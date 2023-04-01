@@ -69,6 +69,11 @@ let (js_int : FStar_Compiler_Util.json -> Prims.int) =
     match uu___ with
     | FStar_Compiler_Util.JsonInt i -> i
     | other -> js_fail "int" other
+let (js_bool : FStar_Compiler_Util.json -> Prims.bool) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Compiler_Util.JsonBool b -> b
+    | other -> js_fail "int" other
 let (js_str : FStar_Compiler_Util.json -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -486,119 +491,6 @@ let (__proj__Mklsp_query__item__query_id :
   fun projectee -> match projectee with | { query_id; q;_} -> query_id
 let (__proj__Mklsp_query__item__q : lsp_query -> lquery) =
   fun projectee -> match projectee with | { query_id; q;_} -> q
-type repl_depth_t = (FStar_TypeChecker_Env.tcenv_depth_t * Prims.int)
-type optmod_t = FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
-type timed_fname =
-  {
-  tf_fname: Prims.string ;
-  tf_modtime: FStar_Compiler_Util.time }
-let (__proj__Mktimed_fname__item__tf_fname : timed_fname -> Prims.string) =
-  fun projectee ->
-    match projectee with | { tf_fname; tf_modtime;_} -> tf_fname
-let (__proj__Mktimed_fname__item__tf_modtime :
-  timed_fname -> FStar_Compiler_Util.time) =
-  fun projectee ->
-    match projectee with | { tf_fname; tf_modtime;_} -> tf_modtime
-type repl_task =
-  | LDInterleaved of (timed_fname * timed_fname) 
-  | LDSingle of timed_fname 
-  | LDInterfaceOfCurrentFile of timed_fname 
-  | PushFragment of FStar_Parser_ParseIt.input_frag 
-  | Noop 
-let (uu___is_LDInterleaved : repl_task -> Prims.bool) =
-  fun projectee ->
-    match projectee with | LDInterleaved _0 -> true | uu___ -> false
-let (__proj__LDInterleaved__item___0 :
-  repl_task -> (timed_fname * timed_fname)) =
-  fun projectee -> match projectee with | LDInterleaved _0 -> _0
-let (uu___is_LDSingle : repl_task -> Prims.bool) =
-  fun projectee ->
-    match projectee with | LDSingle _0 -> true | uu___ -> false
-let (__proj__LDSingle__item___0 : repl_task -> timed_fname) =
-  fun projectee -> match projectee with | LDSingle _0 -> _0
-let (uu___is_LDInterfaceOfCurrentFile : repl_task -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | LDInterfaceOfCurrentFile _0 -> true
-    | uu___ -> false
-let (__proj__LDInterfaceOfCurrentFile__item___0 : repl_task -> timed_fname) =
-  fun projectee -> match projectee with | LDInterfaceOfCurrentFile _0 -> _0
-let (uu___is_PushFragment : repl_task -> Prims.bool) =
-  fun projectee ->
-    match projectee with | PushFragment _0 -> true | uu___ -> false
-let (__proj__PushFragment__item___0 :
-  repl_task -> FStar_Parser_ParseIt.input_frag) =
-  fun projectee -> match projectee with | PushFragment _0 -> _0
-let (uu___is_Noop : repl_task -> Prims.bool) =
-  fun projectee -> match projectee with | Noop -> true | uu___ -> false
-type repl_state =
-  {
-  repl_line: Prims.int ;
-  repl_column: Prims.int ;
-  repl_fname: Prims.string ;
-  repl_deps_stack: (repl_depth_t * (repl_task * repl_state)) Prims.list ;
-  repl_curmod: optmod_t ;
-  repl_env: FStar_TypeChecker_Env.env ;
-  repl_stdin: FStar_Compiler_Util.stream_reader ;
-  repl_names: FStar_Interactive_CompletionTable.table }
-let (__proj__Mkrepl_state__item__repl_line : repl_state -> Prims.int) =
-  fun projectee ->
-    match projectee with
-    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names;_} -> repl_line
-let (__proj__Mkrepl_state__item__repl_column : repl_state -> Prims.int) =
-  fun projectee ->
-    match projectee with
-    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names;_} -> repl_column
-let (__proj__Mkrepl_state__item__repl_fname : repl_state -> Prims.string) =
-  fun projectee ->
-    match projectee with
-    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names;_} -> repl_fname
-let (__proj__Mkrepl_state__item__repl_deps_stack :
-  repl_state -> (repl_depth_t * (repl_task * repl_state)) Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names;_} -> repl_deps_stack
-let (__proj__Mkrepl_state__item__repl_curmod : repl_state -> optmod_t) =
-  fun projectee ->
-    match projectee with
-    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names;_} -> repl_curmod
-let (__proj__Mkrepl_state__item__repl_env :
-  repl_state -> FStar_TypeChecker_Env.env) =
-  fun projectee ->
-    match projectee with
-    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names;_} -> repl_env
-let (__proj__Mkrepl_state__item__repl_stdin :
-  repl_state -> FStar_Compiler_Util.stream_reader) =
-  fun projectee ->
-    match projectee with
-    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names;_} -> repl_stdin
-let (__proj__Mkrepl_state__item__repl_names :
-  repl_state -> FStar_Interactive_CompletionTable.table) =
-  fun projectee ->
-    match projectee with
-    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names;_} -> repl_names
-type repl_stack_entry_t = (repl_depth_t * (repl_task * repl_state))
-type repl_stack_t = (repl_depth_t * (repl_task * repl_state)) Prims.list
-type grepl_state =
-  {
-  grepl_repls: repl_state FStar_Compiler_Util.psmap ;
-  grepl_stdin: FStar_Compiler_Util.stream_reader }
-let (__proj__Mkgrepl_state__item__grepl_repls :
-  grepl_state -> repl_state FStar_Compiler_Util.psmap) =
-  fun projectee ->
-    match projectee with | { grepl_repls; grepl_stdin;_} -> grepl_repls
-let (__proj__Mkgrepl_state__item__grepl_stdin :
-  grepl_state -> FStar_Compiler_Util.stream_reader) =
-  fun projectee ->
-    match projectee with | { grepl_repls; grepl_stdin;_} -> grepl_stdin
 type error_code =
   | ParseError 
   | InvalidRequest 

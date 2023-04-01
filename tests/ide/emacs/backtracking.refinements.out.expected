@@ -6,7 +6,7 @@
 {"kind": "response", "query-id": "5", "response": [], "status": "success"}
 {"kind": "response", "query-id": "6", "response": [], "status": "success"}
 {"kind": "response", "query-id": "7", "response": null, "status": "success"}
-{"kind": "response", "query-id": "8", "response": [[3, "Prims", "nat"]], "status": "success"}
+{"kind": "response", "query-id": "8", "response": [[3, "Prims", "nat"], [0, "<search term>", "nat"]], "status": "success"}
 {"kind": "response", "query-id": "9", "response": [], "status": "success"}
 {"kind": "response", "query-id": "10", "response": [], "status": "success"}
 {"kind": "response", "query-id": "11", "response": null, "status": "success"}
@@ -35,7 +35,7 @@
 {"kind": "response", "query-id": "34", "response": [], "status": "success"}
 {"kind": "response", "query-id": "35", "response": [{"level": "error", "message": "Identifier not found: [b]", "number": 72, "ranges": [{"beg": [5, 7], "end": [5, 8], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "36", "response": [{"level": "error", "message": "Identifier not found: [b]", "number": 72, "ranges": [{"beg": [5, 7], "end": [5, 8], "fname": "<input>"}]}], "status": "success"}
-{"kind": "response", "query-id": "37", "response": [[3, "Prims", "nat"]], "status": "success"}
+{"kind": "response", "query-id": "37", "response": [[3, "Prims", "nat"], [0, "<search term>", "nat"]], "status": "success"}
 {"kind": "response", "query-id": "38", "response": [], "status": "success"}
 {"kind": "response", "query-id": "39", "response": [{"level": "error", "message": "Syntax error", "number": 168, "ranges": [{"beg": [5, 15], "end": [5, 15], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "40", "response": [{"level": "error", "message": "Syntax error", "number": 168, "ranges": [{"beg": [5, 19], "end": [5, 19], "fname": "<input>"}]}], "status": "success"}

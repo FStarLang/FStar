@@ -45,7 +45,7 @@ val core_check: TcEnv.core_check_t
 val tc_one_fragment :
     option Syntax.modul ->
     TcEnv.env_t ->
-    FStar.Parser.ParseIt.input_frag ->
+    either FStar.Parser.ParseIt.input_frag FStar.Parser.AST.decl ->
     option Syntax.modul * TcEnv.env
 
 (* Load an interface file into the dsenv. *)

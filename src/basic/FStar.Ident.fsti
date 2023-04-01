@@ -19,17 +19,17 @@ open FStar.Compiler.Range
 
 (** A (short) identifier for a local name.
  *  e.g. x in `fun x -> ...` *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 new val ident : Type0
 
 // type ident
 
 (** A module path *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type path = list string
 
 (** A module path, as idents *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ipath = list ident
 
 (** Create an ident *)
@@ -81,10 +81,10 @@ val path_of_ns          : ipath -> path
     e.g. Prims.string. Essentially a list of idents where
     the last one denotes a name, and all the others denote a
     module path that qualifies the name. *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 new val lident : Type0
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lid = lident
 
 (** Obtain the range of an lid *)

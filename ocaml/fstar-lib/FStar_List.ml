@@ -56,6 +56,7 @@ let tryFindT = tryFind
 let find = tryFind
 let tryPick f l = try f (BatList.find (fun x -> f x <> None) l) with | Not_found -> None
 let flatten = BatList.flatten
+let concat = flatten
 let split = unzip
 let choose = BatList.filter_map
 let existsb f l = BatList.exists f l

@@ -338,7 +338,7 @@ let (id_info__insert :
           FStar_Compiler_Range.set_def_range range uu___ in
         let id_ty =
           match info.identifier with
-          | FStar_Pervasives.Inr uu___ -> info.identifier_ty
+          | FStar_Pervasives.Inr uu___ -> ty_map info.identifier_ty
           | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
         let info1 =
           {

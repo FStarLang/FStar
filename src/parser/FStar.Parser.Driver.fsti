@@ -25,6 +25,7 @@ type fragment =
     | Empty
     | Modul of AST.modul // an entire module or interface -- unspecified
     | Decls of list AST.decl // a partial set of declarations
+    | DeclsWithContent of list (AST.decl & ParseIt.code_fragment)
 
 val parse_fragment : ParseIt.input_frag -> fragment
 
