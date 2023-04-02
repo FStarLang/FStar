@@ -338,11 +338,21 @@ let format_code (st:repl_state) (code:string)
       let doc_to_string doc =
           FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc
       in
-      let formatted_code =
-        List.map 
-          (fun (d, _) -> doc_to_string (FStar.Parser.ToDocument.decl_to_document d))
+      let formatted_code_rev, leftover_comments =
+        List.fold_left
+          (fun (out, comments) (d, _) -> 
+            let doc, comments = FStar.Parser.ToDocument.decl_with_comments_to_document d comments in
+            doc_to_string doc::out, comments)
+          ([], List.rev comments)
           decls
-        |> String.concat "\n\n"
+      in
+      let code = formatted_code_rev |> List.rev  |> String.concat "\n\n" in
+      let formatted_code =
+        match leftover_comments with
+        | [] -> code
+        | _ ->
+          let doc = FStar.Parser.ToDocument.comments_to_document leftover_comments in
+          code ^ "\n\n" ^ doc_to_string doc
       in
       Inl formatted_code
     | IncrementalFragment (_, _, Some err) ->

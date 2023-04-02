@@ -530,18 +530,41 @@ let (format_code :
             FStar_Pprint.pretty_string
               (FStar_Compiler_Util.float_of_string "1.0")
               (Prims.of_int (100)) doc in
-          let formatted_code =
-            let uu___ =
-              FStar_Compiler_List.map
-                (fun uu___1 ->
-                   match uu___1 with
-                   | (d, uu___2) ->
-                       let uu___3 =
-                         FStar_Parser_ToDocument.decl_to_document d in
-                       doc_to_string uu___3) decls in
-            FStar_Compiler_Effect.op_Bar_Greater uu___
-              (FStar_String.concat "\n\n") in
-          FStar_Pervasives.Inl formatted_code
+          let uu___ =
+            FStar_Compiler_List.fold_left
+              (fun uu___1 ->
+                 fun uu___2 ->
+                   match (uu___1, uu___2) with
+                   | ((out, comments1), (d, uu___3)) ->
+                       let uu___4 =
+                         FStar_Parser_ToDocument.decl_with_comments_to_document
+                           d comments1 in
+                       (match uu___4 with
+                        | (doc, comments2) ->
+                            let uu___5 =
+                              let uu___6 = doc_to_string doc in uu___6 :: out in
+                            (uu___5, comments2)))
+              ([], (FStar_Compiler_List.rev comments)) decls in
+          (match uu___ with
+           | (formatted_code_rev, leftover_comments) ->
+               let code1 =
+                 let uu___1 =
+                   FStar_Compiler_Effect.op_Bar_Greater formatted_code_rev
+                     FStar_Compiler_List.rev in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___1
+                   (FStar_String.concat "\n\n") in
+               let formatted_code =
+                 match leftover_comments with
+                 | [] -> code1
+                 | uu___1 ->
+                     let doc =
+                       FStar_Parser_ToDocument.comments_to_document
+                         leftover_comments in
+                     let uu___2 =
+                       let uu___3 = doc_to_string doc in
+                       Prims.op_Hat "\n\n" uu___3 in
+                     Prims.op_Hat code1 uu___2 in
+               FStar_Pervasives.Inl formatted_code)
       | FStar_Parser_ParseIt.IncrementalFragment
           (uu___, uu___1, FStar_Pervasives_Native.Some err) ->
           let uu___2 = let uu___3 = syntax_issue err in [uu___3] in
