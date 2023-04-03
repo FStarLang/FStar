@@ -1,7 +1,6 @@
 ALL := stlc bool_refinement dependent_bool_refinement mini_steel
 
 all:
-	+$(MAKE) -C core all
 	+$(MAKE) examples
 
 examples: $(addsuffix .all, $(ALL))

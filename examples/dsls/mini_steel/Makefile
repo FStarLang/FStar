@@ -1,3 +1,4 @@
+include ../../Makefile.common
 include ../Makefile.include
 
 include $(FSTAR_HOME)/.common.mk
