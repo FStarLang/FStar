@@ -45,10 +45,17 @@ let (term_to_string :
     fun t ->
       with_printed_effect_args
         (fun uu___ -> FStar_TypeChecker_Normalize.term_to_string tcenv t)
-let (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
-  fun se ->
-    with_printed_effect_args
-      (fun uu___ -> FStar_Syntax_Print.sigelt_to_string se)
+let (sigelt_to_string :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> Prims.string) =
+  fun tcenv ->
+    fun se ->
+      with_printed_effect_args
+        (fun uu___ ->
+           let uu___1 =
+             FStar_Syntax_DsEnv.set_current_module
+               tcenv.FStar_TypeChecker_Env.dsenv
+               tcenv.FStar_TypeChecker_Env.curmodule in
+           FStar_Syntax_Print.sigelt_to_string' uu___1 se)
 let (symlookup :
   FStar_TypeChecker_Env.env ->
     Prims.string ->
@@ -85,7 +92,7 @@ let (symlookup :
               (fun uu___1 ->
                  match uu___1 with
                  | (FStar_Pervasives.Inr (se, uu___2), uu___3) ->
-                     let uu___4 = sigelt_to_string se in
+                     let uu___4 = sigelt_to_string tcenv se in
                      FStar_Pervasives_Native.Some uu___4
                  | uu___2 -> FStar_Pervasives_Native.None) in
           let info_at_pos_opt =

@@ -702,21 +702,22 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
 
     | _ -> Unknown
 
-and eq_antiquotes a1 a2 =
-    match a1, a2 with
-    | [], [] -> Equal
-    | [], _
-    | _, [] -> NotEqual
-    | (x1, t1)::a1, (x2, t2)::a2 ->
-      if not (bv_eq x1 x2)
-      then NotEqual
-      else match eq_tm t1 t2 with
-           | NotEqual -> NotEqual
-           | Unknown ->
-             (match eq_antiquotes a1 a2 with
-              | NotEqual -> NotEqual
-              | _ -> Unknown)
-            | Equal -> eq_antiquotes a1 a2
+and eq_antiquotations a1 a2 =
+  // Basically this;
+  //  List.fold_left2 (fun acc t1 t2 -> eq_inj acc (eq_tm t1 t2)) Equal a1 a2
+  // but lazy and handling lists of different size
+  match a1, a2 with
+  | [], [] -> Equal
+  | [], _
+  | _, [] -> NotEqual
+  | t1::a1, t2::a2 ->
+    match eq_tm t1 t2 with
+    | NotEqual -> NotEqual
+    | Unknown ->
+      (match eq_antiquotations a1 a2 with
+       | NotEqual -> NotEqual
+       | _ -> Unknown)
+    | Equal -> eq_antiquotations a1 a2
 
 and branch_matches b1 b2 =
     let related_by f o1 o2 =
@@ -768,7 +769,7 @@ and eq_comp (c1 c2:comp) : eq_result =
 let eq_quoteinfo q1 q2 =
     if q1.qkind <> q2.qkind
     then NotEqual
-    else eq_antiquotes q1.antiquotes q2.antiquotes
+    else eq_antiquotations (snd q1.antiquotations) (snd q2.antiquotations)
 
 (* Only used in term_eq *)
 let eq_bqual a1 a2 =
@@ -1356,11 +1357,6 @@ let mk_has_type t x t' =
     let t_has_type = fvar_const PC.has_type_lid in //TODO: Fix the U_zeroes below!
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) dummyRange
-
-let mk_with_type u t e =
-    let t_with_type = fvar PC.with_type_lid delta_equational None in
-    let t_with_type = mk (Tm_uinst(t_with_type, [u])) dummyRange in
-    mk (Tm_app(t_with_type, [iarg t; as_arg e])) dummyRange
 
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let texists  = fvar PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2

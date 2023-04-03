@@ -1310,34 +1310,6 @@ let (primitive_type_axioms :
           "inversion-interp") in
       FStar_SMTEncoding_Util.mkAssume uu___1 in
     [uu___] in
-  let mk_with_type_axiom env with_type tt =
-    let tt1 =
-      FStar_SMTEncoding_Term.mk_fv ("t", FStar_SMTEncoding_Term.Term_sort) in
-    let t = FStar_SMTEncoding_Util.mkFreeV tt1 in
-    let ee =
-      FStar_SMTEncoding_Term.mk_fv ("e", FStar_SMTEncoding_Term.Term_sort) in
-    let e = FStar_SMTEncoding_Util.mkFreeV ee in
-    let with_type_t_e = FStar_SMTEncoding_Util.mkApp (with_type, [t; e]) in
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 = FStar_TypeChecker_Env.get_range env in
-          let uu___4 =
-            let uu___5 =
-              let uu___6 =
-                let uu___7 = FStar_SMTEncoding_Util.mkEq (with_type_t_e, e) in
-                let uu___8 =
-                  FStar_SMTEncoding_Term.mk_HasType with_type_t_e t in
-                (uu___7, uu___8) in
-              FStar_SMTEncoding_Util.mkAnd uu___6 in
-            ([[with_type_t_e]],
-              (FStar_Pervasives_Native.Some Prims.int_zero), [tt1; ee],
-              uu___5) in
-          FStar_SMTEncoding_Term.mkForall' uu___3 uu___4 in
-        (uu___2, (FStar_Pervasives_Native.Some "with_type primitive axiom"),
-          "@with_type_primitive_axiom") in
-      FStar_SMTEncoding_Util.mkAssume uu___1 in
-    [uu___] in
   let prims1 =
     [(FStar_Parser_Const.unit_lid, mk_unit);
     (FStar_Parser_Const.bool_lid, mk_bool);
@@ -1353,8 +1325,7 @@ let (primitive_type_axioms :
     (FStar_Parser_Const.iff_lid, mk_iff_interp);
     (FStar_Parser_Const.not_lid, mk_not_interp);
     (FStar_Parser_Const.range_lid, mk_range_interp);
-    (FStar_Parser_Const.inversion_lid, mk_inversion_axiom);
-    (FStar_Parser_Const.with_type_lid, mk_with_type_axiom)] in
+    (FStar_Parser_Const.inversion_lid, mk_inversion_axiom)] in
   fun env ->
     fun t ->
       fun s ->

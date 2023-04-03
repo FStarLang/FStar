@@ -311,7 +311,6 @@ let labeled_lid    = pconst "labeled"
 let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
-let with_type_lid  = psconst "with_type"
 
 (* Constants for marking terms with normalization hints *)
 let normalize      = psconst "normalize"
@@ -546,3 +545,7 @@ let fext_on_domain_lid = fext_lid "on_domain"
 let fext_on_dom_lid = fext_lid "on_dom"
 let fext_on_domain_g_lid = fext_lid "on_domain_g"
 let fext_on_dom_g_lid = fext_lid "on_dom_g"
+
+let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
+let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
+let unseal_lid      = p2l ["FStar"; "Tactics"; "Builtins"; "unseal"]

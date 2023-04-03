@@ -700,11 +700,17 @@ let pack_bv (bvv:bv_view) : bv =
       sort = bvv.bv_sort;
     }
 
-let inspect_binder (b:binder) : bv * (aqualv * list term) =
-    b.binder_bv, (inspect_bqual (b.binder_qual), b.binder_attrs)
+let inspect_binder (b:binder) : binder_view = {
+  binder_bv = b.binder_bv;
+  binder_qual = inspect_bqual (b.binder_qual);
+  binder_attrs = b.binder_attrs
+}
 
-let pack_binder (bv:bv) (aqv:aqualv) (attrs:list term) : binder =
-    { binder_bv=bv; binder_qual=pack_bqual aqv; binder_attrs=attrs }
+let pack_binder (bview:binder_view) : binder = {
+  binder_bv=bview.binder_bv;
+  binder_qual=pack_bqual (bview.binder_qual);
+  binder_attrs=bview.binder_attrs
+}
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list string =
@@ -829,11 +835,11 @@ and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : bool =
   | _ -> false
 
 and binder_eq (b1 : binder) (b2 : binder) : bool =
-  let bv1, (bq1, bats1) = inspect_binder b1 in
-  let bv2, (bq2, bats2) = inspect_binder b2 in
-  binding_bv_eq bv1 bv2 &&
-    aqual_eq bq1 bq2 &&
-    eqlist term_eq bats1 bats2
+  let bview1 = inspect_binder b1 in
+  let bview2 = inspect_binder b2 in
+  binding_bv_eq bview1.binder_bv bview2.binder_bv &&
+    aqual_eq bview1.binder_qual bview2.binder_qual &&
+    eqlist term_eq bview1.binder_attrs bview2.binder_attrs
 
 and binding_bv_eq (bv1 : bv) (bv2 : bv) : bool =
   (*

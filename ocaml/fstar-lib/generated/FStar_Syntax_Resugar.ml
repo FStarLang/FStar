@@ -353,13 +353,18 @@ let (may_shorten : FStar_Ident.lident -> Prims.bool) =
     | "Prims.Cons" -> false
     | uu___1 ->
         let uu___2 = is_tuple_constructor_lid lid in Prims.op_Negation uu___2
+let (maybe_shorten_lid :
+  FStar_Syntax_DsEnv.env -> FStar_Ident.lident -> FStar_Ident.lident) =
+  fun env ->
+    fun lid ->
+      let uu___ = may_shorten lid in
+      if uu___ then FStar_Syntax_DsEnv.shorten_lid env lid else lid
 let (maybe_shorten_fv :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.fv -> FStar_Ident.lident) =
   fun env ->
     fun fv ->
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-      let uu___ = may_shorten lid in
-      if uu___ then FStar_Syntax_DsEnv.shorten_lid env lid else lid
+      maybe_shorten_lid env lid
 let (serialize_machine_integer_desc :
   (FStar_Const.signedness * FStar_Const.width) -> Prims.string) =
   fun uu___ ->
@@ -1814,12 +1819,15 @@ and (resugar_comp' :
                  let uu___2 =
                    let uu___3 =
                      let uu___4 =
+                       maybe_shorten_lid env
+                         c1.FStar_Syntax_Syntax.effect_name in
+                     let uu___5 =
                        FStar_Compiler_List.map
                          (fun t -> (t, FStar_Parser_AST.Nothing))
                          (FStar_Compiler_List.op_At pre2
                             (FStar_Compiler_List.op_At (post2 :: decrease)
                                pats2)) in
-                     ((c1.FStar_Syntax_Syntax.effect_name), uu___4) in
+                     (uu___4, uu___5) in
                    FStar_Parser_AST.Construct uu___3 in
                  mk uu___2)
           else
@@ -1854,14 +1862,23 @@ and (resugar_comp' :
                           aux (FStar_Compiler_List.op_At es l) tl
                       | uu___4 -> aux l tl) in
                let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
-               mk
-                 (FStar_Parser_AST.Construct
-                    ((c1.FStar_Syntax_Syntax.effect_name),
-                      (FStar_Compiler_List.op_At (result :: decrease) args)))
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 =
+                     maybe_shorten_lid env c1.FStar_Syntax_Syntax.effect_name in
+                   (uu___5,
+                     (FStar_Compiler_List.op_At (result :: decrease) args)) in
+                 FStar_Parser_AST.Construct uu___4 in
+               mk uu___3
              else
-               mk
-                 (FStar_Parser_AST.Construct
-                    ((c1.FStar_Syntax_Syntax.effect_name), [result])))
+               (let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      maybe_shorten_lid env
+                        c1.FStar_Syntax_Syntax.effect_name in
+                    (uu___6, [result]) in
+                  FStar_Parser_AST.Construct uu___5 in
+                mk uu___4))
 and (resugar_binder' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.binder ->
@@ -2734,7 +2751,49 @@ let (resugar_sigelt' :
             (let mk e =
                FStar_Syntax_Syntax.mk e se.FStar_Syntax_Syntax.sigrng in
              let dummy = mk FStar_Syntax_Syntax.Tm_unknown in
-             let desugared_let = mk (FStar_Syntax_Syntax.Tm_let (lbs, dummy)) in
+             let nopath_lbs uu___3 =
+               match uu___3 with
+               | (is_rec, lbs1) ->
+                   let nopath fv =
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = FStar_Syntax_Syntax.lid_of_fv fv in
+                           FStar_Ident.ident_of_lid uu___7 in
+                         [uu___6] in
+                       FStar_Ident.lid_of_ids uu___5 in
+                     FStar_Syntax_Syntax.lid_as_fv uu___4
+                       FStar_Syntax_Syntax.delta_constant
+                       FStar_Pervasives_Native.None in
+                   let lbs2 =
+                     FStar_Compiler_List.map
+                       (fun lb ->
+                          let uu___4 =
+                            let uu___5 =
+                              let uu___6 =
+                                FStar_Compiler_Util.right
+                                  lb.FStar_Syntax_Syntax.lbname in
+                              FStar_Compiler_Effect.op_Less_Bar nopath uu___6 in
+                            FStar_Pervasives.Inr uu___5 in
+                          {
+                            FStar_Syntax_Syntax.lbname = uu___4;
+                            FStar_Syntax_Syntax.lbunivs =
+                              (lb.FStar_Syntax_Syntax.lbunivs);
+                            FStar_Syntax_Syntax.lbtyp =
+                              (lb.FStar_Syntax_Syntax.lbtyp);
+                            FStar_Syntax_Syntax.lbeff =
+                              (lb.FStar_Syntax_Syntax.lbeff);
+                            FStar_Syntax_Syntax.lbdef =
+                              (lb.FStar_Syntax_Syntax.lbdef);
+                            FStar_Syntax_Syntax.lbattrs =
+                              (lb.FStar_Syntax_Syntax.lbattrs);
+                            FStar_Syntax_Syntax.lbpos =
+                              (lb.FStar_Syntax_Syntax.lbpos)
+                          }) lbs1 in
+                   (is_rec, lbs2) in
+             let lbs1 = nopath_lbs lbs in
+             let desugared_let =
+               mk (FStar_Syntax_Syntax.Tm_let (lbs1, dummy)) in
              let t = resugar_term' env desugared_let in
              match t.FStar_Parser_AST.tm with
              | FStar_Parser_AST.Let (isrec, lets, uu___3) ->

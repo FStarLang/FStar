@@ -1150,12 +1150,6 @@ val no_subtyping : unit
     See the example usage in ulib/FStar.Algebra.Monoid.fst. *)
 val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
 
-(** [with_type t e] is just an identity function, but it receives
-    special treatment in the SMT encoding, where in addition to being
-    an identity function, we have an SMT axiom:
-    [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
-val with_type (#t: Type) (e: t) : Tot t
-
 (** A weakening coercion from eqtype to Type.
 
     One of its uses is in types of layered effect combinators that

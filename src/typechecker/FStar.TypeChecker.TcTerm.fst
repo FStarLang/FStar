@@ -718,30 +718,30 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       | Inl x -> x
       | Inr _ -> failwith "projl fail"
     in
-    let non_trivial_antiquotes qi =
-        let is_name t =
+    let non_trivial_antiquotations qi =
+        let is_not_name t =
             match (SS.compress t).n with
-            | Tm_name _ -> true
-            | _ -> false
+            | Tm_name _ -> false
+            | _ -> true
         in
-        BU.for_some (fun (_, t) -> not (is_name t)) qi.antiquotes
+        BU.for_some is_not_name (snd qi.antiquotations)
     in
     begin match qi.qkind with
     (* In this case, let-bind all antiquotations so we're sure that effects
      * are properly handled. *)
-    | Quote_static when non_trivial_antiquotes qi ->
+    | Quote_static when non_trivial_antiquotations qi ->
+      // FIXME: check shift=0
         let e0 = e in
-        let newbvs = List.map (fun _ -> S.new_bv None S.t_term) qi.antiquotes in
+        let newbvs = List.map (fun _ -> S.new_bv None S.t_term) (snd qi.antiquotations) in
 
-        let z = List.zip qi.antiquotes newbvs in
+        let z = List.zip (snd qi.antiquotations) newbvs in
 
-        let lbs = List.map (fun ((bv, t), bv') ->
+        let lbs = List.map (fun (t, bv') ->
                                 U.close_univs_and_mk_letbinding None (Inl bv') []
                                                                 S.t_term Const.effect_Tot_lid
                                                                 t [] t.pos)
                            z in
-        let qi = { qi with antiquotes = List.map (fun ((bv, _), bv') ->
-                                            (bv, S.bv_to_name bv')) z } in
+        let qi = { qi with antiquotations = (0, List.map (fun (t, bv') -> S.bv_to_name bv') z) } in
         let nq = mk (Tm_quoted (qt, qi)) top.pos in
         let e = List.fold_left (fun t lb -> mk (Tm_let ((false, [lb]),
                                                         SS.close [S.mk_binder (projl lb.lbname)] t)) top.pos) nq lbs in
@@ -749,14 +749,17 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     (* A static quote is of type `term`, as long as its antiquotations are too *)
     | Quote_static ->
-        (* Typecheck the antiquotes expecting a term *)
-        let aqs = qi.antiquotes in
+        (* Typecheck the antiquotations expecting a term *)
+        let aqs = snd qi.antiquotations in
         let env_tm = Env.set_expected_typ env t_term in
-        let (aqs_rev, guard) =
-            List.fold_right (fun (bv, tm) (aqs_rev, guard) ->
-                                    let tm, _, g = tc_term env_tm tm in
-                                    ((bv, tm)::aqs_rev, Env.conj_guard g guard)) aqs ([], Env.trivial_guard) in
-        let qi = { qi with antiquotes = List.rev aqs_rev } in
+        let (aqs_rev, guard, _env) =
+            List.fold_left (fun (aqs_rev, guard, env_tm) aq_tm ->
+                                    let aq_tm, _, _g = tc_term env_tm aq_tm in // FIXME GUARD DROP
+                                    let env_tm = Env.push_bv env_tm (S.new_bv None t_term) in
+                                    (aq_tm::aqs_rev, Env.conj_guard _g guard, env_tm))
+                                    ([], Env.trivial_guard, env_tm) aqs
+        in
+        let qi = { qi with antiquotations = (0, List.rev aqs_rev) } in
 
         let tm = mk (Tm_quoted (qt, qi)) top.pos in
         value_check_expected_typ env tm (Inl S.t_term) guard

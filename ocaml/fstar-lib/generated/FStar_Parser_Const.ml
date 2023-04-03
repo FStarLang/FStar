@@ -264,7 +264,6 @@ let (range_0 : FStar_Ident.lident) = pconst "range_0"
 let (guard_free : FStar_Ident.lident) = pconst "guard_free"
 let (inversion_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inversion"]
-let (with_type_lid : FStar_Ident.lident) = psconst "with_type"
 let (normalize : FStar_Ident.lident) = psconst "normalize"
 let (normalize_term : FStar_Ident.lident) = psconst "normalize_term"
 let (norm : FStar_Ident.lident) = psconst "norm"
@@ -593,3 +592,7 @@ let (fext_on_domain_lid : FStar_Ident.lident) = fext_lid "on_domain"
 let (fext_on_dom_lid : FStar_Ident.lident) = fext_lid "on_dom"
 let (fext_on_domain_g_lid : FStar_Ident.lident) = fext_lid "on_domain_g"
 let (fext_on_dom_g_lid : FStar_Ident.lident) = fext_lid "on_dom_g"
+let (sealed_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "sealed"]
+let (seal_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "seal"]
+let (unseal_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Builtins"; "unseal"]

@@ -72,8 +72,8 @@ val pack_lb        : lb_view -> letbinding
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
-val inspect_binder : binder -> bv * (aqualv * list term)
-val pack_binder    : bv -> aqualv -> list term -> binder
+val inspect_binder : binder -> binder_view
+val pack_binder    : binder_view -> binder
 
 val inspect_aqual  : aqual -> aqualv
 val pack_aqual     : aqualv -> aqual

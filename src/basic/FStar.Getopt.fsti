@@ -28,6 +28,7 @@ type opt' 'a = char * string * opt_variant 'a * string
 type opt = opt' unit
 
 type parse_cmdline_res =
+  | Empty
   | Help
   | Error of string
   | Success

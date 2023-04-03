@@ -223,9 +223,10 @@ let unpack_interactive_query json =
       assoc  "to-position.line" "line" to_pos  |> js_int, 
       assoc "to-position.column" "column"  to_pos |> js_int
     in
-    let parse_full_buffer_kind = function
+    let parse_full_buffer_kind (kind:string) =
+      match kind with
       | "full" -> Full
-      | "lax-with-symbols" -> LaxWithSymbols
+      | "lax" -> Lax
       | "cache" -> Cache
       | "reload-deps" -> ReloadDeps
       | "verify-to-position" -> VerifyToPosition (read_to_position ())
@@ -244,7 +245,9 @@ let unpack_interactive_query json =
                                        push_line = arg "line" |> js_int;
                                        push_column = arg "column" |> js_int;
                                        push_peek_only = query = "peek" })
-           | "full-buffer" -> FullBuffer (arg "code" |> js_str, parse_full_buffer_kind (arg "kind" |> js_str))
+           | "full-buffer" -> FullBuffer (arg "code" |> js_str,
+                                          parse_full_buffer_kind (arg "kind" |> js_str), 
+                                          arg "with-symbols" |> js_bool)
            | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
                                             try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
@@ -261,6 +264,7 @@ let unpack_interactive_query json =
            | "vfs-add" -> VfsAdd (try_arg "filename" |> Util.map_option js_str,
                                  arg "contents" |> js_str)
            | "format" -> Format (arg "code" |> js_str)
+           | "restart-solver" -> RestartSolver
            | "cancel" -> Cancel (Some("<input>", arg "cancel-line" |> js_int, arg "cancel-column" |> js_int))
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
   with
@@ -598,9 +602,12 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     let open FStar.Interactive.Incremental in
     let json_of_code_fragment (cf:FStar.Parser.ParseIt.code_fragment) =
         JsonAssoc ["range", json_of_def_range cf.range;
-                   "code", JsonStr cf.code]
+                   "code-digest", JsonStr (BU.digest_of_string cf.code)]
     in
     match di with
+    | FullBufferStarted ->
+      write_progress (Some "full-buffer-started") []
+    
     | FragmentStarted d ->
       write_progress (Some "full-buffer-fragment-started")
                      ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
@@ -615,6 +622,7 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     | FragmentFailed d ->
       write_progress (Some "full-buffer-fragment-failed")
                      ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
+
     | FragmentError issues ->
       let qid =
         match !repl_current_qid with
@@ -622,6 +630,9 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
         | Some q -> q
       in
       write_json (json_of_response qid QueryNOK (JsonList (List.map json_of_issue issues)))
+
+    | FullBufferFinished ->
+      write_progress (Some "full-buffer-finished") []
 
 
 let run_push_without_deps st query
@@ -736,12 +747,16 @@ let run_lookup' st symbol context pos_opt requested_info symrange =
   | LKCode -> run_code_lookup st symbol pos_opt requested_info symrange
 
 let run_lookup st symbol context pos_opt requested_info symrange =
-  match run_lookup' st symbol context pos_opt requested_info symrange with
-  | Inl err_msg ->
-    // No result found, but don't fail the query
-    ((QueryOK, JsonStr err_msg), Inl st)
-  | Inr (kind, info) ->
-    ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
+  try
+    match run_lookup' st symbol context pos_opt requested_info symrange with
+    | Inl err_msg ->
+      // No result found, but don't fail the query
+      ((QueryOK, JsonStr err_msg), Inl st)
+    | Inr (kind, info) ->
+      ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
+  with
+  | _ -> ((QueryOK, JsonStr ("Lookup of " ^ symbol^ " failed")), Inl st)
+
 
 let run_code_autocomplete st search_term =
   let result = QH.ck_completion st search_term in
@@ -1030,20 +1045,19 @@ let maybe_cancel_queries st l =
 let rec fold_query (f:repl_state -> query -> run_query_result)
                    (l:list query)
                    (st:repl_state)
-                   (responses: list json)
   : run_query_result
   = match l with
-    | [] -> (QueryOK, responses), Inl st
+    | [] -> (QueryOK, []), Inl st
     | q::l ->
-      let (status, resp), st' = f st q in
-      let responses = responses @ resp in
+      let (status, responses), st' = f st q in
+      List.iter (write_response q.qid status) responses;
       match status, st' with
       | QueryOK, Inl st ->
         let st = buffer_input_queries st in
         let l, st = maybe_cancel_queries st l in
-        fold_query f l st responses
+        fold_query f l st
       | _ ->
-        (status, responses), st'
+        (status, []), st'
 
 let validate_query st (q: query) : query =
   match q.qq with
@@ -1066,11 +1080,16 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
   | VfsAdd (fname, contents) -> as_json_list (run_vfs_add st fname contents)
   | Push pquery -> as_json_list (run_push st pquery)
   | Pop -> as_json_list (run_pop st)
-  | FullBuffer (code, full) ->
+  | FullBuffer (code, full_kind, with_symbols) ->
+    let open FStar.Interactive.Incremental in
+    write_full_buffer_fragment_progress FullBufferStarted;
     let queries, issues = 
-      FStar.Interactive.Incremental.run_full_buffer st q.qid code full write_full_buffer_fragment_progress
+      run_full_buffer st q.qid code full_kind with_symbols write_full_buffer_fragment_progress
     in
-    fold_query validate_and_run_query queries st issues
+    List.iter (write_response q.qid QueryOK) issues;
+    let res = fold_query validate_and_run_query queries st in
+    write_full_buffer_fragment_progress FullBufferFinished;
+    res
   | AutoComplete (search_term, context) ->
     as_json_list (run_autocomplete st search_term context)
   | Lookup (symbol, context, pos_opt, rq_info, symrange) ->
@@ -1083,6 +1102,9 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
     f st
   | Format code ->
     as_json_list (run_format_code st code)
+  | RestartSolver ->
+    st.repl_env.solver.refresh();
+    (QueryOK, []), Inl st
   | Cancel _ ->
     //This should be handled in the fold_query loop above
     (QueryOK, []), Inl st
@@ -1123,11 +1145,6 @@ let js_repl_init_opts () =
 
 (** This is the main loop for the desktop version **)
 let rec go st : int =
-  if Options.debug_any ()
-  then (
-    FStar.Compiler.Util.print1 "Repl stack is:\n%s\n"
-                               (string_of_repl_stack (!repl_stack))
-  );
   let query, st = read_interactive_query st in
   let (status, responses), state_opt = validate_and_run_query st query in
   List.iter (write_response query.qid status) responses;

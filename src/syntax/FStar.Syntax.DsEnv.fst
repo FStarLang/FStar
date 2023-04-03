@@ -664,27 +664,91 @@ let drop_attributes (x:option (term * list attribute)) :option (term) =
 
 let try_lookup_lid_with_attributes (env:env) (l:lident) :(option (term * list attribute)) = try_lookup_lid' env.iface false env l
 let try_lookup_lid (env:env) l = try_lookup_lid_with_attributes env l |> drop_attributes
-let resolve_to_fully_qualified_name (env:env) (l:lident) =
-    match try_lookup_lid env l with
-    | None -> None
-    | Some e ->
-      match (Subst.compress e).n with
+
+let resolve_to_fully_qualified_name (env:env) (l:lident) : option lident =
+  let r =
+    match try_lookup_name true false env l with
+    | Some (Term_name (e, attrs)) ->
+      begin match (Subst.compress e).n with
       | Tm_fvar fv -> Some fv.fv_name.v
       | _ -> None
+      end
+    | Some (Eff_name (o, l)) -> Some l
+    | None -> None
+  in
+  r
 
-let shorten_lid' env lid =
-  let (_, short) = shorten_module_path env (ns_of_lid lid) true in
-  lid_of_ns_and_id short (ident_of_lid lid)
+(* Is this module lid abbreviated? If there is a module M = A.B in scope,
+then this returns Some M for A.B (but not for its descendants). *)
+let is_abbrev env lid : option ipath =
+  List.tryPick (function
+                | Module_abbrev (id, ns) when lid_equals lid ns ->
+                    Some [id]
+                | _ -> None)
+      env.scope_mods
 
-let shorten_lid env lid =
+(* Abbreviate a module lid. If there is a module M = A.B.C in scope,
+then this returns Some (M, C.D) for A.B.C.D (unless there is a more
+specific abbrev, such as one for A.B.C or A.B.C.D) *)
+let try_shorten_abbrev (env:env) (ns:ipath) : option (ipath * list ident) =
+  let rec aux (ns : ipath) (rest : list ident) =
+    match ns with
+    | [] -> None
+    | hd::tl ->
+      match is_abbrev env (lid_of_ids (rev ns)) with
+      | Some short -> Some (short, rest)
+      | _ ->
+        aux tl (hd::rest)
+  in
+  aux (rev ns) []
+
+let shorten_lid' (env:env) (lid0:lident) : lident =
+  (* Id and namespace *)
+  let id0 = ident_of_lid lid0 in
+  let ns0 = ns_of_lid lid0 in
+
+  (* If this lid is "below" some abbreviation, find it and use it unconditionally. *)
+  let pref, ns =
+    match try_shorten_abbrev env ns0 with
+    | None -> [], ns0
+    | Some (ns, rest) -> ns, rest
+  in
+
+  (* Move to FStar.List.Tot.Base? *)
+  let rec tails l = match l with
+    | [] -> [[]]
+    | _::tl -> l::(tails tl)
+  in
+
+  (* Namespace suffixes, in increasing order of length *)
+  let suffs = rev (tails ns) in
+
+  (* Does this shortened lid' resolve to the original lid0? *)
+  let try1 (lid' : lident) : bool =
+    match resolve_to_fully_qualified_name env lid' with
+    | Some lid2 when Ident.lid_equals lid2 lid0 -> true
+    | _ -> false
+  in
+
+  let rec go (nss : list (list ident)) : lid =
+    match nss with
+    | ns::rest ->
+      let lid' = lid_of_ns_and_id (pref @ ns) id0 in
+      if try1 lid'
+      then lid'
+      else go rest
+
+    | [] ->
+      (* This should be unreachable. Warn? *)
+      lid0
+  in
+  let r = go suffs in
+  r
+
+let shorten_lid env lid0 =
   match env.curmodule with
-  | None -> shorten_lid' env lid
-  | _ ->
-    let lid_without_ns = lid_of_ns_and_id [] (ident_of_lid lid) in
-    match resolve_to_fully_qualified_name env lid_without_ns with
-    // Simple case: lid without namespace resolves to itself
-    | Some lid' when string_of_lid lid' = string_of_lid lid -> lid_without_ns
-    | _ -> shorten_lid' env lid
+  | None -> lid0
+  | _ -> shorten_lid' env lid0
 
 let try_lookup_lid_with_attributes_no_resolve (env: env) l :option (term * list attribute) =
   let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }

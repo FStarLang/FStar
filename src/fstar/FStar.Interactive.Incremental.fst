@@ -181,41 +181,45 @@ let inspect_repl_stack (s:repl_stack_t)
     | Some (prefix, first_push, rest) ->
       let entries = first_push :: rest in
       let repl_task (_, (p, _)) = p in
-      let rec matching_prefix (accum:list json) entries (ds:list (decl & code_fragment))
+      let rec matching_prefix (accum:list json) (lookups:list query) entries (ds:list (decl & code_fragment))
         : qst (list query & list json)
         = match entries, ds with
           | [], [] ->
-            return ([], accum)
+            return (lookups, accum)
             
           | e::entries, d::ds -> (
             match repl_task e with
             | Noop -> 
-              matching_prefix accum entries (d::ds)
+              matching_prefix accum lookups entries (d::ds)
             | PushFragment (Inl frag, _, _) ->
               let! pops = pop_entries (e::entries) in
               let! pushes = push_decls (d::ds) in
-              return (pops @ pushes, accum)
+              return (lookups @ pops @ pushes, accum)
             | PushFragment (Inr d', pk, issues) ->
               if eq_decl (fst d) d'
               then (
                 let d, s = d in
                 write_full_buffer_fragment_progress (FragmentSuccess (d, s, pk));
-                matching_prefix (issues@accum) entries ds
+                if with_symbols
+                then let! lookups' = dump_symbols d in
+                     matching_prefix (issues@accum) (lookups'@lookups) entries ds
+                else
+                    matching_prefix (issues@accum) lookups entries ds
               )
               else let! pops = pop_entries (e::entries) in
                    let! pushes = push_decls (d::ds) in
-                   return (pops @ pushes, accum)
+                   return (pops @ lookups @ pushes, accum)
             )
 
          | [], ds ->
            let! pushes = push_decls ds in
-           return (pushes, accum)
+           return (lookups@pushes, accum)
 
          | es, [] ->
            let! pops = pop_entries es in
-           return (pops, accum)
+           return (lookups@pops, accum)
       in
-      matching_prefix [] entries ds 
+      matching_prefix [] [] entries ds 
 
 (* A reload_deps request just pops away the entire stack of PushFragments.
    We also push on just the `module A` declaration after popping. That's done below. *)
@@ -261,6 +265,7 @@ let run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
                     (request_type:full_buffer_request_kind)
+                    (with_symbols:bool)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query & list json
   = let parse_result = parse_code code in
@@ -283,7 +288,6 @@ let run_full_buffer (st:repl_state)
           decls
       | _ -> decls
     in
-    let with_symbols = request_type = LaxWithSymbols in
     let qs = 
       match parse_result with
       | IncrementalFragment (decls, _, err_opt) -> (
@@ -302,10 +306,9 @@ let run_full_buffer (st:repl_state)
           let push_kind = 
             match request_type with
             | LaxToPosition _ -> LaxCheck
-            | LaxWithSymbols -> LaxCheck
+            | Lax -> LaxCheck
             | _ -> FullCheck
           in
-
           let queries, issues = 
               run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid
           in
@@ -331,15 +334,25 @@ let run_full_buffer (st:repl_state)
 let format_code (st:repl_state) (code:string)
   = let parse_result = parse_code code in
     match parse_result with
-    | IncrementalFragment (decls, _, None) ->
+    | IncrementalFragment (decls, comments, None) ->
       let doc_to_string doc =
           FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc
       in
-      let formatted_code =
-        List.map 
-          (fun (d, _) -> doc_to_string (FStar.Parser.ToDocument.decl_to_document d))
+      let formatted_code_rev, leftover_comments =
+        List.fold_left
+          (fun (out, comments) (d, _) -> 
+            let doc, comments = FStar.Parser.ToDocument.decl_with_comments_to_document d comments in
+            doc_to_string doc::out, comments)
+          ([], List.rev comments)
           decls
-        |> String.concat "\n\n"
+      in
+      let code = formatted_code_rev |> List.rev  |> String.concat "\n\n" in
+      let formatted_code =
+        match leftover_comments with
+        | [] -> code
+        | _ ->
+          let doc = FStar.Parser.ToDocument.comments_to_document leftover_comments in
+          code ^ "\n\n" ^ doc_to_string doc
       in
       Inl formatted_code
     | IncrementalFragment (_, _, Some err) ->
