@@ -1,9 +1,13 @@
 include ../Makefile.include
 
+include $(FSTAR_HOME)/.common.mk
+
+FSTAR_LIB_OCAMLPATH := $(call maybe_cygwin_path,$(FSTAR_HOME)/lib)
+
 ifeq ($(OS),Windows_NT)
-  OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/bin);$(OCAMLPATH)
+  OCAMLPATH := $(FSTAR_LIB_OCAMLPATH);$(OCAMLPATH)
 else
-  OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
+  OCAMLPATH := $(FSTAR_LIB_OCAMLPATH):$(OCAMLPATH)
 endif
 
 plugin: verify_all _build/Pulse_Main.cmxs
