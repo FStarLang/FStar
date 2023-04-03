@@ -74,10 +74,13 @@ jobs:
             fi
             docker tag $ci_docker_image_tag fstar:local-commit-$GITHUB_SHA
           fi
-          docker buildx rm $ci_docker_builder
           $ci_docker_status
         env:
           DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
+      - name: Clean up temporary container
+        if: ${{ always() }}
+        run: |
+          docker buildx rm $ci_docker_builder
       - name: Compute elapsed time and status message
         if: ${{ always() }}
         run: |
