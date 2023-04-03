@@ -217,6 +217,19 @@ let open_sig_inductive_typ env se =
       env, (lid, ty_us, ty_params)
     | _                                        -> failwith "Impossible!"
 
+(* Map bv to an unqualified long identifier with the same pp_name
+   just for positivity-checking.
+     
+   It cannot clash with any user long identifier, since those
+   are always qualified to a module 
+*)
+let name_as_fv_in_t (t:term) (bv:bv)
+  : term & lident
+  = let fv_lid = set_lid_range (lid_of_str (FStar.Ident.string_of_id bv.ppname)) (range_of_bv bv) in
+    let fv = S.tconst fv_lid in
+    let t = SS.subst [NT (bv, fv)] t in
+    t, fv_lid
+
 ////////////////////////////////////////////////////////////////////////////////
 // Uniformly recursive parameters
 ////////////////////////////////////////////////////////////////////////////////
@@ -816,9 +829,22 @@ let rec ty_strictly_positive_in_type (env:env)
        "Checking strict positivity in an Tm_match, recur in the branches)");
      if L.existsML (fun mutual -> ty_occurs_in mutual scrutinee) mutuals
      then (
-       //Do not allow things like
-       // type t = | MkT : match f t with ... 
-       false
+       // type t = | MkT : match f t with | D x -> e
+       // is ok if {t,x} are strictly positive in e
+       List.for_all
+         (fun (p, _, t) ->
+           let bs = List.map mk_binder (pat_bvs p) in
+           let bs, t = SS.open_term bs t in
+           let t, mutuals = 
+             List.fold_left
+               (fun (t, lids) b -> 
+                 let t, lid = name_as_fv_in_t t b.binder_bv in
+                 t, lid::lids)
+               (t, mutuals)
+               bs
+           in
+           ty_strictly_positive_in_type env mutuals t unfolded)
+         branches
      )
      else (
        List.for_all
@@ -962,67 +988,77 @@ and ty_strictly_positive_in_arguments_to_fvar
                    (string_of_lid fv)
                    (Print.args_to_string args)
                    (Print.term_to_string t));
-    let fv_ty = 
-      match Env.try_lookup_lid env fv with
-      | Some ((_, fv_ty), _) -> fv_ty
-      | _ ->
-        raise_error 
-          (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-           BU.format1 "Type of %s not found when checking positivity"
-                      (string_of_lid fv))
-          (range_of_lid fv)
-    in
-    let b, idatas = datacons_of_typ env fv in
-    if not b
-    then ( 
-      (*
-       * Check if ilid's corresponding binder is marked "strictly_positive"
-       *)
-      ty_strictly_positive_in_args env mutuals fv_ty args unfolded
+    if Env.is_datacon env fv
+    then (
+      // If fv is a constructor, then the mutuals must be strictly positive
+      // in all the arguments
+      List.for_all
+        (fun (a, _) -> ty_strictly_positive_in_type env mutuals a unfolded)
+        args
     )
-    //if fv has already been unfolded with same arguments, return true
     else (
-      check_no_index_occurrences_in_arities env mutuals t;
-      let ilid = fv in //fv is an inductive
-      //note that num_ibs gives us only the type parameters,
-      //and not indexes, which is what we need since we will
-      //substitute them in the data constructor type
-      let num_uniform_params = 
-        match Env.num_inductive_uniform_ty_params env ilid with
-        | None -> //impossible; we know that ilid is an inductive
-          failwith "Unexpected type"
-        | Some n -> n
+      let fv_ty = 
+        match Env.try_lookup_lid env fv with
+        | Some ((_, fv_ty), _) -> fv_ty
+        | _ ->
+          raise_error 
+            (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+            BU.format1 "Type of %s not found when checking positivity"
+                       (string_of_lid fv))
+            (range_of_lid fv)
       in
-      let params, _rest = List.splitAt num_uniform_params args in            
-      if already_unfolded ilid args unfolded env
-      then (
-        debug_positivity env (fun _ ->
-          "Checking nested positivity, we have already unfolded this inductive with these args");
-        true
+      let b, idatas = datacons_of_typ env fv in
+      if not b
+      then ( 
+        (*
+         * Check if ilid's corresponding binder is marked "strictly_positive"
+         *)
+        ty_strictly_positive_in_args env mutuals fv_ty args unfolded
       )
+      //if fv has already been unfolded with same arguments, return true
       else (
-        debug_positivity env (fun _ -> 
-          BU.format3 "Checking positivity in datacon, number of type parameters is %s, \
-                      adding %s %s to the memo table"          
-                     (string_of_int num_uniform_params)
-                     (Ident.string_of_lid ilid)
-                     (Print.args_to_string params));
-        //update the memo table with the inductive name and the args,
-        //note we keep only the uniform parameters and not indices
-        unfolded := !unfolded @ [ilid, params, num_uniform_params];
-        List.for_all
-          (fun d -> ty_strictly_positive_in_datacon_of_applied_inductive
-                     env
-                     mutuals
-                     d
-                     ilid
-                     us
-                     args
-                     num_uniform_params
-                     unfolded)
-          idatas
+        check_no_index_occurrences_in_arities env mutuals t;
+        let ilid = fv in //fv is an inductive
+        //note that num_ibs gives us only the type parameters,
+        //and not indexes, which is what we need since we will
+        //substitute them in the data constructor type
+        let num_uniform_params = 
+          match Env.num_inductive_uniform_ty_params env ilid with
+          | None -> //impossible; we know that ilid is an inductive
+            failwith "Unexpected type"
+          | Some n -> n
+        in
+        let params, _rest = List.splitAt num_uniform_params args in            
+        if already_unfolded ilid args unfolded env
+        then (
+          debug_positivity env (fun _ ->
+            "Checking nested positivity, we have already unfolded this inductive with these args");
+          true
+        )
+        else (
+          debug_positivity env (fun _ -> 
+            BU.format3 "Checking positivity in datacon, number of type parameters is %s, \
+                       adding %s %s to the memo table"          
+                       (string_of_int num_uniform_params)
+                       (Ident.string_of_lid ilid)
+                       (Print.args_to_string params));
+          //update the memo table with the inductive name and the args,
+          //note we keep only the uniform parameters and not indices
+          unfolded := !unfolded @ [ilid, params, num_uniform_params];
+          List.for_all
+            (fun d -> ty_strictly_positive_in_datacon_of_applied_inductive
+                      env
+                      mutuals
+                      d
+                      ilid
+                      us
+                      args
+                      num_uniform_params
+                      unfolded)
+            idatas
       )
     )
+  )
 
 (* dlid is a data constructor of ilid
    args are the arguments of the ilid application
@@ -1103,14 +1139,7 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
    attribute) is strictly positive in t
 *)
 let name_strictly_positive_in_type env (bv:bv) t =
-  (* We map bv to an unqualified long identifier with the same pp_name
-     just for positivity-checking.
-     
-     It cannot clash with any user long identifier, since those
-     are always qualified to a module *)
-  let fv_lid = set_lid_range (lid_of_str (FStar.Ident.string_of_id bv.ppname)) (range_of_bv bv) in
-  let fv = S.tconst fv_lid in
-  let t = SS.subst [NT (bv, fv)] t in
+  let t, fv_lid = name_as_fv_in_t t bv in
   ty_strictly_positive_in_type env [fv_lid] t (BU.mk_ref [])
 
 

@@ -6181,43 +6181,40 @@ and (tc_abs :
                                     (FStar_Compiler_Util.dflt cbody c_opt) in
                                 FStar_Pervasives_Native.Some uu___8 in
                               FStar_Syntax_Util.abs bs1 body2 uu___7 in
-                            (let env2 =
-                               FStar_TypeChecker_Env.push_binders env1 bs1 in
-                             FStar_Compiler_List.iter
-                               (fun b ->
-                                  let uu___8 =
-                                    (FStar_Syntax_Util.has_attribute
-                                       b.FStar_Syntax_Syntax.binder_attrs
-                                       FStar_Parser_Const.binder_strictly_positive_attr)
-                                      &&
-                                      (let uu___9 =
-                                         FStar_Options.no_positivity () in
-                                       Prims.op_Negation uu___9) in
-                                  if uu___8
-                                  then
-                                    let r =
-                                      FStar_TypeChecker_Positivity.name_strictly_positive_in_type
-                                        env2 b.FStar_Syntax_Syntax.binder_bv
-                                        body2 in
-                                    (if Prims.op_Negation r
-                                     then
-                                       let uu___9 =
-                                         let uu___10 =
-                                           let uu___11 =
-                                             FStar_Syntax_Print.binder_to_string
-                                               b in
-                                           FStar_Compiler_Util.format1
-                                             "Binder %s is marked strictly positive, but its use in the definition is not"
-                                             uu___11 in
-                                         (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                           uu___10) in
-                                       let uu___10 =
-                                         FStar_Syntax_Syntax.range_of_bv
-                                           b.FStar_Syntax_Syntax.binder_bv in
-                                       FStar_Errors.raise_error uu___9
-                                         uu___10
-                                     else ())
-                                  else ()) bs1);
+                            FStar_Compiler_List.iter
+                              (fun b ->
+                                 let uu___8 =
+                                   (FStar_Syntax_Util.has_attribute
+                                      b.FStar_Syntax_Syntax.binder_attrs
+                                      FStar_Parser_Const.binder_strictly_positive_attr)
+                                     &&
+                                     (let uu___9 =
+                                        FStar_Options.no_positivity () in
+                                      Prims.op_Negation uu___9) in
+                                 if uu___8
+                                 then
+                                   let r =
+                                     FStar_TypeChecker_Positivity.name_strictly_positive_in_type
+                                       envbody1
+                                       b.FStar_Syntax_Syntax.binder_bv body2 in
+                                   (if Prims.op_Negation r
+                                    then
+                                      let uu___9 =
+                                        let uu___10 =
+                                          let uu___11 =
+                                            FStar_Syntax_Print.binder_to_string
+                                              b in
+                                          FStar_Compiler_Util.format1
+                                            "Binder %s is marked strictly positive, but its use in the definition is not"
+                                            uu___11 in
+                                        (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
+                                          uu___10) in
+                                      let uu___10 =
+                                        FStar_Syntax_Syntax.range_of_bv
+                                          b.FStar_Syntax_Syntax.binder_bv in
+                                      FStar_Errors.raise_error uu___9 uu___10
+                                    else ())
+                                 else ()) bs1;
                             (let uu___8 =
                                match tfun_opt with
                                | FStar_Pervasives_Native.Some t ->

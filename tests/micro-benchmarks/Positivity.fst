@@ -49,8 +49,8 @@ type t =
 
 
 (*
-// // // //  * #868
-// // // //  *)
+ * #868
+ *)
 let l_868: eqtype = (y: Seq.seq int {Seq.mem 2 y })
 type essai_868 = | T of list (l_868 * essai_868)
 
@@ -67,8 +67,8 @@ noeq type t14 =
 
 
 (*
-//  * Using the strictly_positive attribute on binders
-//  *)
+ * Using the strictly_positive attribute on binders
+ *)
 assume val t_t15 (a:Type0) : Type0
 
 [@@ expect_failure]
@@ -90,8 +90,8 @@ type t_t18 =
   | C181: t_t17 t_t18 nat -> t_t18
 
 (*
-// // // //  * strictly positive attribute is checked properly
-// // // //  *)
+ * strictly positive attribute is checked properly
+ *)
 
 val t_t19 ([@@@ strictly_positive] a:Type0) : Type0
 
@@ -102,10 +102,10 @@ let t_t19 a = list a
 
 
 (*
-//  * This type should be rejected since f may be instantiated with an arrow
-//  *   that could lead to proof of False, as shown below
-//  *
-//  *)
+ * This type should be rejected since f may be instantiated with an arrow
+ *   that could lead to proof of False, as shown below
+ *
+ *)
 
 [@@ expect_failure [3]]
 noeq
@@ -130,9 +130,9 @@ let r1 (_:unit) : squash False = g (C201 g)
 
 
 (*
-//  * If inductive type parameters are marked strictly_positive,
-//  *   they should be checked properly
-//  *)
+ * If inductive type parameters are marked strictly_positive,
+ *   they should be checked properly
+ *)
 
 type t_t21 ([@@@ strictly_positive] a:Type0) : Type0 =
   | C211 : a -> t_t21 a
@@ -205,7 +205,7 @@ type sdyn =
   | S : squash (sdyn → GTot ⊥) → sdyn
 
 (* If we don't enforce positivity in refinements,
-//    things become inconsistent *)
+   things become inconsistent *)
 
 #push-options "--__no_positivity"
 type bad =
@@ -370,3 +370,100 @@ type t_np (a: Type -> Type) =
 noeq
 type t_np' (a: [@@@strictly_positive]Type -> Type) = 
   | T_np' : a (t_np' (fun _ -> unit)) -> t_np' a
+
+// let rec fixpoint_pos ([@@@strictly_positive] a:Type) (n:nat) : bool =
+//   if n = 0 then false else fixpoint_pos a (n-1)
+  
+
+assume
+val asn1_id_t : eqtype
+
+assume
+val set : eqtype -> Type0
+
+assume
+val asn1_id_set : set asn1_id_t
+
+assume
+val disjoint (#a:eqtype) (s0 s1: set a) : prop
+
+assume
+val union (#a:eqtype) (s0 s1: set a) : set a
+
+type asn1_decorator : Type0 =
+  | PLAIN
+  | OPTION
+  | DEFAULT
+
+let rec asn1_sequence_k_wf' (#[@@@strictly_positive] t:set asn1_id_t -> asn1_decorator -> Type)
+                            (li : list (s:set asn1_id_t & d:asn1_decorator & t s d))
+                            (s : set asn1_id_t) : prop
+  = match li with
+    | [] -> True
+    | hd :: tl ->
+      let (| s', d, _ |) = hd in
+      disjoint s s' /\
+      (match d with
+      | PLAIN -> asn1_sequence_k_wf tl
+      | _ -> asn1_sequence_k_wf' tl (union s s'))
+
+and asn1_sequence_k_wf (#[@@@strictly_positive] t:set asn1_id_t -> asn1_decorator -> Type)
+                       (li : list (s:set asn1_id_t & d:asn1_decorator & t s d))
+                      : prop
+= match li with
+  | [] -> True
+  | hd :: tl ->
+    let (|s', d, _|) = hd in 
+    match d with
+    | PLAIN -> asn1_sequence_k_wf tl
+    | OPTION | DEFAULT -> asn1_sequence_k_wf' tl s'
+
+let dtup3 ([@@@strictly_positive] a: Type)
+          ([@@@strictly_positive] b: a -> Type)
+          ([@@@strictly_positive] c: (x:a -> b x -> Type)) = dtuple3 a b c
+  
+let proj_first2_of_3 (#x:Type)
+                     (#y:Type)
+                     (#[@@@strictly_positive] z:x -> y -> Type)
+                     (p:(a:x & b:y & z a b)) : (x & y) = let (| a, b, _ |) = p in (a, b)
+
+#push-options "--debug Positivity --debug_level Positivity"
+let rec sp_map (#[@@@strictly_positive]a:Type)
+               (#b:Type)
+               (f: (x:a -> b))
+               (l:list a) : list b =
+  match l with
+  | [] -> []
+  | hd :: tl -> 
+    f hd :: 
+    sp_map f tl
+
+let rec asn1_sequence_k_wf_alt' ([@@@strictly_positive] li : list (set asn1_id_t & asn1_decorator))
+                                ([@@@strictly_positive] s : set asn1_id_t) : prop
+  = match li with
+    | [] -> True
+    | hd :: tl ->
+      let ( s', d ) = hd in
+      disjoint s s' /\
+      (match d with
+      | PLAIN -> asn1_sequence_k_wf_alt tl
+      | _ -> asn1_sequence_k_wf_alt' tl (union s s'))
+
+and asn1_sequence_k_wf_alt ([@@@strictly_positive]li : list (set asn1_id_t & asn1_decorator))
+                           : prop
+= match li with
+  | [] -> True
+  | hd :: tl ->
+    let ( s, d ) = hd in 
+    match d with
+    | PLAIN -> asn1_sequence_k_wf_alt tl
+    | OPTION | DEFAULT -> asn1_sequence_k_wf_alt' tl s
+
+
+[@@ no_auto_projectors]
+noeq
+type asn1_decorated : set asn1_id_t -> asn1_decorator -> Type0 =
+  | MkDecorated : f:list (dtup3 (set asn1_id_t) (fun _ -> asn1_decorator) (fun x y -> asn1_decorated x y)) -> squash (asn1_sequence_k_wf_alt (sp_map proj_first2_of_3 f)) -> asn1_decorated asn1_id_set PLAIN
+
+
+  

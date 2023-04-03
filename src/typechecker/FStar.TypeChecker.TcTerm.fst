@@ -2269,12 +2269,11 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
      *       after substituting the bv name with a fresh lid fv in the function body
      *)
     let _ =
-      let env = Env.push_binders env bs in
       List.iter
         (fun b ->
            if U.has_attribute b.binder_attrs Const.binder_strictly_positive_attr
            && not (Options.no_positivity())
-           then let r = Positivity.name_strictly_positive_in_type env b.binder_bv body in
+           then let r = Positivity.name_strictly_positive_in_type envbody b.binder_bv body in
                 if not r
                 then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
                                   BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
