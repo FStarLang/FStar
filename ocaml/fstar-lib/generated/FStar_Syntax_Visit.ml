@@ -298,6 +298,8 @@ let (on_sub_binder :
       {
         FStar_Syntax_Syntax.binder_bv = uu___;
         FStar_Syntax_Syntax.binder_qual = uu___1;
+        FStar_Syntax_Syntax.binder_positivity =
+          (b.FStar_Syntax_Syntax.binder_positivity);
         FStar_Syntax_Syntax.binder_attrs = uu___2
       }
 let rec (on_sub_pat :

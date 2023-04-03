@@ -925,13 +925,15 @@ let rec (ty_strictly_positive_in_type :
                                                b;
                                              FStar_Syntax_Syntax.binder_qual
                                                = uu___11;
+                                             FStar_Syntax_Syntax.binder_positivity
+                                               = uu___12;
                                              FStar_Syntax_Syntax.binder_attrs
-                                               = uu___12;_}
+                                               = uu___13;_}
                                              ->
-                                             let uu___13 =
+                                             let uu___14 =
                                                ty_occurs_in ty_lid
                                                  b.FStar_Syntax_Syntax.sort in
-                                             Prims.op_Negation uu___13) sbs)
+                                             Prims.op_Negation uu___14) sbs)
                                  mutuals in
                              if ty_lid_not_to_left_of_arrow
                              then

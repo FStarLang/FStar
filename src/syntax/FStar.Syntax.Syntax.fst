@@ -14,9 +14,6 @@
    limitations under the License.
 *)
 module FStar.Syntax.Syntax
-(* Prims is used for bootstrapping *)
-open Prims
-open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 (* Type definitions for the core AST *)
@@ -204,12 +201,13 @@ let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
     else {bv with index=Ident.next_id()}
-let mk_binder_with_attrs bv aqual attrs = {
+let mk_binder_with_attrs bv aqual pqual attrs = {
   binder_bv = bv;
   binder_qual = aqual;
+  binder_positivity = pqual;
   binder_attrs = attrs
 }
-let mk_binder a = mk_binder_with_attrs a None []
+let mk_binder a = mk_binder_with_attrs a None None []
 let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
 let iarg t : arg = t, Some ({ aqual_implicit = true; aqual_attributes = [] })

@@ -42,7 +42,7 @@ let fresh_binder (g:env) (old:binder)
   : env & binder
   = let ctr = g.max_binder_index + 1 in
     let bv = { old.binder_bv with index = ctr } in
-    let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_attrs in    
+    let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_positivity old.binder_attrs in    
     push_binder g b, b
 
 let open_binders (g:env) (bs:binders) 
@@ -52,6 +52,7 @@ let open_binders (g:env) (bs:binders)
             let bv = { b.binder_bv with sort = Subst.subst subst b.binder_bv.sort } in
             let b = { binder_bv = bv;
                       binder_qual = Subst.subst_bqual subst b.binder_qual;
+                      binder_positivity = b.binder_positivity;
                       binder_attrs = List.map (Subst.subst subst) b.binder_attrs } in
             let g, b' = fresh_binder g b in
             g, b'::bs, DB(0, b'.binder_bv)::Subst.shift_subst 1 subst)
@@ -425,6 +426,12 @@ let check_aqual (a0 a1:aqual)
       else fail "Unequal arg qualifiers"
     | _ ->
       fail "Unequal arg qualifiers"
+
+let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
+  : result unit
+  = if FStar.TypeChecker.Common.check_positivity_qual (SUBTYPING? rel) p0 p1
+    then return ()
+    else fail "Unequal positivity qualifiers"
 
 let mk_forall_l (us:universes) (xs:binders) (t:term)
   : term
@@ -1018,6 +1025,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
         check_relation g EQUALITY b0.binder_bv.sort b1.binder_bv.sort;!
         check_bqual b0.binder_qual b1.binder_qual;!
+        check_positivity_qual EQUALITY b0.binder_positivity b1.binder_positivity;!
         let! u = universe_of g b0.binder_bv.sort in
         let g, b0, body0 = open_term g b0 body0 in
         let body1 = Subst.subst [DB(0, b0.binder_bv)] body1 in
@@ -1033,6 +1041,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
         with_context "subtype arrow" None (fun _ ->
           let! _ = check_bqual x0.binder_qual x1.binder_qual in
+          check_positivity_qual rel x0.binder_positivity x1.binder_positivity;!
           let! u1 = universe_of g x1.binder_bv.sort in
           let g_x1, x1, c1 = open_comp g x1 c1 in
           let c0 = Subst.subst_comp [DB(0, x1.binder_bv)] c0 in

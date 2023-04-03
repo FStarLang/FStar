@@ -413,6 +413,8 @@ let rec (traverse :
                                         });
                                      FStar_Syntax_Syntax.binder_qual =
                                        (b.FStar_Syntax_Syntax.binder_qual);
+                                     FStar_Syntax_Syntax.binder_positivity =
+                                       (b.FStar_Syntax_Syntax.binder_positivity);
                                      FStar_Syntax_Syntax.binder_attrs =
                                        (b.FStar_Syntax_Syntax.binder_attrs)
                                    }) in
@@ -1199,6 +1201,9 @@ let rec (traverse_for_spinoff :
                                                });
                                             FStar_Syntax_Syntax.binder_qual =
                                               (b.FStar_Syntax_Syntax.binder_qual);
+                                            FStar_Syntax_Syntax.binder_positivity
+                                              =
+                                              (b.FStar_Syntax_Syntax.binder_positivity);
                                             FStar_Syntax_Syntax.binder_attrs
                                               =
                                               (b.FStar_Syntax_Syntax.binder_attrs)

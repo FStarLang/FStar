@@ -539,7 +539,9 @@ let (gen :
                                                   match uu___7 with
                                                   | (x, q) ->
                                                       FStar_Syntax_Syntax.mk_binder_with_attrs
-                                                        x q [])) in
+                                                        x q
+                                                        FStar_Pervasives_Native.None
+                                                        [])) in
                                         let t =
                                           let uu___7 =
                                             let uu___8 =

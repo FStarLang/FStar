@@ -288,6 +288,7 @@ let subst_binder' s b =
   S.mk_binder_with_attrs
     ({ b.binder_bv with sort = subst' s b.binder_bv.sort })
     (subst_bqual' s b.binder_qual)
+    b.binder_positivity
     (b.binder_attrs |> List.map (subst' s))
 
 
@@ -559,7 +560,7 @@ let open_binders' bs =
           let attrs = b.binder_attrs |> List.map (subst o) in
           let o = DB(0, x')::shift_subst 1 o in
           let bs', o = aux bs' o in
-          (S.mk_binder_with_attrs x' imp attrs)::bs', o in
+          (S.mk_binder_with_attrs x' imp b.binder_positivity attrs)::bs', o in
    aux bs []
 let open_binders (bs:binders) = fst (open_binders' bs)
 let open_term' (bs:binders) t =
@@ -625,7 +626,7 @@ let close_binders (bs:binders) : binders =
           let imp = subst_bqual s b.binder_qual in
           let attrs = b.binder_attrs |> List.map (subst s) in
           let s' = NM(x, 0)::shift_subst 1 s in
-          (S.mk_binder_with_attrs x imp attrs)::aux s' tl in
+          (S.mk_binder_with_attrs x imp b.binder_positivity attrs)::aux s' tl in
     aux [] bs
 let close_ascription (bs:binders) (asc:ascription) =
   subst_ascription (closing_subst bs) asc

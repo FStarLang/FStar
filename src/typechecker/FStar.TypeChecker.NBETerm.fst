@@ -58,7 +58,6 @@ module C = FStar.Const
 module Range = FStar.Compiler.Range
 module SE = FStar.Syntax.Embeddings
 open FStar.VConfig
-
 // NBE term manipulation
 
 let isAccu (trm:t) =

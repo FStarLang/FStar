@@ -249,7 +249,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
                 else e
               in
               //now, with the uvars gone, we can close over the newly introduced type names
-              let tvars_bs = gen_tvars |> List.map (fun (x, q) -> S.mk_binder_with_attrs x q []) in
+              let tvars_bs = gen_tvars |> List.map (fun (x, q) -> S.mk_binder_with_attrs x q None []) in
               let t = match (SS.compress (U.comp_result c)).n with
                     | Tm_arrow(bs, cod) ->
                       let bs, cod = SS.open_comp bs cod in

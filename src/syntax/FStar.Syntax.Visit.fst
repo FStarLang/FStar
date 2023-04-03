@@ -190,6 +190,7 @@ let on_sub_binder vfs (b : binder) : binder =
     binder_qual = map_opt b.binder_qual
                     (function Meta t -> Meta ((f_term vfs) t)
                             | q -> q);
+    binder_positivity = b.binder_positivity;
     binder_attrs = map (f_term vfs) b.binder_attrs;
   }
 

@@ -598,3 +598,12 @@ let simplify (debug:bool) (tm:term) : term =
         | None -> tm
         end
     | _ -> tm
+
+let check_positivity_qual subtyping p0 p1
+  = if p0 = p1 then true
+    else if subtyping
+    then match p0, p1 with
+         | Some _, None -> true
+         | Some BinderUnused, Some BinderStrictlyPositive -> true
+         | _ -> false
+    else false

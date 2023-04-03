@@ -3111,17 +3111,19 @@ let (t_apply_lemma :
                                                                = b;
                                                              FStar_Syntax_Syntax.binder_qual
                                                                = aq;
+                                                             FStar_Syntax_Syntax.binder_positivity
+                                                               = uu___12;
                                                              FStar_Syntax_Syntax.binder_attrs
-                                                               = uu___12;_},
+                                                               = uu___13;_},
                                                            (uvs, deps, imps,
                                                             subst)) ->
                                                             let b_t =
                                                               FStar_Syntax_Subst.subst
                                                                 subst
                                                                 b.FStar_Syntax_Syntax.sort in
-                                                            let uu___13 =
+                                                            let uu___14 =
                                                               is_unit_t b_t in
-                                                            if uu___13
+                                                            if uu___14
                                                             then
                                                               FStar_Compiler_Effect.op_Less_Bar
                                                                 FStar_Tactics_Monad.ret
@@ -3134,22 +3136,22 @@ let (t_apply_lemma :
                                                                     FStar_Syntax_Util.exp_unit))
                                                                   :: subst))
                                                             else
-                                                              (let uu___15 =
-                                                                 let uu___16
+                                                              (let uu___16 =
+                                                                 let uu___17
                                                                    =
-                                                                   let uu___17
+                                                                   let uu___18
                                                                     =
-                                                                    let uu___18
+                                                                    let uu___19
                                                                     =
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     goal
                                                                     should_check_goal_uvar in
                                                                     FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___18
-                                                                    (fun
                                                                     uu___19
+                                                                    (fun
+                                                                    uu___20
                                                                     ->
-                                                                    match uu___19
+                                                                    match uu___20
                                                                     with
                                                                     | 
                                                                     FStar_Syntax_Syntax.Strict
@@ -3159,30 +3161,30 @@ let (t_apply_lemma :
                                                                     | 
                                                                     x -> x) in
                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___17
-                                                                    (fun
                                                                     uu___18
+                                                                    (fun
+                                                                    uu___19
                                                                     ->
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___18) in
+                                                                    uu___19) in
                                                                  FStar_Tactics_Monad.new_uvar
                                                                    "apply_lemma"
                                                                    env1 b_t
-                                                                   uu___16
+                                                                   uu___17
                                                                    deps
                                                                    (rangeof
                                                                     goal) in
                                                                FStar_Tactics_Monad.op_let_Bang
-                                                                 uu___15
-                                                                 (fun uu___16
+                                                                 uu___16
+                                                                 (fun uu___17
                                                                     ->
-                                                                    match uu___16
+                                                                    match uu___17
                                                                     with
                                                                     | 
                                                                     (t1, u)
                                                                     ->
                                                                     ((
-                                                                    let uu___18
+                                                                    let uu___19
                                                                     =
                                                                     FStar_Compiler_Effect.op_Less_Bar
                                                                     (FStar_TypeChecker_Env.debug
@@ -3190,20 +3192,20 @@ let (t_apply_lemma :
                                                                     (FStar_Options.Other
                                                                     "2635") in
                                                                     if
-                                                                    uu___18
+                                                                    uu___19
                                                                     then
-                                                                    let uu___19
+                                                                    let uu___20
                                                                     =
                                                                     FStar_Syntax_Print.ctx_uvar_to_string
                                                                     u in
-                                                                    let uu___20
+                                                                    let uu___21
                                                                     =
                                                                     FStar_Syntax_Print.term_to_string
                                                                     tm1 in
                                                                     FStar_Compiler_Util.print2
                                                                     "Apply lemma created a new uvar %s while applying %s\n"
-                                                                    uu___19
                                                                     uu___20
+                                                                    uu___21
                                                                     else ());
                                                                     FStar_Tactics_Monad.ret
                                                                     (((t1,
@@ -3575,14 +3577,16 @@ let (subst_goal :
                                               bv;
                                             FStar_Syntax_Syntax.binder_qual =
                                               q;
+                                            FStar_Syntax_Syntax.binder_positivity
+                                              = uu___8;
                                             FStar_Syntax_Syntax.binder_attrs
-                                              = uu___8;_}
+                                              = uu___9;_}
                                             ->
-                                            let uu___9 =
+                                            let uu___10 =
                                               FStar_Syntax_Syntax.bv_to_name
                                                 bv in
-                                            FStar_Syntax_Syntax.as_arg uu___9)
-                                     bs in
+                                            FStar_Syntax_Syntax.as_arg
+                                              uu___10) bs in
                                  FStar_Syntax_Util.mk_app uu___5 uu___6 in
                                let uu___5 = set_solution g sol in
                                FStar_Tactics_Monad.op_let_Bang uu___5
@@ -3694,15 +3698,17 @@ let (rewrite : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                                                                     = bv2;
                                                                    FStar_Syntax_Syntax.binder_qual
                                                                     = uu___14;
+                                                                   FStar_Syntax_Syntax.binder_positivity
+                                                                    = uu___15;
                                                                    FStar_Syntax_Syntax.binder_attrs
-                                                                    = uu___15;_}
+                                                                    = uu___16;_}
                                                                    ->
-                                                                   let uu___16
+                                                                   let uu___17
                                                                     =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     bv2 in
                                                                    FStar_Syntax_Syntax.as_arg
-                                                                    uu___16)
+                                                                    uu___17)
                                                             bs in
                                                         FStar_Syntax_Util.mk_app
                                                           uu___11 uu___12 in
@@ -3761,6 +3767,8 @@ let (rename_to :
                                FStar_Syntax_Syntax.binder_bv = bv'1;
                                FStar_Syntax_Syntax.binder_qual =
                                  (b.FStar_Syntax_Syntax.binder_qual);
+                               FStar_Syntax_Syntax.binder_positivity =
+                                 (b.FStar_Syntax_Syntax.binder_positivity);
                                FStar_Syntax_Syntax.binder_attrs =
                                  (b.FStar_Syntax_Syntax.binder_attrs)
                              }))) in
@@ -5586,6 +5594,9 @@ let (t_destruct :
                                                                     FStar_Syntax_Syntax.binder_qual
                                                                     =
                                                                     (b.FStar_Syntax_Syntax.binder_qual);
+                                                                    FStar_Syntax_Syntax.binder_positivity
+                                                                    =
+                                                                    (b.FStar_Syntax_Syntax.binder_positivity);
                                                                     FStar_Syntax_Syntax.binder_attrs
                                                                     =
                                                                     (b.FStar_Syntax_Syntax.binder_attrs)
@@ -5609,26 +5620,30 @@ let (t_destruct :
                                                                     = bv;
                                                                     FStar_Syntax_Syntax.binder_qual
                                                                     = uu___23;
+                                                                    FStar_Syntax_Syntax.binder_positivity
+                                                                    = uu___24;
                                                                     FStar_Syntax_Syntax.binder_attrs
-                                                                    = uu___24;_},
+                                                                    = uu___25;_},
                                                                     {
                                                                     FStar_Syntax_Syntax.binder_bv
                                                                     = bv';
                                                                     FStar_Syntax_Syntax.binder_qual
-                                                                    = uu___25;
+                                                                    = uu___26;
+                                                                    FStar_Syntax_Syntax.binder_positivity
+                                                                    = uu___27;
                                                                     FStar_Syntax_Syntax.binder_attrs
-                                                                    = uu___26;_})
+                                                                    = uu___28;_})
                                                                     ->
-                                                                    let uu___27
+                                                                    let uu___29
                                                                     =
-                                                                    let uu___28
+                                                                    let uu___30
                                                                     =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     bv' in
                                                                     (bv,
-                                                                    uu___28) in
+                                                                    uu___30) in
                                                                     FStar_Syntax_Syntax.NT
-                                                                    uu___27)
+                                                                    uu___29)
                                                                     bs bs' in
                                                                     let uu___21
                                                                     =
@@ -5736,10 +5751,12 @@ let (t_destruct :
                                                                     = bv;
                                                                     FStar_Syntax_Syntax.binder_qual
                                                                     = uu___28;
+                                                                    FStar_Syntax_Syntax.binder_positivity
+                                                                    = uu___29;
                                                                     FStar_Syntax_Syntax.binder_attrs
-                                                                    = uu___29;_},
+                                                                    = uu___30;_},
                                                                     (t,
-                                                                    uu___30))
+                                                                    uu___31))
                                                                     ->
                                                                     FStar_Syntax_Syntax.NT
                                                                     (bv, t))
@@ -5761,10 +5778,12 @@ let (t_destruct :
                                                                     = bv;
                                                                     FStar_Syntax_Syntax.binder_qual
                                                                     = uu___28;
+                                                                    FStar_Syntax_Syntax.binder_positivity
+                                                                    = uu___29;
                                                                     FStar_Syntax_Syntax.binder_attrs
-                                                                    = uu___29;_},
+                                                                    = uu___30;_},
                                                                     (t,
-                                                                    uu___30))
+                                                                    uu___31))
                                                                     ->
                                                                     ((mk_pat
                                                                     (FStar_Syntax_Syntax.Pat_dot_term
@@ -5786,8 +5805,10 @@ let (t_destruct :
                                                                     = bv;
                                                                     FStar_Syntax_Syntax.binder_qual
                                                                     = bq;
+                                                                    FStar_Syntax_Syntax.binder_positivity
+                                                                    = uu___28;
                                                                     FStar_Syntax_Syntax.binder_attrs
-                                                                    = uu___28;_}
+                                                                    = uu___29;_}
                                                                     ->
                                                                     ((mk_pat
                                                                     (FStar_Syntax_Syntax.Pat_var

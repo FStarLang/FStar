@@ -622,9 +622,9 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
           let env = Env.push_binders env formals in
           mk_precedes env dec previous_dec in
         let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
-        let bs, ({binder_bv=last; binder_qual=imp}) = BU.prefix formals in
+        let bs, ({binder_bv=last; binder_positivity=pqual; binder_attrs=attrs; binder_qual=imp}) = BU.prefix formals in
         let last = {last with sort=U.refine last precedes} in
-        let refined_formals = bs@[S.mk_binder_with_attrs last imp []] in
+        let refined_formals = bs@[S.mk_binder_with_attrs last imp pqual attrs] in
         let t' = U.arrow refined_formals c in
         if debug env Options.Medium
         then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
@@ -2054,15 +2054,15 @@ and tc_abs_check_binders env bs bs_expected use_eq
     match bs, bs_expected with
     | [], [] -> env, [], None, Env.trivial_guard, subst
 
-    | ({binder_qual=None})::_, ({binder_bv=hd_e;binder_qual=q;binder_attrs=attrs})::_
+    | ({binder_qual=None})::_, ({binder_bv=hd_e;binder_qual=q;binder_positivity=pqual;binder_attrs=attrs})::_
       when S.is_bqual_implicit_or_meta q ->
       (* When an implicit is expected, but the user provided an
        * explicit binder, insert a nameless implicit binder. *)
       let bv = S.new_bv (Some (Ident.range_of_id hd_e.ppname)) (SS.subst subst hd_e.sort) in
-      aux (env, subst) ((S.mk_binder_with_attrs bv q attrs) :: bs) bs_expected
+      aux (env, subst) ((S.mk_binder_with_attrs bv q pqual attrs) :: bs) bs_expected
 
-    | ({binder_bv=hd;binder_qual=imp;binder_attrs=attrs})::bs,
-      ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'})::bs_expected -> begin
+    | ({binder_bv=hd;binder_qual=imp;binder_positivity=pqual_actual; binder_attrs=attrs})::bs,
+      ({binder_bv=hd_expected;binder_qual=imp';binder_positivity=pqual_expected;binder_attrs=attrs'})::bs_expected -> begin
         (* These are the discrepancies in qualifiers that we allow *)
         let special q1 q2 = match q1, q2 with
         | Some (Meta _), Some (Meta _) -> true (* don't compare the metaprograms *)
@@ -2075,6 +2075,11 @@ and tc_abs_check_binders env bs bs_expected use_eq
                           BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                          (S.range_of_bv hd)
         end;
+
+        if pqual_actual <> pqual_expected
+        then raise_error (Errors.Fatal_InconsistentQualifierAnnotation,
+                            BU.format1 "Inconsistent positivity qualifier on argument %s" (Print.bv_to_string hd))
+                          (S.range_of_bv hd);
 
         (* since binders depend on previous ones, we accumulate a substitution *)
         let expected_t = SS.subst subst hd_expected.sort in
@@ -2116,9 +2121,9 @@ and tc_abs_check_binders env bs bs_expected use_eq
           ) attrs' in
           attrs@diff
         in
-        let b = {binder_bv=hd;binder_qual=imp;binder_attrs=combine_attrs attrs attrs'} in
+        let b = {binder_bv=hd;binder_qual=imp;binder_positivity=pqual_expected;binder_attrs=combine_attrs attrs attrs'} in
         check_erasable_binder_attributes env b.binder_attrs t;
-        let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'}) in
+        let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_positivity=pqual_expected;binder_attrs=attrs'}) in
         let env_b = push_binding env b in
         let subst = maybe_extend_subst subst b_expected (S.bv_to_name hd) in
         let env_bs, bs, rest, g'_env_b, subst = aux (env_b, subst) bs bs_expected in
@@ -4263,7 +4268,7 @@ and check_lbtyp top_level env lb : option typ  (* checked version of lb.lbtyp, i
                Some t, g, univ_vars, univ_opening, Env.set_expected_typ env1 t
 
 
-and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
+and tc_binder env ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs}) =
     let tu, u = U.type_u () in
     if Env.debug env Options.Extreme
     then BU.print3 "Checking binder %s:%s at type %s\n"
@@ -4280,7 +4285,7 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
     in
     let attrs = tc_attributes env attrs in
     check_erasable_binder_attributes env attrs t;
-    let x = S.mk_binder_with_attrs ({x with sort=t}) imp attrs in
+    let x = S.mk_binder_with_attrs ({x with sort=t}) imp pqual attrs in
     if Env.debug env Options.High
     then BU.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string x.binder_bv) (Print.term_to_string t);
     x, push_binding env x, g, u

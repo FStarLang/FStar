@@ -1257,8 +1257,9 @@ and readback (cfg:config) (x:t) : term =
             List.fold_right
               (fun (t, aq) (binders, accus) ->
                let bqual, battrs = U.bqual_and_attrs_of_aqual aq in
+               let pqual, battrs = U.parse_positivity_attributes battrs in
                let x = S.new_bv None (readback cfg t) in
-               (S.mk_binder_with_attrs x bqual battrs)::binders,
+               (S.mk_binder_with_attrs x bqual pqual battrs)::binders,
                (mkAccuVar x, aq) :: accus)
               args
               ([],[])
@@ -1295,7 +1296,8 @@ and readback (cfg:config) (x:t) : term =
             let t = readback cfg t in
             let x = S.new_bv None t in
             let q, attrs = U.bqual_and_attrs_of_aqual q in
-            S.mk_binder_with_attrs x q [])
+            let pqual, attrs = U.parse_positivity_attributes attrs in
+            S.mk_binder_with_attrs x q pqual attrs)
           args
       in
       let c = readback_comp cfg c in

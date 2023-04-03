@@ -418,52 +418,18 @@ and asn1_sequence_k_wf (#[@@@strictly_positive] t:set asn1_id_t -> asn1_decorato
     | PLAIN -> asn1_sequence_k_wf tl
     | OPTION | DEFAULT -> asn1_sequence_k_wf' tl s'
 
-let dtup3 ([@@@strictly_positive] a: Type)
-          ([@@@strictly_positive] b: a -> Type)
-          ([@@@strictly_positive] c: (x:a -> b x -> Type)) = dtuple3 a b c
-  
-let proj_first2_of_3 (#x:Type)
-                     (#y:Type)
-                     (#[@@@strictly_positive] z:x -> y -> Type)
-                     (p:(a:x & b:y & z a b)) : (x & y) = let (| a, b, _ |) = p in (a, b)
-
-#push-options "--debug Positivity --debug_level Positivity"
-let rec sp_map (#[@@@strictly_positive]a:Type)
-               (#b:Type)
-               (f: (x:a -> b))
-               (l:list a) : list b =
-  match l with
-  | [] -> []
-  | hd :: tl -> 
-    f hd :: 
-    sp_map f tl
-
-let rec asn1_sequence_k_wf_alt' ([@@@strictly_positive] li : list (set asn1_id_t & asn1_decorator))
-                                ([@@@strictly_positive] s : set asn1_id_t) : prop
-  = match li with
-    | [] -> True
-    | hd :: tl ->
-      let ( s', d ) = hd in
-      disjoint s s' /\
-      (match d with
-      | PLAIN -> asn1_sequence_k_wf_alt tl
-      | _ -> asn1_sequence_k_wf_alt' tl (union s s'))
-
-and asn1_sequence_k_wf_alt ([@@@strictly_positive]li : list (set asn1_id_t & asn1_decorator))
-                           : prop
-= match li with
-  | [] -> True
-  | hd :: tl ->
-    let ( s, d ) = hd in 
-    match d with
-    | PLAIN -> asn1_sequence_k_wf_alt tl
-    | OPTION | DEFAULT -> asn1_sequence_k_wf_alt' tl s
-
-
 [@@ no_auto_projectors]
 noeq
 type asn1_decorated : set asn1_id_t -> asn1_decorator -> Type0 =
-  | MkDecorated : f:list (dtup3 (set asn1_id_t) (fun _ -> asn1_decorator) (fun x y -> asn1_decorated x y)) -> squash (asn1_sequence_k_wf_alt (sp_map proj_first2_of_3 f)) -> asn1_decorated asn1_id_set PLAIN
+  | MkDecorated : f:list (x:set asn1_id_t & y:asn1_decorator & asn1_decorated x y) -> squash (asn1_sequence_k_wf f) -> asn1_decorated asn1_id_set PLAIN
 
+////////////////////////////////////////////////////////////////////////////////
+// Adding positivity annotations by subtyping
+////////////////////////////////////////////////////////////////////////////////
 
-  
+let a_to_bool (a:Type) : Type = a -> bool
+[@@expect_failure]
+let a_to_bool_bad ([@@@strictly_positive] a:Type) = a_to_bool a
+
+[@@expect_failure] 
+let a_to_bool_bad : ([@@@strictly_positive] a:Type -> Type) = a_to_bool

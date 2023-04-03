@@ -1002,7 +1002,8 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
             match (SS.compress a).n with
             | Tm_name x ->
               let q, attrs = U.bqual_and_attrs_of_aqual i in
-              [S.mk_binder_with_attrs x q attrs]
+              let pq, attrs = U.parse_positivity_attributes attrs in
+              [S.mk_binder_with_attrs x q pq attrs]
             | _ ->
               fail();
               [])
@@ -1202,7 +1203,8 @@ let pat_vars env ctx args : option binders =
           ||  name_exists_in_binders a ctx
           then None
           else let bq, attrs = U.bqual_and_attrs_of_aqual i in
-               aux ((S.mk_binder_with_attrs a bq attrs)::seen) args
+               let pq, attrs = U.parse_positivity_attributes attrs in
+               aux ((S.mk_binder_with_attrs a bq pq attrs)::seen) args
         | _ -> None
     in
     aux [] args
@@ -1798,6 +1800,7 @@ let quasi_pattern env (f:flex_t) : option (binders * typ) =
                         aux ((S.mk_binder_with_attrs
                                ({x with sort=formal.sort})
                                q
+                               fml.binder_positivity
                                fml.binder_attrs) :: pat_binders) formals t_res args
             | _ -> //it's not a name, so it can't be included in the patterns
             aux (fml :: pat_binders) formals t_res args
@@ -2558,11 +2561,11 @@ and imitate_arrow (orig:prob) (wl:worklist)
               //printfn "Arrow imitation: %s =?= %s" (Print.term_to_string lhs') (Print.term_to_string rhs);
               solve (attempt [sub_prob] (solve_prob orig None [sol] wl))
 
-            | ({binder_bv=x;binder_qual=imp;binder_attrs=attrs})::formals ->
+            | ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs})::formals ->
               let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
               //printfn "Generated formal %s where %s" (Print.term_to_string t_y) (Print.ctx_uvar_to_string ctx_u_x);
               let y = S.new_bv (Some (S.range_of_bv x)) u_x in
-              let b = S.mk_binder_with_attrs y imp attrs in
+              let b = S.mk_binder_with_attrs y imp pqual attrs in
               aux (bs@[b]) (bs_terms@[U.arg_of_non_null_binder b]) formals wl
          in
          let _, occurs_ok, msg = occurs_check u_lhs arrow in

@@ -5877,13 +5877,14 @@ let (maybe_instantiate :
                           match uu___3 with
                           | { FStar_Syntax_Syntax.binder_bv = uu___4;
                               FStar_Syntax_Syntax.binder_qual = imp;
-                              FStar_Syntax_Syntax.binder_attrs = uu___5;_} ->
+                              FStar_Syntax_Syntax.binder_positivity = uu___5;
+                              FStar_Syntax_Syntax.binder_attrs = uu___6;_} ->
                               (FStar_Compiler_Option.isNone imp) ||
-                                (let uu___6 =
+                                (let uu___7 =
                                    FStar_Syntax_Util.eq_bqual imp
                                      (FStar_Pervasives_Native.Some
                                         FStar_Syntax_Syntax.Equality) in
-                                 uu___6 = FStar_Syntax_Util.Equal))) in
+                                 uu___7 = FStar_Syntax_Util.Equal))) in
                 match uu___2 with
                 | FStar_Pervasives_Native.None ->
                     FStar_Compiler_List.length formals
@@ -5938,15 +5939,71 @@ let (maybe_instantiate :
                             FStar_Syntax_Syntax.binder_qual =
                               FStar_Pervasives_Native.Some
                               (FStar_Syntax_Syntax.Implicit uu___4);
+                            FStar_Syntax_Syntax.binder_positivity = uu___5;
                             FStar_Syntax_Syntax.binder_attrs = [];_}::rest)
                            ->
                            let t2 =
                              FStar_Syntax_Subst.subst subst
                                x.FStar_Syntax_Syntax.sort in
-                           let uu___5 =
+                           let uu___6 =
                              new_implicit_var
                                "Instantiation of implicit argument"
                                e.FStar_Syntax_Syntax.pos env t2 in
+                           (match uu___6 with
+                            | (v, uu___7, g) ->
+                                ((let uu___9 =
+                                    FStar_TypeChecker_Env.debug env
+                                      FStar_Options.High in
+                                  if uu___9
+                                  then
+                                    let uu___10 =
+                                      FStar_Syntax_Print.term_to_string v in
+                                    FStar_Compiler_Util.print1
+                                      "maybe_instantiate: Instantiating implicit with %s\n"
+                                      uu___10
+                                  else ());
+                                 (let subst1 =
+                                    (FStar_Syntax_Syntax.NT (x, v)) :: subst in
+                                  let aq =
+                                    let uu___9 = FStar_Compiler_List.hd bs2 in
+                                    FStar_Syntax_Util.aqual_of_binder uu___9 in
+                                  let uu___9 =
+                                    aux subst1 (decr_inst inst_n) rest in
+                                  match uu___9 with
+                                  | (args, bs3, subst2, g') ->
+                                      let uu___10 =
+                                        FStar_TypeChecker_Env.conj_guard g g' in
+                                      (((v, aq) :: args), bs3, subst2,
+                                        uu___10))))
+                       | (uu___3,
+                          { FStar_Syntax_Syntax.binder_bv = x;
+                            FStar_Syntax_Syntax.binder_qual = qual;
+                            FStar_Syntax_Syntax.binder_positivity = uu___4;
+                            FStar_Syntax_Syntax.binder_attrs = attrs;_}::rest)
+                           when maybe_implicit_with_meta_or_attr qual attrs
+                           ->
+                           let t2 =
+                             FStar_Syntax_Subst.subst subst
+                               x.FStar_Syntax_Syntax.sort in
+                           let meta_t =
+                             match (qual, attrs) with
+                             | (FStar_Pervasives_Native.Some
+                                (FStar_Syntax_Syntax.Meta tau), uu___5) ->
+                                 let uu___6 =
+                                   let uu___7 = FStar_Compiler_Dyn.mkdyn env in
+                                   (uu___7, tau) in
+                                 FStar_Syntax_Syntax.Ctx_uvar_meta_tac uu___6
+                             | (uu___5, attr::uu___6) ->
+                                 FStar_Syntax_Syntax.Ctx_uvar_meta_attr attr
+                             | uu___5 ->
+                                 failwith
+                                   "Impossible, match is under a guard, did not expect this case" in
+                           let uu___5 =
+                             FStar_TypeChecker_Env.new_implicit_var_aux
+                               "Instantiation of meta argument"
+                               e.FStar_Syntax_Syntax.pos env t2
+                               FStar_Syntax_Syntax.Strict
+                               (FStar_Pervasives_Native.Some meta_t) in
                            (match uu___5 with
                             | (v, uu___6, g) ->
                                 ((let uu___8 =
@@ -5957,7 +6014,7 @@ let (maybe_instantiate :
                                     let uu___9 =
                                       FStar_Syntax_Print.term_to_string v in
                                     FStar_Compiler_Util.print1
-                                      "maybe_instantiate: Instantiating implicit with %s\n"
+                                      "maybe_instantiate: Instantiating meta argument with %s\n"
                                       uu___9
                                   else ());
                                  (let subst1 =
@@ -5973,60 +6030,6 @@ let (maybe_instantiate :
                                         FStar_TypeChecker_Env.conj_guard g g' in
                                       (((v, aq) :: args), bs3, subst2,
                                         uu___9))))
-                       | (uu___3,
-                          { FStar_Syntax_Syntax.binder_bv = x;
-                            FStar_Syntax_Syntax.binder_qual = qual;
-                            FStar_Syntax_Syntax.binder_attrs = attrs;_}::rest)
-                           when maybe_implicit_with_meta_or_attr qual attrs
-                           ->
-                           let t2 =
-                             FStar_Syntax_Subst.subst subst
-                               x.FStar_Syntax_Syntax.sort in
-                           let meta_t =
-                             match (qual, attrs) with
-                             | (FStar_Pervasives_Native.Some
-                                (FStar_Syntax_Syntax.Meta tau), uu___4) ->
-                                 let uu___5 =
-                                   let uu___6 = FStar_Compiler_Dyn.mkdyn env in
-                                   (uu___6, tau) in
-                                 FStar_Syntax_Syntax.Ctx_uvar_meta_tac uu___5
-                             | (uu___4, attr::uu___5) ->
-                                 FStar_Syntax_Syntax.Ctx_uvar_meta_attr attr
-                             | uu___4 ->
-                                 failwith
-                                   "Impossible, match is under a guard, did not expect this case" in
-                           let uu___4 =
-                             FStar_TypeChecker_Env.new_implicit_var_aux
-                               "Instantiation of meta argument"
-                               e.FStar_Syntax_Syntax.pos env t2
-                               FStar_Syntax_Syntax.Strict
-                               (FStar_Pervasives_Native.Some meta_t) in
-                           (match uu___4 with
-                            | (v, uu___5, g) ->
-                                ((let uu___7 =
-                                    FStar_TypeChecker_Env.debug env
-                                      FStar_Options.High in
-                                  if uu___7
-                                  then
-                                    let uu___8 =
-                                      FStar_Syntax_Print.term_to_string v in
-                                    FStar_Compiler_Util.print1
-                                      "maybe_instantiate: Instantiating meta argument with %s\n"
-                                      uu___8
-                                  else ());
-                                 (let subst1 =
-                                    (FStar_Syntax_Syntax.NT (x, v)) :: subst in
-                                  let aq =
-                                    let uu___7 = FStar_Compiler_List.hd bs2 in
-                                    FStar_Syntax_Util.aqual_of_binder uu___7 in
-                                  let uu___7 =
-                                    aux subst1 (decr_inst inst_n) rest in
-                                  match uu___7 with
-                                  | (args, bs3, subst2, g') ->
-                                      let uu___8 =
-                                        FStar_TypeChecker_Env.conj_guard g g' in
-                                      (((v, aq) :: args), bs3, subst2,
-                                        uu___8))))
                        | (uu___3, bs3) ->
                            ([], bs3, subst,
                              FStar_TypeChecker_Env.trivial_guard) in
@@ -6474,18 +6477,20 @@ let (maybe_add_implicit_binders :
         match uu___ with
         | { FStar_Syntax_Syntax.binder_bv = uu___1;
             FStar_Syntax_Syntax.binder_qual = q;
-            FStar_Syntax_Syntax.binder_attrs = uu___2;_} ->
+            FStar_Syntax_Syntax.binder_positivity = uu___2;
+            FStar_Syntax_Syntax.binder_attrs = uu___3;_} ->
             (match q with
              | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
-                 uu___3) -> true
-             | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___3)
+                 uu___4) -> true
+             | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___4)
                  -> true
-             | uu___3 -> false) in
+             | uu___4 -> false) in
       let pos bs1 =
         match bs1 with
         | { FStar_Syntax_Syntax.binder_bv = hd;
             FStar_Syntax_Syntax.binder_qual = uu___;
-            FStar_Syntax_Syntax.binder_attrs = uu___1;_}::uu___2 ->
+            FStar_Syntax_Syntax.binder_positivity = uu___1;
+            FStar_Syntax_Syntax.binder_attrs = uu___2;_}::uu___3 ->
             FStar_Syntax_Syntax.range_of_bv hd
         | uu___ -> FStar_TypeChecker_Env.get_range env in
       match bs with
@@ -6522,6 +6527,8 @@ let (maybe_add_implicit_binders :
                                      FStar_Syntax_Syntax.binder_bv = uu___8;
                                      FStar_Syntax_Syntax.binder_qual =
                                        (b.FStar_Syntax_Syntax.binder_qual);
+                                     FStar_Syntax_Syntax.binder_positivity =
+                                       (b.FStar_Syntax_Syntax.binder_positivity);
                                      FStar_Syntax_Syntax.binder_attrs =
                                        (b.FStar_Syntax_Syntax.binder_attrs)
                                    })) in
@@ -7241,7 +7248,8 @@ let (layered_effect_indices_as_binders :
                        (match bs1 with
                         | { FStar_Syntax_Syntax.binder_bv = a';
                             FStar_Syntax_Syntax.binder_qual = uu___4;
-                            FStar_Syntax_Syntax.binder_attrs = uu___5;_}::bs2
+                            FStar_Syntax_Syntax.binder_positivity = uu___5;
+                            FStar_Syntax_Syntax.binder_attrs = uu___6;_}::bs2
                             ->
                             FStar_Compiler_Effect.op_Bar_Greater bs2
                               (FStar_Syntax_Subst.subst_binders
@@ -7704,13 +7712,14 @@ let (get_field_projector_name :
                            match uu___4 with
                            | { FStar_Syntax_Syntax.binder_bv = uu___5;
                                FStar_Syntax_Syntax.binder_qual = q;
-                               FStar_Syntax_Syntax.binder_attrs = uu___6;_}
+                               FStar_Syntax_Syntax.binder_positivity = uu___6;
+                               FStar_Syntax_Syntax.binder_attrs = uu___7;_}
                                ->
                                (match q with
                                 | FStar_Pervasives_Native.Some
                                     (FStar_Syntax_Syntax.Implicit (true)) ->
                                     false
-                                | uu___7 -> true))) in
+                                | uu___8 -> true))) in
                  if (FStar_Compiler_List.length bs1) <= index
                  then err (FStar_Compiler_List.length bs1)
                  else
