@@ -264,7 +264,7 @@ val read_pred (_:unit) (#b:erased bool)
     (expects (pts_to r1 full_perm n1 *
               pts_to r2 full_perm n2))
     (provides (fun _ -> pts_to r1 full_perm 1ul *
-                     pts_to r2 full_perm 1ul))
+                        pts_to r2 full_perm 1ul))
     (
       par
         (pts_to r1 full_perm n1)
@@ -275,4 +275,18 @@ val read_pred (_:unit) (#b:erased bool)
         (write r2 1ul)
         (fun _ -> pts_to r2 full_perm 1ul)
     )
+)))
+
+// A test for rewrite
+let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
+
+%splice_t[rewrite_test] (check (`(
+		fun (r:ref U32.t) (n:erased U32.t) ->
+				(expects (mpts_to r n))
+				(provides (fun _ -> mpts_to r 1ul))
+				(
+						rewrite (mpts_to r n) (pts_to r full_perm n);
+						write r 1ul;
+						rewrite (pts_to r full_perm 1ul) (mpts_to r 1ul)
+				)
 )))
