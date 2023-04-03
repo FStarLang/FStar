@@ -69,6 +69,11 @@ let (js_int : FStar_Compiler_Util.json -> Prims.int) =
     match uu___ with
     | FStar_Compiler_Util.JsonInt i -> i
     | other -> js_fail "int" other
+let (js_bool : FStar_Compiler_Util.json -> Prims.bool) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Compiler_Util.JsonBool b -> b
+    | other -> js_fail "int" other
 let (js_str : FStar_Compiler_Util.json -> Prims.string) =
   fun uu___ ->
     match uu___ with

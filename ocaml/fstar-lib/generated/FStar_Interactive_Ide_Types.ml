@@ -151,16 +151,15 @@ let (uu___is_Noop : repl_task -> Prims.bool) =
   fun projectee -> match projectee with | Noop -> true | uu___ -> false
 type full_buffer_request_kind =
   | Full 
-  | LaxWithSymbols 
+  | Lax 
   | Cache 
   | ReloadDeps 
   | VerifyToPosition of position 
   | LaxToPosition of position 
 let (uu___is_Full : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
-let (uu___is_LaxWithSymbols : full_buffer_request_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | LaxWithSymbols -> true | uu___ -> false
+let (uu___is_Lax : full_buffer_request_kind -> Prims.bool) =
+  fun projectee -> match projectee with | Lax -> true | uu___ -> false
 let (uu___is_Cache : full_buffer_request_kind -> Prims.bool) =
   fun projectee -> match projectee with | Cache -> true | uu___ -> false
 let (uu___is_ReloadDeps : full_buffer_request_kind -> Prims.bool) =
@@ -193,13 +192,14 @@ type query' =
   | Search of Prims.string 
   | GenericError of Prims.string 
   | ProtocolViolation of Prims.string 
-  | FullBuffer of (Prims.string * full_buffer_request_kind) 
+  | FullBuffer of (Prims.string * full_buffer_request_kind * Prims.bool) 
   | Callback of
   (repl_state ->
      ((query_status * FStar_Compiler_Util.json Prims.list) * (repl_state,
        Prims.int) FStar_Pervasives.either))
   
   | Format of Prims.string 
+  | RestartSolver 
   | Cancel of position FStar_Pervasives_Native.option 
 and query = {
   qq: query' ;
@@ -277,7 +277,7 @@ let (uu___is_FullBuffer : query' -> Prims.bool) =
   fun projectee ->
     match projectee with | FullBuffer _0 -> true | uu___ -> false
 let (__proj__FullBuffer__item___0 :
-  query' -> (Prims.string * full_buffer_request_kind)) =
+  query' -> (Prims.string * full_buffer_request_kind * Prims.bool)) =
   fun projectee -> match projectee with | FullBuffer _0 -> _0
 let (uu___is_Callback : query' -> Prims.bool) =
   fun projectee ->
@@ -292,6 +292,9 @@ let (uu___is_Format : query' -> Prims.bool) =
   fun projectee -> match projectee with | Format _0 -> true | uu___ -> false
 let (__proj__Format__item___0 : query' -> Prims.string) =
   fun projectee -> match projectee with | Format _0 -> _0
+let (uu___is_RestartSolver : query' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | RestartSolver -> true | uu___ -> false
 let (uu___is_Cancel : query' -> Prims.bool) =
   fun projectee -> match projectee with | Cancel _0 -> true | uu___ -> false
 let (__proj__Cancel__item___0 :
@@ -501,6 +504,7 @@ let (query_to_string : query -> Prims.string) =
     | FullBuffer uu___ -> "FullBuffer"
     | Callback uu___ -> "Callback"
     | Format uu___ -> "Format"
+    | RestartSolver -> "RestartSolver"
     | Cancel uu___ -> "Cancel"
 let (query_needs_current_module : query' -> Prims.bool) =
   fun uu___ ->
@@ -520,6 +524,7 @@ let (query_needs_current_module : query' -> Prims.bool) =
     | FullBuffer uu___1 -> false
     | Callback uu___1 -> false
     | Format uu___1 -> false
+    | RestartSolver -> false
     | Cancel uu___1 -> false
     | Push uu___1 -> true
     | AutoComplete uu___1 -> true
@@ -551,6 +556,7 @@ let (interactive_protocol_features : Prims.string Prims.list) =
   "progress";
   "full-buffer";
   "format";
+  "restart-solver";
   "cancel"]
 let (json_of_issue_level :
   FStar_Errors.issue_level -> FStar_Compiler_Util.json) =

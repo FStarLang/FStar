@@ -27,3 +27,4 @@ val modul_to_document  : FStar.Parser.AST.modul -> FStar.Pprint.document
 val comments_to_document : list (string * FStar.Compiler.Range.range) -> FStar.Pprint.document
 val modul_with_comments_to_document : FStar.Parser.AST.modul -> list (string * FStar.Compiler.Range.range) -> FStar.Pprint.document * list (string * FStar.Compiler.Range.range)
 val handleable_args_length : FStar.Ident.ident -> int
+val decl_with_comments_to_document : FStar.Parser.AST.decl -> list (string * FStar.Compiler.Range.range) -> FStar.Pprint.document * list (string * FStar.Compiler.Range.range)

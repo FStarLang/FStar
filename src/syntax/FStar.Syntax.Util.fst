@@ -1361,11 +1361,6 @@ let mk_has_type t x t' =
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) dummyRange
 
-let mk_with_type u t e =
-    let t_with_type = fvar PC.with_type_lid delta_equational None in
-    let t_with_type = mk (Tm_uinst(t_with_type, [u])) dummyRange in
-    mk (Tm_app(t_with_type, [iarg t; as_arg e])) dummyRange
-
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let texists  = fvar PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?

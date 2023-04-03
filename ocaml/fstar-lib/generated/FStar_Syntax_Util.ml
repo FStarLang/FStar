@@ -2501,32 +2501,6 @@ let (mk_has_type :
             (t_has_type1, uu___2) in
           FStar_Syntax_Syntax.Tm_app uu___1 in
         FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
-let (mk_with_type :
-  FStar_Syntax_Syntax.universe ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-  =
-  fun u ->
-    fun t ->
-      fun e ->
-        let t_with_type =
-          FStar_Syntax_Syntax.fvar FStar_Parser_Const.with_type_lid
-            FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None in
-        let t_with_type1 =
-          FStar_Syntax_Syntax.mk
-            (FStar_Syntax_Syntax.Tm_uinst (t_with_type, [u]))
-            FStar_Compiler_Range.dummyRange in
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStar_Syntax_Syntax.iarg t in
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Syntax.as_arg e in [uu___5] in
-              uu___3 :: uu___4 in
-            (t_with_type1, uu___2) in
-          FStar_Syntax_Syntax.Tm_app uu___1 in
-        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
 let (tforall : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.forall_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)

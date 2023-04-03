@@ -27,10 +27,12 @@ open FStar.Compiler.Util
 
 (* Various kinds of progress messages to print back to the client *)
 type fragment_progress =
+   | FullBufferStarted
    | FragmentStarted of decl
    | FragmentSuccess of (decl & FStar.Parser.ParseIt.code_fragment & push_kind)
    | FragmentFailed of decl
    | FragmentError of list issue
+   | FullBufferFinished
 
 (* Translates a full-buffer(qid, code) query by
    1. Parsing the code into its declarations
@@ -46,6 +48,7 @@ val run_full_buffer (st:repl_state)
                     (qid:string)
                     (code:string)
                     (full:full_buffer_request_kind)
+                    (with_symbols:bool)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query & list json
 

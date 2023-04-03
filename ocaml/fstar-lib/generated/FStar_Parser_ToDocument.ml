@@ -4887,18 +4887,14 @@ let (extract_decl_range : FStar_Parser_AST.decl -> decl_meta) =
         (Prims.op_Negation
            (FStar_Compiler_List.isEmpty d.FStar_Parser_AST.attrs))
     }
-let (modul_with_comments_to_document :
-  FStar_Parser_AST.modul ->
+let (decls_with_comments_to_document :
+  FStar_Parser_AST.decl Prims.list ->
     (Prims.string * FStar_Compiler_Range.range) Prims.list ->
       (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
         Prims.list))
   =
-  fun m ->
+  fun decls ->
     fun comments ->
-      let decls =
-        match m with
-        | FStar_Parser_AST.Module (uu___, decls1) -> decls1
-        | FStar_Parser_AST.Interface (uu___, decls1, uu___1) -> decls1 in
       match decls with
       | [] -> (FStar_Pprint.empty, comments)
       | d::ds ->
@@ -4918,3 +4914,22 @@ let (modul_with_comments_to_document :
                  FStar_Compiler_Effect.op_Colon_Equals comment_stack [];
                  (let uu___3 = FStar_Pprint.op_Hat_Hat initial_comment doc in
                   (uu___3, comments1)))))
+let (modul_with_comments_to_document :
+  FStar_Parser_AST.modul ->
+    (Prims.string * FStar_Compiler_Range.range) Prims.list ->
+      (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
+        Prims.list))
+  =
+  fun m ->
+    fun comments ->
+      let decls =
+        match m with
+        | FStar_Parser_AST.Module (uu___, decls1) -> decls1
+        | FStar_Parser_AST.Interface (uu___, decls1, uu___1) -> decls1 in
+      decls_with_comments_to_document decls comments
+let (decl_with_comments_to_document :
+  FStar_Parser_AST.decl ->
+    (Prims.string * FStar_Compiler_Range.range) Prims.list ->
+      (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
+        Prims.list))
+  = fun d -> fun comments -> decls_with_comments_to_document [d] comments

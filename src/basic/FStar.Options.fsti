@@ -225,8 +225,6 @@ val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option string
 val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> list (list string * bool)
-val vcgen_optimize_bind_as_seq  : unit    -> bool
-val vcgen_decorate_with_type    : unit    -> bool
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string

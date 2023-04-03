@@ -102,7 +102,7 @@ type repl_task =
 
 type full_buffer_request_kind =
   | Full : full_buffer_request_kind
-  | LaxWithSymbols : full_buffer_request_kind
+  | Lax : full_buffer_request_kind
   | Cache : full_buffer_request_kind
   | ReloadDeps : full_buffer_request_kind
   | VerifyToPosition of position
@@ -124,7 +124,7 @@ type query' =
 | ProtocolViolation of string
 // FullBuffer: To check the full contents of a document.
 // FStar.Interactive.Incremental parses it into chunks and turns this into several Push queries
-| FullBuffer of string & full_buffer_request_kind
+| FullBuffer of string & full_buffer_request_kind & bool //bool is with_symbol
 // Callback: This is an internal query, it cannot be raised by a client.
 // It is useful to inject operations into the query stream.
 // e.g., Incremental uses it print progress messages to the client in between
@@ -132,6 +132,7 @@ type query' =
 | Callback of callback_t
 // Format: pretty-print the F* code in the selection
 | Format of string
+| RestartSolver
 // Cancel: Cancel any remaining pushes that are at or beyond the provided position.
 // Cancel all requests if the position is None
 | Cancel of option position
@@ -259,13 +260,14 @@ let query_to_string q = match q.qq with
 | FullBuffer _ -> "FullBuffer"
 | Callback _ -> "Callback"
 | Format _ -> "Format"
+| RestartSolver -> "RestartSolver"
 | Cancel _ -> "Cancel"
 
 let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
   | GenericError _ | ProtocolViolation _
-  | FullBuffer _ | Callback _ | Format _ | Cancel _ -> false
+  | FullBuffer _ | Callback _ | Format _ | RestartSolver | Cancel _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
 let interactive_protocol_vernum = 2
@@ -277,7 +279,7 @@ let interactive_protocol_features =
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress";
-   "full-buffer"; "format"; "cancel"]
+   "full-buffer"; "format"; "restart-solver"; "cancel"]
 
 let json_of_issue_level i =
   JsonStr (match i with
