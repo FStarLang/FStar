@@ -212,6 +212,7 @@ let elim_fv = mk_tests_lid "elim"
 let while_fv = mk_tests_lid "while"
 let invariant_fv = mk_tests_lid "invariant"
 let par_fv = mk_tests_lid "par"
+let rewrite_fv = mk_tests_lid "rewrite"
 
 //
 // shift bvs > n by -1
@@ -500,6 +501,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
                translate_while g;
                translate_par g;
                translate_admit g;
+															translate_rewrite g;
                translate_st_app_or_return g]
               t
                
@@ -564,6 +566,23 @@ and translate_while (g:RT.fstar_top_env) (t:R.term)
            | _ -> Inr "WHILE: Wrong number of arguments to while"
       else Inr "WHILE: Not while"
     | _ -> Inr "WHILE: Not a variable at the head"
+
+and translate_rewrite (g:RT.fstar_top_env) (t:R.term)
+  : T.Tac (err st_term) =
+
+  let open R in
+		let head, args = R.collect_app t in
+		match inspect_ln head with
+		| Tv_FVar v ->
+			 if inspect_fv v = rewrite_fv
+			 then match args with
+					    | [(p, _); (q, _)] ->
+						     let? p = readback_ty g p in
+						     let? q = readback_ty g q in
+						     Inl (Tm_Rewrite p q)
+					    | _ -> Inr "REWRITE: Wrong number of arguments to rewrite"
+			 else Inr "REWRITE: Not rewrite"
+	 | _ ->	Inr "REWRITE: Not a variable at the head" 
 
 and translate_par (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term) =
