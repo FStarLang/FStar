@@ -264,6 +264,7 @@ let unpack_interactive_query json =
            | "vfs-add" -> VfsAdd (try_arg "filename" |> Util.map_option js_str,
                                  arg "contents" |> js_str)
            | "format" -> Format (arg "code" |> js_str)
+           | "restart-solver" -> RestartSolver
            | "cancel" -> Cancel (Some("<input>", arg "cancel-line" |> js_int, arg "cancel-column" |> js_int))
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
   with
@@ -1101,6 +1102,9 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
     f st
   | Format code ->
     as_json_list (run_format_code st code)
+  | RestartSolver ->
+    st.repl_env.solver.refresh();
+    (QueryOK, []), Inl st
   | Cancel _ ->
     //This should be handled in the fold_query loop above
     (QueryOK, []), Inl st

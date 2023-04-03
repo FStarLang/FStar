@@ -540,6 +540,8 @@ let (unpack_interactive_query :
                      FStar_Compiler_Effect.op_Bar_Greater uu___3
                        FStar_Interactive_JsonHelper.js_str in
                    FStar_Interactive_Ide_Types.Format uu___2
+               | "restart-solver" ->
+                   FStar_Interactive_Ide_Types.RestartSolver
                | "cancel" ->
                    let uu___2 =
                      let uu___3 =
@@ -2780,6 +2782,11 @@ let rec (run_query :
       | FStar_Interactive_Ide_Types.Callback f -> f st
       | FStar_Interactive_Ide_Types.Format code ->
           let uu___ = run_format_code st code in as_json_list uu___
+      | FStar_Interactive_Ide_Types.RestartSolver ->
+          (((st.FStar_Interactive_Ide_Types.repl_env).FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
+             ();
+           ((FStar_Interactive_Ide_Types.QueryOK, []),
+             (FStar_Pervasives.Inl st)))
       | FStar_Interactive_Ide_Types.Cancel uu___ ->
           ((FStar_Interactive_Ide_Types.QueryOK, []),
             (FStar_Pervasives.Inl st))

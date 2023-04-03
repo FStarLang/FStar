@@ -132,6 +132,7 @@ type query' =
 | Callback of callback_t
 // Format: pretty-print the F* code in the selection
 | Format of string
+| RestartSolver
 // Cancel: Cancel any remaining pushes that are at or beyond the provided position.
 // Cancel all requests if the position is None
 | Cancel of option position
@@ -259,13 +260,14 @@ let query_to_string q = match q.qq with
 | FullBuffer _ -> "FullBuffer"
 | Callback _ -> "Callback"
 | Format _ -> "Format"
+| RestartSolver -> "RestartSolver"
 | Cancel _ -> "Cancel"
 
 let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
   | GenericError _ | ProtocolViolation _
-  | FullBuffer _ | Callback _ | Format _ | Cancel _ -> false
+  | FullBuffer _ | Callback _ | Format _ | RestartSolver | Cancel _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
 let interactive_protocol_vernum = 2
@@ -277,7 +279,7 @@ let interactive_protocol_features =
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress";
-   "full-buffer"; "format"; "cancel"]
+   "full-buffer"; "format"; "restart-solver"; "cancel"]
 
 let json_of_issue_level i =
   JsonStr (match i with

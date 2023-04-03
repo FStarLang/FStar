@@ -199,6 +199,7 @@ type query' =
        Prims.int) FStar_Pervasives.either))
   
   | Format of Prims.string 
+  | RestartSolver 
   | Cancel of position FStar_Pervasives_Native.option 
 and query = {
   qq: query' ;
@@ -291,6 +292,9 @@ let (uu___is_Format : query' -> Prims.bool) =
   fun projectee -> match projectee with | Format _0 -> true | uu___ -> false
 let (__proj__Format__item___0 : query' -> Prims.string) =
   fun projectee -> match projectee with | Format _0 -> _0
+let (uu___is_RestartSolver : query' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | RestartSolver -> true | uu___ -> false
 let (uu___is_Cancel : query' -> Prims.bool) =
   fun projectee -> match projectee with | Cancel _0 -> true | uu___ -> false
 let (__proj__Cancel__item___0 :
@@ -500,6 +504,7 @@ let (query_to_string : query -> Prims.string) =
     | FullBuffer uu___ -> "FullBuffer"
     | Callback uu___ -> "Callback"
     | Format uu___ -> "Format"
+    | RestartSolver -> "RestartSolver"
     | Cancel uu___ -> "Cancel"
 let (query_needs_current_module : query' -> Prims.bool) =
   fun uu___ ->
@@ -519,6 +524,7 @@ let (query_needs_current_module : query' -> Prims.bool) =
     | FullBuffer uu___1 -> false
     | Callback uu___1 -> false
     | Format uu___1 -> false
+    | RestartSolver -> false
     | Cancel uu___1 -> false
     | Push uu___1 -> true
     | AutoComplete uu___1 -> true
@@ -550,6 +556,7 @@ let (interactive_protocol_features : Prims.string Prims.list) =
   "progress";
   "full-buffer";
   "format";
+  "restart-solver";
   "cancel"]
 let (json_of_issue_level :
   FStar_Errors.issue_level -> FStar_Compiler_Util.json) =
