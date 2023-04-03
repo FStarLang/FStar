@@ -436,6 +436,8 @@ val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a
     See examples/dsls/ for more details
     Following APIs are part of the framework *)
 
+(** TODO: maybe the equiv APIs should require typing of the arguments? *)
+
 val subtyping_token (g:env) (t0 t1:typ) : Type0
 
 val equiv_token (g:env) (t0 t1:typ) : Type0

@@ -149,6 +149,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' eR x i;
       freevars_close_term' postR x (i + 1)
 
+    | Tm_Rewrite p q ->
+				  freevars_close_term' p x i;
+						freevars_close_term' q x i
+
     | Tm_Admit _ _ t post ->
       freevars_close_term' t x i;
       freevars_close_term_opt' post x (i + 1)
@@ -451,6 +455,10 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      st_typing_freevars eR_typing;
      freevars_open_term (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
      freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0
+
+   | T_Rewrite _ _ _ p_typing equiv_p_q ->
+			  tot_typing_freevars p_typing;
+					vprop_equiv_freevars equiv_p_q
 
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
      tot_typing_freevars t_typing;

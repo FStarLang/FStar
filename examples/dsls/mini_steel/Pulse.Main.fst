@@ -311,6 +311,10 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
            (shift_bvs_in_else_st eR n)
            (shift_bvs_in_else postR (n + 1))
 
+  | Tm_Rewrite p q ->
+		  Tm_Rewrite (shift_bvs_in_else p n)
+				           (shift_bvs_in_else q n)
+
   | Tm_Admit c u t post ->
     Tm_Admit c u (shift_bvs_in_else t n)
                  (match post with

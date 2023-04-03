@@ -10118,7 +10118,7 @@ let attrs =     ( Some x ) in
 let op =               ( mk_ident ("let" ^ op, rhs parseState 1) ) in
     ( let lbs = (op, b)::lbs in
       mk_term (LetOperator ( List.map (fun (op, (pat, tm)) -> (op, pat, tm)) lbs
-			   , e)) (rhs2 parseState 1 4) Expr
+			   , e)) (rhs2 parseState 1 5) Expr
     ))
 # 10110 "parse.ml"
                : 'noSeqTerm))

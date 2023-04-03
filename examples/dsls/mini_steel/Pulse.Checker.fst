@@ -967,6 +967,7 @@ let rec print_st_head (t:st_term) =
   | Tm_While _ _ _ -> "While"
   | Tm_Admit _ _ _ _ -> "Admit"
   | Tm_Par _ _ _ _ _ _ -> "Par"
+		| Tm_Rewrite _ _ -> "Rewrite"
   | Tm_STApp p _ _ -> print_head p
   | Tm_IntroExists _ _ _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"  
@@ -988,6 +989,7 @@ let rec print_skel (t:st_term) =
   | Tm_While _ _ _ -> "While"
   | Tm_Admit _ _ _ _ -> "Admit"
   | Tm_Par _ _ _ _ _ _ -> "Par"
+		| Tm_Rewrite _ _ -> "Rewrite"
   | Tm_STApp p _ _ -> print_head p
   | Tm_IntroExists _ _ _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"
@@ -1032,6 +1034,29 @@ let check_par
       repack (try_frame_pre pre_typing d) post_hint true
     else T.fail "par: cR is not stt"
   else T.fail "par: cL is not stt"
+
+let check_rewrite
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_Rewrite? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+		
+		let Tm_Rewrite	p q = t in
+		let (| p, p_typing |) = check_vprop f g p in
+		let (| q, q_typing |) = check_vprop f g q in
+		let equiv_p_q =
+		  if eq_tm p q
+				then VE_Refl g p
+				else match T.check_equiv (extend_env_l f g) (elab_term p) (elab_term q) with
+				    | None -> T.fail "rewrite: p and q elabs are not equiv"
+								| Some token -> VE_Ext g p q token in
+		let d = T_Rewrite _ p q p_typing equiv_p_q in
+		repack (try_frame_pre pre_typing d) post_hint true
 
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
@@ -1098,6 +1123,9 @@ let rec check' : bool -> check_t =
 
     | Tm_Par _ _ _ _ _ _ ->
       check_par allow_inst f g t pre pre_typing post_hint check'
+
+				| Tm_Rewrite _ _ ->
+				  check_rewrite f g t pre pre_typing post_hint
   with
   | Framing_failure failure ->
     handle_framing_failure f g t pre pre_typing post_hint failure (check' true)

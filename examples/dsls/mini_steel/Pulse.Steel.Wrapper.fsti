@@ -215,6 +215,8 @@ let squash_non_informative (a:Type u#a) : non_informative_witness (squash  u#a a
 
 (***** end computation types and combinators *****)
 
+val rewrite (p:vprop) (q:vprop) (_:vprop_equiv p q)
+  : stt_ghost unit emp_inames p (fun _ -> q)
 
 module G = FStar.Ghost
 module R = Steel.ST.Reference

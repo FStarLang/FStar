@@ -119,6 +119,7 @@ type st_term =
   | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
   | Tm_Par        : term -> st_term -> term -> term -> st_term -> term -> st_term  // (pre, e, post) for left and right computations
 
+  | Tm_Rewrite    : term -> term -> st_term
   | Tm_Admit      : ctag -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
   | Tm_Protect    : st_term -> st_term //Wrap a term to indicate that no proof-automation heuristics should be applied 
 
@@ -205,6 +206,9 @@ let rec freevars_st (t:st_term)
         (Set.union (freevars preR)
                    (Set.union (freevars_st eR)
                               (freevars postR)))
+
+    | Tm_Rewrite t1 t2 ->
+						Set.union (freevars t1) (freevars t2)
 
     | Tm_Admit _ _ t post ->
       Set.union (freevars t) (freevars_opt post)
@@ -312,12 +316,16 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' body i
 
     | Tm_Par preL eL postL preR eR postR ->
-       ln' preL i &&
-       ln_st' eL i &&
-       ln' postL (i + 1) &&
-       ln' preR i &&
-       ln_st' eR i &&
-       ln' postR (i + 1)
+      ln' preL i &&
+      ln_st' eL i &&
+      ln' postL (i + 1) &&
+      ln' preR i &&
+      ln_st' eR i &&
+      ln' postR (i + 1)
+
+    | Tm_Rewrite t1 t2 ->
+						ln' t1 i &&
+						ln' t2 i
 
     | Tm_Admit _ _ t post ->
       ln' t i &&
@@ -466,6 +474,10 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
              (open_term' preR v i)
              (open_st_term' eR v i)
              (open_term' postR v (i + 1))
+
+    | Tm_Rewrite	e1 e2 ->
+						Tm_Rewrite (open_term' e1 v i)
+																	(open_term' e2 v i)
 
     | Tm_Admit c u t post ->
       Tm_Admit c u (open_term' t v i)
@@ -617,6 +629,10 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
              (close_term' preR v i)
              (close_st_term' eR v i)
              (close_term' postR v (i + 1))
+
+    | Tm_Rewrite	e1 e2 ->
+						Tm_Rewrite (close_term' e1 v i)
+																	(close_term' e2 v i)
 
     | Tm_Admit c u t post ->
       Tm_Admit c u (close_term' t v i)
@@ -814,6 +830,10 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' eR x i;
       close_open_inverse' postR x (i + 1)
 
+    | Tm_Rewrite	t1 t2 ->
+						close_open_inverse' t1 x i;
+						close_open_inverse' t2 x i
+
     | Tm_Admit _ _ t post ->
       close_open_inverse' t x i;
       close_open_inverse_opt' post x (i + 1)
@@ -978,6 +998,10 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm preR1 preR2 &&
       eq_st_term eR1 eR2 &&
       eq_tm postR1 postR2
+
+    | Tm_Rewrite	e1 e2, Tm_Rewrite e3 e4 ->
+						eq_tm e1 e3 &&
+						eq_tm e2 e4
 
     | Tm_Admit c1 u1 t1 post1, Tm_Admit c2 u2 t2 post2 ->
       c1 = c2 &&
