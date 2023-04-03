@@ -208,6 +208,16 @@ let non_informative_witness_rt (u:R.universe) (a:R.term) : R.term =
   let t = pack_ln (Tv_App t (a, Q_Explicit)) in
   t
 
+
+let stt_vprop_equiv_fv =
+  R.pack_fv (mk_steel_wrapper_lid "vprop_equiv")
+let stt_vprop_equiv_tm =
+  R.pack_ln (R.Tv_FVar stt_vprop_equiv_fv)
+let stt_vprop_equiv (t1 t2:R.term) =
+  let open R in
+		let t = pack_ln (Tv_App stt_vprop_equiv_tm (t1, Q_Explicit)) in
+		pack_ln (Tv_App t (t2, Q_Explicit))
+
 let return_stt_lid = mk_steel_wrapper_lid "return_stt"
 let return_stt_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
 let return_stt_atomic_lid = mk_steel_wrapper_lid "return_stt_atomic"
@@ -477,3 +487,10 @@ let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
   let t = pack_ln (Tv_App t (postR, Q_Implicit)) in
   let t = pack_ln (Tv_App t (eL, Q_Explicit)) in
   pack_ln (Tv_App t (eR, Q_Explicit))
+
+let mk_rewrite (p q:R.term) =
+  let open R in
+		let t = pack_ln (Tv_FVar (pack_fv (mk_steel_wrapper_lid "rewrite"))) in
+		let t = pack_ln (Tv_App t (p, Q_Explicit)) in
+		let t = pack_ln (Tv_App t (q, Q_Explicit)) in
+		pack_ln (Tv_App t (`(), Q_Explicit))

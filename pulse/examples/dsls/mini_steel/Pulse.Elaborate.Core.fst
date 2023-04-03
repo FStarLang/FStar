@@ -216,7 +216,12 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
         (mk_abs raL R.Q_Explicit rpostL)
         rpreR
         (mk_abs raR R.Q_Explicit rpostR)
-        reL reR      
+        reL reR
+
+				| T_Rewrite _ p q _ _ ->
+				  let rp = elab_term p in
+						let rq = elab_term q in
+						mk_rewrite rp rq
 
     | T_Admit _ {u;res;pre;post} c _ ->
       let ru = elab_universe u in

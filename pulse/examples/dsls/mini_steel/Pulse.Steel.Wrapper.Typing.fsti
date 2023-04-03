@@ -320,3 +320,20 @@ val stt_ghost_admit_typing
   : GTot (RT.typing g
                     (mk_stt_ghost_admit u a p q)
                     (mk_stt_ghost_comp u a emp_inames_tm p q))
+
+val rewrite_typing
+  (#g:env)
+		(#p:term)
+		(#q:term)
+		(p_typing:RT.typing g p vprop_tm)
+		(q_typing:RT.typing g q vprop_tm)
+		(equiv:RT.typing g (`()) (stt_vprop_equiv p q))
+
+		: GTot (RT.typing g
+		                  (mk_rewrite p q)
+																				(mk_stt_ghost_comp
+																				   uzero
+																							unit_tm
+																							emp_inames_tm
+																							p
+																							(mk_abs unit_tm Q_Explicit q)))

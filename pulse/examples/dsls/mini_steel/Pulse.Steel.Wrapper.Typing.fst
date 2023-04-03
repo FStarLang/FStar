@@ -24,3 +24,5 @@ let intro_exists_erased_typing _ _ _ = admit ()
 let stt_admit_typing _ _ _ = admit ()
 let stt_atomic_admit_typing _ _ _ = admit ()
 let stt_ghost_admit_typing _ _ _ = admit ()
+
+let rewrite_typing _ _ _ = admit ()

@@ -181,6 +181,8 @@ let sub_stt_ghost #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
   rewrite_equiv (post1 x) (post2 x);
   x
 
+let rewrite p q _ = fun _ -> rewrite_equiv p q
+
 module R = Steel.ST.Reference
 open Steel.ST.Util
 

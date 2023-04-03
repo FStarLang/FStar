@@ -161,6 +161,10 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' eR x i;
       open_term_ln' postR x (i + 1)
 
+    | Tm_Rewrite p q ->
+				  open_term_ln' p x i;
+						open_term_ln' q x i
+
     | Tm_Admit _ _ t post ->
       open_term_ln' t x i;
       open_term_ln_opt' post x (i + 1)
@@ -319,6 +323,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st eR i j;
       ln_weakening postR (i + 1) (j + 1)
 
+    | Tm_Rewrite p q ->
+				  ln_weakening p i j;
+						ln_weakening q i j
+
     | Tm_Admit _ _ t post ->
       ln_weakening t i j;
       ln_weakening_opt post (i + 1) (j + 1)
@@ -472,6 +480,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' eR x i;
       open_term_ln_inv' postR x (i + 1)
 
+    | Tm_Rewrite p q ->
+				  open_term_ln_inv' p x i;
+						open_term_ln_inv' q x i
+
     | Tm_Admit _ _ t post ->
       open_term_ln_inv' t x i;
       open_term_ln_inv_opt' post x (i + 1)
@@ -618,6 +630,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' preR x i;
       close_st_term_ln' eR x i;
       close_term_ln' postR x (i + 1)
+
+    | Tm_Rewrite p q ->
+				  close_term_ln' p x i;
+						close_term_ln' q x i
 
     | Tm_Admit _ _ t post ->
       close_term_ln' t x i;
@@ -780,6 +796,10 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       close_term_ln' (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0) x 0;
       open_term_ln_inv' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
       close_term_ln' (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0) x 0
+
+    | T_Rewrite _ _ _ p_typing equiv_p_q ->
+				  tot_typing_ln p_typing;
+						vprop_equiv_ln equiv_p_q
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_typing_ln t_typing;

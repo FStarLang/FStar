@@ -209,6 +209,11 @@ let rec st_term_to_string (t:st_term)
         (st_term_to_string eR)
         (term_to_string postR)
 
+				| Tm_Rewrite p q ->
+				  sprintf "rewrite %s %s"
+						  (term_to_string p)
+								(term_to_string q)
+
     | Tm_Admit c u t post ->
       sprintf "%s<%s> %s%s"
         (match c with
