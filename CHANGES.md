@@ -546,6 +546,10 @@ Guidelines for the changelog:
      expected output location, we raise Warning 321.
 
 ## Command line options
+   * F* no longer supports the vcgen.optimize_bind_as_seq command line
+			  option for tweaking the verification condition generation.
+					The option was not on by-default, and hence was not maintained well.
+					Further, as issue #2868 observed, it relied on a strange SMT axiom.
 
    * [Issue #2385](https://github.com/FStarLang/FStar/issues/2385).
      The behavior of the --extract option was changed so that it no
