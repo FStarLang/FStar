@@ -2,19 +2,14 @@ all: world
 
 FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
 export FSTAR_HOME
-ifdef KRML_HOME # FIXME: should be HAS_OCAML
-FSTAR_EXE = $(CURDIR)/my_fstar/bin/fstar.exe
-else # no KRML_HOME
 FSTAR_EXE = $(FSTAR_HOME)/bin/fstar.exe
-endif
-FSTAR_LIB ?= $(realpath $(FSTAR_HOME)/ulib)
-export FSTAR_LIB
 
 INCLUDE_PATH := $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental
 
 ifdef KRML_HOME
 KRML_EXE = $(KRML_HOME)/krml
-INCLUDE_PATH += $(KRML_HOME)/krmllib $(KRML_HOME)/krmllib/obj
+MY_FSTAR_PATH=$(CURDIR)/my_fstar
+INCLUDE_PATH += $(KRML_HOME)/krmllib $(KRML_HOME)/krmllib/obj $(MY_FSTAR_PATH)/lib/steel_c
 endif
 
 world: verify test fstlib
@@ -22,12 +17,16 @@ world: verify test fstlib
 fstlib:
 	+$(MAKE) -C $@
 
-FSTAR_OPTIONS = --cache_checked_modules \
+FSTAR_OPTIONS := --cache_checked_modules \
 		--cmi \
 		--compat_pre_typed_indexed_effects \
 	        --already_cached 'Prims,FStar,LowStar,Steel' \
 		$(addprefix --include ,$(INCLUDE_PATH)) \
 		$(OTHERFLAGS)
+
+ifdef KRML_HOME
+FSTAR_OPTIONS += --load ExtractSteelC
+endif
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_OPTIONS)
 
@@ -42,9 +41,9 @@ ifdef KRML_HOME # FIXME: should be HAS_OCAML
 # since the KaRaMeL AST does not have a node for null
 # TODO: This should be removed, and support for Steel.C null should be directly added to KaRaMeL instead
 SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOME)/ulib/LowStar.Buffer.fst $(KRML_HOME)/krmllib/C.fst
-MY_FSTAR=$(FSTAR_EXE)
-$(FSTAR_EXE):
-	+$(MAKE) -C my_fstar
+MY_FSTAR=$(MY_FSTAR_PATH)/lib/steel_c/ExtractSteelC.cmxs
+$(MY_FSTAR):
+	+$(MAKE) -C $(MY_FSTAR_PATH)
 endif
 
 .depend: $(ALL_SOURCE_FILES) Makefile $(MY_FSTAR)

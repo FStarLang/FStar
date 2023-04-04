@@ -1,6 +1,8 @@
 all: world
 
-world: $(CURDIR)/bin/fstar.exe
+MY_OBJ=$(CURDIR)/lib/steel_c/ExtractSteelC.cmxs
+
+world: $(MY_OBJ)
 
 FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
 FSTAR_EXE = $(FSTAR_HOME)/bin/fstar.exe
@@ -25,5 +27,5 @@ $(EXTRACT_FILES): %.ml: %.fst
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $<))
 
-$(CURDIR)/bin/fstar.exe: ExtractSteelC.fst ExtractSteelC.fsti Makefile main.ml
+$(MY_OBJ): ExtractSteelC.fst ExtractSteelC.fsti Makefile
 	OCAMLPATH=$(FSTAR_HOME)/lib dune build && dune install --prefix=$(CURDIR)

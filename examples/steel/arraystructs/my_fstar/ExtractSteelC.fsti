@@ -1,3 +1,2 @@
 module ExtractSteelC
-
-val main: unit -> FStar.Compiler.Effect.ML unit
+(* this interface is necessary because ExtractSteelC `friend`s FStar.Extraction.Krml *)

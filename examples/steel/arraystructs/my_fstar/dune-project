@@ -1,8 +1,8 @@
 (lang dune 3.2)
-(name fstar-steel-c)
+(name steel_c)
 (generate_opam_files false)
 
 (package
-  (name fstar-steel-c)
+  (name steel_c)
   (synopsis "The F* programming language and proof assistant with extraction of Steel files to C")
 )
