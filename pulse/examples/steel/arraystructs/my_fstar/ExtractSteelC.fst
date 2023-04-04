@@ -482,12 +482,8 @@ let my_type_decls () = register_pre_translate_type_decl begin fun env ty ->
     | _ -> raise NotSupportedByKrmlExtension
 end
 
-let register () =
+let _ =
   my_types_without_decay ();
   my_types ();
   my_exprs ();
   my_type_decls ()
-
-let main () =
-  register ();
-  FStar.Main.main ()
