@@ -436,3 +436,7 @@ let a_to_bool_bad ([@@@strictly_positive] a:Type) = a_to_bool a
 
 [@@expect_failure] 
 let a_to_bool_bad : ([@@@strictly_positive] a:Type -> Type) = a_to_bool
+
+val pos ([@@@strictly_positive] a : Type0) : Type0
+type pos (a:Type0) =
+  | MkPos : a -> pos a 

@@ -1862,10 +1862,10 @@ let (check_inductive_well_typedness :
                                                             FStar_Syntax_Syntax.binder_qual
                                                               = uu___8;
                                                             FStar_Syntax_Syntax.binder_positivity
-                                                              = uu___9;
+                                                              = pqual;
                                                             FStar_Syntax_Syntax.binder_attrs
                                                               = attrs;_}
-                                                            -> attrs)) in
+                                                            -> (attrs, pqual))) in
                                               if
                                                 (FStar_Compiler_List.length
                                                    expected_attrs)
@@ -1896,25 +1896,61 @@ let (check_inductive_well_typedness :
                                                   se.FStar_Syntax_Syntax.sigrng
                                               else
                                                 FStar_Compiler_List.map2
-                                                  (fun ex_attrs ->
+                                                  (fun uu___6 ->
                                                      fun b ->
-                                                       {
-                                                         FStar_Syntax_Syntax.binder_bv
-                                                           =
-                                                           (b.FStar_Syntax_Syntax.binder_bv);
-                                                         FStar_Syntax_Syntax.binder_qual
-                                                           =
-                                                           (b.FStar_Syntax_Syntax.binder_qual);
-                                                         FStar_Syntax_Syntax.binder_positivity
-                                                           =
-                                                           (b.FStar_Syntax_Syntax.binder_positivity);
-                                                         FStar_Syntax_Syntax.binder_attrs
-                                                           =
-                                                           (FStar_Compiler_List.op_At
-                                                              b.FStar_Syntax_Syntax.binder_attrs
-                                                              ex_attrs)
-                                                       }) expected_attrs
-                                                  binders1 in
+                                                       match uu___6 with
+                                                       | (ex_attrs, pqual) ->
+                                                           ((let uu___8 =
+                                                               let uu___9 =
+                                                                 FStar_TypeChecker_Common.check_positivity_qual
+                                                                   true pqual
+                                                                   b.FStar_Syntax_Syntax.binder_positivity in
+                                                               Prims.op_Negation
+                                                                 uu___9 in
+                                                             if uu___8
+                                                             then
+                                                               let uu___9 =
+                                                                 FStar_Syntax_Syntax.range_of_bv
+                                                                   b.FStar_Syntax_Syntax.binder_bv in
+                                                               FStar_Errors.raise_error
+                                                                 (FStar_Errors_Codes.Fatal_UnexpectedInductivetype,
+                                                                   "Incompatible positivity annotation")
+                                                                 uu___9
+                                                             else ());
+                                                            {
+                                                              FStar_Syntax_Syntax.binder_bv
+                                                                =
+                                                                (b.FStar_Syntax_Syntax.binder_bv);
+                                                              FStar_Syntax_Syntax.binder_qual
+                                                                =
+                                                                (b.FStar_Syntax_Syntax.binder_qual);
+                                                              FStar_Syntax_Syntax.binder_positivity
+                                                                = pqual;
+                                                              FStar_Syntax_Syntax.binder_attrs
+                                                                =
+                                                                (FStar_Compiler_List.op_At
+                                                                   b.FStar_Syntax_Syntax.binder_attrs
+                                                                   ex_attrs)
+                                                            }))
+                                                  expected_attrs binders1 in
+                                            let inferred_typ_with_binders
+                                              binders1 =
+                                              let body =
+                                                match binders1 with
+                                                | [] -> typ
+                                                | uu___5 ->
+                                                    let uu___6 =
+                                                      let uu___7 =
+                                                        let uu___8 =
+                                                          FStar_Syntax_Syntax.mk_Total
+                                                            typ in
+                                                        (binders1, uu___8) in
+                                                      FStar_Syntax_Syntax.Tm_arrow
+                                                        uu___7 in
+                                                    FStar_Syntax_Syntax.mk
+                                                      uu___6
+                                                      se.FStar_Syntax_Syntax.sigrng in
+                                              (univs1, body) in
                                             let uu___5 =
                                               FStar_TypeChecker_Env.try_lookup_val_decl
                                                 env0 l in
@@ -1923,24 +1959,6 @@ let (check_inductive_well_typedness :
                                                  -> se
                                              | FStar_Pervasives_Native.Some
                                                  (expected_typ, uu___6) ->
-                                                 let inferred_typ =
-                                                   let body =
-                                                     match binders with
-                                                     | [] -> typ
-                                                     | uu___7 ->
-                                                         let uu___8 =
-                                                           let uu___9 =
-                                                             let uu___10 =
-                                                               FStar_Syntax_Syntax.mk_Total
-                                                                 typ in
-                                                             (binders,
-                                                               uu___10) in
-                                                           FStar_Syntax_Syntax.Tm_arrow
-                                                             uu___9 in
-                                                         FStar_Syntax_Syntax.mk
-                                                           uu___8
-                                                           se.FStar_Syntax_Syntax.sigrng in
-                                                   (univs1, body) in
                                                  if
                                                    (FStar_Compiler_List.length
                                                       univs1)
@@ -1953,17 +1971,23 @@ let (check_inductive_well_typedness :
                                                      FStar_Syntax_Subst.open_univ_vars
                                                        univs1
                                                        (FStar_Pervasives_Native.snd
-                                                          inferred_typ) in
+                                                          expected_typ) in
                                                    (match uu___7 with
-                                                    | (uu___8, inferred) ->
+                                                    | (uu___8, expected) ->
+                                                        let binders1 =
+                                                          copy_binder_attrs_from_val
+                                                            binders expected in
+                                                        let inferred_typ =
+                                                          inferred_typ_with_binders
+                                                            binders1 in
                                                         let uu___9 =
                                                           FStar_Syntax_Subst.open_univ_vars
                                                             univs1
                                                             (FStar_Pervasives_Native.snd
-                                                               expected_typ) in
+                                                               inferred_typ) in
                                                         (match uu___9 with
                                                          | (uu___10,
-                                                            expected) ->
+                                                            inferred) ->
                                                              let uu___11 =
                                                                FStar_TypeChecker_Rel.teq_nosmt_force
                                                                  env0
@@ -1971,10 +1995,6 @@ let (check_inductive_well_typedness :
                                                                  expected in
                                                              if uu___11
                                                              then
-                                                               let binders1 =
-                                                                 copy_binder_attrs_from_val
-                                                                   binders
-                                                                   expected in
                                                                {
                                                                  FStar_Syntax_Syntax.sigel
                                                                    =
@@ -2006,8 +2026,10 @@ let (check_inductive_well_typedness :
                                                                  expected_typ
                                                                  inferred_typ))
                                                  else
-                                                   fail expected_typ
-                                                     inferred_typ)
+                                                   (let uu___8 =
+                                                      inferred_typ_with_binders
+                                                        binders in
+                                                    fail expected_typ uu___8))
                                         | uu___5 -> se)) in
                               let sig_bndle =
                                 let uu___5 =
