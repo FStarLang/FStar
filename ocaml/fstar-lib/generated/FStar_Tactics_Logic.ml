@@ -341,14 +341,7 @@ let (pose_lemma :
                                                                     =
                                                                     FStar_Reflection_Data.Q_Explicit;
                                                                     FStar_Reflection_Data.binder_attrs
-                                                                    =
-                                                                    [
-                                                                    FStar_Reflection_Builtins.pack_ln
-                                                                    (FStar_Reflection_Data.Tv_FVar
-                                                                    (FStar_Reflection_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Pervasives";
-                                                                    "strictly_positive"]))]
+                                                                    = []
                                                                     }), t))),
                                                                     FStar_Reflection_Data.Q_Explicit)))))
                                                             | uu___2 ->
@@ -501,14 +494,7 @@ let (pose_lemma :
                                                                     =
                                                                     FStar_Reflection_Data.Q_Explicit;
                                                                     FStar_Reflection_Data.binder_attrs
-                                                                    =
-                                                                    [
-                                                                    FStar_Reflection_Builtins.pack_ln
-                                                                    (FStar_Reflection_Data.Tv_FVar
-                                                                    (FStar_Reflection_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Pervasives";
-                                                                    "strictly_positive"]))]
+                                                                    = []
                                                                     }),
                                                                     uu___3))),
                                                                     FStar_Reflection_Data.Q_Explicit)))))))
