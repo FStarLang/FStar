@@ -4874,15 +4874,24 @@ let (encode_positivity_attributes :
   =
   fun pqual ->
     fun attrs ->
-      let uu___ = contains_strictly_positive_attribute attrs in
+      let uu___ =
+        (pqual = FStar_Pervasives_Native.None) ||
+          (contains_strictly_positive_attribute attrs) in
       if uu___
       then attrs
       else
-        (let uu___2 =
-           let uu___3 =
-             FStar_Syntax_Syntax.lid_as_fv
-               FStar_Parser_Const.binder_strictly_positive_attr
-               (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
-               FStar_Pervasives_Native.None in
-           FStar_Syntax_Syntax.fv_to_tm uu___3 in
-         uu___2 :: attrs)
+        (let qual =
+           match pqual with
+           | FStar_Pervasives_Native.Some
+               (FStar_Syntax_Syntax.BinderStrictlyPositive) ->
+               let uu___2 =
+                 let uu___3 =
+                   FStar_Syntax_Syntax.lid_as_fv
+                     FStar_Parser_Const.binder_strictly_positive_attr
+                     (FStar_Syntax_Syntax.Delta_constant_at_level
+                        Prims.int_zero) FStar_Pervasives_Native.None in
+                 FStar_Syntax_Syntax.fv_to_tm uu___3 in
+               [uu___2]
+           | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.BinderUnused)
+               -> [] in
+         FStar_Compiler_List.op_At qual attrs)

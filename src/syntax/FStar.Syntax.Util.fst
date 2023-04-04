@@ -2519,6 +2519,14 @@ let parse_positivity_attributes (attrs:list attribute)
 
 let encode_positivity_attributes (pqual:option positivity_qualifier) (attrs:list attribute)
 : list attribute
-= if contains_strictly_positive_attribute attrs
+= if pqual = None || contains_strictly_positive_attribute attrs
   then attrs
-  else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_strictly_positive_attr (Delta_constant_at_level 0) None) :: attrs
+  else let qual =
+        match pqual with
+        | Some BinderStrictlyPositive ->
+          [FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_strictly_positive_attr (Delta_constant_at_level 0) None)]
+        | Some BinderUnused -> 
+          //not yet supported
+          []
+       in
+       qual @ attrs

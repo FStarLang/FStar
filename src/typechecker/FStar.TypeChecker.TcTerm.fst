@@ -2080,9 +2080,19 @@ and tc_abs_check_binders env bs bs_expected use_eq
         // though the actual binder on the abstraction may not ... we use the expected pqual
         // But, it is not ok if the expected binder is not annotated while the
         // actual binder is annnotated as strictly positive.
+        let positivity_qual_to_string = function
+          | None -> "None"
+          | Some BinderStrictlyPositive -> "StrictlyPositive"
+          | Some BinderUnused -> "Unused"
+        in
         if not (Common.check_positivity_qual true pqual_expected pqual_actual)
         then raise_error (Errors.Fatal_InconsistentQualifierAnnotation,
-                            BU.format1 "Inconsistent positivity qualifier on argument %s" (Print.bv_to_string hd))
+                            BU.format3 "Inconsistent positivity qualifier on argument %s; \
+                                        Expected qualifier %s, \
+                                        found qualifier %s" 
+                                        (Print.bv_to_string hd)
+                                        (positivity_qual_to_string pqual_expected)
+                                        (positivity_qual_to_string pqual_actual))
                           (S.range_of_bv hd);
 
         (* since binders depend on previous ones, we accumulate a substitution *)
