@@ -2076,7 +2076,11 @@ and tc_abs_check_binders env bs bs_expected use_eq
                          (S.range_of_bv hd)
         end;
 
-        if pqual_actual <> pqual_expected
+        // The expected binder may be annotated with a positivity attribute
+        // though the actual binder on the abstraction may not ... we use the expected pqual
+        // But, it is not ok if the expected binder is not annotated while the
+        // actual binder is annnotated as strictly positive.
+        if not (Common.check_positivity_qual true pqual_expected pqual_actual)
         then raise_error (Errors.Fatal_InconsistentQualifierAnnotation,
                             BU.format1 "Inconsistent positivity qualifier on argument %s" (Print.bv_to_string hd))
                           (S.range_of_bv hd);

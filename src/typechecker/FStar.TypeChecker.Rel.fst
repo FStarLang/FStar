@@ -1200,7 +1200,7 @@ let pat_vars env ctx args : option binders =
         match hd.n with
         | Tm_name a ->
           if name_exists_in_binders a seen
-          ||  name_exists_in_binders a ctx
+          || name_exists_in_binders a ctx
           then None
           else let bq, attrs = U.bqual_and_attrs_of_aqual i in
                let pq, attrs = U.parse_positivity_attributes attrs in

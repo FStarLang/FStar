@@ -5668,19 +5668,22 @@ and (tc_abs_check_binders :
                          let uu___4 = FStar_Syntax_Syntax.range_of_bv hd in
                          FStar_Errors.raise_error uu___3 uu___4
                        else ());
-                      if pqual_actual <> pqual_expected
-                      then
-                        (let uu___3 =
-                           let uu___4 =
-                             let uu___5 = FStar_Syntax_Print.bv_to_string hd in
+                      (let uu___3 =
+                         FStar_TypeChecker_Common.check_positivity_qual true
+                           pqual_expected pqual_actual in
+                       if not uu___3
+                       then
+                         let uu___4 =
+                           let uu___5 =
+                             let uu___6 = FStar_Syntax_Print.bv_to_string hd in
                              FStar_Compiler_Util.format1
                                "Inconsistent positivity qualifier on argument %s"
-                               uu___5 in
+                               uu___6 in
                            (FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation,
-                             uu___4) in
-                         let uu___4 = FStar_Syntax_Syntax.range_of_bv hd in
-                         FStar_Errors.raise_error uu___3 uu___4)
-                      else ();
+                             uu___5) in
+                         let uu___5 = FStar_Syntax_Syntax.range_of_bv hd in
+                         FStar_Errors.raise_error uu___4 uu___5
+                       else ());
                       (let expected_t =
                          FStar_Syntax_Subst.subst subst
                            hd_expected.FStar_Syntax_Syntax.sort in
