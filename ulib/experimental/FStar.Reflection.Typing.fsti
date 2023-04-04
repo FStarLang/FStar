@@ -28,6 +28,25 @@ module R = FStar.Reflection
 module T = FStar.Tactics
 module FTB = FStar.Tactics.Builtins
 
+let rec fold_left_dec #a #b
+  (acc : a)
+  (l : list b)
+  (f : a -> (x:b{x << l}) -> a)
+  : Tot a (decreases l)
+  =
+  match l with
+  | [] -> acc
+  | x::xs -> fold_left_dec (f acc x) xs f
+
+let rec map_dec #a #b
+  (l : list a)
+  (f : (x:a{x << l}) -> b)
+  : Tot (list b) (decreases l)
+  =
+  match l with
+  | [] -> []
+  | x::xs -> f x :: map_dec xs f
+
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
           [SMTPat R.(inspect_ln (pack_ln t))]
@@ -424,6 +443,9 @@ let eq2 (u:universe) (t v0 v1:term)
     let h2 = pack_ln (Tv_App h1 (v1, Q_Explicit)) in    
     h2
 
+let t_true = `True
+let t_false = `False
+
 let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
 let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
@@ -699,6 +721,55 @@ let mk_if (scrutinee then_ else_:R.term) : R.term =
   pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
                                     (Pat_Constant C_False, else_)])
 
+#set-options "--print_implicits"
+
+let rec elab_pat (p:pattern) : list var * term =
+  match p with
+  | Pat_Var bv
+  | Pat_Wild bv ->
+    [bv_index bv], pack_ln (Tv_Var bv) // fresh?
+    
+  | Pat_Cons ctor us pats ->
+    let hd = pack_ln (Tv_FVar ctor) in
+    let vs_args = map_dec pats (fun (p, q) -> elab_pat p, q) in
+    let vs = List.Tot.flatten (map (fun ((vs, t), q) -> vs) vs_args) in
+    let args = map (fun ((vs, t), q) -> (t, (if q then Q_Implicit else Q_Explicit))) vs_args in
+    vs, mk_app hd args
+    
+  | Pat_Constant c ->
+    [], pack_ln (Tv_Const c)
+  
+  | Pat_Dot_Term (Some t) ->
+    [], t
+
+  // hmm?
+  | Pat_Dot_Term None ->
+    magic()
+
+let rec close_forall_vs (vs : list var) (t : term) : term =
+  match vs with
+  | [] -> t
+  | v::vs -> 
+    `(l_Forall #_ (`#(close_term (close_forall_vs vs t) v)))
+
+let does_not_match (t:term) (p:pattern) : term =
+  let vs, pat_t = elab_pat p in
+  close_forall_vs vs (`(`#pat_t =!= `#t))
+
+// shadowing
+let rec extend_env_pat (g:env) (p:pattern) : Tot env (decreases p) =
+  match p with
+  | Pat_Var bv
+  | Pat_Wild bv ->
+    extend_env g (bv_index bv) (inspect_bv bv).bv_sort
+    
+  | Pat_Cons ctor us pats ->
+    fold_left_dec g pats (fun g (p, _) -> extend_env_pat g p)
+    
+  | Pat_Constant _ 
+  | Pat_Dot_Term _ ->
+    g
+
 [@@ no_auto_projectors]
 noeq
 type typing : env -> term -> term -> Type0 =
@@ -821,7 +892,7 @@ type typing : env -> term -> term -> Type0 =
      branches:list branch ->
      ty:term ->
      typing g scrutinee i_ty ->
-     branches_typing g scrutinee i_ty branches ty ->
+     branches_typing g scrutinee i_ty t_true branches ty ->
      typing g (pack_ln (Tv_Match scrutinee None branches)) ty
 
 and sub_typing : env -> term -> term -> Type0 =
@@ -883,8 +954,32 @@ and equiv : env -> term -> term -> Type0 =
       equiv g t0 t1 ->
       equiv g (apply_term_ctxt ctxt t0) (apply_term_ctxt ctxt t1)
 
-and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
+and branches_typing : (g:env) -> (sc:term) -> (sc_ty:term) -> (hyp:term) -> (brs:list branch) -> (t:term) -> Type0 =
+  | BT_0 :
+    g:env ->
+    sc:term ->
+    sc_ty:typ ->
+    hyp:typ ->
+    t:typ ->
+    typing g (`()) (`squash (`#hyp ==> False)) -> // exhaustiveness
+    branches_typing g sc sc_ty hyp [] t
 
+  | BT_S :
+    g:env ->
+    p:pattern ->
+    body:term ->
+    brs:list branch ->
+    sc:term ->
+    sc_ty:typ ->
+    hyp_var:var { None? (lookup_bvar g hyp_var) } ->
+    hyp:typ ->
+    t:typ ->
+    //pat_exp:term -> // !!!!!!!!!!
+    //typing (extend_env (extend_env_pat g p) hyp_var (eq2 u_zero sc_ty sc pat_exp)) body t ->
+    typing (extend_env_pat g p) body t ->
+    branches_typing g sc sc_ty (`(`#(hyp) /\ `#(sc `does_not_match` p))) brs t ->
+    branches_typing g sc sc_ty hyp ((p,body)::brs) t
+    
 let bindings = list (var & term)
 let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
 
