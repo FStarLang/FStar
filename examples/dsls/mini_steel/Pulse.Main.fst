@@ -2,7 +2,7 @@ module Pulse.Main
 
 module T = FStar.Tactics
 module R = FStar.Reflection
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 open FStar.Tactics
 open Pulse.Syntax
 open Pulse.Reflection.Util

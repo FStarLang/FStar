@@ -2,7 +2,7 @@ module Pulse.Readback
 module R = FStar.Reflection
 module L = FStar.List.Tot
 module T = FStar.Tactics
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Elaborate.Pure
@@ -26,7 +26,7 @@ let rec readback_universe (u:R.universe)
     )
 
   | R.Uv_Name (s, r) ->
-    assume (r == Refl.Typing.Builtins.dummy_range);
+    assume (r == FStar.Reflection.Typing.Builtins.dummy_range);
     Some (U_var s)
 
   | R.Uv_Max [u1; u2] -> (

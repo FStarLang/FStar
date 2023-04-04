@@ -288,7 +288,7 @@ let fresh_is_fresh (e:src_env)
        lookup_mem e (fresh e);
        FStar.Classical.forall_intro (fresh_not_mem e)
 
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 
 let r_b2t (t:R.term) 
   : R.term 

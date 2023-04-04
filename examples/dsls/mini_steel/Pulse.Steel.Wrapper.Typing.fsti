@@ -3,7 +3,7 @@ module Pulse.Steel.Wrapper.Typing
 open FStar.Reflection
 open Pulse.Reflection.Util
 
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 
 let return_post_with_eq (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
   let x_tm = RT.var_as_term x in

@@ -8,7 +8,7 @@ open Pulse.Elaborate.Core
 open Pulse.Soundness.Common
 
 module R = FStar.Reflection
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 
 val stc_soundness
   (#f:stt_env)

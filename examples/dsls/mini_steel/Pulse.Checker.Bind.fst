@@ -1,5 +1,5 @@
 module Pulse.Checker.Bind
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 module R = FStar.Reflection
 module L = FStar.List.Tot
 module T = FStar.Tactics

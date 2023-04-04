@@ -11,9 +11,9 @@ MY_FSTAR=$(FSTAR) \
       --odir $(ML_DIR) \
       $(OTHERFLAGS) 
 
-EXTRACT_SELECTOR=+Pulse +Refl -Pulse.Steel
+EXTRACT_SELECTOR=+Pulse -Pulse.Steel
 
-all: verify_all $(CACHE_DIR)
+all-common: verify_all $(CACHE_DIR)
 
 $(CACHE_DIR):
 	mkdir -p $(CACHE_DIR)
@@ -32,7 +32,7 @@ include .depend
 %.fsti.checked:
 	$(MY_FSTAR) $<
 
-%.ml:
+$(OUTPUT_DIRECTORY)/%.ml:
 	$(MY_FSTAR) --codegen Plugin --extract_module $(basename $(notdir $(subst .checked,,$<))) $(notdir $(subst .checked,,$<))
 
 verify_all: $(ALL_CHECKED_FILES)

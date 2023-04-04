@@ -1,4 +1,4 @@
-INCLUDE_PATHS=../../core .. ../_output/ ../_build/_output
+INCLUDE_PATHS=.. ../_output/ ../_build/_output
 
 FSTAR_FLAGS=$(addprefix --include , $(INCLUDE_PATHS)) \
 	    --cache_checked_modules \

@@ -7,7 +7,7 @@ open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Soundness.Common
 
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 module WT = Pulse.Steel.Wrapper.Typing
 
 let rewrite_soundness

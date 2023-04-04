@@ -1,5 +1,5 @@
 module Pulse.Soundness.VPropEquiv
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 module R = FStar.Reflection
 module L = FStar.List.Tot
 module T = FStar.Tactics
