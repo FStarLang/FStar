@@ -9,7 +9,7 @@ open Pulse.Typing
 open Pulse.Checker.Framing
 module P = Pulse.Syntax.Printer
 
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 
 let rec gen_uvars (t_head:term) : T.Tac (list term & comp) =
   match t_head with

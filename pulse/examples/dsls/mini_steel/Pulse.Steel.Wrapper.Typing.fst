@@ -3,7 +3,7 @@ module Pulse.Steel.Wrapper.Typing
 open FStar.Reflection
 open Pulse.Reflection.Util
 
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 
 let return_stt_typing _ _ _ = admit ()
 let return_stt_noeq_typing _ _ _ = admit ()

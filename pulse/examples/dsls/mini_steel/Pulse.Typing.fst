@@ -1,5 +1,5 @@
 module Pulse.Typing
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
 module R = FStar.Reflection
 open Pulse.Reflection.Util
 module L = FStar.List.Tot
@@ -649,7 +649,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       (* This is a little weird, we introduce a name hyp in the environment, 
          but the branches are not allowed to use it (except perhaps in a silent way for proofs).
          Maybe more natural to have one free var in e1,e2 and to open it with hyp?
-         But that's also a change to Refl.Typing
+         But that's also a change to FStar.Reflection.Typing
        *)
       hyp:var { None? (lookup g hyp) /\
                ~(hyp `Set.mem` (freevars_st e1 `Set.union` freevars_st e2))
@@ -754,7 +754,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       st_typing f g (Tm_Admit c s.u s.res None) (comp_admit c s)
 
 
-(* this requires some metatheory on Refl.Typing
+(* this requires some metatheory on FStar.Reflection.Typing
 
      G |- fv e : t
 

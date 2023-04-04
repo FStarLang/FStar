@@ -11,6 +11,10 @@ else
   OCAMLPATH := $(FSTAR_LIB_OCAMLPATH):$(OCAMLPATH)
 endif
 
+all:
+	make all-common
+	make -C tests/
+
 plugin: verify_all _build/Pulse_Main.cmxs
 
 _build/Pulse_Main.cmxs: extract_all
