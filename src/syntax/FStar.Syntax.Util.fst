@@ -2530,3 +2530,6 @@ let encode_positivity_attributes (pqual:option positivity_qualifier) (attrs:list
           []
        in
        qual @ attrs
+
+let is_binder_strictly_positive (b:binder) =
+  b.binder_positivity = Some BinderStrictlyPositive

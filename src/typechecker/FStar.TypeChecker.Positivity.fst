@@ -400,7 +400,7 @@ let mark_uniform_type_parameters (env:env_t)
           let _, non_uniform_params = List.splitAt max_uniform_prefix ty_param_binders in
           List.iter 
             (fun param ->
-                 if U.has_attribute param.binder_attrs C.binder_strictly_positive_attr
+                 if param.binder_positivity = Some BinderStrictlyPositive
                  then ( //if marked strictly positive, it must be uniform
                    raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
                                 BU.format1 "Binder %s is marked strictly positive, \
@@ -930,7 +930,7 @@ and ty_strictly_positive_in_args (env:env)
             // and
             //       type t = | T of f t     is okay
             // but   type t = | T of f (t -> unit) is not okay
-            (U.has_attribute b.binder_attrs FStar.Parser.Const.binder_strictly_positive_attr &&
+            (U.is_binder_strictly_positive b &&
              ty_strictly_positive_in_type env mutuals arg unfolded)
              
           in
@@ -1176,7 +1176,7 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
         let incorrectly_annotated_binder =
             L.tryFind 
               (fun b -> 
-                 if U.has_attribute b.binder_attrs C.binder_strictly_positive_attr
+                 if U.is_binder_strictly_positive b
                  then not (name_strictly_positive_in_type env b.binder_bv f.binder_bv.sort)
                  else false)
               ty_bs

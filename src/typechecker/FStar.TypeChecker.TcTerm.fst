@@ -2293,7 +2293,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let _ =
       List.iter
         (fun b ->
-           if U.has_attribute b.binder_attrs Const.binder_strictly_positive_attr
+           if U.is_binder_strictly_positive b
            && not (Options.no_positivity())
            then let r = Positivity.name_strictly_positive_in_type envbody b.binder_bv body in
                 if not r

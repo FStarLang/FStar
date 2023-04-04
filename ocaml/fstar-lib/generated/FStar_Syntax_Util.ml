@@ -4895,3 +4895,9 @@ let (encode_positivity_attributes :
            | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.BinderUnused)
                -> [] in
          FStar_Compiler_List.op_At qual attrs)
+let (is_binder_strictly_positive : FStar_Syntax_Syntax.binder -> Prims.bool)
+  =
+  fun b ->
+    b.FStar_Syntax_Syntax.binder_positivity =
+      (FStar_Pervasives_Native.Some
+         FStar_Syntax_Syntax.BinderStrictlyPositive)

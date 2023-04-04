@@ -401,26 +401,26 @@ let (mark_uniform_type_parameters :
                           | (uu___6, non_uniform_params) ->
                               FStar_Compiler_List.iter
                                 (fun param ->
-                                   let uu___7 =
-                                     FStar_Syntax_Util.has_attribute
-                                       param.FStar_Syntax_Syntax.binder_attrs
-                                       FStar_Parser_Const.binder_strictly_positive_attr in
-                                   if uu___7
+                                   if
+                                     param.FStar_Syntax_Syntax.binder_positivity
+                                       =
+                                       (FStar_Pervasives_Native.Some
+                                          FStar_Syntax_Syntax.BinderStrictlyPositive)
                                    then
-                                     let uu___8 =
-                                       let uu___9 =
-                                         let uu___10 =
+                                     let uu___7 =
+                                       let uu___8 =
+                                         let uu___9 =
                                            FStar_Syntax_Print.binder_to_string
                                              param in
                                          FStar_Compiler_Util.format1
                                            "Binder %s is marked strictly positive, but it is not uniformly recursive"
-                                           uu___10 in
+                                           uu___9 in
                                        (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                         uu___9) in
-                                     let uu___9 =
+                                         uu___8) in
+                                     let uu___8 =
                                        FStar_Syntax_Syntax.range_of_bv
                                          param.FStar_Syntax_Syntax.binder_bv in
-                                     FStar_Errors.raise_error uu___8 uu___9
+                                     FStar_Errors.raise_error uu___7 uu___8
                                    else ()) non_uniform_params)
                        else ();
                        (let sigel =
@@ -1096,9 +1096,7 @@ and (ty_strictly_positive_in_args :
                                 let uu___4 = ty_occurs_in ty_lid arg in
                                 Prims.op_Negation uu___4) mutuals)
                             ||
-                            ((FStar_Syntax_Util.has_attribute
-                                b.FStar_Syntax_Syntax.binder_attrs
-                                FStar_Parser_Const.binder_strictly_positive_attr)
+                            ((FStar_Syntax_Util.is_binder_strictly_positive b)
                                &&
                                (ty_strictly_positive_in_type env mutuals arg
                                   unfolded)) in
@@ -1387,17 +1385,15 @@ let (ty_strictly_positive_in_datacon_decl :
                             let incorrectly_annotated_binder =
                               FStar_Compiler_List.tryFind
                                 (fun b ->
-                                   let uu___4 =
-                                     FStar_Syntax_Util.has_attribute
-                                       b.FStar_Syntax_Syntax.binder_attrs
-                                       FStar_Parser_Const.binder_strictly_positive_attr in
-                                   if uu___4
+                                   if
+                                     FStar_Syntax_Util.is_binder_strictly_positive
+                                       b
                                    then
-                                     let uu___5 =
+                                     let uu___4 =
                                        name_strictly_positive_in_type env
                                          b.FStar_Syntax_Syntax.binder_bv
                                          (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                     Prims.op_Negation uu___5
+                                     Prims.op_Negation uu___4
                                    else false) ty_bs1 in
                             match incorrectly_annotated_binder with
                             | FStar_Pervasives_Native.None -> ()
