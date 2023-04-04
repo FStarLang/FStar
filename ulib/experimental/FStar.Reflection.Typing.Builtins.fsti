@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 
-module Refl.Typing.Builtins
+module FStar.Reflection.Typing.Builtins
 
 (** This module defines some utilities in support of the reflection
     typing judgment of F*, defined in Refl.Typing.fsti.
 
-				IT IS HIGHLY EXPERIMENTAL AND NOT YET READY TO USE.
+    IT IS HIGHLY EXPERIMENTAL AND NOT YET READY TO USE.
   *)
 
 open FStar.Reflection

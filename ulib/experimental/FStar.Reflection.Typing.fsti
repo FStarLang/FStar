@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 
-module Refl.Typing
+module FStar.Reflection.Typing
 
 (** This module defines a typing judgment for (parts of) the total
     fragment of F*. We are using it in the meta DSL framework.
 
-				IT IS HIGHLY EXPERIMENTAL AND NOT YET READY TO USE.
+    IT IS HIGHLY EXPERIMENTAL AND NOT YET READY TO USE.
   *)
 
 open FStar.List.Tot

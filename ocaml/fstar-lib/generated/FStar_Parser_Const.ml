@@ -539,10 +539,11 @@ let (check_with_lid : FStar_Ident.lident) =
 let (dsl_typing_builtin : Prims.string -> FStar_Ident.lident) =
   fun s ->
     FStar_Ident.lid_of_path
-      (FStar_Compiler_List.op_At ["Refl"; "Typing"; "Builtins"] [s])
+      (FStar_Compiler_List.op_At
+         ["FStar"; "Reflection"; "Typing"; "Builtins"] [s])
       FStar_Compiler_Range.dummyRange
 let (dsl_tac_typ_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Refl"; "Typing"; "dsl_tac_t"]
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Typing"; "dsl_tac_t"]
     FStar_Compiler_Range.dummyRange
 let (calc_lid : Prims.string -> FStar_Ident.lid) =
   fun i ->
