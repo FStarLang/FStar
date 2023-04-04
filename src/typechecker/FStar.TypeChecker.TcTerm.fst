@@ -2293,14 +2293,23 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let _ =
       List.iter
         (fun b ->
+          if Options.no_positivity()
+          then ()
+          else (
+           if U.is_binder_unused b
+           && not (Positivity.name_unused_in_type envbody b.binder_bv body)
+           then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                              BU.format1 "Binder %s is marked unused, but its use in the definition is not"
+                                          (Print.binder_to_string b))
+                               (S.range_of_bv b.binder_bv);
+
            if U.is_binder_strictly_positive b
-           && not (Options.no_positivity())
-           then let r = Positivity.name_strictly_positive_in_type envbody b.binder_bv body in
-                if not r
-                then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
-                                  BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
+           && not (Positivity.name_strictly_positive_in_type envbody b.binder_bv body)
+           then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                              BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
                                              (Print.binder_to_string b))
-                                  (S.range_of_bv b.binder_bv))
+                                (S.range_of_bv b.binder_bv)
+          ))      
         bs 
     in
 

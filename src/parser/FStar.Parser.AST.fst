@@ -163,7 +163,7 @@ type constructor_payload
     (** constructor of any arity & kind (e.g. [C:int->ind] or [C:'a->'b->ind 'c]) *)
     | VpArbitrary of typ
     (** constructor whose payload is a record (e.g. [C {a: int}] or [C {x: Type} -> ind x]) *)
-    | VpRecord of (tycon_record * opt_kind:option typ)
+    | VpRecord of (tycon_record * option typ)
 
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =

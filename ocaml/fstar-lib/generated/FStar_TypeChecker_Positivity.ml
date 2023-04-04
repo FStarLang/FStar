@@ -1091,10 +1091,11 @@ and (ty_strictly_positive_in_args :
                               "Checking positivity of %s in argument %s and binder %s"
                               uu___5 uu___6 uu___7);
                        (let this_occurrence_ok =
-                          (FStar_Compiler_List.for_all
-                             (fun ty_lid ->
-                                let uu___4 = ty_occurs_in ty_lid arg in
-                                Prims.op_Negation uu___4) mutuals)
+                          ((FStar_Compiler_List.for_all
+                              (fun ty_lid ->
+                                 let uu___4 = ty_occurs_in ty_lid arg in
+                                 Prims.op_Negation uu___4) mutuals)
+                             || (FStar_Syntax_Util.is_binder_unused b))
                             ||
                             ((FStar_Syntax_Util.is_binder_strictly_positive b)
                                &&
@@ -1338,6 +1339,17 @@ let (name_strictly_positive_in_type :
         | (t1, fv_lid) ->
             let uu___1 = FStar_Compiler_Util.mk_ref [] in
             ty_strictly_positive_in_type env [fv_lid] t1 uu___1
+let (name_unused_in_type :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool)
+  =
+  fun env ->
+    fun bv ->
+      fun t ->
+        let uu___ = name_as_fv_in_t t bv in
+        match uu___ with
+        | (t1, fv_lid) ->
+            let uu___1 = ty_occurs_in fv_lid t1 in Prims.op_Negation uu___1
 let (ty_strictly_positive_in_datacon_decl :
   FStar_TypeChecker_Env.env_t ->
     FStar_Ident.lident Prims.list ->
@@ -1385,16 +1397,21 @@ let (ty_strictly_positive_in_datacon_decl :
                             let incorrectly_annotated_binder =
                               FStar_Compiler_List.tryFind
                                 (fun b ->
-                                   if
-                                     FStar_Syntax_Util.is_binder_strictly_positive
-                                       b
-                                   then
-                                     let uu___4 =
-                                       name_strictly_positive_in_type env
-                                         b.FStar_Syntax_Syntax.binder_bv
-                                         (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                     Prims.op_Negation uu___4
-                                   else false) ty_bs1 in
+                                   ((FStar_Syntax_Util.is_binder_unused b) &&
+                                      (let uu___4 =
+                                         name_unused_in_type env
+                                           b.FStar_Syntax_Syntax.binder_bv
+                                           (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                       Prims.op_Negation uu___4))
+                                     ||
+                                     ((FStar_Syntax_Util.is_binder_strictly_positive
+                                         b)
+                                        &&
+                                        (let uu___4 =
+                                           name_strictly_positive_in_type env
+                                             b.FStar_Syntax_Syntax.binder_bv
+                                             (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                         Prims.op_Negation uu___4))) ty_bs1 in
                             match incorrectly_annotated_binder with
                             | FStar_Pervasives_Native.None -> ()
                             | FStar_Pervasives_Native.Some b ->
@@ -1402,9 +1419,14 @@ let (ty_strictly_positive_in_datacon_decl :
                                   let uu___5 =
                                     let uu___6 =
                                       FStar_Syntax_Print.binder_to_string b in
-                                    FStar_Compiler_Util.format1
-                                      "Binder %s is marked strictly positive, but its use in the definition is not"
-                                      uu___6 in
+                                    FStar_Compiler_Util.format2
+                                      "Binder %s is marked %s, but its use in the definition is not"
+                                      uu___6
+                                      (if
+                                         FStar_Syntax_Util.is_binder_strictly_positive
+                                           b
+                                       then "strictly_positive"
+                                       else "unused") in
                                   (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                     uu___5) in
                                 let uu___5 =

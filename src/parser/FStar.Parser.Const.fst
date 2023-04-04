@@ -371,6 +371,7 @@ let effect_parameter_attr = psconst "effect_param"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
 let primitive_extraction_attr = psconst "primitive_extraction"
 let binder_strictly_positive_attr = psconst "strictly_positive"
+let binder_unused_attr = psconst "unused"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
 let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]

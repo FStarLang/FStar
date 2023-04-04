@@ -923,6 +923,10 @@ and ty_strictly_positive_in_args (env:env)
           let this_occurrence_ok = 
             // either the ty_lid does not occur at all in the argument
             List.for_all (fun ty_lid -> not (ty_occurs_in ty_lid arg)) mutuals ||
+            // Or the binder is marked unused
+            // E.g., val f ([@@@unused] a : Type) : Type
+            // the binder is ([@@@unused] a : Type)
+            U.is_binder_unused b ||
             // Or the binder is marked strictly positive
             // and the occurrence of ty_lid in arg is also strictly positive
             // E.g., val f ([@@@strictly_positive] a : Type) : Type
@@ -1142,6 +1146,13 @@ let name_strictly_positive_in_type env (bv:bv) t =
   let t, fv_lid = name_as_fv_in_t t bv in
   ty_strictly_positive_in_type env [fv_lid] t (BU.mk_ref [])
 
+(* 
+   Check that the name bv (a binder annotated with a strictly_positive
+   attribute) is strictly positive in t
+*)
+let name_unused_in_type env (bv:bv) t =
+  let t, fv_lid = name_as_fv_in_t t bv in
+  not (ty_occurs_in fv_lid t)
 
 
 (*  Check that the mutuals are
@@ -1175,19 +1186,23 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
     let check_annotated_binders_are_strictly_positive_in_field f =
         let incorrectly_annotated_binder =
             L.tryFind 
-              (fun b -> 
-                 if U.is_binder_strictly_positive b
-                 then not (name_strictly_positive_in_type env b.binder_bv f.binder_bv.sort)
-                 else false)
+              (fun b ->
+                 (U.is_binder_unused b
+                  && not (name_unused_in_type env b.binder_bv f.binder_bv.sort)) ||
+                 (U.is_binder_strictly_positive b
+                  && not (name_strictly_positive_in_type env b.binder_bv f.binder_bv.sort)))
               ty_bs
         in
         match incorrectly_annotated_binder with
         | None -> ()
         | Some b ->
           raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
-                       BU.format1 "Binder %s is marked strictly positive, \
+                       BU.format2 "Binder %s is marked %s, \
                                    but its use in the definition is not"
-                                  (Print.binder_to_string b))
+                                  (Print.binder_to_string b)
+                                  (if U.is_binder_strictly_positive b
+                                   then "strictly_positive"
+                                   else "unused"))
                        (range_of_bv b.binder_bv)
     in
     let rec check_all_fields env fields =

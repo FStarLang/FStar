@@ -216,3 +216,36 @@ then F* raises an error:
 
     Binder (t: Type) is marked strictly positive, but its use in the definition is not
    
+Unused Annotations
+------------------
+
+Sometimes one indexes a type by another type, though the index has no
+semantic meaning. For example, in several F* developments that model
+mutable state, the a heap reference is just a natural number modeling
+its address in the heap. However, one might use the type ``let ref
+(a:Type) = nat`` to represent the type of a reference, even though the
+type ``a`` is not used in the definition. In such cases, it can be
+useful to mark the parameter as unused, to inform F*'s positivity
+checker that the type index is actually irrelevant. The snippet below
+shows an example:
+
+.. literalinclude:: ../code/Part2.Positivity.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: unused$
+   :end-before: //SNIPPET_END: unused$
+
+Here, we've marked the parameter of ``ref`` with the ``unused``
+attribute. We've also marked ``ref`` as ``irreducible`` just to
+ensure for this example that F* does not silently unfold the
+definition of ``ref``.
+
+Now, knowing that the parameter of ``ref`` is unused, one can define
+types like ``linked_list a``, where although ``linked_list a`` appears
+as an argument to the ``ref`` type, the positivity checker accepts it,
+since the parameter is unused. This is similar to the use of a
+``strictly_positive`` annotation on a parameter.
+
+However, with the ``unused`` attribute, one can go further: e.g., the
+type ``neg_unused`` shows that even a negative occurrence of the
+defined type is accepted, so long as it appears only as an
+instantiation of an unused parameter.

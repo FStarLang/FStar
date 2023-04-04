@@ -342,6 +342,7 @@ let (primitive_extraction_attr : FStar_Ident.lident) =
   psconst "primitive_extraction"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
+let (binder_unused_attr : FStar_Ident.lident) = psconst "unused"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"

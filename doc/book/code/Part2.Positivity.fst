@@ -88,3 +88,14 @@ let infinite_branching_tree a = free (fun t -> nat -> t) a
 //SNIPPET_START: free_bad$
 let free_bad = free (fun t -> (t -> False)) int
 //SNIPPET_END: free_bad$
+
+//SNIPPET_START: unused$
+irreducible
+let ref ([@@@unused] a:Type) = nat
+noeq
+type linked_list (a:Type) =
+  | LL : ref (a & linked_list a) -> linked_list a
+noeq
+type neg_unused =
+  | NU : ref (neg_unused -> bool) -> neg_unused
+//SNIPPET_END: unused$

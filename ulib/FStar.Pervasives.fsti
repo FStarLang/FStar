@@ -1122,6 +1122,19 @@ val primitive_extraction : unit
   *)
 val strictly_positive : unit
 
+(** A binder in a definition/declaration may optionally be annotated as unused.
+    This is used in the strict positivity checker. E.g., a type such as the one
+    below is accepted
+    
+    let f ([@@@unused] a:Type) = unit
+    type t = | MkT: f t -> t
+    
+    F* checks that the binder is actually unused in the definition
+
+    See tests/micro-benchmarks/Positivity.fst for a few examples
+  *)
+val unused : unit
+
 (** This attribute may be added to an inductive type
     to disable auto generated projectors
 

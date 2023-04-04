@@ -440,3 +440,32 @@ let a_to_bool_bad : ([@@@strictly_positive] a:Type -> Type) = a_to_bool
 val pos ([@@@strictly_positive] a : Type0) : Type0
 type pos (a:Type0) =
   | MkPos : a -> pos a 
+
+////////////////////////////////////////////////////////////////////////////////
+// Unused annotations
+////////////////////////////////////////////////////////////////////////////////
+[@@expect_failure]
+let test_unused_1 ([@@@unused] a:Type) = a
+
+let test_unused_1 ([@@@unused] a:Type) = nat
+type use_unused_1 = 
+  | MkUseUnused1: test_unused_1 use_unused_1 -> use_unused_1
+
+assume
+val test_unused_2 ([@@@unused] a:Type) : eqtype
+type use_unused_2 = 
+  | MkUseUnused2: test_unused_2 use_unused_2 -> use_unused_2
+
+//It is still not okay to have the defined type appear as an argument to itself
+//even if its occurrence only instantiates an unused parameter
+//We could support this, but we don't currently
+[@@expect_failure]
+type use_unused_2' (a:Type) = 
+  | MkUseUnused2': use_unused_2' (test_unused_2 (use_unused_2' a)) -> use_unused_2' a
+
+
+assume
+val test_unused_3 ( a:Type) : eqtype
+[@@expect_failure]
+type use_unused_3 = 
+  | MkUseUnused3: test_unused_3 use_unused_3 -> use_unused_3

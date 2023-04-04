@@ -2506,6 +2506,14 @@ let contains_strictly_positive_attribute (attrs:list attribute)
       | _ -> false)
     attrs
 
+let contains_unused_attribute (attrs:list attribute)
+: bool
+= U.for_some
+    (fun a -> match a.n with
+      | Tm_fvar fv when fv_eq_lid fv PC.binder_unused_attr -> true
+      | _ -> false)
+    attrs
+
 //retains the original attributes as is, while deciding if they contains
 //the "strictly_positive" attribute
 //we retain the attributes since they will then be carried in arguments
@@ -2513,23 +2521,29 @@ let contains_strictly_positive_attribute (attrs:list attribute)
 //and Rel to construct binders from arguments alone
 let parse_positivity_attributes (attrs:list attribute)
 : option positivity_qualifier & list attribute
-= if contains_strictly_positive_attribute attrs
+= if contains_unused_attribute attrs
+  then Some BinderUnused, attrs
+  else if contains_strictly_positive_attribute attrs
   then Some BinderStrictlyPositive, attrs
   else None, attrs
 
 let encode_positivity_attributes (pqual:option positivity_qualifier) (attrs:list attribute)
 : list attribute
-= if pqual = None || contains_strictly_positive_attribute attrs
-  then attrs
-  else let qual =
-        match pqual with
-        | Some BinderStrictlyPositive ->
-          [FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_strictly_positive_attr (Delta_constant_at_level 0) None)]
-        | Some BinderUnused -> 
-          //not yet supported
-          []
-       in
-       qual @ attrs
+= match pqual with
+  | None -> attrs
+  | Some BinderStrictlyPositive ->
+    if contains_strictly_positive_attribute attrs
+    then attrs
+    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_strictly_positive_attr (Delta_constant_at_level 0) None)
+         :: attrs
+  | Some BinderUnused ->
+    if contains_unused_attribute attrs
+    then attrs
+    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_unused_attr (Delta_constant_at_level 0) None)
+         :: attrs
 
 let is_binder_strictly_positive (b:binder) =
   b.binder_positivity = Some BinderStrictlyPositive
+
+let is_binder_unused (b:binder) =
+  b.binder_positivity = Some BinderUnused
