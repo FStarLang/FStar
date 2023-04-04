@@ -1936,7 +1936,7 @@ let run_lookup :
             Prims.string Prims.list ->
               FStar_Compiler_Util.json FStar_Pervasives_Native.option ->
                 ((FStar_Interactive_Ide_Types.query_status *
-                  FStar_Compiler_Util.json) *
+                  FStar_Compiler_Util.json Prims.list) *
                   (FStar_Interactive_Ide_Types.repl_state, 'uuuuu)
                   FStar_Pervasives.either)
   =
@@ -1955,21 +1955,26 @@ let run_lookup :
                            symrange in
                        (match uu___1 with
                         | FStar_Pervasives.Inl err_msg ->
-                            ((FStar_Interactive_Ide_Types.QueryOK,
-                               (FStar_Compiler_Util.JsonStr err_msg)),
-                              (FStar_Pervasives.Inl st))
+                            (match symrange with
+                             | FStar_Pervasives_Native.None ->
+                                 ((FStar_Interactive_Ide_Types.QueryNOK,
+                                    [FStar_Compiler_Util.JsonStr err_msg]),
+                                   (FStar_Pervasives.Inl st))
+                             | uu___2 ->
+                                 ((FStar_Interactive_Ide_Types.QueryOK, []),
+                                   (FStar_Pervasives.Inl st)))
                         | FStar_Pervasives.Inr (kind, info) ->
                             ((FStar_Interactive_Ide_Types.QueryOK,
-                               (FStar_Compiler_Util.JsonAssoc
+                               [FStar_Compiler_Util.JsonAssoc
                                   (("kind",
                                      (FStar_Compiler_Util.JsonStr kind))
-                                  :: info))), (FStar_Pervasives.Inl st)))) ()
+                                  :: info)]), (FStar_Pervasives.Inl st)))) ()
               with
               | uu___ ->
                   ((FStar_Interactive_Ide_Types.QueryOK,
-                     (FStar_Compiler_Util.JsonStr
+                     [FStar_Compiler_Util.JsonStr
                         (Prims.op_Hat "Lookup of "
-                           (Prims.op_Hat symbol " failed")))),
+                           (Prims.op_Hat symbol " failed"))]),
                     (FStar_Pervasives.Inl st))
 let run_code_autocomplete :
   'uuuuu .
@@ -2773,8 +2778,7 @@ let rec (run_query :
           as_json_list uu___
       | FStar_Interactive_Ide_Types.Lookup
           (symbol, context, pos_opt, rq_info, symrange) ->
-          let uu___ = run_lookup st symbol context pos_opt rq_info symrange in
-          as_json_list uu___
+          run_lookup st symbol context pos_opt rq_info symrange
       | FStar_Interactive_Ide_Types.Compute (term, rules) ->
           let uu___ = run_compute st term rules in as_json_list uu___
       | FStar_Interactive_Ide_Types.Search term ->
