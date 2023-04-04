@@ -185,7 +185,11 @@ internal nodes branch according the type function ``f``.
    :end-before: //SNIPPET_END: free$
 
 We can instantiate this generic ``free`` to produce various kinds of
-trees.
+trees. Note: when instantiating ``free list a`` in
+``variable_branching_list`` below, we need to explicitly re-define the
+``list`` type with a strict-positivity annotation: F* does not
+correctly support rechecking type constructors to prove that they are
+strictly positive when they are used at higher order.
 
 .. literalinclude:: ../code/Part2.Positivity.fst
    :language: fstar
