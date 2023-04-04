@@ -282,13 +282,8 @@ let (ref_Mk_binder : refl_constant) =
           let uu___6 =
             let uu___7 =
               FStar_Ident.mk_ident
-                ("binder_positivity", FStar_Compiler_Range.dummyRange) in
-            let uu___8 =
-              let uu___9 =
-                FStar_Ident.mk_ident
-                  ("binder_attrs", FStar_Compiler_Range.dummyRange) in
-              [uu___9] in
-            uu___7 :: uu___8 in
+                ("binder_attrs", FStar_Compiler_Range.dummyRange) in
+            [uu___7] in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
       (uu___1, uu___2) in

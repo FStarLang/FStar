@@ -2592,7 +2592,16 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
          U.eq_bqual a1 a2
    in
 
-   (*
+   let compat_positivity_qualifiers (p1 p2:option positivity_qualifier) : bool =
+      match p_rel orig with
+      | EQ ->
+        FStar.TypeChecker.Common.check_positivity_qual false p1 p2
+      | SUB ->
+        FStar.TypeChecker.Common.check_positivity_qual true p1 p2
+      | SUBINV ->
+        FStar.TypeChecker.Common.check_positivity_qual true p2 p1
+   in
+  (*
     * AR: adding env to the return type
     *
     *     `aux` solves the binders problems xs REL ys, and keeps on adding the binders to env
@@ -2613,7 +2622,9 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
           let formula = p_guard rhs_prob in
           Inl ([rhs_prob], formula), wl
 
-        | x::xs, y::ys when (eq_bqual x.binder_qual y.binder_qual = U.Equal) ->
+        | x::xs, y::ys 
+          when (eq_bqual x.binder_qual y.binder_qual = U.Equal &&
+                compat_positivity_qualifiers x.binder_positivity y.binder_positivity) ->
            let hd1, imp = x.binder_bv, x.binder_qual in
            let hd2, imp' = y.binder_bv, y.binder_qual in
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders

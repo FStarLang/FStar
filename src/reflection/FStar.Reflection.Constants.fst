@@ -155,7 +155,6 @@ let ref_Mk_binder =
   let attr = Record_ctor (fstar_refl_data_lid "binder_view", [
                             Ident.mk_ident ("binder_bv", Range.dummyRange);
                             Ident.mk_ident ("binder_qual", Range.dummyRange);
-                            Ident.mk_ident ("binder_positivity", Range.dummyRange);
                             Ident.mk_ident ("binder_attrs", Range.dummyRange)]) in
   let fv = lid_as_fv lid delta_constant (Some attr) in
   { lid = lid;

@@ -195,6 +195,8 @@ type free (f:([@@@ strictly_positive] _:Type -> Type)) (a:Type) : Type =
   | Pure   : a -> free f a
   | Impure : f (free f a) -> free f a
 
+let list ([@@@strictly_positive] a :Type) = list a
+//without rebinding list, this fails
 type free_inst0 = free list int
 
 [@@ expect_failure [3]]
@@ -306,6 +308,7 @@ let refine (f:[@@@strictly_positive]Type -> Type)
            ([@@@strictly_positive] t:Type)
   = x:f t { ref t x }          
 
+let option ([@@@strictly_positive] a:Type) = option a
 let opt ([@@@strictly_positive] a:Type) = refine option (fun t -> Some? #t) a
 
 type i1 (a:Type) : Type -> Type =

@@ -5988,6 +5988,14 @@ and (solve_binders :
                   (FStar_Syntax_Syntax.Implicit b2)) ->
                    FStar_Syntax_Util.Equal
                | uu___1 -> FStar_Syntax_Util.eq_bqual a1 a2 in
+             let compat_positivity_qualifiers p1 p2 =
+               match p_rel orig with
+               | FStar_TypeChecker_Common.EQ ->
+                   FStar_TypeChecker_Common.check_positivity_qual false p1 p2
+               | FStar_TypeChecker_Common.SUB ->
+                   FStar_TypeChecker_Common.check_positivity_qual true p1 p2
+               | FStar_TypeChecker_Common.SUBINV ->
+                   FStar_TypeChecker_Common.check_positivity_qual true p2 p1 in
              let rec aux wl1 scope subst xs ys =
                match (xs, ys) with
                | ([], []) ->
@@ -6007,10 +6015,14 @@ and (solve_binders :
                          (let formula = p_guard rhs_prob in
                           ((FStar_Pervasives.Inl ([rhs_prob], formula)), wl2))))
                | (x::xs1, y::ys1) when
-                   let uu___1 =
-                     eq_bqual x.FStar_Syntax_Syntax.binder_qual
-                       y.FStar_Syntax_Syntax.binder_qual in
-                   uu___1 = FStar_Syntax_Util.Equal ->
+                   (let uu___1 =
+                      eq_bqual x.FStar_Syntax_Syntax.binder_qual
+                        y.FStar_Syntax_Syntax.binder_qual in
+                    uu___1 = FStar_Syntax_Util.Equal) &&
+                     (compat_positivity_qualifiers
+                        x.FStar_Syntax_Syntax.binder_positivity
+                        y.FStar_Syntax_Syntax.binder_positivity)
+                   ->
                    let uu___1 =
                      ((x.FStar_Syntax_Syntax.binder_bv),
                        (x.FStar_Syntax_Syntax.binder_qual)) in

@@ -5669,9 +5669,11 @@ and (tc_abs_check_binders :
                          FStar_Errors.raise_error uu___3 uu___4
                        else ());
                       (let uu___3 =
-                         FStar_TypeChecker_Common.check_positivity_qual true
-                           pqual_expected pqual_actual in
-                       if not uu___3
+                         let uu___4 =
+                           FStar_TypeChecker_Common.check_positivity_qual
+                             true pqual_expected pqual_actual in
+                         Prims.op_Negation uu___4 in
+                       if uu___3
                        then
                          let uu___4 =
                            let uu___5 =
