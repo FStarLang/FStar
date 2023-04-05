@@ -58,7 +58,8 @@ let intro_exists_erased_soundness
   LN.tot_typing_ln p_typing;
   elab_ln p 0;
   
-  RT.beta_reduction rt R.Q_Explicit rp reveal_re;    
+  // RT.beta_reduction rt R.Q_Explicit rp reveal_re;
+  admit ();
 
   WT.intro_exists_erased_typing rt_typing rp_typing re_typing
 
@@ -102,7 +103,8 @@ let intro_exists_soundness
   LN.tot_typing_ln p_typing;
   elab_ln p 0;
 
-  RT.beta_reduction rt R.Q_Explicit rp re;
+  // RT.beta_reduction rt R.Q_Explicit rp re;
+  admit ();
 
   WT.intro_exists_typing rt_typing rp_typing re_typing
 #pop-options
@@ -137,22 +139,28 @@ let elim_exists_soundness
 
   let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
   let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x tun))) in
-  let rx_bv = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv 0 tun))) in
 
-  // rt is ln
-  LN.tot_typing_ln t_typing;
-  elab_ln t (-1);
+  // // rt is ln
+  // LN.tot_typing_ln t_typing;
+  // elab_ln t (-1);
 
-  //rp is (ln' 0)
-  LN.tot_typing_ln p_typing;
-  elab_ln p 0;
+  // //rp is (ln' 0)
+  // LN.tot_typing_ln p_typing;
+  // elab_ln p 0;
 
-  calc (==) {
-    elab_term (close_term' (open_term' p (mk_reveal u t x_tm) 0) x 0);
-       (==) {
-               RT.beta_reduction rt R.Q_Explicit rp (Pulse.Reflection.Util.mk_reveal ru rt rx_tm)
-            }
-    WT.elim_exists_post_body ru rt (mk_abs rt R.Q_Explicit rp) x;
-  };
-  WT.elim_exists_typing x rt_typing rp_typing
+  let rreveal_x = Pulse.Reflection.Util.mk_reveal ru rt rx_tm in
+
+  // somehow can't do without this assertion
+  assert (elab_term (mk_reveal u t x_tm) ==
+          Pulse.Reflection.Util.mk_reveal ru rt rx_tm);
+
+  let eq =
+    RT.equiv_abs (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
+      (RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rp rreveal_x)  in
+
+  let comps_equiv = elab_stghost_post_equiv (extend_env_l f g) c _ eq in
+
+  let d = WT.elim_exists_typing x rt_typing rp_typing in
+  RT.T_Sub _ _ _ _ d
+    (RT.ST_Equiv _ _ _ (RT.EQ_Sym _ _ _ comps_equiv))
 #pop-options

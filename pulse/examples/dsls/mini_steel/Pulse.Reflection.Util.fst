@@ -125,6 +125,20 @@ let mk_stt_ghost_comp (u:R.universe) (a inames pre post:R.term) =
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
 
+let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 post2:R.term)
+  (posts_equiv:RT.equiv g post1 post2)
+  : RT.equiv g (mk_stt_ghost_comp u a inames pre post1)
+               (mk_stt_ghost_comp u a inames pre post2) =
+  let open R in
+  let open RT in
+  let t = R.pack_ln (R.Tv_UInst stt_ghost_fv [u]) in
+  let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
+  EQ_Ctxt g post1 post2
+    (Ctxt_app_arg t Q_Explicit Ctxt_hole)
+    posts_equiv
+
 let mk_total t = R.C_Total t
 let binder_of_t_q t q = RT.binder_of_t_q t q
 let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
