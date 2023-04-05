@@ -325,7 +325,7 @@ let elim_exists_post (u:universe) (t:term) (p:term) (x:var)
     let p = open_term' p (mk_reveal u t x_tm) 0 in
     close_term p x
 
-  let comp_elim_exists (u:universe) (t:term) (p:term) (x:var)
+let comp_elim_exists (u:universe) (t:term) (p:term) (x:var)
   : comp
   = C_STGhost Tm_EmpInames 
               {

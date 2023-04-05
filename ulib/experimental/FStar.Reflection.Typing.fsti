@@ -83,7 +83,7 @@ val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
 let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
 let pp_name_t = FStar.Sealed.Inhabited.sealed ""
-let pp_name_default : pp_name_t = FStar.Sealed.Inhabited.seal""
+let pp_name_default : pp_name_t = FStar.Sealed.Inhabited.seal ""
 let seal_pp_name x : pp_name_t = FStar.Sealed.Inhabited.seal x
 
 let mk_binder (pp_name:pp_name_t) (x:var) (ty:term) (q:aqualv)
@@ -135,7 +135,7 @@ type open_or_close =
 let tun = pack_ln Tv_Unknown
 
 let make_bv (n:int) (t:term) = { 
-  bv_ppname = seal_pp_name "_";
+  bv_ppname = pp_name_default;
   bv_index = n;
   bv_sort = t
 }
@@ -146,7 +146,11 @@ let make_bv_with_name (s:pp_name_t) (n:int) (t:term) = {
 }
 let var_as_bv (v:int) = pack_bv (make_bv v tun)
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
-            
+
+let binder_of_t_q t q = mk_binder pp_name_default 0 t q
+let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
+let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i tun)))
+
 let open_with_var (x:var) = OpenWith (pack_ln (Tv_Var (var_as_bv x)))
   
 let maybe_index_of_term (x:term) =
@@ -869,6 +873,15 @@ and equiv : env -> term -> term -> Type0 =
       equiv g t0 t1 ->
       equiv g t1 t2 ->
       equiv g t0 t2
+  
+  | EQ_Beta:
+      g:env ->
+      t:R.typ ->
+      q:R.aqualv ->
+      e:R.term ->
+      arg:R.term ->
+      equiv g (open_or_close_term' e (OpenWith arg) 0)
+              (R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
 
   | EQ_Token:
       g:env ->
@@ -1299,15 +1312,10 @@ val close_with_not_free_var (t:R.term) (x:var) (i:nat)
       (requires ~ (Set.mem x (freevars t)))
       (ensures open_or_close_term' t (CloseVar x) i == t)
 
-let binder_of_t_q t q = mk_binder pp_name_default 0 t q
-let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
-let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i tun)))
-
-val beta_reduction (t:R.typ) (q:R.aqualv) (e:R.term) (arg:R.term)
-  : Lemma
-      (requires ln' e 0 /\ ln arg)
-      (ensures open_or_close_term' e (OpenWith arg) 0 ==
-               R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+val equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv) (x:var)
+  (eq:equiv g e1 e2)
+  : equiv g (mk_abs ty q (open_or_close_term' e1 (CloseVar x) 0))
+            (mk_abs ty q (open_or_close_term' e2 (CloseVar x) 0))
 
 //
 // Type of the top-level tactic that would splice-in the definitions

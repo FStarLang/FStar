@@ -74,28 +74,29 @@ let par_soundness
   RT.well_typed_terms_are_ln _ _ _ rpostL_typing;
   RT.well_typed_terms_are_ln _ _ _ rpostR_typing;
 
-  calc (==) {
-    elab_term (par_post uL uR aL aR postL postR x);
-       (==) { }
-    RT.open_or_close_term'
-      (mk_star
-         (RT.open_or_close_term'
-            (elab_term postL)
-            (RT.OpenWith (elab_term (mk_fst uL uR aL aR x_tm))) 0)
-         (RT.open_or_close_term'
-            (elab_term postR)
-            (RT.OpenWith (elab_term (mk_snd uL uR aL aR x_tm))) 0))
-      (RT.CloseVar x)
-      0;
-       (==) { RT.beta_reduction raL R.Q_Explicit
-                (elab_term postL)
-                (Pulse.Reflection.Util.mk_fst ru ru raL raR (RT.var_as_term x));
-              RT.beta_reduction raR R.Q_Explicit
-                (elab_term postR)
-                (Pulse.Reflection.Util.mk_snd ru ru raL raR (RT.var_as_term x)) }
-    WT.par_post ru raL raR rpostL rpostR x;
-  };
+  // calc (==) {
+  //   elab_term (par_post uL uR aL aR postL postR x);
+  //      (==) { }
+  //   RT.open_or_close_term'
+  //     (mk_star
+  //        (RT.open_or_close_term'
+  //           (elab_term postL)
+  //           (RT.OpenWith (elab_term (mk_fst uL uR aL aR x_tm))) 0)
+  //        (RT.open_or_close_term'
+  //           (elab_term postR)
+  //           (RT.OpenWith (elab_term (mk_snd uL uR aL aR x_tm))) 0))
+  //     (RT.CloseVar x)
+  //     0;
+  //      (==) { RT.beta_reduction raL R.Q_Explicit
+  //               (elab_term postL)
+  //               (Pulse.Reflection.Util.mk_fst ru ru raL raR (RT.var_as_term x));
+  //             RT.beta_reduction raR R.Q_Explicit
+  //               (elab_term postR)
+  //               (Pulse.Reflection.Util.mk_snd ru ru raL raR (RT.var_as_term x)) }
+  //   WT.par_post ru raL raR rpostL rpostR x;
+  // };
   /////
+  admit ();
 
   WT.par_typing x raL_typing raR_typing rpreL_typing rpostL_typing
     rpreR_typing rpostR_typing

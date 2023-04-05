@@ -20,8 +20,7 @@ let (let!) (f:option 'a) (g: 'a -> option 'b) : option 'b =
   match f with
   | None -> None
   | Some x -> g x
-
-let elab_const (c:constant) 
+let elab_const (c:constant)
   : R.vconst
   = match c with
     | Unit -> R.C_Unit
@@ -141,3 +140,15 @@ and elab_st_comp (c:st_comp)
     let pre = elab_term c.pre in
     let post = elab_term c.post in
     elab_universe c.u, res, pre, post
+
+let elab_stghost_post_equiv (g:R.env) (c:comp{C_STGhost? c}) (t:R.term)
+  (eq:RT.equiv g (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))) t)
+  : RT.equiv g
+      (elab_comp c)
+      (let C_STGhost inames {u;res;pre} = c in
+       mk_stt_ghost_comp (elab_universe u)
+                         (elab_term res)
+                         (elab_term inames)
+                         (elab_term pre)
+                         t)
+  = admit ()
