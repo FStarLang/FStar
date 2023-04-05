@@ -41,7 +41,7 @@ val base_len (#elt: Type) (b: base_t elt) : GTot nat
 /// An abstract type to represent a C pointer, as a base and an offset
 /// into its base
 [@@noextract_to "krml"] // primitive
-val ptr ([@@@strictly_positive] elt: Type u#a) : Type0
+val ptr ([@@@unused] elt: Type u#a) : Type0
 [@@noextract_to "krml"]
 val null_ptr (elt: Type u#a) : ptr elt
 // TODO: turn into a stateful operation to avoid comparing dangling pointers

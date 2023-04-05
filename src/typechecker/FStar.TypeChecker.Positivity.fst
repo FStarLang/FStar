@@ -590,6 +590,75 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
       end
   | _ -> ()
 
+////////////////////////////////////////////////////////////////////////////////
+// Do the mutuals not occur in t?
+// Or, if they do, do they only instantiate unused parameters?
+// Expects t to be normalized
+////////////////////////////////////////////////////////////////////////////////
+let mutuals_unused_in_type (mutuals:list lident) t =
+  let mutuals_occur_in t = BU.for_some (fun lid -> ty_occurs_in lid t) mutuals in
+  let rec ok t =
+    if not (mutuals_occur_in t) then true else
+    // fv_lid is used in t
+    // but we need to check that its occurrences only occur as arguments
+    // to functions whose corresponding paramaters are marked as unused
+    match (SS.compress t).n with
+     | Tm_bvar _
+     | Tm_name _
+     | Tm_constant _
+     | Tm_type _ ->
+      //these cases violate the precondition that fv_lid is used in t
+      //so we should never get here
+       true
+     | Tm_fvar _ 
+     | Tm_uinst _ ->
+      //in these cases, fv_lid is used in t
+       false
+     | Tm_abs (bs, t, _) ->
+       binders_ok bs && ok t
+     | Tm_arrow(bs, c) ->
+       binders_ok bs && ok_comp c
+     | Tm_refine(bv, t) ->
+       ok bv.sort && ok t
+     | Tm_app(head, args) ->
+       if mutuals_occur_in head
+       then false
+       else List.for_all
+              (fun (a, qual) -> 
+                (match qual with
+                 | None -> false
+                 | Some q -> U.contains_unused_attribute q.aqual_attributes) ||
+                ok a)
+              args
+      | Tm_match (t, _, branches, _) ->
+        ok t &&
+        List.for_all
+            (fun (_, _, br) -> ok br)
+             branches
+      | Tm_ascribed (t, asc, _) ->
+        ok t
+      | Tm_let ((_, lbs), t) ->
+        List.for_all (fun lb -> ok lb.lbtyp && ok lb.lbdef) lbs
+        && ok t
+      | Tm_uvar _ ->
+        false
+      | Tm_delayed _ ->
+        false
+      | Tm_meta(t, _) ->
+        ok t
+      | _ ->
+        false
+  and binders_ok bs =
+    List.for_all (fun b -> ok b.binder_bv.sort) bs
+  and ok_comp c =
+    match c.n with
+    | Total t -> ok t
+    | GTotal t -> ok t
+    | Comp c ->
+      ok c.result_typ &&
+      List.for_all (fun (a, _) -> ok a) c.effect_args              
+  in
+  ok t
 
 ////////////////////////////////////////////////////////////////////////////////
 // Main strict positivity check
@@ -744,10 +813,7 @@ let rec ty_strictly_positive_in_type (env:env)
                   "Checking strict positivity in the Tm_app node where head lid is %s itself, \
                    checking that ty does not occur in the arguments"
                   (Ident.string_of_lid fv.fv_name.v));
-            List.for_all 
-              (fun ty_lid ->
-                List.for_all (fun (t, _) -> not (ty_occurs_in ty_lid t)) args)
-              mutuals
+              List.for_all (fun (t, _) -> mutuals_unused_in_type mutuals t) args
           )
           else (
             //check that the application is either to an inductive
@@ -795,12 +861,9 @@ let rec ty_strictly_positive_in_type (env:env)
        let sbs, c = U.arrow_formals_comp in_type in
        let return_type = FStar.Syntax.Util.comp_result c in
        let ty_lid_not_to_left_of_arrow =
-         List.for_all 
-           (fun ty_lid ->
-             List.for_all 
-               (fun ({binder_bv=b}) -> not (ty_occurs_in ty_lid b.sort))
-               sbs)
-           mutuals
+            List.for_all 
+               (fun ({binder_bv=b}) -> mutuals_unused_in_type mutuals b.sort)
+               sbs
        in
        if ty_lid_not_to_left_of_arrow
        then (
@@ -907,11 +970,7 @@ and ty_strictly_positive_in_args (env:env)
           //Are beneath a computation type
           //In this case, we just insist that ty_lid simply does not occur
           //in the remaining arguments
-          List.for_all 
-            (fun ty_lid ->
-              List.for_all (fun (arg, _) -> not (ty_occurs_in ty_lid arg)) args)
-            mutuals
-            
+          List.for_all (fun (arg, _) -> mutuals_unused_in_type mutuals arg) args
           
         | b::bs, (arg, _)::args ->
           debug_positivity env (fun _ -> 
@@ -922,7 +981,7 @@ and ty_strictly_positive_in_args (env:env)
                        
           let this_occurrence_ok = 
             // either the ty_lid does not occur at all in the argument
-            List.for_all (fun ty_lid -> not (ty_occurs_in ty_lid arg)) mutuals ||
+            mutuals_unused_in_type mutuals arg ||
             // Or the binder is marked unused
             // E.g., val f ([@@@unused] a : Type) : Type
             // the binder is ([@@@unused] a : Type)
@@ -1146,6 +1205,7 @@ let name_strictly_positive_in_type env (bv:bv) t =
   let t, fv_lid = name_as_fv_in_t t bv in
   ty_strictly_positive_in_type env [fv_lid] t (BU.mk_ref [])
 
+  
 (* 
    Check that the name bv (a binder annotated with a strictly_positive
    attribute) is strictly positive in t
@@ -1153,8 +1213,7 @@ let name_strictly_positive_in_type env (bv:bv) t =
 let name_unused_in_type env (bv:bv) t =
   let t, fv_lid = name_as_fv_in_t t bv in
   not (ty_occurs_in fv_lid t) ||
-  not (ty_occurs_in fv_lid (normalize env t))
-
+  mutuals_unused_in_type [fv_lid] (normalize env t)
 
 (*  Check that the mutuals are
     strictly positive in every field of the data constructor dlid

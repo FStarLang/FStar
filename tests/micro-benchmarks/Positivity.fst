@@ -456,10 +456,8 @@ val test_unused_2 ([@@@unused] a:Type) : eqtype
 type use_unused_2 = 
   | MkUseUnused2: test_unused_2 use_unused_2 -> use_unused_2
 
-//It is still not okay to have the defined type appear as an argument to itself
-//even if its occurrence only instantiates an unused parameter
-//We could support this, but we don't currently
-[@@expect_failure]
+// It's ok for the type constructor to appear in a arg to itself
+// since it appears in an unused position
 type use_unused_2' (a:Type) = 
   | MkUseUnused2': use_unused_2' (test_unused_2 (use_unused_2' a)) -> use_unused_2' a
 
