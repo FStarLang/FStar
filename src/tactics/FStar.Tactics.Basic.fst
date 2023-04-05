@@ -2213,8 +2213,8 @@ let smt_sync () : tac unit = wrap_err "smt_sync" <| (
     | None -> fail "Goal is not irrelevant"
     | Some phi ->
       let e = goal_env goal in
-      let res : bool = e.solver.solve_sync None e phi in
-      if res
+      let ans : bool = e.solver.solve_sync None e phi in
+      if ans
       then (
         mark_uvar_as_already_checked goal.goal_ctx_uvar;
         solve goal U.exp_unit

@@ -230,7 +230,7 @@ let defaults =
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("smtencoding.valid_intro"      , Bool true);
       ("smtencoding.valid_elim"       , Bool false);
-      ("split_queries"                , Bool false);      
+      ("split_queries"                , String "on_failure");
       ("tactics_failhard"             , Bool false);
       ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
@@ -410,7 +410,7 @@ let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr"
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
 let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"   as_bool
-let get_split_queries           ()      = lookup_opt "split_queries"            as_bool
+let get_split_queries           ()      = lookup_opt "split_queries"            as_string
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
 let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
@@ -1025,7 +1025,8 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
          --quake N/M/k works as above, except it will unconditionally run M times\n\t\t\
          --quake N is an alias for --quake N/N\n\t\t\
          --quake N/k is an alias for --quake N/N/k\n\t\
-         Using --quake disables --retry.");
+         Using --quake disables --retry. When quake testing, queries are not splitted for error reporting unless\n\
+         '--split_queries always' is given. Queries from the smt_sync tactic are not quake-tested.");
 
        ( noshort,
         "query_stats",
@@ -1109,8 +1110,12 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
        ( noshort,
         "split_queries",
-        Const (Bool true),
-        "Split SMT verification conditions into several separate queries, one per goal");
+        EnumStr ["no"; "on_failure"; "always"],
+        "Split SMT verification conditions into several separate queries, one per goal.\n\
+           Helps with localizing errors.\n\t\t\
+           - Use 'no' to disable (this may reduce the quality of error messages).\n\t\t\
+           - Use 'on_failure' to split queries and retry when discharging fails (the default)\n\t\t\
+           - Use 'yes' to always split.");
 
        ( noshort,
         "tactic_raw_binders",
@@ -1784,7 +1789,15 @@ let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let smtencoding_valid_intro      () = get_smtencoding_valid_intro     ()
 let smtencoding_valid_elim       () = get_smtencoding_valid_elim      ()
-let split_queries                () = get_split_queries               ()
+
+let parse_split_queries (s:string) : option split_queries_t =
+  match s with
+  | "no" -> Some No
+  | "on_failure" -> Some OnFailure
+  | "always" -> Some Always
+  | _ -> None
+
+let split_queries                () = get_split_queries () |> parse_split_queries |> Util.must
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
 let tactics_info                 () = get_tactics_info                ()

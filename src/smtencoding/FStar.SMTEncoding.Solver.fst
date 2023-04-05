@@ -367,7 +367,6 @@ let errors_to_report (settings : query_settings) : list Errors.error =
           //We didn't get a useful countermodel from Z3 to localize an error
           //so, split the query into N unique queries and try again
             if settings.query_can_be_split_and_retried
-            && not (Options.split_queries()) //queries are already split
             then raise SplitQueryAndRetry
             else (
               //if it can't be split further, report all its labels as potential failures
@@ -380,7 +379,7 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                   //with no labeled sub-goals and so no error location to report.
                   //So, print the source location and the query term itself
                   let dummy_fv = Term.mk_fv ("", dummy_sort) in
-                  let msg = 
+                  let msg =
                     BU.format1 "Failed to prove the following goal, although it appears to be trivial: %s"
                                (Print.term_to_string settings.query_term)
                   in
@@ -392,13 +391,15 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                   //we have a non-unique label despite splitting
                   //this CAN happen, e.g., if the original query term is a `match`
                   //In this case, we couldn't split it and then if it fails without producing a model,
-                  //we blame all the labels in the query. So warn about the imprecision.
-                  FStar.TypeChecker.Err.log_issue
-                       settings.query_env
-                       (Env.get_range settings.query_env)
-                       (Errors.Warning_SplitAndRetryQueries,
-                         "The verification condition was to be split into several atomic sub-goals, \
-                          but this query has multiple sub-goals---the error report may be inaccurate");
+                  //we blame all the labels in the query. So warn about the imprecision, unless the
+                  //use opted into --split_queries no.
+                  if Options.split_queries () <> Options.No then
+                    FStar.TypeChecker.Err.log_issue
+                         settings.query_env
+                         (Env.get_range settings.query_env)
+                         (Errors.Warning_SplitAndRetryQueries,
+                           "The verification condition was to be split into several atomic sub-goals, \
+                            but this query has multiple sub-goals---the error report may be inaccurate");
                   settings.query_all_labels
                 )
                 else settings.query_all_labels
@@ -669,6 +670,7 @@ let collect (l : list 'a) : list ('a * int) =
     in
     List.fold_left add_one acc l
 
+
 (* An answer for an "ask" to the solver. The ok boolean marks whether
 it succeeded or not. The rest is only used for error reporting. *)
 type answer = {
@@ -697,7 +699,8 @@ let ans_fail : answer =
   { ans_ok with ok = false; nsuccess = 0 }
 
 let make_solver_configs
-    (is_being_retried : bool)
+    (can_split : bool)
+    (is_retry : bool)
     (env : Env.env)
     (all_labels : error_labels)
     (prefix : list decl)
@@ -735,7 +738,7 @@ let make_solver_configs
             query_hash=(match next_hint with
                         | None -> None
                         | Some {hash=h} -> h);
-            query_can_be_split_and_retried=not is_being_retried;
+            query_can_be_split_and_retried=can_split;
             query_term=query_term
         } in
         default_settings, next_hint
@@ -773,7 +776,7 @@ let make_solver_configs
       else []
     in
     let cfgs =
-      if is_being_retried
+      if is_retry
       then [default_settings]
       else
         use_hints_setting
@@ -888,7 +891,6 @@ let ask_solver_quake
                        (* ^ if --retrying, it does not make sense to print successes since
                         * they must be exactly 0 *)
                        (if quaking then string_of_int nfail else string_of_int nfail ^ " times")
-                       (* ^ proper grammar :-) *)
                        (string_of_int (hi-n));
                  let r = run_one (seed+n) in
                  let nsucc, nfail =
@@ -936,7 +938,8 @@ let ask_solver_quake
     }
 
 let ask_solver
-    (is_being_retried : bool)
+    (can_split : bool)
+    (is_retry : bool)
     (env : Env.env)
     (all_labels : error_labels)
     (prefix : list decl)
@@ -946,7 +949,7 @@ let ask_solver
  : list query_settings * answer
  =
     (* Prepare the configurations to be used. *)
-    let configs, next_hint = make_solver_configs is_being_retried env all_labels prefix query query_term suffix in
+    let configs, next_hint = make_solver_configs can_split is_retry env all_labels prefix query query_term suffix in
     (* The default config is at the head. We distinguish this one since
     it includes some metadata that we need, such as the query name, etc.
     (Though all other configs also contain it.) *)
@@ -1036,26 +1039,13 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
       end
     end
 
-let ask_and_report_errors
-    (is_being_retried : bool)
-    (env : Env.env)
-    (all_labels : error_labels)
-    (prefix : list decl)
-    (query : decl)
-    (query_term : Syntax.term)
-    (suffix : list decl)
- : unit
- = let configs, ans = ask_solver is_being_retried env all_labels prefix query query_term suffix in
-   let default_settings = List.hd configs in
-   report env default_settings ans
-
 (* This type represents the configuration under which the solver was
 _started_. If anything changes, the solver should be restarted for these
 settings to take effect. See `maybe_refresh` below. *)
 type solver_cfg = {
   seed             : int;
   cliopt           : list string;
-  smtopt           : list string;  
+  smtopt           : list string;
   facts            : list (list string * bool);
   valid_intro      : bool;
   valid_elim       : bool;
@@ -1066,7 +1056,7 @@ let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
 let get_cfg env : solver_cfg =
     { seed             = Options.z3_seed ()
     ; cliopt           = Options.z3_cliopt ()
-    ; smtopt           = Options.z3_smtopt ()    
+    ; smtopt           = Options.z3_smtopt ()
     ; facts            = env.proof_ns
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()
@@ -1086,26 +1076,33 @@ let maybe_refresh_solver env =
           Z3.refresh ()
         )
 
-(* Called by solve *)
-let rec do_solve is_retry use_env_msg tcenv q : unit =
+let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
+  let r =
+    try f () with
+    | e -> h (); raise e
+  in
+  h (); r
+
+(* The query_settings list is non-empty unless the query was trivial. *)
+let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list query_settings * answer) =
     maybe_refresh_solver tcenv;
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-
-    try
+    finally pop (fun () ->
       let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
       let tcenv = incr_query_index tcenv in
       match qry with
-      | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
-      | _ when tcenv.admit -> pop()
+      (* trivial cases *)
+      | Assume({assumption_term={tm=App(FalseOp, _)}}) -> ([], ans_ok)
+      | _ when tcenv.admit -> ([], ans_ok)
 
       | Assume _ ->
-        if (is_retry || Options.split_queries())
+        if (is_retry || Options.split_queries() = Options.Always)
         && Options.debug_any()
         then (
           let n = List.length labels in
           if n <> 1
-          then 
+          then
             FStar.Errors.diag
                 (Env.get_range tcenv)
                 (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
@@ -1113,79 +1110,85 @@ let rec do_solve is_retry use_env_msg tcenv q : unit =
                           (Term.declToSmt "" qry)
                           (BU.string_of_int n))
         );
-
-        let ans = ask_and_report_errors is_retry tcenv labels prefix qry q suffix in
-
-        pop ();
-        ()
+        ask_solver can_split is_retry tcenv labels prefix qry q suffix
 
       | _ -> failwith "Impossible"
-    with
+    )
+
+(* Asks the solver and reports errors. Does quake if needed. *)
+let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
+  let ans_opt =
+    try Some (encode_and_ask can_split is_retry use_env_msg tcenv q) with
+    (* Each (potentially splitted) query can fail with this error, raise by encode_query.
+     * Note, even though this is a log_issue, the error cannot be turned into a warning
+     * nor ignored. *)
+    | FStar.SMTEncoding.Env.Inner_let_rec names ->
+      FStar.TypeChecker.Err.log_issue
+        tcenv tcenv.range
+        (Errors.Error_NonTopRecFunctionNotFullyEncoded,
+         BU.format1
+           "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+           (String.concat "," (List.map fst names)));
+       None
+  in
+  match ans_opt with
+  | Some (default_settings::_, ans) when not ans.ok ->
+    report tcenv default_settings ans
+
+  | Some (_, ans) when ans.ok ->
+    () (* trivial or succeeded *)
+
+  | Some ([], ans) when not ans.ok ->
+    failwith "impossible: bad answer from encode_and_ask"
+
+  | None -> () (* already logged an error *)
+
+let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
+  let goals =
+    match Env.split_smt_query tcenv q with
+    | None ->
+      failwith "Impossible: split_query callback is not set"
+
+    | Some goals ->
+      goals
+  in
+
+  goals |> List.iter (fun (env, goal) -> do_solve false retrying use_env_msg env goal);
+
+  if FStar.Errors.get_err_count() = 0 && retrying
+  then ( //query succeeded after a retry
+    FStar.TypeChecker.Err.log_issue
+      tcenv
+      tcenv.range
+      (Errors.Warning_SplitAndRetryQueries,
+       "The verification condition succeeded after splitting it to localize potential errors, \
+        although the original non-split verification condition failed. \
+        If you want to rely on splitting queries for verifying your program \
+        please use the '--split_queries always' option rather than relying on it implicitly.")
+   )
+
+let disable_quake_for (f : unit -> 'a) : 'a =
+  Options.with_saved_options (fun () ->
+    Options.set_option "quake_hi" (Options.Int 1);
+    f ())
+
+(* Split queries if needed according to --split_queries option. Note:
+sync SMT queries do not pass via this function. *)
+let do_solve_maybe_split use_env_msg tcenv q : unit =
+    match Options.split_queries () with
+    | Options.No -> do_solve false false use_env_msg tcenv q
+    | Options.OnFailure ->
+      (* If we are quake testing, disable auto splitting. Note, this implies
+       * that automatically splitted queries do not ever get quake testing,
+       * which is good as that would be confusing for the user. *)
+      let can_split = not (Options.quake_hi () > 1) in
+      begin try do_solve can_split false use_env_msg tcenv q with
       | SplitQueryAndRetry ->
-        pop();
-        if is_retry
-        then failwith "Impossible: retried queries should always produce an error report\
-                       and cannot be split and retried further";
-
-        let _ =
-          match Env.split_smt_query tcenv q with
-          | None ->
-            failwith "Impossible: split_query callback is not set"
-
-          | Some goals ->
-            goals |> List.iter (fun (env, goal) -> do_solve true use_env_msg env goal)
-        in
-
-        if FStar.Errors.get_err_count() = 0
-        then ( //query succeeded after a retry
-          FStar.TypeChecker.Err.log_issue
-            tcenv
-            tcenv.range
-            (Errors.Warning_SplitAndRetryQueries,
-             "The verification condition succeeded after splitting it to localize potential errors, \
-              although the original non-split verification condition failed. \
-              If you want to rely on splitting queries for verifying your program \
-              please use the --split_queries option rather than relying on it implicitly.")
-         )
-
-
-      | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
-        pop ();  //AR: Important, we push-ed before encode_query was called
-        FStar.TypeChecker.Err.log_issue
-          tcenv tcenv.range
-          (Errors.Error_NonTopRecFunctionNotFullyEncoded,
-           BU.format1
-             "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-             (String.concat "," (List.map fst names)))
-
-(* Called by solve_sync. *)
-let do_solve_sync use_env_msg tcenv q : bool =
-    maybe_refresh_solver tcenv;
-    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-
-    let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
-    let tcenv = incr_query_index tcenv in
-    match qry with
-    | Assume({assumption_term={tm=App(FalseOp, _)}}) -> begin
-      pop();
-      true
-    end
-
-    | _ when tcenv.admit -> begin
-      pop();
-      true
-    end
-
-    | Assume _ ->
-      (* We set is_being_retried=true here so we will not try to split queries,
-       * and hence we do not need to handle the SplitQueryAndRetry exception. *)
-      let configs, ans = ask_solver true tcenv labels prefix qry q suffix in
-      let default_settings = List.hd configs in
-      pop ();
-      ans.ok
-
-    | _ -> failwith "do_solve_sync: impossible"
+         split_and_solve true use_env_msg tcenv q
+      end
+    | Options.Always ->
+      (* Set retrying=false so queries go through the full config list, etc. *)
+      split_and_solve false use_env_msg tcenv q
 
 (* Attempt to discharge a VC through the SMT solver. Will
 automatically retry increasing fuel as needed, and perform quake testing
@@ -1199,21 +1202,35 @@ let solve use_env_msg tcenv q : unit =
              BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q))
     else
     Profiling.profile
-      (fun () -> do_solve false use_env_msg tcenv q)
+      (fun () -> do_solve_maybe_split use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
       "FStar.SMTEncoding.solve_top_level"
 
-(* Like solve, but returns a boolean indicating whether the query
-succeeded, and _will not_ log not raise an error if not. Mostly useful
-for the smt_sync tactic primitive. *)
-let solve_sync use_env_msg tcenv q : bool =
-    if Options.no_smt ()
-    then false
+(* This asks the SMT to solve a query, and returns the answer without
+logging any kind of error. Mostly useful for the smt_sync tactic
+primitive.
+
+It will NOT split queries
+It will NOT do quake testing.
+It WILL raise fuel incrementally to attempt to solve the query
+
+*)
+let solve_sync use_env_msg tcenv q : answer =
+    if Options.no_smt () then ans_fail
     else
+    let go () =
+      let _cfgs, ans = disable_quake_for (fun () -> encode_and_ask false false use_env_msg tcenv q) in
+      ans
+    in
     Profiling.profile
-      (fun () -> do_solve_sync use_env_msg tcenv q)
+      go
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
-      "FStar.SMTEncoding.solve_top_level"
+      "FStar.SMTEncoding.solve_sync_top_level"
+
+(* The version actually exported, and used by tactics. *)
+let solve_sync_bool use_env_msg tcenv q : bool =
+    let ans = solve_sync use_env_msg tcenv q in
+    ans.ok
 
 (**********************************************************************************************)
 (* Top-level interface *)
@@ -1233,7 +1250,7 @@ let solver = {
     handle_smt_goal=(fun e g -> [e,g]);
 
     solve=solve;
-    solve_sync=solve_sync;
+    solve_sync=solve_sync_bool;
     finish=Z3.finish;
     refresh=Z3.refresh;
 }
