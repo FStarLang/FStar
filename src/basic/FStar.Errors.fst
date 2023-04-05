@@ -302,7 +302,7 @@ let t_set_parse_warn_error,
             Getopt.Success
         with Invalid_warn_error_setting msg ->
             (BU.smap_add error_flags we None;
-             Getopt.Error ("Invalid --warn_error setting: " ^msg))
+             Getopt.Error ("Invalid --warn_error setting: " ^ msg ^ "\n"))
     in
     (* get_error_flags is called when logging an issue to figure out
        which error level to report a particular issue at (Warning, Error etc.)
