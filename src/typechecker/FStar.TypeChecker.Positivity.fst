@@ -1152,7 +1152,8 @@ let name_strictly_positive_in_type env (bv:bv) t =
 *)
 let name_unused_in_type env (bv:bv) t =
   let t, fv_lid = name_as_fv_in_t t bv in
-  not (ty_occurs_in fv_lid t)
+  not (ty_occurs_in fv_lid t) ||
+  not (ty_occurs_in fv_lid (normalize env t))
 
 
 (*  Check that the mutuals are

@@ -32,7 +32,7 @@ module FStar.Map
 module S = FStar.Set
 
 (* Map.t key value: The main type provided by this module *)
-val t (key:eqtype) (value:Type u#a)
+val t (key:eqtype) ([@@@strictly_positive] value:Type u#a)
   : Type u#a
 
 (* sel m k : Look up key `k` in map `m` *)

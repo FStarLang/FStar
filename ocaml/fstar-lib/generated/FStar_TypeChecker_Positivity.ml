@@ -1349,7 +1349,11 @@ let (name_unused_in_type :
         let uu___ = name_as_fv_in_t t bv in
         match uu___ with
         | (t1, fv_lid) ->
-            let uu___1 = ty_occurs_in fv_lid t1 in Prims.op_Negation uu___1
+            (let uu___1 = ty_occurs_in fv_lid t1 in Prims.op_Negation uu___1)
+              ||
+              (let uu___1 =
+                 let uu___2 = normalize env t1 in ty_occurs_in fv_lid uu___2 in
+               Prims.op_Negation uu___1)
 let (ty_strictly_positive_in_datacon_decl :
   FStar_TypeChecker_Env.env_t ->
     FStar_Ident.lident Prims.list ->
