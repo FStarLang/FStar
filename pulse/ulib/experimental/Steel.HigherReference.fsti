@@ -30,7 +30,7 @@ module Mem = Steel.Memory
 /// Steel.PCMReference, by instantiating a specific fractional permission PCM
 
 /// An abstract datatype for references
-val ref ([@@@strictly_positive] a:Type u#1) : Type u#0
+val ref ([@@@unused] a:Type u#1) : Type u#0
 
 /// The null pointer
 val null (#a:Type u#1) : ref a
