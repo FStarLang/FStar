@@ -2267,7 +2267,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
   let h = U.un_uinst h in
   let r =
     match (SS.compress h).n, args with
-    | Tm_fvar fv, [(a, None)] when S.fv_eq_lid fv C.erased_lid ->
+    | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv C.erased_lid ->
       Yes a
 
     (* In these two cases, we cannot guarantee that `t` is not

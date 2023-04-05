@@ -4938,8 +4938,7 @@ let rec (check_erased :
                 uu___3.FStar_Syntax_Syntax.n in
               (uu___2, args) in
             match uu___1 with
-            | (FStar_Syntax_Syntax.Tm_fvar fv,
-               (a, FStar_Pervasives_Native.None)::[]) when
+            | (FStar_Syntax_Syntax.Tm_fvar fv, (a, uu___2)::[]) when
                 FStar_Syntax_Syntax.fv_eq_lid fv
                   FStar_Parser_Const.erased_lid
                 -> Yes a

@@ -45,7 +45,7 @@ module FStar.Ghost
 
 (** [erased t] is the computationally irrelevant counterpart of [t] *)
 [@@ erasable]
-val erased: Type u#a -> Type u#a
+val erased ([@@@strictly_positive] a: Type u#a) : Type u#a
 
 (** [erased t] is in a bijection with [t], as witnessed by [reveal]
     and [hide] *)
