@@ -704,16 +704,13 @@ let bind_comp_ln #f #g #x #c1 #c2 #c (d:bind_comp f g x c1 c2 c)
     (ensures ln_c c)
   = ()
 
-#push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 20"
+#push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 30"
 let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
                      (d:st_typing f g t c)
   : Lemma 
     (ensures ln_st t /\ ln_c c)
     (decreases d)
   = match d with
-    // | T_Tot _g e t dt ->
-    //   tot_typing_ln dt
-
     | T_Abs _g x _q ty _u body c dt db ->
       tot_typing_ln dt;
       st_typing_ln db;
@@ -724,21 +721,25 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       tot_typing_ln st;
       tot_typing_ln at;
       open_comp_ln_inv' res arg 0
-
+      
+    | T_Lift _ _ _ _ d1 l ->
+      st_typing_ln d1;
+      lift_comp_ln l
 
     | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
       tot_typing_ln t_typing;
       tot_typing_ln e_typing;
       tot_typing_ln post_typing;
       open_term_ln' post (term_of_var x) 0;
-      let post =
-        if use_eq then Tm_Star post (Tm_Pure (mk_eq2 u t (null_bvar 0) e))
-        else post in
-      open_term_ln_inv' post e 0
-      
-    | T_Lift _ _ _ _ d1 l ->
-      st_typing_ln d1;
-      lift_comp_ln l
+      open_term_ln_inv' post e 0;
+      if not use_eq
+      then ()
+      else begin
+        let e = Tm_Star
+          (open_term' post (null_var x) 0)
+          (Tm_Pure (mk_eq2_prop u t (null_var x) e)) in
+        close_term_ln' e x 0
+      end
 
     | T_Bind _ _ e2 _ _ x _ d1 dc1 d2 bc ->
       st_typing_ln d1;
@@ -798,8 +799,8 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       close_term_ln' (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0) x 0
 
     | T_Rewrite _ _ _ p_typing equiv_p_q ->
-				  tot_typing_ln p_typing;
-						vprop_equiv_ln equiv_p_q
+      tot_typing_ln p_typing;
+      vprop_equiv_ln equiv_p_q
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_typing_ln t_typing;
