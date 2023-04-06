@@ -196,13 +196,17 @@ let destruct_eq' (typ : typ) : option (term * term) =
         | _ -> None
         end
 
-let destruct_eq (typ : typ) : option (term * term) =
+let destruct_eq (env : Env.env) (typ : typ) : option (term * term) =
+// TODO: unascribe?
+    let typ = whnf env typ in
     match destruct_eq' typ with
     | Some t -> Some t
     | None ->
         // Retry for a squashed one
         begin match U.un_squash typ with
-        | Some typ -> destruct_eq' typ
+        | Some typ ->
+          let typ = whnf env typ in
+          destruct_eq' typ
         | None -> None
         end
 
@@ -460,7 +464,7 @@ here for now. *)
 let do_match_on_lhs (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : tac bool =
     bind (mk_tac (fun ps -> let tx = UF.new_transaction () in
                             Success (tx, ps))) (fun tx ->
-    match destruct_eq t1 with
+    match destruct_eq env t1 with
     | None -> fail "do_match_on_lhs: not an eq"
     | Some (lhs, _) ->
     let uvs1 = SF.uvars_uncached lhs in
@@ -1169,7 +1173,7 @@ let rewrite (h:binder) : tac unit = wrap_err "rewrite" <| (
     | None -> fail "binder not found in environment"
     | Some (e0, bv, bvs) ->
       begin
-      match destruct_eq (whnf e0 bv.sort) with
+      match destruct_eq e0 bv.sort with
       | Some (x, e) ->
         begin
         match (SS.compress x).n with
@@ -1462,7 +1466,7 @@ let t_trefl (allow_guards:bool) : tac unit = wrap_err "t_trefl" <| (
   match!
     catch (//restore UF graph, including any Already_checked markers, if anything fails
       let! g = cur_goal in
-      match destruct_eq (whnf (goal_env g) (goal_type g)) with
+      match destruct_eq (goal_env g) (goal_type g) with
       | Some (l, r) ->
              _t_trefl allow_guards l r
       | None ->
@@ -2128,7 +2132,7 @@ let set_urgency (u:Z.t) : tac unit =
 
 let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <| (
   let! g = cur_goal in
-  match destruct_eq (whnf (goal_env g) (goal_type g)) with
+  match destruct_eq (goal_env g) (goal_type g) with
   | Some (l, r) -> begin
     let lh, las = U.head_and_args_full l in
     match (SS.compress (U.unascribe lh)).n with
