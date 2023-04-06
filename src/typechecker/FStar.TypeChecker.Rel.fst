@@ -1836,7 +1836,7 @@ let simplify_guard env g = match g.guard_f with
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
       let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
-              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
+              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm; Env.Exclude Env.Zeta] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f =
         let g = U.unmeta f in
@@ -4944,7 +4944,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
       let vc =
         Profiling.profile
-          (fun () -> N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env vc)
+          (fun () -> N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.Exclude Env.Zeta] env vc)
           (Some (Ident.string_of_lid (Env.current_module env)))
           "FStar.TypeChecker.Rel.vc_normalization"
       in
@@ -4974,7 +4974,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                         if Options.profile_enabled None "FStar.TypeChecker"
                         then BU.print1 "Tactic preprocessing produced %s goals\n" (BU.string_of_int (List.length vcs));
                         let vcs = List.map (fun (env, goal, opts) ->
-                        env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops] env goal, opts) vcs in
+                        env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops; Env.Exclude Env.Zeta] env goal, opts) vcs in
                         let vcs = List.map (fun (env, goal, opts) ->
                           env.solver.handle_smt_goal env goal |>
                             (* Keep the same SMT options if the goals were transformed *)
