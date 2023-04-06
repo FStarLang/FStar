@@ -14,7 +14,7 @@ module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
 
 
-#push-options "--z3rlimit_factor 10 --fuel 8 --ifuel 1"
+#push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 1"
 let par_soundness
   (#f:stt_env)
   (#g:env)
