@@ -50,18 +50,10 @@ let intro_exists_erased_soundness
   in
   let reveal_re = elab_term (mk_reveal u t e) in
 
-  // reveal_re is ln
-  LN.tot_typing_ln e_typing;
-  elab_ln (mk_reveal u t e) (-1);
-
-  //rp is (ln' 0)
-  LN.tot_typing_ln p_typing;
-  elab_ln p 0;
-  
-  // RT.beta_reduction rt R.Q_Explicit rp reveal_re;
-  admit ();
-
-  WT.intro_exists_erased_typing rt_typing rp_typing re_typing
+  let d = WT.intro_exists_erased_typing rt_typing rp_typing re_typing in
+  RT.T_Sub _ _ _ _ d
+    (RT.ST_Equiv _ _ _
+       (elab_stghost_equiv _ c _ _ (RT.EQ_Beta _ rt R.Q_Explicit rp reveal_re) (RT.EQ_Refl _ _)))
 
 let intro_exists_soundness
   (#f:stt_env)
@@ -95,18 +87,10 @@ let intro_exists_soundness
       tot_typing_soundness e_typing
   in
 
-  // re is ln
-  LN.tot_typing_ln e_typing;
-  elab_ln e (-1);
-
-  //rp is (ln' 0)
-  LN.tot_typing_ln p_typing;
-  elab_ln p 0;
-
-  // RT.beta_reduction rt R.Q_Explicit rp re;
-  admit ();
-
-  WT.intro_exists_typing rt_typing rp_typing re_typing
+  let d = WT.intro_exists_typing rt_typing rp_typing re_typing in
+  RT.T_Sub _ _ _ _ d
+    (RT.ST_Equiv _ _ _
+       (elab_stghost_equiv _ c _ _ (RT.EQ_Beta _ rt R.Q_Explicit rp re) (RT.EQ_Refl _ _)))
 #pop-options
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
