@@ -531,3 +531,24 @@ let mk_star_equiv (g:R.env) (t1 t2 t3 t4:R.term)
   : RT.equiv g (mk_star t1 t2) (mk_star t3 t4) =
   
   admit ()
+
+let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res pre1 post1 pre2 post2:R.term)
+  (pre_eq:RT.equiv g pre1 pre2)
+  (post_eq:RT.equiv g post1 post2)
+  : RT.equiv g (mk_stt_comp u res pre1 post1)
+               (mk_stt_comp u res pre2 post2)
+  = admit ()
+
+let mk_stt_atomic_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
+  (pre_eq:RT.equiv g pre1 pre2)
+  (post_eq:RT.equiv g post1 post2)
+  : RT.equiv g (mk_stt_atomic_comp u res inames pre1 post1)
+               (mk_stt_atomic_comp u res inames pre2 post2)
+  = admit ()
+
+let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
+  (pre_eq:RT.equiv g pre1 pre2)
+  (post_eq:RT.equiv g post1 post2)
+  : RT.equiv g (mk_stt_ghost_comp u res inames pre1 post1)
+               (mk_stt_ghost_comp u res inames pre2 post2)
+  = admit ()
