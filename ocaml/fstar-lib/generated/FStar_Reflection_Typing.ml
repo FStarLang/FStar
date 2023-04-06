@@ -109,7 +109,7 @@ let (make_bv :
   fun n ->
     fun t ->
       {
-        FStar_Reflection_Data.bv_ppname = (seal_pp_name "_");
+        FStar_Reflection_Data.bv_ppname = pp_name_default;
         FStar_Reflection_Data.bv_index = n;
         FStar_Reflection_Data.bv_sort = t
       }
@@ -132,6 +132,25 @@ let (var_as_term : FStar_Reflection_Data.var -> FStar_Reflection_Types.term)
   fun v ->
     FStar_Reflection_Builtins.pack_ln
       (FStar_Reflection_Data.Tv_Var (var_as_bv v))
+let (binder_of_t_q :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Data.aqualv -> FStar_Reflection_Types.binder)
+  = fun t -> fun q -> mk_binder pp_name_default Prims.int_zero t q
+let (mk_abs :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Data.aqualv ->
+      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun ty ->
+    fun qual ->
+      fun t ->
+        FStar_Reflection_Builtins.pack_ln
+          (FStar_Reflection_Data.Tv_Abs ((binder_of_t_q ty qual), t))
+let (bound_var : Prims.int -> FStar_Reflection_Types.term) =
+  fun i ->
+    FStar_Reflection_Builtins.pack_ln
+      (FStar_Reflection_Data.Tv_BVar
+         (FStar_Reflection_Builtins.pack_bv (make_bv i tun)))
 let (open_with_var : FStar_Reflection_Data.var -> open_or_close) =
   fun x ->
     OpenWith
@@ -993,6 +1012,9 @@ and ('dummyV0, 'dummyV1, 'dummyV2) equiv =
   | EQ_Trans of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term * (unit, 
   unit, unit) equiv * (unit, unit, unit) equiv 
+  | EQ_Beta of FStar_Reflection_Types.env * FStar_Reflection_Types.typ *
+  FStar_Reflection_Data.aqualv * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term 
   | EQ_Token of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * unit 
   | EQ_Ctxt of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
@@ -1036,6 +1058,8 @@ let uu___is_EQ_Sym uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Sym _ -> true | _ -> false
 let uu___is_EQ_Trans uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Trans _ -> true | _ -> false
+let uu___is_EQ_Beta uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | EQ_Beta _ -> true | _ -> false
 let uu___is_EQ_Token uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Token _ -> true | _ -> false
 let uu___is_EQ_Ctxt uu___2 uu___1 uu___ uu___3 =
@@ -1244,25 +1268,19 @@ let (ln : FStar_Reflection_Types.term -> Prims.bool) =
   fun t -> ln' t (Prims.of_int (-1))
 let (ln_comp : FStar_Reflection_Types.comp -> Prims.bool) =
   fun c -> ln'_comp c (Prims.of_int (-1))
-let (binder_of_t_q :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Data.aqualv -> FStar_Reflection_Types.binder)
-  = fun t -> fun q -> mk_binder pp_name_default Prims.int_zero t q
-let (mk_abs :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Data.aqualv ->
-      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+let (equiv_abs :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            FStar_Reflection_Data.var ->
+              (unit, unit, unit) equiv -> (unit, unit, unit) equiv)
   =
-  fun ty ->
-    fun qual ->
-      fun t ->
-        FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_Abs ((binder_of_t_q ty qual), t))
-let (bound_var : Prims.int -> FStar_Reflection_Types.term) =
-  fun i ->
-    FStar_Reflection_Builtins.pack_ln
-      (FStar_Reflection_Data.Tv_BVar
-         (FStar_Reflection_Builtins.pack_bv (make_bv i tun)))
+  fun g ->
+    fun e1 ->
+      fun e2 ->
+        fun uu___ -> fun uu___1 -> fun uu___2 -> fun uu___3 -> Prims.admit ()
 type 'g fstar_env_fvs = unit
 type fstar_env = FStar_Reflection_Types.env
 type fstar_top_env = fstar_env

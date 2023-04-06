@@ -17,7 +17,10 @@
 module FStar.Reflection.Typing
 
 (** This module defines a typing judgment for (parts of) the total
-    fragment of F*. We are using it in the meta DSL framework.
+    fragment of F*. We are using it in the meta DSL framework as an
+    official specification for the F* type system.
+
+    We expect it to grow to cover more of the F* language.
 
     IT IS HIGHLY EXPERIMENTAL AND NOT YET READY TO USE.
   *)

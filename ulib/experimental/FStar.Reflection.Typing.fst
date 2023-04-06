@@ -17,7 +17,10 @@
 module FStar.Reflection.Typing
 
 (** This module defines a typing judgment for (parts of) the total
-    fragment of F*. We are using it in the meta DSL framework.
+    fragment of F*. We are using it in the meta DSL framework as an
+    official specification for the F* type system.
+
+    We expect it to grow to cover more of the F* language.
 
     IT IS HIGHLY EXPERIMENTAL AND NOT YET READY TO USE.
   *)
@@ -772,4 +775,4 @@ and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
     close_with_not_free_var t x i;
     close_args_with_not_free_var tl x i
 
-let beta_reduction _ _ _ _ = admit ()
+let equiv_abs _ _ _ _ = admit ()
