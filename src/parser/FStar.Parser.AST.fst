@@ -208,6 +208,7 @@ type lift = {
   msource: lid;
   mdest:   lid;
   lift_op: lift_op;
+  braced: bool; //a detail: for incremental parsing, we need to know if it is delimited by bracces  
 }
 
 type pragma =
@@ -995,3 +996,15 @@ let ident_of_binder r b =
 
 let idents_of_binders bs r =
     bs |> List.map (ident_of_binder r)
+
+let decl_syntax_is_delimited (d:decl) = 
+  match d.d with
+  | Pragma (ResetOptions None) -> false
+  | Pragma (PushOptions None) -> false
+  | Pragma _
+  | NewEffect (DefineEffect _)
+  | LayeredEffect (DefineEffect _)
+  | SubEffect {braced=true} -> true
+  | Tycon(_, b, _) -> b
+  | _ -> false
+

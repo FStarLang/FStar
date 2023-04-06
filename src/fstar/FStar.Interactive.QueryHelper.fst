@@ -76,6 +76,9 @@ let symlookup tcenv symbol pos_opt requested_info =
         match name_or_lid with
         | Inl name -> name
         | Inr lid -> Ident.string_of_lid lid in
+      let str_of_opt = function
+        | None -> "<none>"
+        | Some s -> s in
       let typ_str =
         if List.mem "type" requested_info then
           Some (term_to_string tcenv typ)
@@ -90,7 +93,6 @@ let symlookup tcenv symbol pos_opt requested_info =
         | _ -> None in
       let def_range =
         if List.mem "defined-at" requested_info then Some rng else None in
-
       Some ({ slr_name = name; slr_def_range = def_range;
              slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str })
 

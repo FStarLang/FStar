@@ -23,6 +23,7 @@ open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.Errors
 open FStar.Universal
+open FStar.Interactive.Ide.Types
 open FStar.Interactive.JsonHelper
 
 module U = FStar.Compiler.Util
@@ -112,9 +113,15 @@ let repl_state_init (fname: string) : repl_state =
   let intial_range = Range.mk_range fname (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = TcEnv.set_range env intial_range in
-  { repl_line = 1; repl_column = 0; repl_fname = fname;
-    repl_curmod = None; repl_env = env; repl_deps_stack = [];
-    repl_stdin = open_stdin (); repl_names = CompletionTable.empty }
+  { repl_line = 1;
+    repl_column = 0;
+    repl_fname = fname;
+    repl_curmod = None;
+    repl_env = env;
+    repl_deps_stack = [];
+    repl_stdin = open_stdin ();
+    repl_names = CompletionTable.empty;
+    repl_buffered_input_queries = [] }
 
 type optresponse = option assoct // Contains [("result", ...)], [("error", ...)], but is not
                                   // the full response; call json_of_response for that

@@ -22,9 +22,10 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                          (let uu___5 = FStar_Tests_Pars.init () in
                           FStar_Compiler_Effect.op_Bar_Greater uu___5
                             (fun uu___6 -> ()));
+                         FStar_Tests_Pars.parse_incremental_decls ();
                          FStar_Tests_Norm.run_all ();
-                         (let uu___7 = FStar_Tests_Unif.run_all () in
-                          if uu___7
+                         (let uu___8 = FStar_Tests_Unif.run_all () in
+                          if uu___8
                           then ()
                           else FStar_Compiler_Effect.exit Prims.int_one);
                          FStar_Compiler_Effect.exit Prims.int_zero)
@@ -33,9 +34,10 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                          (let uu___5 = FStar_Tests_Pars.init () in
                           FStar_Compiler_Effect.op_Bar_Greater uu___5
                             (fun uu___6 -> ()));
+                         FStar_Tests_Pars.parse_incremental_decls ();
                          FStar_Tests_Norm.run_all ();
-                         (let uu___7 = FStar_Tests_Unif.run_all () in
-                          if uu___7
+                         (let uu___8 = FStar_Tests_Unif.run_all () in
+                          if uu___8
                           then ()
                           else FStar_Compiler_Effect.exit Prims.int_one);
                          FStar_Compiler_Effect.exit Prims.int_zero)))) ()
