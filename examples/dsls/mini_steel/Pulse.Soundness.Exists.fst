@@ -158,7 +158,7 @@ let elim_exists_soundness
     RT.equiv_abs (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
       (RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rp rreveal_x)  in
 
-  let comps_equiv = elab_stghost_post_equiv (extend_env_l f g) c _ eq in
+  let comps_equiv = elab_stghost_equiv (extend_env_l f g) c _ _ (RT.EQ_Refl _ _) eq in
 
   let d = WT.elim_exists_typing x rt_typing rp_typing in
   RT.T_Sub _ _ _ _ d

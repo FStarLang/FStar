@@ -1312,6 +1312,7 @@ val close_with_not_free_var (t:R.term) (x:var) (i:nat)
       (requires ~ (Set.mem x (freevars t)))
       (ensures open_or_close_term' t (CloseVar x) i == t)
 
+// may be it should require typing of one of e1 or e2 in g?
 val equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv) (x:var)
   (eq:equiv g e1 e2)
   : equiv g (mk_abs ty q (open_or_close_term' e1 (CloseVar x) 0))
