@@ -151,8 +151,12 @@ let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
                    (elab_term res)
                    pre
                    post)
-      (elab_comp c)
-  = admit ()
+      (elab_comp c) =
+  
+  mk_stt_comp_equiv _
+    (elab_universe (comp_u c))
+    (elab_term (comp_res c))
+    _ _ _ _ eq_pre eq_post
 
 let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))
@@ -165,8 +169,14 @@ let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.t
                           (elab_term inames)
                           pre
                           post)
-      (elab_comp c)
-  = admit ()
+      (elab_comp c) =
+  
+  let C_STAtomic inames _ = c in
+  mk_stt_atomic_comp_equiv _
+    (elab_universe (comp_u c))
+    (elab_term (comp_res c))
+    (elab_term inames)
+    _ _ _ _ eq_pre eq_post
 
 let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))
@@ -179,5 +189,11 @@ let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.ter
                           (elab_term inames)
                           pre
                           post)
-      (elab_comp c)
-  = admit ()
+      (elab_comp c) =
+  
+  let C_STGhost inames _ = c in
+  mk_stt_ghost_comp_equiv _
+    (elab_universe (comp_u c))
+    (elab_term (comp_res c))
+    (elab_term inames)
+    _ _ _ _ eq_pre eq_post
