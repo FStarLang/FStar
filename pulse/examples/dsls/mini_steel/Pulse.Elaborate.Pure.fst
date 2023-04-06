@@ -141,27 +141,43 @@ and elab_st_comp (c:st_comp)
     let post = elab_term c.post in
     elab_universe c.u, res, pre, post
 
-let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.term)
-  (eq_pre:RT.equiv g (elab_term (comp_pre c)) pre)
-  (eq_post:RT.equiv g (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))) post)
-  : RT.equiv g
-      (elab_comp c)
-      (let C_STGhost inames {u;res} = c in
-       mk_stt_ghost_comp (elab_universe u)
-                         (elab_term res)
-                         (elab_term inames)
-                         pre
-                         post)
-  = admit ()
-
 let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
-  (eq_pre:RT.equiv g (elab_term (comp_pre c)) pre)
-  (eq_post:RT.equiv g (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))) post)
+  (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))
+  (eq_post:RT.equiv g post
+                      (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))))
   : RT.equiv g
-      (elab_comp c)
       (let C_ST {u;res} = c in
        mk_stt_comp (elab_universe u)
                    (elab_term res)
                    pre
                    post)
+      (elab_comp c)
+  = admit ()
+
+let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.term)
+  (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))
+  (eq_post:RT.equiv g post
+                    (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))))
+  : RT.equiv g
+      (let C_STAtomic inames {u;res} = c in
+       mk_stt_atomic_comp (elab_universe u)
+                          (elab_term res)
+                          (elab_term inames)
+                          pre
+                          post)
+      (elab_comp c)
+  = admit ()
+
+let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.term)
+  (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))
+  (eq_post:RT.equiv g post
+                    (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))))
+  : RT.equiv g
+      (let C_STGhost inames {u;res} = c in
+       mk_stt_ghost_comp (elab_universe u)
+                          (elab_term res)
+                          (elab_term inames)
+                          pre
+                          post)
+      (elab_comp c)
   = admit ()
