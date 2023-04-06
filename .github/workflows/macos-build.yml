@@ -1,8 +1,6 @@
 name: Build FStar Binaries
 
 on:
-  schedule:
-    - cron: '0 0 * * 0'
 
 jobs:
 
@@ -35,7 +33,7 @@ jobs:
         source FStar/.github/env.sh
         PACKAGE_DOCS=0 make -j -C FStar package
     - name: Upload artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
-        name: fstar_package
-        path: FStar/src/ocaml-output/fstar_0.9.7.0-alpha1_Darwin_x86_64.tar.gz
+        name: fstar-Darwin_x86_64.tar.gz
+        path: FStar/src/ocaml-output/fstar.tar.gz

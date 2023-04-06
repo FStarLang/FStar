@@ -8,6 +8,6 @@ cd $cwd/../../everest
 export OPAMYES=1
 brew install opam bash gnu-getopt
 opam init
-opam switch create 4.05.0
+opam switch create 4.12.0
 eval $(opam env)
 ./everest --yes z3 opam
