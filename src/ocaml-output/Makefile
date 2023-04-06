@@ -32,9 +32,6 @@ else
 endif
 export INSTALL_EXEC
 
-# Final sanity check for the OCaml version
-OCAML_BRANCH=$(shell ocaml get_branch.ml)
-
 all: dune-snapshot
 
 # We derive parse.mly in two ways:
