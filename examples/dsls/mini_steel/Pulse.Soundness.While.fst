@@ -43,23 +43,33 @@ let while_soundness
         (mk_stt_comp uzero bool_tm (mk_exists uzero bool_tm rinv) rinv) =
     soundness f g cond (comp_while_cond inv) cond_typing in
 
-  // (elab_term inv) is (ln 0)
-  LN.tot_typing_ln inv_typing;
-  elab_ln inv 0;
-
   elab_open_commute' inv tm_true 0;
-  admit ();
-  // RT.beta_reduction bool_tm R.Q_Explicit (elab_term inv) true_tm;
 
   let rbody_typing
     : RT.typing _ (elab_st_typing body_typing)
         (mk_stt_comp uzero unit_tm
            (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
            (mk_abs unit_tm R.Q_Explicit (mk_exists uzero bool_tm rinv))) =
-    soundness f g body (comp_while_body inv) body_typing in
+    
+    let d = soundness f g body (comp_while_body inv) body_typing in
+    let pre_eq : RT.equiv (extend_env_l f g)
+                          (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
+                          (RT.open_or_close_term' (elab_term inv) (RT.OpenWith true_tm) 0)
+      = RT.EQ_Beta _ bool_tm R.Q_Explicit (elab_term inv) true_tm  in
+    RT.T_Sub _ _ _ _ d
+      (RT.ST_Equiv _ _ _ (RT.EQ_Sym _ _ _ (elab_stt_equiv _ _ _ _ pre_eq (RT.EQ_Refl _ _))))in
+
 
   elab_open_commute' inv tm_false 0;
-  // RT.beta_reduction bool_tm R.Q_Explicit (elab_term inv) false_tm;
 
-  WT.while_typing rinv_typing rcond_typing rbody_typing
+  let post_eq : RT.equiv (extend_env_l f g)
+                         (R.pack_ln (R.Tv_App rinv (false_tm, R.Q_Explicit)))
+                         (RT.open_or_close_term' (elab_term inv) (RT.OpenWith false_tm) 0)
+    = RT.EQ_Beta _ bool_tm R.Q_Explicit (elab_term inv) false_tm  in
+
+  let post_eq = RT.EQ_Ctxt _ _ _
+    (RT.Ctxt_abs_body (RT.binder_of_t_q unit_tm R.Q_Explicit) RT.Ctxt_hole) post_eq in
+
+  let d = WT.while_typing rinv_typing rcond_typing rbody_typing in
+  RT.T_Sub _ _ _ _ d (RT.ST_Equiv _ _ _ (elab_stt_equiv _ _ _ _ (RT.EQ_Refl _ _) post_eq))
 #pop-options
