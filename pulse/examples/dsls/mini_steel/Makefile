@@ -12,8 +12,9 @@ else
 endif
 
 all:
-	make all-common
-	make -C tests/
+	$(MAKE) all-common
+	$(MAKE) plugin
+	$(MAKE) -C tests/
 
 plugin: verify_all _build/Pulse_Main.cmxs
 
