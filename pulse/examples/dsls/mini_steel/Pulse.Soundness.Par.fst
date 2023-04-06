@@ -10,6 +10,7 @@ open Pulse.Soundness.Common
 
 module R = FStar.Reflection
 
+module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
 
 
@@ -59,7 +60,6 @@ let par_soundness
 
     inversion_of_stt_typing f g cR ru (Comp.comp_typing_soundness f g cR (comp_u cR) cR_typing) in
 
-  /////
   let uL = comp_u cL in
   let uR = comp_u cR in
   let aL = comp_res cL in
@@ -67,38 +67,30 @@ let par_soundness
   let postL = comp_post cL in
   let postR = comp_post cR in
   let x_tm = term_of_var x in
+  let rx_tm = RT.var_as_term x in
 
-  // ln proofs for invoking the RT beta reduction
-  RT.well_typed_terms_are_ln _ _ _ raL_typing;
-  RT.well_typed_terms_are_ln _ _ _ raR_typing;
-  RT.well_typed_terms_are_ln _ _ _ rpostL_typing;
-  RT.well_typed_terms_are_ln _ _ _ rpostR_typing;
+  elab_open_commute' postL (mk_fst uL uR aL aR x_tm) 0;
+  elab_open_commute' postR (mk_snd uL uR aL aR x_tm) 0;
 
-  // calc (==) {
-  //   elab_term (par_post uL uR aL aR postL postR x);
-  //      (==) { }
-  //   RT.open_or_close_term'
-  //     (mk_star
-  //        (RT.open_or_close_term'
-  //           (elab_term postL)
-  //           (RT.OpenWith (elab_term (mk_fst uL uR aL aR x_tm))) 0)
-  //        (RT.open_or_close_term'
-  //           (elab_term postR)
-  //           (RT.OpenWith (elab_term (mk_snd uL uR aL aR x_tm))) 0))
-  //     (RT.CloseVar x)
-  //     0;
-  //      (==) { RT.beta_reduction raL R.Q_Explicit
-  //               (elab_term postL)
-  //               (Pulse.Reflection.Util.mk_fst ru ru raL raR (RT.var_as_term x));
-  //             RT.beta_reduction raR R.Q_Explicit
-  //               (elab_term postR)
-  //               (Pulse.Reflection.Util.mk_snd ru ru raL raR (RT.var_as_term x)) }
-  //   WT.par_post ru raL raR rpostL rpostR x;
-  // };
-  /////
-  admit ();
+  let post_body_eq : RT.equiv (extend_env_l f g)
+    (mk_star (R.pack_ln (R.Tv_App rpostL (PReflUtil.mk_fst ru ru raL raR rx_tm, R.Q_Explicit)))
+             (R.pack_ln (R.Tv_App rpostR (PReflUtil.mk_snd ru ru raL raR rx_tm, R.Q_Explicit))))
+    (elab_term (Tm_Star (open_term' postL (mk_fst uL uR aL aR x_tm) 0)
+                        (open_term' postR (mk_snd uL uR aL aR x_tm) 0)))
+    = mk_star_equiv _ _ _ _ _
+        (RT.EQ_Beta _ raL _ (elab_term postL) _)
+        (RT.EQ_Beta _ raR _ (elab_term postR) _) in
 
-  WT.par_typing x raL_typing raR_typing rpreL_typing rpostL_typing
+  let post_eq
+    : RT.equiv (extend_env_l f g)
+               (mk_abs _ R.Q_Explicit _)
+               (mk_abs _ R.Q_Explicit _)
+    = RT.equiv_abs _ _ x post_body_eq in
+
+  let d = WT.par_typing x raL_typing raR_typing rpreL_typing rpostL_typing
     rpreR_typing rpostR_typing
-    reL_typing reR_typing
+    reL_typing reR_typing in
+  
+  RT.T_Sub _ _ _ _ d
+    (RT.ST_Equiv _ _ _ (elab_stt_equiv _ c _ _ (RT.EQ_Refl _ _) post_eq))
 #pop-options
