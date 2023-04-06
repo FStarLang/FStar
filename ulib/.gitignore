@@ -5,3 +5,4 @@
 fs/extracted
 [Bb]in/
 [Oo]bj/
+*.bak
