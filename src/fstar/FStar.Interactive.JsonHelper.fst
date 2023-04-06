@@ -65,6 +65,9 @@ let js_fail expected got =
 let js_int : json -> int = function
   | JsonInt i -> i
   | other -> js_fail "int" other
+let js_bool : json -> bool = function
+  | JsonBool b -> b
+  | other -> js_fail "int" other
 let js_str : json -> string = function
   | JsonStr s -> s
   | other -> js_fail "string" other
@@ -257,3 +260,4 @@ let js_diag (fname: string) (msg: string) (r: option Range.range) : assoct =
 let js_diag_clear (fname: string) : assoct =
   [("method", JsonStr "textDocument/publishDiagnostics");
    ("params", JsonAssoc [("uri", JsonStr (path_to_uri fname)); ("diagnostics", JsonList [])])]
+

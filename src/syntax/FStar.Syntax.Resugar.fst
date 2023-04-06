@@ -1435,7 +1435,7 @@ let resugar_sigelt' env se : option A.decl =
       | None, Some t -> A.LiftForFree t
       | _ -> failwith "Should not happen hopefully"
     in
-    Some (decl'_to_decl se (A.SubEffect({msource=src; mdest=dst; lift_op=op})))
+    Some (decl'_to_decl se (A.SubEffect({msource=src; mdest=dst; lift_op=op; braced=false})))
 
   | Sig_effect_abbrev (lid, vs, bs, c, flags) ->
     let bs, c = SS.open_comp bs c in

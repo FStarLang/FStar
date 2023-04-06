@@ -2852,7 +2852,8 @@ let (resugar_sigelt' :
                  {
                    FStar_Parser_AST.msource = src;
                    FStar_Parser_AST.mdest = dst;
-                   FStar_Parser_AST.lift_op = op
+                   FStar_Parser_AST.lift_op = op;
+                   FStar_Parser_AST.braced = false
                  }) in
           FStar_Pervasives_Native.Some uu___
       | FStar_Syntax_Syntax.Sig_effect_abbrev (lid, vs, bs, c, flags) ->

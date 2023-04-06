@@ -2835,40 +2835,6 @@ let (lcomp_has_trivial_postcondition :
             | FStar_Syntax_Syntax.SOMETRIVIAL -> true
             | FStar_Syntax_Syntax.TRIVIAL_POSTCONDITION -> true
             | uu___1 -> false) lc.FStar_TypeChecker_Common.cflags)
-let (maybe_add_with_type :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option ->
-      FStar_TypeChecker_Common.lcomp ->
-        FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-  =
-  fun env ->
-    fun uopt ->
-      fun lc ->
-        fun e ->
-          let uu___ =
-            (FStar_TypeChecker_Common.is_lcomp_partial_return lc) ||
-              env.FStar_TypeChecker_Env.lax in
-          if uu___
-          then e
-          else
-            (let uu___2 =
-               (lcomp_has_trivial_postcondition lc) &&
-                 (let uu___3 =
-                    FStar_TypeChecker_Env.try_lookup_lid env
-                      FStar_Parser_Const.with_type_lid in
-                  FStar_Compiler_Option.isSome uu___3) in
-             if uu___2
-             then
-               let u =
-                 match uopt with
-                 | FStar_Pervasives_Native.Some u1 -> u1
-                 | FStar_Pervasives_Native.None ->
-                     env.FStar_TypeChecker_Env.universe_of env
-                       lc.FStar_TypeChecker_Common.res_typ in
-               FStar_Syntax_Util.mk_with_type u
-                 lc.FStar_TypeChecker_Common.res_typ e
-             else e)
 let (maybe_capture_unit_refinement :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -3240,77 +3206,6 @@ let (bind :
                                                    FStar_TypeChecker_Env.conj_guard
                                                      g g_bind in
                                                  (c, uu___11) in
-                                           let mk_seq c11 b1 c21 =
-                                             let c12 =
-                                               FStar_TypeChecker_Env.unfold_effect_abbrev
-                                                 env c11 in
-                                             let c22 =
-                                               FStar_TypeChecker_Env.unfold_effect_abbrev
-                                                 env c21 in
-                                             let uu___10 =
-                                               FStar_TypeChecker_Env.join env
-                                                 c12.FStar_Syntax_Syntax.effect_name
-                                                 c22.FStar_Syntax_Syntax.effect_name in
-                                             match uu___10 with
-                                             | (m, uu___11, lift2) ->
-                                                 let uu___12 =
-                                                   lift_comp env c22 lift2 in
-                                                 (match uu___12 with
-                                                  | (c23, g2) ->
-                                                      let uu___13 =
-                                                        destruct_wp_comp c12 in
-                                                      (match uu___13 with
-                                                       | (u1, t1, wp1) ->
-                                                           let md_pure_or_ghost
-                                                             =
-                                                             FStar_TypeChecker_Env.get_effect_decl
-                                                               env
-                                                               c12.FStar_Syntax_Syntax.effect_name in
-                                                           let trivial =
-                                                             let uu___14 =
-                                                               FStar_Compiler_Effect.op_Bar_Greater
-                                                                 md_pure_or_ghost
-                                                                 FStar_Syntax_Util.get_wp_trivial_combinator in
-                                                             FStar_Compiler_Effect.op_Bar_Greater
-                                                               uu___14
-                                                               FStar_Compiler_Util.must in
-                                                           let vc1 =
-                                                             let uu___14 =
-                                                               FStar_TypeChecker_Env.inst_effect_fun_with
-                                                                 [u1] env
-                                                                 md_pure_or_ghost
-                                                                 trivial in
-                                                             let uu___15 =
-                                                               let uu___16 =
-                                                                 FStar_Syntax_Syntax.as_arg
-                                                                   t1 in
-                                                               let uu___17 =
-                                                                 let uu___18
-                                                                   =
-                                                                   FStar_Syntax_Syntax.as_arg
-                                                                    wp1 in
-                                                                 [uu___18] in
-                                                               uu___16 ::
-                                                                 uu___17 in
-                                                             FStar_Syntax_Syntax.mk_Tm_app
-                                                               uu___14
-                                                               uu___15 r1 in
-                                                           let uu___14 =
-                                                             strengthen_comp
-                                                               env
-                                                               FStar_Pervasives_Native.None
-                                                               c23 vc1
-                                                               bind_flags in
-                                                           (match uu___14
-                                                            with
-                                                            | (c, g_s) ->
-                                                                let uu___15 =
-                                                                  FStar_TypeChecker_Env.conj_guards
-                                                                    [g_c1;
-                                                                    g_c2;
-                                                                    g2;
-                                                                    g_s] in
-                                                                (c, uu___15)))) in
                                            let uu___10 =
                                              let t =
                                                FStar_Syntax_Util.comp_result
@@ -3371,91 +3266,58 @@ let (bind :
                                                           g_c1 uu___14 in
                                                       mk_bind1 c1 b c21 g))
                                                   else
-                                                    (let uu___14 =
-                                                       ((FStar_Options.vcgen_optimize_bind_as_seq
-                                                           ())
-                                                          &&
-                                                          (lcomp_has_trivial_postcondition
-                                                             lc11))
-                                                         &&
-                                                         (let uu___15 =
-                                                            FStar_TypeChecker_Env.try_lookup_lid
-                                                              env
-                                                              FStar_Parser_Const.with_type_lid in
-                                                          FStar_Compiler_Option.isSome
-                                                            uu___15) in
-                                                     if uu___14
-                                                     then
-                                                       let e1' =
-                                                         let uu___15 =
-                                                           FStar_Options.vcgen_decorate_with_type
-                                                             () in
-                                                         if uu___15
-                                                         then
-                                                           FStar_Syntax_Util.mk_with_type
-                                                             u_res_t1 res_t1
-                                                             e1
-                                                         else e1 in
-                                                       (debug
-                                                          (fun uu___16 ->
-                                                             let uu___17 =
-                                                               FStar_TypeChecker_Normalize.term_to_string
-                                                                 env e1' in
-                                                             let uu___18 =
-                                                               FStar_Syntax_Print.bv_to_string
-                                                                 x in
-                                                             FStar_Compiler_Util.print2
-                                                               "(3) bind (case b): Substituting %s for %s\n"
-                                                               uu___17
-                                                               uu___18);
-                                                        (let c21 =
-                                                           FStar_Syntax_Subst.subst_comp
-                                                             [FStar_Syntax_Syntax.NT
-                                                                (x, e1')] c2 in
-                                                         mk_seq c1 b c21))
-                                                     else
-                                                       (debug
-                                                          (fun uu___17 ->
-                                                             let uu___18 =
-                                                               FStar_TypeChecker_Normalize.term_to_string
-                                                                 env e1 in
-                                                             let uu___19 =
-                                                               FStar_Syntax_Print.bv_to_string
-                                                                 x in
-                                                             FStar_Compiler_Util.print2
-                                                               "(3) bind (case c): Adding equality %s = %s\n"
-                                                               uu___18
-                                                               uu___19);
-                                                        (let c21 =
-                                                           FStar_Syntax_Subst.subst_comp
-                                                             [FStar_Syntax_Syntax.NT
-                                                                (x, e1)] c2 in
-                                                         let x_eq_e =
-                                                           let uu___17 =
-                                                             FStar_Syntax_Syntax.bv_to_name
-                                                               x in
-                                                           FStar_Syntax_Util.mk_eq2
-                                                             u_res_t1 res_t1
-                                                             e1 uu___17 in
-                                                         let uu___17 =
-                                                           let uu___18 =
-                                                             let uu___19 =
-                                                               let uu___20 =
-                                                                 FStar_Syntax_Syntax.mk_binder
-                                                                   x in
-                                                               [uu___20] in
-                                                             FStar_TypeChecker_Env.push_binders
-                                                               env uu___19 in
-                                                           weaken_comp
-                                                             uu___18 c21
-                                                             x_eq_e in
-                                                         match uu___17 with
-                                                         | (c22, g_w) ->
-                                                             let g =
-                                                               let uu___18 =
-                                                                 let uu___19
-                                                                   =
-                                                                   let uu___20
+                                                    (debug
+                                                       (fun uu___15 ->
+                                                          let uu___16 =
+                                                            FStar_TypeChecker_Normalize.term_to_string
+                                                              env e1 in
+                                                          let uu___17 =
+                                                            FStar_Syntax_Print.bv_to_string
+                                                              x in
+                                                          FStar_Compiler_Util.print2
+                                                            "(3) bind (case b): Adding equality %s = %s\n"
+                                                            uu___16 uu___17);
+                                                     (let c21 =
+                                                        FStar_Syntax_Subst.subst_comp
+                                                          [FStar_Syntax_Syntax.NT
+                                                             (x, e1)] c2 in
+                                                      let x_eq_e =
+                                                        let uu___15 =
+                                                          FStar_Syntax_Syntax.bv_to_name
+                                                            x in
+                                                        FStar_Syntax_Util.mk_eq2
+                                                          u_res_t1 res_t1 e1
+                                                          uu___15 in
+                                                      let uu___15 =
+                                                        let uu___16 =
+                                                          let uu___17 =
+                                                            let uu___18 =
+                                                              FStar_Syntax_Syntax.mk_binder
+                                                                x in
+                                                            [uu___18] in
+                                                          FStar_TypeChecker_Env.push_binders
+                                                            env uu___17 in
+                                                        weaken_comp uu___16
+                                                          c21 x_eq_e in
+                                                      match uu___15 with
+                                                      | (c22, g_w) ->
+                                                          let g =
+                                                            let uu___16 =
+                                                              let uu___17 =
+                                                                let uu___18 =
+                                                                  let uu___19
+                                                                    =
+                                                                    let uu___20
+                                                                    =
+                                                                    FStar_Syntax_Syntax.mk_binder
+                                                                    x in
+                                                                    [uu___20] in
+                                                                  FStar_TypeChecker_Env.close_guard
+                                                                    env
+                                                                    uu___19
+                                                                    g_w in
+                                                                let uu___19 =
+                                                                  let uu___20
                                                                     =
                                                                     let uu___21
                                                                     =
@@ -3464,39 +3326,22 @@ let (bind :
                                                                     FStar_Syntax_Syntax.mk_binder
                                                                     x in
                                                                     [uu___22] in
-                                                                    FStar_TypeChecker_Env.close_guard
-                                                                    env
-                                                                    uu___21
-                                                                    g_w in
-                                                                   let uu___21
-                                                                    =
                                                                     let uu___22
-                                                                    =
-                                                                    let uu___23
-                                                                    =
-                                                                    let uu___24
-                                                                    =
-                                                                    FStar_Syntax_Syntax.mk_binder
-                                                                    x in
-                                                                    [uu___24] in
-                                                                    let uu___24
                                                                     =
                                                                     FStar_TypeChecker_Common.weaken_guard_formula
                                                                     g_c2
                                                                     x_eq_e in
                                                                     FStar_TypeChecker_Env.close_guard
                                                                     env
-                                                                    uu___23
-                                                                    uu___24 in
-                                                                    [uu___22] in
-                                                                   uu___20 ::
-                                                                    uu___21 in
-                                                                 g_c1 ::
-                                                                   uu___19 in
-                                                               FStar_TypeChecker_Env.conj_guards
-                                                                 uu___18 in
-                                                             mk_bind1 c1 b
-                                                               c22 g))))
+                                                                    uu___21
+                                                                    uu___22 in
+                                                                  [uu___20] in
+                                                                uu___18 ::
+                                                                  uu___19 in
+                                                              g_c1 :: uu___17 in
+                                                            FStar_TypeChecker_Env.conj_guards
+                                                              uu___16 in
+                                                          mk_bind1 c1 b c22 g)))
                                                else
                                                  mk_bind1 c1 b c2
                                                    trivial_guard)))))) in

@@ -565,7 +565,8 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                         let uu___3 =
                           let uu___4 =
                             FStar_Compiler_Effect.op_Bang test_mod_ref in
-                          FStar_Universal.tc_one_fragment uu___4 tcenv frag in
+                          FStar_Universal.tc_one_fragment uu___4 tcenv
+                            (FStar_Pervasives.Inl frag) in
                         (match uu___3 with
                          | (test_mod', tcenv') ->
                              (FStar_Compiler_Effect.op_Colon_Equals
@@ -623,3 +624,28 @@ let (test_hashes : unit -> unit) =
        then ()
        else (test_one_hash n; aux (n - Prims.int_one)) in
      aux (Prims.of_int (100)); FStar_Options.init ())
+let (parse_incremental_decls : unit -> unit) =
+  fun uu___ ->
+    let source =
+      "module Demo\nlet f x = match x with | Some x -> true | None -> false\nlet test y = if Some? y then f y else true\nlet some junk )(" in
+    let input =
+      FStar_Parser_ParseIt.Incremental
+        {
+          FStar_Parser_ParseIt.frag_fname = "Demo.fst";
+          FStar_Parser_ParseIt.frag_text = source;
+          FStar_Parser_ParseIt.frag_line = Prims.int_zero;
+          FStar_Parser_ParseIt.frag_col = Prims.int_zero
+        } in
+    let uu___1 = FStar_Parser_ParseIt.parse input in
+    match uu___1 with
+    | FStar_Parser_ParseIt.IncrementalFragment
+        (d0::d1::d2::[], uu___2, FStar_Pervasives_Native.Some
+         (uu___3, uu___4, rng))
+        when
+        let p = FStar_Compiler_Range.start_of_range rng in
+        (let uu___5 = FStar_Compiler_Range.line_of_pos p in
+         uu___5 = (Prims.of_int (3))) &&
+          (let uu___5 = FStar_Compiler_Range.col_of_pos p in
+           uu___5 = (Prims.of_int (15)))
+        -> ()
+    | uu___2 -> failwith "Incremental parsing failed"

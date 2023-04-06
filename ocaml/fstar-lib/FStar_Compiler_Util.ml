@@ -297,6 +297,15 @@ let nread (s:stream_reader) (n:Z.t) =
   with
     _ -> None
 
+let poll_stdin (f:float) =
+    try 
+      let ready_fds, _, _ = Unix.select [Unix.stdin] [] [] f in
+      match ready_fds with
+      | [] -> false
+      | _ -> true
+    with
+    | _ -> false
+
 type string_builder = BatBuffer.t
 let new_string_builder () = BatBuffer.create 256
 let clear_string_builder b = BatBuffer.clear b

@@ -187,6 +187,7 @@ type stream_reader
 val open_stdin : unit -> stream_reader
 val read_line: stream_reader -> option string
 val nread : stream_reader -> int -> option string
+val poll_stdin : float -> bool
 
 (* not relying on representation *)
 type string_builder

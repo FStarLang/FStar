@@ -1373,19 +1373,6 @@ let lcomp_has_trivial_postcondition lc =
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
                    lc.cflags
 
-let maybe_add_with_type env uopt lc e =
-    if TcComm.is_lcomp_partial_return lc
-    || env.lax
-    then e
-    else if lcomp_has_trivial_postcondition lc
-         && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //we have with_type in the environment
-    then let u = match uopt with
-                 | Some u -> u
-                 | None -> env.universe_of env lc.res_typ
-         in
-         U.mk_with_type u lc.res_typ e
-    else e
-
 
 (*
  * This is used in bind, when c1 is a Tot (x:unit{phi})
@@ -1544,22 +1531,6 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
               let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
               c, Env.conj_guard g g_bind in
 
-            let mk_seq c1 b c2 =
-                //c1 is PURE or GHOST
-                let c1 = Env.unfold_effect_abbrev env c1 in
-                let c2 = Env.unfold_effect_abbrev env c2 in
-                let m, _, lift2 = Env.join env c1.effect_name c2.effect_name in
-                let c2, g2 = lift_comp env c2 lift2 in
-                let u1, t1, wp1 = destruct_wp_comp c1 in
-                let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
-                let trivial = md_pure_or_ghost |> U.get_wp_trivial_combinator |> must in
-                let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost trivial)
-                                    [S.as_arg t1; S.as_arg wp1]
-                                    r1
-                in
-                let c, g_s = strengthen_comp env None c2 vc1 bind_flags in
-                c, Env.conj_guards [g_c1; g_c2; g2; g_s]
-            in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
             let u_res_t1, res_t1 =
               let t = U.comp_result c1 in
@@ -1584,84 +1555,32 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
                  //weaken wp2 to with the equality, So that whatever
                  //property is proven about the result of wp1 (i.e., x)
                  //is still available in the proof of wp2 However, we
-                 //apply two optimizations:
-
-                 //   a. if c1 is already a return or a partial return,
-                 //      then it already provides this equality, so no
-                 //      need to add it again and instead generate
+                 //do one optimization:
+																	
+																	//if c1 is already a return or a
+																	//partial return, then it already provides this equality,
+																	//so no need to add it again and instead generate
                  //
-                 //         M.bind (lift_(Pure/Ghost)_M wp1)
-                 //                (lift_M2_M (wp2[e1/x]))
-
-                 //   b. if c1 is marked with TRIVIAL_POSTCONDITION,
-                 //      then the post-condition does not carry any
-                 //      useful information. We have two sub-cases:
-
-                 //      (i) In case the user option
-                 //          `vcgen.optimize_bind_as_seq = without_type`
-                 //          rather than generating
-                 //          M.bind wp1 (\x. wp2), we generate:
+                 //    M.bind (lift_(Pure/Ghost)_M wp1)
+                 //           (lift_M2_M (wp2[e1/x]))
+                 
+																 //If the optimization does not apply,
+                 //then we generate the WP mentioned at the top,
+                 //i.e.
                  //
-                 //           M.assert_wp (wp1 (\x. True))
-                 //                       (lift_M2_M  (wp2[e1/x]))
-                 //
-                 //      Note, although the post-condition of c1 does
-                 //      not carry useful information, its result type
-                 //      might. When applying the optimization above,
-                 //      the SMT solver is faced with reconstructing
-                 //      the type of e1. Usually, it can do this, but
-                 //      in some cases (e.g., if the result type has a
-                 //      complex refinement), then this optimization
-                 //      can actually cause a VC to fail. So, we add an
-                 //      option to recover from this, at the cost of
-                 //      some VC bloat:
-                 //
-                 //      (ii). In case the user option
-                 //            `vcgen.optimize_bind_as_seq = with_type`,
-                 //            we build
-                 //
-                 //             M.assert_wp (wp1 (\x. True))
-                 //                        (lift_M2_M (wp2[with_type e1 t1/x]))
-                 //
-                 //      Where `with_type e1 t1`, decorates `e1` with
-                 //      its type before substituting. This allows the
-                 //      SMT solver to recover the type of `e1` (using
-                 //      a primitive axiom about with_type), without
-                 //      polluting the VC with an additional equality.
-                 //      Note, specific occurrences of `with_type e t`
-                 //      can be normalized away to `e` if requested
-                 //      explicitly by a user tactic.
-                 //
-                 //   c. If neither of the optimizations above apply,
-                 //   then we generate the WP mentioned at the top,
-                 //   i.e.
-                 //
-                 //      M.bind (lift_(Pure/Ghost)_M wp1)
-                 //             (x == e1 ==> lift_M2_M (wp2[e1/x]))
+                 //    M.bind (lift_(Pure/Ghost)_M wp1)
+                 //           (x == e1 ==> lift_M2_M (wp2[e1/x]))
 
                  if U.is_partial_return c1
-                 then // case (a)
+                 then
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (Print.bv_to_string x)) in
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       let g = Env.conj_guard g_c1 (Env.map_guard g_c2 (SS.subst [NT (x, e1)])) in
                       mk_bind c1 b c2 g
-                 else if Options.vcgen_optimize_bind_as_seq()
-                      && lcomp_has_trivial_postcondition lc1
-                      && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we have with_type in the environment
-                 then // case (b)
-                      let e1' =
-                        if Options.vcgen_decorate_with_type()
-                        then U.mk_with_type u_res_t1 res_t1 e1 // case (b) (ii)
-                        else e1                                // case (b) (i)
-                      in
+                 else
                       let _ = debug (fun () ->
-                        BU.print2 "(3) bind (case b): Substituting %s for %s\n" (N.term_to_string env e1') (Print.bv_to_string x)) in
-                      let c2 = SS.subst_comp [NT(x, e1')] c2 in
-                      mk_seq c1 b c2
-                 else // case (c)
-                      let _ = debug (fun () ->
-                        BU.print2 "(3) bind (case c): Adding equality %s = %s\n" (N.term_to_string env e1) (Print.bv_to_string x)) in
+                        BU.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (Print.bv_to_string x)) in
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
                       let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in

@@ -26,12 +26,12 @@ open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
+open FStar.Interactive.Ide.Types
 
 module DsEnv = FStar.Syntax.DsEnv
 module CTable = FStar.Interactive.CompletionTable
 module TcEnv = FStar.TypeChecker.Env
 
-type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 type ctx_depth_t = int * int * solver_depth_t * int
 type deps_t = FStar.Parser.Dep.deps
 type either_replst = either repl_state repl_state
@@ -47,7 +47,8 @@ val repl_stack : ref repl_stack_t
 val set_check_kind : env_t -> push_kind -> env_t
 
 // Push an Pop, directly copied over from IDE
-val push_repl : string -> push_kind -> repl_task -> repl_state -> repl_state
+val push_repl : string -> option push_kind -> repl_task -> repl_state -> repl_state
+val add_issues_to_push_fragment (issues: list json) : unit
 val pop_repl : string -> repl_state -> repl_state
 
 // Factored out from IDE for use by LSP as well
