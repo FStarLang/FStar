@@ -109,7 +109,7 @@ let intro_exists_soundness
   WT.intro_exists_typing rt_typing rp_typing re_typing
 #pop-options
 
-#push-options "--z3rlimit_factor 8 --fuel 4 --ifuel 2"
+#push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
 let elim_exists_soundness
   (#f:stt_env)
   (#g:env)
@@ -140,27 +140,17 @@ let elim_exists_soundness
   let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
   let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x tun))) in
 
-  // // rt is ln
-  // LN.tot_typing_ln t_typing;
-  // elab_ln t (-1);
-
-  // //rp is (ln' 0)
-  // LN.tot_typing_ln p_typing;
-  // elab_ln p 0;
-
   let rreveal_x = Pulse.Reflection.Util.mk_reveal ru rt rx_tm in
 
   // somehow can't do without this assertion
   assert (elab_term (mk_reveal u t x_tm) ==
           Pulse.Reflection.Util.mk_reveal ru rt rx_tm);
 
-  let eq =
+  let post_eq =
     RT.equiv_abs (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
       (RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rp rreveal_x)  in
 
-  let comps_equiv = elab_stghost_equiv (extend_env_l f g) c _ _ (RT.EQ_Refl _ _) eq in
-
+  let comp_equiv = elab_stghost_equiv (extend_env_l f g) c _ _ (RT.EQ_Refl _ _) post_eq in
   let d = WT.elim_exists_typing x rt_typing rp_typing in
-  RT.T_Sub _ _ _ _ d
-    (RT.ST_Equiv _ _ _ (RT.EQ_Sym _ _ _ comps_equiv))
+  RT.T_Sub _ _ _ _ d (RT.ST_Equiv _ _ _ comp_equiv)
 #pop-options
