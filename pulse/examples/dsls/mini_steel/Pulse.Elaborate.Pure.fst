@@ -141,14 +141,27 @@ and elab_st_comp (c:st_comp)
     let post = elab_term c.post in
     elab_universe c.u, res, pre, post
 
-let elab_stghost_post_equiv (g:R.env) (c:comp{C_STGhost? c}) (t:R.term)
-  (eq:RT.equiv g (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))) t)
+let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.term)
+  (eq_pre:RT.equiv g (elab_term (comp_pre c)) pre)
+  (eq_post:RT.equiv g (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))) post)
   : RT.equiv g
       (elab_comp c)
-      (let C_STGhost inames {u;res;pre} = c in
+      (let C_STGhost inames {u;res} = c in
        mk_stt_ghost_comp (elab_universe u)
                          (elab_term res)
                          (elab_term inames)
-                         (elab_term pre)
-                         t)
+                         pre
+                         post)
+  = admit ()
+
+let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
+  (eq_pre:RT.equiv g (elab_term (comp_pre c)) pre)
+  (eq_post:RT.equiv g (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))) post)
+  : RT.equiv g
+      (elab_comp c)
+      (let C_ST {u;res} = c in
+       mk_stt_comp (elab_universe u)
+                   (elab_term res)
+                   pre
+                   post)
   = admit ()
