@@ -63,10 +63,22 @@ let forall_lid = ["Steel"; "ST"; "Util"; "forall_"]
 let args_of (tms:list R.term) =
   List.Tot.map (fun x -> x, R.Q_Explicit) tms
 
+let mk_pure (p:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv pure_lid)) in
+  pack_ln (Tv_App t (p, Q_Explicit))
+
 let uzero = R.pack_universe (R.Uv_Zero)
 
 let steel_wrapper = ["Pulse"; "Steel"; "Wrapper"]
 let mk_steel_wrapper_lid s = steel_wrapper@[s]
+
+let mk_eq2 (u:R.universe) (ty e1 e2:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv (mk_steel_wrapper_lid "eq2_prop")) [u]) in
+  let t = pack_ln (Tv_App t (ty, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (e1, Q_Explicit)) in
+  pack_ln (Tv_App t (e2, Q_Explicit))
 
 let stt_admit_lid = mk_steel_wrapper_lid "stt_admit"
 let mk_stt_admit (u:R.universe) (t pre post:R.term) : R.term =
@@ -508,3 +520,14 @@ let mk_rewrite (p q:R.term) =
 		let t = pack_ln (Tv_App t (p, Q_Explicit)) in
 		let t = pack_ln (Tv_App t (q, Q_Explicit)) in
 		pack_ln (Tv_App t (`(), Q_Explicit))
+
+
+
+
+///// Utils to derive equiv for common constructs /////
+let mk_star_equiv (g:R.env) (t1 t2 t3 t4:R.term)
+  (eq1:RT.equiv g t1 t3)
+  (eq2:RT.equiv g t2 t4)
+  : RT.equiv g (mk_star t1 t2) (mk_star t3 t4) =
+  
+  admit ()

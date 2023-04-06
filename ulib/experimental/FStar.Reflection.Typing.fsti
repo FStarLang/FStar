@@ -880,8 +880,8 @@ and equiv : env -> term -> term -> Type0 =
       q:R.aqualv ->
       e:R.term ->
       arg:R.term ->
-      equiv g (open_or_close_term' e (OpenWith arg) 0)
-              (R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+      equiv g (R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+              (open_or_close_term' e (OpenWith arg) 0)
 
   | EQ_Token:
       g:env ->

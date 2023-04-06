@@ -7,17 +7,15 @@ module RT = FStar.Reflection.Typing
 
 let return_post_with_eq (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
   let x_tm = RT.var_as_term x in
-  let eq2_tm =
-    let t = pack_ln (Tv_UInst (pack_fv (mk_steel_wrapper_lid "eq2_prop")) [u]) in
-    let t = pack_ln (Tv_App t (a, Q_Implicit)) in
-    let t = pack_ln (Tv_App t (x_tm, Q_Explicit)) in
-    pack_ln (Tv_App t (e, Q_Explicit)) in
-
-  let p_app_x = pack_ln (Tv_App p (x_tm, Q_Explicit)) in
-  
-  let star_tm = mk_star p_app_x eq2_tm in
-
+  let eq2_tm = mk_eq2 u a x_tm e in
+  let p_app_x = pack_ln (Tv_App p (x_tm, Q_Explicit)) in  
+  let star_tm = mk_star p_app_x (mk_pure eq2_tm) in
   mk_abs a Q_Explicit (RT.open_or_close_term' star_tm (RT.CloseVar x) 0)
+
+let return_stt_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
+  mk_stt_comp u a
+    (pack_ln (Tv_App p (e, Q_Explicit)))
+    (return_post_with_eq u a e p x)
 
 val return_stt_typing
   (#g:env)
@@ -32,9 +30,10 @@ val return_stt_typing
 
   : GTot (RT.typing g
                     (mk_stt_return u a e p)
-                    (mk_stt_comp u a
-                       (pack_ln (Tv_App p (e, Q_Explicit)))
-                       (return_post_with_eq u a e p x)))
+                    (return_stt_comp u a e p x))
+
+let return_stt_noeq_comp (u:universe) (a:term) (x:term) (p:term) : term =
+  mk_stt_comp u a (pack_ln (Tv_App p (x, Q_Explicit))) p
 
 val return_stt_noeq_typing
   (#g:env)
@@ -47,8 +46,13 @@ val return_stt_noeq_typing
   (p_typing:RT.typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
 
   : GTot (RT.typing g
-                    (mk_stt_return u a x p)
-                    (mk_stt_comp u a (pack_ln (Tv_App p (x, Q_Explicit))) p))
+                    (mk_stt_return_noeq u a x p)
+                    (return_stt_noeq_comp u a x p))
+
+let return_stt_atomic_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
+  mk_stt_atomic_comp u a emp_inames_tm
+    (pack_ln (Tv_App p (e, Q_Explicit)))
+    (return_post_with_eq u a e p x)
 
 val return_stt_atomic_typing
   (#g:env)
@@ -63,9 +67,10 @@ val return_stt_atomic_typing
 
   : GTot (RT.typing g
                     (mk_stt_atomic_return u a e p)
-                    (mk_stt_atomic_comp u a emp_inames_tm
-                       (pack_ln (Tv_App p (e, Q_Explicit)))
-                       (return_post_with_eq u a e p x)))
+                    (return_stt_atomic_comp u a e p x))
+
+let return_stt_atomic_noeq_comp (u:universe) (a:term) (x:term) (p:term) : term =
+  mk_stt_atomic_comp u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p
 
 val return_stt_atomic_noeq_typing
   (#g:env)
@@ -79,7 +84,12 @@ val return_stt_atomic_noeq_typing
 
   : GTot (RT.typing g
                     (mk_stt_atomic_return_noeq u a x p)
-                    (mk_stt_atomic_comp u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p))
+                    (return_stt_atomic_noeq_comp u a x p))
+
+let return_stt_ghost_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
+  mk_stt_ghost_comp u a emp_inames_tm
+    (pack_ln (Tv_App p (e, Q_Explicit)))
+    (return_post_with_eq u a e p x)
 
 val return_stt_ghost_typing
   (#g:env)
@@ -94,9 +104,10 @@ val return_stt_ghost_typing
 
   : GTot (RT.typing g
                     (mk_stt_ghost_return u a e p)
-                    (mk_stt_ghost_comp u a emp_inames_tm
-                       (pack_ln (Tv_App p (e, Q_Explicit)))
-                       (return_post_with_eq u a e p x)))
+                    (return_stt_ghost_comp u a e p x))
+
+let return_stt_ghost_noeq_comp (u:universe) (a:term) (x:term) (p:term) : term =
+  mk_stt_ghost_comp u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p
 
 val return_stt_ghost_noeq_typing
   (#g:env)
@@ -110,7 +121,8 @@ val return_stt_ghost_noeq_typing
 
   : GTot (RT.typing g
                     (mk_stt_ghost_return_noeq u a x p)
-                    (mk_stt_ghost_comp u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p))
+                    (return_stt_ghost_noeq_comp u a x p))
+
 
 (*
 

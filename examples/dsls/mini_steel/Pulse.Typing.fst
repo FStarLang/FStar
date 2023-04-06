@@ -51,18 +51,25 @@ let mk_eq2_prop (u:universe)
 let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 (U_succ (U_succ U_zero)) Tm_VProp e0 e1
 
-let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term)
+let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term) (x:var)
   : comp =
 
   let post_maybe_eq =
     if use_eq
-    then Tm_Star post (Tm_Pure (mk_eq2_prop u t (null_bvar 0) e))
+    then let post = open_term' post (null_var x) 0 in
+         let post = Tm_Star post (Tm_Pure (mk_eq2_prop u t (null_var x) e)) in
+         close_term post x
     else post in
 
-  C_ST { u;
-         res = t;
-         pre = open_term' post e 0;
-         post = post_maybe_eq }
+  match c with
+  | STT ->
+    C_ST { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
+  | STT_Atomic ->
+    C_STAtomic Tm_EmpInames
+      { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
+  | STT_Ghost ->
+    C_STGhost Tm_EmpInames
+      { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
 let eqn = term & term & term
 let binding = either term eqn
@@ -321,7 +328,7 @@ let non_informative_witness_t (u:universe) (t:term)
 
 let elim_exists_post (u:universe) (t:term) (p:term) (x:var)
   : term
-  = let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
+  = let x_tm = null_var x in
     let p = open_term' p (mk_reveal u t x_tm) 0 in
     close_term p x
 
@@ -614,7 +621,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       universe_of f g t u ->
       tot_typing f g e t ->
       tot_typing f ((x, Inl t)::g) (open_term post x) Tm_VProp ->
-      st_typing f g (Tm_Return c use_eq e) (comp_return c use_eq u t e post)
+      st_typing f g (Tm_Return c use_eq e) (comp_return c use_eq u t e post x)
 
   | T_Lift:
       g:env ->
