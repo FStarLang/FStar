@@ -1,0 +1,48 @@
+# Makefile for examples stlc, mini_steel, ...
+
+SRC_FILES=$(wildcard *.fst)
+
+CACHE_DIR=_output
+
+ML_DIR=$(CACHE_DIR)
+
+MY_FSTAR=$(FSTAR) \
+      --cache_checked_modules --already_cached Prims,FStar,Steel --cache_dir $(CACHE_DIR) \
+      --odir $(ML_DIR) \
+      $(OTHERFLAGS) 
+
+EXTRACT_SELECTOR=+Pulse -Pulse.Steel
+
+all-common: verify_all $(CACHE_DIR)
+
+$(CACHE_DIR):
+	mkdir -p $(CACHE_DIR)
+
+.depend:
+	$(MY_FSTAR) --dep full $(SRC_FILES) --codegen Plugin --extract '$(EXTRACT_SELECTOR)' > ._depend
+	mv ._depend .depend
+
+depend: .depend
+
+include .depend
+
+%.fst.checked:
+	$(MY_FSTAR) $<
+
+%.fsti.checked:
+	$(MY_FSTAR) $<
+
+$(OUTPUT_DIRECTORY)/%.ml:
+	$(MY_FSTAR) --codegen Plugin --extract_module $(basename $(notdir $(subst .checked,,$<))) $(notdir $(subst .checked,,$<))
+
+verify_all: $(ALL_CHECKED_FILES)
+
+extract_all: $(ALL_ML_FILES)
+
+clean:
+	rm -rf .depend ._depend
+
+%.fst-in %.fsti-in: $(CACHE_DIR)
+	@echo --include ../core --include $(CACHE_DIR)
+
+.PHONY: verify_all extract_all

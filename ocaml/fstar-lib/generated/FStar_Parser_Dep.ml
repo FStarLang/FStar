@@ -1230,7 +1230,7 @@ let (collect_one :
                       match uu___3 with
                       | (pat, t) -> (collect_pattern pat; collect_term t))
                    patterms
-             | FStar_Parser_AST.Splice (uu___2, t) -> collect_term t
+             | FStar_Parser_AST.Splice (uu___2, uu___3, t) -> collect_term t
              | FStar_Parser_AST.Assume (uu___2, t) -> collect_term t
              | FStar_Parser_AST.SubEffect
                  { FStar_Parser_AST.msource = uu___2;

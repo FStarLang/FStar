@@ -528,6 +528,45 @@ let () =
       mk_tac_step_3 1 "with_compat_pre_core"
         (fun _ -> with_compat_pre_core) e_any e_int (e_tactic_thunk e_any) e_any
         (fun _ -> with_compat_pre_core) NBET.e_any NBET.e_int (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
+
+      // reflection typechecker callbacks (part of the DSL framework)
+
+      mk_tac_step_3 0 "check_subtyping"
+        refl_check_subtyping RE.e_env RE.e_term RE.e_term (e_option e_unit)
+        refl_check_subtyping NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
+
+      mk_tac_step_3 0 "check_equiv"
+        refl_check_equiv RE.e_env RE.e_term RE.e_term (e_option e_unit)
+        refl_check_equiv NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
+
+      mk_tac_step_2 0 "core_check_term"
+        refl_core_check_term RE.e_env RE.e_term (e_option RE.e_term)
+        refl_core_check_term NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
+
+      mk_tac_step_2 0 "tc_term"
+        refl_tc_term RE.e_env RE.e_term (e_option (e_tuple2 RE.e_term RE.e_term))
+        refl_tc_term NRE.e_env NRE.e_term (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
+
+      mk_tac_step_2 0 "universe_of"
+        refl_universe_of RE.e_env RE.e_term (e_option RE.e_universe)
+        refl_universe_of NRE.e_env NRE.e_term (NBET.e_option NRE.e_universe);
+
+      mk_tac_step_2 0 "check_prop_validity"
+        refl_check_prop_validity RE.e_env RE.e_term (e_option e_unit)
+        refl_check_prop_validity NRE.e_env NRE.e_term (NBET.e_option NBET.e_unit);
+
+      mk_tac_step_2 0 "instantiate_implicits"
+        refl_instantiate_implicits RE.e_env RE.e_term (e_option (e_tuple2 RE.e_term RE.e_term))
+        refl_instantiate_implicits NRE.e_env NRE.e_term (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
+
+      mk_tac_step_3 0 "maybe_relate_after_unfolding"
+        refl_maybe_relate_after_unfolding RE.e_env RE.e_term RE.e_term (e_option E.e_unfold_side)
+        refl_maybe_relate_after_unfolding NRE.e_env NRE.e_term NRE.e_term (NBET.e_option E.e_unfold_side_nbe);
+
+      mk_tac_step_2 0 "maybe_unfold_head"
+        refl_maybe_unfold_head RE.e_env RE.e_term (e_option RE.e_term)
+        refl_maybe_unfold_head NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
@@ -576,17 +615,25 @@ let run_tactic_on_ps'
   (arg : 'a)
   (e_res : embedding 'b)
   (tactic:term)
+  (tactic_already_typed:bool)
   (ps:proofstate)
   : list goal // remaining goals
   * 'b // return value
   = let env = ps.main_context in
     if !tacdbg then
-        BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
+        BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
+          (Print.term_to_string tactic)
+          (string_of_bool tactic_already_typed);
     
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307 *)
-    let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
+    let g =
+      if tactic_already_typed
+      then Env.trivial_guard
+      else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
+           g in
+
     if !tacdbg then
         BU.print_string "}\n";
 
@@ -681,8 +728,9 @@ let run_tactic_on_ps
           (arg : 'a)
           (e_res : embedding 'b)
           (tactic:term)
+          (tactic_already_typed:bool)
           (ps:proofstate) =
     Profiling.profile
-      (fun () -> run_tactic_on_ps' rng_call rng_goal background e_arg arg e_res tactic ps)
+      (fun () -> run_tactic_on_ps' rng_call rng_goal background e_arg arg e_res tactic tactic_already_typed ps)
       (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
       "FStar.Tactics.Interpreter.run_tactic_on_ps"

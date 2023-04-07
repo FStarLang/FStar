@@ -761,8 +761,10 @@ and p_rawDecl d = match d.d with
     p_pragma p
   | Tycon(true, _, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
-  | Splice (ids, t) ->
-    str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
+  | Splice (is_typed, ids, t) ->
+    str "%splice" ^^
+    (if is_typed then str "_t" else empty) ^^
+    p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
 
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)

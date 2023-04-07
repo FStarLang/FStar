@@ -2922,14 +2922,15 @@ let (resugar_sigelt' :
                  FStar_Parser_AST.Val uu___4 in
                decl'_to_decl se uu___3 in
              FStar_Pervasives_Native.Some uu___2)
-      | FStar_Syntax_Syntax.Sig_splice (ids, t) ->
+      | FStar_Syntax_Syntax.Sig_splice (is_typed, ids, t) ->
           let uu___ =
             let uu___1 =
               let uu___2 =
                 let uu___3 =
                   FStar_Compiler_List.map
                     (fun l -> FStar_Ident.ident_of_lid l) ids in
-                let uu___4 = resugar_term' env t in (uu___3, uu___4) in
+                let uu___4 = resugar_term' env t in
+                (is_typed, uu___3, uu___4) in
               FStar_Parser_AST.Splice uu___2 in
             decl'_to_decl se uu___1 in
           FStar_Pervasives_Native.Some uu___

@@ -1369,7 +1369,7 @@ let (lids_of_sigelt :
   fun se ->
     match se.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_let (uu___, lids) -> lids
-    | FStar_Syntax_Syntax.Sig_splice (lids, uu___) -> lids
+    | FStar_Syntax_Syntax.Sig_splice (uu___, lids, uu___1) -> lids
     | FStar_Syntax_Syntax.Sig_bundle (uu___, lids) -> lids
     | FStar_Syntax_Syntax.Sig_inductive_typ
         (lid, uu___, uu___1, uu___2, uu___3, uu___4, uu___5) -> [lid]
@@ -2230,6 +2230,10 @@ let (t_ctx_uvar_and_sust : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.ctx_uvar_and_subst_lid
 let (t_universe_uvar : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.universe_uvar_lid
+let (t_dsl_tac_typ : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar FStar_Parser_Const.dsl_tac_typ_lid
+    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
+    FStar_Pervasives_Native.None
 let (mk_conj_opt :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
     FStar_Pervasives_Native.option ->

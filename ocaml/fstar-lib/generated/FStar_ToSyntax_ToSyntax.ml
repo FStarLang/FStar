@@ -8502,10 +8502,12 @@ and (desugar_decl_noattrs :
                          (fun x ->
                             let uu___1 = has_no_method_attr x in
                             Prims.op_Negation uu___1) meths in
+                     let is_typed = false in
                      let uu___1 =
                        let uu___2 =
                          let uu___3 =
-                           let uu___4 = mkclass lid in (meths1, uu___4) in
+                           let uu___4 = mkclass lid in
+                           (is_typed, meths1, uu___4) in
                          FStar_Syntax_Syntax.Sig_splice uu___3 in
                        {
                          FStar_Syntax_Syntax.sigel = uu___2;
@@ -9116,7 +9118,7 @@ and (desugar_decl_noattrs :
               } in
             [uu___1] in
           (env, uu___)
-      | FStar_Parser_AST.Splice (ids, t) ->
+      | FStar_Parser_AST.Splice (is_typed, ids, t) ->
           let t1 = desugar_term env t in
           let se =
             let uu___ =
@@ -9124,7 +9126,7 @@ and (desugar_decl_noattrs :
                 let uu___2 =
                   FStar_Compiler_List.map (FStar_Syntax_DsEnv.qualify env)
                     ids in
-                (uu___2, t1) in
+                (is_typed, uu___2, t1) in
               FStar_Syntax_Syntax.Sig_splice uu___1 in
             {
               FStar_Syntax_Syntax.sigel = uu___;

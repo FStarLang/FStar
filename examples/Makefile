@@ -35,7 +35,8 @@ steel_tutorial \
 layeredeffects \
 misc \
 sequence \
-oplss2021
+oplss2021 \
+dsls
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 

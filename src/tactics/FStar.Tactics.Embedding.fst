@@ -95,6 +95,12 @@ let fstar_tactics_Continue      = fstar_tactics_data  ["Types"; "Continue"]
 let fstar_tactics_Skip          = fstar_tactics_data  ["Types"; "Skip"]
 let fstar_tactics_Abort         = fstar_tactics_data  ["Types"; "Abort"]
 
+let fstar_tactics_unfold_side         = fstar_tactics_const ["Types"; "unfold_side"]
+let fstar_tactics_unfold_side_Left    = fstar_tactics_data  ["Types"; "Left"]
+let fstar_tactics_unfold_side_Right   = fstar_tactics_data  ["Types"; "Right"]
+let fstar_tactics_unfold_side_Both    = fstar_tactics_data  ["Types"; "Both"]
+let fstar_tactics_unfold_side_Neither = fstar_tactics_data  ["Types"; "Neither"]
+
 let fstar_tactics_guard_policy  = fstar_tactics_const ["Types"; "guard_policy"]
 let fstar_tactics_SMT           = fstar_tactics_data  ["Types"; "SMT"]
 let fstar_tactics_Goal          = fstar_tactics_data  ["Types"; "Goal"]
@@ -428,6 +434,55 @@ let e_ctrl_flag_nbe  =
     ; NBETerm.un = unembed_ctrl_flag
     ; NBETerm.typ = mkFV fstar_tactics_ctrl_flag.fv [] []
     ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_ctrl_flag.fv }
+
+let e_unfold_side =
+  let open FStar.TypeChecker.Core in
+  let embed_unfold_side (rng:Range.range) (s:side) : term =
+    match s with
+    | Left -> fstar_tactics_unfold_side_Left.t
+    | Right -> fstar_tactics_unfold_side_Right.t
+    | Both -> fstar_tactics_unfold_side_Both.t
+    | Neither  -> fstar_tactics_unfold_side_Neither.t
+  in
+  let unembed_unfold_side w (t : term) : option side =
+    match (SS.compress t).n with
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Left.lid -> Some Left
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Right.lid -> Some Right
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Both.lid -> Some Both
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Neither.lid -> Some Neither
+    | _ ->
+      if w then
+        Err.log_issue t.pos (Err.Warning_NotEmbedded,
+                             BU.format1 "Not an embedded unfold_side: %s" (Print.term_to_string t));
+        None
+  in
+  mk_emb embed_unfold_side unembed_unfold_side fstar_tactics_unfold_side.t
+
+let e_unfold_side_nbe  =
+  let open FStar.TypeChecker.Core in
+  let embed_unfold_side cb (res:side) : NBET.t =
+    match res with
+    | Left -> mkConstruct fstar_tactics_unfold_side_Left.fv [] []
+    | Right -> mkConstruct fstar_tactics_unfold_side_Right.fv [] []
+    | Both -> mkConstruct fstar_tactics_unfold_side_Both.fv [] []
+    | Neither -> mkConstruct fstar_tactics_unfold_side_Neither.fv [] []
+  in
+  let unembed_unfold_side cb (t:NBET.t) : option side =
+    match NBETerm.nbe_t_of_t t with
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_unfold_side_Left.lid -> Some Left
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_unfold_side_Right.lid -> Some Right
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_unfold_side_Both.lid -> Some Both
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_unfold_side_Neither.lid -> Some Neither
+    | _ ->
+      if !Options.debug_embedding then
+        Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded,
+                                        BU.format1 "Not an embedded unfold_side: %s" (NBETerm.t_to_string t));
+      None
+  in
+  { NBETerm.em = embed_unfold_side
+  ; NBETerm.un = unembed_unfold_side
+  ; NBETerm.typ = mkFV fstar_tactics_unfold_side.fv [] []
+  ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_unfold_side.fv }
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =

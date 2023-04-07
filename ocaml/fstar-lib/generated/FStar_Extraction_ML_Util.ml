@@ -978,21 +978,31 @@ let (interpret_plugin_as_term_fun :
                                           let uu___18 =
                                             let uu___19 =
                                               let uu___20 =
-                                                FStar_Reflection_Constants.fstar_refl_syntax_lid
-                                                  "binders" in
+                                                FStar_Reflection_Constants.fstar_refl_types_lid
+                                                  "env" in
                                               (uu___20, Prims.int_zero,
-                                                "binders") in
+                                                "env") in
                                             (uu___19, Refl_emb) in
                                           let uu___19 =
                                             let uu___20 =
                                               let uu___21 =
                                                 let uu___22 =
-                                                  FStar_Reflection_Constants.fstar_refl_data_lid
-                                                    "exp" in
+                                                  FStar_Reflection_Constants.fstar_refl_syntax_lid
+                                                    "binders" in
                                                 (uu___22, Prims.int_zero,
-                                                  "exp") in
+                                                  "binders") in
                                               (uu___21, Refl_emb) in
-                                            [uu___20] in
+                                            let uu___21 =
+                                              let uu___22 =
+                                                let uu___23 =
+                                                  let uu___24 =
+                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                      "exp" in
+                                                  (uu___24, Prims.int_zero,
+                                                    "exp") in
+                                                (uu___23, Refl_emb) in
+                                              [uu___22] in
+                                            uu___20 :: uu___21 in
                                           uu___18 :: uu___19 in
                                         uu___16 :: uu___17 in
                                       uu___14 :: uu___15 in

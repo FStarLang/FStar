@@ -58,6 +58,7 @@ let (float_lid : FStar_Ident.lident) = p2l ["FStar"; "Float"; "float"]
 let (char_lid : FStar_Ident.lident) = p2l ["FStar"; "Char"; "char"]
 let (heap_lid : FStar_Ident.lident) = p2l ["FStar"; "Heap"; "heap"]
 let (logical_lid : FStar_Ident.lident) = pconst "logical"
+let (prop_lid : FStar_Ident.lident) = pconst "prop"
 let (smt_theory_symbol_attr_lid : FStar_Ident.lident) =
   pconst "smt_theory_symbol"
 let (true_lid : FStar_Ident.lident) = pconst "l_True"
@@ -239,24 +240,8 @@ let (try_with_lid : unit -> FStar_Ident.lident) =
 let (as_requires : FStar_Ident.lident) = pconst "as_requires"
 let (as_ensures : FStar_Ident.lident) = pconst "as_ensures"
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases"
-let (inspect : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
-let (pack : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
-let (binder_to_term : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
 let (reveal : FStar_Ident.lident) = p2l ["FStar"; "Ghost"; "reveal"]
 let (hide : FStar_Ident.lident) = p2l ["FStar"; "Ghost"; "hide"]
-let (term_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Types"; "term"]
-let (term_view_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Data"; "term_view"]
-let (decls_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Data"; "decls"]
-let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
-let (universe_uvar_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 let (range_lid : FStar_Ident.lident) = pconst "range"
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of"
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled"
@@ -319,15 +304,6 @@ let (unifier_hint_injective_lid : FStar_Ident.lident) =
   psconst "unifier_hint_injective"
 let (normalize_for_extraction_lid : FStar_Ident.lident) =
   psconst "normalize_for_extraction"
-let (postprocess_with : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
-let (preprocess_with : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
-let (postprocess_extr_with : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
-let (check_with_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Builtins"; "check_with"]
-    FStar_Compiler_Range.dummyRange
 let (commute_nested_matches_lid : FStar_Ident.lident) =
   psconst "commute_nested_matches"
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
@@ -491,6 +467,12 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
         FStar_Ident.string_of_id uu___1 in
       FStar_Compiler_Util.char_at uu___ Prims.int_zero in
     FStar_Compiler_Util.is_upper c
+let (inspect : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
+let (pack : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
+let (binder_to_term : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
 let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   fun s ->
     FStar_Ident.lid_of_path
@@ -535,6 +517,34 @@ let (fv_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "fv"]
     FStar_Compiler_Range.dummyRange
 let (norm_step_lid : FStar_Ident.lident) = psconst "norm_step"
+let (postprocess_with : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let (preprocess_with : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
+let (postprocess_extr_with : FStar_Ident.lident) =
+  p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
+let (term_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "term"]
+let (term_view_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Data"; "term_view"]
+let (decls_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Data"; "decls"]
+let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+let (universe_uvar_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
+let (check_with_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Builtins"; "check_with"]
+    FStar_Compiler_Range.dummyRange
+let (dsl_typing_builtin : Prims.string -> FStar_Ident.lident) =
+  fun s ->
+    FStar_Ident.lid_of_path
+      (FStar_Compiler_List.op_At
+         ["FStar"; "Reflection"; "Typing"; "Builtins"] [s])
+      FStar_Compiler_Range.dummyRange
+let (dsl_tac_typ_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Typing"; "dsl_tac_t"]
+    FStar_Compiler_Range.dummyRange
 let (calc_lid : Prims.string -> FStar_Ident.lid) =
   fun i ->
     FStar_Ident.lid_of_path ["FStar"; "Calc"; i]

@@ -528,7 +528,8 @@ let rec eq_decl' (d1 d2:decl') : bool =
   | Assume (i1, t1), Assume (i2, t2) ->
     eq_ident i1 i2 &&
     eq_term t1 t2
-  | Splice (is1, t1), Splice (is2, t2) ->
+  | Splice (is_typed1, is1, t1), Splice (is_typed2, is2, t2) ->
+    is_typed1 = is_typed2 &&
     eq_list eq_ident is1 is2 &&
     eq_term t1 t2
   | _ -> false
@@ -691,7 +692,7 @@ let rec lidents_of_decl (d:decl) =
   | Polymonadic_subcomp(l0, l1, t) -> l0::l1::lidents_of_term t
   | Pragma _ -> []
   | Assume (_, t) -> lidents_of_term t
-  | Splice (_, t) -> lidents_of_term t
+  | Splice (_, _, t) -> lidents_of_term t
 
 and lidents_of_effect_decl (ed:effect_decl) =
   match ed with

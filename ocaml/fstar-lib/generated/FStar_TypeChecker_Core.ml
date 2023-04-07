@@ -514,6 +514,19 @@ let (report_cache_stats : unit -> cache_stats_t) =
   fun uu___ -> FStar_Compiler_Effect.op_Bang cache_stats
 let (clear_memo_table : unit -> unit) =
   fun uu___ -> FStar_Syntax_TermHashTable.clear table
+type side =
+  | Left 
+  | Right 
+  | Both 
+  | Neither 
+let (uu___is_Left : side -> Prims.bool) =
+  fun projectee -> match projectee with | Left -> true | uu___ -> false
+let (uu___is_Right : side -> Prims.bool) =
+  fun projectee -> match projectee with | Right -> true | uu___ -> false
+let (uu___is_Both : side -> Prims.bool) =
+  fun projectee -> match projectee with | Both -> true | uu___ -> false
+let (uu___is_Neither : side -> Prims.bool) =
+  fun projectee -> match projectee with | Neither -> true | uu___ -> false
 let (insert :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1287,19 +1300,6 @@ let (debug : env -> (unit -> unit) -> unit) =
       let uu___ =
         FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
       if uu___ then f () else ()
-type side =
-  | Left 
-  | Right 
-  | Both 
-  | Neither 
-let (uu___is_Left : side -> Prims.bool) =
-  fun projectee -> match projectee with | Left -> true | uu___ -> false
-let (uu___is_Right : side -> Prims.bool) =
-  fun projectee -> match projectee with | Right -> true | uu___ -> false
-let (uu___is_Both : side -> Prims.bool) =
-  fun projectee -> match projectee with | Both -> true | uu___ -> false
-let (uu___is_Neither : side -> Prims.bool) =
-  fun projectee -> match projectee with | Neither -> true | uu___ -> false
 let (side_to_string : side -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -1353,6 +1353,42 @@ let (combine_path_and_branch_condition :
                 (let uu___2 = FStar_Syntax_Util.mk_boolean_negation bc in
                  FStar_Syntax_Util.mk_and path_condition uu___2) in
         (this_path_condition, next_path_condition)
+let (maybe_relate_after_unfolding :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> side)
+  =
+  fun g ->
+    fun t0 ->
+      fun t1 ->
+        let rec delta_depth_of_head t =
+          let head = FStar_Syntax_Util.leftmost_head t in
+          let uu___ =
+            let uu___1 = FStar_Syntax_Util.un_uinst head in
+            uu___1.FStar_Syntax_Syntax.n in
+          match uu___ with
+          | FStar_Syntax_Syntax.Tm_fvar fv ->
+              let uu___1 = FStar_TypeChecker_Env.delta_depth_of_fv g fv in
+              FStar_Pervasives_Native.Some uu___1
+          | FStar_Syntax_Syntax.Tm_match (t2, uu___1, uu___2, uu___3) ->
+              delta_depth_of_head t2
+          | uu___1 -> FStar_Pervasives_Native.None in
+        let dd0 = delta_depth_of_head t0 in
+        let dd1 = delta_depth_of_head t1 in
+        match (dd0, dd1) with
+        | (FStar_Pervasives_Native.Some uu___, FStar_Pervasives_Native.None)
+            -> Left
+        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some uu___)
+            -> Right
+        | (FStar_Pervasives_Native.Some dd01, FStar_Pervasives_Native.Some
+           dd11) ->
+            if dd01 = dd11
+            then Both
+            else
+              (let uu___1 =
+                 FStar_TypeChecker_Common.delta_depth_greater_than dd01 dd11 in
+               if uu___1 then Left else Right)
+        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+            Neither
 let rec (check_relation :
   env ->
     relation ->
@@ -1423,37 +1459,7 @@ let rec (check_relation :
                     FStar_Syntax_Syntax.Tm_match uu___3) -> true
                  | uu___2 -> false in
                let which_side_to_unfold t01 t11 =
-                 let rec delta_depth_of_head t =
-                   let head = FStar_Syntax_Util.leftmost_head t in
-                   let uu___1 =
-                     let uu___2 = FStar_Syntax_Util.un_uinst head in
-                     uu___2.FStar_Syntax_Syntax.n in
-                   match uu___1 with
-                   | FStar_Syntax_Syntax.Tm_fvar fv ->
-                       let uu___2 =
-                         FStar_TypeChecker_Env.delta_depth_of_fv g.tcenv fv in
-                       FStar_Pervasives_Native.Some uu___2
-                   | FStar_Syntax_Syntax.Tm_match
-                       (t2, uu___2, uu___3, uu___4) -> delta_depth_of_head t2
-                   | uu___2 -> FStar_Pervasives_Native.None in
-                 let dd0 = delta_depth_of_head t01 in
-                 let dd1 = delta_depth_of_head t11 in
-                 match (dd0, dd1) with
-                 | (FStar_Pervasives_Native.Some uu___1,
-                    FStar_Pervasives_Native.None) -> Left
-                 | (FStar_Pervasives_Native.None,
-                    FStar_Pervasives_Native.Some uu___1) -> Right
-                 | (FStar_Pervasives_Native.Some dd01,
-                    FStar_Pervasives_Native.Some dd11) ->
-                     if dd01 = dd11
-                     then Both
-                     else
-                       (let uu___2 =
-                          FStar_TypeChecker_Common.delta_depth_greater_than
-                            dd01 dd11 in
-                        if uu___2 then Left else Right)
-                 | (FStar_Pervasives_Native.None,
-                    FStar_Pervasives_Native.None) -> Neither in
+                 maybe_relate_after_unfolding g.tcenv t01 t11 in
                let maybe_unfold_side side1 t01 t11 =
                  FStar_Profiling.profile
                    (fun uu___1 ->

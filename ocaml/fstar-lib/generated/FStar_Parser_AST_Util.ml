@@ -583,8 +583,10 @@ let rec (eq_decl' :
           eq_pragma p1 p2
       | (FStar_Parser_AST.Assume (i1, t1), FStar_Parser_AST.Assume (i2, t2))
           -> (eq_ident i1 i2) && (eq_term t1 t2)
-      | (FStar_Parser_AST.Splice (is1, t1), FStar_Parser_AST.Splice
-         (is2, t2)) -> (eq_list eq_ident is1 is2) && (eq_term t1 t2)
+      | (FStar_Parser_AST.Splice (is_typed1, is1, t1),
+         FStar_Parser_AST.Splice (is_typed2, is2, t2)) ->
+          ((is_typed1 = is_typed2) && (eq_list eq_ident is1 is2)) &&
+            (eq_term t1 t2)
       | uu___ -> false
 and (eq_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Parser_AST.effect_decl -> Prims.bool)
@@ -1011,7 +1013,7 @@ let rec (lidents_of_decl :
           uu___
     | FStar_Parser_AST.Pragma uu___ -> []
     | FStar_Parser_AST.Assume (uu___, t) -> lidents_of_term t
-    | FStar_Parser_AST.Splice (uu___, t) -> lidents_of_term t
+    | FStar_Parser_AST.Splice (uu___, uu___1, t) -> lidents_of_term t
 and (lidents_of_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Ident.lident Prims.list) =
   fun ed ->
