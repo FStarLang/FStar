@@ -2503,19 +2503,11 @@ let flatten_refinement t =
 
 let contains_strictly_positive_attribute (attrs:list attribute)
 : bool
-= U.for_some
-    (fun a -> match a.n with
-      | Tm_fvar fv when fv_eq_lid fv PC.binder_strictly_positive_attr -> true
-      | _ -> false)
-    attrs
+= has_attribute attrs PC.binder_strictly_positive_attr
 
 let contains_unused_attribute (attrs:list attribute)
 : bool
-= U.for_some
-    (fun a -> match a.n with
-      | Tm_fvar fv when fv_eq_lid fv PC.binder_unused_attr -> true
-      | _ -> false)
-    attrs
+= has_attribute attrs PC.binder_unused_attr
 
 //retains the original attributes as is, while deciding if they contains
 //the "strictly_positive" attribute
