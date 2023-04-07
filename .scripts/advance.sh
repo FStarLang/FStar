@@ -80,10 +80,6 @@ function refresh_hints() {
     git config --global user.name "Dzomo, the Everest Yak"
     git config --global user.email "everbld@microsoft.com"
 
-    # Figure out the branch
-    CI_BRANCH=${branchname##refs/heads/}
-    echo "Current branch_name=$CI_BRANCH"
-
     # Record the latest commit
     last_commit=$(git rev-parse HEAD)
     
@@ -142,10 +138,24 @@ function refresh_hints() {
     git checkout -b BuildHints-$CI_BRANCH
     git push $remote BuildHints-$CI_BRANCH
 
-    # Publish a release
-    if is_release_branch $CI_BRANCH ; then
+    # Create a pull request
+    $gh pr create --base "$CI_BRANCH" --title "Advance to $(cat version.txt)" --fill
+}
+
+release () {
         # Make and test a release
         FSTAR_HOME= KRML_HOME= GH_TOKEN=$DZOMO_GITHUB_TOKEN CI_BRANCH=$CI_BRANCH .scripts/process_build.sh
+}
+
+build_and_refresh () {
+    OTHERFLAGS='--record_hints' make -j "$CI_THREADS" ci-uregressions-ulong
+    refresh_fstar_hints
+}
+
+build_refresh_and_release () {
+    build_and_refresh
+    if is_release_branch $CI_BRANCH ; then
+        release
     fi
 }
 
@@ -153,11 +163,34 @@ function refresh_hints() {
 # of the directory where this script lives
 cd $(cd `dirname $0`/.. && pwd)
 
+# Figure out the branch
+CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "Current branch_name=$CI_BRANCH"
+
+# How many threads do we need?
+if [[ -z "$CI_THREADS" ]] ; then
+    CI_THREADS=24
+fi
+
+# We need a GitHub token
+if [[ -z "$DZOMO_GITHUB_TOKEN" ]] ; then
+    echo "Please provide a GitHub token into the DZOMO_GITHUB_TOKEN environment variable"
+    exit 1
+fi
+
+gh="env GH_TOKEN=$DZOMO_GITHUB_TOKEN gh -R FStarLang/FStar"
+
 case "$1" in
     (refresh_fstar_hints)
         refresh_fstar_hints
         ;;
+    (build_refresh_and_release)
+        build_refresh_and_release
+        ;;
+    (build_and_refresh)
+        build_and_refresh
+        ;;
     (*)
-        echo "What do you want to do? (refresh_fstar_hints)"
-        return 1
+        echo "What do you want to do? (refresh_fstar_hints | build_refresh_and_release | build_and_refresh)"
+        exit 1
 esac

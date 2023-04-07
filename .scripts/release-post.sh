@@ -31,9 +31,4 @@ function upload_archive () {
 upload_archive $BUILD_PACKAGE
 rm -rf release
 
-# If we are running from CI, open a pull request
-if [[ -n "$CI_BRANCH" ]] ; then
-    $gh pr create --base "$CI_BRANCH" --title "Release $my_tag" --fill
-fi
-
 popd
