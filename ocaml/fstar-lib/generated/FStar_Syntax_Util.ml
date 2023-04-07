@@ -4851,25 +4851,10 @@ let (flatten_refinement :
 let (contains_strictly_positive_attribute :
   FStar_Syntax_Syntax.attribute Prims.list -> Prims.bool) =
   fun attrs ->
-    FStar_Compiler_Util.for_some
-      (fun a ->
-         match a.FStar_Syntax_Syntax.n with
-         | FStar_Syntax_Syntax.Tm_fvar fv when
-             FStar_Syntax_Syntax.fv_eq_lid fv
-               FStar_Parser_Const.binder_strictly_positive_attr
-             -> true
-         | uu___ -> false) attrs
+    has_attribute attrs FStar_Parser_Const.binder_strictly_positive_attr
 let (contains_unused_attribute :
   FStar_Syntax_Syntax.attribute Prims.list -> Prims.bool) =
-  fun attrs ->
-    FStar_Compiler_Util.for_some
-      (fun a ->
-         match a.FStar_Syntax_Syntax.n with
-         | FStar_Syntax_Syntax.Tm_fvar fv when
-             FStar_Syntax_Syntax.fv_eq_lid fv
-               FStar_Parser_Const.binder_unused_attr
-             -> true
-         | uu___ -> false) attrs
+  fun attrs -> has_attribute attrs FStar_Parser_Const.binder_unused_attr
 let (parse_positivity_attributes :
   FStar_Syntax_Syntax.attribute Prims.list ->
     (FStar_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option
