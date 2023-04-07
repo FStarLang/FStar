@@ -26,18 +26,6 @@ let (mk_thunk :
           FStar_Syntax_Syntax.tun in
       FStar_Syntax_Syntax.mk_binder uu___ in
     FStar_Syntax_Util.abs [b] e FStar_Pervasives_Native.None
-let (mk_binder_with_attrs :
-  FStar_Syntax_Syntax.bv ->
-    FStar_Syntax_Syntax.bqual ->
-      FStar_Syntax_Syntax.attribute Prims.list -> FStar_Syntax_Syntax.binder)
-  =
-  fun bv ->
-    fun aq ->
-      fun attrs ->
-        let uu___ = FStar_Syntax_Util.parse_positivity_attributes attrs in
-        match uu___ with
-        | (pqual, attrs1) ->
-            FStar_Syntax_Syntax.mk_binder_with_attrs bv aq pqual attrs1
 let (qualify_field_names :
   FStar_Ident.lident ->
     FStar_Ident.lident Prims.list -> FStar_Ident.lident Prims.list)
@@ -2326,7 +2314,6 @@ and (desugar_term_maybe_top :
           match b with
           | { FStar_Syntax_Syntax.binder_bv = x;
               FStar_Syntax_Syntax.binder_qual = FStar_Pervasives_Native.None;
-              FStar_Syntax_Syntax.binder_positivity = uu___;
               FStar_Syntax_Syntax.binder_attrs = [];_} -> x
           | uu___ ->
               let uu___1 =
@@ -2799,7 +2786,7 @@ and (desugar_term_maybe_top :
                                    let uu___6 =
                                      let uu___7 =
                                        let uu___8 =
-                                         mk_binder_with_attrs
+                                         FStar_Syntax_Syntax.mk_binder_with_attrs
                                            {
                                              FStar_Syntax_Syntax.ppname =
                                                (x.FStar_Syntax_Syntax.ppname);
@@ -3130,7 +3117,8 @@ and (desugar_term_maybe_top :
                                                 (sc1, p2)
                                           | uu___6 -> failwith "Impossible") in
                                    let uu___6 =
-                                     mk_binder_with_attrs x aq1 attrs in
+                                     FStar_Syntax_Syntax.mk_binder_with_attrs
+                                       x aq1 attrs in
                                    (uu___6, sc_pat_opt1) in
                              (match uu___5 with
                               | (b1, sc_pat_opt1) ->
@@ -5762,7 +5750,7 @@ and (as_binder :
             let uu___1 =
               let uu___2 = FStar_Syntax_Syntax.null_bv k in
               let uu___3 = trans_bqual env imp in
-              mk_binder_with_attrs uu___2 uu___3 attrs in
+              FStar_Syntax_Syntax.mk_binder_with_attrs uu___2 uu___3 attrs in
             (uu___1, env)
         | (FStar_Pervasives_Native.Some a, k, attrs) ->
             let uu___1 = FStar_Syntax_DsEnv.push_bv env a in
@@ -5770,7 +5758,7 @@ and (as_binder :
              | (env1, a1) ->
                  let uu___2 =
                    let uu___3 = trans_bqual env1 imp in
-                   mk_binder_with_attrs
+                   FStar_Syntax_Syntax.mk_binder_with_attrs
                      {
                        FStar_Syntax_Syntax.ppname =
                          (a1.FStar_Syntax_Syntax.ppname);
@@ -5845,7 +5833,8 @@ let (typars_of_binders :
                                let uu___4 =
                                  let uu___5 =
                                    trans_bqual env2 b.FStar_Parser_AST.aqual in
-                                 mk_binder_with_attrs a2 uu___5 attrs in
+                                 FStar_Syntax_Syntax.mk_binder_with_attrs a2
+                                   uu___5 attrs in
                                uu___4 :: out in
                              (env2, uu___3))
                     | uu___2 ->
@@ -6488,7 +6477,7 @@ let rec (desugar_tycon :
                           | (env3, y) ->
                               let uu___3 =
                                 let uu___4 =
-                                  mk_binder_with_attrs y
+                                  FStar_Syntax_Syntax.mk_binder_with_attrs y
                                     b.FStar_Syntax_Syntax.binder_qual
                                     b.FStar_Syntax_Syntax.binder_attrs in
                                 uu___4 :: tps in
@@ -6836,9 +6825,6 @@ let rec (desugar_tycon :
                                                  (FStar_Pervasives_Native.Some
                                                     (FStar_Syntax_Syntax.Implicit
                                                        true));
-                                               FStar_Syntax_Syntax.binder_positivity
-                                                 =
-                                                 (tp.FStar_Syntax_Syntax.binder_positivity);
                                                FStar_Syntax_Syntax.binder_attrs
                                                  =
                                                  (tp.FStar_Syntax_Syntax.binder_attrs)
@@ -7643,9 +7629,6 @@ let rec (desugar_effect :
                                                                     FStar_Syntax_Syntax.binder_qual
                                                                     =
                                                                     (b.FStar_Syntax_Syntax.binder_qual);
-                                                                    FStar_Syntax_Syntax.binder_positivity
-                                                                    =
-                                                                    (b.FStar_Syntax_Syntax.binder_positivity);
                                                                     FStar_Syntax_Syntax.binder_attrs
                                                                     =
                                                                     b_attrs1
@@ -8519,10 +8502,12 @@ and (desugar_decl_noattrs :
                          (fun x ->
                             let uu___1 = has_no_method_attr x in
                             Prims.op_Negation uu___1) meths in
+                     let is_typed = false in
                      let uu___1 =
                        let uu___2 =
                          let uu___3 =
-                           let uu___4 = mkclass lid in (meths1, uu___4) in
+                           let uu___4 = mkclass lid in
+                           (is_typed, meths1, uu___4) in
                          FStar_Syntax_Syntax.Sig_splice uu___3 in
                        {
                          FStar_Syntax_Syntax.sigel = uu___2;
@@ -9133,7 +9118,7 @@ and (desugar_decl_noattrs :
               } in
             [uu___1] in
           (env, uu___)
-      | FStar_Parser_AST.Splice (ids, t) ->
+      | FStar_Parser_AST.Splice (is_typed, ids, t) ->
           let t1 = desugar_term env t in
           let se =
             let uu___ =
@@ -9141,7 +9126,7 @@ and (desugar_decl_noattrs :
                 let uu___2 =
                   FStar_Compiler_List.map (FStar_Syntax_DsEnv.qualify env)
                     ids in
-                (uu___2, t1) in
+                (is_typed, uu___2, t1) in
               FStar_Syntax_Syntax.Sig_splice uu___1 in
             {
               FStar_Syntax_Syntax.sigel = uu___;

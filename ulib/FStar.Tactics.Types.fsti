@@ -57,3 +57,9 @@ type guard_policy =
     | Goal
     | Force
     | Drop // unsound! careful!
+
+type unfold_side =
+  | Left
+  | Right
+  | Both
+  | Neither

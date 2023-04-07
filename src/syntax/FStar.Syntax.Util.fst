@@ -867,7 +867,7 @@ let destruct typ lid =
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
-  | Sig_splice(lids, _)
+  | Sig_splice(_, lids, _)
   | Sig_bundle(_, lids) -> lids
   | Sig_inductive_typ (lid, _, _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
@@ -1305,6 +1305,9 @@ let rename_let_attr = fvar_const PC.rename_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 let t_universe_uvar     = fvar_const PC.universe_uvar_lid
+
+let t_dsl_tac_typ = fvar PC.dsl_tac_typ_lid (Delta_constant_at_level 1) None
+
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2

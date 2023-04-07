@@ -33,6 +33,7 @@ let b2t_qn       = ["Prims"; "b2t"]
 let forall_qn    = ["Prims"; "l_Forall"]
 let exists_qn    = ["Prims"; "l_Exists"]
 let squash_qn    = ["Prims"; "squash"]
+let prop_qn      = ["Prims"; "prop"]
 
 let bool_true_qn  = ["Prims"; "true"]
 let bool_false_qn = ["Prims"; "false"]

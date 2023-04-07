@@ -745,12 +745,11 @@ let with_ctx : 'a . Prims.string -> (unit -> 'a) -> 'a =
         | FStar_Pervasives.Inl e -> FStar_Compiler_Effect.raise e))
 let with_ctx_if : 'a . Prims.bool -> Prims.string -> (unit -> 'a) -> 'a =
   fun b -> fun s -> fun f -> if b then with_ctx s f else f ()
-let no_ctx : 'a . (unit -> 'a) -> 'a =
-  fun f ->
-    let save = error_context.get () in
-    error_context.clear (); (let res = f () in error_context.set save; res)
-let catch_errors :
-  'a . (unit -> 'a) -> (issue Prims.list * 'a FStar_Pervasives_Native.option)
+let catch_errors_aux :
+  'a .
+    (unit -> 'a) ->
+      (issue Prims.list * issue Prims.list * 'a
+        FStar_Pervasives_Native.option)
   =
   fun f ->
     let newh = mk_default_handler false in
@@ -768,9 +767,29 @@ let catch_errors :
      (let uu___2 =
         FStar_Compiler_List.partition (fun i -> i.issue_level = EError)
           all_issues in
-      match uu___2 with
-      | (errs, rest) ->
-          (FStar_Compiler_List.iter old.eh_add_one rest; (errs, r))))
+      match uu___2 with | (errs, rest) -> (errs, rest, r)))
+let no_ctx : 'a . (unit -> 'a) -> 'a =
+  fun f ->
+    let save = error_context.get () in
+    error_context.clear (); (let res = f () in error_context.set save; res)
+let catch_errors :
+  'a . (unit -> 'a) -> (issue Prims.list * 'a FStar_Pervasives_Native.option)
+  =
+  fun f ->
+    let uu___ = catch_errors_aux f in
+    match uu___ with
+    | (errs, rest, r) ->
+        ((let uu___2 =
+            let uu___3 = FStar_Compiler_Effect.op_Bang current_handler in
+            uu___3.eh_add_one in
+          FStar_Compiler_List.iter uu___2 rest);
+         (errs, r))
+let catch_errors_and_ignore_rest :
+  'a . (unit -> 'a) -> (issue Prims.list * 'a FStar_Pervasives_Native.option)
+  =
+  fun f ->
+    let uu___ = catch_errors_aux f in
+    match uu___ with | (errs, uu___1, r) -> (errs, r)
 let (find_multiset_discrepancy :
   Prims.int Prims.list ->
     Prims.int Prims.list ->

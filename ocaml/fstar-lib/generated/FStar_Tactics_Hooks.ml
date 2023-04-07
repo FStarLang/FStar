@@ -19,10 +19,12 @@ let (run_tactic_on_typ :
             let uu___ = FStar_Tactics_Basic.proofstate_of_goal_ty rng env typ in
             match uu___ with
             | (ps, w) ->
+                let tactic_already_typed = false in
                 let uu___1 =
                   FStar_Tactics_Interpreter.run_tactic_on_ps rng_tac rng_goal
                     false FStar_Syntax_Embeddings.e_unit ()
-                    FStar_Syntax_Embeddings.e_unit tactic ps in
+                    FStar_Syntax_Embeddings.e_unit tactic
+                    tactic_already_typed ps in
                 (match uu___1 with | (gs, _res) -> (gs, w))
 let (run_tactic_on_all_implicits :
   FStar_Compiler_Range.range ->
@@ -42,11 +44,13 @@ let (run_tactic_on_all_implicits :
                 imps in
             match uu___ with
             | (ps, uu___1) ->
+                let tactic_already_typed = false in
                 let uu___2 =
                   let uu___3 = FStar_TypeChecker_Env.get_range env in
                   FStar_Tactics_Interpreter.run_tactic_on_ps uu___3 rng_goal
                     true FStar_Syntax_Embeddings.e_unit ()
-                    FStar_Syntax_Embeddings.e_unit tactic ps in
+                    FStar_Syntax_Embeddings.e_unit tactic
+                    tactic_already_typed ps in
                 (match uu___2 with | (goals, ()) -> goals)
 type pol =
   | StrictlyPositive 
@@ -413,8 +417,6 @@ let rec (traverse :
                                         });
                                      FStar_Syntax_Syntax.binder_qual =
                                        (b.FStar_Syntax_Syntax.binder_qual);
-                                     FStar_Syntax_Syntax.binder_positivity =
-                                       (b.FStar_Syntax_Syntax.binder_positivity);
                                      FStar_Syntax_Syntax.binder_attrs =
                                        (b.FStar_Syntax_Syntax.binder_attrs)
                                    }) in
@@ -1201,9 +1203,6 @@ let rec (traverse_for_spinoff :
                                                });
                                             FStar_Syntax_Syntax.binder_qual =
                                               (b.FStar_Syntax_Syntax.binder_qual);
-                                            FStar_Syntax_Syntax.binder_positivity
-                                              =
-                                              (b.FStar_Syntax_Syntax.binder_positivity);
                                             FStar_Syntax_Syntax.binder_attrs
                                               =
                                               (b.FStar_Syntax_Syntax.binder_attrs)
@@ -1652,136 +1651,355 @@ let (handle_smt_goal :
            | FStar_Pervasives_Native.None -> [(env, goal1)])
 let (splice :
   FStar_TypeChecker_Env.env ->
-    FStar_Compiler_Range.range ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.sigelt Prims.list)
+    Prims.bool ->
+      FStar_Ident.lident Prims.list ->
+        FStar_Syntax_Syntax.term ->
+          FStar_Compiler_Range.range -> FStar_Syntax_Syntax.sigelt Prims.list)
   =
   fun env ->
-    fun rng ->
-      fun tau ->
-        FStar_Errors.with_ctx "While running splice with a tactic"
-          (fun uu___ ->
-             if env.FStar_TypeChecker_Env.nosynth
-             then []
-             else
-               ((let uu___3 =
-                   FStar_TypeChecker_Env.debug env
-                     (FStar_Options.Other "Tac") in
-                 FStar_Compiler_Effect.op_Colon_Equals
-                   FStar_Tactics_Interpreter.tacdbg uu___3);
-                (let typ = FStar_Syntax_Syntax.t_decls in
-                 let ps =
-                   FStar_Tactics_Basic.proofstate_of_goals
-                     tau.FStar_Syntax_Syntax.pos env [] [] in
-                 let uu___3 =
-                   let uu___4 =
-                     FStar_Syntax_Embeddings.e_list
-                       FStar_Reflection_Embeddings.e_sigelt in
-                   FStar_Tactics_Interpreter.run_tactic_on_ps
-                     tau.FStar_Syntax_Syntax.pos tau.FStar_Syntax_Syntax.pos
-                     false FStar_Syntax_Embeddings.e_unit () uu___4 tau ps in
-                 match uu___3 with
-                 | (gs, sigelts) ->
-                     ((let uu___5 =
-                         FStar_Compiler_List.existsML
-                           (fun g ->
-                              let uu___6 =
-                                let uu___7 =
-                                  let uu___8 = FStar_Tactics_Types.goal_env g in
-                                  let uu___9 =
-                                    FStar_Tactics_Types.goal_type g in
-                                  getprop uu___8 uu___9 in
-                                FStar_Compiler_Option.isSome uu___7 in
-                              Prims.op_Negation uu___6) gs in
-                       if uu___5
+    fun is_typed ->
+      fun lids ->
+        fun tau ->
+          fun rng ->
+            FStar_Errors.with_ctx "While running splice with a tactic"
+              (fun uu___ ->
+                 if env.FStar_TypeChecker_Env.nosynth
+                 then []
+                 else
+                   ((let uu___3 =
+                       FStar_TypeChecker_Env.debug env
+                         (FStar_Options.Other "Tac") in
+                     FStar_Compiler_Effect.op_Colon_Equals
+                       FStar_Tactics_Interpreter.tacdbg uu___3);
+                    (let uu___3 =
+                       if is_typed
                        then
-                         FStar_Errors.raise_error
-                           (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
-                             "splice left open goals")
-                           typ.FStar_Syntax_Syntax.pos
-                       else ());
-                      (let uu___6 =
-                         FStar_Compiler_Effect.op_Bang
-                           FStar_Tactics_Interpreter.tacdbg in
-                       if uu___6
-                       then
-                         let uu___7 =
-                           (FStar_Common.string_of_list ())
-                             FStar_Syntax_Print.sigelt_to_string sigelts in
-                         FStar_Compiler_Util.print1
-                           "splice: got decls = {\n\n%s\n\n}\n" uu___7
-                       else ());
-                      (let sigelts1 =
-                         FStar_Compiler_Effect.op_Bar_Greater sigelts
-                           (FStar_Compiler_List.map
-                              (fun se ->
-                                 (match se.FStar_Syntax_Syntax.sigel with
-                                  | FStar_Syntax_Syntax.Sig_datacon uu___7 ->
-                                      let uu___8 =
+                         FStar_TypeChecker_TcTerm.tc_check_tot_or_gtot_term
+                           env tau FStar_Syntax_Util.t_dsl_tac_typ ""
+                       else
+                         FStar_TypeChecker_TcTerm.tc_tactic
+                           FStar_Syntax_Syntax.t_unit
+                           FStar_Syntax_Syntax.t_decls env tau in
+                     match uu___3 with
+                     | (tau1, uu___4, g) ->
+                         (FStar_TypeChecker_Rel.force_trivial_guard env g;
+                          (let ps =
+                             FStar_Tactics_Basic.proofstate_of_goals
+                               tau1.FStar_Syntax_Syntax.pos env [] [] in
+                           let tactic_already_typed = true in
+                           let uu___6 =
+                             if is_typed
+                             then
+                               let uu___7 =
+                                 let uu___8 =
+                                   FStar_Syntax_Embeddings.e_tuple2
+                                     FStar_Reflection_Embeddings.e_term
+                                     FStar_Reflection_Embeddings.e_term in
+                                 FStar_Tactics_Interpreter.run_tactic_on_ps
+                                   tau1.FStar_Syntax_Syntax.pos
+                                   tau1.FStar_Syntax_Syntax.pos false
+                                   FStar_Reflection_Embeddings.e_env
+                                   {
+                                     FStar_TypeChecker_Env.solver =
+                                       (env.FStar_TypeChecker_Env.solver);
+                                     FStar_TypeChecker_Env.range =
+                                       (env.FStar_TypeChecker_Env.range);
+                                     FStar_TypeChecker_Env.curmodule =
+                                       (env.FStar_TypeChecker_Env.curmodule);
+                                     FStar_TypeChecker_Env.gamma = [];
+                                     FStar_TypeChecker_Env.gamma_sig =
+                                       (env.FStar_TypeChecker_Env.gamma_sig);
+                                     FStar_TypeChecker_Env.gamma_cache =
+                                       (env.FStar_TypeChecker_Env.gamma_cache);
+                                     FStar_TypeChecker_Env.modules =
+                                       (env.FStar_TypeChecker_Env.modules);
+                                     FStar_TypeChecker_Env.expected_typ =
+                                       (env.FStar_TypeChecker_Env.expected_typ);
+                                     FStar_TypeChecker_Env.sigtab =
+                                       (env.FStar_TypeChecker_Env.sigtab);
+                                     FStar_TypeChecker_Env.attrtab =
+                                       (env.FStar_TypeChecker_Env.attrtab);
+                                     FStar_TypeChecker_Env.instantiate_imp =
+                                       (env.FStar_TypeChecker_Env.instantiate_imp);
+                                     FStar_TypeChecker_Env.effects =
+                                       (env.FStar_TypeChecker_Env.effects);
+                                     FStar_TypeChecker_Env.generalize =
+                                       (env.FStar_TypeChecker_Env.generalize);
+                                     FStar_TypeChecker_Env.letrecs =
+                                       (env.FStar_TypeChecker_Env.letrecs);
+                                     FStar_TypeChecker_Env.top_level =
+                                       (env.FStar_TypeChecker_Env.top_level);
+                                     FStar_TypeChecker_Env.check_uvars =
+                                       (env.FStar_TypeChecker_Env.check_uvars);
+                                     FStar_TypeChecker_Env.use_eq_strict =
+                                       (env.FStar_TypeChecker_Env.use_eq_strict);
+                                     FStar_TypeChecker_Env.is_iface =
+                                       (env.FStar_TypeChecker_Env.is_iface);
+                                     FStar_TypeChecker_Env.admit =
+                                       (env.FStar_TypeChecker_Env.admit);
+                                     FStar_TypeChecker_Env.lax =
+                                       (env.FStar_TypeChecker_Env.lax);
+                                     FStar_TypeChecker_Env.lax_universes =
+                                       (env.FStar_TypeChecker_Env.lax_universes);
+                                     FStar_TypeChecker_Env.phase1 =
+                                       (env.FStar_TypeChecker_Env.phase1);
+                                     FStar_TypeChecker_Env.failhard =
+                                       (env.FStar_TypeChecker_Env.failhard);
+                                     FStar_TypeChecker_Env.nosynth =
+                                       (env.FStar_TypeChecker_Env.nosynth);
+                                     FStar_TypeChecker_Env.uvar_subtyping =
+                                       (env.FStar_TypeChecker_Env.uvar_subtyping);
+                                     FStar_TypeChecker_Env.tc_term =
+                                       (env.FStar_TypeChecker_Env.tc_term);
+                                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term
+                                       =
+                                       (env.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
+                                     FStar_TypeChecker_Env.universe_of =
+                                       (env.FStar_TypeChecker_Env.universe_of);
+                                     FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                       =
+                                       (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                     FStar_TypeChecker_Env.teq_nosmt_force =
+                                       (env.FStar_TypeChecker_Env.teq_nosmt_force);
+                                     FStar_TypeChecker_Env.subtype_nosmt_force
+                                       =
+                                       (env.FStar_TypeChecker_Env.subtype_nosmt_force);
+                                     FStar_TypeChecker_Env.qtbl_name_and_index
+                                       =
+                                       (env.FStar_TypeChecker_Env.qtbl_name_and_index);
+                                     FStar_TypeChecker_Env.normalized_eff_names
+                                       =
+                                       (env.FStar_TypeChecker_Env.normalized_eff_names);
+                                     FStar_TypeChecker_Env.fv_delta_depths =
+                                       (env.FStar_TypeChecker_Env.fv_delta_depths);
+                                     FStar_TypeChecker_Env.proof_ns =
+                                       (env.FStar_TypeChecker_Env.proof_ns);
+                                     FStar_TypeChecker_Env.synth_hook =
+                                       (env.FStar_TypeChecker_Env.synth_hook);
+                                     FStar_TypeChecker_Env.try_solve_implicits_hook
+                                       =
+                                       (env.FStar_TypeChecker_Env.try_solve_implicits_hook);
+                                     FStar_TypeChecker_Env.splice =
+                                       (env.FStar_TypeChecker_Env.splice);
+                                     FStar_TypeChecker_Env.mpreprocess =
+                                       (env.FStar_TypeChecker_Env.mpreprocess);
+                                     FStar_TypeChecker_Env.postprocess =
+                                       (env.FStar_TypeChecker_Env.postprocess);
+                                     FStar_TypeChecker_Env.identifier_info =
+                                       (env.FStar_TypeChecker_Env.identifier_info);
+                                     FStar_TypeChecker_Env.tc_hooks =
+                                       (env.FStar_TypeChecker_Env.tc_hooks);
+                                     FStar_TypeChecker_Env.dsenv =
+                                       (env.FStar_TypeChecker_Env.dsenv);
+                                     FStar_TypeChecker_Env.nbe =
+                                       (env.FStar_TypeChecker_Env.nbe);
+                                     FStar_TypeChecker_Env.strict_args_tab =
+                                       (env.FStar_TypeChecker_Env.strict_args_tab);
+                                     FStar_TypeChecker_Env.erasable_types_tab
+                                       =
+                                       (env.FStar_TypeChecker_Env.erasable_types_tab);
+                                     FStar_TypeChecker_Env.enable_defer_to_tac
+                                       =
+                                       (env.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                     FStar_TypeChecker_Env.unif_allow_ref_guards
+                                       =
+                                       (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                     FStar_TypeChecker_Env.erase_erasable_args
+                                       =
+                                       (env.FStar_TypeChecker_Env.erase_erasable_args);
+                                     FStar_TypeChecker_Env.core_check =
+                                       (env.FStar_TypeChecker_Env.core_check)
+                                   } uu___8 tau1 tactic_already_typed ps in
+                               match uu___7 with
+                               | (gs, (e, t)) ->
+                                   let lb =
+                                     let uu___8 =
+                                       let uu___9 =
+                                         let uu___10 =
+                                           FStar_Compiler_List.hd lids in
+                                         FStar_Syntax_Syntax.lid_as_fv
+                                           uu___10
+                                           (FStar_Syntax_Syntax.Delta_constant_at_level
+                                              Prims.int_one)
+                                           FStar_Pervasives_Native.None in
+                                       FStar_Pervasives.Inr uu___9 in
+                                     FStar_Syntax_Util.mk_letbinding uu___8
+                                       [] t FStar_Parser_Const.effect_Tot_lid
+                                       e [] rng in
+                                   (gs,
+                                     [{
+                                        FStar_Syntax_Syntax.sigel =
+                                          (FStar_Syntax_Syntax.Sig_let
+                                             ((false, [lb]), lids));
+                                        FStar_Syntax_Syntax.sigrng = rng;
+                                        FStar_Syntax_Syntax.sigquals =
+                                          [FStar_Syntax_Syntax.Visible_default];
+                                        FStar_Syntax_Syntax.sigmeta =
+                                          FStar_Syntax_Syntax.default_sigmeta;
+                                        FStar_Syntax_Syntax.sigattrs = [];
+                                        FStar_Syntax_Syntax.sigopts =
+                                          FStar_Pervasives_Native.None
+                                      }])
+                             else
+                               (let uu___8 =
+                                  FStar_Syntax_Embeddings.e_list
+                                    FStar_Reflection_Embeddings.e_sigelt in
+                                FStar_Tactics_Interpreter.run_tactic_on_ps
+                                  tau1.FStar_Syntax_Syntax.pos
+                                  tau1.FStar_Syntax_Syntax.pos false
+                                  FStar_Syntax_Embeddings.e_unit () uu___8
+                                  tau1 tactic_already_typed ps) in
+                           match uu___6 with
+                           | (gs, sigelts) ->
+                               ((let uu___8 =
+                                   FStar_Compiler_List.existsML
+                                     (fun g1 ->
                                         let uu___9 =
                                           let uu___10 =
-                                            FStar_Syntax_Print.sigelt_to_string_short
-                                              se in
-                                          FStar_Compiler_Util.format1
-                                            "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
+                                            let uu___11 =
+                                              FStar_Tactics_Types.goal_env g1 in
+                                            let uu___12 =
+                                              FStar_Tactics_Types.goal_type
+                                                g1 in
+                                            getprop uu___11 uu___12 in
+                                          FStar_Compiler_Option.isSome
                                             uu___10 in
-                                        (FStar_Errors_Codes.Error_BadSplice,
-                                          uu___9) in
-                                      FStar_Errors.raise_error uu___8 rng
-                                  | FStar_Syntax_Syntax.Sig_inductive_typ
-                                      uu___7 ->
-                                      let uu___8 =
-                                        let uu___9 =
+                                        Prims.op_Negation uu___9) gs in
+                                 if uu___8
+                                 then
+                                   FStar_Errors.raise_error
+                                     (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
+                                       "splice left open goals") rng
+                                 else ());
+                                (let lids' =
+                                   FStar_Compiler_List.collect
+                                     FStar_Syntax_Util.lids_of_sigelt sigelts in
+                                 FStar_Compiler_List.iter
+                                   (fun lid ->
+                                      let uu___9 =
+                                        FStar_Compiler_List.tryFind
+                                          (FStar_Ident.lid_equals lid) lids' in
+                                      match uu___9 with
+                                      | FStar_Pervasives_Native.None when
+                                          Prims.op_Negation
+                                            env.FStar_TypeChecker_Env.nosynth
+                                          ->
                                           let uu___10 =
-                                            FStar_Syntax_Print.sigelt_to_string_short
-                                              se in
-                                          FStar_Compiler_Util.format1
-                                            "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
-                                            uu___10 in
-                                        (FStar_Errors_Codes.Error_BadSplice,
-                                          uu___9) in
-                                      FStar_Errors.raise_error uu___8 rng
-                                  | uu___7 -> ());
-                                 {
-                                   FStar_Syntax_Syntax.sigel =
-                                     (se.FStar_Syntax_Syntax.sigel);
-                                   FStar_Syntax_Syntax.sigrng = rng;
-                                   FStar_Syntax_Syntax.sigquals =
-                                     (se.FStar_Syntax_Syntax.sigquals);
-                                   FStar_Syntax_Syntax.sigmeta =
-                                     (se.FStar_Syntax_Syntax.sigmeta);
-                                   FStar_Syntax_Syntax.sigattrs =
-                                     (se.FStar_Syntax_Syntax.sigattrs);
-                                   FStar_Syntax_Syntax.sigopts =
-                                     (se.FStar_Syntax_Syntax.sigopts)
-                                 })) in
-                       FStar_Compiler_Effect.op_Bar_Greater sigelts1
-                         (FStar_Compiler_List.iter
-                            (fun se ->
-                               FStar_Compiler_Effect.op_Bar_Greater
-                                 se.FStar_Syntax_Syntax.sigquals
-                                 (FStar_Compiler_List.iter
-                                    (fun q ->
-                                       let uu___7 =
-                                         FStar_Syntax_Syntax.is_internal_qualifier
-                                           q in
-                                       if uu___7
-                                       then
-                                         let uu___8 =
-                                           let uu___9 =
-                                             let uu___10 =
-                                               FStar_Syntax_Print.qual_to_string
-                                                 q in
-                                             let uu___11 =
-                                               FStar_Syntax_Print.sigelt_to_string_short
-                                                 se in
-                                             FStar_Compiler_Util.format2
-                                               "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
-                                               uu___10 uu___11 in
-                                           (FStar_Errors_Codes.Error_InternalQualifier,
-                                             uu___9) in
-                                         FStar_Errors.raise_error uu___8 rng
-                                       else ()))));
-                       (match () with | () -> sigelts1))))))
+                                            let uu___11 =
+                                              let uu___12 =
+                                                FStar_Ident.string_of_lid lid in
+                                              let uu___13 =
+                                                let uu___14 =
+                                                  FStar_Compiler_List.map
+                                                    FStar_Ident.string_of_lid
+                                                    lids' in
+                                                FStar_Compiler_Effect.op_Less_Bar
+                                                  (FStar_String.concat ", ")
+                                                  uu___14 in
+                                              FStar_Compiler_Util.format2
+                                                "Splice declared the name %s but it was not defined.\nThose defined were: %s"
+                                                uu___12 uu___13 in
+                                            (FStar_Errors_Codes.Fatal_SplicedUndef,
+                                              uu___11) in
+                                          FStar_Errors.raise_error uu___10
+                                            rng
+                                      | uu___10 -> ()) lids;
+                                 (let uu___10 =
+                                    FStar_Compiler_Effect.op_Bang
+                                      FStar_Tactics_Interpreter.tacdbg in
+                                  if uu___10
+                                  then
+                                    let uu___11 =
+                                      (FStar_Common.string_of_list ())
+                                        FStar_Syntax_Print.sigelt_to_string
+                                        sigelts in
+                                    FStar_Compiler_Util.print1
+                                      "splice: got decls = {\n\n%s\n\n}\n"
+                                      uu___11
+                                  else ());
+                                 (let sigelts1 =
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      sigelts
+                                      (FStar_Compiler_List.map
+                                         (fun se ->
+                                            (match se.FStar_Syntax_Syntax.sigel
+                                             with
+                                             | FStar_Syntax_Syntax.Sig_datacon
+                                                 uu___11 ->
+                                                 let uu___12 =
+                                                   let uu___13 =
+                                                     let uu___14 =
+                                                       FStar_Syntax_Print.sigelt_to_string_short
+                                                         se in
+                                                     FStar_Compiler_Util.format1
+                                                       "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
+                                                       uu___14 in
+                                                   (FStar_Errors_Codes.Error_BadSplice,
+                                                     uu___13) in
+                                                 FStar_Errors.raise_error
+                                                   uu___12 rng
+                                             | FStar_Syntax_Syntax.Sig_inductive_typ
+                                                 uu___11 ->
+                                                 let uu___12 =
+                                                   let uu___13 =
+                                                     let uu___14 =
+                                                       FStar_Syntax_Print.sigelt_to_string_short
+                                                         se in
+                                                     FStar_Compiler_Util.format1
+                                                       "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
+                                                       uu___14 in
+                                                   (FStar_Errors_Codes.Error_BadSplice,
+                                                     uu___13) in
+                                                 FStar_Errors.raise_error
+                                                   uu___12 rng
+                                             | uu___11 -> ());
+                                            {
+                                              FStar_Syntax_Syntax.sigel =
+                                                (se.FStar_Syntax_Syntax.sigel);
+                                              FStar_Syntax_Syntax.sigrng =
+                                                rng;
+                                              FStar_Syntax_Syntax.sigquals =
+                                                (se.FStar_Syntax_Syntax.sigquals);
+                                              FStar_Syntax_Syntax.sigmeta =
+                                                (se.FStar_Syntax_Syntax.sigmeta);
+                                              FStar_Syntax_Syntax.sigattrs =
+                                                (se.FStar_Syntax_Syntax.sigattrs);
+                                              FStar_Syntax_Syntax.sigopts =
+                                                (se.FStar_Syntax_Syntax.sigopts)
+                                            })) in
+                                  if is_typed
+                                  then ()
+                                  else
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      sigelts1
+                                      (FStar_Compiler_List.iter
+                                         (fun se ->
+                                            FStar_Compiler_Effect.op_Bar_Greater
+                                              se.FStar_Syntax_Syntax.sigquals
+                                              (FStar_Compiler_List.iter
+                                                 (fun q ->
+                                                    let uu___12 =
+                                                      FStar_Syntax_Syntax.is_internal_qualifier
+                                                        q in
+                                                    if uu___12
+                                                    then
+                                                      let uu___13 =
+                                                        let uu___14 =
+                                                          let uu___15 =
+                                                            FStar_Syntax_Print.qual_to_string
+                                                              q in
+                                                          let uu___16 =
+                                                            FStar_Syntax_Print.sigelt_to_string_short
+                                                              se in
+                                                          FStar_Compiler_Util.format2
+                                                            "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
+                                                            uu___15 uu___16 in
+                                                        (FStar_Errors_Codes.Error_InternalQualifier,
+                                                          uu___14) in
+                                                      FStar_Errors.raise_error
+                                                        uu___13 rng
+                                                    else ()))));
+                                  (match () with | () -> sigelts1)))))))))
 let (mpreprocess :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -1804,11 +2022,13 @@ let (mpreprocess :
                 (let ps =
                    FStar_Tactics_Basic.proofstate_of_goals
                      tm.FStar_Syntax_Syntax.pos env [] [] in
+                 let tactic_already_typed = false in
                  let uu___3 =
                    FStar_Tactics_Interpreter.run_tactic_on_ps
                      tau.FStar_Syntax_Syntax.pos tm.FStar_Syntax_Syntax.pos
                      false FStar_Reflection_Embeddings.e_term tm
-                     FStar_Reflection_Embeddings.e_term tau ps in
+                     FStar_Reflection_Embeddings.e_term tau
+                     tactic_already_typed ps in
                  match uu___3 with | (gs, tm1) -> tm1)))
 let (postprocess :
   FStar_TypeChecker_Env.env ->

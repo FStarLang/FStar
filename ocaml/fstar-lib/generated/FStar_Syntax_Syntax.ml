@@ -185,15 +185,6 @@ let (uu___is_Strict : should_check_uvar -> Prims.bool) =
 let (uu___is_Already_checked : should_check_uvar -> Prims.bool) =
   fun projectee ->
     match projectee with | Already_checked -> true | uu___ -> false
-type positivity_qualifier =
-  | BinderStrictlyPositive 
-  | BinderUnused 
-let (uu___is_BinderStrictlyPositive : positivity_qualifier -> Prims.bool) =
-  fun projectee ->
-    match projectee with | BinderStrictlyPositive -> true | uu___ -> false
-let (uu___is_BinderUnused : positivity_qualifier -> Prims.bool) =
-  fun projectee ->
-    match projectee with | BinderUnused -> true | uu___ -> false
 type term' =
   | Tm_bvar of bv 
   | Tm_name of bv 
@@ -279,7 +270,6 @@ and binder =
   {
   binder_bv: bv ;
   binder_qual: binder_qualifier FStar_Pervasives_Native.option ;
-  binder_positivity: positivity_qualifier FStar_Pervasives_Native.option ;
   binder_attrs: term' syntax Prims.list }
 and decreases_order =
   | Decreases_lex of term' syntax Prims.list 
@@ -668,26 +658,17 @@ let (__proj__Comp__item___0 : comp' -> comp_typ) =
 let (__proj__Mkbinder__item__binder_bv : binder -> bv) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_positivity; binder_attrs;_} ->
-        binder_bv
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_bv
 let (__proj__Mkbinder__item__binder_qual :
   binder -> binder_qualifier FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_positivity; binder_attrs;_} ->
-        binder_qual
-let (__proj__Mkbinder__item__binder_positivity :
-  binder -> positivity_qualifier FStar_Pervasives_Native.option) =
-  fun projectee ->
-    match projectee with
-    | { binder_bv; binder_qual; binder_positivity; binder_attrs;_} ->
-        binder_positivity
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_qual
 let (__proj__Mkbinder__item__binder_attrs :
   binder -> term' syntax Prims.list) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_positivity; binder_attrs;_} ->
-        binder_attrs
+    | { binder_bv; binder_qual; binder_attrs;_} -> binder_attrs
 let (uu___is_Decreases_lex : decreases_order -> Prims.bool) =
   fun projectee ->
     match projectee with | Decreases_lex _0 -> true | uu___ -> false
@@ -1553,7 +1534,7 @@ type sigelt' =
   | Sig_effect_abbrev of (FStar_Ident.lident * univ_names * binders * comp *
   cflag Prims.list) 
   | Sig_pragma of pragma 
-  | Sig_splice of (FStar_Ident.lident Prims.list * term) 
+  | Sig_splice of (Prims.bool * FStar_Ident.lident Prims.list * term) 
   | Sig_polymonadic_bind of (FStar_Ident.lident * FStar_Ident.lident *
   FStar_Ident.lident * tscheme * tscheme * indexed_effect_combinator_kind
   FStar_Pervasives_Native.option) 
@@ -1635,7 +1616,7 @@ let (uu___is_Sig_splice : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_splice _0 -> true | uu___ -> false
 let (__proj__Sig_splice__item___0 :
-  sigelt' -> (FStar_Ident.lident Prims.list * term)) =
+  sigelt' -> (Prims.bool * FStar_Ident.lident Prims.list * term)) =
   fun projectee -> match projectee with | Sig_splice _0 -> _0
 let (uu___is_Sig_polymonadic_bind : sigelt' -> Prims.bool) =
   fun projectee ->
@@ -1954,26 +1935,13 @@ let (freshen_bv : bv -> bv) =
     else
       (let uu___2 = FStar_Ident.next_id () in
        { ppname = (bv1.ppname); index = uu___2; sort = (bv1.sort) })
-let (mk_binder_with_attrs :
-  bv ->
-    bqual ->
-      positivity_qualifier FStar_Pervasives_Native.option ->
-        attribute Prims.list -> binder)
-  =
+let (mk_binder_with_attrs : bv -> bqual -> attribute Prims.list -> binder) =
   fun bv1 ->
     fun aqual1 ->
-      fun pqual ->
-        fun attrs ->
-          {
-            binder_bv = bv1;
-            binder_qual = aqual1;
-            binder_positivity = pqual;
-            binder_attrs = attrs
-          }
+      fun attrs ->
+        { binder_bv = bv1; binder_qual = aqual1; binder_attrs = attrs }
 let (mk_binder : bv -> binder) =
-  fun a ->
-    mk_binder_with_attrs a FStar_Pervasives_Native.None
-      FStar_Pervasives_Native.None []
+  fun a -> mk_binder_with_attrs a FStar_Pervasives_Native.None []
 let (null_binder : term -> binder) =
   fun t -> let uu___ = null_bv t in mk_binder uu___
 let (imp_tag : binder_qualifier) = Implicit false
@@ -2053,7 +2021,6 @@ let (freshen_binder : binder -> binder) =
     {
       binder_bv = uu___;
       binder_qual = (b.binder_qual);
-      binder_positivity = (b.binder_positivity);
       binder_attrs = (b.binder_attrs)
     }
 let (new_univ_name :

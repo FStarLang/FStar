@@ -690,12 +690,6 @@ let debug g f =
   if Env.debug g.tcenv (Options.Other "Core")
   then f ()
 
-type side = 
-  | Left
-  | Right
-  | Both
-  | Neither
-
 let side_to_string = function
   | Left -> "Left"
   | Right -> "Right"
@@ -730,6 +724,28 @@ let combine_path_and_branch_condition (path_condition:term)
     this_path_condition, //:Type
     next_path_condition  //:bool
 
+let maybe_relate_after_unfolding (g:Env.env) t0 t1 : side =
+  let rec delta_depth_of_head t =
+    let head = U.leftmost_head t in
+    match (U.un_uinst head).n with
+    | Tm_fvar fv -> Some (Env.delta_depth_of_fv g fv)
+    | Tm_match (t, _, _, _) -> delta_depth_of_head t
+    | _ -> None in
+  
+  let dd0 = delta_depth_of_head t0 in
+  let dd1 = delta_depth_of_head t1 in
+  
+  match dd0, dd1 with
+  | Some _, None -> Left
+  | None, Some _ -> Right
+  | Some dd0, Some dd1 ->
+    if dd0 = dd1
+    then Both
+    else if Common.delta_depth_greater_than dd0 dd1
+    then Left
+    else Right
+  | None, None ->
+    Neither
 
 (*
      G |- e : t0 <: t1 | p
@@ -777,29 +793,8 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         | Tm_match _, Tm_match _ -> true
         | _ -> false
     in
-    let which_side_to_unfold t0 t1 
-      : side
-      = let rec delta_depth_of_head t =
-          let head = U.leftmost_head t in
-          match (U.un_uinst head).n with
-          | Tm_fvar fv -> Some (Env.delta_depth_of_fv g.tcenv fv)
-          | Tm_match (t, _, _, _) -> delta_depth_of_head t
-          | _ -> None
-        in
-        let dd0 = delta_depth_of_head t0 in
-        let dd1 = delta_depth_of_head t1 in
-        match dd0, dd1 with
-        | Some _, None -> Left
-        | None, Some _ -> Right
-        | Some dd0, Some dd1 ->
-          if dd0 = dd1
-          then Both
-          else if Common.delta_depth_greater_than dd0 dd1
-          then Left
-          else Right
-        | None, None ->
-          Neither
-    in
+    let which_side_to_unfold t0 t1 =
+      maybe_relate_after_unfolding g.tcenv t0 t1 in
     let maybe_unfold_side side t0 t1
       : option (term & term)
       = Profiling.profile (fun _ -> 

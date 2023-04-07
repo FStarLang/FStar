@@ -806,7 +806,7 @@ type decl' =
   | Polymonadic_subcomp of (FStar_Ident.lid * FStar_Ident.lid * term) 
   | Pragma of pragma 
   | Assume of (FStar_Ident.ident * term) 
-  | Splice of (FStar_Ident.ident Prims.list * term) 
+  | Splice of (Prims.bool * FStar_Ident.ident Prims.list * term) 
 and decl =
   {
   d: decl' ;
@@ -899,7 +899,7 @@ let (__proj__Assume__item___0 : decl' -> (FStar_Ident.ident * term)) =
 let (uu___is_Splice : decl' -> Prims.bool) =
   fun projectee -> match projectee with | Splice _0 -> true | uu___ -> false
 let (__proj__Splice__item___0 :
-  decl' -> (FStar_Ident.ident Prims.list * term)) =
+  decl' -> (Prims.bool * FStar_Ident.ident Prims.list * term)) =
   fun projectee -> match projectee with | Splice _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee -> match projectee with | { d; drange; quals; attrs;_} -> d
@@ -2379,20 +2379,24 @@ let (decl_to_string : decl -> Prims.string) =
         let uu___2 = FStar_Ident.string_of_lid l2 in
         FStar_Compiler_Util.format2 "polymonadic_subcomp %s <: %s" uu___1
           uu___2
-    | Splice (ids, t) ->
+    | Splice (is_typed, ids, t) ->
         let uu___ =
           let uu___1 =
             let uu___2 =
-              FStar_Compiler_List.map (fun i -> FStar_Ident.string_of_id i)
-                ids in
-            FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat ";")
-              uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = term_to_string t in Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat "] (" uu___3 in
-          Prims.op_Hat uu___1 uu___2 in
-        Prims.op_Hat "splice[" uu___
+              let uu___3 =
+                let uu___4 =
+                  FStar_Compiler_List.map
+                    (fun i -> FStar_Ident.string_of_id i) ids in
+                FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat ";")
+                  uu___4 in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 = term_to_string t in Prims.op_Hat uu___6 ")" in
+                Prims.op_Hat "] (" uu___5 in
+              Prims.op_Hat uu___3 uu___4 in
+            Prims.op_Hat "[" uu___2 in
+          Prims.op_Hat (if is_typed then "_t" else "") uu___1 in
+        Prims.op_Hat "splice" uu___
     | SubEffect uu___ -> "sub_effect"
     | Pragma p ->
         let uu___ = string_of_pragma p in Prims.op_Hat "pragma #" uu___

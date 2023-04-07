@@ -1332,16 +1332,16 @@ let (try_lookup_name :
                      FStar_Pervasives_Native.Some uu___2
                  | FStar_Syntax_Syntax.Sig_effect_abbrev uu___2 ->
                      FStar_Pervasives_Native.Some (Eff_name (se, source_lid))
-                 | FStar_Syntax_Syntax.Sig_splice (lids, t) ->
-                     let uu___2 =
-                       let uu___3 =
-                         let uu___4 =
+                 | FStar_Syntax_Syntax.Sig_splice (uu___2, lids, t) ->
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 =
                            FStar_Syntax_Syntax.fvar source_lid
                              (FStar_Syntax_Syntax.Delta_constant_at_level
                                 Prims.int_one) FStar_Pervasives_Native.None in
-                         (uu___4, []) in
-                       Term_name uu___3 in
-                     FStar_Pervasives_Native.Some uu___2
+                         (uu___5, []) in
+                       Term_name uu___4 in
+                     FStar_Pervasives_Native.Some uu___3
                  | uu___2 -> FStar_Pervasives_Native.None) in
           let k_local_binding r =
             let t =
