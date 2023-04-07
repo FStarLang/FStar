@@ -193,11 +193,14 @@ let new_z3proc id cmd_and_args =
     check_z3version();
     BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!")
 
+let warn_handler (s:string) : unit =
+  Errors.log_issue Range.dummyRange (Errors.Warning_UnexpectedZ3Output, "Unexpected output from Z3: \"" ^ s ^ "\"")
+
 let new_z3proc_with_id =
     let ctr = BU.mk_ref (-1) in
     (fun cmd_and_args ->
       let p = new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args in
-      let reply = BU.ask_process p "(echo \"Test\")\n(echo \"Done!\")\n" (fun _ -> "Killed") in
+      let reply = BU.ask_process p "(echo \"Test\")\n(echo \"Done!\")\n" (fun _ -> "Killed") warn_handler in
       if reply = "Test\n"
       then p
       else failwith (BU.format1 "Failed to start and test Z3 process, expected output \"Test\" got \"%s\"" reply))
@@ -235,7 +238,7 @@ let bg_z3_proc =
     let ask input =
         incr the_z3proc_ask_count;
         let kill_handler () = "\nkilled\n" in
-        BU.ask_process (z3proc ()) input kill_handler
+        BU.ask_process (z3proc ()) input kill_handler warn_handler
     in
     let maybe_kill_z3proc () =
       if !the_z3proc <> None then begin
@@ -408,7 +411,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
     if fresh then
       let proc = new_z3proc_with_id (z3_cmd_and_args ()) in
       let kill_handler () = "\nkilled\n" in
-      let out = BU.ask_process proc input kill_handler in
+      let out = BU.ask_process proc input kill_handler warn_handler in
       BU.kill_process proc;
       out
     else

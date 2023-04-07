@@ -383,6 +383,7 @@ type raw_error =
   | Error_PluginDynlink
   | Error_InternalQualifier
   | Warning_NameEscape
+  | Warning_UnexpectedZ3Stderr
 
 type error_setting = raw_error * error_flag * int
 

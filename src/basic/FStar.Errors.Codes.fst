@@ -371,4 +371,5 @@ let default_settings : list error_setting =
     Error_PluginDynlink                               , CError, 353;
     Error_InternalQualifier                           , CAlwaysError, 354;
     Warning_NameEscape                                , CWarning, 355;
+    Warning_UnexpectedZ3Stderr                        , CWarning, 356;
     ]

@@ -71,8 +71,9 @@ let with_sigint_handler handler f =
 
 type proc =
     {pid: int;
-     inc : in_channel;
-     outc : out_channel;
+     inc : in_channel; (* in == where we read from, so the process's stdout *)
+     errc : in_channel; (* the process's stderr *)
+     outc : out_channel; (* the process's stdin *)
      mutable killed : bool;
      stop_marker: (string -> bool) option;
      id : string;
@@ -115,16 +116,19 @@ let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 100
 let start_process'
       (id: string) (prog: string) (args: string list)
       (stop_marker: (string -> bool) option) : proc =
-  let (stdout_r, stdout_w) = Unix.pipe () in
   let (stdin_r, stdin_w) = Unix.pipe () in
+  let (stdout_r, stdout_w) = Unix.pipe () in
+  let (stderr_r, stderr_w) = Unix.pipe () in
   Unix.set_close_on_exec stdin_w;
   Unix.set_close_on_exec stdout_r;
-  (* Capture stdout, leave stderr unchanged. *)
-  let pid = Unix.create_process prog (Array.of_list (prog :: args)) stdin_r stdout_w Unix.stderr in
+  Unix.set_close_on_exec stderr_r;
+  let pid = Unix.create_process prog (Array.of_list (prog :: args)) stdin_r stdout_w stderr_w in
   Unix.close stdin_r;
   Unix.close stdout_w;
+  Unix.close stderr_w;
   let proc = { pid = pid; id = prog ^ ":" ^ id;
                inc = Unix.in_channel_of_descr stdout_r;
+               errc = Unix.in_channel_of_descr stderr_r;
                outc = Unix.out_channel_of_descr stdin_w;
                stop_marker = stop_marker;
                killed = false;
@@ -168,6 +172,26 @@ let kill_all () =
 let process_read_all_output (p: proc) =
   (* Pass cleanup:false because kill_process closes both fds already. *)
   BatIO.read_all (BatIO.input_channel ~autoclose:true ~cleanup:false p.inc)
+
+
+let channel_read_all_nonblock (c: in_channel) : string =
+  let buffer = Bytes.create 8192 in
+  let fd = Unix.descr_of_in_channel c in
+  let rec aux (idx:int) (rem:int) =
+    if rem <= 0 then idx
+    else (
+      let rd, _, _ = Unix.select [fd] [] [] 0.0 in
+      if rd = [] then idx
+      else (
+        let n = Unix.read fd buffer idx rem in
+        if n <= 0
+        then idx
+        else aux (idx+n) (rem-n)
+      )
+    )
+  in
+  let len = aux 0 1024 in
+  Bytes.sub_string buffer 0 len
 
 (** Feed `stdin` to `p`, and call `reader_fn` in a separate thread to read the
     response.
@@ -232,9 +256,17 @@ let run_process (id: string) (prog: string) (args: string list) (stdin: string o
 
 type read_result = EOF | SIGINT
 
+let handle_stderr (p:proc) (h : string -> unit) =
+  (* Read stderr and call the handler if anything is in there.  *)
+  let se = channel_read_all_nonblock p.errc in
+  if se <> "" then
+     h (BatString.trim se)
+
 let ask_process
       (p: proc) (stdin: string)
-      (exn_handler: unit -> string): string =
+      (exn_handler: unit -> string)
+      (stderr_handler : string -> unit)
+      : string =
   let result = ref None in
   let out = Buffer.create 16 in
   let stop_marker = BatOption.default (fun s -> false) p.stop_marker in
@@ -250,7 +282,16 @@ let ask_process
     signal_fn () in
 
   try
+    (* Check stderr both before and after asking. Note: this does
+     * not handle the case when the process prints something to stderr
+     * and then hangs. We will stay in the process_read_async call without
+     * ever handling the output. To properly handle that, we could
+     * use a separate thread, but then all stderr_handler functions need
+     * to take locks. Since this is not a problem for now, we just avoid
+     * this complexity. *)
+    handle_stderr p stderr_handler;
     process_read_async p (Some stdin) reader_fn;
+    handle_stderr p stderr_handler;
     (match !result with
      | Some EOF -> kill_process p; Buffer.add_string out (exn_handler ())
      | Some SIGINT -> raise SigInt

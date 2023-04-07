@@ -211,7 +211,7 @@ val with_sigint_handler: sigint_handler -> (unit -> 'a) -> 'a
 type proc
 val run_process : string -> string -> list string -> option string -> string
 val start_process: string -> string -> list string -> (string -> bool) -> proc
-val ask_process: proc -> string -> (unit -> string) -> string
+val ask_process: proc -> string -> (*err_handler:*)(unit -> string) -> (*stderr_handler:*)(string -> unit) -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
 
