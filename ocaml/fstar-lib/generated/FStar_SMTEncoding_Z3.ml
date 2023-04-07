@@ -318,6 +318,11 @@ let (new_z3proc :
       FStar_Compiler_Util.start_process id
         (FStar_Pervasives_Native.fst cmd_and_args)
         (FStar_Pervasives_Native.snd cmd_and_args) (fun s -> s = "Done!")
+let (warn_handler : Prims.string -> unit) =
+  fun s ->
+    FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
+      (FStar_Errors_Codes.Warning_UnexpectedZ3Output,
+        (Prims.op_Hat "Unexpected output from Z3: \"" (Prims.op_Hat s "\"")))
 let (new_z3proc_with_id :
   (Prims.string * Prims.string Prims.list) -> FStar_Compiler_Util.proc) =
   let ctr = FStar_Compiler_Util.mk_ref (~- Prims.int_one) in
@@ -333,7 +338,7 @@ let (new_z3proc_with_id :
       new_z3proc uu___ cmd_and_args in
     let reply =
       FStar_Compiler_Util.ask_process p "(echo \"Test\")\n(echo \"Done!\")\n"
-        (fun uu___ -> "Killed") in
+        (fun uu___ -> "Killed") warn_handler in
     if reply = "Test\n"
     then p
     else
@@ -390,7 +395,7 @@ let (bg_z3_proc : bgproc FStar_Compiler_Effect.ref) =
     FStar_Compiler_Util.incr the_z3proc_ask_count;
     (let kill_handler uu___1 = "\nkilled\n" in
      let uu___1 = z3proc () in
-     FStar_Compiler_Util.ask_process uu___1 input kill_handler) in
+     FStar_Compiler_Util.ask_process uu___1 input kill_handler warn_handler) in
   let maybe_kill_z3proc uu___ =
     let uu___1 =
       let uu___2 = FStar_Compiler_Effect.op_Bang the_z3proc in
@@ -724,7 +729,8 @@ let (doZ3Exe :
                   let uu___ = z3_cmd_and_args () in new_z3proc_with_id uu___ in
                 let kill_handler uu___ = "\nkilled\n" in
                 let out =
-                  FStar_Compiler_Util.ask_process proc input kill_handler in
+                  FStar_Compiler_Util.ask_process proc input kill_handler
+                    warn_handler in
                 (FStar_Compiler_Util.kill_process proc; out)
               else
                 (let uu___1 = FStar_Compiler_Effect.op_Bang bg_z3_proc in

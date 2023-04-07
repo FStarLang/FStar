@@ -341,19 +341,23 @@ let (destruct_eq' :
                        -> FStar_Pervasives_Native.Some (e1, e2)
                    | uu___5 -> FStar_Pervasives_Native.None)))
 let (destruct_eq :
-  FStar_Syntax_Syntax.typ ->
-    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.option)
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.typ ->
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.option)
   =
-  fun typ ->
-    let uu___ = destruct_eq' typ in
-    match uu___ with
-    | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
-    | FStar_Pervasives_Native.None ->
-        let uu___1 = FStar_Syntax_Util.un_squash typ in
-        (match uu___1 with
-         | FStar_Pervasives_Native.Some typ1 -> destruct_eq' typ1
-         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
+  fun env1 ->
+    fun typ ->
+      let typ1 = whnf env1 typ in
+      let uu___ = destruct_eq' typ1 in
+      match uu___ with
+      | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
+      | FStar_Pervasives_Native.None ->
+          let uu___1 = FStar_Syntax_Util.un_squash typ1 in
+          (match uu___1 with
+           | FStar_Pervasives_Native.Some typ2 ->
+               let typ3 = whnf env1 typ2 in destruct_eq' typ3
+           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
 let (get_guard_policy :
   unit -> FStar_Tactics_Types.guard_policy FStar_Tactics_Monad.tac) =
   fun uu___ ->
@@ -1046,7 +1050,7 @@ let (do_match_on_lhs :
                  FStar_Tactics_Result.Success (tx, ps)) in
           FStar_Tactics_Monad.bind uu___
             (fun tx ->
-               let uu___1 = destruct_eq t1 in
+               let uu___1 = destruct_eq env1 t1 in
                match uu___1 with
                | FStar_Pervasives_Native.None ->
                    FStar_Tactics_Monad.fail "do_match_on_lhs: not an eq"
@@ -3621,9 +3625,7 @@ let (rewrite : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                     FStar_Tactics_Monad.fail
                       "binder not found in environment"
                 | FStar_Pervasives_Native.Some (e0, bv1, bvs) ->
-                    let uu___4 =
-                      let uu___5 = whnf e0 bv1.FStar_Syntax_Syntax.sort in
-                      destruct_eq uu___5 in
+                    let uu___4 = destruct_eq e0 bv1.FStar_Syntax_Syntax.sort in
                     (match uu___4 with
                      | FStar_Pervasives_Native.Some (x, e) ->
                          let uu___5 =
@@ -4390,11 +4392,9 @@ let (t_trefl : Prims.bool -> unit FStar_Tactics_Monad.tac) =
           FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
             (fun g ->
                let uu___3 =
-                 let uu___4 =
-                   let uu___5 = FStar_Tactics_Types.goal_env g in
-                   let uu___6 = FStar_Tactics_Types.goal_type g in
-                   whnf uu___5 uu___6 in
-                 destruct_eq uu___4 in
+                 let uu___4 = FStar_Tactics_Types.goal_env g in
+                 let uu___5 = FStar_Tactics_Types.goal_type g in
+                 destruct_eq uu___4 uu___5 in
                match uu___3 with
                | FStar_Pervasives_Native.Some (l, r) ->
                    _t_trefl allow_guards l r
@@ -6671,11 +6671,9 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
       FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
         (fun g ->
            let uu___2 =
-             let uu___3 =
-               let uu___4 = FStar_Tactics_Types.goal_env g in
-               let uu___5 = FStar_Tactics_Types.goal_type g in
-               whnf uu___4 uu___5 in
-             destruct_eq uu___3 in
+             let uu___3 = FStar_Tactics_Types.goal_env g in
+             let uu___4 = FStar_Tactics_Types.goal_type g in
+             destruct_eq uu___3 uu___4 in
            match uu___2 with
            | FStar_Pervasives_Native.Some (l, r) ->
                let uu___3 = FStar_Syntax_Util.head_and_args_full l in

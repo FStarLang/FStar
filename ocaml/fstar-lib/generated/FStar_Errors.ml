@@ -547,7 +547,8 @@ let (uu___279 :
         (FStar_Compiler_Util.smap_add error_flags we
            FStar_Pervasives_Native.None;
          (let uu___3 =
-            FStar_String.op_Hat "Invalid --warn_error setting: " msg in
+            let uu___4 = FStar_String.op_Hat msg "\n" in
+            FStar_String.op_Hat "Invalid --warn_error setting: " uu___4 in
           FStar_Getopt.Error uu___3)) in
   let get_error_flags uu___ =
     let we = FStar_Options.warn_error () in
