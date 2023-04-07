@@ -5,7 +5,7 @@ authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.c
 homepage: "http://fstar-lang.org"
 license: "Apache-2.0"
 depends: [
-  "ocaml" {>= "4.08.0"}
+  "ocaml" {>= "4.10.0"}
   "batteries"
   "zarith"
   "stdint"
