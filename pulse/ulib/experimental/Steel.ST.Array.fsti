@@ -41,7 +41,7 @@ val base_len (#elt: Type) (b: base_t elt) : GTot nat
 /// into its base
 inline_for_extraction
 [@@noextract_to "krml"]
-val ptr ([@@@strictly_positive] elt: Type0) : Type0
+val ptr ([@@@unused] elt: Type0) : Type0
 inline_for_extraction
 [@@noextract_to "krml"]
 val null_ptr (elt: Type0) : ptr elt

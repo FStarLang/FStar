@@ -30,7 +30,7 @@ module U32 = FStar.UInt32
 ///
 /// It's in universe zero, so refs can be stored in the heap, you can
 /// have [ref (ref a)] etc.
-val ref ([@@@ strictly_positive] a:Type0)
+val ref ([@@@ unused] a:Type0)
   : Type0
 
 /// The null reference
