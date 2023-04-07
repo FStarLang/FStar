@@ -38,7 +38,7 @@ module FStar.DependentMap
 
 (** Abstract type of dependent maps, with universe polymorphic values
     and keys in universe 0 with decidable equality *)
-val t (key: eqtype) (value: (key -> Type u#v)) : Type u#v
+val t (key: eqtype) ([@@@strictly_positive] value: (key -> Type u#v)) : Type u#v
 
 (** Creating a new map from a function *)
 val create (#key: eqtype) (#value: (key -> Tot Type)) (f: (k: key -> Tot (value k)))

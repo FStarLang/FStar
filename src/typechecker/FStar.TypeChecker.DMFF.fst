@@ -115,7 +115,7 @@ let gen_wps_for_free
   in
 
   (* Some helpers. *)
-  let binders_of_list = List.map (fun (t, b) -> S.mk_binder_with_attrs t (S.as_bqual_implicit b) []) in
+  let binders_of_list = List.map (fun (t, b) -> S.mk_binder_with_attrs t (S.as_bqual_implicit b) None []) in
   let mk_all_implicit = List.map (fun t -> { t with binder_qual=S.as_bqual_implicit true }) in
   let args_of_binders = List.map (fun bv -> S.as_arg (S.bv_to_name bv.binder_bv)) in
 
@@ -519,7 +519,7 @@ let double_star typ =
 
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
-    [S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_bqual_implicit false) []],
+    [S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_bqual_implicit false) None []],
     mk_Total U.ktype0
   ))
 
@@ -553,7 +553,7 @@ and star_type' env t =
               //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
               mk (Tm_arrow (
                 binders @ [ S.mk_binder_with_attrs (S.null_bv (mk_star_to_type env a))
-                              (S.as_bqual_implicit false) []],
+                              (S.as_bqual_implicit false) None []],
                 mk_Total U.ktype0))
       end
 
@@ -1408,7 +1408,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
-    let binders = [ S.mk_binder_with_attrs a (S.as_bqual_implicit false) [];
+    let binders = [ S.mk_binder_with_attrs a (S.as_bqual_implicit false) None [];
                     S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))

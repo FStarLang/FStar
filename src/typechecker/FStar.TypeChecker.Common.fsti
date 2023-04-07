@@ -192,3 +192,5 @@ val lcomp_of_comp_guard : comp -> guard_t -> lcomp
 val lcomp_of_comp : comp -> lcomp
 val simplify : debug:bool -> term -> term
 
+val check_positivity_qual (subtyping:bool) (p0 p1:option positivity_qualifier)
+  : bool

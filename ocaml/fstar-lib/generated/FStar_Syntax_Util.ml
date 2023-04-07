@@ -118,6 +118,8 @@ let (args_of_binders :
                     FStar_Syntax_Syntax.binder_bv = uu___2;
                     FStar_Syntax_Syntax.binder_qual =
                       (b.FStar_Syntax_Syntax.binder_qual);
+                    FStar_Syntax_Syntax.binder_positivity =
+                      (b.FStar_Syntax_Syntax.binder_positivity);
                     FStar_Syntax_Syntax.binder_attrs =
                       (b.FStar_Syntax_Syntax.binder_attrs)
                   } in
@@ -152,6 +154,8 @@ let (name_binders :
                   FStar_Syntax_Syntax.binder_bv = bv;
                   FStar_Syntax_Syntax.binder_qual =
                     (b.FStar_Syntax_Syntax.binder_qual);
+                  FStar_Syntax_Syntax.binder_positivity =
+                    (b.FStar_Syntax_Syntax.binder_positivity);
                   FStar_Syntax_Syntax.binder_attrs =
                     (b.FStar_Syntax_Syntax.binder_attrs)
                 }
@@ -183,6 +187,8 @@ let (null_binders_of_tks :
                   FStar_Syntax_Syntax.binder_bv =
                     (uu___1.FStar_Syntax_Syntax.binder_bv);
                   FStar_Syntax_Syntax.binder_qual = imp;
+                  FStar_Syntax_Syntax.binder_positivity =
+                    (uu___1.FStar_Syntax_Syntax.binder_positivity);
                   FStar_Syntax_Syntax.binder_attrs =
                     (uu___1.FStar_Syntax_Syntax.binder_attrs)
                 }))
@@ -200,7 +206,8 @@ let (binders_of_tks :
                   FStar_Syntax_Syntax.new_bv
                     (FStar_Pervasives_Native.Some (t.FStar_Syntax_Syntax.pos))
                     t in
-                FStar_Syntax_Syntax.mk_binder_with_attrs uu___1 imp []))
+                FStar_Syntax_Syntax.mk_binder_with_attrs uu___1 imp
+                  FStar_Pervasives_Native.None []))
 let (binders_of_freevars :
   FStar_Syntax_Syntax.bv FStar_Compiler_Util.set ->
     FStar_Syntax_Syntax.binder Prims.list)
@@ -1931,6 +1938,8 @@ let (remove_inacc : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
       {
         FStar_Syntax_Syntax.binder_bv = (b.FStar_Syntax_Syntax.binder_bv);
         FStar_Syntax_Syntax.binder_qual = aq;
+        FStar_Syntax_Syntax.binder_positivity =
+          (b.FStar_Syntax_Syntax.binder_positivity);
         FStar_Syntax_Syntax.binder_attrs =
           (b.FStar_Syntax_Syntax.binder_attrs)
       } in
@@ -4839,3 +4848,74 @@ let (flatten_refinement :
            | uu___ -> t2)
       | uu___ -> t2 in
     aux t false
+let (contains_strictly_positive_attribute :
+  FStar_Syntax_Syntax.attribute Prims.list -> Prims.bool) =
+  fun attrs ->
+    has_attribute attrs FStar_Parser_Const.binder_strictly_positive_attr
+let (contains_unused_attribute :
+  FStar_Syntax_Syntax.attribute Prims.list -> Prims.bool) =
+  fun attrs -> has_attribute attrs FStar_Parser_Const.binder_unused_attr
+let (parse_positivity_attributes :
+  FStar_Syntax_Syntax.attribute Prims.list ->
+    (FStar_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option
+      * FStar_Syntax_Syntax.attribute Prims.list))
+  =
+  fun attrs ->
+    let uu___ = contains_unused_attribute attrs in
+    if uu___
+    then
+      ((FStar_Pervasives_Native.Some FStar_Syntax_Syntax.BinderUnused),
+        attrs)
+    else
+      (let uu___2 = contains_strictly_positive_attribute attrs in
+       if uu___2
+       then
+         ((FStar_Pervasives_Native.Some
+             FStar_Syntax_Syntax.BinderStrictlyPositive), attrs)
+       else (FStar_Pervasives_Native.None, attrs))
+let (encode_positivity_attributes :
+  FStar_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option ->
+    FStar_Syntax_Syntax.attribute Prims.list ->
+      FStar_Syntax_Syntax.attribute Prims.list)
+  =
+  fun pqual ->
+    fun attrs ->
+      match pqual with
+      | FStar_Pervasives_Native.None -> attrs
+      | FStar_Pervasives_Native.Some
+          (FStar_Syntax_Syntax.BinderStrictlyPositive) ->
+          let uu___ = contains_strictly_positive_attribute attrs in
+          if uu___
+          then attrs
+          else
+            (let uu___2 =
+               let uu___3 =
+                 FStar_Syntax_Syntax.lid_as_fv
+                   FStar_Parser_Const.binder_strictly_positive_attr
+                   (FStar_Syntax_Syntax.Delta_constant_at_level
+                      Prims.int_zero) FStar_Pervasives_Native.None in
+               FStar_Syntax_Syntax.fv_to_tm uu___3 in
+             uu___2 :: attrs)
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.BinderUnused) ->
+          let uu___ = contains_unused_attribute attrs in
+          if uu___
+          then attrs
+          else
+            (let uu___2 =
+               let uu___3 =
+                 FStar_Syntax_Syntax.lid_as_fv
+                   FStar_Parser_Const.binder_unused_attr
+                   (FStar_Syntax_Syntax.Delta_constant_at_level
+                      Prims.int_zero) FStar_Pervasives_Native.None in
+               FStar_Syntax_Syntax.fv_to_tm uu___3 in
+             uu___2 :: attrs)
+let (is_binder_strictly_positive : FStar_Syntax_Syntax.binder -> Prims.bool)
+  =
+  fun b ->
+    b.FStar_Syntax_Syntax.binder_positivity =
+      (FStar_Pervasives_Native.Some
+         FStar_Syntax_Syntax.BinderStrictlyPositive)
+let (is_binder_unused : FStar_Syntax_Syntax.binder -> Prims.bool) =
+  fun b ->
+    b.FStar_Syntax_Syntax.binder_positivity =
+      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.BinderUnused)

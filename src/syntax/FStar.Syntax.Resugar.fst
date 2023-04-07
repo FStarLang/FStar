@@ -1232,13 +1232,11 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
                 | Tm_arrow(bs, _) ->
                   let mfields =
                     bs
-                    |> List.map (fun b ->
-                        let q =
-                            match resugar_bqual env b.binder_qual with
-                            | Some q -> q
-                            | None -> failwith "Unexpected inaccesible implicit argument of a data constructor while resugaring a record field"
-                        in
-                        (bv_as_unique_ident b.binder_bv, q, b.binder_attrs |> List.map (resugar_term' env), resugar_term' env b.binder_bv.sort)) in
+                    |> List.collect (fun b ->
+                          match resugar_bqual env b.binder_qual with
+                          | None -> [] //inaccessible argument
+                          | Some q ->
+                           [(bv_as_unique_ident b.binder_bv, q, b.binder_attrs |> List.map (resugar_term' env), resugar_term' env b.binder_bv.sort)]) in
                   mfields@fields
                 | _ -> failwith "unexpected"
               end

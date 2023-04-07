@@ -700,17 +700,22 @@ let pack_bv (bvv:bv_view) : bv =
       sort = bvv.bv_sort;
     }
 
-let inspect_binder (b:binder) : binder_view = {
-  binder_bv = b.binder_bv;
-  binder_qual = inspect_bqual (b.binder_qual);
-  binder_attrs = b.binder_attrs
-}
+let inspect_binder (b:binder) : binder_view = 
+  let attrs = U.encode_positivity_attributes b.binder_positivity b.binder_attrs in
+  {
+    binder_bv = b.binder_bv;
+    binder_qual = inspect_bqual (b.binder_qual);
+    binder_attrs = attrs
+  }
 
-let pack_binder (bview:binder_view) : binder = {
-  binder_bv=bview.binder_bv;
-  binder_qual=pack_bqual (bview.binder_qual);
-  binder_attrs=bview.binder_attrs
-}
+let pack_binder (bview:binder_view) : binder = 
+  let pqual, attrs = U.parse_positivity_attributes bview.binder_attrs in
+  {
+    binder_bv=bview.binder_bv;
+    binder_qual=pack_bqual (bview.binder_qual);
+    binder_positivity=pqual;
+    binder_attrs=attrs
+  }
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list string =

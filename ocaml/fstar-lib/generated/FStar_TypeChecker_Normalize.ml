@@ -1102,6 +1102,7 @@ and (close_binders :
                     | ((env2, out),
                        { FStar_Syntax_Syntax.binder_bv = b;
                          FStar_Syntax_Syntax.binder_qual = imp;
+                         FStar_Syntax_Syntax.binder_positivity = pqual;
                          FStar_Syntax_Syntax.binder_attrs = attrs;_})
                         ->
                         let b1 =
@@ -1123,7 +1124,7 @@ and (close_binders :
                         let uu___3 =
                           let uu___4 =
                             FStar_Syntax_Syntax.mk_binder_with_attrs b1 imp1
-                              attrs1 in
+                              pqual attrs1 in
                           uu___4 :: out in
                         (env3, uu___3)) (env1, [])) in
         match uu___ with
@@ -5634,7 +5635,8 @@ and (norm_binder :
         let attrs =
           FStar_Compiler_List.map (norm cfg env1 [])
             b.FStar_Syntax_Syntax.binder_attrs in
-        FStar_Syntax_Syntax.mk_binder_with_attrs x imp attrs
+        FStar_Syntax_Syntax.mk_binder_with_attrs x imp
+          b.FStar_Syntax_Syntax.binder_positivity attrs
 and (norm_binders :
   FStar_TypeChecker_Cfg.cfg ->
     env -> FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders)

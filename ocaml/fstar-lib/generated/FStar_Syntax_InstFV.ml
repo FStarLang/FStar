@@ -174,6 +174,8 @@ and (inst_binder :
       {
         FStar_Syntax_Syntax.binder_bv = uu___;
         FStar_Syntax_Syntax.binder_qual = (b.FStar_Syntax_Syntax.binder_qual);
+        FStar_Syntax_Syntax.binder_positivity =
+          (b.FStar_Syntax_Syntax.binder_positivity);
         FStar_Syntax_Syntax.binder_attrs = uu___1
       }
 and (inst_binders :

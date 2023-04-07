@@ -538,7 +538,8 @@ let (subst_binder' :
         FStar_Compiler_Effect.op_Bar_Greater
           b.FStar_Syntax_Syntax.binder_attrs
           (FStar_Compiler_List.map (subst' s)) in
-      FStar_Syntax_Syntax.mk_binder_with_attrs uu___ uu___1 uu___2
+      FStar_Syntax_Syntax.mk_binder_with_attrs uu___ uu___1
+        b.FStar_Syntax_Syntax.binder_positivity uu___2
 let (subst_binders' :
   (FStar_Syntax_Syntax.subst_elt Prims.list Prims.list *
     FStar_Syntax_Syntax.maybe_set_use_range) ->
@@ -1113,7 +1114,8 @@ let (open_binders' :
            | (bs'1, o2) ->
                let uu___1 =
                  let uu___2 =
-                   FStar_Syntax_Syntax.mk_binder_with_attrs x' imp attrs in
+                   FStar_Syntax_Syntax.mk_binder_with_attrs x' imp
+                     b.FStar_Syntax_Syntax.binder_positivity attrs in
                  uu___2 :: bs'1 in
                (uu___1, o2)) in
     aux bs []
@@ -1284,7 +1286,9 @@ let (close_binders :
           let s' =
             let uu___ = shift_subst Prims.int_one s in
             (FStar_Syntax_Syntax.NM (x, Prims.int_zero)) :: uu___ in
-          let uu___ = FStar_Syntax_Syntax.mk_binder_with_attrs x imp attrs in
+          let uu___ =
+            FStar_Syntax_Syntax.mk_binder_with_attrs x imp
+              b.FStar_Syntax_Syntax.binder_positivity attrs in
           let uu___1 = aux s' tl in uu___ :: uu___1 in
     aux [] bs
 let (close_ascription :

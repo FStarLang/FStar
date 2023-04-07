@@ -79,7 +79,8 @@ type free (f:([@@@ strictly_positive] _:Type -> Type))
 
 //SNIPPET_START: free_instances$
 let binary_tree (a:Type) = free (fun t -> t & t) a
-let variable_branching_list a = free list a
+let list_redef ([@@@strictly_positive] a:Type) = list a
+let variable_branching_list a = free list_redef a
 let infinite_branching_tree a = free (fun t -> nat -> t) a
 //SNIPPET_END: free_instances$
 
@@ -87,3 +88,14 @@ let infinite_branching_tree a = free (fun t -> nat -> t) a
 //SNIPPET_START: free_bad$
 let free_bad = free (fun t -> (t -> False)) int
 //SNIPPET_END: free_bad$
+
+//SNIPPET_START: unused$
+irreducible
+let ref ([@@@unused] a:Type) = nat
+noeq
+type linked_list (a:Type) =
+  | LL : ref (a & linked_list a) -> linked_list a
+noeq
+type neg_unused =
+  | NU : ref (neg_unused -> bool) -> neg_unused
+//SNIPPET_END: unused$

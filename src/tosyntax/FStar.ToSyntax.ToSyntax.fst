@@ -50,6 +50,10 @@ let mk_thunk e =
   let b = S.mk_binder (S.new_bv None S.tun) in
   U.abs [b] e None
 
+let mk_binder_with_attrs bv aq attrs = 
+  let pqual, attrs = U.parse_positivity_attributes attrs in
+  S.mk_binder_with_attrs bv aq pqual attrs
+
 (*
    If the user wrote { f1=v1; ...; fn=vn }, where `field_names` [f1;..;fn]
    then we resolve this, using scoping rules only, to `record`.
@@ -1313,7 +1317,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                     match xopt with
                     | None -> env, S.new_bv (Some top.range) (setpos tun)
                     | Some x -> push_bv env x in
-                (env, tparams@[S.mk_binder_with_attrs ({x with sort=t}) None attrs],
+                (env, tparams@[mk_binder_with_attrs ({x with sort=t}) None attrs],
                  typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], [])
         (binders@[Inl <| mk_binder (NoName t) t.range Type_level None]) in
@@ -1429,7 +1433,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                           | _ -> failwith "Impossible"
                           end
                     in
-                    (S.mk_binder_with_attrs x aq attrs), sc_pat_opt
+                    (mk_binder_with_attrs x aq attrs), sc_pat_opt
             in
             aux (aq@aqs) env (b::bs) sc_pat_opt rest
        in
@@ -2612,8 +2616,11 @@ and desugar_binder_aq env b : (option ident * S.term * list S.attribute) * antiq
      let ty, aqs = desugar_typ_aq env t in
      (None, ty, attrs), aqs
 
-   | TVariable x     -> (Some x, mk (Tm_type U_unknown) (range_of_id x), attrs), []
-   | Variable x      -> (Some x, tun_r (range_of_id x), attrs), []
+   | TVariable x     -> 
+    (Some x, mk (Tm_type U_unknown) (range_of_id x), attrs), []
+
+   | Variable x      ->
+    (Some x, tun_r (range_of_id x), attrs), []
 
 and desugar_binder env b : option ident * S.term * list S.attribute =
   let r, aqs = desugar_binder_aq env b in
@@ -2629,10 +2636,10 @@ and desugar_vquote env e r: string =
 
 and as_binder env imp = function
   | (None, k, attrs) ->
-    S.mk_binder_with_attrs (null_bv k) (trans_bqual env imp) attrs, env
+    mk_binder_with_attrs (null_bv k) (trans_bqual env imp) attrs, env
   | (Some a, k, attrs) ->
     let env, a = Env.push_bv env a in
-    (S.mk_binder_with_attrs ({a with sort=k}) (trans_bqual env imp) attrs), env
+    (mk_binder_with_attrs ({a with sort=k}) (trans_bqual env imp) attrs), env
 
 and trans_bqual env = function
   | Some AST.Implicit -> Some S.imp_tag
@@ -2651,7 +2658,7 @@ let typars_of_binders env bs : _ * binders =
             | Some a, k, attrs ->
                 let env, a = push_bv env a in
                 let a = {a with sort=k} in
-                env, (S.mk_binder_with_attrs a (trans_bqual env b.aqual) attrs)::out
+                env, (mk_binder_with_attrs a (trans_bqual env b.aqual) attrs)::out
             | _ -> raise_error (Errors.Fatal_UnexpectedBinder, "Unexpected binder") b.brange) (env, []) bs in
     env, List.rev tpars
 
@@ -2846,7 +2853,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, attrs, fields) ->
       let constrName = mk_ident("Mk" ^ (string_of_id id), (range_of_id id)) in
-      let mfields = List.map (fun (x,q,attrs,t) -> mk_binder_with_attrs (Annotated(x,t)) (range_of_id x) Expr q attrs) fields in
+      let mfields = List.map (fun (x,q,attrs,t) -> FStar.Parser.AST.mk_binder_with_attrs (Annotated(x,t)) (range_of_id x) Expr q attrs) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) (range_of_id id) Type_level) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) (range_of_id id) Type_level in
       //let _ = BU.print_string (BU.format2 "Translated record %s to constructor %s\n" ((string_of_id id)) (term_to_string constrTyp)) in
@@ -2883,7 +2890,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let push_tparams env bs =
     let env, bs = List.fold_left (fun (env, tps) b ->
         let env, y = Env.push_bv env b.binder_bv.ppname in
-        env, (S.mk_binder_with_attrs y b.binder_qual b.binder_attrs)::tps) (env, []) bs in
+        env, (mk_binder_with_attrs y b.binder_qual b.binder_attrs)::tps) (env, []) bs in
     env, List.rev bs in
   match tcs with
     | [TyconAbstract(id, bs, kopt)] ->

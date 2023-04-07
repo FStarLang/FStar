@@ -2092,23 +2092,27 @@ let (extract_lb_sig :
                                                                 = x;
                                                               FStar_Syntax_Syntax.binder_qual
                                                                 = uu___11;
+                                                              FStar_Syntax_Syntax.binder_positivity
+                                                                = uu___12;
                                                               FStar_Syntax_Syntax.binder_attrs
-                                                                = uu___12;_},
+                                                                = uu___13;_},
                                                             {
                                                               FStar_Syntax_Syntax.binder_bv
                                                                 = y;
                                                               FStar_Syntax_Syntax.binder_qual
-                                                                = uu___13;
+                                                                = uu___14;
+                                                              FStar_Syntax_Syntax.binder_positivity
+                                                                = uu___15;
                                                               FStar_Syntax_Syntax.binder_attrs
-                                                                = uu___14;_})
+                                                                = uu___16;_})
                                                              ->
-                                                             let uu___15 =
-                                                               let uu___16 =
+                                                             let uu___17 =
+                                                               let uu___18 =
                                                                  FStar_Syntax_Syntax.bv_to_name
                                                                    y in
-                                                               (x, uu___16) in
+                                                               (x, uu___18) in
                                                              FStar_Syntax_Syntax.NT
-                                                               uu___15)
+                                                               uu___17)
                                                     tbinders targs in
                                                 FStar_Syntax_Subst.subst s
                                                   tbody in
@@ -2122,8 +2126,10 @@ let (extract_lb_sig :
                                                              = a;
                                                            FStar_Syntax_Syntax.binder_qual
                                                              = uu___10;
+                                                           FStar_Syntax_Syntax.binder_positivity
+                                                             = uu___11;
                                                            FStar_Syntax_Syntax.binder_attrs
-                                                             = uu___11;_}
+                                                             = uu___12;_}
                                                            ->
                                                            FStar_Extraction_ML_UEnv.extend_ty
                                                              env1 a false) g
@@ -2143,13 +2149,15 @@ let (extract_lb_sig :
                                                                 = x;
                                                               FStar_Syntax_Syntax.binder_qual
                                                                 = uu___11;
+                                                              FStar_Syntax_Syntax.binder_positivity
+                                                                = uu___12;
                                                               FStar_Syntax_Syntax.binder_attrs
-                                                                = uu___12;_}
+                                                                = uu___13;_}
                                                               ->
-                                                              let uu___13 =
+                                                              let uu___14 =
                                                                 FStar_Extraction_ML_UEnv.lookup_ty
                                                                   env x in
-                                                              uu___13.FStar_Extraction_ML_UEnv.ty_b_name)) in
+                                                              uu___14.FStar_Extraction_ML_UEnv.ty_b_name)) in
                                                 (uu___9, expected_t) in
                                               let add_unit =
                                                 match rest_args with
@@ -2195,8 +2203,10 @@ let (extract_lb_sig :
                                                  = a;
                                                FStar_Syntax_Syntax.binder_qual
                                                  = uu___9;
+                                               FStar_Syntax_Syntax.binder_positivity
+                                                 = uu___10;
                                                FStar_Syntax_Syntax.binder_attrs
-                                                 = uu___10;_}
+                                                 = uu___11;_}
                                                ->
                                                FStar_Extraction_ML_UEnv.extend_ty
                                                  env1 a false) g tbinders in
@@ -2213,13 +2223,15 @@ let (extract_lb_sig :
                                                     = x;
                                                   FStar_Syntax_Syntax.binder_qual
                                                     = uu___10;
+                                                  FStar_Syntax_Syntax.binder_positivity
+                                                    = uu___11;
                                                   FStar_Syntax_Syntax.binder_attrs
-                                                    = uu___11;_}
+                                                    = uu___12;_}
                                                   ->
-                                                  let uu___12 =
+                                                  let uu___13 =
                                                     FStar_Extraction_ML_UEnv.lookup_ty
                                                       env x in
-                                                  uu___12.FStar_Extraction_ML_UEnv.ty_b_name)) in
+                                                  uu___13.FStar_Extraction_ML_UEnv.ty_b_name)) in
                                     (uu___8, expected_t) in
                                   let args =
                                     FStar_Compiler_Effect.op_Bar_Greater
@@ -2232,14 +2244,16 @@ let (extract_lb_sig :
                                                   = bv;
                                                 FStar_Syntax_Syntax.binder_qual
                                                   = uu___9;
+                                                FStar_Syntax_Syntax.binder_positivity
+                                                  = uu___10;
                                                 FStar_Syntax_Syntax.binder_attrs
-                                                  = uu___10;_}
+                                                  = uu___11;_}
                                                 ->
-                                                let uu___11 =
+                                                let uu___12 =
                                                   FStar_Syntax_Syntax.bv_to_name
                                                     bv in
                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                  uu___11
+                                                  uu___12
                                                   FStar_Syntax_Syntax.as_arg)) in
                                   let e =
                                     FStar_Syntax_Syntax.mk
@@ -2259,8 +2273,10 @@ let (extract_lb_sig :
                                                  = a;
                                                FStar_Syntax_Syntax.binder_qual
                                                  = uu___9;
+                                               FStar_Syntax_Syntax.binder_positivity
+                                                 = uu___10;
                                                FStar_Syntax_Syntax.binder_attrs
-                                                 = uu___10;_}
+                                                 = uu___11;_}
                                                ->
                                                FStar_Extraction_ML_UEnv.extend_ty
                                                  env1 a false) g tbinders in
@@ -2277,13 +2293,15 @@ let (extract_lb_sig :
                                                     = x;
                                                   FStar_Syntax_Syntax.binder_qual
                                                     = uu___10;
+                                                  FStar_Syntax_Syntax.binder_positivity
+                                                    = uu___11;
                                                   FStar_Syntax_Syntax.binder_attrs
-                                                    = uu___11;_}
+                                                    = uu___12;_}
                                                   ->
-                                                  let uu___12 =
+                                                  let uu___13 =
                                                     FStar_Extraction_ML_UEnv.lookup_ty
                                                       env x in
-                                                  uu___12.FStar_Extraction_ML_UEnv.ty_b_name)) in
+                                                  uu___13.FStar_Extraction_ML_UEnv.ty_b_name)) in
                                     (uu___8, expected_t) in
                                   let args =
                                     FStar_Compiler_Effect.op_Bar_Greater
@@ -2296,14 +2314,16 @@ let (extract_lb_sig :
                                                   = bv;
                                                 FStar_Syntax_Syntax.binder_qual
                                                   = uu___9;
+                                                FStar_Syntax_Syntax.binder_positivity
+                                                  = uu___10;
                                                 FStar_Syntax_Syntax.binder_attrs
-                                                  = uu___10;_}
+                                                  = uu___11;_}
                                                 ->
-                                                let uu___11 =
+                                                let uu___12 =
                                                   FStar_Syntax_Syntax.bv_to_name
                                                     bv in
                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                  uu___11
+                                                  uu___12
                                                   FStar_Syntax_Syntax.as_arg)) in
                                   let e =
                                     FStar_Syntax_Syntax.mk
@@ -2323,8 +2343,10 @@ let (extract_lb_sig :
                                                  = a;
                                                FStar_Syntax_Syntax.binder_qual
                                                  = uu___9;
+                                               FStar_Syntax_Syntax.binder_positivity
+                                                 = uu___10;
                                                FStar_Syntax_Syntax.binder_attrs
-                                                 = uu___10;_}
+                                                 = uu___11;_}
                                                ->
                                                FStar_Extraction_ML_UEnv.extend_ty
                                                  env1 a false) g tbinders in
@@ -2341,13 +2363,15 @@ let (extract_lb_sig :
                                                     = x;
                                                   FStar_Syntax_Syntax.binder_qual
                                                     = uu___10;
+                                                  FStar_Syntax_Syntax.binder_positivity
+                                                    = uu___11;
                                                   FStar_Syntax_Syntax.binder_attrs
-                                                    = uu___11;_}
+                                                    = uu___12;_}
                                                   ->
-                                                  let uu___12 =
+                                                  let uu___13 =
                                                     FStar_Extraction_ML_UEnv.lookup_ty
                                                       env x in
-                                                  uu___12.FStar_Extraction_ML_UEnv.ty_b_name)) in
+                                                  uu___13.FStar_Extraction_ML_UEnv.ty_b_name)) in
                                     (uu___8, expected_t) in
                                   let args =
                                     FStar_Compiler_Effect.op_Bar_Greater
@@ -2360,14 +2384,16 @@ let (extract_lb_sig :
                                                   = bv;
                                                 FStar_Syntax_Syntax.binder_qual
                                                   = uu___9;
+                                                FStar_Syntax_Syntax.binder_positivity
+                                                  = uu___10;
                                                 FStar_Syntax_Syntax.binder_attrs
-                                                  = uu___10;_}
+                                                  = uu___11;_}
                                                 ->
-                                                let uu___11 =
+                                                let uu___12 =
                                                   FStar_Syntax_Syntax.bv_to_name
                                                     bv in
                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                  uu___11
+                                                  uu___12
                                                   FStar_Syntax_Syntax.as_arg)) in
                                   let e =
                                     FStar_Syntax_Syntax.mk
@@ -3543,7 +3569,8 @@ and (term_as_mlexpr' :
            (match uu___1 with
             | ({ FStar_Syntax_Syntax.binder_bv = x;
                  FStar_Syntax_Syntax.binder_qual = uu___2;
-                 FStar_Syntax_Syntax.binder_attrs = uu___3;_},
+                 FStar_Syntax_Syntax.binder_positivity = uu___3;
+                 FStar_Syntax_Syntax.binder_attrs = uu___4;_},
                body) ->
                 let suggested_name =
                   let attr =
@@ -3551,19 +3578,19 @@ and (term_as_mlexpr' :
                       FStar_Parser_Const.rename_let_attr
                       lb.FStar_Syntax_Syntax.lbattrs in
                   match attr with
-                  | FStar_Pervasives_Native.Some ((str, uu___4)::[]) ->
-                      let uu___5 =
-                        let uu___6 = FStar_Syntax_Subst.compress str in
-                        uu___6.FStar_Syntax_Syntax.n in
-                      (match uu___5 with
+                  | FStar_Pervasives_Native.Some ((str, uu___5)::[]) ->
+                      let uu___6 =
+                        let uu___7 = FStar_Syntax_Subst.compress str in
+                        uu___7.FStar_Syntax_Syntax.n in
+                      (match uu___6 with
                        | FStar_Syntax_Syntax.Tm_constant
-                           (FStar_Const.Const_string (s, uu___6)) when
+                           (FStar_Const.Const_string (s, uu___7)) when
                            s <> "" ->
                            let id =
-                             let uu___7 =
-                               let uu___8 = FStar_Syntax_Syntax.range_of_bv x in
-                               (s, uu___8) in
-                             FStar_Ident.mk_ident uu___7 in
+                             let uu___8 =
+                               let uu___9 = FStar_Syntax_Syntax.range_of_bv x in
+                               (s, uu___9) in
+                             FStar_Ident.mk_ident uu___8 in
                            let bv =
                              {
                                FStar_Syntax_Syntax.ppname = id;
@@ -3573,13 +3600,13 @@ and (term_as_mlexpr' :
                              } in
                            let bv1 = FStar_Syntax_Syntax.freshen_bv bv in
                            FStar_Pervasives_Native.Some bv1
-                       | uu___6 ->
+                       | uu___7 ->
                            (FStar_Errors.log_issue
                               top1.FStar_Syntax_Syntax.pos
                               (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
                                 "Ignoring ill-formed application of `rename_let`");
                             FStar_Pervasives_Native.None))
-                  | FStar_Pervasives_Native.Some uu___4 ->
+                  | FStar_Pervasives_Native.Some uu___5 ->
                       (FStar_Errors.log_issue top1.FStar_Syntax_Syntax.pos
                          (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
                            "Ignoring ill-formed application of `rename_let`");
@@ -3587,15 +3614,15 @@ and (term_as_mlexpr' :
                   | FStar_Pervasives_Native.None ->
                       FStar_Pervasives_Native.None in
                 let remove_attr attrs =
-                  let uu___4 =
+                  let uu___5 =
                     FStar_Compiler_List.partition
                       (fun attr ->
-                         let uu___5 =
+                         let uu___6 =
                            FStar_Syntax_Util.get_attribute
                              FStar_Parser_Const.rename_let_attr [attr] in
-                         FStar_Compiler_Util.is_some uu___5)
+                         FStar_Compiler_Util.is_some uu___6)
                       lb.FStar_Syntax_Syntax.lbattrs in
-                  match uu___4 with | (uu___5, other_attrs) -> other_attrs in
+                  match uu___5 with | (uu___6, other_attrs) -> other_attrs in
                 let maybe_rewritten_let =
                   match suggested_name with
                   | FStar_Pervasives_Native.None ->
@@ -3622,18 +3649,18 @@ and (term_as_mlexpr' :
                       let other_attrs =
                         remove_attr lb.FStar_Syntax_Syntax.lbattrs in
                       let rename =
-                        let uu___4 =
-                          let uu___5 =
-                            let uu___6 = FStar_Syntax_Syntax.bv_to_name y in
-                            (x, uu___6) in
-                          FStar_Syntax_Syntax.NT uu___5 in
-                        [uu___4] in
+                        let uu___5 =
+                          let uu___6 =
+                            let uu___7 = FStar_Syntax_Syntax.bv_to_name y in
+                            (x, uu___7) in
+                          FStar_Syntax_Syntax.NT uu___6 in
+                        [uu___5] in
                       let body1 =
-                        let uu___4 =
-                          let uu___5 = FStar_Syntax_Syntax.mk_binder y in
-                          [uu___5] in
-                        let uu___5 = FStar_Syntax_Subst.subst rename body in
-                        FStar_Syntax_Subst.close uu___4 uu___5 in
+                        let uu___5 =
+                          let uu___6 = FStar_Syntax_Syntax.mk_binder y in
+                          [uu___6] in
+                        let uu___6 = FStar_Syntax_Subst.subst rename body in
+                        FStar_Syntax_Subst.close uu___5 uu___6 in
                       let lb1 =
                         {
                           FStar_Syntax_Syntax.lbname =
@@ -3799,7 +3826,9 @@ and (term_as_mlexpr' :
                                match uu___3 with
                                | { FStar_Syntax_Syntax.binder_bv = a;
                                    FStar_Syntax_Syntax.binder_qual = uu___4;
-                                   FStar_Syntax_Syntax.binder_attrs = uu___5;_}
+                                   FStar_Syntax_Syntax.binder_positivity =
+                                     uu___5;
+                                   FStar_Syntax_Syntax.binder_attrs = uu___6;_}
                                    ->
                                    FStar_Extraction_ML_UEnv.extend_ty env2 a
                                      false) env targs in
@@ -4196,7 +4225,9 @@ let (ind_discriminator_body :
                                 FStar_Syntax_Syntax.binder_qual =
                                   FStar_Pervasives_Native.Some
                                   (FStar_Syntax_Syntax.Implicit uu___7);
-                                FStar_Syntax_Syntax.binder_attrs = uu___8;_}
+                                FStar_Syntax_Syntax.binder_positivity =
+                                  uu___8;
+                                FStar_Syntax_Syntax.binder_attrs = uu___9;_}
                                 -> true
                             | uu___6 -> false)) in
                   FStar_Compiler_List.fold_right

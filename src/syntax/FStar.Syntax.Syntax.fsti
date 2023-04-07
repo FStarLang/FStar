@@ -14,9 +14,6 @@
    limitations under the License.
 *)
 module FStar.Syntax.Syntax
-(* Prims is used for bootstrapping *)
-open Prims
-open FStar.Pervasives
 open FStar.Compiler.Effect
 (* Type definitions for the core AST *)
 
@@ -116,6 +113,10 @@ type should_check_uvar =
   | Allow_ghost of string       (* In some cases, e.g., in ctrl_rewrite, we introduce uvars in Ghost context *)
   | Strict                      (* Strict uvar that must be typechecked *)
   | Already_checked             (* A uvar whose solution has already been checked *)
+
+type positivity_qualifier =
+  | BinderStrictlyPositive
+  | BinderUnused
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -264,6 +265,7 @@ and args = list arg
 and binder = {
   binder_bv    : bv;
   binder_qual  : bqual;
+  binder_positivity : option positivity_qualifier;
   binder_attrs : list attribute
 }                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list binder                                       (* bool marks implicit binder *)
@@ -735,7 +737,7 @@ val binders_of_list:      list bv -> binders
 
 val null_bv:        term -> bv
 val mk_binder_with_attrs
-           :        bv -> bqual -> list attribute -> binder
+           :        bv -> bqual -> option positivity_qualifier -> list attribute -> binder
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
 val as_arg:         term -> arg

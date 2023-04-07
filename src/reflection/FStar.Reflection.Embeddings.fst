@@ -668,7 +668,7 @@ let e_binder_view =
       BU.bind_opt (unembed' w e_bv bv) (fun bv ->
       BU.bind_opt (unembed' w e_aqualv q) (fun q ->
       BU.bind_opt (unembed' w e_attributes attrs) (fun attrs ->
-      Some <| RD.({ binder_bv=bv;binder_qual=q;binder_attrs=attrs}))))
+      Some <| RD.({ binder_bv=bv;binder_qual=q; binder_attrs=attrs}))))
 
     | _ ->
       if w then
