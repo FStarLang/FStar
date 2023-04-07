@@ -831,48 +831,51 @@ let (tc_sig_let :
                       | (uu___2, []) -> val_bs1
                       | ({ FStar_Syntax_Syntax.binder_bv = body_bv;
                            FStar_Syntax_Syntax.binder_qual = uu___2;
-                           FStar_Syntax_Syntax.binder_attrs = uu___3;_}::bt,
+                           FStar_Syntax_Syntax.binder_positivity = uu___3;
+                           FStar_Syntax_Syntax.binder_attrs = uu___4;_}::bt,
                          val_b::vt) ->
-                          let uu___4 =
-                            let uu___5 =
-                              let uu___6 = has_auto_name body_bv in
-                              let uu___7 =
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 = has_auto_name body_bv in
+                              let uu___8 =
                                 has_auto_name
                                   val_b.FStar_Syntax_Syntax.binder_bv in
-                              (uu___6, uu___7) in
-                            match uu___5 with
-                            | (true, uu___6) -> val_b
+                              (uu___7, uu___8) in
+                            match uu___6 with
+                            | (true, uu___7) -> val_b
                             | (false, true) ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    val_b.FStar_Syntax_Syntax.binder_bv in
+                                let uu___7 =
                                   let uu___8 =
-                                    let uu___9 =
-                                      let uu___10 =
+                                    val_b.FStar_Syntax_Syntax.binder_bv in
+                                  let uu___9 =
+                                    let uu___10 =
+                                      let uu___11 =
                                         FStar_Ident.string_of_id
                                           body_bv.FStar_Syntax_Syntax.ppname in
-                                      let uu___11 =
+                                      let uu___12 =
                                         FStar_Ident.range_of_id
                                           (val_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname in
-                                      (uu___10, uu___11) in
-                                    FStar_Ident.mk_ident uu___9 in
+                                      (uu___11, uu___12) in
+                                    FStar_Ident.mk_ident uu___10 in
                                   {
-                                    FStar_Syntax_Syntax.ppname = uu___8;
+                                    FStar_Syntax_Syntax.ppname = uu___9;
                                     FStar_Syntax_Syntax.index =
-                                      (uu___7.FStar_Syntax_Syntax.index);
+                                      (uu___8.FStar_Syntax_Syntax.index);
                                     FStar_Syntax_Syntax.sort =
-                                      (uu___7.FStar_Syntax_Syntax.sort)
+                                      (uu___8.FStar_Syntax_Syntax.sort)
                                   } in
                                 {
-                                  FStar_Syntax_Syntax.binder_bv = uu___6;
+                                  FStar_Syntax_Syntax.binder_bv = uu___7;
                                   FStar_Syntax_Syntax.binder_qual =
                                     (val_b.FStar_Syntax_Syntax.binder_qual);
+                                  FStar_Syntax_Syntax.binder_positivity =
+                                    (val_b.FStar_Syntax_Syntax.binder_positivity);
                                   FStar_Syntax_Syntax.binder_attrs =
                                     (val_b.FStar_Syntax_Syntax.binder_attrs)
                                 }
                             | (false, false) -> val_b in
-                          let uu___5 = rename_binders bt vt in uu___4 ::
-                            uu___5 in
+                          let uu___6 = rename_binders bt vt in uu___5 ::
+                            uu___6 in
                     let uu___2 =
                       let uu___3 =
                         let uu___4 = rename_binders def_bs val_bs in
