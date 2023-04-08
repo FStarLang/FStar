@@ -1,0 +1,64 @@
+[
+  "°›åê7˝ûœ\u0005˙7Ü\u0005?¸ô",
+  [
+    [
+      "Bug2031.add_n_t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "f65d9b5a2e9c487d47ac855c53a9a2ba"
+    ],
+    [
+      "Bug2031.mk_add_n",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug2031.add_n_t.fuel_instrumented",
+        "@fuel_irrelevance_Bug2031.add_n_t.fuel_instrumented", "@query",
+        "Bug2031_interpretation_Tm_arrow_80e268b40e7f5848eed8e39711cb8417",
+        "Bug2031_interpretation_Tm_arrow_9418815bde01cedbac4da03aa220d7cb",
+        "Bug2031_interpretation_Tm_arrow_a62c7dc963913cac168692e72137bbb3",
+        "Bug2031_interpretation_Tm_arrow_de8d2cb17b838b3d0483614afd60b8ef",
+        "Prims_interpretation_Tm_arrow_35447810753695c4fe25c93af1251992",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "equation_with_fuel_Bug2031.add_n_t.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "interpretation_Tm_abs_f627ce99e512d084ced84b483825d854",
+        "interpretation_Tm_abs_f8b7175ad4f28c0bc3c11371abe1d18d",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_Tm_abs_f627ce99e512d084ced84b483825d854",
+        "typing_Tm_abs_f8b7175ad4f28c0bc3c11371abe1d18d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "333819f04a25b8a9caef6a4b86de9952"
+    ],
+    [
+      "Bug2031.uu___31",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "365d7925dd744e3e8646cf7884947f30"
+    ]
+  ]
+]

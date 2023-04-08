@@ -25,10 +25,11 @@
         "disc_equation_FStar.Reflection.Arith.Shr",
         "disc_equation_FStar.Reflection.Arith.Udiv",
         "disc_equation_FStar.Reflection.Arith.Umod",
-        "fuel_guarded_inversion_FStar.Reflection.Arith.expr"
+        "fuel_guarded_inversion_FStar.Reflection.Arith.expr",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "23fbe46b03af73fd18233b86340611fa"
+      "7145d3d9c44a4b519422428f75d01248"
     ],
     [
       "CanonDeep.expr_to_term",
@@ -57,6 +58,7 @@
         "disc_equation_FStar.Reflection.Arith.Udiv",
         "disc_equation_FStar.Reflection.Arith.Umod",
         "fuel_guarded_inversion_FStar.Reflection.Arith.expr",
+        "projection_inverse_BoxBool_proj_0",
         "subterm_ordering_FStar.Reflection.Arith.Ladd",
         "subterm_ordering_FStar.Reflection.Arith.Land",
         "subterm_ordering_FStar.Reflection.Arith.Lor",
@@ -74,7 +76,7 @@
         "subterm_ordering_FStar.Reflection.Arith.Umod"
       ],
       0,
-      "6df6b0ee22d5c6a9a3887a9b93b72b7b"
+      "a2e123e0d1927bc60d53511d84cf08a6"
     ],
     [
       "CanonDeep.canon_correct",
@@ -83,7 +85,7 @@
       1,
       [ "@query", "equation_CanonDeep.canon_expr_" ],
       0,
-      "3f6eafcf4e27711deba10d1bcbf5ccb3"
+      "b3ba9f565f05253eed1731c07cc4467c"
     ]
   ]
 ]

@@ -24,7 +24,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "c8b449a632f54035e7b9a2fd3ae67d3d"
+      "1c0f3f55f14468bca3df162e78f9659a"
     ],
     [
       "SigeltOpts.tau",
@@ -35,6 +35,7 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.Reflection.Types_pretyping_84d6367db30bfa82d85949e1eb0c6daa",
         "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "data_elim_FStar.Pervasives.Native.Some",
@@ -61,7 +62,7 @@
         "typing_FStar.Reflection.Builtins.sigelt_opts"
       ],
       0,
-      "2e2b9ef055c0f77db0346768b247e7a5"
+      "83d45fb02d9276d147264f3206cc94c1"
     ],
     [
       "SigeltOpts.blah",
@@ -86,7 +87,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "e8de124db058ad4113fb4527cfd4067c"
+      "b99c35794f86747f285b1dfedae6568e"
     ]
   ]
 ]

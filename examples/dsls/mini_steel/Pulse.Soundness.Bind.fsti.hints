@@ -1,0 +1,77 @@
+[
+  "C&j÷\u001dÀVÈPìJâà–„#",
+  [
+    [
+      "Pulse.Soundness.Bind.elab_bind_typing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
+        "disc_equation_Pulse.Syntax.C_STAtomic",
+        "disc_equation_Pulse.Syntax.C_STGhost",
+        "disc_equation_Pulse.Syntax.C_Tot", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Pulse.Soundness.Common.ln_comp",
+        "equation_Pulse.Syntax.comp_st",
+        "equation_Pulse.Syntax.stateful_comp", "equation_Pulse.Syntax.var",
+        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed",
+        "refinement_interpretation_Tm_refine_ae3aa26ed321bec26ff7cf294084135e"
+      ],
+      0,
+      "656432c94f15a238fb89eca8dd83b46d"
+    ],
+    [
+      "Pulse.Soundness.Bind.elab_bind_ghost_l_typing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
+        "disc_equation_Pulse.Syntax.C_STAtomic",
+        "disc_equation_Pulse.Syntax.C_STGhost",
+        "disc_equation_Pulse.Syntax.C_Tot", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Pulse.Soundness.Common.ln_comp",
+        "equation_Pulse.Syntax.comp_st",
+        "equation_Pulse.Syntax.stateful_comp", "equation_Pulse.Syntax.var",
+        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed",
+        "refinement_interpretation_Tm_refine_ae3aa26ed321bec26ff7cf294084135e"
+      ],
+      0,
+      "a6c048fb109d5503c38fd8fea38f0dbc"
+    ],
+    [
+      "Pulse.Soundness.Bind.elab_bind_ghost_r_typing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
+        "disc_equation_Pulse.Syntax.C_STAtomic",
+        "disc_equation_Pulse.Syntax.C_STGhost",
+        "disc_equation_Pulse.Syntax.C_Tot", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Pulse.Soundness.Common.ln_comp",
+        "equation_Pulse.Syntax.comp_st",
+        "equation_Pulse.Syntax.stateful_comp", "equation_Pulse.Syntax.var",
+        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed",
+        "refinement_interpretation_Tm_refine_ae3aa26ed321bec26ff7cf294084135e"
+      ],
+      0,
+      "d2feeae4af5d6dec77b99f9e8c300e54"
+    ]
+  ]
+]

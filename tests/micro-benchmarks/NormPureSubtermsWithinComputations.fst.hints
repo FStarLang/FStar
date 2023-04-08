@@ -1,0 +1,98 @@
+[
+  "·VÊF∫z§œ\u007fùõ¶õ∑VÒ",
+  [
+    [
+      "NormPureSubtermsWithinComputations.f1",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.HyperStack.ST.equal_domains",
+        "equation_FStar.Monotonic.Heap.equal_dom",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_intro",
+        "lemma_FStar.Set.lemma_equal_refl",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
+        "typing_FStar.Map.domain", "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Monotonic.HyperStack.get_hmap"
+      ],
+      0,
+      "09b8cec8431c9addf1e014f3cf14d0cf"
+    ],
+    [
+      "NormPureSubtermsWithinComputations.f2",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.HyperStack.ST.equal_domains",
+        "equation_FStar.Monotonic.Heap.equal_dom",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_intro",
+        "lemma_FStar.Set.lemma_equal_refl",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
+        "typing_FStar.Map.domain", "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Monotonic.HyperStack.get_hmap"
+      ],
+      0,
+      "2f13b1193991abd47d813d74964e1093"
+    ],
+    [
+      "NormPureSubtermsWithinComputations.f3",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.HyperStack.ST.equal_domains",
+        "equation_FStar.Monotonic.Heap.equal_dom",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_intro",
+        "lemma_FStar.Set.lemma_equal_refl",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
+        "typing_FStar.Map.domain", "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Monotonic.HyperStack.get_hmap"
+      ],
+      0,
+      "b5d8e86a4946c570b61bf4e1af3f2184"
+    ],
+    [
+      "NormPureSubtermsWithinComputations.test_inline_let",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.HyperStack.ST.equal_stack_domains",
+        "equation_FStar.Monotonic.Heap.equal_dom",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_elim",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
+        "lemma_FStar.Monotonic.HyperStack.lemma_tip_top_smt"
+      ],
+      0,
+      "c361e45f479ecccbb24b07f2f4311184"
+    ],
+    [
+      "NormPureSubtermsWithinComputations.test_inline_let_expeted",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.HyperStack.ST.equal_stack_domains",
+        "equation_FStar.Monotonic.Heap.equal_dom",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_elim",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
+        "lemma_FStar.Monotonic.HyperStack.lemma_tip_top_smt"
+      ],
+      0,
+      "6991f05995511f1673e327480593b089"
+    ]
+  ]
+]

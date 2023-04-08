@@ -1,0 +1,32 @@
+[
+  "2\u001f}\bër¢è<\u0005ó\u001e764ú",
+  [
+    [
+      "CommuteMatch.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_CommuteMatch.X",
+        "constructor_distinct_CommuteMatch.Y",
+        "disc_equation_CommuteMatch.X", "disc_equation_CommuteMatch.Y",
+        "equality_tok_CommuteMatch.X@tok", "equality_tok_CommuteMatch.Y@tok",
+        "fuel_guarded_inversion_CommuteMatch.t",
+        "projection_inverse_BoxBool_proj_0", "true_interp",
+        "typing_CommuteMatch.x"
+      ],
+      0,
+      "56ad3d73830d4dadcf6f8de65671d619"
+    ],
+    [
+      "CommuteMatch.rw_test4",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      0,
+      "63de386d30b362be47bcb2282fb82e66"
+    ]
+  ]
+]

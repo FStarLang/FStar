@@ -1,0 +1,20 @@
+[
+  "«\fë|b\u0014\u0015_\u001eBÂ6\u000b³m5",
+  [
+    [
+      "ReduceRecUnderMatch.f2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_b46f9febde162e476374095e6787c208_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "08f0e1ae5199d9607bd4314a493e39a5"
+    ]
+  ]
+]

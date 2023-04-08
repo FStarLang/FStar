@@ -1,0 +1,49 @@
+[
+  "\r\u0016≥ü)A…ïçø¯ıÁÊ.\u001a",
+  [
+    [
+      "RecordFieldOperator.uu___8",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "62799ca530bb831b03bb08f9ab982ed0"
+    ],
+    [
+      "RecordFieldOperator.uu___9",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_47fc285d7b44e13bcb7e420cbfc55623",
+        "equation_RecordFieldOperator.bar", "int_inversion", "int_typing",
+        "interpretation_Tm_abs_b7bd7ca32453cd32f19493f86c11906d",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_RecordFieldOperator.Mkfoo_op_Hat",
+        "typing_Tm_abs_b7bd7ca32453cd32f19493f86c11906d"
+      ],
+      0,
+      "1cb5d3dc363d9bb2929da4e8586edbc6"
+    ],
+    [
+      "RecordFieldOperator.uu___24",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e2ac1dd2b65182863c6b881cbc219815"
+    ],
+    [
+      "RecordFieldOperator.uu___48",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "530415cb3def3be971ac615e140acf15"
+    ]
+  ]
+]

@@ -1,0 +1,53 @@
+[
+  "Ü/ªút≠I@Ê–ÅPñŸRÁ",
+  [
+    [
+      "Bug2637.__proj__P__item__pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ff30dfd30b652659f77c50fd186a90c0"
+      ],
+      0,
+      "d1bbe27e9d6150fbba337b705bc38476"
+    ],
+    [
+      "Bug2637.__proj__P__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug2637.P",
+        "refinement_interpretation_Tm_refine_ff30dfd30b652659f77c50fd186a90c0"
+      ],
+      0,
+      "1995a09a688fef9a15f5c5cd5e013a47"
+    ],
+    [
+      "Bug2637.__proj__Q__item__pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7c82371b6868ea121d6179df8a5010ed"
+      ],
+      0,
+      "7ecb37f638b00e2d7a046bff36e6810f"
+    ],
+    [
+      "Bug2637.__proj__Q__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug2637.Q",
+        "refinement_interpretation_Tm_refine_7c82371b6868ea121d6179df8a5010ed"
+      ],
+      0,
+      "e935cc93a5d4a5a2d021323bbb12bab1"
+    ]
+  ]
+]

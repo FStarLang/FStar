@@ -9,14 +9,11 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
         "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "lemma_FStar.Ghost.reveal_hide",
         "proj_equation_Queue.Def.Mkcell_next",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "typing_Queue.Def.t"
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b03df7797f83dcda729dc31ffdccba47"
+      "b5030c416190f56d891e8579b037158d"
     ],
     [
       "Queue.dequeue_post",
@@ -27,7 +24,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "c5bba4bd278b03e3528c45c7aa8f2f55"
+      "00bc1ceab77117bd9108f2c498d17eae"
     ]
   ]
 ]

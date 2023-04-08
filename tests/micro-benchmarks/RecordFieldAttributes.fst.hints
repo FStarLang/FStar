@@ -1,5 +1,5 @@
 [
-  "ä\u0014◊ÉË£Û‘8ûPÁœì\u0012Í",
+  "ØÛ$\u0013S’üTÅ_uÿ';›ë",
   [
     [
       "RecordFieldAttributes.fv_eq",
@@ -13,7 +13,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e0492339c6f4cccfe8758bc779c14c04"
+      "754beb8b0d09a17d3a721a642923493d"
     ],
     [
       "RecordFieldAttributes.unpack_field",
@@ -26,7 +26,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f0369fc8aa97835b4e8266c24656e771"
+      "ed7031aaa4929a3e4f646179d7e88562"
     ],
     [
       "RecordFieldAttributes.get_record_fields",
@@ -36,21 +36,31 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "constructor_distinct_BoxInt", "constructor_distinct_Tm_unit",
+        "@query",
+        "FStar.Reflection.Types_pretyping_84d6367db30bfa82d85949e1eb0c6daa",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Reflection.Data.Sg_Inductive",
         "disc_equation_Prims.Cons", "equation_FStar.Reflection.Data.ctor",
         "equation_FStar.Reflection.Types.name",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.Reflection.Data.ctor",
         "function_token_typing_FStar.Reflection.Types.sigelt",
         "function_token_typing_Prims.__cache_version_number__",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "proj_equation_FStar.Reflection.Data.Sg_Inductive_cts",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "typing_FStar.Reflection.Builtins.lookup_typ"
+        "refinement_interpretation_Tm_refine_efd075e5f8fb3196392b8ad33623b437",
+        "typing_FStar.Reflection.Builtins.inspect_sigelt",
+        "typing_FStar.Reflection.Builtins.lookup_typ",
+        "typing_FStar.Reflection.Data.__proj__Sg_Inductive__item__cts"
       ],
       0,
-      "e3373dd6d56103553c615c08b11bd113"
+      "609e4af306254cf0fe351ce6d8d8c5d9"
     ]
   ]
 ]

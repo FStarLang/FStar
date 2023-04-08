@@ -21,7 +21,7 @@
         "typing_FStar.SL.Monotonic.Heap.points_to", "typing_FStar.UInt64.t"
       ],
       0,
-      "4aefcd56181b0abae008fb2dfcc9aa8b"
+      "8406d0a457311e95d7133b51191c6abd"
     ],
     [
       "Examples.swap_ok",
@@ -36,7 +36,7 @@
         "true_interp"
       ],
       0,
-      "8def7af6bf67c4a0695c61374e660f77"
+      "2735a0ba236428bdfec94ea75fbec344"
     ],
     [
       "Examples.swap_ok",
@@ -58,7 +58,7 @@
         "typing_FStar.SL.Monotonic.Heap.points_to", "typing_FStar.UInt64.t"
       ],
       0,
-      "8d936ee078948b9fe17bdf5c65e80b7c"
+      "2e1078206c613f6dcf66052cbb71db9f"
     ],
     [
       "Examples.swap_ok",
@@ -80,7 +80,7 @@
         "typing_FStar.SL.Monotonic.Heap.points_to", "typing_FStar.UInt64.t"
       ],
       0,
-      "af9fa23ea495aebd07dcc7f2e9aa08e7"
+      "92feaef24e7b0b29fa414b32299fd594"
     ],
     [
       "Examples.swap_ok",
@@ -100,7 +100,7 @@
         "typing_FStar.SL.Heap.trivial_preorder", "typing_FStar.UInt64.t"
       ],
       0,
-      "afd69f1400202e294e5b3f85eb5b00c0"
+      "5a3455192690538a92a2a0f67373fff2"
     ],
     [
       "Examples.double_increment_ok",
@@ -137,7 +137,7 @@
         "typing_FStar.UInt64.uint_to_t", "typing_FStar.UInt64.v"
       ],
       0,
-      "4a221043d0318a7df41c64485b82ea10"
+      "908ba2a32f06e9097209291dab4dcbf5"
     ],
     [
       "Examples.init_ok",
@@ -147,17 +147,17 @@
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
-        "b2t_def", "equation_FStar.SL.Heap.ref",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.SL.Heap.ref",
         "equation_FStar.SL.Heap.trivial_preorder",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_Lang.addr",
         "equation_Lang.t", "equation_Prims.eqtype", "equation_Prims.nat",
-        "equation_Prims.pos", "int_typing",
-        "lemma_FStar.SL.Monotonic.Heap.lemma_contains_r_points_to_unused_h",
+        "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "lemma_FStar.SL.Monotonic.Heap.lemma_get_next_addr_emp_with_next_addr",
         "lemma_FStar.SL.Monotonic.Heap.lemma_get_next_addr_points_to",
-        "lemma_FStar.SL.Monotonic.Heap.lemma_r_unused_in_h",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
@@ -175,7 +175,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "6b362206b6c4690fe2e18ac015d4cc2d"
+      "ddba25085daa9fee65fa672ea4059287"
     ],
     [
       "Examples.copy_ok",
@@ -190,7 +190,7 @@
         "true_interp"
       ],
       0,
-      "579e7d6efd5c7b5f19afa65def162902"
+      "c3bbe4c0af58102c44d0f3b71c547849"
     ],
     [
       "Examples.copy_ok",
@@ -202,7 +202,7 @@
         "refinement_interpretation_Tm_refine_956d6ef1030b7c1f706b2ba1b8eb273f"
       ],
       0,
-      "e08af8e5812b9ee3ae505a6c4766e6f1"
+      "fdd54d5d1139d063c6b3570a76547c51"
     ],
     [
       "Examples.copy_ok",
@@ -214,7 +214,7 @@
         "primitive_Prims.op_disEquality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e87b695b431b4f278e38dd46c57f4455"
+      "038a09227203e45891e8ece71ec2422f"
     ],
     [
       "Examples.copy_ok",
@@ -233,7 +233,7 @@
         "typing_FStar.SL.Heap.trivial_preorder", "typing_FStar.UInt64.t"
       ],
       0,
-      "036e31c39b44cf94578250f76e06eb7c"
+      "06742bc548f3a499fccbcf0321a926f1"
     ],
     [
       "Examples.copy_ok",
@@ -255,7 +255,7 @@
         "typing_FStar.SL.Monotonic.Heap.points_to", "typing_FStar.UInt64.t"
       ],
       0,
-      "e25640ed861ecc499a4f3d3d0fc9ce86"
+      "e15acb671269c6bbbdec68f2d6cb8b1d"
     ],
     [
       "Examples.copy_ok",
@@ -274,7 +274,7 @@
         "typing_FStar.SL.Heap.trivial_preorder", "typing_FStar.UInt64.t"
       ],
       0,
-      "280a612f991f1155af4dc11943aa6730"
+      "802e392ee92d5c28a61994a0bae31e0c"
     ]
   ]
 ]

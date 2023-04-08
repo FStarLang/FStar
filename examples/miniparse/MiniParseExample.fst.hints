@@ -12,13 +12,12 @@
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "MiniParseExample_interpretation_Tm_ghost_arrow_0c0a07e051cd3560e9243ce2553853ff",
         "MiniParseExample_pretyping_2551098c9a00877536d6e75fbf59ada2",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "b2t_def",
-        "bool_inversion", "bool_typing",
+        "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_MiniParseExample.TA",
         "constructor_distinct_MiniParseExample.TB",
         "constructor_distinct_MiniParseExample.TC",
         "constructor_distinct_MiniParseExample.TD",
-        "data_typing_intro_MiniParseExample.TB@tok", "eq2-interp",
+        "data_typing_intro_MiniParseExample.TB@tok",
         "equality_tok_MiniParseExample.TA@tok",
         "equality_tok_MiniParseExample.TB@tok",
         "equality_tok_MiniParseExample.TC@tok",
@@ -30,8 +29,8 @@
         "equation_MiniParse.Spec.Int.bounded_u16_eq",
         "equation_MiniParse.Spec.Int.mk_u16",
         "equation_MiniParse.Tac.Base.ctest",
-        "equation_MiniParse.Tac.Base.mk_if_t", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.pos", "equation_Prims.squash",
+        "equation_MiniParse.Tac.Base.mk_if_t", "equation_Prims.nat",
+        "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_MiniParseExample.test", "int_inversion",
         "int_typing",
@@ -49,8 +48,8 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212",
         "refinement_interpretation_Tm_refine_122393b221b19344c38b437c8217b781",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_641a6a7f4fb70f47c0def193c3c84dcf",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
@@ -63,7 +62,7 @@
         "typing_Tm_abs_faa9e5cff5df42ab6564d6584bf6a1cc"
       ],
       0,
-      "6e1d945b19c693338417236b1c77a9d6"
+      "ea1a66fee5529d25295fe42861e7638f"
     ],
     [
       "MiniParseExample.q'",
@@ -126,7 +125,7 @@
         "typing_Tm_abs_faa9e5cff5df42ab6564d6584bf6a1cc"
       ],
       0,
-      "6e3ca265a23026a5407bcff0a60b24ca"
+      "071c87caeecae2ba9e5873b2dd570cb1"
     ]
   ]
 ]

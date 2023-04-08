@@ -1,0 +1,31 @@
+[
+  "\u0001×‘,\u0011Æ¡çðc¸¡T4½¡",
+  [
+    [
+      "HideRevealUnif.test2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ce56e548199278de96830d59d0ac7483"
+    ],
+    [
+      "HideRevealUnif.test2'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "3e8a1f7eff563ca91991c2b8f772241a"
+    ]
+  ]
+]

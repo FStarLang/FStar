@@ -1,5 +1,5 @@
 [
-  "\u001c}÷ß·ÔAŸç…mëE´ñr",
+  "g\u001bÆ7≈%¶K¨ö.~\u0006bU≠",
   [
     [
       "Bug379.test1",
@@ -15,7 +15,23 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a7f7f269991d0cb213128295aba5ebfa"
+      "035c3b18aab51da912e43d547e4557b7"
+    ],
+    [
+      "Bug379.test2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "82d441ab94feca325e51da62b172a064"
     ]
   ]
 ]

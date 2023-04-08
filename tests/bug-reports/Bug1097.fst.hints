@@ -1,0 +1,29 @@
+[
+  "$◊G\u0007\u0014ùS,˜∞OyK»T\u0006",
+  [
+    [
+      "Bug1097.coerce",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f6dd87ea360114ec1596c0358f9c81f1"
+      ],
+      0,
+      "b515877a6505f2554248cc9033ffea3a"
+    ],
+    [
+      "Bug1097.m2'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1f5ab8b59c8e7f172e4f39cbe2899a5d"
+      ],
+      0,
+      "1584919567e966f94bb658c01d8b8ee3"
+    ]
+  ]
+]

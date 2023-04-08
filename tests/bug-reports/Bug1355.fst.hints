@@ -1,0 +1,33 @@
+[
+  "ïØ\u001a\u0012Ü⁄·IùúÆ“\u001d&∏\u000b",
+  [
+    [
+      "Bug1355.for_all_range",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "6545b6f1ca22bc3e2ffe679fcde627a0"
+    ],
+    [
+      "Bug1355.create",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug1355.TC0_t",
+        "projection_inverse_Bug1355.TC0_t"
+      ],
+      0,
+      "235c785bdc073fdc0dd4358e13f9d251"
+    ]
+  ]
+]

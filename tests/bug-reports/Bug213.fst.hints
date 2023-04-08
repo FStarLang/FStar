@@ -1,56 +1,32 @@
 [
-  "H\u001a\\YŽØ\u0019kã/é/²*¯˜",
+  "KÙ\u001eþöÕ;ï‡v\r:-*f¥",
   [
-    [
-      "Bug213.__proj__ExIntro__item___1",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Bug213.ExIntro_x",
-        "projection_inverse_Bug213.ExIntro_x"
-      ],
-      0,
-      "f288cebb96b8b9cb7136621f8c1a85eb"
-    ],
     [
       "Bug213.__proj__ExIntro'__item__p",
       1,
       2,
       1,
-      [
-        "@query", "proj_equation_Bug213.ExIntro__a",
-        "projection_inverse_Bug213.ExIntro__a"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug213.ExIntro_" ],
       0,
-      "2f6c941ea92d01f357fb6d7f4913dfd6"
+      "79b6e78ce37cb670587cd9a919df3a20"
     ],
     [
       "Bug213.__proj__ExIntro'__item__x",
       1,
       2,
       1,
-      [
-        "@query", "proj_equation_Bug213.ExIntro__a",
-        "projection_inverse_Bug213.ExIntro__a"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug213.ExIntro_" ],
       0,
-      "5fceea4181c003076ee0c66b8c68a45e"
+      "fc1efe36d3fbbb1ad31f6b27058f6fd6"
     ],
     [
       "Bug213.__proj__ExIntro'__item___3",
       1,
       2,
       1,
-      [
-        "@query", "proj_equation_Bug213.ExIntro__p",
-        "proj_equation_Bug213.ExIntro__x",
-        "projection_inverse_Bug213.ExIntro__p",
-        "projection_inverse_Bug213.ExIntro__x",
-        "token_correspondence_Bug213.__proj__ExIntro___item__p"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug213.ExIntro_" ],
       0,
-      "3ec43786031ff7c989cdd1131d4537f4"
+      "11b356bda1349766310d528f1917830f"
     ]
   ]
 ]

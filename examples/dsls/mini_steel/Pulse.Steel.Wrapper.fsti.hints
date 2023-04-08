@@ -1,0 +1,32 @@
+[
+  "כר¨CֵLֲ¸חׂ<U4װ5",
+  [
+    [
+      "Pulse.Steel.Wrapper.eq2_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "eda319d523e7e117bf5825257d9f07d5"
+    ],
+    [
+      "Pulse.Steel.Wrapper.iff_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
+        "equation_Prims.l_iff", "equation_Prims.l_imp",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c157c628853b61c6cb61bd316be0be7c"
+    ]
+  ]
+]
