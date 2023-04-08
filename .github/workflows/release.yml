@@ -29,6 +29,8 @@ jobs:
 
     needs: build-linux
 
+    if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/_release' }}
+
     runs-on: macos-latest
 
     steps:
