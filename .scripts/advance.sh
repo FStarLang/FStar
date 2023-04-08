@@ -102,14 +102,6 @@ function refresh_hints() {
     # Drop any other files that were modified as part of the build (e.g.
     # parse.fsi)
     git reset --hard HEAD
-    # Move to whatever is the most recent master (that most likely changed in the
-    # meantime)
-    git fetch
-    git checkout $CI_BRANCH
-    git reset --hard origin/$CI_BRANCH
-    # Silent, always-successful merge
-    export GIT_MERGE_AUTOEDIT=no
-    git merge $commit -Xtheirs
 
     if is_protected_branch ; then
         # We cannot directly push on master because it is protected
@@ -126,6 +118,7 @@ function refresh_hints() {
     fi
 
     # Push.
+    # This will fail if someone pushed in between
     git push $remote $new_branch
 
     # Create a pull request if we pushed to a different branch
