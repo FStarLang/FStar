@@ -49,8 +49,9 @@ RUN git config --global user.name "Dzomo, the Everest Yak" && \
     git config --global user.email "everbld@microsoft.com"
 
 # Download and extract z3, but do not add it in the PATH
-ADD --chown=opam:opam https://github.com/FStarLang/binaries/raw/z3-4.8.5/z3-tested/z3-4.8.5-x64-ubuntu-16.04.zip z3.zip
-RUN unzip z3.zip
+# We download a z3 that does not depend on libgomp
+ADD --chown=opam:opam https://github.com/tahina-pro/z3/releases/download/z3-4.8.5-linux-clang/z3-4.8.5-linux-clang-x86_64.tar.gz z3.tar.gz
+RUN tar xf z3.tar.gz
 
 ADD --chown=opam:opam ./ FStar/
 
@@ -59,7 +60,7 @@ ARG CI_THREADS=24
 # RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env GH_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) ./FStar/.scripts/create_tag.sh
 
 # Build the package with our Z3
-RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' PATH=$HOME/z3-4.8.5-x64-ubuntu-16.04/bin:$PATH make -j $CI_THREADS -C FStar package
+RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' PATH=$HOME/z3:$PATH make -j $CI_THREADS -C FStar package
 
 # Test the package with its Z3, without OCaml or any other dependency
 FROM ubuntu:20.04 AS fstarnoocaml
