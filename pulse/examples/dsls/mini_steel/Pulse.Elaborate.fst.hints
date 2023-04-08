@@ -338,7 +338,7 @@
         "typing_tok_Pulse.Syntax.Unit@tok"
       ],
       0,
-      "3bc991cb3a845788f32bdc867f08c765"
+      "d73cdadfa7934256976c98f76cfabe70"
     ],
     [
       "Pulse.Elaborate.elab_open_commute'",
@@ -504,7 +504,7 @@
         "typing_tok_FStar.Reflection.Data.Q_Explicit@tok"
       ],
       0,
-      "9f2fda08339e1f1e5ca3cd4fe6be7500"
+      "49b9c52ef5a7b25d53c462706d01f40c"
     ],
     [
       "Pulse.Elaborate.elab_close_commute'",
@@ -813,7 +813,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "8106895831bdafa440a40db2745d5c9d"
+      "69e82ab3145d9379cac6465118afd73a"
     ],
     [
       "Pulse.Elaborate.elab_close_commute'",
@@ -968,7 +968,7 @@
         "typing_tok_FStar.Reflection.Data.Q_Explicit@tok"
       ],
       0,
-      "fab6eb5b140542b98969d6b2f37ed2de"
+      "323e452a5dc946f9f12d91f142241be5"
     ],
     [
       "Pulse.Elaborate.elab_open_commute",
@@ -995,7 +995,7 @@
         "typing_Pulse.Syntax.null_var"
       ],
       0,
-      "1d3c0f89cbdc60c793dd61d49fa990fd"
+      "9f450d2618778b476537141a64b8dfb5"
     ],
     [
       "Pulse.Elaborate.elab_comp_close_commute",
@@ -1004,7 +1004,7 @@
       1,
       [ "@query", "equation_Pulse.Syntax.close_comp" ],
       0,
-      "1ffe5b00e00aeabc19e974dde7c71548"
+      "74579fa6348761b9abdab848fefa7c40"
     ],
     [
       "Pulse.Elaborate.elab_comp_open_commute",
@@ -1013,7 +1013,7 @@
       1,
       [ "@query", "equation_Pulse.Syntax.open_comp_with" ],
       0,
-      "f6f491f2c017b7a6e208456ace35f22e"
+      "e7ee9d31c202c9d252fabdc4e0f4a5f2"
     ],
     [
       "Pulse.Elaborate.elab_ln",
@@ -1308,7 +1308,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "cb463d987af6c2586115f0e0ea0ffe78"
+      "136cad9ea0c4c71353262199fd9cc1d4"
     ],
     [
       "Pulse.Elaborate.elab_ln",
@@ -1444,7 +1444,7 @@
         "typing_tok_FStar.Reflection.Data.Q_Explicit@tok"
       ],
       0,
-      "11be75fc4c826cdd827009b1b2a122e7"
+      "08b9f9c51a299317d8b8e9661921fcd9"
     ],
     [
       "Pulse.Elaborate.elab_freevars_eq",
@@ -1459,7 +1459,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d54e93c9dcd59adc4ef71826c8e4a559"
+      "e4da497b8e5aa43c7792e41281950e98"
     ],
     [
       "Pulse.Elaborate.elab_freevars_eq",
@@ -1761,7 +1761,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "be49893af24ab2482c289de27d00d3e4"
+      "40b9b76d95ab78641c6894af0dc99a16"
     ],
     [
       "Pulse.Elaborate.elab_freevars_eq",
@@ -1776,7 +1776,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2e48df3dfff121cca96a7d8d406a9974"
+      "1c674f9ed9f2738b70418bd69b3719e7"
     ],
     [
       "Pulse.Elaborate.elab_freevars_eq",
@@ -1930,7 +1930,7 @@
         "typing_tok_FStar.Reflection.Data.Q_Explicit@tok"
       ],
       0,
-      "9e9dc49726662c00640a9c25adcf32a4"
+      "73b794544e25ebe1d714bd269fe30050"
     ],
     [
       "Pulse.Elaborate.elab_freevars",
@@ -1945,7 +1945,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "336bce0ead5d01d933e10815f6fc8db7"
+      "5c86495535ab61778a4531aa09e821df"
     ],
     [
       "Pulse.Elaborate.elab_freevars",
@@ -1961,7 +1961,7 @@
         "typing_Pulse.Syntax.freevars"
       ],
       0,
-      "81504cfbb8b4f88ad0ad50d4910879a4"
+      "2c777fbe9d20e5bafea957688609c5bc"
     ]
   ]
 ]
