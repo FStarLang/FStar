@@ -63,4 +63,4 @@ ADD --chown=opam:opam ./ FStar/
 
 # Regenerate hints
 ARG CI_THREADS=24
-RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env CI_THREADS=$CI_THREADS GH_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) ./FStar/.scripts/process_build.sh
+RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env CI_THREADS=$CI_THREADS GH_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) Z3_LICENSE="$(opam config expand '%{prefix}%')/.opam-switch/sources/z3.4.8.5/LICENSE.txt" ./FStar/.scripts/process_build.sh
