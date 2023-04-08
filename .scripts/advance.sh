@@ -67,13 +67,12 @@ function is_protected_branch () {
 # the chances of someone merging in-between fetch and push are low.
 function refresh_hints() {
     local msg="regenerate hints + ocaml snapshot"
-    local hints_dir="."
     
+    # Remove those hint files that are no longer necessary
+    git add -u -- '*.hints'
+
     # Add all the hints, even those not under version control
-    find $hints_dir/doc -iname '*.hints' | xargs git add
-    find $hints_dir/examples -iname '*.hints' | xargs git add
-    find $hints_dir/test -iname '*.hints' | xargs git add
-    find $hints_dir/ulib -iname '*.hints' | xargs git add
+    find . -iname '*.hints' | xargs git add
 
     git_add_fstar_snapshot
 
@@ -142,6 +141,7 @@ release () {
 
 build_and_refresh () {
     make dune-fstar
+    find . -iname '*.hints' | xargs rm
     make -j "$CI_THREADS" hints
     refresh_hints
 }
