@@ -55,7 +55,7 @@ RUN unzip z3.zip
 ADD --chown=opam:opam ./ FStar/
 
 # Check if we need to create a tag
-# ARG CI_THREADS=24
+ARG CI_THREADS=24
 # RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env GH_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) ./FStar/.scripts/create_tag.sh
 
 # Build the package with our Z3

@@ -75,7 +75,10 @@ mv share/fstar/examples /tmp/fstar_examples
 mv share/fstar/doc /tmp/fstar_doc
 
 diag "-- Verify all examples --"
-make -j6 -C /tmp/fstar_examples && make -j6 -C /tmp/fstar_doc/tutorial regressions
+if [[ -z "$CI_THREADS" ]] ; then
+    CI_THREADS=1
+fi
+make -j "$CI_THREADS" -C /tmp/fstar_examples && make -j "$CI_THREADS" -C /tmp/fstar_doc/tutorial regressions
 if [ $? -ne 0 ]; then
     echo -e "* ${RED}FAIL!${NC} for all examples - make returned $?"
     exit 1
