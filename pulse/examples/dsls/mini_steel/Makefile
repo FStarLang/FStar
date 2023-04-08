@@ -1,7 +1,7 @@
 include ../../Makefile.common
 include ../Makefile.include
 
-include $(FSTAR_HOME)/.common.mk
+-include $(FSTAR_HOME)/.common.mk
 
 FSTAR_LIB_OCAMLPATH := $(call maybe_cygwin_path,$(FSTAR_HOME)/lib)
 
