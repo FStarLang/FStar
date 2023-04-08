@@ -50,10 +50,14 @@ ENV KRML_HOME /home/opam/karamel
 
 # More CI dependencies:
 # python3 (for interactive tests)
+# Also, configure the git user
 RUN sudo apt-get update && \
     sudo apt-get install -y --no-install-recommends \
     python3 \
-    python-is-python3
+    python-is-python3 \
+    && \
+    git config --global user.name "Dzomo, the Everest Yak" && \
+    git config --global user.email "everbld@microsoft.com"
 
 ADD --chown=opam:opam ./ FStar/
 

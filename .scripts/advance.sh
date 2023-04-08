@@ -180,10 +180,6 @@ if [[ -z "$DZOMO_GITHUB_TOKEN" ]] ; then
     exit 1
 fi
 
-# Identify the committer
-git config --global user.name "Dzomo, the Everest Yak"
-git config --global user.email "everbld@microsoft.com"
-
 # Record the latest commit
 last_commit=$(git rev-parse HEAD)
 
