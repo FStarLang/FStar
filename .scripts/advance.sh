@@ -152,7 +152,6 @@ build_and_refresh () {
         git clean -ffdx -- ulib
     fi
 
-    find . -iname '*.hints' | xargs rm
     make -j "$CI_THREADS" hints
     refresh_hints
 }
