@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_49cd0ecaa1a0a4ea04d1e5d49dd0f091"
       ],
       0,
-      "0ac169a0e4080593d6b0f7167bf4e9d0"
+      "a36dacaf77c0ffe575fb473730f0addb"
     ],
     [
       "Pulse.Syntax.__proj__Int__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_d95aebeb743605d7c55b06f547759692"
       ],
       0,
-      "126da83351fb7ad983682efe63a86dc5"
+      "45cc05a9e284b68a1bec772fdb60c328"
     ],
     [
       "Pulse.Syntax.universe",
@@ -32,7 +32,7 @@
       1,
       [ "@query" ],
       0,
-      "569caead5b5fe11de1d5c3e56f67110a"
+      "82651a9f50ffbea01e0d4c61db36382f"
     ],
     [
       "Pulse.Syntax.__proj__U_succ__item___0",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_8752721bec57658dbd1722af639c9891"
       ],
       0,
-      "c10e7f865c3d6961151da3a2aa27b8f4"
+      "1603e60df308e404cfbaaef48b54c956"
     ],
     [
       "Pulse.Syntax.__proj__U_var__item___0",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Tm_refine_b925a2315551b9bbb3a81b162d58158a"
       ],
       0,
-      "53cb221ba7f2d1051e8edd9e04238f00"
+      "cef95bb0f4d7e7d844e04c3d15f43d14"
     ],
     [
       "Pulse.Syntax.__proj__U_max__item___0",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Tm_refine_0b0b8f8d93b0e65d8f3a69790d910a75"
       ],
       0,
-      "6ada37febb9037b145db65e36aa2f9ec"
+      "73bdb2bdc6639837955b156e9d75ac98"
     ],
     [
       "Pulse.Syntax.__proj__U_max__item___1",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Tm_refine_0b0b8f8d93b0e65d8f3a69790d910a75"
       ],
       0,
-      "6166a774e0f13ea17ef8a6b501c03bb1"
+      "625c72d5b8eb703909e6eb16ab1c4b05"
     ],
     [
       "Pulse.Syntax.freevars",
@@ -95,7 +95,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "194cac19cfc770bbaec6600506cba39a"
+      "ee5dc676f82e30546a86faa0a0a21335"
     ],
     [
       "Pulse.Syntax.freevars",
@@ -145,7 +145,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_Star"
       ],
       0,
-      "c8673412c6fc60fc21f0af920a3e2425"
+      "36c171c155eb5ca2d77d96950e80fb64"
     ],
     [
       "Pulse.Syntax.freevars",
@@ -160,7 +160,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "bb9e6c8f2940547b3aa2bc0be22365a8"
+      "407902d305aec75484991e8898a8d517"
     ],
     [
       "Pulse.Syntax.freevars",
@@ -188,7 +188,7 @@
         "subterm_ordering_Pulse.Syntax.C_Tot"
       ],
       0,
-      "b143262c51e6f819fddd4bc78d9eaf16"
+      "fc06bcba581a3b178410e87337ea5c31"
     ],
     [
       "Pulse.Syntax.freevars",
@@ -203,7 +203,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "96f9c793255d1d53bb0cb80e34fae419"
+      "b4a20acfb33d3333197f6dfe70ee9a9f"
     ],
     [
       "Pulse.Syntax.freevars",
@@ -226,7 +226,7 @@
         "subterm_ordering_Pulse.Syntax.Mkst_comp"
       ],
       0,
-      "556e7d8628a9770d74addb727a478b08"
+      "6353f49bc40ce34a697623943ea21dbf"
     ],
     [
       "Pulse.Syntax.freevars_opt",
@@ -243,7 +243,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3987152365b22fcaf2e8208dcb1d478c"
+      "708c442b3d606b101393061b2308d985"
     ],
     [
       "Pulse.Syntax.freevars_list",
@@ -258,7 +258,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d69c0f37e9a36d6e311c4f3a0ec9a9ad"
+      "955148a369c688d66a98985ed4a19320"
     ],
     [
       "Pulse.Syntax.freevars_list",
@@ -278,7 +278,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "aebacd176970fdf9904103c6d43ceb87"
+      "aab7137bf998291752efee11217341b5"
     ],
     [
       "Pulse.Syntax.freevars_st",
@@ -293,7 +293,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6c025df8e8dbeac2d43c59abb6620cad"
+      "f2fe3355b64dbaf05b1e4b3e34726f89"
     ],
     [
       "Pulse.Syntax.freevars_st",
@@ -330,7 +330,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_While"
       ],
       0,
-      "ae07fba75b8e1d8b23ef0d616b5fa7f8"
+      "98e81e32570d4c451bffe9f101e88b56"
     ],
     [
       "Pulse.Syntax.ln'",
@@ -376,7 +376,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_Star"
       ],
       0,
-      "6453ff955bd36c145f21509d6d67f90e"
+      "43a48d6d5a8b46acdb343475436c5c91"
     ],
     [
       "Pulse.Syntax.ln'",
@@ -400,7 +400,7 @@
         "subterm_ordering_Pulse.Syntax.C_Tot"
       ],
       0,
-      "c143bb15ede090c98c4ab016eb40ed80"
+      "14874fde7c1be7404f484dc9c5521f6a"
     ],
     [
       "Pulse.Syntax.ln'",
@@ -418,7 +418,7 @@
         "subterm_ordering_Pulse.Syntax.Mkst_comp"
       ],
       0,
-      "8cfd30f1fe63f45b5d42b0e06c00a92c"
+      "cc7078c814ae38da84ecaefb41d82615"
     ],
     [
       "Pulse.Syntax.ln_opt'",
@@ -430,7 +430,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "22a3e97ceafcd19f3e2c70094c64aac3"
+      "c41822ffeb74e36192b0cc4ee933b7b3"
     ],
     [
       "Pulse.Syntax.ln_list'",
@@ -445,7 +445,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0d0859fab90a1240027987b860d23570"
+      "c415808ca4ab9ec80bdc73285e86b44a"
     ],
     [
       "Pulse.Syntax.ln_st'",
@@ -478,7 +478,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_While"
       ],
       0,
-      "d40c0049a8e5dfe243dc09a1a10b82f2"
+      "51d03402d91f996ad600bffad3dd6d7d"
     ],
     [
       "Pulse.Syntax.open_term'",
@@ -532,7 +532,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_Star"
       ],
       0,
-      "248e7a992c868e61a3233ccbbad9028d"
+      "25e4646720f915f009daade7a221f9d9"
     ],
     [
       "Pulse.Syntax.open_term'",
@@ -556,7 +556,7 @@
         "subterm_ordering_Pulse.Syntax.C_Tot"
       ],
       0,
-      "d533b75289ff767bac8cc3522a6d8c00"
+      "012caa9292a5235b8767e27356e9432c"
     ],
     [
       "Pulse.Syntax.open_term'",
@@ -579,7 +579,7 @@
         "subterm_ordering_Pulse.Syntax.Mkst_comp"
       ],
       0,
-      "d1bd90919219c8e7f1c9835a7703b996"
+      "7125b3f9857eb4fabf301750e75a2563"
     ],
     [
       "Pulse.Syntax.open_term_opt'",
@@ -591,7 +591,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "13a691dad0ceac0d6f93e696e2f25bec"
+      "3ed0bda71d4006e98a79a220ae3cf29a"
     ],
     [
       "Pulse.Syntax.open_term_list'",
@@ -606,7 +606,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "43565b30f42d32b5536524d2666d6847"
+      "6616f53b001e1d818687b6718a9b3bef"
     ],
     [
       "Pulse.Syntax.open_st_term'",
@@ -643,7 +643,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_While"
       ],
       0,
-      "acf41b7222964307e44e32ee371a8789"
+      "2a6b321dc222d0621263e978f472e025"
     ],
     [
       "Pulse.Syntax.close_term'",
@@ -698,7 +698,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_Star"
       ],
       0,
-      "96d1b3ee787e3a11ceb0f63a86566023"
+      "8e46f593b38dff55cc65b84bf9cd4675"
     ],
     [
       "Pulse.Syntax.close_term'",
@@ -722,7 +722,7 @@
         "subterm_ordering_Pulse.Syntax.C_Tot"
       ],
       0,
-      "d006ffe3e8674926a49fbe5e2f52b8e3"
+      "663a5b3519bd25fe66a56d927219917f"
     ],
     [
       "Pulse.Syntax.close_term'",
@@ -745,7 +745,7 @@
         "subterm_ordering_Pulse.Syntax.Mkst_comp"
       ],
       0,
-      "072e20f7451148bf8fc79d8e5ce255a0"
+      "b6069f7152b245da03dec4cb0dfcc4d7"
     ],
     [
       "Pulse.Syntax.close_term_opt'",
@@ -757,7 +757,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "2565644332efc9a2d5d81a52e3c0f07c"
+      "bbbe0185715fe46e88431edc259b822a"
     ],
     [
       "Pulse.Syntax.close_term_list'",
@@ -772,7 +772,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1e627d660ba05754b3a767341732c910"
+      "366c4e9323ae11b20dad76b288e4318c"
     ],
     [
       "Pulse.Syntax.close_st_term'",
@@ -809,7 +809,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_While"
       ],
       0,
-      "0a06db2dd7843100a1e520b453af3601"
+      "24193c0af4e5c31f83d480a57953ce42"
     ],
     [
       "Pulse.Syntax.comp_res",
@@ -825,7 +825,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "bdd2cdb59147ed44de637bcbaac0d582"
+      "2da485ebf798764384b681667c349698"
     ],
     [
       "Pulse.Syntax.st_comp_of_comp",
@@ -841,7 +841,7 @@
         "refinement_interpretation_Tm_refine_11ec59befb9c4d54a26c6b983715c5d7"
       ],
       0,
-      "cac1ece294ea74e15445e0e009a6880e"
+      "75b34fe4cea49f5988fc1577037d0cd4"
     ],
     [
       "Pulse.Syntax.with_st_comp",
@@ -857,7 +857,7 @@
         "refinement_interpretation_Tm_refine_11ec59befb9c4d54a26c6b983715c5d7"
       ],
       0,
-      "5e44c466dacaaa808fc3d6312ef8866e"
+      "39cab910712a58bfb23cc19587d382ca"
     ],
     [
       "Pulse.Syntax.comp_u",
@@ -873,7 +873,7 @@
         "refinement_interpretation_Tm_refine_11ec59befb9c4d54a26c6b983715c5d7"
       ],
       0,
-      "4aab183dddc7e12adc9f661dba857508"
+      "c5d824b9582ec9a1f47557aa7762c017"
     ],
     [
       "Pulse.Syntax.comp_pre",
@@ -889,7 +889,7 @@
         "refinement_interpretation_Tm_refine_11ec59befb9c4d54a26c6b983715c5d7"
       ],
       0,
-      "8f19f5510849d12d701780c7f52e964f"
+      "4de029eb77c2c88325b9c64c79e91d88"
     ],
     [
       "Pulse.Syntax.comp_post",
@@ -905,7 +905,7 @@
         "refinement_interpretation_Tm_refine_11ec59befb9c4d54a26c6b983715c5d7"
       ],
       0,
-      "fa6b2eb1252024ff47faef52db9d4da2"
+      "cb27167eccda543511c82589469fb5d0"
     ],
     [
       "Pulse.Syntax.comp_inames",
@@ -917,7 +917,7 @@
         "refinement_interpretation_Tm_refine_6dddc00430061b4b77a5be55b61b65f8"
       ],
       0,
-      "12d894fe0445d544ba54daf267722da7"
+      "c12a7814122ce3ce9abb35ae95e9ba26"
     ],
     [
       "Pulse.Syntax.close_open_inverse'",
@@ -932,7 +932,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6638bbf4741aa7167bc8cbafb4457329"
+      "fc0f387ac0267a994b9d8df15a3f9a6c"
     ],
     [
       "Pulse.Syntax.close_open_inverse'",
@@ -1089,7 +1089,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "ba50b85be41598a902b646d23b714701"
+      "4c9e204411f4dabc9e5f15e84b8b2972"
     ],
     [
       "Pulse.Syntax.close_open_inverse'",
@@ -1104,7 +1104,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "270333671132c4aab59c6a34cb60ba6f"
+      "cb2d3e3c87f0302a74b864ac8b2511a1"
     ],
     [
       "Pulse.Syntax.close_open_inverse'",
@@ -1183,7 +1183,7 @@
         "typing_Pulse.Syntax.open_comp_", "typing_Pulse.Syntax.term_of_var"
       ],
       0,
-      "97a026a465724cc33fb05215e0004c92"
+      "5eb5bb371a4c7800e2978a927509c6e4"
     ],
     [
       "Pulse.Syntax.close_open_inverse_opt'",
@@ -1198,7 +1198,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d9828a20f9f1d6998e96fde888d45507"
+      "7f7766c86dab89a2b8d54045cd77bace"
     ],
     [
       "Pulse.Syntax.close_open_inverse_opt'",
@@ -1229,7 +1229,7 @@
         "typing_Pulse.Syntax.freevars_opt"
       ],
       0,
-      "88106ff0550d36eaf37d7206c52e580d"
+      "d91f740ab79567d25d189dd2c752ed4f"
     ],
     [
       "Pulse.Syntax.close_open_inverse_list'",
@@ -1244,7 +1244,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1a6d09d176986078fc6bc8cf0d8524a8"
+      "72a0673eadf0e25ddc89e4cd9bd41f19"
     ],
     [
       "Pulse.Syntax.close_open_inverse_list'",
@@ -1288,7 +1288,7 @@
         "typing_Pulse.Syntax.term_of_var"
       ],
       0,
-      "bba3065274d7010e892d49652c3dd29e"
+      "f75952e52d3d246fdf9710f4a1fc76f7"
     ],
     [
       "Pulse.Syntax.close_open_inverse_st'",
@@ -1303,7 +1303,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "77f97a038ef9efaa98a03461b5d2fc3b"
+      "b22faf3ddac0c6fd81b072229b5f97ee"
     ],
     [
       "Pulse.Syntax.close_open_inverse_st'",
@@ -1423,7 +1423,7 @@
         "typing_Pulse.Syntax.term_of_var"
       ],
       0,
-      "71075d03dad7e251fe37cac587a131ed"
+      "2315c7c966aaacfee437bb19e1f3db26"
     ],
     [
       "Pulse.Syntax.close_open_inverse",
@@ -1438,7 +1438,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ebc01affe4cf64cd027908d2efdc6bdf"
+      "362f94af3a11d266b0211d2bb16a6208"
     ],
     [
       "Pulse.Syntax.close_open_inverse",
@@ -1451,7 +1451,7 @@
         "equation_Pulse.Syntax.term_of_var"
       ],
       0,
-      "48fb8b81ae44cb96e0cb73ed4093c1b2"
+      "ba1ef22ea8be8f4bdadfe3b44f915fa3"
     ],
     [
       "Pulse.Syntax.close_open_inverse_st",
@@ -1466,7 +1466,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "49f2ff7a9ebbf3b43b7050b9d6dac22e"
+      "47cd1c6450ee9ee2bc29995307f6aa90"
     ],
     [
       "Pulse.Syntax.close_open_inverse_st",
@@ -1479,7 +1479,7 @@
         "equation_Pulse.Syntax.term_of_var"
       ],
       0,
-      "df89245568eaad9012e80b957fdff84b"
+      "be55e528f0c883fecbe7d3ad122bb200"
     ],
     [
       "Pulse.Syntax.eq_tm",
@@ -1600,7 +1600,7 @@
         "typing_tok_Pulse.Syntax.Implicit@tok"
       ],
       0,
-      "4406731daa0ed81d5bd5030d788e3d93"
+      "b5c0a7b84eca160f311fd56fcbbde767"
     ],
     [
       "Pulse.Syntax.eq_tm",
@@ -1638,7 +1638,7 @@
         "typing_Pulse.Syntax.eq_st_comp", "typing_Pulse.Syntax.eq_tm"
       ],
       0,
-      "d80bcfedf416d92f0f59d40801286e12"
+      "be7a696ea1f6604adf2795eae694b329"
     ],
     [
       "Pulse.Syntax.eq_tm",
@@ -1669,7 +1669,7 @@
         "typing_Pulse.Syntax.eq_tm"
       ],
       0,
-      "6a89befe1637a3f103a89537de11af8d"
+      "a7e28f85b54d7dbc2bf1f91315e3ae91"
     ],
     [
       "Pulse.Syntax.eq_tm_opt",
@@ -1686,7 +1686,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "340df34d07c315c069f8413dbf931d12"
+      "1be7e56944296fa57c72c6bd0b2a8227"
     ],
     [
       "Pulse.Syntax.eq_tm_list",
@@ -1713,7 +1713,7 @@
         "typing_Pulse.Syntax.eq_tm_list"
       ],
       0,
-      "212658fe25f6592d169a786f9379e713"
+      "79790c1cbe9bab49b9901ecf572c7a1e"
     ],
     [
       "Pulse.Syntax.eq_st_term",
@@ -1819,7 +1819,7 @@
         "typing_tok_Pulse.Syntax.Implicit@tok"
       ],
       0,
-      "b45700eb06b3ab10c8962246899e4f0f"
+      "d4e5e8845aaf8be226f2a748eb86eb6d"
     ],
     [
       "Pulse.Syntax.leftmost_head_and_args",
@@ -1832,7 +1832,7 @@
         "subterm_ordering_Pulse.Syntax.Tm_PureApp"
       ],
       0,
-      "ad99d093b8869d8290b92d5408be61cb"
+      "eecca3702548917eb8fd08d842a1f744"
     ]
   ]
 ]
