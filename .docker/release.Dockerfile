@@ -7,13 +7,15 @@ ARG ocaml_version=4.12
 FROM ocaml/opam:ubuntu-20.04-ocaml-$ocaml_version AS fstarbuild
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
-RUN opam depext conf-gmp z3.4.8.5 conf-m4
+RUN opam depext conf-gmp conf-m4
 
 ADD --chown=opam:opam ./fstar.opam fstar.opam
 
-# Install opam dependencies only
-RUN opam install --deps-only ./fstar.opam && \
-    rm fstar.opam
+# Install opam dependencies only, but not z3
+RUN grep -v z3 < fstar.opam > fstar-no-z3.opam && \
+    rm fstar.opam && \
+    opam install --deps-only ./fstar-no-z3.opam && \
+    rm fstar-no-z3.opam
 
 # Install GitHub CLI
 # From https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian-ubuntu-linux-raspberry-pi-os-apt
@@ -46,8 +48,21 @@ ENV PATH=${PATH}:$DOTNET_ROOT:$DOTNET_ROOT/tools
 RUN git config --global user.name "Dzomo, the Everest Yak" && \
     git config --global user.email "everbld@microsoft.com"
 
+# Download and extract z3, but do not add it in the PATH
+ADD --chown=opam:opam https://github.com/FStarLang/binaries/raw/z3-4.8.5/z3-tested/z3-4.8.5-x64-ubuntu-16.04.zip z3.zip
+RUN unzip z3.zip
+
 ADD --chown=opam:opam ./ FStar/
 
-# Regenerate hints
-ARG CI_THREADS=24
-RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env CI_THREADS=$CI_THREADS GH_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) Z3_LICENSE="$(opam config expand '%{prefix}%')/.opam-switch/sources/z3.4.8.5/LICENSE.txt" ./FStar/.scripts/process_build.sh
+# Check if we need to create a tag
+# ARG CI_THREADS=24
+# RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env GH_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) ./FStar/.scripts/create_tag.sh
+
+# Build the package with our Z3
+RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' PATH=$HOME/z3-4.8.5-x64-ubuntu-16.04/bin:$PATH make -j $CI_THREADS -C FStar package
+
+# Test the package with its Z3
+RUN eval $(opam env) && env CI_THREADS=$CI_THREADS ./FStar/.scripts/test_package.sh
+
+# Publish the release
+# RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env GH_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) ./FStar/.scripts/publish_release.sh

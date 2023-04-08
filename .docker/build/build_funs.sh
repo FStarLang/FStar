@@ -60,11 +60,6 @@ function make_karamel() {
     export PATH="$(pwd)/karamel:$PATH"
 }
 
-function fstar_binary_build () {
-    fetch_karamel
-    ./.scripts/process_build.sh && echo true >$status_file
-}
-
 function fstar_docs_build () {
     # First - get fstar built
     # Second - run fstar with the --doc flag
@@ -145,9 +140,7 @@ function build_fstar() {
         return
     fi
 
-    if [[ $localTarget == "fstar-binary-build" ]]; then
-        fstar_binary_build
-    elif [[ $localTarget == "fstar-docs" ]]; then
+    if [[ $localTarget == "fstar-docs" ]]; then
         fstar_docs_build
     else
         fstar_default_build $target

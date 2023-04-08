@@ -1,6 +1,5 @@
 # This Dockerfile should be run from the root FStar directory
 # It builds and tests a binary package for F*.
-# It is a potential alternative to .scripts/process_build.sh
 
 # Build the package
 ARG ocaml_version=4.12
