@@ -151,7 +151,9 @@ build_and_refresh () {
 
 build_refresh_and_release () {
     build_and_refresh
-    release
+    if is_protected_branch ; then
+        release
+    fi
 }
 
 # Switch back to the F* root directory (which we assume is the parent
