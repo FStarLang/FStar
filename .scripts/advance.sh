@@ -127,11 +127,6 @@ function refresh_hints() {
     fi
 }
 
-release () {
-        # Make and test a release
-        FSTAR_HOME= KRML_HOME= GH_TOKEN=$DZOMO_GITHUB_TOKEN CI_BRANCH=$CI_BRANCH .scripts/process_build.sh
-}
-
 build_and_refresh () {
     # Build fstar.exe
     make dune-fstar
@@ -147,13 +142,6 @@ build_and_refresh () {
 
     make -j "$CI_THREADS" hints
     refresh_hints
-}
-
-build_refresh_and_release () {
-    build_and_refresh
-    if is_protected_branch ; then
-        release
-    fi
 }
 
 # Switch back to the F* root directory (which we assume is the parent
@@ -187,13 +175,10 @@ case "$1" in
     (refresh_fstar_hints)
         refresh_hints
         ;;
-    (build_refresh_and_release)
-        build_refresh_and_release
-        ;;
     (build_and_refresh)
         build_and_refresh
         ;;
     (*)
-        echo "What do you want to do? (refresh_fstar_hints | build_refresh_and_release | build_and_refresh)"
+        echo "What do you want to do? (refresh_fstar_hints | build_and_refresh)"
         exit 1
 esac

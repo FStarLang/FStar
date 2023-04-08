@@ -63,4 +63,4 @@ ADD --chown=opam:opam ./ FStar/
 
 # Regenerate hints
 ARG CI_THREADS=24
-RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env CI_THREADS=$CI_THREADS DZOMO_GITHUB_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) ./FStar/.scripts/advance.sh build_refresh_and_release
+RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env CI_THREADS=$CI_THREADS DZOMO_GITHUB_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) ./FStar/.scripts/advance.sh build_and_refresh
