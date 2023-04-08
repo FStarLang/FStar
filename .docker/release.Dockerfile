@@ -93,7 +93,7 @@ FROM fstarbuild
 ARG CI_THREADS
 # Copy a dummy file to introduce an artificial dependence to the fstarnoocaml stage
 # to force buildx to build that stage as well
-COPY --from=fstarnoocaml /home/test/fstar/.scripts/test_package.sh /tmp/dummy
+COPY --from=fstarnoocaml /home/test/FStar/.scripts/test_package.sh /tmp/dummy
 RUN eval $(opam env) && env CI_THREADS=$CI_THREADS ./FStar/.scripts/test_package.sh
 
 # Publish the release
