@@ -106,12 +106,7 @@ function refresh_hints() {
     if is_protected_branch ; then
         # We cannot directly push on master because it is protected
         # So we need to create a new build hints branch.
-        # Check if build hints branch exist on remote and remove it if it exists
         new_branch=_BuildHints-$CI_BRANCH
-        exist=$(git branch -a | egrep 'remotes/origin/'$new_branch | wc -l)
-        if [ $exist == 1 ]; then
-            git push $remote :$new_branch
-        fi
         git checkout -b $new_branch
     else
         new_branch=$CI_BRANCH
