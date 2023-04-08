@@ -62,7 +62,7 @@ ARG CI_THREADS=24
 RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' PATH=$HOME/z3-4.8.5-x64-ubuntu-16.04/bin:$PATH make -j $CI_THREADS -C FStar package
 
 # Test the package with its Z3, without OCaml or any other dependency
-FROM ubuntu:20.04
+FROM ubuntu:20.04 AS fstarnoocaml
 
 # Create a new user and give them sudo rights
 RUN useradd -d /home/test test
@@ -84,6 +84,9 @@ RUN env CI_THREADS=$CI_THREADS ./FStar/.scripts/test_package.sh
 
 # Test the package with its Z3, with OCaml
 FROM fstarbuild
+# Copy a dummy file to introduce an artificial dependence to the fstarnoocaml stage
+# to force buildx to build that stage as well
+COPY --from=fstarnoocaml /home/test/fstar/.scripts/test_package.sh /tmp/dummy
 RUN eval $(opam env) && env CI_THREADS=$CI_THREADS ./FStar/.scripts/test_package.sh
 
 # Publish the release
