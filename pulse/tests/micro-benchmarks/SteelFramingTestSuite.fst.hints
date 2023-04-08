@@ -1,0 +1,30 @@
+[
+  "O…µÏÿ~Ö,Í:ßîîk\u001c‚",
+  [
+    [
+      "SteelFramingTestSuite.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "de962978d2707a0cf1b3b69ea6e9fa63"
+    ],
+    [
+      "SteelFramingTestSuite.test_subcomp_dep",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "454897b64f9f54a2a87211bb8e431aee"
+    ]
+  ]
+]

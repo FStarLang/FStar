@@ -7,14 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "equation_Steel.Effect.Common.true_p",
-        "lemma_FStar.Ghost.hide_reveal",
-        "refinement_interpretation_Tm_refine_0384ec095b850a18864324063aca63b2",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query", "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_0384ec095b850a18864324063aca63b2"
       ],
       0,
-      "e01dc2807b1368fab2e2f68d00282e98"
+      "6b130c4a4dc9ba4f30f255a017f43f5d"
     ]
   ]
 ]

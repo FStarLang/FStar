@@ -1,0 +1,26 @@
+[
+  "y/ûB™i%«ö\u001e!\f;»uã",
+  [
+    [
+      "Pulse.Soundness.Lift.elab_lift_stt_ghost_typing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
+        "disc_equation_Pulse.Syntax.C_STAtomic",
+        "disc_equation_Pulse.Syntax.C_STGhost",
+        "disc_equation_Pulse.Syntax.C_Tot",
+        "equation_Pulse.Soundness.Common.ln_comp",
+        "equation_Pulse.Syntax.comp_st",
+        "equation_Pulse.Syntax.stateful_comp",
+        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed",
+        "refinement_interpretation_Tm_refine_ae3aa26ed321bec26ff7cf294084135e"
+      ],
+      0,
+      "87d72077a1762f6bc37ad4fc472c5be9"
+    ]
+  ]
+]
