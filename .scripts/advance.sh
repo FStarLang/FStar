@@ -99,9 +99,9 @@ function refresh_hints() {
        return 0
     fi
 
-    # Drop any other files that were modified as part of the build (e.g.
-    # parse.fsi)
-    git reset --hard HEAD
+    # Check that nothing remains uncommitted
+    git diff --staged --exit-code --ignore-cr-at-eol
+    git diff --exit-code --ignore-cr-at-eol
 
     if is_protected_branch ; then
         # We cannot directly push on master because it is protected
