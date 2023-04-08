@@ -1,6 +1,7 @@
-name: Build FStar Binaries
+name: Build FStar Binaries for MacOS
 
 on:
+  workflow_dispatch:
 
 jobs:
 
