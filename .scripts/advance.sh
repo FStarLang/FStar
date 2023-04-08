@@ -55,14 +55,9 @@ function git_add_fstar_snapshot () {
     fi
 }
 
-function refresh_fstar_hints() {
-    [[ -n "$DZOMO_GITHUB_TOKEN" ]] &&
-    refresh_hints "https://$DZOMO_GITHUB_TOKEN@github.com/FStarLang/FStar.git" "git_add_fstar_snapshot" "regenerate hints + ocaml snapshot" "."
-}
-
-# Do we need to update the version number and publish a release?
-function is_release_branch () {
-    [[ "$1" = master || "$1" = _release ]]
+# Is this branch protected?
+function is_protected_branch () {
+    [[ "$CI_BRANCH" = master || "$CI_BRANCH" = _release ]]
 }
 
 # Note: this performs an _approximate_ refresh of the hints, in the sense that
@@ -71,27 +66,15 @@ function is_release_branch () {
 # reset to origin/$CI_BRANCH, take in our hints, and push. This is short enough that
 # the chances of someone merging in-between fetch and push are low.
 function refresh_hints() {
-    local remote=$1
-    local extra="$2"
-    local msg="$3"
-    local hints_dir="$4"
-
-    # Identify the committer
-    git config --global user.name "Dzomo, the Everest Yak"
-    git config --global user.email "everbld@microsoft.com"
-
-    # Record the latest commit
-    last_commit=$(git rev-parse HEAD)
+    local msg="regenerate hints + ocaml snapshot"
+    local hints_dir="."
     
     # Add all the hints, even those not under version control
     find $hints_dir/doc -iname '*.hints' | xargs git add
     find $hints_dir/examples -iname '*.hints' | xargs git add
     find $hints_dir/ulib -iname '*.hints' | xargs git add
 
-    # Without the eval, this was doing weird stuff such as,
-    # when $2 = "git ls-files src/ocaml-output/ | xargs git add",
-    # outputting the list of files to stdout
-    eval "$extra"
+    git_add_fstar_snapshot
 
     # Commit only if changes were staged.
     # From: https://stackoverflow.com/a/2659808
@@ -103,8 +86,8 @@ function refresh_hints() {
 
     # Update the version number in version.txt and fstar.opam, and if
     # so, commit. Do this only for the master branch.
-    if is_release_branch $CI_BRANCH ; then
-	update_version_number
+    if is_protected_branch ; then
+        update_version_number
     fi
 
     # Memorize the latest commit (which might have been a version number update)
@@ -128,19 +111,27 @@ function refresh_hints() {
     export GIT_MERGE_AUTOEDIT=no
     git merge $commit -Xtheirs
 
-    # Check if build hints branch exist on remote and remove it if it exists
-    new_branch=_BuildHints-$CI_BRANCH
-    exist=$(git branch -a | egrep 'remotes/origin/'$new_branch | wc -l)
-    if [ $exist == 1 ]; then
-        git push $remote :$new_branch
+    if is_protected_branch ; then
+        # We cannot directly push on master because it is protected
+        # So we need to create a new build hints branch.
+        # Check if build hints branch exist on remote and remove it if it exists
+        new_branch=_BuildHints-$CI_BRANCH
+        exist=$(git branch -a | egrep 'remotes/origin/'$new_branch | wc -l)
+        if [ $exist == 1 ]; then
+            git push $remote :$new_branch
+        fi
+        git checkout -b $new_branch
+    else
+        new_branch=$CI_BRANCH
     fi
 
     # Push.
-    git checkout -b $new_branch
     git push $remote $new_branch
 
-    # Create a pull request
-    $gh pr create --base "$CI_BRANCH" --title "Advance to $(cat version.txt)" --fill
+    # Create a pull request if we pushed to a different branch
+    if is_protected_branch ; then
+        $gh pr create --base "$CI_BRANCH" --title "Advance to $(cat version.txt)" --fill
+    fi
 }
 
 release () {
@@ -150,14 +141,12 @@ release () {
 
 build_and_refresh () {
     OTHERFLAGS='--record_hints' make -j "$CI_THREADS" ci-uregressions-ulong
-    refresh_fstar_hints
+    refresh_hints
 }
 
 build_refresh_and_release () {
     build_and_refresh
-    if is_release_branch $CI_BRANCH ; then
-        release
-    fi
+    release
 }
 
 # Switch back to the F* root directory (which we assume is the parent
@@ -179,11 +168,21 @@ if [[ -z "$DZOMO_GITHUB_TOKEN" ]] ; then
     exit 1
 fi
 
+# Identify the committer
+git config --global user.name "Dzomo, the Everest Yak"
+git config --global user.email "everbld@microsoft.com"
+
+# Record the latest commit
+last_commit=$(git rev-parse HEAD)
+
+# Repository to which we should push
+remote="https://$DZOMO_GITHUB_TOKEN@github.com/FStarLang/FStar.git"
+
 gh="env GH_TOKEN=$DZOMO_GITHUB_TOKEN gh -R FStarLang/FStar"
 
 case "$1" in
     (refresh_fstar_hints)
-        refresh_fstar_hints
+        refresh_hints
         ;;
     (build_refresh_and_release)
         build_refresh_and_release
