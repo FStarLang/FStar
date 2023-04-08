@@ -140,7 +140,8 @@ release () {
 }
 
 build_and_refresh () {
-    OTHERFLAGS='--record_hints' make -j "$CI_THREADS" ci-uregressions-ulong
+    make dune-fstar
+    make -j "$CI_THREADS" hints
     refresh_hints
 }
 
