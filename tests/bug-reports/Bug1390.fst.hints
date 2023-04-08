@@ -1,0 +1,56 @@
+[
+  "ÁVK„¹b“YÚÊ»u\u0004ÖÃ9",
+  [
+    [
+      "Bug1390.list_sum",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_b46f9febde162e476374095e6787c208_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "40b967c4204fc1be5ee2713aca7e3f7d"
+    ],
+    [
+      "Bug1390.list_sum_lem",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "bfef2278b1227654e42007435e776330"
+    ],
+    [
+      "Bug1390.list_sum_lem",
+      2,
+      8,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug1390.list_sum.fuel_instrumented", "@query",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Prims.nat",
+        "equation_with_fuel_Bug1390.list_sum.fuel_instrumented",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_Bug1390.list_sum"
+      ],
+      0,
+      "c1a27e3ad90cb403bdf50800b40b06d6"
+    ]
+  ]
+]

@@ -1,0 +1,20 @@
+[
+  "Z‡3EwóÇ9¢\u0007l√[ù\u0013à",
+  [
+    [
+      "Pulse.Elaborate.elab_freevars",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Pulse.Syntax.var",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "b5dd23ee5cf8a6d706dede6a5451c209"
+    ]
+  ]
+]

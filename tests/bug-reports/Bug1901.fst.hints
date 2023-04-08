@@ -1,0 +1,20 @@
+[
+  "\u0019l¼ÜS0éü\u0003„\n\u001c#ÀÆ¢",
+  [
+    [
+      "Bug1901.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_b46f9febde162e476374095e6787c208_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "9897bccdd297af990661d94b1325c795"
+    ]
+  ]
+]

@@ -1,5 +1,5 @@
 [
-  "˚\u0018◊Ê∂\u001dßë÷\b\f\u0010¿\u0017i)",
+  "õE•Î≥≈çWDG≤ç˛Æ\u0004\u001d",
   [
     [
       "HoleBy.uu___1",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_HoleBy.x" ],
       0,
-      "19479542a3945abbf3f5794f72f17767"
+      "443dc088a0c975762d451ac2a3abf18b"
     ],
     [
       "HoleBy.lem2",
@@ -17,16 +17,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "568c7ece9ced2ddb679307e03f7dd09b"
-    ],
-    [
-      "HoleBy.uu___1",
-      2,
-      2,
-      1,
-      [ "@query", "equation_HoleBy.x" ],
-      0,
-      "d74ba540a18c8ca9646ecc61298e9bd3"
+      "4d2aa6fc7172d03f02b33d23ae5b2920"
     ]
   ]
 ]

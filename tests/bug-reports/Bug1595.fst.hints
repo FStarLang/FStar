@@ -1,5 +1,5 @@
 [
-  "WTÌ?ˆPmgÕVA¾åÌhü",
+  "v~’ ¡pŸl\u0004²\\J¼E¤Ç",
   [
     [
       "Bug1595.__proj__CalcRefl__item__x",
@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_0d210bce4d0a1cb53e8b9752eeac3ff1"
       ],
       0,
-      "117e5c30e9e5b4fc6ed0885fe421edd1"
+      "1028efa175c6b2a7abb2515cc424e1da"
     ],
     [
       "Bug1595.__proj__CalcStep__item__rs",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
       ],
       0,
-      "87f1eb533626e3763cca7b8d3a04cc82"
+      "36dd1f26f539512156a3bb5a66f780d1"
     ],
     [
       "Bug1595.__proj__CalcStep__item__p",
@@ -38,7 +38,7 @@
         "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
       ],
       0,
-      "edb8cec24669bd485eff18211a12f02d"
+      "8650a51243b691bf3b955f6764851a26"
     ],
     [
       "Bug1595.__proj__CalcStep__item__x",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
       ],
       0,
-      "477a216c1eba3ae1ae31ea452c0fbd73"
+      "cec2d7e8d82baac65cdd60a6b70c2439"
     ],
     [
       "Bug1595.__proj__CalcStep__item__y",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
       ],
       0,
-      "376a3b344b2e57b6d93c121f09dec245"
+      "776ff1b3d894e1e77daef0059c60ad1e"
     ],
     [
       "Bug1595.__proj__CalcStep__item__z",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
       ],
       0,
-      "824885eb2470d0bff5b9aac0c61d6533"
+      "d5fdd35d3b1429d8c4c18d1a8c6fcbde"
     ],
     [
       "Bug1595.__proj__CalcStep__item___5",
@@ -85,18 +85,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1595.CalcStep",
-        "proj_equation_Bug1595.CalcStep_rs",
-        "proj_equation_Bug1595.CalcStep_x",
-        "proj_equation_Bug1595.CalcStep_y",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Bug1595.CalcStep_rs",
-        "projection_inverse_Bug1595.CalcStep_x",
-        "projection_inverse_Bug1595.CalcStep_y",
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug1595.CalcStep",
         "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
       ],
       0,
-      "cf67550c8b578a4ae82830fb436a731d"
+      "93c1044956b28bef1f61a6e9d2d10be7"
     ],
     [
       "Bug1595.__proj__CalcStep__item___6",
@@ -116,7 +109,7 @@
         "token_correspondence_Bug1595.__proj__CalcStep__item__p"
       ],
       0,
-      "af7acbdf609a4a9fdf303acbd99aed7b"
+      "613ff72c946c3e89f4f1e31264186ce1"
     ]
   ]
 ]

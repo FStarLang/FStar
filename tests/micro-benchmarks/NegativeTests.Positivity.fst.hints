@@ -1,5 +1,5 @@
 [
-  "àÊ®Â?`†…§.Îâ=√PØ",
+  "bYxœ\u001cæn5MÈ\u0000∏ë&çD",
   [
     [
       "NegativeTests.Positivity.__proj__C41__item___0",
@@ -8,12 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C41",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_b87d6bbfde336dc7bda327a6b8b57fe0"
       ],
       0,
-      "382a8adb8ca83b323171d28d8e553010"
+      "e3f8d4c85c8a913e0f909c067ac8a4fe"
     ],
     [
       "NegativeTests.Positivity.__proj__C42__item___0",
@@ -22,12 +20,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C42",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_57bfa41d0d733420720971d3c9002d84"
       ],
       0,
-      "57bf6c37e881bd5d85296cca7cb2fb34"
+      "eb642c4b6711e566103a34f863ccee1d"
     ],
     [
       "NegativeTests.Positivity.__proj__C42__item___1",
@@ -36,12 +32,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C42",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_57bfa41d0d733420720971d3c9002d84"
       ],
       0,
-      "b8380cf18699a9da5e10d93fcf49d594"
+      "822f6bcf8369481cfd840d197ed8fe29"
     ],
     [
       "NegativeTests.Positivity.__proj__C61__item___0",
@@ -50,12 +44,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C61",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_d189dce05c186475c90958872418b4e6"
       ],
       0,
-      "4d4c1a8f4244056f2d070bc1875d4484"
+      "b4008404a3dd47e61f6626624887ac8c"
     ],
     [
       "NegativeTests.Positivity.__proj__C61__item___1",
@@ -64,82 +56,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C61",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_d189dce05c186475c90958872418b4e6"
       ],
       0,
-      "f04aa26b00df0bc25885fc6117043854"
-    ],
-    [
-      "NegativeTests.Positivity.__proj__C41__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C41",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_b87d6bbfde336dc7bda327a6b8b57fe0"
-      ],
-      0,
-      "5bdf75c32c66674ff03a25eeb6433601"
-    ],
-    [
-      "NegativeTests.Positivity.__proj__C42__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C42",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_57bfa41d0d733420720971d3c9002d84"
-      ],
-      0,
-      "19d0e6d9866d190b783d29509580738e"
-    ],
-    [
-      "NegativeTests.Positivity.__proj__C42__item___1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C42",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_57bfa41d0d733420720971d3c9002d84"
-      ],
-      0,
-      "0a61fc3bd3d47e3edd0c666e3c67b9fb"
-    ],
-    [
-      "NegativeTests.Positivity.__proj__C61__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C61",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_d189dce05c186475c90958872418b4e6"
-      ],
-      0,
-      "e0dd1ab4b7c0e1ce7e07c10d60505c25"
-    ],
-    [
-      "NegativeTests.Positivity.__proj__C61__item___1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_NegativeTests.Positivity.C61",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_d189dce05c186475c90958872418b4e6"
-      ],
-      0,
-      "2ea4ed89b28fd566978c88af8b446116"
+      "2f61fc9246e9d89ffa759d5f5fb60d94"
     ]
   ]
 ]

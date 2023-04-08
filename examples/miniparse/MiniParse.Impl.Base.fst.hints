@@ -6,14 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_MiniParse.Spec.Base.consumed_length", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_f1ef48729dd48b5741a77671cc117cd5"
-      ],
+      [ "@query" ],
       0,
-      "82909b614899aa57ad21de443efb0a5e"
+      "71030c6ecf9a01ab317fe028ce2f3e89"
     ],
     [
       "MiniParse.Impl.Base.coerce_parser_impl",
@@ -25,7 +20,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "979699f608b342c64dfe237874017878"
+      "bce281eaebb6d34212c5774e7fd84382"
     ],
     [
       "MiniParse.Impl.Base.serializer_impl",
@@ -33,20 +28,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype", "lemma_FStar.Pervasives.invertOption",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_4818621566d3edde8f9c0dac6c867ee2",
-        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_FStar.UInt32.t"
       ],
       0,
-      "ccd43bd0a5439640131e3451402511a5"
+      "e3791744230f9d05e8a124a5af45785b"
     ]
   ]
 ]

@@ -39,7 +39,7 @@
         "typing_Selectors.Tree.Core.tree_sl"
       ],
       0,
-      "59923b779adb74820e555f13d8cdb120"
+      "2e590ccea5d0715bcf36dc1913b48c89"
     ],
     [
       "Selectors.Tree.append_right",
@@ -79,7 +79,7 @@
         "typing_Selectors.Tree.Core.tree_sl"
       ],
       0,
-      "fb75d40d633511006278cdd94cf1dd86"
+      "5bfe264c065b50a5b7462634b0b273ce"
     ],
     [
       "Selectors.Tree.height",
@@ -123,7 +123,7 @@
         "typing_Selectors.Tree.Core.tree_sl"
       ],
       0,
-      "31368ee475fc9bf925970b17ff921798"
+      "fd6f61afb78c40e3a395969aa9c51d83"
     ],
     [
       "Selectors.Tree.member",
@@ -166,7 +166,7 @@
         "typing_Selectors.Tree.Core.tree_sl"
       ],
       0,
-      "5e816f6f1b6cdb7bce6102b111544114"
+      "0756516a44aa6654cf3fe0eb3bd0d542"
     ],
     [
       "Selectors.Tree.rotate_left",
@@ -174,53 +174,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Prims_interpretation_Tm_ghost_arrow_3aa447697277bb40c9738c9125c3e80f",
-        "Selectors.Tree_interpretation_Tm_arrow_108f54744e154bacaf6992a5689e2add",
-        "Selectors.Tree_interpretation_Tm_ghost_arrow_ecfa147b51908d4c39504565bbca2a82",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node",
-        "equation_FStar.FunctionalExtensionality.feq_g",
-        "equation_FStar.FunctionalExtensionality.restricted_g_t",
-        "equation_Selectors.Tree.Core.linked_tree_",
-        "equation_Selectors.Tree.Core.tree",
-        "equation_Selectors.Tree.Core.v_linked_tree",
-        "equation_Steel.Effect.Common.rmem",
-        "equation_Steel.Effect.Common.true_p", "equation_Trees.rotate_left",
-        "fuel_guarded_inversion_Trees.tree",
-        "function_token_typing_Steel.Effect.Common.mk_rmem",
-        "interpretation_Tm_abs_165af6114cdd205ad90889aad6511518",
-        "interpretation_Tm_abs_24ed30a53d959fb60a0346f6b9268501",
-        "interpretation_Tm_abs_5a3aa99c5a1f49132681d9996b0a6a59",
-        "interpretation_Tm_abs_c78b91a44625c21d3ff11b616d5f9b56",
-        "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "lemma_Steel.Effect.Common.can_be_split_refl",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_left",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "projection_inverse_Trees.Node_a",
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
-        "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_9185da06fca917c5514ae63042657873",
-        "refinement_interpretation_Tm_refine_9936fd024fb6930677a41cca0016d77a",
-        "refinement_interpretation_Tm_refine_c1cb6a5ec15d3eb1281bac3fe1ecbc41",
-        "refinement_kinding_Tm_refine_9936fd024fb6930677a41cca0016d77a",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp",
-        "typing_Selectors.Tree.Core.linked_tree_",
-        "typing_Steel.Effect.Common.mk_rmem",
-        "typing_Tm_abs_24ed30a53d959fb60a0346f6b9268501",
-        "typing_Tm_abs_5a3aa99c5a1f49132681d9996b0a6a59",
-        "typing_Tm_abs_c78b91a44625c21d3ff11b616d5f9b56"
+        "projection_inverse_Trees.Node_right"
       ],
       0,
-      "b84236d9ba1453c824917d9315ae4d65"
+      "3e3dfa7768287e0dd29a0b817c0f7109"
     ],
     [
       "Selectors.Tree.rotate_right",
@@ -228,53 +193,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Prims_interpretation_Tm_ghost_arrow_3aa447697277bb40c9738c9125c3e80f",
-        "Selectors.Tree_interpretation_Tm_arrow_108f54744e154bacaf6992a5689e2add",
-        "Selectors.Tree_interpretation_Tm_ghost_arrow_ecfa147b51908d4c39504565bbca2a82",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node",
-        "equation_FStar.FunctionalExtensionality.feq_g",
-        "equation_FStar.FunctionalExtensionality.restricted_g_t",
-        "equation_Selectors.Tree.Core.linked_tree_",
-        "equation_Selectors.Tree.Core.tree",
-        "equation_Selectors.Tree.Core.v_linked_tree",
-        "equation_Steel.Effect.Common.rmem",
-        "equation_Steel.Effect.Common.true_p", "equation_Trees.rotate_right",
-        "fuel_guarded_inversion_Trees.tree",
-        "function_token_typing_Steel.Effect.Common.mk_rmem",
-        "interpretation_Tm_abs_165af6114cdd205ad90889aad6511518",
-        "interpretation_Tm_abs_24ed30a53d959fb60a0346f6b9268501",
-        "interpretation_Tm_abs_5a3aa99c5a1f49132681d9996b0a6a59",
-        "interpretation_Tm_abs_c78b91a44625c21d3ff11b616d5f9b56",
-        "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "lemma_Steel.Effect.Common.can_be_split_refl",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_right",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "projection_inverse_Trees.Node_a",
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
-        "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_9185da06fca917c5514ae63042657873",
-        "refinement_interpretation_Tm_refine_9936fd024fb6930677a41cca0016d77a",
-        "refinement_interpretation_Tm_refine_c1cb6a5ec15d3eb1281bac3fe1ecbc41",
-        "refinement_kinding_Tm_refine_9936fd024fb6930677a41cca0016d77a",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp",
-        "typing_Selectors.Tree.Core.linked_tree_",
-        "typing_Steel.Effect.Common.mk_rmem",
-        "typing_Tm_abs_24ed30a53d959fb60a0346f6b9268501",
-        "typing_Tm_abs_5a3aa99c5a1f49132681d9996b0a6a59",
-        "typing_Tm_abs_c78b91a44625c21d3ff11b616d5f9b56"
+        "projection_inverse_Trees.Node_right"
       ],
       0,
-      "58f8db215f5fc62d515da071b2831c9f"
+      "5c4aa9ebba38bc947e265a4f55c85852"
     ],
     [
       "Selectors.Tree.rotate_right_left",
@@ -282,54 +212,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Prims_interpretation_Tm_ghost_arrow_3aa447697277bb40c9738c9125c3e80f",
-        "Selectors.Tree_interpretation_Tm_arrow_108f54744e154bacaf6992a5689e2add",
-        "Selectors.Tree_interpretation_Tm_ghost_arrow_ecfa147b51908d4c39504565bbca2a82",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node",
-        "equation_FStar.FunctionalExtensionality.feq_g",
-        "equation_FStar.FunctionalExtensionality.restricted_g_t",
-        "equation_Selectors.Tree.Core.linked_tree_",
-        "equation_Selectors.Tree.Core.tree",
-        "equation_Selectors.Tree.Core.v_linked_tree",
-        "equation_Steel.Effect.Common.rmem",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_Trees.rotate_right_left",
-        "fuel_guarded_inversion_Trees.tree",
-        "function_token_typing_Steel.Effect.Common.mk_rmem",
-        "interpretation_Tm_abs_165af6114cdd205ad90889aad6511518",
-        "interpretation_Tm_abs_24ed30a53d959fb60a0346f6b9268501",
-        "interpretation_Tm_abs_5a3aa99c5a1f49132681d9996b0a6a59",
-        "interpretation_Tm_abs_c78b91a44625c21d3ff11b616d5f9b56",
-        "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "lemma_Steel.Effect.Common.can_be_split_refl",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_right_left",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "projection_inverse_Trees.Node_a",
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
-        "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_9185da06fca917c5514ae63042657873",
-        "refinement_interpretation_Tm_refine_9936fd024fb6930677a41cca0016d77a",
-        "refinement_interpretation_Tm_refine_c1cb6a5ec15d3eb1281bac3fe1ecbc41",
-        "refinement_kinding_Tm_refine_9936fd024fb6930677a41cca0016d77a",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp",
-        "typing_Selectors.Tree.Core.linked_tree_",
-        "typing_Steel.Effect.Common.mk_rmem",
-        "typing_Tm_abs_24ed30a53d959fb60a0346f6b9268501",
-        "typing_Tm_abs_5a3aa99c5a1f49132681d9996b0a6a59",
-        "typing_Tm_abs_c78b91a44625c21d3ff11b616d5f9b56"
+        "projection_inverse_Trees.Node_right"
       ],
       0,
-      "f57dc5ff00a0f0d6589fdf658fe8036c"
+      "872427594219aeacc5f627c14954ee97"
     ],
     [
       "Selectors.Tree.rotate_left_right",
@@ -337,54 +231,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Prims_interpretation_Tm_ghost_arrow_3aa447697277bb40c9738c9125c3e80f",
-        "Selectors.Tree_interpretation_Tm_arrow_108f54744e154bacaf6992a5689e2add",
-        "Selectors.Tree_interpretation_Tm_ghost_arrow_ecfa147b51908d4c39504565bbca2a82",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node",
-        "equation_FStar.FunctionalExtensionality.feq_g",
-        "equation_FStar.FunctionalExtensionality.restricted_g_t",
-        "equation_Selectors.Tree.Core.linked_tree_",
-        "equation_Selectors.Tree.Core.tree",
-        "equation_Selectors.Tree.Core.v_linked_tree",
-        "equation_Steel.Effect.Common.rmem",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_Trees.rotate_left_right",
-        "fuel_guarded_inversion_Trees.tree",
-        "function_token_typing_Steel.Effect.Common.mk_rmem",
-        "interpretation_Tm_abs_165af6114cdd205ad90889aad6511518",
-        "interpretation_Tm_abs_24ed30a53d959fb60a0346f6b9268501",
-        "interpretation_Tm_abs_5a3aa99c5a1f49132681d9996b0a6a59",
-        "interpretation_Tm_abs_c78b91a44625c21d3ff11b616d5f9b56",
-        "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "lemma_Steel.Effect.Common.can_be_split_refl",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_left_right",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "projection_inverse_Trees.Node_a",
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
-        "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_9185da06fca917c5514ae63042657873",
-        "refinement_interpretation_Tm_refine_9936fd024fb6930677a41cca0016d77a",
-        "refinement_interpretation_Tm_refine_c1cb6a5ec15d3eb1281bac3fe1ecbc41",
-        "refinement_kinding_Tm_refine_9936fd024fb6930677a41cca0016d77a",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp",
-        "typing_Selectors.Tree.Core.linked_tree_",
-        "typing_Steel.Effect.Common.mk_rmem",
-        "typing_Tm_abs_24ed30a53d959fb60a0346f6b9268501",
-        "typing_Tm_abs_5a3aa99c5a1f49132681d9996b0a6a59",
-        "typing_Tm_abs_c78b91a44625c21d3ff11b616d5f9b56"
+        "projection_inverse_Trees.Node_right"
       ],
       0,
-      "9581bde713e549489d4fc2a2ad6247be"
+      "9e5fdd5f4d17eb3ad5122a53bca5a216"
     ],
     [
       "Selectors.Tree.is_balanced",
@@ -431,7 +289,7 @@
         "typing_Selectors.Tree.Core.tree_sl", "typing_Trees.is_balanced"
       ],
       0,
-      "7a9c69c7c105f9c1c4abf151e09e3978"
+      "f99357cc5d2c1730c2e0c99550f65d2d"
     ],
     [
       "Selectors.Tree.rebalance_avl",
@@ -490,7 +348,7 @@
         "typing_Trees.rotate_left_right", "typing_Trees.rotate_right_left"
       ],
       0,
-      "c9742130888cc35de988f999fb47e509"
+      "ea25fd1805b34f56692e8fd0639138d7"
     ],
     [
       "Selectors.Tree.insert_avl",
@@ -512,7 +370,7 @@
         "data_elim_Trees.Node",
         "data_typing_intro_Steel.Effect.Common.Mkvprop_@tok",
         "data_typing_intro_Steel.Effect.Common.VUnit@tok",
-        "equation_Selectors.Tree.Core.tree",
+        "defn_equation_Trees.is_avl", "equation_Selectors.Tree.Core.tree",
         "equation_Steel.Effect.Common.hmem",
         "equation_Steel.Effect.Common.selector",
         "equation_Steel.Effect.Common.selector_", "equation_Trees.is_avl",
@@ -537,10 +395,11 @@
         "typing_Selectors.Tree.Core.is_null_t",
         "typing_Selectors.Tree.Core.tree",
         "typing_Selectors.Tree.Core.tree_sel",
-        "typing_Selectors.Tree.Core.tree_sl", "typing_Trees.is_balanced"
+        "typing_Selectors.Tree.Core.tree_sl", "typing_Trees.is_balanced",
+        "typing_Trees.is_bst"
       ],
       0,
-      "64ae974c2e7033d31d560e8b9b3b75b4"
+      "a439d7e73a5866316b7c2d700f1c0110"
     ]
   ]
 ]

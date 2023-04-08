@@ -1,0 +1,233 @@
+[
+  "\u001cˆ;•\u0013=“*4©œ\ftB‹–",
+  [
+    [
+      "Bug2595.__proj__SumType1__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1377bc4447dd0544ca096ca5b6956580"
+      ],
+      0,
+      "b45a457bc47f7ad4a7060f1a15fcb805"
+    ],
+    [
+      "Bug2595.__proj__SumType2__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8bea42d9b67122899e94431f9b164811"
+      ],
+      0,
+      "927a9c72039b3fcd3eef28ab82681997"
+    ],
+    [
+      "Bug2595.test_buggy",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_elim_Prims.Mkdtuple2", "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "f726b1406e640d23fcc31f946070cf6b"
+    ],
+    [
+      "Bug2595.__proj__SumType2_1__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6b185c6d50d907658f48a9eee7d9629b"
+      ],
+      0,
+      "036b31b3642270fa22e13f79f069da82"
+    ],
+    [
+      "Bug2595.__proj__SumType2_1__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6b185c6d50d907658f48a9eee7d9629b"
+      ],
+      0,
+      "b892437367427715e90a27090bfa7e0f"
+    ],
+    [
+      "Bug2595.__proj__SumType2_2__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0482fd92f084831ce86b139ce8ff39b4"
+      ],
+      0,
+      "ad4d89e1744c9aefe7c915ce9224a215"
+    ],
+    [
+      "Bug2595.__proj__SumType2_2__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0482fd92f084831ce86b139ce8ff39b4"
+      ],
+      0,
+      "0a1c6408dadc8d60462a46e438c717e1"
+    ],
+    [
+      "Bug2595.test_buggy2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_elim_Prims.Mkdtuple2", "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "ed09467b6ce3b7ccd0f894a3948fbe34"
+    ],
+    [
+      "Bug2595.test_ok2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_elim_Prims.Mkdtuple2", "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "c18aaf8a4fcd0e915ce738d4cc18a875"
+    ],
+    [
+      "Bug2595.__proj__T3_1__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7b26f42d962c68ee7672f7017528c29f"
+      ],
+      0,
+      "daa37116c9eb4fa7aca23d255e9bb29b"
+    ],
+    [
+      "Bug2595.__proj__T3_1__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7b26f42d962c68ee7672f7017528c29f"
+      ],
+      0,
+      "36a4a68a1bcef644029ed7714f043347"
+    ],
+    [
+      "Bug2595.__proj__T3_2__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_88678cae7d23be7f667ac88eb1c18876"
+      ],
+      0,
+      "dde7e88f84294f8f3f8a2594919df2da"
+    ],
+    [
+      "Bug2595.__proj__T3_2__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_88678cae7d23be7f667ac88eb1c18876"
+      ],
+      0,
+      "3a5b1011ecfb47fcdd17d161e27aab5b"
+    ],
+    [
+      "Bug2595.test_mixed",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_elim_Prims.Mkdtuple2", "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "251cec9613739833bafa1a9067f1ecfc"
+    ],
+    [
+      "Bug2595.ntuple_",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_19338ce8ccfceb0f4c8e7a92f0954360_1",
+        "equation_Bug2595.flen", "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "9c2de551edcf40afa84c1470705fb6f7"
+    ],
+    [
+      "Bug2595.rest_",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug2595.ntuple_.fuel_instrumented",
+        "@fuel_irrelevance_Bug2595.ntuple_.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Bug2595.flen", "equation_Prims.pos",
+        "equation_with_fuel_Bug2595.ntuple_.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_297f0d5fd0dfff2d5b3342ea517a9a07",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "be144b4ccc3826ccf0d65af124690f92"
+    ],
+    [
+      "Bug2595.rest",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_297f0d5fd0dfff2d5b3342ea517a9a07"
+      ],
+      0,
+      "2a0baa85a16c91f23fee6f24a70d53c7"
+    ]
+  ]
+]

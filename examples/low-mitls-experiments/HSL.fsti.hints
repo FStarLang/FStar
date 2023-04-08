@@ -26,10 +26,11 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "typing_FStar.UInt32.t", "typing_FStar.UInt32.v",
-        "typing_LowStar.Buffer.trivial_preorder"
+        "typing_LowStar.Buffer.trivial_preorder",
+        "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "1e8d1ab1da18124e7dd5a75ec2932d00"
+      "23d5d23698f9d4bdb67bb63df7aa04de"
     ],
     [
       "HSL.null_terminator_invariant",
@@ -44,7 +45,7 @@
         "refinement_interpretation_Tm_refine_0e73a852e7d03abf28b794a46e41d7ef"
       ],
       0,
-      "abf8f23493bd123ca928ed1ceb9f8289"
+      "bd03502ac53dbea3c9e850f2e3737392"
     ],
     [
       "HSL.msgs_list_invariant_helper",
@@ -83,11 +84,10 @@
         "typing_FStar.Map.contains", "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip", "typing_FStar.UInt32.t",
-        "typing_FStar.UInt32.v", "typing_LowStar.Buffer.trivial_preorder",
-        "typing_LowStar.Monotonic.Buffer.len"
+        "typing_FStar.UInt32.v", "typing_LowStar.Buffer.trivial_preorder"
       ],
       0,
-      "0398dbd3ecb0021ab77cd5dee72e73eb"
+      "907e729d059875f3dd0ec74cd2bb3883"
     ],
     [
       "HSL.msgs_list_invariant",
@@ -103,7 +103,7 @@
         "refinement_interpretation_Tm_refine_0e73a852e7d03abf28b794a46e41d7ef"
       ],
       0,
-      "dc9bc35b5c7669869b4daa5b842eabd6"
+      "adedf1c1c5555bfa060bbfa8c53582a4"
     ],
     [
       "HSL.hsl_invariant_predicate",
@@ -112,7 +112,7 @@
       1,
       [ "@query" ],
       0,
-      "ffaf38d6d2b8675927ab95246413dc80"
+      "6cd5b30d5ad5e3d7288489a0f95919cc"
     ],
     [
       "HSL.hsl_footprint",
@@ -132,7 +132,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "0a7c10b3e33913914ce0e89e460812bf"
+      "bbc491d835e9c5a51a815089c5509f4e"
     ],
     [
       "HSL.lemma_frame_hsl_invariant",
@@ -144,7 +144,7 @@
         "refinement_interpretation_Tm_refine_844aedafe2486882415eb7c5e30e7630"
       ],
       0,
-      "a78106f49aeaead5089136b1f3c2143b"
+      "6b867ac2c50aea09d68b51c15c528290"
     ]
   ]
 ]

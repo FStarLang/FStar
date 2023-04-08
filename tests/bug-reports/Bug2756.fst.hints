@@ -1,0 +1,217 @@
+[
+  "+Eö8>b(_FÛˆÖ{²|\u001f",
+  [
+    [
+      "Bug2756.arrow_to_forall",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
+      ],
+      0,
+      "b6e0325ecbce4d53a7698691f04868a9"
+    ],
+    [
+      "Bug2756.last",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_Prims.Cons",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Cons"
+      ],
+      0,
+      "c16eab7bbc68f048311eda549470e039"
+    ],
+    [
+      "Bug2756.test_dependent_sum",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug2756.nat_dep",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709"
+      ],
+      0,
+      "f4dad03b6d094097fbb7c2481a0e9a17"
+    ],
+    [
+      "Bug2756.__proj__TestDependentSum1__item__n1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8256746bd526b538748945da2ceec1d9"
+      ],
+      0,
+      "e5489e3995be5dc8474334921d5dfb6c"
+    ],
+    [
+      "Bug2756.__proj__TestDependentSum1__item__n2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug2756.nat_dep",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "proj_equation_Bug2756.TestDependentSum1_n1",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709",
+        "typing_Bug2756.__proj__TestDependentSum1__item__n1"
+      ],
+      0,
+      "f790d44d7a6495f610522b1c96c86aab"
+    ],
+    [
+      "Bug2756.__proj__TestDependentSum1__item__n2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Bug2756.TestDependentSum1",
+        "disc_equation_Bug2756.TestDependentSum1",
+        "equation_Bug2756.nat_dep", "equation_Prims.nat",
+        "primitive_Prims.op_Addition",
+        "proj_equation_Bug2756.TestDependentSum1_n1",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_8256746bd526b538748945da2ceec1d9",
+        "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709",
+        "typing_Bug2756.__proj__TestDependentSum1__item__n1"
+      ],
+      0,
+      "c42e7174462ce1e5fe9f114149a4b5f3"
+    ],
+    [
+      "Bug2756.__proj__TestDependentSum1__item__tdn1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8256746bd526b538748945da2ceec1d9"
+      ],
+      0,
+      "3218d80f104a853b953b7a97fea89d3e"
+    ],
+    [
+      "Bug2756.__proj__TestDependentSum2__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c84f9dca56e7aa544dcd8db84b7fdd84"
+      ],
+      0,
+      "d02b483e4245f26244c2ef8d6a59a8b0"
+    ],
+    [
+      "Bug2756.encoded_snd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Bug2756.nat_dep", "equation_Bug2756.refined",
+        "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion",
+        "interpretation_Tm_abs_230c31ce3fb9a811ba1e49e13d1b1205",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709"
+      ],
+      0,
+      "80a8f3d119a939138dc2d54fe447bd02"
+    ],
+    [
+      "Bug2756.encoded_type",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9835155a98934f13794c1293493aee45"
+    ],
+    [
+      "Bug2756.uu___55",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_Prims.Mkdtuple2", "equation_Bug2756.nat_dep",
+        "equation_Bug2756.refined", "equation_Prims.nat",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "interpretation_Tm_abs_230c31ce3fb9a811ba1e49e13d1b1205",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709"
+      ],
+      0,
+      "37f26cd2536d41d5c7f2ad4c837770d0"
+    ],
+    [
+      "Bug2756.uu___55",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_Prims.Mkdtuple2",
+        "disc_equation_Bug2756.TestDependentSum1",
+        "disc_equation_Bug2756.TestDependentSum2",
+        "equation_Bug2756.nat_dep", "equation_Bug2756.refined",
+        "equation_Prims.nat", "equation_Prims.pos",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
+        "fuel_guarded_inversion_Bug2756.test_dependent_sum",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "interpretation_Tm_abs_230c31ce3fb9a811ba1e49e13d1b1205",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709",
+        "typing_Prims.pow2"
+      ],
+      0,
+      "e0ec1f431e7977194b6ad47646d642ec"
+    ]
+  ]
+]

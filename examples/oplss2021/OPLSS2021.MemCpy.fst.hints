@@ -67,7 +67,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "9a99ec1b0a00ba3e67dfc2b07f30fa6e"
+      "5b68d44f5f601633ffc27103fac1a571"
     ],
     [
       "OPLSS2021.MemCpy.malloc_copy_free",
@@ -76,7 +76,8 @@
       0,
       [
         "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "bool_typing", "equation_FStar.HyperStack.ST.equal_stack_domains",
+        "bool_typing", "defn_equation_OPLSS2021.MemCpy.Deps.prefix_equal",
+        "equation_FStar.HyperStack.ST.equal_stack_domains",
         "equation_FStar.HyperStack.ST.is_eternal_region",
         "equation_FStar.Monotonic.Heap.equal_dom",
         "equation_FStar.Monotonic.HyperHeap.hmap",
@@ -100,7 +101,7 @@
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
-        "int_typing",
+        "int_typing", "l_quant_interp_ef365397f5571a8b24371f3bfe200d8f",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
         "lemma_FStar.Map.lemma_ContainsDom",
@@ -157,7 +158,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_unused_in"
       ],
       0,
-      "41eeabdb848fb9769bf5596cf89b1209"
+      "327f9f3ad161eb3f3c3633591bc980fa"
     ]
   ]
 ]

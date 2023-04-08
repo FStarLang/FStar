@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "80f077ab57e7948606e96850279cbe23"
+      "22c5d2d642b24a2ccae4e7996dae30c2"
     ],
     [
       "Bug175.__proj__SApp1__item__h",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_a67958f432222acb1037b7352e3962fa"
       ],
       0,
-      "268a66bbca5243b4b5e515ccfdf1f01b"
+      "07621690daea174c0bdcf568304f4346"
     ],
     [
       "Bug175.__proj__SApp1__item__e1",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Tm_refine_a67958f432222acb1037b7352e3962fa"
       ],
       0,
-      "f95864b466a67f074e001583e294d39e"
+      "35e8a548ec8a4c1b8685e5d960d803af"
     ],
     [
       "Bug175.__proj__SApp1__item__e2",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_a67958f432222acb1037b7352e3962fa"
       ],
       0,
-      "bfbe89ed66d5d2bec2b9b2242a291b12"
+      "f732121509c9ba8a94bd86ebfad5d678"
     ],
     [
       "Bug175.__proj__SApp2__item__h",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
       ],
       0,
-      "ebe90a414b45b4e91c9119d629944bd2"
+      "358e2ae46a14c1a320ad37c83148c351"
     ],
     [
       "Bug175.__proj__SApp2__item__e1",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
       ],
       0,
-      "bc6eb8722d014fc89a5b7e03d1c9612d"
+      "4fa5ad92b6a8a414efdde29a420a8cb1"
     ],
     [
       "Bug175.__proj__SApp2__item__e2",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
       ],
       0,
-      "f5bcf11906aa32f02f8b188149c3cae2"
+      "aa86e47302fc712f23adcb14d4ff5d36"
     ],
     [
       "Bug175.__proj__SApp2__item___3",
@@ -94,17 +94,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug175.SApp2",
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug175.SApp2",
         "equation_Bug175.config", "equation_Bug175.heap",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "proj_equation_Bug175.SApp2_e2", "proj_equation_Bug175.SApp2_h",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Bug175.SApp2_e2",
-        "projection_inverse_Bug175.SApp2_h",
         "refinement_interpretation_Tm_refine_12e4827d6d58248a44aeb52cce13cdc0"
       ],
       0,
-      "178afd33873aad6ad8442add253af916"
+      "0d189a1799bdc29a9df2e80322e8ed89"
     ]
   ]
 ]

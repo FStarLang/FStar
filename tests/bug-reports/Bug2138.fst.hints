@@ -1,0 +1,23 @@
+[
+  "#\u0006;“ã55\u001e—ÙƒÕ¢Ð\u001e\u001e",
+  [
+    [
+      "Bug2138.x",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug2138.t1__uu___haseq" ],
+      0,
+      "02fabf730bbb3c9e199bba87681aa400"
+    ],
+    [
+      "Bug2138.y",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug2138.t1__uu___haseq" ],
+      0,
+      "45ba5b85a53c6c4e1f691f73f22bb08e"
+    ]
+  ]
+]

@@ -1,5 +1,5 @@
 [
-  "¤#úÒU‡j‡¬Wb$\u000e>\u0015³",
+  "\u000f5ä=ŠËD\u007f\u000eÏ’Í\u001aĞ_",
   [
     [
       "Bug1206.bslice",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "24f17276b77b5c17c6a337d57bc501fe"
+      "e9607450a839e2e37602e8c01919f888"
     ],
     [
       "Bug1206.ser_id",
@@ -28,7 +28,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
-      "8448e5c2ee7bd64acfe3b3a00be14824"
+      "395d2dd04e0411b838928f6d96ca43dc"
     ]
   ]
 ]

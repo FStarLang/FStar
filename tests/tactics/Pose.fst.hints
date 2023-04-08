@@ -7,25 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_False",
-        "equation_Prims.squash", "false_interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "5774c37bfd7b552ceecce1deaa03021b"
-    ],
-    [
-      "Pose.uu___2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_False",
-        "equation_Prims.squash", "false_interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "fa555f7fddf4627170d2d92d3bb26917"
+      "c9e782061a3fa1d0c4dae46b5c932192"
     ]
   ]
 ]

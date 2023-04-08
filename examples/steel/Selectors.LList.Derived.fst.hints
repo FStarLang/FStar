@@ -6,28 +6,18 @@
       1,
       2,
       1,
-      [
-        "@query", "equation_Selectors.LList.llist_",
-        "equation_Selectors.LList.v_llist",
-        "equation_Steel.Effect.Common.true_p",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
-      ],
+      [ "@query" ],
       0,
-      "1c1d4707c07b02d90068473e56ba45b0"
+      "f916da1dbff4fb21bb6ace64f6d5d96c"
     ],
     [
       "Selectors.LList.Derived.ind_push",
       1,
       2,
       1,
-      [
-        "@query", "equation_Selectors.LList.ind_llist_",
-        "equation_Selectors.LList.v_ind_llist",
-        "equation_Steel.Effect.Common.true_p",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
-      ],
+      [ "@query" ],
       0,
-      "c1937e5b1f78d0d9086dbb6ef263db84"
+      "894e67ff4963a745912b8daf779a96dc"
     ],
     [
       "Selectors.LList.Derived.pop",
@@ -36,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "f44d1ca6b5117addd05728f010595bf6"
+      "a5e6eae369415b2dd549750f64996b47"
     ],
     [
       "Selectors.LList.Derived.pop",
@@ -60,7 +50,7 @@
         "equation_Steel.Effect.Common.selector_",
         "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "function_token_typing_Selectors.LList.llist_sel",
-        "kinding_Prims.list@tok", "lemma_FStar.Ghost.reveal_hide",
+        "kinding_Prims.list@tok",
         "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Selectors.LList.Derived.Res_n",
@@ -74,7 +64,7 @@
         "typing_Selectors.LList.llist_sl", "typing_Selectors.LList.mk_cell"
       ],
       0,
-      "cd5cc7390056da3e3288a78627cb0158"
+      "c67ff9e0d5463880fe0bf3fd1aa91823"
     ],
     [
       "Selectors.LList.Derived.ind_pop",
@@ -83,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "2a8664e6188c9e07587989f3f56505a3"
+      "92344efc081cabb15324c28f012532c9"
     ],
     [
       "Selectors.LList.Derived.ind_pop",
@@ -119,7 +109,7 @@
         "typing_Selectors.LList.mk_cell"
       ],
       0,
-      "b5b779b5fd8d6affef05463705fc0099"
+      "4d5cac4badfb6186ff9299c95f22a363"
     ],
     [
       "Selectors.LList.Derived.length",
@@ -165,7 +155,7 @@
         "typing_Selectors.LList.llist_sl", "typing_Selectors.LList.mk_cell"
       ],
       0,
-      "25cb95f8ebe947c21acd47338d5cd59e"
+      "dd02bc90b915de70626dcd6c8c7d1604"
     ]
   ]
 ]

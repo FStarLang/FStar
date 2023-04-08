@@ -1,5 +1,5 @@
 [
-  "ËàüÑ¾Pù§›©‚‘ZtU\t",
+  "Ÿ? d^âÒ³Ävb«\u0004eRq",
   [
     [
       "Bug1533.elim",
@@ -7,44 +7,21 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "eq3-interp", "equation_Prims.eq3",
-        "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query",
+        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ac52c5b78ee3beaa6022ce0e44f13d87"
+      "8b4da2586fbb92573ce5c165c1b93126"
     ],
     [
       "Bug1533.elim2",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "equation_Prims.op_Equals_Equals_Equals" ],
       0,
-      "622bedb28b88381d499142d0962b4993"
-    ],
-    [
-      "Bug1533.elim3",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq3",
-        "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_e558333ac4ede30df92b871b032f02dd"
-      ],
-      0,
-      "e2d87578d65055eb16dfc87944c2aff6"
-    ],
-    [
-      "Bug1533.elim3'",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c6f629e2b34586f8d079615ff41b6931"
+      "4a7cda5973dbda6b1adad7228a4d715e"
     ],
     [
       "Bug1533.coerce",
@@ -53,10 +30,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "equation_Prims.op_Equals_Equals_Equals",
         "refinement_interpretation_Tm_refine_770aa551c1985581cf5d9ce92df5e8e5"
       ],
       0,
-      "77be50a4100e8b8863a0d86cdc5c0d1e"
+      "573ebed2445934fa0e6b9f798e75a67d"
     ]
   ]
 ]

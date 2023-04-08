@@ -1,0 +1,41 @@
+[
+  "\u0019ô¸¹®&`¬\u0014Ž5¬3óR",
+  [
+    [
+      "FStar.Sealed.Inhabited.is_sealed",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "790b78f2924aadd8237c24224d38daa2"
+    ],
+    [
+      "FStar.Sealed.Inhabited.seal",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "14bd4e110283feff6ff59843f6b7e1ad"
+    ],
+    [
+      "FStar.Sealed.Inhabited.sealed_singleton",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "91fb8cea7644acd80ea8b4208a679b44"
+    ]
+  ]
+]

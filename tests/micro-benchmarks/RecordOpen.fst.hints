@@ -1,0 +1,56 @@
+[
+  "eNÂÝ?g\u001adÝ¸\u0010\u0014©‚Vè",
+  [
+    [
+      "RecordOpen.uu___13",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_RecordOpen.f",
+        "projection_inverse_RecordOpen.Mkty_x",
+        "projection_inverse_RecordOpen.Mkty_y"
+      ],
+      0,
+      "a583a67ffd0d80e1249c9657fb458070"
+    ],
+    [
+      "RecordOpen.uu___14",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "data_typing_intro_RecordOpen.Mkty@tok", "equation_RecordOpen.f",
+        "int_inversion", "int_typing", "primitive_Prims.op_Minus",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_RecordOpen.Mkty_x",
+        "projection_inverse_RecordOpen.Mkty_y", "typing_RecordOpen.f"
+      ],
+      0,
+      "e0a5bda3254fcf2e68545c94379a290e"
+    ],
+    [
+      "RecordOpen.ty2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "469a6b5a114a61bb0d2de914d20fb4b3"
+    ],
+    [
+      "RecordOpen.f3",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_RecordOpen.Mkty2_x",
+        "projection_inverse_RecordOpen.Mkty2_x"
+      ],
+      0,
+      "38aaa194a2441e4b4d063084b3d845b1"
+    ]
+  ]
+]

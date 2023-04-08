@@ -1,0 +1,20 @@
+[
+  "·\u001c\\kP°äj‡ð;Ûðo¦Í",
+  [
+    [
+      "Bug2684a.the_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_b08439c734df0ef19a3e9b7bd3aab656",
+        "refinement_interpretation_Tm_refine_f5c7d23fc6986a4e5363b18ba2daa613"
+      ],
+      0,
+      "fc62bdacd554b8dc2ae6eb57719be6cc"
+    ]
+  ]
+]

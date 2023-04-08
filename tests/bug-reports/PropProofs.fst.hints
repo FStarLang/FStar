@@ -1,0 +1,19 @@
+[
+  "!\u0004\"‘;m4m½Â\u0007FLÊ’D",
+  [
+    [
+      "PropProofs.y",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "defn_equation_PropProofs.x",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5b5b4a6d5cc2984c22300c1e51799c77"
+    ]
+  ]
+]

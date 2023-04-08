@@ -1,0 +1,19 @@
+[
+  "#ö(ï0\u0010X!ë3+\u001då1±º",
+  [
+    [
+      "Bug2552.lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_fd61d08f4e9c6552404926b9ae6c0391",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_Bug2552.p"
+      ],
+      0,
+      "506ecf2714d5612378ae5a353838c72b"
+    ]
+  ]
+]
