@@ -118,7 +118,7 @@ function refresh_hints() {
 
     # Create a pull request if we pushed to a different branch
     if is_protected_branch ; then
-        $gh pr create --base "$CI_BRANCH" --title "Advance to $(cat version.txt)" --fill
+        $gh pr create --base "$CI_BRANCH" --head "$new_branch" --title "Advance to $(cat version.txt)" --fill
     fi
 }
 
