@@ -63,6 +63,10 @@ diag "*** Test the binary package"
 # obtained binary). FSTAR_HOME is the latter.
 export FSTAR_HOME="$PWD"
 
+# We need to add the bin subdirectory to the PATH,
+# to make z3 reachable
+export PATH="$PWD/bin:$PATH"
+
 # Move doc and examples to the tmp directory.
 # We move them elsewhere since we
 # don't want to rely on relative paths in their Makefiles.
