@@ -65,6 +65,11 @@ RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' PATH=$HOME/z3:
 # Test the package with its Z3, without OCaml or any other dependency
 FROM ubuntu:20.04 AS fstarnoocaml
 
+# Install some dependencies
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends \
+      make
+
 # Create a new user and give them sudo rights
 RUN useradd -d /home/test test
 RUN echo 'test ALL=NOPASSWD: ALL' >> /etc/sudoers
