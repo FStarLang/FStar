@@ -75,12 +75,11 @@ WORKDIR $HOME
 SHELL ["/bin/bash", "--login", "-c"]
 
 # Copy the package and the test script
-COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/test/fstar.tar.gz
-RUN tar xzf fstar.tar.gz
-COPY --from=fstarbuild /home/opam/FStar/.scripts/test_package.sh /home/test/fstar/.scripts/test_package.sh
+COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/test/FStar/src/ocaml-output/fstar.tar.gz
+COPY --from=fstarbuild /home/opam/FStar/.scripts/test_package.sh /home/test/FStar/.scripts/test_package.sh
 
 # Test the package
-RUN env CI_THREADS=$CI_THREADS ./FStar/.scripts/test_package.sh
+RUN env CI_THREADS=$CI_THREADS /home/test/FStar/.scripts/test_package.sh
 
 # Test the package with its Z3, with OCaml
 FROM fstarbuild
