@@ -1,4 +1,4 @@
-FSTAR_HOME=../..
+FSTAR_HOME?=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
 
 OCAMLOPT=OCAMLPATH="$(FSTAR_HOME)/lib" ocamlfind opt
