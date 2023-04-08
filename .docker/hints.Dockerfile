@@ -48,6 +48,13 @@ RUN git clone https://github.com/FStarLang/karamel karamel && \
     cd ./karamel && .docker/build/install-other-deps.sh
 ENV KRML_HOME /home/opam/karamel
 
+# More CI dependencies:
+# python3 (for interactive tests)
+RUN sudo apt-get update && \
+    sudo apt-get install -y --no-install-recommends \
+    python3 \
+    python-is-python3
+
 ADD --chown=opam:opam ./ FStar/
 
 # Regenerate hints
