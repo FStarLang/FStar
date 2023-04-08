@@ -29,6 +29,6 @@ function upload_archive () {
 }
 
 upload_archive $BUILD_PACKAGE
-rm -rf release
+rm -rf $BUILD_PACKAGE
 
 popd
