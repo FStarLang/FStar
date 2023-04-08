@@ -61,7 +61,29 @@ ARG CI_THREADS=24
 # Build the package with our Z3
 RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' PATH=$HOME/z3-4.8.5-x64-ubuntu-16.04/bin:$PATH make -j $CI_THREADS -C FStar package
 
-# Test the package with its Z3
+# Test the package with its Z3, without OCaml or any other dependency
+FROM ubuntu:20.04
+
+# Create a new user and give them sudo rights
+RUN useradd -d /home/test test
+RUN echo 'test ALL=NOPASSWD: ALL' >> /etc/sudoers
+RUN mkdir /home/test
+RUN chown test:test /home/test
+USER test
+ENV HOME /home/test
+WORKDIR $HOME
+SHELL ["/bin/bash", "--login", "-c"]
+
+# Copy the package and the test script
+COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/test/fstar.tar.gz
+RUN tar xzf fstar.tar.gz
+COPY --from=fstarbuild /home/opam/FStar/.scripts/test_package.sh /home/test/fstar/.scripts/test_package.sh
+
+# Test the package
+RUN env CI_THREADS=$CI_THREADS ./FStar/.scripts/test_package.sh
+
+# Test the package with its Z3, with OCaml
+FROM fstarbuild
 RUN eval $(opam env) && env CI_THREADS=$CI_THREADS ./FStar/.scripts/test_package.sh
 
 # Publish the release
