@@ -129,14 +129,15 @@ function refresh_hints() {
     git merge $commit -Xtheirs
 
     # Check if build hints branch exist on remote and remove it if it exists
-    exist=$(git branch -a | egrep 'remotes/origin/BuildHints-'$CI_BRANCH | wc -l)
+    new_branch=_BuildHints-$CI_BRANCH
+    exist=$(git branch -a | egrep 'remotes/origin/'$new_branch | wc -l)
     if [ $exist == 1 ]; then
-        git push $remote :BuildHints-$CI_BRANCH
+        git push $remote :$new_branch
     fi
 
     # Push.
-    git checkout -b BuildHints-$CI_BRANCH
-    git push $remote BuildHints-$CI_BRANCH
+    git checkout -b $new_branch
+    git push $remote $new_branch
 
     # Create a pull request
     $gh pr create --base "$CI_BRANCH" --title "Advance to $(cat version.txt)" --fill
