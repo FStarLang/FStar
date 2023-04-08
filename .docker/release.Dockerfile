@@ -42,21 +42,8 @@ RUN sudo apt-get install --yes --no-install-recommends \
 
 ENV PATH=${PATH}:$DOTNET_ROOT:$DOTNET_ROOT/tools
 
-# Download Karamel and install its dependencies
-# We don't build Karamel here, advance.sh will take care of it
-RUN git clone https://github.com/FStarLang/karamel karamel && \
-    cd ./karamel && .docker/build/install-other-deps.sh
-ENV KRML_HOME /home/opam/karamel
-
-# More CI dependencies:
-# python3 (for interactive tests)
-# Also, configure the git user
-RUN sudo apt-get update && \
-    sudo apt-get install -y --no-install-recommends \
-    python3 \
-    python-is-python3 \
-    && \
-    git config --global user.name "Dzomo, the Everest Yak" && \
+# Configure the git user
+RUN git config --global user.name "Dzomo, the Everest Yak" && \
     git config --global user.email "everbld@microsoft.com"
 
 ADD --chown=opam:opam ./ FStar/
