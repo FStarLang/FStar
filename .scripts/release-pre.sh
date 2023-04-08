@@ -31,6 +31,10 @@ if ! [[ -d ulib ]]; then
   exit 1
 fi
 
+# Figure out the branch
+CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "Current branch_name=$CI_BRANCH"
+
 # Fail if the state is dirty
 # NOTE: --ignore-cr-at-eol is a recent option,
 # so we should ignore it if it is not there
