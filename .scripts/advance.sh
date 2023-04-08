@@ -72,6 +72,7 @@ function refresh_hints() {
     # Add all the hints, even those not under version control
     find $hints_dir/doc -iname '*.hints' | xargs git add
     find $hints_dir/examples -iname '*.hints' | xargs git add
+    find $hints_dir/test -iname '*.hints' | xargs git add
     find $hints_dir/ulib -iname '*.hints' | xargs git add
 
     git_add_fstar_snapshot
