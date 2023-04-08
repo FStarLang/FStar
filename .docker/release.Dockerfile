@@ -3,6 +3,7 @@
 
 # Build the package
 ARG ocaml_version=4.12
+ARG CI_THREADS=24
 
 FROM ocaml/opam:ubuntu-20.04-ocaml-$ocaml_version AS fstarbuild
 
@@ -56,7 +57,6 @@ RUN tar xf z3.tar.gz
 ADD --chown=opam:opam ./ FStar/
 
 # Check if we need to create a tag
-ARG CI_THREADS=24
 # RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env GH_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) ./FStar/.scripts/create_tag.sh
 
 # Build the package with our Z3
@@ -85,10 +85,12 @@ COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/test
 COPY --from=fstarbuild /home/opam/FStar/.scripts/test_package.sh /home/test/FStar/.scripts/test_package.sh
 
 # Test the package
+ARG CI_THREADS
 RUN env CI_THREADS=$CI_THREADS /home/test/FStar/.scripts/test_package.sh
 
 # Test the package with its Z3, with OCaml
 FROM fstarbuild
+ARG CI_THREADS
 # Copy a dummy file to introduce an artificial dependence to the fstarnoocaml stage
 # to force buildx to build that stage as well
 COPY --from=fstarnoocaml /home/test/fstar/.scripts/test_package.sh /tmp/dummy
