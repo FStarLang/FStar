@@ -140,7 +140,18 @@ release () {
 }
 
 build_and_refresh () {
+    # Build fstar.exe
     make dune-fstar
+
+    # If Karamel is around, we need to rebuild it.
+    # To this end, we need to temporarily verify ulib
+    # and clean it afterwards
+    if [[ -n "$KRML_HOME" ]] ; then
+        OTHERFLAGS='--admit_smt_queries true' make -j "$CI_THREADS" -C ulib
+        FSTAR_HOME="$PWD" make -j "$CI_THREADS" -C "$KRML_HOME"
+        git clean -ffdx -- ulib
+    fi
+
     find . -iname '*.hints' | xargs rm
     make -j "$CI_THREADS" hints
     refresh_hints
