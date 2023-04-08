@@ -68,6 +68,8 @@ else
     if test_ref=$(git show-ref "$my_tag") ; then
         [[ -z "$test_ref" ]]
     fi
+    echo "Checking whether new tags are allowed"
+    [[ -z "$FSTAR_NO_NEW_TAG" ]]
     need_to_push_tag=true
     git tag "$my_tag"
 fi
