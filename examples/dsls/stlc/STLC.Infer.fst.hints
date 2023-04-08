@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_67dd0c8a36eaf642ae0fc764a3b385e4"
       ],
       0,
-      "6a4dd2370264297e24d95ce966078a3e"
+      "a32c6d433b9d19896fd1dd0fb83533f8"
     ],
     [
       "STLC.Infer.__proj__EVar__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_10f5db85a110b66ccb5055c6ad6b968a"
       ],
       0,
-      "3fee33117ce8dbd12d810fa7410e8622"
+      "b788ea4104d8017115b9fa0e6d202d66"
     ],
     [
       "STLC.Infer.__proj__ELam__item___0",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "16648868e3303b3881993370f55091fd"
+      "3205b3ae2bb329619a36773702c118ef"
     ],
     [
       "STLC.Infer.__proj__ELam__item___1",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "72dae4c0bb8ba58e9544716cccd09185"
+      "4246e3d102707410bec45232416b9b0d"
     ],
     [
       "STLC.Infer.__proj__EApp__item___0",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "029aa1c5df859a3459667cc23dca2bea"
+      "0ecda1d62607f6da7274be3dd011bf1e"
     ],
     [
       "STLC.Infer.__proj__EApp__item___1",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "1018166c5c617ddb280a6ae53bd5183a"
+      "a4734df24db591c384f6cc8f720963c1"
     ],
     [
       "STLC.Infer.open_exp'",
@@ -97,7 +97,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "af48d6292bbe6e054880372b57b920d1"
+      "058361a8d38502d1ae72a98565f77f31"
     ],
     [
       "STLC.Infer.close_exp'",
@@ -123,7 +123,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "745834f2d2800fefca317466cc734e6f"
+      "31278390c88a435902c434d4984b1632"
     ],
     [
       "STLC.Infer.infer",
@@ -144,7 +144,7 @@
         "typing_STLC.Core.lookup", "typing_STLC.Infer.__proj__EVar__item___0"
       ],
       0,
-      "fa504326e8a863cf65fef89222f13153"
+      "c90fe883871f7872174bba44df701cbf"
     ],
     [
       "STLC.Infer.elab_core",
@@ -159,7 +159,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "40cff07cf39ead2470d375b70289a44e"
+      "8522af21edca07902364c6a8bdc71182"
     ]
   ]
 ]

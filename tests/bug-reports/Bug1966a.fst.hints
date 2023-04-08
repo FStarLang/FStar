@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "445659c7c0a8c5fcc5de246c6025060f"
+      "302938d0ab632bee239102141b8bb0b5"
     ],
     [
       "Bug1966a.congruence_fun'",
@@ -32,7 +32,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "66882fb6cb43991a7cf0a9bcd5e552c1"
+      "c9cc65252f76f1388516884338b8cb01"
     ],
     [
       "Bug1966a.congruence_fun",
@@ -41,7 +41,7 @@
       1,
       [ "@query" ],
       0,
-      "630141007baa1f06167b14dde8015013"
+      "b500fa2fdd9311f123d1d62785a58c59"
     ],
     [
       "Bug1966a.__forall_inst",

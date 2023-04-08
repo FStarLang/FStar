@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6545b6f1ca22bc3e2ffe679fcde627a0"
+      "2a1034cd8149ca6ce25c9248c05d90e7"
     ],
     [
       "Bug1355.create",
@@ -27,7 +27,7 @@
         "projection_inverse_Bug1355.TC0_t"
       ],
       0,
-      "235c785bdc073fdc0dd4358e13f9d251"
+      "bbdd47d9476fa3bf1cb090139e2dfd9e"
     ]
   ]
 ]

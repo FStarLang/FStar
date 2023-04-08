@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "40b967c4204fc1be5ee2713aca7e3f7d"
+      "fb5d6d1d9b4525284404f38bcf7cdaac"
     ],
     [
       "Bug1390.list_sum_lem",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "bfef2278b1227654e42007435e776330"
+      "e08f7bd18495ad7129b89cb27b04b947"
     ],
     [
       "Bug1390.list_sum_lem",
@@ -50,7 +50,7 @@
         "typing_Bug1390.list_sum"
       ],
       0,
-      "c1a27e3ad90cb403bdf50800b40b06d6"
+      "f901eaa97c903160e95607a829602501"
     ]
   ]
 ]
