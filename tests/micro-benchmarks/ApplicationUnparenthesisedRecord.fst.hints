@@ -12,7 +12,7 @@
         "function_token_typing_FStar.Pervasives.pattern"
       ],
       0,
-      "2cdc64f8148fd0caad12d9fd2777ba48"
+      "810873c884961b74ce35944923581d7a"
     ],
     [
       "ApplicationUnparenthesisedRecord.dummy",
@@ -33,7 +33,7 @@
         "token_correspondence_ApplicationUnparenthesisedRecord.g"
       ],
       0,
-      "bf04f490e44af913ce84256f6f8e2e7b"
+      "453741f4bd49aa5ee3df676cb98ec9e5"
     ],
     [
       "ApplicationUnparenthesisedRecord.__proj__Dummy1__item__x",
@@ -45,7 +45,7 @@
         "refinement_interpretation_Tm_refine_0b229cbc08acae1b512b29a2f6d0055c"
       ],
       0,
-      "f9289583ed510359e19f36aec1359c55"
+      "c1f599a9b096b449cc66e4244f443357"
     ],
     [
       "ApplicationUnparenthesisedRecord.__proj__Dummy2__item__x",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_5d8ed3af48177a080d818093bdc46ca2"
       ],
       0,
-      "dae3b420277a5bddcafec72f80e5ec81"
+      "4a2a9afc34fd7c47c429ee1055532a4f"
     ]
   ]
 ]

@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
       ],
       0,
-      "d6be43894457de891f28a2d9e96f61ea"
+      "36cd4833003f45d2917d475b8b514b0a"
     ],
     [
       "StrictUnfolding.test1",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_88b070fdaa2704b0d1fcf1ddd6ee47eb"
       ],
       0,
-      "4bd02b3d74663a97125eb466ea010e93"
+      "89166965179fe93efcfb88456376e067"
     ],
     [
       "StrictUnfolding.test2",
@@ -43,7 +43,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v", "true_interp"
       ],
       0,
-      "7437981e0f010d5baf392c2a54f90e2f"
+      "4d6955f816ac4dc7d4cc40082e318a96"
     ],
     [
       "StrictUnfolding.test_integer_generic",
@@ -110,7 +110,7 @@
         "typing_FStar.UInt8.add"
       ],
       0,
-      "cb8a3c67a3c922a075eeb45f6c995fea"
+      "368a49531e0ac5ba993d186f5127ea63"
     ],
     [
       "StrictUnfolding.test_integer_generic_wo_fstar_integers",
@@ -119,7 +119,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "186ba4340dd932ae9ad831daaa1e9d45"
+      "1ae8b541f5b3d1c9ca3bd195c4d42a13"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -128,7 +128,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "31ea5d6610411c731e95e003c2c4dc94"
+      "2c1cb8359786e007cad674c80879c7af"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -141,7 +141,7 @@
         "typing_FStar.UInt64.add"
       ],
       0,
-      "b991302b9b7e851f0390aacabe261137"
+      "922657e63be1e1b02b53226d9b19cddf"
     ],
     [
       "StrictUnfolding.test_extraction_generic",
@@ -150,7 +150,7 @@
       1,
       [ "@query" ],
       0,
-      "cbcea4f695213f014564a1f2b3317377"
+      "11e562fb0557972afe3bf99c6dded51a"
     ],
     [
       "StrictUnfolding.test_extraction_specific",
@@ -159,7 +159,7 @@
       1,
       [ "@query" ],
       0,
-      "a418f83b0a7357dcbae1905c476e9281"
+      "a77b221c4bba10dd50f3b46985d98d6e"
     ],
     [
       "StrictUnfolding.f",
@@ -174,7 +174,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "19687dff76fcca9f8a037e72156c8ba2"
+      "0f91cfb5870df6bf1bed0893f18a007f"
     ]
   ]
 ]
