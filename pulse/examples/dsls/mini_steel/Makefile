@@ -1,20 +1,18 @@
-include ../../Makefile.common
-include ../Makefile.include
-
--include $(FSTAR_HOME)/.common.mk
-
-FSTAR_LIB_OCAMLPATH := $(call maybe_cygwin_path,$(FSTAR_HOME)/lib)
-
-ifeq ($(OS),Windows_NT)
-  OCAMLPATH := $(FSTAR_LIB_OCAMLPATH);$(OCAMLPATH)
-else
-  OCAMLPATH := $(FSTAR_LIB_OCAMLPATH):$(OCAMLPATH)
-endif
+FSTAR_HOME?=../..
 
 all:
 	$(MAKE) all-common
 	$(MAKE) plugin
 	$(MAKE) -C tests/
+
+include ../../Makefile.common
+include ../Makefile.include
+
+ifeq ($(OS),Windows_NT)
+  OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
+else
+  OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
+endif
 
 plugin: verify_all _build/Pulse_Main.cmxs
 
