@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b95506acac7d0ef0b97b831446c0ebd6"
+      "229756d13e740052be5e96d470cdebeb"
     ],
     [
       "Queue.emp_equiv_pure",
@@ -42,7 +42,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "2d9164db3be5841e77df6bcc1d048d8d"
+      "729d70a559d1e338f31d861fcd74faf7"
     ],
     [
       "Queue.next_last",
@@ -57,7 +57,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c21f4a30d4a8f5b7377c6c9f8ff2f4ee"
+      "2c5cebeb0505831baead865625d21629"
     ],
     [
       "Queue.next_last_correct",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b6af02b1f32a69a5997dac7f4e7f0e2b"
+      "dbf6f402464209b0b0c94880eaf81b01"
     ],
     [
       "Queue.next_last_correct",
@@ -111,7 +111,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "0b41f90dcde98ab8206fb2c73e47724d"
+      "2156278c68acd669914d827154d7f41e"
     ],
     [
       "Queue.fragment_append",
@@ -158,7 +158,7 @@
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "42f6769326ab305d11ad77eb5f0ad6cd"
+      "03c8d9e11bd6fad03bf1954eb59b07b5"
     ],
     [
       "Queue.intro_fragment_nil",
@@ -180,7 +180,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "93109200cf21202f80748c8057a1933d"
+      "900712b1dcbe45839ad1355707a9c424"
     ],
     [
       "Queue.intro_fragment_cons",
@@ -196,7 +196,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "0d450d22854a8f29509a0efbca9c2e1b"
+      "a4907192f1200b1d43d59fbbfc1bc9f5"
     ],
     [
       "Queue.fragment_append_singleton",
@@ -248,7 +248,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "b7d1218dd43149430d6916d21d8475c5"
+      "eb8b530b6ae01e505f9b3ceca89568fc"
     ],
     [
       "Queue.queue_lc_prop",
@@ -273,7 +273,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "97e2f76a23fe70da20e573a30235865a"
+      "41e82ed9ee60c613957d600351972484"
     ],
     [
       "Queue.new_queue",
@@ -351,7 +351,7 @@
         "typing_Steel.Reference.null"
       ],
       0,
-      "d41b6e550ee1200687943c21e2395bfb"
+      "faa54d259a0194a27421951b40b3a47d"
     ],
     [
       "Queue.snoc_inj",
@@ -364,7 +364,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "62882df792fa398a1355119b3c576cff"
+      "986945bb16fd9c726ddcabb26ea7030f"
     ],
     [
       "Queue.unsnoc",
@@ -385,7 +385,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "d07d01504d297ea1d9e3ff1d6cbc9aa9"
+      "c57d61e1c250c002b5f504bfb76e9942"
     ],
     [
       "Queue.unsnoc_hd",
@@ -394,7 +394,7 @@
       1,
       [ "@query" ],
       0,
-      "8eef09e34f8b8d3747b8b98b67173ba7"
+      "115b463d28a1684a58ce47e6e3fc03fe"
     ],
     [
       "Queue.unsnoc_tl",
@@ -403,7 +403,7 @@
       1,
       [ "@query" ],
       0,
-      "6627f14f289de5372fc27056157cba8c"
+      "01b4997680412dd70656532744cb7f9a"
     ],
     [
       "Queue.enqueue",
@@ -512,7 +512,7 @@
         "typing_Steel.Reference.pts_to_sl", "typing_Steel.Reference.ref"
       ],
       0,
-      "858d4b75cf9b22a0026f31bd5d1a6b55"
+      "35e01b6b89f038f0b64bd545171e25e8"
     ],
     [
       "Queue.dequeue_post_success",
@@ -526,7 +526,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "015f102939e9686b3370f3462f19e49e"
+      "c5a4fea1c010279f20acecc92a60a7f4"
     ],
     [
       "Queue.dequeue_post",
@@ -537,7 +537,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "34a7854cf0bd5b10529b4ca85c538f3d"
+      "06353c95bfeebe1a2c4dd2df15cff4f4"
     ],
     [
       "Queue.dequeue",
@@ -608,7 +608,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "9467c62b1088066128cc99200fa51f60"
+      "35d51e2440cf66182dc2ff85a8416960"
     ]
   ]
 ]

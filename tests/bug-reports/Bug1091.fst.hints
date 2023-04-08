@@ -12,7 +12,7 @@
         "typing_FStar.UInt64.t"
       ],
       0,
-      "838c56b4a7724bf93e753b317a51e2b5"
+      "b9905004656958e1b0158ac24202ac9e"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -28,7 +28,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c3ff468767ee181b186ba923c685dcdd"
+      "cb9798de4c2b2b86dca8f73e2a30b0df"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -50,7 +50,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "dbd911743d09d22f232ad76a85c86b47"
+      "a4b3dd945444e4a4c97101d3a451a082"
     ]
   ]
 ]

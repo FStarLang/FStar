@@ -16,7 +16,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1e7aff0348e27b9ed31db86a8cb756fd"
+      "7da28061e0298649ea26ae2e00710ae9"
     ],
     [
       "BinomialQueue.last_cons",
@@ -45,7 +45,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "d148bf7108e9323d3d13245d0568b972"
+      "aef007a2dca3b9d66edfe34ff39f5a81"
     ],
     [
       "BinomialQueue.tree",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "646f274e7150aa0c4065043350829b5f"
+      "aa93a1d0603be77614b99b66b38a2145"
     ],
     [
       "BinomialQueue.__proj__Internal__item___0",
@@ -72,7 +72,7 @@
         "refinement_interpretation_Tm_refine_8a52c7ed1e8b93d264945c07880ca137"
       ],
       0,
-      "62b2ba4ce1d9d7fcc9d95bdba171dd72"
+      "ba3937191dd0d5d4eaf47566855d5037"
     ],
     [
       "BinomialQueue.__proj__Internal__item___1",
@@ -84,7 +84,7 @@
         "refinement_interpretation_Tm_refine_8a52c7ed1e8b93d264945c07880ca137"
       ],
       0,
-      "29c64caff26da6c7f2cd79a94fe4f09f"
+      "1b51f154dfe713b7f625445714a007c7"
     ],
     [
       "BinomialQueue.__proj__Internal__item___2",
@@ -96,7 +96,7 @@
         "refinement_interpretation_Tm_refine_8a52c7ed1e8b93d264945c07880ca137"
       ],
       0,
-      "c2a96b033ecf4d2064b65d6da779b749"
+      "f1564080bdcec97ed0f38dd10828a876"
     ],
     [
       "BinomialQueue.pow2heap_pred",
@@ -122,7 +122,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "84facea2a8c8c3ff6a6f67b950c64e86"
+      "6954eb8a5915532aa54ea8c990e58d43"
     ],
     [
       "BinomialQueue.is_pow2heap",
@@ -137,7 +137,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "b51064ff6d2fe909e87f591f1a072f21"
+      "17c7cbd08b9342e0a723e22d85d0cbf4"
     ],
     [
       "BinomialQueue.is_binomial_queue",
@@ -164,7 +164,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "91be9ff5f859ebe9f59e994c8f18d970"
+      "980aea4678c80107669c9fd528b80477"
     ],
     [
       "BinomialQueue.is_compact",
@@ -177,7 +177,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d36d84d6f17777145397f87e5bdb104f"
+      "dce1d300919a00e675ca7641c631f5f0"
     ],
     [
       "BinomialQueue.empty",
@@ -198,7 +198,7 @@
         "true_interp"
       ],
       0,
-      "dcfeed959e3f18b0d43734a8d350a6ae"
+      "a5066f29812a23402a802d8814600cf3"
     ],
     [
       "BinomialQueue.all_leaf",
@@ -222,7 +222,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7b1d113fa4f9aa79a949d3b760d7d39a"
+      "036e3c584c2b5009f73b3637e0644f6a"
     ],
     [
       "BinomialQueue.mk_compact",
@@ -240,7 +240,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "cd8b87fcd97b1447e70b106916e6ff02"
+      "12d24210812ef7a4a5e2fa3a304fc3e8"
     ],
     [
       "BinomialQueue.mk_compact_correctness",
@@ -280,7 +280,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "c428743771e9af5cef88b61ab17c1d64"
+      "f9d49b6454a2a1237ea7a1911210185d"
     ],
     [
       "BinomialQueue.mk_compact_preserves_binomial_queue",
@@ -316,7 +316,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "bbf7450bdb905e23da859f690942b495"
+      "715aa0fc214e09f866eb45316157b659"
     ],
     [
       "BinomialQueue.smash",
@@ -357,7 +357,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "56db3128b32df0c4dbf95344513604ed"
+      "03e2ac14dcd7d190237a85e12bb2b740"
     ],
     [
       "BinomialQueue.carry",
@@ -390,7 +390,7 @@
         "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "ac1285ce5c623404a2204318b919ed6e"
+      "066f4d21033c81a197f999dd05bc063b"
     ],
     [
       "BinomialQueue.join",
@@ -438,7 +438,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "35f28d038a8e36b3cc0200e4e3af92c6"
+      "1a411d2c8d8ae49cfee11da4884aacbf"
     ],
     [
       "BinomialQueue.insert",
@@ -476,7 +476,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "f8c8614da468f9d0095603c6ec778155"
+      "5dd50e93dcc4dd1a2190a468090be128"
     ],
     [
       "BinomialQueue.find_max",
@@ -504,7 +504,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "fa6259db49f3134df185496e461049ed"
+      "ab5fc9079e81fe78fc2d9e4287105365"
     ],
     [
       "BinomialQueue.binomial_queue_append",
@@ -526,7 +526,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "acca5e2bbeb84daf52bb9c9c30187e7d"
+      "429169901e6384b577197960d8a4c84e"
     ],
     [
       "BinomialQueue.binomial_queue_append",
@@ -578,7 +578,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "1124fad48542763eb4bc8dfb27a6764d"
+      "cbec363eb3c9e66e40f7441b808c47da"
     ],
     [
       "BinomialQueue.unzip",
@@ -642,7 +642,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "a5f96f644f62b95907df188a1f7124ee"
+      "94c1992b8a58f5029d5b30c41a504f3d"
     ],
     [
       "BinomialQueue.heap_delete_max",
@@ -665,7 +665,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "783c99f09e7e0923c194ac43adff9b08"
+      "3384da26533175e22e56e89d1b6ca86f"
     ],
     [
       "BinomialQueue.delete_max_aux",
@@ -712,7 +712,7 @@
         "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "2c49b0a75f41a08795afe0bb1742a86f"
+      "6bbe555afbd5a0af7d4c639f381154dc"
     ],
     [
       "BinomialQueue.delete_max",
@@ -746,7 +746,7 @@
         "typing_BinomialQueue.find_max"
       ],
       0,
-      "8c1a814c06b793268ddc394b12f6631c"
+      "db07c9da4d051d222a5b18e2d999570f"
     ],
     [
       "BinomialQueue.merge",
@@ -772,7 +772,7 @@
         "refinement_interpretation_Tm_refine_bf9b8da8f290823f0b11be068baec869"
       ],
       0,
-      "7662b8429e13ebab32f885527ca7d7da"
+      "909da0fa9a518b0dcdbd550278663acd"
     ],
     [
       "BinomialQueue.ms",
@@ -787,7 +787,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "260815e6bc7a615adb9a2b719d7e8f86"
+      "756c1781e0ba1bdc0433e60bf4095eb5"
     ],
     [
       "BinomialQueue.__proj__Mkms__item__ms_elems",
@@ -802,7 +802,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1b7a9ff4e896cac472127bb8a5a0bdfc"
+      "8a675c8b45caba8cd9c4306b3db193d5"
     ],
     [
       "BinomialQueue.__proj__Mkms__item__ms_elems",
@@ -817,7 +817,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2ba1e9aa30a4eb33c76c463002e76760"
+      "4ebca20110ae6858078d1b5b6c45944a"
     ],
     [
       "BinomialQueue.ms_empty",
@@ -832,7 +832,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "176602da4d5605a12d2da01c9a057088"
+      "e13a44cf01bf42877d334a04c950fe2a"
     ],
     [
       "BinomialQueue.ms_singleton",
@@ -847,7 +847,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4229ae7965f4b67f148a6f6e9860ff85"
+      "67aabb1b3fc99d59e69c9989f96d279c"
     ],
     [
       "BinomialQueue.ms_append",
@@ -870,7 +870,7 @@
         "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count"
       ],
       0,
-      "13ea6e8ef579569d93d3599208f5b131"
+      "847c8de9b1960b74ea0b2a7a77affe90"
     ],
     [
       "BinomialQueue.permutation",
@@ -885,7 +885,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5441850157b6aaeceb38ea3c869acab3"
+      "cb4f38f5e3301834d356087f0d917994"
     ],
     [
       "BinomialQueue.keys_of_tree",
@@ -905,7 +905,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "4e58c0cfb9314699c95bdd917dcce6dd"
+      "b516eb46d7b2badcf7cfd4d46ddf5d4b"
     ],
     [
       "BinomialQueue.keys",
@@ -923,7 +923,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "0de08b2aa6d9eff2ac9890237fb2d2f4"
+      "945aec2145e5d642317a4dcf97aecde4"
     ],
     [
       "BinomialQueue.repr_t",
@@ -939,7 +939,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d9f8020a5fefc01e6f686258b994c67e"
+      "11ac7b36a06ee0f5b870c4dbad22c67d"
     ],
     [
       "BinomialQueue.repr_l",
@@ -955,7 +955,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "677fdfb3a081ecf6c4fa6fb88c5a08b2"
+      "ee43831dceccbc312c396ff8bcda82e9"
     ],
     [
       "BinomialQueue.empty_repr",
@@ -988,7 +988,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "d2cc4cf58ca101a2bbca99be0625e513"
+      "05d21bcb93021cb1917666cd6dbc55fa"
     ],
     [
       "BinomialQueue.smash_repr",
@@ -1056,7 +1056,7 @@
         "typing_FStar.Set.mem", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "f6fcdb8a8e315612c3f2125c99ff94bd"
+      "acb468ea9ed404f36794ec475387d439"
     ],
     [
       "BinomialQueue.carry_repr",
@@ -1068,7 +1068,7 @@
         "refinement_interpretation_Tm_refine_f92f3e6b3863a3cc9f2f0700b6474407"
       ],
       0,
-      "417ef71ea8678b61ee9a6503a66036ea"
+      "af8bfa0f6c20b9cb2ec5d3b217132b94"
     ],
     [
       "BinomialQueue.carry_repr",
@@ -1154,7 +1154,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "f5a0f664aa138cd1371e3abadca8f336"
+      "84e6fed55fcb58f64e851d6da9cc9837"
     ],
     [
       "BinomialQueue.join_repr",
@@ -1166,7 +1166,7 @@
         "refinement_interpretation_Tm_refine_4aaacdbe6aef23914ad906053a7ec01c"
       ],
       0,
-      "8e1f0b1a8c880a627e842e312a5b80d8"
+      "de7ef58de434ac7d046001f88799b4fb"
     ],
     [
       "BinomialQueue.join_repr",
@@ -1260,7 +1260,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "e40a1241be8a5d3c134447853dc52d68"
+      "5d60b03b0a99b130e05aaf5cef59149b"
     ],
     [
       "BinomialQueue.all_leaf_keys",
@@ -1269,7 +1269,7 @@
       1,
       [ "@query" ],
       0,
-      "36b0e6942db4afc816bfaf7f09d827d0"
+      "89f08cec2e0f53c1937d2c2ece001dad"
     ],
     [
       "BinomialQueue.all_leaf_keys",
@@ -1327,7 +1327,7 @@
         "typing_FStar.Set.union", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "cb42cf28ef4081f2f51521f7e02c7f10"
+      "f7380e83fa3087865b02c3442dd67f9f"
     ],
     [
       "BinomialQueue.compact_preserves_keys",
@@ -1379,7 +1379,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "7258e9a27e874e0f543ba868f201fe10"
+      "19d7ab9d124a1b6c959185f5f8a2781b"
     ],
     [
       "BinomialQueue.insert_repr",
@@ -1457,168 +1457,59 @@
         "typing_FStar.Set.union", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "aad238273e0aaa192f4ebcee03c5e6fd"
+      "523a0bc39808848d49cd5770c1a7482e"
     ],
     [
       "BinomialQueue.merge_repr",
-      2,
-      2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.is_priq",
-        "equation_BinomialQueue.priq",
-        "refinement_interpretation_Tm_refine_bf9b8da8f290823f0b11be068baec869"
-      ],
-      0,
-      "1204cc0e6fd25ad5ca817b2643f866c8"
-    ],
-    [
-      "BinomialQueue.merge_repr",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.is_priq",
-        "equation_BinomialQueue.priq",
-        "refinement_interpretation_Tm_refine_bf9b8da8f290823f0b11be068baec869"
-      ],
-      0,
-      "31253068531254b1d75305844a16b103"
-    ],
-    [
-      "BinomialQueue.merge_repr",
-      4,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_BinomialQueue.Leaf",
-        "disc_equation_BinomialQueue.Leaf",
-        "equality_tok_BinomialQueue.Leaf@tok",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "94a447f2f982c7638c91950bd35e30f2"
-    ],
-    [
-      "BinomialQueue.merge_repr",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.repr",
-        "fuel_guarded_inversion_BinomialQueue.ms",
-        "refinement_interpretation_Tm_refine_89a50f27c87487e952b615e576b7c3df"
-      ],
-      0,
-      "76d000e3f1a523c5101e55512d343412"
-    ],
-    [
-      "BinomialQueue.merge_repr",
-      6,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.repr",
-        "fuel_guarded_inversion_BinomialQueue.ms",
-        "refinement_interpretation_Tm_refine_89a50f27c87487e952b615e576b7c3df"
-      ],
-      0,
-      "3b53de87e164ac7923a6134ce1507a9c"
-    ],
-    [
-      "BinomialQueue.merge_repr",
-      7,
       2,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
-        "@query", "constructor_distinct_BinomialQueue.Leaf",
-        "equality_tok_BinomialQueue.Leaf@tok",
-        "equation_BinomialQueue.key_t", "equation_BinomialQueue.ms_empty",
-        "equation_BinomialQueue.permutation",
-        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "lemma_FStar.Set.lemma_equal_refl",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
-        "typing_BinomialQueue.ms_empty", "typing_tok_BinomialQueue.Leaf@tok"
-      ],
-      0,
-      "6398f50807ae2b850eda2b019b96ac87"
-    ],
-    [
-      "BinomialQueue.merge_repr",
-      8,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.mk_compact.fuel_instrumented",
-        "@fuel_correspondence_BinomialQueue.pow2heap_pred.fuel_instrumented",
         "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented",
-        "@fuel_irrelevance_BinomialQueue.keys_of_tree.fuel_instrumented",
         "@fuel_irrelevance_BinomialQueue.mk_compact.fuel_instrumented",
         "@query",
         "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
-        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
-        "b2t_def", "bool_inversion",
-        "constructor_distinct_BinomialQueue.Leaf",
-        "constructor_distinct_Prims.Cons",
-        "data_elim_BinomialQueue.Internal", "data_elim_BinomialQueue.Mkms",
-        "data_elim_Prims.Cons", "defn_equation_BinomialQueue.permutation",
+        "bool_inversion", "constructor_distinct_BinomialQueue.Leaf",
+        "data_elim_BinomialQueue.Mkms",
+        "defn_equation_BinomialQueue.permutation",
         "disc_equation_BinomialQueue.Leaf",
         "equality_tok_BinomialQueue.Leaf@tok",
-        "equation_BinomialQueue.forest",
-        "equation_BinomialQueue.is_pow2heap",
         "equation_BinomialQueue.is_priq", "equation_BinomialQueue.key_t",
         "equation_BinomialQueue.merge", "equation_BinomialQueue.ms_append",
         "equation_BinomialQueue.ms_empty",
         "equation_BinomialQueue.permutation", "equation_BinomialQueue.priq",
         "equation_BinomialQueue.repr", "equation_BinomialQueue.repr_l",
-        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
-        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
-        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
         "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
-        "equation_with_fuel_BinomialQueue.pow2heap_pred.fuel_instrumented",
-        "false_interp", "fuel_guarded_inversion_BinomialQueue.ms",
-        "fuel_guarded_inversion_BinomialQueue.tree",
-        "fuel_guarded_inversion_Prims.list",
+        "fuel_guarded_inversion_BinomialQueue.ms",
         "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "int_typing",
         "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
         "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
-        "l_and-interp", "l_or-interp",
-        "l_quant_interp_c6ffb0d48eff19a8afa9bf101a43b037",
+        "l_and-interp", "l_quant_interp_c6ffb0d48eff19a8afa9bf101a43b037",
         "lemma_BinomialQueue.compact_preserves_keys",
         "lemma_FStar.Set.lemma_equal_elim",
-        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "lemma_FStar.Set.lemma_equal_refl", "lemma_FStar.Set.mem_empty",
         "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_BarBar",
         "proj_equation_BinomialQueue.Mkms_ms_count",
         "proj_equation_BinomialQueue.Mkms_ms_elems",
         "projection_inverse_BinomialQueue.Mkms_ms_count",
         "projection_inverse_BinomialQueue.Mkms_ms_elems",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_89a50f27c87487e952b615e576b7c3df",
         "refinement_interpretation_Tm_refine_bf9b8da8f290823f0b11be068baec869",
         "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
@@ -1626,13 +1517,13 @@
         "token_correspondence_BinomialQueue.keys.fuel_instrumented",
         "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
         "typing_BinomialQueue.join", "typing_BinomialQueue.keys",
-        "typing_BinomialQueue.keys_of_tree", "typing_BinomialQueue.merge",
-        "typing_BinomialQueue.ms_append", "typing_BinomialQueue.ms_empty",
-        "typing_FStar.Set.mem", "typing_tok_BinomialQueue.Leaf@tok",
-        "unit_inversion"
+        "typing_BinomialQueue.merge", "typing_BinomialQueue.ms_append",
+        "typing_BinomialQueue.ms_empty", "typing_FStar.Set.empty",
+        "typing_FStar.Set.mem", "typing_FStar.Set.union",
+        "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "23296b6b5c7065e766d3c346720cc9f0"
+      "dd6c9f29f57c40d3f9966f34c7c243ab"
     ],
     [
       "BinomialQueue.last_key_in_keys",
@@ -1648,7 +1539,7 @@
         "refinement_interpretation_Tm_refine_a4694aff90882905e013f7442fc2a587"
       ],
       0,
-      "6cd6c64c302391b5a260e4d227a39f0e"
+      "bf2b7948f04a0b7802f55dfb539b43ba"
     ],
     [
       "BinomialQueue.last_key_in_keys",
@@ -1706,7 +1597,7 @@
         "typing_FStar.Set.singleton", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "91f097e78659eb708e19e78bfe415ab4"
+      "6ef2c46b0f006d8e2e9d4ba55b1a45d4"
     ],
     [
       "BinomialQueue.find_max_some_is_some",
@@ -1755,7 +1646,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "3320841f9e583c586e088126ba3c1049"
+      "69ccb16383762fbca962ff822d98bfcd"
     ],
     [
       "BinomialQueue.find_max_emp_repr_l",
@@ -1800,7 +1691,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "0df9dd422fe4cc1e9282003fc5b18b15"
+      "4783004f8b40339defd87a3721583a06"
     ],
     [
       "BinomialQueue.find_max_emp_repr_r",
@@ -1870,7 +1761,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "c76cb86b7281259ae8a2452637f4ba41"
+      "cab55d7fec6cd4260d60d2d5e422ba01"
     ],
     [
       "BinomialQueue.delete_max_none_repr",
@@ -1896,7 +1787,7 @@
         "typing_BinomialQueue.find_max"
       ],
       0,
-      "2824789775b1dcab4c5c82b771f86102"
+      "71b5849dc35ab18ece776497b6fadff8"
     ],
     [
       "BinomialQueue.keys_append",
@@ -1969,7 +1860,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "330437fadac677aa28c7c5897d833e4f"
+      "148bcf3fd09cfb488179735c6bdf2f3f"
     ],
     [
       "BinomialQueue.unzip_repr",
@@ -1981,7 +1872,7 @@
         "refinement_interpretation_Tm_refine_76adbb251afae091ffb3b3578bcabcfe"
       ],
       0,
-      "f1bffea44e397765a444ae8b58df4427"
+      "765a46acece8252fcf31e38b301b8016"
     ],
     [
       "BinomialQueue.unzip_repr",
@@ -2079,7 +1970,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "b0950da3ead89b1e976fe51b643fcbc9"
+      "a5a930fe9716a6cf70c8ef94f57c4776"
     ],
     [
       "BinomialQueue.heap_delete_max_repr",
@@ -2156,7 +2047,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "5705cad4d7ec53c8e0351d8f8c11c11f"
+      "bc94a2e0ee14d76901f164f7756a0783"
     ],
     [
       "BinomialQueue.max",
@@ -2171,7 +2062,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a9c3e8a43f758f0a0e8d273e1a92f740"
+      "17f215c97d0e128bf12c5aaffe2f2636"
     ],
     [
       "BinomialQueue.max",
@@ -2186,7 +2077,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a06bca1114e1feaca6479f6adce604fa"
+      "2dd470bb8820621006c3b5a09f66c666"
     ],
     [
       "BinomialQueue.tree_root_is_max_aux",
@@ -2240,7 +2131,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "6b479b0efb948bd7ef77492acb47052e"
+      "0509c9c8ef4526ab3041b6546fe6d293"
     ],
     [
       "BinomialQueue.tree_root_is_max",
@@ -2265,7 +2156,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "c9a3332d9fd29ca9ace6df05503142d5"
+      "55a8e7e5e27837ddca7c0c130d80a600"
     ],
     [
       "BinomialQueue.delete_max_aux_repr",
@@ -2280,7 +2171,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "41d6869ce99a45aa18d529458b50d759"
+      "fc7432cb1f74c451a1530f71cd1e05ab"
     ],
     [
       "BinomialQueue.delete_max_aux_repr",
@@ -2389,7 +2280,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "dae7fbbafe6ed6e282a58c5c7ad669f5"
+      "7bb0f232033f5d5e334faf892ee411f5"
     ],
     [
       "BinomialQueue.find_max_mem_keys",
@@ -2404,7 +2295,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "dace24aff6b6997825bff5f255362071"
+      "1528ca316a6664c2ebd453f106b1a6b8"
     ],
     [
       "BinomialQueue.find_max_mem_keys",
@@ -2479,7 +2370,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "0e6124249110c98f957563cf00515136"
+      "e6570b0c8178ef34356e7ea15aae5ffc"
     ],
     [
       "BinomialQueue.find_max_is_max",
@@ -2491,7 +2382,7 @@
         "refinement_interpretation_Tm_refine_40004e77c501d0d7faf8da16dffd8ea1"
       ],
       0,
-      "5ec0f070812844be49d423258b511a5d"
+      "d5b9f201db71b2426146cee29f36718e"
     ],
     [
       "BinomialQueue.find_max_is_max",
@@ -2570,7 +2461,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "46f8f642388297c1a56a4a2802801f73"
+      "5eb40e0eb5d58745eb2fceb9b3862806"
     ],
     [
       "BinomialQueue.delete_max_some_repr",
@@ -2585,7 +2476,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "95087e551c00ea7f71a6905df874e062"
+      "f9e1c353189ce08292462c8aa499794f"
     ],
     [
       "BinomialQueue.delete_max_some_repr",
@@ -2665,7 +2556,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "b7c3e0752ed2d326730427e71d9143ce"
+      "a8b80349fc291736a7dfddaa8721ca5d"
     ]
   ]
 ]
