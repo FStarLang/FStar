@@ -15,7 +15,6 @@ echo "*** Rename package ***"
 dev='~dev'
 my_tag=$(cat version.txt | sed 's!'"$dev"'!!' | sed 's!'"\r"'$!!')
 CURRENT_VERSION=$(echo $my_tag | sed 's!^v!!' | sed 's!'"\r"'$!!')
-fi
 if [[ -z $OS ]] ; then
     OS=$(uname)
 fi
