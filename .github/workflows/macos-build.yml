@@ -24,7 +24,7 @@ jobs:
       with:
         dotnet-version: '6.0.x'
     - name: Setup dependencies
-      run: ./FStar/.github/setup.sh
+      run: ./FStar/.github/setup-macos.sh
     - name: Build FStar
       run: |
         source FStar/.github/env.sh
