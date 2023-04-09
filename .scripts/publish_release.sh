@@ -43,6 +43,9 @@ mv "$FSTAR_HOST_HOME/src/ocaml-output/fstar$ext" "$BUILD_PACKAGE"
 git checkout version.txt || true
 
 # Publish the release with the GitHub CLI
+if [[ -z "$git_org" ]] ; then
+    git_org=FStarLang
+fi
 gh="gh -R $git_org/FStar"
 if [[ -n "$CI_BRANCH" ]] ; then
     branchname="$CI_BRANCH"
