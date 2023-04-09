@@ -47,11 +47,6 @@ if [[ -z "$git_org" ]] ; then
     git_org=FStarLang
 fi
 gh="gh -R $git_org/FStar"
-if [[ -n "$CI_BRANCH" ]] ; then
-    branchname="$CI_BRANCH"
-else
-    branchname=master
-fi
 
 # push the tag if needed
 if [[ -f .need_to_push_tag ]] ; then
@@ -62,7 +57,7 @@ function upload_archive () {
     archive="$1"
     if ! $gh release view $my_tag ; then
         [[ -f .need_to_push_tag ]]
-        $gh release create --prerelease --generate-notes --target $branchname $my_tag $archive
+        $gh release create --prerelease --generate-notes --target master $my_tag $archive
     else
         $gh release upload $my_tag $archive
     fi
