@@ -12,8 +12,9 @@ fi
 pushd "$FSTAR_HOST_HOME"
 
 echo "*** Rename package ***"
-if [[ -z "$CURRENT_VERSION" ]] ; then
-  CURRENT_VERSION=$(cat fstar/version.txt | sed 's!^v!!' | sed 's!'"\r"'$!!')
+dev='~dev'
+my_tag=$(cat version.txt | sed 's!'"$dev"'!!' | sed 's!'"\r"'$!!')
+CURRENT_VERSION=$(echo $my_tag | sed 's!^v!!' | sed 's!'"\r"'$!!')
 fi
 if [[ -z $OS ]] ; then
     OS=$(uname)
@@ -34,7 +35,10 @@ rm -rf "$BUILD_PACKAGE" src/ocaml-output/fstar
 mv "$FSTAR_HOST_HOME/src/ocaml-output/fstar$ext" "$BUILD_PACKAGE"
 
 # Clear the version number, since everything has worked well so far
-git checkout version.txt
+# Not necessary if we are not in a git clone
+# (e.g. the working copy was downloaded with the GitHub REST API,
+# or from a source archive)
+git checkout version.txt || true
 
 # Publish the release with the GitHub CLI
 gh="gh -R $git_org/FStar"
