@@ -3,6 +3,9 @@
 # This script is called by the release.yml GitHub Actions workflow
 # for Linux (via .docker/release.Dockerfile) and Mac
 
+set -e
+set -x
+
 # We need two FSTAR_HOMEs in this script: one for the host (from where
 # we build F*) and one for the package (from where we test the
 # obtained binary). FSTAR_HOST_HOME is the former.
@@ -50,12 +53,12 @@ fi
 # push the tag if needed
 if [[ -f .need_to_push_tag ]] ; then
     git push "https://$GH_TOKEN@github.com/$git_org/FStar.git" $my_tag
-    rm -f .need_to_push_tag
 fi
 
 function upload_archive () {
     archive="$1"
     if ! $gh release view $my_tag ; then
+        [[ -f .need_to_push_tag ]]
         $gh release create --prerelease --generate-notes --target $branchname $my_tag $archive
     else
         $gh release upload $my_tag $archive
@@ -64,5 +67,6 @@ function upload_archive () {
 
 upload_archive $BUILD_PACKAGE
 rm -rf $BUILD_PACKAGE
+rm -f .need_to_push_tag
 
 popd
