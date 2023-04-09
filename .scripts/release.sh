@@ -28,7 +28,10 @@ dev='~dev'
 sed -i 's!'"$dev"'!!' version.txt
 
 # Build the package
-make -j6 package
+if [[ -z "$CI_THREADS" ]] ; then
+    CI_THREADS=1
+fi
+make -j "$CI_THREADS" package
 
 # Test the package if possible
 if [[ -z "$FSTAR_SKIP_PACKAGE_TEST" ]] ; then
