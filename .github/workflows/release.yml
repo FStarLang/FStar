@@ -47,9 +47,24 @@ jobs:
         dotnet-version: '6.0.x'
     - name: Setup dependencies
       run: ./FStar/.github/setup-macos.sh
-    - name: Package FStar
+    - name: Package and release FStar
       run: |
         source FStar/.github/env.sh
-        PACKAGE_DOCS=0 FSTAR_NO_NEW_TAG=1 FSTAR_SKIP_PACKAGE_TEST=1 FStar/.scripts/process_release.sh
+        CI_THREADS=24 FSTAR_SKIP_PACKAGE_TEST=1 FStar/.scripts/release.sh
       env:
-        DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
+
+  build-windows:
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+    - name: Check out repo        
+      uses: actions/checkout@v2
+      
+    - name: Package and release FStar
+      shell: C:\cygwin64\bin\bash.exe --login '{0}'
+      run: |
+        CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/release.sh && echo "There is a CR at the end of this line"
+      env:
+        GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
