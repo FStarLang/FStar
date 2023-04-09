@@ -56,6 +56,8 @@ jobs:
 
   build-windows:
 
+    needs: build-linux
+
     runs-on: [self-hosted, Windows, X64]
 
     steps:
