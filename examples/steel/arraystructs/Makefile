@@ -20,7 +20,7 @@ fstlib:
 FSTAR_OPTIONS := --cache_checked_modules \
 		--cmi \
 		--compat_pre_typed_indexed_effects \
-	        --already_cached 'Prims,FStar,LowStar,Steel' \
+	        --already_cached 'Prims,FStar,LowStar,Steel,C' \
 		$(addprefix --include ,$(INCLUDE_PATH)) \
 		$(OTHERFLAGS)
 
@@ -37,17 +37,16 @@ EXTRACT_SOURCE_FILES = $(filter-out $(addsuffix .fst,$(NO_EXTRACT_MODULES)),$(AL
 comma=,
 
 ifdef KRML_HOME # FIXME: should be HAS_OCAML
-# We need to add some Low* files to the dependency roots, because F* extracts Steel.C null to LowStar null
-# since the KaRaMeL AST does not have a node for null
-# TODO: This should be removed, and support for Steel.C null should be directly added to KaRaMeL instead
-SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOME)/ulib/LowStar.Buffer.fst $(KRML_HOME)/krmllib/C.fst
+# We need to add some Low* files to the dependency roots, because
+# of C._zero_for_deref
+SOME_LOWSTAR_FILES = $(KRML_HOME)/krmllib/C.fst
 MY_FSTAR=$(MY_FSTAR_PATH)/lib/steel_c/ExtractSteelC.cmxs
 $(MY_FSTAR):
 	+$(MAKE) -C $(MY_FSTAR_PATH)
 endif
 
 .depend: $(ALL_SOURCE_FILES) Makefile $(MY_FSTAR)
-	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) --extract 'krml:* -FStar $(addprefix -,$(NO_EXTRACT_MODULES))'  > $@.tmp
+	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) --extract 'krml:* -FStar -LowStar $(addprefix -,$(NO_EXTRACT_MODULES))'  > $@.tmp
 	mv $@.tmp $@
 
 depend: .depend
