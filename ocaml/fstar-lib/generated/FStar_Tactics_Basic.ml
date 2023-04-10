@@ -6950,6 +6950,28 @@ let with_compat_pre_core :
            FStar_Options.push ();
            (let res = FStar_Options.set_options "--compat_pre_core 0" in
             let r = FStar_Tactics_Monad.run f ps in FStar_Options.pop (); r))
+let (smt_sync : unit -> unit FStar_Tactics_Monad.tac) =
+  fun uu___ ->
+    let uu___1 =
+      FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
+        (fun goal ->
+           let uu___2 = FStar_Tactics_Types.get_phi goal in
+           match uu___2 with
+           | FStar_Pervasives_Native.None ->
+               FStar_Tactics_Monad.fail "Goal is not irrelevant"
+           | FStar_Pervasives_Native.Some phi ->
+               let e = FStar_Tactics_Types.goal_env goal in
+               let ans =
+                 (e.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve_sync
+                   FStar_Pervasives_Native.None e phi in
+               if ans
+               then
+                 (mark_uvar_as_already_checked
+                    goal.FStar_Tactics_Types.goal_ctx_uvar;
+                  solve goal FStar_Syntax_Util.exp_unit)
+               else FStar_Tactics_Monad.fail "SMT did not solve this goal") in
+    FStar_Compiler_Effect.op_Less_Bar
+      (FStar_Tactics_Monad.wrap_err "smt_sync") uu___1
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->
