@@ -1,5 +1,5 @@
 [
-  "åZ\u0000§‹\u0002>C\fj\u0007Á§\u0010g´",
+  "3ðwc\u0018„'ÙJ:È\u0001Ä‚›®",
   [
     [
       "Bug1074.foo",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f2527ab872d82f2e36bbfb985affe24b"
+      "c5c6d3a09e43119b4d82cbc7b980fdab"
     ],
     [
       "Bug1074.does_not_fail_if_annot",
@@ -26,7 +26,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "62e104cc746f74589aee0a49944cf24b"
+      "72cda7691e868c2e87515fc83496ce63"
     ]
   ]
 ]

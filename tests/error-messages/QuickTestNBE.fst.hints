@@ -1,0 +1,163 @@
+[
+  "cˇˆhÉÒJ\u0018\t„∑Ï°,Å",
+  [
+    [
+      "QuickTestNBE.label",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8f0aa85d609b760fc1cdb4846afd5624"
+    ],
+    [
+      "QuickTestNBE.__proj__QEmpty__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_094f3af0eb1394cef01fbb0cf7a0b6a2"
+      ],
+      0,
+      "5f9366f87a95f47d55209b51cca77c8e"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item__r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "df7cb79e775be6c33cdbb8ce1320b489"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item__msg",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "0b3802421deb323abc6f903191dbad42"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item__pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "285f0d288ce5ec2b744832b056c25c40"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item___3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "d194e47fc3929ae40545eead47b96189"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item___4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "b07b64ab59b5c8f2922c4ae133a645f9"
+    ],
+    [
+      "QuickTestNBE.wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_fa10b5986d234da3d5bdfe9ba7efb81b_1",
+        "disc_equation_QuickTestNBE.QEmpty",
+        "disc_equation_QuickTestNBE.QPURE",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_QuickTestNBE.quickCodes",
+        "function_token_typing_Prims.__cache_version_number__",
+        "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_QuickTestNBE.QPURE"
+      ],
+      0,
+      "fb0065b3a7a0aa49be3f90ee3ca4b8f1"
+    ],
+    [
+      "QuickTestNBE.qblock",
+      1,
+      2,
+      1,
+      [ "@query", "equation_QuickTestNBE.t_ensure" ],
+      0,
+      "310f26f50d134694b26a50865df41f49"
+    ],
+    [
+      "QuickTestNBE.va_qcode_Test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "eq2-interp",
+        "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "interpretation_Tm_abs_17de2bb0f4accb34f2f48a2c39070416",
+        "interpretation_Tm_abs_2b6bc9164ee5f4bd38b214e1ff8a50f8",
+        "interpretation_Tm_abs_f0dd0e3bdd29bb942e87b897c66b101a",
+        "l_and-interp", "l_quant_interp_0c168580a82b5ed0782124081acd3faa",
+        "primitive_Prims.op_Subtraction",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "d81be6a5943caeed0e662e4d41a415ca"
+    ],
+    [
+      "QuickTestNBE.va_lemma_Test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "primitive_Prims.op_Subtraction",
+        "unit_inversion"
+      ],
+      0,
+      "5ac05b1c882fe79079bdcbe6da562e71"
+    ],
+    [
+      "QuickTestNBE.va_qcode_Test2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "interpretation_Tm_abs_65576f223b9f28958f7512067494db64",
+        "l_and-interp", "l_quant_interp_0c168580a82b5ed0782124081acd3faa",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "6a23d444b21f6af8603e7dc3ffe8d9a0"
+    ]
+  ]
+]

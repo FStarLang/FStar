@@ -1,0 +1,77 @@
+[
+  "¯åE“š“é„ï\u0001ºJì]N9",
+  [
+    [
+      "Bug1418.vector",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "aa1788e7c66f44adda3ecee79e7289e5"
+    ],
+    [
+      "Bug1418.__proj__Cons__item__l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_df6b33caeb4b6905d7c2d368d9642f39"
+      ],
+      0,
+      "b9d3aacea52b488c5171cf2b3cc0a6df"
+    ],
+    [
+      "Bug1418.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_df6b33caeb4b6905d7c2d368d9642f39"
+      ],
+      0,
+      "e1d4842e072461621b1dd819c3ad938f"
+    ],
+    [
+      "Bug1418.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug1418.Cons",
+        "refinement_interpretation_Tm_refine_df6b33caeb4b6905d7c2d368d9642f39"
+      ],
+      0,
+      "40cd3e35c6c27ffe0236090f59ec06b8"
+    ],
+    [
+      "Bug1418.fold",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_5309527edabb0e563cf2f46109b794cd_7",
+        "binder_x_b513ddacc5d7615736c68c89260be2e6_4",
+        "data_elim_Bug1418.Cons", "disc_equation_Bug1418.Cons",
+        "disc_equation_Bug1418.Nil", "equation_Prims.nat",
+        "fuel_guarded_inversion_Bug1418.vector",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Ghost.reveal", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "06931b0d2981823b00b63bf4f7cb1ad3"
+    ]
+  ]
+]

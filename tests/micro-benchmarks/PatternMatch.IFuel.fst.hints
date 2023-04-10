@@ -1,0 +1,54 @@
+[
+  "ó®0a¤’l¡È\u0015E¡~ÞàÞ",
+  [
+    [
+      "PatternMatch.IFuel.proof",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.unit",
+        "haseqTm_refine_e7d41982900b2dd4d6861990564b9454",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "441e95e494c91206bba1ab075cd8ac67"
+    ],
+    [
+      "PatternMatch.IFuel.m_and_proof",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_PatternMatch.IFuel.proof__uu___haseq" ],
+      0,
+      "9b1720f94a6a7ba4616d062596dadba5"
+    ],
+    [
+      "PatternMatch.IFuel.test2",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_PatternMatch.IFuel.C",
+        "data_elim_PatternMatch.IFuel.Proof",
+        "refinement_interpretation_Tm_refine_e7d41982900b2dd4d6861990564b9454"
+      ],
+      0,
+      "0d07d60f30310a352376ac418a3dd748"
+    ],
+    [
+      "PatternMatch.IFuel.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_PatternMatch.IFuel.Proof",
+        "refinement_interpretation_Tm_refine_e7d41982900b2dd4d6861990564b9454"
+      ],
+      0,
+      "03bab5b2dc843f441c4d65c4e3170bb5"
+    ]
+  ]
+]

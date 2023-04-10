@@ -1,0 +1,25 @@
+[
+  "<Å\u0007¶Œ\fã•1\n‹É\u0014Lc€",
+  [
+    [
+      "Bug2106.last",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_59bd78df6a193fb43bc86d1138fd4d51_2",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_89abfbf1dd7254ec2f6bfc654aa43591",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "d24380329e81e8f6a1533bfe20f2a78c"
+    ]
+  ]
+]

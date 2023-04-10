@@ -1,5 +1,5 @@
 [
-  "›u÷xÄÖ²A€\u001eŸÎ¾„ƒ",
+  "zı“ÛòOq+ÌÉB\".\u0014oÿ",
   [
     [
       "Wild.exists_weaken",
@@ -11,19 +11,16 @@
         "refinement_interpretation_Tm_refine_85095d9057e879f201a95ea3a2249737"
       ],
       0,
-      "be7a842cc154292d16af82df235cb626"
+      "785ea7defb68e81d70658d16e81ea9e7"
     ],
     [
-      "Wild.exists_weaken",
-      2,
+      "Wild.fact",
+      1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_85095d9057e879f201a95ea3a2249737"
-      ],
+      [ "@query", "equation_Wild.q", "false_interp", "true_interp" ],
       0,
-      "fd3b3ef6ebbea6feeeed68db5dd1d505"
+      "ca221c0864eaedb22d70f7f609e2969d"
     ]
   ]
 ]

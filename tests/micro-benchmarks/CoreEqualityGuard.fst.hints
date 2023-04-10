@@ -1,0 +1,26 @@
+[
+  "û²õ¦>\u007fSâ`v…¤>®$ä",
+  [
+    [
+      "CoreEqualityGuard.test",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3db33cd10a4ac0c22704e49690728fb4"
+    ],
+    [
+      "CoreEqualityGuard.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6ec37c325718f5099cb90fb5226ecae8"
+      ],
+      0,
+      "9a3bea62ba03b06406e1ceafa7543da9"
+    ]
+  ]
+]

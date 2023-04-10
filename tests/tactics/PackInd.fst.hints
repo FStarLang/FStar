@@ -1,0 +1,19 @@
+[
+  "?Ë¿8-N«P{ÅÖ\u0002\\…‰²",
+  [
+    [
+      "PackInd.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_PackInd.A",
+        "disc_equation_PackInd.B", "disc_equation_PackInd.C",
+        "fuel_guarded_inversion_PackInd.myty",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "91e089e33aed6148b88aa5cd4d3b8ff3"
+    ]
+  ]
+]

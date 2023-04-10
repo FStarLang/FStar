@@ -9,8 +9,14 @@ ROOTS=$(wildcard *.fst)
 
 all: verify extraction
 
+HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
+
+ifneq (,$(HAS_OCAML))
 extraction:
 	$(MAKE) -C extraction
+else
+extraction:
+endif
 
 .depend:
 	$(FSTAR) --dep full $(ROOTS) > .depend

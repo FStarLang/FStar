@@ -1,0 +1,28 @@
+name: FStar Windows Package
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build-windows:
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+    - name: Check out repo        
+      uses: actions/checkout@v2
+      
+    - name: Build a package
+      shell: C:\cygwin64\bin\bash.exe --login '{0}'
+      run: |
+          make -C $GITHUB_WORKSPACE -j package && echo "There is a CR at the end of this line"
+    - name: Test the package
+      shell: C:\cygwin64\bin\bash.exe --login '{0}'
+      run: |
+        env CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/test_package.sh && echo "There is a CR at the end of this line"
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: fstar-Windows_x86_64.zip
+        path: src\ocaml-output\fstar.zip

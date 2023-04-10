@@ -1,0 +1,34 @@
+[
+  "ú`d£Ë\u0004\u001d°þqbÓæÏÓ^",
+  [
+    [
+      "Bug2055.lift_pure_nd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug2055_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
+        "Bug2055_interpretation_Tm_arrow_96bfa80e8658a33ffadcb56589d68f28",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "eq2-interp", "equation_Bug2055.monotonic", "equation_Bug2055.repr",
+        "equation_Prims.logical",
+        "interpretation_Tm_abs_720d7e2dcb12f62f92f195afb8b57eaf",
+        "l_imp-interp", "l_quant_interp_ab9fe459511fd0c2f480f9d11258b866",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_720d7e2dcb12f62f92f195afb8b57eaf"
+      ],
+      0,
+      "68172e5c17df1e71f31eb8a3d4cfb357"
+    ],
+    [
+      "Bug2055.2055",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "59ccd2adc2ed2dae7e27b4e367505055"
+    ]
+  ]
+]

@@ -1,45 +1,18 @@
 [
-  "þ\u001fÆ¡f\u0002szúbš>ZoQ",
+  "\u0016§\r-íÅ2SB>ÇK*R{ê",
   [
     [
       "Bug1091.jun21_2017_t",
       1,
       1,
       1,
-      [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
-      0,
-      "77c3cf0286c6f1423ee67357c41e0770"
-    ],
-    [
-      "Bug1091.jun21_2017_logand_fail",
-      2,
-      1,
-      1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
-        "equation_Prims.pos", "function_token_typing_FStar.UInt32.n",
-        "haseqBug1091_Tm_refine_e05819e7a2602c1584dd0737dad396b9",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "uvar_typing_19"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.UInt64.t"
       ],
       0,
-      "86eaec220d4a9946fae865d5488d2326"
-    ],
-    [
-      "Bug1091.jun21_2017_logand",
-      2,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.uint_t",
-        "equation_Prims.eqtype", "function_token_typing_Prims.int",
-        "haseqTm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "f6ef6675dadc181e007c7fe2dd99e903"
+      "b9905004656958e1b0158ac24202ac9e"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -50,11 +23,12 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_374b44ccfcb77ed85d505dbc44265913_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "277fc4e557ff4bc5400a6d0179280f2e"
+      "cb9798de4c2b2b86dca8f73e2a30b0df"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -65,8 +39,8 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
@@ -76,7 +50,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3c3d5182c01966c5ff3e66ec89c19581"
+      "a4b3dd945444e4a4c97101d3a451a082"
     ]
   ]
 ]

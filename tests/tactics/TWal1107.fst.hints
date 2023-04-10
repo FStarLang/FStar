@@ -1,0 +1,119 @@
+[
+  "kÃµê\t{¯\nÉoš÷4c\u0002´",
+  [
+    [
+      "TWal1107.toto",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "384b25127d7278830cbf946ec02c371d"
+    ],
+    [
+      "TWal1107.tata",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_TWal1107.refined",
+        "interpretation_Tm_abs_db93ee31d652069ee178dce1dfe0fb28",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa"
+      ],
+      0,
+      "e1959fc4b74a6305207791fa687f0262"
+    ],
+    [
+      "TWal1107.__proj__Ctor_1__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_85cb1f7cdb7c7aa4bf33dc92967f6607"
+      ],
+      0,
+      "fc5c48b49b3d1faa94608452a15a329f"
+    ],
+    [
+      "TWal1107.__proj__Ctor_2__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5e8fff5324e6cc5eeefd4463a761912d"
+      ],
+      0,
+      "1c72e2c243c8c7bd4dcd27476433545f"
+    ],
+    [
+      "TWal1107.arrow_to_forall",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
+      ],
+      0,
+      "f80b904385c59be4a0407b13cd7dbf9c"
+    ],
+    [
+      "TWal1107.bla",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_TWal1107.Ctor_1",
+        "constructor_distinct_TWal1107.Ctor_2", "data_elim_Prims.Mkdtuple2",
+        "equation_Prims.nat", "equation_TWal1107.refined",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_TWal1107.bytes_like",
+        "interpretation_Tm_abs_db93ee31d652069ee178dce1dfe0fb28",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_TWal1107.Ctor_1__0",
+        "projection_inverse_TWal1107.Ctor_1_bytes",
+        "projection_inverse_TWal1107.Ctor_1_uu___0",
+        "projection_inverse_TWal1107.Ctor_2__0",
+        "projection_inverse_TWal1107.Ctor_2_bytes",
+        "projection_inverse_TWal1107.Ctor_2_uu___0",
+        "refinement_interpretation_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa"
+      ],
+      0,
+      "9f1e917cc02a19c46bf52822c3577e91"
+    ],
+    [
+      "TWal1107.bla",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Prims.Mkdtuple2",
+        "disc_equation_TWal1107.Ctor_1", "disc_equation_TWal1107.Ctor_2",
+        "equation_Prims.nat", "equation_TWal1107.refined",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_TWal1107.bytes_like",
+        "fuel_guarded_inversion_TWal1107.test_sum",
+        "interpretation_Tm_abs_db93ee31d652069ee178dce1dfe0fb28",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa"
+      ],
+      0,
+      "df8d2471a5161de67968731b17251385"
+    ]
+  ]
+]
