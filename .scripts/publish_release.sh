@@ -55,6 +55,9 @@ fi
 
 function upload_archive () {
     archive="$1"
+    if [[ $OS = Windows_NT ]] ; then
+        archive=$(cygpath -m "$archive")
+    fi
     if ! $gh release view $my_tag ; then
         [[ -f .need_to_push_tag ]]
         $gh release create --prerelease --generate-notes --target master $my_tag $archive
