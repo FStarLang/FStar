@@ -157,6 +157,7 @@ let kill_process (p: proc) =
           try f () with | _ -> ()
       in
       attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.inc));
+      attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.errc));
       attempt (fun () -> Unix.close (Unix.descr_of_out_channel p.outc));
       (try Unix.kill p.pid Sys.sigkill
        with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
