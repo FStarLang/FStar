@@ -1,0 +1,58 @@
+[
+  "¸·$Ï„,˜²©rÓoÄÆÆ#",
+  [
+    [
+      "SteelSTFramingTestSuite.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5cfc13abdde07522c4945f9d6f37d6b7"
+    ],
+    [
+      "SteelSTFramingTestSuite.swap",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "bbc26ae00e652514ddd7735095c9bad4"
+    ],
+    [
+      "SteelSTFramingTestSuite.swap",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d2dadea09a2b47fd6c8eee134e18a65c"
+    ],
+    [
+      "SteelSTFramingTestSuite.test_ite2",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      0,
+      "1bc75868a7ed9c1833624d27aa551b36"
+    ],
+    [
+      "SteelSTFramingTestSuite.test_ite_g2",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      0,
+      "818107614445a088b2de5280406c8d9f"
+    ]
+  ]
+]

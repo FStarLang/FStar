@@ -17,7 +17,7 @@
         "token_correspondence_FStar.PCM.__proj__Mkpcm__item__refine"
       ],
       0,
-      "a6a9c2deee3e768766d0c69a8418898d"
+      "e13c34de489a41e929e717bd0dfcee69"
     ],
     [
       "Steel.ST.GhostPCMReference.read",
@@ -52,7 +52,7 @@
         "typing_FStar.Universe.raise_t", "typing_FStar.Universe.raise_val"
       ],
       0,
-      "2a5f5f249c9f67e2a8587ab9df5dceb5"
+      "2a1c9a822ba6b8084b8ef86705365c3a"
     ],
     [
       "Steel.ST.GhostPCMReference.write",
@@ -82,7 +82,7 @@
         "typing_FStar.Universe.downgrade_val"
       ],
       0,
-      "4bdbb55effedd5a2e2957360962675da"
+      "efbbf7f293a4e57048260c38e52775bf"
     ],
     [
       "Steel.ST.GhostPCMReference.share",
@@ -91,7 +91,7 @@
       1,
       [ "@query" ],
       0,
-      "97c45317e90c7c3fb04c31aff7a7a9ec"
+      "4854bad821eaabe3bcccb0291478fe93"
     ],
     [
       "Steel.ST.GhostPCMReference.share",
@@ -115,7 +115,7 @@
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op"
       ],
       0,
-      "4f73bd5a31ec198192b335ed448c52c6"
+      "86af5e27b803d3933ac523e47af4d30c"
     ],
     [
       "Steel.ST.GhostPCMReference.gather",
@@ -127,11 +127,82 @@
         "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
       ],
       0,
-      "63ab6dc0b697eccaecd4e3eabdae6c9f"
+      "8694913a41cb98f6d950e3bd34c0dd02"
     ],
     [
       "Steel.ST.GhostPCMReference.gather",
       2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.op",
+        "equation_Prims.eq2", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "de0f59218d5345ba5c5f7703bee16f5d"
+    ],
+    [
+      "Steel.ST.GhostPCMReference.gather",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
+      ],
+      0,
+      "d7530f4fa92c164a268438a36be4446b"
+    ],
+    [
+      "Steel.ST.GhostPCMReference.gather",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.composable",
+        "equation_FStar.Universe.PCM.raise",
+        "fuel_guarded_inversion_FStar.PCM.pcm",
+        "interpretation_Tm_abs_4244f4746f726a1cf4642fa1ca0091d0",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "proj_equation_FStar.PCM.Mkpcm__composable",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "projection_inverse_FStar.PCM.Mkpcm__composable",
+        "projection_inverse_FStar.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_6b201f21dcb0366cb723c0dab495fea6",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable"
+      ],
+      0,
+      "d247f8ae47db6dd062da5a09afc7a375"
+    ],
+    [
+      "Steel.ST.GhostPCMReference.gather",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
+      ],
+      0,
+      "20d2f36ab54028e1ca6b69d1fac9a40f"
+    ],
+    [
+      "Steel.ST.GhostPCMReference.gather",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
+      ],
+      0,
+      "b462cd6188ca944a13a1838f9de2f64a"
+    ],
+    [
+      "Steel.ST.GhostPCMReference.gather",
+      7,
       2,
       1,
       [
@@ -153,7 +224,7 @@
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op"
       ],
       0,
-      "585e88cce83a944c8e876cc3c7f72d5c"
+      "7eb487cbd55177e4cfa59f8912a57f25"
     ]
   ]
 ]

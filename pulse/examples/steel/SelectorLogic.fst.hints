@@ -15,7 +15,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "5ffdfb1d1c82332c1f693bf0acd1e037"
+      "8c3afa9a8a11fe0c5d5c83fd79b2d05b"
     ],
     [
       "SelectorLogic.wand",
@@ -40,7 +40,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "f427b33840f131afd257757d2a4b0b85"
+      "ea09a1025e2a1e6b3c81b2d218ce4f95"
     ],
     [
       "SelectorLogic.star_split",
@@ -49,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "5c6b326cb99645f6659d6c72fffeebe3"
+      "857fccf63da067f371fd3fc3ec0e9ecf"
     ],
     [
       "SelectorLogic.star_split",
@@ -62,7 +62,6 @@
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.l_Exists",
         "equation_Prims.l_and", "equation_Prims.squash",
         "equation_Prims.subtype_of", "equation_Steel.Memory.hmem",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -74,7 +73,7 @@
         "refinement_interpretation_Tm_refine_5a121517d5876c554c3e043a63a98441"
       ],
       0,
-      "b3ab3c17c31ed97d570fb3cbde7c7038"
+      "761baf490ac5927a11f9d1334f78eed3"
     ],
     [
       "SelectorLogic.modus_ponens_interp",
@@ -85,9 +84,8 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
-        "equation_SelectorLogic.star_split", "equation_SelectorLogic.wand",
-        "equation_Steel.Memory.hmem", "lemma_SelectorLogic.reveal_wand",
-        "lemma_Steel.Memory.disjoint_sym",
+        "equation_SelectorLogic.wand", "equation_Steel.Memory.hmem",
+        "lemma_SelectorLogic.reveal_wand", "lemma_Steel.Memory.disjoint_sym",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_SelectorLogic.Mkvprop_hp",
@@ -100,7 +98,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "8f94b1055754b86de6c06580606d18d8"
+      "5ee00e5da1fbf40666373010bb7bf974"
     ],
     [
       "SelectorLogic.modus_ponens_derive_sel",
@@ -109,7 +107,7 @@
       1,
       [ "@query" ],
       0,
-      "691c31694db9138ab4e4c56421536aa4"
+      "06778e4012b47325f716000ba98e30f9"
     ],
     [
       "SelectorLogic.modus_ponens_derive_sel",
@@ -120,8 +118,7 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Pervasives.dfst",
-        "equation_SelectorLogic.star_split", "equation_SelectorLogic.wand",
+        "equation_FStar.Pervasives.dfst", "equation_SelectorLogic.wand",
         "equation_Steel.Memory.hmem",
         "fuel_guarded_inversion_SelectorLogic.vprop",
         "lemma_SelectorLogic.reveal_wand", "lemma_Steel.Memory.disjoint_sym",
@@ -142,7 +139,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "9cfc31f89a267d914e4ccaabe5e5d77c"
+      "ee0c5436873f6009bc892de711c3cf90"
     ]
   ]
 ]
