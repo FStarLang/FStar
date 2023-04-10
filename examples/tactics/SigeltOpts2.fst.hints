@@ -10,6 +10,7 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.Reflection.Types_pretyping_84d6367db30bfa82d85949e1eb0c6daa",
         "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "data_elim_FStar.Pervasives.Native.Some",
@@ -36,7 +37,7 @@
         "typing_FStar.Reflection.Builtins.sigelt_opts"
       ],
       0,
-      "cb1c6187e8c75839b6fd5e66c3988bdd"
+      "288bbacd777f7faf35e8268c239506a7"
     ]
   ]
 ]

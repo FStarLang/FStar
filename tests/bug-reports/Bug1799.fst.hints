@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_and-interp", "l_or-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fd129bc9040d5707bb6dca327be6f10c"
       ],
       0,
-      "f982ba5982564ad213b38711af92cc4e"
+      "2352094f84b3cf3160b0e025d61c74ea"
     ],
     [
       "Bug1799.test'",
@@ -24,7 +23,7 @@
         "l_or-interp"
       ],
       0,
-      "3ed2216ad8baedd16b10d6e367f074c1"
+      "635c30c1f11966299135c5286b042537"
     ]
   ]
 ]

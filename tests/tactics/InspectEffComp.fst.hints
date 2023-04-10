@@ -1,23 +1,23 @@
 [
-  "B…}Qíå*°ôæêLÏ%ši",
+  "²ˆ™Ù{¶ûS{ÅEÌ§ÖHû",
   [
     [
-      "InspectEffComp.uu___18",
+      "InspectEffComp.test",
       1,
       2,
       1,
-      [ "@query", "equation_InspectEffComp.test" ],
+      [ "@query", "int_typing" ],
       0,
-      "ce70eec7c532ab3602ad4f44175f6edc"
+      "a62f35ff679fa8330a5eb91532ff3c25"
     ],
     [
-      "InspectEffComp.uu___18",
-      2,
+      "InspectEffComp.uu___20",
+      1,
       2,
       1,
-      [ "@query", "equation_InspectEffComp.test" ],
+      [ "@query", "equation_InspectEffComp.test", "int_typing" ],
       0,
-      "2ae8aede48ff0aaf7b71c85f1bfb477c"
+      "b987c667823c40969440d1ef7c63d7ad"
     ]
   ]
 ]

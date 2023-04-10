@@ -1,0 +1,19 @@
+[
+  "7æ'\t \u0002W^\u0019ø-<˚¢x\"",
+  [
+    [
+      "WarnOnUse.t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "202fa6ec41807127d0118948a5a06982"
+    ]
+  ]
+]

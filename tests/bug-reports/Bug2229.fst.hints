@@ -1,0 +1,41 @@
+[
+  "åR¦Œì-õƒ÷ýloŒH…¹",
+  [
+    [
+      "Bug2229.test_ghost",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "02cc1445e3738e262a5c748f58f4d629"
+    ],
+    [
+      "Bug2229.test_pure_gtot",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "196214026a1a8a815ecefc002f95beac"
+    ],
+    [
+      "Bug2229.test_pure",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "8d3cd1e939ff97b4891e9813727578cd"
+    ],
+    [
+      "Bug2229.test_gtot_pure",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "edc2902a10fb61cbad3866defab39702"
+    ]
+  ]
+]

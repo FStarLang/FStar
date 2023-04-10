@@ -1,0 +1,54 @@
+[
+  "?zÜS¤D~Fdû~\u00152Ò`\u0001",
+  [
+    [
+      "LambdaImplicits.safe_hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "8806853ef7b63631bd838d565d254ce6"
+    ],
+    [
+      "LambdaImplicits.bind_opt",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "715ab0f2ee524de7893e71ebeff08efc"
+    ],
+    [
+      "LambdaImplicits.bind_opt'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "ccfea1ca01c9ee2f44766ea4db548cdc"
+    ],
+    [
+      "LambdaImplicits.app_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "7a3cc31b8a56887f65d9cfd673d7239f"
+    ]
+  ]
+]

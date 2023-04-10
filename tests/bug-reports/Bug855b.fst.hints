@@ -1,0 +1,67 @@
+[
+  "¶ÇO,\u0007¤ŠU¶qG®\u007f[Y\u0010",
+  [
+    [
+      "Bug855b.wf_Q",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ce6adac733444e7f3ce680a0647354d6"
+    ],
+    [
+      "Bug855b.__proj__Q_Cons__item__h",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "f3ae0ee0fedada5ad0053615c224b38e"
+    ],
+    [
+      "Bug855b.__proj__Q_Cons__item__h",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ef220360de8ffdd45213eb5d4df0261a"
+    ],
+    [
+      "Bug855b.main",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.HyperStack.ST.equal_stack_domains",
+        "equation_FStar.Monotonic.Heap.equal_dom", "equation_Prims.eqtype",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_b913a3f691ca99086652e0a655e72f17",
+        "typing_FStar.Seq.Base.empty"
+      ],
+      0,
+      "b871153738219da192e7f23e9c80c591"
+    ]
+  ]
+]

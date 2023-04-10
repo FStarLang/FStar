@@ -1,0 +1,41 @@
+[
+  "t\u000fάΚzίεγΩ<nθ\u000f",
+  [
+    [
+      "Pulse.Checker.Framing.try_frame_pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
+        "disc_equation_Pulse.Syntax.C_STAtomic",
+        "disc_equation_Pulse.Syntax.C_STGhost",
+        "disc_equation_Pulse.Syntax.C_Tot", "equation_Pulse.Syntax.comp_st",
+        "equation_Pulse.Syntax.stateful_comp",
+        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed"
+      ],
+      0,
+      "5c4b8e5bc6021837b03107fa315f237f"
+    ],
+    [
+      "Pulse.Checker.Framing.frame_empty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
+        "disc_equation_Pulse.Syntax.C_STAtomic",
+        "disc_equation_Pulse.Syntax.C_STGhost",
+        "disc_equation_Pulse.Syntax.C_Tot", "equation_Pulse.Syntax.comp_st",
+        "equation_Pulse.Syntax.stateful_comp",
+        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed"
+      ],
+      0,
+      "fccc8fbdf4c89f7d7ae7a87ed31de002"
+    ]
+  ]
+]

@@ -1,0 +1,22 @@
+[
+  "U\u001cÜø€mÃs\u0014\u001aRÊ:Åoö",
+  [
+    [
+      "Bug855a.bar",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel"
+      ],
+      0,
+      "8f1ff3f4f549d9c0e6265631dd6e0e32"
+    ]
+  ]
+]

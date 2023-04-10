@@ -1,0 +1,38 @@
+[
+  "½]% >¾ÑV\b\u00018ÊY\u0012ý\u000f",
+  [
+    [
+      "Effects.Coherence.lift_pure_m",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Effects.Coherence_interpretation_Tm_arrow_5e4e9f287949dad2b3ef5d3bb2a2719b",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_Effects.Coherence.repr",
+        "equation_Prims.l_True", "equation_Prims.logical",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "interpretation_Tm_abs_c8bcd87a36e1b7812cd6621acead3597",
+        "l_imp-interp", "l_quant_interp_039efd5ab7620f921988b9dd572aa966",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_c8bcd87a36e1b7812cd6621acead3597"
+      ],
+      0,
+      "f77febd84762a1c582a472e0163affb0"
+    ],
+    [
+      "Effects.Coherence.3723",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "84223156d7c19415afa773aa50713ea0"
+    ]
+  ]
+]

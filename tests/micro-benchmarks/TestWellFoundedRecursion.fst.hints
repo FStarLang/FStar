@@ -1,0 +1,640 @@
+[
+  "ÒÃ>#\u0010çíé∞ä∑&—ÄZ¿",
+  [
+    [
+      "TestWellFoundedRecursion.__proj__Succ__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8984efe2f0cef45f5100268c64c20baa"
+      ],
+      0,
+      "a942e10cfb9dd7236d041e67bae7c733"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__Lim__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d5a8ded1543cff98dd3f7b46c3d44a5f"
+      ],
+      0,
+      "c2ee91ddba707c0438ae8dc49193b14b"
+    ],
+    [
+      "TestWellFoundedRecursion.sum",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "TestWellFoundedRecursion_pretyping_e3401ab4af399fa62e69667ee2219c88",
+        "binder_x_e3401ab4af399fa62e69667ee2219c88_0",
+        "disc_equation_TestWellFoundedRecursion.Lim",
+        "disc_equation_TestWellFoundedRecursion.Succ",
+        "disc_equation_TestWellFoundedRecursion.Z",
+        "equality_tok_TestWellFoundedRecursion.Z@tok",
+        "fuel_guarded_inversion_TestWellFoundedRecursion.ord",
+        "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_TestWellFoundedRecursion.Succ",
+        "typing_tok_TestWellFoundedRecursion.Z@tok",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Lim"
+      ],
+      0,
+      "f15d765705c8e21ca33162a8f81d063c"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__T0__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bf2273afcdc185e928a86603e929f9ef"
+      ],
+      0,
+      "f9798b7703944889135a1529b60b4bf6"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__T__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b272cf7ed418ca41754995dc94cbc637"
+      ],
+      0,
+      "eab03c20c2dec4151046190a65f178ac"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__S0__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2526a6b4db292a420821ceb08465e7ce"
+      ],
+      0,
+      "5618dc4c3c713a59beec8a1f1aa5fc90"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ceb852e4b21729325b4452bbfd864562"
+      ],
+      0,
+      "5f80b413dd2ff8f9b4965edec3554094"
+    ],
+    [
+      "TestWellFoundedRecursion.neg_t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "TestWellFoundedRecursion_pretyping_1019f76824886123f9bf083ad47f55e8",
+        "binder_x_1019f76824886123f9bf083ad47f55e8_0",
+        "disc_equation_TestWellFoundedRecursion.T",
+        "disc_equation_TestWellFoundedRecursion.T0",
+        "fuel_guarded_inversion_TestWellFoundedRecursion.t",
+        "projection_inverse_BoxBool_proj_0",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.T"
+      ],
+      0,
+      "f82359723a7b7f9e74eea92b39145df6"
+    ],
+    [
+      "TestWellFoundedRecursion.neg_t",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "TestWellFoundedRecursion_pretyping_366da0740b9b893f1a025644f01bdfcc",
+        "binder_x_366da0740b9b893f1a025644f01bdfcc_0",
+        "disc_equation_TestWellFoundedRecursion.S",
+        "disc_equation_TestWellFoundedRecursion.S0",
+        "fuel_guarded_inversion_TestWellFoundedRecursion.s",
+        "projection_inverse_BoxBool_proj_0",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.S"
+      ],
+      0,
+      "2a4f77c406a48e07a98bf773f3979233"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__Leaf__item__data",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f19749595c8f6a9f8ac00a56a01bec80"
+      ],
+      0,
+      "1a43d4527a7eb7d0ad563aa9c868702b"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__Node__item__children",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6bf5eb2a2468891f02855d133a655dc1"
+      ],
+      0,
+      "65a1773c2708ca6b858d43815c290f6d"
+    ],
+    [
+      "TestWellFoundedRecursion.map",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f05904e018aecf60bd6bb3271a71f0ba_5",
+        "disc_equation_TestWellFoundedRecursion.Leaf",
+        "disc_equation_TestWellFoundedRecursion.Node",
+        "fuel_guarded_inversion_TestWellFoundedRecursion.tree",
+        "projection_inverse_BoxBool_proj_0",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Node"
+      ],
+      0,
+      "6cf7a03c55c4ee8085fab033d62e52f2"
+    ],
+    [
+      "TestWellFoundedRecursion.codomain_ordering",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_TestWellFoundedRecursion.Node",
+        "data_typing_intro_TestWellFoundedRecursion.Node@tok",
+        "disc_equation_TestWellFoundedRecursion.Node", "equation_Prims.nat",
+        "int_inversion",
+        "proj_equation_TestWellFoundedRecursion.Node_children",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_6bf5eb2a2468891f02855d133a655dc1",
+        "token_correspondence_TestWellFoundedRecursion.__proj__Node__item__children",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Node"
+      ],
+      0,
+      "b641357152fad984aa03f4f825d15d98"
+    ],
+    [
+      "TestWellFoundedRecursion.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_TestWellFoundedRecursion.Node",
+        "disc_equation_TestWellFoundedRecursion.Node", "equation_Prims.nat",
+        "int_inversion", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_TestWellFoundedRecursion.Node_a",
+        "projection_inverse_TestWellFoundedRecursion.Node_children",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_6bf5eb2a2468891f02855d133a655dc1",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Node"
+      ],
+      0,
+      "4cbe8d4cad8931f6d15fa57ee103295d"
+    ],
+    [
+      "TestWellFoundedRecursion.map_alt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_9fdc9ad8a6d5057648ab9399eb4f5ad8_3",
+        "disc_equation_TestWellFoundedRecursion.Leaf",
+        "disc_equation_TestWellFoundedRecursion.Node",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_TestWellFoundedRecursion.tree",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "c4d9594d53d410c4c9e108f64c32e546"
+    ],
+    [
+      "TestWellFoundedRecursion.map_alt",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_TestWellFoundedRecursion.Node",
+        "disc_equation_TestWellFoundedRecursion.Node", "equation_Prims.nat",
+        "int_inversion", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_TestWellFoundedRecursion.Node_a",
+        "projection_inverse_TestWellFoundedRecursion.Node_children",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_59c1073156d270d9324bfabc7844ea39",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Node"
+      ],
+      0,
+      "9e4bf9561577672d8b7f849970a2821b"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__SCons'__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_346cbdfada0725d3e74b4c52aab8adf4"
+      ],
+      0,
+      "f4e151e11190e9adc22456c16c4f5ba1"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__SCons__item__uu___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f195aa4109afbb06f867e978be79070b"
+      ],
+      0,
+      "2eb24c854950061ed0367ab2e3a75b85"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__SCons__item__f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f195aa4109afbb06f867e978be79070b"
+      ],
+      0,
+      "ce26fe3644d14056aafbdfaf90bc81f3"
+    ],
+    [
+      "TestWellFoundedRecursion.fmap_stream",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9b7e4d25a31964a60851d6a21a9cda2e_5",
+        "disc_equation_TestWellFoundedRecursion.SCons",
+        "disc_equation_TestWellFoundedRecursion.SNil",
+        "fuel_guarded_inversion_TestWellFoundedRecursion.stream",
+        "projection_inverse_BoxBool_proj_0", "unit_typing",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.SCons"
+      ],
+      0,
+      "39a748e5468168704906bfebcd711875"
+    ],
+    [
+      "TestWellFoundedRecursion.wf_test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "fuel_guarded_inversion_TestWellFoundedRecursion.test1",
+        "int_inversion", "proj_equation_TestWellFoundedRecursion.Test1_f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_TestWellFoundedRecursion.__proj__Test1__item__f",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Test1"
+      ],
+      0,
+      "7ef44fc76c9090c4b445829f98fab6ff"
+    ],
+    [
+      "TestWellFoundedRecursion.map_test2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_2d774cbd5eb51433aeceacf4fd8c5d62_4",
+        "proj_equation_TestWellFoundedRecursion.Test1_f",
+        "projection_inverse_TestWellFoundedRecursion.Test1_f",
+        "subterm_ordering_TestWellFoundedRecursion.Test2",
+        "token_correspondence_TestWellFoundedRecursion.__proj__Test1__item__f"
+      ],
+      0,
+      "240a4508004c73384c3fd7fd679b61a8"
+    ],
+    [
+      "TestWellFoundedRecursion.test_tf",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_ac5357826b4111242593425d712359de_0",
+        "well_founded_ordering_on_codomain_TestWellFoundedRecursion.TF"
+      ],
+      0,
+      "3539716bf4dc9eeefcb61d2d6ca20225"
+    ],
+    [
+      "TestWellFoundedRecursion.ackermann",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "5afd2bbc1cc49a4aaebf4d25b375f8bb"
+    ],
+    [
+      "TestWellFoundedRecursion.lt_well_founded",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "80e90b03b020f68eb678232332185852"
+    ],
+    [
+      "TestWellFoundedRecursion.lt_dep_well_founded",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "10e1529741e9123c305f87f6b4a55af3"
+    ],
+    [
+      "TestWellFoundedRecursion.higher_nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "337c14986b9f7808a1b5d48967851897"
+    ],
+    [
+      "TestWellFoundedRecursion.__proj__HS__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6d02e0add0161078d4cd126ba95a57e7"
+      ],
+      0,
+      "1c882814c196f9cba7cd7985849357db"
+    ],
+    [
+      "TestWellFoundedRecursion.higher_nat_lt_well_founded",
+      1,
+      2,
+      1,
+      [ "@query", "equation_TestWellFoundedRecursion.higher_nat_lt" ],
+      0,
+      "e7cd9fbe86e51d6f5dbef4acee867760"
+    ],
+    [
+      "TestWellFoundedRecursion.ackermann_wf",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "529bdcca6fff6b43b4195906aee141c7"
+    ],
+    [
+      "TestWellFoundedRecursion.rel_parametric",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "TestWellFoundedRecursion_interpretation_Tm_arrow_bc7ac1720b9e70985d6baeb3c92d840b",
+        "binder_x_54ebd40d7781850201403c810735a25c_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_f2c4df419245400743269b358541bb3f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_TestWellFoundedRecursion.get_previous"
+      ],
+      0,
+      "c1996cd840611e70d274689bbf15bd0b"
+    ],
+    [
+      "TestWellFoundedRecursion.rel_poly",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_ef9cb512a25ee351fa5536d617490497",
+        "binder_x_31e5b43e0763b9f6894e493d89e67852_4",
+        "binder_x_5a21938ae881b99732309b7f62510851_3",
+        "binder_x_64a6f2da4341770a4dee8aa1d0d4ae69_5",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_2",
+        "data_typing_intro_Prims.Mkdtuple2@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some", "eq2-interp",
+        "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
+        "equation_FStar.WellFounded.Util.lift_binrel_squashed",
+        "equation_FStar.WellFounded.Util.lift_binrel_squashed_as_well_founded_relation",
+        "equation_FStar.WellFounded.Util.top", "equation_Prims.logical",
+        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_FStar.WellFounded.Util.lift_binrel_squashed_as_well_founded_relation",
+        "function_token_typing_FStar.WellFounded.Util.top",
+        "function_token_typing_Prims.logical",
+        "interpretation_Tm_abs_9706396db915b3a2ea86d4646a5b8236",
+        "interpretation_Tm_abs_c0b2d2713728d6e6a55603d19fda193b",
+        "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "proj_equation_Prims.Mkdtuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a5a5b3188fd1976bd9041becb5b53274",
+        "typing_FStar.Pervasives.dsnd",
+        "typing_FStar.WellFounded.Util.lift_binrel_squashed_as_well_founded_relation",
+        "typing_TestWellFoundedRecursion.get_previous",
+        "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
+      ],
+      0,
+      "d0315da73b0bf6afe871061dbdcec3a7"
+    ],
+    [
+      "TestWellFoundedRecursion.rel_poly2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_ef9cb512a25ee351fa5536d617490497",
+        "binder_x_7312fb6c16df12e03fea4bdf93e8a6b1_2",
+        "binder_x_9324747c4ec86885e1951a76f6a71323_3",
+        "binder_x_e09860b75d8922ab497a3e5bc9347578_4",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "data_typing_intro_Prims.Mkdtuple2@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
+        "equation_FStar.WellFounded.Util.lift_binrel_as_well_founded_relation",
+        "equation_FStar.WellFounded.Util.top", "equation_Prims.logical",
+        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_FStar.WellFounded.Util.lift_binrel",
+        "function_token_typing_FStar.WellFounded.Util.lift_binrel_as_well_founded_relation",
+        "function_token_typing_FStar.WellFounded.Util.top",
+        "function_token_typing_Prims.logical",
+        "interpretation_Tm_abs_9706396db915b3a2ea86d4646a5b8236",
+        "primitive_Prims.op_Addition", "proj_equation_Prims.Mkdtuple2__1",
+        "proj_equation_Prims.Mkdtuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_fdc1613f156dff2e2ab1b123b703f525",
+        "typing_FStar.Pervasives.dsnd",
+        "typing_FStar.WellFounded.Util.lift_binrel_as_well_founded_relation",
+        "typing_TestWellFoundedRecursion.get_previous",
+        "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
+      ],
+      0,
+      "5a55499f31cb0151e797685b1881573d"
+    ],
+    [
+      "TestWellFoundedRecursion.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "eq2-interp", "equation_FStar.WellFoundedRelation.default_relation",
+        "equation_FStar.WellFoundedRelation.lex_nondep_relation",
+        "equation_Prims.nat",
+        "equation_TestWellFoundedRecursion.nat_nat_wfr",
+        "function_token_typing_FStar.WellFoundedRelation.__proj__Mkwfr_t__item__relation",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "kinding_FStar.Pervasives.Native.tuple2@tok", "l_and-interp",
+        "l_or-interp", "lemma_FStar.WellFoundedRelation.ambient_wfr_lemma",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_60b089fbf798b34a1afca83f94afe144",
+        "refinement_interpretation_Tm_refine_995eaeb7e82a4f7247b32b45400ca7f4",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_FStar.WellFoundedRelation.__proj__Mkwfr_t__item__relation",
+        "token_correspondence_FStar.WellFoundedRelation.default_relation",
+        "token_correspondence_FStar.WellFoundedRelation.lex_nondep_relation",
+        "typing_FStar.WellFoundedRelation.default_wfr",
+        "typing_TestWellFoundedRecursion.nat_nat_wfr",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "21de8f5e009a92d0c5ac95e5f438697a"
+    ],
+    [
+      "TestWellFoundedRecursion.count_steps_to_none",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "TestWellFoundedRecursion_interpretation_Tm_arrow_033e9c386f32d5f5a2cd4af2333c25c7",
+        "binder_x_82d3b1b37ab19a5a30ef2f0c8e180c02_2",
+        "binder_x_ef952050ee21782b3408b12eb781979e_3",
+        "binder_x_f042d5bb4fdf7600bca097ff97c513fc_4",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.WellFoundedRelation.option_relation",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.WellFoundedRelation.wfr_t",
+        "function_token_typing_FStar.WellFoundedRelation.__proj__Mkwfr_t__item__relation",
+        "kinding_FStar.Pervasives.Native.option@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "lemma_FStar.WellFoundedRelation.ambient_wfr_lemma",
+        "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5a87f29bd214668d88282537a52a3869",
+        "refinement_interpretation_Tm_refine_b59a9826438acf4c4137603dd4389a9e",
+        "token_correspondence_FStar.WellFoundedRelation.option_relation",
+        "typing_FStar.WellFoundedRelation.option_wfr"
+      ],
+      0,
+      "f0e9f0c84a47bc803145e51fc165a8d2"
+    ]
+  ]
+]

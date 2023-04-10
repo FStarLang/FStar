@@ -1,5 +1,5 @@
 [
-  "j@_4êé°\u007f0⁄’LoÉœ\u0013",
+  "~≥5b›0»»œÛ0\u0015o≥\u0010p",
   [
     [
       "Pruning.lemma",
@@ -30,23 +30,7 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "4e2cf2c8b8421594f2abe8ed2fe157c7"
-    ],
-    [
-      "Pruning.lemma",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_81746e462692213c028719b75d01a164",
-        "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "a6278433d021d4f1977a01ced57fd201"
+      "cf4780e5b061f11ec233ca559a4bc44d"
     ]
   ]
 ]

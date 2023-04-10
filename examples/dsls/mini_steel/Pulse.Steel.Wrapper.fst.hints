@@ -1,0 +1,369 @@
+[
+  "j\\r\u0006ô¬\fRzý†QfUEÄ",
+  [
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "22c6c9c8cde5e381f0b6bb0e663a86b0"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_post_equiv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9ab27e508995b33db60c7063b3d381ff"
+    ],
+    [
+      "Pulse.Steel.Wrapper.intro_vprop_post_equiv",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4cbf4bed811c4069ac09800ee38f2385"
+    ],
+    [
+      "Pulse.Steel.Wrapper.elim_vprop_post_equiv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "defn_equation_Pulse.Steel.Wrapper.vprop_post_equiv",
+        "equation_Prims.prop", "equation_Prims.subtype_of",
+        "l_quant_interp_25c78b80b0f4b31a65cc09c664681812",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
+        "typing_Pulse.Steel.Wrapper.vprop_post_equiv", "unit_inversion"
+      ],
+      0,
+      "a11193ed22a1d025bb4a6f27887b2182"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv_refl",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "78c300035a0a3940cfc214b5e210c569"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv_sym",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Pulse.Steel.Wrapper.vprop_equiv",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c1f4143c66fcb3a898fbecf9b66c9262"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv_trans",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Pulse.Steel.Wrapper.vprop_equiv",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "97b933324572db521580a7efd681a45c"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv_unit",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6bb6ef500225760598f28ed88ee12aa5"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv_comm",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cc55f0a6b47445ad7410350edfb3b551"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv_assoc",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fb03056d0ad9055ed92d08c643656f1e"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Pulse.Steel.Wrapper.vprop_equiv",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e3b637531a91e73dcdd134cdccf3e52a"
+    ],
+    [
+      "Pulse.Steel.Wrapper.vprop_equiv_ext",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
+      ],
+      0,
+      "a44477dcb3770171af541d49d4f52677"
+    ],
+    [
+      "Pulse.Steel.Wrapper.eq2_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "95f563e560a746d6ce0575a3346b8049"
+    ],
+    [
+      "Pulse.Steel.Wrapper.iff_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
+        "equation_Prims.l_iff", "equation_Prims.l_imp",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e3ec5f2cd8f4a3796478ba253cb91c54"
+    ],
+    [
+      "Pulse.Steel.Wrapper.return_stt",
+      1,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Pulse.Steel.Wrapper.eq2_prop" ],
+      0,
+      "60990960c92f74db07756c581a79b564"
+    ],
+    [
+      "Pulse.Steel.Wrapper.bind_stt_atomic_ghost",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Pulse.Steel.Wrapper_interpretation_Tm_arrow_44a3bfa508921f33b48c300bd121e494",
+        "equation_Pulse.Steel.Wrapper.non_informative_witness",
+        "lemma_FStar.Ghost.reveal_hide",
+        "refinement_interpretation_Tm_refine_0384ec095b850a18864324063aca63b2",
+        "typing_FStar.Ghost.hide"
+      ],
+      0,
+      "bf20fcdc94ad989157f58ac3f875f0ec"
+    ],
+    [
+      "Pulse.Steel.Wrapper.bind_stt_ghost_atomic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Pulse.Steel.Wrapper_interpretation_Tm_arrow_44a3bfa508921f33b48c300bd121e494",
+        "equation_Pulse.Steel.Wrapper.non_informative_witness",
+        "lemma_FStar.Ghost.reveal_hide",
+        "refinement_interpretation_Tm_refine_0384ec095b850a18864324063aca63b2",
+        "typing_FStar.Ghost.hide"
+      ],
+      0,
+      "933b61433831a0bdaa9dc98c667ba808"
+    ],
+    [
+      "Pulse.Steel.Wrapper.lift_stt_ghost",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Pulse.Steel.Wrapper_interpretation_Tm_arrow_44a3bfa508921f33b48c300bd121e494",
+        "lemma_FStar.Ghost.reveal_hide",
+        "refinement_interpretation_Tm_refine_0384ec095b850a18864324063aca63b2",
+        "typing_FStar.Ghost.hide"
+      ],
+      0,
+      "2290bea421793438d503943bf349e368"
+    ],
+    [
+      "Pulse.Steel.Wrapper.sub_stt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Pulse.Steel.Wrapper.vprop_equiv",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "89ae280bafc5f7bf6a1ed34d64b6470a"
+    ],
+    [
+      "Pulse.Steel.Wrapper.sub_stt_atomic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Pulse.Steel.Wrapper.vprop_equiv",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "44134303160814ad16ee62584bf3fd24"
+    ],
+    [
+      "Pulse.Steel.Wrapper.sub_stt_ghost",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Pulse.Steel.Wrapper.vprop_equiv",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "14ebbd734b0622c2deb059c106d0a113"
+    ],
+    [
+      "Pulse.Steel.Wrapper.rewrite",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Pulse.Steel.Wrapper.vprop_equiv",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "d6bdad65e043e80ca7bc8f488acaf0bb"
+    ],
+    [
+      "Pulse.Steel.Wrapper.read",
+      1,
+      2,
+      1,
+      [
+        "@query", "eq2-interp", "equation_Prims.l_True",
+        "equation_Pulse.Steel.Wrapper.eq2_prop",
+        "equation_Steel.Effect.Common.prop_and", "true_interp"
+      ],
+      0,
+      "91beb3aaa738c25eeecb815ab3078863"
+    ],
+    [
+      "Pulse.Steel.Wrapper.read_atomic",
+      1,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Pulse.Steel.Wrapper.eq2_prop" ],
+      0,
+      "e293a1efc3ab0e18a502f792e34ef28c"
+    ],
+    [
+      "Pulse.Steel.Wrapper.gread",
+      1,
+      2,
+      1,
+      [
+        "@query", "eq2-interp", "equation_Prims.l_True",
+        "equation_Pulse.Steel.Wrapper.eq2_prop",
+        "equation_Steel.Effect.Common.prop_and", "true_interp"
+      ],
+      0,
+      "eca30206a144caf516d149b721839a37"
+    ],
+    [
+      "Pulse.Steel.Wrapper.ggather",
+      1,
+      2,
+      1,
+      [
+        "@query", "eq2-interp", "equation_Prims.l_True",
+        "equation_Pulse.Steel.Wrapper.eq2_prop",
+        "equation_Steel.Effect.Common.prop_and", "true_interp"
+      ],
+      0,
+      "b528bad6de241bf50019dcdefc30c114"
+    ],
+    [
+      "Pulse.Steel.Wrapper.elim_pure_explicit",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1c211e6c118f294c87769f2433ab29f1"
+    ],
+    [
+      "Pulse.Steel.Wrapper.elim_pure",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9ca7533916e0062333f424829780da91"
+    ],
+    [
+      "Pulse.Steel.Wrapper.intro_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "d247b6faa1b7e37ff7aef35d54bc0579"
+    ],
+    [
+      "Pulse.Steel.Wrapper.stt_ghost_reveal",
+      1,
+      2,
+      1,
+      [
+        "@query", "eq2-interp", "equation_Prims.l_True",
+        "equation_Pulse.Steel.Wrapper.eq2_prop",
+        "equation_Steel.Effect.Common.prop_and", "true_interp"
+      ],
+      0,
+      "30bb5dcd4f5106ec3cbfbc47909a6263"
+    ]
+  ]
+]

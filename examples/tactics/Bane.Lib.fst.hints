@@ -8,19 +8,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "bool_typing", "data_elim_FStar.Tactics.Result.Success",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype",
+        "data_elim_FStar.Tactics.Result.Success",
+        "equation_FStar.Pervasives.pattern",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_Prims.unit",
-        "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "unit_typing"
+        "function_token_typing_FStar.Pervasives.pattern",
+        "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "ae0d40baf60f0e37100987100f29701e"
+      "70f45c7c67385b95c2e47348b8f39348"
     ]
   ]
 ]

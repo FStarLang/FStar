@@ -17,7 +17,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "40477d8a3291144a194983c465708ecd"
+      "ab14b608b41a38d7237ea4dfe2e655dd"
     ],
     [
       "Tests.uu___13",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "cd8c615969a8c20fd5401e2410ebbbcb"
+      "ff6b30677ddd9cdb021f1760870bdc71"
     ],
     [
       "Tests.uu___14",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "306bff704259b902c5d04c7cdd072c45"
+      "6e7223446ce01425d721bc989bacb9a5"
     ],
     [
       "Tests.test1",
@@ -50,7 +50,7 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Add.add_int",
         "equation_Add.mkadd", "equation_Add.plus", "equation_Add.zero",
-        "equation_Eq.uu___20", "equation_Num.add_num", "equation_Num.mknum",
+        "equation_Eq.uu___25", "equation_Num.add_num", "equation_Num.mknum",
         "equation_Num.num_int", "equation_Prims.eqtype",
         "equation_with_fuel_Tests.sum.fuel_instrumented",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
@@ -72,7 +72,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "69a01171620927afa02f487f3c0432f5"
+      "3d9ca63c2f2a0ffd35ba4ae858c9c577"
     ],
     [
       "Tests.test2",
@@ -83,7 +83,7 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Add.add_int", "equation_Add.mkadd", "equation_Add.plus",
-        "equation_Eq.uu___20", "equation_Num.add_num", "equation_Num.minus",
+        "equation_Eq.uu___25", "equation_Num.add_num", "equation_Num.minus",
         "equation_Num.mknum", "equation_Num.num_int",
         "function_token_typing_Prims.__cache_version_number__",
         "interpretation_Tm_abs_12ddde8171c888fa95f826be9c2a1fe9",
@@ -100,7 +100,7 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "83fd5210966b23e92ba68715d717fab3"
+      "3dadc092421c692a4eab76e0e87fceca"
     ]
   ]
 ]

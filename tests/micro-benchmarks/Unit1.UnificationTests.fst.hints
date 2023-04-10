@@ -1,5 +1,5 @@
 [
-  "ú«Ê”xâí\u0005Oyf¾™ê\u0005ô",
+  "P\u000f`ÉÒgåùô£&¦slzÜ",
   [
     [
       "Unit1.UnificationTests.t_indexed",
@@ -10,24 +10,29 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.UnificationTests.X",
         "disc_equation_Unit1.UnificationTests.Y",
-        "fuel_guarded_inversion_Unit1.UnificationTests.some_enum"
+        "fuel_guarded_inversion_Unit1.UnificationTests.some_enum",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c4573d17f622d69ef13cc2bc68bca121"
+      "8c800c4ddcccd36a083c5d53d515d7c7"
     ],
     [
-      "Unit1.UnificationTests.t_indexed",
-      2,
+      "Unit1.UnificationTests.test_unit_valued_implicits0",
+      1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_Unit1.UnificationTests.X",
-        "disc_equation_Unit1.UnificationTests.Y",
-        "fuel_guarded_inversion_Unit1.UnificationTests.some_enum"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion", "unit_typing" ],
       0,
-      "357470b1e0ca892eff509c28b3e97c18"
+      "6b7756b76c220228cb3cff44d0714436"
+    ],
+    [
+      "Unit1.UnificationTests.test_unit_valued_implicits4",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion", "unit_typing" ],
+      0,
+      "8e0f47d0a88790a9ab62895ef528b9db"
     ]
   ]
 ]
