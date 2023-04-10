@@ -74,6 +74,10 @@ fi
 # F* dependencies
 RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/FStar/fstar.opam
 
+# Configure the git user for hint refresh
+RUN git config --global user.name "Dzomo, the Everest Yak" && \
+    git config --global user.email "everbld@microsoft.com"
+
 WORKDIR $HOME/FStar
 
 # Run CI proper

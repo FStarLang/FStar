@@ -1,6 +1,7 @@
-# This file is to be included at the beginning of release scripts, to
-# determine the version tag, and create one if necessary
+#!/usr/bin/env bash
 
+# This script is called by the release.yml GitHub Actions workflow
+# via .docker/release.Dockerfile, to create a tag when creating a new release
 
 # Sorry, everyone
 if (( ${BASH_VERSION%%.*} < 4 )); then
@@ -31,6 +32,10 @@ if ! [[ -d ulib ]]; then
   exit 1
 fi
 
+# Figure out the branch
+CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "Current branch_name=$CI_BRANCH"
+
 # Fail if the state is dirty
 # NOTE: --ignore-cr-at-eol is a recent option,
 # so we should ignore it if it is not there
@@ -57,7 +62,7 @@ fi
 
 # Check if the commit pointed to by that tag (if any) points to the current commit
 this_commit=$(git rev-parse HEAD)
-need_to_push_tag=false
+rm -f .need_to_push_tag
 if tagged_commit=$(git show-ref --tags --hash "$my_tag") && [[ -n $tagged_commit ]] ; then
     [[ $tagged_commit = $this_commit ]]
 else
@@ -68,7 +73,9 @@ else
     if test_ref=$(git show-ref "$my_tag") ; then
         [[ -z "$test_ref" ]]
     fi
-    need_to_push_tag=true
+    echo "Checking whether new tags are allowed"
+    [[ -z "$FSTAR_NO_NEW_TAG" ]]
+    touch .need_to_push_tag
     git tag "$my_tag"
 fi
 
