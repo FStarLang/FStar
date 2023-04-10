@@ -16,7 +16,8 @@ pushd "$FSTAR_HOST_HOME"
 
 echo "*** Rename package ***"
 dev='~dev'
-CURRENT_VERSION=$(cat version.txt | sed 's!'"$dev"'!!' | sed 's!'"\r"'$!!')
+SED=$(which gsed >/dev/null 2>&1 && echo gsed || echo sed)
+CURRENT_VERSION=$(cat version.txt | $SED 's!'"$dev"'!!' | $SED 's!'"\r"'$!!')
 my_tag="v$CURRENT_VERSION"
 if [[ -z $OS ]] ; then
     OS=$(uname)

@@ -24,8 +24,9 @@ fi
 cd "$FSTAR_HOST_HOME"
 
 # Strip the ~dev part of the version number
+SED=$(which gsed >/dev/null 2>&1 && echo gsed || echo sed)
 dev='~dev'
-sed -i 's!'"$dev"'!!' version.txt
+$SED -i 's!'"$dev"'!!' version.txt
 
 # Build the package
 if [[ -z "$CI_THREADS" ]] ; then
