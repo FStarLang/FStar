@@ -35,7 +35,7 @@ module Mem = Steel.Memory
 /// to better separate reasoning about memory safety and functional correctness when handling references.
 
 /// An abstract datatype for references
-val ref ([@@@strictly_positive] a:Type0) : Type0
+val ref ([@@@unused] a:Type0) : Type0
 
 /// The null pointer
 [@@ noextract_to "krml"]

@@ -8,20 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67", "eq2-interp",
-        "equality_tok_Prims.T@tok", "equation_Prims.eq2",
-        "equation_Prims.l_True", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.ens_depends_only_on",
-        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
-        "interpretation_Tm_abs_cd90e9a65c4ab98e5834ff6be202b421",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_7862db5d0910cb70066e48a635175549",
-        "typing_tok_Prims.T@tok"
+        "refinement_interpretation_Tm_refine_7862db5d0910cb70066e48a635175549"
       ],
       0,
-      "8318c5f24d25cfa6158d2fc86f5715a8"
+      "3e60af5fa765d87006ef12475ca3feb2"
     ],
     [
       "TwoLockQueue.rewrite",
@@ -41,27 +31,16 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "b0c27aa0d49b570fa66b6982133633b3"
+      "3a70877c55f408fc780901efa5cbd705"
     ],
     [
       "TwoLockQueue.elim_pure",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
-        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.ens_depends_only_on",
-        "equation_Steel.Effect.Common.true_p",
-        "interpretation_Tm_abs_54fb27a47119b84b6087de3dbed19349",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "true_interp", "typing_tok_Prims.T@tok"
-      ],
+      [ "@query" ],
       0,
-      "aba27edf66cd67855e38eeb5358e0a74"
+      "7255319bd0cfe71bdd6b1e4155c7ab28"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -75,7 +54,7 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "7f672b6f9960c8daa11b632f9491573c"
+      "4b90851bfc5ef65b3d16d8d9f699988a"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -84,16 +63,16 @@
       1,
       [ "@query", "equation_TwoLockQueue.lock_inv" ],
       0,
-      "e883407d1cdc729dab11e185d243b5d2"
+      "2d8e14f3d829feb837e7f2dbf0024c8e"
     ],
     [
       "TwoLockQueue.new_queue",
       1,
       2,
       1,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      [ "@query" ],
       0,
-      "0e19c3177204582d4ecb4ad39c4b9362"
+      "e198b5acf52a0805085659ef5a423022"
     ],
     [
       "TwoLockQueue.enqueue",
@@ -141,7 +120,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "e3b337ec21f7afcc5cc13e70eedcfb93"
+      "c2372c165a82fc9b536ea3712063a5da"
     ],
     [
       "TwoLockQueue.maybe_ghost_pts_to",
@@ -152,7 +131,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "26b00848becbac31478701986d4c87b6"
+      "b9ccf93f148421684255fd8700ee53e9"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -216,7 +195,7 @@
         "typing_TwoLockQueue.maybe_ghost_pts_to"
       ],
       0,
-      "5a0ec7f63b13bd6d1b1a79cd96cf1537"
+      "d79c007b07e41135b2d9e43d39b8c4ed"
     ],
     [
       "TwoLockQueue.dequeue",
@@ -294,7 +273,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "df8bbb0f0468fbeac9bb135de81df8e4"
+      "4d6c0594b8b9b83ac4a1cfb9c0b721dd"
     ]
   ]
 ]
