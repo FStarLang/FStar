@@ -12,7 +12,7 @@ jobs:
     steps:
     - name: Check out repo        
       uses: actions/checkout@v2
-    - name: Record new hints, advance version number and release
+    - name: Package and release FStar
       run: |
           ci_docker_image_tag=fstar-release:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           ci_docker_builder=builder_fstar-release_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
