@@ -67,6 +67,6 @@ jobs:
     - name: Package and release FStar
       shell: C:\cygwin64\bin\bash.exe --login '{0}'
       run: |
-        CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/release.sh && echo "There is a CR at the end of this line"
+        FSTAR_COMMIT=$GITHUB_SHA CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/release.sh && echo "There is a CR at the end of this line"
       env:
         GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
