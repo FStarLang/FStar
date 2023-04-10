@@ -10,7 +10,17 @@ val clear_memo_table (_:unit)
   : unit
 
 val error : Type0
-  
+
+type side = 
+  | Left
+  | Right
+  | Both
+  | Neither
+
+val side_to_string : side -> string
+
+val maybe_relate_after_unfolding (g:Env.env) (t0 t1:term) : side
+
 val check_term (g:Env.env) (e:term) (t:typ) (must_tot:bool)
   : either (option typ) error
 

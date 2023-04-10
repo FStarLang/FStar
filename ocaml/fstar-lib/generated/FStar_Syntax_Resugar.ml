@@ -2343,30 +2343,30 @@ let (resugar_typ :
                             | FStar_Syntax_Syntax.Tm_arrow (bs3, uu___8) ->
                                 let mfields =
                                   FStar_Compiler_Effect.op_Bar_Greater bs3
-                                    (FStar_Compiler_List.map
+                                    (FStar_Compiler_List.collect
                                        (fun b ->
-                                          let q =
-                                            let uu___9 =
-                                              resugar_bqual env
-                                                b.FStar_Syntax_Syntax.binder_qual in
-                                            match uu___9 with
-                                            | FStar_Pervasives_Native.Some q1
-                                                -> q1
-                                            | FStar_Pervasives_Native.None ->
-                                                failwith
-                                                  "Unexpected inaccesible implicit argument of a data constructor while resugaring a record field" in
                                           let uu___9 =
-                                            bv_as_unique_ident
-                                              b.FStar_Syntax_Syntax.binder_bv in
-                                          let uu___10 =
-                                            FStar_Compiler_Effect.op_Bar_Greater
-                                              b.FStar_Syntax_Syntax.binder_attrs
-                                              (FStar_Compiler_List.map
-                                                 (resugar_term' env)) in
-                                          let uu___11 =
-                                            resugar_term' env
-                                              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                          (uu___9, q, uu___10, uu___11))) in
+                                            resugar_bqual env
+                                              b.FStar_Syntax_Syntax.binder_qual in
+                                          match uu___9 with
+                                          | FStar_Pervasives_Native.None ->
+                                              []
+                                          | FStar_Pervasives_Native.Some q ->
+                                              let uu___10 =
+                                                let uu___11 =
+                                                  bv_as_unique_ident
+                                                    b.FStar_Syntax_Syntax.binder_bv in
+                                                let uu___12 =
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    b.FStar_Syntax_Syntax.binder_attrs
+                                                    (FStar_Compiler_List.map
+                                                       (resugar_term' env)) in
+                                                let uu___13 =
+                                                  resugar_term' env
+                                                    (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                                (uu___11, q, uu___12,
+                                                  uu___13) in
+                                              [uu___10])) in
                                 FStar_Compiler_List.op_At mfields fields
                             | uu___8 -> failwith "unexpected")
                        | uu___4 -> failwith "unexpected" in
@@ -2852,7 +2852,8 @@ let (resugar_sigelt' :
                  {
                    FStar_Parser_AST.msource = src;
                    FStar_Parser_AST.mdest = dst;
-                   FStar_Parser_AST.lift_op = op
+                   FStar_Parser_AST.lift_op = op;
+                   FStar_Parser_AST.braced = false
                  }) in
           FStar_Pervasives_Native.Some uu___
       | FStar_Syntax_Syntax.Sig_effect_abbrev (lid, vs, bs, c, flags) ->
@@ -2921,14 +2922,15 @@ let (resugar_sigelt' :
                  FStar_Parser_AST.Val uu___4 in
                decl'_to_decl se uu___3 in
              FStar_Pervasives_Native.Some uu___2)
-      | FStar_Syntax_Syntax.Sig_splice (ids, t) ->
+      | FStar_Syntax_Syntax.Sig_splice (is_typed, ids, t) ->
           let uu___ =
             let uu___1 =
               let uu___2 =
                 let uu___3 =
                   FStar_Compiler_List.map
                     (fun l -> FStar_Ident.ident_of_lid l) ids in
-                let uu___4 = resugar_term' env t in (uu___3, uu___4) in
+                let uu___4 = resugar_term' env t in
+                (is_typed, uu___3, uu___4) in
               FStar_Parser_AST.Splice uu___2 in
             decl'_to_decl se uu___1 in
           FStar_Pervasives_Native.Some uu___

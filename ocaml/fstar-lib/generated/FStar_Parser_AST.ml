@@ -738,17 +738,24 @@ type lift =
   {
   msource: FStar_Ident.lid ;
   mdest: FStar_Ident.lid ;
-  lift_op: lift_op }
+  lift_op: lift_op ;
+  braced: Prims.bool }
 let (__proj__Mklift__item__msource : lift -> FStar_Ident.lid) =
   fun projectee ->
-    match projectee with | { msource; mdest; lift_op = lift_op1;_} -> msource
+    match projectee with
+    | { msource; mdest; lift_op = lift_op1; braced;_} -> msource
 let (__proj__Mklift__item__mdest : lift -> FStar_Ident.lid) =
   fun projectee ->
-    match projectee with | { msource; mdest; lift_op = lift_op1;_} -> mdest
+    match projectee with
+    | { msource; mdest; lift_op = lift_op1; braced;_} -> mdest
 let (__proj__Mklift__item__lift_op : lift -> lift_op) =
   fun projectee ->
     match projectee with
-    | { msource; mdest; lift_op = lift_op1;_} -> lift_op1
+    | { msource; mdest; lift_op = lift_op1; braced;_} -> lift_op1
+let (__proj__Mklift__item__braced : lift -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { msource; mdest; lift_op = lift_op1; braced;_} -> braced
 type pragma =
   | SetOptions of Prims.string 
   | ResetOptions of Prims.string FStar_Pervasives_Native.option 
@@ -799,7 +806,7 @@ type decl' =
   | Polymonadic_subcomp of (FStar_Ident.lid * FStar_Ident.lid * term) 
   | Pragma of pragma 
   | Assume of (FStar_Ident.ident * term) 
-  | Splice of (FStar_Ident.ident Prims.list * term) 
+  | Splice of (Prims.bool * FStar_Ident.ident Prims.list * term) 
 and decl =
   {
   d: decl' ;
@@ -892,7 +899,7 @@ let (__proj__Assume__item___0 : decl' -> (FStar_Ident.ident * term)) =
 let (uu___is_Splice : decl' -> Prims.bool) =
   fun projectee -> match projectee with | Splice _0 -> true | uu___ -> false
 let (__proj__Splice__item___0 :
-  decl' -> (FStar_Ident.ident Prims.list * term)) =
+  decl' -> (Prims.bool * FStar_Ident.ident Prims.list * term)) =
   fun projectee -> match projectee with | Splice _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee -> match projectee with | { d; drange; quals; attrs;_} -> d
@@ -2372,20 +2379,24 @@ let (decl_to_string : decl -> Prims.string) =
         let uu___2 = FStar_Ident.string_of_lid l2 in
         FStar_Compiler_Util.format2 "polymonadic_subcomp %s <: %s" uu___1
           uu___2
-    | Splice (ids, t) ->
+    | Splice (is_typed, ids, t) ->
         let uu___ =
           let uu___1 =
             let uu___2 =
-              FStar_Compiler_List.map (fun i -> FStar_Ident.string_of_id i)
-                ids in
-            FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat ";")
-              uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = term_to_string t in Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat "] (" uu___3 in
-          Prims.op_Hat uu___1 uu___2 in
-        Prims.op_Hat "splice[" uu___
+              let uu___3 =
+                let uu___4 =
+                  FStar_Compiler_List.map
+                    (fun i -> FStar_Ident.string_of_id i) ids in
+                FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat ";")
+                  uu___4 in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 = term_to_string t in Prims.op_Hat uu___6 ")" in
+                Prims.op_Hat "] (" uu___5 in
+              Prims.op_Hat uu___3 uu___4 in
+            Prims.op_Hat "[" uu___2 in
+          Prims.op_Hat (if is_typed then "_t" else "") uu___1 in
+        Prims.op_Hat "splice" uu___
     | SubEffect uu___ -> "sub_effect"
     | Pragma p ->
         let uu___ = string_of_pragma p in Prims.op_Hat "pragma #" uu___
@@ -2436,3 +2447,16 @@ let (idents_of_binders :
     fun r ->
       FStar_Compiler_Effect.op_Bar_Greater bs
         (FStar_Compiler_List.map (ident_of_binder r))
+let (decl_syntax_is_delimited : decl -> Prims.bool) =
+  fun d ->
+    match d.d with
+    | Pragma (ResetOptions (FStar_Pervasives_Native.None)) -> false
+    | Pragma (PushOptions (FStar_Pervasives_Native.None)) -> false
+    | Pragma uu___ -> true
+    | NewEffect (DefineEffect uu___) -> true
+    | LayeredEffect (DefineEffect uu___) -> true
+    | SubEffect
+        { msource = uu___; mdest = uu___1; lift_op = uu___2; braced = true;_}
+        -> true
+    | Tycon (uu___, b, uu___1) -> b
+    | uu___ -> false

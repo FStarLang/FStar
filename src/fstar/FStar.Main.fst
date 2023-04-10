@@ -107,6 +107,9 @@ let fstar_files: ref (option (list string)) = Util.mk_ref None
 let go _ =
   let res, filenames = process_args () in
   match res with
+    | Empty ->
+        Options.display_usage(); exit 1
+
     | Help ->
         Options.display_usage(); exit 0
 

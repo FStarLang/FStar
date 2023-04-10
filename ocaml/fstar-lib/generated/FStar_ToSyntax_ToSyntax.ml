@@ -1,4 +1,6 @@
 open Prims
+type antiquotations_temp =
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list
 let (tun_r : FStar_Compiler_Range.range -> FStar_Syntax_Syntax.term) =
   fun r ->
     {
@@ -24,6 +26,18 @@ let (mk_thunk :
           FStar_Syntax_Syntax.tun in
       FStar_Syntax_Syntax.mk_binder uu___ in
     FStar_Syntax_Util.abs [b] e FStar_Pervasives_Native.None
+let (mk_binder_with_attrs :
+  FStar_Syntax_Syntax.bv ->
+    FStar_Syntax_Syntax.bqual ->
+      FStar_Syntax_Syntax.attribute Prims.list -> FStar_Syntax_Syntax.binder)
+  =
+  fun bv ->
+    fun aq ->
+      fun attrs ->
+        let uu___ = FStar_Syntax_Util.parse_positivity_attributes attrs in
+        match uu___ with
+        | (pqual, attrs1) ->
+            FStar_Syntax_Syntax.mk_binder_with_attrs bv aq pqual attrs1
 let (qualify_field_names :
   FStar_Ident.lident ->
     FStar_Ident.lident Prims.list -> FStar_Ident.lident Prims.list)
@@ -1401,7 +1415,7 @@ let (desugar_universe :
     match u with
     | FStar_Pervasives.Inl n -> int_to_universe n
     | FStar_Pervasives.Inr u1 -> u1
-let (check_no_aq : FStar_Syntax_Syntax.antiquotations -> unit) =
+let (check_no_aq : antiquotations_temp -> unit) =
   fun aq ->
     match aq with
     | [] -> ()
@@ -1410,7 +1424,7 @@ let (check_no_aq : FStar_Syntax_Syntax.antiquotations -> unit) =
          FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_quoted
            (e,
             { FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_dynamic;
-              FStar_Syntax_Syntax.antiquotes = uu___;_});
+              FStar_Syntax_Syntax.antiquotations = uu___;_});
          FStar_Syntax_Syntax.pos = uu___1; FStar_Syntax_Syntax.vars = uu___2;
          FStar_Syntax_Syntax.hash_code = uu___3;_})::uu___4
         ->
@@ -1587,8 +1601,7 @@ let rec (desugar_data_pat :
   Prims.bool ->
     env_t ->
       FStar_Parser_AST.pattern ->
-        ((env_t * bnd * annotated_pat Prims.list) *
-          FStar_Syntax_Syntax.antiquotations))
+        ((env_t * bnd * annotated_pat Prims.list) * antiquotations_temp))
   =
   fun top_level_ascr_allowed ->
     fun env ->
@@ -2021,8 +2034,7 @@ and (desugar_binding_pat_maybe_top :
   Prims.bool ->
     FStar_Syntax_DsEnv.env ->
       FStar_Parser_AST.pattern ->
-        ((env_t * bnd * annotated_pat Prims.list) *
-          FStar_Syntax_Syntax.antiquotations))
+        ((env_t * bnd * annotated_pat Prims.list) * antiquotations_temp))
   =
   fun top ->
     fun env ->
@@ -2109,15 +2121,13 @@ and (desugar_binding_pat_maybe_top :
 and (desugar_binding_pat_aq :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.pattern ->
-      ((env_t * bnd * annotated_pat Prims.list) *
-        FStar_Syntax_Syntax.antiquotations))
+      ((env_t * bnd * annotated_pat Prims.list) * antiquotations_temp))
   = fun env -> fun p -> desugar_binding_pat_maybe_top false env p
 and (desugar_match_pat_maybe_top :
   Prims.bool ->
     env_t ->
       FStar_Parser_AST.pattern ->
-        ((env_t * annotated_pat Prims.list) *
-          FStar_Syntax_Syntax.antiquotations))
+        ((env_t * annotated_pat Prims.list) * antiquotations_temp))
   =
   fun uu___ ->
     fun env ->
@@ -2128,13 +2138,11 @@ and (desugar_match_pat_maybe_top :
 and (desugar_match_pat :
   env_t ->
     FStar_Parser_AST.pattern ->
-      ((env_t * annotated_pat Prims.list) *
-        FStar_Syntax_Syntax.antiquotations))
+      ((env_t * annotated_pat Prims.list) * antiquotations_temp))
   = fun env -> fun p -> desugar_match_pat_maybe_top false env p
 and (desugar_term_aq :
   env_t ->
-    FStar_Parser_AST.term ->
-      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.antiquotations))
+    FStar_Parser_AST.term -> (FStar_Syntax_Syntax.term * antiquotations_temp))
   =
   fun env ->
     fun e ->
@@ -2149,8 +2157,7 @@ and (desugar_term :
       match uu___ with | (t, aq) -> (check_no_aq aq; t)
 and (desugar_typ_aq :
   FStar_Syntax_DsEnv.env ->
-    FStar_Parser_AST.term ->
-      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.antiquotations))
+    FStar_Parser_AST.term -> (FStar_Syntax_Syntax.term * antiquotations_temp))
   =
   fun env ->
     fun e ->
@@ -2286,7 +2293,7 @@ and (desugar_term_maybe_top :
   Prims.bool ->
     env_t ->
       FStar_Parser_AST.term ->
-        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.antiquotations))
+        (FStar_Syntax_Syntax.term * antiquotations_temp))
   =
   fun top_level ->
     fun env ->
@@ -2319,6 +2326,7 @@ and (desugar_term_maybe_top :
           match b with
           | { FStar_Syntax_Syntax.binder_bv = x;
               FStar_Syntax_Syntax.binder_qual = FStar_Pervasives_Native.None;
+              FStar_Syntax_Syntax.binder_positivity = uu___;
               FStar_Syntax_Syntax.binder_attrs = [];_} -> x
           | uu___ ->
               let uu___1 =
@@ -2791,7 +2799,7 @@ and (desugar_term_maybe_top :
                                    let uu___6 =
                                      let uu___7 =
                                        let uu___8 =
-                                         FStar_Syntax_Syntax.mk_binder_with_attrs
+                                         mk_binder_with_attrs
                                            {
                                              FStar_Syntax_Syntax.ppname =
                                                (x.FStar_Syntax_Syntax.ppname);
@@ -3122,8 +3130,7 @@ and (desugar_term_maybe_top :
                                                 (sc1, p2)
                                           | uu___6 -> failwith "Impossible") in
                                    let uu___6 =
-                                     FStar_Syntax_Syntax.mk_binder_with_attrs
-                                       x aq1 attrs in
+                                     mk_binder_with_attrs x aq1 attrs in
                                    (uu___6, sc_pat_opt1) in
                              (match uu___5 with
                               | (b1, sc_pat_opt1) ->
@@ -4134,31 +4141,58 @@ and (desugar_term_maybe_top :
             let uu___1 = desugar_term_aq env e in
             (match uu___1 with
              | (tm, vts) ->
-                 let qi =
-                   {
-                     FStar_Syntax_Syntax.qkind =
-                       FStar_Syntax_Syntax.Quote_static;
-                     FStar_Syntax_Syntax.antiquotes = vts
-                   } in
-                 let uu___2 =
-                   FStar_Compiler_Effect.op_Less_Bar mk
-                     (FStar_Syntax_Syntax.Tm_quoted (tm, qi)) in
-                 (uu___2, noaqs))
+                 let vt_binders =
+                   FStar_Compiler_List.map
+                     (fun uu___2 ->
+                        match uu___2 with
+                        | (bv, _tm) -> FStar_Syntax_Syntax.mk_binder bv) vts in
+                 let vt_tms =
+                   FStar_Compiler_List.map FStar_Pervasives_Native.snd vts in
+                 let tm1 = FStar_Syntax_Subst.close vt_binders tm in
+                 ((let fvs = FStar_Syntax_Free.names tm1 in
+                   let uu___3 =
+                     let uu___4 = FStar_Compiler_Util.set_is_empty fvs in
+                     Prims.op_Negation uu___4 in
+                   if uu___3
+                   then
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 =
+                           FStar_Common.string_of_set
+                             FStar_Syntax_Print.nm_to_string fvs in
+                         FStar_Compiler_Util.format1
+                           "Static quotation refers to external variables: %s"
+                           uu___6 in
+                       (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
+                         uu___5) in
+                     FStar_Errors.raise_error uu___4 e.FStar_Parser_AST.range
+                   else ());
+                  (match () with
+                   | () ->
+                       let qi =
+                         {
+                           FStar_Syntax_Syntax.qkind =
+                             FStar_Syntax_Syntax.Quote_static;
+                           FStar_Syntax_Syntax.antiquotations =
+                             (Prims.int_zero, vt_tms)
+                         } in
+                       let uu___3 =
+                         FStar_Compiler_Effect.op_Less_Bar mk
+                           (FStar_Syntax_Syntax.Tm_quoted (tm1, qi)) in
+                       (uu___3, noaqs))))
         | FStar_Parser_AST.Antiquote e ->
             let bv =
               FStar_Syntax_Syntax.new_bv
                 (FStar_Pervasives_Native.Some (e.FStar_Parser_AST.range))
                 FStar_Syntax_Syntax.tun in
+            let tm = desugar_term env e in
             let uu___1 = FStar_Syntax_Syntax.bv_to_name bv in
-            let uu___2 =
-              let uu___3 = let uu___4 = desugar_term env e in (bv, uu___4) in
-              [uu___3] in
-            (uu___1, uu___2)
+            (uu___1, [(bv, tm)])
         | FStar_Parser_AST.Quote (e, FStar_Parser_AST.Dynamic) ->
             let qi =
               {
                 FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_dynamic;
-                FStar_Syntax_Syntax.antiquotes = []
+                FStar_Syntax_Syntax.antiquotations = (Prims.int_zero, [])
               } in
             let uu___1 =
               let uu___2 =
@@ -4847,8 +4881,7 @@ and (desugar_match_returns :
           FStar_Pervasives.either * FStar_Syntax_Syntax.term'
           FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option *
           Prims.bool)) FStar_Pervasives_Native.option *
-          (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
-          FStar_Syntax_Syntax.syntax) Prims.list))
+          (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list))
   =
   fun env ->
     fun scrutinee ->
@@ -4914,9 +4947,7 @@ and (desugar_ascription :
   env_t ->
     FStar_Parser_AST.term ->
       FStar_Parser_AST.term FStar_Pervasives_Native.option ->
-        Prims.bool ->
-          (FStar_Syntax_Syntax.ascription *
-            FStar_Syntax_Syntax.antiquotations))
+        Prims.bool -> (FStar_Syntax_Syntax.ascription * antiquotations_temp))
   =
   fun env ->
     fun t ->
@@ -5647,7 +5678,7 @@ and (desugar_binder_aq :
     FStar_Parser_AST.binder ->
       ((FStar_Ident.ident FStar_Pervasives_Native.option *
         FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.attribute Prims.list)
-        * FStar_Syntax_Syntax.antiquotations))
+        * antiquotations_temp))
   =
   fun env ->
     fun b ->
@@ -5731,7 +5762,7 @@ and (as_binder :
             let uu___1 =
               let uu___2 = FStar_Syntax_Syntax.null_bv k in
               let uu___3 = trans_bqual env imp in
-              FStar_Syntax_Syntax.mk_binder_with_attrs uu___2 uu___3 attrs in
+              mk_binder_with_attrs uu___2 uu___3 attrs in
             (uu___1, env)
         | (FStar_Pervasives_Native.Some a, k, attrs) ->
             let uu___1 = FStar_Syntax_DsEnv.push_bv env a in
@@ -5739,7 +5770,7 @@ and (as_binder :
              | (env1, a1) ->
                  let uu___2 =
                    let uu___3 = trans_bqual env1 imp in
-                   FStar_Syntax_Syntax.mk_binder_with_attrs
+                   mk_binder_with_attrs
                      {
                        FStar_Syntax_Syntax.ppname =
                          (a1.FStar_Syntax_Syntax.ppname);
@@ -5814,8 +5845,7 @@ let (typars_of_binders :
                                let uu___4 =
                                  let uu___5 =
                                    trans_bqual env2 b.FStar_Parser_AST.aqual in
-                                 FStar_Syntax_Syntax.mk_binder_with_attrs a2
-                                   uu___5 attrs in
+                                 mk_binder_with_attrs a2 uu___5 attrs in
                                uu___4 :: out in
                              (env2, uu___3))
                     | uu___2 ->
@@ -6458,7 +6488,7 @@ let rec (desugar_tycon :
                           | (env3, y) ->
                               let uu___3 =
                                 let uu___4 =
-                                  FStar_Syntax_Syntax.mk_binder_with_attrs y
+                                  mk_binder_with_attrs y
                                     b.FStar_Syntax_Syntax.binder_qual
                                     b.FStar_Syntax_Syntax.binder_attrs in
                                 uu___4 :: tps in
@@ -6806,6 +6836,9 @@ let rec (desugar_tycon :
                                                  (FStar_Pervasives_Native.Some
                                                     (FStar_Syntax_Syntax.Implicit
                                                        true));
+                                               FStar_Syntax_Syntax.binder_positivity
+                                                 =
+                                                 (tp.FStar_Syntax_Syntax.binder_positivity);
                                                FStar_Syntax_Syntax.binder_attrs
                                                  =
                                                  (tp.FStar_Syntax_Syntax.binder_attrs)
@@ -7610,6 +7643,9 @@ let rec (desugar_effect :
                                                                     FStar_Syntax_Syntax.binder_qual
                                                                     =
                                                                     (b.FStar_Syntax_Syntax.binder_qual);
+                                                                    FStar_Syntax_Syntax.binder_positivity
+                                                                    =
+                                                                    (b.FStar_Syntax_Syntax.binder_positivity);
                                                                     FStar_Syntax_Syntax.binder_attrs
                                                                     =
                                                                     b_attrs1
@@ -8483,10 +8519,12 @@ and (desugar_decl_noattrs :
                          (fun x ->
                             let uu___1 = has_no_method_attr x in
                             Prims.op_Negation uu___1) meths in
+                     let is_typed = false in
                      let uu___1 =
                        let uu___2 =
                          let uu___3 =
-                           let uu___4 = mkclass lid in (meths1, uu___4) in
+                           let uu___4 = mkclass lid in
+                           (is_typed, meths1, uu___4) in
                          FStar_Syntax_Syntax.Sig_splice uu___3 in
                        {
                          FStar_Syntax_Syntax.sigel = uu___2;
@@ -9097,7 +9135,7 @@ and (desugar_decl_noattrs :
               } in
             [uu___1] in
           (env, uu___)
-      | FStar_Parser_AST.Splice (ids, t) ->
+      | FStar_Parser_AST.Splice (is_typed, ids, t) ->
           let t1 = desugar_term env t in
           let se =
             let uu___ =
@@ -9105,7 +9143,7 @@ and (desugar_decl_noattrs :
                 let uu___2 =
                   FStar_Compiler_List.map (FStar_Syntax_DsEnv.qualify env)
                     ids in
-                (uu___2, t1) in
+                (is_typed, uu___2, t1) in
               FStar_Syntax_Syntax.Sig_splice uu___1 in
             {
               FStar_Syntax_Syntax.sigel = uu___;

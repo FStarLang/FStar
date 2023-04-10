@@ -35,6 +35,8 @@ let parse_fragment (frag: ParseIt.input_frag) : fragment =
         Empty
     | ASTFragment (Inr decls, _) -> //interactive mode: more decls
         Decls decls
+    | IncrementalFragment (decls, _, _) -> 
+        DeclsWithContent decls
     | ParseError (e, msg, r) ->
         raise_error (e, msg) r
     | Term _ ->

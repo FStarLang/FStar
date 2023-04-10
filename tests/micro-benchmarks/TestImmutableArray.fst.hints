@@ -1,0 +1,70 @@
+[
+  "â‚10\u0014ôÏá}¢~¨ëñI?",
+  [
+    [
+      "TestImmutableArray.uu___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "lemma_FStar.ImmutableArray.Base.array_has_eq",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "407024f047304ac8b824ff75c7b6b405"
+    ],
+    [
+      "TestImmutableArray.test_length_correspondence",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@query", "lemma_FStar.ImmutableArray.length_spec",
+        "lemma_FStar.ImmutableArray.to_list_of_list",
+        "typing_FStar.ImmutableArray.Base.of_list"
+      ],
+      0,
+      "82e4efce13257976f9f20e8fd4645cbf"
+    ],
+    [
+      "TestImmutableArray.test_index_correspondence",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@query", "equation_Prims.nat", "int_inversion",
+        "lemma_FStar.ImmutableArray.index_spec",
+        "lemma_FStar.ImmutableArray.length_spec",
+        "lemma_FStar.ImmutableArray.to_list_of_list",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c86aba5c6243e6b7f9a4b0ad41b4e9a0",
+        "refinement_interpretation_Tm_refine_edb064fdc83c1f3b2d617f591ddbc683",
+        "typing_FStar.ImmutableArray.Base.of_list"
+      ],
+      0,
+      "9f2ef3852ec5b38470cb5d90b50e4635"
+    ],
+    [
+      "TestImmutableArray.__proj__Array__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d37a57f00cafb69b97302439f61bb47d"
+      ],
+      0,
+      "0f6f22b710dd7880276c77e7fa0f4cce"
+    ]
+  ]
+]

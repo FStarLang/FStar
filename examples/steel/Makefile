@@ -16,7 +16,7 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
-ifdef HAS_OCAML
+ifneq (,$(HAS_OCAML))
 
 OCAML_DEFAULT_FLAGS += -I $(OUTPUT_DIRECTORY) -w -31
 counter: _output/OWGCounter.ml OWGCounterTest.ml | verify-all

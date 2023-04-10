@@ -528,6 +528,8 @@ and (on_subterms :
                                       FStar_Syntax_Syntax.binder_bv = bv;
                                       FStar_Syntax_Syntax.binder_qual =
                                         (b.FStar_Syntax_Syntax.binder_qual);
+                                      FStar_Syntax_Syntax.binder_positivity =
+                                        (b.FStar_Syntax_Syntax.binder_positivity);
                                       FStar_Syntax_Syntax.binder_attrs =
                                         (b.FStar_Syntax_Syntax.binder_attrs)
                                     } in

@@ -28,13 +28,15 @@ open FStar.Errors
 open FStar.Interactive.JsonHelper
 open FStar.Interactive.QueryHelper
 open FStar.Interactive.PushHelper
+open FStar.Interactive.Ide.Types
+module BU = FStar.Compiler.Util
 
 open FStar.Universal
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 open FStar.Interactive
 open FStar.Parser.ParseIt
-
+open FStar.Interactive.Ide.Types
 module SS = FStar.Syntax.Syntax
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
@@ -73,28 +75,7 @@ let with_captured_errors' env sigint_handler f =
 let with_captured_errors env sigint_handler f =
   if Options.trace_error () then f env
   else with_captured_errors' env sigint_handler f
-
-(*************************)
-(* REPL tasks and states *)
-(*************************)
-
-let t0 = Util.now ()
-
-(** Create a timed_fname with a dummy modtime **)
-let dummy_tf_of_fname fname =
-  { tf_fname = fname;
-    tf_modtime = t0 }
-
-let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
-  if modtime = t0 then Util.format1 "{ %s }" fname
-  else Util.format2 "{ %s; %s }" fname (string_of_time modtime)
-
-type push_query =
-  { push_kind: push_kind;
-    push_code: string;
-    push_line: int; push_column: int;
-    push_peek_only: bool }
-
+  
 (** Tasks describing each snapshot of the REPL state. **)
 
 type env_t = TcEnv.env
@@ -112,24 +93,13 @@ let nothing_left_to_pop st =
 (* Dependency checks *)
 (*********************)
 
-let string_of_repl_task = function
-  | LDInterleaved (intf, impl) ->
-    Util.format2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
-  | LDSingle intf_or_impl ->
-    Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
-  | LDInterfaceOfCurrentFile intf ->
-    Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
-  | PushFragment frag ->
-    Util.format1 "PushFragment { code = %s }" frag.frag_text
-  | Noop -> "Noop {}"
-
 (** Push, run `task`, and pop if it fails.
 
 If `must_rollback` is set, always pop.  Returns a pair: a boolean indicating
 success, and a new REPL state. **)
 let run_repl_transaction st push_kind must_rollback task =
   let st = push_repl "run_repl_transaction" push_kind task st in
-  let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking…
+  let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking …
 
   let check_success () =
     get_err_count () = 0 && not must_rollback in
@@ -141,7 +111,7 @@ let run_repl_transaction st push_kind must_rollback task =
     | Some (curmod, env) when check_success () -> curmod, env, true
     | _ -> st.repl_curmod, env, false in
 
-  let env, name_events = finish_name_tracking env in // …end name tracking
+  let env, name_events = finish_name_tracking env in //  …end name tracking
   let st =
     if success then
       let st = { st with repl_env = env; repl_curmod = curmod } in
@@ -156,7 +126,7 @@ let run_repl_transaction st push_kind must_rollback task =
 Returns a new REPL state, wrapped in ``Inl`` to indicate complete success or
 ``Inr`` to indicate a partial failure.  That new state has an updated
 ``repl_deps_stack``, containing loaded dependencies in reverse order compared to
-the original list of tasks: the first dependencies (prims, …) come first; the
+the original list of tasks: the first dependencies (prims, ...) come first; the
 current file's interface comes last.
 
 The original value of the ``repl_deps_stack`` field in ``st`` is used to skip
@@ -201,7 +171,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
       Options.restore_cmd_line_options false |> ignore;
       let timestamped_task = update_task_timestamps task in
       let push_kind = if Options.lax () then LaxCheck else FullCheck in
-      let success, st = run_repl_transaction st push_kind false timestamped_task in
+      let success, st = run_repl_transaction st (Some push_kind) false timestamped_task in
       if success then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
       else Inr st
 
@@ -217,106 +187,6 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
       aux (revert_many st previous) tasks [] in
 
   aux st tasks (List.rev st.repl_deps_stack)
-
-(*****************************************)
-(* Reading queries and writing responses *)
-(*****************************************)
-
-let js_pushkind s : push_kind = match js_str s with
-  | "syntax" -> SyntaxCheck
-  | "lax" -> LaxCheck
-  | "full" -> FullCheck
-  | _ -> js_fail "push_kind" s
-
-let js_reductionrule s = match js_str s with
-  | "beta" -> FStar.TypeChecker.Env.Beta
-  | "delta" -> FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant
-  | "iota" -> FStar.TypeChecker.Env.Iota
-  | "zeta" -> FStar.TypeChecker.Env.Zeta
-  | "reify" -> FStar.TypeChecker.Env.Reify
-  | "pure-subterms" -> FStar.TypeChecker.Env.PureSubtermsWithinComputations
-  | _ -> js_fail "reduction rule" s
-
-type completion_context =
-| CKCode
-| CKOption of bool (* #set-options (false) or #reset-options (true) *)
-| CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
-
-let js_optional_completion_context k =
-  match k with
-  | None -> CKCode
-  | Some k ->
-    match js_str k with
-    | "symbol" // Backwards compatibility
-    | "code" -> CKCode
-    | "set-options" -> CKOption false
-    | "reset-options" -> CKOption true
-    | "open"
-    | "let-open" -> CKModuleOrNamespace (true, true)
-    | "include"
-    | "module-alias" -> CKModuleOrNamespace (true, false)
-    | _ ->
-      js_fail "completion context (code, set-options, reset-options, \
-open, let-open, include, module-alias)" k
-
-type lookup_context =
-| LKSymbolOnly
-| LKModule
-| LKOption
-| LKCode
-
-let js_optional_lookup_context k =
-  match k with
-  | None -> LKSymbolOnly // Backwards-compatible default
-  | Some k ->
-    match js_str k with
-    | "symbol-only" -> LKSymbolOnly
-    | "code" -> LKCode
-    | "set-options"
-    | "reset-options" -> LKOption
-    | "open"
-    | "let-open"
-    | "include"
-    | "module-alias" -> LKModule
-    | _ ->
-      js_fail "lookup context (symbol-only, code, set-options, reset-options, \
-open, let-open, include, module-alias)" k
-
-type position = string * int * int
-
-type query' =
-| Exit
-| DescribeProtocol
-| DescribeRepl
-| Segment of string (* File contents *)
-| Pop
-| Push of push_query
-| VfsAdd of option string (* fname *) * string (* contents *)
-| AutoComplete of string * completion_context
-| Lookup of string * lookup_context * option position * list string
-| Compute of string * option (list FStar.TypeChecker.Env.step)
-| Search of string
-| GenericError of string
-| ProtocolViolation of string
-and query = { qq: query'; qid: string }
-
-let query_needs_current_module = function
-  | Exit | DescribeProtocol | DescribeRepl | Segment _
-  | Pop | Push { push_peek_only = false } | VfsAdd _
-  | GenericError _ | ProtocolViolation _ -> false
-  | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
-
-let interactive_protocol_vernum = 2
-
-let interactive_protocol_features =
-  ["autocomplete"; "autocomplete/context";
-   "compute"; "compute/reify"; "compute/pure-subterms";
-   "describe-protocol"; "describe-repl"; "exit";
-   "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
-   "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"; "tactic-ranges"; "interrupt"; "progress"]
-
-type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
 
 let wrap_js_failure qid expected got =
   { qid = qid;
@@ -342,6 +212,27 @@ let unpack_interactive_query json =
       | Some JsonNull -> None
       | other -> other in
 
+    let read_position err loc =
+        assoc err "filename" loc |> js_str,
+        assoc err "line" loc |> js_int,
+        assoc err "column" loc |> js_int
+    in
+    let read_to_position () =
+      let to_pos = arg "to-position" |> js_assoc in
+      "<input>",
+      assoc  "to-position.line" "line" to_pos  |> js_int, 
+      assoc "to-position.column" "column"  to_pos |> js_int
+    in
+    let parse_full_buffer_kind (kind:string) =
+      match kind with
+      | "full" -> Full
+      | "lax" -> Lax
+      | "cache" -> Cache
+      | "reload-deps" -> ReloadDeps
+      | "verify-to-position" -> VerifyToPosition (read_to_position ())
+      | "lax-to-position" -> LaxToPosition (read_to_position ())
+      | _ -> raise (InvalidQuery "Invalid full-buffer kind")
+    in
     { qid = qid;
       qq = match query with
            | "exit" -> Exit
@@ -350,27 +241,31 @@ let unpack_interactive_query json =
            | "describe-repl" -> DescribeRepl
            | "segment" -> Segment (arg "code" |> js_str)
            | "peek" | "push" -> Push ({ push_kind = arg "kind" |> js_pushkind;
-                                       push_code = arg "code" |> js_str;
+                                       push_code_or_decl = Inl (arg "code" |> js_str);
                                        push_line = arg "line" |> js_int;
                                        push_column = arg "column" |> js_int;
                                        push_peek_only = query = "peek" })
+           | "full-buffer" -> FullBuffer (arg "code" |> js_str,
+                                          parse_full_buffer_kind (arg "kind" |> js_str), 
+                                          arg "with-symbols" |> js_bool)
            | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
                                             try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
                                 try_arg "context" |> js_optional_lookup_context,
                                 try_arg "location"
                                   |> Util.map_option js_assoc
-                                  |> Util.map_option (fun loc ->
-                                      (assoc "[location]" "filename" loc |> js_str,
-                                       assoc "[location]" "line" loc |> js_int,
-                                       assoc "[location]" "column" loc |> js_int)),
-                                arg "requested-info" |> js_list js_str)
+                                  |> Util.map_option (read_position "[location]"),
+                                arg "requested-info" |> js_list js_str,
+                                try_arg "symbol-range")
            | "compute" -> Compute (arg "term" |> js_str,
                                   try_arg "rules"
                                     |> Util.map_option (js_list js_reductionrule))
            | "search" -> Search (arg "terms" |> js_str)
            | "vfs-add" -> VfsAdd (try_arg "filename" |> Util.map_option js_str,
                                  arg "contents" |> js_str)
+           | "format" -> Format (arg "code" |> js_str)
+           | "restart-solver" -> RestartSolver
+           | "cancel" -> Cancel (Some("<input>", arg "cancel-line" |> js_int, arg "cancel-column" |> js_int))
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
   with
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
@@ -388,43 +283,57 @@ let parse_interactive_query query_str : query =
   | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
   | Some request -> deserialize_interactive_query request
 
-let read_interactive_query stream : query =
-  match Util.read_line stream with
-  | None -> exit 0
-  | Some line -> parse_interactive_query line
+let buffer_input_queries (st:repl_state) : repl_state =
+  let rec aux qs (st:repl_state) : repl_state =
+    let done qs st =
+        {st with repl_buffered_input_queries =
+                 st.repl_buffered_input_queries @ List.rev qs}
+    in
+    if not (Util.poll_stdin (float_of_string "0.0"))
+    then done qs st
+    else (
+      match Util.read_line st.repl_stdin with
+      | None ->
+        done qs st
 
+      | Some line -> 
+        let q = parse_interactive_query line in
+        match q.qq with
+        | Cancel _ -> 
+          //Cancel drains all buffered queries
+          {st with repl_buffered_input_queries = [q] }
+        | _ -> aux (q :: qs) st
+    )
+  in
+  aux [] st
+
+let read_interactive_query (st:repl_state) : query & repl_state =
+    match st.repl_buffered_input_queries with
+    | [] -> (
+      match Util.read_line st.repl_stdin with
+      | None -> exit 0
+      | Some line -> parse_interactive_query line, st
+    )
+    | q :: qs ->
+      q, { st with repl_buffered_input_queries = qs }
+  
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
 
-let json_of_issue_level i =
-  JsonStr (match i with
-           | ENotImplemented -> "not-implemented"
-           | EInfo -> "info"
-           | EWarning -> "warning"
-           | EError -> "error")
-
-let json_of_issue issue =
-  JsonAssoc <|
-     [("level", json_of_issue_level issue.issue_level)]
-    @(match issue.issue_number with
-      | None -> []
-      | Some n -> [("number", JsonInt n)])
-    @[("message", JsonStr (issue_message issue));
-      ("ranges", JsonList
-                   ((match issue.issue_range with
-                     | None -> []
-                     | Some r -> [json_of_use_range r]) @
-                    (match issue.issue_range with
-                     | Some r when def_range r <> use_range r ->
-                       [json_of_def_range r]
-                     | _ -> [])))]
-
-let alist_of_symbol_lookup_result lr =
+let alist_of_symbol_lookup_result lr symbol symrange_opt=
   [("name", JsonStr lr.slr_name);
    ("defined-at", json_of_opt json_of_def_range lr.slr_def_range);
    ("type", json_of_opt JsonStr lr.slr_typ);
    ("documentation", json_of_opt JsonStr lr.slr_doc);
-   ("definition", json_of_opt JsonStr lr.slr_def)]
+   ("definition", json_of_opt JsonStr lr.slr_def)] @ (
+    // echo back the symbol-range and symbol, if symbol-range was provided
+    // (don't include it otherwise, for backwards compat with fstar-mode.el)
+    match symrange_opt with
+    | None -> []
+    | Some symrange -> 
+     [("symbol-range", json_of_opt (fun x -> x) symrange_opt);
+      ("symbol", JsonStr symbol)]
+  )
 
 let alist_of_protocol_info =
   let js_version = JsonInt interactive_protocol_vernum in
@@ -660,6 +569,9 @@ let write_progress stage contents_alist =
   let js_contents = ("stage", stage) :: contents_alist in
   write_json (json_of_message "progress" (JsonAssoc js_contents))
 
+let write_error contents =
+  write_json (json_of_message "error" (JsonAssoc contents))
+
 let write_repl_ld_task_progress task =
   match task with
   | LDInterleaved (_, tf) | LDSingle tf | LDInterfaceOfCurrentFile tf ->
@@ -686,26 +598,95 @@ let rephrase_dependency_error issue =
                format1 "Error while computing or loading dependencies:\n%s"
                        issue.issue_msg }
 
-let run_push_without_deps st query =
+let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
+    let open FStar.Interactive.Incremental in
+    let json_of_code_fragment (cf:FStar.Parser.ParseIt.code_fragment) =
+        JsonAssoc ["range", json_of_def_range cf.range;
+                   "code-digest", JsonStr (BU.digest_of_string cf.code)]
+    in
+    match di with
+    | FullBufferStarted ->
+      write_progress (Some "full-buffer-started") []
+    
+    | FragmentStarted d ->
+      write_progress (Some "full-buffer-fragment-started")
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
+    | FragmentSuccess (d, cf, FullCheck) ->
+      write_progress (Some "full-buffer-fragment-ok")
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange;
+                      "code-fragment", json_of_code_fragment cf]
+    | FragmentSuccess (d, cf, LaxCheck) ->
+      write_progress (Some "full-buffer-fragment-lax-ok")
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange;
+                      "code-fragment", json_of_code_fragment cf]
+    | FragmentFailed d ->
+      write_progress (Some "full-buffer-fragment-failed")
+                     ["ranges", json_of_def_range d.FStar.Parser.AST.drange]
+
+    | FragmentError issues ->
+      let qid =
+        match !repl_current_qid with
+        | None -> "unknown"
+        | Some q -> q
+      in
+      write_json (json_of_response qid QueryNOK (JsonList (List.map json_of_issue issues)))
+
+    | FullBufferFinished ->
+      write_progress (Some "full-buffer-finished") []
+
+
+let run_push_without_deps st query
+  : (query_status & json) & either repl_state int =
   let set_nosynth_flag st flag =
     { st with repl_env = { st.repl_env with nosynth = flag } } in
 
-  let { push_code = text; push_line = line; push_column = column;
-        push_peek_only = peek_only; push_kind = push_kind } = query in
+  let { push_code_or_decl = code_or_decl;
+        push_line = line;
+        push_column = column;
+        push_peek_only = peek_only;
+        push_kind = push_kind } = query in
 
-  let frag = { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column } in
 
   let _ =
     if FStar.Options.ide_id_info_off()
     then TcEnv.toggle_id_info st.repl_env false
     else TcEnv.toggle_id_info st.repl_env true
   in
+  let frag =
+    match code_or_decl with
+    | Inl text ->
+      Inl { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column }
+    | Inr (decl, _code) -> 
+      Inr decl
+    in
   let st = set_nosynth_flag st peek_only in
-  let success, st = run_repl_transaction st push_kind peek_only (PushFragment frag) in
+  let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [])) in
   let st = set_nosynth_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
-  let json_errors = JsonList (collect_errors () |> List.map json_of_issue) in
+  let errs = collect_errors () in
+  let has_error = 
+      List.existsb 
+        (fun i -> 
+          match i.issue_level with
+          | EError | ENotImplemented -> true
+          | _ -> false)
+        errs
+  in
+  let _ = 
+    match code_or_decl with
+    | Inr (d, s) ->
+      if not has_error
+      then write_full_buffer_fragment_progress (Incremental.FragmentSuccess (d, s, push_kind))
+      else write_full_buffer_fragment_progress (Incremental.FragmentFailed d)
+    | _ -> ()
+  in
+  let json_errors = JsonList (errs |> List.map json_of_issue) in
+  let _ = 
+    match errs, status with
+    | _::_, QueryOK -> add_issues_to_push_fragment [json_errors]
+    | _ -> ()
+  in
   let st = if success then { st with repl_line = line; repl_column = column } else st in
   ((status, json_errors), Inl st)
 
@@ -729,10 +710,11 @@ let run_push st query =
   else
     run_push_without_deps st query
 
-let run_symbol_lookup st symbol pos_opt requested_info =
+let run_symbol_lookup st symbol pos_opt requested_info (symbol_range_opt:option json) =
   match QH.symlookup st.repl_env symbol pos_opt requested_info with
   | None -> Inl "Symbol not found"
-  | Some result -> Inr ("symbol", alist_of_symbol_lookup_result result)
+  | Some result ->
+    Inr ("symbol", alist_of_symbol_lookup_result result symbol symbol_range_opt)
 
 let run_option_lookup opt_name =
   let _, trimmed_name = trim_option_name opt_name in
@@ -750,30 +732,54 @@ let run_module_lookup st symbol =
   | Some (CTable.Namespace ns_info) ->
     Inr ("namespace", CTable.alist_of_ns_info ns_info)
 
-let run_code_lookup st symbol pos_opt requested_info =
-  match run_symbol_lookup st symbol pos_opt requested_info with
+let run_code_lookup st symbol pos_opt requested_info symrange_opt=
+  match run_symbol_lookup st symbol pos_opt requested_info symrange_opt with
   | Inr alist -> Inr alist
   | Inl _ -> match run_module_lookup st symbol with
             | Inr alist -> Inr alist
             | Inl err_msg -> Inl "No such symbol, module, or namespace."
 
-let run_lookup' st symbol context pos_opt requested_info =
+let run_lookup' st symbol context pos_opt requested_info symrange =
   match context with
-  | LKSymbolOnly -> run_symbol_lookup st symbol pos_opt requested_info
+  | LKSymbolOnly -> run_symbol_lookup st symbol pos_opt requested_info symrange
   | LKModule -> run_module_lookup st symbol
   | LKOption -> run_option_lookup symbol
-  | LKCode -> run_code_lookup st symbol pos_opt requested_info
+  | LKCode -> run_code_lookup st symbol pos_opt requested_info symrange
 
-let run_lookup st symbol context pos_opt requested_info =
-  match run_lookup' st symbol context pos_opt requested_info with
-  | Inl err_msg ->
-    ((QueryNOK, JsonStr err_msg), Inl st)
-  | Inr (kind, info) ->
-    ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
+let run_lookup st symbol context pos_opt requested_info symrange =
+  try
+    match run_lookup' st symbol context pos_opt requested_info symrange with
+    | Inl err_msg -> (
+      match symrange with
+      | None ->
+        //fstar-mode.el expects a failure on symbol not found
+        ((QueryNOK, [JsonStr err_msg]), Inl st)
+      | _ ->
+        // This is the behavior for the vscode mode
+        // No result found, but don't fail the query
+         ((QueryOK, []), Inl st)
+      )
+
+    | Inr (kind, info) ->
+      ((QueryOK, [JsonAssoc (("kind", JsonStr kind) :: info)]), Inl st)
+  with
+  | _ -> ((QueryOK, [JsonStr ("Lookup of " ^ symbol^ " failed")]), Inl st)
+
 
 let run_code_autocomplete st search_term =
   let result = QH.ck_completion st search_term in
-  let js = List.map CTable.json_of_completion_result result in
+  let results = 
+    match result with
+    | [] -> result
+    | _ ->
+      let result_correlator : CTable.completion_result = {
+        completion_match_length = 0;
+        completion_annotation = "<search term>";
+        completion_candidate = search_term
+      } in
+      result@[result_correlator]
+  in
+  let js = List.map CTable.json_of_completion_result results in
   ((QueryOK, JsonList js), Inl st)
 
 let run_module_autocomplete st search_term modules namespaces =
@@ -821,7 +827,7 @@ let run_autocomplete st search_term context =
     run_module_autocomplete st search_term modules namespaces
 
 let run_and_rewind st sigint_default task =
-  let st = push_repl "run_and_rewind" FullCheck Noop st in
+  let st = push_repl "run_and_rewind" (Some FullCheck) Noop st in
   let results =
     try Util.with_sigint_handler Util.sigint_raise (fun _ -> Inl <| task st)
     with | Util.SigInt -> Inl sigint_default
@@ -843,8 +849,8 @@ let run_with_parsed_and_tc_term st term line column continuation =
     | _ -> None in
 
   let parse frag =
-    match FStar.Parser.ParseIt.parse (FStar.Parser.ParseIt.Toplevel frag) with
-    | FStar.Parser.ParseIt.ASTFragment (Inr decls, _) -> Some decls
+    match FStar.Parser.ParseIt.parse (FStar.Parser.ParseIt.Incremental frag) with
+    | FStar.Parser.ParseIt.IncrementalFragment (decls, _, _err) -> Some (List.map fst decls)
     | _ -> None in
 
   let desugar env decls =
@@ -997,21 +1003,69 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
-let run_query st (q: query') : (query_status * json) * either repl_state int =
-  match q with
-  | Exit -> run_exit st
-  | DescribeProtocol -> run_describe_protocol st
-  | DescribeRepl -> run_describe_repl st
-  | GenericError message -> run_generic_error st message
-  | ProtocolViolation query -> run_protocol_violation st query
-  | Segment c -> run_segment st c
-  | VfsAdd (fname, contents) -> run_vfs_add st fname contents
-  | Push pquery -> run_push st pquery
-  | Pop -> run_pop st
-  | AutoComplete (search_term, context) -> run_autocomplete st search_term context
-  | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
-  | Compute (term, rules) -> run_compute st term rules
-  | Search term -> run_search st term
+let run_format_code st code =
+  let code_or_err = FStar.Interactive.Incremental.format_code st code in
+  match code_or_err with
+  | Inl code -> 
+    let result = JsonAssoc ["formatted-code", JsonStr code] in 
+    (QueryOK, result), Inl st
+  | Inr issue ->
+    let result = JsonAssoc ["formatted-code-issue", JsonList (List.map json_of_issue issue)] in 
+    (QueryNOK, result), Inl st
+
+let as_json_list (q: (query_status & json) & either repl_state int)
+  : (query_status & list json) & either repl_state int
+  = let (q, j), s = q in
+    (q, [j]), s
+
+let run_query_result = (query_status * list json) * either repl_state int 
+
+let maybe_cancel_queries st l = 
+  let log_cancellation l = 
+      if Options.debug_any()
+      then List.iter (fun q -> BU.print1 "Cancelling query: %s\n" (query_to_string q)) l
+  in
+  match st.repl_buffered_input_queries with
+  | { qq = Cancel p } :: rest -> (
+    let st = { st with repl_buffered_input_queries = rest } in
+    match p with
+    | None -> //If no range, then cancel all remaining queries
+      log_cancellation l;
+      [], st
+    | Some p -> //Cancel all queries that are within the range
+      let query_ahead_of p q =
+        let _, l, c = p in
+        match q.qq with
+        | Push pq -> pq.push_line >= l
+        | _ -> false
+      in
+      let l = 
+        match BU.prefix_until (query_ahead_of p) l with
+        | None -> l
+        | Some (l, q, qs) ->
+          log_cancellation (q::qs);
+          l
+      in
+      l, st
+  )
+  | _ -> l, st
+
+let rec fold_query (f:repl_state -> query -> run_query_result)
+                   (l:list query)
+                   (st:repl_state)
+  : run_query_result
+  = match l with
+    | [] -> (QueryOK, []), Inl st
+    | q::l ->
+      let (status, responses), st' = f st q in
+      List.iter (write_response q.qid status) responses;
+      match status, st' with
+      | QueryOK, Inl st ->
+        let st = buffer_input_queries st in
+        let l, st = maybe_cancel_queries st l in
+        fold_query f l st
+      | _ ->
+        (status, []), st'
 
 let validate_query st (q: query) : query =
   match q.qq with
@@ -1022,16 +1076,58 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-let validate_and_run_query st query =
+
+let rec run_query st (q: query) : (query_status * list json) * either repl_state int =
+  match q.qq with
+  | Exit -> as_json_list (run_exit st)
+  | DescribeProtocol -> as_json_list (run_describe_protocol st)
+  | DescribeRepl -> as_json_list (run_describe_repl st)
+  | GenericError message -> as_json_list (run_generic_error st message)
+  | ProtocolViolation query -> as_json_list (run_protocol_violation st query)
+  | Segment c -> as_json_list (run_segment st c)
+  | VfsAdd (fname, contents) -> as_json_list (run_vfs_add st fname contents)
+  | Push pquery -> as_json_list (run_push st pquery)
+  | Pop -> as_json_list (run_pop st)
+  | FullBuffer (code, full_kind, with_symbols) ->
+    let open FStar.Interactive.Incremental in
+    write_full_buffer_fragment_progress FullBufferStarted;
+    let queries, issues = 
+      run_full_buffer st q.qid code full_kind with_symbols write_full_buffer_fragment_progress
+    in
+    List.iter (write_response q.qid QueryOK) issues;
+    let res = fold_query validate_and_run_query queries st in
+    write_full_buffer_fragment_progress FullBufferFinished;
+    res
+  | AutoComplete (search_term, context) ->
+    as_json_list (run_autocomplete st search_term context)
+  | Lookup (symbol, context, pos_opt, rq_info, symrange) ->
+    run_lookup st symbol context pos_opt rq_info symrange
+  | Compute (term, rules) ->
+    as_json_list (run_compute st term rules)
+  | Search term ->
+    as_json_list (run_search st term)
+  | Callback f ->
+    f st
+  | Format code ->
+    as_json_list (run_format_code st code)
+  | RestartSolver ->
+    st.repl_env.solver.refresh();
+    (QueryOK, []), Inl st
+  | Cancel _ ->
+    //This should be handled in the fold_query loop above
+    (QueryOK, []), Inl st
+and validate_and_run_query st query =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;
-  run_query st query.qq
+  if Options.debug_any ()
+  then BU.print2 "Running query %s: %s\n" query.qid (query_to_string query);
+  run_query st query
 
 (** This is the body of the JavaScript port's main loop. **)
 let js_repl_eval st query =
-  let (status, response), st_opt = validate_and_run_query st query in
-  let js_response = json_of_response query.qid status response in
-  js_response, st_opt
+  let (status, responses), st_opt = validate_and_run_query st query in
+  let js_responses = List.map (json_of_response query.qid status) responses in
+  js_responses, st_opt
 
 let js_repl_eval_js st query_js =
   js_repl_eval st (deserialize_interactive_query query_js)
@@ -1039,7 +1135,7 @@ let js_repl_eval_js st query_js =
 let js_repl_eval_str st query_str =
   let js_response, st_opt =
     js_repl_eval st (parse_interactive_query query_str) in
-  (Util.string_of_json js_response), st_opt
+  (List.map Util.string_of_json js_response), st_opt
 
 (** This too is called from FStar.js **)
 let js_repl_init_opts () =
@@ -1057,9 +1153,9 @@ let js_repl_init_opts () =
 
 (** This is the main loop for the desktop version **)
 let rec go st : int =
-  let query = read_interactive_query st.repl_stdin in
-  let (status, response), state_opt = validate_and_run_query st query in
-  write_response query.qid status response;
+  let query, st = read_interactive_query st in
+  let (status, responses), state_opt = validate_and_run_query st query in
+  List.iter (write_response query.qid status) responses;
   match state_opt with
   | Inl st' -> go st'
   | Inr exitcode -> exitcode
@@ -1091,17 +1187,20 @@ let install_ide_mode_hooks printer =
   FStar.Compiler.Util.set_printer (interactive_printer printer);
   FStar.Errors.set_handler interactive_error_handler
 
-let initial_range =
-  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
 
-  { repl_line = 1; repl_column = 0; repl_fname = filename;
-    repl_curmod = None; repl_env = env; repl_deps_stack = [];
+  { repl_line = 1;
+    repl_column = 0;
+    repl_fname = filename;
+    repl_curmod = None;
+    repl_env = env;
+    repl_deps_stack = [];
     repl_stdin = open_stdin ();
-    repl_names = CompletionTable.empty }
+    repl_names = CompletionTable.empty;
+    repl_buffered_input_queries = [] }
 
 let interactive_mode' init_st =
   write_hello ();
@@ -1115,7 +1214,6 @@ let interactive_mode' init_st =
 
 let interactive_mode (filename:string): unit =
   install_ide_mode_hooks write_json;
-
   // Ignore unexpected interrupts (some methods override this handler)
   Util.set_sigint_handler Util.sigint_ignore;
 

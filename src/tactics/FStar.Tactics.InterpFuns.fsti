@@ -1249,4 +1249,3 @@ val mk_total_step_20 :
   NBET.embedding 'nt20 ->
   NBET.embedding 'nr ->
   Cfg.primitive_step
-

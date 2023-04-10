@@ -943,8 +943,9 @@ let destruct_flex_t' t : flex_t =
       Flex (t, uv, args)
     | _ -> failwith "Not a flex-uvar"
 
-(* Destruct a term into its uvar head and arguments *)
-let destruct_flex_t t wl : flex_t * worklist =
+(* Destruct a term into its uvar head and arguments. The wl is only
+used to track implicits. *)
+let destruct_flex_t (t:term) wl : flex_t * worklist =
   (* ensure_no_uvar_subst only uses the environment for debugging
    * flags, so it's safe to pass wl.tcenv *)
   let t, wl = ensure_no_uvar_subst wl.tcenv t wl in
@@ -1001,7 +1002,8 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
             match (SS.compress a).n with
             | Tm_name x ->
               let q, attrs = U.bqual_and_attrs_of_aqual i in
-              [S.mk_binder_with_attrs x q attrs]
+              let pq, attrs = U.parse_positivity_attributes attrs in
+              [S.mk_binder_with_attrs x q pq attrs]
             | _ ->
               fail();
               [])
@@ -1198,10 +1200,11 @@ let pat_vars env ctx args : option binders =
         match hd.n with
         | Tm_name a ->
           if name_exists_in_binders a seen
-          ||  name_exists_in_binders a ctx
+          || name_exists_in_binders a ctx
           then None
           else let bq, attrs = U.bqual_and_attrs_of_aqual i in
-               aux ((S.mk_binder_with_attrs a bq attrs)::seen) args
+               let pq, attrs = U.parse_positivity_attributes attrs in
+               aux ((S.mk_binder_with_attrs a bq pq attrs)::seen) args
         | _ -> None
     in
     aux [] args
@@ -1797,6 +1800,7 @@ let quasi_pattern env (f:flex_t) : option (binders * typ) =
                         aux ((S.mk_binder_with_attrs
                                ({x with sort=formal.sort})
                                q
+                               fml.binder_positivity
                                fml.binder_attrs) :: pat_binders) formals t_res args
             | _ -> //it's not a name, so it can't be included in the patterns
             aux (fml :: pat_binders) formals t_res args
@@ -2447,6 +2451,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       let tx = UF.new_transaction () in
       begin
+      List.iter (def_check_prob "meet_or_join3_sub") sub_probs;
       match solve_t eq_prob ({wl' with defer_ok=NoDefer;
                                        wl_implicits = [];
                                        wl_deferred = [];
@@ -2556,11 +2561,11 @@ and imitate_arrow (orig:prob) (wl:worklist)
               //printfn "Arrow imitation: %s =?= %s" (Print.term_to_string lhs') (Print.term_to_string rhs);
               solve (attempt [sub_prob] (solve_prob orig None [sol] wl))
 
-            | ({binder_bv=x;binder_qual=imp;binder_attrs=attrs})::formals ->
+            | ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs})::formals ->
               let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
               //printfn "Generated formal %s where %s" (Print.term_to_string t_y) (Print.ctx_uvar_to_string ctx_u_x);
               let y = S.new_bv (Some (S.range_of_bv x)) u_x in
-              let b = S.mk_binder_with_attrs y imp attrs in
+              let b = S.mk_binder_with_attrs y imp pqual attrs in
               aux (bs@[b]) (bs_terms@[U.arg_of_non_null_binder b]) formals wl
          in
          let _, occurs_ok, msg = occurs_check u_lhs arrow in
@@ -2587,7 +2592,16 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
          U.eq_bqual a1 a2
    in
 
-   (*
+   let compat_positivity_qualifiers (p1 p2:option positivity_qualifier) : bool =
+      match p_rel orig with
+      | EQ ->
+        FStar.TypeChecker.Common.check_positivity_qual false p1 p2
+      | SUB ->
+        FStar.TypeChecker.Common.check_positivity_qual true p1 p2
+      | SUBINV ->
+        FStar.TypeChecker.Common.check_positivity_qual true p2 p1
+   in
+  (*
     * AR: adding env to the return type
     *
     *     `aux` solves the binders problems xs REL ys, and keeps on adding the binders to env
@@ -2608,7 +2622,9 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
           let formula = p_guard rhs_prob in
           Inl ([rhs_prob], formula), wl
 
-        | x::xs, y::ys when (eq_bqual x.binder_qual y.binder_qual = U.Equal) ->
+        | x::xs, y::ys 
+          when (eq_bqual x.binder_qual y.binder_qual = U.Equal &&
+                compat_positivity_qualifiers x.binder_positivity y.binder_positivity) ->
            let hd1, imp = x.binder_bv, x.binder_qual in
            let hd2, imp' = y.binder_bv, y.binder_qual in
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
@@ -4874,10 +4890,13 @@ let solve_deferred_constraints env (g:guard_t) =
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
 let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) =
+  Errors.with_ctx "solve_non_tactic_deferred_constraints" (fun () ->
+    def_check_guard_wf Range.dummyRange "solve_non_tactic_deferred_constraints.g" env g;
     let defer_ok = if maybe_defer_flex_flex then DeferFlexFlexOnly else NoDefer in
     let smt_ok = true in
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
+  )
 
 // Discharge (the logical part of) a guard [g].
 //

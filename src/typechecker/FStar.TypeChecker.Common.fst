@@ -109,7 +109,8 @@ let id_info__insert ty_map db info =
     let use_range = Range.set_def_range range (Range.use_range range) in
     let id_ty =
       match info.identifier with
-      | Inr _ -> info.identifier_ty
+      | Inr _ ->
+        ty_map info.identifier_ty
       | Inl x ->
         // BU.print1 "id_info__insert: %s\n"
         //           (print_identifier_info info);
@@ -597,3 +598,12 @@ let simplify (debug:bool) (tm:term) : term =
         | None -> tm
         end
     | _ -> tm
+
+let check_positivity_qual subtyping p0 p1
+  = if p0 = p1 then true
+    else if subtyping
+    then match p0, p1 with
+         | Some _, None -> true
+         | Some BinderUnused, Some BinderStrictlyPositive -> true
+         | _ -> false
+    else false

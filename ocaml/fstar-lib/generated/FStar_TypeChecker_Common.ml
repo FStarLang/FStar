@@ -338,7 +338,7 @@ let (id_info__insert :
           FStar_Compiler_Range.set_def_range range uu___ in
         let id_ty =
           match info.identifier with
-          | FStar_Pervasives.Inr uu___ -> info.identifier_ty
+          | FStar_Pervasives.Inr uu___ -> ty_map info.identifier_ty
           | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
         let info1 =
           {
@@ -1767,3 +1767,27 @@ let (simplify :
                w FStar_Syntax_Util.t_false
            | FStar_Pervasives_Native.None -> tm)
       | uu___1 -> tm
+let (check_positivity_qual :
+  Prims.bool ->
+    FStar_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option
+      ->
+      FStar_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option
+        -> Prims.bool)
+  =
+  fun subtyping ->
+    fun p0 ->
+      fun p1 ->
+        if p0 = p1
+        then true
+        else
+          if subtyping
+          then
+            (match (p0, p1) with
+             | (FStar_Pervasives_Native.Some uu___1,
+                FStar_Pervasives_Native.None) -> true
+             | (FStar_Pervasives_Native.Some
+                (FStar_Syntax_Syntax.BinderUnused),
+                FStar_Pervasives_Native.Some
+                (FStar_Syntax_Syntax.BinderStrictlyPositive)) -> true
+             | uu___1 -> false)
+          else false

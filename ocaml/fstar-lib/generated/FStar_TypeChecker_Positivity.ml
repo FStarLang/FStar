@@ -133,6 +133,21 @@ let (open_sig_inductive_typ :
                let env2 = FStar_TypeChecker_Env.push_binders env1 ty_params2 in
                (env2, (lid, ty_us1, ty_params2)))
       | uu___ -> failwith "Impossible!"
+let (name_as_fv_in_t :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.bv -> (FStar_Syntax_Syntax.term * FStar_Ident.lident))
+  =
+  fun t ->
+    fun bv ->
+      let fv_lid =
+        let uu___ =
+          let uu___1 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+          FStar_Ident.lid_of_str uu___1 in
+        let uu___1 = FStar_Syntax_Syntax.range_of_bv bv in
+        FStar_Ident.set_lid_range uu___ uu___1 in
+      let fv = FStar_Syntax_Syntax.tconst fv_lid in
+      let t1 = FStar_Syntax_Subst.subst [FStar_Syntax_Syntax.NT (bv, fv)] t in
+      (t1, fv_lid)
 let rec min_l :
   'a . Prims.int -> 'a Prims.list -> ('a -> Prims.int) -> Prims.int =
   fun def ->
@@ -386,26 +401,26 @@ let (mark_uniform_type_parameters :
                           | (uu___6, non_uniform_params) ->
                               FStar_Compiler_List.iter
                                 (fun param ->
-                                   let uu___7 =
-                                     FStar_Syntax_Util.has_attribute
-                                       param.FStar_Syntax_Syntax.binder_attrs
-                                       FStar_Parser_Const.binder_strictly_positive_attr in
-                                   if uu___7
+                                   if
+                                     param.FStar_Syntax_Syntax.binder_positivity
+                                       =
+                                       (FStar_Pervasives_Native.Some
+                                          FStar_Syntax_Syntax.BinderStrictlyPositive)
                                    then
-                                     let uu___8 =
-                                       let uu___9 =
-                                         let uu___10 =
+                                     let uu___7 =
+                                       let uu___8 =
+                                         let uu___9 =
                                            FStar_Syntax_Print.binder_to_string
                                              param in
                                          FStar_Compiler_Util.format1
                                            "Binder %s is marked strictly positive, but it is not uniformly recursive"
-                                           uu___10 in
+                                           uu___9 in
                                        (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                         uu___9) in
-                                     let uu___9 =
+                                         uu___8) in
+                                     let uu___8 =
                                        FStar_Syntax_Syntax.range_of_bv
                                          param.FStar_Syntax_Syntax.binder_bv in
-                                     FStar_Errors.raise_error uu___8 uu___9
+                                     FStar_Errors.raise_error uu___7 uu___8
                                    else ()) non_uniform_params)
                        else ();
                        (let sigel =
@@ -714,6 +729,83 @@ let (check_no_index_occurrences_in_arities :
                                                  mutuals indices1 in
                                          aux [] formals indices)))))
               | uu___3 -> ()))
+let (mutuals_unused_in_type :
+  FStar_Ident.lident Prims.list ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.bool)
+  =
+  fun mutuals ->
+    fun t ->
+      let mutuals_occur_in t1 =
+        FStar_Compiler_Util.for_some (fun lid -> ty_occurs_in lid t1) mutuals in
+      let rec ok t1 =
+        let uu___ =
+          let uu___1 = mutuals_occur_in t1 in Prims.op_Negation uu___1 in
+        if uu___
+        then true
+        else
+          (let uu___2 =
+             let uu___3 = FStar_Syntax_Subst.compress t1 in
+             uu___3.FStar_Syntax_Syntax.n in
+           match uu___2 with
+           | FStar_Syntax_Syntax.Tm_bvar uu___3 -> true
+           | FStar_Syntax_Syntax.Tm_name uu___3 -> true
+           | FStar_Syntax_Syntax.Tm_constant uu___3 -> true
+           | FStar_Syntax_Syntax.Tm_type uu___3 -> true
+           | FStar_Syntax_Syntax.Tm_fvar uu___3 -> false
+           | FStar_Syntax_Syntax.Tm_uinst uu___3 -> false
+           | FStar_Syntax_Syntax.Tm_abs (bs, t2, uu___3) ->
+               (binders_ok bs) && (ok t2)
+           | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+               (binders_ok bs) && (ok_comp c)
+           | FStar_Syntax_Syntax.Tm_refine (bv, t2) ->
+               (ok bv.FStar_Syntax_Syntax.sort) && (ok t2)
+           | FStar_Syntax_Syntax.Tm_app (head, args) ->
+               let uu___3 = mutuals_occur_in head in
+               if uu___3
+               then false
+               else
+                 FStar_Compiler_List.for_all
+                   (fun uu___5 ->
+                      match uu___5 with
+                      | (a, qual) ->
+                          (match qual with
+                           | FStar_Pervasives_Native.None -> false
+                           | FStar_Pervasives_Native.Some q ->
+                               FStar_Syntax_Util.contains_unused_attribute
+                                 q.FStar_Syntax_Syntax.aqual_attributes)
+                            || (ok a)) args
+           | FStar_Syntax_Syntax.Tm_match (t2, uu___3, branches, uu___4) ->
+               (ok t2) &&
+                 (FStar_Compiler_List.for_all
+                    (fun uu___5 ->
+                       match uu___5 with | (uu___6, uu___7, br) -> ok br)
+                    branches)
+           | FStar_Syntax_Syntax.Tm_ascribed (t2, asc, uu___3) -> ok t2
+           | FStar_Syntax_Syntax.Tm_let ((uu___3, lbs), t2) ->
+               (FStar_Compiler_List.for_all
+                  (fun lb ->
+                     (ok lb.FStar_Syntax_Syntax.lbtyp) &&
+                       (ok lb.FStar_Syntax_Syntax.lbdef)) lbs)
+                 && (ok t2)
+           | FStar_Syntax_Syntax.Tm_uvar uu___3 -> false
+           | FStar_Syntax_Syntax.Tm_delayed uu___3 -> false
+           | FStar_Syntax_Syntax.Tm_meta (t2, uu___3) -> ok t2
+           | uu___3 -> false)
+      and binders_ok bs =
+        FStar_Compiler_List.for_all
+          (fun b ->
+             ok (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)
+          bs
+      and ok_comp c =
+        match c.FStar_Syntax_Syntax.n with
+        | FStar_Syntax_Syntax.Total t1 -> ok t1
+        | FStar_Syntax_Syntax.GTotal t1 -> ok t1
+        | FStar_Syntax_Syntax.Comp c1 ->
+            (ok c1.FStar_Syntax_Syntax.result_typ) &&
+              (FStar_Compiler_List.for_all
+                 (fun uu___ -> match uu___ with | (a, uu___1) -> ok a)
+                 c1.FStar_Syntax_Syntax.effect_args) in
+      ok t
 type unfolded_memo_elt =
   (FStar_Ident.lident * FStar_Syntax_Syntax.args * Prims.int) Prims.list
 type unfolded_memo_t = unfolded_memo_elt FStar_Compiler_Effect.ref
@@ -847,14 +939,10 @@ let rec (ty_strictly_positive_in_type :
                                   "Checking strict positivity in the Tm_app node where head lid is %s itself, checking that ty does not occur in the arguments"
                                   uu___8);
                            FStar_Compiler_List.for_all
-                             (fun ty_lid ->
-                                FStar_Compiler_List.for_all
-                                  (fun uu___7 ->
-                                     match uu___7 with
-                                     | (t1, uu___8) ->
-                                         let uu___9 = ty_occurs_in ty_lid t1 in
-                                         Prims.op_Negation uu___9) args)
-                             mutuals)
+                             (fun uu___7 ->
+                                match uu___7 with
+                                | (t1, uu___8) ->
+                                    mutuals_unused_in_type mutuals t1) args)
                         else
                           (debug_positivity env
                              (fun uu___8 ->
@@ -901,23 +989,18 @@ let rec (ty_strictly_positive_in_type :
                                FStar_Syntax_Util.comp_result c1 in
                              let ty_lid_not_to_left_of_arrow =
                                FStar_Compiler_List.for_all
-                                 (fun ty_lid ->
-                                    FStar_Compiler_List.for_all
-                                      (fun uu___10 ->
-                                         match uu___10 with
-                                         | {
-                                             FStar_Syntax_Syntax.binder_bv =
-                                               b;
-                                             FStar_Syntax_Syntax.binder_qual
-                                               = uu___11;
-                                             FStar_Syntax_Syntax.binder_attrs
-                                               = uu___12;_}
-                                             ->
-                                             let uu___13 =
-                                               ty_occurs_in ty_lid
-                                                 b.FStar_Syntax_Syntax.sort in
-                                             Prims.op_Negation uu___13) sbs)
-                                 mutuals in
+                                 (fun uu___10 ->
+                                    match uu___10 with
+                                    | { FStar_Syntax_Syntax.binder_bv = b;
+                                        FStar_Syntax_Syntax.binder_qual =
+                                          uu___11;
+                                        FStar_Syntax_Syntax.binder_positivity
+                                          = uu___12;
+                                        FStar_Syntax_Syntax.binder_attrs =
+                                          uu___13;_}
+                                        ->
+                                        mutuals_unused_in_type mutuals
+                                          b.FStar_Syntax_Syntax.sort) sbs in
                              if ty_lid_not_to_left_of_arrow
                              then
                                let uu___10 =
@@ -957,7 +1040,36 @@ let rec (ty_strictly_positive_in_type :
                          (fun mutual -> ty_occurs_in mutual scrutinee)
                          mutuals in
                      if uu___8
-                     then false
+                     then
+                       FStar_Compiler_List.for_all
+                         (fun uu___9 ->
+                            match uu___9 with
+                            | (p, uu___10, t) ->
+                                let bs =
+                                  let uu___11 = FStar_Syntax_Syntax.pat_bvs p in
+                                  FStar_Compiler_List.map
+                                    FStar_Syntax_Syntax.mk_binder uu___11 in
+                                let uu___11 =
+                                  FStar_Syntax_Subst.open_term bs t in
+                                (match uu___11 with
+                                 | (bs1, t1) ->
+                                     let uu___12 =
+                                       FStar_Compiler_List.fold_left
+                                         (fun uu___13 ->
+                                            fun b ->
+                                              match uu___13 with
+                                              | (t2, lids) ->
+                                                  let uu___14 =
+                                                    name_as_fv_in_t t2
+                                                      b.FStar_Syntax_Syntax.binder_bv in
+                                                  (match uu___14 with
+                                                   | (t3, lid) ->
+                                                       (t3, (lid :: lids))))
+                                         (t1, mutuals) bs1 in
+                                     (match uu___12 with
+                                      | (t2, mutuals1) ->
+                                          ty_strictly_positive_in_type env
+                                            mutuals1 t2 unfolded))) branches
                      else
                        FStar_Compiler_List.for_all
                          (fun uu___10 ->
@@ -1026,13 +1138,10 @@ and (ty_strictly_positive_in_args :
                   | (uu___2, []) -> true
                   | ([], uu___2) ->
                       FStar_Compiler_List.for_all
-                        (fun ty_lid ->
-                           FStar_Compiler_List.for_all
-                             (fun uu___3 ->
-                                match uu___3 with
-                                | (arg, uu___4) ->
-                                    let uu___5 = ty_occurs_in ty_lid arg in
-                                    Prims.op_Negation uu___5) args1) mutuals
+                        (fun uu___3 ->
+                           match uu___3 with
+                           | (arg, uu___4) ->
+                               mutuals_unused_in_type mutuals arg) args1
                   | (b::bs2, (arg, uu___2)::args2) ->
                       (debug_positivity env
                          (fun uu___4 ->
@@ -1045,14 +1154,10 @@ and (ty_strictly_positive_in_args :
                               "Checking positivity of %s in argument %s and binder %s"
                               uu___5 uu___6 uu___7);
                        (let this_occurrence_ok =
-                          (FStar_Compiler_List.for_all
-                             (fun ty_lid ->
-                                let uu___4 = ty_occurs_in ty_lid arg in
-                                Prims.op_Negation uu___4) mutuals)
+                          ((mutuals_unused_in_type mutuals arg) ||
+                             (FStar_Syntax_Util.is_binder_unused b))
                             ||
-                            ((FStar_Syntax_Util.has_attribute
-                                b.FStar_Syntax_Syntax.binder_attrs
-                                FStar_Parser_Const.binder_strictly_positive_attr)
+                            ((FStar_Syntax_Util.is_binder_strictly_positive b)
                                &&
                                (ty_strictly_positive_in_type env mutuals arg
                                   unfolded)) in
@@ -1095,77 +1200,91 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                      FStar_Compiler_Util.format4
                        "Checking positivity of %s in application of fv %s to %s (t=%s)"
                        uu___2 uu___3 uu___4 uu___5);
-                (let fv_ty =
-                   let uu___1 = FStar_TypeChecker_Env.try_lookup_lid env fv in
-                   match uu___1 with
-                   | FStar_Pervasives_Native.Some ((uu___2, fv_ty1), uu___3)
-                       -> fv_ty1
-                   | uu___2 ->
-                       let uu___3 =
-                         let uu___4 =
-                           let uu___5 = FStar_Ident.string_of_lid fv in
-                           FStar_Compiler_Util.format1
-                             "Type of %s not found when checking positivity"
-                             uu___5 in
-                         (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                           uu___4) in
-                       let uu___4 = FStar_Ident.range_of_lid fv in
-                       FStar_Errors.raise_error uu___3 uu___4 in
-                 let uu___1 = FStar_TypeChecker_Env.datacons_of_typ env fv in
-                 match uu___1 with
-                 | (b, idatas) ->
-                     if Prims.op_Negation b
-                     then
-                       ty_strictly_positive_in_args env mutuals fv_ty args
-                         unfolded
-                     else
-                       (check_no_index_occurrences_in_arities env mutuals t;
-                        (let ilid = fv in
-                         let num_uniform_params =
-                           let uu___4 =
-                             FStar_TypeChecker_Env.num_inductive_uniform_ty_params
-                               env ilid in
-                           match uu___4 with
-                           | FStar_Pervasives_Native.None ->
-                               failwith "Unexpected type"
-                           | FStar_Pervasives_Native.Some n -> n in
-                         let uu___4 =
-                           FStar_Compiler_List.splitAt num_uniform_params
-                             args in
-                         match uu___4 with
-                         | (params, _rest) ->
-                             let uu___5 =
-                               already_unfolded ilid args unfolded env in
-                             if uu___5
-                             then
-                               (debug_positivity env
-                                  (fun uu___7 ->
-                                     "Checking nested positivity, we have already unfolded this inductive with these args");
-                                true)
-                             else
-                               (debug_positivity env
-                                  (fun uu___8 ->
-                                     let uu___9 =
-                                       FStar_Ident.string_of_lid ilid in
-                                     let uu___10 =
-                                       FStar_Syntax_Print.args_to_string
-                                         params in
-                                     FStar_Compiler_Util.format3
-                                       "Checking positivity in datacon, number of type parameters is %s, adding %s %s to the memo table"
-                                       (Prims.string_of_int
-                                          num_uniform_params) uu___9 uu___10);
-                                (let uu___9 =
-                                   let uu___10 =
-                                     FStar_Compiler_Effect.op_Bang unfolded in
-                                   FStar_List_Tot_Base.op_At uu___10
-                                     [(ilid, params, num_uniform_params)] in
-                                 FStar_Compiler_Effect.op_Colon_Equals
-                                   unfolded uu___9);
-                                FStar_Compiler_List.for_all
-                                  (fun d ->
-                                     ty_strictly_positive_in_datacon_of_applied_inductive
-                                       env mutuals d ilid us args
-                                       num_uniform_params unfolded) idatas))))
+                (let uu___1 = FStar_TypeChecker_Env.is_datacon env fv in
+                 if uu___1
+                 then
+                   FStar_Compiler_List.for_all
+                     (fun uu___2 ->
+                        match uu___2 with
+                        | (a, uu___3) ->
+                            ty_strictly_positive_in_type env mutuals a
+                              unfolded) args
+                 else
+                   (let fv_ty =
+                      let uu___3 =
+                        FStar_TypeChecker_Env.try_lookup_lid env fv in
+                      match uu___3 with
+                      | FStar_Pervasives_Native.Some
+                          ((uu___4, fv_ty1), uu___5) -> fv_ty1
+                      | uu___4 ->
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 = FStar_Ident.string_of_lid fv in
+                              FStar_Compiler_Util.format1
+                                "Type of %s not found when checking positivity"
+                                uu___7 in
+                            (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
+                              uu___6) in
+                          let uu___6 = FStar_Ident.range_of_lid fv in
+                          FStar_Errors.raise_error uu___5 uu___6 in
+                    let uu___3 = FStar_TypeChecker_Env.datacons_of_typ env fv in
+                    match uu___3 with
+                    | (b, idatas) ->
+                        if Prims.op_Negation b
+                        then
+                          ty_strictly_positive_in_args env mutuals fv_ty args
+                            unfolded
+                        else
+                          (check_no_index_occurrences_in_arities env mutuals
+                             t;
+                           (let ilid = fv in
+                            let num_uniform_params =
+                              let uu___6 =
+                                FStar_TypeChecker_Env.num_inductive_uniform_ty_params
+                                  env ilid in
+                              match uu___6 with
+                              | FStar_Pervasives_Native.None ->
+                                  failwith "Unexpected type"
+                              | FStar_Pervasives_Native.Some n -> n in
+                            let uu___6 =
+                              FStar_Compiler_List.splitAt num_uniform_params
+                                args in
+                            match uu___6 with
+                            | (params, _rest) ->
+                                let uu___7 =
+                                  already_unfolded ilid args unfolded env in
+                                if uu___7
+                                then
+                                  (debug_positivity env
+                                     (fun uu___9 ->
+                                        "Checking nested positivity, we have already unfolded this inductive with these args");
+                                   true)
+                                else
+                                  (debug_positivity env
+                                     (fun uu___10 ->
+                                        let uu___11 =
+                                          FStar_Ident.string_of_lid ilid in
+                                        let uu___12 =
+                                          FStar_Syntax_Print.args_to_string
+                                            params in
+                                        FStar_Compiler_Util.format3
+                                          "Checking positivity in datacon, number of type parameters is %s, adding %s %s to the memo table"
+                                          (Prims.string_of_int
+                                             num_uniform_params) uu___11
+                                          uu___12);
+                                   (let uu___11 =
+                                      let uu___12 =
+                                        FStar_Compiler_Effect.op_Bang
+                                          unfolded in
+                                      FStar_List_Tot_Base.op_At uu___12
+                                        [(ilid, params, num_uniform_params)] in
+                                    FStar_Compiler_Effect.op_Colon_Equals
+                                      unfolded uu___11);
+                                   FStar_Compiler_List.for_all
+                                     (fun d ->
+                                        ty_strictly_positive_in_datacon_of_applied_inductive
+                                          env mutuals d ilid us args
+                                          num_uniform_params unfolded) idatas)))))
 and (ty_strictly_positive_in_datacon_of_applied_inductive :
   FStar_TypeChecker_Env.env_t ->
     FStar_Ident.lident Prims.list ->
@@ -1275,17 +1394,25 @@ let (name_strictly_positive_in_type :
   fun env ->
     fun bv ->
       fun t ->
-        let fv_lid =
-          let uu___ =
-            let uu___1 =
-              FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
-            FStar_Ident.lid_of_str uu___1 in
-          let uu___1 = FStar_Syntax_Syntax.range_of_bv bv in
-          FStar_Ident.set_lid_range uu___ uu___1 in
-        let fv = FStar_Syntax_Syntax.tconst fv_lid in
-        let t1 = FStar_Syntax_Subst.subst [FStar_Syntax_Syntax.NT (bv, fv)] t in
-        let uu___ = FStar_Compiler_Util.mk_ref [] in
-        ty_strictly_positive_in_type env [fv_lid] t1 uu___
+        let uu___ = name_as_fv_in_t t bv in
+        match uu___ with
+        | (t1, fv_lid) ->
+            let uu___1 = FStar_Compiler_Util.mk_ref [] in
+            ty_strictly_positive_in_type env [fv_lid] t1 uu___1
+let (name_unused_in_type :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool)
+  =
+  fun env ->
+    fun bv ->
+      fun t ->
+        let uu___ = name_as_fv_in_t t bv in
+        match uu___ with
+        | (t1, fv_lid) ->
+            (let uu___1 = ty_occurs_in fv_lid t1 in Prims.op_Negation uu___1)
+              ||
+              (let uu___1 = normalize env t1 in
+               mutuals_unused_in_type [fv_lid] uu___1)
 let (ty_strictly_positive_in_datacon_decl :
   FStar_TypeChecker_Env.env_t ->
     FStar_Ident.lident Prims.list ->
@@ -1333,18 +1460,21 @@ let (ty_strictly_positive_in_datacon_decl :
                             let incorrectly_annotated_binder =
                               FStar_Compiler_List.tryFind
                                 (fun b ->
-                                   let uu___4 =
-                                     FStar_Syntax_Util.has_attribute
-                                       b.FStar_Syntax_Syntax.binder_attrs
-                                       FStar_Parser_Const.binder_strictly_positive_attr in
-                                   if uu___4
-                                   then
-                                     let uu___5 =
-                                       name_strictly_positive_in_type env
-                                         b.FStar_Syntax_Syntax.binder_bv
-                                         (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                     Prims.op_Negation uu___5
-                                   else false) ty_bs1 in
+                                   ((FStar_Syntax_Util.is_binder_unused b) &&
+                                      (let uu___4 =
+                                         name_unused_in_type env
+                                           b.FStar_Syntax_Syntax.binder_bv
+                                           (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                       Prims.op_Negation uu___4))
+                                     ||
+                                     ((FStar_Syntax_Util.is_binder_strictly_positive
+                                         b)
+                                        &&
+                                        (let uu___4 =
+                                           name_strictly_positive_in_type env
+                                             b.FStar_Syntax_Syntax.binder_bv
+                                             (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                         Prims.op_Negation uu___4))) ty_bs1 in
                             match incorrectly_annotated_binder with
                             | FStar_Pervasives_Native.None -> ()
                             | FStar_Pervasives_Native.Some b ->
@@ -1352,9 +1482,14 @@ let (ty_strictly_positive_in_datacon_decl :
                                   let uu___5 =
                                     let uu___6 =
                                       FStar_Syntax_Print.binder_to_string b in
-                                    FStar_Compiler_Util.format1
-                                      "Binder %s is marked strictly positive, but its use in the definition is not"
-                                      uu___6 in
+                                    FStar_Compiler_Util.format2
+                                      "Binder %s is marked %s, but its use in the definition is not"
+                                      uu___6
+                                      (if
+                                         FStar_Syntax_Util.is_binder_strictly_positive
+                                           b
+                                       then "strictly_positive"
+                                       else "unused") in
                                   (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                     uu___5) in
                                 let uu___5 =

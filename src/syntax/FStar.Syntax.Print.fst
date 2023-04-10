@@ -205,11 +205,8 @@ and term_to_string x =
       | Tm_quoted (tm, qi) ->
         begin match qi.qkind with
         | Quote_static ->
-            let print_aq (bv, t) =
-              U.format2 "%s -> %s" (bv_to_string bv) (term_to_string t)
-            in
             U.format2 "`(%s)%s" (term_to_string tm)
-                                (FStar.Common.string_of_list print_aq qi.antiquotes)
+                                (FStar.Common.string_of_list term_to_string (snd qi.antiquotations))
         | Quote_dynamic ->
             U.format1 "quote (%s)" (term_to_string tm)
         end
@@ -771,8 +768,11 @@ let rec sigelt_to_string (x: sigelt) =
                 | _ -> failwith "impossible" in
              U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
-      | Sig_splice (lids, t) ->
-        U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)
+      | Sig_splice (is_typed, lids, t) ->
+        U.format3 "splice%s[%s] (%s)"
+          (if is_typed then "_t" else "")
+          (String.concat "; " <| List.map Ident.string_of_lid lids)
+          (term_to_string t)
       | Sig_polymonadic_bind (m, n, p, t, ty, k) ->
         U.format6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
           (Ident.string_of_lid m)
@@ -849,9 +849,10 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_effect_abbrev (l, univs, tps, c, flags) ->
     U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
 
-  | Sig_splice (lids, t) ->
-    U.format2 "%splice[%s] (...)"
+  | Sig_splice (is_typed, lids, t) ->
+    U.format3 "%splice%s[%s] (...)"
               "%s" // sigh, no escape for format
+              (if is_typed then "_t" else "")
               (String.concat "; " <| List.map Ident.string_of_lid lids)
 
   | Sig_polymonadic_bind (m, n, p, t, ty, _) ->

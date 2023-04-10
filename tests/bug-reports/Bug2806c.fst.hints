@@ -1,0 +1,71 @@
+[
+  "%¼2\u0014ðO*\u0011='¦ü\\ÆU«",
+  [
+    [
+      "Bug2806c.dom",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Arrow",
+        "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Reflection.Data.Tv_Arrow_bv",
+        "projection_inverse_FStar.Reflection.Data.Tv_Arrow_c",
+        "refinement_interpretation_Tm_refine_05453b8274de1f22e1d10d9293ceda20"
+      ],
+      0,
+      "c529f2e278c43b6929d5ba4dc5c300d7"
+    ],
+    [
+      "Bug2806c.name",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_193ed3b15b4f1e32b0876428f6cfe8b0",
+        "FStar.Reflection.Types_pretyping_549a35da6c02ceac7c7ad93207dec82a",
+        "data_elim_FStar.Reflection.Data.Tv_Arrow",
+        "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_89eb48691f77287fc28fe1ec5c75f42c",
+        "refinement_interpretation_Tm_refine_e3775393449751e705c67cc8acd5aa61",
+        "typing_FStar.Reflection.Builtins.inspect_ln"
+      ],
+      0,
+      "1b17cb286750c3aa226826d07802cd7a"
+    ],
+    [
+      "Bug2806c.t1",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Reflection.Data.Tv_Arrow",
+        "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Reflection.Data.Tv_Arrow_bv",
+        "projection_inverse_FStar.Reflection.Data.Tv_Arrow_c"
+      ],
+      0,
+      "6f6fc14bd9fa7e52d49485aaea91b24a"
+    ],
+    [
+      "Bug2806c.t2",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Reflection.Data.Tv_Arrow",
+        "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Reflection.Data.Tv_Arrow_bv",
+        "projection_inverse_FStar.Reflection.Data.Tv_Arrow_c"
+      ],
+      0,
+      "f2fc6f0a6036aa8c521a761c657476dc"
+    ]
+  ]
+]

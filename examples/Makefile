@@ -35,11 +35,12 @@ steel_tutorial \
 layeredeffects \
 misc \
 sequence \
-oplss2021
+oplss2021 \
+dsls
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
-ifdef HAS_OCAML
+ifneq (,$(HAS_OCAML))
 ALL_EXAMPLE_DIRS+=\
   hello \
   extraction \

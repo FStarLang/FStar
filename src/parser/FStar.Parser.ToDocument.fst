@@ -761,8 +761,10 @@ and p_rawDecl d = match d.d with
     p_pragma p
   | Tycon(true, _, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
-  | Splice (ids, t) ->
-    str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
+  | Splice (is_typed, ids, t) ->
+    str "%splice" ^^
+    (if is_typed then str "_t" else empty) ^^
+    p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
 
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
@@ -2235,16 +2237,7 @@ let extract_decl_range (d: decl): decl_meta =
     has_qs = has_qs;
     has_attrs = not (List.isEmpty d.attrs); }
 
-(* [modul_with_comments_to_document m comments] prints the module [m] trying *)
-(* to insert the comments from [comments]. The list comments is composed of *)
-(* pairs of a raw string and a position which is used to place the comment *)
-(* not too far from its original position. The rules for placing comments *)
-(* are described in the ``Taking care of comments`` section *)
-let modul_with_comments_to_document (m:modul) comments =
-  let decls = match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) -> decls
-  in
+let decls_with_comments_to_document (decls:list decl) comments =
   match decls with
     | [] -> empty, comments
     | d :: ds ->
@@ -2255,3 +2248,18 @@ let modul_with_comments_to_document (m:modul) comments =
   let comments = !comment_stack in
   comment_stack := [] ;
   (initial_comment ^^ doc, comments)
+
+(* [modul_with_comments_to_document m comments] prints the module [m] trying *)
+(* to insert the comments from [comments]. The list comments is composed of *)
+(* pairs of a raw string and a position which is used to place the comment *)
+(* not too far from its original position. The rules for placing comments *)
+(* are described in the ``Taking care of comments`` section *)
+let modul_with_comments_to_document (m:modul) comments =
+  let decls = match m with
+    | Module (_, decls)
+    | Interface (_, decls, _) -> decls
+  in
+  decls_with_comments_to_document decls comments
+
+let decl_with_comments_to_document (d:decl) comments =
+  decls_with_comments_to_document [d] comments

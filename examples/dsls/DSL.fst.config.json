@@ -1,0 +1,12 @@
+{
+	"fstar_exe": "fstar.exe",
+	"options": [
+	],
+	"include_dirs": [
+		"mini_steel",
+		"mini_steel/tests",
+		"bool_refinement",
+		"dependent_bool_refinement",
+		"stlc"
+	]
+}

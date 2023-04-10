@@ -1102,6 +1102,7 @@ and (close_binders :
                     | ((env2, out),
                        { FStar_Syntax_Syntax.binder_bv = b;
                          FStar_Syntax_Syntax.binder_qual = imp;
+                         FStar_Syntax_Syntax.binder_positivity = pqual;
                          FStar_Syntax_Syntax.binder_attrs = attrs;_})
                         ->
                         let b1 =
@@ -1123,7 +1124,7 @@ and (close_binders :
                         let uu___3 =
                           let uu___4 =
                             FStar_Syntax_Syntax.mk_binder_with_attrs b1 imp1
-                              attrs1 in
+                              pqual attrs1 in
                           uu___4 :: out in
                         (env3, uu___3)) (env1, [])) in
         match uu___ with
@@ -5634,7 +5635,8 @@ and (norm_binder :
         let attrs =
           FStar_Compiler_List.map (norm cfg env1 [])
             b.FStar_Syntax_Syntax.binder_attrs in
-        FStar_Syntax_Syntax.mk_binder_with_attrs x imp attrs
+        FStar_Syntax_Syntax.mk_binder_with_attrs x imp
+          b.FStar_Syntax_Syntax.binder_positivity attrs
 and (norm_binders :
   FStar_TypeChecker_Cfg.cfg ->
     env -> FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders)
@@ -8741,14 +8743,13 @@ let (elim_uvars_aux_tc :
           | (univ_names1, t1) ->
               let t2 = remove_uvar_solutions env1 t1 in
               let t3 = FStar_Syntax_Subst.close_univ_vars univ_names1 t2 in
-              let t4 = FStar_Syntax_Subst.deep_compress false t3 in
               let uu___1 =
                 match binders with
-                | [] -> ([], (FStar_Pervasives.Inl t4))
+                | [] -> ([], (FStar_Pervasives.Inl t3))
                 | uu___2 ->
                     let uu___3 =
                       let uu___4 =
-                        let uu___5 = FStar_Syntax_Subst.compress t4 in
+                        let uu___5 = FStar_Syntax_Subst.compress t3 in
                         uu___5.FStar_Syntax_Syntax.n in
                       (uu___4, tc) in
                     (match uu___3 with
@@ -8761,7 +8762,7 @@ let (elim_uvars_aux_tc :
                            (FStar_Pervasives.Inl
                               (FStar_Syntax_Util.comp_result c)))
                      | (uu___4, FStar_Pervasives.Inl uu___5) ->
-                         ([], (FStar_Pervasives.Inl t4))
+                         ([], (FStar_Pervasives.Inl t3))
                      | uu___4 -> failwith "Impossible") in
               (match uu___1 with
                | (binders1, tc1) -> (univ_names1, binders1, tc1))
@@ -8911,11 +8912,9 @@ let rec (elim_uvars :
                     | (opening, lbunivs) ->
                         let elim t =
                           let uu___1 =
-                            let uu___2 =
-                              let uu___3 = FStar_Syntax_Subst.subst opening t in
-                              remove_uvar_solutions env1 uu___3 in
-                            FStar_Syntax_Subst.close_univ_vars lbunivs uu___2 in
-                          FStar_Syntax_Subst.deep_compress false uu___1 in
+                            let uu___2 = FStar_Syntax_Subst.subst opening t in
+                            remove_uvar_solutions env1 uu___2 in
+                          FStar_Syntax_Subst.close_univ_vars lbunivs uu___1 in
                         let lbtyp = elim lb.FStar_Syntax_Syntax.lbtyp in
                         let lbdef = elim lb.FStar_Syntax_Syntax.lbdef in
                         {

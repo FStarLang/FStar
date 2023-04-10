@@ -13,20 +13,16 @@
         "true_interp"
       ],
       0,
-      "84affa25aa6a1d300c783b1d5a490bba"
+      "86acadf07c08cb7285c9e762b12b09a0"
     ],
     [
       "Neg.c3",
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Neg.xi",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
-      ],
+      [ "@query", "equation_Neg.xi" ],
       0,
-      "f2d02529c75b7155b5a390e16810750a"
+      "44860a644a139c47cd90258b4b62d862"
     ]
   ]
 ]

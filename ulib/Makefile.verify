@@ -58,7 +58,11 @@ include gmake/Makefile.tmpl
 %FStar.Buffer.Quantifiers.fst.checked: OTHERFLAGS+=--warn_error -271
 
 # 352 - Indexed effect combinator is not substitutive warning
+# Also set the compatibility flag while we migrate old modules.
 .cache/Steel.%.checked: COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects --warn_error -352
+
+# These modules already verify without the flag.
+.cache/Steel.ST.GhostPCMReference.fst.checked: COMPAT_INDEXED_EFFECTS=
 
 verify-core: $(filter-out $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))
 verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA)))), $(ALL_CHECKED_FILES))

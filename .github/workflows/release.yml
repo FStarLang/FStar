@@ -1,0 +1,72 @@
+name: FStar Binary Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build-linux:
+
+    runs-on: [self-hosted, linux, X64]
+
+    steps:
+    - name: Check out repo        
+      uses: actions/checkout@v2
+    - name: Package and release FStar
+      run: |
+          ci_docker_image_tag=fstar-release:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          ci_docker_builder=builder_fstar-release_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
+          docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
+          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/release.Dockerfile .
+      env:
+          DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
+    - name: Remove the builder if created
+      if: ${{ always() }}
+      run: |
+        docker buildx rm -f $ci_docker_builder || true
+
+  build-macos:
+
+    needs: build-linux
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout FStar
+      uses: actions/checkout@v2
+      with:
+        path: FStar
+    - name: Checkout everest
+      uses: actions/checkout@v2
+      with:
+        repository: project-everest/everest
+        path: FStar/.github/everest
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0.x'
+    - name: Setup dependencies
+      run: ./FStar/.github/setup-macos.sh
+    - name: Package and release FStar
+      run: |
+        source FStar/.github/env.sh
+        CI_THREADS=24 FSTAR_SKIP_PACKAGE_TEST=1 FStar/.scripts/release.sh
+      env:
+        GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
+
+  build-windows:
+
+    needs: build-linux
+
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+    - name: Check out repo        
+      uses: actions/checkout@v2
+      
+    - name: Package and release FStar
+      shell: C:\cygwin64\bin\bash.exe --login '{0}'
+      run: |
+        FSTAR_COMMIT=$GITHUB_SHA CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/release.sh && echo "There is a CR at the end of this line"
+      env:
+        GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}

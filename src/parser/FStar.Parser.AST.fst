@@ -163,7 +163,7 @@ type constructor_payload
     (** constructor of any arity & kind (e.g. [C:int->ind] or [C:'a->'b->ind 'c]) *)
     | VpArbitrary of typ
     (** constructor whose payload is a record (e.g. [C {a: int}] or [C {x: Type} -> ind x]) *)
-    | VpRecord of (tycon_record * opt_kind:option typ)
+    | VpRecord of (tycon_record * option typ)
 
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
@@ -208,6 +208,7 @@ type lift = {
   msource: lid;
   mdest:   lid;
   lift_op: lift_op;
+  braced: bool; //a detail: for incremental parsing, we need to know if it is delimited by bracces  
 }
 
 type pragma =
@@ -237,7 +238,7 @@ type decl' =
   | Polymonadic_subcomp of lid * lid * term
   | Pragma of pragma
   | Assume of ident * term
-  | Splice of list ident * term
+  | Splice of bool * list ident * term  (* bool is true for a typed splice *)
 
 and decl = {
   d:decl';
@@ -964,7 +965,10 @@ let decl_to_string (d:decl) = match d.d with
   | Polymonadic_subcomp (l1, l2, _) ->
       Util.format2 "polymonadic_subcomp %s <: %s"
                     (string_of_lid l1) (string_of_lid l2)
-  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> (string_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
+  | Splice (is_typed, ids, t) ->
+    "splice" ^ (if is_typed then "_t" else "")
+             ^ "["
+             ^ (String.concat ";" <| List.map (fun i -> (string_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma p -> "pragma #" ^ string_of_pragma p
 
@@ -995,3 +999,15 @@ let ident_of_binder r b =
 
 let idents_of_binders bs r =
     bs |> List.map (ident_of_binder r)
+
+let decl_syntax_is_delimited (d:decl) = 
+  match d.d with
+  | Pragma (ResetOptions None) -> false
+  | Pragma (PushOptions None) -> false
+  | Pragma _
+  | NewEffect (DefineEffect _)
+  | LayeredEffect (DefineEffect _)
+  | SubEffect {braced=true} -> true
+  | Tycon(_, b, _) -> b
+  | _ -> false
+

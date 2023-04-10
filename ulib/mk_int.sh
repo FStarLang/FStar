@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+set -eu
+
+function err () {
+	echo "Generating the int files failed."
+	echo "Please note this must be run in the ulib/ directory"
+}
+
+trap err ERR
+
 ## Write FStar.Int<N>.fsti
 
 for i in 8 16 32 64 128; do
@@ -153,5 +162,5 @@ EOF
   fi
 done
 
-sed -i.bak 's/UInt32.//g' FStar.UInt32.fsti
-sed -i.bak 's/UInt32.//g' FStar.UInt32.fst
+sed -i 's/UInt32.//g' FStar.UInt32.fsti
+sed -i 's/UInt32.//g' FStar.UInt32.fst

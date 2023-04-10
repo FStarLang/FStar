@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b2eafc9f9beda4deb46845e3b901bb96"
+      "7fc88081f76c144604d7db7ce35b3d13"
     ],
     [
       "Long.calc50",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "2f160796e82c5507f070656783c4f658"
+      "83dae53e93e591f2cdfc44ba79a4abe3"
     ],
     [
       "Long.calc75",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "e370c21d1c07bb28fd6747150a0be430"
+      "8695dde561aaf760f8a04fe4aa11aa5d"
     ],
     [
       "Long.calc100",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "3d427829a809c9f6b940dd510899bee4"
+      "8cf6b671c02be37adda61b8f75bac25b"
     ]
   ]
 ]

@@ -622,9 +622,9 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
           let env = Env.push_binders env formals in
           mk_precedes env dec previous_dec in
         let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
-        let bs, ({binder_bv=last; binder_qual=imp}) = BU.prefix formals in
+        let bs, ({binder_bv=last; binder_positivity=pqual; binder_attrs=attrs; binder_qual=imp}) = BU.prefix formals in
         let last = {last with sort=U.refine last precedes} in
-        let refined_formals = bs@[S.mk_binder_with_attrs last imp []] in
+        let refined_formals = bs@[S.mk_binder_with_attrs last imp pqual attrs] in
         let t' = U.arrow refined_formals c in
         if debug env Options.Medium
         then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
@@ -718,30 +718,30 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       | Inl x -> x
       | Inr _ -> failwith "projl fail"
     in
-    let non_trivial_antiquotes qi =
-        let is_name t =
+    let non_trivial_antiquotations qi =
+        let is_not_name t =
             match (SS.compress t).n with
-            | Tm_name _ -> true
-            | _ -> false
+            | Tm_name _ -> false
+            | _ -> true
         in
-        BU.for_some (fun (_, t) -> not (is_name t)) qi.antiquotes
+        BU.for_some is_not_name (snd qi.antiquotations)
     in
     begin match qi.qkind with
     (* In this case, let-bind all antiquotations so we're sure that effects
      * are properly handled. *)
-    | Quote_static when non_trivial_antiquotes qi ->
+    | Quote_static when non_trivial_antiquotations qi ->
+      // FIXME: check shift=0
         let e0 = e in
-        let newbvs = List.map (fun _ -> S.new_bv None S.t_term) qi.antiquotes in
+        let newbvs = List.map (fun _ -> S.new_bv None S.t_term) (snd qi.antiquotations) in
 
-        let z = List.zip qi.antiquotes newbvs in
+        let z = List.zip (snd qi.antiquotations) newbvs in
 
-        let lbs = List.map (fun ((bv, t), bv') ->
+        let lbs = List.map (fun (t, bv') ->
                                 U.close_univs_and_mk_letbinding None (Inl bv') []
                                                                 S.t_term Const.effect_Tot_lid
                                                                 t [] t.pos)
                            z in
-        let qi = { qi with antiquotes = List.map (fun ((bv, _), bv') ->
-                                            (bv, S.bv_to_name bv')) z } in
+        let qi = { qi with antiquotations = (0, List.map (fun (t, bv') -> S.bv_to_name bv') z) } in
         let nq = mk (Tm_quoted (qt, qi)) top.pos in
         let e = List.fold_left (fun t lb -> mk (Tm_let ((false, [lb]),
                                                         SS.close [S.mk_binder (projl lb.lbname)] t)) top.pos) nq lbs in
@@ -749,14 +749,17 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     (* A static quote is of type `term`, as long as its antiquotations are too *)
     | Quote_static ->
-        (* Typecheck the antiquotes expecting a term *)
-        let aqs = qi.antiquotes in
+        (* Typecheck the antiquotations expecting a term *)
+        let aqs = snd qi.antiquotations in
         let env_tm = Env.set_expected_typ env t_term in
-        let (aqs_rev, guard) =
-            List.fold_right (fun (bv, tm) (aqs_rev, guard) ->
-                                    let tm, _, g = tc_term env_tm tm in
-                                    ((bv, tm)::aqs_rev, Env.conj_guard g guard)) aqs ([], Env.trivial_guard) in
-        let qi = { qi with antiquotes = List.rev aqs_rev } in
+        let (aqs_rev, guard, _env) =
+            List.fold_left (fun (aqs_rev, guard, env_tm) aq_tm ->
+                                    let aq_tm, _, _g = tc_term env_tm aq_tm in // FIXME GUARD DROP
+                                    let env_tm = Env.push_bv env_tm (S.new_bv None t_term) in
+                                    (aq_tm::aqs_rev, Env.conj_guard _g guard, env_tm))
+                                    ([], Env.trivial_guard, env_tm) aqs
+        in
+        let qi = { qi with antiquotations = (0, List.rev aqs_rev) } in
 
         let tm = mk (Tm_quoted (qt, qi)) top.pos in
         value_check_expected_typ env tm (Inl S.t_term) guard
@@ -2051,15 +2054,15 @@ and tc_abs_check_binders env bs bs_expected use_eq
     match bs, bs_expected with
     | [], [] -> env, [], None, Env.trivial_guard, subst
 
-    | ({binder_qual=None})::_, ({binder_bv=hd_e;binder_qual=q;binder_attrs=attrs})::_
+    | ({binder_qual=None})::_, ({binder_bv=hd_e;binder_qual=q;binder_positivity=pqual;binder_attrs=attrs})::_
       when S.is_bqual_implicit_or_meta q ->
       (* When an implicit is expected, but the user provided an
        * explicit binder, insert a nameless implicit binder. *)
       let bv = S.new_bv (Some (Ident.range_of_id hd_e.ppname)) (SS.subst subst hd_e.sort) in
-      aux (env, subst) ((S.mk_binder_with_attrs bv q attrs) :: bs) bs_expected
+      aux (env, subst) ((S.mk_binder_with_attrs bv q pqual attrs) :: bs) bs_expected
 
-    | ({binder_bv=hd;binder_qual=imp;binder_attrs=attrs})::bs,
-      ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'})::bs_expected -> begin
+    | ({binder_bv=hd;binder_qual=imp;binder_positivity=pqual_actual; binder_attrs=attrs})::bs,
+      ({binder_bv=hd_expected;binder_qual=imp';binder_positivity=pqual_expected;binder_attrs=attrs'})::bs_expected -> begin
         (* These are the discrepancies in qualifiers that we allow *)
         let special q1 q2 = match q1, q2 with
         | Some (Meta _), Some (Meta _) -> true (* don't compare the metaprograms *)
@@ -2072,6 +2075,25 @@ and tc_abs_check_binders env bs bs_expected use_eq
                           BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                          (S.range_of_bv hd)
         end;
+
+        // The expected binder may be annotated with a positivity attribute
+        // though the actual binder on the abstraction may not ... we use the expected pqual
+        // But, it is not ok if the expected binder is not annotated while the
+        // actual binder is annnotated as strictly positive.
+        let positivity_qual_to_string = function
+          | None -> "None"
+          | Some BinderStrictlyPositive -> "StrictlyPositive"
+          | Some BinderUnused -> "Unused"
+        in
+        if not (Common.check_positivity_qual true pqual_expected pqual_actual)
+        then raise_error (Errors.Fatal_InconsistentQualifierAnnotation,
+                            BU.format3 "Inconsistent positivity qualifier on argument %s; \
+                                        Expected qualifier %s, \
+                                        found qualifier %s" 
+                                        (Print.bv_to_string hd)
+                                        (positivity_qual_to_string pqual_expected)
+                                        (positivity_qual_to_string pqual_actual))
+                          (S.range_of_bv hd);
 
         (* since binders depend on previous ones, we accumulate a substitution *)
         let expected_t = SS.subst subst hd_expected.sort in
@@ -2113,9 +2135,9 @@ and tc_abs_check_binders env bs bs_expected use_eq
           ) attrs' in
           attrs@diff
         in
-        let b = {binder_bv=hd;binder_qual=imp;binder_attrs=combine_attrs attrs attrs'} in
+        let b = {binder_bv=hd;binder_qual=imp;binder_positivity=pqual_expected;binder_attrs=combine_attrs attrs attrs'} in
         check_erasable_binder_attributes env b.binder_attrs t;
-        let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'}) in
+        let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_positivity=pqual_expected;binder_attrs=attrs'}) in
         let env_b = push_binding env b in
         let subst = maybe_extend_subst subst b_expected (S.bv_to_name hd) in
         let env_bs, bs, rest, g'_env_b, subst = aux (env_b, subst) bs bs_expected in
@@ -2269,17 +2291,25 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
      *       after substituting the bv name with a fresh lid fv in the function body
      *)
     let _ =
-      let env = Env.push_binders env bs in
       List.iter
         (fun b ->
-           if U.has_attribute b.binder_attrs Const.binder_strictly_positive_attr
-           && not (Options.no_positivity())
-           then let r = Positivity.name_strictly_positive_in_type env b.binder_bv body in
-                if not r
-                then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
-                                  BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
+          if Options.no_positivity()
+          then ()
+          else (
+           if U.is_binder_unused b
+           && not (Positivity.name_unused_in_type envbody b.binder_bv body)
+           then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                              BU.format1 "Binder %s is marked unused, but its use in the definition is not"
+                                          (Print.binder_to_string b))
+                               (S.range_of_bv b.binder_bv);
+
+           if U.is_binder_strictly_positive b
+           && not (Positivity.name_strictly_positive_in_type envbody b.binder_bv body)
+           then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                              BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
                                              (Print.binder_to_string b))
-                                  (S.range_of_bv b.binder_bv))
+                                (S.range_of_bv b.binder_bv)
+          ))      
         bs 
     in
 
@@ -4261,7 +4291,7 @@ and check_lbtyp top_level env lb : option typ  (* checked version of lb.lbtyp, i
                Some t, g, univ_vars, univ_opening, Env.set_expected_typ env1 t
 
 
-and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
+and tc_binder env ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs}) =
     let tu, u = U.type_u () in
     if Env.debug env Options.Extreme
     then BU.print3 "Checking binder %s:%s at type %s\n"
@@ -4278,7 +4308,7 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
     in
     let attrs = tc_attributes env attrs in
     check_erasable_binder_attributes env attrs t;
-    let x = S.mk_binder_with_attrs ({x with sort=t}) imp attrs in
+    let x = S.mk_binder_with_attrs ({x with sort=t}) imp pqual attrs in
     if Env.debug env Options.High
     then BU.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string x.binder_bv) (Print.term_to_string t);
     x, push_binding env x, g, u

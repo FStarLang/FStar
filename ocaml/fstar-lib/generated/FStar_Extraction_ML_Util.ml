@@ -85,10 +85,7 @@ let (mlexpr_of_range :
       FStar_Compiler_Effect.op_Bar_Greater uu___
         (FStar_Extraction_ML_Syntax.with_ty
            FStar_Extraction_ML_Syntax.ml_string_ty) in
-    let drop_path s =
-      match FStar_String.split [47] s with
-      | [] -> s
-      | l -> FStar_Compiler_List.last l in
+    let drop_path = FStar_Compiler_Util.basename in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -981,21 +978,31 @@ let (interpret_plugin_as_term_fun :
                                           let uu___18 =
                                             let uu___19 =
                                               let uu___20 =
-                                                FStar_Reflection_Constants.fstar_refl_syntax_lid
-                                                  "binders" in
+                                                FStar_Reflection_Constants.fstar_refl_types_lid
+                                                  "env" in
                                               (uu___20, Prims.int_zero,
-                                                "binders") in
+                                                "env") in
                                             (uu___19, Refl_emb) in
                                           let uu___19 =
                                             let uu___20 =
                                               let uu___21 =
                                                 let uu___22 =
-                                                  FStar_Reflection_Constants.fstar_refl_data_lid
-                                                    "exp" in
+                                                  FStar_Reflection_Constants.fstar_refl_syntax_lid
+                                                    "binders" in
                                                 (uu___22, Prims.int_zero,
-                                                  "exp") in
+                                                  "binders") in
                                               (uu___21, Refl_emb) in
-                                            [uu___20] in
+                                            let uu___21 =
+                                              let uu___22 =
+                                                let uu___23 =
+                                                  let uu___24 =
+                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                      "exp" in
+                                                  (uu___24, Prims.int_zero,
+                                                    "exp") in
+                                                (uu___23, Refl_emb) in
+                                              [uu___22] in
+                                            uu___20 :: uu___21 in
                                           uu___18 :: uu___19 in
                                         uu___16 :: uu___17 in
                                       uu___14 :: uu___15 in
@@ -1397,17 +1404,19 @@ let (interpret_plugin_as_term_fun :
                               match uu___4 with
                               | { FStar_Syntax_Syntax.binder_bv = b;
                                   FStar_Syntax_Syntax.binder_qual = uu___5;
-                                  FStar_Syntax_Syntax.binder_attrs = uu___6;_}
+                                  FStar_Syntax_Syntax.binder_positivity =
+                                    uu___6;
+                                  FStar_Syntax_Syntax.binder_attrs = uu___7;_}
                                   ->
-                                  let uu___7 =
-                                    let uu___8 =
+                                  let uu___8 =
+                                    let uu___9 =
                                       FStar_Syntax_Subst.compress
                                         b.FStar_Syntax_Syntax.sort in
-                                    uu___8.FStar_Syntax_Syntax.n in
-                                  (match uu___7 with
-                                   | FStar_Syntax_Syntax.Tm_type uu___8 ->
+                                    uu___9.FStar_Syntax_Syntax.n in
+                                  (match uu___8 with
+                                   | FStar_Syntax_Syntax.Tm_type uu___9 ->
                                        false
-                                   | uu___8 -> true)) bs1 in
+                                   | uu___9 -> true)) bs1 in
                        match uu___3 with
                        | FStar_Pervasives_Native.None -> (bs1, [])
                        | FStar_Pervasives_Native.Some (tvars, x, rest) ->
@@ -1557,14 +1566,16 @@ let (interpret_plugin_as_term_fun :
                                       FStar_Compiler_Effect.raise uu___7))
                             | { FStar_Syntax_Syntax.binder_bv = b;
                                 FStar_Syntax_Syntax.binder_qual = uu___3;
-                                FStar_Syntax_Syntax.binder_attrs = uu___4;_}::bs4
+                                FStar_Syntax_Syntax.binder_positivity =
+                                  uu___4;
+                                FStar_Syntax_Syntax.binder_attrs = uu___5;_}::bs4
                                 ->
-                                let uu___5 =
-                                  let uu___6 =
+                                let uu___6 =
+                                  let uu___7 =
                                     mk_embedding loc tvar_context
                                       b.FStar_Syntax_Syntax.sort in
-                                  uu___6 :: accum_embeddings in
-                                aux loc uu___5 bs4 in
+                                  uu___7 :: accum_embeddings in
+                                aux loc uu___6 bs4 in
                           (try
                              (fun uu___3 ->
                                 match () with

@@ -772,7 +772,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
         let expected_attrs =
           N.get_n_binders env (List.length binders) expected
           |> fst
-          |> List.map (fun {binder_attrs=attrs} -> attrs) in
+          |> List.map (fun {binder_attrs=attrs; binder_positivity=pqual} -> attrs, pqual) in
         if List.length expected_attrs <> List.length binders
         then raise_error
                (Errors.Fatal_UnexpectedInductivetype,
@@ -780,33 +780,41 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
                             (binders |> List.length |> string_of_int)
                             (Print.term_to_string expected)))
                se.sigrng
-        else List.map2 (fun ex_attrs b ->
-               {b with binder_attrs = b.binder_attrs@ex_attrs}
+        else List.map2 (fun (ex_attrs, pqual) b ->
+               if not (Common.check_positivity_qual true pqual b.binder_positivity)
+               then (
+                 raise_error
+                   (Errors.Fatal_UnexpectedInductivetype, "Incompatible positivity annotation")
+                   (range_of_bv b.binder_bv));
+               {b with binder_attrs = b.binder_attrs@ex_attrs; binder_positivity=pqual}
              ) expected_attrs binders
+      in
+      let inferred_typ_with_binders binders = 
+          let body =
+            match binders with
+            | [] -> typ
+            | _ -> S.mk (Tm_arrow(binders, S.mk_Total typ)) se.sigrng
+          in
+          (univs, body)
       in
       begin match Env.try_lookup_val_decl env0 l with
             | None -> se
             | Some (expected_typ, _) ->
-              let inferred_typ =
-                  let body =
-                      match binders with
-                      | [] -> typ
-                      | _ -> S.mk (Tm_arrow(binders, S.mk_Total typ)) se.sigrng in
-                  (univs, body)
-              in
               if List.length univs = List.length (fst expected_typ)
-              then let _, inferred = Subst.open_univ_vars univs (snd inferred_typ) in
-                   let _, expected = Subst.open_univ_vars univs (snd expected_typ) in
+              then let _, expected = Subst.open_univ_vars univs (snd expected_typ) in
+                   let binders = copy_binder_attrs_from_val binders expected in
+                   let inferred_typ = inferred_typ_with_binders binders in
+                   let _, inferred = Subst.open_univ_vars univs (snd inferred_typ) in
+
                    //
                    //  AR: Shouldn't we push opened universes to env0?
                    //
                    if Rel.teq_nosmt_force env0 inferred expected
                    then begin
-                     let binders = copy_binder_attrs_from_val binders expected in
                      {se with sigel=Sig_inductive_typ (l, univs, binders, num_uniform, typ, ts, ds)}
                    end
                    else fail expected_typ inferred_typ
-              else fail expected_typ inferred_typ
+              else fail expected_typ (inferred_typ_with_binders binders)
       end
     | _ -> se) in
 

@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Postprocess.x" ],
       0,
-      "df6ccdd3e16c0e589096ba58424764e4"
+      "828503bd62a9491199c0d4b777121c45"
     ],
     [
       "Postprocess.uu___7",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Postprocess.y" ],
       0,
-      "3b3f32c927756be8b8172679680538e7"
+      "34786f8de2a9c5d43c16b9504c29dcf2"
     ],
     [
       "Postprocess.__proj__B1__item___0",
@@ -25,12 +25,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Postprocess.B1",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_17e22ae7e75398217bad910401b33530"
       ],
       0,
-      "3808643157e4959ec635bb158d363746"
+      "02920a822773cb74f732137d538f6209"
     ],
     [
       "Postprocess.__proj__C1__item___0",
@@ -38,12 +37,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Postprocess.C1",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_60aa030648fef8e7bd28516f822e9a0c"
       ],
       0,
-      "ffe0dce5ea982e875782cf6ad0fb8422"
+      "1069358bc1e77ccd02d92a50b317e604"
     ],
     [
       "Postprocess.__proj__B2__item___0",
@@ -51,12 +49,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Postprocess.B2",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_a571d0930fe419c0a3557e389115132f"
       ],
       0,
-      "861fd8a4893dbb2cc8795acbefbe590e"
+      "93f39495a6480c8f127636fa37cde9e0"
     ],
     [
       "Postprocess.__proj__C2__item___0",
@@ -64,12 +61,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Postprocess.C2",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_d350a2c0136fefb41ae2d218a2b66a7b"
       ],
       0,
-      "17a24183c3e28d278ed73333833fd99e"
+      "a3458663d6938cec304d6a3274cc7a86"
     ],
     [
       "Postprocess.lift",
@@ -87,7 +83,7 @@
         "well_founded_ordering_on_codomain_Postprocess.C1"
       ],
       0,
-      "93b471b0fbd13e6a129047825995ff7a"
+      "fd45426ad3557b0ec9e2cd7b94b403e2"
     ],
     [
       "Postprocess.lemA",
@@ -103,7 +99,7 @@
         "typing_tok_Postprocess.A1@tok"
       ],
       0,
-      "b485bbd30ae0332539f78ce13f215343"
+      "73054a7f091d6a25e8bb1fb8d7afee4f"
     ],
     [
       "Postprocess.lemB",
@@ -119,7 +115,7 @@
         "projection_inverse_Postprocess.B1__0"
       ],
       0,
-      "01f338d745d59dfceb692365b5e2183a"
+      "8e4d43d72fe33d1510318deba128763a"
     ],
     [
       "Postprocess.congB",
@@ -131,7 +127,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "beb4b4ce2f422b2a22f67d82968d3d97"
+      "4203487aa3fdf4667c17b3e08868cc05"
     ],
     [
       "Postprocess.congC",
@@ -143,7 +139,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "8d1f208e69d94510bcbc5574d9925862"
+      "179d27c5fa05ead903e59be2b58c078d"
     ],
     [
       "Postprocess.q_as_lem",
@@ -155,7 +151,7 @@
         "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "9a5384b3aca28702ac875dee2dff585b"
+      "7cca37431f8b0dbeb028a33872ca8159"
     ],
     [
       "Postprocess.congruence_fun",
@@ -164,24 +160,16 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "d93bafdcb393c82f01b6c3cf9581f068"
+      "ab44bb32cf91fb43dfb373d94405120b"
     ],
     [
       "Postprocess.apply_feq_lem",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
-        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
-        "equation_FStar.FunctionalExtensionality.feq",
-        "interpretation_Tm_abs_134069e179ddf4705519081c391c4e10",
-        "lemma_FStar.FunctionalExtensionality.extensionality",
-        "typing_Tm_abs_134069e179ddf4705519081c391c4e10"
-      ],
+      [ "@query" ],
       0,
-      "a984930a9c21f2b42ea3ad179846ef7f"
+      "2ff36c39fc5092d1c6d8f47626114a3a"
     ],
     [
       "Postprocess._onL",
@@ -193,7 +181,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "a281ae7594baf06e8bf1f0301a928f18"
+      "9f1f1da29de64dee335c102febb808f9"
     ]
   ]
 ]

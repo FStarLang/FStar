@@ -94,7 +94,7 @@ let none_to_empty_list x =
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SPLICET SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES DECREASES LBRACE_COLON_WELL_FOUNDED
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
@@ -128,7 +128,9 @@ let none_to_empty_list x =
 %start inputFragment
 %start term
 %start warn_error_list
+%start oneDeclOrEOF
 %type <FStar_Parser_AST.inputFragment> inputFragment
+%type <FStar_Parser_AST.decl option> oneDeclOrEOF
 %type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
 %type <(FStar_Errors_Codes.error_flag * string) list> warn_error_list
@@ -141,6 +143,9 @@ inputFragment:
         as_frag decls
       }
 
+oneDeclOrEOF:
+  | EOF { None }
+  | d=decl { Some d }
 
 /******************************************************************************/
 /*                      Top level declarations                                */
@@ -259,7 +264,9 @@ rawDecl:
         in Val(lid, t)
       }
   | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
-      { Splice (ids, t) }
+      { Splice (false, ids, t) }
+  | SPLICET LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=atomicTerm
+      { Splice (true, ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect
@@ -410,7 +417,7 @@ effectDecl:
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
-      { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } }
+      { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift; braced=false } }
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident
     LBRACE
       lift1=separated_pair(IDENT, EQUALS, simpleTerm)
@@ -422,9 +429,9 @@ subEffect:
        | None ->
           begin match lift1 with
           | ("lift", lift) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = LiftForFree lift }
+             { msource = src_eff; mdest = tgt_eff; lift_op = LiftForFree lift; braced=true }
           | ("lift_wp", lift_wp) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
+             { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp; braced=true }
           | _ ->
              raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (lhs parseState)
           end
@@ -435,7 +442,7 @@ subEffect:
                   | "lift", "lift_wp" -> tm2, tm1
                   | _ -> raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
           in
-          { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
+          { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp); braced=true }
      }
 
 polymonadic_bind:

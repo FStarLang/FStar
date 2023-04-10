@@ -1230,25 +1230,28 @@ let (collect_one :
                       match uu___3 with
                       | (pat, t) -> (collect_pattern pat; collect_term t))
                    patterms
-             | FStar_Parser_AST.Splice (uu___2, t) -> collect_term t
+             | FStar_Parser_AST.Splice (uu___2, uu___3, t) -> collect_term t
              | FStar_Parser_AST.Assume (uu___2, t) -> collect_term t
              | FStar_Parser_AST.SubEffect
                  { FStar_Parser_AST.msource = uu___2;
                    FStar_Parser_AST.mdest = uu___3;
                    FStar_Parser_AST.lift_op =
-                     FStar_Parser_AST.NonReifiableLift t;_}
+                     FStar_Parser_AST.NonReifiableLift t;
+                   FStar_Parser_AST.braced = uu___4;_}
                  -> collect_term t
              | FStar_Parser_AST.SubEffect
                  { FStar_Parser_AST.msource = uu___2;
                    FStar_Parser_AST.mdest = uu___3;
-                   FStar_Parser_AST.lift_op = FStar_Parser_AST.LiftForFree t;_}
+                   FStar_Parser_AST.lift_op = FStar_Parser_AST.LiftForFree t;
+                   FStar_Parser_AST.braced = uu___4;_}
                  -> collect_term t
              | FStar_Parser_AST.Val (uu___2, t) -> collect_term t
              | FStar_Parser_AST.SubEffect
                  { FStar_Parser_AST.msource = uu___2;
                    FStar_Parser_AST.mdest = uu___3;
                    FStar_Parser_AST.lift_op = FStar_Parser_AST.ReifiableLift
-                     (t0, t1);_}
+                     (t0, t1);
+                   FStar_Parser_AST.braced = uu___4;_}
                  -> (collect_term t0; collect_term t1)
              | FStar_Parser_AST.Tycon (uu___2, tc, ts) ->
                  (if tc

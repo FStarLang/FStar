@@ -14,9 +14,6 @@
    limitations under the License.
 *)
 module FStar.Syntax.Syntax
-(* Prims is used for bootstrapping *)
-open Prims
-open FStar.Pervasives
 open FStar.Compiler.Effect
 (* Type definitions for the core AST *)
 
@@ -117,6 +114,10 @@ type should_check_uvar =
   | Strict                      (* Strict uvar that must be typechecked *)
   | Already_checked             (* A uvar whose solution has already been checked *)
 
+type positivity_qualifier =
+  | BinderStrictlyPositive
+  | BinderUnused
+
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -180,10 +181,69 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbattrs:list attribute; //attrs
     lbpos  :range;           //original position of 'e'
 }
-and antiquotations = list (bv * term)
+and antiquotations = int * list term
 and quoteinfo = {
-    qkind      : quote_kind;
-    antiquotes : antiquotations;
+    qkind          : quote_kind;
+    antiquotations : antiquotations;
+(*************************************************************************
+  ANTIQUOTATIONS and shifting
+
+ The antiquotations of a quoted term (Tm_quoted) are kept in the
+ antiquotations list above. The terms inside that list are not scoped by
+ any binder *inside* the quoted term, but are affected by substitutions
+ on the full term as usual. Inside the quoted terms, the points where
+ antiquotations are spliced in Tm_bvar nodes, where the index of the
+ bv indexes into the antiquotations list above, where the rightmost
+ elements is closer in scope. I.e., a term like
+
+   Tm_quoted (Tm_bvar 2, {antiquotations = [a;b;c]})
+
+ is really just `a`. This makes the representation of antiquotations
+ more canonical (we previously had freshly-named Tm_names instead).
+
+ Unembedding a Tm_quoted(tm, aq) term will simply take tm and substitute
+ it appropriately with the information from aq. Every antiquotation must
+ be a literal term for this to work, and not a variable or an expression
+ computing a quoted term.
+
+ When extracting or encoding a quoted term to SMT, then, we cannot
+ simply unembed as the antiquotations are most likely undetermined. For
+ instance, the extraction of a term like
+
+   Tm_quoted(1 + bvar 0, aq = [ compute_some_term() ]}
+
+ should be something like
+
+   pack_ln (Tv_App (pack_ln (Tv_App (plus, Tv_Const 1)), compute_some_term()).
+
+ To implement this conveniently, we allow _embedding_ terms with
+ antiquotations, so we can implement extraction basically by:
+
+   extract (Tm_quoted (Tm_bvar i, aq)) =
+     aq `index` (length aq - 1 - i)
+
+   extract (Tm_quoted (t, aq)) =
+     let tv = inspect_ln t in
+     let tv_e = embed_term_view tv aq in
+     let t' = mk_app pack_ln tv_e in
+     extract t'
+
+ That is, unfolding one level of the view, enclosing it with a
+ pack_ln call, and recursing. For this to work, however, we need the
+ antiquotations to be preserved, hence we pass them to embed_term_view.
+ The term_view embedding will also take care of *shifting* the
+ antiquotations (see the int there) when traversing a binder in the
+ quoted term. Hence, a term like:
+
+   Tm_quoted (fun x -> 1 + x + bvar 1, aqs = [t]),
+
+ will be unfolded to
+
+   Tv_Abs (x, Tm_quoted(1 + bvar0 + bvar1, aqs = [t], shift=1))
+
+ where the shift is needed to make the bvar1 actually point to t.
+
+*************************************************************************)
 }
 and comp_typ = {
   comp_univs:universes;
@@ -205,6 +265,7 @@ and args = list arg
 and binder = {
   binder_bv    : bv;
   binder_qual  : bqual;
+  binder_positivity : option positivity_qualifier;
   binder_attrs : list attribute
 }                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list binder                                       (* bool marks implicit binder *)
@@ -249,7 +310,8 @@ and unresolved_constructor = {
   uc_fields : list lident  // The fields names as written in the source
 }
 and lbname = either bv fv
-and letbindings = bool * list letbinding       (* let recs may have more than one element; top-level lets have lidents *)
+and letbindings = bool * list letbinding        (* let recs may have more than one element; top-level lets have lidents *)
+                                                (* boolean true indicates rec *)
 and subst_ts = list (list subst_elt)            (* A composition of parallel substitutions *)
              * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
@@ -575,7 +637,8 @@ type sigelt' =
                           * comp
                           * list cflag
   | Sig_pragma            of pragma
-  | Sig_splice            of list lident * term
+  | Sig_splice            of bool * list lident * term  (* bool true indicates a typed splice that does not re-typecheck the generated sigelt *)
+                                                        (* it is an experimental feature added as part of the meta DSL framework *)
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //(m, n) |> p, the polymonadic term, and its type
   | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //m <: n, the polymonadic subcomp term, and its type
@@ -601,7 +664,9 @@ type modul = {
 }
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
-val lookup_aq : bv -> antiquotations -> option term
+
+(* Requires that bv.index is in scope for the antiquotation list. *)
+val lookup_aq : bv -> antiquotations -> term
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term))
@@ -672,7 +737,7 @@ val binders_of_list:      list bv -> binders
 
 val null_bv:        term -> bv
 val mk_binder_with_attrs
-           :        bv -> bqual -> list attribute -> binder
+           :        bv -> bqual -> option positivity_qualifier -> list attribute -> binder
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
 val as_arg:         term -> arg

@@ -16,7 +16,7 @@ FSTAR_BOOT ?= $(FSTAR)
 # FSTAR_C: This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
-DUNE_SNAPSHOT ?= $(FSTAR_HOME)/ocaml
+DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(FSTAR_HOME)/ocaml)
 OUTPUT_DIRECTORY = $(DUNE_SNAPSHOT)/fstar-lib/generated
 FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
 
@@ -40,10 +40,11 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		
 		FStar.Interactive.CompletionTable			\
 		FStar.Interactive.JsonHelper FStar.Interactive.QueryHelper \
 		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\
-		FStar.Interactive.Ide FStar.Interactive.Legacy		\
+		FStar.Interactive.Ide FStar.Interactive.Ide.Types       \
+		FStar.Interactive.Incremental FStar.Interactive.Legacy	\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
 		FStar.Main FStar.Compiler.List FStar.Compiler.Option    \
-                FStar.Compiler.Dyn
+		FStar.Compiler.Dyn
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES

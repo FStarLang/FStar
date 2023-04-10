@@ -139,6 +139,9 @@ let go : 'uuuuu . 'uuuuu -> unit =
     match uu___1 with
     | (res, filenames) ->
         (match res with
+         | FStar_Getopt.Empty ->
+             (FStar_Options.display_usage ();
+              FStar_Compiler_Effect.exit Prims.int_one)
          | FStar_Getopt.Help ->
              (FStar_Options.display_usage ();
               FStar_Compiler_Effect.exit Prims.int_zero)

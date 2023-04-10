@@ -650,6 +650,8 @@ let rec (translate :
                                  FStar_Syntax_Syntax.binder_bv = x1;
                                  FStar_Syntax_Syntax.binder_qual =
                                    (b.FStar_Syntax_Syntax.binder_qual);
+                                 FStar_Syntax_Syntax.binder_positivity =
+                                   (b.FStar_Syntax_Syntax.binder_positivity);
                                  FStar_Syntax_Syntax.binder_attrs =
                                    (b.FStar_Syntax_Syntax.binder_attrs)
                                } :: binders_rev))) (bs, []) xs in
@@ -2725,6 +2727,8 @@ and (readback :
                                    FStar_Syntax_Syntax.binder_bv = x2;
                                    FStar_Syntax_Syntax.binder_qual =
                                      (b.FStar_Syntax_Syntax.binder_qual);
+                                   FStar_Syntax_Syntax.binder_positivity =
+                                     (b.FStar_Syntax_Syntax.binder_positivity);
                                    FStar_Syntax_Syntax.binder_attrs =
                                      (b.FStar_Syntax_Syntax.binder_attrs)
                                  } :: binders_rev), uu___4)) (ctx, [], [])
@@ -2753,23 +2757,29 @@ and (readback :
                                 FStar_Syntax_Util.bqual_and_attrs_of_aqual aq in
                               (match uu___5 with
                                | (bqual, battrs) ->
-                                   let x1 =
-                                     let uu___6 = readback cfg t in
-                                     FStar_Syntax_Syntax.new_bv
-                                       FStar_Pervasives_Native.None uu___6 in
                                    let uu___6 =
-                                     let uu___7 =
-                                       FStar_Syntax_Syntax.mk_binder_with_attrs
-                                         x1 bqual battrs in
-                                     uu___7 :: binders1 in
-                                   let uu___7 =
-                                     let uu___8 =
-                                       let uu___9 =
-                                         FStar_TypeChecker_NBETerm.mkAccuVar
-                                           x1 in
-                                       (uu___9, aq) in
-                                     uu___8 :: accus in
-                                   (uu___6, uu___7))) args ([], []) in
+                                     FStar_Syntax_Util.parse_positivity_attributes
+                                       battrs in
+                                   (match uu___6 with
+                                    | (pqual, battrs1) ->
+                                        let x1 =
+                                          let uu___7 = readback cfg t in
+                                          FStar_Syntax_Syntax.new_bv
+                                            FStar_Pervasives_Native.None
+                                            uu___7 in
+                                        let uu___7 =
+                                          let uu___8 =
+                                            FStar_Syntax_Syntax.mk_binder_with_attrs
+                                              x1 bqual pqual battrs1 in
+                                          uu___8 :: binders1 in
+                                        let uu___8 =
+                                          let uu___9 =
+                                            let uu___10 =
+                                              FStar_TypeChecker_NBETerm.mkAccuVar
+                                                x1 in
+                                            (uu___10, aq) in
+                                          uu___9 :: accus in
+                                        (uu___7, uu___8)))) args ([], []) in
                  (match uu___2 with
                   | (binders1, accus) ->
                       (binders1, (FStar_Compiler_List.rev accus),
@@ -2829,8 +2839,13 @@ and (readback :
                         FStar_Syntax_Util.bqual_and_attrs_of_aqual q in
                       (match uu___2 with
                        | (q1, attrs) ->
-                           FStar_Syntax_Syntax.mk_binder_with_attrs x1 q1 []))
-               args in
+                           let uu___3 =
+                             FStar_Syntax_Util.parse_positivity_attributes
+                               attrs in
+                           (match uu___3 with
+                            | (pqual, attrs1) ->
+                                FStar_Syntax_Syntax.mk_binder_with_attrs x1
+                                  q1 pqual attrs1))) args in
            let c1 = readback_comp cfg c in
            let uu___1 = FStar_Syntax_Util.arrow binders c1 in
            with_range uu___1

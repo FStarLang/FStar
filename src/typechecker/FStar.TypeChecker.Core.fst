@@ -42,7 +42,7 @@ let fresh_binder (g:env) (old:binder)
   : env & binder
   = let ctr = g.max_binder_index + 1 in
     let bv = { old.binder_bv with index = ctr } in
-    let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_attrs in    
+    let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_positivity old.binder_attrs in    
     push_binder g b, b
 
 let open_binders (g:env) (bs:binders) 
@@ -52,6 +52,7 @@ let open_binders (g:env) (bs:binders)
             let bv = { b.binder_bv with sort = Subst.subst subst b.binder_bv.sort } in
             let b = { binder_bv = bv;
                       binder_qual = Subst.subst_bqual subst b.binder_qual;
+                      binder_positivity = b.binder_positivity;
                       binder_attrs = List.map (Subst.subst subst) b.binder_attrs } in
             let g, b' = fresh_binder g b in
             g, b'::bs, DB(0, b'.binder_bv)::Subst.shift_subst 1 subst)
@@ -426,6 +427,12 @@ let check_aqual (a0 a1:aqual)
     | _ ->
       fail "Unequal arg qualifiers"
 
+let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
+  : result unit
+  = if FStar.TypeChecker.Common.check_positivity_qual (SUBTYPING? rel) p0 p1
+    then return ()
+    else fail "Unequal positivity qualifiers"
+
 let mk_forall_l (us:universes) (xs:binders) (t:term)
   : term
   = FStar.Compiler.List.fold_right2
@@ -683,12 +690,6 @@ let debug g f =
   if Env.debug g.tcenv (Options.Other "Core")
   then f ()
 
-type side = 
-  | Left
-  | Right
-  | Both
-  | Neither
-
 let side_to_string = function
   | Left -> "Left"
   | Right -> "Right"
@@ -723,6 +724,28 @@ let combine_path_and_branch_condition (path_condition:term)
     this_path_condition, //:Type
     next_path_condition  //:bool
 
+let maybe_relate_after_unfolding (g:Env.env) t0 t1 : side =
+  let rec delta_depth_of_head t =
+    let head = U.leftmost_head t in
+    match (U.un_uinst head).n with
+    | Tm_fvar fv -> Some (Env.delta_depth_of_fv g fv)
+    | Tm_match (t, _, _, _) -> delta_depth_of_head t
+    | _ -> None in
+  
+  let dd0 = delta_depth_of_head t0 in
+  let dd1 = delta_depth_of_head t1 in
+  
+  match dd0, dd1 with
+  | Some _, None -> Left
+  | None, Some _ -> Right
+  | Some dd0, Some dd1 ->
+    if dd0 = dd1
+    then Both
+    else if Common.delta_depth_greater_than dd0 dd1
+    then Left
+    else Right
+  | None, None ->
+    Neither
 
 (*
      G |- e : t0 <: t1 | p
@@ -770,29 +793,8 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         | Tm_match _, Tm_match _ -> true
         | _ -> false
     in
-    let which_side_to_unfold t0 t1 
-      : side
-      = let rec delta_depth_of_head t =
-          let head = U.leftmost_head t in
-          match (U.un_uinst head).n with
-          | Tm_fvar fv -> Some (Env.delta_depth_of_fv g.tcenv fv)
-          | Tm_match (t, _, _, _) -> delta_depth_of_head t
-          | _ -> None
-        in
-        let dd0 = delta_depth_of_head t0 in
-        let dd1 = delta_depth_of_head t1 in
-        match dd0, dd1 with
-        | Some _, None -> Left
-        | None, Some _ -> Right
-        | Some dd0, Some dd1 ->
-          if dd0 = dd1
-          then Both
-          else if Common.delta_depth_greater_than dd0 dd1
-          then Left
-          else Right
-        | None, None ->
-          Neither
-    in
+    let which_side_to_unfold t0 t1 =
+      maybe_relate_after_unfolding g.tcenv t0 t1 in
     let maybe_unfold_side side t0 t1
       : option (term & term)
       = Profiling.profile (fun _ -> 
@@ -1018,6 +1020,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
         check_relation g EQUALITY b0.binder_bv.sort b1.binder_bv.sort;!
         check_bqual b0.binder_qual b1.binder_qual;!
+        check_positivity_qual EQUALITY b0.binder_positivity b1.binder_positivity;!
         let! u = universe_of g b0.binder_bv.sort in
         let g, b0, body0 = open_term g b0 body0 in
         let body1 = Subst.subst [DB(0, b0.binder_bv)] body1 in
@@ -1033,6 +1036,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
         with_context "subtype arrow" None (fun _ ->
           let! _ = check_bqual x0.binder_qual x1.binder_qual in
+          check_positivity_qual rel x0.binder_positivity x1.binder_positivity;!
           let! u1 = universe_of g x1.binder_bv.sort in
           let g_x1, x1, c1 = open_comp g x1 c1 in
           let c0 = Subst.subst_comp [DB(0, x1.binder_bv)] c0 in
@@ -1872,7 +1876,7 @@ let check_term g e t must_tot =
   | Inr err -> Inr err
 
 let compute_term_type_handle_guards g e must_tot gh =
-  let e = FStar.Syntax.Subst.deep_compress true e in
+  let e = FStar.Syntax.Compress.deep_compress true e in
   match check_term_top_gh g e None must_tot (Some gh) with
   | Inl (Some (_, t), None) -> Inl t
   | Inl (None, _) -> failwith "Impossible: Success must return some effect and type"

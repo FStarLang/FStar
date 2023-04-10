@@ -68,7 +68,7 @@ let unshadow (bs : binders) (t : term) : binders * term =
             let (bv0, q) = b.binder_bv, b.binder_qual in
             let nbs = fresh_until (s bv0) (fun s -> not (List.mem s seen)) in
             let bv = sset bv0 nbs in
-            let b = S.mk_binder_with_attrs bv q b.binder_attrs in
+            let b = S.mk_binder_with_attrs bv q b.binder_positivity b.binder_attrs in
             go (nbs::seen) (subst @ [NT (bv0, S.bv_to_name bv)]) bs (b :: bs') t
             end
     in

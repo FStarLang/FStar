@@ -1,11 +1,11 @@
 opam-version: "2.0"
-version: "2023.03.22~dev"
+version: "2023.04.08~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
 license: "Apache-2.0"
 depends: [
-  "ocaml" {>= "4.08.0"}
+  "ocaml" {>= "4.10.0"}
   "batteries"
   "zarith"
   "stdint"

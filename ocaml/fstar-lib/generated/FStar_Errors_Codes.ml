@@ -370,6 +370,8 @@ type raw_error =
   | Warning_Adhoc_IndexedEffect_Combinator 
   | Error_PluginDynlink 
   | Error_InternalQualifier 
+  | Warning_NameEscape 
+  | Warning_UnexpectedZ3Stderr 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1899,6 +1901,14 @@ let (uu___is_Error_PluginDynlink : raw_error -> Prims.bool) =
 let (uu___is_Error_InternalQualifier : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with | Error_InternalQualifier -> true | uu___ -> false
+let (uu___is_Warning_NameEscape : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Warning_NameEscape -> true | uu___ -> false
+let (uu___is_Warning_UnexpectedZ3Stderr : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Warning_UnexpectedZ3Stderr -> true
+    | uu___ -> false
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
@@ -2046,7 +2056,8 @@ let (default_settings : error_setting Prims.list) =
   (Fatal_NonLinearPatternVars, CFatal, (Prims.of_int (139)));
   (Fatal_NonSingletonTopLevel, CFatal, (Prims.of_int (140)));
   (Fatal_NonSingletonTopLevelModule, CFatal, (Prims.of_int (141)));
-  (Error_NonTopRecFunctionNotFullyEncoded, CError, (Prims.of_int (142)));
+  (Error_NonTopRecFunctionNotFullyEncoded, CAlwaysError,
+    (Prims.of_int (142)));
   (Fatal_NonTrivialPreConditionInPrims, CFatal, (Prims.of_int (143)));
   (Fatal_NonVariableInductiveTypeParameter, CFatal, (Prims.of_int (144)));
   (Fatal_NotApplicationOrFv, CFatal, (Prims.of_int (145)));
@@ -2259,4 +2270,6 @@ let (default_settings : error_setting Prims.list) =
   (Warning_FailedToCheckInitialTacticGoal, CSilent, (Prims.of_int (351)));
   (Warning_Adhoc_IndexedEffect_Combinator, CWarning, (Prims.of_int (352)));
   (Error_PluginDynlink, CError, (Prims.of_int (353)));
-  (Error_InternalQualifier, CAlwaysError, (Prims.of_int (354)))]
+  (Error_InternalQualifier, CAlwaysError, (Prims.of_int (354)));
+  (Warning_NameEscape, CWarning, (Prims.of_int (355)));
+  (Warning_UnexpectedZ3Stderr, CWarning, (Prims.of_int (356)))]

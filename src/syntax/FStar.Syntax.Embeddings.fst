@@ -911,7 +911,6 @@ let e_vconfig =
                    S.as_arg (embed e_bool              vcfg.tcnorm                                    rng None norm);
                    S.as_arg (embed e_bool              vcfg.no_plugins                                rng None norm);
                    S.as_arg (embed e_bool              vcfg.no_tactics                                rng None norm);
-                   S.as_arg (embed (e_option e_string) vcfg.vcgen_optimize_bind_as_seq                rng None norm);
                    S.as_arg (embed e_string_list       vcfg.z3cliopt                                  rng None norm);
                    S.as_arg (embed e_string_list       vcfg.z3smtopt                                  rng None norm);                   
                    S.as_arg (embed e_bool              vcfg.z3refresh                                 rng None norm);
@@ -948,7 +947,6 @@ let e_vconfig =
             (tcnorm, _);
             (no_plugins, _);
             (no_tactics, _);
-            (vcgen_optimize_bind_as_seq, _);
             (z3cliopt, _);
             (z3smtopt, _);            
             (z3refresh, _);
@@ -977,7 +975,6 @@ let e_vconfig =
                   BU.bind_opt (unembed e_bool              tcnorm w norm) (fun tcnorm ->
                   BU.bind_opt (unembed e_bool              no_plugins w norm) (fun no_plugins ->
                   BU.bind_opt (unembed e_bool              no_tactics w norm) (fun no_tactics ->
-                  BU.bind_opt (unembed (e_option e_string) vcgen_optimize_bind_as_seq w norm) (fun vcgen_optimize_bind_as_seq ->
                   BU.bind_opt (unembed e_string_list       z3cliopt w norm) (fun z3cliopt ->
                   BU.bind_opt (unembed e_string_list       z3smtopt w norm) (fun z3smtopt ->                  
                   BU.bind_opt (unembed e_bool              z3refresh w norm) (fun z3refresh ->
@@ -1006,7 +1003,6 @@ let e_vconfig =
                     tcnorm = tcnorm;
                     no_plugins = no_plugins;
                     no_tactics = no_tactics;
-                    vcgen_optimize_bind_as_seq = vcgen_optimize_bind_as_seq;
                     z3cliopt = z3cliopt;
                     z3smtopt = z3smtopt;
                     z3refresh = z3refresh;
@@ -1015,7 +1011,7 @@ let e_vconfig =
                     z3seed = z3seed;
                     trivial_pre_for_unannotated_effectful_fns = trivial_pre_for_unannotated_effectful_fns;
                     reuse_hint_for = reuse_hint_for;
-                  })))))))))))))))))))))))))))))
+                  }))))))))))))))))))))))))))))
         | _ ->
           if w then
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded vconfig: %s" (Print.term_to_string t0)));

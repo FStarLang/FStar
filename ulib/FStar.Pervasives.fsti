@@ -744,6 +744,14 @@ type dtuple4
   (d: (x: a -> y: b x -> z: c x y -> GTot Type))
   = | Mkdtuple4 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> dtuple4 a b c d
 
+(** Dependent quadruples, with sugar [x:a & y:b x & z:c x y & d x y z] *)
+unopteq
+type dtuple5
+  (a: Type) (b: (x: a -> GTot Type)) (c: (x: a -> b x -> GTot Type))
+  (d: (x: a -> y: b x -> z: c x y -> GTot Type))
+  (e: (x: a -> y: b x -> z: c x y -> w: d x y z -> GTot Type))
+  = | Mkdtuple5 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> _5: e _1 _2 _3 _4 -> dtuple5 a b c d e
+
 (** Explicitly discarding a value *)
 let ignore (#a: Type) (x: a) : Tot unit = ()
 
@@ -1122,6 +1130,19 @@ val primitive_extraction : unit
   *)
 val strictly_positive : unit
 
+(** A binder in a definition/declaration may optionally be annotated as unused.
+    This is used in the strict positivity checker. E.g., a type such as the one
+    below is accepted
+    
+    let f ([@@@unused] a:Type) = unit
+    type t = | MkT: f t -> t
+    
+    F* checks that the binder is actually unused in the definition
+
+    See tests/micro-benchmarks/Positivity.fst for a few examples
+  *)
+val unused : unit
+
 (** This attribute may be added to an inductive type
     to disable auto generated projectors
 
@@ -1149,12 +1170,6 @@ val no_subtyping : unit
     To circumvent this behavior, singleton can be used.
     See the example usage in ulib/FStar.Algebra.Monoid.fst. *)
 val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
-
-(** [with_type t e] is just an identity function, but it receives
-    special treatment in the SMT encoding, where in addition to being
-    an identity function, we have an SMT axiom:
-    [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
-val with_type (#t: Type) (e: t) : Tot t
 
 (** A weakening coercion from eqtype to Type.
 

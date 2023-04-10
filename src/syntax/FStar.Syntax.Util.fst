@@ -102,7 +102,7 @@ let null_binders_of_tks (tks:list (typ * bqual)) : binders =
     tks |> List.map (fun (t, imp) -> { null_binder t with binder_qual = imp })
 
 let binders_of_tks (tks:list (typ * bqual)) : binders =
-    tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp [])
+    tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp None [])
 
 let binders_of_freevars fvs = U.set_elements fvs |> List.map mk_binder
 
@@ -702,21 +702,22 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
 
     | _ -> Unknown
 
-and eq_antiquotes a1 a2 =
-    match a1, a2 with
-    | [], [] -> Equal
-    | [], _
-    | _, [] -> NotEqual
-    | (x1, t1)::a1, (x2, t2)::a2 ->
-      if not (bv_eq x1 x2)
-      then NotEqual
-      else match eq_tm t1 t2 with
-           | NotEqual -> NotEqual
-           | Unknown ->
-             (match eq_antiquotes a1 a2 with
-              | NotEqual -> NotEqual
-              | _ -> Unknown)
-            | Equal -> eq_antiquotes a1 a2
+and eq_antiquotations a1 a2 =
+  // Basically this;
+  //  List.fold_left2 (fun acc t1 t2 -> eq_inj acc (eq_tm t1 t2)) Equal a1 a2
+  // but lazy and handling lists of different size
+  match a1, a2 with
+  | [], [] -> Equal
+  | [], _
+  | _, [] -> NotEqual
+  | t1::a1, t2::a2 ->
+    match eq_tm t1 t2 with
+    | NotEqual -> NotEqual
+    | Unknown ->
+      (match eq_antiquotations a1 a2 with
+       | NotEqual -> NotEqual
+       | _ -> Unknown)
+    | Equal -> eq_antiquotations a1 a2
 
 and branch_matches b1 b2 =
     let related_by f o1 o2 =
@@ -768,7 +769,7 @@ and eq_comp (c1 c2:comp) : eq_result =
 let eq_quoteinfo q1 q2 =
     if q1.qkind <> q2.qkind
     then NotEqual
-    else eq_antiquotes q1.antiquotes q2.antiquotes
+    else eq_antiquotations (snd q1.antiquotations) (snd q2.antiquotations)
 
 (* Only used in term_eq *)
 let eq_bqual a1 a2 =
@@ -866,7 +867,7 @@ let destruct typ lid =
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
-  | Sig_splice(lids, _)
+  | Sig_splice(_, lids, _)
   | Sig_bundle(_, lids) -> lids
   | Sig_inductive_typ (lid, _, _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
@@ -1305,6 +1306,9 @@ let rename_let_attr = fvar_const PC.rename_let_attr
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 let t_universe_uvar     = fvar_const PC.universe_uvar_lid
 
+let t_dsl_tac_typ = fvar PC.dsl_tac_typ_lid (Delta_constant_at_level 1) None
+
+
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
   | Some phi1 -> Some (mk (Tm_app(tand, [as_arg phi1; as_arg phi2])) (Range.union_ranges phi1.pos phi2.pos))
@@ -1356,11 +1360,6 @@ let mk_has_type t x t' =
     let t_has_type = fvar_const PC.has_type_lid in //TODO: Fix the U_zeroes below!
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) dummyRange
-
-let mk_with_type u t e =
-    let t_with_type = fvar PC.with_type_lid delta_equational None in
-    let t_with_type = mk (Tm_uinst(t_with_type, [u])) dummyRange in
-    mk (Tm_app(t_with_type, [iarg t; as_arg e])) dummyRange
 
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let texists  = fvar PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
@@ -2501,3 +2500,45 @@ let flatten_refinement t =
     | _ -> t
   in
   aux t false
+
+let contains_strictly_positive_attribute (attrs:list attribute)
+: bool
+= has_attribute attrs PC.binder_strictly_positive_attr
+
+let contains_unused_attribute (attrs:list attribute)
+: bool
+= has_attribute attrs PC.binder_unused_attr
+
+//retains the original attributes as is, while deciding if they contains
+//the "strictly_positive" attribute
+//we retain the attributes since they will then be carried in arguments
+//that are applied to the corresponding binder, which is used in embeddings
+//and Rel to construct binders from arguments alone
+let parse_positivity_attributes (attrs:list attribute)
+: option positivity_qualifier & list attribute
+= if contains_unused_attribute attrs
+  then Some BinderUnused, attrs
+  else if contains_strictly_positive_attribute attrs
+  then Some BinderStrictlyPositive, attrs
+  else None, attrs
+
+let encode_positivity_attributes (pqual:option positivity_qualifier) (attrs:list attribute)
+: list attribute
+= match pqual with
+  | None -> attrs
+  | Some BinderStrictlyPositive ->
+    if contains_strictly_positive_attribute attrs
+    then attrs
+    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_strictly_positive_attr (Delta_constant_at_level 0) None)
+         :: attrs
+  | Some BinderUnused ->
+    if contains_unused_attribute attrs
+    then attrs
+    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_unused_attr (Delta_constant_at_level 0) None)
+         :: attrs
+
+let is_binder_strictly_positive (b:binder) =
+  b.binder_positivity = Some BinderStrictlyPositive
+
+let is_binder_unused (b:binder) =
+  b.binder_positivity = Some BinderUnused

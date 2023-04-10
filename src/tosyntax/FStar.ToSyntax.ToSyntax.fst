@@ -40,6 +40,8 @@ module P = FStar.Syntax.Print
 module EMB = FStar.Syntax.Embeddings
 module SS = FStar.Syntax.Subst
 
+type antiquotations_temp = list (bv * S.term)
+
 let tun_r (r:Range.range) : S.term = { tun with pos = r }
 
 type annotated_pat = Syntax.pat * list (bv * Syntax.typ * list S.term)
@@ -47,6 +49,10 @@ type annotated_pat = Syntax.pat * list (bv * Syntax.typ * list S.term)
 let mk_thunk e =
   let b = S.mk_binder (S.new_bv None S.tun) in
   U.abs [b] e None
+
+let mk_binder_with_attrs bv aq attrs = 
+  let pqual, attrs = U.parse_positivity_attributes attrs in
+  S.mk_binder_with_attrs bv aq pqual attrs
 
 (*
    If the user wrote { f1=v1; ...; fn=vn }, where `field_names` [f1;..;fn]
@@ -699,7 +705,7 @@ let desugar_universe t : Syntax.universe =
         | Inl n -> int_to_universe n
         | Inr u -> u
 
-let check_no_aq (aq : antiquotations) : unit =
+let check_no_aq (aq : antiquotations_temp) : unit =
     match aq with
     | [] -> ()
     | (bv, { n = Tm_quoted (e, { qkind = Quote_dynamic })})::_ ->
@@ -796,7 +802,7 @@ let rec desugar_data_pat
     (top_level_ascr_allowed : bool)
     (env:env_t)
     (p:pattern)
-    : (env_t * bnd * list annotated_pat) * antiquotations =
+    : (env_t * bnd * list annotated_pat) * antiquotations_temp =
   let resolvex (l:lenv_t) e x =
     (* This resolution function will be shared across
      * the cases of a PatOr, so different ocurrences of
@@ -809,9 +815,9 @@ let rec desugar_data_pat
       (xbv::l), e, xbv
   in
 
-  let rec aux' (top:bool) (loc:lenv_t) (aqs:antiquotations) (env:env_t) (p:pattern)
+  let rec aux' (top:bool) (loc:lenv_t) (aqs:antiquotations_temp) (env:env_t) (p:pattern)
     : lenv_t                                  (* list of all BVs mentioned *)
-    * antiquotations                          (* updated antiquotations *)
+    * antiquotations_temp                     (* updated antiquotations_temp *)
     * env_t                                   (* env updated with the BVs pushed in *)
     * bnd                                     (* a binder for the pattern *)
     * pat                                     (* elaborated pattern *)
@@ -989,7 +995,7 @@ and desugar_binding_pat_maybe_top top env p
   : (env_t                 (* environment with patterns variables pushed in *)
   * bnd                    (* a binder for the pattern *)
   * list annotated_pat)    (* elaborated patterns with their variable annotations *)
-  * antiquotations         (* antiquotations found in binder types *)
+  * antiquotations_temp    (* antiquotations_temp found in binder types *)
   =
 
   if top then
@@ -1030,7 +1036,7 @@ and desugar_match_pat_maybe_top _ env pat =
 
 and desugar_match_pat env p = desugar_match_pat_maybe_top false env p
 
-and desugar_term_aq env e : S.term * antiquotations =
+and desugar_term_aq env e : S.term * antiquotations_temp =
     let env = Env.set_expect_typ env false in
     desugar_term_maybe_top false env e
 
@@ -1039,7 +1045,7 @@ and desugar_term env e : S.term =
     check_no_aq aq;
     t
 
-and desugar_typ_aq env e : S.term * antiquotations =
+and desugar_typ_aq env e : S.term * antiquotations_temp =
     let env = Env.set_expect_typ env true in
     desugar_term_maybe_top false env e
 
@@ -1088,7 +1094,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   S.mk (Tm_meta (app, Meta_desugared
                  (Machine_integer (signedness, width)))) range
 
-and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * antiquotations =
+and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * antiquotations_temp =
   let mk e = S.mk e top.range in
   let noaqs = [] in
   let join_aqs aqs = List.flatten aqs in
@@ -1311,7 +1317,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                     match xopt with
                     | None -> env, S.new_bv (Some top.range) (setpos tun)
                     | Some x -> push_bv env x in
-                (env, tparams@[S.mk_binder_with_attrs ({x with sort=t}) None attrs],
+                (env, tparams@[mk_binder_with_attrs ({x with sort=t}) None attrs],
                  typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], [])
         (binders@[Inl <| mk_binder (NoName t) t.range Type_level None]) in
@@ -1384,7 +1390,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
          fun y1 y2 y3 -> match (y1, y2, y3) with
                 | (P1 x1, P2 x2, P3 x3) -> [[e]]
       *)
-      let rec aux aqs env bs sc_pat_opt pats : S.term * antiquotations =
+      let rec aux aqs env bs sc_pat_opt pats : S.term * antiquotations_temp =
         match pats with
         | [] ->
             let body, aq = desugar_term_aq env body in
@@ -1427,7 +1433,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                           | _ -> failwith "Impossible"
                           end
                     in
-                    (S.mk_binder_with_attrs x aq attrs), sc_pat_opt
+                    (mk_binder_with_attrs x aq attrs), sc_pat_opt
             in
             aux (aq@aqs) env (b::bs) sc_pat_opt rest
        in
@@ -1594,7 +1600,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                         f, g
          *)
         let desugar_one_def env lbname (attrs_opt, (_, args, result_t), def)
-            : letbinding * antiquotations
+            : letbinding * antiquotations_temp
             =
             let args = args |> List.map replace_unit_pattern in
             let pos = def.range in
@@ -1855,7 +1861,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       log_issue (range_of_id n) (Warning_IgnoredBinding, "This name is being ignored");
       desugar_term_aq env e
 
-
     | Paren e -> failwith "impossible"
 
     | VQuote e ->
@@ -1863,19 +1868,29 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Quote (e, Static) ->
       let tm, vts = desugar_term_aq env e in
-      let qi = { qkind = Quote_static
-               ; antiquotes = vts
-               } in
+      let vt_binders = List.map (fun (bv, _tm) -> S.mk_binder bv) vts in
+      let vt_tms = List.map snd vts in // not closing these, they are already well-scoped
+      let tm = SS.close vt_binders tm in // but we need to close the variables in tm
+      let () =
+        let fvs = Free.names tm in
+        if not (BU.set_is_empty fvs) then
+          raise_error (Errors.Fatal_MissingFieldInRecord,
+                     BU.format1 "Static quotation refers to external variables: %s" (Common.string_of_set Print.nm_to_string fvs))
+                     (e.range)
+      in
+
+      let qi = { qkind = Quote_static; antiquotations = (0, vt_tms) } in
       mk <| Tm_quoted (tm, qi), noaqs
 
     | Antiquote e ->
-        let bv = S.new_bv (Some e.range) S.tun in
-        (* We use desugar_term, so the there can be double antiquotations *)
-        S.bv_to_name bv, [(bv, desugar_term env e)]
+      let bv = S.new_bv (Some e.range) S.tun in
+      (* We use desugar_term, so there can be double antiquotations *)
+      let tm = desugar_term env e in
+      S.bv_to_name bv, [(bv, tm)]
 
     | Quote (e, Dynamic) ->
       let qi = { qkind = Quote_dynamic
-               ; antiquotes = []
+               ; antiquotations = (0, [])
                } in
       mk <| Tm_quoted (desugar_term env e, qi), noaqs
 
@@ -2257,7 +2272,7 @@ and desugar_match_returns env scrutinee asc_opt =
     let b = List.hd (SS.close_binders [b]) in
     Some (b, asc), aq
 
-and desugar_ascription env t tac_opt use_eq : S.ascription * antiquotations =
+and desugar_ascription env t tac_opt use_eq : S.ascription * antiquotations_temp =
   let annot, aq0 =
     if is_comp_type env t
     then if use_eq
@@ -2589,7 +2604,7 @@ and desugar_formula env (f:term) : S.term =
 
     | _ -> desugar_term env f
 
-and desugar_binder_aq env b : (option ident * S.term * list S.attribute) * antiquotations =
+and desugar_binder_aq env b : (option ident * S.term * list S.attribute) * antiquotations_temp =
   let attrs = b.battributes |> List.map (desugar_term env) in
   match b.b with
    | TAnnotated(x, t)
@@ -2601,8 +2616,11 @@ and desugar_binder_aq env b : (option ident * S.term * list S.attribute) * antiq
      let ty, aqs = desugar_typ_aq env t in
      (None, ty, attrs), aqs
 
-   | TVariable x     -> (Some x, mk (Tm_type U_unknown) (range_of_id x), attrs), []
-   | Variable x      -> (Some x, tun_r (range_of_id x), attrs), []
+   | TVariable x     -> 
+    (Some x, mk (Tm_type U_unknown) (range_of_id x), attrs), []
+
+   | Variable x      ->
+    (Some x, tun_r (range_of_id x), attrs), []
 
 and desugar_binder env b : option ident * S.term * list S.attribute =
   let r, aqs = desugar_binder_aq env b in
@@ -2618,10 +2636,10 @@ and desugar_vquote env e r: string =
 
 and as_binder env imp = function
   | (None, k, attrs) ->
-    S.mk_binder_with_attrs (null_bv k) (trans_bqual env imp) attrs, env
+    mk_binder_with_attrs (null_bv k) (trans_bqual env imp) attrs, env
   | (Some a, k, attrs) ->
     let env, a = Env.push_bv env a in
-    (S.mk_binder_with_attrs ({a with sort=k}) (trans_bqual env imp) attrs), env
+    (mk_binder_with_attrs ({a with sort=k}) (trans_bqual env imp) attrs), env
 
 and trans_bqual env = function
   | Some AST.Implicit -> Some S.imp_tag
@@ -2640,7 +2658,7 @@ let typars_of_binders env bs : _ * binders =
             | Some a, k, attrs ->
                 let env, a = push_bv env a in
                 let a = {a with sort=k} in
-                env, (S.mk_binder_with_attrs a (trans_bqual env b.aqual) attrs)::out
+                env, (mk_binder_with_attrs a (trans_bqual env b.aqual) attrs)::out
             | _ -> raise_error (Errors.Fatal_UnexpectedBinder, "Unexpected binder") b.brange) (env, []) bs in
     env, List.rev tpars
 
@@ -2835,7 +2853,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, attrs, fields) ->
       let constrName = mk_ident("Mk" ^ (string_of_id id), (range_of_id id)) in
-      let mfields = List.map (fun (x,q,attrs,t) -> mk_binder_with_attrs (Annotated(x,t)) (range_of_id x) Expr q attrs) fields in
+      let mfields = List.map (fun (x,q,attrs,t) -> FStar.Parser.AST.mk_binder_with_attrs (Annotated(x,t)) (range_of_id x) Expr q attrs) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) (range_of_id id) Type_level) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) (range_of_id id) Type_level in
       //let _ = BU.print_string (BU.format2 "Translated record %s to constructor %s\n" ((string_of_id id)) (term_to_string constrTyp)) in
@@ -2872,7 +2890,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let push_tparams env bs =
     let env, bs = List.fold_left (fun (env, tps) b ->
         let env, y = Env.push_bv env b.binder_bv.ppname in
-        env, (S.mk_binder_with_attrs y b.binder_qual b.binder_attrs)::tps) (env, []) bs in
+        env, (mk_binder_with_attrs y b.binder_qual b.binder_attrs)::tps) (env, []) bs in
     env, List.rev bs in
   match tcs with
     | [TyconAbstract(id, bs, kopt)] ->
@@ -3650,7 +3668,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
               formals
           in
           let meths = List.filter (fun x -> not (has_no_method_attr x)) meths in
-          [{ sigel = Sig_splice(meths , mkclass lid);
+          let is_typed = false in
+          [{ sigel = Sig_splice(is_typed, meths , mkclass lid);
              sigquals = [];
              sigrng = d.drange;
              sigmeta = default_sigmeta;
@@ -3973,9 +3992,9 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       sigattrs = [];
       sigopts = None }]
 
-  | Splice (ids, t) ->
+  | Splice (is_typed, ids, t) ->
     let t = desugar_term env t in
-    let se = { sigel = Sig_splice(List.map (qualify env) ids, t);
+    let se = { sigel = Sig_splice(is_typed, List.map (qualify env) ids, t);
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta;

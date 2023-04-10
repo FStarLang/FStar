@@ -302,7 +302,7 @@ let t_set_parse_warn_error,
             Getopt.Success
         with Invalid_warn_error_setting msg ->
             (BU.smap_add error_flags we None;
-             Getopt.Error ("Invalid --warn_error setting: " ^msg))
+             Getopt.Error ("Invalid --warn_error setting: " ^ msg ^ "\n"))
     in
     (* get_error_flags is called when logging an issue to figure out
        which error level to report a particular issue at (Warning, Error etc.)
@@ -449,6 +449,22 @@ let with_ctx_if (b:bool) (s:string) (f : unit -> 'a) : 'a =
   else
     f ()
 
+//
+// returns errors, other issues, result if any
+// restores handler back
+//
+let catch_errors_aux (f : unit -> 'a) : list issue & list issue & option 'a =
+  let newh = mk_default_handler false in
+  let old = !current_handler in
+  current_handler := newh;
+  let r = try Some (f ())
+          with | ex -> err_exn ex; None
+  in
+  let all_issues = newh.eh_report() in //de-duplicated already
+  current_handler := old;
+  let errs, rest = List.partition (fun i -> i.issue_level = EError) all_issues in
+  errs, rest, r
+
 let no_ctx (f : unit -> 'a) : 'a =
   let save = error_context.get () in
   error_context.clear ();
@@ -457,17 +473,16 @@ let no_ctx (f : unit -> 'a) : 'a =
   res
 
 let catch_errors (f : unit -> 'a) : list issue * option 'a =
-    let newh = mk_default_handler false in
-    let old = !current_handler in
-    current_handler := newh;
-    let r = try Some (f ())
-            with | ex -> err_exn ex; None
-    in
-    let all_issues = newh.eh_report() in //de-duplicated already
-    current_handler := old;
-    let errs, rest = List.partition (fun i -> i.issue_level = EError) all_issues in
-    List.iter old.eh_add_one rest; //add the remaining issues back to the outer handler to be reported as usual
-    errs, r
+  let errs, rest, r = catch_errors_aux f in
+  List.iter (!current_handler).eh_add_one rest;
+  errs, r
+
+//
+// Similar to catch_errors, except the warnings are not added to the old handler
+//
+let catch_errors_and_ignore_rest (f:unit -> 'a) : list issue & option 'a =
+  let errs, _, r = catch_errors_aux f in
+  errs, r
 
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)
  * eg. find_multiset_discrepancy [1;1;3;5] [1;1;3;3;4;5] = Some (3, 1, 2)

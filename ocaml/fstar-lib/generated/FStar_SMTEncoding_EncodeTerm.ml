@@ -398,15 +398,17 @@ let check_pattern_vars :
                       match uu___1 with
                       | { FStar_Syntax_Syntax.binder_bv = b;
                           FStar_Syntax_Syntax.binder_qual = uu___2;
-                          FStar_Syntax_Syntax.binder_attrs = uu___3;_} ->
-                          let uu___4 = FStar_Compiler_Util.set_mem b pat_vars in
-                          Prims.op_Negation uu___4)) in
+                          FStar_Syntax_Syntax.binder_positivity = uu___3;
+                          FStar_Syntax_Syntax.binder_attrs = uu___4;_} ->
+                          let uu___5 = FStar_Compiler_Util.set_mem b pat_vars in
+                          Prims.op_Negation uu___5)) in
             (match uu___ with
              | FStar_Pervasives_Native.None -> ()
              | FStar_Pervasives_Native.Some
                  { FStar_Syntax_Syntax.binder_bv = x;
                    FStar_Syntax_Syntax.binder_qual = uu___1;
-                   FStar_Syntax_Syntax.binder_attrs = uu___2;_}
+                   FStar_Syntax_Syntax.binder_positivity = uu___2;
+                   FStar_Syntax_Syntax.binder_attrs = uu___3;_}
                  ->
                  let pos =
                    FStar_Compiler_List.fold_left
@@ -415,14 +417,14 @@ let check_pattern_vars :
                           FStar_Compiler_Range.union_ranges out
                             t.FStar_Syntax_Syntax.pos)
                      hd.FStar_Syntax_Syntax.pos tl in
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 = FStar_Syntax_Print.bv_to_string x in
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStar_Syntax_Print.bv_to_string x in
                      FStar_Compiler_Util.format1
                        "SMT pattern misses at least one bound variable: %s"
-                       uu___5 in
-                   (FStar_Errors_Codes.Warning_SMTPatternIllFormed, uu___4) in
-                 FStar_Errors.log_issue pos uu___3)
+                       uu___6 in
+                   (FStar_Errors_Codes.Warning_SMTPatternIllFormed, uu___5) in
+                 FStar_Errors.log_issue pos uu___4)
 type label =
   (FStar_SMTEncoding_Term.fv * Prims.string * FStar_Compiler_Range.range)
 type labels = label Prims.list
@@ -2329,9 +2331,11 @@ and (encode_term :
                                                                  = bv;
                                                                FStar_Syntax_Syntax.binder_qual
                                                                  = uu___13;
+                                                               FStar_Syntax_Syntax.binder_positivity
+                                                                 = uu___14;
                                                                FStar_Syntax_Syntax.binder_attrs
-                                                                 = uu___14;_},
-                                                             (a, uu___15)) ->
+                                                                 = uu___15;_},
+                                                             (a, uu___16)) ->
                                                               FStar_Syntax_Syntax.NT
                                                                 (bv, a))
                                                      formals1 args_e1 in
@@ -2374,46 +2378,48 @@ and (encode_term :
                                                                     = bv;
                                                                     FStar_Syntax_Syntax.binder_qual
                                                                     = uu___16;
+                                                                    FStar_Syntax_Syntax.binder_positivity
+                                                                    = uu___17;
                                                                     FStar_Syntax_Syntax.binder_attrs
-                                                                    = uu___17;_})
+                                                                    = uu___18;_})
                                                                     ->
                                                                     let t2 =
                                                                     FStar_Syntax_Subst.subst
                                                                     subst
                                                                     bv.FStar_Syntax_Syntax.sort in
-                                                                    let uu___18
+                                                                    let uu___19
                                                                     =
                                                                     encode_term_pred
                                                                     FStar_Pervasives_Native.None
                                                                     t2 env e in
-                                                                    (match uu___18
+                                                                    (match uu___19
                                                                     with
                                                                     | 
                                                                     (t_hyp,
                                                                     decls'1)
                                                                     ->
                                                                     ((
-                                                                    let uu___20
+                                                                    let uu___21
                                                                     =
                                                                     FStar_TypeChecker_Env.debug
                                                                     env.FStar_SMTEncoding_Env.tcenv
                                                                     (FStar_Options.Other
                                                                     "PartialApp") in
                                                                     if
-                                                                    uu___20
+                                                                    uu___21
                                                                     then
-                                                                    let uu___21
+                                                                    let uu___22
                                                                     =
                                                                     FStar_Syntax_Print.term_to_string
                                                                     t2 in
-                                                                    let uu___22
+                                                                    let uu___23
                                                                     =
                                                                     FStar_SMTEncoding_Term.print_smt_term
                                                                     t_hyp in
                                                                     FStar_Compiler_Util.print2
                                                                     "Encoded typing hypothesis for %s ... got %s\n"
-                                                                    uu___21
                                                                     uu___22
+                                                                    uu___23
                                                                     else ());
                                                                     ((t_hyp
                                                                     ::

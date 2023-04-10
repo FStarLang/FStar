@@ -1277,13 +1277,16 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
     | FStar_Parser_AST.Tycon (true, uu___, uu___1) ->
         failwith
           "Effect abbreviation is expected to be defined by an abbreviation"
-    | FStar_Parser_AST.Splice (ids, t) ->
+    | FStar_Parser_AST.Splice (is_typed, ids, t) ->
         let uu___ = str "%splice" in
         let uu___1 =
-          let uu___2 = let uu___3 = str ";" in p_list p_uident uu___3 ids in
+          let uu___2 = if is_typed then str "_t" else FStar_Pprint.empty in
           let uu___3 =
-            let uu___4 = p_term false false t in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+            let uu___4 = let uu___5 = str ";" in p_list p_uident uu___5 ids in
+            let uu___5 =
+              let uu___6 = p_term false false t in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___6 in
+            FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
           FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
         FStar_Pprint.op_Hat_Hat uu___ uu___1
 and (p_pragma : FStar_Parser_AST.pragma -> FStar_Pprint.document) =
@@ -4884,18 +4887,14 @@ let (extract_decl_range : FStar_Parser_AST.decl -> decl_meta) =
         (Prims.op_Negation
            (FStar_Compiler_List.isEmpty d.FStar_Parser_AST.attrs))
     }
-let (modul_with_comments_to_document :
-  FStar_Parser_AST.modul ->
+let (decls_with_comments_to_document :
+  FStar_Parser_AST.decl Prims.list ->
     (Prims.string * FStar_Compiler_Range.range) Prims.list ->
       (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
         Prims.list))
   =
-  fun m ->
+  fun decls ->
     fun comments ->
-      let decls =
-        match m with
-        | FStar_Parser_AST.Module (uu___, decls1) -> decls1
-        | FStar_Parser_AST.Interface (uu___, decls1, uu___1) -> decls1 in
       match decls with
       | [] -> (FStar_Pprint.empty, comments)
       | d::ds ->
@@ -4915,3 +4914,22 @@ let (modul_with_comments_to_document :
                  FStar_Compiler_Effect.op_Colon_Equals comment_stack [];
                  (let uu___3 = FStar_Pprint.op_Hat_Hat initial_comment doc in
                   (uu___3, comments1)))))
+let (modul_with_comments_to_document :
+  FStar_Parser_AST.modul ->
+    (Prims.string * FStar_Compiler_Range.range) Prims.list ->
+      (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
+        Prims.list))
+  =
+  fun m ->
+    fun comments ->
+      let decls =
+        match m with
+        | FStar_Parser_AST.Module (uu___, decls1) -> decls1
+        | FStar_Parser_AST.Interface (uu___, decls1, uu___1) -> decls1 in
+      decls_with_comments_to_document decls comments
+let (decl_with_comments_to_document :
+  FStar_Parser_AST.decl ->
+    (Prims.string * FStar_Compiler_Range.range) Prims.list ->
+      (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
+        Prims.list))
+  = fun d -> fun comments -> decls_with_comments_to_document [d] comments

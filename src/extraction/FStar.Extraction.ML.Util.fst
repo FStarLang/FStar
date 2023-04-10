@@ -83,11 +83,8 @@ let mlexpr_of_range (r:Range.range) : mlexpr' =
     let cstr (s : string) : mlexpr =
         MLC_String s |> MLE_Const |> with_ty ml_string_ty
     in
-    let drop_path (s : string) : string =
-       match String.split ['/'] s with
-       | [] -> s
-       | l -> List.last l
-    in
+    let drop_path = BU.basename in
+
     // This is not being fully faithful since it disregards
     // the use_range, but I assume that's not too bad.
     //
@@ -508,8 +505,9 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
               (RC.fstar_refl_types_lid "sigelt", 0, "sigelt"), Refl_emb;
               (RC.fstar_refl_types_lid "fv", 0, "fv"), Refl_emb;
               (RC.fstar_refl_types_lid "binder", 0, "binder"), Refl_emb;
+              (RC.fstar_refl_types_lid "env", 0, "env"), Refl_emb;                            
               (RC.fstar_refl_syntax_lid "binders", 0, "binders"), Refl_emb;
-              (RC.fstar_refl_data_lid "exp", 0, "exp"), Refl_emb
+              (RC.fstar_refl_data_lid "exp", 0, "exp"), Refl_emb;
             ]
        in
        let nbe_cs =

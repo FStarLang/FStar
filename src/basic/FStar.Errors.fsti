@@ -116,6 +116,9 @@ issues it logged/raised. *)
 val catch_errors : (unit -> 'a) -> list issue * option 'a
 
 
+(* Similar to catch_errors, except the warnings are not added to the old handler *)
+val catch_errors_and_ignore_rest (f:unit -> 'a) : list issue & option 'a
+
 
 
 

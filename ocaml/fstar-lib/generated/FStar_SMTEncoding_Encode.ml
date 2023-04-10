@@ -1310,34 +1310,6 @@ let (primitive_type_axioms :
           "inversion-interp") in
       FStar_SMTEncoding_Util.mkAssume uu___1 in
     [uu___] in
-  let mk_with_type_axiom env with_type tt =
-    let tt1 =
-      FStar_SMTEncoding_Term.mk_fv ("t", FStar_SMTEncoding_Term.Term_sort) in
-    let t = FStar_SMTEncoding_Util.mkFreeV tt1 in
-    let ee =
-      FStar_SMTEncoding_Term.mk_fv ("e", FStar_SMTEncoding_Term.Term_sort) in
-    let e = FStar_SMTEncoding_Util.mkFreeV ee in
-    let with_type_t_e = FStar_SMTEncoding_Util.mkApp (with_type, [t; e]) in
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 = FStar_TypeChecker_Env.get_range env in
-          let uu___4 =
-            let uu___5 =
-              let uu___6 =
-                let uu___7 = FStar_SMTEncoding_Util.mkEq (with_type_t_e, e) in
-                let uu___8 =
-                  FStar_SMTEncoding_Term.mk_HasType with_type_t_e t in
-                (uu___7, uu___8) in
-              FStar_SMTEncoding_Util.mkAnd uu___6 in
-            ([[with_type_t_e]],
-              (FStar_Pervasives_Native.Some Prims.int_zero), [tt1; ee],
-              uu___5) in
-          FStar_SMTEncoding_Term.mkForall' uu___3 uu___4 in
-        (uu___2, (FStar_Pervasives_Native.Some "with_type primitive axiom"),
-          "@with_type_primitive_axiom") in
-      FStar_SMTEncoding_Util.mkAssume uu___1 in
-    [uu___] in
   let prims1 =
     [(FStar_Parser_Const.unit_lid, mk_unit);
     (FStar_Parser_Const.bool_lid, mk_bool);
@@ -1353,8 +1325,7 @@ let (primitive_type_axioms :
     (FStar_Parser_Const.iff_lid, mk_iff_interp);
     (FStar_Parser_Const.not_lid, mk_not_interp);
     (FStar_Parser_Const.range_lid, mk_range_interp);
-    (FStar_Parser_Const.inversion_lid, mk_inversion_axiom);
-    (FStar_Parser_Const.with_type_lid, mk_with_type_axiom)] in
+    (FStar_Parser_Const.inversion_lid, mk_inversion_axiom)] in
   fun env ->
     fun t ->
       fun s ->
@@ -2336,16 +2307,20 @@ let (encode_top_level_let :
                            match (uu___2, uu___3) with
                            | ({ FStar_Syntax_Syntax.binder_bv = formal;
                                 FStar_Syntax_Syntax.binder_qual = uu___4;
-                                FStar_Syntax_Syntax.binder_attrs = uu___5;_},
+                                FStar_Syntax_Syntax.binder_positivity =
+                                  uu___5;
+                                FStar_Syntax_Syntax.binder_attrs = uu___6;_},
                               { FStar_Syntax_Syntax.binder_bv = binder;
-                                FStar_Syntax_Syntax.binder_qual = uu___6;
-                                FStar_Syntax_Syntax.binder_attrs = uu___7;_})
+                                FStar_Syntax_Syntax.binder_qual = uu___7;
+                                FStar_Syntax_Syntax.binder_positivity =
+                                  uu___8;
+                                FStar_Syntax_Syntax.binder_attrs = uu___9;_})
                                ->
-                               let uu___8 =
-                                 let uu___9 =
+                               let uu___10 =
+                                 let uu___11 =
                                    FStar_Syntax_Syntax.bv_to_name binder in
-                                 (formal, uu___9) in
-                               FStar_Syntax_Syntax.NT uu___8) formals1
+                                 (formal, uu___11) in
+                               FStar_Syntax_Syntax.NT uu___10) formals1
                       binders in
                   let extra_formals1 =
                     let uu___2 =
@@ -2368,6 +2343,8 @@ let (encode_top_level_let :
                                 FStar_Syntax_Syntax.binder_bv = uu___3;
                                 FStar_Syntax_Syntax.binder_qual =
                                   (b.FStar_Syntax_Syntax.binder_qual);
+                                FStar_Syntax_Syntax.binder_positivity =
+                                  (b.FStar_Syntax_Syntax.binder_positivity);
                                 FStar_Syntax_Syntax.binder_attrs =
                                   (b.FStar_Syntax_Syntax.binder_attrs)
                               })) in
@@ -2495,15 +2472,17 @@ let (encode_top_level_let :
                          match (uu___1, uu___2) with
                          | ({ FStar_Syntax_Syntax.binder_bv = x;
                               FStar_Syntax_Syntax.binder_qual = uu___3;
-                              FStar_Syntax_Syntax.binder_attrs = uu___4;_},
+                              FStar_Syntax_Syntax.binder_positivity = uu___4;
+                              FStar_Syntax_Syntax.binder_attrs = uu___5;_},
                             { FStar_Syntax_Syntax.binder_bv = b;
-                              FStar_Syntax_Syntax.binder_qual = uu___5;
-                              FStar_Syntax_Syntax.binder_attrs = uu___6;_})
+                              FStar_Syntax_Syntax.binder_qual = uu___6;
+                              FStar_Syntax_Syntax.binder_positivity = uu___7;
+                              FStar_Syntax_Syntax.binder_attrs = uu___8;_})
                              ->
-                             let uu___7 =
-                               let uu___8 = FStar_Syntax_Syntax.bv_to_name b in
-                               (x, uu___8) in
-                             FStar_Syntax_Syntax.NT uu___7) formals actuals in
+                             let uu___9 =
+                               let uu___10 = FStar_Syntax_Syntax.bv_to_name b in
+                               (x, uu___10) in
+                             FStar_Syntax_Syntax.NT uu___9) formals actuals in
                 FStar_Syntax_Subst.subst_comp subst comp in
               let rec arrow_formals_comp_norm norm t1 =
                 let t2 =
@@ -4011,21 +3990,23 @@ and (encode_sigelt' :
                                   | ({ FStar_Syntax_Syntax.binder_bv = bv;
                                        FStar_Syntax_Syntax.binder_qual =
                                          uu___10;
+                                       FStar_Syntax_Syntax.binder_positivity
+                                         = uu___11;
                                        FStar_Syntax_Syntax.binder_attrs =
-                                         uu___11;_},
+                                         uu___12;_},
                                      (env3, acc_sorts, acc)) ->
-                                      let uu___12 =
+                                      let uu___13 =
                                         FStar_SMTEncoding_Env.gen_term_var
                                           env3 bv in
-                                      (match uu___12 with
+                                      (match uu___13 with
                                        | (xxsym, xx, env4) ->
-                                           let uu___13 =
-                                             let uu___14 =
+                                           let uu___14 =
+                                             let uu___15 =
                                                FStar_SMTEncoding_Term.mk_fv
                                                  (xxsym,
                                                    FStar_SMTEncoding_Term.Term_sort) in
-                                             uu___14 :: acc_sorts in
-                                           (env4, uu___13, (xx :: acc))) in
+                                             uu___15 :: acc_sorts in
+                                           (env4, uu___14, (xx :: acc))) in
                                 FStar_Compiler_List.fold_right aux formals
                                   (env2, [], []) in
                               (match uu___7 with
@@ -4823,23 +4804,25 @@ and (encode_sigelt' :
                                                                   = x;
                                                                 FStar_Syntax_Syntax.binder_qual
                                                                   = uu___12;
+                                                                FStar_Syntax_Syntax.binder_positivity
+                                                                  = uu___13;
                                                                 FStar_Syntax_Syntax.binder_attrs
-                                                                  = uu___13;_}
+                                                                  = uu___14;_}
                                                                 ->
-                                                                let uu___14 =
-                                                                  let uu___15
+                                                                let uu___15 =
+                                                                  let uu___16
                                                                     =
-                                                                    let uu___16
+                                                                    let uu___17
                                                                     =
                                                                     FStar_SMTEncoding_Env.mk_term_projector_name
                                                                     l x in
-                                                                    (uu___16,
+                                                                    (uu___17,
                                                                     [xx]) in
                                                                   FStar_SMTEncoding_Util.mkApp
-                                                                    uu___15 in
+                                                                    uu___16 in
                                                                 FStar_SMTEncoding_Env.push_term_var
                                                                   env3 x
-                                                                  uu___14)
+                                                                  uu___15)
                                                        env1) in
                                                 let uu___11 =
                                                   FStar_SMTEncoding_EncodeTerm.encode_args

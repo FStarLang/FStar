@@ -25,11 +25,12 @@ module Env = FStar.TypeChecker.Env
 val run_tactic_on_ps :
     range -> (* position on the tactic call *)
     range -> (* position for the goal *)
-    bool -> (* whether this call is in the "background", like resolve_implicits *)
+    bool ->  (* whether this call is in the "background", like resolve_implicits *)
     embedding 'a ->
     'a ->
     embedding 'b ->
     term ->        (* a term representing an `'a -> tac 'b` *)
+    bool ->        (* true if the tactic term is already typechecked *)
     proofstate ->  (* proofstate *)
     list goal * 'b (* goals and return value *)
 

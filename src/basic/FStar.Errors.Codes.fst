@@ -159,7 +159,7 @@ let default_settings : list error_setting =
     Fatal_NonLinearPatternVars                        , CFatal, 139;
     Fatal_NonSingletonTopLevel                        , CFatal, 140;
     Fatal_NonSingletonTopLevelModule                  , CFatal, 141;
-    Error_NonTopRecFunctionNotFullyEncoded            , CError, 142;
+    Error_NonTopRecFunctionNotFullyEncoded            , CAlwaysError, 142;
     Fatal_NonTrivialPreConditionInPrims               , CFatal, 143;
     Fatal_NonVariableInductiveTypeParameter           , CFatal, 144;
     Fatal_NotApplicationOrFv                          , CFatal, 145;
@@ -370,4 +370,6 @@ let default_settings : list error_setting =
     Warning_Adhoc_IndexedEffect_Combinator            , CWarning, 352;
     Error_PluginDynlink                               , CError, 353;
     Error_InternalQualifier                           , CAlwaysError, 354;
+    Warning_NameEscape                                , CWarning, 355;
+    Warning_UnexpectedZ3Stderr                        , CWarning, 356;
     ]

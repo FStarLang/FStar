@@ -105,6 +105,10 @@ let unit_param   = param_of_eqtype unit
 let string_param = param_of_eqtype string
 
 
+let binder_set_qual (b:binder) (q:aqualv) : Tac binder =
+  let bview = inspect_binder b in
+  pack_binder {bview with binder_qual=q}
+
 let admit_param : #a0:Type -> #a1:Type -> (#aR: (a0 -> a1 -> Type0)) ->
                   u1:unit -> u2:unit -> unit_param u1 u2 ->
                   aR (admit ()) (admit ()) =
@@ -145,7 +149,6 @@ let rec param' (s:param_state) (t:term) : Tac term =
 
  | Tv_Abs b t ->
     let abs b t : Tac term = pack (Tv_Abs b t) in
-
     let (s', (bx0, bx1, bxR)) = push_binder b s in
 
     let t = param' s' t in
@@ -271,9 +274,9 @@ and push_binder (b:binder) (s:param_state) : Tac (param_state & (binder & binder
   let bxr = fresh_binder_named (decor name "R") (`(`#(param' s typ)) (`#bx0) (`#bx1)) in
 
   (* respect implicits *)
-  let bx0 = binder_set_qual q bx0 in
-  let bx1 = binder_set_qual q bx1 in
-  let bxr = binder_set_qual q bxr in
+  let bx0 = binder_set_qual bx0 q in
+  let bx1 = binder_set_qual bx1 q in
+  let bxr = binder_set_qual bxr q in
 
   let s = push_bv_to_state bv bx0 bx1 bxr s in
   (s, (bx0, bx1, bxr))

@@ -14,9 +14,6 @@
    limitations under the License.
 *)
 module FStar.Syntax.Syntax
-(* Prims is used for bootstrapping *)
-open Prims
-open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 (* Type definitions for the core AST *)
@@ -31,6 +28,7 @@ open FStar.Compiler.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
 open FStar.VConfig
+module Err = FStar.Errors
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
@@ -79,13 +77,16 @@ let set_range_of_bv x r = {x with ppname = set_id_range r x.ppname }
 
 (* Helpers *)
 let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
-    let aq = List.map (fun (bv, t) -> (bv, f t)) qi.antiquotes in
-    { qi with antiquotes = aq }
+  let (s, aqs) = qi.antiquotations in
+  let aqs' = List.map f aqs in
+  { qi with antiquotations = (s, aqs') }
 
-let lookup_aq (bv : bv) (aq : antiquotations) : option term =
-    match List.tryFind (fun (bv', _) -> bv_eq bv bv') aq with
-    | Some (_, e) -> Some e
-    | None -> None
+(* Requires that bv.index is in scope. *)
+let lookup_aq (bv : bv) (aq : antiquotations) : term =
+    try List.nth (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) // subtract shift
+    with
+    | _ ->
+      failwith "antiquotation out of bounds"
 
 (*********************************************************************************)
 (* Syntax builders *)
@@ -200,12 +201,13 @@ let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
     else {bv with index=Ident.next_id()}
-let mk_binder_with_attrs bv aqual attrs = {
+let mk_binder_with_attrs bv aqual pqual attrs = {
   binder_bv = bv;
   binder_qual = aqual;
+  binder_positivity = pqual;
   binder_attrs = attrs
 }
-let mk_binder a = mk_binder_with_attrs a None []
+let mk_binder a = mk_binder_with_attrs a None None []
 let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
 let iarg t : arg = t, Some ({ aqual_implicit = true; aqual_attributes = [] })

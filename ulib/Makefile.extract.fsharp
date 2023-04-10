@@ -24,7 +24,7 @@ OUTPUT_DIRECTORY=fs/extracted
 
 CODEGEN ?= FSharp
 
-MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --already_cached '*' --warn_error @241 --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache
+MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --already_cached '*,' --warn_error @241 --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache
 
 # And then, in a separate invocation, from each .checked file we
 # extract an .fs file

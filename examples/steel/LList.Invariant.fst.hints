@@ -15,7 +15,7 @@
         "projection_inverse_LList.Invariant.Mkcell_next"
       ],
       0,
-      "9c8f4330f74e7ee05df4aed8659629c6"
+      "71b8b3386a229b7a436f6140c0b12f70"
     ],
     [
       "LList.Invariant.llist'",
@@ -31,13 +31,12 @@
         "equation_Prims.l_imp", "equation_Prims.l_not",
         "equation_Prims.squash", "equation_Prims.subtype_of",
         "fuel_guarded_inversion_Prims.list",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3c3b65a030707835a61f140ea1f538cb"
+      "cf1fa907a44f375512376ea223a95e32"
     ],
     [
       "LList.Invariant.intro_llist_nil",
@@ -45,26 +44,19 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "@query", "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
         "constructor_distinct_Steel.Effect.Common.VUnit",
-        "data_typing_intro_Prims.Nil@tok", "equality_tok_Prims.T@tok",
-        "equation_Prims.l_True", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.to_vprop_",
-        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "kinding_LList.Invariant.cell@tok",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
         "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "typing_LList.Invariant.llist", "typing_LList.Invariant.null_llist",
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "994258e4f923c2a57a367f2d82169ba7"
+      "8eea03a7a8c6d62c37b02150390bda4e"
     ],
     [
       "LList.Invariant.intro_llist_cons",
@@ -87,7 +79,6 @@
         "fuel_guarded_inversion_LList.Invariant.cell",
         "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "kinding_LList.Invariant.cell@tok",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
         "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Steel.Effect.Common.VStar__0",
@@ -99,7 +90,7 @@
         "typing_Steel.Reference.is_null"
       ],
       0,
-      "92fd63c29607ad7c5ddd734b7a732385"
+      "7c05994378f9b1961f5ba6bbf63bb371"
     ],
     [
       "LList.Invariant.elim_llist_cons",
@@ -129,7 +120,6 @@
         "fuel_guarded_inversion_LList.Invariant.cell",
         "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "kinding_LList.Invariant.cell@tok",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
         "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
@@ -139,14 +129,14 @@
         "projection_inverse_Steel.Effect.Common.VStar__1",
         "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "typing_FStar.Ghost.hide", "typing_LList.Invariant.llist_",
-        "typing_LList.Invariant.next", "typing_Steel.Effect.Common.star",
+        "typing_LList.Invariant.llist_", "typing_LList.Invariant.next",
+        "typing_Steel.Effect.Common.star",
         "typing_Steel.Effect.Common.to_vprop_",
         "typing_Steel.FractionalPermission.full_perm",
         "typing_Steel.Memory.pure", "typing_Steel.Reference.pts_to"
       ],
       0,
-      "ca5c4dcb49ef30b86f434a2d84c79030"
+      "a84cc9bee5f24fe0d8f4741e0d62fad5"
     ]
   ]
 ]

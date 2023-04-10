@@ -1,20 +1,30 @@
 # This Dockerfile should be run from the root FStar directory
-# It builds and tests a binary package for F*.
-# It is a potential alternative to .scripts/process_build.sh
 
 # Build the package
 ARG ocaml_version=4.12
-ARG opamthreads=24
+ARG CI_THREADS=24
 
 FROM ocaml/opam:ubuntu-20.04-ocaml-$ocaml_version AS fstarbuild
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
-RUN opam depext conf-gmp z3.4.8.5 conf-m4
+RUN opam depext conf-gmp conf-m4
 
 ADD --chown=opam:opam ./fstar.opam fstar.opam
 
-# Install opam dependencies only
-RUN opam install --deps-only ./fstar.opam
+# Install opam dependencies only, but not z3
+RUN grep -v z3 < fstar.opam > fstar-no-z3.opam && \
+    rm fstar.opam && \
+    opam install --deps-only ./fstar-no-z3.opam && \
+    rm fstar-no-z3.opam
+
+# Install GitHub CLI
+# From https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian-ubuntu-linux-raspberry-pi-os-apt
+RUN { type -p curl >/dev/null || sudo apt-get install curl -y ; } \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && sudo apt-get update \
+    && sudo apt-get install gh -y
 
 # Install .NET
 RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
@@ -26,28 +36,35 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
 # So, we use manual install instead, from https://docs.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#manual-install
 ENV DOTNET_ROOT /home/opam/dotnet
 RUN sudo apt-get install --yes --no-install-recommends \
-    wget
-
-RUN wget https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a6a-4d0d-b42e-dfd3b880e222/008a93f83aba6d1acf75ded3d2cfba24/dotnet-sdk-6.0.400-linux-x64.tar.gz && \
+    wget \
+    && \
+    wget https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a6a-4d0d-b42e-dfd3b880e222/008a93f83aba6d1acf75ded3d2cfba24/dotnet-sdk-6.0.400-linux-x64.tar.gz && \
     mkdir -p $DOTNET_ROOT && \
     tar xf dotnet-sdk-6.0.400-linux-x64.tar.gz -C $DOTNET_ROOT
 
 ENV PATH=${PATH}:$DOTNET_ROOT:$DOTNET_ROOT/tools
 
+# Configure the git user
+RUN git config --global user.name "Dzomo, the Everest Yak" && \
+    git config --global user.email "everbld@microsoft.com"
+
+# Download and extract z3, but do not add it in the PATH
+# We download a z3 that does not depend on libgomp
+ADD --chown=opam:opam https://github.com/tahina-pro/z3/releases/download/z3-4.8.5-linux-clang/z3-4.8.5-linux-clang-x86_64.tar.gz z3.tar.gz
+RUN tar xf z3.tar.gz
+
 ADD --chown=opam:opam ./ FStar/
 
-# Build the package, 
-RUN eval $(opam env) && env Z3_LICENSE="$(opam config expand '%{prefix}%')/.opam-switch/sources/z3.4.8.5/LICENSE.txt" OTHERFLAGS='--admit_smt_queries true' make -C FStar -j $opamthreads package
+# Build the package with our Z3
+RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' PATH=$HOME/z3:$PATH make -j $CI_THREADS -C FStar package
 
-# Create a separate image to test the package
-
-# Test the F* binary package
-
-# Test the fresh package without OCaml
+# Test the package with its Z3, without OCaml or any other dependency
 FROM ubuntu:20.04 AS fstarnoocaml
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update
-RUN apt-get --yes install --no-install-recommends make sudo libgomp1
+
+# Install some dependencies
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends \
+      make
 
 # Create a new user and give them sudo rights
 RUN useradd -d /home/test test
@@ -59,33 +76,18 @@ ENV HOME /home/test
 WORKDIR $HOME
 SHELL ["/bin/bash", "--login", "-c"]
 
-# Copy the package
-COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/test/fstar.tar.gz
-RUN tar xzf fstar.tar.gz
+# Copy the package and the test script
+COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/test/FStar/src/ocaml-output/fstar.tar.gz
+COPY --from=fstarbuild /home/opam/FStar/.scripts/test_package.sh /home/test/FStar/.scripts/test_package.sh
 
-# Copy tests, examples and docs
-ADD --chown=test:test examples/ fstar_examples/
-ADD --chown=test:test doc/ fstar_doc/
+# Test the package
+ARG CI_THREADS
+RUN env CI_THREADS=$CI_THREADS /home/test/FStar/.scripts/test_package.sh
 
-# Case 3: test F* package without OCaml
-
-# Test the package with FSTAR_HOME defined
-# Move z3 elsewhere
-# FROM fstarnoocaml
-# ENV FSTAR_HOME=$HOME/fstar
-# RUN mkdir -p $HOME/bin && ln -s $FSTAR_HOME/bin/z3 $HOME/bin/
-# ENV PATH="${HOME}/bin:${PATH}"
-# RUN make -C fstar_examples -j $opamthreads
-# RUN make -C fstar_doc/tutorial -j $opamthreads regressions
-
-# Test the package with F* in the PATH instead
-FROM fstarnoocaml
-ENV PATH="/home/test/fstar/bin:${PATH}"
-RUN make -C fstar_examples -j $opamthreads
-RUN make -C fstar_doc/tutorial -j $opamthreads regressions
-
-FROM fstarnoocaml
-# This is the last image. So we can also copy the file that contains
-# the desired filename for the package, to be extracted via
-# `docker cp`
-COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/version_platform.txt /home/test/version_platform.txt
+# Test the package with its Z3, with OCaml
+FROM fstarbuild
+ARG CI_THREADS
+# Copy a dummy file to introduce an artificial dependence to the fstarnoocaml stage
+# to force buildx to build that stage as well
+COPY --from=fstarnoocaml /home/test/FStar/.scripts/test_package.sh /tmp/dummy
+RUN eval $(opam env) && env CI_THREADS=$CI_THREADS ./FStar/.scripts/test_package.sh

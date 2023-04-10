@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@query", "proj_equation_Bug190.DForallElim_f",
-        "projection_inverse_Bug190.DForallElim_f"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug190.DForallElim" ],
       0,
-      "84fa39c59cd96818c8b41dc237b8a500"
+      "fb95cccba27849f07661b0ac9050f066"
     ]
   ]
 ]

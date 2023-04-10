@@ -198,7 +198,7 @@ First we explain how to get a working OCaml setup on your machine.
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version from 4.08.0 to 4.14.X should work.
+The steps require a working OCaml setup. OCaml version from 4.10.0 to 4.14.X should work.
 
 #### Instructions for Windows ####
 
@@ -278,7 +278,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
   ```
   On Windows, for dynamic libraries like gmp, you should add `/usr/x86_64-w64-mingw32/sys-root/mingw/bin:/usr/i686-w64-mingw32/sys-root/mingw/bin` to your cygwin `$PATH`.
   If you additionally want to call `bin/fstar.exe` from Windows or VSCode (not just from a cygwin shell),
-  you also need to add the corresponding Windows paths (like `C:\OCaml32\usr\i686-w64-mingw32\sys-root\mingw\bin`) to your
+  you also need to add the corresponding Windows paths (like `C:\cygwin64\usr\i686-w64-mingw32\sys-root\mingw\bin`) to your
   Windows `$PATH`. Otherwise you will get popups like this when trying to call fstar.exe outside cygwin:
   ```sh
   The code execution cannot proceed because libgmp-10.dll was not found. Reinstall the program may fix this problem.
