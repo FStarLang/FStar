@@ -1,5 +1,4 @@
 # This Dockerfile should be run from the root FStar directory
-# It regenerates the hints and the version number
 
 # Build the package
 ARG ocaml_version=4.12
