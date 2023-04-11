@@ -275,6 +275,11 @@ let rec (inspect_ln :
                    let uu___3 = inspect_pat pat in (uu___3, t3)) brs in
         FStar_Reflection_Data.Tv_Match (t2, ret_opt, brs1)
     | FStar_Syntax_Syntax.Tm_unknown -> FStar_Reflection_Data.Tv_Unknown
+    | FStar_Syntax_Syntax.Tm_lazy i ->
+        let uu___ =
+          FStar_Compiler_Effect.op_Bar_Greater i
+            FStar_Syntax_Util.unfold_lazy in
+        FStar_Compiler_Effect.op_Bar_Greater uu___ inspect_ln
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
