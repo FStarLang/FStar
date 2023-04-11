@@ -1219,10 +1219,8 @@ let rec (unfold_until_arrow :
                                                                    (Prims.of_int (6))
                                                                    (Prims.of_int (244))
                                                                    (Prims.of_int (9)))
-                                                                (FStar_Tactics_Effect.lift_div_tac
-                                                                   (fun
-                                                                    uu___5 ->
-                                                                    FStar_Reflection_Derived.collect_app
+                                                                (Obj.magic
+                                                                   (FStar_Tactics_Derived.collect_app
                                                                     ty))
                                                                 (fun uu___5
                                                                    ->

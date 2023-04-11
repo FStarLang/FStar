@@ -1277,9 +1277,7 @@ let (tcc_no_lift :
                           "FStar.InteractiveHelpers.Effectful.fst"
                           (Prims.of_int (197)) (Prims.of_int (4))
                           (Prims.of_int (199)) (Prims.of_int (41)))
-                       (FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___3 ->
-                             FStar_Reflection_Derived.collect_app t))
+                       (Obj.magic (FStar_Tactics_Derived.collect_app t))
                        (fun uu___3 ->
                           (fun uu___3 ->
                              match uu___3 with

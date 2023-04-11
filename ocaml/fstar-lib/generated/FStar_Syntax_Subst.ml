@@ -748,243 +748,261 @@ let (compose_uvar_subst :
         match uu___ with
         | [] -> ([], (FStar_Pervasives_Native.snd s))
         | s' -> ([s'], (FStar_Pervasives_Native.snd s))
-let rec (push_subst :
+let rec (push_subst_aux :
+  Prims.bool ->
+    FStar_Syntax_Syntax.subst_ts ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun resolve_uvars ->
+    fun s ->
+      fun t ->
+        let mk t' =
+          let uu___ = mk_range t.FStar_Syntax_Syntax.pos s in
+          FStar_Syntax_Syntax.mk t' uu___ in
+        match t.FStar_Syntax_Syntax.n with
+        | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+            failwith "Impossible (delayed node in push_subst)"
+        | FStar_Syntax_Syntax.Tm_lazy i ->
+            (match i.FStar_Syntax_Syntax.lkind with
+             | FStar_Syntax_Syntax.Lazy_embedding uu___ ->
+                 let t1 =
+                   let uu___1 =
+                     let uu___2 =
+                       FStar_Compiler_Effect.op_Bang
+                         FStar_Syntax_Syntax.lazy_chooser in
+                     FStar_Compiler_Util.must uu___2 in
+                   uu___1 i.FStar_Syntax_Syntax.lkind i in
+                 push_subst_aux resolve_uvars s t1
+             | uu___ -> tag_with_range t s)
+        | FStar_Syntax_Syntax.Tm_constant uu___ -> tag_with_range t s
+        | FStar_Syntax_Syntax.Tm_fvar uu___ -> tag_with_range t s
+        | FStar_Syntax_Syntax.Tm_unknown -> tag_with_range t s
+        | FStar_Syntax_Syntax.Tm_uvar (uv, s0) ->
+            let fallback uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = compose_uvar_subst uv s0 s in (uv, uu___4) in
+                  FStar_Syntax_Syntax.Tm_uvar uu___3 in
+                {
+                  FStar_Syntax_Syntax.n = uu___2;
+                  FStar_Syntax_Syntax.pos = (t.FStar_Syntax_Syntax.pos);
+                  FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
+                  FStar_Syntax_Syntax.hash_code =
+                    (t.FStar_Syntax_Syntax.hash_code)
+                } in
+              tag_with_range uu___1 s in
+            if Prims.op_Negation resolve_uvars
+            then fallback ()
+            else
+              (let uu___1 =
+                 FStar_Syntax_Unionfind.find
+                   uv.FStar_Syntax_Syntax.ctx_uvar_head in
+               match uu___1 with
+               | FStar_Pervasives_Native.None -> fallback ()
+               | FStar_Pervasives_Native.Some t1 ->
+                   push_subst_aux resolve_uvars (compose_subst s0 s) t1)
+        | FStar_Syntax_Syntax.Tm_type uu___ -> subst' s t
+        | FStar_Syntax_Syntax.Tm_bvar uu___ -> subst' s t
+        | FStar_Syntax_Syntax.Tm_name uu___ -> subst' s t
+        | FStar_Syntax_Syntax.Tm_uinst (t', us) ->
+            let us1 =
+              FStar_Compiler_List.map
+                (subst_univ (FStar_Pervasives_Native.fst s)) us in
+            let uu___ = mk (FStar_Syntax_Syntax.Tm_uinst (t', us1)) in
+            tag_with_range uu___ s
+        | FStar_Syntax_Syntax.Tm_app (t0, args) ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = subst' s t0 in
+                let uu___3 = subst_args' s args in (uu___2, uu___3) in
+              FStar_Syntax_Syntax.Tm_app uu___1 in
+            mk uu___
+        | FStar_Syntax_Syntax.Tm_ascribed (t0, asc, lopt) ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = subst' s t0 in
+                let uu___3 = subst_ascription' s asc in
+                (uu___2, uu___3, lopt) in
+              FStar_Syntax_Syntax.Tm_ascribed uu___1 in
+            mk uu___
+        | FStar_Syntax_Syntax.Tm_abs (bs, body, lopt) ->
+            let n = FStar_Compiler_List.length bs in
+            let s' = shift_subst' n s in
+            let uu___ =
+              let uu___1 =
+                let uu___2 = subst_binders' s bs in
+                let uu___3 = subst' s' body in
+                let uu___4 = push_subst_lcomp s' lopt in
+                (uu___2, uu___3, uu___4) in
+              FStar_Syntax_Syntax.Tm_abs uu___1 in
+            mk uu___
+        | FStar_Syntax_Syntax.Tm_arrow (bs, comp) ->
+            let n = FStar_Compiler_List.length bs in
+            let uu___ =
+              let uu___1 =
+                let uu___2 = subst_binders' s bs in
+                let uu___3 =
+                  let uu___4 = shift_subst' n s in subst_comp' uu___4 comp in
+                (uu___2, uu___3) in
+              FStar_Syntax_Syntax.Tm_arrow uu___1 in
+            mk uu___
+        | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
+            let x1 =
+              let uu___ = subst' s x.FStar_Syntax_Syntax.sort in
+              {
+                FStar_Syntax_Syntax.ppname = (x.FStar_Syntax_Syntax.ppname);
+                FStar_Syntax_Syntax.index = (x.FStar_Syntax_Syntax.index);
+                FStar_Syntax_Syntax.sort = uu___
+              } in
+            let phi1 =
+              let uu___ = shift_subst' Prims.int_one s in subst' uu___ phi in
+            mk (FStar_Syntax_Syntax.Tm_refine (x1, phi1))
+        | FStar_Syntax_Syntax.Tm_match (t0, asc_opt, pats, lopt) ->
+            let t01 = subst' s t0 in
+            let pats1 =
+              FStar_Compiler_Effect.op_Bar_Greater pats
+                (FStar_Compiler_List.map
+                   (fun uu___ ->
+                      match uu___ with
+                      | (pat, wopt, branch) ->
+                          let uu___1 = subst_pat' s pat in
+                          (match uu___1 with
+                           | (pat1, n) ->
+                               let s1 = shift_subst' n s in
+                               let wopt1 =
+                                 match wopt with
+                                 | FStar_Pervasives_Native.None ->
+                                     FStar_Pervasives_Native.None
+                                 | FStar_Pervasives_Native.Some w ->
+                                     let uu___2 = subst' s1 w in
+                                     FStar_Pervasives_Native.Some uu___2 in
+                               let branch1 = subst' s1 branch in
+                               (pat1, wopt1, branch1)))) in
+            let asc_opt1 =
+              match asc_opt with
+              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+              | FStar_Pervasives_Native.Some (b, asc) ->
+                  let b1 = subst_binder' s b in
+                  let asc1 =
+                    let uu___ = shift_subst' Prims.int_one s in
+                    subst_ascription' uu___ asc in
+                  FStar_Pervasives_Native.Some (b1, asc1) in
+            let uu___ =
+              let uu___1 =
+                let uu___2 = push_subst_lcomp s lopt in
+                (t01, asc_opt1, pats1, uu___2) in
+              FStar_Syntax_Syntax.Tm_match uu___1 in
+            mk uu___
+        | FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), body) ->
+            let n = FStar_Compiler_List.length lbs in
+            let sn = shift_subst' n s in
+            let body1 = subst' sn body in
+            let lbs1 =
+              FStar_Compiler_Effect.op_Bar_Greater lbs
+                (FStar_Compiler_List.map
+                   (fun lb ->
+                      let lbt = subst' s lb.FStar_Syntax_Syntax.lbtyp in
+                      let lbd =
+                        let uu___ =
+                          is_rec &&
+                            (FStar_Compiler_Util.is_left
+                               lb.FStar_Syntax_Syntax.lbname) in
+                        if uu___
+                        then subst' sn lb.FStar_Syntax_Syntax.lbdef
+                        else subst' s lb.FStar_Syntax_Syntax.lbdef in
+                      let lbname =
+                        match lb.FStar_Syntax_Syntax.lbname with
+                        | FStar_Pervasives.Inl x ->
+                            FStar_Pervasives.Inl
+                              {
+                                FStar_Syntax_Syntax.ppname =
+                                  (x.FStar_Syntax_Syntax.ppname);
+                                FStar_Syntax_Syntax.index =
+                                  (x.FStar_Syntax_Syntax.index);
+                                FStar_Syntax_Syntax.sort = lbt
+                              }
+                        | FStar_Pervasives.Inr fv -> FStar_Pervasives.Inr fv in
+                      let lbattrs =
+                        FStar_Compiler_List.map (subst' s)
+                          lb.FStar_Syntax_Syntax.lbattrs in
+                      {
+                        FStar_Syntax_Syntax.lbname = lbname;
+                        FStar_Syntax_Syntax.lbunivs =
+                          (lb.FStar_Syntax_Syntax.lbunivs);
+                        FStar_Syntax_Syntax.lbtyp = lbt;
+                        FStar_Syntax_Syntax.lbeff =
+                          (lb.FStar_Syntax_Syntax.lbeff);
+                        FStar_Syntax_Syntax.lbdef = lbd;
+                        FStar_Syntax_Syntax.lbattrs = lbattrs;
+                        FStar_Syntax_Syntax.lbpos =
+                          (lb.FStar_Syntax_Syntax.lbpos)
+                      })) in
+            mk (FStar_Syntax_Syntax.Tm_let ((is_rec, lbs1), body1))
+        | FStar_Syntax_Syntax.Tm_meta
+            (t0, FStar_Syntax_Syntax.Meta_pattern (bs, ps)) ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = subst' s t0 in
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = FStar_Compiler_List.map (subst' s) bs in
+                    let uu___6 =
+                      FStar_Compiler_Effect.op_Bar_Greater ps
+                        (FStar_Compiler_List.map (subst_args' s)) in
+                    (uu___5, uu___6) in
+                  FStar_Syntax_Syntax.Meta_pattern uu___4 in
+                (uu___2, uu___3) in
+              FStar_Syntax_Syntax.Tm_meta uu___1 in
+            mk uu___
+        | FStar_Syntax_Syntax.Tm_meta
+            (t0, FStar_Syntax_Syntax.Meta_monadic (m, t1)) ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = subst' s t0 in
+                let uu___3 =
+                  let uu___4 = let uu___5 = subst' s t1 in (m, uu___5) in
+                  FStar_Syntax_Syntax.Meta_monadic uu___4 in
+                (uu___2, uu___3) in
+              FStar_Syntax_Syntax.Tm_meta uu___1 in
+            mk uu___
+        | FStar_Syntax_Syntax.Tm_meta
+            (t0, FStar_Syntax_Syntax.Meta_monadic_lift (m1, m2, t1)) ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = subst' s t0 in
+                let uu___3 =
+                  let uu___4 = let uu___5 = subst' s t1 in (m1, m2, uu___5) in
+                  FStar_Syntax_Syntax.Meta_monadic_lift uu___4 in
+                (uu___2, uu___3) in
+              FStar_Syntax_Syntax.Tm_meta uu___1 in
+            mk uu___
+        | FStar_Syntax_Syntax.Tm_quoted (tm, qi) ->
+            (match qi.FStar_Syntax_Syntax.qkind with
+             | FStar_Syntax_Syntax.Quote_dynamic ->
+                 let uu___ =
+                   let uu___1 = let uu___2 = subst' s tm in (uu___2, qi) in
+                   FStar_Syntax_Syntax.Tm_quoted uu___1 in
+                 mk uu___
+             | FStar_Syntax_Syntax.Quote_static ->
+                 let qi1 = FStar_Syntax_Syntax.on_antiquoted (subst' s) qi in
+                 mk (FStar_Syntax_Syntax.Tm_quoted (tm, qi1)))
+        | FStar_Syntax_Syntax.Tm_meta (t1, m) ->
+            let uu___ =
+              let uu___1 = let uu___2 = subst' s t1 in (uu___2, m) in
+              FStar_Syntax_Syntax.Tm_meta uu___1 in
+            mk uu___
+let (push_subst :
   FStar_Syntax_Syntax.subst_ts ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-  =
-  fun s ->
-    fun t ->
-      let mk t' =
-        let uu___ = mk_range t.FStar_Syntax_Syntax.pos s in
-        FStar_Syntax_Syntax.mk t' uu___ in
-      match t.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
-          failwith "Impossible (delayed node in push_subst)"
-      | FStar_Syntax_Syntax.Tm_lazy i ->
-          (match i.FStar_Syntax_Syntax.lkind with
-           | FStar_Syntax_Syntax.Lazy_embedding uu___ ->
-               let t1 =
-                 let uu___1 =
-                   let uu___2 =
-                     FStar_Compiler_Effect.op_Bang
-                       FStar_Syntax_Syntax.lazy_chooser in
-                   FStar_Compiler_Util.must uu___2 in
-                 uu___1 i.FStar_Syntax_Syntax.lkind i in
-               push_subst s t1
-           | uu___ -> tag_with_range t s)
-      | FStar_Syntax_Syntax.Tm_constant uu___ -> tag_with_range t s
-      | FStar_Syntax_Syntax.Tm_fvar uu___ -> tag_with_range t s
-      | FStar_Syntax_Syntax.Tm_unknown -> tag_with_range t s
-      | FStar_Syntax_Syntax.Tm_uvar (uv, s0) ->
-          let uu___ =
-            FStar_Syntax_Unionfind.find uv.FStar_Syntax_Syntax.ctx_uvar_head in
-          (match uu___ with
-           | FStar_Pervasives_Native.None ->
-               let uu___1 =
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 = compose_uvar_subst uv s0 s in (uv, uu___4) in
-                   FStar_Syntax_Syntax.Tm_uvar uu___3 in
-                 {
-                   FStar_Syntax_Syntax.n = uu___2;
-                   FStar_Syntax_Syntax.pos = (t.FStar_Syntax_Syntax.pos);
-                   FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
-                   FStar_Syntax_Syntax.hash_code =
-                     (t.FStar_Syntax_Syntax.hash_code)
-                 } in
-               tag_with_range uu___1 s
-           | FStar_Pervasives_Native.Some t1 ->
-               push_subst (compose_subst s0 s) t1)
-      | FStar_Syntax_Syntax.Tm_type uu___ -> subst' s t
-      | FStar_Syntax_Syntax.Tm_bvar uu___ -> subst' s t
-      | FStar_Syntax_Syntax.Tm_name uu___ -> subst' s t
-      | FStar_Syntax_Syntax.Tm_uinst (t', us) ->
-          let us1 =
-            FStar_Compiler_List.map
-              (subst_univ (FStar_Pervasives_Native.fst s)) us in
-          let uu___ = mk (FStar_Syntax_Syntax.Tm_uinst (t', us1)) in
-          tag_with_range uu___ s
-      | FStar_Syntax_Syntax.Tm_app (t0, args) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = subst' s t0 in
-              let uu___3 = subst_args' s args in (uu___2, uu___3) in
-            FStar_Syntax_Syntax.Tm_app uu___1 in
-          mk uu___
-      | FStar_Syntax_Syntax.Tm_ascribed (t0, asc, lopt) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = subst' s t0 in
-              let uu___3 = subst_ascription' s asc in (uu___2, uu___3, lopt) in
-            FStar_Syntax_Syntax.Tm_ascribed uu___1 in
-          mk uu___
-      | FStar_Syntax_Syntax.Tm_abs (bs, body, lopt) ->
-          let n = FStar_Compiler_List.length bs in
-          let s' = shift_subst' n s in
-          let uu___ =
-            let uu___1 =
-              let uu___2 = subst_binders' s bs in
-              let uu___3 = subst' s' body in
-              let uu___4 = push_subst_lcomp s' lopt in
-              (uu___2, uu___3, uu___4) in
-            FStar_Syntax_Syntax.Tm_abs uu___1 in
-          mk uu___
-      | FStar_Syntax_Syntax.Tm_arrow (bs, comp) ->
-          let n = FStar_Compiler_List.length bs in
-          let uu___ =
-            let uu___1 =
-              let uu___2 = subst_binders' s bs in
-              let uu___3 =
-                let uu___4 = shift_subst' n s in subst_comp' uu___4 comp in
-              (uu___2, uu___3) in
-            FStar_Syntax_Syntax.Tm_arrow uu___1 in
-          mk uu___
-      | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
-          let x1 =
-            let uu___ = subst' s x.FStar_Syntax_Syntax.sort in
-            {
-              FStar_Syntax_Syntax.ppname = (x.FStar_Syntax_Syntax.ppname);
-              FStar_Syntax_Syntax.index = (x.FStar_Syntax_Syntax.index);
-              FStar_Syntax_Syntax.sort = uu___
-            } in
-          let phi1 =
-            let uu___ = shift_subst' Prims.int_one s in subst' uu___ phi in
-          mk (FStar_Syntax_Syntax.Tm_refine (x1, phi1))
-      | FStar_Syntax_Syntax.Tm_match (t0, asc_opt, pats, lopt) ->
-          let t01 = subst' s t0 in
-          let pats1 =
-            FStar_Compiler_Effect.op_Bar_Greater pats
-              (FStar_Compiler_List.map
-                 (fun uu___ ->
-                    match uu___ with
-                    | (pat, wopt, branch) ->
-                        let uu___1 = subst_pat' s pat in
-                        (match uu___1 with
-                         | (pat1, n) ->
-                             let s1 = shift_subst' n s in
-                             let wopt1 =
-                               match wopt with
-                               | FStar_Pervasives_Native.None ->
-                                   FStar_Pervasives_Native.None
-                               | FStar_Pervasives_Native.Some w ->
-                                   let uu___2 = subst' s1 w in
-                                   FStar_Pervasives_Native.Some uu___2 in
-                             let branch1 = subst' s1 branch in
-                             (pat1, wopt1, branch1)))) in
-          let asc_opt1 =
-            match asc_opt with
-            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-            | FStar_Pervasives_Native.Some (b, asc) ->
-                let b1 = subst_binder' s b in
-                let asc1 =
-                  let uu___ = shift_subst' Prims.int_one s in
-                  subst_ascription' uu___ asc in
-                FStar_Pervasives_Native.Some (b1, asc1) in
-          let uu___ =
-            let uu___1 =
-              let uu___2 = push_subst_lcomp s lopt in
-              (t01, asc_opt1, pats1, uu___2) in
-            FStar_Syntax_Syntax.Tm_match uu___1 in
-          mk uu___
-      | FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), body) ->
-          let n = FStar_Compiler_List.length lbs in
-          let sn = shift_subst' n s in
-          let body1 = subst' sn body in
-          let lbs1 =
-            FStar_Compiler_Effect.op_Bar_Greater lbs
-              (FStar_Compiler_List.map
-                 (fun lb ->
-                    let lbt = subst' s lb.FStar_Syntax_Syntax.lbtyp in
-                    let lbd =
-                      let uu___ =
-                        is_rec &&
-                          (FStar_Compiler_Util.is_left
-                             lb.FStar_Syntax_Syntax.lbname) in
-                      if uu___
-                      then subst' sn lb.FStar_Syntax_Syntax.lbdef
-                      else subst' s lb.FStar_Syntax_Syntax.lbdef in
-                    let lbname =
-                      match lb.FStar_Syntax_Syntax.lbname with
-                      | FStar_Pervasives.Inl x ->
-                          FStar_Pervasives.Inl
-                            {
-                              FStar_Syntax_Syntax.ppname =
-                                (x.FStar_Syntax_Syntax.ppname);
-                              FStar_Syntax_Syntax.index =
-                                (x.FStar_Syntax_Syntax.index);
-                              FStar_Syntax_Syntax.sort = lbt
-                            }
-                      | FStar_Pervasives.Inr fv -> FStar_Pervasives.Inr fv in
-                    let lbattrs =
-                      FStar_Compiler_List.map (subst' s)
-                        lb.FStar_Syntax_Syntax.lbattrs in
-                    {
-                      FStar_Syntax_Syntax.lbname = lbname;
-                      FStar_Syntax_Syntax.lbunivs =
-                        (lb.FStar_Syntax_Syntax.lbunivs);
-                      FStar_Syntax_Syntax.lbtyp = lbt;
-                      FStar_Syntax_Syntax.lbeff =
-                        (lb.FStar_Syntax_Syntax.lbeff);
-                      FStar_Syntax_Syntax.lbdef = lbd;
-                      FStar_Syntax_Syntax.lbattrs = lbattrs;
-                      FStar_Syntax_Syntax.lbpos =
-                        (lb.FStar_Syntax_Syntax.lbpos)
-                    })) in
-          mk (FStar_Syntax_Syntax.Tm_let ((is_rec, lbs1), body1))
-      | FStar_Syntax_Syntax.Tm_meta
-          (t0, FStar_Syntax_Syntax.Meta_pattern (bs, ps)) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = subst' s t0 in
-              let uu___3 =
-                let uu___4 =
-                  let uu___5 = FStar_Compiler_List.map (subst' s) bs in
-                  let uu___6 =
-                    FStar_Compiler_Effect.op_Bar_Greater ps
-                      (FStar_Compiler_List.map (subst_args' s)) in
-                  (uu___5, uu___6) in
-                FStar_Syntax_Syntax.Meta_pattern uu___4 in
-              (uu___2, uu___3) in
-            FStar_Syntax_Syntax.Tm_meta uu___1 in
-          mk uu___
-      | FStar_Syntax_Syntax.Tm_meta
-          (t0, FStar_Syntax_Syntax.Meta_monadic (m, t1)) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = subst' s t0 in
-              let uu___3 =
-                let uu___4 = let uu___5 = subst' s t1 in (m, uu___5) in
-                FStar_Syntax_Syntax.Meta_monadic uu___4 in
-              (uu___2, uu___3) in
-            FStar_Syntax_Syntax.Tm_meta uu___1 in
-          mk uu___
-      | FStar_Syntax_Syntax.Tm_meta
-          (t0, FStar_Syntax_Syntax.Meta_monadic_lift (m1, m2, t1)) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = subst' s t0 in
-              let uu___3 =
-                let uu___4 = let uu___5 = subst' s t1 in (m1, m2, uu___5) in
-                FStar_Syntax_Syntax.Meta_monadic_lift uu___4 in
-              (uu___2, uu___3) in
-            FStar_Syntax_Syntax.Tm_meta uu___1 in
-          mk uu___
-      | FStar_Syntax_Syntax.Tm_quoted (tm, qi) ->
-          (match qi.FStar_Syntax_Syntax.qkind with
-           | FStar_Syntax_Syntax.Quote_dynamic ->
-               let uu___ =
-                 let uu___1 = let uu___2 = subst' s tm in (uu___2, qi) in
-                 FStar_Syntax_Syntax.Tm_quoted uu___1 in
-               mk uu___
-           | FStar_Syntax_Syntax.Quote_static ->
-               let qi1 = FStar_Syntax_Syntax.on_antiquoted (subst' s) qi in
-               mk (FStar_Syntax_Syntax.Tm_quoted (tm, qi1)))
-      | FStar_Syntax_Syntax.Tm_meta (t1, m) ->
-          let uu___ =
-            let uu___1 = let uu___2 = subst' s t1 in (uu___2, m) in
-            FStar_Syntax_Syntax.Tm_meta uu___1 in
-          mk uu___
+  = fun s -> fun t -> push_subst_aux true s t
+let (compress_subst : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+  fun t ->
+    match t.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_delayed (t1, s) -> push_subst_aux false s t1
+    | uu___ -> t
 let rec (compress_slow :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)

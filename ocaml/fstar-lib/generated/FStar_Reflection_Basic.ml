@@ -160,7 +160,9 @@ let (pack_universe :
 let rec (inspect_ln :
   FStar_Syntax_Syntax.term -> FStar_Reflection_Data.term_view) =
   fun t ->
-    let t1 = FStar_Syntax_Util.unlazy_emb t in
+    let t1 =
+      FStar_Compiler_Effect.op_Bar_Greater t
+        FStar_Syntax_Subst.compress_subst in
     match t1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_meta (t2, uu___) -> inspect_ln t2
     | FStar_Syntax_Syntax.Tm_name bv -> FStar_Reflection_Data.Tv_Var bv

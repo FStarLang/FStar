@@ -263,12 +263,13 @@ let (term_as_formula' :
                 (FStar_Tactics_Effect.tac_bind
                    (Prims.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (83)) (Prims.of_int (22))
-                      (Prims.of_int (83)) (Prims.of_int (36)))
+                      (Prims.of_int (83)) (Prims.of_int (39)))
                    (Prims.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (83)) (Prims.of_int (8))
                       (Prims.of_int (116)) (Prims.of_int (26)))
                    (FStar_Tactics_Effect.lift_div_tac
-                      (fun uu___ -> FStar_Reflection_Derived.collect_app h0))
+                      (fun uu___ ->
+                         FStar_Reflection_Derived.collect_app_ln h0))
                    (fun uu___ ->
                       (fun uu___ ->
                          match uu___ with

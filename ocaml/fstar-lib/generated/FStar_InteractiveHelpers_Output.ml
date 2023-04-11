@@ -1550,7 +1550,9 @@ let (_debug_print_var :
                                               uu___3))) uu___2))) uu___1)))
              uu___)
 let magic_witness : 'a . unit -> 'a =
-  fun uu___ -> failwith "Not yet implemented:magic_witness"
+  fun uu___ ->
+    failwith
+      "Not yet implemented:FStar.InteractiveHelpers.Output.magic_witness"
 let (tadmit_no_warning : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
