@@ -80,7 +80,7 @@ let term_as_formula' (t:term) : Tac formula =
     // ...or should we just try to drop all squashes?
     // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
-        let (h, ts) = collect_app h0 in
+        let (h, ts) = collect_app_ln h0 in
         let h = un_uinst h in
         match inspect_ln h, ts@[t] with
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit); (a3, Q_Explicit)] ->

@@ -50,6 +50,16 @@ let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
     inspect_unascribe t
   | tv -> tv
 
+(* Helpers for dealing with nested applications and arrows *)
+let rec collect_app' (args : list argv) (t : term)
+  : Tac (term * list argv) =
+    match inspect_unascribe t with
+    | Tv_App l r ->
+        collect_app' (r::args) l
+    | _ -> (t, args)
+
+let collect_app = collect_app' []
+
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
