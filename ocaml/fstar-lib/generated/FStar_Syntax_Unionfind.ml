@@ -208,6 +208,8 @@ let (uvar_id : FStar_Syntax_Syntax.uvar -> Prims.int) =
   fun u ->
     let uu___ = get_term_graph () in
     let uu___1 = chk_v_t u in FStar_Unionfind.puf_id uu___ uu___1
+let (uvar_unique_id : FStar_Syntax_Syntax.uvar -> Prims.int) =
+  fun u -> let uu___ = chk_v_t u in FStar_Unionfind.puf_unique_id uu___
 let (fresh :
   FStar_Syntax_Syntax.uvar_decoration ->
     FStar_Compiler_Range.range -> FStar_Syntax_Syntax.uvar)
