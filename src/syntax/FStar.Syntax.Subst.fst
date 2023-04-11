@@ -377,7 +377,7 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     | [] -> [], snd s
     |  s' -> [s'], snd s
 
-let rec push_subst s t =
+let rec push_subst_aux (resolve_uvars:bool) s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
@@ -390,7 +390,7 @@ let rec push_subst s t =
              * The hope is that this does not occur often and so
              * we still get good performance. *)
           let t = must !lazy_chooser i.lkind i in // Can't call Syntax.Util from here
-          push_subst s t
+          push_subst_aux resolve_uvars s t
         | _ ->
             (* All others must be closed, so don't bother *)
             tag_with_range t s
@@ -401,11 +401,14 @@ let rec push_subst s t =
     | Tm_unknown -> tag_with_range t s //these are always closed
 
     | Tm_uvar (uv, s0) ->
-      begin
-        match (Unionfind.find uv.ctx_uvar_head) with
-        | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
-        | Some t -> push_subst (compose_subst s0 s) t
-      end
+      let fallback () =
+        tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
+      in
+      if not resolve_uvars
+      then fallback ()
+      else (match (Unionfind.find uv.ctx_uvar_head) with
+            | None -> fallback ()
+            | Some t -> push_subst_aux resolve_uvars (compose_subst s0 s) t)
 
     | Tm_type _
     | Tm_bvar _
@@ -491,6 +494,14 @@ let rec push_subst s t =
 
     | Tm_meta(t, m) ->
         mk (Tm_meta(subst' s t,  m))
+
+let push_subst s t = push_subst_aux true s t
+
+let compress_subst t =
+  match t.n with
+  | Tm_delayed (t, s) ->
+    push_subst_aux false s t
+  | _ -> t
 
 (* compress:
       This is used pervasively, throughout the codebase
