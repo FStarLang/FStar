@@ -179,7 +179,7 @@ let pack_universe uv =
   | Uv_Unk -> U_unknown
 
 let rec inspect_ln (t:term) : term_view =
-    let t = U.unlazy_emb t in
+    let t = t |> SS.compress_subst in
     match t.n with
     | Tm_meta (t, _) ->
         inspect_ln t
