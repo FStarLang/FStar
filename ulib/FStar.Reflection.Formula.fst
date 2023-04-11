@@ -23,6 +23,23 @@ open FStar.Reflection.Derived
 open FStar.Reflection.Const
 open FStar.Reflection.Data
 
+let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
+  match inspect t with
+  | Tv_AscribedT t _ _ _
+  | Tv_AscribedC t _ _ _ ->
+    inspect_unascribe t
+  | tv -> tv
+
+(* Helpers for dealing with nested applications and arrows *)
+let rec collect_app' (args : list argv) (t : term)
+  : Tac (term * list argv) =
+    match inspect_unascribe t with
+    | Tv_App l r ->
+        collect_app' (r::args) l
+    | _ -> (t, args)
+
+let collect_app = collect_app' []
+
 // Cannot open FStar.Tactics.Derived here
 let fresh_bv = fresh_bv_named "x"
 let bv_to_string (bv : bv) : Tac string =
@@ -64,7 +81,7 @@ let mk_Exists (typ : term) (pred : term) : Tac formula =
     Exists b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let term_as_formula' (t:term) : Tac formula =
-    match inspect_ln_unascribe t with
+    match inspect_unascribe t with
     | Tv_Var n ->
         Name n
 
@@ -80,7 +97,7 @@ let term_as_formula' (t:term) : Tac formula =
     // ...or should we just try to drop all squashes?
     // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
-        let (h, ts) = collect_app_ln h0 in
+        let (h, ts) = collect_app h0 in
         let h = un_uinst h in
         match inspect_ln h, ts@[t] with
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit); (a3, Q_Explicit)] ->

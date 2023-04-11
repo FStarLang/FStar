@@ -160,9 +160,9 @@ val is_true : term -> Tac bool
 let is_true t =
     begin match term_as_formula' t with
     | True_ -> true
-    | _ -> begin match inspect_ln t with
+    | _ -> begin match inspect t with
            | Tv_App l r ->
-            begin match inspect_ln l with
+            begin match inspect l with
             | Tv_Abs b t ->
                 begin match term_as_formula' t with
                 | True_ -> true
@@ -178,9 +178,9 @@ val is_false : term -> Tac bool
 let is_false t =
     begin match term_as_formula' t with
     | False_ -> true
-    | _ -> begin match inspect_ln t with
+    | _ -> begin match inspect t with
            | Tv_App l r ->
-            begin match inspect_ln l with
+            begin match inspect l with
             | Tv_Abs b t ->
                 begin match term_as_formula' t with
                 | False_ -> true
@@ -195,7 +195,7 @@ let is_false t =
 val inhabit : unit -> Tac unit
 let inhabit () =
     let t = cur_goal () in
-    match inspect_ln t with
+    match inspect t with
     | Tv_FVar fv ->
         let qn = inspect_fv fv in
              if qn = int_lid  then exact (`42)

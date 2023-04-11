@@ -278,6 +278,8 @@ let rec inspect_ln (t:term) : term_view =
     | Tm_unknown ->
         Tv_Unknown
 
+    | Tm_lazy i -> i |> U.unfold_lazy |> inspect_ln
+
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         Tv_Unknown
