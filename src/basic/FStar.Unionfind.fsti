@@ -30,3 +30,6 @@ val puf_union: puf 'a -> p_uvar 'a -> p_uvar 'a -> puf 'a
 val puf_equivalent: puf 'a -> p_uvar 'a -> p_uvar 'a -> bool
 val puf_change: puf 'a -> p_uvar 'a -> 'a -> puf 'a
 val puf_test: unit -> unit
+
+val puf_unique_id: p_uvar 'a -> int
+

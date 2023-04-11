@@ -180,7 +180,6 @@ let pack_universe uv =
 
 let rec inspect_ln (t:term) : term_view =
     let t = U.unlazy_emb t in
-    let t = SS.compress t in
     match t.n with
     | Tm_meta (t, _) ->
         inspect_ln t
@@ -195,7 +194,6 @@ let rec inspect_ln (t:term) : term_view =
         Tv_FVar fv
 
     | Tm_uinst (t, us) ->
-      let t = t |> SS.compress |> U.unascribe |> U.unlazy_emb in
       (match t.n with
        | Tm_fvar fv -> Tv_UInst (fv, us)
        | _ -> failwith "Reflection::inspect_ln: uinst for a non-fvar node")
@@ -246,7 +244,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Const (inspect_const c)
 
     | Tm_uvar (ctx_u, s) ->
-        Tv_Uvar (Z.of_int_fs (UF.uvar_id ctx_u.ctx_uvar_head),
+        Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head),
                 (ctx_u, s))
 
     | Tm_let ((false, [lb]), t2) ->
