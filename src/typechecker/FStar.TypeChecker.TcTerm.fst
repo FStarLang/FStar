@@ -53,7 +53,7 @@ let no_inst env = {env with Env.instantiate_imp=false}
 let is_eq = function
     | Some Equality -> true
     | _ -> false
-let steps env = [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm]
+let steps env = [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm; Env.Exclude Env.Zeta]
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
 let check_no_escape head_opt env (fvs:list bv) kt : term * guard_t =

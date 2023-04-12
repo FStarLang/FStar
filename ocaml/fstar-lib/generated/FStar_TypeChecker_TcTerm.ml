@@ -172,7 +172,8 @@ let steps : 'uuuuu . 'uuuuu -> FStar_TypeChecker_Env.step Prims.list =
   fun env ->
     [FStar_TypeChecker_Env.Beta;
     FStar_TypeChecker_Env.Eager_unfolding;
-    FStar_TypeChecker_Env.NoFullNorm]
+    FStar_TypeChecker_Env.NoFullNorm;
+    FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
 let (norm :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
