@@ -3,8 +3,6 @@ module FStar.Math.Euclid
 open FStar.Mul
 open FStar.Math.Lemmas
 
-#set-options "--fuel 0 --ifuel 0 --z3rlimit 40"
-
 ///
 /// Auxiliary lemmas
 ///
@@ -148,15 +146,7 @@ val egcd (a b u1 u2 u3 v1 v2 v3:int) : Pure (int & int & int)
   (ensures (fun (u, v, d) -> u * a + v * b = d /\ is_gcd a b d))
   (decreases v3)
 
-#push-options "--warn_error -271"
 let rec egcd a b u1 u2 u3 v1 v2 v3 =
-
-  let aux (a b q d : int) : Lemma
-    (requires is_gcd b (a - q * b) d)
-    (ensures is_gcd a b d)
-    [SMTPat ()]
-    = is_gcd_for_euclid a b q d in
-    
   if v3 = 0 then
     begin
     divides_0 u3;
@@ -175,16 +165,22 @@ let rec egcd a b u1 u2 u3 v1 v2 v3 =
       (u1 * a + u2 * b) - q * (v1 * a + v2 * b);
       == { }
       u3 - q * v3;
-      == { }
+      == { lemma_div_mod u3 v3 }
       u3 % v3;
     };
     let u1, v1 = v1, u1 - q * v1 in
     let u2, v2 = v2, u2 - q * v2 in
+    let u3' = u3 in
+    let v3' = v3 in
     let u3, v3 = v3, u3 - q * v3 in
-    egcd a b u1 u2 u3 v1 v2 v3
+    (* proving the implication in the precondition *)
+    introduce forall d. is_gcd v3' (u3' - q * v3') d ==> is_gcd u3' v3' d with
+      introduce _ ==> _ with _.
+        is_gcd_for_euclid u3' v3' q d;
+    let r = egcd a b u1 u2 u3 v1 v2 v3 in
+    r
     end
-#push-options "--query_stats"
-#restart-solver
+
 let euclid_gcd a b =
   if b >= 0 then
     egcd a b 1 0 a 0 1 b
@@ -199,7 +195,6 @@ let euclid_gcd a b =
     assert (is_gcd a b d);
     res
   )
-#pop-options
 
 val is_gcd_prime_aux (p:int) (a:pos{a < p}) (d:int) : Lemma
   (requires is_prime p /\ d `divides` p /\ d `divides` a)

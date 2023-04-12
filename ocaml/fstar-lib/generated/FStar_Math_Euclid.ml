@@ -28,10 +28,13 @@ let rec (egcd :
                          let uu___2 = (v2, (u2 - (q * v2))) in
                          (match uu___2 with
                           | (u21, v21) ->
+                              let u3' = u3 in
+                              let v3' = v3 in
                               let uu___3 = (v3, (u3 - (q * v3))) in
                               (match uu___3 with
                                | (u31, v31) ->
-                                   egcd a b u11 u21 u31 v11 v21 v31)))
+                                   let r = egcd a b u11 u21 u31 v11 v21 v31 in
+                                   r)))
 let (euclid_gcd :
   Prims.int -> Prims.int -> (Prims.int * Prims.int * Prims.int)) =
   fun a ->
