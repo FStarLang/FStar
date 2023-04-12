@@ -179,6 +179,10 @@ let pack_universe uv =
   | Uv_Unk -> U_unknown
 
 let rec inspect_ln (t:term) : term_view =
+    //
+    // Only pushes delayed substitutions,
+    //   doesn't compress uvars
+    //
     let t = t |> SS.compress_subst in
     match t.n with
     | Tm_meta (t, _) ->
@@ -244,6 +248,9 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Const (inspect_const c)
 
     | Tm_uvar (ctx_u, s) ->
+        //
+        // Use the unique id of the uvar
+        //
         Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head),
                 (ctx_u, s))
 
@@ -278,7 +285,9 @@ let rec inspect_ln (t:term) : term_view =
     | Tm_unknown ->
         Tv_Unknown
 
-    | Tm_lazy i -> i |> U.unfold_lazy |> inspect_ln
+    | Tm_lazy i ->
+        // Not calling U.unlazy_emb since that calls (stateful) SS.compress
+        i |> U.unfold_lazy |> inspect_ln
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));

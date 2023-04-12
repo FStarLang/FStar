@@ -377,6 +377,12 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     | [] -> [], snd s
     |  s' -> [s'], snd s
 
+//
+// If resolve_uvars is true, it will lookup the unionfind graph
+//   and use uvar solution, if it has already been solved
+//   see the Tm_uvar case in this function
+// Otherwise it will just compose s with the uvar subst
+// 
 let rec push_subst_aux (resolve_uvars:bool) s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
@@ -497,10 +503,15 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
 
 let push_subst s t = push_subst_aux true s t
 
+//
+// Only push the pending substitution down,
+//   no resolving uvars
+//
 let compress_subst t =
   match t.n with
   | Tm_delayed (t, s) ->
-    push_subst_aux false s t
+    let resolve_uvars = false in
+    push_subst_aux resolve_uvars s t
   | _ -> t
 
 (* compress:

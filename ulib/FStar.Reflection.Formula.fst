@@ -23,28 +23,25 @@ open FStar.Reflection.Derived
 open FStar.Reflection.Const
 open FStar.Reflection.Data
 
+///// Cannot open FStar.Tactics.Derived here /////
+let fresh_bv = fresh_bv_named "x"
+let bv_to_string (bv : bv) : Tac string =
+    let bvv = inspect_bv bv in
+    unseal (bvv.bv_ppname)
 let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
   match inspect t with
   | Tv_AscribedT t _ _ _
   | Tv_AscribedC t _ _ _ ->
     inspect_unascribe t
   | tv -> tv
-
-(* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list argv) (t : term)
   : Tac (term * list argv) =
     match inspect_unascribe t with
     | Tv_App l r ->
         collect_app' (r::args) l
     | _ -> (t, args)
-
 let collect_app = collect_app' []
-
-// Cannot open FStar.Tactics.Derived here
-let fresh_bv = fresh_bv_named "x"
-let bv_to_string (bv : bv) : Tac string =
-    let bvv = inspect_bv bv in
-    unseal (bvv.bv_ppname)
+/////
 
 noeq type comparison =
   | Eq     of option typ  (* Propositional equality (eq2), maybe annotated *)
