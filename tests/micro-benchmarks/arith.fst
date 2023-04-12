@@ -16,7 +16,8 @@
 module Arith
 unfold let op_Star = Prims.op_Multiply
 
-#reset-options "--z3cliopt smt.arith.nl=false --smtencoding.elim_box true --smtencoding.nl_arith_repr native --smtencoding.l_arith_repr native"
+#set-options "--z3cliopt smt.arith.nl=false --smtencoding.elim_box true --smtencoding.nl_arith_repr native --smtencoding.l_arith_repr native"
+
 irreducible
 let test1 (a:nat) = assert ((3 * (3 * a)) / 3 == a * 3)
 
@@ -44,11 +45,12 @@ let test8 (a:nat) (b:nat) (c:nat) = assert (a * (b + c) == (c * a) + (a * b))
 irreducible
 let test9 (f:nat -> nat) (a:nat) (b:nat) (c:nat) = assert (f a * (b + c) == (c * f a) + (f a * b))
 
-#set-options "--smtencoding.nl_arith_repr wrapped"
+#push-options "--smtencoding.nl_arith_repr wrapped"
 irreducible
 let test10 (a:nat) (b:nat) (c:nat) (z:nat) = assert (a==z ==> a * (b + c) == (c * a) + (z * b))
+#pop-options
 
-#set-options "--smtencoding.nl_arith_repr native"
+#push-options "--z3cliopt smt.arith.nl=true --smtencoding.elim_box true --smtencoding.nl_arith_repr native --smtencoding.l_arith_repr native"
 irreducible
 let test11 (a:nat) (b:nat) (c:nat) (d:nat) (e:nat) =
   assert ((a + b + c + d + e) * (a + b + c + d + e) == (a * a) 
@@ -66,3 +68,4 @@ let test11 (a:nat) (b:nat) (c:nat) (d:nat) (e:nat) =
                                                     + (d * d)
                                                     + 2 * (d * e) 
                                                     + (e * e))
+#pop-options
