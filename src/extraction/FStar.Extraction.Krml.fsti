@@ -26,6 +26,3 @@ type binary_format = version * list file
 
 val current_version: version
 val translate : FStar.Extraction.ML.Syntax.mllib -> list file
-
-(* Called by FStar.Main.main () to initialize code translators *)
-val init : unit -> FStar.Compiler.Effect.ML unit
