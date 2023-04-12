@@ -91,6 +91,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	$(Q)$(FSTAR_C) --dep full		\
 		fstar/FStar.Main.fst		\
 		boot/FStar.Tests.Test.fst	\
+		extraction/FStar.Extraction.Krml.Steel.fst \
 		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)			> ._depend
 	@# We've generated deps for everything into fstar-lib/generated.
