@@ -1241,7 +1241,7 @@ let translate_type_decl' env ty: option decl =
         Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KaRaMeL\n" name));
         None
 
-let translate_let env flavor lb: option decl =
+let translate_let' env flavor lb: option decl =
   match lb with
   | {
       mllb_name = name;
@@ -1365,6 +1365,22 @@ let translate_let env flavor lb: option decl =
           ()
       end;
       None
+
+let translate_let_t = env -> mlletflavor -> mllb -> ML (option decl)
+(* translate_let' is not recursive, so we can directly use it to initialize ref_translate_let *)
+let ref_translate_let : ref translate_let_t = mk_ref translate_let'
+let register_pre_translate_let
+  (f: translate_let_t)
+: ML unit
+= let before : translate_let_t = !ref_translate_let in
+  let after : translate_let_t = fun e fl lb ->
+    try
+      f e fl lb
+    with NotSupportedByKrmlExtension -> before e fl lb
+  in
+  ref_translate_let := after
+let translate_let env flavor lb: option decl =
+  !ref_translate_let env flavor lb
 
 let translate_decl env d: list decl =
   match d with
