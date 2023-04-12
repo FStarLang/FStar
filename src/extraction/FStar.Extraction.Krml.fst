@@ -376,7 +376,110 @@ let generate_is_null
 = let dummy = UInt64 in
   EApp (ETypApp (EOp (Eq, dummy), [TBuf t]), [x; EBufNull t])
 
-let rec translate_type env t: typ =
+exception NotSupportedByKrmlExtension
+
+let translate_type_without_decay_t = env -> mlty -> ML typ
+let ref_translate_type_without_decay : ref translate_type_without_decay_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
+let register_pre_translate_type_without_decay
+  (f: translate_type_without_decay_t)
+: ML unit
+= let before : translate_type_without_decay_t = !ref_translate_type_without_decay in
+  let after : translate_type_without_decay_t = fun e t ->
+    try
+      f e t
+    with NotSupportedByKrmlExtension -> before e t
+  in
+  ref_translate_type_without_decay := after
+let register_post_translate_type_without_decay
+  (f: translate_type_without_decay_t)
+: ML unit
+= let before : translate_type_without_decay_t = !ref_translate_type_without_decay in
+  let after : translate_type_without_decay_t = fun e t ->
+    try
+      before e t
+    with NotSupportedByKrmlExtension -> f e t
+  in
+  ref_translate_type_without_decay := after
+let translate_type_without_decay env t = !ref_translate_type_without_decay env t
+
+// The outermost array type constructor decays to pointer
+let translate_type_t = env -> mlty -> ML typ
+let ref_translate_type : ref translate_type_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
+let register_pre_translate_type
+  (f: translate_type_t)
+: ML unit
+= let before : translate_type_t = !ref_translate_type in
+  let after : translate_type_t = fun e t ->
+    try
+      f e t
+    with NotSupportedByKrmlExtension -> before e t
+  in
+  ref_translate_type := after
+let register_post_translate_type
+  (f: translate_type_t)
+: ML unit
+= let before : translate_type_t = !ref_translate_type in
+  let after : translate_type_t = fun e t ->
+    try
+      before e t
+    with NotSupportedByKrmlExtension -> f e t
+  in
+  ref_translate_type := after
+let translate_type env t = !ref_translate_type env t
+
+let translate_expr_t = env -> mlexpr -> ML expr
+let ref_translate_expr : ref translate_expr_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
+let register_pre_translate_expr
+  (f: translate_expr_t)
+: ML unit
+= let before : translate_expr_t = !ref_translate_expr in
+  let after : translate_expr_t = fun e t ->
+    try
+      f e t
+    with NotSupportedByKrmlExtension -> before e t
+  in
+  ref_translate_expr := after
+let register_post_translate_expr
+  (f: translate_expr_t)
+: ML unit
+= let before : translate_expr_t = !ref_translate_expr in
+  let after : translate_expr_t = fun e t ->
+    try
+      before e t
+    with NotSupportedByKrmlExtension -> f e t
+  in
+  ref_translate_expr := after
+let translate_expr (env: env) (e: mlexpr) = !ref_translate_expr env e
+
+let translate_type_decl_t = env -> one_mltydecl -> ML (option decl)
+let ref_translate_type_decl : ref translate_type_decl_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
+let register_pre_translate_type_decl
+  (f: translate_type_decl_t)
+: ML unit
+= let before : translate_type_decl_t = !ref_translate_type_decl in
+  let after : translate_type_decl_t = fun e t ->
+    try
+      f e t
+    with NotSupportedByKrmlExtension -> before e t
+  in
+  ref_translate_type_decl := after
+let register_post_translate_type_decl
+  (f: translate_type_decl_t)
+: ML unit
+= let before : translate_type_decl_t = !ref_translate_type_decl in
+  let after : translate_type_decl_t = fun e t ->
+    try
+      before e t
+    with NotSupportedByKrmlExtension -> f e t
+  in
+  ref_translate_type_decl := after
+let translate_type_decl env ty: option decl =
+  if List.mem Syntax.NoExtract ty.tydecl_meta then
+    None
+  else
+    !ref_translate_type_decl env ty
+
+let rec translate_type_without_decay' env t: typ =
   match t with
   | MLTY_Tuple []
   | MLTY_Top ->
@@ -384,7 +487,7 @@ let rec translate_type env t: typ =
   | MLTY_Var name ->
       TBound (find_t env name)
   | MLTY_Fun (t1, _, t2) ->
-      TArrow (translate_type env t1, translate_type env t2)
+      TArrow (translate_type_without_decay env t1, translate_type_without_decay env t2)
   | MLTY_Erased ->
       TUnit
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
@@ -397,15 +500,15 @@ let rec translate_type env t: typ =
       TInt (must (mk_width m))
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
-
+  
   | MLTY_Named ([_; arg; _], p) when
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.mrref"  ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.m_rref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_mref"
     ->
-      TBuf (translate_type env arg)
-
+      TBuf (translate_type_without_decay env arg)
+  
   | MLTY_Named ([arg; _], p) when
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mreference" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mstackref" ||
@@ -419,14 +522,14 @@ let rec translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmstackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"
     ->
-      TBuf (translate_type env arg)
-
+      TBuf (translate_type_without_decay env arg)
+  
   | MLTY_Named ([arg; _; _], p) when
-    Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
-
+    Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type_without_decay env arg)
+  
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" ||
-    Syntax.string_of_mlpath p = "Steel.TLArray.t" -> TConstBuf (translate_type env arg)
+    Syntax.string_of_mlpath p = "Steel.TLArray.t" -> TConstBuf (translate_type_without_decay env arg)
 
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
@@ -447,37 +550,43 @@ let rec translate_type env t: typ =
     Syntax.string_of_mlpath p = "Steel.ST.Reference.ref" ||
     Syntax.string_of_mlpath p = "Steel.ST.HigherArray.ptr"
     ->
-      TBuf (translate_type env arg)
-
+      TBuf (translate_type_without_decay env arg)
+  
   | MLTY_Named ([_;arg], p) when
     Syntax.string_of_mlpath p = "FStar.HyperStack.s_ref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"
     ->
-      TBuf (translate_type env arg)
-
+      TBuf (translate_type_without_decay env arg)
+  
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Universe.raise_t"
     ->
-      translate_type env arg
+      translate_type_without_decay env arg
 
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
-
+  
   | MLTY_Named ([], (path, type_name)) ->
       // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
-
+  
   | MLTY_Named (args, (ns, t)) when (ns = ["Prims"] || ns = ["FStar"; "Pervasives"; "Native"]) && BU.starts_with t "tuple" ->
-      TTuple (List.map (translate_type env) args)
-
+      TTuple (List.map (translate_type_without_decay env) args)
+  
   | MLTY_Named (args, lid) ->
       if List.length args > 0 then
-        TApp (lid, List.map (translate_type env) args)
+        TApp (lid, List.map (translate_type_without_decay env) args)
       else
         TQualified lid
-
+  
   | MLTY_Tuple ts ->
-      TTuple (List.map (translate_type env) ts)
+      TTuple (List.map (translate_type_without_decay env) ts)
+  
+and translate_type' env t: typ =
+  // The outermost array type constructor decays to pointer
+  match t with
+      
+  | t -> translate_type_without_decay env t
 
 and translate_binders env args =
   List.map (translate_binder env) args
@@ -485,7 +594,7 @@ and translate_binders env args =
 and translate_binder env (name, typ) =
   { name = name; typ = translate_type env typ; mut = false }
 
-and translate_expr env e: expr =
+and translate_expr' env e: expr =
   match e.expr with
   | MLE_Tuple [] ->
       EUnit
@@ -890,6 +999,11 @@ and translate_expr env e: expr =
         ECast (translate_expr env arg, TInt Int8)
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
+        
+  (* Misc. Steel operations *)
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
+    when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
+    translate_expr env e
 
   | MLE_App ({ expr = MLE_Name p }, [ arg ])
     when string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ||
@@ -1082,10 +1196,7 @@ and translate_constant c: expr =
 and mk_op_app env w op args =
   EApp (EOp (op, w), List.map (translate_expr env) args)
 
-let translate_type_decl env ty: option decl =
-  if List.mem Syntax.NoExtract ty.tydecl_meta then
-    None
-  else
+let translate_type_decl' env ty: option decl =
     match ty with
     | {tydecl_assumed=assumed;
        tydecl_name=name;
@@ -1111,7 +1222,7 @@ let translate_type_decl env ty: option decl =
         let name = env.module_name, name in
         let env = List.fold_left (fun env name -> extend_t env name) env args in
         Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
-          f, (translate_type env t, false)) fields))
+          f, (translate_type_without_decay env t, false)) fields))
 
     | {tydecl_name=name;
        tydecl_parameters=args;
@@ -1122,7 +1233,7 @@ let translate_type_decl env ty: option decl =
         let env = List.fold_left extend_t env args in
         Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
           cons, List.map (fun (name, t) ->
-            name, (translate_type env t, false)
+            name, (translate_type_without_decay env t, false)
           ) ts
         ) branches))
     | {tydecl_name=name} ->
@@ -1304,3 +1415,9 @@ let translate (MLLib modules): list file =
           m_name (BU.print_exn e);
         None
   ) modules
+
+let init () =
+  register_post_translate_type_without_decay translate_type_without_decay';
+  register_post_translate_type translate_type';
+  register_post_translate_type_decl translate_type_decl';
+  register_post_translate_expr translate_expr'
