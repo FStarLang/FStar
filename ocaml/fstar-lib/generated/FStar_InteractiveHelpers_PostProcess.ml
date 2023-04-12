@@ -6,7 +6,10 @@ let (term_eq :
   = FStar_Tactics_Builtins.term_eq_old
 type meta_info = unit
 let (focus_on_term : meta_info) =
-  Obj.magic (fun uu___ -> failwith "Not yet implemented:focus_on_term")
+  Obj.magic
+    (fun uu___ ->
+       failwith
+         "Not yet implemented:FStar.InteractiveHelpers.PostProcess.focus_on_term")
 let (end_proof : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Builtins.tadmit_t

@@ -6294,7 +6294,7 @@ let rec (inspect :
                  let uu___3 =
                    let uu___4 =
                      let uu___5 =
-                       FStar_Syntax_Unionfind.uvar_id
+                       FStar_Syntax_Unionfind.uvar_unique_id
                          ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
                      FStar_BigInt.of_int_fs uu___5 in
                    (uu___4, (ctx_u, s)) in

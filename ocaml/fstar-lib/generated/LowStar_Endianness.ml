@@ -5,29 +5,29 @@ type u32 = FStar_UInt32.t
 type u64 = FStar_UInt64.t
 type u128 = FStar_UInt128.t
 let (htole16 : FStar_UInt16.t -> FStar_UInt16.t) =
-  fun uu___ -> failwith "Not yet implemented:htole16"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.htole16"
 let (le16toh : FStar_UInt16.t -> FStar_UInt16.t) =
-  fun uu___ -> failwith "Not yet implemented:le16toh"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.le16toh"
 let (htole32 : FStar_UInt32.t -> FStar_UInt32.t) =
-  fun uu___ -> failwith "Not yet implemented:htole32"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.htole32"
 let (le32toh : FStar_UInt32.t -> FStar_UInt32.t) =
-  fun uu___ -> failwith "Not yet implemented:le32toh"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.le32toh"
 let (htole64 : FStar_UInt64.t -> FStar_UInt64.t) =
-  fun uu___ -> failwith "Not yet implemented:htole64"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.htole64"
 let (le64toh : FStar_UInt64.t -> FStar_UInt64.t) =
-  fun uu___ -> failwith "Not yet implemented:le64toh"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.le64toh"
 let (htobe16 : FStar_UInt16.t -> FStar_UInt16.t) =
-  fun uu___ -> failwith "Not yet implemented:htobe16"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.htobe16"
 let (be16toh : FStar_UInt16.t -> FStar_UInt16.t) =
-  fun uu___ -> failwith "Not yet implemented:be16toh"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.be16toh"
 let (htobe32 : FStar_UInt32.t -> FStar_UInt32.t) =
-  fun uu___ -> failwith "Not yet implemented:htobe32"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.htobe32"
 let (be32toh : FStar_UInt32.t -> FStar_UInt32.t) =
-  fun uu___ -> failwith "Not yet implemented:be32toh"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.be32toh"
 let (htobe64 : FStar_UInt64.t -> FStar_UInt64.t) =
-  fun uu___ -> failwith "Not yet implemented:htobe64"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.htobe64"
 let (be64toh : FStar_UInt64.t -> FStar_UInt64.t) =
-  fun uu___ -> failwith "Not yet implemented:be64toh"
+  fun uu___ -> failwith "Not yet implemented:LowStar.Endianness.be64toh"
 type ('a, 'rrel, 'rel, 'b, 'i, 'j, 'predicate, 'h) store_pre = unit
 type ('a, 'rrel, 'rel, 'b, 'i, 'j, 'predicate, 'h0, 'uuuuu, 'h1) store_post =
   unit
@@ -35,82 +35,124 @@ let store16_le_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt16.t -> unit
-  = fun b -> fun i -> fun z -> failwith "Not yet implemented:store16_le_i"
+  =
+  fun b ->
+    fun i ->
+      fun z -> failwith "Not yet implemented:LowStar.Endianness.store16_le_i"
 let load16_le_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt16.t
-  = fun b -> fun i -> failwith "Not yet implemented:load16_le_i"
+  =
+  fun b ->
+    fun i -> failwith "Not yet implemented:LowStar.Endianness.load16_le_i"
 let store16_be_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt16.t -> unit
-  = fun b -> fun i -> fun z -> failwith "Not yet implemented:store16_be_i"
+  =
+  fun b ->
+    fun i ->
+      fun z -> failwith "Not yet implemented:LowStar.Endianness.store16_be_i"
 let load16_be_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt16.t
-  = fun b -> fun i -> failwith "Not yet implemented:load16_be_i"
+  =
+  fun b ->
+    fun i -> failwith "Not yet implemented:LowStar.Endianness.load16_be_i"
 let store32_le_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt32.t -> unit
-  = fun b -> fun i -> fun z -> failwith "Not yet implemented:store32_le_i"
+  =
+  fun b ->
+    fun i ->
+      fun z -> failwith "Not yet implemented:LowStar.Endianness.store32_le_i"
 let load32_le_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt32.t
-  = fun b -> fun i -> failwith "Not yet implemented:load32_le_i"
+  =
+  fun b ->
+    fun i -> failwith "Not yet implemented:LowStar.Endianness.load32_le_i"
 let store32_be_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt32.t -> unit
-  = fun b -> fun i -> fun z -> failwith "Not yet implemented:store32_be_i"
+  =
+  fun b ->
+    fun i ->
+      fun z -> failwith "Not yet implemented:LowStar.Endianness.store32_be_i"
 let load32_be_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt32.t
-  = fun b -> fun i -> failwith "Not yet implemented:load32_be_i"
+  =
+  fun b ->
+    fun i -> failwith "Not yet implemented:LowStar.Endianness.load32_be_i"
 let store64_le_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt64.t -> unit
-  = fun b -> fun i -> fun z -> failwith "Not yet implemented:store64_le_i"
+  =
+  fun b ->
+    fun i ->
+      fun z -> failwith "Not yet implemented:LowStar.Endianness.store64_le_i"
 let load64_le_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt64.t
-  = fun b -> fun i -> failwith "Not yet implemented:load64_le_i"
+  =
+  fun b ->
+    fun i -> failwith "Not yet implemented:LowStar.Endianness.load64_le_i"
 let store64_be_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt64.t -> unit
-  = fun b -> fun i -> fun z -> failwith "Not yet implemented:store64_be_i"
+  =
+  fun b ->
+    fun i ->
+      fun z -> failwith "Not yet implemented:LowStar.Endianness.store64_be_i"
 let load64_be_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt64.t
-  = fun b -> fun i -> failwith "Not yet implemented:load64_be_i"
+  =
+  fun b ->
+    fun i -> failwith "Not yet implemented:LowStar.Endianness.load64_be_i"
 let store128_le_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt128.t -> unit
-  = fun b -> fun i -> fun z -> failwith "Not yet implemented:store128_le_i"
+  =
+  fun b ->
+    fun i ->
+      fun z ->
+        failwith "Not yet implemented:LowStar.Endianness.store128_le_i"
 let load128_le_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt128.t
-  = fun b -> fun i -> failwith "Not yet implemented:load128_le_i"
+  =
+  fun b ->
+    fun i -> failwith "Not yet implemented:LowStar.Endianness.load128_le_i"
 let store128_be_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt128.t -> unit
-  = fun b -> fun i -> fun z -> failwith "Not yet implemented:store128_be_i"
+  =
+  fun b ->
+    fun i ->
+      fun z ->
+        failwith "Not yet implemented:LowStar.Endianness.store128_be_i"
 let load128_be_i :
   'rrel 'rel .
     (FStar_UInt8.t, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer ->
       FStar_UInt32.t -> FStar_UInt128.t
-  = fun b -> fun i -> failwith "Not yet implemented:load128_be_i"
+  =
+  fun b ->
+    fun i -> failwith "Not yet implemented:LowStar.Endianness.load128_be_i"
 let (store16_le :
   FStar_UInt8.t LowStar_Buffer.buffer -> FStar_UInt16.t -> unit) =
   fun b -> fun z -> store16_le_i b Stdint.Uint32.zero z
