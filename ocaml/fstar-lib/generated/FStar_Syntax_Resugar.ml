@@ -1732,6 +1732,40 @@ and (resugar_comp' :
           let result =
             let uu___ = resugar_term' env c1.FStar_Syntax_Syntax.result_typ in
             (uu___, FStar_Parser_AST.Nothing) in
+          let mk_decreases fl =
+            let rec aux l uu___ =
+              match uu___ with
+              | [] -> l
+              | hd::tl ->
+                  (match hd with
+                   | FStar_Syntax_Syntax.DECREASES dec_order ->
+                       let d =
+                         match dec_order with
+                         | FStar_Syntax_Syntax.Decreases_lex (t::[]) ->
+                             resugar_term' env t
+                         | FStar_Syntax_Syntax.Decreases_lex ts ->
+                             let uu___1 =
+                               let uu___2 =
+                                 FStar_Compiler_Effect.op_Bar_Greater ts
+                                   (FStar_Compiler_List.map
+                                      (resugar_term' env)) in
+                               FStar_Parser_AST.LexList uu___2 in
+                             mk uu___1
+                         | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
+                             let uu___1 =
+                               let uu___2 =
+                                 let uu___3 = resugar_term' env rel in
+                                 let uu___4 = resugar_term' env e in
+                                 (uu___3, uu___4) in
+                               FStar_Parser_AST.WFOrder uu___2 in
+                             mk uu___1 in
+                       let e =
+                         mk
+                           (FStar_Parser_AST.Decreases
+                              (d, FStar_Pervasives_Native.None)) in
+                       aux (e :: l) tl
+                   | uu___1 -> aux l tl) in
+            aux [] fl in
           let uu___ =
             (FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name
                FStar_Parser_Const.effect_Lemma_lid)
@@ -1785,37 +1819,7 @@ and (resugar_comp' :
                    mk uu___2 in
                  let pats2 =
                    FStar_Compiler_List.map (resugar_term' env) pats1 in
-                 let rec aux l uu___2 =
-                   match uu___2 with
-                   | [] -> l
-                   | hd::tl ->
-                       (match hd with
-                        | FStar_Syntax_Syntax.DECREASES dec_order ->
-                            let d =
-                              match dec_order with
-                              | FStar_Syntax_Syntax.Decreases_lex ts ->
-                                  let uu___3 =
-                                    let uu___4 =
-                                      FStar_Compiler_Effect.op_Bar_Greater ts
-                                        (FStar_Compiler_List.map
-                                           (resugar_term' env)) in
-                                    FStar_Parser_AST.LexList uu___4 in
-                                  mk uu___3
-                              | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
-                                  let uu___3 =
-                                    let uu___4 =
-                                      let uu___5 = resugar_term' env rel in
-                                      let uu___6 = resugar_term' env e in
-                                      (uu___5, uu___6) in
-                                    FStar_Parser_AST.WFOrder uu___4 in
-                                  mk uu___3 in
-                            let e =
-                              mk
-                                (FStar_Parser_AST.Decreases
-                                   (d, FStar_Pervasives_Native.None)) in
-                            aux (e :: l) tl
-                        | uu___3 -> aux l tl) in
-                 let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
+                 let decrease = mk_decreases c1.FStar_Syntax_Syntax.flags in
                  let uu___2 =
                    let uu___3 =
                      let uu___4 =
@@ -1842,26 +1846,10 @@ and (resugar_comp' :
                           let uu___5 = resugar_term' env e in
                           (uu___5, FStar_Parser_AST.Nothing))
                    c1.FStar_Syntax_Syntax.effect_args in
-               let rec aux l uu___3 =
-                 match uu___3 with
-                 | [] -> l
-                 | hd::tl ->
-                     (match hd with
-                      | FStar_Syntax_Syntax.DECREASES d ->
-                          let ts =
-                            match d with
-                            | FStar_Syntax_Syntax.Decreases_lex ts1 -> ts1
-                            | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
-                                [rel; e] in
-                          let es =
-                            FStar_Compiler_Effect.op_Bar_Greater ts
-                              (FStar_Compiler_List.map
-                                 (fun e ->
-                                    let uu___4 = resugar_term' env e in
-                                    (uu___4, FStar_Parser_AST.Nothing))) in
-                          aux (FStar_Compiler_List.op_At es l) tl
-                      | uu___4 -> aux l tl) in
-               let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
+               let decrease =
+                 let uu___3 = mk_decreases c1.FStar_Syntax_Syntax.flags in
+                 FStar_Compiler_List.map
+                   (fun t -> (t, FStar_Parser_AST.Nothing)) uu___3 in
                let uu___3 =
                  let uu___4 =
                    let uu___5 =

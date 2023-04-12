@@ -3,7 +3,7 @@ let (rfrac : FStar_BaseTypes.float) =
   FStar_Compiler_Util.float_of_string "1.0"
 let (width : Prims.int) = (Prims.of_int (100))
 let (pp : FStar_Pprint.document -> Prims.string) =
-  fun d -> FStar_Pprint.pretty_string rfrac (Prims.of_int (100)) d
+  fun d -> FStar_Pprint.pretty_string rfrac width d
 let (term_to_string' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun env ->
