@@ -1001,7 +1001,8 @@ let (push_subst :
 let (compress_subst : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     match t.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_delayed (t1, s) -> push_subst_aux false s t1
+    | FStar_Syntax_Syntax.Tm_delayed (t1, s) ->
+        let resolve_uvars = false in push_subst_aux resolve_uvars s t1
     | uu___ -> t
 let rec (compress_slow :
   FStar_Syntax_Syntax.term ->
