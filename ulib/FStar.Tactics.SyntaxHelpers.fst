@@ -76,3 +76,20 @@ let lookup_lb_view (lbs:list letbinding) (nm:name) : Tac lb_view =
   match o with
   | Some lb -> inspect_lb lb
   | None -> fail "lookup_lb_view: Name not in let group"
+
+let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
+  match inspect t with
+  | Tv_AscribedT t _ _ _
+  | Tv_AscribedC t _ _ _ ->
+    inspect_unascribe t
+  | tv -> tv
+
+(* Helpers for dealing with nested applications and arrows *)
+let rec collect_app' (args : list argv) (t : term)
+  : Tac (term * list argv) =
+    match inspect_unascribe t with
+    | Tv_App l r ->
+        collect_app' (r::args) l
+    | _ -> (t, args)
+
+let collect_app = collect_app' []
