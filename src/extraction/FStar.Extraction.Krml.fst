@@ -1416,7 +1416,7 @@ let translate (MLLib modules): list file =
         None
   ) modules
 
-let init () =
+let _ =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
