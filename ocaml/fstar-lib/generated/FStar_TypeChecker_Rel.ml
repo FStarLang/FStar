@@ -4067,7 +4067,9 @@ let (simplify_guard :
                 FStar_TypeChecker_Env.Eager_unfolding;
                 FStar_TypeChecker_Env.Simplify;
                 FStar_TypeChecker_Env.Primops;
-                FStar_TypeChecker_Env.NoFullNorm] env f in
+                FStar_TypeChecker_Env.NoFullNorm;
+                FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] env
+                f in
             (let uu___2 =
                FStar_Compiler_Effect.op_Less_Bar
                  (FStar_TypeChecker_Env.debug env)
@@ -13646,7 +13648,9 @@ let (discharge_guard' :
                            FStar_TypeChecker_Normalize.normalize
                              [FStar_TypeChecker_Env.Eager_unfolding;
                              FStar_TypeChecker_Env.Simplify;
-                             FStar_TypeChecker_Env.Primops] env vc) uu___4
+                             FStar_TypeChecker_Env.Primops;
+                             FStar_TypeChecker_Env.Exclude
+                               FStar_TypeChecker_Env.Zeta] env vc) uu___4
                         "FStar.TypeChecker.Rel.vc_normalization" in
                     if debug1
                     then
@@ -13728,7 +13732,9 @@ let (discharge_guard' :
                                                      norm_with_steps
                                                        "FStar.TypeChecker.Rel.norm_with_steps.7"
                                                        [FStar_TypeChecker_Env.Simplify;
-                                                       FStar_TypeChecker_Env.Primops]
+                                                       FStar_TypeChecker_Env.Primops;
+                                                       FStar_TypeChecker_Env.Exclude
+                                                         FStar_TypeChecker_Env.Zeta]
                                                        env1 goal in
                                                    (env1, uu___15, opts))
                                             vcs1 in
