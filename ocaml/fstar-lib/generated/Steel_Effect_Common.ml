@@ -950,7 +950,8 @@ let (is_uvar :
                         (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (794)) (Prims.of_int (6))
                            (Prims.of_int (795)) (Prims.of_int (17)))
-                        (Obj.magic (FStar_Tactics_Derived.collect_app t))
+                        (Obj.magic
+                           (FStar_Tactics_SyntaxHelpers.collect_app t))
                         (fun uu___3 ->
                            (fun uu___3 ->
                               match uu___3 with
@@ -994,7 +995,7 @@ let rec (get_candidates :
            (Prims.of_int (16)) (Prims.of_int (800)) (Prims.of_int (29)))
         (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (800))
            (Prims.of_int (2)) (Prims.of_int (807)) (Prims.of_int (32)))
-        (Obj.magic (FStar_Tactics_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -1016,7 +1017,7 @@ let rec (get_candidates :
                                   (Prims.of_int (804)) (Prims.of_int (6))
                                   (Prims.of_int (807)) (Prims.of_int (32)))
                                (Obj.magic
-                                  (FStar_Tactics_Derived.collect_app hd))
+                                  (FStar_Tactics_SyntaxHelpers.collect_app hd))
                                (fun uu___2 ->
                                   (fun uu___2 ->
                                      match uu___2 with
@@ -1866,7 +1867,8 @@ let rec (new_args_for_smt_attrs :
                               (Prims.of_int (944)) (Prims.of_int (8))
                               (Prims.of_int (944)) (Prims.of_int (31)))
                            (Obj.magic
-                              (FStar_Tactics_Derived.inspect_unascribe ty))
+                              (FStar_Tactics_SyntaxHelpers.inspect_unascribe
+                                 ty))
                            (fun uu___ ->
                               FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___1 -> (l, uu___)))))
@@ -2158,7 +2160,7 @@ let (rewrite_term_for_smt :
                                        (Prims.of_int (980))
                                        (Prims.of_int (68)))
                                     (Obj.magic
-                                       (FStar_Tactics_Derived.collect_app
+                                       (FStar_Tactics_SyntaxHelpers.collect_app
                                           term))
                                     (fun uu___1 ->
                                        (fun uu___1 ->
@@ -3722,7 +3724,7 @@ let rec (reification_aux :
                                       (Prims.of_int (1633))
                                       (Prims.of_int (57)))
                                    (Obj.magic
-                                      (FStar_Tactics_Derived.inspect_unascribe
+                                      (FStar_Tactics_SyntaxHelpers.inspect_unascribe
                                          hd))
                                    (fun uu___1 ->
                                       FStar_Tactics_Effect.lift_div_tac
@@ -4247,7 +4249,7 @@ let rec (unify_pr_with_true :
          (Prims.of_int (15)) (Prims.of_int (1789)) (Prims.of_int (29)))
       (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1789))
          (Prims.of_int (2)) (Prims.of_int (1810)) (Prims.of_int (73)))
-      (Obj.magic (FStar_Tactics_Derived.collect_app pr))
+      (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app pr))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -4286,7 +4288,8 @@ let rec (unify_pr_with_true :
                              (Prims.of_int (1798)) (Prims.of_int (4))
                              (Prims.of_int (1810)) (Prims.of_int (73)))
                           (Obj.magic
-                             (FStar_Tactics_Derived.inspect_unascribe hd))
+                             (FStar_Tactics_SyntaxHelpers.inspect_unascribe
+                                hd))
                           (fun uu___2 ->
                              (fun uu___2 ->
                                 match uu___2 with
@@ -4351,7 +4354,7 @@ let rec (set_abduction_variable_term :
          (Prims.of_int (15)) (Prims.of_int (1830)) (Prims.of_int (29)))
       (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1830))
          (Prims.of_int (2)) (Prims.of_int (1851)) (Prims.of_int (54)))
-      (Obj.magic (FStar_Tactics_Derived.collect_app pr))
+      (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app pr))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -4499,7 +4502,7 @@ let (set_abduction_variable :
                  (Prims.mk_range "Steel.Effect.Common.fsti"
                     (Prims.of_int (1855)) (Prims.of_int (2))
                     (Prims.of_int (1861)) (Prims.of_int (33)))
-                 (Obj.magic (FStar_Tactics_Derived.inspect_unascribe g))
+                 (Obj.magic (FStar_Tactics_SyntaxHelpers.inspect_unascribe g))
                  (fun uu___1 ->
                     (fun uu___1 ->
                        match uu___1 with
@@ -6879,7 +6882,7 @@ let rec (slterm_nbr_uvars :
          (Prims.of_int (8)) (Prims.of_int (2113)) (Prims.of_int (27)))
       (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2113))
          (Prims.of_int (2)) (Prims.of_int (2123)) (Prims.of_int (10)))
-      (Obj.magic (FStar_Tactics_Derived.inspect_unascribe t))
+      (Obj.magic (FStar_Tactics_SyntaxHelpers.inspect_unascribe t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -6898,7 +6901,8 @@ let rec (slterm_nbr_uvars :
                         (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2116)) (Prims.of_int (4))
                            (Prims.of_int (2121)) (Prims.of_int (10)))
-                        (Obj.magic (FStar_Tactics_Derived.collect_app t))
+                        (Obj.magic
+                           (FStar_Tactics_SyntaxHelpers.collect_app t))
                         (fun uu___3 ->
                            (fun uu___3 ->
                               match uu___3 with
@@ -6966,7 +6970,7 @@ let rec (all_guards_solved :
          (Prims.of_int (8)) (Prims.of_int (2131)) (Prims.of_int (27)))
       (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2131))
          (Prims.of_int (2)) (Prims.of_int (2152)) (Prims.of_int (13)))
-      (Obj.magic (FStar_Tactics_Derived.inspect_unascribe t))
+      (Obj.magic (FStar_Tactics_SyntaxHelpers.inspect_unascribe t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -6982,7 +6986,8 @@ let rec (all_guards_solved :
                         (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2134)) (Prims.of_int (4))
                            (Prims.of_int (2151)) (Prims.of_int (10)))
-                        (Obj.magic (FStar_Tactics_Derived.collect_app t))
+                        (Obj.magic
+                           (FStar_Tactics_SyntaxHelpers.collect_app t))
                         (fun uu___3 ->
                            (fun uu___3 ->
                               match uu___3 with
@@ -7192,7 +7197,8 @@ let rec (term_is_uvar :
                           (Prims.mk_range "Steel.Effect.Common.fsti"
                              (Prims.of_int (2165)) (Prims.of_int (6))
                              (Prims.of_int (2166)) (Prims.of_int (23)))
-                          (Obj.magic (FStar_Tactics_Derived.collect_app t))
+                          (Obj.magic
+                             (FStar_Tactics_SyntaxHelpers.collect_app t))
                           (fun uu___3 ->
                              (fun uu___3 ->
                                 match uu___3 with
@@ -7466,7 +7472,7 @@ let rec (extract_contexts :
               (Prims.mk_range "Steel.Effect.Common.fsti"
                  (Prims.of_int (2243)) (Prims.of_int (2))
                  (Prims.of_int (2294)) (Prims.of_int (7)))
-              (Obj.magic (FStar_Tactics_Derived.collect_app t))
+              (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
               (fun uu___ ->
                  (fun uu___ ->
                     match uu___ with
@@ -7750,7 +7756,7 @@ let rec (extract_contexts :
                                                  (Prims.of_int (2279))
                                                  (Prims.of_int (17)))
                                               (Obj.magic
-                                                 (FStar_Tactics_Derived.inspect_unascribe
+                                                 (FStar_Tactics_SyntaxHelpers.inspect_unascribe
                                                     hd))
                                               (fun uu___2 ->
                                                  FStar_Tactics_Effect.lift_div_tac
@@ -8001,7 +8007,7 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                      (Prims.of_int (2328))
                                                      (Prims.of_int (57)))
                                                   (Obj.magic
-                                                     (FStar_Tactics_Derived.collect_app
+                                                     (FStar_Tactics_SyntaxHelpers.collect_app
                                                         t0))
                                                   (fun uu___3 ->
                                                      (fun uu___3 ->
@@ -8029,7 +8035,7 @@ let (open_existentials : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (60)))
                                                                     (
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Derived.collect_app
+                                                                    (FStar_Tactics_SyntaxHelpers.collect_app
                                                                     t1))
                                                                     (
                                                                     fun
@@ -9355,7 +9361,7 @@ let (open_existentials_forall_dep :
                                                      (Prims.of_int (2517))
                                                      (Prims.of_int (71)))
                                                   (Obj.magic
-                                                     (FStar_Tactics_Derived.collect_app
+                                                     (FStar_Tactics_SyntaxHelpers.collect_app
                                                         t0))
                                                   (fun uu___3 ->
                                                      (fun uu___3 ->
@@ -9383,7 +9389,7 @@ let (open_existentials_forall_dep :
                                                                     (Prims.of_int (78)))
                                                                     (
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Derived.collect_app
+                                                                    (FStar_Tactics_SyntaxHelpers.collect_app
                                                                     t1))
                                                                     (
                                                                     fun
@@ -9424,7 +9430,7 @@ let (open_existentials_forall_dep :
                                                                     (Prims.of_int (2511))
                                                                     (Prims.of_int (71)))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Derived.inspect_unascribe
+                                                                    (FStar_Tactics_SyntaxHelpers.inspect_unascribe
                                                                     rhs))
                                                                     (fun
                                                                     uu___8 ->
@@ -9689,7 +9695,7 @@ let (open_existentials_forall_dep :
                                                                     (Prims.of_int (2511))
                                                                     (Prims.of_int (71)))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Derived.inspect_unascribe
+                                                                    (FStar_Tactics_SyntaxHelpers.inspect_unascribe
                                                                     rhs))
                                                                     (fun
                                                                     uu___9 ->
@@ -11677,7 +11683,7 @@ let (is_return_eq :
            (Prims.of_int (15)) (Prims.of_int (2693)) (Prims.of_int (28)))
         (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2693))
            (Prims.of_int (2)) (Prims.of_int (2695)) (Prims.of_int (56)))
-        (Obj.magic (FStar_Tactics_Derived.collect_app l))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app l))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -11690,7 +11696,7 @@ let (is_return_eq :
                        (Prims.mk_range "Steel.Effect.Common.fsti"
                           (Prims.of_int (2694)) (Prims.of_int (2))
                           (Prims.of_int (2695)) (Prims.of_int (56)))
-                       (Obj.magic (FStar_Tactics_Derived.collect_app r))
+                       (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app r))
                        (fun uu___1 ->
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___2 ->
@@ -12095,7 +12101,7 @@ let (goal_to_equiv :
                                                  (Prims.of_int (2770))
                                                  (Prims.of_int (51)))
                                               (Obj.magic
-                                                 (FStar_Tactics_Derived.collect_app
+                                                 (FStar_Tactics_SyntaxHelpers.collect_app
                                                     t1))
                                               (fun uu___1 ->
                                                  (fun uu___1 ->
@@ -12497,7 +12503,7 @@ let (solve_or_delay :
                                            (Prims.of_int (2815))
                                            (Prims.of_int (11)))
                                         (Obj.magic
-                                           (FStar_Tactics_Derived.collect_app
+                                           (FStar_Tactics_SyntaxHelpers.collect_app
                                               t))
                                         (fun uu___1 ->
                                            (fun uu___1 ->
@@ -12773,7 +12779,7 @@ let rec (vprop_term_uvars :
          (Prims.of_int (8)) (Prims.of_int (2831)) (Prims.of_int (27)))
       (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2831))
          (Prims.of_int (2)) (Prims.of_int (2841)) (Prims.of_int (11)))
-      (Obj.magic (FStar_Tactics_Derived.inspect_unascribe t))
+      (Obj.magic (FStar_Tactics_SyntaxHelpers.inspect_unascribe t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -12791,7 +12797,8 @@ let rec (vprop_term_uvars :
                         (Prims.mk_range "Steel.Effect.Common.fsti"
                            (Prims.of_int (2834)) (Prims.of_int (4))
                            (Prims.of_int (2839)) (Prims.of_int (25)))
-                        (Obj.magic (FStar_Tactics_Derived.collect_app t))
+                        (Obj.magic
+                           (FStar_Tactics_SyntaxHelpers.collect_app t))
                         (fun uu___3 ->
                            (fun uu___3 ->
                               match uu___3 with
@@ -12897,7 +12904,7 @@ let (goal_term_uvars :
          (Prims.of_int (15)) (Prims.of_int (2866)) (Prims.of_int (28)))
       (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2866))
          (Prims.of_int (2)) (Prims.of_int (2875)) (Prims.of_int (6)))
-      (Obj.magic (FStar_Tactics_Derived.collect_app t))
+      (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -12916,7 +12923,7 @@ let (goal_term_uvars :
                                  (Prims.of_int (2871)) (Prims.of_int (6))
                                  (Prims.of_int (2872)) (Prims.of_int (36)))
                               (Obj.magic
-                                 (FStar_Tactics_Derived.collect_app tl0))
+                                 (FStar_Tactics_SyntaxHelpers.collect_app tl0))
                               (fun uu___1 ->
                                  (fun uu___1 ->
                                     match uu___1 with
@@ -13598,7 +13605,7 @@ let (typ_contains_req_ens :
          (Prims.of_int (16)) (Prims.of_int (2999)) (Prims.of_int (29)))
       (Prims.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2999))
          (Prims.of_int (2)) (Prims.of_int (3000)) (Prims.of_int (73)))
-      (Obj.magic (FStar_Tactics_Derived.collect_app t))
+      (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 ->
@@ -13855,7 +13862,7 @@ let rec (solve_maybe_emps :
                                                              (Prims.of_int (3053))
                                                              (Prims.of_int (20)))
                                                           (Obj.magic
-                                                             (FStar_Tactics_Derived.collect_app
+                                                             (FStar_Tactics_SyntaxHelpers.collect_app
                                                                 t))
                                                           (fun uu___5 ->
                                                              (fun uu___5 ->
