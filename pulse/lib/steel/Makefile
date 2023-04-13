@@ -1,4 +1,4 @@
-all: steel
+all: steel pulse
 
 ifneq (,$(FSTAR_HOME))
   FSTAR=$(FSTAR_HOME)/bin/fstar.exe
@@ -30,6 +30,10 @@ Steel.ST.GhostPCMReference.fst.checked: COMPAT_INDEXED_EFFECTS=
 include .depend
 
 steel: $(ALL_CHECKED_FILES)
+
+.PHONY: pulse
+pulse: steel
+	+$(MAKE) -C $@
 
 clean:
 	rm -f .depend* *.checked

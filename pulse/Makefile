@@ -28,8 +28,12 @@ lib:
 verify-steel: ocaml
 	+$(MAKE) -C lib/steel steel
 
+.PHONY: verify-pulse
+verify-pulse: verify-steel
+	+$(MAKE) -C lib/steel pulse
+
 .PHONY: verify
-verify: verify-steel
+verify: verify-steel verify-pulse
 
 clean:
 	+$(MAKE) -C lib/steel clean ; true

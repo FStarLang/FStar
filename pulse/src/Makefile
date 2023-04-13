@@ -7,11 +7,15 @@ all: boot
 .PHONY: all
 
 .PHONY: extract-ocaml
-extract-ocaml: extract-steel-plugin extract-extraction
+extract-ocaml: extract-steel-plugin extract-extraction extract-pulse-plugin
 
 .PHONY: extract-steel-plugin
 extract-steel-plugin:
 	+$(MAKE) -C ocaml/plugin -f extract-steel.Makefile
+
+.PHONY: extract-pulse-plugin
+extract-pulse-plugin: verify-steel
+	+$(MAKE) -C ocaml/plugin -f extract-pulse.Makefile
 
 .PHONY: extract-extraction
 extract-extraction:
