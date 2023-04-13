@@ -1,0 +1,45 @@
+[
+  "Ø®\u000e¨Kv{Ô!√BÚËW∂Ç",
+  [
+    [
+      "Pulse.Reflection.Util.mk_stt_ghost_comp_post_equiv",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.Reflection.Typing.apply_term_ctxt.fuel_instrumented",
+        "@query",
+        "FStar.Reflection.Data_pretyping_b90ba98501c0444263072cb94ae6e3aa",
+        "FStar.Reflection.Types_pretyping_fd1daa8e4b5ab420d7e908e7afd35083",
+        "constructor_distinct_FStar.Reflection.Typing.Ctxt_app_arg",
+        "constructor_distinct_FStar.Reflection.Typing.Ctxt_hole",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Reflection.Data.Q_Explicit@tok",
+        "data_typing_intro_FStar.Reflection.Data.Tv_App@tok",
+        "data_typing_intro_FStar.Reflection.Data.Tv_UInst@tok",
+        "data_typing_intro_FStar.Reflection.Typing.Ctxt_app_arg@tok",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "equality_tok_FStar.Reflection.Data.Q_Explicit@tok",
+        "equality_tok_FStar.Reflection.Typing.Ctxt_hole@tok",
+        "equation_FStar.Reflection.Data.argv",
+        "equation_FStar.Reflection.Data.universes",
+        "equation_Pulse.Reflection.Util.mk_stt_ghost_comp",
+        "equation_with_fuel_FStar.Reflection.Typing.apply_term_ctxt.fuel_instrumented",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Reflection.Types.universe",
+        "kinding_FStar.Reflection.Data.aqualv@tok",
+        "projection_inverse_FStar.Reflection.Typing.Ctxt_app_arg__0",
+        "projection_inverse_FStar.Reflection.Typing.Ctxt_app_arg__1",
+        "projection_inverse_FStar.Reflection.Typing.Ctxt_app_arg__2",
+        "typing_FStar.Reflection.Builtins.pack_ln",
+        "typing_Pulse.Reflection.Util.stt_ghost_fv",
+        "typing_tok_FStar.Reflection.Data.Q_Explicit@tok",
+        "typing_tok_FStar.Reflection.Typing.Ctxt_hole@tok"
+      ],
+      0,
+      "13e56005b9c064d14f2bbe1e1ca5f5c9"
+    ]
+  ]
+]
