@@ -7,11 +7,9 @@ CACHE_DIR=_output
 ML_DIR=$(CACHE_DIR)
 
 MY_FSTAR=$(FSTAR) \
-      --cache_checked_modules --already_cached Prims,FStar,Steel --cache_dir $(CACHE_DIR) \
+      --cache_checked_modules --already_cached Prims,FStar --cache_dir $(CACHE_DIR) \
       --odir $(ML_DIR) \
       $(OTHERFLAGS) 
-
-EXTRACT_SELECTOR=+Pulse -Pulse.Steel
 
 all-common: verify_all $(CACHE_DIR)
 
