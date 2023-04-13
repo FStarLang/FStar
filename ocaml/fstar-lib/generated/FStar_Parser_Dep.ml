@@ -841,17 +841,19 @@ let (check_module_declaration_against_filename :
 exception Exit 
 let (uu___is_Exit : Prims.exn -> Prims.bool) =
   fun projectee -> match projectee with | Exit -> true | uu___ -> false
-let (core_modules : Prims.string Prims.list) =
-  let uu___ =
-    let uu___1 = FStar_Options.prims_basename () in
-    let uu___2 =
-      let uu___3 = FStar_Options.pervasives_basename () in
-      let uu___4 =
-        let uu___5 = FStar_Options.pervasives_native_basename () in [uu___5] in
-      uu___3 :: uu___4 in
-    uu___1 :: uu___2 in
-  FStar_Compiler_Effect.op_Bar_Greater uu___
-    (FStar_Compiler_List.map module_name_of_file)
+let (core_modules : unit -> Prims.string Prims.list) =
+  fun uu___ ->
+    let uu___1 =
+      let uu___2 = FStar_Options.prims_basename () in
+      let uu___3 =
+        let uu___4 = FStar_Options.pervasives_basename () in
+        let uu___5 =
+          let uu___6 = FStar_Options.pervasives_native_basename () in
+          [uu___6] in
+        uu___4 :: uu___5 in
+      uu___2 :: uu___3 in
+    FStar_Compiler_Effect.op_Bar_Greater uu___1
+      (FStar_Compiler_List.map module_name_of_file)
 let (implicit_ns_deps : FStar_Ident.lident Prims.list) =
   [FStar_Parser_Const.fstar_ns_lid]
 let (implicit_module_deps : FStar_Ident.lident Prims.list) =
@@ -867,7 +869,7 @@ let (hard_coded_dependencies :
       FStar_Compiler_List.map (fun l -> (l, Open_namespace)) implicit_ns_deps in
     let uu___ =
       let uu___1 = module_name_of_file filename in
-      FStar_Compiler_List.mem uu___1 core_modules in
+      let uu___2 = core_modules () in FStar_Compiler_List.mem uu___1 uu___2 in
     if uu___
     then []
     else
