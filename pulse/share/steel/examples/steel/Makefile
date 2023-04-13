@@ -1,4 +1,4 @@
-all: verify counter # llist2 llist3
+all: verify counter llist2 llist3
 
 # assuming share/steel/examples/steel
 STEEL_HOME ?= ../../../..
@@ -23,10 +23,10 @@ endif
 
 ifdef KRML_HOME
 
-llist2: verify
+llist2: Selectors.LList2.fst.checked
 	+$(MAKE) -C $@
 
-llist3: verify
+llist3: Selectors.LList3.fst.checked
 	+$(MAKE) -C $@
 
 else
