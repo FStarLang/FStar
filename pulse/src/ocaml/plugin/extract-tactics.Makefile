@@ -1,6 +1,6 @@
 all: extract
 
-LIB_STEEL=$(CURDIR)/../../lib/steel
+LIB_STEEL=$(CURDIR)/../../../lib/steel
 OUTPUT_DIRECTORY=generated
 
 CODEGEN = Plugin

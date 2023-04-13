@@ -11,7 +11,7 @@ extract-ocaml: extract-tactics extract-extraction
 
 .PHONY: extract-tactics
 extract-tactics:
-	+$(MAKE) -C ocaml -f extract-tactics.Makefile
+	+$(MAKE) -C ocaml/plugin -f extract-tactics.Makefile
 
 .PHONY: extract-extraction
 extract-extraction:
@@ -34,5 +34,5 @@ boot: extract
 
 .PHONY: full-boot
 full-boot:
-	rm -rf ocaml/generated include/steel/Steel_SpinLock.h
+	rm -rf ocaml/*/generated include/steel/Steel_SpinLock.h
 	+$(MAKE) boot
