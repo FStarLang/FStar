@@ -1,4 +1,4 @@
-all: ocaml
+all: verify
 
 .PHONY: extract-ocaml
 extract-ocaml: extract-tactics extract-extraction
@@ -31,5 +31,10 @@ ocaml:
 	cd src/ocaml && dune build
 	cd src/ocaml && dune install --prefix=$(STEEL_HOME)
 
+.PHONY: verify
+verify: ocaml
+	+$(MAKE) -C lib/steel
+
 clean:
+	+$(MAKE) -C lib/steel clean ; true
 	cd src/ocaml && { dune uninstall --prefix=$(STEEL_HOME) ; dune clean ; true ; }

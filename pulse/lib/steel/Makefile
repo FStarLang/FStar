@@ -1,0 +1,33 @@
+all: verify
+
+ifneq (,$(FSTAR_HOME))
+  FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+else
+  FSTAR=fstar.exe
+endif
+
+FSTAR_FILES:=$(wildcard *.fst *.fsti)
+
+MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Steel' --load_cmxs steel
+
+COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
+
+%.checked:
+	$(call msg, "CHECK", $(basename $(notdir $@)))
+	@# You can debug with --debug $(basename $(notdir $<))
+	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
+
+.depend: $(FSTAR_FILES)
+	$(call msg, "DEPEND")
+	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
+	$(Q)$(MY_FSTAR) --dep full @$@.rsp > $@.tmp
+	mv $@.tmp $@
+
+include .depend
+
+verify: $(ALL_CHECKED_FILES)
+
+clean:
+	rm -f .depend* *.checked
+
+.PHONY: all verify clean
