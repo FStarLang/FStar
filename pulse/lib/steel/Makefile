@@ -8,14 +8,18 @@ endif
 
 FSTAR_FILES:=$(wildcard *.fst *.fsti)
 
-MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Steel' --load_cmxs steel
+FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Steel' --load_cmxs steel
 
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
+MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 
 %.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
 	@# You can debug with --debug $(basename $(notdir $<))
 	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
+
+# These modules already verify without the flag.
+Steel.ST.GhostPCMReference.fst.checked: COMPAT_INDEXED_EFFECTS=
 
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND")
@@ -30,4 +34,7 @@ verify: $(ALL_CHECKED_FILES)
 clean:
 	rm -f .depend* *.checked
 
-.PHONY: all verify clean
+.PHONY: all verify clean %.fst-in %.fsti-in
+
+%.fst-in %.fsti-in:
+	@echo $(FSTAR_OPTIONS)
