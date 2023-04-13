@@ -1,4 +1,4 @@
-all: verify
+all: lib
 
 .PHONY: extract-ocaml
 extract-ocaml: extract-tactics extract-extraction
@@ -30,6 +30,10 @@ endif
 ocaml:
 	cd src/ocaml && dune build
 	cd src/ocaml && dune install --prefix=$(STEEL_HOME)
+
+.PHONY: lib
+lib: verify
+	+$(MAKE) -C src/c
 
 .PHONY: verify
 verify: ocaml
