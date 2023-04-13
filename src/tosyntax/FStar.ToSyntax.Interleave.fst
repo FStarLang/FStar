@@ -315,7 +315,7 @@ let apply_ml_mode_optimizations (mname:lident) : bool =
    *     But until then ... (sigh)
    *)  
   Options.ml_ish () &&
-  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules))) &&
+  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules ()))) &&
   (not (List.contains (Ident.string_of_lid mname) ulib_modules))
 
 let prefix_one_decl mname iface impl =
