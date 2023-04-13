@@ -1,0 +1,46 @@
+[
+  "W\u0014V\u0019$∏ÛwI∂ı7èﬁ]ﬁ",
+  [
+    [
+      "SteelArrayArith.main",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Prims.Mkdtuple2",
+        "data_typing_intro_Prims.Mkdtuple2@tok", "eq2-interp",
+        "equation_FStar.Pervasives.dsnd", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Steel.ST.Array.adjacent",
+        "equation_Steel.ST.Array.array",
+        "equation_Steel.ST.Array.is_full_array",
+        "equation_Steel.ST.Array.length",
+        "equation_Steel.ST.Array.merge_into",
+        "equation_Steel.ST.Array.ptr_of", "equation_Steel.ST.Array.split_l",
+        "equation_Steel.ST.Array.split_r",
+        "fuel_guarded_inversion_Prims.dtuple2", "int_typing",
+        "interpretation_Tm_abs_4d5e86439a4b92fb1d3f2062e682ba81",
+        "lemma_FStar.Ghost.reveal_hide", "lemma_FStar.SizeT.fits_lte",
+        "lemma_FStar.SizeT.size_uint_to_t_inj",
+        "primitive_Prims.op_Addition", "proj_equation_Prims.Mkdtuple2__2",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__2",
+        "refinement_interpretation_Tm_refine_14d43361b7e9404d179ef736339e2265",
+        "refinement_interpretation_Tm_refine_1a393eda85d067f44c66d88406a9a35a",
+        "refinement_interpretation_Tm_refine_2b4e91e739a3d39c2d294e33348ce804",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_76c84c73641925b528edb32fe3ff3950",
+        "refinement_interpretation_Tm_refine_7df43cb9feb536df62477b7b30ce1682",
+        "refinement_interpretation_Tm_refine_d14ea8de3cd346e3d75109b2c7d0c051",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Ghost.hide", "typing_FStar.SizeT.t",
+        "typing_FStar.SizeT.v", "typing_FStar.UInt32.t",
+        "typing_Steel.ST.Array.array", "typing_Steel.ST.Array.merge",
+        "typing_Steel.ST.Array.offset", "typing_Steel.ST.Array.ptr_of"
+      ],
+      0,
+      "80183f7fd8896a4b52afc026b5753432"
+    ]
+  ]
+]

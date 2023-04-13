@@ -1,4 +1,14 @@
-all: verify
+all: verify krml
+
+.PHONY: krml
+
+ifneq (,$(KRML_HOME))
+krml:
+	+$(MAKE) -C $@
+else
+krml:
+	echo "No krml found, gracefully skipping"
+endif
 
 # Assuming share/steel/tests
 STEEL_HOME ?= ../../..

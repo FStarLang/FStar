@@ -1,0 +1,69 @@
+[
+  "—å©ëëyõäqtf\u001b¾3W\t",
+  [
+    [
+      "SteelLoops.sum_to_n_for",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a1ccc22400dbc75d57f53f6a76f43a08"
+    ],
+    [
+      "SteelLoops.sum_to_n_for_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "b2t_def", "bool_inversion", "bool_typing",
+        "data_elim_Steel.FractionalPermission.MkPerm",
+        "equation_FStar.UInt.add_mod", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Prims.eq2", "equation_Prims.nat", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Loops.nat_at_most",
+        "equation_Steel.Loops.u32_between", "int_inversion", "int_typing",
+        "lemma_FStar.SizeT.fits_at_least_16", "lemma_FStar.SizeT.fits_lte",
+        "lemma_FStar.SizeT.size_uint_to_t_inj",
+        "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt32.uv_inv",
+        "lemma_FStar.UInt32.vu_inv", "primitive_FStar.Real.op_Greater_Dot",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0ea1fba779ad5718e28476faeef94d56",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_3a8efe8897601cf34c6cedf4c76b3b62",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7df43cb9feb536df62477b7b30ce1682",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53",
+        "refinement_interpretation_Tm_refine_d74c5cae4646fea1e5e69a2dd9d7c65a",
+        "refinement_interpretation_Tm_refine_edc8fb7e909853d860d4ab445ef31337",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.SizeT.v", "typing_FStar.UInt.fits",
+        "typing_FStar.UInt32.add_mod", "typing_FStar.UInt32.uint_to_t",
+        "typing_FStar.UInt32.v",
+        "typing_Steel.FractionalPermission.full_perm"
+      ],
+      0,
+      "65594f60c225705fc6278b3533422b2f"
+    ],
+    [
+      "SteelLoops.sum_to_n_while",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3802af5943eeace2f530be8b44718e2b"
+    ]
+  ]
+]
