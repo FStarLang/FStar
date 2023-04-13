@@ -42,3 +42,34 @@ clean:
 .PHONY: test
 test: all
 	+$(MAKE) -C share/steel
+
+ifeq ($(OS),Windows_NT)
+  STEEL_INSTALL_PREFIX=$(shell cygpath -m $(PREFIX))
+else
+  STEEL_INSTALL_PREFIX=$(PREFIX)
+endif
+export STEEL_INSTALL_PREFIX
+
+INSTALL := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
+ifdef INSTALL
+   INSTALL := ginstall
+else
+   INSTALL := install
+endif
+export INSTALL
+
+.PHONY: install install-ocaml install-lib install-include install-share
+
+install-ocaml:
+	cd src/ocaml && dune install --prefix=$(STEEL_INSTALL_PREFIX)
+
+install-lib:
+	+$(MAKE) -C lib/steel install
+
+install-include:
+	+$(MAKE) -C include/steel install
+
+install-share:
+	+$(MAKE) -C share/steel install
+
+install: install-ocaml install-lib install-include install-share

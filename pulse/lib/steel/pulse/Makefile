@@ -34,3 +34,13 @@ clean:
 
 %.fst-in %.fsti-in:
 	@echo $(FSTAR_OPTIONS)
+
+.PHONY: install-pulse install
+install: install-pulse
+
+.PHONY: %.install
+
+%.install: %
+	$(INSTALL) -m 644 -D $< $(STEEL_INSTALL_PREFIX)/lib/steel/pulse/$<
+
+install-pulse: $(addsuffix .install,$(wildcard *.fst *.fsti *.checked))

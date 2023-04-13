@@ -42,3 +42,16 @@ clean:
 
 %.fst-in %.fsti-in:
 	@echo $(FSTAR_OPTIONS)
+
+.PHONY: install-steel install-pulse install
+install: install-steel install-pulse
+
+install-pulse:
+	+$(MAKE) -C pulse install
+
+.PHONY: %.install
+
+%.install: %
+	$(INSTALL) -m 644 -D $< $(STEEL_INSTALL_PREFIX)/lib/steel/$<
+
+install-steel: $(addsuffix .install,$(wildcard *.fst *.fsti *.checked) libsteel.a)
