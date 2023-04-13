@@ -1,0 +1,13 @@
+(include_subdirs unqualified)
+(executable
+  (name OWGCounterTest)
+  (libraries
+    steel
+  )
+  (link_flags "-linkall")
+  (modes (native exe))  
+)
+
+(env
+  (_
+    (flags (:standard -w -A))))
