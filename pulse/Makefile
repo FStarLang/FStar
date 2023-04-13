@@ -38,3 +38,7 @@ verify: ocaml
 clean:
 	+$(MAKE) -C lib/steel clean ; true
 	cd src/ocaml && { dune uninstall --prefix=$(STEEL_HOME) ; dune clean ; true ; }
+
+.PHONY: test
+test: all
+	+$(MAKE) -C share/steel
