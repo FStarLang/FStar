@@ -40,4 +40,7 @@ verify: $(ALL_CHECKED_FILES)
 clean::
 	rm -f *.checked .depend* *.krml
 
-.PHONY: all verify clean
+.PHONY: all verify clean %.fst-in %.fsti-in
+
+%.fst-in %.fsti-in:
+	@echo $(FSTAR_OPTIONS)
