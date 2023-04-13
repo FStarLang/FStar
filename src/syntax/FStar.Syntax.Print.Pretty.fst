@@ -25,7 +25,7 @@ module Pp         = FStar.Pprint
 
 let rfrac = float_of_string "1.0"
 let width = 100
-let pp d = Pp.pretty_string rfrac 100 d
+let pp d = Pp.pretty_string rfrac width d
 
 let term_to_string' env (tm:term) : string = Ident.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_term' env tm in

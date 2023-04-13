@@ -37,19 +37,20 @@ type msg = (Prims.string * FStar_Compiler_Range.range)
 type ranges =
   (Prims.string FStar_Pervasives_Native.option * FStar_Compiler_Range.range)
     Prims.list
+let (__ctr : Prims.int FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref Prims.int_zero
 let (fresh_label :
   Prims.string ->
     FStar_Compiler_Range.range ->
       FStar_SMTEncoding_Term.term -> (label * FStar_SMTEncoding_Term.term))
   =
-  let ctr = FStar_Compiler_Util.mk_ref Prims.int_zero in
   fun message ->
     fun range ->
       fun t ->
         let l =
-          FStar_Compiler_Util.incr ctr;
+          FStar_Compiler_Util.incr __ctr;
           (let uu___1 =
-             let uu___2 = FStar_Compiler_Effect.op_Bang ctr in
+             let uu___2 = FStar_Compiler_Effect.op_Bang __ctr in
              FStar_Compiler_Util.string_of_int uu___2 in
            FStar_Compiler_Util.format1 "label_%s" uu___1) in
         let lvar =
@@ -734,8 +735,9 @@ let (label_goals :
                          FStar_SMTEncoding_Term.mkLet (es, body1)
                            q1.FStar_SMTEncoding_Term.rng in
                        (labels2, uu___2)) in
-            aux "assertion failed" FStar_Pervasives_Native.None
-              FStar_Pervasives_Native.None [] q
+            (FStar_Compiler_Effect.op_Colon_Equals __ctr Prims.int_zero;
+             aux "assertion failed" FStar_Pervasives_Native.None
+               FStar_Pervasives_Native.None [] q)
 let (detail_errors :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->

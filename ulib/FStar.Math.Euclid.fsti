@@ -2,8 +2,6 @@ module FStar.Math.Euclid
 
 open FStar.Mul
 
-#set-options "--fuel 0 --ifuel 0 --z3rlimit 40"
-
 ///
 /// Divides relation
 ///
