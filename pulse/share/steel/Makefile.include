@@ -8,7 +8,7 @@ else
   FSTAR=fstar.exe
 endif
 
-FSTAR_FILES:=$(wildcard *.fst *.fsti)
+FSTAR_FILES:=$(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
 
 FSTAR_OPTIONS += $(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel' --include $(STEEL_HOME)/lib/steel --load_cmxs steel
 
