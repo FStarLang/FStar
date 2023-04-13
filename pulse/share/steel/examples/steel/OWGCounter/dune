@@ -2,7 +2,7 @@
 (executable
   (name OWGCounterTest)
   (libraries
-    steel
+    steel.runtime
   )
   (link_flags "-linkall")
   (modes (native exe))  
