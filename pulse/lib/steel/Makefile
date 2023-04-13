@@ -1,4 +1,4 @@
-all: verify
+all: steel
 
 ifneq (,$(FSTAR_HOME))
   FSTAR=$(FSTAR_HOME)/bin/fstar.exe
@@ -29,12 +29,12 @@ Steel.ST.GhostPCMReference.fst.checked: COMPAT_INDEXED_EFFECTS=
 
 include .depend
 
-verify: $(ALL_CHECKED_FILES)
+steel: $(ALL_CHECKED_FILES)
 
 clean:
 	rm -f .depend* *.checked
 
-.PHONY: all verify clean %.fst-in %.fsti-in
+.PHONY: all steel clean %.fst-in %.fsti-in
 
 %.fst-in %.fsti-in:
 	@echo $(FSTAR_OPTIONS)

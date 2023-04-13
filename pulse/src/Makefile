@@ -7,22 +7,22 @@ all: boot
 .PHONY: all
 
 .PHONY: extract-ocaml
-extract-ocaml: extract-tactics extract-extraction
+extract-ocaml: extract-steel-plugin extract-extraction
 
-.PHONY: extract-tactics
-extract-tactics:
-	+$(MAKE) -C ocaml/plugin -f extract-tactics.Makefile
+.PHONY: extract-steel-plugin
+extract-steel-plugin:
+	+$(MAKE) -C ocaml/plugin -f extract-steel.Makefile
 
 .PHONY: extract-extraction
 extract-extraction:
 	+$(MAKE) -C extraction
 
-.PHONY: verify
-verify: extract-tactics
-	+$(MAKE) -C .. verify
+.PHONY: verify-steel
+verify-steel: extract-steel-plugin
+	+$(MAKE) -C .. verify-steel
 
 .PHONY: extract-c
-extract-c: verify
+extract-c: verify-steel
 	+$(MAKE) -C c extract
 
 .PHONY: extract

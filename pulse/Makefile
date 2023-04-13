@@ -24,9 +24,12 @@ ocaml:
 lib:
 	+$(MAKE) -C src/c
 
+.PHONY: verify-steel
+verify-steel: ocaml
+	+$(MAKE) -C lib/steel steel
+
 .PHONY: verify
-verify: ocaml
-	+$(MAKE) -C lib/steel
+verify: verify-steel
 
 clean:
 	+$(MAKE) -C lib/steel clean ; true
