@@ -1,0 +1,6 @@
+This directory contains the .fst implementations of SteelC modules
+that used to be part of ulib/experimental, but take too long to
+verify.
+
+Those .fst here all have corresponding .fsti files in
+ulib/experimental.
