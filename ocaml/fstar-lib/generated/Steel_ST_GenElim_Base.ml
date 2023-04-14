@@ -38,8 +38,7 @@ let rec (term_has_head :
            (Prims.of_int (17)) (Prims.of_int (309)) (Prims.of_int (32)))
         (Prims.mk_range "Steel.ST.GenElim.Base.fsti" (Prims.of_int (309))
            (Prims.of_int (2)) (Prims.of_int (320)) (Prims.of_int (12)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -189,9 +188,8 @@ let rec (solve_gen_unit_elim :
                       (Prims.mk_range "Steel.ST.GenElim.Base.fsti"
                          (Prims.of_int (329)) (Prims.of_int (8))
                          (Prims.of_int (340)) (Prims.of_int (47)))
-                      (FStar_Tactics_Effect.lift_div_tac
-                         (fun uu___2 ->
-                            FStar_Reflection_Derived.collect_app tl'))
+                      (Obj.magic
+                         (FStar_Tactics_SyntaxHelpers.collect_app tl'))
                       (fun uu___2 ->
                          (fun uu___2 ->
                             match uu___2 with
@@ -407,8 +405,7 @@ let rec (solve_gen_elim :
                    (Prims.mk_range "Steel.ST.GenElim.Base.fsti"
                       (Prims.of_int (358)) (Prims.of_int (8))
                       (Prims.of_int (399)) (Prims.of_int (68)))
-                   (FStar_Tactics_Effect.lift_div_tac
-                      (fun uu___2 -> FStar_Reflection_Derived.collect_app tl'))
+                   (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app tl'))
                    (fun uu___2 ->
                       (fun uu___2 ->
                          match uu___2 with
@@ -1082,9 +1079,8 @@ let rec (solve_gen_elim_nondep' :
                          (Prims.mk_range "Steel.ST.GenElim.Base.fsti"
                             (Prims.of_int (488)) (Prims.of_int (4))
                             (Prims.of_int (532)) (Prims.of_int (13)))
-                         (FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___1 ->
-                               FStar_Reflection_Derived.collect_app t))
+                         (Obj.magic
+                            (FStar_Tactics_SyntaxHelpers.collect_app t))
                          (fun uu___1 ->
                             (fun uu___1 ->
                                match uu___1 with
@@ -1749,8 +1745,9 @@ let (solve_gen_elim_prop :
                (Prims.of_int (17)) (Prims.of_int (566)) (Prims.of_int (46)))
             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
             (fun uu___1 ->
-               FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___2 -> FStar_Reflection_Derived.collect_app uu___1))))
+               (fun uu___1 ->
+                  Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app uu___1))
+                 uu___1)))
       (fun uu___1 ->
          (fun uu___1 ->
             match uu___1 with
@@ -1810,10 +1807,9 @@ let (solve_gen_elim_prop :
                                           (Prims.of_int (4))
                                           (Prims.of_int (603))
                                           (Prims.of_int (7)))
-                                       (FStar_Tactics_Effect.lift_div_tac
-                                          (fun uu___3 ->
-                                             FStar_Reflection_Derived.collect_app
-                                               body1))
+                                       (Obj.magic
+                                          (FStar_Tactics_SyntaxHelpers.collect_app
+                                             body1))
                                        (fun uu___3 ->
                                           (fun uu___3 ->
                                              match uu___3 with
@@ -2441,8 +2437,9 @@ let (solve_gen_elim_prop_placeholder :
                (Prims.of_int (17)) (Prims.of_int (610)) (Prims.of_int (46)))
             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
             (fun uu___1 ->
-               FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___2 -> FStar_Reflection_Derived.collect_app uu___1))))
+               (fun uu___1 ->
+                  Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app uu___1))
+                 uu___1)))
       (fun uu___1 ->
          (fun uu___1 ->
             match uu___1 with
@@ -2502,10 +2499,9 @@ let (solve_gen_elim_prop_placeholder :
                                           (Prims.of_int (4))
                                           (Prims.of_int (643))
                                           (Prims.of_int (7)))
-                                       (FStar_Tactics_Effect.lift_div_tac
-                                          (fun uu___3 ->
-                                             FStar_Reflection_Derived.collect_app
-                                               body1))
+                                       (Obj.magic
+                                          (FStar_Tactics_SyntaxHelpers.collect_app
+                                             body1))
                                        (fun uu___3 ->
                                           (fun uu___3 ->
                                              match uu___3 with

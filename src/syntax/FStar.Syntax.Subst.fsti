@@ -36,6 +36,14 @@ val subst_residual_comp:list subst_elt -> residual_comp -> residual_comp
 val compress:           term -> term
 val compress_univ:      universe -> universe
 
+//
+// It pushes delayed substitutions down,
+//   but does not resolve uvars
+//
+// Whereas compress does both
+//
+val compress_subst: term -> term
+
 val close:                binders -> term -> term
 val close_comp:           binders -> comp -> comp
 val close_binders:        binders -> binders

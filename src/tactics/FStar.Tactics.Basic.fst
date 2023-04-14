@@ -1987,7 +1987,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         ret <| Tv_Const (inspect_const c)
 
     | Tm_uvar (ctx_u, s) ->
-        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id ctx_u.ctx_uvar_head), (ctx_u, s))
+        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head), (ctx_u, s))
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else

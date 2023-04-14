@@ -42,7 +42,7 @@ let rec (flatten_name : FStar_Reflection_Types.name -> Prims.string) =
     | [] -> ""
     | n::[] -> n
     | n::ns1 -> Prims.strcat n (Prims.strcat "." (flatten_name ns1))
-let rec (collect_app' :
+let rec (collect_app_ln' :
   FStar_Reflection_Data.argv Prims.list ->
     FStar_Reflection_Types.term ->
       (FStar_Reflection_Types.term * FStar_Reflection_Data.argv Prims.list))
@@ -50,12 +50,12 @@ let rec (collect_app' :
   fun args ->
     fun t ->
       match inspect_ln_unascribe t with
-      | FStar_Reflection_Data.Tv_App (l, r) -> collect_app' (r :: args) l
+      | FStar_Reflection_Data.Tv_App (l, r) -> collect_app_ln' (r :: args) l
       | uu___ -> (t, args)
-let (collect_app :
+let (collect_app_ln :
   FStar_Reflection_Types.term ->
     (FStar_Reflection_Types.term * FStar_Reflection_Data.argv Prims.list))
-  = collect_app' []
+  = collect_app_ln' []
 let rec (mk_app :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Data.argv Prims.list -> FStar_Reflection_Types.term)
@@ -233,7 +233,7 @@ let (destruct_tuple :
     FStar_Reflection_Types.term Prims.list FStar_Pervasives_Native.option)
   =
   fun t ->
-    let uu___ = collect_app t in
+    let uu___ = collect_app_ln t in
     match uu___ with
     | (head, args) ->
         (match FStar_Reflection_Builtins.inspect_ln head with

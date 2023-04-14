@@ -2328,8 +2328,7 @@ let (is_conjunction :
                  (Prims.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
                     (Prims.of_int (286)) (Prims.of_int (2))
                     (Prims.of_int (296)) (Prims.of_int (13)))
-                 (FStar_Tactics_Effect.lift_div_tac
-                    (fun uu___ -> FStar_Reflection_Derived.collect_app t1))
+                 (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t1))
                  (fun uu___ ->
                     (fun uu___ ->
                        match uu___ with
@@ -2810,9 +2809,8 @@ let (is_eq :
                                  "FStar.InteractiveHelpers.PostProcess.fst"
                                  (Prims.of_int (379)) (Prims.of_int (2))
                                  (Prims.of_int (397)) (Prims.of_int (13)))
-                              (FStar_Tactics_Effect.lift_div_tac
-                                 (fun uu___1 ->
-                                    FStar_Reflection_Derived.collect_app t1))
+                              (Obj.magic
+                                 (FStar_Tactics_SyntaxHelpers.collect_app t1))
                               (fun uu___1 ->
                                  (fun uu___1 ->
                                     match uu___1 with

@@ -44,7 +44,7 @@ let rec list_ref #a #p l =
 
 val collect_app_order' : (args:list argv) -> (tt:term) -> (t:term) ->
              Lemma (requires args <<: tt /\ t << tt)
-                   (ensures (let fn, args' = collect_app' args t in
+                   (ensures (let fn, args' = collect_app_ln' args t in
                              args' <<: tt /\ fn << tt))
                    (decreases t)
 let rec collect_app_order' args tt t =
@@ -53,7 +53,7 @@ let rec collect_app_order' args tt t =
     | _ -> ()
 
 val collect_app_order : (t:term) ->
-            Lemma (ensures (forall (f:term). forall (s:list argv). (f,s) == collect_app t ==>
+            Lemma (ensures (forall (f:term). forall (s:list argv). (f,s) == collect_app_ln t ==>
                               (f << t /\ s <<: t)
                             \/ (f == t /\ s == [])))
 let collect_app_order t =
@@ -63,7 +63,7 @@ let collect_app_order t =
 
 val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) * list (a:argv{fst a << t})
 let collect_app_ref t =
-    let h, a = collect_app t in
+    let h, a = collect_app_ln t in
     collect_app_order t;
     h, list_ref a
 

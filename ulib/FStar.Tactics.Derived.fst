@@ -43,13 +43,6 @@ let binder_to_string (b : binder) : Tac string =
 
 exception Goal_not_trivial
 
-let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
-  match inspect t with
-  | Tv_AscribedT t _ _ _
-  | Tv_AscribedC t _ _ _ ->
-    inspect_unascribe t
-  | tv -> tv
-
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 

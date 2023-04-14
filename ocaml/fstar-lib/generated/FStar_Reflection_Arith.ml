@@ -356,7 +356,7 @@ let fail : 'a . Prims.string -> 'a tm =
               (fun uu___ -> FStar_Pervasives.Inl s))) uu___
 let rec (as_arith_expr : FStar_Reflection_Types.term -> expr tm) =
   fun t ->
-    let uu___ = FStar_Reflection_Derived.collect_app t in
+    let uu___ = FStar_Reflection_Derived.collect_app_ln t in
     match uu___ with
     | (hd, tl) ->
         (match ((FStar_Reflection_Builtins.inspect_ln hd), tl) with
