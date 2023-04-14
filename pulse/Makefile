@@ -30,10 +30,14 @@ verify-steel: ocaml
 
 .PHONY: verify-pulse
 verify-pulse: verify-steel
-	+$(MAKE) -C lib/steel pulse
+	+$(MAKE) -C lib/steel/pulse pulse
+
+.PHONY: verify-steelc
+verify-steelc: verify-steel
+	+$(MAKE) -C lib/steel/c steelc
 
 .PHONY: verify
-verify: verify-steel verify-pulse
+verify: verify-steel verify-pulse verify-steelc
 
 clean:
 	+$(MAKE) -C lib/steel clean ; true
