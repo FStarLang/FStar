@@ -1,4 +1,4 @@
-module HaclExample3
+module HaclExample
 open Steel.ST.GenElim
 open Steel.ST.C.Types
 open Steel.C.Typenat

@@ -1,4 +1,4 @@
-module ScalarUnion2
+module ScalarUnion
 open Steel.ST.Util
 open Steel.ST.C.Types
 

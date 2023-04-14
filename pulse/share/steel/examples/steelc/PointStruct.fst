@@ -1,4 +1,4 @@
-module PointStruct2
+module PointStruct
 open Steel.ST.Util
 open Steel.ST.C.Types
 
