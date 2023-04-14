@@ -19,8 +19,9 @@ open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
-open FStar.Real
+open FStar.PCM
 open Steel.PCMFrac
+open FStar.Real
 module RP = Steel.PCMReference
 
 #set-options "--ide_id_info_off"
@@ -257,7 +258,7 @@ let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a)
       (pts_to_raw r p1 v1)
       (RP.pts_to r (Ghost.reveal (Some (Ghost.reveal v1, p1))))
       (fun _ -> ());
-    RP.gather r (Some (Ghost.reveal v0, p0)) (Some (Ghost.reveal v1, p1));
+    let _ = RP.gather r (Some (Ghost.reveal v0, p0)) (Some (Ghost.reveal v1, p1)) in
     rewrite_slprop
       (RP.pts_to r _)
       (pts_to_raw r (sum_perm p0 p1) v0)
@@ -366,6 +367,10 @@ let ghost_ref a = erased (ref a)
 [@@__reduce__]
 let ghost_pts_to_sl #a (r:ghost_ref a) (p:perm) (x:a) = pts_to_sl (reveal r) p x
 
+let reveal_ghost_ref _ = ()
+
+let reveal_ghost_pts_to_sl _ _ _ = ()
+
 let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_invariant (ghost_pts_to_sl r p)) =
   let aux (x y : erased a) (m:mem)
     : Lemma (requires (interp (ghost_pts_to_sl r p x) m /\ interp (ghost_pts_to_sl r p y) m))
@@ -408,6 +413,19 @@ let ghost_gather r = gather (reveal r)
 
 let ghost_pts_to_injective_eq #_ #_ #p0 #p1 r v0 v1 =
   higher_ref_pts_to_injective_eq #_ #_ #p0 #p1 #v0 #v1 (reveal r)
+
+let ghost_pts_to_perm #a #_ #p #v r =
+  let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
+    rewrite_slprop
+      (ghost_pts_to r p v)
+      (RP.pts_to r v_old `star` pure (perm_ok p))
+      (fun _ -> ());
+    elim_pure (perm_ok p);
+    intro_pure (perm_ok p);
+    rewrite_slprop
+      (RP.pts_to r v_old `star` pure (perm_ok p))
+      (ghost_pts_to r p v)
+      (fun _ -> ())
 
 let ghost_read #a #u #p #v r
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in

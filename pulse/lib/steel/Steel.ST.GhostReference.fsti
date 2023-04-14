@@ -54,6 +54,14 @@ val pts_to_injective_eq (#a:_)
       (requires True)
       (ensures fun _ -> v0 == v1)
 
+/// A permission is always no greater than one
+val pts_to_perm (#a: _) (#u: _) (#p: _) (#v: _) (r: ref a)
+  : STGhost unit u
+      (pts_to r p v)
+      (fun _ -> pts_to r p v)
+      True
+      (fun _ -> p `lesser_equal_perm` full_perm)
+
 /// Allocating a ghost reference, with an erased initial value
 val alloc (#a:Type)
           (#u:_)
