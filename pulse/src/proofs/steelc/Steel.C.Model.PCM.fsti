@@ -101,7 +101,7 @@ val one_pcm_of_fstar_pcm
   (#a: Type)
   (p: P.pcm a)
 : Lemma
-  (one (pcm_of_fstar_pcm p) == P.one p)
+  (one (pcm_of_fstar_pcm p) == p.p.one)
   [SMTPat (one (pcm_of_fstar_pcm p))]
 
 val p_refine_pcm_of_fstar_pcm
@@ -125,8 +125,8 @@ val one_fstar_pcm_of_pcm
   (#a: Type)
   (p: pcm0 a)
 : Lemma
-  (P.one (fstar_pcm_of_pcm p) == one p)
-  [SMTPat (P.one (fstar_pcm_of_pcm p))]
+  ((fstar_pcm_of_pcm p).p.one == one p)
+  [SMTPat (fstar_pcm_of_pcm p).p.one]
 
 val refine_fstar_pcm_of_pcm
   (#a: Type)
