@@ -194,8 +194,8 @@ let translate_binder (g:R.env) (b:R.binder)
       let b_ty' = readback_maybe_unknown_ty bv_view.bv_sort in      
       Inl ({binder_ty=b_ty';binder_ppname=bv_view.bv_ppname}, q)
 
-let is_head_fv (t:R.term) (fv:list string) : option (list R.argv) = 
-  let head, args = R.collect_app t in
+let is_head_fv (t:R.term) (fv:list string) : T.Tac (option (list R.argv)) = 
+  let head, args = T.collect_app t in
   match R.inspect_ln head with
   | R.Tv_FVar fv' -> 
     if inspect_fv fv' = fv
@@ -366,7 +366,7 @@ let rec map_err (f:'a -> T.Tac (err 'b)) (l:list 'a)
 let translate_intro (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = let open R in
-    let head, args = R.collect_app t in
+    let head, args = T.collect_app t in
     match inspect_ln head with
     | Tv_UInst fv _
     | Tv_FVar fv ->
@@ -392,7 +392,7 @@ let translate_intro (g:RT.fstar_top_env) (t:R.term)
 let translate_admit (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = let open R in
-    let head, args = R.collect_app t in
+    let head, args = T.collect_app t in
     match inspect_ln head, args with
     | Tv_UInst v _, [(t, _)]
     | Tv_FVar v, [(t, _)] ->  
@@ -536,7 +536,7 @@ and translate_term (g:RT.fstar_top_env) (t:R.term)
 and translate_while (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = let open R in
-    let head, args = R.collect_app t in
+    let head, args = T.collect_app t in
     match inspect_ln head with
     | Tv_FVar v ->
       if inspect_fv v = while_fv
@@ -571,7 +571,7 @@ and translate_rewrite (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term) =
 
   let open R in
-		let head, args = R.collect_app t in
+		let head, args = T.collect_app t in
 		match inspect_ln head with
 		| Tv_FVar v ->
 			 if inspect_fv v = rewrite_fv
@@ -588,7 +588,7 @@ and translate_par (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term) =
 
   let open R in
-  let head, args = R.collect_app t in
+  let head, args = T.collect_app t in
   match inspect_ln head with
   | Tv_FVar v ->
     if inspect_fv v = par_fv

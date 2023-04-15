@@ -657,7 +657,7 @@ let on_sort_binder (f : term -> Tac unit) (b:binder) : Tac unit =
   on_sort_bv f bv
 
 let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
-  let tv = inspect_ln t in
+  let tv = inspect t in
   (match tv with
   | Tv_FVar _
   | Tv_UInst _ _ -> ()
@@ -2133,8 +2133,7 @@ let rec all_guards_solved (t: term) : Tac bool =
   | Tv_App _ _ ->
     let hd, args = collect_app t in
     if hd `is_fvar` (`%guard_vprop)
-    then
-      slterm_nbr_uvars_argv args = 0
+    then slterm_nbr_uvars_argv args = 0
     else if not (all_guards_solved hd)
     then false
     else
@@ -3083,7 +3082,6 @@ let init_resolve_tac' (dict: _) : Tac unit =
   let slgs, loggs = filter_goals (goals()) in
   // print ("SL Goals: \n" ^ print_goals slgs);
   // print ("Logical goals: \n" ^ print_goals loggs);
-
   // We first solve the slprops
   set_goals slgs;
 
