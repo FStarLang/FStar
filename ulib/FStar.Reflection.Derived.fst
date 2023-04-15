@@ -60,14 +60,14 @@ let rec flatten_name ns =
     | n::ns -> n ^ "." ^ flatten_name ns
 
 (* Helpers for dealing with nested applications and arrows *)
-let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
+let rec collect_app_ln' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
     match inspect_ln_unascribe t with
     | Tv_App l r ->
-        collect_app' (r::args) l
+        collect_app_ln' (r::args) l
     | _ -> (t, args)
 
-val collect_app : term -> term * list argv
-let collect_app = collect_app' []
+val collect_app_ln : term -> term * list argv
+let collect_app_ln = collect_app_ln' []
 
 let rec mk_app (t : term) (args : list argv) : Tot term (decreases args) =
     match args with
@@ -155,7 +155,7 @@ let mktuple_n (ts : list term{List.Tot.Base.length ts <= 8}) : term =
            end
 
 let destruct_tuple (t : term) : option (list term) =
-    let head, args = collect_app t in
+    let head, args = collect_app_ln t in
     match inspect_ln head with
     | Tv_FVar fv ->
         if List.Tot.Base.mem

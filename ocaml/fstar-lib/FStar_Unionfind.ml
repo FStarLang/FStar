@@ -119,6 +119,10 @@ let puf_id' (h:'a puf) (x:'a p_uvar) : int =
 let puf_id (h: 'a puf) (x: 'a p_uvar): Prims.int =
     Z.of_int (puf_id' h x)
 
+let puf_unique_id (x: 'a p_uvar): Prims.int =
+  match x with
+  | P a -> Z.of_int a
+
 let puf_fromid (_:'a puf) (id : Prims.int) : 'a p_uvar =
     P (Z.to_int id)
 

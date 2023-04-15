@@ -9,7 +9,7 @@ let (collect_app_ref :
     (FStar_Reflection_Types.term * FStar_Reflection_Data.argv Prims.list))
   =
   fun t ->
-    let uu___ = FStar_Reflection_Derived.collect_app t in
+    let uu___ = FStar_Reflection_Derived.collect_app_ln t in
     match uu___ with | (h, a) -> (h, (list_ref a))
 let (collect_abs_ln_ref :
   FStar_Reflection_Types.term ->

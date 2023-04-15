@@ -40,7 +40,4 @@ extract_all: $(ALL_ML_FILES)
 clean:
 	rm -rf .depend ._depend
 
-%.fst-in %.fsti-in: $(CACHE_DIR)
-	@echo --include ../core --include $(CACHE_DIR)
-
 .PHONY: verify_all extract_all

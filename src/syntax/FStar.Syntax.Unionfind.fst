@@ -160,6 +160,7 @@ let chk_v_t (su:S.uvar) =
                   rng
 
 let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v_t u)
+let uvar_unique_id u = PU.puf_unique_id (chk_v_t u)
 let fresh decoration (rng:Range.range)  =
     fail_if_ro ();
     PU.puf_fresh (get_term_graph()) (None, decoration), get_version(), rng
