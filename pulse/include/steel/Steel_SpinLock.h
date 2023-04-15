@@ -7,10 +7,7 @@
 #ifndef __Steel_SpinLock_H
 #define __Steel_SpinLock_H
 
-#include <inttypes.h>
-#include "krmllib.h"
-#include "krml/internal/compat.h"
-#include "krml/internal/target.h"
+#include <stdbool.h>
 #include "steel_types.h"
 
 extern bool Steel_SpinLock_uu___is_Lock(Steel_SpinLock_lock____ projectee);

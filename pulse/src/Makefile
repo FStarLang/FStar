@@ -38,5 +38,5 @@ boot: extract
 
 .PHONY: full-boot
 full-boot:
-	rm -rf ocaml/*/generated include/steel/Steel_SpinLock.h
+	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
 	+$(MAKE) boot

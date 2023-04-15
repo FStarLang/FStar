@@ -47,6 +47,6 @@ $(INCLUDE_STEEL)/Steel_SpinLock.h: $(ALL_KRML_FILES)
 	  -tmpdir $(dir $@) \
 	  -skip-makefiles \
 	  -extract-uints \
-	  $(addprefix -add-include ,'<inttypes.h>' '"krmllib.h"' '"krml/internal/compat.h"' '"krml/internal/target.h"' '"steel_types.h"') \
+	  $(addprefix -add-include ,'<stdbool.h>' '"steel_types.h"') \
 	  -bundle Steel.SpinLock=Steel.*,Prims,FStar.*,LowStar.* \
 	  $^
