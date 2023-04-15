@@ -6,7 +6,7 @@ INCLUDE_STEEL=../../include/steel
 world: $(LIB_STEEL)/libsteel.a
 
 steel_spinlock.o: steel_spinlock.c $(INCLUDE_STEEL)/Steel_SpinLock.h
-	$(CC) -c -I $(KRML_HOME)/include -I $(KRML_HOME)/krmllib/dist/generic -I $(INCLUDE_STEEL) -o $@ $<
+	$(CC) -c -I $(INCLUDE_STEEL) -o $@ $<
 
 $(LIB_STEEL)/libsteel.a: steel_spinlock.o
 	ar cr $@ $^
