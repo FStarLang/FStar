@@ -73,11 +73,10 @@ let (try_readback_st_comp :
     fun readback_ty ->
       FStar_Tactics_Effect.tac_bind
         (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (66))
-           (Prims.of_int (17)) (Prims.of_int (66)) (Prims.of_int (30)))
+           (Prims.of_int (17)) (Prims.of_int (66)) (Prims.of_int (32)))
         (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (66))
            (Prims.of_int (2)) (Prims.of_int (129)) (Prims.of_int (13)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -709,9 +708,8 @@ let rec (readback_ty :
                               (Prims.mk_range "Pulse.Readback.fst"
                                  (Prims.of_int (190)) (Prims.of_int (4))
                                  (Prims.of_int (239)) (Prims.of_int (7)))
-                              (FStar_Tactics_Effect.lift_div_tac
-                                 (fun uu___ ->
-                                    FStar_Reflection_Derived.collect_app t))
+                              (Obj.magic
+                                 (FStar_Tactics_SyntaxHelpers.collect_app t))
                               (fun uu___ ->
                                  (fun uu___ ->
                                     match uu___ with
