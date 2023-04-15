@@ -1,0 +1,5 @@
+This directory contains the .fst implementations of SteelC modules
+whose verification takes too long to be included in lib/steel/c.
+
+Those .fst here all have corresponding .fsti files in
+lib/steel/c.

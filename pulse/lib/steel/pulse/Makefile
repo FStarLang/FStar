@@ -16,6 +16,7 @@ MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 	$(call msg, "CHECK", $(basename $(notdir $@)))
 	@# You can debug with --debug $(basename $(notdir $<))
 	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
+	touch -c $@
 
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND")

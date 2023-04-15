@@ -173,6 +173,19 @@ val ghost_ref (a:Type u#1) : Type u#0
 
 val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (x:a) : slprop u#1
 
+/// Lemmas to break the abstraction, if one needs to manipulate both
+/// ghost and non-ghost references. These lemmas have no SMT patterns
+/// so that the normalizer or SMT won't silently unfold the
+/// definitions of ghost_ref or ghost_pts_to_sl. These should be
+/// harmless since ghost_ref is erasable
+val reveal_ghost_ref (a: Type u#1) : Lemma
+  (ghost_ref a == erased (ref a))
+
+val reveal_ghost_pts_to_sl
+  (#a: _) (r: ghost_ref a) (p: perm) (x: a)
+: Lemma
+  (ghost_pts_to_sl r p x == pts_to_sl (reveal (coerce_eq (reveal_ghost_ref a) r)) p x)
+
 [@@ __steel_reduce__]
 unfold let ghost_pts_to (#a:_) (r:ghost_ref a) (p:perm) (x:a) : vprop =
   to_vprop (ghost_pts_to_sl r p x)
@@ -213,6 +226,14 @@ val ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Gho
     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
     (requires fun _ -> True)
     (ensures fun _ _ _ -> v0 == v1)
+
+/// A permission is always no greater than one
+val ghost_pts_to_perm (#a: _) (#u: _) (#p: _) (#v: _) (r: ghost_ref a)
+  : SteelGhost unit u
+      (ghost_pts_to r p v)
+      (fun _ -> ghost_pts_to r p v)
+      (fun _ -> True)
+      (fun _ _ _ -> p `lesser_equal_perm` full_perm)
 
 val ghost_read (#a:Type) (#u:_) (#p:perm) (#v:erased a) (r:ghost_ref a)
   : SteelGhost (erased a) u (ghost_pts_to r p v) (fun x -> ghost_pts_to r p x)

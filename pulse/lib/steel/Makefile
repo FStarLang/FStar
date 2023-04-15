@@ -1,4 +1,4 @@
-all: steel pulse
+all: steel pulse steelc
 
 ifneq (,$(FSTAR_HOME))
   FSTAR=$(FSTAR_HOME)/bin/fstar.exe
@@ -17,6 +17,7 @@ MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 	$(call msg, "CHECK", $(basename $(notdir $@)))
 	@# You can debug with --debug $(basename $(notdir $<))
 	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
+	touch -c $@
 
 # These modules already verify without the flag.
 Steel.ST.GhostPCMReference.fst.checked: COMPAT_INDEXED_EFFECTS=
@@ -35,6 +36,10 @@ steel: $(ALL_CHECKED_FILES)
 pulse: steel
 	+$(MAKE) -C $@
 
+.PHONY: steelc
+steelc: steel
+	+$(MAKE) -C $@
+
 clean:
 	rm -f .depend* *.checked
 
@@ -43,11 +48,14 @@ clean:
 %.fst-in %.fsti-in:
 	@echo $(FSTAR_OPTIONS)
 
-.PHONY: install-steel install-pulse install
-install: install-steel install-pulse
+.PHONY: install-steel install-pulse install-steelc install
+install: install-steel install-pulse install-steelc
 
 install-pulse:
 	+$(MAKE) -C pulse install
+
+install-steelc:
+	+$(MAKE) -C c install
 
 .PHONY: %.install
 
