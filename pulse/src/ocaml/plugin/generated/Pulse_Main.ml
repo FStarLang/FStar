@@ -308,8 +308,7 @@ let rec (translate_vprop :
            (Prims.of_int (16)) (Prims.of_int (85)) (Prims.of_int (29)))
         (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (85))
            (Prims.of_int (4)) (Prims.of_int (100)) (Prims.of_int (21)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -645,10 +644,9 @@ and (translate_exists_formula :
                                   (Prims.mk_range "Pulse.Main.fst"
                                      (Prims.of_int (139)) (Prims.of_int (6))
                                      (Prims.of_int (145)) (Prims.of_int (19)))
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___2 ->
-                                        FStar_Reflection_Derived.collect_app
-                                          t))
+                                  (Obj.magic
+                                     (FStar_Tactics_SyntaxHelpers.collect_app
+                                        t))
                                   (fun uu___2 ->
                                      (fun uu___2 ->
                                         match uu___2 with
@@ -682,8 +680,7 @@ and (translate_star :
            (Prims.of_int (19)) (Prims.of_int (149)) (Prims.of_int (32)))
         (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (149))
            (Prims.of_int (4)) (Prims.of_int (158)) (Prims.of_int (28)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -795,8 +792,7 @@ and (translate_pure :
            (Prims.of_int (19)) (Prims.of_int (162)) (Prims.of_int (32)))
         (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (162))
            (Prims.of_int (4)) (Prims.of_int (169)) (Prims.of_int (28)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -970,19 +966,28 @@ let (translate_binder :
 let (is_head_fv :
   FStar_Reflection_Types.term ->
     Prims.string Prims.list ->
-      FStar_Reflection_Data.argv Prims.list FStar_Pervasives_Native.option)
+      (FStar_Reflection_Data.argv Prims.list FStar_Pervasives_Native.option,
+        unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
     fun fv ->
-      let uu___ = FStar_Reflection_Derived.collect_app t in
-      match uu___ with
-      | (head, args) ->
-          (match FStar_Reflection_Builtins.inspect_ln head with
-           | FStar_Reflection_Data.Tv_FVar fv' ->
-               if (FStar_Reflection_Builtins.inspect_fv fv') = fv
-               then FStar_Pervasives_Native.Some args
-               else FStar_Pervasives_Native.None
-           | uu___1 -> FStar_Pervasives_Native.None)
+      FStar_Tactics_Effect.tac_bind
+        (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (198))
+           (Prims.of_int (19)) (Prims.of_int (198)) (Prims.of_int (34)))
+        (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (198))
+           (Prims.of_int (2)) (Prims.of_int (204)) (Prims.of_int (13)))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
+        (fun uu___ ->
+           FStar_Tactics_Effect.lift_div_tac
+             (fun uu___1 ->
+                match uu___ with
+                | (head, args) ->
+                    (match FStar_Reflection_Builtins.inspect_ln head with
+                     | FStar_Reflection_Data.Tv_FVar fv' ->
+                         if (FStar_Reflection_Builtins.inspect_fv fv') = fv
+                         then FStar_Pervasives_Native.Some args
+                         else FStar_Pervasives_Native.None
+                     | uu___2 -> FStar_Pervasives_Native.None)))
 let (mk_tests_lid : Prims.string -> Prims.string Prims.list) =
   fun s -> ["Tests"; "Common"; s]
 let (expects_fv : Prims.string Prims.list) = mk_tests_lid "expects"
@@ -2054,8 +2059,7 @@ let (translate_intro :
            (Prims.of_int (21)) (Prims.of_int (369)) (Prims.of_int (36)))
         (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (369))
            (Prims.of_int (4)) (Prims.of_int (385)) (Prims.of_int (42)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -2278,8 +2282,7 @@ let (translate_admit :
            (Prims.of_int (21)) (Prims.of_int (395)) (Prims.of_int (36)))
         (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (395))
            (Prims.of_int (4)) (Prims.of_int (409)) (Prims.of_int (48)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -2654,48 +2657,93 @@ let rec (translate_term' :
                                                     uu___2))
                                       | FStar_Reflection_Data.Tv_App
                                           (uu___2, uu___3) ->
-                                          (match is_head_fv body expects_fv
-                                           with
-                                           | FStar_Pervasives_Native.None ->
-                                               Obj.magic (aux ())
-                                           | FStar_Pervasives_Native.Some
-                                               args ->
-                                               (match args with
-                                                | (expects_arg, uu___4)::
-                                                    (provides, uu___5)::
-                                                    (body1, uu___6)::[] ->
-                                                    (match is_head_fv
-                                                             provides
-                                                             provides_fv
-                                                     with
-                                                     | FStar_Pervasives_Native.Some
-                                                         ((provides_arg,
-                                                           uu___7)::[])
+                                          Obj.magic
+                                            (FStar_Tactics_Effect.tac_bind
+                                               (Prims.mk_range
+                                                  "Pulse.Main.fst"
+                                                  (Prims.of_int (454))
+                                                  (Prims.of_int (14))
+                                                  (Prims.of_int (454))
+                                                  (Prims.of_int (40)))
+                                               (Prims.mk_range
+                                                  "Pulse.Main.fst"
+                                                  (Prims.of_int (453))
+                                                  (Prims.of_int (25))
+                                                  (Prims.of_int (483))
+                                                  (Prims.of_int (7)))
+                                               (Obj.magic
+                                                  (is_head_fv body expects_fv))
+                                               (fun uu___4 ->
+                                                  (fun uu___4 ->
+                                                     match uu___4 with
+                                                     | FStar_Pervasives_Native.None
                                                          ->
-                                                         Obj.magic
-                                                           (FStar_Tactics_Effect.tac_bind
-                                                              (Prims.mk_range
-                                                                 "Pulse.Main.fst"
-                                                                 (Prims.of_int (461))
-                                                                 (Prims.of_int (25))
-                                                                 (Prims.of_int (461))
-                                                                 (Prims.of_int (54)))
-                                                              (Prims.mk_range
-                                                                 "Pulse.Main.fst"
-                                                                 (Prims.of_int (461))
-                                                                 (Prims.of_int (14))
-                                                                 (Prims.of_int (470))
-                                                                 (Prims.of_int (58)))
-                                                              (Obj.magic
-                                                                 (translate_vprop
+                                                         Obj.magic (aux ())
+                                                     | FStar_Pervasives_Native.Some
+                                                         args ->
+                                                         (match args with
+                                                          | (expects_arg,
+                                                             uu___5)::
+                                                              (provides,
+                                                               uu___6)::
+                                                              (body1, uu___7)::[]
+                                                              ->
+                                                              Obj.magic
+                                                                (FStar_Tactics_Effect.tac_bind
+                                                                   (Prims.mk_range
+                                                                    "Pulse.Main.fst"
+                                                                    (Prims.of_int (459))
+                                                                    (Prims.of_int (18))
+                                                                    (Prims.of_int (459))
+                                                                    (Prims.of_int (49)))
+                                                                   (Prims.mk_range
+                                                                    "Pulse.Main.fst"
+                                                                    (Prims.of_int (458))
+                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (473))
+                                                                    (Prims.of_int (11)))
+                                                                   (Obj.magic
+                                                                    (is_head_fv
+                                                                    provides
+                                                                    provides_fv))
+                                                                   (fun
+                                                                    uu___8 ->
+                                                                    (fun
+                                                                    uu___8 ->
+                                                                    match uu___8
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    ((provides_arg,
+                                                                    uu___9)::[])
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (Prims.mk_range
+                                                                    "Pulse.Main.fst"
+                                                                    (Prims.of_int (461))
+                                                                    (Prims.of_int (25))
+                                                                    (Prims.of_int (461))
+                                                                    (Prims.of_int (54)))
+                                                                    (Prims.mk_range
+                                                                    "Pulse.Main.fst"
+                                                                    (Prims.of_int (461))
+                                                                    (Prims.of_int (14))
+                                                                    (Prims.of_int (470))
+                                                                    (Prims.of_int (58)))
+                                                                    (Obj.magic
+                                                                    (translate_vprop
                                                                     g
                                                                     expects_arg))
-                                                              (fun uu___8 ->
-                                                                 (fun uu___8
+                                                                    (fun
+                                                                    uu___10
+                                                                    ->
+                                                                    (fun
+                                                                    uu___10
                                                                     ->
                                                                     Obj.magic
                                                                     (op_let_Question
-                                                                    uu___8
+                                                                    uu___10
                                                                     (fun pre
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
@@ -2717,7 +2765,7 @@ let rec (translate_term' :
                                                                     with
                                                                     | 
                                                                     FStar_Reflection_Data.Tv_Abs
-                                                                    (uu___9,
+                                                                    (uu___11,
                                                                     provides_body)
                                                                     ->
                                                                     Obj.magic
@@ -2725,18 +2773,21 @@ let rec (translate_term' :
                                                                     g
                                                                     provides_body)
                                                                     | 
-                                                                    uu___9 ->
+                                                                    uu___11
+                                                                    ->
                                                                     Obj.magic
                                                                     (unexpected_term
                                                                     "'provides' should be an abstraction"
                                                                     provides_arg))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___11
+                                                                    ->
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___11
+                                                                    ->
                                                                     Obj.magic
                                                                     (op_let_Question
-                                                                    uu___9
+                                                                    uu___11
                                                                     (fun post
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
@@ -2756,23 +2807,23 @@ let rec (translate_term' :
                                                                     (translate_st_term
                                                                     g body1))
                                                                     (fun
-                                                                    uu___10
+                                                                    uu___12
                                                                     ->
                                                                     (fun
-                                                                    uu___10
+                                                                    uu___12
                                                                     ->
                                                                     Obj.magic
                                                                     (op_let_Question
-                                                                    uu___10
+                                                                    uu___12
                                                                     (fun
-                                                                    uu___11
+                                                                    uu___13
                                                                     ->
                                                                     (fun
                                                                     body2 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___11
+                                                                    uu___13
                                                                     ->
                                                                     FStar_Pervasives.Inl
                                                                     (Pulse_Syntax.Tm_Abs
@@ -2782,38 +2833,45 @@ let rec (translate_term' :
                                                                     body2,
                                                                     (FStar_Pervasives_Native.Some
                                                                     post))))))
-                                                                    uu___11)))
-                                                                    uu___10))))
-                                                                    uu___9))))
-                                                                   uu___8))
-                                                     | uu___7 ->
-                                                         Obj.magic (aux ()))
-                                                | (expects_arg, uu___4)::
-                                                    (body1, uu___5)::[] ->
-                                                    Obj.magic
-                                                      (FStar_Tactics_Effect.tac_bind
-                                                         (Prims.mk_range
-                                                            "Pulse.Main.fst"
-                                                            (Prims.of_int (476))
-                                                            (Prims.of_int (23))
-                                                            (Prims.of_int (476))
-                                                            (Prims.of_int (48)))
-                                                         (Prims.mk_range
-                                                            "Pulse.Main.fst"
-                                                            (Prims.of_int (475))
-                                                            (Prims.of_int (45))
-                                                            (Prims.of_int (479))
-                                                            (Prims.of_int (11)))
-                                                         (Obj.magic
-                                                            (readback_ty g
-                                                               expects_arg))
-                                                         (fun uu___6 ->
-                                                            (fun uu___6 ->
-                                                               Obj.magic
-                                                                 (op_let_Question
-                                                                    uu___6
-                                                                    (
-                                                                    fun pre
+                                                                    uu___13)))
+                                                                    uu___12))))
+                                                                    uu___11))))
+                                                                    uu___10))
+                                                                    | 
+                                                                    uu___9 ->
+                                                                    Obj.magic
+                                                                    (aux ()))
+                                                                    uu___8))
+                                                          | (expects_arg,
+                                                             uu___5)::
+                                                              (body1, uu___6)::[]
+                                                              ->
+                                                              Obj.magic
+                                                                (FStar_Tactics_Effect.tac_bind
+                                                                   (Prims.mk_range
+                                                                    "Pulse.Main.fst"
+                                                                    (Prims.of_int (476))
+                                                                    (Prims.of_int (23))
+                                                                    (Prims.of_int (476))
+                                                                    (Prims.of_int (48)))
+                                                                   (Prims.mk_range
+                                                                    "Pulse.Main.fst"
+                                                                    (Prims.of_int (475))
+                                                                    (Prims.of_int (45))
+                                                                    (Prims.of_int (479))
+                                                                    (Prims.of_int (11)))
+                                                                   (Obj.magic
+                                                                    (readback_ty
+                                                                    g
+                                                                    expects_arg))
+                                                                   (fun
+                                                                    uu___7 ->
+                                                                    (fun
+                                                                    uu___7 ->
+                                                                    Obj.magic
+                                                                    (op_let_Question
+                                                                    uu___7
+                                                                    (fun pre
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (Prims.mk_range
@@ -2832,20 +2890,20 @@ let rec (translate_term' :
                                                                     (translate_st_term
                                                                     g body1))
                                                                     (fun
-                                                                    uu___7 ->
-                                                                    (fun
-                                                                    uu___7 ->
-                                                                    Obj.magic
-                                                                    (op_let_Question
-                                                                    uu___7
+                                                                    uu___8 ->
                                                                     (fun
                                                                     uu___8 ->
+                                                                    Obj.magic
+                                                                    (op_let_Question
+                                                                    uu___8
+                                                                    (fun
+                                                                    uu___9 ->
                                                                     (fun
                                                                     body2 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___9 ->
                                                                     FStar_Pervasives.Inl
                                                                     (Pulse_Syntax.Tm_Abs
                                                                     (b, q,
@@ -2853,11 +2911,13 @@ let rec (translate_term' :
                                                                     pre),
                                                                     body2,
                                                                     FStar_Pervasives_Native.None)))))
-                                                                    uu___8)))
-                                                                    uu___7))))
-                                                              uu___6))
-                                                | uu___4 ->
-                                                    Obj.magic (aux ())))
+                                                                    uu___9)))
+                                                                    uu___8))))
+                                                                    uu___7))
+                                                          | uu___5 ->
+                                                              Obj.magic
+                                                                (aux ())))
+                                                    uu___4))
                                       | uu___2 -> Obj.magic (aux ())) uu___2))))
                  uu___)
       | uu___ -> unexpected_term "translate_term'" t
@@ -3042,8 +3102,7 @@ and (translate_while :
            (Prims.of_int (21)) (Prims.of_int (539)) (Prims.of_int (36)))
         (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (539))
            (Prims.of_int (4)) (Prims.of_int (568)) (Prims.of_int (50)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -3087,10 +3146,9 @@ and (translate_while :
                                                     (Prims.of_int (15))
                                                     (Prims.of_int (561))
                                                     (Prims.of_int (79)))
-                                                 (FStar_Tactics_Effect.lift_div_tac
-                                                    (fun uu___4 ->
-                                                       FStar_Reflection_Derived.collect_app
-                                                         inv))
+                                                 (Obj.magic
+                                                    (FStar_Tactics_SyntaxHelpers.collect_app
+                                                       inv))
                                                  (fun uu___4 ->
                                                     (fun uu___4 ->
                                                        match uu___4 with
@@ -3285,8 +3343,7 @@ and (translate_rewrite :
            (Prims.of_int (19)) (Prims.of_int (574)) (Prims.of_int (34)))
         (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (574))
            (Prims.of_int (2)) (Prims.of_int (585)) (Prims.of_int (50)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -3387,8 +3444,7 @@ and (translate_par :
            (Prims.of_int (19)) (Prims.of_int (591)) (Prims.of_int (34)))
         (Prims.mk_range "Pulse.Main.fst" (Prims.of_int (591))
            (Prims.of_int (2)) (Prims.of_int (616)) (Prims.of_int (46)))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_Derived.collect_app t))
+        (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
