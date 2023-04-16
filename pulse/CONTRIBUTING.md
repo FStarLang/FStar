@@ -88,7 +88,7 @@ very long time and high amounts of memory to verify.
 ## Testing
 
 `share/steel` contains all examples and tests. You can run `make -j -C
-share` to verify and test them. This rule will work whether you have
+share/steel` to verify and test them. This rule will work whether you have
 Karamel or not. If you have Karamel, then this rule will also extract
 and compile (and sometimes run) C extraction examples. Alternatively,
 you can run `make -j test` from the Steel root directory, which will
