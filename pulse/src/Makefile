@@ -40,3 +40,28 @@ boot: extract
 full-boot:
 	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
 	+$(MAKE) boot
+
+.PHONY: proofs
+proofs:
+	+$(MAKE) -C $@
+
+.PHONY: share
+share:
+	+$(MAKE) -C ../share/steel
+
+.PHONY: test
+test: proofs share
+
+.PHONY: check-for-changes
+check-for-changes:
+	# Test if no new files appeared
+	git status
+	test "" = "$$(git ls-files --others --exclude-standard -- ..)"
+	# Test if nothing has changed
+	git diff-index --exit-code HEAD
+
+.PHONY: ci
+ci:
+	+$(MAKE) full-boot
+	+$(MAKE) check-for-changes
+	+$(MAKE) test
