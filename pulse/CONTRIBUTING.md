@@ -97,7 +97,9 @@ build Steel beforehand.
 If you have Docker, you can run `docker build -f
 src/ci/opam.Dockerfile .` to test the opam installation of Steel
 (including all dependencies.) This will also verify all examples and
-tests.
+tests, by moving them outside of the Steel directory hierarchy
+beforehand, to make sure that the location of those examples does not
+need to depend on the location of Steel.
 
 Finally, you can run `make -j -C src ci` to re-extract, recompile and
 re-test everything. This rule also checks that the re-extracted
@@ -105,7 +107,7 @@ snapshot is no newer than the current snapshot. If the
 `STEEL_NIGHTLY_CI` environment variable is set to a nonempty value,
 then this rule also includes the proofs from `src/proofs`, so it will
 take time and memory. If you have Docker, you can run the `ci` rule
-with `docker build -f src/ci/ci.Dockerfile .` --- this will also
+with `docker build -f src/ci/ci.Dockerfile .` which will also
 install all dependencies automatically.
 
 TODO: add GitHub Actions workflows for continuous integration

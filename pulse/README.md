@@ -95,6 +95,12 @@ those are not installed as of now.
 1. Clone the F* repository and install F* with `opam install
    <path to FStar>/./fstar.opam`. This will build F* and all of its
    dependencies (including Z3)
+   
+   (Right now the F* release on the opam package repository is too
+   old. Once version 2023.04.15 or later is made available on the opam
+   repository, cloning the F* repository will no longer be necessary,
+   and `opam install fstar` should be enough for this step.)
+   
 2. Build and install Steel with `opam install ./steel.opam`
 
 ## Using Steel
@@ -146,7 +152,8 @@ To call F* with Steel:
 
 TODO: we should distribute a binary package with the Steel plugin
 statically linked in fstar.exe. In that case, the `--load_cmxs steel`
-option to load the Steel plugin would no longer be necessary.
+option to load the Steel plugin would no longer be necessary. Then,
+what about the `--include` paths?
 
 ### Extracting Steel code to C or OCaml
 
