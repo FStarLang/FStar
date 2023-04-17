@@ -34,44 +34,84 @@ let (is_true :
             | uu___1 ->
                 Obj.magic
                   (Obj.repr
-                     (match FStar_Reflection_Builtins.inspect_ln t with
-                      | FStar_Reflection_Data.Tv_App (l, r) ->
-                          Obj.repr
-                            (match FStar_Reflection_Builtins.inspect_ln l
-                             with
-                             | FStar_Reflection_Data.Tv_Abs (b, t1) ->
-                                 Obj.repr
-                                   (FStar_Tactics_Effect.tac_bind
-                                      (Prims.mk_range
-                                         "FStar.Tactics.Simplifier.fst"
-                                         (Prims.of_int (167))
-                                         (Prims.of_int (28))
-                                         (Prims.of_int (167))
-                                         (Prims.of_int (46)))
-                                      (Prims.mk_range
-                                         "FStar.Tactics.Simplifier.fst"
-                                         (Prims.of_int (167))
-                                         (Prims.of_int (22))
-                                         (Prims.of_int (169))
-                                         (Prims.of_int (28)))
-                                      (Obj.magic
-                                         (FStar_Reflection_Formula.term_as_formula'
-                                            t1))
-                                      (fun uu___2 ->
-                                         FStar_Tactics_Effect.lift_div_tac
-                                           (fun uu___3 ->
-                                              match uu___2 with
-                                              | FStar_Reflection_Formula.True_
-                                                  -> true
-                                              | uu___4 -> false)))
-                             | uu___2 ->
-                                 Obj.repr
-                                   (FStar_Tactics_Effect.lift_div_tac
-                                      (fun uu___3 -> false)))
-                      | uu___2 ->
-                          Obj.repr
-                            (FStar_Tactics_Effect.lift_div_tac
-                               (fun uu___3 -> false))))) uu___)
+                     (FStar_Tactics_Effect.tac_bind
+                        (Prims.mk_range "FStar.Tactics.Simplifier.fst"
+                           (Prims.of_int (163)) (Prims.of_int (23))
+                           (Prims.of_int (163)) (Prims.of_int (32)))
+                        (Prims.mk_range "FStar.Tactics.Simplifier.fst"
+                           (Prims.of_int (163)) (Prims.of_int (17))
+                           (Prims.of_int (173)) (Prims.of_int (23)))
+                        (Obj.magic (FStar_Tactics_Builtins.inspect t))
+                        (fun uu___2 ->
+                           (fun uu___2 ->
+                              match uu___2 with
+                              | FStar_Reflection_Data.Tv_App (l, r) ->
+                                  Obj.magic
+                                    (Obj.repr
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (Prims.mk_range
+                                             "FStar.Tactics.Simplifier.fst"
+                                             (Prims.of_int (165))
+                                             (Prims.of_int (24))
+                                             (Prims.of_int (165))
+                                             (Prims.of_int (33)))
+                                          (Prims.mk_range
+                                             "FStar.Tactics.Simplifier.fst"
+                                             (Prims.of_int (165))
+                                             (Prims.of_int (18))
+                                             (Prims.of_int (171))
+                                             (Prims.of_int (24)))
+                                          (Obj.magic
+                                             (FStar_Tactics_Builtins.inspect
+                                                l))
+                                          (fun uu___3 ->
+                                             (fun uu___3 ->
+                                                match uu___3 with
+                                                | FStar_Reflection_Data.Tv_Abs
+                                                    (b, t1) ->
+                                                    Obj.magic
+                                                      (Obj.repr
+                                                         (FStar_Tactics_Effect.tac_bind
+                                                            (Prims.mk_range
+                                                               "FStar.Tactics.Simplifier.fst"
+                                                               (Prims.of_int (167))
+                                                               (Prims.of_int (28))
+                                                               (Prims.of_int (167))
+                                                               (Prims.of_int (46)))
+                                                            (Prims.mk_range
+                                                               "FStar.Tactics.Simplifier.fst"
+                                                               (Prims.of_int (167))
+                                                               (Prims.of_int (22))
+                                                               (Prims.of_int (169))
+                                                               (Prims.of_int (28)))
+                                                            (Obj.magic
+                                                               (FStar_Reflection_Formula.term_as_formula'
+                                                                  t1))
+                                                            (fun uu___4 ->
+                                                               FStar_Tactics_Effect.lift_div_tac
+                                                                 (fun uu___5
+                                                                    ->
+                                                                    match uu___4
+                                                                    with
+                                                                    | 
+                                                                    FStar_Reflection_Formula.True_
+                                                                    -> true
+                                                                    | 
+                                                                    uu___6 ->
+                                                                    false))))
+                                                | uu___4 ->
+                                                    Obj.magic
+                                                      (Obj.repr
+                                                         (FStar_Tactics_Effect.lift_div_tac
+                                                            (fun uu___5 ->
+                                                               false))))
+                                               uu___3)))
+                              | uu___3 ->
+                                  Obj.magic
+                                    (Obj.repr
+                                       (FStar_Tactics_Effect.lift_div_tac
+                                          (fun uu___4 -> false)))) uu___2))))
+           uu___)
 let (is_false :
   FStar_Reflection_Types.term ->
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
@@ -93,44 +133,84 @@ let (is_false :
             | uu___1 ->
                 Obj.magic
                   (Obj.repr
-                     (match FStar_Reflection_Builtins.inspect_ln t with
-                      | FStar_Reflection_Data.Tv_App (l, r) ->
-                          Obj.repr
-                            (match FStar_Reflection_Builtins.inspect_ln l
-                             with
-                             | FStar_Reflection_Data.Tv_Abs (b, t1) ->
-                                 Obj.repr
-                                   (FStar_Tactics_Effect.tac_bind
-                                      (Prims.mk_range
-                                         "FStar.Tactics.Simplifier.fst"
-                                         (Prims.of_int (185))
-                                         (Prims.of_int (28))
-                                         (Prims.of_int (185))
-                                         (Prims.of_int (46)))
-                                      (Prims.mk_range
-                                         "FStar.Tactics.Simplifier.fst"
-                                         (Prims.of_int (185))
-                                         (Prims.of_int (22))
-                                         (Prims.of_int (187))
-                                         (Prims.of_int (28)))
-                                      (Obj.magic
-                                         (FStar_Reflection_Formula.term_as_formula'
-                                            t1))
-                                      (fun uu___2 ->
-                                         FStar_Tactics_Effect.lift_div_tac
-                                           (fun uu___3 ->
-                                              match uu___2 with
-                                              | FStar_Reflection_Formula.False_
-                                                  -> true
-                                              | uu___4 -> false)))
-                             | uu___2 ->
-                                 Obj.repr
-                                   (FStar_Tactics_Effect.lift_div_tac
-                                      (fun uu___3 -> false)))
-                      | uu___2 ->
-                          Obj.repr
-                            (FStar_Tactics_Effect.lift_div_tac
-                               (fun uu___3 -> false))))) uu___)
+                     (FStar_Tactics_Effect.tac_bind
+                        (Prims.mk_range "FStar.Tactics.Simplifier.fst"
+                           (Prims.of_int (181)) (Prims.of_int (23))
+                           (Prims.of_int (181)) (Prims.of_int (32)))
+                        (Prims.mk_range "FStar.Tactics.Simplifier.fst"
+                           (Prims.of_int (181)) (Prims.of_int (17))
+                           (Prims.of_int (191)) (Prims.of_int (23)))
+                        (Obj.magic (FStar_Tactics_Builtins.inspect t))
+                        (fun uu___2 ->
+                           (fun uu___2 ->
+                              match uu___2 with
+                              | FStar_Reflection_Data.Tv_App (l, r) ->
+                                  Obj.magic
+                                    (Obj.repr
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (Prims.mk_range
+                                             "FStar.Tactics.Simplifier.fst"
+                                             (Prims.of_int (183))
+                                             (Prims.of_int (24))
+                                             (Prims.of_int (183))
+                                             (Prims.of_int (33)))
+                                          (Prims.mk_range
+                                             "FStar.Tactics.Simplifier.fst"
+                                             (Prims.of_int (183))
+                                             (Prims.of_int (18))
+                                             (Prims.of_int (189))
+                                             (Prims.of_int (24)))
+                                          (Obj.magic
+                                             (FStar_Tactics_Builtins.inspect
+                                                l))
+                                          (fun uu___3 ->
+                                             (fun uu___3 ->
+                                                match uu___3 with
+                                                | FStar_Reflection_Data.Tv_Abs
+                                                    (b, t1) ->
+                                                    Obj.magic
+                                                      (Obj.repr
+                                                         (FStar_Tactics_Effect.tac_bind
+                                                            (Prims.mk_range
+                                                               "FStar.Tactics.Simplifier.fst"
+                                                               (Prims.of_int (185))
+                                                               (Prims.of_int (28))
+                                                               (Prims.of_int (185))
+                                                               (Prims.of_int (46)))
+                                                            (Prims.mk_range
+                                                               "FStar.Tactics.Simplifier.fst"
+                                                               (Prims.of_int (185))
+                                                               (Prims.of_int (22))
+                                                               (Prims.of_int (187))
+                                                               (Prims.of_int (28)))
+                                                            (Obj.magic
+                                                               (FStar_Reflection_Formula.term_as_formula'
+                                                                  t1))
+                                                            (fun uu___4 ->
+                                                               FStar_Tactics_Effect.lift_div_tac
+                                                                 (fun uu___5
+                                                                    ->
+                                                                    match uu___4
+                                                                    with
+                                                                    | 
+                                                                    FStar_Reflection_Formula.False_
+                                                                    -> true
+                                                                    | 
+                                                                    uu___6 ->
+                                                                    false))))
+                                                | uu___4 ->
+                                                    Obj.magic
+                                                      (Obj.repr
+                                                         (FStar_Tactics_Effect.lift_div_tac
+                                                            (fun uu___5 ->
+                                                               false))))
+                                               uu___3)))
+                              | uu___3 ->
+                                  Obj.magic
+                                    (Obj.repr
+                                       (FStar_Tactics_Effect.lift_div_tac
+                                          (fun uu___4 -> false)))) uu___2))))
+           uu___)
 let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
@@ -141,58 +221,82 @@ let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
       (fun uu___1 ->
          (fun t ->
-            match FStar_Reflection_Builtins.inspect_ln t with
-            | FStar_Reflection_Data.Tv_FVar fv ->
-                Obj.magic
-                  (Obj.repr
-                     (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range "FStar.Tactics.Simplifier.fst"
-                           (Prims.of_int (200)) (Prims.of_int (17))
-                           (Prims.of_int (200)) (Prims.of_int (30)))
-                        (Prims.mk_range "FStar.Tactics.Simplifier.fst"
-                           (Prims.of_int (201)) (Prims.of_int (13))
-                           (Prims.of_int (204)) (Prims.of_int (20)))
-                        (FStar_Tactics_Effect.lift_div_tac
-                           (fun uu___1 ->
-                              FStar_Reflection_Builtins.inspect_fv fv))
-                        (fun uu___1 ->
-                           (fun qn ->
-                              if qn = FStar_Reflection_Const.int_lid
-                              then
-                                Obj.magic
-                                  (Obj.repr
-                                     (FStar_Tactics_Derived.exact
-                                        (FStar_Reflection_Builtins.pack_ln
-                                           (FStar_Reflection_Data.Tv_Const
-                                              (FStar_Reflection_Data.C_Int
-                                                 (Prims.of_int (42)))))))
-                              else
-                                Obj.magic
-                                  (Obj.repr
-                                     (if qn = FStar_Reflection_Const.bool_lid
-                                      then
-                                        Obj.repr
-                                          (FStar_Tactics_Derived.exact
-                                             (FStar_Reflection_Builtins.pack_ln
-                                                (FStar_Reflection_Data.Tv_Const
-                                                   FStar_Reflection_Data.C_True)))
-                                      else
-                                        Obj.repr
-                                          (if
-                                             qn =
-                                               FStar_Reflection_Const.unit_lid
-                                           then
-                                             Obj.repr
-                                               (FStar_Tactics_Derived.exact
-                                                  (FStar_Reflection_Builtins.pack_ln
-                                                     (FStar_Reflection_Data.Tv_Const
-                                                        FStar_Reflection_Data.C_Unit)))
-                                           else
-                                             Obj.repr
-                                               (FStar_Tactics_Derived.fail "")))))
-                             uu___1)))
-            | uu___1 -> Obj.magic (Obj.repr (FStar_Tactics_Derived.fail "")))
-           uu___1)
+            Obj.magic
+              (FStar_Tactics_Effect.tac_bind
+                 (Prims.mk_range "FStar.Tactics.Simplifier.fst"
+                    (Prims.of_int (198)) (Prims.of_int (10))
+                    (Prims.of_int (198)) (Prims.of_int (19)))
+                 (Prims.mk_range "FStar.Tactics.Simplifier.fst"
+                    (Prims.of_int (198)) (Prims.of_int (4))
+                    (Prims.of_int (205)) (Prims.of_int (18)))
+                 (Obj.magic (FStar_Tactics_Builtins.inspect t))
+                 (fun uu___1 ->
+                    (fun uu___1 ->
+                       match uu___1 with
+                       | FStar_Reflection_Data.Tv_FVar fv ->
+                           Obj.magic
+                             (Obj.repr
+                                (FStar_Tactics_Effect.tac_bind
+                                   (Prims.mk_range
+                                      "FStar.Tactics.Simplifier.fst"
+                                      (Prims.of_int (200))
+                                      (Prims.of_int (17))
+                                      (Prims.of_int (200))
+                                      (Prims.of_int (30)))
+                                   (Prims.mk_range
+                                      "FStar.Tactics.Simplifier.fst"
+                                      (Prims.of_int (201))
+                                      (Prims.of_int (13))
+                                      (Prims.of_int (204))
+                                      (Prims.of_int (20)))
+                                   (FStar_Tactics_Effect.lift_div_tac
+                                      (fun uu___2 ->
+                                         FStar_Reflection_Builtins.inspect_fv
+                                           fv))
+                                   (fun uu___2 ->
+                                      (fun qn ->
+                                         if
+                                           qn =
+                                             FStar_Reflection_Const.int_lid
+                                         then
+                                           Obj.magic
+                                             (Obj.repr
+                                                (FStar_Tactics_Derived.exact
+                                                   (FStar_Reflection_Builtins.pack_ln
+                                                      (FStar_Reflection_Data.Tv_Const
+                                                         (FStar_Reflection_Data.C_Int
+                                                            (Prims.of_int (42)))))))
+                                         else
+                                           Obj.magic
+                                             (Obj.repr
+                                                (if
+                                                   qn =
+                                                     FStar_Reflection_Const.bool_lid
+                                                 then
+                                                   Obj.repr
+                                                     (FStar_Tactics_Derived.exact
+                                                        (FStar_Reflection_Builtins.pack_ln
+                                                           (FStar_Reflection_Data.Tv_Const
+                                                              FStar_Reflection_Data.C_True)))
+                                                 else
+                                                   Obj.repr
+                                                     (if
+                                                        qn =
+                                                          FStar_Reflection_Const.unit_lid
+                                                      then
+                                                        Obj.repr
+                                                          (FStar_Tactics_Derived.exact
+                                                             (FStar_Reflection_Builtins.pack_ln
+                                                                (FStar_Reflection_Data.Tv_Const
+                                                                   FStar_Reflection_Data.C_Unit)))
+                                                      else
+                                                        Obj.repr
+                                                          (FStar_Tactics_Derived.fail
+                                                             ""))))) uu___2)))
+                       | uu___2 ->
+                           Obj.magic
+                             (Obj.repr (FStar_Tactics_Derived.fail "")))
+                      uu___1))) uu___1)
 let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->

@@ -97,7 +97,7 @@ let rec read_back (g:R.env) (t:R.term)
 
     | R.Tv_App _ _ ->
       begin
-      let head, args = R.collect_app t in
+      let head, args = T.collect_app t in
       if not (is_fv head ["STLC"; "Core"; "TArrow"])
       then T.fail "Got an application of type stlc_ty, but head is not a TArrow"
       else match args with

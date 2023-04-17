@@ -35,10 +35,11 @@ type msg = string * Range.range
 type ranges = list (option string * Range.range)
 
 //decorate a term with an error label
+let __ctr = BU.mk_ref 0
+
 let fresh_label : string -> Range.range -> term -> label * term =
-    let ctr = BU.mk_ref 0 in
     fun message range t ->
-        let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
+        let l = incr __ctr; format1 "label_%s" (string_of_int !__ctr) in
         let lvar = mk_fv (l, Bool_sort) in
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
@@ -293,6 +294,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let labels, body = aux default_msg ropt post_name_opt labels body in
           labels, Term.mkLet (es, body) q.rng
     in
+    __ctr := 0;
     aux "assertion failed" None None [] q
 
 

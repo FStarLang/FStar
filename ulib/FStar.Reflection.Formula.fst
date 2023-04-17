@@ -23,11 +23,25 @@ open FStar.Reflection.Derived
 open FStar.Reflection.Const
 open FStar.Reflection.Data
 
-// Cannot open FStar.Tactics.Derived here
-let fresh_bv = fresh_bv_named "x"
-let bv_to_string (bv : bv) : Tac string =
+///// Cannot open FStar.Tactics.Derived here /////
+private let fresh_bv = fresh_bv_named "x"
+private let bv_to_string (bv : bv) : Tac string =
     let bvv = inspect_bv bv in
     unseal (bvv.bv_ppname)
+private let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
+  match inspect t with
+  | Tv_AscribedT t _ _ _
+  | Tv_AscribedC t _ _ _ ->
+    inspect_unascribe t
+  | tv -> tv
+private let rec collect_app' (args : list argv) (t : term)
+  : Tac (term * list argv) =
+    match inspect_unascribe t with
+    | Tv_App l r ->
+        collect_app' (r::args) l
+    | _ -> (t, args)
+private let collect_app = collect_app' []
+/////
 
 noeq type comparison =
   | Eq     of option typ  (* Propositional equality (eq2), maybe annotated *)
@@ -64,7 +78,7 @@ let mk_Exists (typ : term) (pred : term) : Tac formula =
     Exists b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let term_as_formula' (t:term) : Tac formula =
-    match inspect_ln_unascribe t with
+    match inspect_unascribe t with
     | Tv_Var n ->
         Name n
 

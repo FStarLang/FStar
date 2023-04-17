@@ -972,6 +972,26 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
 
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in
+    let mk_decreases (fl : list cflag) : list A.term =
+      let rec aux l = function
+       | [] -> l
+       | hd::tl ->
+          match hd with
+          | DECREASES dec_order ->
+            let d =
+              match dec_order with
+              | Decreases_lex [t] -> // special casing for single term
+                resugar_term' env t
+              | Decreases_lex ts ->
+                mk (LexList (ts |> List.map (resugar_term' env)))
+              | Decreases_wf (rel, e) ->
+                mk (WFOrder (resugar_term' env rel, resugar_term' env e)) in
+            let e = mk (Decreases (d, None)) in
+            aux (e::l) tl
+          | _ -> aux l tl
+      in
+      aux [] fl
+    in
     if lid_equals c.effect_name C.effect_Lemma_lid && List.length c.effect_args = 3 then
       let args = List.map(fun (e,_) -> (resugar_term' env e, A.Nothing)) c.effect_args in
       let pre, post, pats =
@@ -987,43 +1007,14 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
       let pre = List.map (fun t -> mk (Requires (resugar_term' env t, None))) pre in
       let post = mk (Ensures (resugar_term' env post, None)) in
       let pats = List.map (resugar_term' env) pats in
-
-      let rec aux l = function
-       | [] -> l
-       | hd::tl ->
-          match hd with
-          | DECREASES dec_order ->
-            let d =
-              match dec_order with
-              | Decreases_lex ts ->
-                mk (LexList (ts |> List.map (resugar_term' env)))
-              | Decreases_wf (rel, e) ->
-                mk (WFOrder (resugar_term' env rel, resugar_term' env e)) in
-            let e = mk (Decreases (d, None)) in
-            aux (e::l) tl
-          | _ -> aux l tl
-      in
-      let decrease = aux [] c.flags in
+      let decrease = mk_decreases c.flags in
 
       mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post::decrease@pats)))
 
     else if (Options.print_effect_args()) then
       (* let universe = List.map (fun u -> resugar_universe u) c.comp_univs in *)
       let args = List.map(fun (e,_) -> (resugar_term' env e, A.Nothing)) c.effect_args in
-      let rec aux l = function
-       | [] -> l
-       | hd::tl ->
-         match hd with
-         | DECREASES d ->
-           let ts =
-             match d with
-             | Decreases_lex ts -> ts
-             | Decreases_wf (rel, e) -> [rel; e] in
-           let es = ts |> List.map (fun e -> resugar_term' env e, A.Nothing) in
-           aux (es@l) tl
-         | _ -> aux l tl
-      in
-      let decrease = aux [] c.flags in
+      let decrease = List.map (fun t -> (t, A.Nothing)) (mk_decreases c.flags) in
       mk (A.Construct(maybe_shorten_lid env c.effect_name, result::decrease@args))
     else
       mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))

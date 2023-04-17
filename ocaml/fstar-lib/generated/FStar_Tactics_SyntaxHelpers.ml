@@ -363,3 +363,55 @@ let (lookup_lb_view :
                   Obj.magic
                     (Obj.repr (fail "lookup_lb_view: Name not in let group")))
              uu___)
+let rec (inspect_unascribe :
+  FStar_Reflection_Types.term ->
+    (FStar_Reflection_Data.term_view, unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun t ->
+    FStar_Tactics_Effect.tac_bind
+      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (81))
+         (Prims.of_int (8)) (Prims.of_int (81)) (Prims.of_int (17)))
+      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (81))
+         (Prims.of_int (2)) (Prims.of_int (85)) (Prims.of_int (12)))
+      (Obj.magic (FStar_Tactics_Builtins.inspect t))
+      (fun uu___ ->
+         (fun uu___ ->
+            match uu___ with
+            | FStar_Reflection_Data.Tv_AscribedT (t1, uu___1, uu___2, uu___3)
+                -> Obj.magic (Obj.repr (inspect_unascribe t1))
+            | FStar_Reflection_Data.Tv_AscribedC (t1, uu___1, uu___2, uu___3)
+                -> Obj.magic (Obj.repr (inspect_unascribe t1))
+            | tv ->
+                Obj.magic
+                  (Obj.repr
+                     (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> tv))))
+           uu___)
+let rec (collect_app' :
+  FStar_Reflection_Data.argv Prims.list ->
+    FStar_Reflection_Types.term ->
+      ((FStar_Reflection_Types.term * FStar_Reflection_Data.argv Prims.list),
+        unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun args ->
+    fun t ->
+      FStar_Tactics_Effect.tac_bind
+        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (90))
+           (Prims.of_int (10)) (Prims.of_int (90)) (Prims.of_int (29)))
+        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (90))
+           (Prims.of_int (4)) (Prims.of_int (93)) (Prims.of_int (20)))
+        (Obj.magic (inspect_unascribe t))
+        (fun uu___ ->
+           (fun uu___ ->
+              match uu___ with
+              | FStar_Reflection_Data.Tv_App (l, r) ->
+                  Obj.magic (Obj.repr (collect_app' (r :: args) l))
+              | uu___1 ->
+                  Obj.magic
+                    (Obj.repr
+                       (FStar_Tactics_Effect.lift_div_tac
+                          (fun uu___2 -> (t, args))))) uu___)
+let (collect_app :
+  FStar_Reflection_Types.term ->
+    ((FStar_Reflection_Types.term * FStar_Reflection_Data.argv Prims.list),
+      unit) FStar_Tactics_Effect.tac_repr)
+  = collect_app' []

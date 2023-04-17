@@ -63,7 +63,7 @@ let try_readback_st_comp
   : T.Tac (option (c:comp{elab_comp c == t})) =
 
   let open R in
-  let hd, args = collect_app t in
+  let hd, args = T.collect_app t in
   match inspect_ln hd with
   | Tv_UInst fv [u] ->
     let fv_lid = inspect_fv fv in
@@ -187,7 +187,7 @@ let rec readback_ty (t:R.term)
         let? arg' = readback_ty a in
         Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:term {elab_term ty == t})
     in
-    let head, args = R.collect_app t in
+    let head, args = T.collect_app t in
     begin
     match inspect_ln head, args with
     | Tv_FVar fv, [(a1,_); (a2,_)] -> 

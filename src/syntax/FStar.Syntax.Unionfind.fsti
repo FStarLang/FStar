@@ -45,6 +45,7 @@ val update_in_tx       : ref 'a -> 'a -> unit
 
 val fresh              : S.uvar_decoration -> Range.range -> S.uvar
 val uvar_id            : S.uvar -> int
+val uvar_unique_id     : S.uvar -> int
 val find               : S.uvar -> option S.term
 val find_decoration    : S.uvar -> S.uvar_decoration
 val change             : S.uvar -> S.term -> unit
