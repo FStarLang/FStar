@@ -8,6 +8,33 @@ else
   FSTAR=fstar.exe
 endif
 
+# Add Steel to the OCaml (ocamlfind) search path
+ifeq ($(OS),Windows_NT)
+  OCAMLPATH := $(shell cygpath -m $(STEEL_HOME)/lib);$(OCAMLPATH)
+else
+  OCAMLPATH := $(STEEL_HOME)/lib:$(OCAMLPATH)
+endif
+
+# Find fstar.exe and the fstar.lib OCaml package
+ifeq (,$(FSTAR_HOME))
+  _check_fstar := $(shell which fstar.exe)
+  ifeq ($(.SHELLSTATUS),0)
+    _fstar_home := $(realpath $(dir $(_check_fstar))/..)
+    ifeq ($(OS),Windows_NT)
+      OCAMLPATH := $(shell cygpath -m $(_fstar_home)/lib);$(OCAMLPATH)
+    else
+      OCAMLPATH := $(_fstar_home)/lib:$(OCAMLPATH)
+    endif
+  endif
+else
+  ifeq ($(OS),Windows_NT)
+    OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
+  else
+    OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
+  endif
+endif
+export OCAMLPATH
+
 FSTAR_FILES += $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
 
 FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel,C' --include $(STEEL_HOME)/lib/steel --load_cmxs steel
