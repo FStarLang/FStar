@@ -50,3 +50,4 @@ $(INCLUDE_STEEL)/Steel_SpinLock.h: $(ALL_KRML_FILES)
 	  $(addprefix -add-include ,'<stdbool.h>' '"steel_types.h"') \
 	  -bundle Steel.SpinLock=Steel.*,Prims,FStar.*,LowStar.* \
 	  $^
+	chmod -x $@
