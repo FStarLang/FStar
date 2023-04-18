@@ -4,13 +4,12 @@ TODO: write the corresponding Part 8 in https://fstar-lang.org/tutorial
 
 ## Current status
 
-This is a draft attempt to split Steel away from the F* code base. It
+This repository splits Steel away from the F* code base. It
 currently works with
 https://github.com/FStarLang/FStar/tree/taramana_no_steel and
-https://github.com/FStarLang/karamel/tree/taramana_no_steel . Once
-approved, this repository should be moved to FStarLang/steel and F*
-and Karamel pull requests should be opened from those respective
-branches.
+https://github.com/FStarLang/karamel/tree/taramana_no_steel . F*
+and Karamel pull requests will be opened from those respective
+branches soon.
 
 This repository contains:
 * Steel and Pulse, and their corresponding examples and tests, from F*

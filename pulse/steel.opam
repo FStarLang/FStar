@@ -14,6 +14,6 @@ build: [
 install: [
   [make "PREFIX=%{prefix}%" "install"]
 ]
-dev-repo: "git://github.com/tahina-pro/steel-draft"
-bug-reports: "https://github.com/tahina-pro/steel-draft/issues"
+dev-repo: "git://github.com/FStarLang/steel"
+bug-reports: "https://github.com/FStarLang/steel/issues"
 synopsis: "The Steel separation logic framework for F*"
