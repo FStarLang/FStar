@@ -63,6 +63,7 @@ clean:
 test: all
 	+$(MAKE) -C share/steel
 
+PREFIX ?= /usr/local
 ifeq ($(OS),Windows_NT)
   STEEL_INSTALL_PREFIX=$(shell cygpath -m $(PREFIX))
 else

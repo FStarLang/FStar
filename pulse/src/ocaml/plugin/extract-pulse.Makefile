@@ -29,6 +29,7 @@ COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	chmod -x $@
 
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND")

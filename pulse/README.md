@@ -133,6 +133,11 @@ plugin loaded.
      to add more options if you need Pulse and/or SteelC:
      * if you want to use Pulse, add `--include $STEEL_HOME/lib/steel/pulse`
      * if you want to use SteelC, add `--include $STEEL_HOME/lib/steel/c`
+   * `FSTAR_DEP_OPTIONS`: additional options to pass to F* to compute
+     dependencies (in addition to `FSTAR_OPTIONS`), such as `--extract`
+   * `FSTAR_ML_CODEGEN`: useful only if you want to extract OCaml
+     code. If you want to extract a F* plugin, set this option to
+     `Plugin`. Otherwise, it is set by default to `OCaml`.
 
 4. After those variable definitions, insert `include
    $STEEL_HOME/share/steel/Makefile.include` to your Makefile.

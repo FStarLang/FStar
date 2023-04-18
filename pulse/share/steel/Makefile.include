@@ -41,6 +41,9 @@ FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 -
 
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 
+# Used only for OCaml extraction, not krml extraction
+FSTAR_ML_CODEGEN ?= OCaml
+
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 
 %.checked:
@@ -52,14 +55,18 @@ MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND")
 	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
-	$(Q)$(MY_FSTAR) --dep full @$@.rsp > $@.tmp
+	$(Q)$(MY_FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp > $@.tmp
 	mv $@.tmp $@
 
 include .depend
 
 verify: $(ALL_CHECKED_FILES)
 
-%.krml:
+$(ALL_ML_FILES): %.ml:
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
+	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(FSTAR_ML_CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+
+$(ALL_KRML_FILES): %.krml:
 	$(MY_FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
 	  --extract_module $(basename $(notdir $(subst .checked,,$<)))
 	touch -c $@

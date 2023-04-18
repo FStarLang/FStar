@@ -5,6 +5,8 @@ FROM ocaml/opam:ubuntu-ocaml-$ocaml_version
 
 ARG opamthreads=24
 
+ADD --chown=opam:opam ./ steel/
+
 # Install F* and Karamel from the Karamel CI install script
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 ENV KRML_HOME=$HOME/karamel
@@ -21,6 +23,5 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # Steel CI proper
-ADD --chown=opam:opam ./ steel/
 ARG STEEL_NIGHTLY_CI
 RUN eval $(opam env) && env STEEL_NIGHTLY_CI="$STEEL_NIGHTLY_CI" make -k -j $opamthreads -C steel test
