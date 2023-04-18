@@ -1,2 +1,7 @@
-type range = FStar_Compiler_Range.range
-let prims_to_fstar_range = FStar_Compiler_Range.prims_to_fstar_range
+type __range = FStar_Compiler_Range.range
+type range = __range
+
+let mk_range f a b c d = FStar_Compiler_Range.mk_range f {line=a;col=b} {line=c;col=d}
+let range_0 : range = let z = Prims.parse_int "0" in mk_range "<dummy>" z z z z
+
+type ('Ar,'Amsg,'Ab) labeled = 'Ab

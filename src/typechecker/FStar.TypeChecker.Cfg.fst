@@ -511,16 +511,6 @@ let built_in_primitive_steps : prim_step_set =
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    (* Really an identity, but only when the thing is an embedded range *)
-    let prims_to_fstar_range_step psc _norm_cb _us args : option term =
-        match args with
-        | [(a1, _)] ->
-            begin match try_unembed_simple EMB.e_range a1 with
-            | Some r -> Some (embed_simple EMB.e_range psc.psc_range r)
-            | None -> None
-            end
-        | _ -> failwith "Unexpected number of arguments"
-    in
     (* and_op and or_op are special cased because they are short-circuting,
      * can run without unembedding its second argument. *)
     let and_op : psc -> EMB.norm_cb -> universes -> args -> option term
@@ -759,16 +749,11 @@ let built_in_primitive_steps : prim_step_set =
              0,
              decidable_eq true,
              (fun _ -> NBETerm.decidable_eq true));
-         (PC.p2l ["Prims"; "mk_range"],
+         (PC.p2l ["FStar"; "Range"; "mk_range"],
              5,
              0,
              mk_range,
              (fun _ -> NBE.mk_range));
-         (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"],
-             1,
-             0,
-             prims_to_fstar_range_step,
-             (fun _ -> NBE.prims_to_fstar_range_step));
         ]
     in
     (* GM: Just remove strong_reduction_ok? There's currently no operator which requires that
