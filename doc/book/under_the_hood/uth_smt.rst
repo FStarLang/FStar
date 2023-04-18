@@ -1600,8 +1600,8 @@ F* reports:
     (Warning 349) The verification condition succeeded after splitting
     it to localize potential errors, although the original non-split
     verification condition failed. If you want to rely on splitting
-    queries for verifying your program please use the --split_queries
-    option rather than relying on it implicitly.
+    queries for verifying your program please use the '--split_queries
+    always' option rather than relying on it implicitly.
 
 By default, F* collects all the proof obligations in a top-level F*
 definition and presents it to Z3 in a single query with several
@@ -1625,7 +1625,7 @@ any. However, sometimes, when tried in this mode, the proof of all
 conjuncts can succeed.
 
 One way to respond to Warning 349 is to follow what it says and enable
-``--split_queries`` explicitly, at least for the program fragment in
+``--split_queries always`` explicitly, at least for the program fragment in
 question. This can sometimes stabilize a previously unstable
 proof. However, it may also end up deferring an underlying
 proof-performance problem. Besides, even putting stability aside,

@@ -31,6 +31,7 @@ open FStar.Tactics.Types
 open FStar.Tactics.Monad
 open FStar.Tactics.Printing
 open FStar.Syntax.Syntax
+open FStar.VConfig
 
 module BU     = FStar.Compiler.Util
 module Cfg    = FStar.TypeChecker.Cfg
@@ -782,11 +783,6 @@ let norm (s : list EMB.norm_step) : tac unit =
 
 let norm_term_env (e : env) (s : list EMB.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
     let! ps = get in
-    (* We need a set of options, but there might be no goals, so do this *)
-    let opts = match ps.goals with
-               | g::_ -> g.opts
-               | _ -> FStar.Options.peek ()
-    in
     if_verbose (fun () -> BU.print1 "norm_term_env: t = %s\n" (Print.term_to_string t)) ;!
     // only for elaborating lifts and all that, we don't care if it's actually well-typed
     let! t, _, _ = __tc_lax e t in
@@ -2201,11 +2197,58 @@ let term_eq_old (t1:term) (t2:term) : tac bool
 
 let with_compat_pre_core (n:Z.t) (f:tac 'a) : tac 'a =
     mk_tac (fun ps ->
-            FStar.Options.push ();
-            let res = FStar.Options.set_options ("--compat_pre_core 0") in
-            let r = run f ps in
-            FStar.Options.pop ();
-            r)
+      Options.with_saved_options (fun () ->
+        let _res = FStar.Options.set_options ("--compat_pre_core 0") in
+        run f ps))
+
+let get_vconfig () : tac vconfig =
+  let! g = cur_goal in
+ (* Restore goal's optionstate (a copy is needed) and read vconfig.
+  * This is an artifact of the options API being stateful in many places,
+  * morally this is just (get_vconfig g.opts) *)
+  let vcfg = Options.with_saved_options (fun () ->
+               FStar.Options.set (Util.smap_copy g.opts);
+               Options.get_vconfig ())
+  in
+  ret vcfg
+
+let set_vconfig (vcfg : vconfig) : tac unit =
+  (* Same comment as for get_vconfig applies, this is really just
+   * let g' = { g with opts = set_vconfig vcfg g.opts } *)
+  let! g = cur_goal in
+  let opts' = Options.with_saved_options (fun () ->
+                FStar.Options.set (Util.smap_copy g.opts);
+                Options.set_vconfig vcfg;
+                Options.peek ())
+  in
+  let g' = { g with opts = opts' } in
+  replace_cur g'
+
+let t_smt_sync (vcfg : vconfig) : tac unit = wrap_err "t_smt_sync" <| (
+    let! goal = cur_goal in
+    match get_phi goal with
+    | None -> fail "Goal is not irrelevant"
+    | Some phi ->
+      let e = goal_env goal in
+      let ans : bool =
+        (* Set goal's optionstate before asking solver, to respect
+         * its vconfig among other things. *)
+        Options.with_saved_options (fun () ->
+          (* NOTE: we ignore the goal's options, the rationale is that
+           * any verification-relevant option is inside the vconfig, so we
+           * should not need read the optionstate. Of course this vconfig
+           * will probably come in large part from a get_vconfig, which does
+           * read the goal's options. *)
+          Options.set_vconfig vcfg;
+          e.solver.solve_sync None e phi
+        )
+      in
+      if ans
+      then (
+        mark_uvar_as_already_checked goal.goal_ctx_uvar;
+        solve goal U.exp_unit
+      ) else fail "SMT did not solve this goal"
+)
 
 (***** Builtins used in the meta DSL framework *****)
 

@@ -1936,24 +1936,6 @@ let pure_precondition_for_trivial_post env u t wp r =
     [trivial_post |> S.as_arg]
     r
 
-
-(* <Move> this out of here *)
-let dummy_solver = {
-    init=(fun _ -> ());
-    push=(fun _ -> ());
-    pop=(fun _ -> ());
-    snapshot=(fun _ -> (0, 0, 0), ());
-    rollback=(fun _ _ -> ());
-    encode_sig=(fun _ _ -> ());
-    preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
-    spinoff_strictly_positive_goals=None;
-    handle_smt_goal=(fun e g -> [e,g]);
-    solve=(fun _ _ _ -> ());
-    finish=(fun () -> ());
-    refresh=(fun () -> ());
-}
-(* </Move> *)
-
 let get_letrec_arity (env:env) (lbname:lbname) : option int =
   let compare_either f1 f2 e1 e2 : bool =
       match e1, e2 with

@@ -260,6 +260,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
             FStar_Tactics_Hooks.handle_smt_goal;
           FStar_TypeChecker_Env.solve =
             (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.solve);
+          FStar_TypeChecker_Env.solve_sync =
+            (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.solve_sync);
           FStar_TypeChecker_Env.finish =
             (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.finish);
           FStar_TypeChecker_Env.refresh =

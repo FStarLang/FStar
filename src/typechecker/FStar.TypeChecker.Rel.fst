@@ -4986,7 +4986,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                 else [env,vc,FStar.Options.peek ()]
             in
             let vcs =
-              if Options.split_queries ()
+              if Options.split_queries () = Options.Always
               then vcs |>
                    List.collect
                      (fun (env, goal, opts) ->

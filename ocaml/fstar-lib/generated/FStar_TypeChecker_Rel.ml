@@ -13762,7 +13762,9 @@ let (discharge_guard' :
                                     (env, vc2, uu___13) in
                                   [uu___12]) in
                              let vcs1 =
-                               let uu___10 = FStar_Options.split_queries () in
+                               let uu___10 =
+                                 let uu___11 = FStar_Options.split_queries () in
+                                 uu___11 = FStar_Options.Always in
                                if uu___10
                                then
                                  FStar_Compiler_Effect.op_Bar_Greater vcs
