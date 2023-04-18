@@ -84,8 +84,6 @@ let hash_pair (h:'a -> mm H.hash_code) (i:'b -> mm H.hash_code) (x:('a * 'b))
   : mm H.hash_code
   = mix (h (fst x)) (i (snd x))
 
-let hash_byte (b:FStar.BaseTypes.byte) : mm H.hash_code = ret (H.of_int (UInt8.v b))
-
 let rec hash_term (t:term)
   : mm H.hash_code
   = maybe_memoize t hash_term'
