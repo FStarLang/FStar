@@ -38,7 +38,7 @@ pulse: steel
 
 .PHONY: steelc
 steelc: steel
-	+$(MAKE) -C $@
+	+$(MAKE) -C c
 
 clean:
 	rm -f .depend* *.checked
