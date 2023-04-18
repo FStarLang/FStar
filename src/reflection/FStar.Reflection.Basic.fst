@@ -446,17 +446,6 @@ let compare_bv (x:bv) (y:bv) : order =
     else if n = 0 then Eq
     else Gt
 
-let is_free (x:bv) (t:term) : bool =
-    U.is_free_in x t
-
-let free_bvs (t:term) : list bv =
-  Syntax.Free.names t |> BU.set_elements
-
-let free_uvars (t:term) : list Z.t =
-  Syntax.Free.uvars_uncached t
-    |> BU.set_elements
-    |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head))
-
 let lookup_attr (attr:term) (env:Env.env) : list fv =
     match (SS.compress_subst attr).n with
     | Tm_fvar fv ->

@@ -89,9 +89,6 @@ val lookup_typ            : env -> name -> option sigelt
 val compare_bv            : bv -> bv -> order
 val binders_of_env        : env -> binders
 val moduleof              : env -> name
-val is_free               : bv -> term -> bool
-val free_bvs              : term -> list bv
-val free_uvars            : term -> list int
 val lookup_attr           : term -> env -> list fv
 val all_defs_in_env       : env -> list fv
 val defs_in_module        : env -> name -> list fv
