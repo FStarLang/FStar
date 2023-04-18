@@ -5,13 +5,13 @@ FROM ocaml/opam:ubuntu-ocaml-$ocaml_version
 
 ARG opamthreads=24
 
+ADD --chown=opam:opam ./ steel/
+
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 RUN opam depext conf-gmp z3.4.8.5 conf-m4 && \
     git clone --branch taramana_no_steel https://github.com/FStarLang/FStar FStar && \
     opam install -j $opamthreads -v -v -v FStar/fstar.opam && \
     rm -rf FStar
-
-ADD --chown=opam:opam ./ steel/
 
 RUN opam install -j $opamthreads -v -v -v steel/steel.opam
 
