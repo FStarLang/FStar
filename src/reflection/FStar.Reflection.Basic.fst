@@ -458,7 +458,7 @@ let free_uvars (t:term) : list Z.t =
     |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head))
 
 let lookup_attr (attr:term) (env:Env.env) : list fv =
-    match (SS.compress attr).n with
+    match (SS.compress_subst attr).n with
     | Tm_fvar fv ->
         let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
         List.concatMap (fun se -> match U.lid_of_sigelt se with
