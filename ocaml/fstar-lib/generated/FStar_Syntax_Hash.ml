@@ -93,8 +93,6 @@ let hash_pair :
       fun x ->
         let uu___ = h (FStar_Pervasives_Native.fst x) in
         let uu___1 = i (FStar_Pervasives_Native.snd x) in mix uu___ uu___1
-let (hash_byte : FStar_BaseTypes.byte -> FStar_Hash.hash_code mm) =
-  fun b -> let uu___ = FStar_Hash.of_int (FStar_UInt8.v b) in ret uu___
 let rec (hash_term : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
   fun t -> maybe_memoize t hash_term'
 and (hash_comp :
@@ -456,8 +454,7 @@ and (hash_constant : FStar_Syntax_Syntax.sconst -> FStar_Hash.hash_code mm) =
         mix uu___1 uu___2
     | FStar_Const.Const_char c ->
         let uu___1 = of_int (Prims.of_int (317)) in
-        let uu___2 = of_int (FStar_UInt32.v (FStar_Char.u32_of_char c)) in
-        mix uu___1 uu___2
+        let uu___2 = of_int (FStar_Char.int_of_char c) in mix uu___1 uu___2
     | FStar_Const.Const_real s ->
         let uu___1 = of_int (Prims.of_int (337)) in
         let uu___2 = of_string s in mix uu___1 uu___2

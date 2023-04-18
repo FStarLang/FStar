@@ -680,37 +680,42 @@ let (dependences_of :
                 (FStar_Compiler_List.filter (fun k -> k <> fn))
 let (print_graph : dependence_graph -> unit) =
   fun graph ->
-    FStar_Compiler_Util.print_endline
-      "A DOT-format graph has been dumped in the current directory as dep.graph";
-    FStar_Compiler_Util.print_endline
-      "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
-    FStar_Compiler_Util.print_endline
-      "Hint: cat dep.graph | grep -v _ | grep -v prims";
-    (let uu___3 =
-       let uu___4 =
-         let uu___5 =
-           let uu___6 =
-             let uu___7 =
-               let uu___8 = deps_keys graph in
-               FStar_Compiler_List.unique uu___8 in
+    (let uu___1 =
+       let uu___2 = FStar_Options.silent () in Prims.op_Negation uu___2 in
+     if uu___1
+     then
+       (FStar_Compiler_Util.print_endline
+          "A DOT-format graph has been dumped in the current directory as dep.graph";
+        FStar_Compiler_Util.print_endline
+          "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
+        FStar_Compiler_Util.print_endline
+          "Hint: cat dep.graph | grep -v _ | grep -v prims")
+     else ());
+    (let uu___1 =
+       let uu___2 =
+         let uu___3 =
+           let uu___4 =
+             let uu___5 =
+               let uu___6 = deps_keys graph in
+               FStar_Compiler_List.unique uu___6 in
              FStar_Compiler_List.collect
                (fun k ->
                   let deps1 =
-                    let uu___8 =
-                      let uu___9 = deps_try_find graph k in
-                      FStar_Compiler_Util.must uu___9 in
-                    uu___8.edges in
+                    let uu___6 =
+                      let uu___7 = deps_try_find graph k in
+                      FStar_Compiler_Util.must uu___7 in
+                    uu___6.edges in
                   let r s = FStar_Compiler_Util.replace_char s 46 95 in
                   let print dep =
-                    let uu___8 =
-                      let uu___9 = lowercase_module_name k in r uu___9 in
-                    FStar_Compiler_Util.format2 "  \"%s\" -> \"%s\"" uu___8
+                    let uu___6 =
+                      let uu___7 = lowercase_module_name k in r uu___7 in
+                    FStar_Compiler_Util.format2 "  \"%s\" -> \"%s\"" uu___6
                       (r (module_name_of_dep dep)) in
-                  FStar_Compiler_List.map print deps1) uu___7 in
-           FStar_String.concat "\n" uu___6 in
-         FStar_String.op_Hat uu___5 "\n}\n" in
-       FStar_String.op_Hat "digraph {\n" uu___4 in
-     FStar_Compiler_Util.write_file "dep.graph" uu___3)
+                  FStar_Compiler_List.map print deps1) uu___5 in
+           FStar_String.concat "\n" uu___4 in
+         FStar_String.op_Hat uu___3 "\n}\n" in
+       FStar_String.op_Hat "digraph {\n" uu___2 in
+     FStar_Compiler_Util.write_file "dep.graph" uu___1)
 let (build_inclusion_candidates_list :
   unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
