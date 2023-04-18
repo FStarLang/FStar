@@ -82,7 +82,7 @@ val pack_universe    : universe_view -> universe
  * pulls a LOT of modules. *)
 val implode_qn     : list string -> string
 val explode_qn     : string -> list string
-val compare_string : string -> string -> int
+val compare_string : s1:string -> s2:string -> x:int{x == 0 <==> s1 == s2}
 
 (** Primitives & helpers *)
 val lookup_typ            : env -> name -> option sigelt
