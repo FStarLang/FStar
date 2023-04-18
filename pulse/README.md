@@ -141,6 +141,10 @@ plugin loaded.
 
 ### Calling F* directly
 
+If you already have an existing `Makefile` for your Steel-based
+project, you now need to pass new options to your Makefile to use
+Steel from this repository, as described in this section.
+
 To call F* with Steel:
 
 1. Make sure F* and Steel are properly located, following steps 1 and 2 above.
