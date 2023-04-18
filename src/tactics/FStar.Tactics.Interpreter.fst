@@ -529,6 +529,18 @@ let () =
         (fun _ -> with_compat_pre_core) e_any e_int (e_tactic_thunk e_any) e_any
         (fun _ -> with_compat_pre_core) NBET.e_any NBET.e_int (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
 
+      mk_tac_step_1 0 "get_vconfig"
+        get_vconfig e_unit e_vconfig
+        get_vconfig NBET.e_unit NBET.e_vconfig;
+
+      mk_tac_step_1 0 "set_vconfig"
+        set_vconfig e_vconfig e_unit
+        set_vconfig NBET.e_vconfig NBET.e_unit;
+
+      mk_tac_step_1 0 "t_smt_sync"
+        t_smt_sync e_vconfig e_unit
+        t_smt_sync NBET.e_vconfig NBET.e_unit;
+
       // reflection typechecker callbacks (part of the DSL framework)
 
       mk_tac_step_3 0 "check_subtyping"

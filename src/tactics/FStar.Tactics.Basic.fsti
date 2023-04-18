@@ -118,6 +118,11 @@ val comp_to_string         : comp -> tac string
 val term_eq_old            : term -> term -> tac bool
 val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
 
+val get_vconfig            : unit -> tac VConfig.vconfig
+val set_vconfig            : VConfig.vconfig -> tac unit
+
+val t_smt_sync             : VConfig.vconfig -> tac unit
+
 (***** Callbacks for the meta DSL framework *****)
 
 val refl_check_subtyping              : env -> typ -> typ -> tac (option unit)

@@ -7,7 +7,7 @@ val f : (f:(nat -> int){unbounded f})
 
 let g : (nat -> int) = fun x -> f (x+1)
 
-#push-options "--query_stats --fuel 0 --ifuel 0 --split_queries"
+#push-options "--query_stats --fuel 0 --ifuel 0 --split_queries always"
 let find_above_for_g (m:nat) : Lemma(exists (i:nat). abs(g i) > m) = 
   assert (unbounded f); // apply forall to m
   eliminate exists (n:nat). abs(f n) > m
