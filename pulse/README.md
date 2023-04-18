@@ -169,7 +169,7 @@ TODO: add instructions to extract code. Meanwhile, see:
   example. This example has both a `Makefile` to extract the Steel
   code to C, and a `dune` file to compile the extracted OCaml
   code. Most notably, to compile and run OCaml code extracted from
-  Steel, `$STEEL_HOME` has to be added to `OCAMLPATH` (which is
+  Steel, `$STEEL_HOME/lib` has to be added to `OCAMLPATH` (which is
   already the case by default with opam, if the opam environment is
   properly set up with `eval $(opam env)`), and the `steel.runtime`
   package has to be used.
