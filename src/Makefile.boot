@@ -98,6 +98,18 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	$(Q)$(SED) 's,fstar-lib/generated/FStar_Test,fstar-tests/generated/FStar_Test,g' <._depend >.depend
 	$(Q)mkdir -p $(CACHE_DIR)
 
+.PHONY: depgraph.pdf
+depgraph.pdf :
+	$(call msg, "DEPEND")
+	$(Q)$(FSTAR_C) --dep graph\
+		fstar/FStar.Main.fst		\
+		boot/FStar.Tests.Test.fst	\
+		--odir $(OUTPUT_DIRECTORY)	\
+		$(EXTRACT)
+	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph
+	$(call msg, "DOT", $@)
+	$(Q)dot -Tpdf -o $@ dep_simpl.graph
+
 depend: .depend
 
 include .depend
