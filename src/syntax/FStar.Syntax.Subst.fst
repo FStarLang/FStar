@@ -128,6 +128,8 @@ let rec compress_univ u = match u with
 let subst_bv a s = U.find_map s (function
     | DB (i, x) when (i=a.index) ->
       Some (bv_to_name (Syntax.set_range_of_bv x (Syntax.range_of_bv a)))
+    | DT (i, t) when (i=a.index) ->
+      Some ({ t with pos = Syntax.range_of_bv a })
     | _ -> None)
 let subst_nm a s = U.find_map s (function
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({a with index=i}))
@@ -278,6 +280,7 @@ let subst_ascription' s (asc:ascription) =
 
 let shift n s = match s with
     | DB(i, t) -> DB(i+n, t)
+    | DT(i, t) -> DT(i+n, t)
     | UN(i, t) -> UN(i+n, t)
     | NM(x, i) -> NM(x, i+n)
     | UD(x, i) -> UD(x, i+n)

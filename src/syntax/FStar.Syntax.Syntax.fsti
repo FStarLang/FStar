@@ -316,6 +316,7 @@ and subst_ts = list (list subst_elt)            (* A composition of parallel sub
              * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
+   | DT of int * term                          (* DB i t: replace a bound variable with index i with name bv                 *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)

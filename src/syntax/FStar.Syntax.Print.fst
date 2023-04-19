@@ -336,6 +336,7 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
 
 and subst_elt_to_string = function
    | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
+   | DT(i, t) -> U.format2 "DT (%s, %s)" (string_of_int i) (term_to_string t)
    | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
    | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
    | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
