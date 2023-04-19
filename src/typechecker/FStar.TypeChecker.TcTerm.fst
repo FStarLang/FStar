@@ -2776,7 +2776,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
     in //end tc_args
 
     let rec check_function_app tf guard =
-       match (N.unfold_whnf env tf).n with
+       let tw = N.unfold_whnf env tf in
+       match (SS.compress tw).n with
         | Tm_uvar _
         | Tm_app({n=Tm_uvar _}, _) ->
             let bs, guard =
