@@ -948,3 +948,11 @@ let subst (x:bv) (n:term) (m:term) : term =
   SS.subst [NT(x,n)] m
 
 let close_term (b:binder) (t:term) : term = SS.close [b] t
+
+let prims_range_of_range (r:Range.range) : Prims.range =
+  let open FStar.Compiler.Range in
+  let (f, (l, c), (l', c')), _ = Range.prims_range_of_range r in
+  Prims.mk_range f l c l' c'
+  
+let range_of_term (t:term) = prims_range_of_range t.pos
+let range_of_sigelt (s:sigelt) = prims_range_of_range s.sigrng

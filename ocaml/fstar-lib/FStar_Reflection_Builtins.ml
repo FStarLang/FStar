@@ -49,3 +49,6 @@ let pack_universe           = RB.pack_universe
  * in the library. *)
 let inspect_aqual           = RB.inspect_aqual
 let pack_aqual              = RB.pack_aqual
+
+let range_of_term           = RB.range_of_term
+let range_of_sigelt         = RB.range_of_sigelt

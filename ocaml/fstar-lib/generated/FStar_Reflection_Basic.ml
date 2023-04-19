@@ -1296,3 +1296,12 @@ let (close_term :
   FStar_Syntax_Syntax.binder ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   = fun b -> fun t -> FStar_Syntax_Subst.close [b] t
+let (prims_range_of_range : FStar_Compiler_Range.range -> Prims.range) =
+  fun r ->
+    let uu___ = FStar_Compiler_Range.prims_range_of_range r in
+    match uu___ with
+    | ((f, (l, c), (l', c')), uu___1) -> Prims.mk_range f l c l' c'
+let (range_of_term : FStar_Syntax_Syntax.term -> Prims.range) =
+  fun t -> prims_range_of_range t.FStar_Syntax_Syntax.pos
+let (range_of_sigelt : FStar_Syntax_Syntax.sigelt -> Prims.range) =
+  fun s -> prims_range_of_range s.FStar_Syntax_Syntax.sigrng
