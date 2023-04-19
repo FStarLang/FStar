@@ -118,6 +118,7 @@ type st_term =
   | Tm_IntroExists: erased:bool -> vprop -> witnesses:list term -> st_term
   | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
   | Tm_Par        : term -> st_term -> term -> term -> st_term -> term -> st_term  // (pre, e, post) for left and right computations
+  | Tm_WithLocal  : term -> st_term -> st_term  // initial value of the local, continuation
 
   | Tm_Rewrite    : term -> term -> st_term
   | Tm_Admit      : ctag -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
@@ -206,6 +207,9 @@ let rec freevars_st (t:st_term)
         (Set.union (freevars preR)
                    (Set.union (freevars_st eR)
                               (freevars postR)))
+
+    | Tm_WithLocal t1 t2 ->
+      Set.union (freevars t1) (freevars_st t2)
 
     | Tm_Rewrite t1 t2 ->
 						Set.union (freevars t1) (freevars t2)
@@ -322,6 +326,10 @@ let rec ln_st' (t:st_term) (i:int)
       ln' preR i &&
       ln_st' eR i &&
       ln' postR (i + 1)
+
+    | Tm_WithLocal t1 t2 ->
+      ln' t1 i &&
+      ln_st' t2 (i + 1)
 
     | Tm_Rewrite t1 t2 ->
 						ln' t1 i &&
@@ -474,6 +482,10 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
              (open_term' preR v i)
              (open_st_term' eR v i)
              (open_term' postR v (i + 1))
+
+    | Tm_WithLocal e1 e2 ->
+      Tm_WithLocal (open_term' e1 v i)
+                   (open_st_term' e2 v (i + 1))
 
     | Tm_Rewrite	e1 e2 ->
 						Tm_Rewrite (open_term' e1 v i)
@@ -629,6 +641,10 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
              (close_term' preR v i)
              (close_st_term' eR v i)
              (close_term' postR v (i + 1))
+
+    | Tm_WithLocal e1 e2 ->
+      Tm_WithLocal (close_term' e1 v i)
+                   (close_st_term' e2 v (i + 1))
 
     | Tm_Rewrite	e1 e2 ->
 						Tm_Rewrite (close_term' e1 v i)
@@ -830,6 +846,10 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' eR x i;
       close_open_inverse' postR x (i + 1)
 
+    | Tm_WithLocal t1 t2 ->
+      close_open_inverse' t1 x i;
+      close_open_inverse_st' t2 x (i + 1)
+
     | Tm_Rewrite	t1 t2 ->
 						close_open_inverse' t1 x i;
 						close_open_inverse' t2 x i
@@ -998,6 +1018,10 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm preR1 preR2 &&
       eq_st_term eR1 eR2 &&
       eq_tm postR1 postR2
+
+    | Tm_WithLocal e1 e2, Tm_WithLocal e3 e4 ->
+      eq_tm e1 e3 &&
+      eq_st_term e2 e4
 
     | Tm_Rewrite	e1 e2, Tm_Rewrite e3 e4 ->
 						eq_tm e1 e3 &&
