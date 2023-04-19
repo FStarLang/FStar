@@ -214,7 +214,7 @@ let rec freevars_st (t:st_term)
       Set.union (freevars t) (freevars_opt post)
     | Tm_Protect t -> freevars_st t
 
-let rec ln' (t:term) (i:int) =
+let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   match t with
   | Tm_BVar {bv_index=j} -> j <= i
   | Tm_Var _
@@ -257,7 +257,7 @@ let rec ln' (t:term) (i:int) =
     ln_c' c (i + 1)
     
 and ln_c' (c:comp) (i:int)
-  : Tot bool
+  : Tot bool (decreases c)
   = match c with
     | C_Tot t -> ln' t i
     | C_ST s -> ln_st_comp s i
@@ -266,7 +266,7 @@ and ln_c' (c:comp) (i:int)
       ln' inames i &&
       ln_st_comp s i
 
-and ln_st_comp (s:st_comp) (i:int) : bool =
+and ln_st_comp (s:st_comp) (i:int) : Tot bool (decreases s) =
   ln' s.res i &&
   ln' s.pre i &&
   ln' s.post (i + 1) (* post has 1 impliict abstraction *)
@@ -282,7 +282,7 @@ let rec ln_list' (t:list term) (i:int) : bool =
   | hd::tl -> ln' hd i && ln_list' tl i
 
 let rec ln_st' (t:st_term) (i:int)
-  : Tot bool
+  : Tot bool (decreases t)
   = match t with
     | Tm_Return _ _ t ->
       ln' t i
@@ -495,7 +495,7 @@ let open_st_term t v =
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
 let rec close_term' (t:term) (v:var) (i:index)
-  : term
+  : Tot term (decreases t)
   = match t with
     | Tm_Var nm ->
       if nm.nm_index = v
@@ -868,7 +868,7 @@ let gen_uvar (t:term) : T.Tac term =
   Tm_UVar (T.fresh ())
 
 let rec eq_tm (t1 t2:term) 
-  : b:bool { b <==> (t1 == t2) }
+  : Tot (b:bool { b <==> (t1 == t2) }) (decreases t1)
   = match t1, t2 with
     | Tm_VProp, Tm_VProp
     | Tm_Emp, Tm_Emp
@@ -912,7 +912,7 @@ let rec eq_tm (t1 t2:term)
     | _ -> false
     
 and eq_comp (c1 c2:comp) 
-  : b:bool { b <==> (c1 == c2) }
+  : Tot (b:bool { b <==> (c1 == c2) }) (decreases c1)
   = match c1, c2 with
     | C_Tot t1, C_Tot t2 ->
       eq_tm t1 t2
