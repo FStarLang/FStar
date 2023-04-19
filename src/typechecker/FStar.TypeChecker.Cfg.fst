@@ -74,7 +74,7 @@ let steps_to_string f =
     f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_qual |> format_opt (String.concat ", ");
-    f.unfold_namespace |> format_opt (String.concat ", ");    
+    f.unfold_namespace |> format_opt (String.concat ", ");
     f.unfold_tac |> b;
     f.pure_subterms_within_computations |> b;
     f.simplify |> b;
@@ -106,7 +106,7 @@ let default_steps : fsteps = {
     unfold_fully = None;
     unfold_attr = None;
     unfold_qual = None;
-    unfold_namespace = None;    
+    unfold_namespace = None;
     unfold_tac = false;
     pure_subterms_within_computations = false;
     simplify = false;
