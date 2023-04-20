@@ -541,7 +541,7 @@ let (steps_to_string : fsteps -> Prims.string) =
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     FStar_Compiler_Util.format
-      "{\nbeta = %s;\niota = %s;\nzeta = %s;\nzeta_full = %s;\nweak = %s;\nhnf  = %s;\nprimops = %s;\ndo_not_unfold_pure_lets = %s;\nunfold_until = %s;\nunfold_only = %s;\nunfold_fully = %s;\nunfold_attr = %s;\nunfold_qual = %s;\nunfold_namespace = %s;\n\\    \n    unfold_tac = %s;\npure_subterms_within_computations = %s;\nsimplify = %s;\nerase_universes = %s;\nallow_unbound_universes = %s;\nreify_ = %s;\ncompress_uvars = %s;\nno_full_norm = %s;\ncheck_no_uvars = %s;\nunmeta = %s;\nunascribe = %s;\nin_full_norm_request = %s;\nweakly_reduce_scrutinee = %s;\nfor_extraction = %s;\nunrefine = %s;\n}"
+      "{\nbeta = %s;\niota = %s;\nzeta = %s;\nzeta_full = %s;\nweak = %s;\nhnf  = %s;\nprimops = %s;\ndo_not_unfold_pure_lets = %s;\nunfold_until = %s;\nunfold_only = %s;\nunfold_fully = %s;\nunfold_attr = %s;\nunfold_qual = %s;\nunfold_namespace = %s;\nunfold_tac = %s;\npure_subterms_within_computations = %s;\nsimplify = %s;\nerase_universes = %s;\nallow_unbound_universes = %s;\nreify_ = %s;\ncompress_uvars = %s;\nno_full_norm = %s;\ncheck_no_uvars = %s;\nunmeta = %s;\nunascribe = %s;\nin_full_norm_request = %s;\nweakly_reduce_scrutinee = %s;\nfor_extraction = %s;\nunrefine = %s;\n}"
       uu___
 let (default_steps : fsteps) =
   {
@@ -2358,17 +2358,6 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
              FStar_Pervasives_Native.Some (if neg then tru else fal)
          | uu___4 -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments" in
-  let prims_to_fstar_range_step psc1 _norm_cb _us args =
-    match args with
-    | (a1, uu___)::[] ->
-        let uu___1 = try_unembed_simple FStar_Syntax_Embeddings.e_range a1 in
-        (match uu___1 with
-         | FStar_Pervasives_Native.Some r ->
-             let uu___2 =
-               embed_simple FStar_Syntax_Embeddings.e_range psc1.psc_range r in
-             FStar_Pervasives_Native.Some uu___2
-         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments" in
   let and_op psc1 _norm_cb _us args =
     match args with
     | (a1, FStar_Pervasives_Native.None)::(a2, FStar_Pervasives_Native.None)::[]
@@ -2724,7 +2713,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                                                   let uu___50
                                                                     =
                                                                     FStar_Parser_Const.p2l
-                                                                    ["Prims";
+                                                                    ["FStar";
+                                                                    "Range";
                                                                     "mk_range"] in
                                                                   (uu___50,
                                                                     (Prims.of_int (5)),
@@ -2735,26 +2725,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                                                     uu___51
                                                                     ->
                                                                     FStar_TypeChecker_NBETerm.mk_range)) in
-                                                                let uu___50 =
-                                                                  let uu___51
-                                                                    =
-                                                                    let uu___52
-                                                                    =
-                                                                    FStar_Parser_Const.p2l
-                                                                    ["FStar";
-                                                                    "Range";
-                                                                    "prims_to_fstar_range"] in
-                                                                    (uu___52,
-                                                                    Prims.int_one,
-                                                                    Prims.int_zero,
-                                                                    prims_to_fstar_range_step,
-                                                                    (fun
-                                                                    uu___53
-                                                                    ->
-                                                                    FStar_TypeChecker_NBETerm.prims_to_fstar_range_step)) in
-                                                                  [uu___51] in
-                                                                uu___49 ::
-                                                                  uu___50 in
+                                                                [uu___49] in
                                                               (FStar_Parser_Const.op_notEq,
                                                                 (Prims.of_int (3)),
                                                                 Prims.int_zero,

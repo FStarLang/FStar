@@ -446,6 +446,10 @@ if it cannot be solved. The vconfig specifies fuels, limits, etc. The
 current goal's vconfig is ignored in favor of this one. *)
 val t_smt_sync : vconfig -> Tac unit
 
+(** This returns the free uvars that appear in a term. This is not
+a reflection primitive as it depends on the state of the UF graph. *)
+val free_uvars : term -> Tac (list int)
+
 
 (***** APIs used in the meta DSL framework *****)
 

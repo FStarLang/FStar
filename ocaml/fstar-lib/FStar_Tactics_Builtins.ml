@@ -171,12 +171,14 @@ let term_to_string          = from_tac_1 B.term_to_string
 let comp_to_string          = from_tac_1 B.comp_to_string
 let range_to_string         = from_tac_1 B.range_to_string
 let term_eq_old             = from_tac_2 B.term_eq_old
-let get_vconfig             = from_tac_1 B.get_vconfig
-let set_vconfig             = from_tac_1 B.set_vconfig
-let t_smt_sync              = from_tac_1 B.t_smt_sync
 
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
   from_tac_2 B.with_compat_pre_core n (to_tac_0 (f ()))
+
+let get_vconfig             = from_tac_1 B.get_vconfig
+let set_vconfig             = from_tac_1 B.set_vconfig
+let t_smt_sync              = from_tac_1 B.t_smt_sync
+let free_uvars              = from_tac_1 B.free_uvars
 
 
 type ('env, 't0, 't1) subtyping_token = unit

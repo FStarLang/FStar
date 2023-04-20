@@ -1000,7 +1000,8 @@ let abs bs t lopt =
 
 let arrow bs c = match bs with
   | [] -> comp_result c
-  | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) c.pos
+  | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c))
+            (List.fold_left (fun a b -> Range.union_ranges a b.binder_bv.sort.pos) c.pos bs)
 
 let flat_arrow bs c =
   let t = arrow bs c in

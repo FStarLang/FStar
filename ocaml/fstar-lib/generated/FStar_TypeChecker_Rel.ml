@@ -2908,6 +2908,8 @@ let rec (head_matches :
            uu___1) -> HeadMatch true
         | (FStar_Syntax_Syntax.Tm_match uu___, FStar_Syntax_Syntax.Tm_match
            uu___1) -> HeadMatch true
+        | (FStar_Syntax_Syntax.Tm_quoted uu___, FStar_Syntax_Syntax.Tm_quoted
+           uu___1) -> HeadMatch true
         | (FStar_Syntax_Syntax.Tm_abs uu___, FStar_Syntax_Syntax.Tm_abs
            uu___1) -> HeadMatch true
         | uu___ ->

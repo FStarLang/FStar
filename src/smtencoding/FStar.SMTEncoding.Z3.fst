@@ -55,7 +55,7 @@ let parse_z3_version_lines out =
             BU.format2
                 "Expected Z3 version \"%s\", got \"%s\""
                 _z3version_expected
-                out
+                (BU.trim_string out)
         in
         Some msg
     | _ -> Some "No Z3 version string found"
@@ -83,7 +83,7 @@ let check_z3version () =
         | Some (e, msg) ->
           let msg =
               BU.format4
-                  "%s\n%s\n%s\n%s\n"
+                  "%s\n%s\n%s\n%s"
                   msg
                   "Please download the version of Z3 corresponding to your platform from:"
                   _z3url

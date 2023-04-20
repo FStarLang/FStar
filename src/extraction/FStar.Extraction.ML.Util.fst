@@ -47,7 +47,7 @@ let pruneNones (l : list (option 'a)) : list 'a =
                           | None -> ll) l []
 
 
-let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["Prims"], "mk_range")
+let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
 let fstar_real_of_string = with_ty MLTY_Top <| MLE_Name (["FStar";"Real"], "of_string")
 

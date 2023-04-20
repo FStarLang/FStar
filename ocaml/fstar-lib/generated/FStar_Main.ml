@@ -123,7 +123,7 @@ let (load_native_tactics : unit -> unit) =
     (let uu___2 = FStar_Options.debug_any () in
      if uu___2
      then
-       FStar_Compiler_Util.print1 "Will try to load cmxs files: %s\n"
+       FStar_Compiler_Util.print1 "Will try to load cmxs files: [%s]\n"
          (FStar_String.concat ", " cmxs_files)
      else ());
     FStar_Tactics_Load.load_tactics cmxs_files;

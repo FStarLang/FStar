@@ -335,22 +335,6 @@ let reflection_primops : list Cfg.primitive_step = [
     e_bv
     e_order;
 
-  mk2 "is_free"
-    RB.is_free
-    e_bv
-    e_term
-    e_bool;
-
-  mk1 "free_bvs"
-    RB.free_bvs
-    e_term
-    (e_list e_bv);
-
-  mk1 "free_uvars"
-    RB.free_uvars
-    e_term
-    (e_list e_int);
-
   mk2 "lookup_attr"
     RB.lookup_attr
     e_term

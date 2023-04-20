@@ -82,16 +82,13 @@ val pack_universe    : universe_view -> universe
  * pulls a LOT of modules. *)
 val implode_qn     : list string -> string
 val explode_qn     : string -> list string
-val compare_string : string -> string -> int
+val compare_string : s1:string -> s2:string -> x:int{x == 0 <==> s1 == s2}
 
 (** Primitives & helpers *)
 val lookup_typ            : env -> name -> option sigelt
 val compare_bv            : bv -> bv -> order
 val binders_of_env        : env -> binders
 val moduleof              : env -> name
-val is_free               : bv -> term -> bool
-val free_bvs              : term -> list bv
-val free_uvars            : term -> list int
 val lookup_attr           : term -> env -> list fv
 val all_defs_in_env       : env -> list fv
 val defs_in_module        : env -> name -> list fv

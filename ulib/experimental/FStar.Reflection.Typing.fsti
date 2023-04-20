@@ -118,9 +118,7 @@ let as_binder (x:var) (ty:term) =
 
 let bv_index (x:bv)
   : var
-  = let n = (inspect_bv x).bv_index in
-    assume (n >= 0); //TODO: fix lib
-    n
+  = (inspect_bv x).bv_index
 
 let binder_sort (b:binder) =
   let { binder_bv = bv } = inspect_binder b in 
@@ -137,17 +135,17 @@ type open_or_close =
 
 let tun = pack_ln Tv_Unknown
 
-let make_bv (n:int) (t:term) = { 
+let make_bv (n:nat) (t:term) = {
   bv_ppname = pp_name_default;
   bv_index = n;
   bv_sort = t
 }
-let make_bv_with_name (s:pp_name_t) (n:int) (t:term) = {
+let make_bv_with_name (s:pp_name_t) (n:nat) (t:term) = {
   bv_ppname = s;
   bv_index = n;
   bv_sort = t
 }
-let var_as_bv (v:int) = pack_bv (make_bv v tun)
+let var_as_bv (v:nat) = pack_bv (make_bv v tun)
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
 
 let binder_of_t_q t q = mk_binder pp_name_default 0 t q
@@ -607,7 +605,7 @@ type term_ctxt =
   | Ctxt_match_scrutinee : term_ctxt -> option match_returns_ascription -> list branch -> term_ctxt
 
 and bv_ctxt =
-  | Ctxt_bv : sealed string -> int -> term_ctxt -> bv_ctxt
+  | Ctxt_bv : sealed string -> nat -> term_ctxt -> bv_ctxt
 
 and binder_ctxt =
   | Ctxt_binder : bv_ctxt -> aqualv -> list term -> binder_ctxt
@@ -616,7 +614,7 @@ and comp_ctxt =
   | Ctxt_total  : term_ctxt -> comp_ctxt
   | Ctxt_gtotal : term_ctxt -> comp_ctxt
 
-let rec apply_term_ctxt (e:term_ctxt) (t:term) : term =
+let rec apply_term_ctxt (e:term_ctxt) (t:term) : Tot term (decreases e) =
   match e with
   | Ctxt_hole -> t
   | Ctxt_app_head e arg -> pack_ln (Tv_App (apply_term_ctxt e t) arg)
@@ -636,15 +634,15 @@ let rec apply_term_ctxt (e:term_ctxt) (t:term) : term =
   | Ctxt_match_scrutinee sc ret brs ->
     pack_ln (Tv_Match (apply_term_ctxt sc t) ret brs)
 
-and apply_bv_ctxt (b:bv_ctxt) (t:term) : bv =
+and apply_bv_ctxt (b:bv_ctxt) (t:term) : Tot bv (decreases b) =
   let Ctxt_bv bv_ppname bv_index ty = b in
   pack_bv {bv_ppname; bv_index; bv_sort=apply_term_ctxt ty t}
 
-and apply_binder_ctxt (b:binder_ctxt) (t:term) : binder =
+and apply_binder_ctxt (b:binder_ctxt) (t:term) : Tot binder (decreases b) =
   let Ctxt_binder bv binder_qual binder_attrs = b in
   pack_binder {binder_bv=apply_bv_ctxt bv t; binder_qual; binder_attrs}
 
-and apply_comp_ctxt (c:comp_ctxt) (t:term) : comp =
+and apply_comp_ctxt (c:comp_ctxt) (t:term) : Tot comp (decreases c) =
   match c with
   | Ctxt_total e -> pack_comp (C_Total (apply_term_ctxt e t))
   | Ctxt_gtotal e -> pack_comp (C_GTotal (apply_term_ctxt e t))
@@ -945,7 +943,7 @@ let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
 #push-options "--ifuel 2"
 
 let rec ln' (e:term) (n:int)
-  : bool
+  : Tot bool (decreases e)
   = match inspect_ln e with
     | Tv_UInst _ _
     | Tv_FVar _

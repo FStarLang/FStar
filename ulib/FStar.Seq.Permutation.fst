@@ -122,7 +122,7 @@ let count_head (#a:eqtype) (x:seq a{ Seq.length x > 0 })
   = ()
 
 
-#push-options "--fuel 0 --quake 10/10"
+#push-options "--fuel 0"
 #restart-solver
 let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
   : Tot (seqperm s0 s1)
