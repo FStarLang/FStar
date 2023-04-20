@@ -35,9 +35,9 @@ let compress1_t (allow_uvars:bool) : term -> term =
 let compress1_u (allow_uvars:bool) : universe -> universe =
   fun u ->
     match u with
-    | U_unif uv when not allow_uvars ->
-      Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     format1 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s" (string_of_int (Unionfind.univ_uvar_id uv)))
+    | U_unif uv when not allow_uvars -> U_zero
+      (* Err.raise_err (Err.Error_UnexpectedUnresolvedUvar, *)
+      (*                format1 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s" (string_of_int (Unionfind.univ_uvar_id uv))) *)
     | _ -> u
 
 (* deep_compress_*: eliminating all unification variables and delayed

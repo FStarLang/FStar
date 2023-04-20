@@ -10,4 +10,5 @@ let recall_token :
   fun m -> fun p -> ()
 type ('a, 'rel) spred = unit
 let recall : 'p . unit -> unit = fun uu___ -> ()
+let __unused : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 let witness : 'p . unit -> unit = fun uu___ -> ()
