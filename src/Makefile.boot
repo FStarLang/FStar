@@ -90,7 +90,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	$(call msg, "DEPEND")
 	$(Q)$(FSTAR_C) --dep full		\
 		fstar/FStar.Main.fst		\
-		boot/FStar.Tests.Test.fst	\
+		tests/FStar.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)			> ._depend
 	@# We've generated deps for everything into fstar-lib/generated.
@@ -103,7 +103,7 @@ depgraph.pdf :
 	$(call msg, "DEPEND")
 	$(Q)$(FSTAR_C) --dep graph\
 		fstar/FStar.Main.fst		\
-		boot/FStar.Tests.Test.fst	\
+		tests/FStar.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)
 	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph
