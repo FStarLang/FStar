@@ -312,7 +312,7 @@ let freevars_open_st_term_inv (e:st_term)
 #pop-options
 #pop-options
 
-#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 20 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats"
+#push-options "--retry 5 --fuel 10 --ifuel 10 --z3rlimit_factor 30 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats --split_queries always"
 let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                             (d:st_typing f g t c)
   : Lemma 
