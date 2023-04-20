@@ -27,7 +27,6 @@
 
 module HyE.RSA
 
-open FStar.BaseTypes
 open FStar.List.Tot
 
 open Platform.Bytes
