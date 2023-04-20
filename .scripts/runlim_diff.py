@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This script compares two runlim runs and produces a scatter plot with linear regression
 #
 # It takes as input two identifiers, the identifiers for the new run and the old run resp.
