@@ -15,7 +15,6 @@
 *)
 module Unit1.Basic
 open FStar.All
-open FStar.BaseTypes
 
 type t =
   | A

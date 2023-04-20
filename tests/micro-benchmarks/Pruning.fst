@@ -19,7 +19,6 @@ module Pruning
 open FStar.Algebra.Monoid
 open FStar.Array
 open FStar.Axiomatic.Array
-open FStar.BaseTypes
 open FStar.BitVector
 open FStar.Bytes
 open FStar.Char
