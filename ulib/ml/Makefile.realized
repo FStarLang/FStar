@@ -1,7 +1,7 @@
 # You should include this Makefile in your Makefile to make sure you remain
 # future-proof w.r.t. realized modules!
 
-FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn Float Ghost Heap Monotonic.Heap \
+FSTAR_REALIZED_MODULES=All Buffer Bytes Char CommonST Constructive Dyn Float Ghost Heap Monotonic.Heap \
 	HyperStack.All HyperStack.ST HyperStack.IO Int16 Int32 Int64 Int8 IO \
 	List List.Tot.Base Mul Option Pervasives.Native ST Exn String \
 	UInt16 UInt32 UInt64 UInt8 \
