@@ -1650,7 +1650,14 @@ let (arrow :
               let uu___4 = FStar_Syntax_Subst.close_comp bs c in
               (uu___3, uu___4) in
             FStar_Syntax_Syntax.Tm_arrow uu___2 in
-          FStar_Syntax_Syntax.mk uu___1 c.FStar_Syntax_Syntax.pos
+          let uu___2 =
+            FStar_Compiler_List.fold_left
+              (fun a ->
+                 fun b ->
+                   FStar_Compiler_Range.union_ranges a
+                     ((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos)
+              c.FStar_Syntax_Syntax.pos bs in
+          FStar_Syntax_Syntax.mk uu___1 uu___2
 let (flat_arrow :
   FStar_Syntax_Syntax.binder Prims.list ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->

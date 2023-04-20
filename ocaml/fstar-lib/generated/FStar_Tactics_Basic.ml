@@ -7007,6 +7007,26 @@ let (t_smt_sync : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
                else FStar_Tactics_Monad.fail "SMT did not solve this goal") in
     FStar_Compiler_Effect.op_Less_Bar
       (FStar_Tactics_Monad.wrap_err "t_smt_sync") uu___
+let (free_uvars :
+  FStar_Syntax_Syntax.term ->
+    FStar_BigInt.t Prims.list FStar_Tactics_Monad.tac)
+  =
+  fun tm ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uvs =
+           let uu___1 =
+             let uu___2 = FStar_Syntax_Free.uvars_uncached tm in
+             FStar_Compiler_Effect.op_Bar_Greater uu___2
+               FStar_Compiler_Util.set_elements in
+           FStar_Compiler_Effect.op_Bar_Greater uu___1
+             (FStar_Compiler_List.map
+                (fun u ->
+                   let uu___2 =
+                     FStar_Syntax_Unionfind.uvar_id
+                       u.FStar_Syntax_Syntax.ctx_uvar_head in
+                   FStar_BigInt.of_int_fs uu___2)) in
+         FStar_Tactics_Monad.ret uvs)
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->
