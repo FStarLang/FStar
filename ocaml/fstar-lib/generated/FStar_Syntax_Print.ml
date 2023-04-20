@@ -655,6 +655,10 @@ and (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =
         let uu___1 = FStar_Compiler_Util.string_of_int i in
         let uu___2 = bv_to_string x in
         FStar_Compiler_Util.format2 "DB (%s, %s)" uu___1 uu___2
+    | FStar_Syntax_Syntax.DT (i, t) ->
+        let uu___1 = FStar_Compiler_Util.string_of_int i in
+        let uu___2 = term_to_string t in
+        FStar_Compiler_Util.format2 "DT (%s, %s)" uu___1 uu___2
     | FStar_Syntax_Syntax.NM (x, i) ->
         let uu___1 = bv_to_string x in
         let uu___2 = FStar_Compiler_Util.string_of_int i in

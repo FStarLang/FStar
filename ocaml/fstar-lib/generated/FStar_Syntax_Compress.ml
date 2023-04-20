@@ -72,16 +72,7 @@ let (compress1_u :
     fun u ->
       match u with
       | FStar_Syntax_Syntax.U_unif uv when Prims.op_Negation allow_uvars ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Unionfind.univ_uvar_id uv in
-                FStar_Compiler_Util.string_of_int uu___3 in
-              FStar_Compiler_Util.format1
-                "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s"
-                uu___2 in
-            (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar, uu___1) in
-          FStar_Errors.raise_err uu___
+          FStar_Syntax_Syntax.U_zero
       | uu___ -> u
 let (deep_compress :
   Prims.bool -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =

@@ -4766,7 +4766,9 @@ let (tc_modul :
         let env01 = push_context env0 msg in
         let uu___ = tc_partial_modul env01 m in
         match uu___ with
-        | (modul, env) -> finish_partial_modul false iface_exists env modul
+        | (modul, env) ->
+            let modul1 = deep_compress_modul modul in
+            finish_partial_modul false iface_exists env modul1
 let (load_checked_module :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul -> FStar_TypeChecker_Env.env)

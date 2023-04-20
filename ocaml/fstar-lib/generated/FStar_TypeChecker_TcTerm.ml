@@ -7414,9 +7414,9 @@ and (check_application_args :
                                     aux false false ghead2
                                       (FStar_Syntax_Util.comp_result chead2)))) in
                let rec check_function_app tf guard =
+                 let tw = FStar_TypeChecker_Normalize.unfold_whnf env tf in
                  let uu___1 =
-                   let uu___2 =
-                     FStar_TypeChecker_Normalize.unfold_whnf env tf in
+                   let uu___2 = FStar_Syntax_Subst.compress tw in
                    uu___2.FStar_Syntax_Syntax.n in
                  match uu___1 with
                  | FStar_Syntax_Syntax.Tm_uvar uu___2 ->

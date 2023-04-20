@@ -323,6 +323,7 @@ and unresolved_constructor =
   uc_fields: FStar_Ident.lident Prims.list }
 and subst_elt =
   | DB of (Prims.int * bv) 
+  | DT of (Prims.int * term' syntax) 
   | NM of (bv * Prims.int) 
   | NT of (bv * term' syntax) 
   | UN of (Prims.int * universe) 
@@ -825,6 +826,10 @@ let (uu___is_DB : subst_elt -> Prims.bool) =
   fun projectee -> match projectee with | DB _0 -> true | uu___ -> false
 let (__proj__DB__item___0 : subst_elt -> (Prims.int * bv)) =
   fun projectee -> match projectee with | DB _0 -> _0
+let (uu___is_DT : subst_elt -> Prims.bool) =
+  fun projectee -> match projectee with | DT _0 -> true | uu___ -> false
+let (__proj__DT__item___0 : subst_elt -> (Prims.int * term' syntax)) =
+  fun projectee -> match projectee with | DT _0 -> _0
 let (uu___is_NM : subst_elt -> Prims.bool) =
   fun projectee -> match projectee with | NM _0 -> true | uu___ -> false
 let (__proj__NM__item___0 : subst_elt -> (bv * Prims.int)) =

@@ -130,7 +130,8 @@ let rec (compress_univ :
 let (subst_bv :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.subst_elt Prims.list ->
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+        FStar_Pervasives_Native.option)
   =
   fun a ->
     fun s ->
@@ -144,6 +145,18 @@ let (subst_bv :
                    let uu___3 = FStar_Syntax_Syntax.range_of_bv a in
                    FStar_Syntax_Syntax.set_range_of_bv x uu___3 in
                  FStar_Syntax_Syntax.bv_to_name uu___2 in
+               FStar_Pervasives_Native.Some uu___1
+           | FStar_Syntax_Syntax.DT (i, t) when
+               i = a.FStar_Syntax_Syntax.index ->
+               let uu___1 =
+                 let uu___2 = FStar_Syntax_Syntax.range_of_bv a in
+                 {
+                   FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
+                   FStar_Syntax_Syntax.pos = uu___2;
+                   FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
+                   FStar_Syntax_Syntax.hash_code =
+                     (t.FStar_Syntax_Syntax.hash_code)
+                 } in
                FStar_Pervasives_Native.Some uu___1
            | uu___1 -> FStar_Pervasives_Native.None)
 let (subst_nm :
@@ -499,6 +512,7 @@ let (shift :
     fun s ->
       match s with
       | FStar_Syntax_Syntax.DB (i, t) -> FStar_Syntax_Syntax.DB ((i + n), t)
+      | FStar_Syntax_Syntax.DT (i, t) -> FStar_Syntax_Syntax.DT ((i + n), t)
       | FStar_Syntax_Syntax.UN (i, t) -> FStar_Syntax_Syntax.UN ((i + n), t)
       | FStar_Syntax_Syntax.NM (x, i) -> FStar_Syntax_Syntax.NM (x, (i + n))
       | FStar_Syntax_Syntax.UD (x, i) -> FStar_Syntax_Syntax.UD (x, (i + n))
