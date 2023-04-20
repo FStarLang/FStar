@@ -238,7 +238,7 @@ and hash_constant =
   | Const_int (s, o) -> mix (of_int 313)
                              (mix (of_string s)
                                     (hash_option hash_sw o))
-  | Const_char c -> mix (of_int 317) (of_int (UInt32.v (Char.u32_of_char c)))
+  | Const_char c -> mix (of_int 317) (of_int (Char.int_of_char c))
   | Const_real s -> mix (of_int 337) (of_string s)
   | Const_string (s, _) -> mix (of_int 349) (of_string s)
   | Const_range_of -> of_int 353
