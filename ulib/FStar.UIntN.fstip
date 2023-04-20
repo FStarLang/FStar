@@ -322,7 +322,7 @@ val to_string_hex: t -> Tot string
 (** In fixed-width hex representation (left-padded with zeroes, no leading 0x) *)
 val to_string_hex_pad: t -> Tot string
 
-val of_string: string -> Tot t
+val of_string: string -> Tot (option t)
 
 #set-options "--lax"
 //This private primitive is used internally by the

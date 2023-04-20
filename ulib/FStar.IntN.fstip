@@ -137,7 +137,7 @@ let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
 (* .. in decimal representation *)
 val to_string: t -> Tot string
 
-val of_string: string -> Tot t
+val of_string: string -> Tot (option t)
 
 #set-options "--lax"
 //This private primitive is used internally by the
