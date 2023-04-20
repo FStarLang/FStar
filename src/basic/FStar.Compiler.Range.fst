@@ -174,6 +174,14 @@ let json_of_def_range r =
             (start_of_range r)
             (end_of_range r)
 
+(* This coercion relies on the equality of the two types, which is
+   not visible in F*, but is true at the OCaml level. *)
+let of_prims_range (r : prims_range) : Prims.range =
+  coerce_eq () r
+
+let to_prims_range (r:Prims.range) : prims_range =
+  coerce_eq () r
+  
 let rng_of_prims_rng (r:prims_rng) =
     let (f, s, e) = r in
     let s = mk_pos (fst s) (snd s) in

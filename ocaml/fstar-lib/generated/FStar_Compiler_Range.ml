@@ -220,6 +220,10 @@ let (json_of_def_range : range -> FStar_Compiler_Util.json) =
 type prims_rng =
   (Prims.string * (Prims.int * Prims.int) * (Prims.int * Prims.int))
 type prims_range = (prims_rng * prims_rng)
+let (of_prims_range : prims_range -> Prims.range) =
+  fun r -> FStar_Pervasives.coerce_eq () r
+let (to_prims_range : Prims.range -> prims_range) =
+  fun r -> FStar_Pervasives.coerce_eq () r
 let (rng_of_prims_rng : prims_rng -> rng) =
   fun r ->
     let uu___ = r in

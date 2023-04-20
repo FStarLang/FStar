@@ -71,5 +71,7 @@ val json_of_def_range : range -> json
  * but we cannot use Prims.range here, since it is uninterpreted in F* *)
 type prims_rng = string * (int * int) * (int * int)
 type prims_range = prims_rng * prims_rng
+val of_prims_range : prims_range -> Prims.range
+val to_prims_range : Prims.range -> prims_range
 val range_of_prims_range : prims_range -> range
 val prims_range_of_range : range -> prims_range

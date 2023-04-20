@@ -152,6 +152,8 @@ let e_aqualv          : dualemb RD.aqualv          = (RE.e_aqualv, NRE.e_aqualv)
 let e_vconfig         : dualemb VConfig.vconfig    = (EMB.e_vconfig, NBET.e_vconfig)
 let e_attributes      : dualemb (list attribute)   = (RE.e_attributes, NRE.e_attributes)
 let e_qualifiers      : dualemb RD.qualifiers      = (RE.e_qualifiers, NRE.e_qualifiers)
+let e_range           : dualemb range              = 
+  (FStar.Syntax.Embeddings.e_range, FStar.TypeChecker.NBETerm.e_range)
 
 let e_list (e : dualemb 'a) : dualemb (list 'a) =
   (EMB.e_list (fst e), NBET.e_list (snd e))
@@ -414,6 +416,16 @@ let reflection_primops : list Cfg.primitive_step = [
     e_env
     e_binder
     e_env;
+
+  mk1 "range_of_term"
+    RB.range_of_term
+    e_term
+    e_range;
+
+  mk1 "range_of_sigelt"
+    RB.range_of_sigelt
+    e_sigelt
+    e_range;
 ]
 
 let _ = List.iter FStar.TypeChecker.Cfg.register_extra_step reflection_primops

@@ -261,6 +261,7 @@ val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
 val e_range  : embedding Range.range
+val e_prims_range  : embedding Prims.range
 val e_vconfig  : embedding vconfig
 val e_norm_step : embedding Syntax.Embeddings.norm_step
 val e_list   : embedding 'a -> embedding (list 'a)

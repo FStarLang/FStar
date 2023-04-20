@@ -415,6 +415,9 @@ val term_to_string : term -> Tac string
 on [term_to_string]. *)
 val comp_to_string : comp -> Tac string
 
+(** Print a source range as a string *)
+val range_to_string : range -> Tac string
+
 (** A variant of Reflection.term_eq that may inspect more underlying
 details of terms. This function could distinguish two _otherwise equal
 terms_, but that distinction cannot leave the Tac effect.

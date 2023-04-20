@@ -122,6 +122,7 @@ val e_fsint       : embedding int
 val e_string      : embedding string
 val e_norm_step   : embedding norm_step
 val e_range       : embedding Range.range
+val e_prims_range : embedding Prims.range
 val e_vconfig     : embedding vconfig
 
 val e_option      : embedding 'a -> embedding (option 'a)
