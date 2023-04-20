@@ -15,10 +15,10 @@ let rec (collect_arr' :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                       (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                           (Prims.of_int (14)) (Prims.of_int (20))
                           (Prims.of_int (14)) (Prims.of_int (29)))
-                       (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                       (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                           (Prims.of_int (14)) (Prims.of_int (14))
                           (Prims.of_int (18)) (Prims.of_int (19)))
                        (Obj.magic (FStar_Tactics_Builtins.inspect t))
@@ -45,9 +45,9 @@ let (collect_arr_bs :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (25))
+      (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (25))
          (Prims.of_int (18)) (Prims.of_int (25)) (Prims.of_int (57)))
-      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (25))
+      (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (25))
          (Prims.of_int (4)) (Prims.of_int (26)) (Prims.of_int (29)))
       (Obj.magic
          (collect_arr' []
@@ -64,9 +64,9 @@ let (collect_arr :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (30))
+      (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (30))
          (Prims.of_int (18)) (Prims.of_int (30)) (Prims.of_int (57)))
-      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (30))
+      (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (30))
          (Prims.of_int (4)) (Prims.of_int (32)) (Prims.of_int (29)))
       (Obj.magic
          (collect_arr' []
@@ -90,9 +90,9 @@ let rec (collect_abs' :
   fun bs ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (36))
+        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (36))
            (Prims.of_int (10)) (Prims.of_int (36)) (Prims.of_int (19)))
-        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (36))
+        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (36))
            (Prims.of_int (4)) (Prims.of_int (39)) (Prims.of_int (18)))
         (Obj.magic (FStar_Tactics_Builtins.inspect t))
         (fun uu___ ->
@@ -112,9 +112,9 @@ let (collect_abs :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (43))
+      (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (43))
          (Prims.of_int (19)) (Prims.of_int (43)) (Prims.of_int (36)))
-      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (43))
+      (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (43))
          (Prims.of_int (4)) (Prims.of_int (44)) (Prims.of_int (30)))
       (Obj.magic (collect_abs' [] t))
       (fun uu___ ->
@@ -142,35 +142,35 @@ let rec (mk_arr :
             (FStar_Reflection_Data.Tv_Arrow (b, cod))
       | b::bs1 ->
           FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+            (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                (Prims.of_int (55)) (Prims.of_int (11)) (Prims.of_int (55))
                (Prims.of_int (61)))
-            (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+            (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                (Prims.of_int (55)) (Prims.of_int (6)) (Prims.of_int (55))
                (Prims.of_int (61)))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
-                  (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                  (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                      (Prims.of_int (55)) (Prims.of_int (23))
                      (Prims.of_int (55)) (Prims.of_int (60)))
-                  (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                  (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                      (Prims.of_int (55)) (Prims.of_int (11))
                      (Prims.of_int (55)) (Prims.of_int (61)))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                            (Prims.of_int (55)) (Prims.of_int (34))
                            (Prims.of_int (55)) (Prims.of_int (59)))
-                        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                            (Prims.of_int (55)) (Prims.of_int (23))
                            (Prims.of_int (55)) (Prims.of_int (60)))
                         (Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
+                              (FStar_Range.mk_range
                                  "FStar.Tactics.SyntaxHelpers.fst"
                                  (Prims.of_int (55)) (Prims.of_int (43))
                                  (Prims.of_int (55)) (Prims.of_int (58)))
-                              (Prims.mk_range
+                              (FStar_Range.mk_range
                                  "FStar.Tactics.SyntaxHelpers.fst"
                                  (Prims.of_int (55)) (Prims.of_int (34))
                                  (Prims.of_int (55)) (Prims.of_int (59)))
@@ -204,35 +204,35 @@ let rec (mk_arr_curried :
             (FStar_Reflection_Data.Tv_Arrow (b, cod))
       | b::bs1 ->
           FStar_Tactics_Effect.tac_bind
-            (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+            (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                (Prims.of_int (61)) (Prims.of_int (30)) (Prims.of_int (61))
                (Prims.of_int (88)))
-            (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+            (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                (Prims.of_int (61)) (Prims.of_int (17)) (Prims.of_int (61))
                (Prims.of_int (88)))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
-                  (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                  (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                      (Prims.of_int (61)) (Prims.of_int (42))
                      (Prims.of_int (61)) (Prims.of_int (87)))
-                  (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                  (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                      (Prims.of_int (61)) (Prims.of_int (30))
                      (Prims.of_int (61)) (Prims.of_int (88)))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                            (Prims.of_int (61)) (Prims.of_int (53))
                            (Prims.of_int (61)) (Prims.of_int (86)))
-                        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                            (Prims.of_int (61)) (Prims.of_int (42))
                            (Prims.of_int (61)) (Prims.of_int (87)))
                         (Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range
+                              (FStar_Range.mk_range
                                  "FStar.Tactics.SyntaxHelpers.fst"
                                  (Prims.of_int (61)) (Prims.of_int (62))
                                  (Prims.of_int (61)) (Prims.of_int (85)))
-                              (Prims.mk_range
+                              (FStar_Range.mk_range
                                  "FStar.Tactics.SyntaxHelpers.fst"
                                  (Prims.of_int (61)) (Prims.of_int (53))
                                  (Prims.of_int (61)) (Prims.of_int (86)))
@@ -271,41 +271,41 @@ let rec (mk_tot_arr :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                       (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                           (Prims.of_int (67)) (Prims.of_int (11))
                           (Prims.of_int (67)) (Prims.of_int (65)))
-                       (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst"
+                       (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
                           (Prims.of_int (67)) (Prims.of_int (6))
                           (Prims.of_int (67)) (Prims.of_int (65)))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
-                             (Prims.mk_range
+                             (FStar_Range.mk_range
                                 "FStar.Tactics.SyntaxHelpers.fst"
                                 (Prims.of_int (67)) (Prims.of_int (23))
                                 (Prims.of_int (67)) (Prims.of_int (64)))
-                             (Prims.mk_range
+                             (FStar_Range.mk_range
                                 "FStar.Tactics.SyntaxHelpers.fst"
                                 (Prims.of_int (67)) (Prims.of_int (11))
                                 (Prims.of_int (67)) (Prims.of_int (65)))
                              (Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range
+                                   (FStar_Range.mk_range
                                       "FStar.Tactics.SyntaxHelpers.fst"
                                       (Prims.of_int (67)) (Prims.of_int (34))
                                       (Prims.of_int (67)) (Prims.of_int (63)))
-                                   (Prims.mk_range
+                                   (FStar_Range.mk_range
                                       "FStar.Tactics.SyntaxHelpers.fst"
                                       (Prims.of_int (67)) (Prims.of_int (23))
                                       (Prims.of_int (67)) (Prims.of_int (64)))
                                    (Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
-                                         (Prims.mk_range
+                                         (FStar_Range.mk_range
                                             "FStar.Tactics.SyntaxHelpers.fst"
                                             (Prims.of_int (67))
                                             (Prims.of_int (43))
                                             (Prims.of_int (67))
                                             (Prims.of_int (62)))
-                                         (Prims.mk_range
+                                         (FStar_Range.mk_range
                                             "FStar.Tactics.SyntaxHelpers.fst"
                                             (Prims.of_int (67))
                                             (Prims.of_int (34))
@@ -339,9 +339,9 @@ let (lookup_lb_view :
   fun lbs ->
     fun nm ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (70))
+        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (70))
            (Prims.of_int (10)) (Prims.of_int (74)) (Prims.of_int (16)))
-        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (76))
+        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (76))
            (Prims.of_int (2)) (Prims.of_int (78)) (Prims.of_int (56)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ ->
@@ -369,9 +369,9 @@ let rec (inspect_unascribe :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (81))
+      (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (81))
          (Prims.of_int (8)) (Prims.of_int (81)) (Prims.of_int (17)))
-      (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (81))
+      (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (81))
          (Prims.of_int (2)) (Prims.of_int (85)) (Prims.of_int (12)))
       (Obj.magic (FStar_Tactics_Builtins.inspect t))
       (fun uu___ ->
@@ -395,9 +395,9 @@ let rec (collect_app' :
   fun args ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (90))
+        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (90))
            (Prims.of_int (10)) (Prims.of_int (90)) (Prims.of_int (29)))
-        (Prims.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (90))
+        (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst" (Prims.of_int (90))
            (Prims.of_int (4)) (Prims.of_int (93)) (Prims.of_int (20)))
         (Obj.magic (inspect_unascribe t))
         (fun uu___ ->

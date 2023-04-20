@@ -6583,18 +6583,8 @@ let (new_tac_implicit_var :
           fun should_check ->
             fun uvar_typedness_deps ->
               fun meta ->
-                let uu___ =
-                  FStar_Syntax_Util.destruct k
-                    FStar_Parser_Const.range_of_lid in
+                let uu___ = () in
                 match uu___ with
-                | FStar_Pervasives_Native.Some (uu___1::(tm, uu___2)::[]) ->
-                    let t =
-                      FStar_Syntax_Syntax.mk
-                        (FStar_Syntax_Syntax.Tm_constant
-                           (FStar_Const.Const_range
-                              (tm.FStar_Syntax_Syntax.pos)))
-                        tm.FStar_Syntax_Syntax.pos in
-                    (t, [], trivial_guard)
                 | uu___1 ->
                     let binders = all_binders env1 in
                     let gamma = env1.gamma in

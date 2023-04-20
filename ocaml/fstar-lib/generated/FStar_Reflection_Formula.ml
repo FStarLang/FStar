@@ -9,9 +9,9 @@ let (bv_to_string :
   =
   fun bv ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (29))
+      (FStar_Range.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (29))
          (Prims.of_int (14)) (Prims.of_int (29)) (Prims.of_int (27)))
-      (Prims.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (30))
+      (FStar_Range.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (30))
          (Prims.of_int (4)) (Prims.of_int (30)) (Prims.of_int (26)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Builtins.inspect_bv bv))
@@ -26,9 +26,9 @@ let rec (inspect_unascribe :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (32))
+      (FStar_Range.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (32))
          (Prims.of_int (8)) (Prims.of_int (32)) (Prims.of_int (17)))
-      (Prims.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (32))
+      (FStar_Range.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (32))
          (Prims.of_int (2)) (Prims.of_int (36)) (Prims.of_int (12)))
       (Obj.magic (FStar_Tactics_Builtins.inspect t))
       (fun uu___ ->
@@ -52,9 +52,9 @@ let rec (collect_app' :
   fun args ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (39))
+        (FStar_Range.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (39))
            (Prims.of_int (10)) (Prims.of_int (39)) (Prims.of_int (29)))
-        (Prims.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (39))
+        (FStar_Range.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (39))
            (Prims.of_int (4)) (Prims.of_int (42)) (Prims.of_int (20)))
         (Obj.magic (inspect_unascribe t))
         (fun uu___ ->
@@ -274,9 +274,9 @@ let (term_as_formula' :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (81))
+      (FStar_Range.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (81))
          (Prims.of_int (10)) (Prims.of_int (81)) (Prims.of_int (29)))
-      (Prims.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (81))
+      (FStar_Range.mk_range "FStar.Reflection.Formula.fst" (Prims.of_int (81))
          (Prims.of_int (4)) (Prims.of_int (150)) (Prims.of_int (28)))
       (Obj.magic (inspect_unascribe t))
       (fun uu___ ->
@@ -321,10 +321,10 @@ let (term_as_formula' :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range "FStar.Reflection.Formula.fst"
+                        (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                            (Prims.of_int (97)) (Prims.of_int (22))
                            (Prims.of_int (97)) (Prims.of_int (36)))
-                        (Prims.mk_range "FStar.Reflection.Formula.fst"
+                        (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                            (Prims.of_int (97)) (Prims.of_int (8))
                            (Prims.of_int (130)) (Prims.of_int (26)))
                         (Obj.magic (collect_app h0))
@@ -334,13 +334,13 @@ let (term_as_formula' :
                               | (h, ts) ->
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
-                                       (Prims.mk_range
+                                       (FStar_Range.mk_range
                                           "FStar.Reflection.Formula.fst"
                                           (Prims.of_int (98))
                                           (Prims.of_int (16))
                                           (Prims.of_int (98))
                                           (Prims.of_int (26)))
-                                       (Prims.mk_range
+                                       (FStar_Range.mk_range
                                           "FStar.Reflection.Formula.fst"
                                           (Prims.of_int (99))
                                           (Prims.of_int (8))
@@ -513,13 +513,13 @@ let (term_as_formula' :
                                                  Obj.magic
                                                    (Obj.repr
                                                       (FStar_Tactics_Effect.tac_bind
-                                                         (Prims.mk_range
+                                                         (FStar_Range.mk_range
                                                             "FStar.Reflection.Formula.fst"
                                                             (Prims.of_int (121))
                                                             (Prims.of_int (21))
                                                             (Prims.of_int (121))
                                                             (Prims.of_int (34)))
-                                                         (Prims.mk_range
+                                                         (FStar_Range.mk_range
                                                             "FStar.Reflection.Formula.fst"
                                                             (Prims.of_int (122))
                                                             (Prims.of_int (17))
@@ -775,18 +775,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (208)) (Prims.of_int (24))
                       (Prims.of_int (211)) (Prims.of_int (80)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (208)) (Prims.of_int (24))
                             (Prims.of_int (210)) (Prims.of_int (67)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (208)) (Prims.of_int (24))
                             (Prims.of_int (211)) (Prims.of_int (80)))
                          (match mt with
@@ -799,26 +799,26 @@ let (formula_to_string :
                               Obj.magic
                                 (Obj.repr
                                    (FStar_Tactics_Effect.tac_bind
-                                      (Prims.mk_range
+                                      (FStar_Range.mk_range
                                          "FStar.Reflection.Formula.fst"
                                          (Prims.of_int (210))
                                          (Prims.of_int (44))
                                          (Prims.of_int (210))
                                          (Prims.of_int (66)))
-                                      (Prims.mk_range "prims.fst"
+                                      (FStar_Range.mk_range "prims.fst"
                                          (Prims.of_int (606))
                                          (Prims.of_int (19))
                                          (Prims.of_int (606))
                                          (Prims.of_int (31)))
                                       (Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
-                                            (Prims.mk_range
+                                            (FStar_Range.mk_range
                                                "FStar.Reflection.Formula.fst"
                                                (Prims.of_int (210))
                                                (Prims.of_int (44))
                                                (Prims.of_int (210))
                                                (Prims.of_int (60)))
-                                            (Prims.mk_range "prims.fst"
+                                            (FStar_Range.mk_range "prims.fst"
                                                (Prims.of_int (606))
                                                (Prims.of_int (19))
                                                (Prims.of_int (606))
@@ -838,39 +838,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (211))
                                        (Prims.of_int (24))
                                        (Prims.of_int (211))
                                        (Prims.of_int (80)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (211))
                                              (Prims.of_int (31))
                                              (Prims.of_int (211))
                                              (Prims.of_int (80)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (211))
                                                    (Prims.of_int (31))
                                                    (Prims.of_int (211))
                                                    (Prims.of_int (47)))
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (211))
                                                    (Prims.of_int (31))
@@ -883,13 +883,13 @@ let (formula_to_string :
                                                    (fun uu___1 ->
                                                       Obj.magic
                                                         (FStar_Tactics_Effect.tac_bind
-                                                           (Prims.mk_range
+                                                           (FStar_Range.mk_range
                                                               "FStar.Reflection.Formula.fst"
                                                               (Prims.of_int (211))
                                                               (Prims.of_int (50))
                                                               (Prims.of_int (211))
                                                               (Prims.of_int (80)))
-                                                           (Prims.mk_range
+                                                           (FStar_Range.mk_range
                                                               "prims.fst"
                                                               (Prims.of_int (606))
                                                               (Prims.of_int (19))
@@ -897,13 +897,13 @@ let (formula_to_string :
                                                               (Prims.of_int (31)))
                                                            (Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
-                                                                 (Prims.mk_range
+                                                                 (FStar_Range.mk_range
                                                                     "FStar.Reflection.Formula.fst"
                                                                     (Prims.of_int (211))
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (211))
                                                                     (Prims.of_int (80)))
-                                                                 (Prims.mk_range
+                                                                 (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (606))
                                                                     (Prims.of_int (19))
@@ -912,13 +912,13 @@ let (formula_to_string :
                                                                  (Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Reflection.Formula.fst"
                                                                     (Prims.of_int (211))
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (211))
                                                                     (Prims.of_int (74)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (606))
                                                                     (Prims.of_int (19))
@@ -967,18 +967,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (213)) (Prims.of_int (24))
                       (Prims.of_int (216)) (Prims.of_int (80)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (213)) (Prims.of_int (24))
                             (Prims.of_int (215)) (Prims.of_int (67)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (213)) (Prims.of_int (24))
                             (Prims.of_int (216)) (Prims.of_int (80)))
                          (match mt with
@@ -991,26 +991,26 @@ let (formula_to_string :
                               Obj.magic
                                 (Obj.repr
                                    (FStar_Tactics_Effect.tac_bind
-                                      (Prims.mk_range
+                                      (FStar_Range.mk_range
                                          "FStar.Reflection.Formula.fst"
                                          (Prims.of_int (215))
                                          (Prims.of_int (44))
                                          (Prims.of_int (215))
                                          (Prims.of_int (66)))
-                                      (Prims.mk_range "prims.fst"
+                                      (FStar_Range.mk_range "prims.fst"
                                          (Prims.of_int (606))
                                          (Prims.of_int (19))
                                          (Prims.of_int (606))
                                          (Prims.of_int (31)))
                                       (Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
-                                            (Prims.mk_range
+                                            (FStar_Range.mk_range
                                                "FStar.Reflection.Formula.fst"
                                                (Prims.of_int (215))
                                                (Prims.of_int (44))
                                                (Prims.of_int (215))
                                                (Prims.of_int (60)))
-                                            (Prims.mk_range "prims.fst"
+                                            (FStar_Range.mk_range "prims.fst"
                                                (Prims.of_int (606))
                                                (Prims.of_int (19))
                                                (Prims.of_int (606))
@@ -1030,39 +1030,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (216))
                                        (Prims.of_int (24))
                                        (Prims.of_int (216))
                                        (Prims.of_int (80)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (216))
                                              (Prims.of_int (31))
                                              (Prims.of_int (216))
                                              (Prims.of_int (80)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (216))
                                                    (Prims.of_int (31))
                                                    (Prims.of_int (216))
                                                    (Prims.of_int (47)))
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (216))
                                                    (Prims.of_int (31))
@@ -1075,13 +1075,13 @@ let (formula_to_string :
                                                    (fun uu___1 ->
                                                       Obj.magic
                                                         (FStar_Tactics_Effect.tac_bind
-                                                           (Prims.mk_range
+                                                           (FStar_Range.mk_range
                                                               "FStar.Reflection.Formula.fst"
                                                               (Prims.of_int (216))
                                                               (Prims.of_int (50))
                                                               (Prims.of_int (216))
                                                               (Prims.of_int (80)))
-                                                           (Prims.mk_range
+                                                           (FStar_Range.mk_range
                                                               "prims.fst"
                                                               (Prims.of_int (606))
                                                               (Prims.of_int (19))
@@ -1089,13 +1089,13 @@ let (formula_to_string :
                                                               (Prims.of_int (31)))
                                                            (Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
-                                                                 (Prims.mk_range
+                                                                 (FStar_Range.mk_range
                                                                     "FStar.Reflection.Formula.fst"
                                                                     (Prims.of_int (216))
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (216))
                                                                     (Prims.of_int (80)))
-                                                                 (Prims.mk_range
+                                                                 (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (606))
                                                                     (Prims.of_int (19))
@@ -1104,13 +1104,13 @@ let (formula_to_string :
                                                                  (Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Reflection.Formula.fst"
                                                                     (Prims.of_int (216))
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (216))
                                                                     (Prims.of_int (74)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (606))
                                                                     (Prims.of_int (19))
@@ -1159,18 +1159,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (217)) (Prims.of_int (30))
                       (Prims.of_int (217)) (Prims.of_int (79)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (217)) (Prims.of_int (30))
                             (Prims.of_int (217)) (Prims.of_int (46)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (217)) (Prims.of_int (30))
                             (Prims.of_int (217)) (Prims.of_int (79)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string l))
@@ -1178,39 +1178,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (217))
                                        (Prims.of_int (49))
                                        (Prims.of_int (217))
                                        (Prims.of_int (79)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (217))
                                              (Prims.of_int (57))
                                              (Prims.of_int (217))
                                              (Prims.of_int (79)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (217))
                                                    (Prims.of_int (57))
                                                    (Prims.of_int (217))
                                                    (Prims.of_int (73)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1239,18 +1239,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (218)) (Prims.of_int (30))
                       (Prims.of_int (218)) (Prims.of_int (79)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (218)) (Prims.of_int (30))
                             (Prims.of_int (218)) (Prims.of_int (46)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (218)) (Prims.of_int (30))
                             (Prims.of_int (218)) (Prims.of_int (79)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string l))
@@ -1258,39 +1258,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (218))
                                        (Prims.of_int (49))
                                        (Prims.of_int (218))
                                        (Prims.of_int (79)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (218))
                                              (Prims.of_int (57))
                                              (Prims.of_int (218))
                                              (Prims.of_int (79)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (218))
                                                    (Prims.of_int (57))
                                                    (Prims.of_int (218))
                                                    (Prims.of_int (73)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1319,18 +1319,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (219)) (Prims.of_int (30))
                       (Prims.of_int (219)) (Prims.of_int (79)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (219)) (Prims.of_int (30))
                             (Prims.of_int (219)) (Prims.of_int (46)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (219)) (Prims.of_int (30))
                             (Prims.of_int (219)) (Prims.of_int (79)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string l))
@@ -1338,39 +1338,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (219))
                                        (Prims.of_int (49))
                                        (Prims.of_int (219))
                                        (Prims.of_int (79)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (219))
                                              (Prims.of_int (57))
                                              (Prims.of_int (219))
                                              (Prims.of_int (79)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (219))
                                                    (Prims.of_int (57))
                                                    (Prims.of_int (219))
                                                    (Prims.of_int (73)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1399,18 +1399,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (220)) (Prims.of_int (30))
                       (Prims.of_int (220)) (Prims.of_int (79)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (220)) (Prims.of_int (30))
                             (Prims.of_int (220)) (Prims.of_int (46)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (220)) (Prims.of_int (30))
                             (Prims.of_int (220)) (Prims.of_int (79)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string l))
@@ -1418,39 +1418,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (220))
                                        (Prims.of_int (49))
                                        (Prims.of_int (220))
                                        (Prims.of_int (79)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (220))
                                              (Prims.of_int (57))
                                              (Prims.of_int (220))
                                              (Prims.of_int (79)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (220))
                                                    (Prims.of_int (57))
                                                    (Prims.of_int (220))
                                                    (Prims.of_int (73)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1479,18 +1479,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (221)) (Prims.of_int (27))
                       (Prims.of_int (221)) (Prims.of_int (76)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (221)) (Prims.of_int (27))
                             (Prims.of_int (221)) (Prims.of_int (43)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (221)) (Prims.of_int (27))
                             (Prims.of_int (221)) (Prims.of_int (76)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string p))
@@ -1498,39 +1498,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (221))
                                        (Prims.of_int (46))
                                        (Prims.of_int (221))
                                        (Prims.of_int (76)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (221))
                                              (Prims.of_int (54))
                                              (Prims.of_int (221))
                                              (Prims.of_int (76)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (221))
                                                    (Prims.of_int (54))
                                                    (Prims.of_int (221))
                                                    (Prims.of_int (70)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1559,18 +1559,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (222)) (Prims.of_int (27))
                       (Prims.of_int (222)) (Prims.of_int (76)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (222)) (Prims.of_int (27))
                             (Prims.of_int (222)) (Prims.of_int (43)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (222)) (Prims.of_int (27))
                             (Prims.of_int (222)) (Prims.of_int (76)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string p))
@@ -1578,39 +1578,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (222))
                                        (Prims.of_int (46))
                                        (Prims.of_int (222))
                                        (Prims.of_int (76)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (222))
                                              (Prims.of_int (54))
                                              (Prims.of_int (222))
                                              (Prims.of_int (76)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (222))
                                                    (Prims.of_int (54))
                                                    (Prims.of_int (222))
                                                    (Prims.of_int (70)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1639,18 +1639,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (223)) (Prims.of_int (36))
                       (Prims.of_int (223)) (Prims.of_int (85)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (223)) (Prims.of_int (36))
                             (Prims.of_int (223)) (Prims.of_int (52)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (223)) (Prims.of_int (36))
                             (Prims.of_int (223)) (Prims.of_int (85)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string p))
@@ -1658,39 +1658,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (223))
                                        (Prims.of_int (55))
                                        (Prims.of_int (223))
                                        (Prims.of_int (85)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (223))
                                              (Prims.of_int (63))
                                              (Prims.of_int (223))
                                              (Prims.of_int (85)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (223))
                                                    (Prims.of_int (63))
                                                    (Prims.of_int (223))
                                                    (Prims.of_int (79)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1719,18 +1719,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (224)) (Prims.of_int (26))
                       (Prims.of_int (224)) (Prims.of_int (48)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (224)) (Prims.of_int (26))
                             (Prims.of_int (224)) (Prims.of_int (42)))
-                         (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                         (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                             (Prims.of_int (19)) (Prims.of_int (606))
                             (Prims.of_int (31)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string p))
@@ -1744,18 +1744,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (225)) (Prims.of_int (28))
                       (Prims.of_int (225)) (Prims.of_int (77)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (225)) (Prims.of_int (28))
                             (Prims.of_int (225)) (Prims.of_int (44)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (225)) (Prims.of_int (28))
                             (Prims.of_int (225)) (Prims.of_int (77)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string p))
@@ -1763,39 +1763,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (225))
                                        (Prims.of_int (47))
                                        (Prims.of_int (225))
                                        (Prims.of_int (77)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (225))
                                              (Prims.of_int (55))
                                              (Prims.of_int (225))
                                              (Prims.of_int (77)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (225))
                                                    (Prims.of_int (55))
                                                    (Prims.of_int (225))
                                                    (Prims.of_int (71)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1824,18 +1824,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (226)) (Prims.of_int (39))
                       (Prims.of_int (226)) (Prims.of_int (61)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (226)) (Prims.of_int (39))
                             (Prims.of_int (226)) (Prims.of_int (55)))
-                         (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                         (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                             (Prims.of_int (19)) (Prims.of_int (606))
                             (Prims.of_int (31)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string t))
@@ -1849,18 +1849,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (227)) (Prims.of_int (39))
                       (Prims.of_int (227)) (Prims.of_int (61)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (227)) (Prims.of_int (39))
                             (Prims.of_int (227)) (Prims.of_int (55)))
-                         (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                         (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                             (Prims.of_int (19)) (Prims.of_int (606))
                             (Prims.of_int (31)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string t))
@@ -1874,18 +1874,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (228)) (Prims.of_int (28))
                       (Prims.of_int (228)) (Prims.of_int (77)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (228)) (Prims.of_int (28))
                             (Prims.of_int (228)) (Prims.of_int (44)))
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (228)) (Prims.of_int (28))
                             (Prims.of_int (228)) (Prims.of_int (77)))
                          (Obj.magic (FStar_Tactics_Builtins.term_to_string p))
@@ -1893,39 +1893,39 @@ let (formula_to_string :
                             (fun uu___ ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (Prims.mk_range
+                                    (FStar_Range.mk_range
                                        "FStar.Reflection.Formula.fst"
                                        (Prims.of_int (228))
                                        (Prims.of_int (47))
                                        (Prims.of_int (228))
                                        (Prims.of_int (77)))
-                                    (Prims.mk_range "prims.fst"
+                                    (FStar_Range.mk_range "prims.fst"
                                        (Prims.of_int (606))
                                        (Prims.of_int (19))
                                        (Prims.of_int (606))
                                        (Prims.of_int (31)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "FStar.Reflection.Formula.fst"
                                              (Prims.of_int (228))
                                              (Prims.of_int (55))
                                              (Prims.of_int (228))
                                              (Prims.of_int (77)))
-                                          (Prims.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (606))
                                              (Prims.of_int (19))
                                              (Prims.of_int (606))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Reflection.Formula.fst"
                                                    (Prims.of_int (228))
                                                    (Prims.of_int (55))
                                                    (Prims.of_int (228))
                                                    (Prims.of_int (71)))
-                                                (Prims.mk_range "prims.fst"
+                                                (FStar_Range.mk_range "prims.fst"
                                                    (Prims.of_int (606))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (606))
@@ -1954,18 +1954,18 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Reflection.Formula.fst"
+                   (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                       (Prims.of_int (229)) (Prims.of_int (29))
                       (Prims.of_int (229)) (Prims.of_int (50)))
-                   (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                       (Prims.of_int (19)) (Prims.of_int (606))
                       (Prims.of_int (31)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (Prims.mk_range "FStar.Reflection.Formula.fst"
+                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
                             (Prims.of_int (229)) (Prims.of_int (29))
                             (Prims.of_int (229)) (Prims.of_int (44)))
-                         (Prims.mk_range "prims.fst" (Prims.of_int (606))
+                         (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
                             (Prims.of_int (19)) (Prims.of_int (606))
                             (Prims.of_int (31)))
                          (Obj.magic (bv_to_string bv))
