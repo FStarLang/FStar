@@ -15,6 +15,7 @@
 *)
 module Unit1.Basic
 open FStar.All
+open FStar.Char
 
 type t =
   | A
