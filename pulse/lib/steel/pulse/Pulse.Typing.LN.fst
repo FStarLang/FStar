@@ -760,7 +760,7 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
     | T_ElimExists _ u t p x dt dv ->
       tot_typing_ln dt;
       tot_typing_ln dv;
-      let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
+      let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=default_range} in
       open_term_ln_inv' p (Pulse.Typing.mk_reveal u t x_tm) 0;
       close_term_ln' (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0) x 0
 

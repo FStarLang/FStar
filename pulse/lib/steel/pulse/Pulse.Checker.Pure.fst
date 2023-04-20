@@ -210,17 +210,17 @@ let get_non_informative_witness f g u t
                                (P.term_to_string t)) in
     let eopt =
       match t with
-      | Tm_FVar l ->
+      | Tm_FVar {fv_name=l} ->
         if l = R.unit_lid
-        then Some (Tm_FVar (mk_steel_wrapper_lid "unit_non_informative"))
+        then Some (Tm_FVar (as_fv (mk_steel_wrapper_lid "unit_non_informative")))
         else if l = R.prop_qn
-        then Some (Tm_FVar (mk_steel_wrapper_lid "prop_non_informative"))
+        then Some (Tm_FVar (as_fv (mk_steel_wrapper_lid "prop_non_informative")))
         else None
-      | Tm_PureApp (Tm_UInst l [u']) None arg ->
+      | Tm_PureApp (Tm_UInst {fv_name=l} [u']) None arg ->
         if l = R.squash_qn
-        then Some (Tm_PureApp (Tm_UInst (mk_steel_wrapper_lid "squash_non_informative") [u']) None arg)
+        then Some (Tm_PureApp (Tm_UInst (as_fv (mk_steel_wrapper_lid "squash_non_informative")) [u']) None arg)
         else if l = erased_lid
-        then Some (Tm_PureApp (Tm_UInst (mk_steel_wrapper_lid "erased_non_informative") [u']) None arg)
+        then Some (Tm_PureApp (Tm_UInst (as_fv (mk_steel_wrapper_lid "erased_non_informative")) [u']) None arg)
         else None
       | _ -> None
     in

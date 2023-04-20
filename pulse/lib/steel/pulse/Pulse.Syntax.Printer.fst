@@ -41,8 +41,8 @@ let rec term_to_string (t:term)
       if dbg_printing
       then sprintf "%s#%d" (T.unseal x.nm_ppname) x.nm_index
       else T.unseal x.nm_ppname
-    | Tm_FVar f -> name_to_string f
-    | Tm_UInst f us -> sprintf "%s %s" (name_to_string f) (String.concat " " (List.Tot.map univ_to_string us))
+    | Tm_FVar f -> name_to_string f.fv_name
+    | Tm_UInst f us -> sprintf "%s %s" (name_to_string f.fv_name) (String.concat " " (List.Tot.map univ_to_string us))
     | Tm_Constant c -> constant_to_string c
     | Tm_Refine b phi ->
       sprintf "%s:%s{%s}"

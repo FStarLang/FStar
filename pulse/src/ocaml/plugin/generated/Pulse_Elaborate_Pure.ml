@@ -64,11 +64,11 @@ let rec (elab_term : Pulse_Syntax.term -> FStar_Reflection_Types.term) =
     | Pulse_Syntax.Tm_FVar l ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv l))
+             (FStar_Reflection_Builtins.pack_fv l.Pulse_Syntax.fv_name))
     | Pulse_Syntax.Tm_UInst (l, us) ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_UInst
-             ((FStar_Reflection_Builtins.pack_fv l),
+             ((FStar_Reflection_Builtins.pack_fv l.Pulse_Syntax.fv_name),
                (FStar_List_Tot_Base.map elab_universe us)))
     | Pulse_Syntax.Tm_Constant c ->
         FStar_Reflection_Builtins.pack_ln

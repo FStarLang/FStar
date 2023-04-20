@@ -144,7 +144,7 @@ let rec readback_ty (t:R.term)
   | Tv_Var bv ->
     let bv_view = inspect_bv bv in
     assume (bv_view.bv_index >= 0);
-    let r = Tm_Var {nm_index=bv_view.bv_index;nm_ppname=bv_view.bv_ppname} in
+    let r = Tm_Var {nm_index=bv_view.bv_index;nm_ppname=bv_view.bv_ppname;nm_range=range_of_term t} in
     // Needs some tweaks to how names are designed in the DSL,
     //   e.g. may need to expose ppname, what happens to tun bv sort?
     assume (elab_term r == t);
@@ -153,7 +153,7 @@ let rec readback_ty (t:R.term)
   | Tv_BVar bv ->
     let bv_view = inspect_bv bv in
     assume (bv_view.bv_index >= 0);
-    let r = Tm_BVar {bv_index=bv_view.bv_index;bv_ppname=bv_view.bv_ppname} in
+    let r = Tm_BVar {bv_index=bv_view.bv_index;bv_ppname=bv_view.bv_ppname; bv_range=range_of_term t} in
     // Similar to the name case
     assume (elab_term r == t);
     Some r
@@ -168,10 +168,10 @@ let rec readback_ty (t:R.term)
     then Some Tm_Inames
     else if fv_lid = emp_inames_lid
     then Some Tm_EmpInames
-    else Some (Tm_FVar (inspect_fv fv))
+    else Some (Tm_FVar {fv_name=inspect_fv fv; fv_range=range_of_term t})
 
   | Tv_UInst fv us -> (
-    let fv = inspect_fv fv in
+    let fv = {fv_name=inspect_fv fv; fv_range=range_of_term t} in
     match readback_universes us with
     | None -> None
     | Some us' -> Some (Tm_UInst fv us')

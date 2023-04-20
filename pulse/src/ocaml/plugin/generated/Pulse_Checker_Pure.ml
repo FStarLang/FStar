@@ -1856,23 +1856,31 @@ let (get_non_informative_witness :
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ ->
                              match t with
-                             | Pulse_Syntax.Tm_FVar l ->
+                             | Pulse_Syntax.Tm_FVar
+                                 { Pulse_Syntax.fv_name = l;
+                                   Pulse_Syntax.fv_range = uu___1;_}
+                                 ->
                                  if l = FStar_Reflection_Const.unit_lid
                                  then
                                    FStar_Pervasives_Native.Some
                                      (Pulse_Syntax.Tm_FVar
-                                        (Pulse_Reflection_Util.mk_steel_wrapper_lid
-                                           "unit_non_informative"))
+                                        (Pulse_Syntax.as_fv
+                                           (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                              "unit_non_informative")))
                                  else
                                    if l = FStar_Reflection_Const.prop_qn
                                    then
                                      FStar_Pervasives_Native.Some
                                        (Pulse_Syntax.Tm_FVar
-                                          (Pulse_Reflection_Util.mk_steel_wrapper_lid
-                                             "prop_non_informative"))
+                                          (Pulse_Syntax.as_fv
+                                             (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                                "prop_non_informative")))
                                    else FStar_Pervasives_Native.None
                              | Pulse_Syntax.Tm_PureApp
-                                 (Pulse_Syntax.Tm_UInst (l, u'::[]),
+                                 (Pulse_Syntax.Tm_UInst
+                                  ({ Pulse_Syntax.fv_name = l;
+                                     Pulse_Syntax.fv_range = uu___1;_},
+                                   u'::[]),
                                   FStar_Pervasives_Native.None, arg)
                                  ->
                                  if l = FStar_Reflection_Const.squash_qn
@@ -1880,8 +1888,9 @@ let (get_non_informative_witness :
                                    FStar_Pervasives_Native.Some
                                      (Pulse_Syntax.Tm_PureApp
                                         ((Pulse_Syntax.Tm_UInst
-                                            ((Pulse_Reflection_Util.mk_steel_wrapper_lid
-                                                "squash_non_informative"),
+                                            ((Pulse_Syntax.as_fv
+                                                (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                                   "squash_non_informative")),
                                               [u'])),
                                           FStar_Pervasives_Native.None, arg))
                                  else
@@ -1890,8 +1899,9 @@ let (get_non_informative_witness :
                                      FStar_Pervasives_Native.Some
                                        (Pulse_Syntax.Tm_PureApp
                                           ((Pulse_Syntax.Tm_UInst
-                                              ((Pulse_Reflection_Util.mk_steel_wrapper_lid
-                                                  "erased_non_informative"),
+                                              ((Pulse_Syntax.as_fv
+                                                  (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                                     "erased_non_informative")),
                                                 [u'])),
                                             FStar_Pervasives_Native.None,
                                             arg))

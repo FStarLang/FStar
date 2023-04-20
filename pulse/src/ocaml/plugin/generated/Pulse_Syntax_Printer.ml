@@ -126,7 +126,7 @@ let rec (term_to_string :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> name_to_string f)))
+                   (fun uu___ -> name_to_string f.Pulse_Syntax.fv_name)))
        | Pulse_Syntax.Tm_UInst (f, us) ->
            Obj.magic
              (Obj.repr
@@ -134,7 +134,8 @@ let rec (term_to_string :
                    (fun uu___ ->
                       Prims.strcat
                         (Prims.strcat ""
-                           (Prims.strcat (name_to_string f) " "))
+                           (Prims.strcat
+                              (name_to_string f.Pulse_Syntax.fv_name) " "))
                         (Prims.strcat
                            (FStar_String.concat " "
                               (FStar_List_Tot_Base.map univ_to_string us)) ""))))

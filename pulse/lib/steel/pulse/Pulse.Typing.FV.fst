@@ -312,7 +312,19 @@ let freevars_open_st_term_inv (e:st_term)
 #pop-options
 #pop-options
 
-#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 20 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats"
+let subset_union_l (#a:eqtype) (s0 s0' s1:Set.set a)
+  : Lemma
+    (requires s0 `Set.subset` s0')
+    (ensures (s0 `Set.union` s1) `Set.subset` (s0' `Set.union` s1))
+  = ()
+
+let subset_union_r (#a:eqtype) (s0 s1 s1':Set.set a)
+  : Lemma
+    (requires s1 `Set.subset` s1')
+    (ensures (s0 `Set.union` s1) `Set.subset` (s0 `Set.union` s1'))
+  = ()
+
+#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 40 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats"
 let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
                             (d:st_typing f g t c)
   : Lemma 
@@ -357,17 +369,27 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      freevars_open_st_term_inv e2 x
 
    | T_If _ _b e1 e2 _c _u hyp tb d1 d2 (E ct) ->
-     tot_typing_freevars tb;
-     comp_typing_freevars ct;
-     st_typing_freevars d1;
-     st_typing_freevars d2
+     assert (t == (Tm_If _b e1 e2 None));
+     calc (Set.subset) {
+        freevars_st t;
+     (==) {}
+       ((Set.union (freevars _b) (freevars_st e1)) `Set.union`
+        (freevars_st e2 `Set.union` freevars_opt None));
+     (Set.equal) {}
+       (freevars _b `Set.union` (freevars_st e1 `Set.union` freevars_st e2));
+     (Set.subset) { tot_typing_freevars tb }
+       (vars_of_env g `Set.union` (freevars_st e1 `Set.union` freevars_st e2));
+     (Set.subset) { st_typing_freevars d1 ; st_typing_freevars d2 }
+       vars_of_env g;
+    };
+    comp_typing_freevars ct
 
    | T_Frame _ _ _ _ df dc ->
      tot_typing_freevars df;
      st_typing_freevars dc
 
    | T_ElimExists _ u t p x dt dv ->
-     let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default} in
+     let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=default_range} in
      tot_typing_freevars dt;
      tot_typing_freevars dv;
      assert (Set.equal (freevars (Pulse.Typing.mk_reveal u t x_tm))
@@ -465,4 +487,4 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      tot_typing_freevars pre_typing;
      tot_typing_freevars post_typing;
      freevars_open_term s.post (term_of_var x) 0
-#pop-options //takes about 23s
+#pop-options //takes about 60s

@@ -46,10 +46,10 @@ let rec elab_term (top:term)
       pack_ln (Tv_Var bv)
 
     | Tm_FVar l ->
-      pack_ln (Tv_FVar (pack_fv l))
+      pack_ln (Tv_FVar (pack_fv l.fv_name))
 
     | Tm_UInst l us ->
-      pack_ln (Tv_UInst (pack_fv l) (List.Tot.map elab_universe us))
+      pack_ln (Tv_UInst (pack_fv l.fv_name) (List.Tot.map elab_universe us))
 
     | Tm_Constant c ->
       pack_ln (Tv_Const (elab_const c))

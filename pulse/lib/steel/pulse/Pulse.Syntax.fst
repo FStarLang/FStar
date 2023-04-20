@@ -1,4 +1,5 @@
 module Pulse.Syntax
+module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection
 open FStar.List.Tot
@@ -33,17 +34,22 @@ type universe =
 *)
 
 let ppname = RT.pp_name_t
+let range = FStar.Sealed.Inhabited.sealed #Prims.range RTB.dummy_range
+let default_range : range = FStar.Sealed.seal (Prims.mk_range "" 0 0 0 0)
+let range_of_term (t:FStar.Reflection.term) : range = FStar.Sealed.seal (FStar.Reflection.range_of_term t)
 
 noeq
 type bv = {
   bv_index  : index;
   bv_ppname : ppname;
+  bv_range  : range;
 }
 
 noeq
 type nm = {
   nm_index  : var;
   nm_ppname : ppname;
+  nm_range  : range;
 }
 
 type qualifier =
@@ -53,13 +59,21 @@ let should_elim_t = FStar.Sealed.Inhabited.sealed false
 let should_elim_true : should_elim_t = FStar.Sealed.Inhabited.seal true
 let should_elim_false : should_elim_t = FStar.Sealed.Inhabited.seal false
 
+noeq
+type fv = {
+  fv_name : R.name;
+  fv_range : range;
+}
+let as_fv l = { fv_name = l; fv_range = default_range }
+
+
 [@@ no_auto_projectors]
 noeq
 type term =
   | Tm_BVar       : bv -> term
   | Tm_Var        : nm -> term
-  | Tm_FVar       : l:R.name -> term
-  | Tm_UInst      : l:R.name -> us:list universe -> term
+  | Tm_FVar       : l:fv -> term
+  | Tm_UInst      : l:fv -> us:list universe -> term
   | Tm_Constant   : c:constant -> term
   | Tm_Refine     : b:binder -> term -> term
   | Tm_PureApp    : head:term -> arg_qual:option qualifier -> arg:term -> term
@@ -487,10 +501,14 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
       Tm_Protect (open_st_term' t v i)
 
 let open_term t v =
-    open_term' t (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=v}) 0
+    open_term' t (Tm_Var { nm_ppname=RT.pp_name_default;
+                           nm_index=v;
+                           nm_range=default_range}) 0
 
 let open_st_term t v =
-    open_st_term' t (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=v}) 0
+    open_st_term' t (Tm_Var { nm_ppname=RT.pp_name_default;
+                              nm_index=v;
+                              nm_range=default_range}) 0
 
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
@@ -499,7 +517,7 @@ let rec close_term' (t:term) (v:var) (i:index)
   = match t with
     | Tm_Var nm ->
       if nm.nm_index = v
-      then Tm_BVar {bv_index=i;bv_ppname=nm.nm_ppname}
+      then Tm_BVar {bv_index=i;bv_ppname=nm.nm_ppname;bv_range=nm.nm_range}
       else t
     
     | Tm_BVar _
@@ -690,7 +708,7 @@ let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
   | C_STAtomic inames _
   | C_STGhost inames _ -> inames
 
-let term_of_var (x:var) = Tm_Var { nm_ppname=RT.pp_name_default; nm_index=x}
+let term_of_var (x:var) = Tm_Var { nm_ppname=RT.pp_name_default; nm_index=x; nm_range=default_range}
 
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
@@ -857,12 +875,12 @@ let null_binder (t:term) : binder =
 let mk_binder (s:string) (t:term) : binder =
   {binder_ty=t;binder_ppname=RT.seal_pp_name s}
 
-let mk_bvar (s:string) (i:index) : term =
-  Tm_BVar {bv_index=i;bv_ppname=RT.seal_pp_name s}
+let mk_bvar (s:string) (r:range) (i:index) : term =
+  Tm_BVar {bv_index=i;bv_ppname=RT.seal_pp_name s;bv_range=r}
 
-let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname=RT.pp_name_default}
+let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname=RT.pp_name_default;nm_range=default_range}
 
-let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=RT.pp_name_default}
+let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=RT.pp_name_default;bv_range=default_range}
 
 let gen_uvar (t:term) : T.Tac term =
   Tm_UVar (T.fresh ())
@@ -877,8 +895,8 @@ let rec eq_tm (t1 t2:term)
     | Tm_Unknown, Tm_Unknown -> true
     | Tm_BVar x1, Tm_BVar x2 -> x1.bv_index = x2.bv_index
     | Tm_Var x1,  Tm_Var x2 -> x1.nm_index = x2.nm_index
-    | Tm_FVar x1, Tm_FVar x2 -> x1 = x2
-    | Tm_UInst x1 us1, Tm_UInst x2 us2 -> x1=x2 && us1=us2
+    | Tm_FVar x1, Tm_FVar x2 -> x1.fv_name = x2.fv_name
+    | Tm_UInst x1 us1, Tm_UInst x2 us2 -> x1.fv_name=x2.fv_name && us1=us2
     | Tm_Constant c1, Tm_Constant c2 -> c1=c2
     | Tm_Refine b1 t1, Tm_Refine b2 t2 -> 
       eq_tm b1.binder_ty b2.binder_ty &&

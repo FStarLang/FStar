@@ -19,9 +19,9 @@ else
   endif
 endif
 export OCAMLPATH
-_check_fstar_lib_package := $(shell env OCAMLPATH=$(OCAMLPATH) ocamlfind query fstar.lib)
+_check_fstar_lib_package := $(shell env OCAMLPATH="$(OCAMLPATH)" ocamlfind query fstar.lib)
 ifneq ($(.SHELLSTATUS),0)
-  $(error "Cannot find fstar.lib. Please make sure fstar.exe is properly installed and in your PATH or FSTAR_HOME points to its prefix directory or the F* source repository.")
+  $(error "Cannot find fstar.lib in $(OCAMLPATH). Please make sure fstar.exe is properly installed and in your PATH or FSTAR_HOME points to its prefix directory or the F* source repository.")
 endif
 
 # Define the Steel root directory. We need to fix it to use the Windows path convention on Windows+Cygwin.
@@ -55,8 +55,10 @@ verify-steelc: verify-steel
 .PHONY: verify
 verify: verify-steel verify-pulse verify-steelc
 
-clean:
+clean: clean_ocaml
 	+$(MAKE) -C lib/steel clean ; true
+
+clean_ocaml:
 	cd src/ocaml && { dune uninstall --prefix=$(STEEL_HOME) ; dune clean ; true ; }
 
 .PHONY: test

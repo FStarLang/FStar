@@ -17,17 +17,17 @@ module FTB = FStar.Tactics
 //     ///\ star etc
 //   }
 
-let tm_unit = Tm_FVar unit_lid
-let tm_bool = Tm_FVar bool_lid
+let tm_unit = Tm_FVar (as_fv unit_lid)
+let tm_bool = Tm_FVar (as_fv bool_lid)
 let tm_true = Tm_Constant (Bool true)
 let tm_false = Tm_Constant (Bool false)
 
 let mk_erased (u:universe) (t:term) : term =
-  let hd = Tm_UInst erased_lid [u] in
+  let hd = Tm_UInst (as_fv erased_lid) [u] in
   Tm_PureApp hd None t
 
 let mk_reveal (u:universe) (t:term) (e:term) : term =
-  let hd = Tm_UInst reveal_lid [u] in
+  let hd = Tm_UInst (as_fv reveal_lid) [u] in
   let hd = Tm_PureApp hd (Some Implicit) t in
   Tm_PureApp hd None e
 
@@ -36,7 +36,7 @@ let mk_eq2 (u:universe)
            (e0 e1:term) 
   : term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_UInst R.eq2_qn [u]) (Some Implicit) t)
+         (Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv R.eq2_qn) [u]) (Some Implicit) t)
                      None e0) None e1
 
 let mk_eq2_prop (u:universe)
@@ -44,7 +44,7 @@ let mk_eq2_prop (u:universe)
            (e0 e1:term) 
   : term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_UInst (mk_steel_wrapper_lid "eq2_prop") [u]) (Some Implicit) t)
+         (Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv (mk_steel_wrapper_lid "eq2_prop")) [u]) (Some Implicit) t)
                      None e0) None e1
 
 
@@ -322,7 +322,7 @@ let st_equiv_pre (c1 c2:comp_st)
 
 let non_informative_witness_t (u:universe) (t:term)
   : term
-  = Tm_PureApp (Tm_UInst non_informative_witness_lid [u])
+  = Tm_PureApp (Tm_UInst (as_fv non_informative_witness_lid) [u])
                None
                t
 
@@ -390,19 +390,19 @@ let comp_while (inv:term)
          }
 
 let mk_tuple2 (u1 u2:universe) (t1 t2:term) : term =
-  Tm_PureApp (Tm_PureApp (Tm_UInst tuple2_lid [u1; u2])
+  Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv tuple2_lid) [u1; u2])
                          None
                          t1)
              None t2
 
 let mk_fst (u1 u2:universe) (a1 a2 e:term) : term =
-  Tm_PureApp (Tm_PureApp (Tm_PureApp (Tm_UInst fst_lid [u1; u2]) (Some Implicit) a1)
+  Tm_PureApp (Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv fst_lid) [u1; u2]) (Some Implicit) a1)
                          (Some Implicit) a2)
              None
              e
 
 let mk_snd (u1 u2:universe) (a1 a2 e:term) : term =
-  Tm_PureApp (Tm_PureApp (Tm_PureApp (Tm_UInst snd_lid [u1; u2]) (Some Implicit) a1)
+  Tm_PureApp (Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv snd_lid) [u1; u2]) (Some Implicit) a1)
                          (Some Implicit) a2)
              None
              e

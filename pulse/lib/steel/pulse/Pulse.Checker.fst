@@ -120,7 +120,7 @@ let check_abs
         match post_hint with
         | None -> None
         | Some post ->
-          let post = open_term' post (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=x}) 1 in
+          let post = open_term' post (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=default_range}) 1 in
           Some post
       in
       let (| body', c_body, body_typing |) = check f g' (open_st_term body x) pre_opened (E pre_typing) post in
@@ -151,7 +151,7 @@ let maybe_add_elim_pure (pre:list term) (t:st_term) : T.Tac (bool & st_term) =
     true,
     L.fold_left 
       (fun t (p:term) ->
-        let elim_pure_tm = Tm_STApp (Tm_FVar elim_pure_explicit_lid)
+        let elim_pure_tm = Tm_STApp (Tm_FVar (as_fv elim_pure_explicit_lid))
                                     None
                                     p 
         in
@@ -528,7 +528,7 @@ let maybe_infer_intro_exists
         match hd with
         | Tm_FVar fv
         | Tm_UInst fv _ ->
-          if fv = mk_steel_wrapper_lid "eq2_prop"
+          if fv.fv_name = mk_steel_wrapper_lid "eq2_prop"
           then Some (l, r)
           else None
         | _ -> None
@@ -580,13 +580,13 @@ let maybe_infer_intro_exists
         match t with
         | Tm_PureApp (Tm_PureApp (Tm_UInst l [_]) (Some Implicit) _)
                      None arg ->
-          if l = reveal_lid
+          if l.fv_name = reveal_lid
           then Some arg
           else None
         | _ -> None
     in
     let mk_hide (e:term) : term =
-        let hd = Tm_FVar hide_lid in
+        let hd = Tm_FVar (as_fv hide_lid) in
         Tm_PureApp hd None e
     in    
     let solutions = 
@@ -674,7 +674,7 @@ let check_while
   let (| inv, inv_typing |) =
     check_vprop f g (Tm_ExistsSL U_zero tm_bool inv should_elim_true) in
   match inv with
-  | Tm_ExistsSL U_zero (Tm_FVar ["Prims"; "bool"]) inv _ ->
+  | Tm_ExistsSL U_zero (Tm_FVar {fv_name=["Prims"; "bool"]}) inv _ ->
     // Should get from inv_typing
     let cond_pre_typing =
       check_vprop_with_core f g (comp_pre (comp_while_cond inv)) in
@@ -702,15 +702,37 @@ let check_while
     else T.fail "Cannot typecheck while loop condition"
   | _ -> T.fail "Typechecked invariant is not an exists"
 
+let range_of_head (t:st_term) : option (term & range) =
+  match t with
+  | Tm_STApp head _ _ ->
+    let rec aux (t:term) : (term & range) =
+      match t with
+      | Tm_FVar fv -> (t, fv.fv_range)
+      | Tm_Var nm -> (t, nm.nm_range)
+      | Tm_PureApp hd _ _ -> aux hd
+      | _ -> t, default_range
+    in
+    Some (aux head)
+  | _ -> None
+
 let maybe_log t =
+  let _ =
+    match range_of_head t with
+    | Some (head, range) ->
+      let range = T.unseal range in
+      T.print (Printf.sprintf "At location %s: Checking app with head = %s"
+                         (T.range_to_string range)
+                         (P.term_to_string head))
+    | None -> ()
+  in
   match t with
   | Tm_STApp (Tm_FVar l) None p ->
-    if l = elim_pure_explicit_lid
+    if l.fv_name = elim_pure_explicit_lid
     then T.print (Printf.sprintf "LOG ELIM PURE: %s\n"
                     (P.term_to_string p))
                     
   | Tm_STApp (Tm_PureApp (Tm_FVar l) None p) None _ ->
-    if l = mk_steel_wrapper_lid "intro_pure"
+    if l.fv_name = mk_steel_wrapper_lid "intro_pure"
     then T.print (Printf.sprintf "LOG INTRO PURE: %s\n"
                     (P.term_to_string p))  
                     
@@ -862,7 +884,7 @@ let handle_framing_failure
         Tm_Protect
           (Tm_STApp
             (Tm_PureApp 
-              (Tm_FVar (mk_steel_wrapper_lid "intro_pure"))
+              (Tm_FVar (as_fv (mk_steel_wrapper_lid "intro_pure")))
               None
               p)
             None
@@ -928,7 +950,7 @@ let rec maybe_add_elims
       let t = Tm_Bind e (Tm_Protect t) in
       maybe_add_elims g rest t
     | Tm_Pure p :: rest ->
-      let elim_pure_tm = Tm_STApp (Tm_FVar elim_pure_explicit_lid)
+      let elim_pure_tm = Tm_STApp (Tm_FVar (as_fv elim_pure_explicit_lid))
                                   None
                                   p 
       in
@@ -974,7 +996,7 @@ let rec print_st_head (t:st_term) =
 and print_head (t:term) =
   match t with
   | Tm_FVar fv
-  | Tm_UInst fv _ -> String.concat "." fv
+  | Tm_UInst fv _ -> String.concat "." fv.fv_name
   | Tm_PureApp head _ _ -> print_head head
   | _ -> "<pure term>"
 

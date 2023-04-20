@@ -414,7 +414,7 @@ let translate_st_app_or_return (g:R.env) (t:R.term)
     match t with
     | Tm_PureApp head q arg ->
       (match head with
-       | Tm_FVar l ->
+       | Tm_FVar {fv_name=l} ->
          if l = return_stt_lid
          then Inl (Tm_Return STT true arg)
          else if l = return_stt_noeq_lid

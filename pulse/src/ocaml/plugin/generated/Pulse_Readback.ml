@@ -564,7 +564,9 @@ let rec (readback_ty :
                              Pulse_Syntax.nm_index =
                                ((FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_index);
                              Pulse_Syntax.nm_ppname =
-                               ((FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_ppname)
+                               ((FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_ppname);
+                             Pulse_Syntax.nm_range =
+                               (Pulse_Syntax.range_of_term t)
                            }))))
        | FStar_Reflection_Data.Tv_BVar bv ->
            Obj.magic
@@ -577,7 +579,9 @@ let rec (readback_ty :
                              Pulse_Syntax.bv_index =
                                ((FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_index);
                              Pulse_Syntax.bv_ppname =
-                               ((FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_ppname)
+                               ((FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_ppname);
+                             Pulse_Syntax.bv_range =
+                               (Pulse_Syntax.range_of_term t)
                            }))))
        | FStar_Reflection_Data.Tv_FVar fv ->
            Obj.magic
@@ -610,7 +614,13 @@ let rec (readback_ty :
                             else
                               FStar_Pervasives_Native.Some
                                 (Pulse_Syntax.Tm_FVar
-                                   (FStar_Reflection_Builtins.inspect_fv fv)))))
+                                   {
+                                     Pulse_Syntax.fv_name =
+                                       (FStar_Reflection_Builtins.inspect_fv
+                                          fv);
+                                     Pulse_Syntax.fv_range =
+                                       (Pulse_Syntax.range_of_term t)
+                                   }))))
        | FStar_Reflection_Data.Tv_UInst (fv, us) ->
            Obj.magic
              (Obj.repr
@@ -622,8 +632,12 @@ let rec (readback_ty :
                       | FStar_Pervasives_Native.Some us' ->
                           FStar_Pervasives_Native.Some
                             (Pulse_Syntax.Tm_UInst
-                               ((FStar_Reflection_Builtins.inspect_fv fv),
-                                 us')))))
+                               ({
+                                  Pulse_Syntax.fv_name =
+                                    (FStar_Reflection_Builtins.inspect_fv fv);
+                                  Pulse_Syntax.fv_range =
+                                    (Pulse_Syntax.range_of_term t)
+                                }, us')))))
        | FStar_Reflection_Data.Tv_App (hd, (a, q)) ->
            Obj.magic
              (Obj.repr
