@@ -373,13 +373,7 @@ let (label_goals :
                                                          sorts), body))
                                                     q1.FStar_SMTEncoding_Term.rng in
                                                 (labels3, uu___6))))
-                             | uu___2 ->
-                                 let uu___3 =
-                                   let uu___4 =
-                                     FStar_SMTEncoding_Term.print_smt_term
-                                       arg in
-                                   Prims.op_Hat "arg not a quant: " uu___4 in
-                                 fallback uu___3)) ()
+                             | uu___2 -> fallback "arg not a quant: ")) ()
                    with | Not_a_wp_implication msg1 -> fallback msg1)
               | FStar_SMTEncoding_Term.Labeled (arg, reason, r1) ->
                   aux reason (FStar_Pervasives_Native.Some r1) post_name_opt
