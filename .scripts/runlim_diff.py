@@ -34,12 +34,17 @@ def parse_line(filename, time, space, line):
 # it strips .identifier".runlim" from the filename
 # it calls parse_line on the on the resulting string, the 2 hashtables, and each line
 # it returns the 2 hashtables
-def parse_file(filename, identifier, time, space):
+def parse_file(filename, identifier, dire, time, space):
+    file_id = filename
+    if identifier != "":
+      file_id = file_id.replace(".{}.runlim".format(identifier), "")
+    if dire != "":
+      file_id = file_id.replace(".runlim".format(identifier), "")
+      file_id = file_id.replace(dire + "/", "")
+
     with open(filename) as f:
         for line in f:
-            filename = filename.replace(".{}.runlim".format(identifier), "")
-            time, space = parse_line(
-                filename, time, space, line)
+            time, space = parse_line(file_id, time, space, line)
     return time, space
 
 
@@ -70,7 +75,16 @@ def parse_all(identifier):
     files = list_files(".")
     for filename in files:
         if filename.endswith(".{}.runlim".format(identifier)):
-            time, space = parse_file(filename, identifier, time, space)
+            time, space = parse_file(filename, identifier, "", time, space)
+    return time, space
+
+def parse_dir(dire):
+    time = {}
+    space = {}
+    files = list_files(dire)
+    for filename in files:
+        if filename.endswith(".runlim"):
+            time, space = parse_file(filename, "", dire, time, space)
     return time, space
 
 # a function that takes as input 2 hashtables
@@ -155,30 +169,52 @@ def print_hashtable(hashtable):
 # it calls sort_array on the two arrays
 # it calls generate_scatter_plot on the two arrays with xlabel as the second identifier and ylabel as the first identifier and title as "F* runlim"
 
+def load_files(isdir, id):
+    if isdir:
+        time, space = parse_dir(id)
+    else:
+        time, space = parse_all(id)
+    return time, space
 
-def diff(identifier1, identifier2):
-    time1, space1 = parse_all(identifier1)
-    time2, space2 = parse_all(identifier2)
+def diff(id1, time1, space1, id2, time2, space2):
     time_diff = diff_hashtables(time1, time2)
     space_diff = diff_hashtables(space1, space2)
     time_diff = sort_array(time_diff)
     space_diff = sort_array(space_diff)
     generate_scatter_plot(
-        time_diff, "ID " + identifier2, "ID " + identifier1, "F* runlim time")
+        time_diff, "ID " + id2, "ID " + id1, "F* runlim time")
     generate_scatter_plot(
-        space_diff, "ID " + identifier2, "ID " + identifier1, "F* runlim space")
+        space_diff, "ID " + id2, "ID " + id1, "F* runlim space")
 
 # main function that parses two identifiers from the command line
 # it calls diff on the two identifiers
-
-
 def main():
     import sys
-    if len(sys.argv) != 3:
-        print(
-            "Usage: python diff_runlim.py identifier1(the new run) identifier2(the old run)")
-        return
-    diff(sys.argv[1], sys.argv[2])
+    import argparse
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dirs", action='store_true', help="interpret runs as directories, else as MONID suffixes")
+    parser.add_argument("run1", help="the new run")
+    parser.add_argument("run2", help="the old run")
+    args = parser.parse_args()
+
+    #  if len(args) != 2:
+    #      print("Usage: python diff_runlim.py identifier1(the new run) identifier2(the old run)")
+    #      print("       python diff_runlim.py --dirs directory1 directory2")
+    #      return
+
+    print ("Comparing {} and {}, --dirs={}".format(args.run1, args.run2, args.dirs))
+
+    id1 = args.run1
+    id2 = args.run2
+
+    # Remove trailing slashes
+    id1 = id1.rstrip('/')
+    id2 = id2.rstrip('/')
+
+    t1, s1 = load_files(args.dirs, id1)
+    t2, s2 = load_files(args.dirs, id2)
+
+    diff(id1, t1, s1, id2, t2, s2)
 
 main()
