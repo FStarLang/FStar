@@ -54,7 +54,11 @@ let logxor        = M.logxor
 let logor         = M.logor
 let lognot        = M.lognot
 let to_string     = M.to_string
-let of_string     = M.of_string
+
+(* M.of_string can fail. The F* version returns an option. *)
+let of_string s =
+  try Some (M.of_string s)
+  with | _ -> None
 
 let to_string_hex = M.to_string_hex
 
