@@ -120,7 +120,6 @@ let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 let mk (t:'a) r = {
     n=t;
     pos=r;
-    vars=Util.mk_ref None;
     hash_code=Util.mk_ref None;
 }
 
