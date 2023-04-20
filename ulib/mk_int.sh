@@ -9,13 +9,9 @@ function err () {
 
 trap err ERR
 
-## Write FStar.Int<N>.fsti
-
-for i in 8 16 32 64 128; do
-  f=FStar.Int$i.fsti
-  cat > $f <<EOF
+COPYRIGHT="
 (*
-   Copyright 2008-2019 Microsoft Research
+   Copyright 2008-2023 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,10 +24,20 @@ for i in 8 16 32 64 128; do
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*)
+*)"
+
+AUTOGEND="(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)"
+
+
+## Write FStar.Int<N>.fsti
+
+for i in 8 16 32 64 128; do
+  f=FStar.Int$i.fsti
+  cat > $f <<EOF
+$COPYRIGHT
 module FStar.Int$i
 
-(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+$AUTOGEND
 
 unfold let n = $i
 
@@ -53,24 +59,10 @@ done
 for i in 8 16 32 64 128; do
   f=FStar.Int$i.fst
   cat > $f <<EOF
-(*
-   Copyright 2008-2019 Microsoft Research
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*)
+$COPYRIGHT
 module FStar.Int$i
 
-(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+$AUTOGEND
 
 EOF
   cat FStar.IntN.fstp >> $f
@@ -89,24 +81,10 @@ done
 for i in 8 16 32 64; do
   f=FStar.UInt$i.fsti
   cat > $f <<EOF
-(*
-   Copyright 2008-2019 Microsoft Research
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*)
+$COPYRIGHT
 module FStar.UInt$i
 
-(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+$AUTOGEND
 
 unfold let n = $i
 
@@ -131,24 +109,10 @@ done
 for i in 8 16 32 64; do
   f=FStar.UInt$i.fst
   cat > $f <<EOF
-(*
-   Copyright 2008-2019 Microsoft Research
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*)
+$COPYRIGHT
 module FStar.UInt$i
 
-(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+$AUTOGEND
 
 EOF
   cat FStar.UIntN.fstp >> $f
@@ -162,5 +126,8 @@ EOF
   fi
 done
 
+# All modules reference UInt32 in the bitshift operations, but if UInt32
+# references itself we get a circular dependency, so avoid that by
+# unqualifying the names.
 sed -i 's/UInt32.//g' FStar.UInt32.fsti
 sed -i 's/UInt32.//g' FStar.UInt32.fst
