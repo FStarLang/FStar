@@ -155,10 +155,12 @@ let (fatom :
     fun ts ->
       fun am ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+          (FStar_Range.mk_range
+             "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
              (Prims.of_int (279)) (Prims.of_int (8)) (Prims.of_int (279))
              (Prims.of_int (18)))
-          (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+          (FStar_Range.mk_range
+             "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
              (Prims.of_int (279)) (Prims.of_int (2)) (Prims.of_int (284))
              (Prims.of_int (47))) (Obj.magic (where t ts))
           (fun uu___ ->
@@ -227,10 +229,12 @@ let rec (reification_aux :
         fun unit ->
           fun t ->
             FStar_Tactics_Effect.tac_bind
-              (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+              (FStar_Range.mk_range
+                 "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                  (Prims.of_int (289)) (Prims.of_int (15))
                  (Prims.of_int (289)) (Prims.of_int (32)))
-              (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+              (FStar_Range.mk_range
+                 "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                  (Prims.of_int (289)) (Prims.of_int (2)) (Prims.of_int (300))
                  (Prims.of_int (22)))
               (FStar_Tactics_Effect.lift_div_tac
@@ -424,10 +428,12 @@ let (reification :
         fun am ->
           fun t ->
             FStar_Tactics_Effect.tac_bind
-              (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+              (FStar_Range.mk_range
+                 "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                  (Prims.of_int (304)) (Prims.of_int (13))
                  (Prims.of_int (304)) (Prims.of_int (60)))
-              (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+              (FStar_Range.mk_range
+                 "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                  (Prims.of_int (305)) (Prims.of_int (2)) (Prims.of_int (307))
                  (Prims.of_int (35)))
               (Obj.magic
@@ -518,10 +524,12 @@ let rec (repeat_cong_right_identity :
                       "right_identity"]))))
         (fun uu___ ->
            FStar_Tactics_Effect.tac_bind
-             (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+             (FStar_Range.mk_range
+                "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                 (Prims.of_int (311)) (Prims.of_int (20)) (Prims.of_int (311))
                 (Prims.of_int (55)))
-             (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+             (FStar_Range.mk_range
+                "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                 (Prims.of_int (312)) (Prims.of_int (20)) (Prims.of_int (314))
                 (Prims.of_int (51)))
              (Obj.magic
@@ -699,10 +707,12 @@ let (canon_lhs_rhs :
       fun lhs ->
         fun rhs ->
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+            (FStar_Range.mk_range
+               "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                (Prims.of_int (341)) (Prims.of_int (15)) (Prims.of_int (341))
                (Prims.of_int (61)))
-            (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+            (FStar_Range.mk_range
+               "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                (Prims.of_int (342)) (Prims.of_int (2)) (Prims.of_int (370))
                (Prims.of_int (52)))
             (Obj.magic

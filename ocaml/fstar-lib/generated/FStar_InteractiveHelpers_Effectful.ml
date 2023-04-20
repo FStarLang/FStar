@@ -42,8 +42,8 @@ let (cast_info_to_string :
       (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
          (Prims.of_int (33)) (Prims.of_int (20)) (Prims.of_int (35))
          (Prims.of_int (56)))
-      (FStar_Range.mk_range "prims.fst" (Prims.of_int (606)) (Prims.of_int (19))
-         (Prims.of_int (606)) (Prims.of_int (31)))
+      (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+         (Prims.of_int (19)) (Prims.of_int (590)) (Prims.of_int (31)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
@@ -61,8 +61,8 @@ let (cast_info_to_string :
                           "FStar.InteractiveHelpers.Effectful.fst"
                           (Prims.of_int (33)) (Prims.of_int (47))
                           (Prims.of_int (35)) (Prims.of_int (56)))
-                       (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                          (Prims.of_int (19)) (Prims.of_int (606))
+                       (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                          (Prims.of_int (19)) (Prims.of_int (590))
                           (Prims.of_int (31)))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
@@ -70,9 +70,9 @@ let (cast_info_to_string :
                                 "FStar.InteractiveHelpers.Effectful.fst"
                                 (Prims.of_int (34)) (Prims.of_int (2))
                                 (Prims.of_int (35)) (Prims.of_int (56)))
-                             (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                                (Prims.of_int (19)) (Prims.of_int (606))
-                                (Prims.of_int (31)))
+                             (FStar_Range.mk_range "prims.fst"
+                                (Prims.of_int (590)) (Prims.of_int (19))
+                                (Prims.of_int (590)) (Prims.of_int (31)))
                              (Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
                                    (FStar_Range.mk_range
@@ -97,10 +97,11 @@ let (cast_info_to_string :
                                                  (Prims.of_int (51))
                                                  (Prims.of_int (35))
                                                  (Prims.of_int (56)))
-                                              (FStar_Range.mk_range "prims.fst"
-                                                 (Prims.of_int (606))
+                                              (FStar_Range.mk_range
+                                                 "prims.fst"
+                                                 (Prims.of_int (590))
                                                  (Prims.of_int (19))
-                                                 (Prims.of_int (606))
+                                                 (Prims.of_int (590))
                                                  (Prims.of_int (31)))
                                               (Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
@@ -112,9 +113,9 @@ let (cast_info_to_string :
                                                        (Prims.of_int (56)))
                                                     (FStar_Range.mk_range
                                                        "prims.fst"
-                                                       (Prims.of_int (606))
+                                                       (Prims.of_int (590))
                                                        (Prims.of_int (19))
-                                                       (Prims.of_int (606))
+                                                       (Prims.of_int (590))
                                                        (Prims.of_int (31)))
                                                     (Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
@@ -126,9 +127,9 @@ let (cast_info_to_string :
                                                              (Prims.of_int (50)))
                                                           (FStar_Range.mk_range
                                                              "prims.fst"
-                                                             (Prims.of_int (606))
+                                                             (Prims.of_int (590))
                                                              (Prims.of_int (19))
-                                                             (Prims.of_int (606))
+                                                             (Prims.of_int (590))
                                                              (Prims.of_int (31)))
                                                           (Obj.magic
                                                              (FStar_InteractiveHelpers_Base.option_to_string
@@ -212,22 +213,23 @@ let (effect_info_to_string :
       (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
          (Prims.of_int (51)) (Prims.of_int (2)) (Prims.of_int (54))
          (Prims.of_int (49)))
-      (FStar_Range.mk_range "prims.fst" (Prims.of_int (606)) (Prims.of_int (19))
-         (Prims.of_int (606)) (Prims.of_int (31)))
+      (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+         (Prims.of_int (19)) (Prims.of_int (590)) (Prims.of_int (31)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
                (Prims.of_int (51)) (Prims.of_int (36)) (Prims.of_int (54))
                (Prims.of_int (49)))
-            (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-               (Prims.of_int (19)) (Prims.of_int (606)) (Prims.of_int (31)))
+            (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+               (Prims.of_int (19)) (Prims.of_int (590)) (Prims.of_int (31)))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
-                  (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                  (FStar_Range.mk_range
+                     "FStar.InteractiveHelpers.Effectful.fst"
                      (Prims.of_int (52)) (Prims.of_int (2))
                      (Prims.of_int (54)) (Prims.of_int (49)))
-                  (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                     (Prims.of_int (19)) (Prims.of_int (606))
+                  (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                     (Prims.of_int (19)) (Prims.of_int (590))
                      (Prims.of_int (31)))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
@@ -251,9 +253,9 @@ let (effect_info_to_string :
                                       (Prims.of_int (52)) (Prims.of_int (45))
                                       (Prims.of_int (54)) (Prims.of_int (49)))
                                    (FStar_Range.mk_range "prims.fst"
-                                      (Prims.of_int (606))
+                                      (Prims.of_int (590))
                                       (Prims.of_int (19))
-                                      (Prims.of_int (606))
+                                      (Prims.of_int (590))
                                       (Prims.of_int (31)))
                                    (Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
@@ -264,9 +266,9 @@ let (effect_info_to_string :
                                             (Prims.of_int (54))
                                             (Prims.of_int (49)))
                                          (FStar_Range.mk_range "prims.fst"
-                                            (Prims.of_int (606))
+                                            (Prims.of_int (590))
                                             (Prims.of_int (19))
-                                            (Prims.of_int (606))
+                                            (Prims.of_int (590))
                                             (Prims.of_int (31)))
                                          (Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
@@ -297,9 +299,9 @@ let (effect_info_to_string :
                                                              (Prims.of_int (49)))
                                                           (FStar_Range.mk_range
                                                              "prims.fst"
-                                                             (Prims.of_int (606))
+                                                             (Prims.of_int (590))
                                                              (Prims.of_int (19))
-                                                             (Prims.of_int (606))
+                                                             (Prims.of_int (590))
                                                              (Prims.of_int (31)))
                                                           (Obj.magic
                                                              (FStar_Tactics_Effect.tac_bind
@@ -311,9 +313,9 @@ let (effect_info_to_string :
                                                                    (Prims.of_int (49)))
                                                                 (FStar_Range.mk_range
                                                                    "prims.fst"
-                                                                   (Prims.of_int (606))
+                                                                   (Prims.of_int (590))
                                                                    (Prims.of_int (19))
-                                                                   (Prims.of_int (606))
+                                                                   (Prims.of_int (590))
                                                                    (Prims.of_int (31)))
                                                                 (Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
@@ -325,9 +327,9 @@ let (effect_info_to_string :
                                                                     (Prims.of_int (43)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.option_to_string
@@ -407,11 +409,12 @@ let (eterm_info_to_string :
          (FStar_Tactics_Util.map
             (fun x ->
                FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                 (FStar_Range.mk_range
+                    "FStar.InteractiveHelpers.Effectful.fst"
                     (Prims.of_int (66)) (Prims.of_int (35))
                     (Prims.of_int (66)) (Prims.of_int (67)))
-                 (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                    (Prims.of_int (19)) (Prims.of_int (606))
+                 (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                    (Prims.of_int (19)) (Prims.of_int (590))
                     (Prims.of_int (31)))
                  (Obj.magic
                     (FStar_Tactics_Effect.tac_bind
@@ -419,8 +422,8 @@ let (eterm_info_to_string :
                           "FStar.InteractiveHelpers.Effectful.fst"
                           (Prims.of_int (66)) (Prims.of_int (35))
                           (Prims.of_int (66)) (Prims.of_int (56)))
-                       (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                          (Prims.of_int (19)) (Prims.of_int (606))
+                       (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                          (Prims.of_int (19)) (Prims.of_int (590))
                           (Prims.of_int (31)))
                        (Obj.magic (cast_info_to_string x))
                        (fun uu___ ->
@@ -434,10 +437,12 @@ let (eterm_info_to_string :
          (fun params ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                 (FStar_Range.mk_range
+                    "FStar.InteractiveHelpers.Effectful.fst"
                     (Prims.of_int (67)) (Prims.of_int (19))
                     (Prims.of_int (67)) (Prims.of_int (66)))
-                 (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                 (FStar_Range.mk_range
+                    "FStar.InteractiveHelpers.Effectful.fst"
                     (Prims.of_int (68)) (Prims.of_int (2))
                     (Prims.of_int (71)) (Prims.of_int (18)))
                  (FStar_Tactics_Effect.lift_div_tac
@@ -452,9 +457,9 @@ let (eterm_info_to_string :
                                "FStar.InteractiveHelpers.Effectful.fst"
                                (Prims.of_int (69)) (Prims.of_int (2))
                                (Prims.of_int (71)) (Prims.of_int (18)))
-                            (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                               (Prims.of_int (19)) (Prims.of_int (606))
-                               (Prims.of_int (31)))
+                            (FStar_Range.mk_range "prims.fst"
+                               (Prims.of_int (590)) (Prims.of_int (19))
+                               (Prims.of_int (590)) (Prims.of_int (31)))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
@@ -477,10 +482,11 @@ let (eterm_info_to_string :
                                                 (Prims.of_int (37))
                                                 (Prims.of_int (71))
                                                 (Prims.of_int (18)))
-                                             (FStar_Range.mk_range "prims.fst"
-                                                (Prims.of_int (606))
+                                             (FStar_Range.mk_range
+                                                "prims.fst"
+                                                (Prims.of_int (590))
                                                 (Prims.of_int (19))
-                                                (Prims.of_int (606))
+                                                (Prims.of_int (590))
                                                 (Prims.of_int (31)))
                                              (Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
@@ -492,9 +498,9 @@ let (eterm_info_to_string :
                                                       (Prims.of_int (18)))
                                                    (FStar_Range.mk_range
                                                       "prims.fst"
-                                                      (Prims.of_int (606))
+                                                      (Prims.of_int (590))
                                                       (Prims.of_int (19))
-                                                      (Prims.of_int (606))
+                                                      (Prims.of_int (590))
                                                       (Prims.of_int (31)))
                                                    (Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
@@ -506,9 +512,9 @@ let (eterm_info_to_string :
                                                             (Prims.of_int (26)))
                                                          (FStar_Range.mk_range
                                                             "prims.fst"
-                                                            (Prims.of_int (606))
+                                                            (Prims.of_int (590))
                                                             (Prims.of_int (19))
-                                                            (Prims.of_int (606))
+                                                            (Prims.of_int (590))
                                                             (Prims.of_int (31)))
                                                          (Obj.magic
                                                             (FStar_Tactics_Builtins.term_to_string
@@ -1223,10 +1229,11 @@ let (typ_or_comp_to_effect_info :
                                                     (Prims.of_int (64))
                                                     (Prims.of_int (181))
                                                     (Prims.of_int (82)))
-                                                 (FStar_Range.mk_range "prims.fst"
-                                                    (Prims.of_int (606))
+                                                 (FStar_Range.mk_range
+                                                    "prims.fst"
+                                                    (Prims.of_int (590))
                                                     (Prims.of_int (19))
-                                                    (Prims.of_int (606))
+                                                    (Prims.of_int (590))
                                                     (Prims.of_int (31)))
                                                  (Obj.magic
                                                     (FStar_InteractiveHelpers_Base.acomp_to_string
@@ -1390,9 +1397,9 @@ let (compute_eterm_info :
                                                                     (Prims.of_int (73)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
@@ -1496,10 +1503,12 @@ let (compare_types :
              (fun uu___ ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                     (FStar_Range.mk_range
+                        "FStar.InteractiveHelpers.Effectful.fst"
                         (Prims.of_int (256)) (Prims.of_int (5))
                         (Prims.of_int (256)) (Prims.of_int (30)))
-                     (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                     (FStar_Range.mk_range
+                        "FStar.InteractiveHelpers.Effectful.fst"
                         (Prims.of_int (256)) (Prims.of_int (2))
                         (Prims.of_int (279)) (Prims.of_int (13)))
                      (Obj.magic
@@ -1802,10 +1811,12 @@ let (cast_info_to_propositions :
              (Prims.of_int (13)))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
-                (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                (FStar_Range.mk_range
+                   "FStar.InteractiveHelpers.Effectful.fst"
                    (Prims.of_int (316)) (Prims.of_int (16))
                    (Prims.of_int (316)) (Prims.of_int (76)))
-                (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                (FStar_Range.mk_range
+                   "FStar.InteractiveHelpers.Effectful.fst"
                    (Prims.of_int (316)) (Prims.of_int (2))
                    (Prims.of_int (316)) (Prims.of_int (76)))
                 (Obj.magic
@@ -1814,8 +1825,8 @@ let (cast_info_to_propositions :
                          "FStar.InteractiveHelpers.Effectful.fst"
                          (Prims.of_int (316)) (Prims.of_int (53))
                          (Prims.of_int (316)) (Prims.of_int (75)))
-                      (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                         (Prims.of_int (19)) (Prims.of_int (606))
+                      (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                         (Prims.of_int (19)) (Prims.of_int (590))
                          (Prims.of_int (31)))
                       (Obj.magic (cast_info_to_string ci))
                       (fun uu___ ->
@@ -1832,10 +1843,12 @@ let (cast_info_to_propositions :
              (fun uu___ ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                     (FStar_Range.mk_range
+                        "FStar.InteractiveHelpers.Effectful.fst"
                         (Prims.of_int (317)) (Prims.of_int (8))
                         (Prims.of_int (317)) (Prims.of_int (33)))
-                     (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                     (FStar_Range.mk_range
+                        "FStar.InteractiveHelpers.Effectful.fst"
                         (Prims.of_int (317)) (Prims.of_int (2))
                         (Prims.of_int (344)) (Prims.of_int (13)))
                      (Obj.magic (compare_cast_types dbg ci))
@@ -2181,10 +2194,12 @@ let (compute_pre_type :
              (fun uu___ ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                     (FStar_Range.mk_range
+                        "FStar.InteractiveHelpers.Effectful.fst"
                         (Prims.of_int (371)) (Prims.of_int (8))
                         (Prims.of_int (371)) (Prims.of_int (21)))
-                     (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                     (FStar_Range.mk_range
+                        "FStar.InteractiveHelpers.Effectful.fst"
                         (Prims.of_int (371)) (Prims.of_int (2))
                         (Prims.of_int (388)) (Prims.of_int (16)))
                      (Obj.magic
@@ -2353,9 +2368,9 @@ let (compute_pre_type :
                                                                     (Prims.of_int (70)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
@@ -2803,9 +2818,9 @@ let (compute_post_type :
                                                                     (Prims.of_int (58)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2838,9 +2853,9 @@ let (compute_post_type :
                                                                     (Prims.of_int (58)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2852,9 +2867,9 @@ let (compute_post_type :
                                                                     (Prims.of_int (58)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
@@ -2935,9 +2950,9 @@ let (compute_post_type :
                                                                     (Prims.of_int (60)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2970,9 +2985,9 @@ let (compute_post_type :
                                                                     (Prims.of_int (60)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2984,9 +2999,9 @@ let (compute_post_type :
                                                                     (Prims.of_int (60)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
@@ -3122,9 +3137,9 @@ let (compute_post_type :
                                                                     (Prims.of_int (70)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
@@ -3595,9 +3610,9 @@ let rec (_introduce_variables_for_abs :
                                          (Prims.of_int (483))
                                          (Prims.of_int (68)))
                                       (FStar_Range.mk_range "prims.fst"
-                                         (Prims.of_int (606))
+                                         (Prims.of_int (590))
                                          (Prims.of_int (19))
-                                         (Prims.of_int (606))
+                                         (Prims.of_int (590))
                                          (Prims.of_int (31)))
                                       (Obj.magic
                                          (FStar_Tactics_Derived.name_of_binder
@@ -3797,11 +3812,12 @@ let (is_st_get :
                  (Prims.of_int (54)))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.Effectful.fst"
                        (Prims.of_int (514)) (Prims.of_int (37))
                        (Prims.of_int (514)) (Prims.of_int (53)))
-                    (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                       (Prims.of_int (19)) (Prims.of_int (606))
+                    (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                       (Prims.of_int (19)) (Prims.of_int (590))
                        (Prims.of_int (31)))
                     (Obj.magic (FStar_Tactics_Builtins.term_to_string t))
                     (fun uu___ ->
@@ -3816,10 +3832,12 @@ let (is_st_get :
            (fun uu___ ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                   (FStar_Range.mk_range
+                      "FStar.InteractiveHelpers.Effectful.fst"
                       (Prims.of_int (515)) (Prims.of_int (8))
                       (Prims.of_int (515)) (Prims.of_int (17)))
-                   (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                   (FStar_Range.mk_range
+                      "FStar.InteractiveHelpers.Effectful.fst"
                       (Prims.of_int (515)) (Prims.of_int (2))
                       (Prims.of_int (528)) (Prims.of_int (9)))
                    (Obj.magic (FStar_Tactics_Builtins.inspect t))
@@ -3962,11 +3980,12 @@ let (is_let_st_get :
                  (Prims.of_int (58)))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.Effectful.fst"
                        (Prims.of_int (531)) (Prims.of_int (41))
                        (Prims.of_int (531)) (Prims.of_int (57)))
-                    (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                       (Prims.of_int (19)) (Prims.of_int (606))
+                    (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                       (Prims.of_int (19)) (Prims.of_int (590))
                        (Prims.of_int (31)))
                     (Obj.magic
                        (FStar_Tactics_Effect.tac_bind
@@ -4073,10 +4092,12 @@ let (term_has_effectful_comp :
              (fun uu___ ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                     (FStar_Range.mk_range
+                        "FStar.InteractiveHelpers.Effectful.fst"
                         (Prims.of_int (551)) (Prims.of_int (18))
                         (Prims.of_int (551)) (Prims.of_int (46)))
-                     (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                     (FStar_Range.mk_range
+                        "FStar.InteractiveHelpers.Effectful.fst"
                         (Prims.of_int (552)) (Prims.of_int (2))
                         (Prims.of_int (558)) (Prims.of_int (8)))
                      (Obj.magic (compute_effect_info dbg e tm))
@@ -4154,10 +4175,12 @@ let (related_term_is_effectul :
              (fun uu___ ->
                 fun tm ->
                   FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.Effectful.fst"
                        (Prims.of_int (570)) (Prims.of_int (4))
                        (Prims.of_int (570)) (Prims.of_int (41)))
-                    (FStar_Range.mk_range "FStar.InteractiveHelpers.Effectful.fst"
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.Effectful.fst"
                        (Prims.of_int (570)) (Prims.of_int (4))
                        (Prims.of_int (570)) (Prims.of_int (55)))
                     (Obj.magic
@@ -4290,9 +4313,9 @@ let rec (find_mem_in_related :
                                           (Prims.of_int (612))
                                           (Prims.of_int (66)))
                                        (FStar_Range.mk_range "prims.fst"
-                                          (Prims.of_int (606))
+                                          (Prims.of_int (590))
                                           (Prims.of_int (19))
-                                          (Prims.of_int (606))
+                                          (Prims.of_int (590))
                                           (Prims.of_int (31)))
                                        (Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
@@ -4680,10 +4703,11 @@ let (pre_post_to_propositions :
                                                   (Prims.of_int (44))
                                                   (Prims.of_int (668))
                                                   (Prims.of_int (83)))
-                                               (FStar_Range.mk_range "prims.fst"
-                                                  (Prims.of_int (606))
+                                               (FStar_Range.mk_range
+                                                  "prims.fst"
+                                                  (Prims.of_int (590))
                                                   (Prims.of_int (19))
-                                                  (Prims.of_int (606))
+                                                  (Prims.of_int (590))
                                                   (Prims.of_int (31)))
                                                (Obj.magic
                                                   (FStar_InteractiveHelpers_Base.option_to_string
@@ -4740,9 +4764,9 @@ let (pre_post_to_propositions :
                                                              (Prims.of_int (85)))
                                                           (FStar_Range.mk_range
                                                              "prims.fst"
-                                                             (Prims.of_int (606))
+                                                             (Prims.of_int (590))
                                                              (Prims.of_int (19))
-                                                             (Prims.of_int (606))
+                                                             (Prims.of_int (590))
                                                              (Prims.of_int (31)))
                                                           (Obj.magic
                                                              (FStar_InteractiveHelpers_Base.option_to_string
@@ -6210,9 +6234,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (74)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.option_to_string
@@ -6277,9 +6301,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (76)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.option_to_string
@@ -6453,9 +6477,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (69)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (effect_info_to_string
@@ -6519,9 +6543,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (91)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.option_to_string
@@ -6586,9 +6610,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (93)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.option_to_string
@@ -6695,9 +6719,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (65)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.genv_to_string
@@ -6809,9 +6833,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (65)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -6823,9 +6847,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (65)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -6837,9 +6861,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (65)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.binder_to_string
@@ -7047,9 +7071,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (97)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.binder_to_string
@@ -7592,9 +7616,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (85)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_ExploreTerm.type_info_to_string
@@ -7664,9 +7688,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (82)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_ExploreTerm.type_info_to_string
@@ -8061,9 +8085,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (88)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.option_to_string
@@ -8134,9 +8158,9 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (90)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.option_to_string

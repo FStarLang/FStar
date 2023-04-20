@@ -499,10 +499,12 @@ let reification :
                (Prims.of_int (35)))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
-                  (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.fst"
+                  (FStar_Range.mk_range
+                     "FStar.Tactics.CanonCommMonoidSimple.fst"
                      (Prims.of_int (244)) (Prims.of_int (41))
                      (Prims.of_int (244)) (Prims.of_int (61)))
-                  (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.fst"
+                  (FStar_Range.mk_range
+                     "FStar.Tactics.CanonCommMonoidSimple.fst"
                      (Prims.of_int (244)) (Prims.of_int (13))
                      (Prims.of_int (244)) (Prims.of_int (61)))
                   (FStar_Tactics_Effect.lift_div_tac
@@ -594,10 +596,12 @@ let canon_monoid :
          (fun uu___ ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.fst"
+                 (FStar_Range.mk_range
+                    "FStar.Tactics.CanonCommMonoidSimple.fst"
                     (Prims.of_int (251)) (Prims.of_int (8))
                     (Prims.of_int (251)) (Prims.of_int (37)))
-                 (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoidSimple.fst"
+                 (FStar_Range.mk_range
+                    "FStar.Tactics.CanonCommMonoidSimple.fst"
                     (Prims.of_int (251)) (Prims.of_int (2))
                     (Prims.of_int (274)) (Prims.of_int (42)))
                  (Obj.magic
@@ -755,9 +759,9 @@ let canon_monoid :
                                                                     (Prims.of_int (49)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind

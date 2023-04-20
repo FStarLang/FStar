@@ -2,10 +2,12 @@ open Prims
 let (dump : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun m ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst" (Prims.of_int (32))
-         (Prims.of_int (24)) (Prims.of_int (32)) (Prims.of_int (36)))
-      (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst" (Prims.of_int (32))
-         (Prims.of_int (21)) (Prims.of_int (32)) (Prims.of_int (48)))
+      (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+         (Prims.of_int (32)) (Prims.of_int (24)) (Prims.of_int (32))
+         (Prims.of_int (36)))
+      (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+         (Prims.of_int (32)) (Prims.of_int (21)) (Prims.of_int (32))
+         (Prims.of_int (48)))
       (Obj.magic (FStar_Tactics_Builtins.debugging ()))
       (fun uu___ ->
          (fun uu___ ->
@@ -570,10 +572,12 @@ let reification :
                 fun munit ->
                   fun ts ->
                     FStar_Tactics_Effect.tac_bind
-                      (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                      (FStar_Range.mk_range
+                         "FStar.Tactics.CanonCommMonoid.fst"
                          (Prims.of_int (267)) (Prims.of_int (20))
                          (Prims.of_int (267)) (Prims.of_int (53)))
-                      (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                      (FStar_Range.mk_range
+                         "FStar.Tactics.CanonCommMonoid.fst"
                          (Prims.of_int (268)) (Prims.of_int (2))
                          (Prims.of_int (279)) (Prims.of_int (30)))
                       (Obj.magic
@@ -708,10 +712,12 @@ let rec (term_mem :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                       (FStar_Range.mk_range
+                          "FStar.Tactics.CanonCommMonoid.fst"
                           (Prims.of_int (284)) (Prims.of_int (17))
                           (Prims.of_int (284)) (Prims.of_int (33)))
-                       (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                       (FStar_Range.mk_range
+                          "FStar.Tactics.CanonCommMonoid.fst"
                           (Prims.of_int (284)) (Prims.of_int (14))
                           (Prims.of_int (284)) (Prims.of_int (62)))
                        (Obj.magic (FStar_Tactics_Builtins.term_eq_old hd x))
@@ -976,10 +982,12 @@ let quote_vm :
                  (fun uu___ ->
                     fun p ->
                       FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                        (FStar_Range.mk_range
+                           "FStar.Tactics.CanonCommMonoid.fst"
                            (Prims.of_int (307)) (Prims.of_int (23))
                            (Prims.of_int (308)) (Prims.of_int (70)))
-                        (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                        (FStar_Range.mk_range
+                           "FStar.Tactics.CanonCommMonoid.fst"
                            (Prims.of_int (307)) (Prims.of_int (4))
                            (Prims.of_int (308)) (Prims.of_int (70)))
                         (Obj.magic
@@ -1135,10 +1143,12 @@ let quote_vm :
                  (fun quote_pair ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.CanonCommMonoid.fst"
                             (Prims.of_int (309)) (Prims.of_int (19))
                             (Prims.of_int (309)) (Prims.of_int (45)))
-                         (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.CanonCommMonoid.fst"
                             (Prims.of_int (310)) (Prims.of_int (2))
                             (Prims.of_int (322)) (Prims.of_int (63)))
                          (FStar_Tactics_Effect.lift_div_tac
@@ -1481,10 +1491,12 @@ let rec (quote_exp :
                       (Prims.of_int (327)) (Prims.of_int (56)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.CanonCommMonoid.fst"
                             (Prims.of_int (327)) (Prims.of_int (30))
                             (Prims.of_int (327)) (Prims.of_int (55)))
-                         (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.CanonCommMonoid.fst"
                             (Prims.of_int (327)) (Prims.of_int (29))
                             (Prims.of_int (327)) (Prims.of_int (56)))
                          (Obj.magic
@@ -1517,10 +1529,12 @@ let rec (quote_exp :
                       (Prims.of_int (328)) (Prims.of_int (63)))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.CanonCommMonoid.fst"
                             (Prims.of_int (328)) (Prims.of_int (36))
                             (Prims.of_int (328)) (Prims.of_int (48)))
-                         (FStar_Range.mk_range "FStar.Tactics.CanonCommMonoid.fst"
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.CanonCommMonoid.fst"
                             (Prims.of_int (328)) (Prims.of_int (35))
                             (Prims.of_int (328)) (Prims.of_int (63)))
                          (Obj.magic (quote_exp e1))

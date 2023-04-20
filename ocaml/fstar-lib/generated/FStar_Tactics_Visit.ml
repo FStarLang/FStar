@@ -128,10 +128,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (43)) (Prims.of_int (17))
                                    (Prims.of_int (43)) (Prims.of_int (44)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (44)) (Prims.of_int (8))
                                    (Prims.of_int (44)) (Prims.of_int (17)))
                                 (Obj.magic (on_sort_bv (visit_tm ff) bv))
@@ -143,10 +145,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (47)) (Prims.of_int (17))
                                    (Prims.of_int (47)) (Prims.of_int (44)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (48)) (Prims.of_int (8))
                                    (Prims.of_int (48)) (Prims.of_int (18)))
                                 (Obj.magic (on_sort_bv (visit_tm ff) bv))
@@ -181,10 +185,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (55)) (Prims.of_int (16))
                                    (Prims.of_int (55)) (Prims.of_int (46)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (56)) (Prims.of_int (8))
                                    (Prims.of_int (57)) (Prims.of_int (20)))
                                 (Obj.magic (on_sort_binder (visit_tm ff) b))
@@ -214,10 +220,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (59)) (Prims.of_int (16))
                                    (Prims.of_int (59)) (Prims.of_int (46)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (60)) (Prims.of_int (8))
                                    (Prims.of_int (61)) (Prims.of_int (18)))
                                 (Obj.magic (on_sort_binder (visit_tm ff) b))
@@ -247,10 +255,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (63)) (Prims.of_int (17))
                                    (Prims.of_int (63)) (Prims.of_int (30)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (64)) (Prims.of_int (9))
                                    (Prims.of_int (65)) (Prims.of_int (24)))
                                 (Obj.magic (visit_tm ff l))
@@ -280,10 +290,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (67)) (Prims.of_int (16))
                                    (Prims.of_int (67)) (Prims.of_int (42)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (68)) (Prims.of_int (8))
                                    (Prims.of_int (69)) (Prims.of_int (21)))
                                 (Obj.magic (on_sort_bv (visit_tm ff) b))
@@ -313,10 +325,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (71)) (Prims.of_int (16))
                                    (Prims.of_int (71)) (Prims.of_int (42)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (72)) (Prims.of_int (8))
                                    (Prims.of_int (74)) (Prims.of_int (30)))
                                 (Obj.magic (on_sort_bv (visit_tm ff) b))
@@ -367,10 +381,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (76)) (Prims.of_int (17))
                                    (Prims.of_int (76)) (Prims.of_int (31)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (77)) (Prims.of_int (8))
                                    (Prims.of_int (87)) (Prims.of_int (31)))
                                 (Obj.magic (visit_tm ff sc))
@@ -623,10 +639,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (89)) (Prims.of_int (16))
                                    (Prims.of_int (89)) (Prims.of_int (29)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (90)) (Prims.of_int (8))
                                    (Prims.of_int (91)) (Prims.of_int (36)))
                                 (Obj.magic (visit_tm ff e))
@@ -658,10 +676,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (93)) (Prims.of_int (16))
                                    (Prims.of_int (93)) (Prims.of_int (29)))
-                                (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (94)) (Prims.of_int (8))
                                    (Prims.of_int (94)) (Prims.of_int (36)))
                                 (Obj.magic (visit_tm ff e))
@@ -707,10 +727,12 @@ and (visit_br :
                           (fun p1 ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Visit.fst"
                                      (Prims.of_int (100)) (Prims.of_int (10))
                                      (Prims.of_int (100)) (Prims.of_int (23)))
-                                  (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Visit.fst"
                                      (Prims.of_int (101)) (Prims.of_int (2))
                                      (Prims.of_int (101)) (Prims.of_int (8)))
                                   (Obj.magic (visit_tm ff t))

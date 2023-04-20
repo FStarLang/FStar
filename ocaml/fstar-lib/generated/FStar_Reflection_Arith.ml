@@ -197,11 +197,12 @@ let op_let_Bang : 'a 'b . 'a tm -> ('a -> 'b tm) -> 'b tm =
     fun f ->
       fun i ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "FStar.Reflection.Arith.fst" (Prims.of_int (77))
-             (Prims.of_int (19)) (Prims.of_int (77)) (Prims.of_int (22)))
-          (FStar_Range.mk_range "FStar.Reflection.Arith.fst" (Prims.of_int (77))
-             (Prims.of_int (13)) (Prims.of_int (79)) (Prims.of_int (34)))
-          (Obj.magic (m i))
+          (FStar_Range.mk_range "FStar.Reflection.Arith.fst"
+             (Prims.of_int (77)) (Prims.of_int (19)) (Prims.of_int (77))
+             (Prims.of_int (22)))
+          (FStar_Range.mk_range "FStar.Reflection.Arith.fst"
+             (Prims.of_int (77)) (Prims.of_int (13)) (Prims.of_int (79))
+             (Prims.of_int (34))) (Obj.magic (m i))
           (fun uu___ ->
              (fun uu___ ->
                 match uu___ with
@@ -220,10 +221,12 @@ let lift :
     fun x ->
       fun st1 ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "FStar.Reflection.Arith.fst" (Prims.of_int (83))
-             (Prims.of_int (8)) (Prims.of_int (83)) (Prims.of_int (17)))
-          (FStar_Range.mk_range "FStar.Reflection.Arith.fst" (Prims.of_int (83))
-             (Prims.of_int (4)) (Prims.of_int (83)) (Prims.of_int (17)))
+          (FStar_Range.mk_range "FStar.Reflection.Arith.fst"
+             (Prims.of_int (83)) (Prims.of_int (8)) (Prims.of_int (83))
+             (Prims.of_int (17)))
+          (FStar_Range.mk_range "FStar.Reflection.Arith.fst"
+             (Prims.of_int (83)) (Prims.of_int (4)) (Prims.of_int (83))
+             (Prims.of_int (17)))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
                 (FStar_Range.mk_range "FStar.Reflection.Arith.fst"
@@ -329,10 +332,12 @@ let (atom : FStar_Reflection_Types.term -> expr tm) =
       match uu___ with
       | (n, atoms) ->
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Reflection.Arith.fst" (Prims.of_int (116))
-               (Prims.of_int (10)) (Prims.of_int (116)) (Prims.of_int (40)))
-            (FStar_Range.mk_range "FStar.Reflection.Arith.fst" (Prims.of_int (116))
-               (Prims.of_int (4)) (Prims.of_int (118)) (Prims.of_int (57)))
+            (FStar_Range.mk_range "FStar.Reflection.Arith.fst"
+               (Prims.of_int (116)) (Prims.of_int (10)) (Prims.of_int (116))
+               (Prims.of_int (40)))
+            (FStar_Range.mk_range "FStar.Reflection.Arith.fst"
+               (Prims.of_int (116)) (Prims.of_int (4)) (Prims.of_int (118))
+               (Prims.of_int (57)))
             (Obj.magic
                (find_idx (FStar_Tactics_Builtins.term_eq_old t) atoms))
             (fun uu___1 ->

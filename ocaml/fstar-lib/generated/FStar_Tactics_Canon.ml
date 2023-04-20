@@ -63,10 +63,12 @@ let rec (canon_point :
                         (fun uu___ ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (142)) (Prims.of_int (8))
                                    (Prims.of_int (142)) (Prims.of_int (16)))
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (143)) (Prims.of_int (8))
                                    (Prims.of_int (143)) (Prims.of_int (19)))
                                 (Obj.magic (FStar_Tactics_Derived.trefl ()))
@@ -93,10 +95,12 @@ let rec (canon_point :
                         (fun uu___ ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (147)) (Prims.of_int (8))
                                    (Prims.of_int (147)) (Prims.of_int (16)))
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (148)) (Prims.of_int (8))
                                    (Prims.of_int (148)) (Prims.of_int (19)))
                                 (Obj.magic (FStar_Tactics_Derived.trefl ()))
@@ -150,10 +154,12 @@ let rec (canon_point :
                         (fun uu___ ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (158)) (Prims.of_int (8))
                                    (Prims.of_int (158)) (Prims.of_int (31)))
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (159)) (Prims.of_int (8))
                                    (Prims.of_int (161)) (Prims.of_int (30)))
                                 (Obj.magic
@@ -233,10 +239,12 @@ let rec (canon_point :
                         (fun uu___ ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (165)) (Prims.of_int (8))
                                    (Prims.of_int (165)) (Prims.of_int (31)))
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (166)) (Prims.of_int (8))
                                    (Prims.of_int (168)) (Prims.of_int (30)))
                                 (Obj.magic
@@ -319,10 +327,12 @@ let rec (canon_point :
                         (fun uu___ ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (173)) (Prims.of_int (8))
                                    (Prims.of_int (173)) (Prims.of_int (31)))
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (174)) (Prims.of_int (8))
                                    (Prims.of_int (176)) (Prims.of_int (30)))
                                 (Obj.magic
@@ -403,10 +413,12 @@ let rec (canon_point :
                         (fun uu___ ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (180)) (Prims.of_int (8))
                                    (Prims.of_int (180)) (Prims.of_int (31)))
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (181)) (Prims.of_int (8))
                                    (Prims.of_int (183)) (Prims.of_int (30)))
                                 (Obj.magic
@@ -489,10 +501,12 @@ let rec (canon_point :
                           (fun uu___ ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Canon.fst"
                                      (Prims.of_int (189)) (Prims.of_int (12))
                                      (Prims.of_int (189)) (Prims.of_int (36)))
-                                  (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Canon.fst"
                                      (Prims.of_int (190)) (Prims.of_int (12))
                                      (Prims.of_int (192)) (Prims.of_int (20)))
                                   (Obj.magic
@@ -575,10 +589,12 @@ let rec (canon_point :
                           (fun uu___ ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Canon.fst"
                                      (Prims.of_int (200)) (Prims.of_int (12))
                                      (Prims.of_int (200)) (Prims.of_int (36)))
-                                  (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Canon.fst"
                                      (Prims.of_int (201)) (Prims.of_int (12))
                                      (Prims.of_int (203)) (Prims.of_int (20)))
                                   (Obj.magic
@@ -842,10 +858,12 @@ let rec (canon_point :
                         (fun uu___ ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (244)) (Prims.of_int (8))
                                    (Prims.of_int (244)) (Prims.of_int (31)))
-                                (FStar_Range.mk_range "FStar.Tactics.Canon.fst"
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (245)) (Prims.of_int (8))
                                    (Prims.of_int (247)) (Prims.of_int (30)))
                                 (Obj.magic
@@ -1013,10 +1031,11 @@ let (canon_point_entry : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                     (Prims.of_int (31))
                                                     (Prims.of_int (273))
                                                     (Prims.of_int (47)))
-                                                 (FStar_Range.mk_range "prims.fst"
-                                                    (Prims.of_int (606))
+                                                 (FStar_Range.mk_range
+                                                    "prims.fst"
+                                                    (Prims.of_int (590))
                                                     (Prims.of_int (19))
-                                                    (Prims.of_int (606))
+                                                    (Prims.of_int (590))
                                                     (Prims.of_int (31)))
                                                  (Obj.magic
                                                     (FStar_Tactics_Builtins.term_to_string

@@ -494,10 +494,12 @@ let quote_vm :
              (fun uu___ ->
                 fun p ->
                   FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (389)) (Prims.of_int (23))
                        (Prims.of_int (391)) (Prims.of_int (35)))
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (389)) (Prims.of_int (4))
                        (Prims.of_int (391)) (Prims.of_int (35)))
                     (Obj.magic
@@ -651,10 +653,12 @@ let quote_vm :
              (fun quote_map_entry ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                     (FStar_Range.mk_range
+                        "FStar.Tactics.CanonCommSemiring.fst"
                         (Prims.of_int (392)) (Prims.of_int (16))
                         (Prims.of_int (392)) (Prims.of_int (47)))
-                     (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                     (FStar_Range.mk_range
+                        "FStar.Tactics.CanonCommSemiring.fst"
                         (Prims.of_int (393)) (Prims.of_int (2))
                         (Prims.of_int (396)) (Prims.of_int (73)))
                      (FStar_Tactics_Effect.lift_div_tac
@@ -1176,10 +1180,12 @@ let rec reification_aux :
               fun mult ->
                 fun t ->
                   FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1523)) (Prims.of_int (15))
                        (Prims.of_int (1523)) (Prims.of_int (32)))
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1523)) (Prims.of_int (2))
                        (Prims.of_int (1545)) (Prims.of_int (38)))
                     (FStar_Tactics_Effect.lift_div_tac
@@ -1635,10 +1641,12 @@ let reification :
               fun munit ->
                 fun ts ->
                   FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1583)) (Prims.of_int (13))
                        (Prims.of_int (1583)) (Prims.of_int (17)))
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1584)) (Prims.of_int (2))
                        (Prims.of_int (1595)) (Prims.of_int (31)))
                     (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> tadd))
@@ -1814,10 +1822,12 @@ let rec quote_polynomial :
                  (Prims.of_int (1600)) (Prims.of_int (75)))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1600)) (Prims.of_int (33))
                        (Prims.of_int (1600)) (Prims.of_int (75)))
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1600)) (Prims.of_int (33))
                        (Prims.of_int (1600)) (Prims.of_int (75)))
                     (Obj.magic
@@ -1874,10 +1884,12 @@ let rec quote_polynomial :
                  (Prims.of_int (1601)) (Prims.of_int (58)))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1601)) (Prims.of_int (32))
                        (Prims.of_int (1601)) (Prims.of_int (57)))
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1601)) (Prims.of_int (31))
                        (Prims.of_int (1601)) (Prims.of_int (58)))
                     (Obj.magic
@@ -1908,10 +1920,12 @@ let rec quote_polynomial :
                  (Prims.of_int (1603)) (Prims.of_int (84)))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1603)) (Prims.of_int (23))
                        (Prims.of_int (1603)) (Prims.of_int (52)))
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1603)) (Prims.of_int (22))
                        (Prims.of_int (1603)) (Prims.of_int (84)))
                     (Obj.magic (quote_polynomial ta quotea e1))
@@ -1970,10 +1984,12 @@ let rec quote_polynomial :
                  (Prims.of_int (1605)) (Prims.of_int (84)))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1605)) (Prims.of_int (23))
                        (Prims.of_int (1605)) (Prims.of_int (52)))
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1605)) (Prims.of_int (22))
                        (Prims.of_int (1605)) (Prims.of_int (84)))
                     (Obj.magic (quote_polynomial ta quotea e1))
@@ -2032,10 +2048,12 @@ let rec quote_polynomial :
                  (Prims.of_int (1606)) (Prims.of_int (61)))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1606)) (Prims.of_int (32))
                        (Prims.of_int (1606)) (Prims.of_int (60)))
-                    (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                    (FStar_Range.mk_range
+                       "FStar.Tactics.CanonCommSemiring.fst"
                        (Prims.of_int (1606)) (Prims.of_int (31))
                        (Prims.of_int (1606)) (Prims.of_int (61)))
                     (Obj.magic (quote_polynomial ta quotea e1))
@@ -2724,10 +2742,12 @@ let (int_semiring : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                 ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                     (FStar_Range.mk_range
+                        "FStar.Tactics.CanonCommSemiring.fst"
                         (Prims.of_int (1697)) (Prims.of_int (11))
                         (Prims.of_int (1697)) (Prims.of_int (33)))
-                     (FStar_Range.mk_range "FStar.Tactics.CanonCommSemiring.fst"
+                     (FStar_Range.mk_range
+                        "FStar.Tactics.CanonCommSemiring.fst"
                         (Prims.of_int (1697)) (Prims.of_int (8))
                         (Prims.of_int (1699)) (Prims.of_int (34)))
                      (Obj.magic

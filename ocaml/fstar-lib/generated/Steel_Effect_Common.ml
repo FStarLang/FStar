@@ -46,10 +46,12 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
     FStar_Tactics_Builtins.with_compat_pre_core Prims.int_zero
       (fun uu___1 ->
          FStar_Tactics_Effect.tac_bind
-           (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (420))
-              (Prims.of_int (2)) (Prims.of_int (425)) (Prims.of_int (32)))
-           (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (432))
-              (Prims.of_int (2)) (Prims.of_int (456)) (Prims.of_int (10)))
+           (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+              (Prims.of_int (420)) (Prims.of_int (2)) (Prims.of_int (425))
+              (Prims.of_int (32)))
+           (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+              (Prims.of_int (432)) (Prims.of_int (2)) (Prims.of_int (456))
+              (Prims.of_int (10)))
            (Obj.magic
               (FStar_Tactics_Builtins.norm
                  [FStar_Pervasives.delta_attr
@@ -350,10 +352,12 @@ let (frame_vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                          (fun uu___3 ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (450)) (Prims.of_int (2))
                                     (Prims.of_int (450)) (Prims.of_int (76)))
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (454)) (Prims.of_int (2))
                                     (Prims.of_int (456)) (Prims.of_int (10)))
                                  (Obj.magic
@@ -594,10 +598,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (674)) (Prims.of_int (6))
                                    (Prims.of_int (674)) (Prims.of_int (25)))
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (675)) (Prims.of_int (6))
                                    (Prims.of_int (675)) (Prims.of_int (21)))
                                 (Obj.magic (on_sort_binder ff b))
@@ -608,10 +614,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (677)) (Prims.of_int (14))
                                    (Prims.of_int (677)) (Prims.of_int (44)))
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (678)) (Prims.of_int (6))
                                    (Prims.of_int (678)) (Prims.of_int (19)))
                                 (Obj.magic (on_sort_binder (visit_tm ff) b))
@@ -622,10 +630,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (681)) (Prims.of_int (7))
                                    (Prims.of_int (681)) (Prims.of_int (20)))
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (682)) (Prims.of_int (7))
                                    (Prims.of_int (682)) (Prims.of_int (20)))
                                 (Obj.magic (visit_tm ff l))
@@ -638,10 +648,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (688)) (Prims.of_int (6))
                                    (Prims.of_int (688)) (Prims.of_int (21)))
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (689)) (Prims.of_int (6))
                                    (Prims.of_int (689)) (Prims.of_int (19)))
                                 (Obj.magic (visit_tm ff def))
@@ -652,10 +664,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (692)) (Prims.of_int (6))
                                    (Prims.of_int (692)) (Prims.of_int (20)))
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (693)) (Prims.of_int (6))
                                    (Prims.of_int (693)) (Prims.of_int (28)))
                                 (Obj.magic (visit_tm ff sc))
@@ -669,10 +683,12 @@ let rec (visit_tm :
                         Obj.magic
                           (Obj.repr
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (696)) (Prims.of_int (6))
                                    (Prims.of_int (696)) (Prims.of_int (19)))
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (697)) (Prims.of_int (6))
                                    (Prims.of_int (697)) (Prims.of_int (19)))
                                 (Obj.magic (visit_tm ff e))
@@ -735,10 +751,12 @@ and (visit_comp :
                           (fun uu___ ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (716)) (Prims.of_int (6))
                                      (Prims.of_int (716)) (Prims.of_int (22)))
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (717)) (Prims.of_int (6))
                                      (Prims.of_int (717)) (Prims.of_int (22)))
                                   (Obj.magic (visit_tm ff post))
@@ -760,10 +778,12 @@ and (visit_comp :
                           (fun uu___ ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (721)) (Prims.of_int (6))
                                      (Prims.of_int (721)) (Prims.of_int (45)))
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (722)) (Prims.of_int (6))
                                      (Prims.of_int (722)) (Prims.of_int (30)))
                                   (Obj.magic
@@ -826,10 +846,12 @@ let (name_appears_in :
                                (Prims.of_int (732)) (Prims.of_int (35)))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (732)) (Prims.of_int (13))
                                      (Prims.of_int (732)) (Prims.of_int (28)))
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (732)) (Prims.of_int (6))
                                      (Prims.of_int (732)) (Prims.of_int (28)))
                                   (Obj.magic (visit_tm ff t))
@@ -862,10 +884,12 @@ let (term_appears_in :
            (Prims.of_int (2)) (Prims.of_int (738)) (Prims.of_int (51)))
         (Obj.magic
            (FStar_Tactics_Effect.tac_bind
-              (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (738))
-                 (Prims.of_int (30)) (Prims.of_int (738)) (Prims.of_int (48)))
-              (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (738))
-                 (Prims.of_int (18)) (Prims.of_int (738)) (Prims.of_int (49)))
+              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                 (Prims.of_int (738)) (Prims.of_int (30))
+                 (Prims.of_int (738)) (Prims.of_int (48)))
+              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                 (Prims.of_int (738)) (Prims.of_int (18))
+                 (Prims.of_int (738)) (Prims.of_int (49)))
               (Obj.magic (FStar_Tactics_Builtins.term_to_string t))
               (fun uu___ ->
                  FStar_Tactics_Effect.lift_div_tac
@@ -1010,10 +1034,12 @@ let rec (get_candidates :
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.tac_bind
-                               (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                               (FStar_Range.mk_range
+                                  "Steel.Effect.Common.fsti"
                                   (Prims.of_int (804)) (Prims.of_int (17))
                                   (Prims.of_int (804)) (Prims.of_int (31)))
-                               (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                               (FStar_Range.mk_range
+                                  "Steel.Effect.Common.fsti"
                                   (Prims.of_int (804)) (Prims.of_int (6))
                                   (Prims.of_int (807)) (Prims.of_int (32)))
                                (Obj.magic
@@ -1192,12 +1218,13 @@ let rec (print_atoms :
                           (fun uu___ ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (841)) (Prims.of_int (46))
                                      (Prims.of_int (841)) (Prims.of_int (71)))
                                   (FStar_Range.mk_range "prims.fst"
-                                     (Prims.of_int (606)) (Prims.of_int (19))
-                                     (Prims.of_int (606)) (Prims.of_int (31)))
+                                     (Prims.of_int (590)) (Prims.of_int (19))
+                                     (Prims.of_int (590)) (Prims.of_int (31)))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (FStar_Range.mk_range
@@ -1207,9 +1234,9 @@ let rec (print_atoms :
                                            (Prims.of_int (841))
                                            (Prims.of_int (71)))
                                         (FStar_Range.mk_range "prims.fst"
-                                           (Prims.of_int (606))
+                                           (Prims.of_int (590))
                                            (Prims.of_int (19))
-                                           (Prims.of_int (606))
+                                           (Prims.of_int (590))
                                            (Prims.of_int (31)))
                                         (Obj.magic (print_atoms tl am))
                                         (fun uu___1 ->
@@ -1416,12 +1443,14 @@ let rec (equivalent_lists_once :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (875))
                                       (Prims.of_int (15))
                                       (Prims.of_int (875))
                                       (Prims.of_int (38)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (875)) (Prims.of_int (4))
                                       (Prims.of_int (883)) (Prims.of_int (5)))
                                    (Obj.magic (try_candidates hd l2 am))
@@ -1518,11 +1547,13 @@ let rec (equivalent_lists_once_l2 :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (896)) (Prims.of_int (7))
                                       (Prims.of_int (896))
                                       (Prims.of_int (29)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (896)) (Prims.of_int (4))
                                       (Prims.of_int (910)) (Prims.of_int (5)))
                                    (Obj.magic (is_uvar (select hd am)))
@@ -1753,9 +1784,9 @@ let rec (try_unifying_remaining :
                                              (Prims.of_int (930))
                                              (Prims.of_int (92)))
                                           (FStar_Range.mk_range "prims.fst"
-                                             (Prims.of_int (606))
+                                             (Prims.of_int (590))
                                              (Prims.of_int (19))
-                                             (Prims.of_int (606))
+                                             (Prims.of_int (590))
                                              (Prims.of_int (31)))
                                           (Obj.magic
                                              (FStar_Tactics_Builtins.term_to_string
@@ -1828,10 +1859,12 @@ let rec (new_args_for_smt_attrs :
     fun l ->
       fun ty ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (941))
-             (Prims.of_int (4)) (Prims.of_int (942)) (Prims.of_int (23)))
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (944))
-             (Prims.of_int (2)) (Prims.of_int (970)) (Prims.of_int (66)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (941)) (Prims.of_int (4)) (Prims.of_int (942))
+             (Prims.of_int (23)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (944)) (Prims.of_int (2)) (Prims.of_int (970))
+             (Prims.of_int (66)))
           (FStar_Tactics_Effect.lift_div_tac
              (fun uu___ ->
                 fun ty1 ->
@@ -2124,10 +2157,12 @@ let (rewrite_term_for_smt :
     fun am ->
       fun a ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (974))
-             (Prims.of_int (30)) (Prims.of_int (974)) (Prims.of_int (32)))
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (974))
-             (Prims.of_int (4)) (Prims.of_int (980)) (Prims.of_int (68)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (974)) (Prims.of_int (30)) (Prims.of_int (974))
+             (Prims.of_int (32)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (974)) (Prims.of_int (4)) (Prims.of_int (980))
+             (Prims.of_int (68)))
           (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> am))
           (fun uu___ ->
              (fun uu___ ->
@@ -2235,17 +2270,19 @@ let fail_atoms :
     fun l2 ->
       fun am ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (984))
-             (Prims.of_int (9)) (Prims.of_int (984)) (Prims.of_int (105)))
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (984))
-             (Prims.of_int (4)) (Prims.of_int (984)) (Prims.of_int (105)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (984)) (Prims.of_int (9)) (Prims.of_int (984))
+             (Prims.of_int (105)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (984)) (Prims.of_int (4)) (Prims.of_int (984))
+             (Prims.of_int (105)))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
                    (Prims.of_int (984)) (Prims.of_int (55))
                    (Prims.of_int (984)) (Prims.of_int (104)))
-                (FStar_Range.mk_range "prims.fst" (Prims.of_int (606))
-                   (Prims.of_int (19)) (Prims.of_int (606))
+                (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                   (Prims.of_int (19)) (Prims.of_int (590))
                    (Prims.of_int (31)))
                 (Obj.magic
                    (FStar_Tactics_Effect.tac_bind
@@ -2260,12 +2297,13 @@ let fail_atoms :
                          (fun uu___ ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (984)) (Prims.of_int (75))
                                     (Prims.of_int (984)) (Prims.of_int (104)))
                                  (FStar_Range.mk_range "prims.fst"
-                                    (Prims.of_int (606)) (Prims.of_int (19))
-                                    (Prims.of_int (606)) (Prims.of_int (31)))
+                                    (Prims.of_int (590)) (Prims.of_int (19))
+                                    (Prims.of_int (590)) (Prims.of_int (31)))
                                  (Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (FStar_Range.mk_range
@@ -2275,9 +2313,9 @@ let fail_atoms :
                                           (Prims.of_int (984))
                                           (Prims.of_int (104)))
                                        (FStar_Range.mk_range "prims.fst"
-                                          (Prims.of_int (606))
+                                          (Prims.of_int (590))
                                           (Prims.of_int (19))
-                                          (Prims.of_int (606))
+                                          (Prims.of_int (590))
                                           (Prims.of_int (31)))
                                        (Obj.magic (print_atoms l2 am))
                                        (fun uu___1 ->
@@ -2383,9 +2421,9 @@ let rec (equivalent_lists_fallback :
                                                                     (
                                                                     FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (
                                                                     Obj.magic
@@ -2430,9 +2468,9 @@ let rec (equivalent_lists_fallback :
                                                        (Prims.of_int (83)))
                                                     (FStar_Range.mk_range
                                                        "prims.fst"
-                                                       (Prims.of_int (606))
+                                                       (Prims.of_int (590))
                                                        (Prims.of_int (19))
-                                                       (Prims.of_int (606))
+                                                       (Prims.of_int (590))
                                                        (Prims.of_int (31)))
                                                     (Obj.magic
                                                        (FStar_Tactics_Builtins.term_to_string
@@ -2571,10 +2609,12 @@ let (replace_smt_uvars :
     fun l2 ->
       fun am ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1022))
-             (Prims.of_int (14)) (Prims.of_int (1022)) (Prims.of_int (24)))
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1023))
-             (Prims.of_int (4)) (Prims.of_int (1023)) (Prims.of_int (52)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (1022)) (Prims.of_int (14)) (Prims.of_int (1022))
+             (Prims.of_int (24)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (1023)) (Prims.of_int (4)) (Prims.of_int (1023))
+             (Prims.of_int (52)))
           (Obj.magic (FStar_Tactics_Derived.cur_env ()))
           (fun uu___ ->
              (fun env ->
@@ -2674,9 +2714,9 @@ let rec (equivalent_lists' :
                                                                     (Prims.of_int (83)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (606))
+                                                                    (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
@@ -2720,9 +2760,9 @@ let rec (equivalent_lists' :
                                                            (Prims.of_int (83)))
                                                         (FStar_Range.mk_range
                                                            "prims.fst"
-                                                           (Prims.of_int (606))
+                                                           (Prims.of_int (590))
                                                            (Prims.of_int (19))
-                                                           (Prims.of_int (606))
+                                                           (Prims.of_int (590))
                                                            (Prims.of_int (31)))
                                                         (Obj.magic
                                                            (FStar_Tactics_Builtins.term_to_string
@@ -3217,11 +3257,12 @@ let (equivalent_lists :
       fun l2 ->
         fun am ->
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1103))
-               (Prims.of_int (31)) (Prims.of_int (1103)) (Prims.of_int (55)))
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1103))
-               (Prims.of_int (2)) (Prims.of_int (1107)) (Prims.of_int (39)))
-            (Obj.magic (trivial_cancels l1 l2 am))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (1103)) (Prims.of_int (31))
+               (Prims.of_int (1103)) (Prims.of_int (55)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (1103)) (Prims.of_int (2)) (Prims.of_int (1107))
+               (Prims.of_int (39))) (Obj.magic (trivial_cancels l1 l2 am))
             (fun uu___ ->
                (fun uu___ ->
                   match uu___ with
@@ -3312,12 +3353,13 @@ let rec (list_to_string :
                       (fun uu___ ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (1116)) (Prims.of_int (34))
                                  (Prims.of_int (1116)) (Prims.of_int (57)))
                               (FStar_Range.mk_range "prims.fst"
-                                 (Prims.of_int (606)) (Prims.of_int (19))
-                                 (Prims.of_int (606)) (Prims.of_int (31)))
+                                 (Prims.of_int (590)) (Prims.of_int (19))
+                                 (Prims.of_int (590)) (Prims.of_int (31)))
                               (Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (FStar_Range.mk_range
@@ -3327,9 +3369,9 @@ let rec (list_to_string :
                                        (Prims.of_int (1116))
                                        (Prims.of_int (57)))
                                     (FStar_Range.mk_range "prims.fst"
-                                       (Prims.of_int (606))
+                                       (Prims.of_int (590))
                                        (Prims.of_int (19))
-                                       (Prims.of_int (606))
+                                       (Prims.of_int (590))
                                        (Prims.of_int (31)))
                                     (Obj.magic (list_to_string tl))
                                     (fun uu___1 ->
@@ -3441,10 +3483,12 @@ let rec (dismiss_slprops :
          (Prims.of_int (2)) (Prims.of_int (1560)) (Prims.of_int (40)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1558))
-               (Prims.of_int (25)) (Prims.of_int (1558)) (Prims.of_int (38)))
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1558))
-               (Prims.of_int (8)) (Prims.of_int (1558)) (Prims.of_int (38)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (1558)) (Prims.of_int (25))
+               (Prims.of_int (1558)) (Prims.of_int (38)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (1558)) (Prims.of_int (8)) (Prims.of_int (1558))
+               (Prims.of_int (38)))
             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
             (fun uu___1 ->
                (fun uu___1 ->
@@ -3501,10 +3545,12 @@ let rec (n_identity_left :
         if n = Prims.int_zero
         then
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1565))
-               (Prims.of_int (6)) (Prims.of_int (1565)) (Prims.of_int (48)))
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1567))
-               (Prims.of_int (6)) (Prims.of_int (1567)) (Prims.of_int (18)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (1565)) (Prims.of_int (6)) (Prims.of_int (1565))
+               (Prims.of_int (48)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (1567)) (Prims.of_int (6)) (Prims.of_int (1567))
+               (Prims.of_int (18)))
             (Obj.magic
                (FStar_Tactics_Derived.apply_lemma
                   (FStar_Reflection_Builtins.pack_ln
@@ -3523,10 +3569,12 @@ let rec (n_identity_left :
                  uu___)
         else
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1569))
-               (Prims.of_int (6)) (Prims.of_int (1569)) (Prims.of_int (53)))
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1571))
-               (Prims.of_int (6)) (Prims.of_int (1572)) (Prims.of_int (32)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (1569)) (Prims.of_int (6)) (Prims.of_int (1569))
+               (Prims.of_int (53)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (1571)) (Prims.of_int (6)) (Prims.of_int (1572))
+               (Prims.of_int (32)))
             (Obj.magic
                (FStar_Tactics_Derived.apply_lemma
                   (FStar_Reflection_Builtins.pack_ln
@@ -3621,11 +3669,12 @@ let (fatom :
     fun ts ->
       fun am ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1619))
-             (Prims.of_int (8)) (Prims.of_int (1619)) (Prims.of_int (18)))
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (1619))
-             (Prims.of_int (2)) (Prims.of_int (1624)) (Prims.of_int (63)))
-          (Obj.magic (where t ts))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (1619)) (Prims.of_int (8)) (Prims.of_int (1619))
+             (Prims.of_int (18)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (1619)) (Prims.of_int (2)) (Prims.of_int (1624))
+             (Prims.of_int (63))) (Obj.magic (where t ts))
           (fun uu___ ->
              (fun uu___ ->
                 match uu___ with
@@ -3713,12 +3762,14 @@ let rec (reification_aux :
                                 (Prims.of_int (1643)) (Prims.of_int (22)))
                              (Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (1633))
                                       (Prims.of_int (8))
                                       (Prims.of_int (1633))
                                       (Prims.of_int (28)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (1633))
                                       (Prims.of_int (8))
                                       (Prims.of_int (1633))
@@ -4262,10 +4313,12 @@ let rec (unify_pr_with_true :
                         | (pr_l, uu___1)::(pr_r, uu___2)::[] ->
                             Obj.repr
                               (FStar_Tactics_Effect.tac_bind
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (1794)) (Prims.of_int (6))
                                     (Prims.of_int (1794)) (Prims.of_int (29)))
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (1795)) (Prims.of_int (6))
                                     (Prims.of_int (1795)) (Prims.of_int (29)))
                                  (Obj.magic (unify_pr_with_true pr_l))
@@ -4417,10 +4470,12 @@ let rec (set_abduction_variable_term :
                             ->
                             Obj.repr
                               (FStar_Tactics_Effect.tac_bind
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (1835)) (Prims.of_int (9))
                                     (Prims.of_int (1835)) (Prims.of_int (46)))
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (1835)) (Prims.of_int (6))
                                     (Prims.of_int (1845))
                                     (Prims.of_int (100)))
@@ -4662,12 +4717,14 @@ let (set_abduction_variable :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (1857))
                                       (Prims.of_int (13))
                                       (Prims.of_int (1857))
                                       (Prims.of_int (41)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (1858))
                                       (Prims.of_int (4))
                                       (Prims.of_int (1860))
@@ -4801,10 +4858,12 @@ let (canon_l_r :
                          (fun m_unit ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (1870)) (Prims.of_int (15))
                                     (Prims.of_int (1870)) (Prims.of_int (67)))
-                                 (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                 (FStar_Range.mk_range
+                                    "Steel.Effect.Common.fsti"
                                     (Prims.of_int (1872)) (Prims.of_int (2))
                                     (Prims.of_int (2080)) (Prims.of_int (29)))
                                  (Obj.magic
@@ -7002,10 +7061,12 @@ let (canon' :
     fun pr ->
       fun pr_bind ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2109))
-             (Prims.of_int (23)) (Prims.of_int (2109)) (Prims.of_int (59)))
-          (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2109))
-             (Prims.of_int (2)) (Prims.of_int (2109)) (Prims.of_int (83)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (2109)) (Prims.of_int (23)) (Prims.of_int (2109))
+             (Prims.of_int (59)))
+          (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+             (Prims.of_int (2109)) (Prims.of_int (2)) (Prims.of_int (2109))
+             (Prims.of_int (83)))
           (Obj.magic
              (FStar_Tactics_Builtins.pack
                 (FStar_Reflection_Data.Tv_FVar
@@ -7285,10 +7346,12 @@ let (unfold_guard : unit -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
          (Prims.of_int (2)) (Prims.of_int (2160)) (Prims.of_int (9)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2155))
-               (Prims.of_int (23)) (Prims.of_int (2155)) (Prims.of_int (36)))
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2155))
-               (Prims.of_int (5)) (Prims.of_int (2155)) (Prims.of_int (36)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (2155)) (Prims.of_int (23))
+               (Prims.of_int (2155)) (Prims.of_int (36)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (2155)) (Prims.of_int (5)) (Prims.of_int (2155))
+               (Prims.of_int (36)))
             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
             (fun uu___1 ->
                (fun uu___1 -> Obj.magic (all_guards_solved uu___1)) uu___1)))
@@ -7326,10 +7389,12 @@ let rec (term_is_uvar :
   fun t ->
     fun i ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2162))
-           (Prims.of_int (22)) (Prims.of_int (2162)) (Prims.of_int (23)))
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2162))
-           (Prims.of_int (53)) (Prims.of_int (2167)) (Prims.of_int (14)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (2162)) (Prims.of_int (22)) (Prims.of_int (2162))
+           (Prims.of_int (23)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (2162)) (Prims.of_int (53)) (Prims.of_int (2167))
+           (Prims.of_int (14)))
         (Obj.magic (FStar_Tactics_Builtins.inspect t))
         (fun uu___ ->
            (fun uu___ ->
@@ -7392,10 +7457,12 @@ let rec (dismiss_non_squash_goals' :
       | [] -> FStar_Tactics_Builtins.set_goals (FStar_List_Tot_Base.rev keep)
       | hd::tl ->
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2186))
-               (Prims.of_int (13)) (Prims.of_int (2186)) (Prims.of_int (44)))
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2187))
-               (Prims.of_int (5)) (Prims.of_int (2194)) (Prims.of_int (40)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (2186)) (Prims.of_int (13))
+               (Prims.of_int (2186)) (Prims.of_int (44)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (2187)) (Prims.of_int (5)) (Prims.of_int (2194))
+               (Prims.of_int (40)))
             (Obj.magic
                (FStar_Reflection_Formula.term_as_formula'
                   (FStar_Tactics_Types.goal_type hd)))
@@ -7481,10 +7548,12 @@ let rec (lookup_by_term_attr' :
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.tac_bind
-                               (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                               (FStar_Range.mk_range
+                                  "Steel.Effect.Common.fsti"
                                   (Prims.of_int (2211)) (Prims.of_int (12))
                                   (Prims.of_int (2211)) (Prims.of_int (24)))
-                               (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                               (FStar_Range.mk_range
+                                  "Steel.Effect.Common.fsti"
                                   (Prims.of_int (2212)) (Prims.of_int (10))
                                   (Prims.of_int (2220)) (Prims.of_int (42)))
                                (FStar_Tactics_Effect.lift_div_tac
@@ -7554,10 +7623,12 @@ let (lookup_by_term_attr :
   fun label_attr ->
     fun attr ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2224))
-           (Prims.of_int (10)) (Prims.of_int (2224)) (Prims.of_int (20)))
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2225))
-           (Prims.of_int (2)) (Prims.of_int (2226)) (Prims.of_int (43)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (2224)) (Prims.of_int (10)) (Prims.of_int (2224))
+           (Prims.of_int (20)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (2225)) (Prims.of_int (2)) (Prims.of_int (2226))
+           (Prims.of_int (43)))
         (Obj.magic (FStar_Tactics_Derived.cur_env ()))
         (fun uu___ ->
            (fun e ->
@@ -7872,11 +7943,13 @@ let rec (extract_contexts :
                           Obj.magic
                             (Obj.repr
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2276)) (Prims.of_int (6))
                                      (Prims.of_int (2286))
                                      (Prims.of_int (71)))
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2288)) (Prims.of_int (4))
                                      (Prims.of_int (2294)) (Prims.of_int (7)))
                                   (Obj.magic
@@ -8413,10 +8486,12 @@ let rec (solve_can_be_split :
                       (fun lnbr ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2351)) (Prims.of_int (17))
                                  (Prims.of_int (2351)) (Prims.of_int (36)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2352)) (Prims.of_int (6))
                                  (Prims.of_int (2382)) (Prims.of_int (18)))
                               (Obj.magic (slterm_nbr_uvars t2))
@@ -8701,10 +8776,12 @@ let (solve_can_be_split_dep :
                       (fun lnbr ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2391)) (Prims.of_int (17))
                                  (Prims.of_int (2391)) (Prims.of_int (36)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2392)) (Prims.of_int (6))
                                  (Prims.of_int (2422)) (Prims.of_int (18)))
                               (Obj.magic (slterm_nbr_uvars t2))
@@ -9081,10 +9158,12 @@ let (solve_can_be_split_forall :
                       (fun lnbr ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2435)) (Prims.of_int (17))
                                  (Prims.of_int (2435)) (Prims.of_int (36)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2436)) (Prims.of_int (6))
                                  (Prims.of_int (2460)) (Prims.of_int (18)))
                               (Obj.magic (slterm_nbr_uvars t2))
@@ -10156,10 +10235,12 @@ let rec (solve_can_be_split_forall_dep :
                       (fun lnbr ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2533)) (Prims.of_int (17))
                                  (Prims.of_int (2533)) (Prims.of_int (36)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2534)) (Prims.of_int (6))
                                  (Prims.of_int (2577)) (Prims.of_int (18)))
                               (Obj.magic (slterm_nbr_uvars t2))
@@ -10769,10 +10850,12 @@ let (solve_equiv_forall :
                       (fun lnbr ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2586)) (Prims.of_int (17))
                                  (Prims.of_int (2586)) (Prims.of_int (36)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2587)) (Prims.of_int (6))
                                  (Prims.of_int (2614)) (Prims.of_int (18)))
                               (Obj.magic (slterm_nbr_uvars t2))
@@ -11144,10 +11227,12 @@ let (solve_equiv :
                       (fun lnbr ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2623)) (Prims.of_int (17))
                                  (Prims.of_int (2623)) (Prims.of_int (36)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2624)) (Prims.of_int (6))
                                  (Prims.of_int (2647)) (Prims.of_int (18)))
                               (Obj.magic (slterm_nbr_uvars t2))
@@ -11379,10 +11464,12 @@ let (solve_can_be_split_post :
                       (fun lnbr ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2656)) (Prims.of_int (17))
                                  (Prims.of_int (2656)) (Prims.of_int (36)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2657)) (Prims.of_int (6))
                                  (Prims.of_int (2687)) (Prims.of_int (18)))
                               (Obj.magic (slterm_nbr_uvars t2))
@@ -11831,10 +11918,12 @@ let (is_return_eq :
   fun l ->
     fun r ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2693))
-           (Prims.of_int (15)) (Prims.of_int (2693)) (Prims.of_int (28)))
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2693))
-           (Prims.of_int (2)) (Prims.of_int (2695)) (Prims.of_int (56)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (2693)) (Prims.of_int (15)) (Prims.of_int (2693))
+           (Prims.of_int (28)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (2693)) (Prims.of_int (2)) (Prims.of_int (2695))
+           (Prims.of_int (56)))
         (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app l))
         (fun uu___ ->
            (fun uu___ ->
@@ -11891,12 +11980,14 @@ let rec (solve_indirection_eqs :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2706))
                                       (Prims.of_int (12))
                                       (Prims.of_int (2706))
                                       (Prims.of_int (43)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2707))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2711))
@@ -12017,12 +12108,14 @@ let rec (solve_all_eqs :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2720))
                                       (Prims.of_int (12))
                                       (Prims.of_int (2720))
                                       (Prims.of_int (43)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2721))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2725))
@@ -12118,12 +12211,14 @@ let rec (solve_return_eqs :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2735))
                                       (Prims.of_int (12))
                                       (Prims.of_int (2735))
                                       (Prims.of_int (43)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2736))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2740))
@@ -12215,12 +12310,14 @@ let (goal_to_equiv :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2748))
                                       (Prims.of_int (6))
                                       (Prims.of_int (2749))
                                       (Prims.of_int (70)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2750))
                                       (Prims.of_int (6))
                                       (Prims.of_int (2770))
@@ -12578,11 +12675,13 @@ let rec term_dict_assoc :
                           (fun q' ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2782)) (Prims.of_int (7))
                                      (Prims.of_int (2782))
                                      (Prims.of_int (26)))
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2782)) (Prims.of_int (4))
                                      (Prims.of_int (2784))
                                      (Prims.of_int (11)))
@@ -12905,12 +13004,14 @@ let (solve_or_delay :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2820))
                                       (Prims.of_int (15))
                                       (Prims.of_int (2820))
                                       (Prims.of_int (45)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2821))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2823))
@@ -13165,10 +13266,12 @@ let (goal_term_uvars :
                        (match tl with
                         | (tl0, FStar_Reflection_Data.Q_Explicit)::[] ->
                             FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2871)) (Prims.of_int (19))
                                  (Prims.of_int (2871)) (Prims.of_int (34)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2871)) (Prims.of_int (6))
                                  (Prims.of_int (2872)) (Prims.of_int (36)))
                               (Obj.magic
@@ -13199,10 +13302,12 @@ let (goal_term_uvars :
                                    uu___1)
                         | uu___1 ->
                             FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2873)) (Prims.of_int (11))
                                  (Prims.of_int (2873)) (Prims.of_int (35)))
-                              (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                              (FStar_Range.mk_range
+                                 "Steel.Effect.Common.fsti"
                                  (Prims.of_int (2873)) (Prims.of_int (37))
                                  (Prims.of_int (2873)) (Prims.of_int (39)))
                               (Obj.magic
@@ -13278,11 +13383,13 @@ let rec (compute_guarded_uvars1 :
                           (fun t ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2915)) (Prims.of_int (6))
                                      (Prims.of_int (2917))
                                      (Prims.of_int (48)))
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2919)) (Prims.of_int (4))
                                      (Prims.of_int (2919))
                                      (Prims.of_int (34)))
@@ -13368,12 +13475,14 @@ let rec (compute_guarded_uvars2 :
                           (fun t ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2927))
                                      (Prims.of_int (12))
                                      (Prims.of_int (2927))
                                      (Prims.of_int (29)))
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (2928)) (Prims.of_int (4))
                                      (Prims.of_int (2933))
                                      (Prims.of_int (34)))
@@ -13415,11 +13524,12 @@ let rec (compute_guarded_uvars3 :
   fun accu ->
     fun g ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2936))
-           (Prims.of_int (14)) (Prims.of_int (2936)) (Prims.of_int (43)))
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (2937))
-           (Prims.of_int (2)) (Prims.of_int (2939)) (Prims.of_int (37)))
-        (Obj.magic (compute_guarded_uvars2 accu g))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (2936)) (Prims.of_int (14)) (Prims.of_int (2936))
+           (Prims.of_int (43)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (2937)) (Prims.of_int (2)) (Prims.of_int (2939))
+           (Prims.of_int (37))) (Obj.magic (compute_guarded_uvars2 accu g))
         (fun uu___ ->
            (fun accu' ->
               if accu = accu'
@@ -13658,12 +13768,14 @@ let rec (resolve_tac :
                            (fun uu___1 ->
                               Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2971))
                                       (Prims.of_int (24))
                                       (Prims.of_int (2971))
                                       (Prims.of_int (48)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2973))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2974))
@@ -13825,12 +13937,14 @@ let rec (resolve_tac_logical :
                            (fun fuel ->
                               Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2989))
                                       (Prims.of_int (7))
                                       (Prims.of_int (2989))
                                       (Prims.of_int (34)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (2989))
                                       (Prims.of_int (4))
                                       (Prims.of_int (2995))
@@ -13896,12 +14010,14 @@ let rec (filter_goals :
                          | (slgoals, loggoals) ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (3008))
                                      (Prims.of_int (12))
                                      (Prims.of_int (3008))
                                      (Prims.of_int (43)))
-                                  (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                  (FStar_Range.mk_range
+                                     "Steel.Effect.Common.fsti"
                                      (Prims.of_int (3008)) (Prims.of_int (6))
                                      (Prims.of_int (3022))
                                      (Prims.of_int (30)))
@@ -13985,10 +14101,12 @@ let (is_true :
   fun t ->
     fun uu___ ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3025))
-           (Prims.of_int (8)) (Prims.of_int (3025)) (Prims.of_int (25)))
-        (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3025))
-           (Prims.of_int (2)) (Prims.of_int (3027)) (Prims.of_int (31)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (3025)) (Prims.of_int (8)) (Prims.of_int (3025))
+           (Prims.of_int (25)))
+        (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+           (Prims.of_int (3025)) (Prims.of_int (2)) (Prims.of_int (3027))
+           (Prims.of_int (31)))
         (Obj.magic (FStar_Reflection_Formula.term_as_formula t))
         (fun uu___1 ->
            (fun uu___1 ->
@@ -14036,12 +14154,14 @@ let rec (solve_maybe_emps :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (3038))
                                       (Prims.of_int (12))
                                       (Prims.of_int (3038))
                                       (Prims.of_int (42)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (3038))
                                       (Prims.of_int (46))
                                       (Prims.of_int (3056))
@@ -14331,12 +14451,14 @@ let rec (norm_return_pre :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (3064))
                                       (Prims.of_int (12))
                                       (Prims.of_int (3064))
                                       (Prims.of_int (44)))
-                                   (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                   (FStar_Range.mk_range
+                                      "Steel.Effect.Common.fsti"
                                       (Prims.of_int (3064))
                                       (Prims.of_int (46))
                                       (Prims.of_int (3064))
@@ -14413,10 +14535,12 @@ let (init_resolve_tac' :
          (Prims.of_int (2)) (Prims.of_int (3115)) (Prims.of_int (26)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3082))
-               (Prims.of_int (33)) (Prims.of_int (3082)) (Prims.of_int (42)))
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3082))
-               (Prims.of_int (20)) (Prims.of_int (3082)) (Prims.of_int (42)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (3082)) (Prims.of_int (33))
+               (Prims.of_int (3082)) (Prims.of_int (42)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (3082)) (Prims.of_int (20))
+               (Prims.of_int (3082)) (Prims.of_int (42)))
             (Obj.magic (FStar_Tactics_Derived.goals ()))
             (fun uu___ -> (fun uu___ -> Obj.magic (filter_goals uu___)) uu___)))
       (fun uu___ ->
@@ -14436,10 +14560,12 @@ let (init_resolve_tac' :
                         (fun uu___1 ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (3089)) (Prims.of_int (2))
                                    (Prims.of_int (3089)) (Prims.of_int (47)))
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (3094)) (Prims.of_int (2))
                                    (Prims.of_int (3115)) (Prims.of_int (26)))
                                 (Obj.magic
@@ -14845,10 +14971,12 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
          (Prims.of_int (2)) (Prims.of_int (3170)) (Prims.of_int (8)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3146))
-               (Prims.of_int (36)) (Prims.of_int (3146)) (Prims.of_int (46)))
-            (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3146))
-               (Prims.of_int (23)) (Prims.of_int (3146)) (Prims.of_int (46)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (3146)) (Prims.of_int (36))
+               (Prims.of_int (3146)) (Prims.of_int (46)))
+            (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+               (Prims.of_int (3146)) (Prims.of_int (23))
+               (Prims.of_int (3146)) (Prims.of_int (46)))
             (Obj.magic (FStar_Tactics_Derived.goals ()))
             (fun uu___1 ->
                (fun uu___1 -> Obj.magic (filter_goals uu___1)) uu___1)))
@@ -14869,10 +14997,12 @@ let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                         (fun uu___2 ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (3148)) (Prims.of_int (2))
                                    (Prims.of_int (3148)) (Prims.of_int (46)))
-                                (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+                                (FStar_Range.mk_range
+                                   "Steel.Effect.Common.fsti"
                                    (Prims.of_int (3151)) (Prims.of_int (2))
                                    (Prims.of_int (3170)) (Prims.of_int (8)))
                                 (Obj.magic
@@ -15153,10 +15283,12 @@ let (vc_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
     FStar_Tactics_Builtins.with_compat_pre_core Prims.int_zero
       (fun uu___1 ->
          FStar_Tactics_Effect.tac_bind
-           (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3176))
-              (Prims.of_int (61)) (Prims.of_int (3176)) (Prims.of_int (78)))
-           (FStar_Range.mk_range "Steel.Effect.Common.fsti" (Prims.of_int (3176))
-              (Prims.of_int (80)) (Prims.of_int (3176)) (Prims.of_int (87)))
+           (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+              (Prims.of_int (3176)) (Prims.of_int (61)) (Prims.of_int (3176))
+              (Prims.of_int (78)))
+           (FStar_Range.mk_range "Steel.Effect.Common.fsti"
+              (Prims.of_int (3176)) (Prims.of_int (80)) (Prims.of_int (3176))
+              (Prims.of_int (87)))
            (Obj.magic
               (FStar_Tactics_Builtins.norm
                  [FStar_Pervasives.delta_attr

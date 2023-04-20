@@ -19,10 +19,12 @@ let (is_true :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (161))
-         (Prims.of_int (16)) (Prims.of_int (161)) (Prims.of_int (34)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (161))
-         (Prims.of_int (10)) (Prims.of_int (174)) (Prims.of_int (14)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (161)) (Prims.of_int (16)) (Prims.of_int (161))
+         (Prims.of_int (34)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (161)) (Prims.of_int (10)) (Prims.of_int (174))
+         (Prims.of_int (14)))
       (Obj.magic (FStar_Reflection_Formula.term_as_formula' t))
       (fun uu___ ->
          (fun uu___ ->
@@ -118,10 +120,12 @@ let (is_false :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (179))
-         (Prims.of_int (16)) (Prims.of_int (179)) (Prims.of_int (34)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (179))
-         (Prims.of_int (10)) (Prims.of_int (192)) (Prims.of_int (14)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (179)) (Prims.of_int (16)) (Prims.of_int (179))
+         (Prims.of_int (34)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (179)) (Prims.of_int (10)) (Prims.of_int (192))
+         (Prims.of_int (14)))
       (Obj.magic (FStar_Reflection_Formula.term_as_formula' t))
       (fun uu___ ->
          (fun uu___ ->
@@ -214,11 +218,12 @@ let (is_false :
 let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (197))
-         (Prims.of_int (12)) (Prims.of_int (197)) (Prims.of_int (23)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (198))
-         (Prims.of_int (4)) (Prims.of_int (205)) (Prims.of_int (18)))
-      (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (197)) (Prims.of_int (12)) (Prims.of_int (197))
+         (Prims.of_int (23)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (198)) (Prims.of_int (4)) (Prims.of_int (205))
+         (Prims.of_int (18))) (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
       (fun uu___1 ->
          (fun t ->
             Obj.magic
@@ -301,11 +306,12 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (211))
-         (Prims.of_int (4)) (Prims.of_int (211)) (Prims.of_int (14)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (212))
-         (Prims.of_int (4)) (Prims.of_int (266)) (Prims.of_int (81)))
-      (Obj.magic (recurse ()))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (211)) (Prims.of_int (4)) (Prims.of_int (211))
+         (Prims.of_int (14)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (212)) (Prims.of_int (4)) (Prims.of_int (266))
+         (Prims.of_int (81))) (Obj.magic (recurse ()))
       (fun uu___1 ->
          (fun uu___1 ->
             Obj.magic
@@ -321,10 +327,12 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                     (fun uu___2 ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                            (FStar_Range.mk_range
+                               "FStar.Tactics.Simplifier.fst"
                                (Prims.of_int (213)) (Prims.of_int (12))
                                (Prims.of_int (213)) (Prims.of_int (23)))
-                            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                            (FStar_Range.mk_range
+                               "FStar.Tactics.Simplifier.fst"
                                (Prims.of_int (214)) (Prims.of_int (4))
                                (Prims.of_int (266)) (Prims.of_int (81)))
                             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
@@ -1234,11 +1242,12 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
 and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (269))
-         (Prims.of_int (4)) (Prims.of_int (269)) (Prims.of_int (11)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (270))
-         (Prims.of_int (4)) (Prims.of_int (304)) (Prims.of_int (74)))
-      (Obj.magic (step ()))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (269)) (Prims.of_int (4)) (Prims.of_int (269))
+         (Prims.of_int (11)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (270)) (Prims.of_int (4)) (Prims.of_int (304))
+         (Prims.of_int (74))) (Obj.magic (step ()))
       (fun uu___1 ->
          (fun uu___1 ->
             Obj.magic
@@ -1254,10 +1263,12 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                     (fun uu___2 ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                            (FStar_Range.mk_range
+                               "FStar.Tactics.Simplifier.fst"
                                (Prims.of_int (271)) (Prims.of_int (12))
                                (Prims.of_int (271)) (Prims.of_int (23)))
-                            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                            (FStar_Range.mk_range
+                               "FStar.Tactics.Simplifier.fst"
                                (Prims.of_int (272)) (Prims.of_int (4))
                                (Prims.of_int (304)) (Prims.of_int (74)))
                             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
@@ -1536,10 +1547,12 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
 let (simplify : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (310))
-         (Prims.of_int (4)) (Prims.of_int (310)) (Prims.of_int (24)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst" (Prims.of_int (311))
-         (Prims.of_int (4)) (Prims.of_int (311)) (Prims.of_int (21)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (310)) (Prims.of_int (4)) (Prims.of_int (310))
+         (Prims.of_int (24)))
+      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+         (Prims.of_int (311)) (Prims.of_int (4)) (Prims.of_int (311))
+         (Prims.of_int (21)))
       (Obj.magic
          (FStar_Tactics_Derived.apply_lemma
             (FStar_Reflection_Builtins.pack_ln
