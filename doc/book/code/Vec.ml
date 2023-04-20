@@ -176,9 +176,9 @@ let (implies_intro :
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "Vec.fst" (Prims.of_int (160)) (Prims.of_int (2))
+      (FStar_Range.mk_range "Vec.fst" (Prims.of_int (160)) (Prims.of_int (2))
          (Prims.of_int (160)) (Prims.of_int (14)))
-      (Prims.mk_range "Vec.fst" (Prims.of_int (161)) (Prims.of_int (2))
+      (FStar_Range.mk_range "Vec.fst" (Prims.of_int (161)) (Prims.of_int (2))
          (Prims.of_int (161)) (Prims.of_int (9)))
       (Obj.magic
          (FStar_Tactics_Derived.apply
