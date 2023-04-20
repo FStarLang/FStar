@@ -1110,6 +1110,7 @@ let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
   let modul, env = tc_partial_modul env0 m in
   // Note: all sigelts returned by tc_partial_modul must already be compressed
   // by Syntax.compress.deep_compress, so they are safe to output.
+  let modul = deep_compress_modul modul in // paranoid
   finish_partial_modul false iface_exists env modul
 
 let load_checked_module (en:env) (m:modul) :env =
