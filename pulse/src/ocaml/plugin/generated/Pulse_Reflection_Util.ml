@@ -1584,6 +1584,50 @@ let (mk_rewrite :
              ((FStar_Reflection_Builtins.pack_ln
                  (FStar_Reflection_Data.Tv_Const FStar_Reflection_Data.C_Unit)),
                FStar_Reflection_Data.Q_Explicit)))
+let (mk_withlocal :
+  FStar_Reflection_Types.universe ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.term ->
+          FStar_Reflection_Types.term ->
+            FStar_Reflection_Types.term ->
+              FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun ret_u ->
+    fun a ->
+      fun init ->
+        fun pre ->
+          fun ret_t ->
+            fun post ->
+              fun body ->
+                let lid = mk_steel_wrapper_lid "with_local" in
+                let t =
+                  FStar_Reflection_Builtins.pack_ln
+                    (FStar_Reflection_Data.Tv_UInst
+                       ((FStar_Reflection_Builtins.pack_fv lid), [ret_u])) in
+                let t1 =
+                  FStar_Reflection_Builtins.pack_ln
+                    (FStar_Reflection_Data.Tv_App
+                       (t, (a, FStar_Reflection_Data.Q_Implicit))) in
+                let t2 =
+                  FStar_Reflection_Builtins.pack_ln
+                    (FStar_Reflection_Data.Tv_App
+                       (t1, (init, FStar_Reflection_Data.Q_Explicit))) in
+                let t3 =
+                  FStar_Reflection_Builtins.pack_ln
+                    (FStar_Reflection_Data.Tv_App
+                       (t2, (pre, FStar_Reflection_Data.Q_Implicit))) in
+                let t4 =
+                  FStar_Reflection_Builtins.pack_ln
+                    (FStar_Reflection_Data.Tv_App
+                       (t3, (ret_t, FStar_Reflection_Data.Q_Implicit))) in
+                let t5 =
+                  FStar_Reflection_Builtins.pack_ln
+                    (FStar_Reflection_Data.Tv_App
+                       (t4, (post, FStar_Reflection_Data.Q_Implicit))) in
+                FStar_Reflection_Builtins.pack_ln
+                  (FStar_Reflection_Data.Tv_App
+                     (t5, (body, FStar_Reflection_Data.Q_Explicit)))
 let (mk_star_equiv :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.term ->
@@ -1658,3 +1702,17 @@ let (mk_stt_ghost_comp_equiv :
             fun post1 ->
               fun pre2 ->
                 fun post2 -> fun pre_eq -> fun post_eq -> Prims.admit ()
+let (ref_lid : Prims.string Prims.list) = ["Steel"; "ST"; "Reference"; "ref"]
+let (pts_to_lid : Prims.string Prims.list) =
+  ["Steel"; "ST"; "Reference"; "pts_to"]
+let (full_perm_lid : Prims.string Prims.list) =
+  ["Steel"; "FractionalPermission"; "full_perm"]
+let (mk_ref : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
+  fun a ->
+    let t =
+      FStar_Reflection_Builtins.pack_ln
+        (FStar_Reflection_Data.Tv_FVar
+           (FStar_Reflection_Builtins.pack_fv ref_lid)) in
+    FStar_Reflection_Builtins.pack_ln
+      (FStar_Reflection_Data.Tv_App
+         (t, (a, FStar_Reflection_Data.Q_Explicit)))

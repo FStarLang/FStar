@@ -163,6 +163,7 @@ type st_term =
   | Tm_IntroExists of Prims.bool * vprop * term Prims.list 
   | Tm_While of term * st_term * st_term 
   | Tm_Par of term * st_term * term * term * st_term * term 
+  | Tm_WithLocal of term * st_term 
   | Tm_Rewrite of term * term 
   | Tm_Admit of ctag * universe * term * term FStar_Pervasives_Native.option
   
@@ -181,6 +182,8 @@ let uu___is_Tm_IntroExists uu___ =
 let uu___is_Tm_While uu___ =
   match uu___ with | Tm_While _ -> true | _ -> false
 let uu___is_Tm_Par uu___ = match uu___ with | Tm_Par _ -> true | _ -> false
+let uu___is_Tm_WithLocal uu___ =
+  match uu___ with | Tm_WithLocal _ -> true | _ -> false
 let uu___is_Tm_Rewrite uu___ =
   match uu___ with | Tm_Rewrite _ -> true | _ -> false
 let uu___is_Tm_Admit uu___ =
@@ -267,6 +270,7 @@ let rec (freevars_st : st_term -> var FStar_Set.set) =
              (FStar_Set.union (freevars_st eL) (freevars postL)))
           (FStar_Set.union (freevars preR)
              (FStar_Set.union (freevars_st eR) (freevars postR)))
+    | Tm_WithLocal (t1, t2) -> FStar_Set.union (freevars t1) (freevars_st t2)
     | Tm_Rewrite (t1, t2) -> FStar_Set.union (freevars t1) (freevars t2)
     | Tm_Admit (uu___, uu___1, t1, post) ->
         FStar_Set.union (freevars t1) (freevars_opt post)
@@ -348,6 +352,8 @@ let rec (ln_st' : st_term -> Prims.int -> Prims.bool) =
               && (ln' preR i))
              && (ln_st' eR i))
             && (ln' postR (i + Prims.int_one))
+      | Tm_WithLocal (t1, t2) ->
+          (ln' t1 i) && (ln_st' t2 (i + Prims.int_one))
       | Tm_Rewrite (t1, t2) -> (ln' t1 i) && (ln' t2 i)
       | Tm_Admit (uu___, uu___1, t1, post) ->
           (ln' t1 i) && (ln_opt' post (i + Prims.int_one))
@@ -479,6 +485,9 @@ let rec (open_st_term' : st_term -> term -> index -> st_term) =
                 (open_term' postL v (i + Prims.int_one)),
                 (open_term' preR v i), (open_st_term' eR v i),
                 (open_term' postR v (i + Prims.int_one)))
+        | Tm_WithLocal (e1, e2) ->
+            Tm_WithLocal
+              ((open_term' e1 v i), (open_st_term' e2 v (i + Prims.int_one)))
         | Tm_Rewrite (e1, e2) ->
             Tm_Rewrite ((open_term' e1 v i), (open_term' e2 v i))
         | Tm_Admit (c, u, t1, post) ->
@@ -634,6 +643,10 @@ let rec (close_st_term' : st_term -> var -> index -> st_term) =
                 (close_term' postL v (i + Prims.int_one)),
                 (close_term' preR v i), (close_st_term' eR v i),
                 (close_term' postR v (i + Prims.int_one)))
+        | Tm_WithLocal (e1, e2) ->
+            Tm_WithLocal
+              ((close_term' e1 v i),
+                (close_st_term' e2 v (i + Prims.int_one)))
         | Tm_Rewrite (e1, e2) ->
             Tm_Rewrite ((close_term' e1 v i), (close_term' e2 v i))
         | Tm_Admit (c, u, t1, post) ->
@@ -725,10 +738,10 @@ let (null_bvar : index -> term) =
 let (gen_uvar : term -> (term, unit) FStar_Tactics_Effect.tac_repr) =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "Pulse.Syntax.fst" (Prims.of_int (868))
-         (Prims.of_int (10)) (Prims.of_int (868)) (Prims.of_int (22)))
-      (Prims.mk_range "Pulse.Syntax.fst" (Prims.of_int (868))
-         (Prims.of_int (2)) (Prims.of_int (868)) (Prims.of_int (22)))
+      (Prims.mk_range "Pulse.Syntax.fst" (Prims.of_int (888))
+         (Prims.of_int (10)) (Prims.of_int (888)) (Prims.of_int (22)))
+      (Prims.mk_range "Pulse.Syntax.fst" (Prims.of_int (888))
+         (Prims.of_int (2)) (Prims.of_int (888)) (Prims.of_int (22)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> Tm_UVar uu___))
@@ -830,6 +843,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
               && (eq_tm preR1 preR2))
              && (eq_st_term eR1 eR2))
             && (eq_tm postR1 postR2)
+      | (Tm_WithLocal (e1, e2), Tm_WithLocal (e3, e4)) ->
+          (eq_tm e1 e3) && (eq_st_term e2 e4)
       | (Tm_Rewrite (e1, e2), Tm_Rewrite (e3, e4)) ->
           (eq_tm e1 e3) && (eq_tm e2 e4)
       | (Tm_Admit (c1, u1, t11, post1), Tm_Admit (c2, u2, t21, post2)) ->
