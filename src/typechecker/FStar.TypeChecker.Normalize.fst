@@ -3035,6 +3035,7 @@ let normalize_with_primitive_steps ps s e t =
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
+      def_check_closed_in_env t.pos "normalize_with_primitive_steps call" e t;
       let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
                       BU.record_time (fun () ->
                         nbe_eval c s t))
@@ -3044,6 +3045,7 @@ let normalize_with_primitive_steps ps s e t =
     end else begin
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
+      def_check_closed_in_env t.pos "normalize_with_primitive_steps call" e t;
       let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
                       BU.record_time (fun () ->
                         norm c [] [] t))
@@ -3067,6 +3069,7 @@ let normalize_comp s e c =
     plugin_unfold_warn_ctr := 10;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+    def_check_comp_closed_in_env c.pos "normalize_comp call" e c;
     let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
                     BU.record_time (fun () ->
                       norm_comp cfg [] c))
@@ -3076,8 +3079,9 @@ let normalize_comp s e c =
   (Some (Ident.string_of_lid (Env.current_module e)))
   "FStar.TypeChecker.Normalize.normalize_comp"
 
-
-let normalize_universe env u = norm_universe (config [] env) [] u
+let normalize_universe env u = Errors.with_ctx "While normalizing a universe level" (fun () ->
+  norm_universe (config [] env) [] u
+)
 
 let non_info_norm env t =
   let steps = [UnfoldUntil delta_constant;

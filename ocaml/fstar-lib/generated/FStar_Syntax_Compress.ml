@@ -87,17 +87,24 @@ let (deep_compress :
   Prims.bool -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun allow_uvars ->
     fun tm ->
-      let uu___ =
-        let uu___1 = compress1_t allow_uvars in
-        let uu___2 = compress1_u allow_uvars in
-        FStar_Syntax_Visit.visit_term_univs uu___1 uu___2 in
-      uu___ tm
+      FStar_Errors.with_ctx "While deep-compressing a term"
+        (fun uu___ ->
+           let uu___1 =
+             let uu___2 = compress1_t allow_uvars in
+             let uu___3 = compress1_u allow_uvars in
+             FStar_Syntax_Visit.visit_term_univs uu___2 uu___3 in
+           uu___1 tm)
 let (deep_compress_se :
   Prims.bool -> FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
   fun allow_uvars ->
     fun se ->
       let uu___ =
-        let uu___1 = compress1_t allow_uvars in
-        let uu___2 = compress1_u allow_uvars in
-        FStar_Syntax_Visit.visit_sigelt uu___1 uu___2 in
-      uu___ se
+        let uu___1 = FStar_Syntax_Print.sigelt_to_string_short se in
+        FStar_Compiler_Util.format1 "While deep-compressing %s" uu___1 in
+      FStar_Errors.with_ctx uu___
+        (fun uu___1 ->
+           let uu___2 =
+             let uu___3 = compress1_t allow_uvars in
+             let uu___4 = compress1_u allow_uvars in
+             FStar_Syntax_Visit.visit_sigelt uu___3 uu___4 in
+           uu___2 se)

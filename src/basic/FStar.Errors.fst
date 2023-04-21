@@ -501,11 +501,8 @@ let find_multiset_discrepancy (l1 : list int) (l2 : list int) : option (int * in
                 else (hd, 1) :: (h, n) :: t
             end
     in
-    let summ l =
-        collect l
-    in
-    let l1 = summ (sort l1) in
-    let l2 = summ (sort l2) in
+    let l1 = collect (sort l1) in
+    let l2 = collect (sort l2) in
     let rec aux l1 l2 =
         match l1, l2 with
         | [], [] -> None

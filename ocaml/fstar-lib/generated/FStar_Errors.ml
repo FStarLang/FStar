@@ -810,9 +810,8 @@ let (find_multiset_discrepancy :
                  if h = hd
                  then (h, (n + Prims.int_one)) :: t
                  else (hd, Prims.int_one) :: (h, n) :: t) in
-      let summ l = collect l in
-      let l11 = let uu___ = sort l1 in summ uu___ in
-      let l21 = let uu___ = sort l2 in summ uu___ in
+      let l11 = let uu___ = sort l1 in collect uu___ in
+      let l21 = let uu___ = sort l2 in collect uu___ in
       let rec aux l12 l22 =
         match (l12, l22) with
         | ([], []) -> FStar_Pervasives_Native.None

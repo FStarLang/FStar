@@ -59,9 +59,7 @@ let (as_binder :
       mk_binder (seal_pp_name "x") x ty FStar_Reflection_Data.Q_Explicit
 let (bv_index : FStar_Reflection_Types.bv -> FStar_Reflection_Data.var) =
   fun x ->
-    let n =
-      (FStar_Reflection_Builtins.inspect_bv x).FStar_Reflection_Data.bv_index in
-    n
+    (FStar_Reflection_Builtins.inspect_bv x).FStar_Reflection_Data.bv_index
 let (binder_sort :
   FStar_Reflection_Types.binder -> FStar_Reflection_Types.typ) =
   fun b ->
@@ -104,7 +102,7 @@ let (__proj__Rename__item___1 : open_or_close -> FStar_Reflection_Data.var) =
 let (tun : FStar_Reflection_Types.term) =
   FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
 let (make_bv :
-  Prims.int -> FStar_Reflection_Types.term -> FStar_Reflection_Data.bv_view)
+  Prims.nat -> FStar_Reflection_Types.term -> FStar_Reflection_Data.bv_view)
   =
   fun n ->
     fun t ->
@@ -115,7 +113,7 @@ let (make_bv :
       }
 let (make_bv_with_name :
   pp_name_t ->
-    Prims.int -> FStar_Reflection_Types.term -> FStar_Reflection_Data.bv_view)
+    Prims.nat -> FStar_Reflection_Types.term -> FStar_Reflection_Data.bv_view)
   =
   fun s ->
     fun n ->
@@ -125,7 +123,7 @@ let (make_bv_with_name :
           FStar_Reflection_Data.bv_index = n;
           FStar_Reflection_Data.bv_sort = t
         }
-let (var_as_bv : Prims.int -> FStar_Reflection_Types.bv) =
+let (var_as_bv : Prims.nat -> FStar_Reflection_Types.bv) =
   fun v -> FStar_Reflection_Builtins.pack_bv (make_bv v tun)
 let (var_as_term : FStar_Reflection_Data.var -> FStar_Reflection_Types.term)
   =
@@ -146,7 +144,7 @@ let (mk_abs :
       fun t ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_Abs ((binder_of_t_q ty qual), t))
-let (bound_var : Prims.int -> FStar_Reflection_Types.term) =
+let (bound_var : Prims.nat -> FStar_Reflection_Types.term) =
   fun i ->
     FStar_Reflection_Builtins.pack_ln
       (FStar_Reflection_Data.Tv_BVar
@@ -755,7 +753,7 @@ type term_ctxt =
   FStar_Reflection_Types.match_returns_ascription
   FStar_Pervasives_Native.option * FStar_Reflection_Data.branch Prims.list 
 and bv_ctxt =
-  | Ctxt_bv of Prims.string FStar_Sealed.sealed * Prims.int * term_ctxt 
+  | Ctxt_bv of Prims.string FStar_Sealed.sealed * Prims.nat * term_ctxt 
 and binder_ctxt =
   | Ctxt_binder of bv_ctxt * FStar_Reflection_Data.aqualv *
   FStar_Reflection_Types.term Prims.list 

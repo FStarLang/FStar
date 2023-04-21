@@ -63,13 +63,17 @@ function.
 makes .checked files more brittle, so we don't do it.
 *)
 let deep_compress (allow_uvars:bool) (tm : term) : term =
-  Visit.visit_term_univs
-    (compress1_t allow_uvars)
-    (compress1_u allow_uvars)
-    tm
+  Err.with_ctx ("While deep-compressing a term") (fun () ->
+    Visit.visit_term_univs
+      (compress1_t allow_uvars)
+      (compress1_u allow_uvars)
+      tm
+  )
 
 let deep_compress_se (allow_uvars:bool) (se : sigelt) : sigelt =
-  Visit.visit_sigelt
-    (compress1_t allow_uvars)
-    (compress1_u allow_uvars)
-    se
+  Err.with_ctx (format1 "While deep-compressing %s" (Syntax.Print.sigelt_to_string_short se)) (fun () ->
+    Visit.visit_sigelt
+      (compress1_t allow_uvars)
+      (compress1_u allow_uvars)
+      se
+  )

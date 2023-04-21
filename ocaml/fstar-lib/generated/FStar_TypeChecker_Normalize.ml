@@ -7949,39 +7949,15 @@ let (normalize_with_primitive_steps :
                      (fun uu___8 ->
                         let uu___9 = FStar_TypeChecker_Cfg.cfg_to_string c in
                         FStar_Compiler_Util.print1 ">>> cfg = %s\n" uu___9);
-                   (let uu___8 =
+                   FStar_TypeChecker_Env.def_check_closed_in_env
+                     t.FStar_Syntax_Syntax.pos
+                     "normalize_with_primitive_steps call" e t;
+                   (let uu___9 =
                       FStar_Errors.with_ctx
                         "While normalizing a term via NBE"
-                        (fun uu___9 ->
-                           FStar_Compiler_Util.record_time
-                             (fun uu___10 -> nbe_eval c s t)) in
-                    match uu___8 with
-                    | (r, ms) ->
-                        (FStar_TypeChecker_Cfg.log_top c
-                           (fun uu___10 ->
-                              let uu___11 =
-                                FStar_Syntax_Print.term_to_string r in
-                              let uu___12 =
-                                FStar_Compiler_Util.string_of_int ms in
-                              FStar_Compiler_Util.print2
-                                "}\nNormalization result = (%s) in %s ms\n"
-                                uu___11 uu___12);
-                         r)))
-                else
-                  (FStar_TypeChecker_Cfg.log_top c
-                     (fun uu___8 ->
-                        let uu___9 = FStar_Syntax_Print.term_to_string t in
-                        FStar_Compiler_Util.print1
-                          "Starting normalizer for (%s) {\n" uu___9);
-                   FStar_TypeChecker_Cfg.log_top c
-                     (fun uu___9 ->
-                        let uu___10 = FStar_TypeChecker_Cfg.cfg_to_string c in
-                        FStar_Compiler_Util.print1 ">>> cfg = %s\n" uu___10);
-                   (let uu___9 =
-                      FStar_Errors.with_ctx "While normalizing a term"
                         (fun uu___10 ->
                            FStar_Compiler_Util.record_time
-                             (fun uu___11 -> norm c [] [] t)) in
+                             (fun uu___11 -> nbe_eval c s t)) in
                     match uu___9 with
                     | (r, ms) ->
                         (FStar_TypeChecker_Cfg.log_top c
@@ -7993,6 +7969,36 @@ let (normalize_with_primitive_steps :
                               FStar_Compiler_Util.print2
                                 "}\nNormalization result = (%s) in %s ms\n"
                                 uu___12 uu___13);
+                         r)))
+                else
+                  (FStar_TypeChecker_Cfg.log_top c
+                     (fun uu___8 ->
+                        let uu___9 = FStar_Syntax_Print.term_to_string t in
+                        FStar_Compiler_Util.print1
+                          "Starting normalizer for (%s) {\n" uu___9);
+                   FStar_TypeChecker_Cfg.log_top c
+                     (fun uu___9 ->
+                        let uu___10 = FStar_TypeChecker_Cfg.cfg_to_string c in
+                        FStar_Compiler_Util.print1 ">>> cfg = %s\n" uu___10);
+                   FStar_TypeChecker_Env.def_check_closed_in_env
+                     t.FStar_Syntax_Syntax.pos
+                     "normalize_with_primitive_steps call" e t;
+                   (let uu___10 =
+                      FStar_Errors.with_ctx "While normalizing a term"
+                        (fun uu___11 ->
+                           FStar_Compiler_Util.record_time
+                             (fun uu___12 -> norm c [] [] t)) in
+                    match uu___10 with
+                    | (r, ms) ->
+                        (FStar_TypeChecker_Cfg.log_top c
+                           (fun uu___12 ->
+                              let uu___13 =
+                                FStar_Syntax_Print.term_to_string r in
+                              let uu___14 =
+                                FStar_Compiler_Util.string_of_int ms in
+                              FStar_Compiler_Util.print2
+                                "}\nNormalization result = (%s) in %s ms\n"
+                                uu___13 uu___14);
                          r))))) uu___
             "FStar.TypeChecker.Normalize.normalize_with_primitive_steps"
 let (normalize :
@@ -8040,20 +8046,22 @@ let (normalize_comp :
                (fun uu___6 ->
                   let uu___7 = FStar_TypeChecker_Cfg.cfg_to_string cfg in
                   FStar_Compiler_Util.print1 ">>> cfg = %s\n" uu___7);
-             (let uu___6 =
+             FStar_TypeChecker_Env.def_check_comp_closed_in_env
+               c.FStar_Syntax_Syntax.pos "normalize_comp call" e c;
+             (let uu___7 =
                 FStar_Errors.with_ctx "While normalizing a computation type"
-                  (fun uu___7 ->
+                  (fun uu___8 ->
                      FStar_Compiler_Util.record_time
-                       (fun uu___8 -> norm_comp cfg [] c)) in
-              match uu___6 with
+                       (fun uu___9 -> norm_comp cfg [] c)) in
+              match uu___7 with
               | (c1, ms) ->
                   (FStar_TypeChecker_Cfg.log_top cfg
-                     (fun uu___8 ->
-                        let uu___9 = FStar_Syntax_Print.comp_to_string c1 in
-                        let uu___10 = FStar_Compiler_Util.string_of_int ms in
+                     (fun uu___9 ->
+                        let uu___10 = FStar_Syntax_Print.comp_to_string c1 in
+                        let uu___11 = FStar_Compiler_Util.string_of_int ms in
                         FStar_Compiler_Util.print2
-                          "}\nNormalization result = (%s) in %s ms\n" uu___9
-                          uu___10);
+                          "}\nNormalization result = (%s) in %s ms\n" uu___10
+                          uu___11);
                    c1))) uu___ "FStar.TypeChecker.Normalize.normalize_comp"
 let (normalize_universe :
   FStar_TypeChecker_Env.env ->
@@ -8061,8 +8069,10 @@ let (normalize_universe :
   =
   fun env1 ->
     fun u ->
-      let uu___ = FStar_TypeChecker_Cfg.config [] env1 in
-      norm_universe uu___ [] u
+      FStar_Errors.with_ctx "While normalizing a universe level"
+        (fun uu___ ->
+           let uu___1 = FStar_TypeChecker_Cfg.config [] env1 in
+           norm_universe uu___1 [] u)
 let (non_info_norm :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun env1 ->
