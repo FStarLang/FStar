@@ -2809,7 +2809,7 @@ let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
           first (List.Tot.map run_tac candidates)
         with _ ->
           (* this is a logical goal, solve it only if it has no uvars *)
-          if List.Tot.length (FStar.Reflection.Builtins.free_uvars t) = 0
+          if List.Tot.length (free_uvars t) = 0
           then (smt (); true)
           else false
         end
@@ -2817,8 +2817,8 @@ let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
       // TODO: handle non-squash goals here
       false
   | Comp (Eq _) l r ->
-    let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
-    let rnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars r) in
+    let lnbr = List.Tot.length (free_uvars l) in
+    let rnbr = List.Tot.length (free_uvars r) in
     // Only solve equality if one of the terms is completely determined
     if lnbr = 0 || rnbr = 0 then (trefl (); true) else false
   | _ -> false

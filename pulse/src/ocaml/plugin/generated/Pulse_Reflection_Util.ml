@@ -424,9 +424,9 @@ let (binder_of_t_q_s :
   =
   fun t ->
     fun q -> fun s -> FStar_Reflection_Typing.mk_binder s Prims.int_zero t q
-let (bound_var : Prims.int -> FStar_Reflection_Types.term) =
+let (bound_var : Prims.nat -> FStar_Reflection_Types.term) =
   fun i -> FStar_Reflection_Typing.bound_var i
-let (mk_name : Prims.int -> FStar_Reflection_Types.term) =
+let (mk_name : Prims.nat -> FStar_Reflection_Types.term) =
   fun i ->
     FStar_Reflection_Builtins.pack_ln
       (FStar_Reflection_Data.Tv_Var
