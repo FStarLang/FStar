@@ -1082,7 +1082,8 @@ let check_withlocal
          then T.fail "withlocal: body is not stt or postcondition mismatch"
          else let body = close_st_term opened_body x in
               assume (open_st_term (close_st_term opened_body x) x == opened_body);
-              let c = C_ST {u=comp_u c_body;res=comp_res c_body; pre; post} in
+              let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post} in
+              // This is for the typing rule, can we avoid checking it?
               let c_typing = check_comp f g c pre_typing in
               let d = T_WithLocal g init body init_t c x
                 (E init_typing) init_t_typing c_typing body_typing in
