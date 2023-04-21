@@ -223,14 +223,16 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
 						let rq = elab_term q in
 						mk_rewrite rp rq
 
-    | T_WithLocal _ init _ init_t c _ _ _ _ body_typing ->
+    | T_WithLocal _ init _ init_t c x _ _ _ body_typing ->
       let rret_u = elab_universe (comp_u c) in
       let ra = elab_term init_t in
       let rinit = elab_term init in
       let rret_t = elab_term (comp_res c) in
       let rpre = elab_term (comp_pre c) in
       let rpost = mk_abs rret_t R.Q_Explicit (elab_term (comp_post c)) in
-      let rbody = mk_abs (mk_ref ra) R.Q_Explicit (elab_st_typing body_typing) in
+      let rbody = elab_st_typing body_typing in
+      let rbody = RT.close_term rbody x in
+      let rbody = mk_abs (mk_ref ra) R.Q_Explicit rbody in
       mk_withlocal rret_u ra rinit rpre rret_t rpost rbody
 
     | T_Admit _ {u;res;pre;post} c _ ->
