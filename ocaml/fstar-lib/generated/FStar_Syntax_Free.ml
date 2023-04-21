@@ -10,12 +10,9 @@ let (ctx_uvar_typ :
     uu___.FStar_Syntax_Syntax.uvar_decoration_typ
 type use_cache_t =
   | Def 
-  | NoCache 
   | Full 
 let (uu___is_Def : use_cache_t -> Prims.bool) =
   fun projectee -> match projectee with | Def -> true | uu___ -> false
-let (uu___is_NoCache : use_cache_t -> Prims.bool) =
-  fun projectee -> match projectee with | NoCache -> true | uu___ -> false
 let (uu___is_Full : use_cache_t -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
 type free_vars_and_fvars =
@@ -333,23 +330,7 @@ and (free_names_and_uvars :
   fun t ->
     fun use_cache ->
       let t1 = FStar_Syntax_Subst.compress t in
-      let uu___ = FStar_Compiler_Effect.op_Bang t1.FStar_Syntax_Syntax.vars in
-      match uu___ with
-      | FStar_Pervasives_Native.Some n when
-          let uu___1 = should_invalidate_cache n use_cache in
-          Prims.op_Negation uu___1 ->
-          let uu___1 = FStar_Syntax_Syntax.new_fv_set () in (n, uu___1)
-      | uu___1 ->
-          (FStar_Compiler_Effect.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
-             FStar_Pervasives_Native.None;
-           (let n = free_names_and_uvs' t1 use_cache in
-            if use_cache <> Full
-            then
-              FStar_Compiler_Effect.op_Colon_Equals
-                t1.FStar_Syntax_Syntax.vars
-                (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n))
-            else ();
-            n))
+      free_names_and_uvs' t1 use_cache
 and (free_names_and_uvars_args :
   (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
     FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
@@ -377,51 +358,36 @@ and (free_names_and_uvars_comp :
   =
   fun c ->
     fun use_cache ->
-      let uu___ = FStar_Compiler_Effect.op_Bang c.FStar_Syntax_Syntax.vars in
-      match uu___ with
-      | FStar_Pervasives_Native.Some n ->
-          let uu___1 = should_invalidate_cache n use_cache in
-          if uu___1
-          then
-            (FStar_Compiler_Effect.op_Colon_Equals c.FStar_Syntax_Syntax.vars
-               FStar_Pervasives_Native.None;
-             free_names_and_uvars_comp c use_cache)
-          else
-            (let uu___3 = FStar_Syntax_Syntax.new_fv_set () in (n, uu___3))
-      | uu___1 ->
-          let n =
-            match c.FStar_Syntax_Syntax.n with
-            | FStar_Syntax_Syntax.GTotal t ->
-                free_names_and_uvars t use_cache
-            | FStar_Syntax_Syntax.Total t -> free_names_and_uvars t use_cache
-            | FStar_Syntax_Syntax.Comp ct ->
-                let decreases_vars =
-                  let uu___2 =
-                    FStar_Compiler_List.tryFind
-                      (fun uu___3 ->
-                         match uu___3 with
-                         | FStar_Syntax_Syntax.DECREASES uu___4 -> true
-                         | uu___4 -> false) ct.FStar_Syntax_Syntax.flags in
-                  match uu___2 with
-                  | FStar_Pervasives_Native.None -> no_free_vars
-                  | FStar_Pervasives_Native.Some
-                      (FStar_Syntax_Syntax.DECREASES dec_order) ->
-                      free_names_and_uvars_dec_order dec_order use_cache in
-                let us =
-                  let uu___2 =
-                    free_names_and_uvars ct.FStar_Syntax_Syntax.result_typ
-                      use_cache in
-                  union uu___2 decreases_vars in
-                let us1 =
-                  free_names_and_uvars_args
-                    ct.FStar_Syntax_Syntax.effect_args us use_cache in
-                FStar_Compiler_List.fold_left
-                  (fun us2 ->
-                     fun u -> let uu___2 = free_univs u in union us2 uu___2)
-                  us1 ct.FStar_Syntax_Syntax.comp_univs in
-          (FStar_Compiler_Effect.op_Colon_Equals c.FStar_Syntax_Syntax.vars
-             (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n));
-           n)
+      let n =
+        match c.FStar_Syntax_Syntax.n with
+        | FStar_Syntax_Syntax.GTotal t -> free_names_and_uvars t use_cache
+        | FStar_Syntax_Syntax.Total t -> free_names_and_uvars t use_cache
+        | FStar_Syntax_Syntax.Comp ct ->
+            let decreases_vars =
+              let uu___ =
+                FStar_Compiler_List.tryFind
+                  (fun uu___1 ->
+                     match uu___1 with
+                     | FStar_Syntax_Syntax.DECREASES uu___2 -> true
+                     | uu___2 -> false) ct.FStar_Syntax_Syntax.flags in
+              match uu___ with
+              | FStar_Pervasives_Native.None -> no_free_vars
+              | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
+                  dec_order) ->
+                  free_names_and_uvars_dec_order dec_order use_cache in
+            let us =
+              let uu___ =
+                free_names_and_uvars ct.FStar_Syntax_Syntax.result_typ
+                  use_cache in
+              union uu___ decreases_vars in
+            let us1 =
+              free_names_and_uvars_args ct.FStar_Syntax_Syntax.effect_args us
+                use_cache in
+            FStar_Compiler_List.fold_left
+              (fun us2 ->
+                 fun u -> let uu___ = free_univs u in union us2 uu___) us1
+              ct.FStar_Syntax_Syntax.comp_univs in
+      n
 and (free_names_and_uvars_dec_order :
   FStar_Syntax_Syntax.decreases_order -> use_cache_t -> free_vars_and_fvars)
   =
@@ -438,30 +404,6 @@ and (free_names_and_uvars_dec_order :
       | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
           let uu___ = free_names_and_uvars rel use_cache in
           let uu___1 = free_names_and_uvars e use_cache in union uu___ uu___1
-and (should_invalidate_cache :
-  FStar_Syntax_Syntax.free_vars -> use_cache_t -> Prims.bool) =
-  fun n ->
-    fun use_cache ->
-      ((use_cache <> Def) ||
-         (FStar_Compiler_Effect.op_Bar_Greater
-            n.FStar_Syntax_Syntax.free_uvars
-            (FStar_Compiler_Util.for_some
-               (fun u ->
-                  let uu___ =
-                    FStar_Syntax_Unionfind.find
-                      u.FStar_Syntax_Syntax.ctx_uvar_head in
-                  match uu___ with
-                  | FStar_Pervasives_Native.Some uu___1 -> true
-                  | uu___1 -> false))))
-        ||
-        (FStar_Compiler_Effect.op_Bar_Greater
-           n.FStar_Syntax_Syntax.free_univs
-           (FStar_Compiler_Util.for_some
-              (fun u ->
-                 let uu___ = FStar_Syntax_Unionfind.univ_find u in
-                 match uu___ with
-                 | FStar_Pervasives_Native.Some uu___1 -> true
-                 | FStar_Pervasives_Native.None -> false)))
 let (compare_uv :
   FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.ctx_uvar -> Prims.int)
   =
@@ -544,7 +486,7 @@ let (univnames_comp :
 let (fvars :
   FStar_Syntax_Syntax.term -> FStar_Ident.lident FStar_Compiler_Util.set) =
   fun t ->
-    let uu___ = free_names_and_uvars t NoCache in
+    let uu___ = free_names_and_uvars t Def in
     FStar_Pervasives_Native.snd uu___
 let (names_of_binders :
   FStar_Syntax_Syntax.binders ->
@@ -560,14 +502,7 @@ let (names_of_binders :
 let (uvars_uncached :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set)
-  =
-  fun t ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars t NoCache in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_uvars in
-    FStar_Compiler_Util.as_set uu___ compare_uv
+  = fun t -> uvars t
 let (uvars_full :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set)

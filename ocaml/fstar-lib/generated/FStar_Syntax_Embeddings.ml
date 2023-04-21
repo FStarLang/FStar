@@ -410,8 +410,6 @@ let (e_unit : unit embedding) =
       FStar_Syntax_Syntax.n =
         (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars =
-        (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.vars);
       FStar_Syntax_Syntax.hash_code =
         (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.hash_code)
     } in
@@ -448,7 +446,6 @@ let (e_bool : Prims.bool embedding) =
     {
       FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
       FStar_Syntax_Syntax.hash_code = (t.FStar_Syntax_Syntax.hash_code)
     } in
   let un t0 w _norm =
@@ -482,7 +479,6 @@ let (e_char : FStar_Char.char embedding) =
     {
       FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
       FStar_Syntax_Syntax.hash_code = (t.FStar_Syntax_Syntax.hash_code)
     } in
   let un t0 w _norm =

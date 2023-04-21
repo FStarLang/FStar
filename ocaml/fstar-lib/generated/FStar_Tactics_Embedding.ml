@@ -368,7 +368,6 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
         {
           FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = rng;
-          FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
           FStar_Syntax_Syntax.hash_code = (t.FStar_Syntax_Syntax.hash_code)
         }
     | e1 ->

@@ -4416,9 +4416,6 @@ let (tc_layered_eff_decl :
                                                       (uu___17.FStar_Syntax_Syntax.n);
                                                     FStar_Syntax_Syntax.pos =
                                                       uu___18;
-                                                    FStar_Syntax_Syntax.vars
-                                                      =
-                                                      (uu___17.FStar_Syntax_Syntax.vars);
                                                     FStar_Syntax_Syntax.hash_code
                                                       =
                                                       (uu___17.FStar_Syntax_Syntax.hash_code)
@@ -4611,9 +4608,6 @@ let (tc_layered_eff_decl :
                                                             (uu___19.FStar_Syntax_Syntax.n);
                                                           FStar_Syntax_Syntax.pos
                                                             = uu___20;
-                                                          FStar_Syntax_Syntax.vars
-                                                            =
-                                                            (uu___19.FStar_Syntax_Syntax.vars);
                                                           FStar_Syntax_Syntax.hash_code
                                                             =
                                                             (uu___19.FStar_Syntax_Syntax.hash_code)

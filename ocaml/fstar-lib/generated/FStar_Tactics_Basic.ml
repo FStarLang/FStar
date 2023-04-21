@@ -4925,9 +4925,8 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                 FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uvar
                   (ctx_uvar, uu___2);
                 FStar_Syntax_Syntax.pos = uu___3;
-                FStar_Syntax_Syntax.vars = uu___4;
-                FStar_Syntax_Syntax.hash_code = uu___5;_},
-              uu___6) ->
+                FStar_Syntax_Syntax.hash_code = uu___4;_},
+              uu___5) ->
                let env2 =
                  {
                    FStar_TypeChecker_Env.solver =

@@ -2505,23 +2505,22 @@ and (check' :
       | FStar_Syntax_Syntax.Tm_uinst
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar f;
              FStar_Syntax_Syntax.pos = uu___;
-             FStar_Syntax_Syntax.vars = uu___1;
-             FStar_Syntax_Syntax.hash_code = uu___2;_},
+             FStar_Syntax_Syntax.hash_code = uu___1;_},
            us)
           ->
-          let uu___3 =
+          let uu___2 =
             FStar_TypeChecker_Env.try_lookup_and_inst_lid g.tcenv us
               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-          (match uu___3 with
+          (match uu___2 with
            | FStar_Pervasives_Native.None ->
-               let uu___4 =
-                 let uu___5 =
+               let uu___3 =
+                 let uu___4 =
                    FStar_Ident.string_of_lid
                      (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                  FStar_Compiler_Util.format1 "Top-level name not found: %s"
-                   uu___5 in
-               fail uu___4
-           | FStar_Pervasives_Native.Some (t, uu___4) -> return (E_TOTAL, t))
+                   uu___4 in
+               fail uu___3
+           | FStar_Pervasives_Native.Some (t, uu___3) -> return (E_TOTAL, t))
       | FStar_Syntax_Syntax.Tm_constant c ->
           (match c with
            | FStar_Const.Const_range_of -> fail "Unhandled constant"
@@ -3771,24 +3770,22 @@ and (check_scrutinee_pattern_type_compatible :
                          FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
                            fv_head;
                          FStar_Syntax_Syntax.pos = uu___4;
-                         FStar_Syntax_Syntax.vars = uu___5;
-                         FStar_Syntax_Syntax.hash_code = uu___6;_},
+                         FStar_Syntax_Syntax.hash_code = uu___5;_},
                        us_head),
                       FStar_Syntax_Syntax.Tm_uinst
                       ({
                          FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
                            fv_pat;
-                         FStar_Syntax_Syntax.pos = uu___7;
-                         FStar_Syntax_Syntax.vars = uu___8;
-                         FStar_Syntax_Syntax.hash_code = uu___9;_},
+                         FStar_Syntax_Syntax.pos = uu___6;
+                         FStar_Syntax_Syntax.hash_code = uu___7;_},
                        us_pat)) when
-                       let uu___10 = FStar_Syntax_Syntax.lid_of_fv fv_head in
-                       let uu___11 = FStar_Syntax_Syntax.lid_of_fv fv_pat in
-                       FStar_Ident.lid_equals uu___10 uu___11 ->
-                       let uu___10 =
+                       let uu___8 = FStar_Syntax_Syntax.lid_of_fv fv_head in
+                       let uu___9 = FStar_Syntax_Syntax.lid_of_fv fv_pat in
+                       FStar_Ident.lid_equals uu___8 uu___9 ->
+                       let uu___8 =
                          FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv
                            head_sc head_pat in
-                       if uu___10
+                       if uu___8
                        then return fv_head
                        else err "Incompatible universe instantiations"
                    | (uu___4, uu___5) ->
