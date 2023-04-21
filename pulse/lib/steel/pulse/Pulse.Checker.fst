@@ -967,7 +967,8 @@ let rec print_st_head (t:st_term) =
   | Tm_While _ _ _ -> "While"
   | Tm_Admit _ _ _ _ -> "Admit"
   | Tm_Par _ _ _ _ _ _ -> "Par"
-		| Tm_Rewrite _ _ -> "Rewrite"
+  | Tm_Rewrite _ _ -> "Rewrite"
+  | Tm_WithLocal _ _ -> "WithLocal"
   | Tm_STApp p _ _ -> print_head p
   | Tm_IntroExists _ _ _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"  
@@ -989,7 +990,8 @@ let rec print_skel (t:st_term) =
   | Tm_While _ _ _ -> "While"
   | Tm_Admit _ _ _ _ -> "Admit"
   | Tm_Par _ _ _ _ _ _ -> "Par"
-		| Tm_Rewrite _ _ -> "Rewrite"
+  | Tm_Rewrite _ _ -> "Rewrite"
+  | Tm_WithLocal _ _ -> "WithLocal"
   | Tm_STApp p _ _ -> print_head p
   | Tm_IntroExists _ _ _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"
@@ -1073,13 +1075,17 @@ let check_withlocal
          let body_post = comp_withlocal_body_post post init_t x_tm in
          let (| opened_body, c_body, body_typing |) =
            check' allow_inst f g_extended (open_st_term body x) body_pre body_pre_typing (Some body_post) in
+         //
+         // Checking post equality here to match the typing rule
+         // 
          if not (C_ST? c_body && eq_tm (comp_post c_body) body_post)
          then T.fail "withlocal: body is not stt or postcondition mismatch"
          else let body = close_st_term opened_body x in
               assume (open_st_term (close_st_term opened_body x) x == opened_body);
-              let d = T_WithLocal g init body init_t
-                (comp_u c_body) (comp_res c_body) pre post x
-                (E init_typing) init_t_typing body_typing in
+              let c = C_ST {u=comp_u c_body;res=comp_res c_body; pre; post} in
+              let c_typing = check_comp f g c pre_typing in
+              let d = T_WithLocal g init body init_t c x
+                (E init_typing) init_t_typing c_typing body_typing in
               (| Tm_WithLocal init body, _, d |)
   else T.fail "withlocal: init type is not universe zero"
 #pop-options
