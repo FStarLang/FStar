@@ -738,9 +738,9 @@ let (null_bvar : index -> term) =
 let (gen_uvar : term -> (term, unit) FStar_Tactics_Effect.tac_repr) =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "Pulse.Syntax.fst" (Prims.of_int (888))
+      (FStar_Range.mk_range "Pulse.Syntax.fst" (Prims.of_int (888))
          (Prims.of_int (10)) (Prims.of_int (888)) (Prims.of_int (22)))
-      (Prims.mk_range "Pulse.Syntax.fst" (Prims.of_int (888))
+      (FStar_Range.mk_range "Pulse.Syntax.fst" (Prims.of_int (888))
          (Prims.of_int (2)) (Prims.of_int (888)) (Prims.of_int (22)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
       (fun uu___ ->

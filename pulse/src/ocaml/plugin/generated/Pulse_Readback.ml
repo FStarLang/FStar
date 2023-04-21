@@ -72,9 +72,9 @@ let (try_readback_st_comp :
   fun t ->
     fun readback_ty ->
       FStar_Tactics_Effect.tac_bind
-        (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (66))
+        (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (66))
            (Prims.of_int (17)) (Prims.of_int (66)) (Prims.of_int (32)))
-        (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (66))
+        (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (66))
            (Prims.of_int (2)) (Prims.of_int (129)) (Prims.of_int (13)))
         (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
         (fun uu___ ->
@@ -86,10 +86,10 @@ let (try_readback_st_comp :
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.tac_bind
-                               (Prims.mk_range "Pulse.Readback.fst"
+                               (FStar_Range.mk_range "Pulse.Readback.fst"
                                   (Prims.of_int (69)) (Prims.of_int (17))
                                   (Prims.of_int (69)) (Prims.of_int (30)))
-                               (Prims.mk_range "Pulse.Readback.fst"
+                               (FStar_Range.mk_range "Pulse.Readback.fst"
                                   (Prims.of_int (70)) (Prims.of_int (4))
                                   (Prims.of_int (128)) (Prims.of_int (13)))
                                (FStar_Tactics_Effect.lift_div_tac
@@ -112,13 +112,13 @@ let (try_readback_st_comp :
                                                      (b, body) ->
                                                      Obj.repr
                                                        (FStar_Tactics_Effect.tac_bind
-                                                          (Prims.mk_range
+                                                          (FStar_Range.mk_range
                                                              "Pulse.Readback.fst"
                                                              (Prims.of_int (76))
                                                              (Prims.of_int (18))
                                                              (Prims.of_int (76))
                                                              (Prims.of_int (34)))
-                                                          (Prims.mk_range
+                                                          (FStar_Range.mk_range
                                                              "Pulse.Readback.fst"
                                                              (Prims.of_int (75))
                                                              (Prims.of_int (14))
@@ -142,13 +142,13 @@ let (try_readback_st_comp :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (78))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (78))
                                                                     (Prims.of_int (41)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (90))
                                                                     (Prims.of_int (14))
@@ -171,13 +171,13 @@ let (try_readback_st_comp :
                                                                     (fun u''
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (91))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (91))
                                                                     (Prims.of_int (47)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (91))
                                                                     (Prims.of_int (14))
@@ -197,13 +197,13 @@ let (try_readback_st_comp :
                                                                     (fun res'
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (92))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (92))
                                                                     (Prims.of_int (47)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (92))
                                                                     (Prims.of_int (14))
@@ -223,13 +223,13 @@ let (try_readback_st_comp :
                                                                     (fun pre'
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (93))
                                                                     (Prims.of_int (27))
                                                                     (Prims.of_int (93))
                                                                     (Prims.of_int (43)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (93))
                                                                     (Prims.of_int (14))
@@ -304,13 +304,13 @@ let (try_readback_st_comp :
                                                           (b, body) ->
                                                           Obj.repr
                                                             (FStar_Tactics_Effect.tac_bind
-                                                               (Prims.mk_range
+                                                               (FStar_Range.mk_range
                                                                   "Pulse.Readback.fst"
                                                                   (Prims.of_int (105))
                                                                   (Prims.of_int (20))
                                                                   (Prims.of_int (105))
                                                                   (Prims.of_int (36)))
-                                                               (Prims.mk_range
+                                                               (FStar_Range.mk_range
                                                                   "Pulse.Readback.fst"
                                                                   (Prims.of_int (104))
                                                                   (Prims.of_int (14))
@@ -337,13 +337,13 @@ let (try_readback_st_comp :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (107))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (107))
                                                                     (Prims.of_int (41)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (108))
                                                                     (Prims.of_int (14))
@@ -366,13 +366,13 @@ let (try_readback_st_comp :
                                                                     (fun u''
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (109))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (109))
                                                                     (Prims.of_int (47)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (109))
                                                                     (Prims.of_int (14))
@@ -392,13 +392,13 @@ let (try_readback_st_comp :
                                                                     (fun res'
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (110))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (110))
                                                                     (Prims.of_int (53)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (110))
                                                                     (Prims.of_int (14))
@@ -419,13 +419,13 @@ let (try_readback_st_comp :
                                                                     opened'
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (111))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (111))
                                                                     (Prims.of_int (47)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (111))
                                                                     (Prims.of_int (14))
@@ -445,13 +445,13 @@ let (try_readback_st_comp :
                                                                     (fun pre'
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (112))
                                                                     (Prims.of_int (27))
                                                                     (Prims.of_int (112))
                                                                     (Prims.of_int (43)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (112))
                                                                     (Prims.of_int (14))
@@ -628,20 +628,20 @@ let rec (readback_ty :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (183))
-                      (Prims.of_int (6)) (Prims.of_int (188))
-                      (Prims.of_int (83)))
-                   (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (190))
-                      (Prims.of_int (4)) (Prims.of_int (239))
-                      (Prims.of_int (7)))
+                   (FStar_Range.mk_range "Pulse.Readback.fst"
+                      (Prims.of_int (183)) (Prims.of_int (6))
+                      (Prims.of_int (188)) (Prims.of_int (83)))
+                   (FStar_Range.mk_range "Pulse.Readback.fst"
+                      (Prims.of_int (190)) (Prims.of_int (4))
+                      (Prims.of_int (239)) (Prims.of_int (7)))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ ->
                          fun uu___1 ->
                            FStar_Tactics_Effect.tac_bind
-                             (Prims.mk_range "Pulse.Readback.fst"
+                             (FStar_Range.mk_range "Pulse.Readback.fst"
                                 (Prims.of_int (183)) (Prims.of_int (17))
                                 (Prims.of_int (183)) (Prims.of_int (31)))
-                             (Prims.mk_range "Pulse.Readback.fst"
+                             (FStar_Range.mk_range "Pulse.Readback.fst"
                                 (Prims.of_int (183)) (Prims.of_int (6))
                                 (Prims.of_int (188)) (Prims.of_int (83)))
                              (Obj.magic (readback_ty hd))
@@ -663,13 +663,13 @@ let rec (readback_ty :
                                                   Obj.magic
                                                     (Obj.repr
                                                        (FStar_Tactics_Effect.tac_bind
-                                                          (Prims.mk_range
+                                                          (FStar_Range.mk_range
                                                              "Pulse.Readback.fst"
                                                              (Prims.of_int (187))
                                                              (Prims.of_int (20))
                                                              (Prims.of_int (187))
                                                              (Prims.of_int (33)))
-                                                          (Prims.mk_range
+                                                          (FStar_Range.mk_range
                                                              "Pulse.Readback.fst"
                                                              (Prims.of_int (187))
                                                              (Prims.of_int (8))
@@ -702,10 +702,10 @@ let rec (readback_ty :
                       (fun aux ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range "Pulse.Readback.fst"
+                              (FStar_Range.mk_range "Pulse.Readback.fst"
                                  (Prims.of_int (190)) (Prims.of_int (21))
                                  (Prims.of_int (190)) (Prims.of_int (36)))
-                              (Prims.mk_range "Pulse.Readback.fst"
+                              (FStar_Range.mk_range "Pulse.Readback.fst"
                                  (Prims.of_int (190)) (Prims.of_int (4))
                                  (Prims.of_int (239)) (Prims.of_int (7)))
                               (Obj.magic
@@ -728,13 +728,13 @@ let rec (readback_ty :
                                              then
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
-                                                    (Prims.mk_range
+                                                    (FStar_Range.mk_range
                                                        "Pulse.Readback.fst"
                                                        (Prims.of_int (196))
                                                        (Prims.of_int (18))
                                                        (Prims.of_int (196))
                                                        (Prims.of_int (32)))
-                                                    (Prims.mk_range
+                                                    (FStar_Range.mk_range
                                                        "Pulse.Readback.fst"
                                                        (Prims.of_int (195))
                                                        (Prims.of_int (11))
@@ -750,14 +750,14 @@ let rec (readback_ty :
                                                                (fun t1 ->
                                                                   FStar_Tactics_Effect.tac_bind
                                                                     (
-                                                                    Prims.mk_range
+                                                                    FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (197))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (197))
                                                                     (Prims.of_int (32)))
                                                                     (
-                                                                    Prims.mk_range
+                                                                    FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (197))
                                                                     (Prims.of_int (8))
@@ -810,13 +810,13 @@ let rec (readback_ty :
                                                     (readback_universe u)
                                                     (fun u1 ->
                                                        FStar_Tactics_Effect.tac_bind
-                                                         (Prims.mk_range
+                                                         (FStar_Range.mk_range
                                                             "Pulse.Readback.fst"
                                                             (Prims.of_int (207))
                                                             (Prims.of_int (18))
                                                             (Prims.of_int (207))
                                                             (Prims.of_int (32)))
-                                                         (Prims.mk_range
+                                                         (FStar_Range.mk_range
                                                             "Pulse.Readback.fst"
                                                             (Prims.of_int (207))
                                                             (Prims.of_int (8))
@@ -832,13 +832,13 @@ let rec (readback_ty :
                                                                     (
                                                                     fun ty ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (209))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (214))
                                                                     (Prims.of_int (97)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (208))
                                                                     (Prims.of_int (8))
@@ -855,13 +855,13 @@ let rec (readback_ty :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (211))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (211))
                                                                     (Prims.of_int (37)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (211))
                                                                     (Prims.of_int (12))
@@ -936,13 +936,13 @@ let rec (readback_ty :
                                              then
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
-                                                    (Prims.mk_range
+                                                    (FStar_Range.mk_range
                                                        "Pulse.Readback.fst"
                                                        (Prims.of_int (233))
                                                        (Prims.of_int (18))
                                                        (Prims.of_int (233))
                                                        (Prims.of_int (31)))
-                                                    (Prims.mk_range
+                                                    (FStar_Range.mk_range
                                                        "Pulse.Readback.fst"
                                                        (Prims.of_int (232))
                                                        (Prims.of_int (11))
@@ -973,22 +973,22 @@ let rec (readback_ty :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (242))
-                      (Prims.of_int (18)) (Prims.of_int (242))
-                      (Prims.of_int (31)))
-                   (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (243))
-                      (Prims.of_int (4)) (Prims.of_int (247))
-                      (Prims.of_int (43)))
+                   (FStar_Range.mk_range "Pulse.Readback.fst"
+                      (Prims.of_int (242)) (Prims.of_int (18))
+                      (Prims.of_int (242)) (Prims.of_int (31)))
+                   (FStar_Range.mk_range "Pulse.Readback.fst"
+                      (Prims.of_int (243)) (Prims.of_int (4))
+                      (Prims.of_int (247)) (Prims.of_int (43)))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ -> FStar_Reflection_Builtins.inspect_bv bv))
                    (fun uu___ ->
                       (fun bv_view ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range "Pulse.Readback.fst"
+                              (FStar_Range.mk_range "Pulse.Readback.fst"
                                  (Prims.of_int (243)) (Prims.of_int (14))
                                  (Prims.of_int (243)) (Prims.of_int (41)))
-                              (Prims.mk_range "Pulse.Readback.fst"
+                              (FStar_Range.mk_range "Pulse.Readback.fst"
                                  (Prims.of_int (243)) (Prims.of_int (4))
                                  (Prims.of_int (247)) (Prims.of_int (43)))
                               (Obj.magic
@@ -1000,13 +1000,13 @@ let rec (readback_ty :
                                       (op_let_Question uu___
                                          (fun ty ->
                                             FStar_Tactics_Effect.tac_bind
-                                              (Prims.mk_range
+                                              (FStar_Range.mk_range
                                                  "Pulse.Readback.fst"
                                                  (Prims.of_int (244))
                                                  (Prims.of_int (15))
                                                  (Prims.of_int (244))
                                                  (Prims.of_int (30)))
-                                              (Prims.mk_range
+                                              (FStar_Range.mk_range
                                                  "Pulse.Readback.fst"
                                                  (Prims.of_int (244))
                                                  (Prims.of_int (4))
@@ -1044,12 +1044,12 @@ let rec (readback_ty :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (253))
-                      (Prims.of_int (8)) (Prims.of_int (253))
-                      (Prims.of_int (24)))
-                   (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (251))
-                      (Prims.of_int (20)) (Prims.of_int (270))
-                      (Prims.of_int (5)))
+                   (FStar_Range.mk_range "Pulse.Readback.fst"
+                      (Prims.of_int (253)) (Prims.of_int (8))
+                      (Prims.of_int (253)) (Prims.of_int (24)))
+                   (FStar_Range.mk_range "Pulse.Readback.fst"
+                      (Prims.of_int (251)) (Prims.of_int (20))
+                      (Prims.of_int (270)) (Prims.of_int (5)))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ ->
                          FStar_Reflection_Builtins.inspect_binder b))
@@ -1070,13 +1070,13 @@ let rec (readback_ty :
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Tactics_Effect.tac_bind
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "Pulse.Readback.fst"
                                              (Prims.of_int (259))
                                              (Prims.of_int (14))
                                              (Prims.of_int (259))
                                              (Prims.of_int (30)))
-                                          (Prims.mk_range
+                                          (FStar_Range.mk_range
                                              "Pulse.Readback.fst"
                                              (Prims.of_int (261))
                                              (Prims.of_int (6))
@@ -1088,13 +1088,13 @@ let rec (readback_ty :
                                              (fun q ->
                                                 Obj.magic
                                                   (FStar_Tactics_Effect.tac_bind
-                                                     (Prims.mk_range
+                                                     (FStar_Range.mk_range
                                                         "Pulse.Readback.fst"
                                                         (Prims.of_int (261))
                                                         (Prims.of_int (20))
                                                         (Prims.of_int (261))
                                                         (Prims.of_int (33)))
-                                                     (Prims.mk_range
+                                                     (FStar_Range.mk_range
                                                         "Pulse.Readback.fst"
                                                         (Prims.of_int (263))
                                                         (Prims.of_int (6))
@@ -1108,13 +1108,13 @@ let rec (readback_ty :
                                                         (fun bv_view ->
                                                            Obj.magic
                                                              (FStar_Tactics_Effect.tac_bind
-                                                                (Prims.mk_range
+                                                                (FStar_Range.mk_range
                                                                    "Pulse.Readback.fst"
                                                                    (Prims.of_int (263))
                                                                    (Prims.of_int (19))
                                                                    (Prims.of_int (263))
                                                                    (Prims.of_int (33)))
-                                                                (Prims.mk_range
+                                                                (FStar_Range.mk_range
                                                                    "Pulse.Readback.fst"
                                                                    (Prims.of_int (264))
                                                                    (Prims.of_int (6))
@@ -1137,13 +1137,13 @@ let rec (readback_ty :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (266))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (266))
                                                                     (Prims.of_int (49)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (266))
                                                                     (Prims.of_int (9))
@@ -1162,13 +1162,13 @@ let rec (readback_ty :
                                                                     (fun
                                                                     b_ty' ->
                                                                     FStar_Tactics_Effect.tac_bind
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (267))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (267))
                                                                     (Prims.of_int (36)))
-                                                                    (Prims.mk_range
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (267))
                                                                     (Prims.of_int (9))
@@ -1270,10 +1270,10 @@ let rec (readback_ty :
                  else
                    Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range "Pulse.Readback.fst"
+                        (FStar_Range.mk_range "Pulse.Readback.fst"
                            (Prims.of_int (293)) (Prims.of_int (20))
                            (Prims.of_int (293)) (Prims.of_int (33)))
-                        (Prims.mk_range "Pulse.Readback.fst"
+                        (FStar_Range.mk_range "Pulse.Readback.fst"
                            (Prims.of_int (295)) (Prims.of_int (6))
                            (Prims.of_int (299)) (Prims.of_int (69)))
                         (FStar_Tactics_Effect.lift_div_tac
@@ -1283,12 +1283,12 @@ let rec (readback_ty :
                            (fun bv_view ->
                               Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
-                                   (Prims.mk_range "Pulse.Readback.fst"
+                                   (FStar_Range.mk_range "Pulse.Readback.fst"
                                       (Prims.of_int (295))
                                       (Prims.of_int (19))
                                       (Prims.of_int (295))
                                       (Prims.of_int (46)))
-                                   (Prims.mk_range "Pulse.Readback.fst"
+                                   (FStar_Range.mk_range "Pulse.Readback.fst"
                                       (Prims.of_int (295)) (Prims.of_int (6))
                                       (Prims.of_int (299))
                                       (Prims.of_int (69)))
@@ -1301,13 +1301,13 @@ let rec (readback_ty :
                                            (op_let_Question uu___1
                                               (fun bv_t' ->
                                                  FStar_Tactics_Effect.tac_bind
-                                                   (Prims.mk_range
+                                                   (FStar_Range.mk_range
                                                       "Pulse.Readback.fst"
                                                       (Prims.of_int (296))
                                                       (Prims.of_int (18))
                                                       (Prims.of_int (296))
                                                       (Prims.of_int (33)))
-                                                   (Prims.mk_range
+                                                   (FStar_Range.mk_range
                                                       "Pulse.Readback.fst"
                                                       (Prims.of_int (296))
                                                       (Prims.of_int (6))
@@ -1322,13 +1322,13 @@ let rec (readback_ty :
                                                               uu___2
                                                               (fun def' ->
                                                                  FStar_Tactics_Effect.tac_bind
-                                                                   (Prims.mk_range
+                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (297))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (297))
                                                                     (Prims.of_int (35)))
-                                                                   (Prims.mk_range
+                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (297))
                                                                     (Prims.of_int (6))
@@ -1392,9 +1392,9 @@ and (readback_comp :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (313))
+      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (313))
          (Prims.of_int (13)) (Prims.of_int (313)) (Prims.of_int (47)))
-      (Prims.mk_range "Pulse.Readback.fst" (Prims.of_int (314))
+      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (314))
          (Prims.of_int (2)) (Prims.of_int (318)) (Prims.of_int (49)))
       (Obj.magic (try_readback_st_comp t readback_ty))
       (fun uu___ ->
@@ -1408,10 +1408,10 @@ and (readback_comp :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (Prims.mk_range "Pulse.Readback.fst"
+                        (FStar_Range.mk_range "Pulse.Readback.fst"
                            (Prims.of_int (317)) (Prims.of_int (14))
                            (Prims.of_int (317)) (Prims.of_int (27)))
-                        (Prims.mk_range "Pulse.Readback.fst"
+                        (FStar_Range.mk_range "Pulse.Readback.fst"
                            (Prims.of_int (317)) (Prims.of_int (4))
                            (Prims.of_int (318)) (Prims.of_int (49)))
                         (Obj.magic (readback_ty t))
