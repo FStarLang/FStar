@@ -34,4 +34,9 @@ In this folder, the following scripts are in use or can be used:
     
     + to test the Windows binary package created by the workflow
 
+* `simpl_graph.py`: this script simplifies a DOT-format graph (such as
+the one output by `fstar.exe --dep graph` by removing its transitive
+dependencies. This allows for a much better visualization. It is used by
+the `depgraph.pdf` rule in `src/Makefile.boot`.
+
 (TODO: expand this list)
