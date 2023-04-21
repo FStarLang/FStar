@@ -541,6 +541,10 @@ let () =
         t_smt_sync e_vconfig e_unit
         t_smt_sync NBET.e_vconfig NBET.e_unit;
 
+      mk_tac_step_1 0 "free_uvars"
+        free_uvars RE.e_term (e_list e_int)
+        free_uvars NRE.e_term (NBET.e_list NBET.e_int);
+
       // reflection typechecker callbacks (part of the DSL framework)
 
       mk_tac_step_3 0 "check_subtyping"

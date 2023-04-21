@@ -1675,23 +1675,19 @@ let (uu___156 : unit) =
                                                                     =
                                                                     let uu___168
                                                                     =
-                                                                    FStar_Syntax_Embeddings.e_option
-                                                                    FStar_Syntax_Embeddings.e_unit in
+                                                                    FStar_Syntax_Embeddings.e_list
+                                                                    FStar_Syntax_Embeddings.e_int in
                                                                     let uu___169
                                                                     =
-                                                                    FStar_TypeChecker_NBETerm.e_option
-                                                                    FStar_TypeChecker_NBETerm.e_unit in
-                                                                    FStar_Tactics_InterpFuns.mk_tac_step_3
+                                                                    FStar_TypeChecker_NBETerm.e_list
+                                                                    FStar_TypeChecker_NBETerm.e_int in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
-                                                                    "check_subtyping"
-                                                                    FStar_Tactics_Basic.refl_check_subtyping
-                                                                    FStar_Reflection_Embeddings.e_env
-                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    "free_uvars"
+                                                                    FStar_Tactics_Basic.free_uvars
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     uu___168
-                                                                    FStar_Tactics_Basic.refl_check_subtyping
-                                                                    FStar_Reflection_NBEEmbeddings.e_env
-                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    FStar_Tactics_Basic.free_uvars
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     uu___169 in
                                                                     let uu___168
@@ -1708,13 +1704,13 @@ let (uu___156 : unit) =
                                                                     FStar_TypeChecker_NBETerm.e_unit in
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
-                                                                    "check_equiv"
-                                                                    FStar_Tactics_Basic.refl_check_equiv
+                                                                    "check_subtyping"
+                                                                    FStar_Tactics_Basic.refl_check_subtyping
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     uu___170
-                                                                    FStar_Tactics_Basic.refl_check_equiv
+                                                                    FStar_Tactics_Basic.refl_check_subtyping
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term
@@ -1726,8 +1722,33 @@ let (uu___156 : unit) =
                                                                     let uu___172
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_option
-                                                                    FStar_Reflection_Embeddings.e_term in
+                                                                    FStar_Syntax_Embeddings.e_unit in
                                                                     let uu___173
+                                                                    =
+                                                                    FStar_TypeChecker_NBETerm.e_option
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_3
+                                                                    Prims.int_zero
+                                                                    "check_equiv"
+                                                                    FStar_Tactics_Basic.refl_check_equiv
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    uu___172
+                                                                    FStar_Tactics_Basic.refl_check_equiv
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    uu___173 in
+                                                                    let uu___172
+                                                                    =
+                                                                    let uu___173
+                                                                    =
+                                                                    let uu___174
+                                                                    =
+                                                                    FStar_Syntax_Embeddings.e_option
+                                                                    FStar_Reflection_Embeddings.e_term in
+                                                                    let uu___175
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_Reflection_NBEEmbeddings.e_term in
@@ -1737,64 +1758,41 @@ let (uu___156 : unit) =
                                                                     FStar_Tactics_Basic.refl_core_check_term
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    uu___172
+                                                                    uu___174
                                                                     FStar_Tactics_Basic.refl_core_check_term
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    uu___173 in
-                                                                    let uu___172
-                                                                    =
-                                                                    let uu___173
-                                                                    =
+                                                                    uu___175 in
                                                                     let uu___174
                                                                     =
                                                                     let uu___175
+                                                                    =
+                                                                    let uu___176
+                                                                    =
+                                                                    let uu___177
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     FStar_Reflection_Embeddings.e_term in
                                                                     FStar_Syntax_Embeddings.e_option
-                                                                    uu___175 in
-                                                                    let uu___175
+                                                                    uu___177 in
+                                                                    let uu___177
                                                                     =
-                                                                    let uu___176
+                                                                    let uu___178
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_tuple2
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term in
                                                                     FStar_TypeChecker_NBETerm.e_option
-                                                                    uu___176 in
+                                                                    uu___178 in
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
                                                                     "tc_term"
                                                                     FStar_Tactics_Basic.refl_tc_term
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    uu___174
-                                                                    FStar_Tactics_Basic.refl_tc_term
-                                                                    FStar_Reflection_NBEEmbeddings.e_env
-                                                                    FStar_Reflection_NBEEmbeddings.e_term
-                                                                    uu___175 in
-                                                                    let uu___174
-                                                                    =
-                                                                    let uu___175
-                                                                    =
-                                                                    let uu___176
-                                                                    =
-                                                                    FStar_Syntax_Embeddings.e_option
-                                                                    FStar_Reflection_Embeddings.e_universe in
-                                                                    let uu___177
-                                                                    =
-                                                                    FStar_TypeChecker_NBETerm.e_option
-                                                                    FStar_Reflection_NBEEmbeddings.e_universe in
-                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
-                                                                    Prims.int_zero
-                                                                    "universe_of"
-                                                                    FStar_Tactics_Basic.refl_universe_of
-                                                                    FStar_Reflection_Embeddings.e_env
-                                                                    FStar_Reflection_Embeddings.e_term
                                                                     uu___176
-                                                                    FStar_Tactics_Basic.refl_universe_of
+                                                                    FStar_Tactics_Basic.refl_tc_term
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     uu___177 in
@@ -1805,19 +1803,19 @@ let (uu___156 : unit) =
                                                                     let uu___178
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_option
-                                                                    FStar_Syntax_Embeddings.e_unit in
+                                                                    FStar_Reflection_Embeddings.e_universe in
                                                                     let uu___179
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
-                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    FStar_Reflection_NBEEmbeddings.e_universe in
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
-                                                                    "check_prop_validity"
-                                                                    FStar_Tactics_Basic.refl_check_prop_validity
+                                                                    "universe_of"
+                                                                    FStar_Tactics_Basic.refl_universe_of
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     uu___178
-                                                                    FStar_Tactics_Basic.refl_check_prop_validity
+                                                                    FStar_Tactics_Basic.refl_universe_of
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     uu___179 in
@@ -1827,30 +1825,20 @@ let (uu___156 : unit) =
                                                                     =
                                                                     let uu___180
                                                                     =
-                                                                    let uu___181
-                                                                    =
-                                                                    FStar_Syntax_Embeddings.e_tuple2
-                                                                    FStar_Reflection_Embeddings.e_term
-                                                                    FStar_Reflection_Embeddings.e_term in
                                                                     FStar_Syntax_Embeddings.e_option
-                                                                    uu___181 in
+                                                                    FStar_Syntax_Embeddings.e_unit in
                                                                     let uu___181
                                                                     =
-                                                                    let uu___182
-                                                                    =
-                                                                    FStar_TypeChecker_NBETerm.e_tuple2
-                                                                    FStar_Reflection_NBEEmbeddings.e_term
-                                                                    FStar_Reflection_NBEEmbeddings.e_term in
                                                                     FStar_TypeChecker_NBETerm.e_option
-                                                                    uu___182 in
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
-                                                                    "instantiate_implicits"
-                                                                    FStar_Tactics_Basic.refl_instantiate_implicits
+                                                                    "check_prop_validity"
+                                                                    FStar_Tactics_Basic.refl_check_prop_validity
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     uu___180
-                                                                    FStar_Tactics_Basic.refl_instantiate_implicits
+                                                                    FStar_Tactics_Basic.refl_check_prop_validity
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     uu___181 in
@@ -1860,9 +1848,42 @@ let (uu___156 : unit) =
                                                                     =
                                                                     let uu___182
                                                                     =
+                                                                    let uu___183
+                                                                    =
+                                                                    FStar_Syntax_Embeddings.e_tuple2
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Reflection_Embeddings.e_term in
+                                                                    FStar_Syntax_Embeddings.e_option
+                                                                    uu___183 in
+                                                                    let uu___183
+                                                                    =
+                                                                    let uu___184
+                                                                    =
+                                                                    FStar_TypeChecker_NBETerm.e_tuple2
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    FStar_Reflection_NBEEmbeddings.e_term in
+                                                                    FStar_TypeChecker_NBETerm.e_option
+                                                                    uu___184 in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
+                                                                    Prims.int_zero
+                                                                    "instantiate_implicits"
+                                                                    FStar_Tactics_Basic.refl_instantiate_implicits
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    uu___182
+                                                                    FStar_Tactics_Basic.refl_instantiate_implicits
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    uu___183 in
+                                                                    let uu___182
+                                                                    =
+                                                                    let uu___183
+                                                                    =
+                                                                    let uu___184
+                                                                    =
                                                                     FStar_Syntax_Embeddings.e_option
                                                                     FStar_Tactics_Embedding.e_unfold_side in
-                                                                    let uu___183
+                                                                    let uu___185
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_Tactics_Embedding.e_unfold_side_nbe in
@@ -1873,21 +1894,21 @@ let (uu___156 : unit) =
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    uu___182
+                                                                    uu___184
                                                                     FStar_Tactics_Basic.refl_maybe_relate_after_unfolding
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    uu___183 in
-                                                                    let uu___182
-                                                                    =
-                                                                    let uu___183
-                                                                    =
+                                                                    uu___185 in
                                                                     let uu___184
+                                                                    =
+                                                                    let uu___185
+                                                                    =
+                                                                    let uu___186
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_option
                                                                     FStar_Reflection_Embeddings.e_term in
-                                                                    let uu___185
+                                                                    let uu___187
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_Reflection_NBEEmbeddings.e_term in
@@ -1897,12 +1918,15 @@ let (uu___156 : unit) =
                                                                     FStar_Tactics_Basic.refl_maybe_unfold_head
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    uu___184
+                                                                    uu___186
                                                                     FStar_Tactics_Basic.refl_maybe_unfold_head
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    uu___185 in
-                                                                    [uu___183] in
+                                                                    uu___187 in
+                                                                    [uu___185] in
+                                                                    uu___183
+                                                                    ::
+                                                                    uu___184 in
                                                                     uu___181
                                                                     ::
                                                                     uu___182 in

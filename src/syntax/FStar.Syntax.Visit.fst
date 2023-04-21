@@ -225,7 +225,7 @@ let on_sub_comp_typ vfs ct =
     comp_univs  = map (f_univ vfs) ct.comp_univs;
     effect_name = ct.effect_name;
     result_typ  = (f_term vfs) ct.result_typ;
-    effect_args = ct.effect_args;
+    effect_args = map (f_arg vfs) ct.effect_args;
     flags       = ct.flags;
   }
 

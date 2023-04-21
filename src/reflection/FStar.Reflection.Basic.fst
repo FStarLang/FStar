@@ -290,7 +290,7 @@ let rec inspect_ln (t:term) : term_view =
         i |> U.unfold_lazy |> inspect_ln
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (Print.tag_of_term t) (Print.term_to_string t));
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
@@ -446,19 +446,8 @@ let compare_bv (x:bv) (y:bv) : order =
     else if n = 0 then Eq
     else Gt
 
-let is_free (x:bv) (t:term) : bool =
-    U.is_free_in x t
-
-let free_bvs (t:term) : list bv =
-  Syntax.Free.names t |> BU.set_elements
-
-let free_uvars (t:term) : list Z.t =
-  Syntax.Free.uvars_uncached t
-    |> BU.set_elements
-    |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head))
-
 let lookup_attr (attr:term) (env:Env.env) : list fv =
-    match (SS.compress attr).n with
+    match (SS.compress_subst attr).n with
     | Tm_fvar fv ->
         let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
         List.concatMap (fun se -> match U.lid_of_sigelt se with
@@ -696,6 +685,13 @@ let pack_lb (lbv:lb_view) : letbinding =
     U.mk_letbinding (Inr fv) us typ PC.effect_Tot_lid def [] Range.dummyRange
 
 let inspect_bv (bv:bv) : bv_view =
+    if bv.index < 0 then (
+        Err.log_issue Range.dummyRange
+            (Err.Warning_CantInspect, BU.format3 "inspect_bv: index is negative (%s : %s), index = %s"
+                                         (Ident.string_of_id bv.ppname)
+                                         (Print.term_to_string bv.sort)
+                                         (string_of_int bv.index))
+    );
     {
       bv_ppname = Ident.string_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
@@ -703,9 +699,16 @@ let inspect_bv (bv:bv) : bv_view =
     }
 
 let pack_bv (bvv:bv_view) : bv =
+    if Z.to_int_fs bvv.bv_index < 0 then (
+        Err.log_issue Range.dummyRange
+            (Err.Warning_CantInspect, BU.format3 "pack_bv: index is negative (%s : %s), index = %s"
+                                         bvv.bv_ppname
+                                         (Print.term_to_string bvv.bv_sort)
+                                         (string_of_int (Z.to_int_fs bvv.bv_index)))
+    );
     {
       ppname = Ident.mk_ident (bvv.bv_ppname, Range.dummyRange);
-      index = Z.to_int_fs bvv.bv_index;
+      index = Z.to_int_fs bvv.bv_index; // Guaranteed to be a nat
       sort = bvv.bv_sort;
     }
 

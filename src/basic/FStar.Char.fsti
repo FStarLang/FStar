@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2023 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,12 +13,20 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Compiler.Option
-open Prims
-open FStar.Compiler.Effect
 
-val isNone: option 'a -> Tot bool
-val isSome: option 'a -> Tot bool
-val map: ('a -> ML 'b) -> option 'a -> ML (option 'b)
-val mapTot: ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
-val get: option 'a -> ML 'a
+module FStar.Char
+
+(* This is a trimmed-down version of ulib/FStar.Char, realized by the
+same ML implementation. It is here to prevent dependencies from the
+compiler into the UInt32 module. *)
+
+new
+val char:eqtype
+
+type char_code
+
+val int_of_char : char -> Tot int
+val char_of_int : int -> Tot char
+
+val lowercase: char -> Tot char
+val uppercase: char -> Tot char

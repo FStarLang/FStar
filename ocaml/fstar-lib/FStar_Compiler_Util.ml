@@ -483,8 +483,13 @@ let format (fmt:string) (args:string list) =
   if BatList.length frags <> BatList.length args + 1 then
     failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Stdlib.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
   else
-    let args = args@[""] in
-    BatList.fold_left2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
+    let sbldr = new_string_builder () in
+    string_builder_append sbldr (List.hd frags);
+    BatList.iter2
+        (fun frag arg -> string_builder_append sbldr arg;
+                         string_builder_append sbldr frag)
+        (List.tl frags) args;
+    string_of_string_builder sbldr
 
 let format1 f a = format f [a]
 let format2 f a b = format f [a;b]
