@@ -8,8 +8,10 @@ ARG opamthreads=24
 ADD --chown=opam:opam ./ steel/
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
-RUN opam depext conf-gmp z3.4.8.5 conf-m4 && \
-    git clone --branch taramana_no_steel https://github.com/FStarLang/FStar FStar && \
+RUN sudo apt-get update && \
+    sudo apt-get install --yes --no-install-recommends jq && \
+    opam depext conf-gmp z3.4.8.5 conf-m4 && \
+    git clone --branch $(jq -c -r '.RepoVersions.fstar' steel/src/ci/config.json || echo master) https://github.com/FStarLang/FStar FStar && \
     opam install -j $opamthreads -v -v -v FStar/fstar.opam && \
     rm -rf FStar
 

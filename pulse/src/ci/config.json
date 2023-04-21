@@ -1,0 +1,7 @@
+{
+    "RepoVersions" : {
+        "fstar": "taramana_no_steel",
+        "karamel" : "taramana_no_steel"
+    },
+    "NotificationChannel" : "#steel-build"
+}
