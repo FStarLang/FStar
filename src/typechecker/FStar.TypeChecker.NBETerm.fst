@@ -463,12 +463,6 @@ let e_range : embedding Range.range =
         None
     in
     mk_emb' em un (lid_as_typ PC.range_lid [] []) (SE.emb_typ_of SE.e_range)
-
-let e_prims_range : embedding Prims.range =
-    embed_as e_range 
-        (fun x -> FStar.Compiler.Range.(of_prims_range (prims_range_of_range x)))
-        (fun x -> FStar.Compiler.Range.(range_of_prims_range (to_prims_range x)))
-        None
   
 // vconfig, NYI
 let e_vconfig : embedding vconfig =

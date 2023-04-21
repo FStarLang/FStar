@@ -173,33 +173,3 @@ let json_of_def_range r =
             (file_of_range r)
             (start_of_range r)
             (end_of_range r)
-
-(* This coercion relies on the equality of the two types, which is
-   not visible in F*, but is true at the OCaml level. *)
-let of_prims_range (r : prims_range) : Prims.range =
-  coerce_eq () r
-
-let to_prims_range (r:Prims.range) : prims_range =
-  coerce_eq () r
-  
-let rng_of_prims_rng (r:prims_rng) =
-    let (f, s, e) = r in
-    let s = mk_pos (fst s) (snd s) in
-    let e = mk_pos (fst e) (snd e) in
-    mk_rng f s e
-
-let prims_rng_of_rng (r:rng) : prims_rng =
-    let f = r.file_name in
-    let s = (r.start_pos.line, r.start_pos.col) in
-    let e = (r.end_pos.line, r.end_pos.col) in
-    (f, s, e)
-
-let range_of_prims_range (r : prims_range) : range =
-    let r1 = rng_of_prims_rng (fst r) in
-    let r2 = rng_of_prims_rng (snd r) in
-    { def_range = r1; use_range = r2 }
-
-let prims_range_of_range (r:range) : prims_range =
-    let r1 = prims_rng_of_rng r.def_range in
-    let r2 = prims_rng_of_rng r.use_range in
-    (r1, r2)

@@ -1596,15 +1596,6 @@ let (e_range : FStar_Compiler_Range.range embedding) =
     FStar_Syntax_Syntax.ET_app uu___1 in
   mk_emb_full em un FStar_Syntax_Syntax.t_range
     FStar_Compiler_Range.string_of_range uu___
-let (e_prims_range : Prims.range embedding) =
-  embed_as e_range
-    (fun x ->
-       let uu___ = FStar_Compiler_Range.prims_range_of_range x in
-       FStar_Compiler_Range.of_prims_range uu___)
-    (fun x ->
-       let uu___ = FStar_Compiler_Range.to_prims_range x in
-       FStar_Compiler_Range.range_of_prims_range uu___)
-    FStar_Pervasives_Native.None
 let (e_vconfig : FStar_VConfig.vconfig embedding) =
   let em vcfg rng _shadow norm =
     let uu___ =

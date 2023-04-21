@@ -66,12 +66,3 @@ val extend_to_end_of_line: range -> range
 val json_of_pos : pos -> json
 val json_of_use_range : range -> json
 val json_of_def_range : range -> json
-
-(* This needs to correspond with the `range` type is ulib/ml/prims.ml,
- * but we cannot use Prims.range here, since it is uninterpreted in F* *)
-type prims_rng = string * (int * int) * (int * int)
-type prims_range = prims_rng * prims_rng
-val of_prims_range : prims_range -> Prims.range
-val to_prims_range : Prims.range -> prims_range
-val range_of_prims_range : prims_range -> range
-val prims_range_of_range : range -> prims_range

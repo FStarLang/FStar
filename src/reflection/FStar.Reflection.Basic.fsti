@@ -89,5 +89,5 @@ val compare_string : string -> string -> Z.t
 
 val push_binder    : Env.env -> binder -> Env.env
 
-val range_of_term : term -> range
-val range_of_sigelt : sigelt -> range
+val range_of_term : term -> FStar.Compiler.Range.range
+val range_of_sigelt : sigelt -> FStar.Compiler.Range.range

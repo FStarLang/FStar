@@ -6924,11 +6924,10 @@ let (comp_to_string :
   FStar_Syntax_Syntax.comp -> Prims.string FStar_Tactics_Monad.tac) =
   fun c ->
     let s = FStar_Syntax_Print.comp_to_string c in FStar_Tactics_Monad.ret s
-let (range_to_string : Prims.range -> Prims.string FStar_Tactics_Monad.tac) =
+let (range_to_string :
+  FStar_Compiler_Range.range -> Prims.string FStar_Tactics_Monad.tac) =
   fun r ->
-    let r1 = FStar_Compiler_Range.to_prims_range r in
-    let r2 = FStar_Compiler_Range.range_of_prims_range r1 in
-    let uu___ = FStar_Compiler_Range.string_of_range r2 in
+    let uu___ = FStar_Compiler_Range.string_of_range r in
     FStar_Tactics_Monad.ret uu___
 let (term_eq_old :
   FStar_Syntax_Syntax.term ->
@@ -7013,6 +7012,26 @@ let (t_smt_sync : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
                else FStar_Tactics_Monad.fail "SMT did not solve this goal") in
     FStar_Compiler_Effect.op_Less_Bar
       (FStar_Tactics_Monad.wrap_err "t_smt_sync") uu___
+let (free_uvars :
+  FStar_Syntax_Syntax.term ->
+    FStar_BigInt.t Prims.list FStar_Tactics_Monad.tac)
+  =
+  fun tm ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uvs =
+           let uu___1 =
+             let uu___2 = FStar_Syntax_Free.uvars_uncached tm in
+             FStar_Compiler_Effect.op_Bar_Greater uu___2
+               FStar_Compiler_Util.set_elements in
+           FStar_Compiler_Effect.op_Bar_Greater uu___1
+             (FStar_Compiler_List.map
+                (fun u ->
+                   let uu___2 =
+                     FStar_Syntax_Unionfind.uvar_id
+                       u.FStar_Syntax_Syntax.ctx_uvar_head in
+                   FStar_BigInt.of_int_fs uu___2)) in
+         FStar_Tactics_Monad.ret uvs)
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->

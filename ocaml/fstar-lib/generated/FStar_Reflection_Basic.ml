@@ -286,7 +286,7 @@ let rec (inspect_ln :
               let uu___4 = FStar_Syntax_Print.tag_of_term t1 in
               let uu___5 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format2
-                "inspect_ln: outside of expected syntax (%s, %s)\n" uu___4
+                "inspect_ln: outside of expected syntax (%s, %s)" uu___4
                 uu___5 in
             (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
           FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___2);
@@ -540,28 +540,6 @@ let (compare_bv :
       if n < Prims.int_zero
       then FStar_Order.Lt
       else if n = Prims.int_zero then FStar_Order.Eq else FStar_Order.Gt
-let (is_free :
-  FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool) =
-  fun x -> fun t -> FStar_Syntax_Util.is_free_in x t
-let (free_bvs :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv Prims.list) =
-  fun t ->
-    let uu___ = FStar_Syntax_Free.names t in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      FStar_Compiler_Util.set_elements
-let (free_uvars : FStar_Syntax_Syntax.term -> FStar_BigInt.t Prims.list) =
-  fun t ->
-    let uu___ =
-      let uu___1 = FStar_Syntax_Free.uvars_uncached t in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1
-        FStar_Compiler_Util.set_elements in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_List.map
-         (fun u ->
-            let uu___1 =
-              FStar_Syntax_Unionfind.uvar_id
-                u.FStar_Syntax_Syntax.ctx_uvar_head in
-            FStar_BigInt.of_int_fs uu___1))
 let (lookup_attr :
   FStar_Syntax_Syntax.term ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.fv Prims.list)
@@ -569,7 +547,7 @@ let (lookup_attr :
   fun attr ->
     fun env ->
       let uu___ =
-        let uu___1 = FStar_Syntax_Subst.compress attr in
+        let uu___1 = FStar_Syntax_Subst.compress_subst attr in
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_fvar fv ->
@@ -1003,25 +981,59 @@ let (pack_lb :
           FStar_Compiler_Range.dummyRange
 let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =
   fun bv ->
-    let uu___ = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
-    let uu___1 = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index in
-    {
-      FStar_Reflection_Data.bv_ppname = uu___;
-      FStar_Reflection_Data.bv_index = uu___1;
-      FStar_Reflection_Data.bv_sort = (bv.FStar_Syntax_Syntax.sort)
-    }
+    if bv.FStar_Syntax_Syntax.index < Prims.int_zero
+    then
+      (let uu___1 =
+         let uu___2 =
+           let uu___3 =
+             FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+           let uu___4 =
+             FStar_Syntax_Print.term_to_string bv.FStar_Syntax_Syntax.sort in
+           FStar_Compiler_Util.format3
+             "inspect_bv: index is negative (%s : %s), index = %s" uu___3
+             uu___4 (Prims.string_of_int bv.FStar_Syntax_Syntax.index) in
+         (FStar_Errors_Codes.Warning_CantInspect, uu___2) in
+       FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___1)
+    else ();
+    (let uu___1 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+     let uu___2 = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index in
+     {
+       FStar_Reflection_Data.bv_ppname = uu___1;
+       FStar_Reflection_Data.bv_index = uu___2;
+       FStar_Reflection_Data.bv_sort = (bv.FStar_Syntax_Syntax.sort)
+     })
 let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
   fun bvv ->
-    let uu___ =
-      FStar_Ident.mk_ident
-        ((bvv.FStar_Reflection_Data.bv_ppname),
-          FStar_Compiler_Range.dummyRange) in
-    let uu___1 = FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index in
-    {
-      FStar_Syntax_Syntax.ppname = uu___;
-      FStar_Syntax_Syntax.index = uu___1;
-      FStar_Syntax_Syntax.sort = (bvv.FStar_Reflection_Data.bv_sort)
-    }
+    (let uu___1 =
+       let uu___2 = FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index in
+       uu___2 < Prims.int_zero in
+     if uu___1
+     then
+       let uu___2 =
+         let uu___3 =
+           let uu___4 =
+             FStar_Syntax_Print.term_to_string
+               bvv.FStar_Reflection_Data.bv_sort in
+           let uu___5 =
+             let uu___6 =
+               FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index in
+             Prims.string_of_int uu___6 in
+           FStar_Compiler_Util.format3
+             "pack_bv: index is negative (%s : %s), index = %s"
+             bvv.FStar_Reflection_Data.bv_ppname uu___4 uu___5 in
+         (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
+       FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2
+     else ());
+    (let uu___1 =
+       FStar_Ident.mk_ident
+         ((bvv.FStar_Reflection_Data.bv_ppname),
+           FStar_Compiler_Range.dummyRange) in
+     let uu___2 = FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index in
+     {
+       FStar_Syntax_Syntax.ppname = uu___1;
+       FStar_Syntax_Syntax.index = uu___2;
+       FStar_Syntax_Syntax.sort = (bvv.FStar_Reflection_Data.bv_sort)
+     })
 let (inspect_binder :
   FStar_Syntax_Syntax.binder -> FStar_Reflection_Data.binder_view) =
   fun b ->
@@ -1296,12 +1308,8 @@ let (close_term :
   FStar_Syntax_Syntax.binder ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   = fun b -> fun t -> FStar_Syntax_Subst.close [b] t
-let (prims_range_of_range : FStar_Compiler_Range.range -> Prims.range) =
-  fun r ->
-    let uu___ = FStar_Compiler_Range.prims_range_of_range r in
-    match uu___ with
-    | ((f, (l, c), (l', c')), uu___1) -> Prims.mk_range f l c l' c'
-let (range_of_term : FStar_Syntax_Syntax.term -> Prims.range) =
-  fun t -> prims_range_of_range t.FStar_Syntax_Syntax.pos
-let (range_of_sigelt : FStar_Syntax_Syntax.sigelt -> Prims.range) =
-  fun s -> prims_range_of_range s.FStar_Syntax_Syntax.sigrng
+let (range_of_term : FStar_Syntax_Syntax.term -> FStar_Compiler_Range.range)
+  = fun t -> t.FStar_Syntax_Syntax.pos
+let (range_of_sigelt :
+  FStar_Syntax_Syntax.sigelt -> FStar_Compiler_Range.range) =
+  fun s -> s.FStar_Syntax_Syntax.sigrng

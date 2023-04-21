@@ -25,6 +25,7 @@ module RB    = FStar.Reflection.Basic
 module RD    = FStar.Reflection.Data
 module RE    = FStar.Reflection.Embeddings
 module Z     = FStar.BigInt
+module Range = FStar.Compiler.Range
 open FStar.Compiler
 open FStar.Compiler.List
 open FStar.Ident
@@ -152,7 +153,7 @@ let e_aqualv          : dualemb RD.aqualv          = (RE.e_aqualv, NRE.e_aqualv)
 let e_vconfig         : dualemb VConfig.vconfig    = (EMB.e_vconfig, NBET.e_vconfig)
 let e_attributes      : dualemb (list attribute)   = (RE.e_attributes, NRE.e_attributes)
 let e_qualifiers      : dualemb RD.qualifiers      = (RE.e_qualifiers, NRE.e_qualifiers)
-let e_range           : dualemb range              = 
+let e_range           : dualemb Range.range              = 
   (FStar.Syntax.Embeddings.e_range, FStar.TypeChecker.NBETerm.e_range)
 
 let e_list (e : dualemb 'a) : dualemb (list 'a) =

@@ -887,12 +887,6 @@ let e_range =
         S.t_range
         Range.string_of_range
         (ET_app (PC.range_lid |> Ident.string_of_lid, []))
-
-let e_prims_range =
-    embed_as e_range 
-        (fun x -> FStar.Compiler.Range.(of_prims_range (prims_range_of_range x)))
-        (fun x -> FStar.Compiler.Range.(range_of_prims_range (to_prims_range x)))
-        None
         
 let e_vconfig =
     let em (vcfg:vconfig) (rng:Range.range) _shadow norm : term =

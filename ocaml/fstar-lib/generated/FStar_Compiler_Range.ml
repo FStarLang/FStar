@@ -217,36 +217,3 @@ let (json_of_def_range : range -> FStar_Compiler_Util.json) =
     let uu___ = file_of_range r in
     let uu___1 = start_of_range r in
     let uu___2 = end_of_range r in json_of_range_fields uu___ uu___1 uu___2
-type prims_rng =
-  (Prims.string * (Prims.int * Prims.int) * (Prims.int * Prims.int))
-type prims_range = (prims_rng * prims_rng)
-let (of_prims_range : prims_range -> Prims.range) =
-  fun r -> FStar_Pervasives.coerce_eq () r
-let (to_prims_range : Prims.range -> prims_range) =
-  fun r -> FStar_Pervasives.coerce_eq () r
-let (rng_of_prims_rng : prims_rng -> rng) =
-  fun r ->
-    let uu___ = r in
-    match uu___ with
-    | (f, s, e) ->
-        let s1 =
-          mk_pos (FStar_Pervasives_Native.fst s)
-            (FStar_Pervasives_Native.snd s) in
-        let e1 =
-          mk_pos (FStar_Pervasives_Native.fst e)
-            (FStar_Pervasives_Native.snd e) in
-        mk_rng f s1 e1
-let (prims_rng_of_rng : rng -> prims_rng) =
-  fun r ->
-    let f = r.file_name in
-    let s = (((r.start_pos).line), ((r.start_pos).col)) in
-    let e = (((r.end_pos).line), ((r.end_pos).col)) in (f, s, e)
-let (range_of_prims_range : prims_range -> range) =
-  fun r ->
-    let r1 = rng_of_prims_rng (FStar_Pervasives_Native.fst r) in
-    let r2 = rng_of_prims_rng (FStar_Pervasives_Native.snd r) in
-    { def_range = r1; use_range = r2 }
-let (prims_range_of_range : range -> prims_range) =
-  fun r ->
-    let r1 = prims_rng_of_rng r.def_range in
-    let r2 = prims_rng_of_rng r.use_range in (r1, r2)
