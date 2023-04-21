@@ -445,18 +445,13 @@ let comp_withlocal_body_pre (pre:vprop) (init_t:term) (r:term) (init:term) : vpr
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
   Tm_Star post (Tm_ExistsSL U_zero init_t (mk_pts_to init_t r (null_bvar 0)) should_elim_false)  
 
-let comp_withlocal_body (r:var)
-  (init_t:term) (init:term)
-  (pre:vprop)
-  (ret_u:universe) (ret_t:term)
-  (post:term) : comp =
-
+let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in
   C_ST {
-    u = ret_u;
-    res = ret_t;
-    pre = comp_withlocal_body_pre pre init_t r init;
-    post = comp_withlocal_body_post post init_t r
+    u = comp_u c;
+    res = comp_res c;
+    pre = comp_withlocal_body_pre (comp_pre c) init_t r init;
+    post = comp_withlocal_body_post (comp_post c) init_t r
   }
 
 let comp_rewrite (p q:vprop) : comp =
@@ -607,13 +602,6 @@ and comp_typing (f:RT.fstar_top_env) : env -> comp -> universe -> Type =
       comp_typing f g (C_STGhost inames st) st.u
 
 and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
-  // | T_Tot:
-  //     g:env ->
-  //     e:term ->
-  //     ty:term ->
-  //     tot_typing f g e ty ->
-  //     st_typing f g (Tm_Return e) (C_Tot ty)
-
   | T_Abs: 
       g:env ->
       x:var { None? (lookup g x) } ->
@@ -779,17 +767,15 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       init:term ->
       body:st_term ->
       init_t:term ->
-      u:universe ->
-      res:term ->
-      pre:term ->
-      post:term ->
+      c:comp { C_ST? c } ->
       x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
       tot_typing f g init init_t ->
       universe_of f g init_t U_zero ->
+      comp_typing f g c (comp_u c) ->
       st_typing f ((x, Inl (mk_ref init_t))::g)
                 (open_st_term body x)
-                (comp_withlocal_body x init_t init pre u res post) ->
-      st_typing f g (Tm_WithLocal init body) (C_ST {u;res;pre;post})
+                (comp_withlocal_body x init_t init c) ->
+      st_typing f g (Tm_WithLocal init body) c
 
   | T_Rewrite:
 		    g:env ->

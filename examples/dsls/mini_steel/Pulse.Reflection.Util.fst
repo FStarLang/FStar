@@ -516,13 +516,22 @@ let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
 
 let mk_rewrite (p q:R.term) =
   let open R in
-		let t = pack_ln (Tv_FVar (pack_fv (mk_steel_wrapper_lid "rewrite"))) in
-		let t = pack_ln (Tv_App t (p, Q_Explicit)) in
-		let t = pack_ln (Tv_App t (q, Q_Explicit)) in
-		pack_ln (Tv_App t (`(), Q_Explicit))
+  let t = pack_ln (Tv_FVar (pack_fv (mk_steel_wrapper_lid "rewrite"))) in
+  let t = pack_ln (Tv_App t (p, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (q, Q_Explicit)) in
+  pack_ln (Tv_App t (`(), Q_Explicit))
 
 
-
+let mk_withlocal (ret_u:R.universe) (a init pre ret_t post body:R.term) =
+  let open R in
+  let lid = mk_steel_wrapper_lid "with_local" in
+  let t = pack_ln (Tv_UInst (R.pack_fv lid) [ret_u]) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (init, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (pre, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (ret_t, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (post, Q_Implicit)) in
+  pack_ln (Tv_App t (body, Q_Explicit))
 
 ///// Utils to derive equiv for common constructs /////
 let mk_star_equiv (g:R.env) (t1 t2 t3 t4:R.term)
@@ -556,3 +565,8 @@ let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2
 let ref_lid = ["Steel"; "ST"; "Reference"; "ref"]
 let pts_to_lid = ["Steel"; "ST"; "Reference"; "pts_to"]
 let full_perm_lid = ["Steel"; "FractionalPermission"; "full_perm"]
+
+let mk_ref (a:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv ref_lid)) in
+  pack_ln (Tv_App t (a, Q_Explicit))

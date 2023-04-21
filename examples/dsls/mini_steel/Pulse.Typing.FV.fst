@@ -150,8 +150,12 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' postR x (i + 1)
 
     | Tm_Rewrite p q ->
-				  freevars_close_term' p x i;
-						freevars_close_term' q x i
+      freevars_close_term' p x i;
+      freevars_close_term' q x i
+
+    | Tm_WithLocal init e ->
+      freevars_close_term' init x i;
+      freevars_close_st_term' e x (i + 1)
 
     | Tm_Admit _ _ t post ->
       freevars_close_term' t x i;
@@ -314,17 +318,14 @@ let freevars_open_st_term_inv (e:st_term)
 
 #push-options "--retry 5 --fuel 10 --ifuel 10 --z3rlimit_factor 30 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats --split_queries always"
 let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
-                            (d:st_typing f g t c)
+                           (d:st_typing f g t c)
   : Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
              freevars_comp c `Set.subset` vars_of_env g)
     (decreases d)
 
  = match d with
-   // | T_Tot _g e t dt ->
-   //    tot_typing_freevars dt
-
-   | T_Abs _g  x _q ty _u body cres dt db ->
+   | T_Abs _  x _ ty _ body cres dt db ->
       tot_typing_freevars dt;
       st_typing_freevars db;
       freevars_close_comp cres x 0;
@@ -457,8 +458,14 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0
 
    | T_Rewrite _ _ _ p_typing equiv_p_q ->
-			  tot_typing_freevars p_typing;
-					vprop_equiv_freevars equiv_p_q
+     tot_typing_freevars p_typing;
+     vprop_equiv_freevars equiv_p_q
+
+   | T_WithLocal _ init body _ c x init_typing _ c_typing body_typing ->
+     tot_typing_freevars init_typing;
+     st_typing_freevars body_typing;
+     freevars_open_st_term_inv body x;
+     comp_typing_freevars c_typing
 
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
      tot_typing_freevars t_typing;
