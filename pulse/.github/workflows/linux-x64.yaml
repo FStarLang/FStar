@@ -24,14 +24,7 @@ jobs:
       - name: Build Steel and its dependencies
         run: |
           ci_docker_image_tag=steel:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
-          ci_docker_builder=builder_fstar_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
-          echo "ci_docker_builder=$ci_docker_builder" >> $GITHUB_ENV
-          docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
-          docker buildx build --builder $ci_docker_builder -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH .
-      - name: Clean up temporary container
-        if: ${{ always() }}
-        run: |
-          docker buildx rm $ci_docker_builder
+          docker buildx build -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH .
       - name: Compute elapsed time
         if: ${{ always() }}
         run: |
