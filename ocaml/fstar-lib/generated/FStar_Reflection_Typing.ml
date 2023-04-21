@@ -15,9 +15,9 @@ let (lookup_fvar :
       FStar_Reflection_Types.term FStar_Pervasives_Native.option)
   = fun e -> fun x -> lookup_fvar_uinst e x []
 type pp_name_t = (Prims.string, unit) FStar_Sealed_Inhabited.sealed
-let (pp_name_default : pp_name_t) = FStar_Sealed_Inhabited.seal "" ""
+let (pp_name_default : pp_name_t) = FStar_Sealed_Inhabited.seal "x" "x"
 let (seal_pp_name : Prims.string -> pp_name_t) =
-  fun x -> FStar_Sealed_Inhabited.seal "" x
+  fun x -> FStar_Sealed_Inhabited.seal "x" x
 let (mk_binder :
   pp_name_t ->
     FStar_Reflection_Data.var ->
