@@ -439,6 +439,12 @@ let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
     post
   }
 
+let comp_withlocal_body_pre (pre:vprop) (init_t:term) (r:term) (init:term) : vprop =
+  Tm_Star pre (mk_pts_to init_t r init)
+
+let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
+  Tm_Star post (Tm_ExistsSL U_zero init_t (mk_pts_to init_t r (null_bvar 0)) should_elim_false)  
+
 let comp_withlocal_body (r:var)
   (init_t:term) (init:term)
   (pre:vprop)
@@ -449,8 +455,8 @@ let comp_withlocal_body (r:var)
   C_ST {
     u = ret_u;
     res = ret_t;
-    pre = Tm_Star pre (mk_pts_to init_t r init);
-    post = Tm_Star post (Tm_ExistsSL U_zero init_t (mk_pts_to init_t r (null_bvar 0)) should_elim_false);
+    pre = comp_withlocal_body_pre pre init_t r init;
+    post = comp_withlocal_body_post post init_t r
   }
 
 let comp_rewrite (p q:vprop) : comp =

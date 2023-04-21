@@ -1035,6 +1035,55 @@ let check_par
     else T.fail "par: cR is not stt"
   else T.fail "par: cL is not stt"
 
+#push-options "--z3rlimit_factor 4"
+let check_withlocal
+  (allow_inst:bool)
+  (f:RT.fstar_top_env)
+  (g:env)
+  (t:st_term{Tm_WithLocal? t})
+  (pre:term)
+  (pre_typing:tot_typing f g pre Tm_VProp)
+  (post_hint:option term)
+  (check':bool -> check_t)
+  : T.Tac (t:st_term &
+           c:comp{stateful_comp c ==> comp_pre c == pre} &
+           st_typing f g t c) =
+  
+  let Tm_WithLocal init body = t in
+  let (| init, init_u, init_t, init_t_typing, init_typing |) =
+    check_tot_univ f g init in
+  if init_u = U_zero
+  then let x = fresh g in
+       if x `Set.mem` freevars_st body
+       then T.fail "withlocal: x is free in body"
+       else
+         let x_tm = null_var x in
+         let g_extended = (x, Inl (mk_ref init_t))::g in
+         let body_pre = comp_withlocal_body_pre pre init_t x_tm init in
+         let body_pre_typing = check_vprop_with_core f g_extended body_pre in
+         // elaborating this post here,
+         //   so that later we can check the computed post to be equal to this one
+         let post =
+           let post =
+             match post_hint with
+             | Some post -> post
+             | None -> T.fail "withlocal: no post_hint!" in
+           let (| post_opened, _ |) = check_vprop f g_extended (open_term post x) in
+            close_term post_opened x in
+         let body_post = comp_withlocal_body_post post init_t x_tm in
+         let (| opened_body, c_body, body_typing |) =
+           check' allow_inst f g_extended (open_st_term body x) body_pre body_pre_typing (Some body_post) in
+         if not (C_ST? c_body && eq_tm (comp_post c_body) body_post)
+         then T.fail "withlocal: body is not stt or postcondition mismatch"
+         else let body = close_st_term opened_body x in
+              assume (open_st_term (close_st_term opened_body x) x == opened_body);
+              let d = T_WithLocal g init body init_t
+                (comp_u c_body) (comp_res c_body) pre post x
+                (E init_typing) init_t_typing body_typing in
+              (| Tm_WithLocal init body, _, d |)
+  else T.fail "withlocal: init type is not universe zero"
+#pop-options
+
 let check_rewrite
   (f:RT.fstar_top_env)
   (g:env)
@@ -1124,8 +1173,11 @@ let rec check' : bool -> check_t =
     | Tm_Par _ _ _ _ _ _ ->
       check_par allow_inst f g t pre pre_typing post_hint check'
 
-				| Tm_Rewrite _ _ ->
-				  check_rewrite f g t pre pre_typing post_hint
+    | Tm_WithLocal _ _ ->
+      check_withlocal allow_inst f g t pre pre_typing post_hint check'
+
+		| Tm_Rewrite _ _ ->
+      check_rewrite f g t pre pre_typing post_hint
   with
   | Framing_failure failure ->
     handle_framing_failure f g t pre pre_typing post_hint failure (check' true)
