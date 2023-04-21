@@ -85,8 +85,8 @@ val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
 
 let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 
-let pp_name_t = FStar.Sealed.Inhabited.sealed ""
-let pp_name_default : pp_name_t = FStar.Sealed.Inhabited.seal ""
+let pp_name_t = FStar.Sealed.Inhabited.sealed "x"
+let pp_name_default : pp_name_t = FStar.Sealed.Inhabited.seal "x"
 let seal_pp_name x : pp_name_t = FStar.Sealed.Inhabited.seal x
 
 let mk_binder (pp_name:pp_name_t) (x:var) (ty:term) (q:aqualv)
