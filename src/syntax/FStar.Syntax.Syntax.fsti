@@ -28,21 +28,21 @@ module O = FStar.Options
 open FStar.VConfig
 
 (* Objects with metadata *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type withinfo_t 'a = {
   v: 'a;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type var  = withinfo_t lident
 
 (* Term language *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type sconst = FStar.Const.sconst
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option string
@@ -51,7 +51,7 @@ type pragma =
   | RestartSolver
   | PrintEffectsGraph  //#print-effects-graph dumps the current effects graph in a dot file named "effects.graph"
 
-// IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
+[@@ PpxDerivingYoJson; PpxDerivingShowConstant "None" ]
 type memo 'a = ref (option 'a)
 
 (* Simple types used in native compilation
@@ -63,13 +63,13 @@ type emb_typ =
   | ET_app  of string * list emb_typ
 
 //versioning for unification variables
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type version = {
     major:int;
     minor:int
 }
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type universe =
   | U_zero
   | U_succ  of universe
@@ -81,32 +81,32 @@ type universe =
 and univ_name = ident
 and universe_uvar = Unionfind.p_uvar (option universe) * version * Range.range
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type univ_names    = list univ_name
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type universes     = list universe
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type monad_name    = lident
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type quote_kind =
   | Quote_static
   | Quote_dynamic
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type maybe_set_use_range =
   | NoUseRange
   | SomeUseRange of range
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type delta_depth =
   | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
   | Allow_unresolved of string  (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped of string     (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)

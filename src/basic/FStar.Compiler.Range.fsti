@@ -19,13 +19,13 @@ open FStar.BaseTypes
 open FStar.Compiler.Util
 module List = FStar.Compiler.List
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow]
 new val rng : Type0
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow]
 new val range : Type0
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow]
 new val pos : Type0
 
 val dummyRange: range
