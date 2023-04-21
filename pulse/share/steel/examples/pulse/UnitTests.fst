@@ -290,3 +290,15 @@ let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
 						rewrite (pts_to r full_perm 1ul) (mpts_to r 1ul)
 				)
 )))
+
+%splice_t[test_local] (check (`(
+  fun (r:ref U32.t) (n:erased U32.t) ->
+    (expects (pts_to r full_perm n))
+    (provides (fun _ -> pts_to r full_perm 0ul))
+    (
+      let x = local 0ul in
+      let y = read #U32.t x #(hide 0ul) #full_perm in
+      write #U32.t r y #n;
+      intro (exists n. pts_to x full_perm n) y
+    )
+)))

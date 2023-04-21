@@ -213,6 +213,7 @@ let while_fv = mk_tests_lid "while"
 let invariant_fv = mk_tests_lid "invariant"
 let par_fv = mk_tests_lid "par"
 let rewrite_fv = mk_tests_lid "rewrite"
+let local_fv = mk_tests_lid "local"
 
 //
 // shift bvs > n by -1
@@ -510,15 +511,28 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
               t
                
     | R.Tv_Let false [] bv def body ->
-      let? def = translate_st_term g def in 
-      let? body = translate_st_term g body in 
-      begin
-      match def with
-      | Tm_IntroExists _ _ _ -> 
-        Inl (Tm_Bind (Tm_Protect def) (Tm_Protect body))
-      | _ ->
-        Inl (Tm_Bind def body)
-      end
+      let is_mut, def =
+        match (inspect_ln def) with
+        | Tv_App hd arg ->
+          (match (inspect_ln hd) with
+           | Tv_FVar fv ->
+             if inspect_fv fv = local_fv then (true, fst arg)
+             else false, def
+           | _ -> false, def)
+        | _ -> false, def in
+      
+      let? body = translate_st_term g body in
+      if is_mut
+      then let? def = readback_ty g def in
+           Inl (Tm_WithLocal def body)
+      else  let? def = translate_st_term g def in
+            begin
+              match def with
+                | Tm_IntroExists _ _ _ -> 
+                  Inl (Tm_Bind (Tm_Protect def) (Tm_Protect body))
+                | _ ->
+                  Inl (Tm_Bind def body)
+            end
 
     | R.Tv_Match b _ [(Pat_Constant C_True, then_);
                       (Pat_Wild _, else_)] ->
