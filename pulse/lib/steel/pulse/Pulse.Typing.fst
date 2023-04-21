@@ -51,6 +51,15 @@ let mk_eq2_prop (u:universe)
 let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 (U_succ (U_succ U_zero)) Tm_VProp e0 e1
 
+let mk_ref (t:term) : term = Tm_PureApp (Tm_FVar ref_lid) None t
+
+let mk_pts_to (ty:term) (r:term) (v:term) : term =
+  let t = Tm_FVar pts_to_lid in
+  let t = Tm_PureApp t (Some Implicit) ty in
+  let t = Tm_PureApp t None r in
+  let t = Tm_PureApp t None (Tm_FVar full_perm_lid) in
+  Tm_PureApp t None v
+
 let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term) (x:var)
   : comp =
 
@@ -430,6 +439,20 @@ let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
     post
   }
 
+let comp_withlocal_body (r:var)
+  (init_t:term) (init:term)
+  (pre:vprop)
+  (ret_u:universe) (ret_t:term)
+  (post:term) : comp =
+
+  let r = null_var r in
+  C_ST {
+    u = ret_u;
+    res = ret_t;
+    pre = Tm_Star pre (mk_pts_to init_t r init);
+    post = Tm_Star post (Tm_ExistsSL U_zero init_t (mk_pts_to init_t r (null_bvar 0)) should_elim_false);
+  }
+
 let comp_rewrite (p q:vprop) : comp =
   C_STGhost Tm_EmpInames {
 			u = U_zero;
@@ -744,6 +767,23 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       st_typing f g eR cR ->
       st_typing f g (Tm_Par Tm_Unknown eL Tm_Unknown Tm_Unknown eR Tm_Unknown)
                     (comp_par cL cR x)
+
+  | T_WithLocal:
+      g:env ->
+      init:term ->
+      body:st_term ->
+      init_t:term ->
+      u:universe ->
+      res:term ->
+      pre:term ->
+      post:term ->
+      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      tot_typing f g init init_t ->
+      universe_of f g init_t U_zero ->
+      st_typing f ((x, Inl (mk_ref init_t))::g)
+                (open_st_term body x)
+                (comp_withlocal_body x init_t init pre u res post) ->
+      st_typing f g (Tm_WithLocal init body) (C_ST {u;res;pre;post})
 
   | T_Rewrite:
 		    g:env ->

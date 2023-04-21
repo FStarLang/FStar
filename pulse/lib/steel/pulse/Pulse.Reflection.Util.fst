@@ -552,3 +552,7 @@ let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2
   : RT.equiv g (mk_stt_ghost_comp u res inames pre1 post1)
                (mk_stt_ghost_comp u res inames pre2 post2)
   = admit ()
+
+let ref_lid = ["Steel"; "ST"; "Reference"; "ref"]
+let pts_to_lid = ["Steel"; "ST"; "Reference"; "pts_to"]
+let full_perm_lid = ["Steel"; "FractionalPermission"; "full_perm"]

@@ -347,3 +347,13 @@ val stt_par
   : stt (aL & aR)
         (preL `star` preR)
         (fun x -> postL (fst x) `star` postR (snd x))
+
+val with_local
+  (#a:Type0)
+  (init:a)
+  (#pre:vprop)
+  (#ret_t:Type)
+  (#post:ret_t -> vprop)
+  (body:(r:R.ref a) -> stt ret_t (pre `star` R.pts_to r full_perm init)
+                                 (fun v -> post v `star` exists_ (R.pts_to r full_perm)))
+  : stt ret_t pre post
