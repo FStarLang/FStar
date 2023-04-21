@@ -720,10 +720,25 @@ let bind_comp_ln #f #g #x #c1 #c2 #c (d:bind_comp f g x c1 c2 c)
     (ensures ln_c c)
   = ()
 
+let st_comp_typing_ln (#f:_) (#g:_) (#st:_) (d:st_comp_typing f g st)
+  : Lemma (ensures ln_st_comp st (-1)) =
+  
+  let STC _ {post} x res_typing pre_typing post_typing = d in
+  tot_typing_ln res_typing;
+  tot_typing_ln pre_typing;
+  tot_typing_ln post_typing;
+  open_term_ln' post (null_var x) 0
+
 let comp_typing_ln (#f:_) (#g:_) (#c:_) (#u:_) (d:comp_typing f g c u)
   : Lemma (ensures ln_c c) =
 
-  admit ()
+  match d with
+  | CT_Tot _ _ _ t_typing -> tot_typing_ln t_typing
+  | CT_ST _ _ st_typing -> st_comp_typing_ln st_typing
+  | CT_STAtomic _ _ _ inames_typing st_typing
+  | CT_STGhost _ _ _ inames_typing st_typing ->
+    tot_typing_ln inames_typing;
+    st_comp_typing_ln st_typing
 
 #push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 30"
 let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
