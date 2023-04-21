@@ -15,7 +15,7 @@ let pruneNones :
 let (mk_range_mle : FStar_Extraction_ML_Syntax.mlexpr) =
   FStar_Compiler_Effect.op_Less_Bar
     (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top)
-    (FStar_Extraction_ML_Syntax.MLE_Name (["Prims"], "mk_range"))
+    (FStar_Extraction_ML_Syntax.MLE_Name (["FStar"; "Range"], "mk_range"))
 let (dummy_range_mle : FStar_Extraction_ML_Syntax.mlexpr) =
   FStar_Compiler_Effect.op_Less_Bar
     (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top)

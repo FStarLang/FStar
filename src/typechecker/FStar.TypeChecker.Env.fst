@@ -1851,12 +1851,6 @@ let close_guard env binders g =
 
 (* Generating new implicit variables *)
 let new_tac_implicit_var reason r env k should_check uvar_typedness_deps meta =
-    match U.destruct k FStar.Parser.Const.range_of_lid with
-     | Some [_; (tm, _)] ->
-       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
-       t, [], trivial_guard
-
-     | _ ->
       let binders = all_binders env in
       let gamma = env.gamma in
       let decoration = {
