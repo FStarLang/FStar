@@ -1704,7 +1704,6 @@ let rec (canon_arrow :
           {
             FStar_Syntax_Syntax.n = cn;
             FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
-            FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
             FStar_Syntax_Syntax.hash_code = (c.FStar_Syntax_Syntax.hash_code)
           } in
         flat_arrow bs c1
@@ -2886,10 +2885,9 @@ let (is_squash :
          | (FStar_Syntax_Syntax.Tm_uinst
             ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
                FStar_Syntax_Syntax.pos = uu___2;
-               FStar_Syntax_Syntax.vars = uu___3;
-               FStar_Syntax_Syntax.hash_code = uu___4;_},
+               FStar_Syntax_Syntax.hash_code = uu___3;_},
              u::[]),
-            (t1, uu___5)::[]) when
+            (t1, uu___4)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid
              -> FStar_Pervasives_Native.Some (u, t1)
          | uu___2 -> FStar_Pervasives_Native.None)
@@ -2911,10 +2909,9 @@ let (is_auto_squash :
          | (FStar_Syntax_Syntax.Tm_uinst
             ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
                FStar_Syntax_Syntax.pos = uu___2;
-               FStar_Syntax_Syntax.vars = uu___3;
-               FStar_Syntax_Syntax.hash_code = uu___4;_},
+               FStar_Syntax_Syntax.hash_code = uu___3;_},
              u::[]),
-            (t1, uu___5)::[]) when
+            (t1, uu___4)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Parser_Const.auto_squash_lid
              -> FStar_Pervasives_Native.Some (u, t1)
@@ -3170,69 +3167,61 @@ let (destruct_typ_as_formula :
         | (FStar_Pervasives_Native.Some fa,
            ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar tc;
               FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;
-              FStar_Syntax_Syntax.hash_code = uu___3;_},
+              FStar_Syntax_Syntax.hash_code = uu___2;_},
             ({
                FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs
-                 (b::[], t2, uu___4);
-               FStar_Syntax_Syntax.pos = uu___5;
-               FStar_Syntax_Syntax.vars = uu___6;
-               FStar_Syntax_Syntax.hash_code = uu___7;_},
-             uu___8)::[]))
+                 (b::[], t2, uu___3);
+               FStar_Syntax_Syntax.pos = uu___4;
+               FStar_Syntax_Syntax.hash_code = uu___5;_},
+             uu___6)::[]))
             when is_q fa tc -> aux qopt (b :: out) t2
         | (FStar_Pervasives_Native.Some fa,
            ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar tc;
               FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;
-              FStar_Syntax_Syntax.hash_code = uu___3;_},
-            uu___4::({
+              FStar_Syntax_Syntax.hash_code = uu___2;_},
+            uu___3::({
                        FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs
-                         (b::[], t2, uu___5);
-                       FStar_Syntax_Syntax.pos = uu___6;
-                       FStar_Syntax_Syntax.vars = uu___7;
-                       FStar_Syntax_Syntax.hash_code = uu___8;_},
-                     uu___9)::[]))
+                         (b::[], t2, uu___4);
+                       FStar_Syntax_Syntax.pos = uu___5;
+                       FStar_Syntax_Syntax.hash_code = uu___6;_},
+                     uu___7)::[]))
             when is_q fa tc -> aux qopt (b :: out) t2
         | (FStar_Pervasives_Native.None,
            ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar tc;
               FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;
-              FStar_Syntax_Syntax.hash_code = uu___3;_},
+              FStar_Syntax_Syntax.hash_code = uu___2;_},
             ({
                FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs
-                 (b::[], t2, uu___4);
-               FStar_Syntax_Syntax.pos = uu___5;
-               FStar_Syntax_Syntax.vars = uu___6;
-               FStar_Syntax_Syntax.hash_code = uu___7;_},
-             uu___8)::[]))
+                 (b::[], t2, uu___3);
+               FStar_Syntax_Syntax.pos = uu___4;
+               FStar_Syntax_Syntax.hash_code = uu___5;_},
+             uu___6)::[]))
             when
             is_qlid (tc.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v ->
-            let uu___9 =
-              let uu___10 =
+            let uu___7 =
+              let uu___8 =
                 is_forall
                   (tc.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-              FStar_Pervasives_Native.Some uu___10 in
-            aux uu___9 (b :: out) t2
+              FStar_Pervasives_Native.Some uu___8 in
+            aux uu___7 (b :: out) t2
         | (FStar_Pervasives_Native.None,
            ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar tc;
               FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;
-              FStar_Syntax_Syntax.hash_code = uu___3;_},
-            uu___4::({
+              FStar_Syntax_Syntax.hash_code = uu___2;_},
+            uu___3::({
                        FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs
-                         (b::[], t2, uu___5);
-                       FStar_Syntax_Syntax.pos = uu___6;
-                       FStar_Syntax_Syntax.vars = uu___7;
-                       FStar_Syntax_Syntax.hash_code = uu___8;_},
-                     uu___9)::[]))
+                         (b::[], t2, uu___4);
+                       FStar_Syntax_Syntax.pos = uu___5;
+                       FStar_Syntax_Syntax.hash_code = uu___6;_},
+                     uu___7)::[]))
             when
             is_qlid (tc.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v ->
-            let uu___10 =
-              let uu___11 =
+            let uu___8 =
+              let uu___9 =
                 is_forall
                   (tc.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-              FStar_Pervasives_Native.Some uu___11 in
-            aux uu___10 (b :: out) t2
+              FStar_Pervasives_Native.Some uu___9 in
+            aux uu___8 (b :: out) t2
         | (FStar_Pervasives_Native.Some b, uu___1) ->
             let bs = FStar_Compiler_List.rev out in
             let uu___2 = FStar_Syntax_Subst.open_term bs t1 in
@@ -4757,10 +4746,9 @@ let (is_erased_head :
          | (FStar_Syntax_Syntax.Tm_uinst
             ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
                FStar_Syntax_Syntax.pos = uu___1;
-               FStar_Syntax_Syntax.vars = uu___2;
-               FStar_Syntax_Syntax.hash_code = uu___3;_},
+               FStar_Syntax_Syntax.hash_code = uu___2;_},
              u::[]),
-            (ty, uu___4)::[]) when
+            (ty, uu___3)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid
              -> FStar_Pervasives_Native.Some (u, ty)
          | uu___1 -> FStar_Pervasives_Native.None)

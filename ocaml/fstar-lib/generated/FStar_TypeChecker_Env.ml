@@ -3029,7 +3029,6 @@ let (try_lookup_lid_aux :
                   {
                     FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
                     FStar_Syntax_Syntax.pos = uu___4;
-                    FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
                     FStar_Syntax_Syntax.hash_code =
                       (t.FStar_Syntax_Syntax.hash_code)
                   } in
@@ -4613,7 +4612,6 @@ let (comp_set_flags :
            {
              FStar_Syntax_Syntax.n = uu___1;
              FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
-             FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars);
              FStar_Syntax_Syntax.hash_code =
                (c.FStar_Syntax_Syntax.hash_code)
            } in

@@ -270,7 +270,6 @@ let tag_with_range :
              {
                FStar_Syntax_Syntax.n = t';
                FStar_Syntax_Syntax.pos = r1;
-               FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
                FStar_Syntax_Syntax.hash_code =
                  (t.FStar_Syntax_Syntax.hash_code)
              })
@@ -788,7 +787,6 @@ let rec (push_subst_aux :
                 {
                   FStar_Syntax_Syntax.n = uu___2;
                   FStar_Syntax_Syntax.pos = (t.FStar_Syntax_Syntax.pos);
-                  FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
                   FStar_Syntax_Syntax.hash_code =
                     (t.FStar_Syntax_Syntax.hash_code)
                 } in

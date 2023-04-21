@@ -292,8 +292,6 @@ let (extract_let_rec_annotation :
                                     (FStar_Syntax_Syntax.Tm_meta (e'1, m));
                                   FStar_Syntax_Syntax.pos =
                                     (e3.FStar_Syntax_Syntax.pos);
-                                  FStar_Syntax_Syntax.vars =
-                                    (e3.FStar_Syntax_Syntax.vars);
                                   FStar_Syntax_Syntax.hash_code =
                                     (e3.FStar_Syntax_Syntax.hash_code)
                                 }, recheck))
@@ -324,8 +322,6 @@ let (extract_let_rec_annotation :
                                     FStar_Syntax_Syntax.n = uu___8;
                                     FStar_Syntax_Syntax.pos =
                                       (e3.FStar_Syntax_Syntax.pos);
-                                    FStar_Syntax_Syntax.vars =
-                                      (e3.FStar_Syntax_Syntax.vars);
                                     FStar_Syntax_Syntax.hash_code =
                                       (e3.FStar_Syntax_Syntax.hash_code)
                                   } in
@@ -359,8 +355,6 @@ let (extract_let_rec_annotation :
                                            use_eq), lopt));
                                   FStar_Syntax_Syntax.pos =
                                     (e3.FStar_Syntax_Syntax.pos);
-                                  FStar_Syntax_Syntax.vars =
-                                    (e3.FStar_Syntax_Syntax.vars);
                                   FStar_Syntax_Syntax.hash_code =
                                     (e3.FStar_Syntax_Syntax.hash_code)
                                 } in
@@ -393,8 +387,6 @@ let (extract_let_rec_annotation :
                                                   (body', m));
                                              FStar_Syntax_Syntax.pos =
                                                (body3.FStar_Syntax_Syntax.pos);
-                                             FStar_Syntax_Syntax.vars =
-                                               (body3.FStar_Syntax_Syntax.vars);
                                              FStar_Syntax_Syntax.hash_code =
                                                (body3.FStar_Syntax_Syntax.hash_code)
                                            } in
@@ -468,9 +460,6 @@ let (extract_let_rec_annotation :
                                                      FStar_Syntax_Syntax.pos
                                                        =
                                                        (body2.FStar_Syntax_Syntax.pos);
-                                                     FStar_Syntax_Syntax.vars
-                                                       =
-                                                       (body2.FStar_Syntax_Syntax.vars);
                                                      FStar_Syntax_Syntax.hash_code
                                                        =
                                                        (body2.FStar_Syntax_Syntax.hash_code)
@@ -5423,9 +5412,8 @@ let (weaken_result_typ :
                                   FStar_Syntax_Syntax.n =
                                     FStar_Syntax_Syntax.Tm_fvar fv;
                                   FStar_Syntax_Syntax.pos = uu___7;
-                                  FStar_Syntax_Syntax.vars = uu___8;
-                                  FStar_Syntax_Syntax.hash_code = uu___9;_},
-                                uu___10)
+                                  FStar_Syntax_Syntax.hash_code = uu___8;_},
+                                uu___9)
                                when
                                FStar_Syntax_Syntax.fv_eq_lid fv
                                  FStar_Parser_Const.true_lid
