@@ -12,8 +12,14 @@ ADD --chown=opam:opam ./ steel/
 ENV KRML_HOME=$HOME/karamel
 RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
     jq \
-    && git clone --branch taramana_no_steel https://github.com/FStarLang/karamel $KRML_HOME && \
-    eval $(opam env) && env FSTAR_HOME=$HOME/FStar $KRML_HOME/.docker/build/install-deps.sh && \
+    && \
+    git clone --branch $(jq -c -r '.RepoVersions.fstar' steel/src/ci/config.json || echo master) https://github.com/FStarLang/FStar $HOME/FStar && \
+    eval $(opam env) && \
+    opam depext conf-gmp z3.4.8.5 conf-m4 && \
+    opam install --deps-only $FSTAR_HOME/fstar.opam && \
+    env OTHERFLAGS='--admit_smt_queries true' make -C $HOME/FStar -j $opamthreads && \
+    git clone --branch $(jq -c -r '.RepoVersions.karamel' steel/src/ci/config.json || echo master) https://github.com/FStarLang/karamel $KRML_HOME && \
+    eval $(opam env) && $KRML_HOME/.docker/build/install-other-deps.sh && \
     env FSTAR_HOME=$HOME/FStar OTHERFLAGS='--admit_smt_queries true' make -C $KRML_HOME -j $opamthreads
 
 ENV PATH=$HOME/FStar/bin:$PATH
