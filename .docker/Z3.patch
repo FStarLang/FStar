@@ -1,0 +1,56 @@
+From 2ed0b48783a9dc187297cd148d28c5a68d40d1da Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Guido=20Mart=C3=ADnez?= <mtzguido@gmail.com>
+Date: Tue, 11 Apr 2023 15:37:18 -0700
+Subject: [PATCH] wip stable
+
+---
+ src/ast/pattern/pattern_inference.cpp | 3 +++
+ src/ast/rewriter/bool_rewriter.cpp    | 4 ++--
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/ast/pattern/pattern_inference.cpp b/src/ast/pattern/pattern_inference.cpp
+index 2fd2b4c82..92242175b 100644
+--- a/src/ast/pattern/pattern_inference.cpp
++++ b/src/ast/pattern/pattern_inference.cpp
+@@ -407,6 +407,8 @@ bool pattern_inference_cfg::pattern_weight_lt::operator()(expr * n1, expr * n2)
+ 
+ 
+ app* pattern_inference_cfg::mk_pattern(app* candidate) {
++    return m.mk_pattern(candidate);
++#if 0
+     auto has_var_arg = [&](expr* e) {
+         if (!is_app(e))
+             return false;
+@@ -441,6 +443,7 @@ app* pattern_inference_cfg::mk_pattern(app* candidate) {
+         }
+     }
+     return m.mk_pattern(m_args.size(), m_args.data());
++#endif
+ }
+ 
+ /**
+diff --git a/src/ast/rewriter/bool_rewriter.cpp b/src/ast/rewriter/bool_rewriter.cpp
+index 95c0950d8..d0a0e5dd0 100644
+--- a/src/ast/rewriter/bool_rewriter.cpp
++++ b/src/ast/rewriter/bool_rewriter.cpp
+@@ -293,7 +293,7 @@ br_status bool_rewriter::mk_nflat_or_core(unsigned num_args, expr * const * args
+ #endif
+         if (s) {
+             ast_lt lt;
+-            std::sort(buffer.begin(), buffer.end(), lt);       
++            // std::sort(buffer.begin(), buffer.end(), lt);
+             result = m().mk_or(sz, buffer.data());
+             return BR_DONE;
+         }
+@@ -331,7 +331,7 @@ br_status bool_rewriter::mk_flat_or_core(unsigned num_args, expr * const * args,
+         if (mk_nflat_or_core(flat_args.size(), flat_args.data(), result) == BR_FAILED) {
+             if (!ordered) {
+                 ast_lt lt;
+-                std::sort(flat_args.begin(), flat_args.end(), lt);
++                // std::sort(flat_args.begin(), flat_args.end(), lt);
+             }
+             result = mk_or_app(flat_args.size(), flat_args.data());
+         }
+-- 
+2.39.2
+
