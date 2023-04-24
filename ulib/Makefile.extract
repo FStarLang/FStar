@@ -3,8 +3,6 @@
 FSTAR_HOME=..
 include ml/Makefile.realized
 
-NOEXTRACT_MODULES += +FStar.Pervasives -FStar.Pervasives.Native -FStar.Reflection -FStar.Tactics
-
 include $(FSTAR_HOME)/.common.mk
 include gmake/z3.mk
 include gmake/fstar.mk
@@ -12,9 +10,12 @@ include gmake/fstar.mk
 DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(realpath $(FSTAR_HOME)/ocaml))
 OUTPUT_DIRECTORY=$(DUNE_SNAPSHOT)/fstar-lib/generated
 
-FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES),$(wildcard *.fst *.fsti))
+FSTAR_FILES:=
+FSTAR_FILES+=$(wildcard *.fst *.fsti)
+FSTAR_FILES+=$(wildcard experimental/*.fst experimental/*.fsti)
+FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), $(FSTAR_FILES))
 
-CODEGEN = OCaml
+CODEGEN = Plugin
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache --warn_error @241
 EXTRACT_MODULES=--extract '* $(NOEXTRACT_MODULES)'
 
@@ -24,15 +25,31 @@ $(OUTPUT_DIRECTORY)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
-.depend.extract-stdlib:
+DEPEND=.depend.extract
+DEPENDRSP=.depend.extract.rsp
+
+# GM/TR: These shell commands run ALWAYS, as soon as the Makefile is LOADED.
+# This is clearly undesirable, but the command-line argument line in
+# Windows prevents us from doing this simply.
+$(DEPENDRSP):
+	$(Q)true $(shell rm -f $(DEPENDRSP)) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $(DEPENDRSP)))
+
+$(DEPEND): $(DEPENDRSP)
 	$(call msg, "DEPEND")
 	$(Q)mkdir -p .cache
-	$(Q)true $(shell rm -f .depend.extract-stdlib.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract-stdlib.rsp))
-	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract-stdlib.rsp > .depend.extract-stdlib
+	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP) > $@
 
-depend.extract-stdlib: .depend.extract-stdlib
+dep.graph: $(DEPENDRSP)
+	$(Q)$(MY_FSTAR) --dep graph $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP)
 
-include .depend.extract-stdlib
+depgraph.pdf: dep.graph
+	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph
+	$(call msg, "DOT", $@)
+	$(Q)dot -Tpdf -o $@ dep_simpl.graph
+
+depend.extract: $(DEPEND)
+
+include $(DEPEND)
 
 .PHONY: all-ml dune-snapshot intfiles
 
