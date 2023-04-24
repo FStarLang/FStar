@@ -120,6 +120,7 @@ val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
+val resolve_name: env -> lident -> option (either bv fv)
 
 (* Won't fail on duplicates, use with caution *)
 val push_sigelt_force : env -> sigelt -> env

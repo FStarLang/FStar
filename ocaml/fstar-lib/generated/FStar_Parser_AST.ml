@@ -807,6 +807,8 @@ type decl' =
   | Pragma of pragma 
   | Assume of (FStar_Ident.ident * term) 
   | Splice of (Prims.bool * FStar_Ident.ident Prims.list * term) 
+  | DeclSyntaxExtension of (Prims.string * Prims.string *
+  FStar_Compiler_Range.range) 
 and decl =
   {
   d: decl' ;
@@ -901,6 +903,12 @@ let (uu___is_Splice : decl' -> Prims.bool) =
 let (__proj__Splice__item___0 :
   decl' -> (Prims.bool * FStar_Ident.ident Prims.list * term)) =
   fun projectee -> match projectee with | Splice _0 -> _0
+let (uu___is_DeclSyntaxExtension : decl' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DeclSyntaxExtension _0 -> true | uu___ -> false
+let (__proj__DeclSyntaxExtension__item___0 :
+  decl' -> (Prims.string * Prims.string * FStar_Compiler_Range.range)) =
+  fun projectee -> match projectee with | DeclSyntaxExtension _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee -> match projectee with | { d; drange; quals; attrs;_} -> d
 let (__proj__Mkdecl__item__drange : decl -> FStar_Compiler_Range.range) =

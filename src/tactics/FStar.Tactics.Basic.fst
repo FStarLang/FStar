@@ -2496,6 +2496,19 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term) =
     else eopt |> must)
   else ret None
 
+let push_open_namespace (e:env) (ns:list string) =
+  let lid = Ident.lid_of_path ns Range.dummyRange in
+  ret { e with dsenv = FStar.Syntax.DsEnv.push_namespace e.dsenv lid }
+
+let push_module_abbrev (e:env) (n:string) (m:list string) =
+  let mlid = Ident.lid_of_path m Range.dummyRange in
+  let ident = Ident.id_of_text n in
+  ret { e with dsenv = FStar.Syntax.DsEnv.push_module_abbrev e.dsenv ident mlid }
+
+let resolve_name (e:env) (n:list string) =
+  let l = Ident.lid_of_path n Range.dummyRange in
+  ret (FStar.Syntax.DsEnv.resolve_name e.dsenv l)
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =

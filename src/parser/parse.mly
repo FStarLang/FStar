@@ -21,6 +21,7 @@ open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
+module AU = FStar_Parser_AST_Util
 
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
@@ -41,10 +42,8 @@ let none_to_empty_list x =
 
 let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) : FStar_Parser_AST.decl' =
     let p = pos_of_lexpos r in
-    print3 "At position: %s, got extension [%s], with content = {%s}\n"
-      (string_of_pos p) extension_name s;
-    failwith "Blobs cannot be parsed yet"
-
+    let r = mk_range (file_of_range (lhs())) p p in
+    DeclSyntaxExtension (extension_name, s, r)
 %}
 
 %token <string> STRING

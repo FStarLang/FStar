@@ -492,3 +492,12 @@ val maybe_relate_after_unfolding (g:env) (t1 t2:term)
 
 val maybe_unfold_head (g:env) (t0:term)
   : Tac (option (t1:term{equiv_token g t0 t1}))
+
+val push_open_namespace (g:env) (ns:name)
+  : Tac env
+
+val push_module_abbrev (g:env) (n:string) (m:name)
+  : Tac env
+
+val resolve_name (g:env) (n:name)
+  : Tac (option (either bv fv))

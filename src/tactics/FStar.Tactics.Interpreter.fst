@@ -583,6 +583,18 @@ let () =
         refl_maybe_unfold_head RE.e_env RE.e_term (e_option RE.e_term)
         refl_maybe_unfold_head NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
 
+      mk_tac_step_2 0 "push_open_namespace"
+        push_open_namespace RE.e_env (e_list e_string) RE.e_env
+        push_open_namespace NRE.e_env (NBET.e_list NBET.e_string) NRE.e_env;
+
+      mk_tac_step_3 0 "push_module_abbrev"
+        push_module_abbrev RE.e_env e_string (e_list e_string) RE.e_env
+        push_module_abbrev NRE.e_env NBET.e_string (NBET.e_list NBET.e_string) NRE.e_env;
+
+      mk_tac_step_2 0 "resolve_name"
+        resolve_name RE.e_env (e_list e_string) (e_option (e_either RE.e_bv RE.e_fv))
+        resolve_name NRE.e_env (NBET.e_list NBET.e_string) (NBET.e_option (NBET.e_either NRE.e_bv NRE.e_fv));
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

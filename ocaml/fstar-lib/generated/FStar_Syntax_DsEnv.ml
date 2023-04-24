@@ -3413,3 +3413,33 @@ let fail_or2 :
           let uu___2 = FStar_Ident.range_of_id id in
           FStar_Errors.raise_error uu___1 uu___2
       | FStar_Pervasives_Native.Some r -> r
+let (resolve_name :
+  env ->
+    FStar_Ident.lident ->
+      (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv)
+        FStar_Pervasives.either FStar_Pervasives_Native.option)
+  =
+  fun e ->
+    fun name ->
+      let uu___ = try_lookup_name false false e name in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some (Term_name (e1, attrs)) ->
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Subst.compress e1 in
+            uu___2.FStar_Syntax_Syntax.n in
+          (match uu___1 with
+           | FStar_Syntax_Syntax.Tm_name n ->
+               FStar_Pervasives_Native.Some (FStar_Pervasives.Inl n)
+           | FStar_Syntax_Syntax.Tm_fvar fv ->
+               FStar_Pervasives_Native.Some (FStar_Pervasives.Inr fv)
+           | uu___2 -> FStar_Pervasives_Native.None)
+      | FStar_Pervasives_Native.Some (Eff_name (se, l)) ->
+          let uu___1 = delta_depth_of_declaration in
+          let uu___2 =
+            let uu___3 =
+              FStar_Syntax_Syntax.lid_as_fv l
+                FStar_Syntax_Syntax.delta_constant
+                FStar_Pervasives_Native.None in
+            FStar_Pervasives.Inr uu___3 in
+          FStar_Pervasives_Native.Some uu___2

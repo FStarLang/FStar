@@ -1014,6 +1014,7 @@ let rec (lidents_of_decl :
     | FStar_Parser_AST.Pragma uu___ -> []
     | FStar_Parser_AST.Assume (uu___, t) -> lidents_of_term t
     | FStar_Parser_AST.Splice (uu___, uu___1, t) -> lidents_of_term t
+    | FStar_Parser_AST.DeclSyntaxExtension uu___ -> []
 and (lidents_of_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Ident.lident Prims.list) =
   fun ed ->
@@ -1029,3 +1030,43 @@ and (lidents_of_effect_decl :
         let uu___1 = (concat_map ()) lidents_of_binder bs in
         let uu___2 = lidents_of_term t in
         FStar_Compiler_List.op_At uu___1 uu___2
+type open_namespaces_and_abbreviations =
+  {
+  open_namespaces: FStar_Ident.lident Prims.list ;
+  module_abbreviations: (FStar_Ident.ident * FStar_Ident.lident) Prims.list }
+let (__proj__Mkopen_namespaces_and_abbreviations__item__open_namespaces :
+  open_namespaces_and_abbreviations -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { open_namespaces; module_abbreviations;_} -> open_namespaces
+let (__proj__Mkopen_namespaces_and_abbreviations__item__module_abbreviations
+  :
+  open_namespaces_and_abbreviations ->
+    (FStar_Ident.ident * FStar_Ident.lident) Prims.list)
+  =
+  fun projectee ->
+    match projectee with
+    | { open_namespaces; module_abbreviations;_} -> module_abbreviations
+type error_message =
+  {
+  message: Prims.string ;
+  range: FStar_Compiler_Range.range }
+let (__proj__Mkerror_message__item__message : error_message -> Prims.string)
+  = fun projectee -> match projectee with | { message; range;_} -> message
+let (__proj__Mkerror_message__item__range :
+  error_message -> FStar_Compiler_Range.range) =
+  fun projectee -> match projectee with | { message; range;_} -> range
+type extension_parser =
+  open_namespaces_and_abbreviations ->
+    Prims.string ->
+      FStar_Compiler_Range.range ->
+        (error_message, FStar_Parser_AST.decl') FStar_Pervasives.either
+let (extension_parser_table : extension_parser FStar_Compiler_Util.smap) =
+  FStar_Compiler_Util.smap_create (Prims.of_int (20))
+let (register_extension_parser : Prims.string -> extension_parser -> unit) =
+  fun ext ->
+    fun parser ->
+      FStar_Compiler_Util.smap_add extension_parser_table ext parser
+let (lookup_extension_parser :
+  Prims.string -> extension_parser FStar_Pervasives_Native.option) =
+  fun ext -> FStar_Compiler_Util.smap_try_find extension_parser_table ext

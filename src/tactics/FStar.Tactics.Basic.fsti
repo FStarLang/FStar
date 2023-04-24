@@ -134,3 +134,7 @@ val refl_check_prop_validity          : env -> term -> tac (option unit)
 val refl_instantiate_implicits        : env -> term -> tac (option (term & typ))
 val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side)
 val refl_maybe_unfold_head            : env -> term -> tac (option term)
+
+val push_open_namespace               : env -> list string -> tac env
+val push_module_abbrev                : env -> string -> list string -> tac env
+val resolve_name                      : env -> list string -> tac (option (either bv fv))

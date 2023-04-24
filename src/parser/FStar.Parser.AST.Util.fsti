@@ -26,3 +26,22 @@ open FStar.Parser.AST
 val eq_decl (d1 d2:decl) : bool
 
 val lidents_of_decl (t:decl) : list FStar.Ident.lident
+
+type open_namespaces_and_abbreviations = {
+   open_namespaces: list FStar.Ident.lident;
+   module_abbreviations: list (FStar.Ident.ident * FStar.Ident.lident);
+}
+
+type error_message = {
+   message: string;
+   range: FStar.Compiler.Range.range;
+}
+
+type extension_parser = 
+   open_namespaces_and_abbreviations ->
+   contents:string ->
+   p:FStar.Compiler.Range.range ->
+   either error_message decl'
+
+val register_extension_parser (extension_name:string) (parser:extension_parser) : unit
+val lookup_extension_parser (extension_name:string) : option extension_parser
