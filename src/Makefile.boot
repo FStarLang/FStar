@@ -61,7 +61,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # recent than its dependences.
 %.checked.lax:
 	$(call msg, "LAXCHECK", $(basename $(basename $(notdir $@))))
-	$(Q)$(FSTAR_C) $< --already_cached '*,'-$(basename $(notdir $<))
+	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< --already_cached '*,'-$(basename $(notdir $<))
 	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
