@@ -22,7 +22,6 @@ FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_mod
 
 # Tests.* goes to fstar-tests, the rest to fstar-lib
 OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(DUNE_SNAPSHOT)/fstar-lib/generated)
-FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -98,14 +97,16 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	$(Q)$(SED) 's,fstar-lib/generated/FStar_Test,fstar-tests/generated/FStar_Test,g' <._depend >.depend
 	$(Q)mkdir -p $(CACHE_DIR)
 
-.PHONY: depgraph.pdf
-depgraph.pdf :
+.PHONY: dep.graph
+dep.graph:
 	$(call msg, "DEPEND")
-	$(Q)$(FSTAR_C) --dep graph\
+	$(Q)$(FSTAR_C) --dep graph		\
 		fstar/FStar.Main.fst		\
 		tests/FStar.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)
+
+depgraph.pdf: dep.graph
 	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph
 	$(call msg, "DOT", $@)
 	$(Q)dot -Tpdf -o $@ dep_simpl.graph
