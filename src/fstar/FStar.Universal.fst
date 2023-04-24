@@ -299,7 +299,7 @@ let tc_one_file
     : tc_result
     * option FStar.Extraction.ML.Syntax.mllib
     * uenv =
-  Ident.reset_gensym();
+  GenSym.reset_gensym();
 
   (*
    * AR: smt encode_modul functions are now here instead of in Tc.fs

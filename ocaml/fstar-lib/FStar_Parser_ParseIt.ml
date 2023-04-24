@@ -237,7 +237,7 @@ let parse fn =
           try
             (* Reset the gensym between decls, to ensure determinism, 
                otherwise, every _ is parsed as different name *)
-            FStar_Ident.reset_gensym();
+            FStar_GenSym.reset_gensym();
             Inl (parse_one_decl lexer)
           with 
           | FStar_Errors.Error(e, msg, r, _ctx) ->

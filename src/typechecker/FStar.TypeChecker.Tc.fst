@@ -69,7 +69,7 @@ let set_hint_correlator env se =
       let lids = U.lids_of_sigelt se in
       let lid = match lids with
             | [] -> Ident.lid_add_suffix (Env.current_module env)
-                                         (Ident.next_id () |> BU.string_of_int)
+                                         (GenSym.next_id () |> BU.string_of_int) // GM: Should we really touch the gensym?
             | l::_ -> l in
       {env with qtbl_name_and_index=tbl, Some (lid, get_n lid)}
 
