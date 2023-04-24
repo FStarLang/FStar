@@ -147,7 +147,12 @@ let (on_sub_meta :
       | FStar_Syntax_Syntax.Meta_monadic_lift (m1, m2, typ) ->
           let uu___ = let uu___1 = f_term vfs typ in (m1, m2, uu___1) in
           FStar_Syntax_Syntax.Meta_monadic_lift uu___
-      | md1 -> md1
+      | FStar_Syntax_Syntax.Meta_named lid ->
+          FStar_Syntax_Syntax.Meta_named lid
+      | FStar_Syntax_Syntax.Meta_labeled (s, r, b) ->
+          FStar_Syntax_Syntax.Meta_labeled (s, r, b)
+      | FStar_Syntax_Syntax.Meta_desugared i ->
+          FStar_Syntax_Syntax.Meta_desugared i
 let (on_sub_letbinding :
   vfs_t -> FStar_Syntax_Syntax.letbinding -> FStar_Syntax_Syntax.letbinding)
   =

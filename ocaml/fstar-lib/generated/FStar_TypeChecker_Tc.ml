@@ -126,7 +126,7 @@ let (set_hint_correlator :
             | [] ->
                 let uu___1 = FStar_TypeChecker_Env.current_module env in
                 let uu___2 =
-                  let uu___3 = FStar_Ident.next_id () in
+                  let uu___3 = FStar_GenSym.next_id () in
                   FStar_Compiler_Effect.op_Bar_Greater uu___3
                     FStar_Compiler_Util.string_of_int in
                 FStar_Ident.lid_add_suffix uu___1 uu___2
