@@ -708,6 +708,7 @@ let range_of_head (t:st_term) : option (term & range) =
     let rec aux (t:term) : (term & range) =
       match t with
       | Tm_FVar fv -> (t, fv.fv_range)
+      | Tm_UInst fv _ -> (t, fv.fv_range)
       | Tm_Var nm -> (t, nm.nm_range)
       | Tm_PureApp hd _ _ -> aux hd
       | _ -> t, default_range
@@ -715,13 +716,36 @@ let range_of_head (t:st_term) : option (term & range) =
     Some (aux head)
   | _ -> None
 
+let tag_of_term (t:term) =
+  match t with
+  | Tm_FVar fv -> "Tm_FVar"
+  | Tm_UInst fv _ -> "Tm_UInst"
+  | Tm_Var nm -> "Tm_Var"
+  | Tm_PureApp hd _ _ -> "Tm_PureApp"
+  | Tm_Constant _ -> "Tm_Constant"
+  | Tm_Type _ -> "Tm_Type"
+  | Tm_Refine _ _ -> "Tm_Refine"
+  | Tm_Let _ _ _ -> "Tm_Let"
+  | Tm_Emp -> "Tm_Emp"
+  | Tm_Pure _ -> "Tm_Pure"
+  | Tm_Star _ _ -> "Tm_Star"
+  | Tm_ExistsSL _ _ _ _ -> "Tm_ExistsSL"
+  | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
+  | Tm_Arrow _ _ _ -> "Tm_Arrow"
+  | Tm_VProp -> "Tm_VProp"
+  | Tm_Inames -> "Tm_Inames"
+  | Tm_EmpInames -> "Tm_EmpInames"
+  | Tm_Unknown -> "Tm_Unknown"
+  | Tm_UVar _ -> "Tm_UVar"
+
 let maybe_log t =
   let _ =
     match range_of_head t with
     | Some (head, range) ->
       let range = T.unseal range in
-      T.print (Printf.sprintf "At location %s: Checking app with head = %s"
+      T.print (Printf.sprintf "At location %s: Checking app with head (%s) = %s"
                          (T.range_to_string range)
+                         (tag_of_term head)
                          (P.term_to_string head))
     | None -> ()
   in
