@@ -44,4 +44,5 @@ val sealed_singl (#a:Type) (x y : sealed a)
   : Lemma (x == y)
 
 (* Sealing a value hides it from the logical fragment of F* *)
-val seal (#a : Type u#aa) (x:a) : sealed a
+val seal (#a : Type u#aa) (x:a) : Tot (sealed a)
+// ^ NB: Tot annotation needed since this file is used in bootstrapping.

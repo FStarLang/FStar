@@ -11,8 +11,8 @@ type ('a, 'b, 'wpuf, 'wpug, 'ps, 'post) tac_bind_wp = 'wpuf
 type ('a, 'wp, 'ps, 'post) tac_wp_compact = unit
 let tac_bind :
   'a 'b 'wpuf 'wpug .
-    Prims.range ->
-      Prims.range ->
+    FStar_Range.range ->
+      FStar_Range.range ->
         ('a, 'wpuf) tac_repr ->
           ('a -> ('b, 'wpug) tac_repr) -> ('b, unit) tac_repr
   =
@@ -23,19 +23,16 @@ let tac_bind :
           fun ps ->
             match t1
                     (FStar_Tactics_Types.incr_depth
-                       (FStar_Tactics_Types.set_proofstate_range ps
-                          (FStar_Range.prims_to_fstar_range r1)))
+                       (FStar_Tactics_Types.set_proofstate_range ps r1))
             with
             | FStar_Tactics_Result.Success (a1, ps') ->
                 (match FStar_Tactics_Types.tracepoint
-                         (FStar_Tactics_Types.set_proofstate_range ps'
-                            (FStar_Range.prims_to_fstar_range r2))
+                         (FStar_Tactics_Types.set_proofstate_range ps' r2)
                  with
                  | true ->
                      t2 a1
                        (FStar_Tactics_Types.decr_depth
-                          (FStar_Tactics_Types.set_proofstate_range ps'
-                             (FStar_Range.prims_to_fstar_range r2))))
+                          (FStar_Tactics_Types.set_proofstate_range ps' r2)))
             | FStar_Tactics_Result.Failed (e, ps') ->
                 FStar_Tactics_Result.Failed (e, ps')
 type ('a, 'wputhen, 'wpuelse, 'b, 'ps, 'post) tac_if_then_else_wp = unit

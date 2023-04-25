@@ -242,10 +242,9 @@ let (as_ensures : FStar_Ident.lident) = pconst "as_ensures"
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases"
 let (reveal : FStar_Ident.lident) = p2l ["FStar"; "Ghost"; "reveal"]
 let (hide : FStar_Ident.lident) = p2l ["FStar"; "Ghost"; "hide"]
-let (range_lid : FStar_Ident.lident) = pconst "range"
-let (range_of_lid : FStar_Ident.lident) = pconst "range_of"
-let (labeled_lid : FStar_Ident.lident) = pconst "labeled"
-let (range_0 : FStar_Ident.lident) = pconst "range_0"
+let (labeled_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "labeled"]
+let (range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range"]
+let (range_0 : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range_0"]
 let (guard_free : FStar_Ident.lident) = pconst "guard_free"
 let (inversion_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inversion"]
