@@ -11,6 +11,8 @@ In all cases (user or developer), please first read `README.md`
   binding the pthreads spinlock)
 * In `src/extraction`: The krml extraction rules for Steel and
   SteelC. This F* code typechecks against the F* sources.
+* In `src/syntax-extension`: A top-level parser hook for the custom
+  syntax of pulse. This F* code typechecks against the F* sources.
 * In `src/ocaml/runtime`: The handwritten Steel runtime library for
   OCaml. This OCaml code typechecks and compiles against the
   `fstar.lib` package.
@@ -55,7 +57,7 @@ extract-pulse-plugin`). Then you can compile the obtained plugin and
 reverify Steel and Pulse with it, by simply running `make` from the
 Steel root directory.
 
-## Modify the Steel or SteelC extraction rules
+## Modify the Steel or SteelC extraction rules, or the syntax extension.
 
 If you modify the Steel or SteelC extraction rules in `src/extraction`
 (`ExtractSteel.fst` and `ExtractSteelC.fst` respectively), you need to
@@ -69,6 +71,9 @@ package) will not work.
 Then, you can extract the rules with `make -j -C src
 extract-extraction` . Then you can recompile everything with `make`
 from the Steel root directory.
+
+Likewise, if you modify the syntax extension, you should run `make -j
+-C src extract-syntax-extension`
 
 ## Safe rules to regenerate and recompile everything
 

@@ -1,6 +1,7 @@
 %{
     open Pulse_Syntax
-
+    open Pulse_Util
+    
     let ctr : int ref = ref 0
 
     let get_next () : int =
@@ -34,19 +35,21 @@
     let resolve_name (s:string) : term =
       match lookup_name s with
       | Some (n, b) ->
-        Tm_Var {nm_ppname=if b then s else "_";nm_index=Z.of_int n}
-      | None -> failwith ("Cannot resolve name " ^ s)
+        Tm_Var { nm_ppname=if b then s else "_";
+                 nm_index=Z.of_int n;
+                 nm_range=FStar_Range.range_0}
+      | None -> raise (Syntax_error ("Cannot resolve name " ^ s))
 
     let lookup_var_index (s:string) : Z.t =
-      match lookup_name s with
+          match lookup_name s with
       | Some (n, _) -> Z.of_int n
-      | None -> failwith ("lookup_var_index, name not found " ^ s)
+      | None -> raise (Syntax_error("lookup_var_index, name not found " ^ s))
 
-    let mk_app (head:term) (args:(qualifier option * term) list) : term =
+    let mk_app (head:term) (args:(qualifier option * term) list) : st_term =
       if List.length args = 0
       then Tm_STApp (head, None, Tm_Constant Unit)
       else
-        let rec aux (acc:term) (args:(qualifier option * term) list) : term =
+        let rec aux (acc:term) (args:(qualifier option * term) list) : st_term =
           match args with
           | [q, arg] -> Tm_STApp (acc, q, arg)
           | (q, arg)::args -> aux (Tm_PureApp (acc, q, arg)) args in
@@ -55,37 +58,37 @@
     let mk_st_app (app:term) =
         match app with
         | Tm_PureApp(head, q, arg) -> Tm_STApp(head, q, arg)
-        | _ -> app
+        | _ -> Tm_Return (STT, false, app)
         
     let mk_fvar (l:string list) (us:universe list)
         : term
         = match us with
-          | [] -> Tm_FVar l
-          | _ -> Tm_UInst (l, us)
+          | [] -> Tm_FVar (Pulse_Syntax.as_fv l)
+          | _ -> Tm_UInst (Pulse_Syntax.as_fv l, us)
 
     let unsnoc (l:'a list) : ('a list * 'a) =
       let l = List.rev l in
       List.rev (List.tl l), List.hd l
     
-    let mk_abs (bs:(qualifier option * binder) list) (pre:term) (body:term) (post_opt:term option) : term =
+    let mk_abs (bs:(qualifier option * binder) list) (pre:term) (body:st_term) (post_opt:term option) : st_term =
       let bs, (q, b) = unsnoc bs in
       let b_index = lookup_var_index b.binder_ppname in
       let t = Tm_Abs
                 (b,
                  q,
                  (Some (close_term pre b_index)),
-                 close_term body b_index,
+                 close_st_term body b_index,
                  (match post_opt with
                   | None -> None
                   | Some post ->
                     Some (close_term' post b_index (Z.of_int 1)))) in
       List.fold_right (fun (q, b) t ->
-                        let t = close_term t (lookup_var_index b.binder_ppname) in
+                        let t = close_st_term t (lookup_var_index b.binder_ppname) in
                         Tm_Abs (b, q, Some Tm_Emp, t, None)) bs t
 
     let mk_pure_app (head:term) (l:(qualifier option * term) list) : term =
       match l with
-      | [] -> failwith "mk_pure_app: no arguments"
+      | [] -> raise (Syntax_error ("mk_pure_app: no arguments"))
       | _ ->
         List.fold_left
                 (fun t (q, e) -> Tm_PureApp (t, q, e))
@@ -103,7 +106,7 @@
 
 %token EMP STAR
 
-%start <term option> prog
+%start <st_term option> prog
 
 %left STAR
 
@@ -173,18 +176,6 @@ ensures:
     { post }
 
 lambda:
-  | FUN b=binder RARROW e=expr
-    {
-      let q, b = b in
-      let e = close_term e (lookup_var_index b.binder_ppname) in
-      Tm_Abs (b, q, Some Tm_Emp, e, None)
-    }
-
-  | FUN bs=binders pre=requires RARROW e=expr
-    {
-      mk_abs bs pre e None
-    }
-
   | FUN bs=binders pre=requires post=ensures RARROW e=expr
     {
       mk_abs bs pre e (Some post)
@@ -201,11 +192,11 @@ pureapp:
   | e1=pure_atomic_expr e2=qualified_arg es=list(qualified_arg)    { mk_pure_app e1 (e2::es) }
 
 expr:
-  | RETURN e=pure_expr      { e }
+  | RETURN e=pure_expr      { Tm_Return (STT, false, e) }
   | app=pureapp            { mk_st_app app }
   | LET b=let_binder EQUALS e1=pureapp SEMICOLON e2=expr
     {
-      let e2 = close_term e2 (lookup_var_index b) in
+      let e2 = close_st_term e2 (lookup_var_index b) in
       Tm_Bind (mk_st_app e1, e2)
     }
   | e1=pureapp SEMICOLON e2=expr    { Tm_Bind (mk_st_app e1, e2) }

@@ -7,7 +7,7 @@ all: boot
 .PHONY: all
 
 .PHONY: extract-ocaml
-extract-ocaml: extract-steel-plugin extract-extraction extract-pulse-plugin
+extract-ocaml: extract-steel-plugin extract-extraction extract-syntax-extension extract-pulse-plugin
 
 .PHONY: extract-steel-plugin
 extract-steel-plugin:
@@ -20,6 +20,10 @@ extract-pulse-plugin: verify-steel
 .PHONY: extract-extraction
 extract-extraction:
 	+$(MAKE) -C extraction
+
+.PHONY: extract-syntax-extension
+extract-syntax-extension:
+	+$(MAKE) -C syntax_extension
 
 .PHONY: verify-steel
 verify-steel: extract-steel-plugin
