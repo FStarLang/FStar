@@ -2,6 +2,17 @@
   "5\u0001\u001e†\u001bçæ%\u001a\u0001:π∞GÒ˝",
   [
     [
+      "Pulse.Soundness.VPropEquiv.vprop_equiv_ext_type",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "c1735be3a515621d5176ab799ceba318"
+    ],
+    [
       "Pulse.Soundness.VPropEquiv.inst_vprop_equiv_ext_aux",
       1,
       2,
@@ -34,7 +45,7 @@
         "typing_tok_FStar.Reflection.Typing.Ctxt_hole@tok"
       ],
       0,
-      "8755f7fcd1c140a021c89b2e641f3908"
+      "2f7c2874a84b5b502081babcae6f46a0"
     ],
     [
       "Pulse.Soundness.VPropEquiv.inst_vprop_equiv_ext",
@@ -51,7 +62,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "210f9464f64ff7d9c49fd25d6abc1685"
+      "389ce7cc87d65913de48f70f83906ea5"
     ],
     [
       "Pulse.Soundness.VPropEquiv.vprop_equiv_soundness",
@@ -126,7 +137,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "90625294c6d8a5a5f6e36943a3b782fd"
+      "3a149fea5df426e7837605a61f44f186"
     ]
   ]
 ]

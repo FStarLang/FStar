@@ -55,7 +55,7 @@
       1,
       [ "@query" ],
       0,
-      "94c3e44308a8ab04c9335a6a3ec6f7af"
+      "f506e3ab2d34e88f183195de71dc2566"
     ],
     [
       "Bug1536.t1",
@@ -64,7 +64,7 @@
       1,
       [ "@query", "eq2-interp" ],
       0,
-      "a6bbe4d42dda9457700533515c455879"
+      "3b3882237f863de3a6f79ec0f7ae63ae"
     ],
     [
       "Bug1536.t2",
@@ -73,7 +73,7 @@
       1,
       [ "@query", "eq2-interp" ],
       0,
-      "67814d2c684c77002f8aef2e43a96331"
+      "a7f4f33eb40e91eab89c2284d7edd7e5"
     ]
   ]
 ]

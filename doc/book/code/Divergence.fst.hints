@@ -42,7 +42,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "4cbd0406dc89b031f43f6c2693413237"
+      "ce26bb607fcc073cf2cf3fd748283f01"
     ],
     [
       "Divergence.collatz_ends_in_one",
@@ -85,7 +85,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "5b3c967cc233a7e615dc7085709837df"
+      "2f22c601cd05ab6781b0034569d865f6"
     ],
     [
       "Divergence.collatz_spec",
@@ -114,7 +114,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "717ad22d80959a3f5462a57a78e97cbb"
+      "2f1dbfb0d9c8aee88ea6de88a7bf443f"
     ],
     [
       "Divergence.collatz'",
@@ -147,7 +147,7 @@
         "typing_Divergence.collatz_spec"
       ],
       0,
-      "10327460d268bca06abc2c3730b49013"
+      "b167d20197f0d9cd5fd1b503ff3847d7"
     ],
     [
       "Divergence.term",
@@ -162,7 +162,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2699adb4f04a5d07dbed6c74ddd7b475"
+      "3df251ab038e74dfca8c13c468aa2bc7"
     ],
     [
       "Divergence.__proj__Var__item___0",
@@ -174,7 +174,7 @@
         "refinement_interpretation_Tm_refine_cdd50521e9c03cc2d185a28f1ee1af46"
       ],
       0,
-      "0fb9e349dff679454197e92ddb7112a3"
+      "5880564dfb89abb6217b486851ef024f"
     ],
     [
       "Divergence.__proj__Int__item___0",
@@ -186,7 +186,7 @@
         "refinement_interpretation_Tm_refine_412b22bcd22c0ff134f850a6e38558cd"
       ],
       0,
-      "4cfc3555c7410a5f18f040bd50f5fb67"
+      "8be734941dfbc7e50b892f9392eb4d91"
     ],
     [
       "Divergence.__proj__Lam__item___0",
@@ -198,7 +198,7 @@
         "refinement_interpretation_Tm_refine_111879f7c1a479de6f84866f8b3a1ca1"
       ],
       0,
-      "f86e8bce88340254589cc8bea926d437"
+      "3b0c72fb09e8ce722dff1f59c3074bf7"
     ],
     [
       "Divergence.__proj__App__item___0",
@@ -210,7 +210,7 @@
         "refinement_interpretation_Tm_refine_f01e7d484d7a97acf2fd967415f36ddb"
       ],
       0,
-      "d847f2dfb9ec4bca8033aebee5fa3ed7"
+      "3b09191b183e432f7f457a6b222e6579"
     ],
     [
       "Divergence.__proj__App__item___1",
@@ -222,7 +222,7 @@
         "refinement_interpretation_Tm_refine_f01e7d484d7a97acf2fd967415f36ddb"
       ],
       0,
-      "9ab14a3e1789912f048856ba7696084f"
+      "4e41fe901f23a56f8e59877df4c54b55"
     ],
     [
       "Divergence.subst",
@@ -248,7 +248,7 @@
         "subterm_ordering_Divergence.App", "subterm_ordering_Divergence.Lam"
       ],
       0,
-      "1f3d5fb1fdfe94bb8e331f87ca72cff5"
+      "aba2bed87d32af56cb6d52ed66c575d0"
     ],
     [
       "Divergence.interpret",
@@ -263,7 +263,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a4af1648c04961cd702f1220bbafc086"
+      "d4aa408d09aef3cd6a496151c51dfd4e"
     ],
     [
       "Divergence.__proj__DErr__item___0",
@@ -275,7 +275,7 @@
         "refinement_interpretation_Tm_refine_ad29e06a7f7d5073ace7a1c2a3ec13f8"
       ],
       0,
-      "262d7aa2b9b577ea49a69dce80b6e540"
+      "33f0909e3ae6df765ae91172cc6aaaf2"
     ],
     [
       "Divergence.__proj__DInt__item___0",
@@ -287,7 +287,7 @@
         "refinement_interpretation_Tm_refine_4d4850cc1f5cf9c0b93b593ebbdcbfb5"
       ],
       0,
-      "b256c3c72d72b4bccd0e6857c21eaa5c"
+      "5e731ac96c2bb93921e28e0e4f184ceb"
     ],
     [
       "Divergence.__proj__DFun__item___0",
@@ -299,7 +299,7 @@
         "refinement_interpretation_Tm_refine_0d7b78c2bec10e6dab76d83ddf094d02"
       ],
       0,
-      "298ca70c5ff3bdfae617721746939070"
+      "71463eb2aa297d54a0408cb745a9e15a"
     ],
     [
       "Divergence.shift",
@@ -313,7 +313,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "e924dc2bb5b2312a0d31117c9cb493e3"
+      "8f3512812d1fdd78fd735572ddbcf0bf"
     ],
     [
       "Divergence.denote",
@@ -330,7 +330,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "31b3c6281f0bb30d785cc9b6a4e1a6e1"
+      "a1e07f6b7fc0dcb96d590153deef68ca"
     ],
     [
       "Divergence.div",
@@ -339,7 +339,7 @@
       1,
       [ "@query", "primitive_Prims.op_Equality" ],
       0,
-      "552028d78f6caa6e1b5aadd6905407d6"
+      "9f3bc6de0696c4364ace3e33c2ce1741"
     ],
     [
       "Divergence.mod",
@@ -348,7 +348,7 @@
       1,
       [ "@query", "primitive_Prims.op_Equality" ],
       0,
-      "4e94169d8cbf6548dba209860c33c7a4"
+      "ef8d9b56589ba8ffbab1417c5c5baba5"
     ]
   ]
 ]

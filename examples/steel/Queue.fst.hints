@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "229756d13e740052be5e96d470cdebeb"
+      "159b319989c06319ad1b8d64ab1f20b0"
     ],
     [
       "Queue.emp_equiv_pure",
@@ -42,7 +42,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "729d70a559d1e338f31d861fcd74faf7"
+      "505468dfc34678f243fc3027a0055ed6"
     ],
     [
       "Queue.next_last",
@@ -57,7 +57,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2c5cebeb0505831baead865625d21629"
+      "5d574f0f03cd1266a0ee7d2607ed0b68"
     ],
     [
       "Queue.next_last_correct",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "dbf6f402464209b0b0c94880eaf81b01"
+      "23a3071f6baf06216ac939166ec94438"
     ],
     [
       "Queue.next_last_correct",
@@ -111,7 +111,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "2156278c68acd669914d827154d7f41e"
+      "968b47c48d3681139aa272d0eeeb6cc3"
     ],
     [
       "Queue.fragment_append",
@@ -158,7 +158,7 @@
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "03c8d9e11bd6fad03bf1954eb59b07b5"
+      "10aafc632e48f13bca111c17afcb0c5e"
     ],
     [
       "Queue.intro_fragment_nil",
@@ -180,7 +180,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "900712b1dcbe45839ad1355707a9c424"
+      "042f9061662dc804fb1169a76648ae97"
     ],
     [
       "Queue.intro_fragment_cons",
@@ -196,7 +196,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "a4907192f1200b1d43d59fbbfc1bc9f5"
+      "7657052feb2a07fa7f1593863ef422f8"
     ],
     [
       "Queue.fragment_append_singleton",
@@ -248,7 +248,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "eb8b530b6ae01e505f9b3ceca89568fc"
+      "933cb82c7effdd883a7f7623e909f3ee"
     ],
     [
       "Queue.queue_lc_prop",
@@ -273,7 +273,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "41e82ed9ee60c613957d600351972484"
+      "3a63bb2afeb94ebd53a70fcfa62e3b8b"
     ],
     [
       "Queue.new_queue",
@@ -351,7 +351,7 @@
         "typing_Steel.Reference.null"
       ],
       0,
-      "faa54d259a0194a27421951b40b3a47d"
+      "f0681070950ceace8cd26ffaf3cd8744"
     ],
     [
       "Queue.snoc_inj",
@@ -364,7 +364,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "986945bb16fd9c726ddcabb26ea7030f"
+      "5420818ec6e207d53cd3362aa1864a40"
     ],
     [
       "Queue.unsnoc",
@@ -385,7 +385,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "c57d61e1c250c002b5f504bfb76e9942"
+      "4b45abac5b51e727d45e22172aa9d3d7"
     ],
     [
       "Queue.unsnoc_hd",
@@ -394,7 +394,7 @@
       1,
       [ "@query" ],
       0,
-      "115b463d28a1684a58ce47e6e3fc03fe"
+      "22ec81d9319803739d08a76b119b897b"
     ],
     [
       "Queue.unsnoc_tl",
@@ -403,7 +403,7 @@
       1,
       [ "@query" ],
       0,
-      "01b4997680412dd70656532744cb7f9a"
+      "efee6296dd087b06869351d0fb62d547"
     ],
     [
       "Queue.enqueue",
@@ -512,7 +512,7 @@
         "typing_Steel.Reference.pts_to_sl", "typing_Steel.Reference.ref"
       ],
       0,
-      "35e01b6b89f038f0b64bd545171e25e8"
+      "e1b214cdddec9253e5c61fa902721066"
     ],
     [
       "Queue.dequeue_post_success",
@@ -526,7 +526,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c5a4fea1c010279f20acecc92a60a7f4"
+      "9f05e3331537a5a87b44fc1d16c42c9b"
     ],
     [
       "Queue.dequeue_post",
@@ -537,7 +537,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "06353c95bfeebe1a2c4dd2df15cff4f4"
+      "3673187a8f705f3781ed9a7ce328300b"
     ],
     [
       "Queue.dequeue",
@@ -608,7 +608,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "35d51e2440cf66182dc2ff85a8416960"
+      "d19b33dcb424e1d49723828ac44189f5"
     ]
   ]
 ]

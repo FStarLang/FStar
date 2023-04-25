@@ -1,5 +1,5 @@
 [
-  "¸0tú-äR“\u001c\u0002^x©∫ñÔ",
+  "»øvLNâÅø\ftÉy:h_O",
   [
     [
       "Pulse.Elaborate.Core.elab_frame",
@@ -19,7 +19,7 @@
         "typing_Pulse.Syntax.uu___is_C_STAtomic"
       ],
       0,
-      "44d653e763b69b2e98ffc8de0bc78112"
+      "c704d67b0e9de19ef92c0c01f3aac00a"
     ],
     [
       "Pulse.Elaborate.Core.elab_sub",
@@ -40,7 +40,7 @@
         "typing_Pulse.Syntax.uu___is_C_STAtomic"
       ],
       0,
-      "60f7c1b5f86b00dd042fa8b36d44247b"
+      "287d06457925103e515d34262e94b66f"
     ],
     [
       "Pulse.Elaborate.Core.elab_bind",
@@ -81,7 +81,7 @@
         "refinement_interpretation_Tm_refine_b60a3fff1dfdc0c440afbdaa581abd69"
       ],
       0,
-      "b9aee1b5aabae95c6351ebb6c5947170"
+      "17384aa83f6fd15092ca609856824c0c"
     ],
     [
       "Pulse.Elaborate.Core.elab_lift",
@@ -109,7 +109,7 @@
         "typing_Pulse.Syntax.uu___is_C_STGhost"
       ],
       0,
-      "8607ceee1331a2a3ab6a7b9ccfeb55cc"
+      "db5f36ea4da75ffe3e8f6afdd75c27ea"
     ],
     [
       "Pulse.Elaborate.Core.elab_st_typing",
@@ -146,6 +146,7 @@
         "disc_equation_Pulse.Typing.T_Rewrite",
         "disc_equation_Pulse.Typing.T_STApp",
         "disc_equation_Pulse.Typing.T_While",
+        "disc_equation_Pulse.Typing.T_WithLocal",
         "equation_FStar.Reflection.Typing.fstar_top_env",
         "equation_Pulse.Syntax.comp_st",
         "equation_Pulse.Syntax.stateful_comp",
@@ -173,11 +174,12 @@
         "subterm_ordering_Pulse.Typing.T_Lift",
         "subterm_ordering_Pulse.Typing.T_Par",
         "subterm_ordering_Pulse.Typing.T_While",
+        "subterm_ordering_Pulse.Typing.T_WithLocal",
         "typing_Pulse.Syntax.uu___is_C_ST",
         "typing_Pulse.Typing.uu___is_T_STApp"
       ],
       0,
-      "edf7c17c5fac1eaf73ccb6b1b40bbc27"
+      "25fbed92564e7bf333d0dc0b3bb628f0"
     ]
   ]
 ]

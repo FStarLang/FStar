@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "cd9b91c8aa684f4143f3eecaa41f879e"
+      "cc70bc28c1a0e5c33453ed07b5e94bc1"
     ],
     [
       "FStar.PtrdiffT.fits_lt",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6d1d52a3331555db9d0f83e81b02a768"
+      "8e8ec4cfe49dd5dcca49e33a7de1c89f"
     ],
     [
       "FStar.PtrdiffT.v",
@@ -67,7 +67,7 @@
         "refinement_interpretation_Tm_refine_f547cc520ba3c9ffd45a92889fcd05d0"
       ],
       0,
-      "9fb1bd7b0f054d4697689e6ae79c0f62"
+      "e45c1f819d4125fdb915280b82e0bfb0"
     ],
     [
       "FStar.PtrdiffT.int_to_t",
@@ -82,7 +82,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "345c46a0714d5aeeae45bcce5d20411c"
+      "608e73d78d220099ec886f5be4a1b751"
     ],
     [
       "FStar.PtrdiffT.ptrdiff_v_inj",
@@ -94,7 +94,7 @@
         "lemma_FStar.Int64.uv_inv"
       ],
       0,
-      "97ff113935a408745c8f719d86698d07"
+      "f2bcd95a66154749273d075833327acf"
     ],
     [
       "FStar.PtrdiffT.ptrdiff_v_inj",
@@ -108,7 +108,7 @@
         "refinement_interpretation_Tm_refine_f547cc520ba3c9ffd45a92889fcd05d0"
       ],
       0,
-      "293d13fa68f692a0467a2c17c6898522"
+      "a0099d3bd8f29b9903b8c703f71fa886"
     ],
     [
       "FStar.PtrdiffT.ptrdiff_int_to_t_inj",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b2eb4cf5e02437be431171e9cab9f4e5"
+      "f4ae1b3ebc907ea6a6e35bf5817facf9"
     ],
     [
       "FStar.PtrdiffT.ptrdiff_int_to_t_inj",
@@ -134,7 +134,7 @@
         "typing_FStar.PtrdiffT.int_to_t"
       ],
       0,
-      "bec509cd5161ef2f00a94f4c293a454a"
+      "142a15ba2eea5d79abf84c1ba424c2a9"
     ],
     [
       "FStar.PtrdiffT.mk",
@@ -169,7 +169,7 @@
         "typing_FStar.PtrdiffT.max_bound"
       ],
       0,
-      "86c0be3124c9801151dc76266d144b58"
+      "5845a02aca971f554075087a6a3fd144"
     ],
     [
       "FStar.PtrdiffT.zero",
@@ -178,7 +178,7 @@
       1,
       [ "@query" ],
       0,
-      "fca1d1decfe5aa3a89e05726ca612f11"
+      "e010dbd52965644b3b7e0dba8df77e57"
     ],
     [
       "FStar.PtrdiffT.ptrdifft_to_sizet",
@@ -211,7 +211,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "08d4b4c9aaf419c855132c006988f6f7"
+      "c7b0e287e2470b0ad4892c8e39015fd6"
     ],
     [
       "FStar.PtrdiffT.add",
@@ -229,7 +229,7 @@
         "typing_FStar.Int64.v", "typing_FStar.PtrdiffT.v"
       ],
       0,
-      "ace0f3bdfc646c0964c2555f3f981851"
+      "4dcf279927196a1485efe7c82dd840f9"
     ],
     [
       "FStar.PtrdiffT.div",
@@ -241,13 +241,13 @@
         "refinement_interpretation_Tm_refine_6ae084591a21f7d4bed34f2acf042fb3"
       ],
       0,
-      "6c4723492b73ef7d15941c2a2a034f2a"
+      "36afb6a049f948d9a48da75d21fa3079"
     ],
     [
       "FStar.PtrdiffT.div",
       2,
       2,
-      2,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
@@ -259,6 +259,7 @@
         "equation_FStar.PtrdiffT.min_bound", "equation_FStar.PtrdiffT.t",
         "equation_FStar.PtrdiffT.v", "equation_Prims.abs",
         "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "lemma_FStar.Ghost.reveal_hide", "lemma_FStar.UInt.pow2_values",
@@ -266,7 +267,8 @@
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Division",
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_0766302b68bb44ab7aff8c4d8be0b46f",
@@ -274,12 +276,14 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_6ae084591a21f7d4bed34f2acf042fb3",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_a52b5446a4298e72780bb9d607e958e4",
         "refinement_interpretation_Tm_refine_b2ca36b5b680a6837d66d3c40a2bd567",
         "refinement_interpretation_Tm_refine_f547cc520ba3c9ffd45a92889fcd05d0",
-        "typing_FStar.Int.op_Slash"
+        "token_correspondence_Prims.pow2.fuel_instrumented",
+        "typing_FStar.Int.op_Slash", "typing_FStar.PtrdiffT.max_bound"
       ],
       0,
-      "d346431c5070cf42af97d80211758496"
+      "872458f6d1719eab84c386a4f0b8fc14"
     ],
     [
       "FStar.PtrdiffT.mod_spec",
@@ -309,7 +313,7 @@
         "refinement_interpretation_Tm_refine_ac60b3a483ff3158afbeff9eb077e91b"
       ],
       0,
-      "da6e8e12d49f715fbdfb73d479a17910"
+      "4960f78851e99541a23e60d085b31fea"
     ],
     [
       "FStar.PtrdiffT.rem",
@@ -321,7 +325,7 @@
         "refinement_interpretation_Tm_refine_6ae084591a21f7d4bed34f2acf042fb3"
       ],
       0,
-      "1a83fc2695b89e71c0adab37ad7fd2f6"
+      "bfd1d69759ae0cfcb12a67dbedd84957"
     ],
     [
       "FStar.PtrdiffT.rem",
@@ -361,7 +365,7 @@
         "typing_FStar.PtrdiffT.v"
       ],
       0,
-      "319d3bd1b841e4fa5ecaef49054b6424"
+      "e4b677d6f609c1de838acd3667429c74"
     ],
     [
       "FStar.PtrdiffT.gt",
@@ -373,7 +377,7 @@
         "equation_FStar.PtrdiffT.v"
       ],
       0,
-      "c2f2814ec6e4341677a5401c71a94057"
+      "a27afd0e02990e7164f4d32ad15ac3b0"
     ],
     [
       "FStar.PtrdiffT.gte",
@@ -385,7 +389,7 @@
         "equation_FStar.PtrdiffT.v"
       ],
       0,
-      "e097c4c9d18a0fdb1159aa194ffd062d"
+      "6d9f7e73645e328fefd55c5f68aae867"
     ],
     [
       "FStar.PtrdiffT.lt",
@@ -397,7 +401,7 @@
         "equation_FStar.PtrdiffT.v"
       ],
       0,
-      "279f13525b745b0ac0711ee558d081f6"
+      "87a953956a56fa2061971f226ca182bc"
     ],
     [
       "FStar.PtrdiffT.lte",
@@ -409,7 +413,7 @@
         "equation_FStar.PtrdiffT.v"
       ],
       0,
-      "ff5e89a83b6a6e06866fba866f4376dc"
+      "38cc398e5626d1873e5e16ed8b453ae2"
     ]
   ]
 ]

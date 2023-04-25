@@ -1,5 +1,5 @@
 [
-  "\nÁo?e\u001bÏC|h†ù\u0012\b\u0012Z",
+  "∑ÅÀg|(`\u0014m\u000e\u0011≈\t\r∫",
   [
     [
       "Pulse.Syntax.Printer.constant_to_string",
@@ -18,7 +18,7 @@
         "typing_Pulse.Syntax.uu___is_Unit"
       ],
       0,
-      "b8bf4e47b28e89bb0e57b5fa7f6f8c9c"
+      "9b089a241c5395f4256828a536286709"
     ],
     [
       "Pulse.Syntax.Printer.universe_to_string",
@@ -44,7 +44,7 @@
         "subterm_ordering_Pulse.Syntax.U_succ"
       ],
       0,
-      "388766326fade127d0d748b3d73ac4a7"
+      "eb50c26467c8f467eeb417f1b1c0a163"
     ],
     [
       "Pulse.Syntax.Printer.univ_to_string",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "7c4756a8303b38f81cddf7dbbbcfeccc"
+      "78f1bc90e1adc9949699906703eacf33"
     ],
     [
       "Pulse.Syntax.Printer.qual_to_string",
@@ -65,7 +65,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "a79d893521b1b71510a47f1c94927e57"
+      "226a52c14b7e7a09fe535d9bb7244ccf"
     ],
     [
       "Pulse.Syntax.Printer.term_to_string",
@@ -100,7 +100,7 @@
         "projection_inverse_BoxBool_proj_0", "string_typing"
       ],
       0,
-      "500a3cab6ce727e423dfc51e3dc448aa"
+      "0f14b760dc66bdf26347cbf3449f8d97"
     ],
     [
       "Pulse.Syntax.Printer.term_to_string",
@@ -114,7 +114,7 @@
         "string_typing"
       ],
       0,
-      "e0324cf005945c4b7ab5c932cdaa76f3"
+      "b2caeacbb6789915305ff494d7a4e520"
     ],
     [
       "Pulse.Syntax.Printer.term_to_string",
@@ -133,7 +133,7 @@
         "projection_inverse_BoxBool_proj_0", "string_typing"
       ],
       0,
-      "93dbd57bfcaf718d5bafcda9ab730c06"
+      "bb8e07856fb07c023f3620f4db219075"
     ],
     [
       "Pulse.Syntax.Printer.term_opt_to_string",
@@ -145,7 +145,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "5c40ddd1ef17fd18a4aa123d172928de"
+      "cfbd48a4a4af49d7944300f84f92d289"
     ],
     [
       "Pulse.Syntax.Printer.st_term_to_string",
@@ -175,6 +175,7 @@
         "disc_equation_Pulse.Syntax.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Tm_STApp",
         "disc_equation_Pulse.Syntax.Tm_While",
+        "disc_equation_Pulse.Syntax.Tm_WithLocal",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "fuel_guarded_inversion_Pulse.Syntax.ctag",
         "fuel_guarded_inversion_Pulse.Syntax.st_term",
@@ -195,7 +196,7 @@
         "typing_Pulse.Syntax.uu___is_Tm_Protect"
       ],
       0,
-      "f05c986657d6b06d4acaefa4ce9a330e"
+      "20a6c70256e1dbc37e4cb00cb188a0af"
     ]
   ]
 ]
