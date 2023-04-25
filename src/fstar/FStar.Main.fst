@@ -153,7 +153,7 @@ let go _ =
         else if Options.lsp_server () then
           FStar.Interactive.Lsp.start_server ()
 
-        (* For the following cases we might need fstartaclib/native tactics, try to load *)
+        (* For the following cases we might need native tactics, try to load *)
         else begin
         load_native_tactics ();
 

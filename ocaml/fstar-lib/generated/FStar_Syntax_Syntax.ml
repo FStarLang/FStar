@@ -1907,7 +1907,7 @@ let (null_id : FStar_Ident.ident) =
   FStar_Ident.mk_ident ("_", FStar_Compiler_Range.dummyRange)
 let (null_bv : term -> bv) =
   fun k ->
-    let uu___ = FStar_Ident.next_id () in
+    let uu___ = FStar_GenSym.next_id () in
     { ppname = null_id; index = uu___; sort = k }
 let (is_null_bv : bv -> Prims.bool) =
   fun b ->
@@ -1929,7 +1929,7 @@ let (gen_bv' :
   fun id ->
     fun r ->
       fun t ->
-        let uu___ = FStar_Ident.next_id () in
+        let uu___ = FStar_GenSym.next_id () in
         { ppname = id; index = uu___; sort = t }
 let (gen_bv :
   Prims.string ->
@@ -1952,7 +1952,7 @@ let (freshen_bv : bv -> bv) =
         let uu___2 = range_of_bv bv1 in FStar_Pervasives_Native.Some uu___2 in
       new_bv uu___1 bv1.sort
     else
-      (let uu___2 = FStar_Ident.next_id () in
+      (let uu___2 = FStar_GenSym.next_id () in
        { ppname = (bv1.ppname); index = uu___2; sort = (bv1.sort) })
 let (mk_binder_with_attrs :
   bv ->
@@ -2059,7 +2059,7 @@ let (freshen_binder : binder -> binder) =
 let (new_univ_name :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option -> univ_name) =
   fun ropt ->
-    let id = FStar_Ident.next_id () in
+    let id = FStar_GenSym.next_id () in
     let uu___ =
       let uu___1 =
         let uu___2 = FStar_Compiler_Util.string_of_int id in

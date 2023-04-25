@@ -25,10 +25,11 @@ open FStar.Compiler.Range
 open FStar.Ident
 open FStar.Const
 open FStar.Compiler.Dyn
-module O = FStar.Options
-module PC = FStar.Parser.Const
 open FStar.VConfig
-module Err = FStar.Errors
+module O    = FStar.Options
+module PC   = FStar.Parser.Const
+module Err  = FStar.Errors
+module GS   = FStar.GenSym
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
@@ -180,9 +181,11 @@ let is_teff (t:term) = match t.n with
 let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false
+
 (* Gen sym *)
 let null_id  = mk_ident("_", dummyRange)
-let null_bv k = {ppname=null_id; index=Ident.next_id(); sort=k}
+let null_bv k = {ppname=null_id; index=GS.next_id(); sort=k}
+
 let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
 let is_null_binder (b:binder) = is_null_bv b.binder_bv
 let range_of_ropt = function
@@ -190,7 +193,7 @@ let range_of_ropt = function
     | Some r -> r
 
 let gen_bv' (id : ident) (r : option Range.range) (t : typ) : bv =
-  {ppname=id; index=Ident.next_id(); sort=t}
+  {ppname=id; index=GS.next_id(); sort=t}
 
 let gen_bv (s : string) (r : option Range.range) (t : typ) : bv =
   let id = mk_ident(s, range_of_ropt r) in
@@ -200,7 +203,7 @@ let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
 let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
-    else {bv with index=Ident.next_id()}
+    else {bv with index=GS.next_id()}
 let mk_binder_with_attrs bv aqual pqual attrs = {
   binder_bv = bv;
   binder_qual = aqual;
@@ -242,7 +245,7 @@ let pat_bvs (p:pat) : list bv =
 let freshen_binder (b:binder) = { b with binder_bv = freshen_bv b.binder_bv }
 
 let new_univ_name ropt =
-    let id = Ident.next_id() in
+    let id = GS.next_id() in
     mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y

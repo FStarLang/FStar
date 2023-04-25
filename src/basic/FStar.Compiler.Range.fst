@@ -20,10 +20,10 @@ module Options = FStar.Options
 open FStar.BaseTypes
 open FStar.Compiler.Util
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type file_name = string
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type pos = {
   line:int;
   col: int
@@ -33,13 +33,13 @@ let pos_geq p1 p2 =
    (p1.line > p2.line ||
    (p1.line = p2.line && p1.col >= p2.col))
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type rng = {
   file_name:file_name;
   start_pos:pos;
   end_pos:pos;
 }
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type range = {
   def_range:rng;
   use_range:rng

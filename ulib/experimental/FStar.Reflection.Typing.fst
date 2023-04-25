@@ -108,14 +108,18 @@ let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:typing g e t) = a
 let type_correctness (g:R.env) (e:R.term) (t:R.term) (_:typing g e t) = magic ()
 
 let rec binder_offset_pattern_invariant (p:pattern) (s:open_or_close) (i:nat)
-  : Lemma (binder_offset_pattern p == binder_offset_pattern (open_or_close_pattern' p s i))
+  : Lemma (ensures binder_offset_pattern p ==
+                   binder_offset_pattern (open_or_close_pattern' p s i))
+          (decreases p)
   = match p with
     | Pat_Cons _ _ pats ->
       binder_offset_patterns_invariant pats s i
     | _ -> ()
 
 and binder_offset_patterns_invariant (p:list (pattern & bool)) (s:open_or_close) (i:nat)
-  : Lemma (binder_offset_patterns p == binder_offset_patterns (open_or_close_patterns' p s i))
+  : Lemma (ensures binder_offset_patterns p ==
+                   binder_offset_patterns (open_or_close_patterns' p s i))
+          (decreases p)
   = match p with
     | [] -> ()
     | (hd, _)::tl ->
@@ -601,7 +605,8 @@ let close_open_inverse (e:R.term) (x:var {~ (x `Set.mem` freevars e) })
 let rec close_with_not_free_var (t:R.term) (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars t)))
-      (ensures open_or_close_term' t (CloseVar x) i == t) =
+      (ensures open_or_close_term' t (CloseVar x) i == t)
+      (decreases t) =
 
   match inspect_ln t with
   | Tv_Var _
@@ -657,7 +662,8 @@ and close_match_returns_with_not_free_var
   (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_match_returns r)))
-      (ensures open_or_close_match_returns' r (CloseVar x) i == r) =
+      (ensures open_or_close_match_returns' r (CloseVar x) i == r)
+      (decreases r) =
 
   let b, (ret, as_opt, _) = r in
   close_binder_with_not_free_var b x i;
@@ -673,7 +679,8 @@ and close_branches_with_not_free_var
   (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_branches brs)))
-      (ensures open_or_close_branches' brs (CloseVar x) i == brs) =
+      (ensures open_or_close_branches' brs (CloseVar x) i == brs)
+      (decreases brs) =
 
   match brs with
   | [] -> ()
@@ -686,7 +693,8 @@ and close_branch_with_not_free_var
   (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_branch br)))
-      (ensures open_or_close_branch' br (CloseVar x) i == br) =
+      (ensures open_or_close_branch' br (CloseVar x) i == br)
+      (decreases br) =
 
   let p, t = br in
   close_pattern_with_not_free_var p x i;
@@ -695,7 +703,8 @@ and close_branch_with_not_free_var
 and close_pattern_with_not_free_var (p:R.pattern) (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_pattern p)))
-      (ensures open_or_close_pattern' p (CloseVar x) i == p) =
+      (ensures open_or_close_pattern' p (CloseVar x) i == p)
+      (decreases p) =
 
   match p with
   | Pat_Constant _ -> ()
@@ -711,7 +720,8 @@ and close_pattern_with_not_free_var (p:R.pattern) (x:var) (i:nat)
 and close_patterns_with_not_free_var (l:list (R.pattern & bool)) (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_patterns l)))
-      (ensures open_or_close_patterns' l (CloseVar x) i == l) =
+      (ensures open_or_close_patterns' l (CloseVar x) i == l)
+      (decreases l) =
 
   match l with
   | [] -> ()
@@ -722,7 +732,8 @@ and close_patterns_with_not_free_var (l:list (R.pattern & bool)) (x:var) (i:nat)
 and close_terms_with_not_free_var (l:list R.term) (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_terms l)))
-      (ensures open_or_close_terms' l (CloseVar x) i == l) =
+      (ensures open_or_close_terms' l (CloseVar x) i == l)
+      (decreases l) =
 
   match l with
   | [] -> ()
@@ -733,7 +744,8 @@ and close_terms_with_not_free_var (l:list R.term) (x:var) (i:nat)
 and close_binder_with_not_free_var (b:R.binder) (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_binder b)))
-      (ensures open_or_close_binder' b (CloseVar x) i == b) =
+      (ensures open_or_close_binder' b (CloseVar x) i == b)
+      (decreases b) =
 
   let {binder_bv; binder_attrs} = inspect_binder b in
   close_bv_with_not_free_var binder_bv x i;
@@ -742,7 +754,8 @@ and close_binder_with_not_free_var (b:R.binder) (x:var) (i:nat)
 and close_bv_with_not_free_var (b:R.bv) (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_bv b)))
-      (ensures open_or_close_bv' b (CloseVar x) i == b) =
+      (ensures open_or_close_bv' b (CloseVar x) i == b)
+      (decreases b) =
 
   let {bv_sort} = inspect_bv b in
   close_with_not_free_var bv_sort x i
@@ -750,7 +763,8 @@ and close_bv_with_not_free_var (b:R.bv) (x:var) (i:nat)
 and close_comp_with_not_free_var (c:R.comp) (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_comp c)))
-      (ensures open_or_close_comp' c (CloseVar x) i == c) =
+      (ensures open_or_close_comp' c (CloseVar x) i == c)
+      (decreases c) =
 
   match inspect_comp c with
   | C_Total t
@@ -767,7 +781,8 @@ and close_comp_with_not_free_var (c:R.comp) (x:var) (i:nat)
 and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
   : Lemma
       (requires ~ (Set.mem x (freevars_args l)))
-      (ensures open_or_close_args' l (CloseVar x) i == l) =
+      (ensures open_or_close_args' l (CloseVar x) i == l)
+      (decreases l) =
 
   match l with
   | [] -> ()

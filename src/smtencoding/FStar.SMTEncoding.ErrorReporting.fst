@@ -125,9 +125,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           begin try
               begin match arg.tm with
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->
-                  let post_name = "^^post_condition_"^ (BU.string_of_int <| Ident.next_id ()) in
+                  let post_name = "^^post_condition_"^ (BU.string_of_int <| GenSym.next_id ()) in
                   let names = mk_fv (post_name, post)
-                              ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Ident.next_id()), s)) sorts in
+                              ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| GenSym.next_id()), s)) sorts in
                   let instantiation = List.map mkFreeV names in
                   let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
@@ -169,7 +169,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
 
                 | _ -> //not in the form produced by an application of M_stronger
-                  fallback ("arg not a quant: " ^ (Term.print_smt_term arg))
+                  fallback ("arg not a quant: ")// ^ (Term.print_smt_term arg))
               end
           with Not_a_wp_implication msg -> fallback msg
           end
@@ -180,9 +180,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Forall, [], None, sorts, {tm=App(Imp, [lhs;rhs]); rng=rng})
             when is_a_named_continuation lhs ->
           let sorts', post = BU.prefix sorts in
-          let new_post_name = "^^post_condition_"^ (BU.string_of_int <| Ident.next_id ()) in
+          let new_post_name = "^^post_condition_"^ (BU.string_of_int <| GenSym.next_id ()) in
           //printfn "Got a named continuation with post-condition %s" new_post_name;
-          let names = List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Ident.next_id()), s)) sorts'
+          let names = List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| GenSym.next_id()), s)) sorts'
                              @ [mk_fv (new_post_name, post)] in
           let instantiation = List.map mkFreeV names in
           let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
