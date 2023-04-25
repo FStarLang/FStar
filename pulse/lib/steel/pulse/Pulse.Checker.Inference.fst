@@ -10,6 +10,7 @@ open Pulse.Checker.Framing
 module P = Pulse.Syntax.Printer
 
 module RT = FStar.Reflection.Typing
+module RUtil = Pulse.Reflection.Util
 
 let rec gen_uvars (t_head:term) : T.Tac (list term & comp) =
   match t_head with
@@ -40,24 +41,42 @@ let rec check_valid_solution (t1 t2:term) (uv_sols:list (term & term))
          else T.fail "check_valid_solution failed"
     else (t1', t2')::(check_valid_solution t1 t2 tl)
 
+let is_reveal_uvar (t:term) : option (universe & term & term) =
+  match t with
+  | Tm_PureApp (Tm_PureApp (Tm_UInst l [u]) (Some Implicit) ty) None (Tm_UVar n) ->
+    if l = RUtil.reveal_lid
+    then Some (u, ty, Tm_UVar n)
+    else None
+  | _ -> None
+
+let is_reveal (t:term) : bool =
+  let hd, _ = leftmost_head_and_args t in
+  match hd with
+  | Tm_UInst l [_] -> l = RUtil.reveal_lid
+  | _ -> false
+
 let rec match_typ (t1 t2:term) (uv_sols:list (term & term))
   : T.Tac (list (term & term)) =
 
-  match t1, t2 with
-  | Tm_UVar n, _ ->
-    check_valid_solution t1 t2 uv_sols
-  | _, Tm_UVar _ -> T.fail "match_typ: t2 is a uvar"
+  match is_reveal_uvar t1, is_reveal t2 with
+  | Some (u, ty, t), false ->
+    check_valid_solution t (mk_hide u ty t2) uv_sols
+  | _ ->
+    match t1, t2 with
+    | Tm_UVar n, _ ->
+      check_valid_solution t1 t2 uv_sols
+    | _, Tm_UVar _ -> T.fail "match_typ: t2 is a uvar"
 
-  | Tm_PureApp head1 arg_qual1 arg1, Tm_PureApp head2 arg_qual2 arg2 ->
-    if arg_qual1 = arg_qual2
-    then let uv_sols = match_typ head1 head2 uv_sols in
-         match_typ arg1 arg2 uv_sols
-    else uv_sols
+    | Tm_PureApp head1 arg_qual1 arg1, Tm_PureApp head2 arg_qual2 arg2 ->
+      if arg_qual1 = arg_qual2
+      then let uv_sols = match_typ head1 head2 uv_sols in
+           match_typ arg1 arg2 uv_sols
+      else uv_sols
 
-  | Tm_Pure t1, Tm_Pure t2 ->
-    match_typ t1 t2 uv_sols
+    | Tm_Pure t1, Tm_Pure t2 ->
+      match_typ t1 t2 uv_sols
     
-  | _, _ -> uv_sols
+    | _, _ -> uv_sols
 
 let rec atomic_vprop_has_uvar (t:term) : bool =
   match t with
@@ -69,15 +88,17 @@ let rec atomic_vprop_has_uvar (t:term) : bool =
   | _ -> false
 
 let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
-  match t1, t2 with
-  | Tm_UVar _, _ -> true
-  | Tm_PureApp head1 q1 arg1, Tm_PureApp head2 q2 arg2 ->
-    atomic_vprops_may_match head1 head2 &&
-    q1 = q2 &&
-    atomic_vprops_may_match arg1 arg2
-  | Tm_Pure x, Tm_Pure y ->
-    atomic_vprops_may_match x y
-  | _, _ -> eq_tm t1 t2
+  if Some? (is_reveal_uvar t1) && not (is_reveal t2)
+  then true
+  else match t1, t2 with
+    | Tm_UVar _, _ -> true
+    | Tm_PureApp head1 q1 arg1, Tm_PureApp head2 q2 arg2 ->
+      atomic_vprops_may_match head1 head2 &&
+      q1 = q2 &&
+      atomic_vprops_may_match arg1 arg2
+    | Tm_Pure x, Tm_Pure y ->
+      atomic_vprops_may_match x y
+    | _, _ -> eq_tm t1 t2
 
 let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (term & term))
   : T.Tac (list (term & term)) =
