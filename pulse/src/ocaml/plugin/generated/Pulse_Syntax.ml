@@ -41,39 +41,24 @@ let (__proj__U_max__item___1 : universe -> universe) =
 let (uu___is_U_unknown : universe -> Prims.bool) =
   fun projectee -> match projectee with | U_unknown -> true | uu___ -> false
 type ppname = FStar_Reflection_Typing.pp_name_t
-type range = (Prims.range, unit) FStar_Sealed_Inhabited.sealed
-let (default_range : range) =
-  FStar_Sealed.seal
-    (Prims.mk_range "." Prims.int_zero Prims.int_zero Prims.int_zero
-       Prims.int_zero)
-let (range_of_term : FStar_Reflection_Types.term -> range) =
-  fun t -> FStar_Sealed.seal (FStar_Reflection_Builtins.range_of_term t)
 type bv = {
   bv_index: index ;
-  bv_ppname: ppname ;
-  bv_range: range }
+  bv_ppname: ppname }
 let (__proj__Mkbv__item__bv_index : bv -> index) =
   fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_index
+    match projectee with | { bv_index; bv_ppname;_} -> bv_index
 let (__proj__Mkbv__item__bv_ppname : bv -> ppname) =
   fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_ppname
-let (__proj__Mkbv__item__bv_range : bv -> range) =
-  fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_range
+    match projectee with | { bv_index; bv_ppname;_} -> bv_ppname
 type nm = {
   nm_index: var ;
-  nm_ppname: ppname ;
-  nm_range: range }
+  nm_ppname: ppname }
 let (__proj__Mknm__item__nm_index : nm -> var) =
   fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_index
+    match projectee with | { nm_index; nm_ppname;_} -> nm_index
 let (__proj__Mknm__item__nm_ppname : nm -> ppname) =
   fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_ppname
-let (__proj__Mknm__item__nm_range : nm -> range) =
-  fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_range
+    match projectee with | { nm_index; nm_ppname;_} -> nm_ppname
 type qualifier =
   | Implicit 
 let (uu___is_Implicit : qualifier -> Prims.bool) = fun projectee -> true
@@ -82,20 +67,11 @@ let (should_elim_true : should_elim_t) =
   FStar_Sealed_Inhabited.seal false true
 let (should_elim_false : should_elim_t) =
   FStar_Sealed_Inhabited.seal false false
-type fv = {
-  fv_name: FStar_Reflection_Types.name ;
-  fv_range: range }
-let (__proj__Mkfv__item__fv_name : fv -> FStar_Reflection_Types.name) =
-  fun projectee -> match projectee with | { fv_name; fv_range;_} -> fv_name
-let (__proj__Mkfv__item__fv_range : fv -> range) =
-  fun projectee -> match projectee with | { fv_name; fv_range;_} -> fv_range
-let (as_fv : FStar_Reflection_Types.name -> fv) =
-  fun l -> { fv_name = l; fv_range = default_range }
 type term =
   | Tm_BVar of bv 
   | Tm_Var of nm 
-  | Tm_FVar of fv 
-  | Tm_UInst of fv * universe Prims.list 
+  | Tm_FVar of FStar_Reflection_Types.name 
+  | Tm_UInst of FStar_Reflection_Types.name * universe Prims.list 
   | Tm_Constant of constant 
   | Tm_Refine of binder * term 
   | Tm_PureApp of term * qualifier FStar_Pervasives_Native.option * term 
@@ -187,6 +163,7 @@ type st_term =
   | Tm_IntroExists of Prims.bool * vprop * term Prims.list 
   | Tm_While of term * st_term * st_term 
   | Tm_Par of term * st_term * term * term * st_term * term 
+  | Tm_WithLocal of term * st_term 
   | Tm_Rewrite of term * term 
   | Tm_Admit of ctag * universe * term * term FStar_Pervasives_Native.option
   
@@ -205,6 +182,8 @@ let uu___is_Tm_IntroExists uu___ =
 let uu___is_Tm_While uu___ =
   match uu___ with | Tm_While _ -> true | _ -> false
 let uu___is_Tm_Par uu___ = match uu___ with | Tm_Par _ -> true | _ -> false
+let uu___is_Tm_WithLocal uu___ =
+  match uu___ with | Tm_WithLocal _ -> true | _ -> false
 let uu___is_Tm_Rewrite uu___ =
   match uu___ with | Tm_Rewrite _ -> true | _ -> false
 let uu___is_Tm_Admit uu___ =
@@ -291,6 +270,7 @@ let rec (freevars_st : st_term -> var FStar_Set.set) =
              (FStar_Set.union (freevars_st eL) (freevars postL)))
           (FStar_Set.union (freevars preR)
              (FStar_Set.union (freevars_st eR) (freevars postR)))
+    | Tm_WithLocal (t1, t2) -> FStar_Set.union (freevars t1) (freevars_st t2)
     | Tm_Rewrite (t1, t2) -> FStar_Set.union (freevars t1) (freevars t2)
     | Tm_Admit (uu___, uu___1, t1, post) ->
         FStar_Set.union (freevars t1) (freevars_opt post)
@@ -299,8 +279,7 @@ let rec (ln' : term -> Prims.int -> Prims.bool) =
   fun t ->
     fun i ->
       match t with
-      | Tm_BVar { bv_index = j; bv_ppname = uu___; bv_range = uu___1;_} ->
-          j <= i
+      | Tm_BVar { bv_index = j; bv_ppname = uu___;_} -> j <= i
       | Tm_Var uu___ -> true
       | Tm_FVar uu___ -> true
       | Tm_UInst (uu___, uu___1) -> true
@@ -373,6 +352,8 @@ let rec (ln_st' : st_term -> Prims.int -> Prims.bool) =
               && (ln' preR i))
              && (ln_st' eR i))
             && (ln' postR (i + Prims.int_one))
+      | Tm_WithLocal (t1, t2) ->
+          (ln' t1 i) && (ln_st' t2 (i + Prims.int_one))
       | Tm_Rewrite (t1, t2) -> (ln' t1 i) && (ln' t2 i)
       | Tm_Admit (uu___, uu___1, t1, post) ->
           (ln' t1 i) && (ln_opt' post (i + Prims.int_one))
@@ -504,6 +485,9 @@ let rec (open_st_term' : st_term -> term -> index -> st_term) =
                 (open_term' postL v (i + Prims.int_one)),
                 (open_term' preR v i), (open_st_term' eR v i),
                 (open_term' postR v (i + Prims.int_one)))
+        | Tm_WithLocal (e1, e2) ->
+            Tm_WithLocal
+              ((open_term' e1 v i), (open_st_term' e2 v (i + Prims.int_one)))
         | Tm_Rewrite (e1, e2) ->
             Tm_Rewrite ((open_term' e1 v i), (open_term' e2 v i))
         | Tm_Admit (c, u, t1, post) ->
@@ -518,8 +502,7 @@ let (open_term : term -> var -> term) =
         (Tm_Var
            {
              nm_index = v;
-             nm_ppname = FStar_Reflection_Typing.pp_name_default;
-             nm_range = default_range
+             nm_ppname = FStar_Reflection_Typing.pp_name_default
            }) Prims.int_zero
 let (open_st_term : st_term -> var -> st_term) =
   fun t ->
@@ -528,8 +511,7 @@ let (open_st_term : st_term -> var -> st_term) =
         (Tm_Var
            {
              nm_index = v;
-             nm_ppname = FStar_Reflection_Typing.pp_name_default;
-             nm_range = default_range
+             nm_ppname = FStar_Reflection_Typing.pp_name_default
            }) Prims.int_zero
 let (open_comp_with : comp -> term -> comp) =
   fun c -> fun x -> open_comp' c x Prims.int_zero
@@ -540,13 +522,7 @@ let rec (close_term' : term -> var -> index -> term) =
         match t with
         | Tm_Var nm1 ->
             if nm1.nm_index = v
-            then
-              Tm_BVar
-                {
-                  bv_index = i;
-                  bv_ppname = (nm1.nm_ppname);
-                  bv_range = (nm1.nm_range)
-                }
+            then Tm_BVar { bv_index = i; bv_ppname = (nm1.nm_ppname) }
             else t
         | Tm_BVar uu___ -> t
         | Tm_FVar uu___ -> t
@@ -667,6 +643,10 @@ let rec (close_st_term' : st_term -> var -> index -> st_term) =
                 (close_term' postL v (i + Prims.int_one)),
                 (close_term' preR v i), (close_st_term' eR v i),
                 (close_term' postR v (i + Prims.int_one)))
+        | Tm_WithLocal (e1, e2) ->
+            Tm_WithLocal
+              ((close_term' e1 v i),
+                (close_st_term' e2 v (i + Prims.int_one)))
         | Tm_Rewrite (e1, e2) ->
             Tm_Rewrite ((close_term' e1 v i), (close_term' e2 v i))
         | Tm_Admit (c, u, t1, post) ->
@@ -729,11 +709,7 @@ let (comp_inames : comp -> term) =
 let (term_of_var : var -> term) =
   fun x ->
     Tm_Var
-      {
-        nm_index = x;
-        nm_ppname = FStar_Reflection_Typing.pp_name_default;
-        nm_range = default_range
-      }
+      { nm_index = x; nm_ppname = FStar_Reflection_Typing.pp_name_default }
 let (null_binder : term -> binder) =
   fun t ->
     { binder_ty = t; binder_ppname = FStar_Reflection_Typing.pp_name_default
@@ -745,39 +721,27 @@ let (mk_binder : Prims.string -> term -> binder) =
         binder_ty = t;
         binder_ppname = (FStar_Reflection_Typing.seal_pp_name s)
       }
-let (mk_bvar : Prims.string -> range -> index -> term) =
+let (mk_bvar : Prims.string -> index -> term) =
   fun s ->
-    fun r ->
-      fun i ->
-        Tm_BVar
-          {
-            bv_index = i;
-            bv_ppname = (FStar_Reflection_Typing.seal_pp_name s);
-            bv_range = r
-          }
+    fun i ->
+      Tm_BVar
+        { bv_index = i; bv_ppname = (FStar_Reflection_Typing.seal_pp_name s)
+        }
 let (null_var : var -> term) =
   fun v ->
     Tm_Var
-      {
-        nm_index = v;
-        nm_ppname = FStar_Reflection_Typing.pp_name_default;
-        nm_range = default_range
-      }
+      { nm_index = v; nm_ppname = FStar_Reflection_Typing.pp_name_default }
 let (null_bvar : index -> term) =
   fun i ->
     Tm_BVar
-      {
-        bv_index = i;
-        bv_ppname = FStar_Reflection_Typing.pp_name_default;
-        bv_range = default_range
-      }
+      { bv_index = i; bv_ppname = FStar_Reflection_Typing.pp_name_default }
 let (gen_uvar : term -> (term, unit) FStar_Tactics_Effect.tac_repr) =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "Pulse.Syntax.fst" (Prims.of_int (886))
-         (Prims.of_int (10)) (Prims.of_int (886)) (Prims.of_int (22)))
-      (Prims.mk_range "Pulse.Syntax.fst" (Prims.of_int (886))
-         (Prims.of_int (2)) (Prims.of_int (886)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fst" (Prims.of_int (888))
+         (Prims.of_int (10)) (Prims.of_int (888)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fst" (Prims.of_int (888))
+         (Prims.of_int (2)) (Prims.of_int (888)) (Prims.of_int (22)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> Tm_UVar uu___))
@@ -792,9 +756,8 @@ let rec (eq_tm : term -> term -> Prims.bool) =
       | (Tm_Unknown, Tm_Unknown) -> true
       | (Tm_BVar x1, Tm_BVar x2) -> x1.bv_index = x2.bv_index
       | (Tm_Var x1, Tm_Var x2) -> x1.nm_index = x2.nm_index
-      | (Tm_FVar x1, Tm_FVar x2) -> x1.fv_name = x2.fv_name
-      | (Tm_UInst (x1, us1), Tm_UInst (x2, us2)) ->
-          (x1.fv_name = x2.fv_name) && (us1 = us2)
+      | (Tm_FVar x1, Tm_FVar x2) -> x1 = x2
+      | (Tm_UInst (x1, us1), Tm_UInst (x2, us2)) -> (x1 = x2) && (us1 = us2)
       | (Tm_Constant c1, Tm_Constant c2) -> c1 = c2
       | (Tm_Refine (b1, t11), Tm_Refine (b2, t21)) ->
           (eq_tm b1.binder_ty b2.binder_ty) && (eq_tm t11 t21)
@@ -880,6 +843,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
               && (eq_tm preR1 preR2))
              && (eq_st_term eR1 eR2))
             && (eq_tm postR1 postR2)
+      | (Tm_WithLocal (e1, e2), Tm_WithLocal (e3, e4)) ->
+          (eq_tm e1 e3) && (eq_st_term e2 e4)
       | (Tm_Rewrite (e1, e2), Tm_Rewrite (e3, e4)) ->
           (eq_tm e1 e3) && (eq_tm e2 e4)
       | (Tm_Admit (c1, u1, t11, post1), Tm_Admit (c2, u2, t21, post2)) ->

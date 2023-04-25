@@ -41,7 +41,7 @@ steelc: steel
 	+$(MAKE) -C c
 
 clean:
-	rm -f .depend* *.checked
+	rm -f .depend* *.checked */.depend* */*.checked
 
 .PHONY: all steel clean %.fst-in %.fsti-in
 

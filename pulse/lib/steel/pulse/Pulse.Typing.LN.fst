@@ -162,8 +162,12 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' postR x (i + 1)
 
     | Tm_Rewrite p q ->
-				  open_term_ln' p x i;
-						open_term_ln' q x i
+      open_term_ln' p x i;
+      open_term_ln' q x i
+
+    | Tm_WithLocal init e ->
+      open_term_ln' init x i;
+      open_st_term_ln' e x (i + 1)
 
     | Tm_Admit _ _ t post ->
       open_term_ln' t x i;
@@ -324,8 +328,12 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening postR (i + 1) (j + 1)
 
     | Tm_Rewrite p q ->
-				  ln_weakening p i j;
-						ln_weakening q i j
+      ln_weakening p i j;
+      ln_weakening q i j
+
+    | Tm_WithLocal init e ->
+      ln_weakening init i j;
+      ln_weakening_st e (i + 1) (j + 1)
 
     | Tm_Admit _ _ t post ->
       ln_weakening t i j;
@@ -481,8 +489,12 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' postR x (i + 1)
 
     | Tm_Rewrite p q ->
-				  open_term_ln_inv' p x i;
-						open_term_ln_inv' q x i
+      open_term_ln_inv' p x i;
+      open_term_ln_inv' q x i
+
+    | Tm_WithLocal init e ->
+      open_term_ln_inv' init x i;
+      open_term_ln_inv_st' e x (i + 1)
 
     | Tm_Admit _ _ t post ->
       open_term_ln_inv' t x i;
@@ -632,8 +644,12 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' postR x (i + 1)
 
     | Tm_Rewrite p q ->
-				  close_term_ln' p x i;
-						close_term_ln' q x i
+      close_term_ln' p x i;
+      close_term_ln' q x i
+
+    | Tm_WithLocal init e ->
+      close_term_ln' init x i;
+      close_st_term_ln' e x (i + 1)
 
     | Tm_Admit _ _ t post ->
       close_term_ln' t x i;
@@ -704,6 +720,26 @@ let bind_comp_ln #f #g #x #c1 #c2 #c (d:bind_comp f g x c1 c2 c)
     (ensures ln_c c)
   = ()
 
+let st_comp_typing_ln (#f:_) (#g:_) (#st:_) (d:st_comp_typing f g st)
+  : Lemma (ensures ln_st_comp st (-1)) =
+  
+  let STC _ {post} x res_typing pre_typing post_typing = d in
+  tot_typing_ln res_typing;
+  tot_typing_ln pre_typing;
+  tot_typing_ln post_typing;
+  open_term_ln' post (null_var x) 0
+
+let comp_typing_ln (#f:_) (#g:_) (#c:_) (#u:_) (d:comp_typing f g c u)
+  : Lemma (ensures ln_c c) =
+
+  match d with
+  | CT_Tot _ _ _ t_typing -> tot_typing_ln t_typing
+  | CT_ST _ _ st_typing -> st_comp_typing_ln st_typing
+  | CT_STAtomic _ _ _ inames_typing st_typing
+  | CT_STGhost _ _ _ inames_typing st_typing ->
+    tot_typing_ln inames_typing;
+    st_comp_typing_ln st_typing
+
 #push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 30"
 let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
                      (d:st_typing f g t c)
@@ -760,7 +796,7 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
     | T_ElimExists _ u t p x dt dv ->
       tot_typing_ln dt;
       tot_typing_ln dv;
-      let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=default_range} in
+      let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
       open_term_ln_inv' p (Pulse.Typing.mk_reveal u t x_tm) 0;
       close_term_ln' (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0) x 0
 
@@ -801,6 +837,12 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
     | T_Rewrite _ _ _ p_typing equiv_p_q ->
       tot_typing_ln p_typing;
       vprop_equiv_ln equiv_p_q
+
+    | T_WithLocal g init body init_t c x init_typing init_t_typing c_typing body_typing ->
+      tot_typing_ln init_typing;
+      st_typing_ln body_typing;
+      open_st_term_ln' body (null_var x) 0;
+      comp_typing_ln c_typing
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_typing_ln t_typing;

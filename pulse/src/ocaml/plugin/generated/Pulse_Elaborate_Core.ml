@@ -391,6 +391,36 @@ let rec (elab_st_typing :
                 let rp = Pulse_Elaborate_Pure.elab_term p in
                 let rq = Pulse_Elaborate_Pure.elab_term q in
                 Pulse_Reflection_Util.mk_rewrite rp rq
+            | Pulse_Typing.T_WithLocal
+                (uu___, init, uu___1, init_t, c1, x, uu___2, uu___3, uu___4,
+                 body_typing)
+                ->
+                let rret_u =
+                  Pulse_Elaborate_Pure.elab_universe (Pulse_Syntax.comp_u c1) in
+                let ra = Pulse_Elaborate_Pure.elab_term init_t in
+                let rinit = Pulse_Elaborate_Pure.elab_term init in
+                let rret_t =
+                  Pulse_Elaborate_Pure.elab_term (Pulse_Syntax.comp_res c1) in
+                let rpre =
+                  Pulse_Elaborate_Pure.elab_term (Pulse_Syntax.comp_pre c1) in
+                let rpost =
+                  Pulse_Reflection_Util.mk_abs rret_t
+                    FStar_Reflection_Data.Q_Explicit
+                    (Pulse_Elaborate_Pure.elab_term
+                       (Pulse_Syntax.comp_post c1)) in
+                let rbody =
+                  elab_st_typing f
+                    ((x, (FStar_Pervasives.Inl (Pulse_Typing.mk_ref init_t)))
+                    :: uu___) (Pulse_Syntax.open_st_term uu___1 x)
+                    (Pulse_Typing.comp_withlocal_body x init_t init c1)
+                    body_typing in
+                let rbody1 = FStar_Reflection_Typing.close_term rbody x in
+                let rbody2 =
+                  Pulse_Reflection_Util.mk_abs
+                    (Pulse_Reflection_Util.mk_ref ra)
+                    FStar_Reflection_Data.Q_Explicit rbody1 in
+                Pulse_Reflection_Util.mk_withlocal rret_u ra rinit rpre
+                  rret_t rpost rbody2
             | Pulse_Typing.T_Admit
                 (uu___,
                  { Pulse_Syntax.u = u; Pulse_Syntax.res = res;

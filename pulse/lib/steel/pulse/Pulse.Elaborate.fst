@@ -9,7 +9,7 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
 
-#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 5 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
+#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 10 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
 
 let rec elab_open_commute' (e:term)
                            (v:term)
@@ -132,7 +132,6 @@ and elab_comp_close_commute' (c:comp) (v:var) (n:index)
       elab_close_commute' s.res v n;
       elab_close_commute' s.pre v n;
       elab_close_commute' s.post v (n + 1)
-#pop-options
 
 let elab_open_commute (t:term) (x:var)
   : Lemma (elab_term (open_term t x) == RT.open_term (elab_term t) x)
@@ -202,7 +201,6 @@ and elab_ln_comp (c:comp) (i:int)
     elab_ln st.pre i;
     elab_ln st.post (i + 1)
 
-#push-options "--z3rlimit_factor 8"
 let rec elab_freevars_eq (e:term)
   : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) =
   match e with

@@ -51,6 +51,15 @@ let mk_eq2_prop (u:universe)
 let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 (U_succ (U_succ U_zero)) Tm_VProp e0 e1
 
+let mk_ref (t:term) : term = Tm_PureApp (Tm_FVar (as_fv ref_lid)) None t
+
+let mk_pts_to (ty:term) (r:term) (v:term) : term =
+  let t = Tm_FVar (as_fv pts_to_lid) in
+  let t = Tm_PureApp t (Some Implicit) ty in
+  let t = Tm_PureApp t None r in
+  let t = Tm_PureApp t None (Tm_FVar (as_fv full_perm_lid)) in
+  Tm_PureApp t None v
+
 let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term) (x:var)
   : comp =
 
@@ -239,7 +248,7 @@ type vprop_equiv (f:RT.fstar_top_env) : env -> term -> term -> Type =
 
 let add_frame (s:comp_st) (frame:term)
   : comp_st
-  = let add_frame_s (s:st_comp) : x:st_comp =
+  = let add_frame_s (s:st_comp) : st_comp =
         { s with pre = Tm_Star s.pre frame;
                  post = Tm_Star s.post frame }
     in
@@ -430,6 +439,21 @@ let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
     post
   }
 
+let comp_withlocal_body_pre (pre:vprop) (init_t:term) (r:term) (init:term) : vprop =
+  Tm_Star pre (mk_pts_to init_t r init)
+
+let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
+  Tm_Star post (Tm_ExistsSL U_zero init_t (mk_pts_to init_t r (null_bvar 0)) should_elim_false)  
+
+let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
+  let r = null_var r in
+  C_ST {
+    u = comp_u c;
+    res = comp_res c;
+    pre = comp_withlocal_body_pre (comp_pre c) init_t r init;
+    post = comp_withlocal_body_post (comp_post c) init_t r
+  }
+
 let comp_rewrite (p q:vprop) : comp =
   C_STGhost Tm_EmpInames {
 			u = U_zero;
@@ -578,13 +602,6 @@ and comp_typing (f:RT.fstar_top_env) : env -> comp -> universe -> Type =
       comp_typing f g (C_STGhost inames st) st.u
 
 and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
-  // | T_Tot:
-  //     g:env ->
-  //     e:term ->
-  //     ty:term ->
-  //     tot_typing f g e ty ->
-  //     st_typing f g (Tm_Return e) (C_Tot ty)
-
   | T_Abs: 
       g:env ->
       x:var { None? (lookup g x) } ->
@@ -744,6 +761,21 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       st_typing f g eR cR ->
       st_typing f g (Tm_Par Tm_Unknown eL Tm_Unknown Tm_Unknown eR Tm_Unknown)
                     (comp_par cL cR x)
+
+  | T_WithLocal:
+      g:env ->
+      init:term ->
+      body:st_term ->
+      init_t:term ->
+      c:comp { C_ST? c } ->
+      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      tot_typing f g init init_t ->
+      universe_of f g init_t U_zero ->
+      comp_typing f g c (comp_u c) ->
+      st_typing f ((x, Inl (mk_ref init_t))::g)
+                (open_st_term body x)
+                (comp_withlocal_body x init_t init c) ->
+      st_typing f g (Tm_WithLocal init body) c
 
   | T_Rewrite:
 		    g:env ->

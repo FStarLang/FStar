@@ -290,8 +290,10 @@ let rec soundness (f:stt_env)
     | T_Par _ _ _ _ _ _ _ _ _ _ ->
       Par.par_soundness d soundness
 
-				| T_Rewrite _ _ _ _ _ ->
-				  Rewrite.rewrite_soundness d
+    | T_WithLocal _ _ _ _ _ _ _ _ _ _ -> admit ()
+
+    | T_Rewrite _ _ _ _ _ ->
+      Rewrite.rewrite_soundness d
 
     | T_Admit _ _ _ _ -> Admit.admit_soundess d
 #pop-options
