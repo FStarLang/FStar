@@ -126,3 +126,9 @@ val subst : bv -> t1:term -> t2:term -> term
 
 (** Close an open binder in a term (i.e. turn the name into a de Bruijn index. *)
 val close_term : binder -> term -> term
+
+(** Get the range of a term, i.e., the source location where it was defined. *)
+val range_of_term : term -> range
+
+(** Get the range of a sigelt, i.e., the source location where it was defined. *)
+val range_of_sigelt : sigelt -> range

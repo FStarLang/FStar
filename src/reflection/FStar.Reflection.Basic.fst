@@ -951,3 +951,6 @@ let subst (x:bv) (n:term) (m:term) : term =
   SS.subst [NT(x,n)] m
 
 let close_term (b:binder) (t:term) : term = SS.close [b] t
+
+let range_of_term (t:term) = t.pos
+let range_of_sigelt (s:sigelt) = s.sigrng

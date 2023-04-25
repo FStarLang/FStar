@@ -113,6 +113,7 @@ val string_to_term         : env -> string -> tac term
 val push_bv_dsenv          : env -> string -> tac (env * bv)
 val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
+val range_to_string        : Range.range -> tac string
 
 val term_eq_old            : term -> term -> tac bool
 val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a

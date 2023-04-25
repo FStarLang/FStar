@@ -463,7 +463,7 @@ let e_range : embedding Range.range =
         None
     in
     mk_emb' em un (lid_as_typ PC.range_lid [] []) (SE.emb_typ_of SE.e_range)
-
+  
 // vconfig, NYI
 let e_vconfig : embedding vconfig =
     let em cb r = failwith "e_vconfig NBE" in

@@ -169,6 +169,7 @@ let string_to_term          = from_tac_2 B.string_to_term
 let push_bv_dsenv           = from_tac_2 B.push_bv_dsenv
 let term_to_string          = from_tac_1 B.term_to_string
 let comp_to_string          = from_tac_1 B.comp_to_string
+let range_to_string         = from_tac_1 B.range_to_string
 let term_eq_old             = from_tac_2 B.term_eq_old
 
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =

@@ -521,6 +521,10 @@ let () =
         comp_to_string RE.e_comp e_string
         comp_to_string NRE.e_comp NBET.e_string;
 
+      mk_tac_step_1 0 "range_to_string"
+        range_to_string FStar.Syntax.Embeddings.e_range e_string
+        range_to_string FStar.TypeChecker.NBETerm.e_range NBET.e_string;
+
       mk_tac_step_2 0 "term_eq_old"
         term_eq_old RE.e_term RE.e_term e_bool
         term_eq_old NRE.e_term NRE.e_term NBET.e_bool;
