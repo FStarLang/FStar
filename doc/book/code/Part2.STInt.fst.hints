@@ -46,7 +46,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "7c29eebeb6d08a943b65f7d214008cae"
+      "0497275f719284b72c264972b797f47a"
     ],
     [
       "Part2.STInt.associativity",
@@ -64,7 +64,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "ac3ded3b7829b1ad4f6e15e3793d93ac"
+      "967c19064ec1165a0d5e2f4c0dc32f4d"
     ],
     [
       "Part2.STInt.redundant_read_elim",
@@ -85,7 +85,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "0a92286a12a5b713473e78705a5da791"
+      "acaa5d5d2b3985e269d56b5c44062dec"
     ],
     [
       "Part2.STInt.redundant_write_elim",
@@ -103,7 +103,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "575c49b1239e1573d22e5b12a487415c"
+      "907321f4c967976f417f0136b2f289d7"
     ],
     [
       "Part2.STInt.read_write_noop",
@@ -127,7 +127,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "50786cae531b46a9f2447e134fde1c27"
+      "90098c72495e0ddfe635f5387faa76a4"
     ]
   ]
 ]

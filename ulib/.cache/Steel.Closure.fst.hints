@@ -14,7 +14,7 @@
         "true_interp", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "4c3a596e72cb4bcb6dafc603306c9586"
+      "3355daea214ca4b2be9b25565db95ba1"
     ],
     [
       "Steel.Closure.new_counter'",
@@ -31,7 +31,7 @@
         "token_correspondence_FStar.Pervasives.dfst", "true_interp"
       ],
       0,
-      "cc7b5d0adb979c086c8c92e8a6f17406"
+      "381ddc28df29248abfe9350ac2df0eb2"
     ]
   ]
 ]

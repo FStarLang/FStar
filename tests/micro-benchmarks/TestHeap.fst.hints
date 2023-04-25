@@ -39,7 +39,7 @@
         "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "c3fc2fc0d97c59822ca30b11f9b480b8"
+      "8a8abb83e403a9cde2f76e2c354b5640"
     ],
     [
       "TestHeap.test3",
@@ -57,7 +57,7 @@
         "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "6a4ef87167abb791b4a79d558022bcdd"
+      "a6737eafe4ebf72b0cd68782f923c4a8"
     ],
     [
       "TestHeap.test7",
@@ -80,7 +80,7 @@
         "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "11f2dcad967eb38cbe14957c326c72df"
+      "594b1a2e16716cb76b30f4f941e8ddd3"
     ],
     [
       "TestHeap.test8",
@@ -98,7 +98,7 @@
         "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "cfbf7928bf44b7967b8edbef766eb141"
+      "286534ec8939214944c76f464902d7c4"
     ]
   ]
 ]

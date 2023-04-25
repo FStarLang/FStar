@@ -1,5 +1,5 @@
 [
-  "%ˆ\u007fÒ[†\u0000„Hÿ®\n>E\u0005‚",
+  "ür≈∫x°ã\u0004É<_'pdC\\",
   [
     [
       "Pulse.Typing.LN.open_term_ln'",
@@ -129,7 +129,7 @@
         "typing_tok_Pulse.Syntax.Tm_Emp@tok"
       ],
       0,
-      "dccd09dc1fd42120eb1b0f480714cf67"
+      "d7db43419cd4f8fbe0d5308be5dcd3a6"
     ],
     [
       "Pulse.Typing.LN.open_term_ln'",
@@ -197,7 +197,7 @@
         "typing_Pulse.Syntax.open_comp_", "typing_Pulse.Syntax.uu___is_C_Tot"
       ],
       0,
-      "de3d5bdb2a5703695b723dda88df2196"
+      "db24547df40938e64fd872ae7f6dc690"
     ],
     [
       "Pulse.Typing.LN.open_term_ln_opt'",
@@ -222,7 +222,7 @@
         "typing_Pulse.Syntax.ln_opt_", "typing_Pulse.Syntax.open_term_opt_"
       ],
       0,
-      "f485a22d1476a89be0f670003304d73e"
+      "13c49cafc39e084953945a3bae5a60d3"
     ],
     [
       "Pulse.Typing.LN.open_term_ln_list'",
@@ -263,7 +263,7 @@
         "typing_Pulse.Syntax.open_term_list_", "unit_typing"
       ],
       0,
-      "3a0e18619aa3223f4a99743c8284e089"
+      "af5ea7f8149caf06e606c41fd5768884"
     ],
     [
       "Pulse.Typing.LN.open_st_term_ln'",
@@ -294,6 +294,7 @@
         "constructor_distinct_Pulse.Syntax.Tm_Rewrite",
         "constructor_distinct_Pulse.Syntax.Tm_STApp",
         "constructor_distinct_Pulse.Syntax.Tm_While",
+        "constructor_distinct_Pulse.Syntax.Tm_WithLocal",
         "disc_equation_Pulse.Syntax.Tm_Abs",
         "disc_equation_Pulse.Syntax.Tm_Admit",
         "disc_equation_Pulse.Syntax.Tm_Bind",
@@ -305,7 +306,8 @@
         "disc_equation_Pulse.Syntax.Tm_Return",
         "disc_equation_Pulse.Syntax.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Tm_STApp",
-        "disc_equation_Pulse.Syntax.Tm_While", "equation_Prims.nat",
+        "disc_equation_Pulse.Syntax.Tm_While",
+        "disc_equation_Pulse.Syntax.Tm_WithLocal", "equation_Prims.nat",
         "equation_Pulse.Syntax.index", "equation_Pulse.Syntax.ln_opt_",
         "equation_Pulse.Syntax.vprop",
         "equation_with_fuel_Pulse.Syntax.ln_.fuel_instrumented",
@@ -355,14 +357,17 @@
         "projection_inverse_Pulse.Syntax.Tm_While__0",
         "projection_inverse_Pulse.Syntax.Tm_While__1",
         "projection_inverse_Pulse.Syntax.Tm_While__2",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__0",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__1",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_83fa3691bd889b255ebd44c64b740f93",
+        "refinement_interpretation_Tm_refine_bb91f84aaa5cbfe860126d13485eaac7",
         "subterm_ordering_Pulse.Syntax.Tm_Abs",
         "subterm_ordering_Pulse.Syntax.Tm_Bind",
         "subterm_ordering_Pulse.Syntax.Tm_If",
         "subterm_ordering_Pulse.Syntax.Tm_Par",
         "subterm_ordering_Pulse.Syntax.Tm_Protect",
         "subterm_ordering_Pulse.Syntax.Tm_While",
+        "subterm_ordering_Pulse.Syntax.Tm_WithLocal",
         "token_correspondence_Pulse.Syntax.ln_.fuel_instrumented",
         "token_correspondence_Pulse.Syntax.ln_st_.fuel_instrumented",
         "token_correspondence_Pulse.Syntax.open_st_term_.fuel_instrumented",
@@ -376,7 +381,7 @@
         "typing_Pulse.Syntax.uu___is_Tm_Return"
       ],
       0,
-      "5669e61e59b8ac1ebb58b7d393ae6ddc"
+      "95cfebcf638bc367637aacd3745a2b3b"
     ],
     [
       "Pulse.Typing.LN.open_term_ln",
@@ -389,7 +394,7 @@
         "equation_Pulse.Syntax.term_of_var"
       ],
       0,
-      "23ea0c878bccbbfb4f730f0a2f6ff738"
+      "196cf2e9c9bc878716843b4851329b65"
     ],
     [
       "Pulse.Typing.LN.open_st_term_ln",
@@ -402,7 +407,7 @@
         "equation_Pulse.Syntax.term_of_var"
       ],
       0,
-      "bb2a104eb5db627003b4ade63139d7c0"
+      "ab80e7e20bf112d8e627ca1540443194"
     ],
     [
       "Pulse.Typing.LN.ln_weakening",
@@ -524,7 +529,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "8d4697df83fb472a11e5d08013b32580"
+      "69f6ec74ce27046f6f9b9de858c4d9f4"
     ],
     [
       "Pulse.Typing.LN.ln_weakening",
@@ -581,7 +586,7 @@
         "typing_Pulse.Syntax.uu___is_C_Tot"
       ],
       0,
-      "1ccbc1685d98c6ea4bd49e2962c870c3"
+      "953f98fe907c32a8d8d5df4b7f779952"
     ],
     [
       "Pulse.Typing.LN.ln_weakening_opt",
@@ -603,7 +608,7 @@
         "typing_Pulse.Syntax.ln_opt_"
       ],
       0,
-      "0ff7a3938e350782104a4f72cdb5bffd"
+      "ed930601c0e176df8788702f9bce2b52"
     ],
     [
       "Pulse.Typing.LN.ln_weakening_list",
@@ -632,7 +637,7 @@
         "typing_Pulse.Syntax.ln_", "typing_Pulse.Syntax.ln_list_"
       ],
       0,
-      "a57b3976b741dcd2cd91935299842200"
+      "6c0d3f2f66db51c8a9839a29d39361f9"
     ],
     [
       "Pulse.Typing.LN.ln_weakening_st",
@@ -661,6 +666,7 @@
         "constructor_distinct_Pulse.Syntax.Tm_Rewrite",
         "constructor_distinct_Pulse.Syntax.Tm_STApp",
         "constructor_distinct_Pulse.Syntax.Tm_While",
+        "constructor_distinct_Pulse.Syntax.Tm_WithLocal",
         "disc_equation_Pulse.Syntax.Tm_Abs",
         "disc_equation_Pulse.Syntax.Tm_Admit",
         "disc_equation_Pulse.Syntax.Tm_Bind",
@@ -673,6 +679,7 @@
         "disc_equation_Pulse.Syntax.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Tm_STApp",
         "disc_equation_Pulse.Syntax.Tm_While",
+        "disc_equation_Pulse.Syntax.Tm_WithLocal",
         "equation_Pulse.Syntax.ln_opt_", "equation_Pulse.Syntax.vprop",
         "equation_with_fuel_Pulse.Syntax.ln_st_.fuel_instrumented",
         "fuel_guarded_inversion_Pulse.Syntax.st_term", "int_inversion",
@@ -716,13 +723,16 @@
         "projection_inverse_Pulse.Syntax.Tm_While__0",
         "projection_inverse_Pulse.Syntax.Tm_While__1",
         "projection_inverse_Pulse.Syntax.Tm_While__2",
-        "refinement_interpretation_Tm_refine_513d0a8963dc7bf8c80551b6e088be2b",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__0",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__1",
+        "refinement_interpretation_Tm_refine_122d6266c84ea00eac36214f110e047a",
         "subterm_ordering_Pulse.Syntax.Tm_Abs",
         "subterm_ordering_Pulse.Syntax.Tm_Bind",
         "subterm_ordering_Pulse.Syntax.Tm_If",
         "subterm_ordering_Pulse.Syntax.Tm_Par",
         "subterm_ordering_Pulse.Syntax.Tm_Protect",
         "subterm_ordering_Pulse.Syntax.Tm_While",
+        "subterm_ordering_Pulse.Syntax.Tm_WithLocal",
         "token_correspondence_Pulse.Syntax.ln_st_.fuel_instrumented",
         "typing_Pulse.Syntax.__proj__Mkbinder__item__binder_ty",
         "typing_Pulse.Syntax.ln_", "typing_Pulse.Syntax.ln_list_",
@@ -730,7 +740,7 @@
         "typing_Pulse.Syntax.uu___is_Tm_Return"
       ],
       0,
-      "54a00c341aa1892d7c298fd537469361"
+      "5898d336e08d615d66dc79cd9e50e378"
     ],
     [
       "Pulse.Typing.LN.open_term_ln_inv'",
@@ -868,7 +878,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "7042427c0580d824023b52d9664a1151"
+      "c040b7539ef7d6ca73a81b48d696cf10"
     ],
     [
       "Pulse.Typing.LN.open_term_ln_inv'",
@@ -939,7 +949,7 @@
         "typing_Pulse.Syntax.uu___is_C_Tot"
       ],
       0,
-      "7cd185cb2c1bc30d1d8fd189522c47d2"
+      "220aa3bfe87093eaf989d498af26256c"
     ],
     [
       "Pulse.Typing.LN.open_term_ln_inv_opt'",
@@ -969,7 +979,7 @@
         "typing_Pulse.Syntax.ln", "typing_Pulse.Syntax.ln_opt_"
       ],
       0,
-      "c96a7d2bf47f56c7cc470731646c6c1a"
+      "91c1d345c065d5019ff5748ac865f4e3"
     ],
     [
       "Pulse.Typing.LN.open_term_ln_inv_list'",
@@ -1009,7 +1019,7 @@
         "typing_Pulse.Syntax.open_term_list_"
       ],
       0,
-      "fb29de2f82ed03742e48827be5ec1004"
+      "451fc25a39bedec87e421424c6a930c5"
     ],
     [
       "Pulse.Typing.LN.open_term_ln_inv_st'",
@@ -1044,6 +1054,7 @@
         "constructor_distinct_Pulse.Syntax.Tm_Rewrite",
         "constructor_distinct_Pulse.Syntax.Tm_STApp",
         "constructor_distinct_Pulse.Syntax.Tm_While",
+        "constructor_distinct_Pulse.Syntax.Tm_WithLocal",
         "data_elim_FStar.Pervasives.Native.Some",
         "disc_equation_Pulse.Syntax.Tm_Abs",
         "disc_equation_Pulse.Syntax.Tm_Admit",
@@ -1056,7 +1067,8 @@
         "disc_equation_Pulse.Syntax.Tm_Return",
         "disc_equation_Pulse.Syntax.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Tm_STApp",
-        "disc_equation_Pulse.Syntax.Tm_While", "equation_Prims.nat",
+        "disc_equation_Pulse.Syntax.Tm_While",
+        "disc_equation_Pulse.Syntax.Tm_WithLocal", "equation_Prims.nat",
         "equation_Pulse.Syntax.index", "equation_Pulse.Syntax.ln_opt_",
         "equation_Pulse.Syntax.open_term_opt_",
         "equation_Pulse.Syntax.vprop",
@@ -1111,15 +1123,18 @@
         "projection_inverse_Pulse.Syntax.Tm_While__0",
         "projection_inverse_Pulse.Syntax.Tm_While__1",
         "projection_inverse_Pulse.Syntax.Tm_While__2",
-        "refinement_interpretation_Tm_refine_331395f069789d5bea9247a2c64267d2",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__0",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__1",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_949ffb6c837b8de2dc4f073575bc9a1c",
+        "refinement_interpretation_Tm_refine_be778d2f658f12538ee86416ac917da0",
         "subterm_ordering_Pulse.Syntax.Tm_Abs",
         "subterm_ordering_Pulse.Syntax.Tm_Bind",
         "subterm_ordering_Pulse.Syntax.Tm_If",
         "subterm_ordering_Pulse.Syntax.Tm_Par",
         "subterm_ordering_Pulse.Syntax.Tm_Protect",
         "subterm_ordering_Pulse.Syntax.Tm_While",
+        "subterm_ordering_Pulse.Syntax.Tm_WithLocal",
         "token_correspondence_Pulse.Syntax.ln_st_.fuel_instrumented",
         "token_correspondence_Pulse.Syntax.open_term_.fuel_instrumented",
         "typing_Pulse.Syntax.__proj__Mkbinder__item__binder_ty",
@@ -1132,7 +1147,7 @@
         "typing_Pulse.Syntax.uu___is_Tm_Return"
       ],
       0,
-      "34bf7395d5d7bee3b8a53b48a222fcde"
+      "90f17c8c7fca1ace0fac82c7dc774fa4"
     ],
     [
       "Pulse.Typing.LN.close_term_ln'",
@@ -1266,7 +1281,7 @@
         "typing_tok_Pulse.Syntax.Tm_VProp@tok"
       ],
       0,
-      "44cee8716377cb2f2883e01db77a91af"
+      "77a2c1c9668cfdcb00f6d27f06cf6238"
     ],
     [
       "Pulse.Typing.LN.close_term_ln'",
@@ -1336,7 +1351,7 @@
         "typing_Pulse.Syntax.uu___is_C_Tot"
       ],
       0,
-      "a2c076f5988bde9e24d7d67506fb2d69"
+      "aab8379b32256764afd35b62e4a6d7c3"
     ],
     [
       "Pulse.Typing.LN.close_term_ln_opt'",
@@ -1365,7 +1380,7 @@
         "typing_Pulse.Syntax.ln_opt_"
       ],
       0,
-      "d03486b18a6203509af89636fd203840"
+      "b5fe58fd0a72cda66ec82ecfbc5a24a2"
     ],
     [
       "Pulse.Typing.LN.close_term_ln_list'",
@@ -1404,7 +1419,7 @@
         "typing_Pulse.Syntax.ln_list_"
       ],
       0,
-      "877e871fd2e6ea271bed1f5074cad209"
+      "270a2acee84de9a09de6bb806b239c40"
     ],
     [
       "Pulse.Typing.LN.close_st_term_ln'",
@@ -1438,6 +1453,7 @@
         "constructor_distinct_Pulse.Syntax.Tm_Rewrite",
         "constructor_distinct_Pulse.Syntax.Tm_STApp",
         "constructor_distinct_Pulse.Syntax.Tm_While",
+        "constructor_distinct_Pulse.Syntax.Tm_WithLocal",
         "data_elim_FStar.Pervasives.Native.Some",
         "disc_equation_Pulse.Syntax.Tm_Abs",
         "disc_equation_Pulse.Syntax.Tm_Admit",
@@ -1450,7 +1466,8 @@
         "disc_equation_Pulse.Syntax.Tm_Return",
         "disc_equation_Pulse.Syntax.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Tm_STApp",
-        "disc_equation_Pulse.Syntax.Tm_While", "equation_Prims.nat",
+        "disc_equation_Pulse.Syntax.Tm_While",
+        "disc_equation_Pulse.Syntax.Tm_WithLocal", "equation_Prims.nat",
         "equation_Pulse.Syntax.close_term_opt_",
         "equation_Pulse.Syntax.index", "equation_Pulse.Syntax.ln_opt_",
         "equation_Pulse.Syntax.var", "equation_Pulse.Syntax.vprop",
@@ -1502,14 +1519,17 @@
         "projection_inverse_Pulse.Syntax.Tm_While__0",
         "projection_inverse_Pulse.Syntax.Tm_While__1",
         "projection_inverse_Pulse.Syntax.Tm_While__2",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__0",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__1",
+        "refinement_interpretation_Tm_refine_324266885022635ecab957e122551ff4",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_9afa68636b361fe66d799a8c863d230d",
         "subterm_ordering_Pulse.Syntax.Tm_Abs",
         "subterm_ordering_Pulse.Syntax.Tm_Bind",
         "subterm_ordering_Pulse.Syntax.Tm_If",
         "subterm_ordering_Pulse.Syntax.Tm_Par",
         "subterm_ordering_Pulse.Syntax.Tm_Protect",
         "subterm_ordering_Pulse.Syntax.Tm_While",
+        "subterm_ordering_Pulse.Syntax.Tm_WithLocal",
         "token_correspondence_Pulse.Syntax.ln_.fuel_instrumented",
         "token_correspondence_Pulse.Syntax.ln_st_.fuel_instrumented",
         "typing_Pulse.Syntax.__proj__Mkbinder__item__binder_ty",
@@ -1521,7 +1541,7 @@
         "typing_Pulse.Syntax.ln_st_", "typing_Pulse.Syntax.uu___is_Tm_Return"
       ],
       0,
-      "92e0280d039ecf636346492baa849131"
+      "5f334351117756b84d43d2322fc01853"
     ],
     [
       "Pulse.Typing.LN.close_comp_ln",
@@ -1535,7 +1555,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "18c6ac459ee3141a38fbb12300b124fe"
+      "e83253acd700ca1f6259c00ff180330a"
     ],
     [
       "Pulse.Typing.LN.test",
@@ -1547,7 +1567,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "09340de89324728191d03eff71dc7ad8"
+      "644ac35aa1a995bea4197cd58826b0d1"
     ],
     [
       "Pulse.Typing.LN.lift_comp_ln",
@@ -1576,7 +1596,7 @@
         "typing_Pulse.Syntax.ln_c"
       ],
       0,
-      "3b8c78bcbe41789bc40972a8994602c0"
+      "e735c3290089891c73b6c64533c00781"
     ],
     [
       "Pulse.Typing.LN.tot_typing_ln",
@@ -1585,7 +1605,7 @@
       2,
       [ "@query" ],
       0,
-      "a8dd2ce39183a7d0a5614479fe2fd5ab"
+      "155dd4ca1d986cd9c7cc3625e0cdfad4"
     ],
     [
       "Pulse.Typing.LN.vprop_equiv_ln",
@@ -1640,7 +1660,7 @@
         "typing_Pulse.Syntax.ln", "typing_tok_Pulse.Syntax.Tm_Emp@tok"
       ],
       0,
-      "83846d35eb9cb12533ab92cd942de8a5"
+      "7f931baf8b6156adb2c48179b1f7496a"
     ],
     [
       "Pulse.Typing.LN.st_equiv_ln",
@@ -1703,7 +1723,7 @@
         "typing_Pulse.Syntax.uu___is_C_Tot"
       ],
       0,
-      "4520f86c310f0d724b93f185d3e3bfbd"
+      "630a4ebdbf481542f08780081a5f1883"
     ],
     [
       "Pulse.Typing.LN.bind_comp_ln",
@@ -1793,7 +1813,89 @@
         "typing_Pulse.Typing.bind_comp_out"
       ],
       0,
-      "34a07b746b6b16dda9a51d80c6bf6e17"
+      "8e54fc72f7b84aeb96647d2d5a7e9e4f"
+    ],
+    [
+      "Pulse.Typing.LN.st_comp_typing_ln",
+      1,
+      2,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Pulse.Syntax.ln_.fuel_instrumented",
+        "@fuel_correspondence_Pulse.Syntax.ln_st_comp.fuel_instrumented",
+        "@fuel_irrelevance_Pulse.Syntax.ln_.fuel_instrumented", "@query",
+        "bool_inversion", "equality_tok_Pulse.Syntax.Tm_VProp@tok",
+        "equation_Pulse.Syntax.ln", "equation_Pulse.Syntax.null_var",
+        "equation_Pulse.Syntax.open_term",
+        "equation_with_fuel_Pulse.Syntax.ln_st_comp.fuel_instrumented",
+        "fuel_guarded_inversion_Pulse.Typing.st_comp_typing", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "proj_equation_Pulse.Syntax.Mkst_comp_post",
+        "proj_equation_Pulse.Syntax.Mkst_comp_pre",
+        "proj_equation_Pulse.Syntax.Mkst_comp_res",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Pulse.Syntax.Mkst_comp_post",
+        "projection_inverse_Pulse.Syntax.Mkst_comp_pre",
+        "projection_inverse_Pulse.Syntax.Mkst_comp_res",
+        "projection_inverse_Pulse.Typing.STC_st",
+        "refinement_interpretation_Tm_refine_eff12d2a0359fd862f0bd9ca4c228c98",
+        "typing_Pulse.Syntax.ln", "typing_Pulse.Syntax.ln_",
+        "typing_Pulse.Syntax.open_term",
+        "typing_tok_Pulse.Syntax.Tm_VProp@tok"
+      ],
+      0,
+      "fbb234b3f3d8346a8a84876080018a3c"
+    ],
+    [
+      "Pulse.Typing.LN.comp_typing_ln",
+      1,
+      2,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Pulse.Syntax.ln_.fuel_instrumented",
+        "@fuel_correspondence_Pulse.Syntax.ln_c_.fuel_instrumented",
+        "@fuel_correspondence_Pulse.Syntax.ln_st_comp.fuel_instrumented",
+        "@fuel_irrelevance_Pulse.Syntax.ln_.fuel_instrumented",
+        "@fuel_irrelevance_Pulse.Syntax.ln_st_comp.fuel_instrumented",
+        "@query", "bool_inversion", "bool_typing",
+        "constructor_distinct_Pulse.Syntax.C_ST",
+        "constructor_distinct_Pulse.Syntax.C_STAtomic",
+        "constructor_distinct_Pulse.Syntax.C_STGhost",
+        "constructor_distinct_Pulse.Syntax.C_Tot",
+        "data_elim_Pulse.Typing.CT_ST", "data_elim_Pulse.Typing.CT_STAtomic",
+        "data_elim_Pulse.Typing.CT_STGhost", "data_elim_Pulse.Typing.CT_Tot",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_Pulse.Typing.CT_ST",
+        "disc_equation_Pulse.Typing.CT_STAtomic",
+        "disc_equation_Pulse.Typing.CT_STGhost",
+        "disc_equation_Pulse.Typing.CT_Tot",
+        "equation_FStar.Reflection.Typing.fstar_top_env",
+        "equation_Pulse.Syntax.ln", "equation_Pulse.Syntax.ln_c",
+        "equation_with_fuel_Pulse.Syntax.ln_c_.fuel_instrumented",
+        "equation_with_fuel_Pulse.Syntax.ln_st_comp.fuel_instrumented",
+        "fuel_guarded_inversion_Pulse.Typing.comp_typing",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_AmpAmp",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Pulse.Syntax.C_STAtomic__0",
+        "projection_inverse_Pulse.Syntax.C_STAtomic__1",
+        "projection_inverse_Pulse.Syntax.C_STGhost__0",
+        "projection_inverse_Pulse.Syntax.C_STGhost__1",
+        "projection_inverse_Pulse.Syntax.C_ST__0",
+        "projection_inverse_Pulse.Syntax.C_Tot__0",
+        "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
+        "token_correspondence_Pulse.Syntax.ln_.fuel_instrumented",
+        "typing_Pulse.Syntax.__proj__Mkst_comp__item__pre",
+        "typing_Pulse.Syntax.__proj__Mkst_comp__item__res",
+        "typing_Pulse.Syntax.ln", "typing_Pulse.Syntax.ln_c",
+        "typing_Pulse.Syntax.ln_st_comp",
+        "typing_Pulse.Typing.uu___is_CT_Tot"
+      ],
+      0,
+      "b6687b28a5243ec12cfd4b3c3cccb9a9"
     ],
     [
       "Pulse.Typing.LN.st_typing_ln",
@@ -1807,6 +1909,7 @@
         "@fuel_correspondence_Pulse.Syntax.ln_c_.fuel_instrumented",
         "@fuel_correspondence_Pulse.Syntax.ln_list_.fuel_instrumented",
         "@fuel_correspondence_Pulse.Syntax.ln_st_.fuel_instrumented",
+        "@fuel_correspondence_Pulse.Syntax.open_st_term_.fuel_instrumented",
         "@fuel_correspondence_Pulse.Syntax.open_term_.fuel_instrumented",
         "@fuel_irrelevance_Pulse.Syntax.close_term_.fuel_instrumented",
         "@fuel_irrelevance_Pulse.Syntax.ln_.fuel_instrumented",
@@ -1852,13 +1955,13 @@
         "constructor_distinct_Pulse.Syntax.Tm_VProp",
         "constructor_distinct_Pulse.Syntax.Tm_Var",
         "constructor_distinct_Pulse.Syntax.Tm_While",
+        "constructor_distinct_Pulse.Syntax.Tm_WithLocal",
         "data_elim_Pulse.Syntax.C_ST", "data_elim_Pulse.Syntax.C_STAtomic",
         "data_elim_Pulse.Syntax.C_STGhost",
         "data_elim_Pulse.Syntax.Mkst_comp",
         "data_elim_Pulse.Syntax.Tm_ElimExists",
         "data_elim_Pulse.Syntax.Tm_IntroExists",
-        "data_elim_Pulse.Syntax.Tm_PureApp",
-        "data_elim_Pulse.Syntax.Tm_Star", "data_elim_Pulse.Typing.T_Abs",
+        "data_elim_Pulse.Syntax.Tm_PureApp", "data_elim_Pulse.Typing.T_Abs",
         "data_elim_Pulse.Typing.T_Admit", "data_elim_Pulse.Typing.T_Bind",
         "data_elim_Pulse.Typing.T_ElimExists",
         "data_elim_Pulse.Typing.T_Equiv", "data_elim_Pulse.Typing.T_Frame",
@@ -1868,7 +1971,9 @@
         "data_elim_Pulse.Typing.T_Lift", "data_elim_Pulse.Typing.T_Par",
         "data_elim_Pulse.Typing.T_Return",
         "data_elim_Pulse.Typing.T_Rewrite", "data_elim_Pulse.Typing.T_STApp",
-        "data_elim_Pulse.Typing.T_While", "data_typing_intro_Prims.Cons@tok",
+        "data_elim_Pulse.Typing.T_While",
+        "data_elim_Pulse.Typing.T_WithLocal",
+        "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "data_typing_intro_Pulse.Syntax.Mknm@tok",
         "data_typing_intro_Pulse.Syntax.Mkst_comp@tok",
@@ -1897,6 +2002,7 @@
         "disc_equation_Pulse.Typing.T_Rewrite",
         "disc_equation_Pulse.Typing.T_STApp",
         "disc_equation_Pulse.Typing.T_While",
+        "disc_equation_Pulse.Typing.T_WithLocal",
         "equality_tok_Pulse.Syntax.Tm_EmpInames@tok",
         "equality_tok_Pulse.Syntax.Tm_Unknown@tok",
         "equality_tok_Pulse.Syntax.U_zero@tok",
@@ -1914,6 +2020,7 @@
         "equation_Pulse.Syntax.ln_opt_", "equation_Pulse.Syntax.ln_st",
         "equation_Pulse.Syntax.null_var",
         "equation_Pulse.Syntax.open_comp_with",
+        "equation_Pulse.Syntax.open_st_term",
         "equation_Pulse.Syntax.open_term", "equation_Pulse.Syntax.ppname",
         "equation_Pulse.Syntax.should_elim_false",
         "equation_Pulse.Syntax.should_elim_t",
@@ -1950,8 +2057,7 @@
         "fuel_guarded_inversion_Pulse.Typing.st_comp_typing",
         "fuel_guarded_inversion_Pulse.Typing.st_typing",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.bool",
-        "function_token_typing_Prims.string", "int_inversion", "int_typing",
+        "function_token_typing_Prims.bool", "int_inversion", "int_typing",
         "kinding_Pulse.Syntax.term@tok",
         "lemma_FStar.Sealed.Inhabited.sealed_singleton",
         "lemma_Pulse.Typing.LN.ln_weakening", "primitive_Prims.op_Addition",
@@ -2033,6 +2139,8 @@
         "projection_inverse_Pulse.Syntax.Tm_While__0",
         "projection_inverse_Pulse.Syntax.Tm_While__1",
         "projection_inverse_Pulse.Syntax.Tm_While__2",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__0",
+        "projection_inverse_Pulse.Syntax.Tm_WithLocal__1",
         "projection_inverse_Pulse.Typing.STC_st",
         "projection_inverse_Pulse.Typing.T_STApp_head",
         "projection_inverse_Pulse.Typing.T_STApp_ty",
@@ -2055,10 +2163,12 @@
         "subterm_ordering_Pulse.Typing.T_Lift",
         "subterm_ordering_Pulse.Typing.T_Par",
         "subterm_ordering_Pulse.Typing.T_While",
+        "subterm_ordering_Pulse.Typing.T_WithLocal",
         "token_correspondence_Pulse.Syntax.close_term_.fuel_instrumented",
         "token_correspondence_Pulse.Syntax.ln_.fuel_instrumented",
         "token_correspondence_Pulse.Syntax.ln_c_.fuel_instrumented",
         "token_correspondence_Pulse.Syntax.ln_st_comp.fuel_instrumented",
+        "token_correspondence_Pulse.Syntax.open_term_.fuel_instrumented",
         "typing_FStar.Reflection.Typing.seal_pp_name",
         "typing_Pulse.Syntax.__proj__Mkst_comp__item__post",
         "typing_Pulse.Syntax.__proj__Mkst_comp__item__pre",
@@ -2087,7 +2197,7 @@
         "typing_tok_Pulse.Syntax.U_zero@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "0ddb07c2f2ee390c19e374fc3eca5a1b"
+      "693a94365b2fe5cbd9794879ac81d6ca"
     ]
   ]
 ]

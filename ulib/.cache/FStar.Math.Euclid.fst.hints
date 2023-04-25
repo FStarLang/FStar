@@ -1,5 +1,5 @@
 [
-  "&u<i<¬ñ‹»gÐ2\u001bé•ž",
+  "aÌl\"E±½*\u001a‡â a2\fà",
   [
     [
       "FStar.Math.Euclid.divides",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "718190db0b471853ff0792735dfa2837"
+      "fe2fc36913e852477dc13e884159d6b7"
     ],
     [
       "FStar.Math.Euclid.eq_mult_left",
@@ -25,7 +25,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ce8937ce1d579045860c109fa172c440"
+      "58f692033f3bbd87500458c948a7ad6d"
     ],
     [
       "FStar.Math.Euclid.eq_mult_one",
@@ -37,7 +37,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d0f17d0c85a61c39f68248a5365eab8a"
+      "9afb2cf7971dbfba0efddd4bfb363bd7"
     ],
     [
       "FStar.Math.Euclid.opp_idempotent",
@@ -49,7 +49,7 @@
         "primitive_Prims.op_Minus", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "bbcb8d7254ca503bcacb9edb16fb04de"
+      "184a1f7d5a654b02d81f66e9f1ac4471"
     ],
     [
       "FStar.Math.Euclid.add_sub_l",
@@ -62,7 +62,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c5b696a8750c6512189e8a52b98f2815"
+      "d65cc4538c398db13ff5096dda891011"
     ],
     [
       "FStar.Math.Euclid.add_sub_r",
@@ -75,7 +75,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ffcdb01542b8d6781b05460e99daa7a1"
+      "cd9c292456355e3c2a3ab35c9e80dca1"
     ],
     [
       "FStar.Math.Euclid.divides_reflexive",
@@ -88,7 +88,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "cb60d848d682114db391a6b8dbc7402c"
+      "b65f03b3720bdde8e478c9e8045a5648"
     ],
     [
       "FStar.Math.Euclid.divides_transitive",
@@ -105,7 +105,7 @@
         "refinement_interpretation_Tm_refine_90b5d2df39645a4835173a203da069e4"
       ],
       0,
-      "47c54a43e782882a38c3a7707f1ed54c"
+      "c6b280fec4a1d18d69de50c40bd69578"
     ],
     [
       "FStar.Math.Euclid.divide_antisym",
@@ -124,7 +124,7 @@
         "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
       ],
       0,
-      "90560215f1518345a9507e4cd9bb1beb"
+      "a6bf28f1b0b5e3bbaf063e96c262e82f"
     ],
     [
       "FStar.Math.Euclid.divides_0",
@@ -137,7 +137,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "412d623ce331ef5d40499e8b31c881f9"
+      "f386eaa1de9c290e29f088d2ceef5a7d"
     ],
     [
       "FStar.Math.Euclid.divides_1",
@@ -150,7 +150,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c8910bacec43695f0fcd5fb97243f5f3"
+      "0f4b6eaf1b317921e3856427152aa211"
     ],
     [
       "FStar.Math.Euclid.divides_minus",
@@ -165,7 +165,7 @@
         "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
       ],
       0,
-      "597c06bfc7fd7c7c976d96f2a81cee3c"
+      "2221b9b454f37911f5e01be441d2fd0e"
     ],
     [
       "FStar.Math.Euclid.divides_opp",
@@ -180,7 +180,7 @@
         "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
       ],
       0,
-      "63fa14f4fd8500f8a46d0b5f04747547"
+      "aef74e48b8cfa66f7afea87b8fd76c44"
     ],
     [
       "FStar.Math.Euclid.divides_plus",
@@ -194,7 +194,7 @@
         "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
       ],
       0,
-      "5e966acda5c0e18d9929d28ee383bd78"
+      "d0660a6b6f6207d05b143b92eb16b2bd"
     ],
     [
       "FStar.Math.Euclid.divides_sub",
@@ -208,7 +208,7 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e757b3bfec4ac89840f504321cffbed2"
+      "5b074ca28cc40f043899461ae01f7831"
     ],
     [
       "FStar.Math.Euclid.divides_mult_right",
@@ -222,7 +222,7 @@
         "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
       ],
       0,
-      "a0e688e646600e8f409760687ae00d6f"
+      "dc8af96eb69f94cab052e2ad03f40dd5"
     ],
     [
       "FStar.Math.Euclid.is_gcd",
@@ -237,7 +237,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "671dbe5e6beceb22cf8a79edc41889f2"
+      "ce5a89b66680c016a1040e8161f29070"
     ],
     [
       "FStar.Math.Euclid.mod_divides",
@@ -253,7 +253,7 @@
         "refinement_interpretation_Tm_refine_0766302b68bb44ab7aff8c4d8be0b46f"
       ],
       0,
-      "607828cd6d7fa0d03fd0fe88f23ae50d"
+      "b7513f7d35e8ca5a2c340e26a7183c34"
     ],
     [
       "FStar.Math.Euclid.divides_mod",
@@ -270,7 +270,7 @@
         "refinement_interpretation_Tm_refine_2310b01be5c19ce958196c6889908ecd"
       ],
       0,
-      "e24c3d272e33167c6c05b530530faca8"
+      "4761587e69b57622c11c7e5cffd1e3b6"
     ],
     [
       "FStar.Math.Euclid.is_gcd_unique",
@@ -279,7 +279,7 @@
       0,
       [ "@query", "equation_FStar.Math.Euclid.is_gcd" ],
       0,
-      "699a50ef9376df9edf38240ff73ca5e9"
+      "e43dbe475f04c3dee5b3cf047ac05a1f"
     ],
     [
       "FStar.Math.Euclid.is_gcd_reflexive",
@@ -292,7 +292,7 @@
         "lemma_FStar.Math.Euclid.divides_reflexive"
       ],
       0,
-      "4c0eaf555d125d9d7358b8c9ae14a488"
+      "d7cda2ae4c16b277b675e1d47f5ac104"
     ],
     [
       "FStar.Math.Euclid.is_gcd_symmetric",
@@ -301,7 +301,7 @@
       0,
       [ "@query", "equation_FStar.Math.Euclid.is_gcd" ],
       0,
-      "aa399281de81b8abe4117d0778ce1b0b"
+      "c369a86373bda9cf25abe45a7a1d1227"
     ],
     [
       "FStar.Math.Euclid.is_gcd_0",
@@ -316,7 +316,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6592d610ea906c6902f4e3f6bc11edcc"
+      "a0930ccc13ee1ed541ed7863064091ff"
     ],
     [
       "FStar.Math.Euclid.is_gcd_1",
@@ -331,7 +331,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "af8cf443cc733904ffc9653e6a3ac8e4"
+      "2e4d925f5be9833373ff4995084b9e01"
     ],
     [
       "FStar.Math.Euclid.is_gcd_minus",
@@ -344,7 +344,7 @@
         "primitive_Prims.op_Minus"
       ],
       0,
-      "dd904cf99e867372ab54182f7dba2460"
+      "051a354dc827c922610433c475cbfa7e"
     ],
     [
       "FStar.Math.Euclid.is_gcd_opp",
@@ -357,7 +357,7 @@
         "primitive_Prims.op_Minus"
       ],
       0,
-      "b7ecc8bd1cf5a42395a5b87e30ebdf8c"
+      "b4d19936543a6f64416ada05b8eacb01"
     ],
     [
       "FStar.Math.Euclid.is_gcd_plus",
@@ -370,7 +370,7 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply"
       ],
       0,
-      "f2db9ce5b7bf1a1741b20ac047a05997"
+      "bfed5628232f7caa88cbfd05c6fda61b"
     ],
     [
       "FStar.Math.Euclid.is_gcd_for_euclid",
@@ -379,7 +379,7 @@
       0,
       [ "@query", "equation_FStar.Math.Euclid.is_gcd" ],
       0,
-      "8bbb683dcaad8c195e4989438b2780af"
+      "022a223ef5f2689b8c26003e693e9a66"
     ],
     [
       "FStar.Math.Euclid.egcd",
@@ -388,13 +388,13 @@
       0,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "c24cfadb4cf44edb493b7379c646510c"
+      "000d3fa74c551c2bbb669332461eb908"
     ],
     [
       "FStar.Math.Euclid.egcd",
       2,
-      0,
-      0,
+      2,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
@@ -404,10 +404,9 @@
         "binder_x_ae567c2fb75be05905677af440075565_5",
         "binder_x_ae567c2fb75be05905677af440075565_6",
         "binder_x_ae567c2fb75be05905677af440075565_7",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.Math.Euclid.is_gcd",
+        "equation_FStar.Math.Euclid.is_gcd", "equation_Prims.squash",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "lemma_FStar.Math.Euclid.divides_reflexive",
-        "lemma_FStar.Math.Euclid.is_gcd_for_euclid",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -417,10 +416,12 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_d1ad8d70cd8f832cf361aa471eb3814f",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "92e068afc8dffe3486a505ff89c31f6d"
+      "a7b8c1f5571d6643195757b998e05892"
     ],
     [
       "FStar.Math.Euclid.euclid_gcd",
@@ -441,7 +442,7 @@
         "refinement_interpretation_Tm_refine_760c5e70adce122a95cd106d0e0c6598"
       ],
       0,
-      "9a7fb7202b87410dbf5f807cf33ebf94"
+      "dc32369d42de839c40f00f0e5da67380"
     ],
     [
       "FStar.Math.Euclid.is_gcd_prime_aux",
@@ -458,7 +459,7 @@
         "refinement_interpretation_Tm_refine_dd319c5462eccabc540582a4c9a72d35"
       ],
       0,
-      "d15a97129d66147b045bdb084e37d5cc"
+      "05c00256a1354d11ac5d93f823d54765"
     ],
     [
       "FStar.Math.Euclid.is_gcd_prime",
@@ -477,7 +478,7 @@
         "refinement_interpretation_Tm_refine_dd319c5462eccabc540582a4c9a72d35"
       ],
       0,
-      "d9ae691abbdbad28c8d413e903d6e828"
+      "d5548673eee33c0c560a3596aef53aa5"
     ],
     [
       "FStar.Math.Euclid.bezout_prime",
@@ -501,7 +502,7 @@
         "true_interp"
       ],
       0,
-      "859057b68be5f7f75e442180c0300966"
+      "68d52fbbc713a52c8031f8ad4b5abc02"
     ],
     [
       "FStar.Math.Euclid.bezout_prime",
@@ -510,7 +511,7 @@
       0,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "a41976ffc25ed6bf790c4afc568bda0e"
+      "a7451930d8a63baf8dafb1f8c0d25739"
     ],
     [
       "FStar.Math.Euclid.euclid",
@@ -522,7 +523,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "aae2fbc3fa6c8e771dc5eefe10fa1fde"
+      "7e4abeb168d311fe3624c8e474ace387"
     ],
     [
       "FStar.Math.Euclid.euclid",
@@ -537,7 +538,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "69e650f76ba23fbf6c556a7b68a7fef3"
+      "fe820a29fe2366ba9ffde19412171ca1"
     ],
     [
       "FStar.Math.Euclid.euclid_prime",
@@ -551,7 +552,7 @@
         "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
       ],
       0,
-      "c1f231730694e2e01db9955eb3bbdbfa"
+      "4ef28505a0a9e54bdc3713efd3741910"
     ],
     [
       "FStar.Math.Euclid.euclid_prime",
@@ -573,7 +574,7 @@
         "true_interp", "unit_inversion", "unit_typing"
       ],
       0,
-      "01dbcfa21ab310aca87158e5db4eb085"
+      "77c7a11b852430b7b0b0bc19a4c4a30d"
     ],
     [
       "FStar.Math.Euclid.euclid_prime",
@@ -582,7 +583,7 @@
       0,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "c4133fbb6cd624d1e68d14b3c5a197ed"
+      "53fc973831392905faa25475c01f318d"
     ]
   ]
 ]
