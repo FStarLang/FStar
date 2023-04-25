@@ -52,7 +52,7 @@ endif
 .PHONY: generated-files
 generated-files: $(FStar_Parser_Parse_ml) $(FStar_Version_ml)
 
-.PHONY: dune-stdlib-snapshot dune-taclib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib source-files
+.PHONY: dune-stdlib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib source-files
 
 # FIXME: dune-fstar-snapshot should also depend on dune-verify-ulib,
 # once we no longer lax-typecheck
@@ -63,12 +63,9 @@ dune-verify-ulib:
 	+$(MAKE) -C ../../ulib
 
 dune-stdlib-snapshot: dune-verify-ulib
-	$(MAKE) -C ../../ulib -f Makefile.extract-stdlib dune-snapshot
+	$(MAKE) -C ../../ulib -f Makefile.extract dune-snapshot
 
-dune-taclib-snapshot: dune-verify-ulib
-	$(MAKE) -C ../../ulib -f Makefile.extract-taclib dune-snapshot
-
-dune-snapshot: generated-files dune-fstar-snapshot dune-stdlib-snapshot dune-taclib-snapshot
+dune-snapshot: generated-files dune-fstar-snapshot dune-stdlib-snapshot
 
 $(FStar_Parser_Parse_ml): parse.mly
 	@# We are opening the same module twice but we need these modules

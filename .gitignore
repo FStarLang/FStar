@@ -41,7 +41,6 @@ tests/*/*.ml
 tests/incl/*.neg/error.log
 
 _build/
-/ulib/ml/_taclib_build/
 /ulib/fs/obj
 /ulib/fs/bin
 
