@@ -1024,7 +1024,9 @@ let rec (shift_bvs_in_else :
                                 Pulse_Syntax.bv_index =
                                   (bv.Pulse_Syntax.bv_index - Prims.int_one);
                                 Pulse_Syntax.bv_ppname =
-                                  (bv.Pulse_Syntax.bv_ppname)
+                                  (bv.Pulse_Syntax.bv_ppname);
+                                Pulse_Syntax.bv_range =
+                                  (bv.Pulse_Syntax.bv_range)
                               }
                           else t)))
            | Pulse_Syntax.Tm_Var uu___ ->
@@ -2494,7 +2496,10 @@ let (translate_st_app_or_return :
                                  match t1 with
                                  | Pulse_Syntax.Tm_PureApp (head, q, arg) ->
                                      (match head with
-                                      | Pulse_Syntax.Tm_FVar l ->
+                                      | Pulse_Syntax.Tm_FVar
+                                          { Pulse_Syntax.fv_name = l;
+                                            Pulse_Syntax.fv_range = uu___2;_}
+                                          ->
                                           if
                                             l =
                                               Pulse_Reflection_Util.return_stt_lid

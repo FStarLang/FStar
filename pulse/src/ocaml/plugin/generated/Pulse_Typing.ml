@@ -1,8 +1,8 @@
 open Prims
 let (tm_unit : Pulse_Syntax.term) =
-  Pulse_Syntax.Tm_FVar Pulse_Reflection_Util.unit_lid
+  Pulse_Syntax.Tm_FVar (Pulse_Syntax.as_fv Pulse_Reflection_Util.unit_lid)
 let (tm_bool : Pulse_Syntax.term) =
-  Pulse_Syntax.Tm_FVar Pulse_Reflection_Util.bool_lid
+  Pulse_Syntax.Tm_FVar (Pulse_Syntax.as_fv Pulse_Reflection_Util.bool_lid)
 let (tm_true : Pulse_Syntax.term) =
   Pulse_Syntax.Tm_Constant (Pulse_Syntax.Bool true)
 let (tm_false : Pulse_Syntax.term) =
@@ -11,7 +11,9 @@ let (mk_erased :
   Pulse_Syntax.universe -> Pulse_Syntax.term -> Pulse_Syntax.term) =
   fun u ->
     fun t ->
-      let hd = Pulse_Syntax.Tm_UInst (Pulse_Reflection_Util.erased_lid, [u]) in
+      let hd =
+        Pulse_Syntax.Tm_UInst
+          ((Pulse_Syntax.as_fv Pulse_Reflection_Util.erased_lid), [u]) in
       Pulse_Syntax.Tm_PureApp (hd, FStar_Pervasives_Native.None, t)
 let (mk_reveal :
   Pulse_Syntax.universe ->
@@ -21,7 +23,8 @@ let (mk_reveal :
     fun t ->
       fun e ->
         let hd =
-          Pulse_Syntax.Tm_UInst (Pulse_Reflection_Util.reveal_lid, [u]) in
+          Pulse_Syntax.Tm_UInst
+            ((Pulse_Syntax.as_fv Pulse_Reflection_Util.reveal_lid), [u]) in
         let hd1 =
           Pulse_Syntax.Tm_PureApp
             (hd, (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit), t) in
@@ -39,7 +42,8 @@ let (mk_eq2 :
             ((Pulse_Syntax.Tm_PureApp
                 ((Pulse_Syntax.Tm_PureApp
                     ((Pulse_Syntax.Tm_UInst
-                        (FStar_Reflection_Const.eq2_qn, [u])),
+                        ((Pulse_Syntax.as_fv FStar_Reflection_Const.eq2_qn),
+                          [u])),
                       (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit),
                       t)), FStar_Pervasives_Native.None, e0)),
               FStar_Pervasives_Native.None, e1)
@@ -56,8 +60,9 @@ let (mk_eq2_prop :
             ((Pulse_Syntax.Tm_PureApp
                 ((Pulse_Syntax.Tm_PureApp
                     ((Pulse_Syntax.Tm_UInst
-                        ((Pulse_Reflection_Util.mk_steel_wrapper_lid
-                            "eq2_prop"), [u])),
+                        ((Pulse_Syntax.as_fv
+                            (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                               "eq2_prop")), [u])),
                       (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit),
                       t)), FStar_Pervasives_Native.None, e0)),
               FStar_Pervasives_Native.None, e1)
@@ -70,7 +75,8 @@ let (mk_vprop_eq :
 let (mk_ref : Pulse_Syntax.term -> Pulse_Syntax.term) =
   fun t ->
     Pulse_Syntax.Tm_PureApp
-      ((Pulse_Syntax.Tm_FVar Pulse_Reflection_Util.ref_lid),
+      ((Pulse_Syntax.Tm_FVar
+          (Pulse_Syntax.as_fv Pulse_Reflection_Util.ref_lid)),
         FStar_Pervasives_Native.None, t)
 let (mk_pts_to :
   Pulse_Syntax.term ->
@@ -79,7 +85,9 @@ let (mk_pts_to :
   fun ty ->
     fun r ->
       fun v ->
-        let t = Pulse_Syntax.Tm_FVar Pulse_Reflection_Util.pts_to_lid in
+        let t =
+          Pulse_Syntax.Tm_FVar
+            (Pulse_Syntax.as_fv Pulse_Reflection_Util.pts_to_lid) in
         let t1 =
           Pulse_Syntax.Tm_PureApp
             (t, (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit), ty) in
@@ -88,7 +96,8 @@ let (mk_pts_to :
         let t3 =
           Pulse_Syntax.Tm_PureApp
             (t2, FStar_Pervasives_Native.None,
-              (Pulse_Syntax.Tm_FVar Pulse_Reflection_Util.full_perm_lid)) in
+              (Pulse_Syntax.Tm_FVar
+                 (Pulse_Syntax.as_fv Pulse_Reflection_Util.full_perm_lid))) in
         Pulse_Syntax.Tm_PureApp (t3, FStar_Pervasives_Native.None, v)
 let (comp_return :
   Pulse_Syntax.ctag ->
@@ -282,7 +291,8 @@ let (non_informative_witness_t :
     fun t ->
       Pulse_Syntax.Tm_PureApp
         ((Pulse_Syntax.Tm_UInst
-            (Pulse_Reflection_Util.non_informative_witness_lid, [u])),
+            ((Pulse_Syntax.as_fv
+                Pulse_Reflection_Util.non_informative_witness_lid), [u])),
           FStar_Pervasives_Native.None, t)
 let (elim_exists_post :
   Pulse_Syntax.universe ->
@@ -406,8 +416,8 @@ let (mk_tuple2 :
           Pulse_Syntax.Tm_PureApp
             ((Pulse_Syntax.Tm_PureApp
                 ((Pulse_Syntax.Tm_UInst
-                    (Pulse_Reflection_Util.tuple2_lid, [u1; u2])),
-                  FStar_Pervasives_Native.None, t1)),
+                    ((Pulse_Syntax.as_fv Pulse_Reflection_Util.tuple2_lid),
+                      [u1; u2])), FStar_Pervasives_Native.None, t1)),
               FStar_Pervasives_Native.None, t2)
 let (mk_fst :
   Pulse_Syntax.universe ->
@@ -424,7 +434,8 @@ let (mk_fst :
               ((Pulse_Syntax.Tm_PureApp
                   ((Pulse_Syntax.Tm_PureApp
                       ((Pulse_Syntax.Tm_UInst
-                          (Pulse_Reflection_Util.fst_lid, [u1; u2])),
+                          ((Pulse_Syntax.as_fv Pulse_Reflection_Util.fst_lid),
+                            [u1; u2])),
                         (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit),
                         a1)),
                     (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit), a2)),
@@ -444,7 +455,8 @@ let (mk_snd :
               ((Pulse_Syntax.Tm_PureApp
                   ((Pulse_Syntax.Tm_PureApp
                       ((Pulse_Syntax.Tm_UInst
-                          (Pulse_Reflection_Util.snd_lid, [u1; u2])),
+                          ((Pulse_Syntax.as_fv Pulse_Reflection_Util.snd_lid),
+                            [u1; u2])),
                         (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit),
                         a1)),
                     (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit), a2)),
