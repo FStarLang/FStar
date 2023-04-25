@@ -26,6 +26,18 @@ let (mk_reveal :
           Pulse_Syntax.Tm_PureApp
             (hd, (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit), t) in
         Pulse_Syntax.Tm_PureApp (hd1, FStar_Pervasives_Native.None, e)
+let (mk_hide :
+  Pulse_Syntax.universe ->
+    Pulse_Syntax.term -> Pulse_Syntax.term -> Pulse_Syntax.term)
+  =
+  fun u ->
+    fun t ->
+      fun e ->
+        let hd = Pulse_Syntax.Tm_UInst (Pulse_Reflection_Util.hide_lid, [u]) in
+        let hd1 =
+          Pulse_Syntax.Tm_PureApp
+            (hd, (FStar_Pervasives_Native.Some Pulse_Syntax.Implicit), t) in
+        Pulse_Syntax.Tm_PureApp (hd1, FStar_Pervasives_Native.None, e)
 let (mk_eq2 :
   Pulse_Syntax.universe ->
     Pulse_Syntax.term ->
