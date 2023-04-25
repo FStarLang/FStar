@@ -13,6 +13,7 @@
     pprint
     process
     sedlex
+    ezgzip
  )
  (modes native)
  (wrapped false)

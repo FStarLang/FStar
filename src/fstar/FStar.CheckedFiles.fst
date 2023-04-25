@@ -208,7 +208,7 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
     if not (BU.file_exists checked_fn)
     then let msg = BU.format1 "checked file %s does not exist" checked_fn in
          add_and_return (Invalid msg, Inl msg)
-    else let entry :option checked_file_entry_stage1 = BU.load_value_from_file checked_fn in
+    else let entry :option checked_file_entry_stage1 = BU.load_zipped_value_from_file checked_fn in
          match entry with
          | None ->
            let msg = BU.format1 "checked file %s is corrupt" checked_fn in

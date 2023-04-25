@@ -1043,16 +1043,22 @@ let save_value_to_file (fname:string) value =
     (fun channel -> output_value channel value)
     channel
 
-let load_value_from_file (fname:string) =
+let on_file (fname:string) (f : in_channel -> 'a) : 'a option =
   (* BatFile.with_file_in uses Unix.openfile (which isn't available in
      js_of_ocaml) instead of Pervasives.open_in, so we don't use it here. *)
   try
     let channel = open_in_bin fname in
     BatPervasives.finally
       (fun () -> close_in channel)
-      (fun channel -> Some (input_value channel))
+      (fun channel -> Some (f channel))
       channel
   with | _ -> None
+
+let load_value_from_file (fname:string) =
+  on_file fname input_value
+
+let load_zipped_value_from_file (fname:string) =
+  on_file fname FStar_Zip.input_zipped_value
 
 let save_2values_to_file (fname:string) value1 value2 =
   try
@@ -1060,8 +1066,8 @@ let save_2values_to_file (fname:string) value1 value2 =
     BatPervasives.finally
       (fun () -> close_out channel)
       (fun channel ->
-        output_value channel value1;
-        output_value channel value2)
+        FStar_Zip.output_zipped_value channel value1;
+        FStar_Zip.output_zipped_value channel value2)
       channel
   with
   | e -> delete_file fname;
@@ -1073,8 +1079,8 @@ let load_2values_from_file (fname:string) =
     BatPervasives.finally
       (fun () -> close_in channel)
       (fun channel ->
-        let v1 = input_value channel in
-        let v2 = input_value channel in
+        let v1 = FStar_Zip.input_zipped_value channel in
+        let v2 = FStar_Zip.input_zipped_value channel in
         Some (v1, v2))
       channel
   with | _ -> None
