@@ -1,5 +1,5 @@
 [
-  "ï\u00072+äî®0Â&³h\u0013¿‰w",
+  "¡SEiHH‹x±yM—üë\u000fG",
   [
     [
       "FStar.Tactics.SyntaxHelpers.mk_arr",
@@ -11,7 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "a00cf7550aa9c1df5ba6ee2598bcd0dd"
+      "02086481009dcc6086fe75b8f8dd0d1c"
     ],
     [
       "FStar.Tactics.SyntaxHelpers.mk_arr_curried",
@@ -24,7 +24,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "0390131925f63aa15bbe5a3bf73b3a1e"
+      "1feb82c626050f73a81cdd3f3e20e735"
     ],
     [
       "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
@@ -36,7 +36,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "bbeae510c47506ebb3e0d83f09b28547"
+      "722b92f7866ffa1b064ad141002b22b7"
     ],
     [
       "FStar.Tactics.SyntaxHelpers.lookup_lb_view",
@@ -62,7 +62,24 @@
         "typing_Tm_abs_221246e01212a4a5cd2192fb779fba3d"
       ],
       0,
-      "bf43e26532386a8aeccc1fe1bc3de640"
+      "d7f382488c625880b7420dc2a8db0a36"
+    ],
+    [
+      "FStar.Tactics.SyntaxHelpers.inspect_unascribe",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Reflection.Data.Tv_AscribedC",
+        "disc_equation_FStar.Reflection.Data.Tv_AscribedT",
+        "equation_FStar.Reflection.Data.notAscription",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "357581bc92b665f9a059cade98c741ee"
     ]
   ]
 ]

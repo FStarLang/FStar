@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0,
-      "f3710be1ffb87ce8b6b1633d27f3bba9"
+      "3b1da54587a5b065ffdbe04eea79e548"
     ],
     [
       "NegativeTests.Bug260.validity",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
       0,
-      "66879ba46ff3c25f712db96199e886a9"
+      "e21322795bb7d0a871f9755e5f7f92ad"
     ]
   ]
 ]

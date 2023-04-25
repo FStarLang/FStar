@@ -31,7 +31,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "c583f073dcb634e4b746687402350dfe"
+      "3f23db8a65453a7c540bfa1bbf2bc012"
     ],
     [
       "Bug138.arg_precede",
@@ -43,7 +43,7 @@
         "disc_equation_Bug138.Foo", "fuel_guarded_inversion_Bug138.arg"
       ],
       0,
-      "ffa56caeae2098b45757a0f6dd8504a4"
+      "955477561cd8602933264e3e890bb086"
     ],
     [
       "Bug138.foo_bar",
@@ -69,7 +69,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "98b34a9ee01bb12b35909991c1dddca8"
+      "a13b1fbf6e50ec8fe3b063f51ac14b58"
     ]
   ]
 ]
