@@ -2191,6 +2191,9 @@ let comp_to_string (c:comp) : tac string
   = let s = Print.comp_to_string c in
     ret s
 
+let range_to_string (r:FStar.Compiler.Range.range) : tac string
+  = ret (Range.string_of_range r)
+
 let term_eq_old (t1:term) (t2:term) : tac bool
   = idtac ;!
     ret (Syntax.Util.term_eq t1 t2)

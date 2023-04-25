@@ -6924,6 +6924,11 @@ let (comp_to_string :
   FStar_Syntax_Syntax.comp -> Prims.string FStar_Tactics_Monad.tac) =
   fun c ->
     let s = FStar_Syntax_Print.comp_to_string c in FStar_Tactics_Monad.ret s
+let (range_to_string :
+  FStar_Compiler_Range.range -> Prims.string FStar_Tactics_Monad.tac) =
+  fun r ->
+    let uu___ = FStar_Compiler_Range.string_of_range r in
+    FStar_Tactics_Monad.ret uu___
 let (term_eq_old :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term -> Prims.bool FStar_Tactics_Monad.tac)

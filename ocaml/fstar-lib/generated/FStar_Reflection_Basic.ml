@@ -1308,3 +1308,8 @@ let (close_term :
   FStar_Syntax_Syntax.binder ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   = fun b -> fun t -> FStar_Syntax_Subst.close [b] t
+let (range_of_term : FStar_Syntax_Syntax.term -> FStar_Compiler_Range.range)
+  = fun t -> t.FStar_Syntax_Syntax.pos
+let (range_of_sigelt :
+  FStar_Syntax_Syntax.sigelt -> FStar_Compiler_Range.range) =
+  fun s -> s.FStar_Syntax_Syntax.sigrng
