@@ -14,10 +14,8 @@
    limitations under the License.
 *)
 module FStar.Compiler.Range
+
 open FStar.Compiler.Effect
-open FStar.BaseTypes
-open FStar.Compiler.Util
-module List = FStar.Compiler.List
 
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val rng : Type0

@@ -21,6 +21,7 @@ open FStar.Const
 open FStar.Compiler.Util
 
 module DsEnv = FStar.Syntax.DsEnv
+module Json = FStar.Json
 
 val db_to_string          : bv -> string
 val bv_to_string          : bv -> string
@@ -49,8 +50,8 @@ val sigelt_to_string_short: sigelt -> string
 val tag_of_sigelt         : sigelt -> string
 val binder_to_string      : binder -> string
 val binders_to_string     : string -> binders -> string
-val binder_to_json        : DsEnv.env -> binder -> json
-val binders_to_json       : DsEnv.env -> binders -> json
+val binder_to_json        : DsEnv.env -> binder -> Json.json
+val binders_to_json       : DsEnv.env -> binders -> Json.json
 val aqual_to_string       : aqual -> string
 val bqual_to_string       : bqual -> string
 val args_to_string        : args -> string
