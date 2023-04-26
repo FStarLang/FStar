@@ -723,7 +723,7 @@ let (stt_vprop_equiv :
 let (return_stt_lid : Prims.string Prims.list) =
   mk_steel_wrapper_lid "return_stt"
 let (return_stt_noeq_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "return_stt_noeq"
+  mk_steel_wrapper_lid "return"
 let (return_stt_atomic_lid : Prims.string Prims.list) =
   mk_steel_wrapper_lid "return_stt_atomic"
 let (return_stt_atomic_noeq_lid : Prims.string Prims.list) =
