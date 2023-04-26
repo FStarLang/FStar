@@ -4,12 +4,12 @@ open Pulse.Syntax
 open Pulse.Main
 open Steel.ST.Util 
 open Steel.ST.Reference
-open Pulse.Steel.Wrapper
 open Steel.FractionalPermission
 open FStar.Ghost
 
 module U32 = FStar.UInt32
 
+open Pulse.Steel.Wrapper
 open Tests.Common
 
 #push-options "--ide_id_info_off"
@@ -38,8 +38,8 @@ let warmup (x:int) = assert (x + 1 > x)
      (provides (fun _ ->
         pts_to x full_perm 0ul))
      (
-       write x 1ul;
-       write x 0ul
+       x := 1ul;
+       x := 0ul
      )
    )))
 
@@ -52,8 +52,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun x ->
        pts_to r p x))
     (
-       let x = read r in
-       return_stt_noeq x
+       let x = !r in
+       return x
     )
 )))
 
@@ -65,8 +65,8 @@ let warmup (x:int) = assert (x + 1 > x)
     (expects (
        pts_to r full_perm n))
     (
-       let x = read r in
-       write r x
+       let x = !r in
+       r := x
     )
 )))
 
@@ -81,10 +81,10 @@ let warmup (x:int) = assert (x + 1 > x)
       pts_to r1 full_perm n2 *
       pts_to r2 full_perm n1))
     (
-      let x = read r1 in
-      let y = read r2 in
-      write r1 y;
-      write r2 x
+      let x = !r1 in
+      let y = !r2 in
+      r1 := y;
+      r2 := x
     )
 )))
 
@@ -115,10 +115,10 @@ let warmup (x:int) = assert (x + 1 > x)
     (provides (fun _ ->
                pts_to r1 full_perm n2 * pts_to r2 full_perm n1))
     (
-      let x = read r1 in
-      let y = read r2 in
-      write r1 y;
-      write r2 x
+      let x = !r1 in
+      let y = !r2 in
+      r1 := y;
+      r2 := x
     )
 )))
 
@@ -151,7 +151,7 @@ let warmup (x:int) = assert (x + 1 > x)
     (
       let x = read_atomic r in
       if b
-      then write r (U32.add x 2ul)
+      then r := (U32.add x 2ul)
       else write_atomic r 3ul
     )
 )))
@@ -191,11 +191,11 @@ let warmup (x:int) = assert (x + 1 > x)
         (invariant (fun b -> exists n. pts_to r full_perm n))
         (
           intro (exists n. pts_to r full_perm n) _;
-          return_stt_noeq true
+          return true
         )
         (
           intro (exists (b:bool) n. pts_to r full_perm n) true _;
-          return_stt_noeq ()
+          return ()
         )
     )
 )))
@@ -216,7 +216,7 @@ val read_pred (_:unit) (#b:erased bool)
         (invariant (fun b -> exists n. pts_to r full_perm n * pred b))
         (
           let x = read_pred () in
-          return_stt_noeq x
+          return x
         )
         (
           ()
@@ -232,7 +232,7 @@ val read_pred (_:unit) (#b:erased bool)
     (expects (exists n. pts_to r full_perm n))
     (provides (fun _ -> exists n. pts_to r full_perm n))
     (
-        let x = read r in
+        let x = !r in
         ()
     ))))
 
@@ -247,13 +247,13 @@ val read_pred (_:unit) (#b:erased bool)
         (invariant (fun b ->
             exists n. pts_to r full_perm n *
                  pure (eq2_prop b (n <> 10ul))))
-        (let x = read r in
-         return_stt_noeq (x <> 10ul))
+        (let x = !r in
+         return (x <> 10ul))
         ( 
-          let x = read r in
+          let x = !r in
           if x <^ 10ul
-          then (write r (x +^ 1ul); ())
-          else (write r (x -^ 1ul); ())
+          then (r := x +^ 1ul; ())
+          else (r := x -^ 1ul; ())
         );
       ())
 )))
@@ -268,11 +268,11 @@ val read_pred (_:unit) (#b:erased bool)
     (
       par
         (pts_to r1 full_perm n1)
-        (write r1 1ul)
+        (r1 := 1ul)
         (fun _ -> pts_to r1 full_perm 1ul)
 
         (pts_to r2 full_perm n2)
-        (write r2 1ul)
+        (r2 := 1ul)
         (fun _ -> pts_to r2 full_perm 1ul)
     )
 )))
@@ -286,7 +286,7 @@ let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
 				(provides (fun _ -> mpts_to r 1ul))
 				(
 						rewrite (mpts_to r n) (pts_to r full_perm n);
-						write r 1ul;
+						r := 1ul;
 						rewrite (pts_to r full_perm 1ul) (mpts_to r 1ul)
 				)
 )))
@@ -297,8 +297,8 @@ let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
     (provides (fun _ -> pts_to r full_perm 0ul))
     (
       let x = local 0ul in
-      let y = read x in
-      write r y;
+      let y = !x in
+      r := y;
       intro (exists n. pts_to x full_perm n) _
     )
 )))
@@ -312,10 +312,10 @@ let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
       while
         (invariant (fun b -> exists m. pts_to i full_perm m *
                              pure (eq2_prop b (m <> n))))
-        (let m = read i in return_stt_noeq (m <> n))
-        (let m = read i in write i (m + 1); ());
-      let x = read i in
-      write r x;
+        (let m = !i in return (m <> n))
+        (let m = !i in i := m + 1; ());
+      let x = !i in
+      r := x;
       intro (exists m. pts_to i full_perm m) _
     )
 )))
@@ -325,7 +325,7 @@ let rec sum_spec (n:nat) : nat =
 
 let zero : nat = 0
 
-%splice_t[sum_local] (check (`(
+%splice_t[sum] (check (`(
   fun (r:ref nat) (n:nat) ->
     (expects (exists (n:nat). pts_to r full_perm n))
     (provides (fun _ -> pts_to r full_perm (sum_spec n)))
@@ -341,18 +341,18 @@ let zero : nat = 0
                                     pts_to i full_perm m *
                                     pts_to sum full_perm s *
                                     pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))))
-        (let m = read i in return_stt_noeq (m <> n))
-        (let m = read i in
-         let s = read sum in
-         write i (m + 1);
-         write sum (s + m + 1);
+        (let m = !i in return (m <> n))
+        (let m = !i in
+         let s = !sum in
+         i := (m + 1);
+         sum := s + m + 1;
          intro (exists (b:bool). exists (m:nat) (s:nat).
                                  pts_to i full_perm m *
                                  pts_to sum full_perm s *
                                  pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (m + 1 <> n);
          ());
-      let s = read sum in
-      write r s;
+      let s = !sum in
+      r := s;
       intro (exists m. pts_to i full_perm m) _;
       intro (exists s. pts_to sum full_perm s) _
     )
