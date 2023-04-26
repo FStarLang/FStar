@@ -245,7 +245,7 @@ let stt_vprop_equiv (t1 t2:R.term) =
 		pack_ln (Tv_App t (t2, Q_Explicit))
 
 let return_stt_lid = mk_steel_wrapper_lid "return_stt"
-let return_stt_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
+let return_stt_noeq_lid = mk_steel_wrapper_lid "return"
 let return_stt_atomic_lid = mk_steel_wrapper_lid "return_stt_atomic"
 let return_stt_atomic_noeq_lid = mk_steel_wrapper_lid "return_stt_atomic_noeq"
 let return_stt_ghost_lid = mk_steel_wrapper_lid "return_stt_ghost"

@@ -81,7 +81,7 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) =
   fun _ -> return x
 
 inline_for_extraction
-let return_stt_noeq (#a:Type u#a) (x:a) (p:a -> vprop) =
+let return (#a:Type u#a) (x:a) (p:a -> vprop) =
   fun _ -> return x
 
 inline_for_extraction
@@ -111,7 +111,7 @@ let bind_stt_atomic_ghost #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_b =
     let y = e2 x () in
     rewrite (post2 y) (post2 (reveal_b (Ghost.hide y)));
     Ghost.hide y in
-  return (reveal_b y)
+  Steel.ST.Util.return (reveal_b y)
 
 let bind_stt_ghost_atomic #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a =
   fun _ ->
@@ -128,7 +128,7 @@ let lift_stt_ghost #a #opened #pre #post e reveal_a =
     let y = e () in
     rewrite (post y) (post (reveal_a (Ghost.hide y)));
     Ghost.hide y in
-  return (reveal_a x)
+  Steel.ST.Util.return (reveal_a x)
 
 inline_for_extraction
 let frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt a pre post)
@@ -155,7 +155,7 @@ let sub_stt (#a:Type u#a)
       elim_vprop_post_equiv post1 post2 pf2 x
     in
     rewrite_equiv (post1 x) (post2 x);
-    return x
+    Steel.ST.Util.return x
 
 inline_for_extraction
 let sub_stt_atomic #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
@@ -167,7 +167,7 @@ let sub_stt_atomic #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
     elim_vprop_post_equiv post1 post2 pf2 x
   in
   rewrite_equiv (post1 x) (post2 x);
-  return x
+  Steel.ST.Util.return x
 
 inline_for_extraction
 let sub_stt_ghost #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
