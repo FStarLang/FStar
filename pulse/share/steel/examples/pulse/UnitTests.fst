@@ -349,8 +349,7 @@ let zero : nat = 0
          intro (exists b. exists m s.
                           pts_to i full_perm m *
                           pts_to sum full_perm s *
-                          pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (m + 1 <> n);
-         ());
+                          pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (m + 1 <> n));
       let s = !sum in
       r := s;
       intro (exists m. pts_to i full_perm m) _;
