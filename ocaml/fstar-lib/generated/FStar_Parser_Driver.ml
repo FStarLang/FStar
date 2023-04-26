@@ -45,7 +45,7 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
           "Impossible: parsing a Toplevel always results in an ASTFragment"
 let (parse_file :
   Prims.string ->
-    (FStar_Parser_AST.file * (Prims.string * FStar_Compiler_Range.range)
+    (FStar_Parser_AST.file * (Prims.string * FStar_Compiler_Range_Type.range)
       Prims.list))
   =
   fun fn ->
@@ -56,7 +56,7 @@ let (parse_file :
     | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr uu___1, uu___2)
         ->
         let msg = FStar_Compiler_Util.format1 "%s: expected a module\n" fn in
-        let r = FStar_Compiler_Range.dummyRange in
+        let r = FStar_Compiler_Range_Type.dummyRange in
         FStar_Errors.raise_error
           (FStar_Errors_Codes.Fatal_ModuleExpected, msg) r
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->

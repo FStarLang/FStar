@@ -2,7 +2,7 @@ open Prims
 let mkForall_fuel' :
   'uuuuu .
     Prims.string ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         'uuuuu ->
           (FStar_SMTEncoding_Term.pat Prims.list Prims.list *
             FStar_SMTEncoding_Term.fvs * FStar_SMTEncoding_Term.term) ->
@@ -62,7 +62,7 @@ let mkForall_fuel' :
                      FStar_SMTEncoding_Term.mkForall r (pats1, vars1, body1))
 let (mkForall_fuel :
   Prims.string ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       (FStar_SMTEncoding_Term.pat Prims.list Prims.list *
         FStar_SMTEncoding_Term.fvs * FStar_SMTEncoding_Term.term) ->
         FStar_SMTEncoding_Term.term)
@@ -246,7 +246,7 @@ let (mk_Apply_args :
 let raise_arity_mismatch :
   'a .
     Prims.string ->
-      Prims.int -> Prims.int -> FStar_Compiler_Range.range -> 'a
+      Prims.int -> Prims.int -> FStar_Compiler_Range_Type.range -> 'a
   =
   fun head ->
     fun arity ->
@@ -262,7 +262,7 @@ let raise_arity_mismatch :
             (FStar_Errors_Codes.Fatal_SMTEncodingArityMismatch, uu___1) in
           FStar_Errors.raise_error uu___ rng
 let (isTotFun_axioms :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_SMTEncoding_Term.term ->
       FStar_SMTEncoding_Term.fvs ->
         FStar_SMTEncoding_Term.term Prims.list ->
@@ -310,7 +310,7 @@ let (isTotFun_axioms :
             is_tot_fun_axioms [] FStar_SMTEncoding_Util.mkTrue head vars
               guards
 let (maybe_curry_app :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (FStar_SMTEncoding_Term.op, FStar_SMTEncoding_Term.term)
       FStar_Pervasives.either ->
       Prims.int ->
@@ -339,7 +339,7 @@ let (maybe_curry_app :
                   (let uu___2 = FStar_SMTEncoding_Term.op_to_string head1 in
                    raise_arity_mismatch uu___2 arity n_args rng)
 let (maybe_curry_fvb :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_SMTEncoding_Env.fvar_binding ->
       FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term)
   =
@@ -414,7 +414,7 @@ let check_pattern_vars :
                    FStar_Compiler_List.fold_left
                      (fun out ->
                         fun t ->
-                          FStar_Compiler_Range.union_ranges out
+                          FStar_Compiler_Range_Ops.union_ranges out
                             t.FStar_Syntax_Syntax.pos)
                      hd.FStar_Syntax_Syntax.pos tl in
                  let uu___4 =
@@ -426,7 +426,8 @@ let check_pattern_vars :
                    (FStar_Errors_Codes.Warning_SMTPatternIllFormed, uu___5) in
                  FStar_Errors.log_issue pos uu___4)
 type label =
-  (FStar_SMTEncoding_Term.fv * Prims.string * FStar_Compiler_Range.range)
+  (FStar_SMTEncoding_Term.fv * Prims.string *
+    FStar_Compiler_Range_Type.range)
 type labels = label Prims.list
 type pattern =
   {
@@ -483,7 +484,7 @@ let (as_function_typ :
             else
               (let uu___2 =
                  let uu___3 =
-                   FStar_Compiler_Range.string_of_range
+                   FStar_Compiler_Range_Ops.string_of_range
                      t0.FStar_Syntax_Syntax.pos in
                  let uu___4 = FStar_Syntax_Print.term_to_string t0 in
                  FStar_Compiler_Util.format2
@@ -664,7 +665,7 @@ let rec (encode_const :
           let syntax_term =
             FStar_ToSyntax_ToSyntax.desugar_machine_integer
               (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.dsenv
-              repr sw FStar_Compiler_Range.dummyRange in
+              repr sw FStar_Compiler_Range_Type.dummyRange in
           encode_term syntax_term env
       | FStar_Const.Const_string (s, uu___) ->
           let uu___1 =
@@ -1187,7 +1188,7 @@ and (encode_term :
             let uu___3 =
               let uu___4 =
                 FStar_Compiler_Effect.op_Less_Bar
-                  FStar_Compiler_Range.string_of_range
+                  FStar_Compiler_Range_Ops.string_of_range
                   t1.FStar_Syntax_Syntax.pos in
               let uu___5 = FStar_Syntax_Print.tag_of_term t1 in
               let uu___6 = FStar_Syntax_Print.term_to_string t1 in
@@ -1198,7 +1199,7 @@ and (encode_term :
             let uu___2 =
               let uu___3 =
                 FStar_Compiler_Effect.op_Less_Bar
-                  FStar_Compiler_Range.string_of_range
+                  FStar_Compiler_Range_Ops.string_of_range
                   t1.FStar_Syntax_Syntax.pos in
               let uu___4 = FStar_Syntax_Print.tag_of_term t1 in
               let uu___5 = FStar_Syntax_Print.term_to_string t1 in
@@ -2450,7 +2451,7 @@ and (encode_term :
                                                                 FStar_SMTEncoding_Term.mk_and_l
                                                                   (t_head_hyp
                                                                   :: t_hyps)
-                                                                  FStar_Compiler_Range.dummyRange in
+                                                                  FStar_Compiler_Range_Type.dummyRange in
                                                               let uu___15 =
                                                                 encode_term_pred
                                                                   FStar_Pervasives_Native.None
@@ -3226,7 +3227,7 @@ and (encode_match :
               let uu___1 =
                 let uu___2 =
                   FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
-                    FStar_Compiler_Range.dummyRange in
+                    FStar_Compiler_Range_Type.dummyRange in
                 FStar_Syntax_Syntax.null_bv uu___2 in
               FStar_SMTEncoding_Env.gen_term_var env uu___1 in
             match uu___ with
@@ -3308,7 +3309,7 @@ and (encode_match :
                                 [uu___6] in
                               (uu___5, match_tm) in
                             FStar_SMTEncoding_Term.mkLet' uu___4
-                              FStar_Compiler_Range.dummyRange in
+                              FStar_Compiler_Range_Type.dummyRange in
                           (uu___3, decls1)))
 and (encode_pat :
   FStar_SMTEncoding_Env.env_t ->
@@ -3845,12 +3846,13 @@ and (encode_formula :
                        let tt1 =
                          let uu___3 =
                            let uu___4 =
-                             FStar_Compiler_Range.use_range
+                             FStar_Compiler_Range_Type.use_range
                                tt.FStar_SMTEncoding_Term.rng in
                            let uu___5 =
-                             FStar_Compiler_Range.use_range
+                             FStar_Compiler_Range_Type.use_range
                                phi1.FStar_Syntax_Syntax.pos in
-                           FStar_Compiler_Range.rng_included uu___4 uu___5 in
+                           FStar_Compiler_Range_Ops.rng_included uu___4
+                             uu___5 in
                          if uu___3
                          then tt
                          else
@@ -3880,12 +3882,12 @@ and (encode_formula :
                  let tt1 =
                    let uu___2 =
                      let uu___3 =
-                       FStar_Compiler_Range.use_range
+                       FStar_Compiler_Range_Type.use_range
                          tt.FStar_SMTEncoding_Term.rng in
                      let uu___4 =
-                       FStar_Compiler_Range.use_range
+                       FStar_Compiler_Range_Type.use_range
                          phi1.FStar_Syntax_Syntax.pos in
-                     FStar_Compiler_Range.rng_included uu___3 uu___4 in
+                     FStar_Compiler_Range_Ops.rng_included uu___3 uu___4 in
                    if uu___2
                    then tt
                    else

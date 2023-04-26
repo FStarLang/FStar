@@ -663,7 +663,7 @@ let (prims : prims_t) =
                                                                     x in
                                                                     FStar_SMTEncoding_Term.mkRealOfInt
                                                                     uu___53
-                                                                    FStar_Compiler_Range.dummyRange in
+                                                                    FStar_Compiler_Range_Type.dummyRange in
                                                                     FStar_Compiler_Effect.op_Less_Bar
                                                                     FStar_SMTEncoding_Term.boxReal
                                                                     uu___52 in
@@ -722,7 +722,7 @@ let (prims : prims_t) =
                           | (l', uu___4) -> FStar_Ident.lid_equals l l')) in
                 { mk; is }))
 let (pretype_axiom :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_SMTEncoding_Env.env_t ->
       FStar_SMTEncoding_Term.term ->
         (Prims.string * FStar_SMTEncoding_Term.sort * Prims.bool) Prims.list
@@ -1741,7 +1741,7 @@ let (encode_free_var :
                                         FStar_SMTEncoding_Term.dummy_sort) in
                                   let dummy_tm =
                                     FStar_SMTEncoding_Term.mkFreeV dummy_var
-                                      FStar_Compiler_Range.dummyRange in
+                                      FStar_Compiler_Range_Type.dummyRange in
                                   let should_thunk uu___8 =
                                     let is_type t =
                                       let uu___9 =
@@ -2745,7 +2745,7 @@ let (encode_top_level_let :
                                                        let dummy_tm =
                                                          FStar_SMTEncoding_Term.mkFreeV
                                                            dummy_var
-                                                           FStar_Compiler_Range.dummyRange in
+                                                           FStar_Compiler_Range_Type.dummyRange in
                                                        let app =
                                                          let uu___15 =
                                                            FStar_Syntax_Syntax.range_of_lbname

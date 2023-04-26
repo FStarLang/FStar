@@ -1,7 +1,7 @@
 open Prims
 let (run_tactic_on_typ :
-  FStar_Compiler_Range.range ->
-    FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.term ->
         FStar_TypeChecker_Env.env ->
           FStar_Syntax_Syntax.term ->
@@ -13,9 +13,9 @@ let (run_tactic_on_typ :
         fun env ->
           fun typ ->
             let rng =
-              let uu___ = FStar_Compiler_Range.use_range rng_goal in
-              let uu___1 = FStar_Compiler_Range.use_range rng_tac in
-              FStar_Compiler_Range.range_of_rng uu___ uu___1 in
+              let uu___ = FStar_Compiler_Range_Type.use_range rng_goal in
+              let uu___1 = FStar_Compiler_Range_Type.use_range rng_tac in
+              FStar_Compiler_Range_Type.range_of_rng uu___ uu___1 in
             let uu___ = FStar_Tactics_Basic.proofstate_of_goal_ty rng env typ in
             match uu___ with
             | (ps, w) ->
@@ -27,8 +27,8 @@ let (run_tactic_on_typ :
                     tactic_already_typed ps in
                 (match uu___1 with | (gs, _res) -> (gs, w))
 let (run_tactic_on_all_implicits :
-  FStar_Compiler_Range.range ->
-    FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.term ->
         FStar_TypeChecker_Env.env ->
           FStar_TypeChecker_Env.implicits ->
@@ -644,7 +644,7 @@ let (preprocess :
                       uu___7 :: gs2))))
 let rec (traverse_for_spinoff :
   pol ->
-    (Prims.string * FStar_Compiler_Range.range)
+    (Prims.string * FStar_Compiler_Range_Type.range)
       FStar_Pervasives_Native.option ->
       FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres)
   =
@@ -661,8 +661,10 @@ let rec (traverse_for_spinoff :
             let print_lc uu___ =
               match uu___ with
               | (msg, rng) ->
-                  let uu___1 = FStar_Compiler_Range.string_of_def_range rng in
-                  let uu___2 = FStar_Compiler_Range.string_of_use_range rng in
+                  let uu___1 =
+                    FStar_Compiler_Range_Ops.string_of_def_range rng in
+                  let uu___2 =
+                    FStar_Compiler_Range_Ops.string_of_use_range rng in
                   FStar_Compiler_Util.format3 "(%s,%s) : %s" uu___1 uu___2
                     msg in
             if debug
@@ -1659,7 +1661,8 @@ let (splice :
     Prims.bool ->
       FStar_Ident.lident Prims.list ->
         FStar_Syntax_Syntax.term ->
-          FStar_Compiler_Range.range -> FStar_Syntax_Syntax.sigelt Prims.list)
+          FStar_Compiler_Range_Type.range ->
+            FStar_Syntax_Syntax.sigelt Prims.list)
   =
   fun env ->
     fun is_typed ->

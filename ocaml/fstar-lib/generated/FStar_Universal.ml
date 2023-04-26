@@ -723,7 +723,7 @@ let (tc_one_fragment :
           if uu___
           then
             let uu___1 = FStar_TypeChecker_Env.get_range env1 in
-            FStar_Compiler_Range.file_of_range uu___1
+            FStar_Compiler_Range_Ops.file_of_range uu___1
           else
             (let uu___2 = FStar_Options.file_list () in
              FStar_Compiler_List.hd uu___2) in
@@ -751,7 +751,7 @@ let (tc_one_fragment :
                  FStar_Parser_AST.attrs = uu___3;_}::uu___4,
                uu___5)
               -> d
-          | uu___ -> FStar_Compiler_Range.dummyRange in
+          | uu___ -> FStar_Compiler_Range_Type.dummyRange in
         let check_module_name_declaration ast_modul =
           let uu___ =
             let uu___1 =

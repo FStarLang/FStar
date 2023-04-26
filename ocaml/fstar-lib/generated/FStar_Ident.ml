@@ -1,10 +1,13 @@
 open Prims
-type ident = {
+type ident =
+  {
   idText: Prims.string ;
-  idRange: FStar_Compiler_Range.range }[@@deriving yojson,show,yojson,show]
+  idRange: FStar_Compiler_Range_Type.range }[@@deriving
+                                              yojson,show,yojson,show]
 let (__proj__Mkident__item__idText : ident -> Prims.string) =
   fun projectee -> match projectee with | { idText; idRange;_} -> idText
-let (__proj__Mkident__item__idRange : ident -> FStar_Compiler_Range.range) =
+let (__proj__Mkident__item__idRange :
+  ident -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | { idText; idRange;_} -> idRange
 type path = Prims.string Prims.list[@@deriving yojson,show]
 type ipath = ident Prims.list[@@deriving yojson,show]
@@ -26,24 +29,24 @@ let (__proj__Mklident__item__nsstr : lident -> Prims.string) =
 let (__proj__Mklident__item__str : lident -> Prims.string) =
   fun projectee ->
     match projectee with | { ns; ident = ident1; nsstr; str;_} -> str
-let (mk_ident : (Prims.string * FStar_Compiler_Range.range) -> ident) =
+let (mk_ident : (Prims.string * FStar_Compiler_Range_Type.range) -> ident) =
   fun uu___ ->
     match uu___ with | (text, range) -> { idText = text; idRange = range }
-let (set_id_range : FStar_Compiler_Range.range -> ident -> ident) =
+let (set_id_range : FStar_Compiler_Range_Type.range -> ident -> ident) =
   fun r -> fun i -> { idText = (i.idText); idRange = r }
 let (reserved_prefix : Prims.string) = "uu___"
-let (gen' : Prims.string -> FStar_Compiler_Range.range -> ident) =
+let (gen' : Prims.string -> FStar_Compiler_Range_Type.range -> ident) =
   fun s ->
     fun r ->
       let i = FStar_GenSym.next_id () in
       mk_ident ((Prims.op_Hat s (Prims.string_of_int i)), r)
-let (gen : FStar_Compiler_Range.range -> ident) =
+let (gen : FStar_Compiler_Range_Type.range -> ident) =
   fun r -> gen' reserved_prefix r
 let (ident_of_lid : lident -> ident) = fun l -> l.ident
-let (range_of_id : ident -> FStar_Compiler_Range.range) =
+let (range_of_id : ident -> FStar_Compiler_Range_Type.range) =
   fun id -> id.idRange
 let (id_of_text : Prims.string -> ident) =
-  fun str -> mk_ident (str, FStar_Compiler_Range.dummyRange)
+  fun str -> mk_ident (str, FStar_Compiler_Range_Type.dummyRange)
 let (string_of_id : ident -> Prims.string) = fun id -> id.idText
 let (text_of_path : path -> Prims.string) =
   fun path1 -> FStar_Compiler_Util.concat_l "." path1
@@ -82,7 +85,7 @@ let (lid_of_str : Prims.string -> lident) =
     let uu___ =
       FStar_Compiler_List.map id_of_text (FStar_Compiler_Util.split str ".") in
     lid_of_ids uu___
-let (lid_of_path : path -> FStar_Compiler_Range.range -> lident) =
+let (lid_of_path : path -> FStar_Compiler_Range_Type.range -> lident) =
   fun path1 ->
     fun pos ->
       let ids = FStar_Compiler_List.map (fun s -> mk_ident (s, pos)) path1 in
@@ -93,9 +96,9 @@ let (lid_equals : lident -> lident -> Prims.bool) =
 let (ident_equals : ident -> ident -> Prims.bool) =
   fun id1 -> fun id2 -> id1.idText = id2.idText
 type lid = lident[@@deriving yojson,show]
-let (range_of_lid : lident -> FStar_Compiler_Range.range) =
+let (range_of_lid : lident -> FStar_Compiler_Range_Type.range) =
   fun lid1 -> range_of_id lid1.ident
-let (set_lid_range : lident -> FStar_Compiler_Range.range -> lident) =
+let (set_lid_range : lident -> FStar_Compiler_Range_Type.range -> lident) =
   fun l ->
     fun r ->
       {

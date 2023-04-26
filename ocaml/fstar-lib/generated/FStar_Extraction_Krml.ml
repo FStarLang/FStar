@@ -2815,7 +2815,8 @@ let (translate_type_decl' :
                 FStar_Compiler_Util.format1
                   "Error extracting type definition %s to KaRaMeL\n" name1 in
               (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___7) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___6);
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___6);
            FStar_Pervasives_Native.None)
 let (translate_let' :
   env ->
@@ -2944,7 +2945,7 @@ let (translate_let' :
                              (FStar_Errors_Codes.Warning_FunctionNotExtacted,
                                uu___10) in
                            FStar_Errors.log_issue
-                             FStar_Compiler_Range.dummyRange uu___9);
+                             FStar_Compiler_Range_Type.dummyRange uu___9);
                           (let msg1 =
                              Prims.op_Hat
                                "This function was not extracted:\n" msg in
@@ -2993,8 +2994,8 @@ let (translate_let' :
                            uu___8 in
                        (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
                          uu___6) in
-                     FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                       uu___5);
+                     FStar_Errors.log_issue
+                       FStar_Compiler_Range_Type.dummyRange uu___5);
                     FStar_Pervasives_Native.Some
                       (DGlobal
                          (meta1, name2, (FStar_Compiler_List.length tvars),
@@ -3010,7 +3011,8 @@ let (translate_let' :
                   FStar_Compiler_Util.format1
                     "Not extracting %s to KaRaMeL\n" name1 in
                 (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___6) in
-              FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___5);
+              FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+                uu___5);
              (match ts with
               | FStar_Pervasives_Native.Some (idents, t) ->
                   let uu___6 =

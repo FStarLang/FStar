@@ -643,7 +643,7 @@ let (generalize' :
                            match uu___5 with
                            | (l, us, e, c, gvs) ->
                                let uu___6 =
-                                 FStar_Compiler_Range.string_of_range
+                                 FStar_Compiler_Range_Ops.string_of_range
                                    e.FStar_Syntax_Syntax.pos in
                                let uu___7 =
                                  FStar_Syntax_Print.lbname_to_string l in

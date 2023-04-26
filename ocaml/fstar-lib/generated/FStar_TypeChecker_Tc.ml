@@ -238,7 +238,7 @@ let (tc_type_common :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.tscheme ->
       FStar_Syntax_Syntax.typ ->
-        FStar_Compiler_Range.range -> FStar_Syntax_Syntax.tscheme)
+        FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.tscheme)
   =
   fun env ->
     fun uu___ ->
@@ -274,7 +274,7 @@ let (tc_type_common :
 let (tc_declare_typ :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.tscheme ->
-      FStar_Compiler_Range.range -> FStar_Syntax_Syntax.tscheme)
+      FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.tscheme)
   =
   fun env ->
     fun ts ->
@@ -287,7 +287,7 @@ let (tc_declare_typ :
 let (tc_assume :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.tscheme ->
-      FStar_Compiler_Range.range -> FStar_Syntax_Syntax.tscheme)
+      FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.tscheme)
   =
   fun env ->
     fun ts ->
@@ -748,7 +748,7 @@ let run_phase1 : 'a . (unit -> 'a) -> 'a =
     (let r = f () in FStar_TypeChecker_Core.clear_memo_table (); r)
 let (tc_sig_let :
   FStar_TypeChecker_Env.env ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.sigelt ->
         (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list) ->
           FStar_Ident.lident Prims.list ->
@@ -4492,7 +4492,7 @@ let (tc_decls :
                    match FStar_Syntax_Util.lids_of_sigelt se with
                    | hd::uu___5 -> FStar_Ident.string_of_lid hd
                    | uu___5 ->
-                       FStar_Compiler_Range.string_of_range
+                       FStar_Compiler_Range_Ops.string_of_range
                          (FStar_Syntax_Util.range_of_sigelt se) in
                  FStar_Profiling.report_and_clear tag
                else ());

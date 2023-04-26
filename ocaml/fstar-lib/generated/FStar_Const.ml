@@ -30,10 +30,10 @@ type sconst =
   FStar_Pervasives_Native.option) 
   | Const_char of FStar_BaseTypes.char 
   | Const_real of Prims.string 
-  | Const_string of (Prims.string * FStar_Compiler_Range.range) 
+  | Const_string of (Prims.string * FStar_Compiler_Range_Type.range) 
   | Const_range_of 
   | Const_set_range_of 
-  | Const_range of FStar_Compiler_Range.range 
+  | Const_range of FStar_Compiler_Range_Type.range 
   | Const_reify of FStar_Ident.lid FStar_Pervasives_Native.option 
   | Const_reflect of FStar_Ident.lid [@@deriving yojson,show]
 let (uu___is_Const_effect : sconst -> Prims.bool) =
@@ -67,7 +67,7 @@ let (uu___is_Const_string : sconst -> Prims.bool) =
   fun projectee ->
     match projectee with | Const_string _0 -> true | uu___ -> false
 let (__proj__Const_string__item___0 :
-  sconst -> (Prims.string * FStar_Compiler_Range.range)) =
+  sconst -> (Prims.string * FStar_Compiler_Range_Type.range)) =
   fun projectee -> match projectee with | Const_string _0 -> _0
 let (uu___is_Const_range_of : sconst -> Prims.bool) =
   fun projectee ->
@@ -78,7 +78,8 @@ let (uu___is_Const_set_range_of : sconst -> Prims.bool) =
 let (uu___is_Const_range : sconst -> Prims.bool) =
   fun projectee ->
     match projectee with | Const_range _0 -> true | uu___ -> false
-let (__proj__Const_range__item___0 : sconst -> FStar_Compiler_Range.range) =
+let (__proj__Const_range__item___0 :
+  sconst -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | Const_range _0 -> _0
 let (uu___is_Const_reify : sconst -> Prims.bool) =
   fun projectee ->

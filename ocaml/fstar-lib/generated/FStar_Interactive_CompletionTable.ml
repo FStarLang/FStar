@@ -783,16 +783,16 @@ let (first_import_of_path :
     | { imports; segment = uu___;_}::uu___1 ->
         FStar_Compiler_List.last_opt imports
 let (alist_of_ns_info :
-  ns_info -> (Prims.string * FStar_Compiler_Util.json) Prims.list) =
+  ns_info -> (Prims.string * FStar_Json.json) Prims.list) =
   fun ns_info1 ->
-    [("name", (FStar_Compiler_Util.JsonStr (ns_info1.ns_name)));
-    ("loaded", (FStar_Compiler_Util.JsonBool (ns_info1.ns_loaded)))]
+    [("name", (FStar_Json.JsonStr (ns_info1.ns_name)));
+    ("loaded", (FStar_Json.JsonBool (ns_info1.ns_loaded)))]
 let (alist_of_mod_info :
-  mod_info -> (Prims.string * FStar_Compiler_Util.json) Prims.list) =
+  mod_info -> (Prims.string * FStar_Json.json) Prims.list) =
   fun mod_info1 ->
-    [("name", (FStar_Compiler_Util.JsonStr (mod_info1.mod_name)));
-    ("path", (FStar_Compiler_Util.JsonStr (mod_info1.mod_path)));
-    ("loaded", (FStar_Compiler_Util.JsonBool (mod_info1.mod_loaded)))]
+    [("name", (FStar_Json.JsonStr (mod_info1.mod_name)));
+    ("path", (FStar_Json.JsonStr (mod_info1.mod_path)));
+    ("loaded", (FStar_Json.JsonBool (mod_info1.mod_loaded)))]
 type completion_result =
   {
   completion_match_length: Prims.int ;
@@ -816,13 +816,12 @@ let (__proj__Mkcompletion_result__item__completion_annotation :
     match projectee with
     | { completion_match_length; completion_candidate;
         completion_annotation;_} -> completion_annotation
-let (json_of_completion_result :
-  completion_result -> FStar_Compiler_Util.json) =
+let (json_of_completion_result : completion_result -> FStar_Json.json) =
   fun result ->
-    FStar_Compiler_Util.JsonList
-      [FStar_Compiler_Util.JsonInt (result.completion_match_length);
-      FStar_Compiler_Util.JsonStr (result.completion_annotation);
-      FStar_Compiler_Util.JsonStr (result.completion_candidate)]
+    FStar_Json.JsonList
+      [FStar_Json.JsonInt (result.completion_match_length);
+      FStar_Json.JsonStr (result.completion_annotation);
+      FStar_Json.JsonStr (result.completion_candidate)]
 let completion_result_of_lid : 'uuuuu . (path * 'uuuuu) -> completion_result
   =
   fun uu___ ->

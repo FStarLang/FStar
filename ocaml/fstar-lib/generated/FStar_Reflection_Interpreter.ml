@@ -26,7 +26,7 @@ let try_unembed :
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings.embedding ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         'uuuuu -> FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun ea ->
@@ -356,7 +356,7 @@ let (e_attributes : FStar_Syntax_Syntax.attribute Prims.list dualemb) =
 let (e_qualifiers : FStar_Reflection_Data.qualifiers dualemb) =
   (FStar_Reflection_Embeddings.e_qualifiers,
     FStar_Reflection_NBEEmbeddings.e_qualifiers)
-let (e_range : FStar_Compiler_Range.range dualemb) =
+let (e_range : FStar_Compiler_Range_Type.range dualemb) =
   (FStar_Syntax_Embeddings.e_range, FStar_TypeChecker_NBETerm.e_range)
 let e_list : 'a . 'a dualemb -> 'a Prims.list dualemb =
   fun e ->

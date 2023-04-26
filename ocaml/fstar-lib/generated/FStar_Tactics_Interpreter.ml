@@ -16,7 +16,7 @@ let unembed :
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings.embedding ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         'uuuuu -> FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun ea ->
@@ -321,7 +321,7 @@ let unembed_tactic_1 :
       fun f ->
         fun ncb ->
           fun x ->
-            let rng = FStar_Compiler_Range.dummyRange in
+            let rng = FStar_Compiler_Range_Type.dummyRange in
             let x_tm = embed ea rng x ncb in
             let app =
               let uu___ =
@@ -2172,7 +2172,7 @@ let unembed_tactic_1_alt :
         fun ncb ->
           FStar_Pervasives_Native.Some
             (fun x ->
-               let rng = FStar_Compiler_Range.dummyRange in
+               let rng = FStar_Compiler_Range_Type.dummyRange in
                let x_tm = embed ea rng x ncb in
                let app =
                  let uu___ =
@@ -2202,7 +2202,7 @@ let e_tactic_1_alt :
         FStar_Syntax_Embeddings.term_as_fv FStar_Syntax_Syntax.t_unit in
       FStar_Syntax_Embeddings.mk_emb em un uu___
 let (report_implicits :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_TypeChecker_Rel.tagged_implicits -> unit)
   =
   fun rng ->
@@ -2273,8 +2273,8 @@ let (report_implicits :
       FStar_Errors.stop_if_err ()
 let run_tactic_on_ps' :
   'a 'b .
-    FStar_Compiler_Range.range ->
-      FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
+      FStar_Compiler_Range_Type.range ->
         Prims.bool ->
           'a FStar_Syntax_Embeddings.embedding ->
             'a ->
@@ -2503,8 +2503,8 @@ let run_tactic_on_ps' :
                              FStar_Errors.raise_error uu___6 rng)))))
 let run_tactic_on_ps :
   'a 'b .
-    FStar_Compiler_Range.range ->
-      FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
+      FStar_Compiler_Range_Type.range ->
         Prims.bool ->
           'a FStar_Syntax_Embeddings.embedding ->
             'a ->

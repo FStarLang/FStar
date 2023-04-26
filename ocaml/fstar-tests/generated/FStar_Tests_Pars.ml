@@ -1,6 +1,6 @@
 open Prims
 let (test_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Test"] FStar_Compiler_Range.dummyRange
+  FStar_Ident.lid_of_path ["Test"] FStar_Compiler_Range_Type.dummyRange
 let (tcenv_ref :
   FStar_TypeChecker_Env.env FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
@@ -35,7 +35,7 @@ let (parse_mod :
                let uu___3 =
                  let uu___4 =
                    FStar_Ident.lid_of_path ["Test"]
-                     FStar_Compiler_Range.dummyRange in
+                     FStar_Compiler_Range_Type.dummyRange in
                  FStar_Syntax_DsEnv.prepare_module_or_interface false false
                    env' uu___4 FStar_Syntax_DsEnv.default_mii in
                (match uu___3 with | (env'1, uu___4) -> (env'1, m1)))
@@ -47,7 +47,7 @@ let (parse_mod :
             FStar_Compiler_Util.format1 "%s: expected a module\n" mod_name in
           FStar_Errors.raise_error
             (FStar_Errors_Codes.Fatal_ModuleExpected, msg)
-            FStar_Compiler_Range.dummyRange
+            FStar_Compiler_Range_Type.dummyRange
       | FStar_Parser_ParseIt.Term uu___1 ->
           failwith
             "Impossible: parsing a Filename always results in an ASTFragment"
@@ -344,10 +344,10 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
     | FStar_Errors.Error (err, msg, r, _ctx) when
         let uu___1 = FStar_Options.trace_error () in
         FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___1 ->
-        (if r = FStar_Compiler_Range.dummyRange
+        (if r = FStar_Compiler_Range_Type.dummyRange
          then FStar_Compiler_Util.print_string msg
          else
-           (let uu___3 = FStar_Compiler_Range.string_of_range r in
+           (let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
             FStar_Compiler_Util.print2 "%s: %s\n" uu___3 msg);
          FStar_Compiler_Effect.exit Prims.int_one)
     | e when
@@ -642,10 +642,10 @@ let (parse_incremental_decls : unit -> unit) =
         (d0::d1::d2::[], uu___2, FStar_Pervasives_Native.Some
          (uu___3, uu___4, rng))
         when
-        let p = FStar_Compiler_Range.start_of_range rng in
-        (let uu___5 = FStar_Compiler_Range.line_of_pos p in
+        let p = FStar_Compiler_Range_Ops.start_of_range rng in
+        (let uu___5 = FStar_Compiler_Range_Ops.line_of_pos p in
          uu___5 = (Prims.of_int (3))) &&
-          (let uu___5 = FStar_Compiler_Range.col_of_pos p in
+          (let uu___5 = FStar_Compiler_Range_Ops.col_of_pos p in
            uu___5 = (Prims.of_int (15)))
         -> ()
     | uu___2 -> failwith "Incremental parsing failed"

@@ -45,10 +45,10 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
      | FStar_Errors.Error (err, msg, r, _ctx) when
          let uu___2 = FStar_Options.trace_error () in
          FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___2 ->
-         (if r = FStar_Compiler_Range.dummyRange
+         (if r = FStar_Compiler_Range_Type.dummyRange
           then FStar_Compiler_Util.print_string msg
           else
-            (let uu___4 = FStar_Compiler_Range.string_of_range r in
+            (let uu___4 = FStar_Compiler_Range_Ops.string_of_range r in
              FStar_Compiler_Util.print2 "%s: %s\n" uu___4 msg);
           FStar_Compiler_Effect.exit Prims.int_one)
      | FStar_Errors.Err (raw_error, s, ls) when

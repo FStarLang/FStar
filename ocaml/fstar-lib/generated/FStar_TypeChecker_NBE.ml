@@ -524,7 +524,7 @@ let (find_let :
                then FStar_Pervasives_Native.Some lb
                else FStar_Pervasives_Native.None)
 let (mk_rt :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_TypeChecker_NBETerm.t' -> FStar_TypeChecker_NBETerm.t)
   =
   fun r ->
@@ -537,7 +537,7 @@ let (mk_t : FStar_TypeChecker_NBETerm.t' -> FStar_TypeChecker_NBETerm.t) =
   fun t ->
     {
       FStar_TypeChecker_NBETerm.nbe_t = t;
-      FStar_TypeChecker_NBETerm.nbe_r = FStar_Compiler_Range.dummyRange
+      FStar_TypeChecker_NBETerm.nbe_r = FStar_Compiler_Range_Type.dummyRange
     }
 let rec (translate :
   config ->
@@ -1058,7 +1058,7 @@ let rec (translate :
              (debug1
                 (fun uu___3 ->
                    let uu___4 =
-                     FStar_Compiler_Range.string_of_range
+                     FStar_Compiler_Range_Ops.string_of_range
                        e.FStar_Syntax_Syntax.pos in
                    let uu___5 = FStar_Syntax_Print.term_to_string e in
                    FStar_Compiler_Util.print2 "%s: Translating match %s\n"
@@ -2046,7 +2046,7 @@ and (readback_comp :
         | FStar_TypeChecker_NBETerm.Comp ctyp ->
             let uu___ = readback_comp_typ cfg ctyp in
             FStar_Syntax_Syntax.Comp uu___ in
-      FStar_Syntax_Syntax.mk c' FStar_Compiler_Range.dummyRange
+      FStar_Syntax_Syntax.mk c' FStar_Compiler_Range_Type.dummyRange
 and (translate_comp_typ :
   config ->
     FStar_TypeChecker_NBETerm.t Prims.list ->
@@ -2874,7 +2874,7 @@ and (readback :
                args in
            let fv1 =
              FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
-               FStar_Compiler_Range.dummyRange in
+               FStar_Compiler_Range_Type.dummyRange in
            let app =
              let uu___1 =
                FStar_Syntax_Syntax.mk_Tm_uinst fv1
@@ -2971,7 +2971,7 @@ and (readback :
            let hd =
              FStar_Syntax_Syntax.mk
                (FStar_Syntax_Syntax.Tm_let ((false, [lb1]), body1))
-               FStar_Compiler_Range.dummyRange in
+               FStar_Compiler_Range_Type.dummyRange in
            let args1 = readback_args cfg args in
            let uu___1 = FStar_Syntax_Util.mk_app hd args1 in
            with_range uu___1
@@ -3016,7 +3016,7 @@ and (readback :
                 let hd =
                   FStar_Syntax_Syntax.mk
                     (FStar_Syntax_Syntax.Tm_let ((true, lbs2), body2))
-                    FStar_Compiler_Range.dummyRange in
+                    FStar_Compiler_Range_Type.dummyRange in
                 let args1 = readback_args cfg args in
                 let uu___2 = FStar_Syntax_Util.mk_app hd args1 in
                 with_range uu___2)
@@ -3046,7 +3046,7 @@ and (readback :
            let fv = FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
            let head =
              FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
-               FStar_Compiler_Range.dummyRange in
+               FStar_Compiler_Range_Type.dummyRange in
            let args1 =
              FStar_Compiler_List.map
                (fun uu___3 ->
@@ -3115,7 +3115,7 @@ and (readback :
                 let head =
                   FStar_Syntax_Syntax.mk
                     (FStar_Syntax_Syntax.Tm_let ((true, lbs2), body1))
-                    FStar_Compiler_Range.dummyRange in
+                    FStar_Compiler_Range_Type.dummyRange in
                 let args1 =
                   FStar_Compiler_List.map
                     (fun uu___3 ->

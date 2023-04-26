@@ -13,9 +13,24 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Compiler.Range
+module FStar.Compiler.Range.Type
 
-(* This module simply bundles together these other two. See their
-interfaces for reference. *)
-include FStar.Compiler.Range.Type
-include FStar.Compiler.Range.Ops
+open FStar.Compiler.Effect
+
+[@@ PpxDerivingYoJson; PpxDerivingShow]
+new val rng : Type0
+
+[@@ PpxDerivingYoJson; PpxDerivingShow]
+new val range : Type0
+
+[@@ PpxDerivingYoJson; PpxDerivingShow]
+new val pos : Type0
+
+val dummyRange: range
+val use_range: range -> rng
+val def_range: range -> rng
+val range_of_rng: def_rng:rng -> use_rng:rng -> range
+val set_use_range: range -> rng -> range
+val set_def_range: range -> rng -> range
+val mk_pos: int -> int -> pos
+val mk_range: string -> pos -> pos -> range
