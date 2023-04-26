@@ -327,29 +327,29 @@ let zero : nat = 0
 
 %splice_t[sum] (check (`(
   fun (r:ref nat) (n:nat) ->
-    (expects (exists (n:nat). pts_to r full_perm n))
+    (expects (exists n. pts_to r full_perm n))
     (provides (fun _ -> pts_to r full_perm (sum_spec n)))
     (
       let i = local zero in
       let sum = local zero in
-      intro (exists (b:bool). exists (m:nat) (s:nat).
-                              pts_to i full_perm m *
-                              pts_to sum full_perm s *
-                              pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (zero <> n);
+      intro (exists b. exists m s.
+                       pts_to i full_perm m *
+                       pts_to sum full_perm s *
+                       pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (zero <> n);
       while
-        (invariant (fun (b:bool) -> exists (m:nat) (s:nat).
-                                    pts_to i full_perm m *
-                                    pts_to sum full_perm s *
-                                    pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))))
+        (invariant (fun b -> exists m s.
+                             pts_to i full_perm m *
+                             pts_to sum full_perm s *
+                             pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))))
         (let m = !i in return (m <> n))
         (let m = !i in
          let s = !sum in
          i := (m + 1);
          sum := s + m + 1;
-         intro (exists (b:bool). exists (m:nat) (s:nat).
-                                 pts_to i full_perm m *
-                                 pts_to sum full_perm s *
-                                 pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (m + 1 <> n);
+         intro (exists b. exists m s.
+                          pts_to i full_perm m *
+                          pts_to sum full_perm s *
+                          pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (m + 1 <> n);
          ());
       let s = !sum in
       r := s;
