@@ -46,7 +46,8 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		
 		FStar.Interactive.Incremental FStar.Interactive.Legacy	\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
 		FStar.Main FStar.Compiler.List FStar.Compiler.Option    \
-		FStar.Compiler.Dyn FStar.Json
+		FStar.Compiler.Dyn FStar.Json FStar.Compiler.Range.Type \
+		FStar.Compiler.Range.Ops
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES
