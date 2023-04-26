@@ -17,12 +17,13 @@ let (mkAssume :
         FStar_SMTEncoding_Term.Assume uu___1
 let norng :
   'uuuuu 'uuuuu1 .
-    ('uuuuu -> FStar_Compiler_Range.range -> 'uuuuu1) -> 'uuuuu -> 'uuuuu1
-  = fun f -> fun x -> f x FStar_Compiler_Range.dummyRange
+    ('uuuuu -> FStar_Compiler_Range_Type.range -> 'uuuuu1) ->
+      'uuuuu -> 'uuuuu1
+  = fun f -> fun x -> f x FStar_Compiler_Range_Type.dummyRange
 let (mkTrue : FStar_SMTEncoding_Term.term) =
-  FStar_SMTEncoding_Term.mkTrue FStar_Compiler_Range.dummyRange
+  FStar_SMTEncoding_Term.mkTrue FStar_Compiler_Range_Type.dummyRange
 let (mkFalse : FStar_SMTEncoding_Term.term) =
-  FStar_SMTEncoding_Term.mkFalse FStar_Compiler_Range.dummyRange
+  FStar_SMTEncoding_Term.mkFalse FStar_Compiler_Range_Type.dummyRange
 let (mkInteger : Prims.string -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkInteger
 let (mkInteger' : Prims.int -> FStar_SMTEncoding_Term.term) =
@@ -171,24 +172,28 @@ let (mkCases :
   norng FStar_SMTEncoding_Term.mkCases
 let norng2 :
   'uuuuu 'uuuuu1 'uuuuu2 .
-    ('uuuuu -> 'uuuuu1 -> FStar_Compiler_Range.range -> 'uuuuu2) ->
+    ('uuuuu -> 'uuuuu1 -> FStar_Compiler_Range_Type.range -> 'uuuuu2) ->
       'uuuuu -> 'uuuuu1 -> 'uuuuu2
-  = fun f -> fun x -> fun y -> f x y FStar_Compiler_Range.dummyRange
+  = fun f -> fun x -> fun y -> f x y FStar_Compiler_Range_Type.dummyRange
 let norng3 :
   'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 .
-    ('uuuuu -> 'uuuuu1 -> 'uuuuu2 -> FStar_Compiler_Range.range -> 'uuuuu3)
+    ('uuuuu ->
+       'uuuuu1 -> 'uuuuu2 -> FStar_Compiler_Range_Type.range -> 'uuuuu3)
       -> 'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3
   =
-  fun f -> fun x -> fun y -> fun z -> f x y z FStar_Compiler_Range.dummyRange
+  fun f ->
+    fun x -> fun y -> fun z -> f x y z FStar_Compiler_Range_Type.dummyRange
 let norng4 :
   'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 'uuuuu4 .
     ('uuuuu ->
-       'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> FStar_Compiler_Range.range -> 'uuuuu4)
+       'uuuuu1 ->
+         'uuuuu2 -> 'uuuuu3 -> FStar_Compiler_Range_Type.range -> 'uuuuu4)
       -> 'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> 'uuuuu4
   =
   fun f ->
     fun x ->
-      fun y -> fun z -> fun w -> f x y z w FStar_Compiler_Range.dummyRange
+      fun y ->
+        fun z -> fun w -> f x y z w FStar_Compiler_Range_Type.dummyRange
 let (mk_Term_app :
   FStar_SMTEncoding_Term.term ->
     FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)

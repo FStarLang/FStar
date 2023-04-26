@@ -8,7 +8,7 @@ type vconst =
   | C_True 
   | C_False 
   | C_String of Prims.string 
-  | C_Range of FStar_Compiler_Range.range 
+  | C_Range of FStar_Compiler_Range_Type.range 
   | C_Reify 
   | C_Reflect of name 
 let (uu___is_C_Unit : vconst -> Prims.bool) =
@@ -28,7 +28,7 @@ let (__proj__C_String__item___0 : vconst -> Prims.string) =
   fun projectee -> match projectee with | C_String _0 -> _0
 let (uu___is_C_Range : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_Range _0 -> true | uu___ -> false
-let (__proj__C_Range__item___0 : vconst -> FStar_Compiler_Range.range) =
+let (__proj__C_Range__item___0 : vconst -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | C_Range _0 -> _0
 let (uu___is_C_Reify : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_Reify -> true | uu___ -> false
@@ -127,7 +127,7 @@ type universe_view =
   | Uv_Succ of FStar_Syntax_Syntax.universe 
   | Uv_Max of universes 
   | Uv_BVar of FStar_BigInt.t 
-  | Uv_Name of (Prims.string * FStar_Compiler_Range.range) 
+  | Uv_Name of (Prims.string * FStar_Compiler_Range_Type.range) 
   | Uv_Unif of FStar_Syntax_Syntax.universe_uvar 
   | Uv_Unk 
 let (uu___is_Uv_Zero : universe_view -> Prims.bool) =
@@ -148,7 +148,7 @@ let (__proj__Uv_BVar__item___0 : universe_view -> FStar_BigInt.t) =
 let (uu___is_Uv_Name : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Name _0 -> true | uu___ -> false
 let (__proj__Uv_Name__item___0 :
-  universe_view -> (Prims.string * FStar_Compiler_Range.range)) =
+  universe_view -> (Prims.string * FStar_Compiler_Range_Type.range)) =
   fun projectee -> match projectee with | Uv_Name _0 -> _0
 let (uu___is_Uv_Unif : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Unif _0 -> true | uu___ -> false

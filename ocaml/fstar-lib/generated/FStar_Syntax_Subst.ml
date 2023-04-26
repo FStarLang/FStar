@@ -230,16 +230,16 @@ let tag_with_range :
       | FStar_Syntax_Syntax.SomeUseRange r ->
           let uu___ =
             let uu___1 =
-              FStar_Compiler_Range.use_range t.FStar_Syntax_Syntax.pos in
-            let uu___2 = FStar_Compiler_Range.use_range r in
-            FStar_Compiler_Range.rng_included uu___1 uu___2 in
+              FStar_Compiler_Range_Type.use_range t.FStar_Syntax_Syntax.pos in
+            let uu___2 = FStar_Compiler_Range_Type.use_range r in
+            FStar_Compiler_Range_Ops.rng_included uu___1 uu___2 in
           if uu___
           then t
           else
             (let r1 =
-               let uu___2 = FStar_Compiler_Range.use_range r in
-               FStar_Compiler_Range.set_use_range t.FStar_Syntax_Syntax.pos
-                 uu___2 in
+               let uu___2 = FStar_Compiler_Range_Type.use_range r in
+               FStar_Compiler_Range_Type.set_use_range
+                 t.FStar_Syntax_Syntax.pos uu___2 in
              let t' =
                match t.FStar_Syntax_Syntax.n with
                | FStar_Syntax_Syntax.Tm_bvar bv ->
@@ -288,20 +288,20 @@ let tag_lid_with_range :
           let uu___ =
             let uu___1 =
               let uu___2 = FStar_Ident.range_of_lid l in
-              FStar_Compiler_Range.use_range uu___2 in
-            let uu___2 = FStar_Compiler_Range.use_range r in
-            FStar_Compiler_Range.rng_included uu___1 uu___2 in
+              FStar_Compiler_Range_Type.use_range uu___2 in
+            let uu___2 = FStar_Compiler_Range_Type.use_range r in
+            FStar_Compiler_Range_Ops.rng_included uu___1 uu___2 in
           if uu___
           then l
           else
             (let uu___2 =
                let uu___3 = FStar_Ident.range_of_lid l in
-               let uu___4 = FStar_Compiler_Range.use_range r in
-               FStar_Compiler_Range.set_use_range uu___3 uu___4 in
+               let uu___4 = FStar_Compiler_Range_Type.use_range r in
+               FStar_Compiler_Range_Type.set_use_range uu___3 uu___4 in
              FStar_Ident.set_lid_range l uu___2)
 let (mk_range :
-  FStar_Compiler_Range.range ->
-    FStar_Syntax_Syntax.subst_ts -> FStar_Compiler_Range.range)
+  FStar_Compiler_Range_Type.range ->
+    FStar_Syntax_Syntax.subst_ts -> FStar_Compiler_Range_Type.range)
   =
   fun r ->
     fun s ->
@@ -309,14 +309,14 @@ let (mk_range :
       | FStar_Syntax_Syntax.NoUseRange -> r
       | FStar_Syntax_Syntax.SomeUseRange r' ->
           let uu___ =
-            let uu___1 = FStar_Compiler_Range.use_range r in
-            let uu___2 = FStar_Compiler_Range.use_range r' in
-            FStar_Compiler_Range.rng_included uu___1 uu___2 in
+            let uu___1 = FStar_Compiler_Range_Type.use_range r in
+            let uu___2 = FStar_Compiler_Range_Type.use_range r' in
+            FStar_Compiler_Range_Ops.rng_included uu___1 uu___2 in
           if uu___
           then r
           else
-            (let uu___2 = FStar_Compiler_Range.use_range r' in
-             FStar_Compiler_Range.set_use_range r uu___2)
+            (let uu___2 = FStar_Compiler_Range_Type.use_range r' in
+             FStar_Compiler_Range_Type.set_use_range r uu___2)
 let rec (subst' :
   FStar_Syntax_Syntax.subst_ts ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -1027,7 +1027,7 @@ let (subst :
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   = fun s -> fun t -> subst' ([s], FStar_Syntax_Syntax.NoUseRange) t
 let (set_use_range :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   fun r ->
@@ -1035,8 +1035,8 @@ let (set_use_range :
       let uu___ =
         let uu___1 =
           let uu___2 =
-            let uu___3 = FStar_Compiler_Range.use_range r in
-            FStar_Compiler_Range.set_def_range r uu___3 in
+            let uu___3 = FStar_Compiler_Range_Type.use_range r in
+            FStar_Compiler_Range_Type.set_def_range r uu___3 in
           FStar_Syntax_Syntax.SomeUseRange uu___2 in
         ([], uu___1) in
       subst' uu___ t

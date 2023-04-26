@@ -1,11 +1,11 @@
 open Prims
-exception Inner_let_rec of (Prims.string * FStar_Compiler_Range.range)
+exception Inner_let_rec of (Prims.string * FStar_Compiler_Range_Type.range)
   Prims.list 
 let (uu___is_Inner_let_rec : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with | Inner_let_rec uu___ -> true | uu___ -> false
 let (__proj__Inner_let_rec__item__uu___ :
-  Prims.exn -> (Prims.string * FStar_Compiler_Range.range) Prims.list) =
+  Prims.exn -> (Prims.string * FStar_Compiler_Range_Type.range) Prims.list) =
   fun projectee -> match projectee with | Inner_let_rec uu___ -> uu___
 let add_fuel : 'uuuuu . 'uuuuu -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
   fun x ->
