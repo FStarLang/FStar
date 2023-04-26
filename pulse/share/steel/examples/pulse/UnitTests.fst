@@ -319,3 +319,41 @@ let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
       intro (exists m. pts_to i full_perm m) _
     )
 )))
+
+let rec sum_spec (n:nat) : nat =
+  if n = 0 then 0 else n + sum_spec (n - 1)
+
+let zero : nat = 0
+
+%splice_t[sum_local] (check (`(
+  fun (r:ref nat) (n:nat) ->
+    (expects (exists (n:nat). pts_to r full_perm n))
+    (provides (fun _ -> pts_to r full_perm (sum_spec n)))
+    (
+      let i = local zero in
+      let sum = local zero in
+      intro (exists (b:bool). exists (m:nat) (s:nat).
+                              pts_to i full_perm m *
+                              pts_to sum full_perm s *
+                              pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (zero <> n);
+      while
+        (invariant (fun (b:bool) -> exists (m:nat) (s:nat).
+                                    pts_to i full_perm m *
+                                    pts_to sum full_perm s *
+                                    pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))))
+        (let m = read i in return_stt_noeq (m <> n))
+        (let m = read i in
+         let s = read sum in
+         write i (m + 1);
+         write sum (s + m + 1);
+         intro (exists (b:bool). exists (m:nat) (s:nat).
+                                 pts_to i full_perm m *
+                                 pts_to sum full_perm s *
+                                 pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n)))) (m + 1 <> n);
+         ());
+      let s = read sum in
+      write r s;
+      intro (exists m. pts_to i full_perm m) _;
+      intro (exists s. pts_to sum full_perm s) _
+    )
+)))
