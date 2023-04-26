@@ -80,7 +80,7 @@ type universe_view =
   | Uv_BVar : nat -> universe_view
   | Uv_Name : univ_name -> universe_view
   | Uv_Unif : universe_uvar -> universe_view
-  | Uv_Unk   : universe_view
+  | Uv_Unk  : universe_view
 
 noeq
 type term_view =
