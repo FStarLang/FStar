@@ -36,6 +36,11 @@ let main t pre : RT.dsl_tac_t = main' t pre
 // let parse_and_check (s:string) : RT.dsl_tac_t = main (parse s) Tm_Emp
 
 let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
+let tuple3_lid = ["FStar"; "Pervasives"; "Native"; "tuple3"]
+let tuple4_lid = ["FStar"; "Pervasives"; "Native"; "tuple4"]
+let tuple5_lid = ["FStar"; "Pervasives"; "Native"; "tuple5"]
+let tuple6_lid = ["FStar"; "Pervasives"; "Native"; "tuple6"]
+let tuple7_lid = ["FStar"; "Pervasives"; "Native"; "tuple7"]
 
 let err a = either a string
 
@@ -80,9 +85,21 @@ let readback_ty (g:R.env) (t:R.term)
       unexpected_term "readback failed" t    
     | Some t -> Inl t
 
+let mk_star (l:list term) : term =
+  match l with
+  | [] -> Tm_Emp
+  | [x] -> x
+  | [x; y] -> Tm_Star x y
+  | x::y::tl ->
+    List.Tot.fold_left (fun t x -> Tm_Star t x) (Tm_Star x y) tl
+
+let is_ntuple (s:R.name) : bool =
+  s = tuple2_lid || s = tuple3_lid || s = tuple4_lid ||
+  s = tuple5_lid || s = tuple6_lid || s = tuple7_lid
+
 let rec translate_vprop (g:R.env) (t:R.term)
   : T.Tac (err vprop)
-  = let hd, _ = collect_app t in
+  = let hd, args = collect_app t in
     match inspect_ln hd with
     | Tv_FVar fv ->
       let qn = inspect_fv fv in
@@ -90,8 +107,11 @@ let rec translate_vprop (g:R.env) (t:R.term)
       then translate_exists g t
       else if qn = exists_qn
       then translate_exists_formula g t
-      else if qn = star_lid || qn = tuple2_lid
+      else if qn = star_lid
       then translate_star g t
+      else if is_ntuple qn
+      then let? l = translate_vprop_list g (List.Tot.map fst args) in
+           Inl (mk_star l)
       else if qn = pure_lid
       then translate_pure g t     
       else readback_ty g t
@@ -150,10 +170,10 @@ and translate_star (g:R.env) (t:R.term)
     match inspect_ln hd, args with
     | Tv_FVar fv, [(l, _); (r, _)] ->
       let lid = inspect_fv fv in
-      if lid = star_lid || lid = tuple2_lid
+      if lid = star_lid
       then let? l = translate_vprop g l in
            let? r = translate_vprop g r in
-           Inl (Tm_Star l r)
+           Inl (mk_star [l; r])
       else Inr "Not a star"
     | _ ->  Inr "Not a star"
 
@@ -167,6 +187,14 @@ and translate_pure (g:R.env) (t:R.term)
            Inl (Tm_Pure p)
       else Inr "Not a pure"
     | _ ->  Inr "Not a pure"
+
+and translate_vprop_list (g:R.env) (l:list R.term) : T.Tac (err (list term)) =
+  match l with
+  | [] -> Inl []
+  | hd::tl ->
+    let? hd = translate_vprop g hd in
+    let? tl = translate_vprop_list g tl in
+    Inl (hd::tl)
 
 let readback_comp (t:R.term)
   : T.Tac (err comp)

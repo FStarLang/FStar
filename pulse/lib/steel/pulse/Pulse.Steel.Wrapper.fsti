@@ -72,6 +72,7 @@ val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type 
 
 let eq2_prop (#a:Type) (x y:a) : prop = x == y
 let iff_prop (p q:Type0) : prop = p <==> q
+let and_prop (p q:Type0) : prop = p /\ q
 
 inline_for_extraction
 val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
