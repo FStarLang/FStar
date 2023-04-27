@@ -55,12 +55,13 @@ let rec blah (t : term) : Tac term =
              | Tv_Abs b t -> let t = blah t in
                              Tv_Abs b t
              | Tv_Arrow b t -> Tv_Arrow b t
-             | Tv_Refine b t -> let t = blah t in
-                                Tv_Refine b t
+             | Tv_Refine b s t -> let s = blah s in
+                                  let t = blah t in
+                                  Tv_Refine b s t
              | Tv_Type u -> Tv_Type u
              | Tv_Const c -> Tv_Const c
              | Tv_Uvar u t -> Tv_Uvar u t
-             | Tv_Let r attrs b t1 t2 -> Tv_Let r attrs b t1 t2
+             | Tv_Let r attrs b ty t1 t2 -> Tv_Let r attrs b ty t1 t2
              | Tv_Match t ret_opt brs -> Tv_Match t ret_opt brs
              | Tv_AscribedT e t tac use_eq -> Tv_AscribedT e t tac use_eq
              | Tv_AscribedC e c tac use_eq -> Tv_AscribedC e c tac use_eq
@@ -121,7 +122,7 @@ let arith_test2 (x : int) =
 let _ = assert True
             by (let t = quote (let x = 2 in x + 6) in
                 match inspect t with
-                | Tv_Let r attrs bv t1 t2 -> (
+                | Tv_Let r attrs bv ty t1 t2 -> (
                    debug ("r = " ^ (if r then "true" else "false"));
                    debug ("bv = " ^ bv_to_string bv);
                    debug ("t1 = " ^ term_to_string t1);
@@ -132,7 +133,7 @@ let _ = assert True
 let _ = assert True
             by (let t = quote (let rec f x = if (x <= 0) then 1 else f (x - 1) in f 5) in
                 match inspect t with
-                | Tv_Let r attrs bv t1 t2 -> (
+                | Tv_Let r attrs bv ty t1 t2 -> (
                    debug ("r = " ^ (if r then "true" else "false"));
                    debug ("bv = " ^ bv_to_string bv);
                    debug ("t1 = " ^ term_to_string t1);
