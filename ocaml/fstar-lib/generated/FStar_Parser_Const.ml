@@ -321,6 +321,8 @@ let (binder_unused_attr : FStar_Ident.lident) = psconst "unused"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
+let (admit_termination_lid : FStar_Ident.lident) =
+  psconst "admit_termination"
 let (attr_substitute_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "Substitute"]
 let (well_founded_relation_lid : FStar_Ident.lident) =

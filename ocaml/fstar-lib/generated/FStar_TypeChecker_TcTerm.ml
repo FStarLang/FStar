@@ -10851,7 +10851,7 @@ and (build_let_rec_env :
     fun env ->
       fun lbs ->
         let env0 = env in
-        let termination_check_enabled lbname lbdef lbtyp =
+        let termination_check_enabled attrs lbname lbdef lbtyp =
           let uu___ = FStar_Options.ml_ish () in
           if uu___
           then FStar_Pervasives_Native.None
@@ -10893,21 +10893,38 @@ and (build_let_rec_env :
                        else ();
                        (let nformals = FStar_Compiler_List.length formals in
                         let uu___5 =
-                          let uu___6 =
-                            FStar_Compiler_Effect.op_Bar_Greater
-                              (FStar_Syntax_Util.comp_effect_name c)
-                              (FStar_TypeChecker_Env.lookup_effect_quals env) in
-                          FStar_Compiler_Effect.op_Bar_Greater uu___6
-                            (FStar_Compiler_List.contains
-                               FStar_Syntax_Syntax.TotalEffect) in
+                          FStar_Syntax_Util.has_attribute attrs
+                            FStar_Parser_Const.admit_termination_lid in
                         if uu___5
                         then
-                          let uu___6 =
-                            let uu___7 =
-                              FStar_Syntax_Util.abs actuals1 body body_lc in
-                            (nformals, uu___7) in
-                          FStar_Pervasives_Native.Some uu___6
-                        else FStar_Pervasives_Native.None)))) in
+                          ((let uu___7 =
+                              let uu___8 =
+                                let uu___9 =
+                                  FStar_Syntax_Print.lbname_to_string lbname in
+                                Prims.op_Hat "Admitting termination of "
+                                  uu___9 in
+                              (FStar_Errors_Codes.Warning_WarnOnUse, uu___8) in
+                            FStar_Errors.log_issue
+                              env.FStar_TypeChecker_Env.range uu___7);
+                           FStar_Pervasives_Native.None)
+                        else
+                          (let uu___7 =
+                             let uu___8 =
+                               FStar_Compiler_Effect.op_Bar_Greater
+                                 (FStar_Syntax_Util.comp_effect_name c)
+                                 (FStar_TypeChecker_Env.lookup_effect_quals
+                                    env) in
+                             FStar_Compiler_Effect.op_Bar_Greater uu___8
+                               (FStar_Compiler_List.contains
+                                  FStar_Syntax_Syntax.TotalEffect) in
+                           if uu___7
+                           then
+                             let uu___8 =
+                               let uu___9 =
+                                 FStar_Syntax_Util.abs actuals1 body body_lc in
+                               (nformals, uu___9) in
+                             FStar_Pervasives_Native.Some uu___8
+                           else FStar_Pervasives_Native.None))))) in
         let check_annot univ_vars t =
           let env01 = FStar_TypeChecker_Env.push_univ_vars env0 univ_vars in
           let uu___ =
@@ -11053,6 +11070,7 @@ and (build_let_rec_env :
                                let uu___4 =
                                  let uu___5 =
                                    termination_check_enabled
+                                     lb.FStar_Syntax_Syntax.lbattrs
                                      lb.FStar_Syntax_Syntax.lbname lbdef
                                      lbtyp1 in
                                  match uu___5 with

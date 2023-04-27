@@ -950,14 +950,12 @@ let (tc_sig_let :
                                        r
                                    else ();
                                    (let uu___5 =
-                                      let uu___6 =
-                                        let uu___7 =
-                                          FStar_Parser_Const.effect_ALL_lid
-                                            () in
+                                      FStar_Syntax_Syntax.mk_lb
                                         ((FStar_Pervasives.Inr lbname), uvs,
-                                          uu___7, tval, def, [],
+                                          FStar_Parser_Const.effect_Tot_lid,
+                                          tval, def,
+                                          (lb.FStar_Syntax_Syntax.lbattrs),
                                           (lb.FStar_Syntax_Syntax.lbpos)) in
-                                      FStar_Syntax_Syntax.mk_lb uu___6 in
                                     (false, uu___5, quals_opt1))) in
                             (match uu___2 with
                              | (gen1, lb1, quals_opt1) ->

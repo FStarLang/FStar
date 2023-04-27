@@ -359,6 +359,7 @@ let binder_strictly_positive_attr = psconst "strictly_positive"
 let binder_unused_attr = psconst "unused"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
+let admit_termination_lid = psconst "admit_termination"
 let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]
 
 
