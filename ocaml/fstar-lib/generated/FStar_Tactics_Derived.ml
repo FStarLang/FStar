@@ -1746,11 +1746,11 @@ let (fresh_binder_named :
            (Prims.of_int (35)))
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
            (Prims.of_int (386)) (Prims.of_int (4)) (Prims.of_int (386))
-           (Prims.of_int (35)))
+           (Prims.of_int (37)))
         (Obj.magic (FStar_Tactics_Builtins.fresh_bv_named nm t))
         (fun uu___ ->
            FStar_Tactics_Effect.lift_div_tac
-             (fun uu___1 -> FStar_Reflection_Derived.mk_binder uu___))
+             (fun uu___1 -> FStar_Reflection_Derived.mk_binder uu___ t))
 let (fresh_binder :
   FStar_Reflection_Types.typ ->
     (FStar_Reflection_Types.binder, unit) FStar_Tactics_Effect.tac_repr)
@@ -1780,11 +1780,12 @@ let (fresh_implicit_binder_named :
            (Prims.of_int (44)))
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
            (Prims.of_int (394)) (Prims.of_int (4)) (Prims.of_int (394))
-           (Prims.of_int (44)))
+           (Prims.of_int (46)))
         (Obj.magic (FStar_Tactics_Builtins.fresh_bv_named nm t))
         (fun uu___ ->
            FStar_Tactics_Effect.lift_div_tac
-             (fun uu___1 -> FStar_Reflection_Derived.mk_implicit_binder uu___))
+             (fun uu___1 ->
+                FStar_Reflection_Derived.mk_implicit_binder uu___ t))
 let (fresh_implicit_binder :
   FStar_Reflection_Types.typ ->
     (FStar_Reflection_Types.binder, unit) FStar_Tactics_Effect.tac_repr)
@@ -2412,6 +2413,17 @@ let (binder_to_term :
          (fun bview ->
             Obj.magic (bv_to_term bview.FStar_Reflection_Data.binder_bv))
            uu___)
+let (binder_sort :
+  FStar_Reflection_Types.binder ->
+    (FStar_Reflection_Types.typ, unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun uu___ ->
+    (fun b ->
+       Obj.magic
+         (FStar_Tactics_Effect.lift_div_tac
+            (fun uu___ ->
+               (FStar_Reflection_Builtins.inspect_binder b).FStar_Reflection_Data.binder_sort)))
+      uu___
 let rec (__assumption_aux :
   FStar_Reflection_Types.binders ->
     (unit, unit) FStar_Tactics_Effect.tac_repr)
@@ -2425,11 +2437,11 @@ let rec (__assumption_aux :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (548)) (Prims.of_int (16))
-                      (Prims.of_int (548)) (Prims.of_int (32)))
+                      (Prims.of_int (550)) (Prims.of_int (16))
+                      (Prims.of_int (550)) (Prims.of_int (32)))
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (549)) (Prims.of_int (8))
-                      (Prims.of_int (552)) (Prims.of_int (27)))
+                      (Prims.of_int (551)) (Prims.of_int (8))
+                      (Prims.of_int (554)) (Prims.of_int (27)))
                    (Obj.magic (binder_to_term b))
                    (fun uu___ ->
                       (fun t ->
@@ -2444,15 +2456,15 @@ let rec (__assumption_aux :
                                           FStar_Tactics_Effect.tac_bind
                                             (FStar_Range.mk_range
                                                "FStar.Tactics.Derived.fst"
-                                               (Prims.of_int (550))
+                                               (Prims.of_int (552))
                                                (Prims.of_int (13))
-                                               (Prims.of_int (550))
+                                               (Prims.of_int (552))
                                                (Prims.of_int (48)))
                                             (FStar_Range.mk_range
                                                "FStar.Tactics.Derived.fst"
-                                               (Prims.of_int (551))
+                                               (Prims.of_int (553))
                                                (Prims.of_int (13))
-                                               (Prims.of_int (551))
+                                               (Prims.of_int (553))
                                                (Prims.of_int (20)))
                                             (Obj.magic
                                                (apply
@@ -2470,10 +2482,10 @@ let rec (__assumption_aux :
 let (assumption : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (555))
-         (Prims.of_int (21)) (Prims.of_int (555)) (Prims.of_int (37)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (555))
-         (Prims.of_int (4)) (Prims.of_int (555)) (Prims.of_int (37)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (557))
+         (Prims.of_int (21)) (Prims.of_int (557)) (Prims.of_int (37)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (557))
+         (Prims.of_int (4)) (Prims.of_int (557)) (Prims.of_int (37)))
       (Obj.magic (cur_binders ()))
       (fun uu___1 ->
          (fun uu___1 -> Obj.magic (__assumption_aux uu___1)) uu___1)
@@ -2485,10 +2497,10 @@ let (destruct_equality_implication :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (558))
-         (Prims.of_int (10)) (Prims.of_int (558)) (Prims.of_int (27)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (558))
-         (Prims.of_int (4)) (Prims.of_int (565)) (Prims.of_int (15)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (560))
+         (Prims.of_int (10)) (Prims.of_int (560)) (Prims.of_int (27)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (560))
+         (Prims.of_int (4)) (Prims.of_int (567)) (Prims.of_int (15)))
       (Obj.magic (FStar_Reflection_Formula.term_as_formula t))
       (fun uu___ ->
          (fun uu___ ->
@@ -2498,11 +2510,11 @@ let (destruct_equality_implication :
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                           (Prims.of_int (560)) (Prims.of_int (18))
-                           (Prims.of_int (560)) (Prims.of_int (38)))
+                           (Prims.of_int (562)) (Prims.of_int (18))
+                           (Prims.of_int (562)) (Prims.of_int (38)))
                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                           (Prims.of_int (561)) (Prims.of_int (14))
-                           (Prims.of_int (563)) (Prims.of_int (19)))
+                           (Prims.of_int (563)) (Prims.of_int (14))
+                           (Prims.of_int (565)) (Prims.of_int (19)))
                         (Obj.magic
                            (FStar_Reflection_Formula.term_as_formula' lhs))
                         (fun lhs1 ->
@@ -2529,22 +2541,22 @@ let (rewrite' :
          (fun uu___ ->
             FStar_Tactics_Effect.tac_bind
               (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                 (Prims.of_int (574)) (Prims.of_int (20))
-                 (Prims.of_int (574)) (Prims.of_int (35)))
+                 (Prims.of_int (576)) (Prims.of_int (20))
+                 (Prims.of_int (576)) (Prims.of_int (35)))
               (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                 (Prims.of_int (575)) (Prims.of_int (20))
-                 (Prims.of_int (576)) (Prims.of_int (29)))
+                 (Prims.of_int (577)) (Prims.of_int (20))
+                 (Prims.of_int (578)) (Prims.of_int (29)))
               (Obj.magic (FStar_Tactics_Builtins.binder_retype b))
               (fun uu___1 ->
                  (fun uu___1 ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                            (Prims.of_int (575)) (Prims.of_int (20))
-                            (Prims.of_int (575)) (Prims.of_int (43)))
+                            (Prims.of_int (577)) (Prims.of_int (20))
+                            (Prims.of_int (577)) (Prims.of_int (43)))
                          (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                            (Prims.of_int (576)) (Prims.of_int (20))
-                            (Prims.of_int (576)) (Prims.of_int (29)))
+                            (Prims.of_int (578)) (Prims.of_int (20))
+                            (Prims.of_int (578)) (Prims.of_int (29)))
                          (Obj.magic
                             (apply_lemma
                                (FStar_Reflection_Builtins.pack_ln
@@ -2579,11 +2591,11 @@ let rec (try_rewrite_equality :
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                          (Prims.of_int (584)) (Prims.of_int (20))
-                          (Prims.of_int (584)) (Prims.of_int (56)))
+                          (Prims.of_int (586)) (Prims.of_int (20))
+                          (Prims.of_int (586)) (Prims.of_int (56)))
                        (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                          (Prims.of_int (584)) (Prims.of_int (14))
-                          (Prims.of_int (590)) (Prims.of_int (37)))
+                          (Prims.of_int (586)) (Prims.of_int (14))
+                          (Prims.of_int (592)) (Prims.of_int (37)))
                        (Obj.magic
                           (FStar_Reflection_Formula.term_as_formula
                              (FStar_Reflection_Derived.type_of_binder x_t)))
@@ -2617,11 +2629,11 @@ let rec (rewrite_all_context_equalities :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (597)) (Prims.of_int (8))
-                      (Prims.of_int (597)) (Prims.of_int (40)))
+                      (Prims.of_int (599)) (Prims.of_int (8))
+                      (Prims.of_int (599)) (Prims.of_int (40)))
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (598)) (Prims.of_int (8))
-                      (Prims.of_int (598)) (Prims.of_int (41)))
+                      (Prims.of_int (600)) (Prims.of_int (8))
+                      (Prims.of_int (600)) (Prims.of_int (41)))
                    (Obj.magic
                       (try_with
                          (fun uu___ ->
@@ -2640,10 +2652,10 @@ let (rewrite_eqs_from_context :
   unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (602))
-         (Prims.of_int (35)) (Prims.of_int (602)) (Prims.of_int (51)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (602))
-         (Prims.of_int (4)) (Prims.of_int (602)) (Prims.of_int (51)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (604))
+         (Prims.of_int (35)) (Prims.of_int (604)) (Prims.of_int (51)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (604))
+         (Prims.of_int (4)) (Prims.of_int (604)) (Prims.of_int (51)))
       (Obj.magic (cur_binders ()))
       (fun uu___1 ->
          (fun uu___1 -> Obj.magic (rewrite_all_context_equalities uu___1))
@@ -2653,10 +2665,10 @@ let (rewrite_equality :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (605))
-         (Prims.of_int (27)) (Prims.of_int (605)) (Prims.of_int (43)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (605))
-         (Prims.of_int (4)) (Prims.of_int (605)) (Prims.of_int (43)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (607))
+         (Prims.of_int (27)) (Prims.of_int (607)) (Prims.of_int (43)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (607))
+         (Prims.of_int (4)) (Prims.of_int (607)) (Prims.of_int (43)))
       (Obj.magic (cur_binders ()))
       (fun uu___ ->
          (fun uu___ -> Obj.magic (try_rewrite_equality t uu___)) uu___)
@@ -2665,10 +2677,10 @@ let (unfold_def :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (608))
-         (Prims.of_int (10)) (Prims.of_int (608)) (Prims.of_int (19)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (608))
-         (Prims.of_int (4)) (Prims.of_int (612)) (Prims.of_int (46)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (610))
+         (Prims.of_int (10)) (Prims.of_int (610)) (Prims.of_int (19)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (610))
+         (Prims.of_int (4)) (Prims.of_int (614)) (Prims.of_int (46)))
       (Obj.magic (FStar_Tactics_Builtins.inspect t))
       (fun uu___ ->
          (fun uu___ ->
@@ -2678,11 +2690,11 @@ let (unfold_def :
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                           (Prims.of_int (610)) (Prims.of_int (16))
-                           (Prims.of_int (610)) (Prims.of_int (42)))
+                           (Prims.of_int (612)) (Prims.of_int (16))
+                           (Prims.of_int (612)) (Prims.of_int (42)))
                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                           (Prims.of_int (611)) (Prims.of_int (8))
-                           (Prims.of_int (611)) (Prims.of_int (30)))
+                           (Prims.of_int (613)) (Prims.of_int (8))
+                           (Prims.of_int (613)) (Prims.of_int (30)))
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___1 ->
                               FStar_Reflection_Builtins.implode_qn
@@ -2702,20 +2714,20 @@ let (l_to_r :
   =
   fun lems ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (619))
-         (Prims.of_int (8)) (Prims.of_int (622)) (Prims.of_int (31)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (623))
-         (Prims.of_int (4)) (Prims.of_int (623)) (Prims.of_int (28)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (621))
+         (Prims.of_int (8)) (Prims.of_int (624)) (Prims.of_int (31)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (625))
+         (Prims.of_int (4)) (Prims.of_int (625)) (Prims.of_int (28)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ ->
             fun uu___1 ->
               FStar_Tactics_Effect.tac_bind
                 (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                   (Prims.of_int (619)) (Prims.of_int (8))
-                   (Prims.of_int (622)) (Prims.of_int (31)))
+                   (Prims.of_int (621)) (Prims.of_int (8))
+                   (Prims.of_int (624)) (Prims.of_int (31)))
                 (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                   (Prims.of_int (619)) (Prims.of_int (8))
-                   (Prims.of_int (622)) (Prims.of_int (31)))
+                   (Prims.of_int (621)) (Prims.of_int (8))
+                   (Prims.of_int (624)) (Prims.of_int (31)))
                 (Obj.magic
                    (FStar_Tactics_Util.fold_left
                       (fun uu___3 ->
@@ -2760,21 +2772,21 @@ let (grewrite :
     fun t2 ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-           (Prims.of_int (636)) (Prims.of_int (12)) (Prims.of_int (636))
+           (Prims.of_int (638)) (Prims.of_int (12)) (Prims.of_int (638))
            (Prims.of_int (33)))
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-           (Prims.of_int (637)) (Prims.of_int (4)) (Prims.of_int (650))
+           (Prims.of_int (639)) (Prims.of_int (4)) (Prims.of_int (652))
            (Prims.of_int (44))) (Obj.magic (tcut (mk_sq_eq t1 t2)))
         (fun uu___ ->
            (fun e ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (637)) (Prims.of_int (12))
-                      (Prims.of_int (637)) (Prims.of_int (45)))
+                      (Prims.of_int (639)) (Prims.of_int (12))
+                      (Prims.of_int (639)) (Prims.of_int (45)))
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (638)) (Prims.of_int (4))
-                      (Prims.of_int (650)) (Prims.of_int (44)))
+                      (Prims.of_int (640)) (Prims.of_int (4))
+                      (Prims.of_int (652)) (Prims.of_int (44)))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ ->
                          FStar_Reflection_Builtins.pack_ln
@@ -2788,41 +2800,41 @@ let (grewrite :
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.Derived.fst"
-                                      (Prims.of_int (641)) (Prims.of_int (8))
-                                      (Prims.of_int (646))
+                                      (Prims.of_int (643)) (Prims.of_int (8))
+                                      (Prims.of_int (648))
                                       (Prims.of_int (20)))
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.Derived.fst"
-                                      (Prims.of_int (648)) (Prims.of_int (6))
-                                      (Prims.of_int (650))
+                                      (Prims.of_int (650)) (Prims.of_int (6))
+                                      (Prims.of_int (652))
                                       (Prims.of_int (43)))
                                    (Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
                                          (FStar_Range.mk_range
                                             "FStar.Tactics.Derived.fst"
-                                            (Prims.of_int (641))
+                                            (Prims.of_int (643))
                                             (Prims.of_int (14))
-                                            (Prims.of_int (641))
+                                            (Prims.of_int (643))
                                             (Prims.of_int (42)))
                                          (FStar_Range.mk_range
                                             "FStar.Tactics.Derived.fst"
-                                            (Prims.of_int (641))
+                                            (Prims.of_int (643))
                                             (Prims.of_int (8))
-                                            (Prims.of_int (646))
+                                            (Prims.of_int (648))
                                             (Prims.of_int (20)))
                                          (Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (FStar_Range.mk_range
                                                   "FStar.Tactics.Derived.fst"
-                                                  (Prims.of_int (641))
+                                                  (Prims.of_int (643))
                                                   (Prims.of_int (30))
-                                                  (Prims.of_int (641))
+                                                  (Prims.of_int (643))
                                                   (Prims.of_int (42)))
                                                (FStar_Range.mk_range
                                                   "FStar.Tactics.Derived.fst"
-                                                  (Prims.of_int (641))
+                                                  (Prims.of_int (643))
                                                   (Prims.of_int (14))
-                                                  (Prims.of_int (641))
+                                                  (Prims.of_int (643))
                                                   (Prims.of_int (42)))
                                                (Obj.magic (cur_goal ()))
                                                (fun uu___1 ->
@@ -2863,10 +2875,10 @@ let (grewrite_eq :
   =
   fun b ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (657))
-         (Prims.of_int (8)) (Prims.of_int (657)) (Prims.of_int (42)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (657))
-         (Prims.of_int (2)) (Prims.of_int (669)) (Prims.of_int (7)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (659))
+         (Prims.of_int (8)) (Prims.of_int (659)) (Prims.of_int (42)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (659))
+         (Prims.of_int (2)) (Prims.of_int (671)) (Prims.of_int (7)))
       (Obj.magic
          (FStar_Reflection_Formula.term_as_formula
             (FStar_Reflection_Derived.type_of_binder b)))
@@ -2878,11 +2890,11 @@ let (grewrite_eq :
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                        (Prims.of_int (659)) (Prims.of_int (4))
-                        (Prims.of_int (659)) (Prims.of_int (16)))
+                        (Prims.of_int (661)) (Prims.of_int (4))
+                        (Prims.of_int (661)) (Prims.of_int (16)))
                      (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                        (Prims.of_int (660)) (Prims.of_int (4))
-                        (Prims.of_int (660)) (Prims.of_int (54)))
+                        (Prims.of_int (662)) (Prims.of_int (4))
+                        (Prims.of_int (662)) (Prims.of_int (54)))
                      (Obj.magic (grewrite l r))
                      (fun uu___2 ->
                         (fun uu___2 ->
@@ -2893,15 +2905,15 @@ let (grewrite_eq :
                                    FStar_Tactics_Effect.tac_bind
                                      (FStar_Range.mk_range
                                         "FStar.Tactics.Derived.fst"
-                                        (Prims.of_int (660))
+                                        (Prims.of_int (662))
                                         (Prims.of_int (34))
-                                        (Prims.of_int (660))
+                                        (Prims.of_int (662))
                                         (Prims.of_int (52)))
                                      (FStar_Range.mk_range
                                         "FStar.Tactics.Derived.fst"
-                                        (Prims.of_int (660))
+                                        (Prims.of_int (662))
                                         (Prims.of_int (28))
-                                        (Prims.of_int (660))
+                                        (Prims.of_int (662))
                                         (Prims.of_int (52)))
                                      (Obj.magic (binder_to_term b))
                                      (fun uu___4 ->
@@ -2912,11 +2924,11 @@ let (grewrite_eq :
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                        (Prims.of_int (662)) (Prims.of_int (16))
-                        (Prims.of_int (662)) (Prims.of_int (51)))
+                        (Prims.of_int (664)) (Prims.of_int (16))
+                        (Prims.of_int (664)) (Prims.of_int (51)))
                      (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                        (Prims.of_int (662)) (Prims.of_int (10))
-                        (Prims.of_int (668)) (Prims.of_int (56)))
+                        (Prims.of_int (664)) (Prims.of_int (10))
+                        (Prims.of_int (670)) (Prims.of_int (56)))
                      (Obj.magic
                         (FStar_Reflection_Formula.term_as_formula'
                            (FStar_Reflection_Derived.type_of_binder b)))
@@ -2930,15 +2942,15 @@ let (grewrite_eq :
                                     (FStar_Tactics_Effect.tac_bind
                                        (FStar_Range.mk_range
                                           "FStar.Tactics.Derived.fst"
-                                          (Prims.of_int (664))
+                                          (Prims.of_int (666))
                                           (Prims.of_int (6))
-                                          (Prims.of_int (664))
+                                          (Prims.of_int (666))
                                           (Prims.of_int (18)))
                                        (FStar_Range.mk_range
                                           "FStar.Tactics.Derived.fst"
-                                          (Prims.of_int (665))
+                                          (Prims.of_int (667))
                                           (Prims.of_int (6))
-                                          (Prims.of_int (666))
+                                          (Prims.of_int (668))
                                           (Prims.of_int (56)))
                                        (Obj.magic (grewrite l r))
                                        (fun uu___4 ->
@@ -2950,15 +2962,15 @@ let (grewrite_eq :
                                                      FStar_Tactics_Effect.tac_bind
                                                        (FStar_Range.mk_range
                                                           "FStar.Tactics.Derived.fst"
-                                                          (Prims.of_int (665))
+                                                          (Prims.of_int (667))
                                                           (Prims.of_int (30))
-                                                          (Prims.of_int (665))
+                                                          (Prims.of_int (667))
                                                           (Prims.of_int (55)))
                                                        (FStar_Range.mk_range
                                                           "FStar.Tactics.Derived.fst"
-                                                          (Prims.of_int (666))
+                                                          (Prims.of_int (668))
                                                           (Prims.of_int (30))
-                                                          (Prims.of_int (666))
+                                                          (Prims.of_int (668))
                                                           (Prims.of_int (54)))
                                                        (Obj.magic
                                                           (apply_lemma
@@ -2975,15 +2987,15 @@ let (grewrite_eq :
                                                                (FStar_Tactics_Effect.tac_bind
                                                                   (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (666))
+                                                                    (Prims.of_int (668))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (666))
+                                                                    (Prims.of_int (668))
                                                                     (Prims.of_int (54)))
                                                                   (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (666))
+                                                                    (Prims.of_int (668))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (666))
+                                                                    (Prims.of_int (668))
                                                                     (Prims.of_int (54)))
                                                                   (Obj.magic
                                                                     (binder_to_term
@@ -3018,11 +3030,11 @@ let rec (apply_squash_or_lem :
                 | () ->
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                         (Prims.of_int (691)) (Prims.of_int (8))
-                         (Prims.of_int (691)) (Prims.of_int (43)))
+                         (Prims.of_int (693)) (Prims.of_int (8))
+                         (Prims.of_int (693)) (Prims.of_int (43)))
                       (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                         (Prims.of_int (691)) (Prims.of_int (45))
-                         (Prims.of_int (691)) (Prims.of_int (52)))
+                         (Prims.of_int (693)) (Prims.of_int (45))
+                         (Prims.of_int (693)) (Prims.of_int (52)))
                       (Obj.magic
                          (apply
                             (FStar_Reflection_Builtins.pack_ln
@@ -3044,25 +3056,25 @@ let rec (apply_squash_or_lem :
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Derived.fst"
-                                     (Prims.of_int (697)) (Prims.of_int (13))
-                                     (Prims.of_int (697)) (Prims.of_int (30)))
+                                     (Prims.of_int (699)) (Prims.of_int (13))
+                                     (Prims.of_int (699)) (Prims.of_int (30)))
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Derived.fst"
-                                     (Prims.of_int (698)) (Prims.of_int (4))
-                                     (Prims.of_int (746)) (Prims.of_int (41)))
+                                     (Prims.of_int (700)) (Prims.of_int (4))
+                                     (Prims.of_int (748)) (Prims.of_int (41)))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.Derived.fst"
-                                           (Prims.of_int (697))
+                                           (Prims.of_int (699))
                                            (Prims.of_int (16))
-                                           (Prims.of_int (697))
+                                           (Prims.of_int (699))
                                            (Prims.of_int (28)))
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.Derived.fst"
-                                           (Prims.of_int (697))
+                                           (Prims.of_int (699))
                                            (Prims.of_int (13))
-                                           (Prims.of_int (697))
+                                           (Prims.of_int (699))
                                            (Prims.of_int (30)))
                                         (Obj.magic (cur_env ()))
                                         (fun uu___4 ->
@@ -3076,15 +3088,15 @@ let rec (apply_squash_or_lem :
                                           (FStar_Tactics_Effect.tac_bind
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.Derived.fst"
-                                                (Prims.of_int (698))
+                                                (Prims.of_int (700))
                                                 (Prims.of_int (17))
-                                                (Prims.of_int (698))
+                                                (Prims.of_int (700))
                                                 (Prims.of_int (31)))
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.Derived.fst"
-                                                (Prims.of_int (698))
+                                                (Prims.of_int (700))
                                                 (Prims.of_int (4))
-                                                (Prims.of_int (746))
+                                                (Prims.of_int (748))
                                                 (Prims.of_int (41)))
                                              (Obj.magic
                                                 (FStar_Tactics_SyntaxHelpers.collect_arr
@@ -3106,16 +3118,16 @@ let rec (apply_squash_or_lem :
                                                                     (
                                                                     FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (702))
+                                                                    (Prims.of_int (704))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (702))
+                                                                    (Prims.of_int (704))
                                                                     (Prims.of_int (32)))
                                                                     (
                                                                     FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (703))
+                                                                    (Prims.of_int (705))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (711))
+                                                                    (Prims.of_int (713))
                                                                     (Prims.of_int (41)))
                                                                     (
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -3137,15 +3149,15 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (703))
+                                                                    (Prims.of_int (705))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (703))
+                                                                    (Prims.of_int (705))
                                                                     (Prims.of_int (35)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (705))
+                                                                    (Prims.of_int (707))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (711))
+                                                                    (Prims.of_int (713))
                                                                     (Prims.of_int (41)))
                                                                     (Obj.magic
                                                                     (norm_term
@@ -3158,15 +3170,15 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (705))
+                                                                    (Prims.of_int (707))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (705))
+                                                                    (Prims.of_int (707))
                                                                     (Prims.of_int (34)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (705))
+                                                                    (Prims.of_int (707))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (711))
+                                                                    (Prims.of_int (713))
                                                                     (Prims.of_int (41)))
                                                                     (Obj.magic
                                                                     (FStar_Reflection_Formula.term_as_formula'
@@ -3185,15 +3197,15 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (707))
+                                                                    (Prims.of_int (709))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (707))
+                                                                    (Prims.of_int (709))
                                                                     (Prims.of_int (31)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (708))
+                                                                    (Prims.of_int (710))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (708))
+                                                                    (Prims.of_int (710))
                                                                     (Prims.of_int (38)))
                                                                     (Obj.magic
                                                                     (apply_lemma
@@ -3236,15 +3248,15 @@ let rec (apply_squash_or_lem :
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (719))
+                                                                    (Prims.of_int (721))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (719))
+                                                                    (Prims.of_int (721))
                                                                     (Prims.of_int (33)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (721))
+                                                                    (Prims.of_int (723))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (727))
+                                                                    (Prims.of_int (729))
                                                                     (Prims.of_int (43)))
                                                                     (Obj.magic
                                                                     (norm_term
@@ -3257,15 +3269,15 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (721))
+                                                                    (Prims.of_int (723))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (721))
+                                                                    (Prims.of_int (723))
                                                                     (Prims.of_int (34)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (721))
+                                                                    (Prims.of_int (723))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (727))
+                                                                    (Prims.of_int (729))
                                                                     (Prims.of_int (43)))
                                                                     (Obj.magic
                                                                     (FStar_Reflection_Formula.term_as_formula'
@@ -3284,15 +3296,15 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (723))
+                                                                    (Prims.of_int (725))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (723))
+                                                                    (Prims.of_int (725))
                                                                     (Prims.of_int (33)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (724))
+                                                                    (Prims.of_int (726))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (724))
+                                                                    (Prims.of_int (726))
                                                                     (Prims.of_int (40)))
                                                                     (Obj.magic
                                                                     (apply_lemma
@@ -3326,15 +3338,15 @@ let rec (apply_squash_or_lem :
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (734))
+                                                                    (Prims.of_int (736))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (734))
+                                                                    (Prims.of_int (736))
                                                                     (Prims.of_int (33)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (736))
+                                                                    (Prims.of_int (738))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (743))
+                                                                    (Prims.of_int (745))
                                                                     (Prims.of_int (20)))
                                                                     (Obj.magic
                                                                     (norm_term
@@ -3347,15 +3359,15 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (736))
+                                                                    (Prims.of_int (738))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (736))
+                                                                    (Prims.of_int (738))
                                                                     (Prims.of_int (34)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (736))
+                                                                    (Prims.of_int (738))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (743))
+                                                                    (Prims.of_int (745))
                                                                     (Prims.of_int (20)))
                                                                     (Obj.magic
                                                                     (FStar_Reflection_Formula.term_as_formula'
@@ -3373,15 +3385,15 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (738))
+                                                                    (Prims.of_int (740))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (738))
+                                                                    (Prims.of_int (740))
                                                                     (Prims.of_int (33)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (739))
+                                                                    (Prims.of_int (741))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (739))
+                                                                    (Prims.of_int (741))
                                                                     (Prims.of_int (40)))
                                                                     (Obj.magic
                                                                     (apply_lemma
@@ -3408,15 +3420,15 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (742))
+                                                                    (Prims.of_int (744))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (742))
+                                                                    (Prims.of_int (744))
                                                                     (Prims.of_int (48)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Derived.fst"
-                                                                    (Prims.of_int (743))
+                                                                    (Prims.of_int (745))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (743))
+                                                                    (Prims.of_int (745))
                                                                     (Prims.of_int (20)))
                                                                     (Obj.magic
                                                                     (apply
@@ -3447,10 +3459,10 @@ let (mapply :
 let (admit_dump_t : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (756))
-         (Prims.of_int (2)) (Prims.of_int (756)) (Prims.of_int (18)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (757))
-         (Prims.of_int (2)) (Prims.of_int (757)) (Prims.of_int (16)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (758))
+         (Prims.of_int (2)) (Prims.of_int (758)) (Prims.of_int (18)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (759))
+         (Prims.of_int (2)) (Prims.of_int (759)) (Prims.of_int (16)))
       (Obj.magic (FStar_Tactics_Builtins.dump "Admitting"))
       (fun uu___1 ->
          (fun uu___1 ->
@@ -3464,21 +3476,21 @@ let admit_dump : 'a . (unit -> 'a) -> unit -> 'a = fun x -> fun uu___ -> x ()
 let (magic_dump_t : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (764))
-         (Prims.of_int (2)) (Prims.of_int (764)) (Prims.of_int (18)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (765))
-         (Prims.of_int (2)) (Prims.of_int (767)) (Prims.of_int (4)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (766))
+         (Prims.of_int (2)) (Prims.of_int (766)) (Prims.of_int (18)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (767))
+         (Prims.of_int (2)) (Prims.of_int (769)) (Prims.of_int (4)))
       (Obj.magic (FStar_Tactics_Builtins.dump "Admitting"))
       (fun uu___1 ->
          (fun uu___1 ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                    (Prims.of_int (765)) (Prims.of_int (2))
-                    (Prims.of_int (765)) (Prims.of_int (16)))
+                    (Prims.of_int (767)) (Prims.of_int (2))
+                    (Prims.of_int (767)) (Prims.of_int (16)))
                  (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                    (Prims.of_int (766)) (Prims.of_int (2))
-                    (Prims.of_int (767)) (Prims.of_int (4)))
+                    (Prims.of_int (768)) (Prims.of_int (2))
+                    (Prims.of_int (769)) (Prims.of_int (4)))
                  (Obj.magic
                     (apply
                        (FStar_Reflection_Builtins.pack_ln
@@ -3490,11 +3502,11 @@ let (magic_dump_t : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
                             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                               (Prims.of_int (766)) (Prims.of_int (2))
-                               (Prims.of_int (766)) (Prims.of_int (13)))
+                               (Prims.of_int (768)) (Prims.of_int (2))
+                               (Prims.of_int (768)) (Prims.of_int (13)))
                             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                               (Prims.of_int (767)) (Prims.of_int (2))
-                               (Prims.of_int (767)) (Prims.of_int (4)))
+                               (Prims.of_int (769)) (Prims.of_int (2))
+                               (Prims.of_int (769)) (Prims.of_int (4)))
                             (Obj.magic
                                (exact
                                   (FStar_Reflection_Builtins.pack_ln
@@ -3514,10 +3526,10 @@ let (change_with :
         (fun uu___ ->
            FStar_Tactics_Effect.tac_bind
              (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                (Prims.of_int (774)) (Prims.of_int (8)) (Prims.of_int (774))
+                (Prims.of_int (776)) (Prims.of_int (8)) (Prims.of_int (776))
                 (Prims.of_int (22)))
              (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                (Prims.of_int (775)) (Prims.of_int (8)) (Prims.of_int (775))
+                (Prims.of_int (777)) (Prims.of_int (8)) (Prims.of_int (777))
                 (Prims.of_int (29))) (Obj.magic (grewrite t1 t2))
              (fun uu___1 ->
                 (fun uu___1 -> Obj.magic (iseq [idtac; trivial])) uu___1))
@@ -3538,21 +3550,21 @@ let finish_by :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (782))
-         (Prims.of_int (12)) (Prims.of_int (782)) (Prims.of_int (16)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (783))
-         (Prims.of_int (4)) (Prims.of_int (784)) (Prims.of_int (5)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (784))
+         (Prims.of_int (12)) (Prims.of_int (784)) (Prims.of_int (16)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (785))
+         (Prims.of_int (4)) (Prims.of_int (786)) (Prims.of_int (5)))
       (Obj.magic (t ()))
       (fun uu___ ->
          (fun x ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                    (Prims.of_int (783)) (Prims.of_int (4))
-                    (Prims.of_int (783)) (Prims.of_int (58)))
+                    (Prims.of_int (785)) (Prims.of_int (4))
+                    (Prims.of_int (785)) (Prims.of_int (58)))
                  (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                    (Prims.of_int (782)) (Prims.of_int (8))
-                    (Prims.of_int (782)) (Prims.of_int (9)))
+                    (Prims.of_int (784)) (Prims.of_int (8))
+                    (Prims.of_int (784)) (Prims.of_int (9)))
                  (Obj.magic
                     (or_else qed
                        (fun uu___ ->
@@ -3572,21 +3584,21 @@ let solve_then :
     fun t2 ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-           (Prims.of_int (787)) (Prims.of_int (4)) (Prims.of_int (787))
+           (Prims.of_int (789)) (Prims.of_int (4)) (Prims.of_int (789))
            (Prims.of_int (10)))
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-           (Prims.of_int (788)) (Prims.of_int (4)) (Prims.of_int (791))
+           (Prims.of_int (790)) (Prims.of_int (4)) (Prims.of_int (793))
            (Prims.of_int (5))) (Obj.magic (FStar_Tactics_Builtins.dup ()))
         (fun uu___ ->
            (fun uu___ ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (788)) (Prims.of_int (12))
-                      (Prims.of_int (788)) (Prims.of_int (42)))
+                      (Prims.of_int (790)) (Prims.of_int (12))
+                      (Prims.of_int (790)) (Prims.of_int (42)))
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (789)) (Prims.of_int (4))
-                      (Prims.of_int (791)) (Prims.of_int (5)))
+                      (Prims.of_int (791)) (Prims.of_int (4))
+                      (Prims.of_int (793)) (Prims.of_int (5)))
                    (Obj.magic (focus (fun uu___1 -> finish_by t1)))
                    (fun uu___1 ->
                       (fun x ->
@@ -3594,12 +3606,12 @@ let solve_then :
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Range.mk_range
                                  "FStar.Tactics.Derived.fst"
-                                 (Prims.of_int (789)) (Prims.of_int (12))
-                                 (Prims.of_int (789)) (Prims.of_int (16)))
+                                 (Prims.of_int (791)) (Prims.of_int (12))
+                                 (Prims.of_int (791)) (Prims.of_int (16)))
                               (FStar_Range.mk_range
                                  "FStar.Tactics.Derived.fst"
-                                 (Prims.of_int (790)) (Prims.of_int (4))
-                                 (Prims.of_int (791)) (Prims.of_int (5)))
+                                 (Prims.of_int (792)) (Prims.of_int (4))
+                                 (Prims.of_int (793)) (Prims.of_int (5)))
                               (Obj.magic (t2 x))
                               (fun uu___1 ->
                                  (fun y ->
@@ -3607,15 +3619,15 @@ let solve_then :
                                       (FStar_Tactics_Effect.tac_bind
                                          (FStar_Range.mk_range
                                             "FStar.Tactics.Derived.fst"
-                                            (Prims.of_int (790))
+                                            (Prims.of_int (792))
                                             (Prims.of_int (4))
-                                            (Prims.of_int (790))
+                                            (Prims.of_int (792))
                                             (Prims.of_int (12)))
                                          (FStar_Range.mk_range
                                             "FStar.Tactics.Derived.fst"
-                                            (Prims.of_int (789))
+                                            (Prims.of_int (791))
                                             (Prims.of_int (8))
-                                            (Prims.of_int (789))
+                                            (Prims.of_int (791))
                                             (Prims.of_int (9)))
                                          (Obj.magic (trefl ()))
                                          (fun uu___1 ->
@@ -3632,10 +3644,10 @@ let add_elem :
       (fun uu___ ->
          FStar_Tactics_Effect.tac_bind
            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-              (Prims.of_int (794)) (Prims.of_int (4)) (Prims.of_int (794))
+              (Prims.of_int (796)) (Prims.of_int (4)) (Prims.of_int (796))
               (Prims.of_int (17)))
            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-              (Prims.of_int (795)) (Prims.of_int (4)) (Prims.of_int (799))
+              (Prims.of_int (797)) (Prims.of_int (4)) (Prims.of_int (801))
               (Prims.of_int (5)))
            (Obj.magic
               (apply
@@ -3649,11 +3661,11 @@ let add_elem :
                       (fun uu___2 ->
                          FStar_Tactics_Effect.tac_bind
                            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                              (Prims.of_int (796)) (Prims.of_int (14))
-                              (Prims.of_int (796)) (Prims.of_int (18)))
+                              (Prims.of_int (798)) (Prims.of_int (14))
+                              (Prims.of_int (798)) (Prims.of_int (18)))
                            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                              (Prims.of_int (797)) (Prims.of_int (6))
-                              (Prims.of_int (798)) (Prims.of_int (7)))
+                              (Prims.of_int (799)) (Prims.of_int (6))
+                              (Prims.of_int (800)) (Prims.of_int (7)))
                            (Obj.magic (t ()))
                            (fun uu___3 ->
                               (fun x ->
@@ -3661,15 +3673,15 @@ let add_elem :
                                    (FStar_Tactics_Effect.tac_bind
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.Derived.fst"
-                                         (Prims.of_int (797))
+                                         (Prims.of_int (799))
                                          (Prims.of_int (6))
-                                         (Prims.of_int (797))
+                                         (Prims.of_int (799))
                                          (Prims.of_int (12)))
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.Derived.fst"
-                                         (Prims.of_int (796))
+                                         (Prims.of_int (798))
                                          (Prims.of_int (10))
-                                         (Prims.of_int (796))
+                                         (Prims.of_int (798))
                                          (Prims.of_int (11)))
                                       (Obj.magic (qed ()))
                                       (fun uu___3 ->
@@ -3689,11 +3701,11 @@ let specialize :
           (fun uu___1 ->
              FStar_Tactics_Effect.tac_bind
                (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                  (Prims.of_int (818)) (Prims.of_int (42))
-                  (Prims.of_int (818)) (Prims.of_int (51)))
+                  (Prims.of_int (820)) (Prims.of_int (42))
+                  (Prims.of_int (820)) (Prims.of_int (51)))
                (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                  (Prims.of_int (818)) (Prims.of_int (36))
-                  (Prims.of_int (818)) (Prims.of_int (51)))
+                  (Prims.of_int (820)) (Prims.of_int (36))
+                  (Prims.of_int (820)) (Prims.of_int (51)))
                (FStar_Tactics_Effect.lift_div_tac
                   (fun uu___2 ->
                      (fun uu___2 ->
@@ -3710,10 +3722,10 @@ let specialize :
 let (tlabel : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun l ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (821))
-         (Prims.of_int (10)) (Prims.of_int (821)) (Prims.of_int (18)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (821))
-         (Prims.of_int (4)) (Prims.of_int (824)) (Prims.of_int (38)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (823))
+         (Prims.of_int (10)) (Prims.of_int (823)) (Prims.of_int (18)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (823))
+         (Prims.of_int (4)) (Prims.of_int (826)) (Prims.of_int (38)))
       (Obj.magic (goals ()))
       (fun uu___ ->
          (fun uu___ ->
@@ -3727,10 +3739,10 @@ let (tlabel : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
 let (tlabel' : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun l ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (827))
-         (Prims.of_int (10)) (Prims.of_int (827)) (Prims.of_int (18)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (827))
-         (Prims.of_int (4)) (Prims.of_int (831)) (Prims.of_int (26)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (829))
+         (Prims.of_int (10)) (Prims.of_int (829)) (Prims.of_int (18)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (829))
+         (Prims.of_int (4)) (Prims.of_int (833)) (Prims.of_int (26)))
       (Obj.magic (goals ()))
       (fun uu___ ->
          (fun uu___ ->
@@ -3741,11 +3753,11 @@ let (tlabel' : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                           (Prims.of_int (830)) (Prims.of_int (16))
-                           (Prims.of_int (830)) (Prims.of_int (45)))
+                           (Prims.of_int (832)) (Prims.of_int (16))
+                           (Prims.of_int (832)) (Prims.of_int (45)))
                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                           (Prims.of_int (831)) (Prims.of_int (8))
-                           (Prims.of_int (831)) (Prims.of_int (26)))
+                           (Prims.of_int (833)) (Prims.of_int (8))
+                           (Prims.of_int (833)) (Prims.of_int (26)))
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___1 ->
                               FStar_Tactics_Types.set_label
@@ -3759,26 +3771,26 @@ let (tlabel' : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
 let (focus_all : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (834))
-         (Prims.of_int (4)) (Prims.of_int (834)) (Prims.of_int (39)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (835))
-         (Prims.of_int (4)) (Prims.of_int (835)) (Prims.of_int (20)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (836))
+         (Prims.of_int (4)) (Prims.of_int (836)) (Prims.of_int (39)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (837))
+         (Prims.of_int (4)) (Prims.of_int (837)) (Prims.of_int (20)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-               (Prims.of_int (834)) (Prims.of_int (14)) (Prims.of_int (834))
+               (Prims.of_int (836)) (Prims.of_int (14)) (Prims.of_int (836))
                (Prims.of_int (39)))
             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-               (Prims.of_int (834)) (Prims.of_int (4)) (Prims.of_int (834))
+               (Prims.of_int (836)) (Prims.of_int (4)) (Prims.of_int (836))
                (Prims.of_int (39)))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                     (Prims.of_int (834)) (Prims.of_int (15))
-                     (Prims.of_int (834)) (Prims.of_int (23)))
+                     (Prims.of_int (836)) (Prims.of_int (15))
+                     (Prims.of_int (836)) (Prims.of_int (23)))
                   (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                     (Prims.of_int (834)) (Prims.of_int (14))
-                     (Prims.of_int (834)) (Prims.of_int (39)))
+                     (Prims.of_int (836)) (Prims.of_int (14))
+                     (Prims.of_int (836)) (Prims.of_int (39)))
                   (Obj.magic (goals ()))
                   (fun uu___1 ->
                      (fun uu___1 ->
@@ -3786,12 +3798,12 @@ let (focus_all : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range
                                 "FStar.Tactics.Derived.fst"
-                                (Prims.of_int (834)) (Prims.of_int (26))
-                                (Prims.of_int (834)) (Prims.of_int (38)))
+                                (Prims.of_int (836)) (Prims.of_int (26))
+                                (Prims.of_int (836)) (Prims.of_int (38)))
                              (FStar_Range.mk_range
                                 "FStar.Tactics.Derived.fst"
-                                (Prims.of_int (834)) (Prims.of_int (14))
-                                (Prims.of_int (834)) (Prims.of_int (39)))
+                                (Prims.of_int (836)) (Prims.of_int (14))
+                                (Prims.of_int (836)) (Prims.of_int (39)))
                              (Obj.magic (smt_goals ()))
                              (fun uu___2 ->
                                 FStar_Tactics_Effect.lift_div_tac
@@ -3823,17 +3835,17 @@ let rec extract_nth :
 let (bump_nth : Prims.pos -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun n ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (850))
-         (Prims.of_int (8)) (Prims.of_int (850)) (Prims.of_int (38)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (850))
-         (Prims.of_int (2)) (Prims.of_int (852)) (Prims.of_int (37)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (852))
+         (Prims.of_int (8)) (Prims.of_int (852)) (Prims.of_int (38)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (852))
+         (Prims.of_int (2)) (Prims.of_int (854)) (Prims.of_int (37)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-               (Prims.of_int (850)) (Prims.of_int (28)) (Prims.of_int (850))
+               (Prims.of_int (852)) (Prims.of_int (28)) (Prims.of_int (852))
                (Prims.of_int (38)))
             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-               (Prims.of_int (850)) (Prims.of_int (8)) (Prims.of_int (850))
+               (Prims.of_int (852)) (Prims.of_int (8)) (Prims.of_int (852))
                (Prims.of_int (38))) (Obj.magic (goals ()))
             (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
@@ -3854,10 +3866,10 @@ let rec (destruct_list :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (855))
-         (Prims.of_int (21)) (Prims.of_int (855)) (Prims.of_int (34)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (855))
-         (Prims.of_int (4)) (Prims.of_int (867)) (Prims.of_int (27)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (857))
+         (Prims.of_int (21)) (Prims.of_int (857)) (Prims.of_int (34)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (857))
+         (Prims.of_int (4)) (Prims.of_int (869)) (Prims.of_int (27)))
       (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
       (fun uu___ ->
          (fun uu___ ->
@@ -3879,12 +3891,12 @@ let rec (destruct_list :
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Derived.fst"
-                                     (Prims.of_int (860)) (Prims.of_int (17))
-                                     (Prims.of_int (860)) (Prims.of_int (33)))
+                                     (Prims.of_int (862)) (Prims.of_int (17))
+                                     (Prims.of_int (862)) (Prims.of_int (33)))
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Derived.fst"
-                                     (Prims.of_int (860)) (Prims.of_int (14))
-                                     (Prims.of_int (860)) (Prims.of_int (16)))
+                                     (Prims.of_int (862)) (Prims.of_int (14))
+                                     (Prims.of_int (862)) (Prims.of_int (16)))
                                   (Obj.magic (destruct_list a2))
                                   (fun uu___1 ->
                                      FStar_Tactics_Effect.lift_div_tac
@@ -3907,12 +3919,12 @@ let rec (destruct_list :
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Derived.fst"
-                                     (Prims.of_int (860)) (Prims.of_int (17))
-                                     (Prims.of_int (860)) (Prims.of_int (33)))
+                                     (Prims.of_int (862)) (Prims.of_int (17))
+                                     (Prims.of_int (862)) (Prims.of_int (33)))
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Derived.fst"
-                                     (Prims.of_int (860)) (Prims.of_int (14))
-                                     (Prims.of_int (860)) (Prims.of_int (16)))
+                                     (Prims.of_int (862)) (Prims.of_int (14))
+                                     (Prims.of_int (862)) (Prims.of_int (16)))
                                   (Obj.magic (destruct_list a2))
                                   (fun uu___2 ->
                                      FStar_Tactics_Effect.lift_div_tac
@@ -3943,17 +3955,17 @@ let (get_match_body :
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (870))
-         (Prims.of_int (8)) (Prims.of_int (870)) (Prims.of_int (35)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (870))
-         (Prims.of_int (2)) (Prims.of_int (874)) (Prims.of_int (46)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (872))
+         (Prims.of_int (8)) (Prims.of_int (872)) (Prims.of_int (35)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (872))
+         (Prims.of_int (2)) (Prims.of_int (876)) (Prims.of_int (46)))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-               (Prims.of_int (870)) (Prims.of_int (22)) (Prims.of_int (870))
+               (Prims.of_int (872)) (Prims.of_int (22)) (Prims.of_int (872))
                (Prims.of_int (35)))
             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-               (Prims.of_int (870)) (Prims.of_int (8)) (Prims.of_int (870))
+               (Prims.of_int (872)) (Prims.of_int (8)) (Prims.of_int (872))
                (Prims.of_int (35))) (Obj.magic (cur_goal ()))
             (fun uu___1 ->
                FStar_Tactics_Effect.lift_div_tac
@@ -3967,11 +3979,11 @@ let (get_match_body :
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                           (Prims.of_int (872)) (Prims.of_int (20))
-                           (Prims.of_int (872)) (Prims.of_int (39)))
+                           (Prims.of_int (874)) (Prims.of_int (20))
+                           (Prims.of_int (874)) (Prims.of_int (39)))
                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                           (Prims.of_int (872)) (Prims.of_int (14))
-                           (Prims.of_int (874)) (Prims.of_int (46)))
+                           (Prims.of_int (874)) (Prims.of_int (14))
+                           (Prims.of_int (876)) (Prims.of_int (46)))
                         (Obj.magic
                            (FStar_Tactics_SyntaxHelpers.inspect_unascribe t))
                         (fun uu___2 ->
@@ -3997,21 +4009,21 @@ let (branch_on_match : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___1 ->
          FStar_Tactics_Effect.tac_bind
            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-              (Prims.of_int (887)) (Prims.of_int (14)) (Prims.of_int (887))
+              (Prims.of_int (889)) (Prims.of_int (14)) (Prims.of_int (889))
               (Prims.of_int (31)))
            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-              (Prims.of_int (888)) (Prims.of_int (6)) (Prims.of_int (893))
+              (Prims.of_int (890)) (Prims.of_int (6)) (Prims.of_int (895))
               (Prims.of_int (20))) (Obj.magic (get_match_body ()))
            (fun uu___2 ->
               (fun x ->
                  Obj.magic
                    (FStar_Tactics_Effect.tac_bind
                       (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                         (Prims.of_int (888)) (Prims.of_int (14))
-                         (Prims.of_int (888)) (Prims.of_int (26)))
+                         (Prims.of_int (890)) (Prims.of_int (14))
+                         (Prims.of_int (890)) (Prims.of_int (26)))
                       (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                         (Prims.of_int (889)) (Prims.of_int (6))
-                         (Prims.of_int (893)) (Prims.of_int (20)))
+                         (Prims.of_int (891)) (Prims.of_int (6))
+                         (Prims.of_int (895)) (Prims.of_int (20)))
                       (Obj.magic (FStar_Tactics_Builtins.t_destruct x))
                       (fun uu___2 ->
                          (fun uu___2 ->
@@ -4021,15 +4033,15 @@ let (branch_on_match : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                     FStar_Tactics_Effect.tac_bind
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.Derived.fst"
-                                         (Prims.of_int (890))
+                                         (Prims.of_int (892))
                                          (Prims.of_int (17))
-                                         (Prims.of_int (890))
+                                         (Prims.of_int (892))
                                          (Prims.of_int (29)))
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.Derived.fst"
-                                         (Prims.of_int (891))
-                                         (Prims.of_int (8))
                                          (Prims.of_int (893))
+                                         (Prims.of_int (8))
+                                         (Prims.of_int (895))
                                          (Prims.of_int (19)))
                                       (Obj.magic
                                          (repeat FStar_Tactics_Builtins.intro))
@@ -4039,15 +4051,15 @@ let (branch_on_match : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                               (FStar_Tactics_Effect.tac_bind
                                                  (FStar_Range.mk_range
                                                     "FStar.Tactics.Derived.fst"
-                                                    (Prims.of_int (891))
+                                                    (Prims.of_int (893))
                                                     (Prims.of_int (16))
-                                                    (Prims.of_int (891))
+                                                    (Prims.of_int (893))
                                                     (Prims.of_int (23)))
                                                  (FStar_Range.mk_range
                                                     "FStar.Tactics.Derived.fst"
-                                                    (Prims.of_int (892))
+                                                    (Prims.of_int (894))
                                                     (Prims.of_int (8))
-                                                    (Prims.of_int (893))
+                                                    (Prims.of_int (895))
                                                     (Prims.of_int (19)))
                                                  (Obj.magic (last bs))
                                                  (fun uu___4 ->
@@ -4056,15 +4068,15 @@ let (branch_on_match : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                          (FStar_Tactics_Effect.tac_bind
                                                             (FStar_Range.mk_range
                                                                "FStar.Tactics.Derived.fst"
-                                                               (Prims.of_int (892))
+                                                               (Prims.of_int (894))
                                                                (Prims.of_int (8))
-                                                               (Prims.of_int (892))
+                                                               (Prims.of_int (894))
                                                                (Prims.of_int (21)))
                                                             (FStar_Range.mk_range
                                                                "FStar.Tactics.Derived.fst"
-                                                               (Prims.of_int (893))
+                                                               (Prims.of_int (895))
                                                                (Prims.of_int (8))
-                                                               (Prims.of_int (893))
+                                                               (Prims.of_int (895))
                                                                (Prims.of_int (19)))
                                                             (Obj.magic
                                                                (grewrite_eq b))
@@ -4083,21 +4095,21 @@ let (nth_binder :
   =
   fun i ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (902))
-         (Prims.of_int (11)) (Prims.of_int (902)) (Prims.of_int (25)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (903))
-         (Prims.of_int (2)) (Prims.of_int (907)) (Prims.of_int (15)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (904))
+         (Prims.of_int (11)) (Prims.of_int (904)) (Prims.of_int (25)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (905))
+         (Prims.of_int (2)) (Prims.of_int (909)) (Prims.of_int (15)))
       (Obj.magic (cur_binders ()))
       (fun uu___ ->
          (fun bs ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                    (Prims.of_int (903)) (Prims.of_int (16))
-                    (Prims.of_int (903)) (Prims.of_int (65)))
+                    (Prims.of_int (905)) (Prims.of_int (16))
+                    (Prims.of_int (905)) (Prims.of_int (65)))
                  (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                    (Prims.of_int (904)) (Prims.of_int (2))
-                    (Prims.of_int (907)) (Prims.of_int (15)))
+                    (Prims.of_int (906)) (Prims.of_int (2))
+                    (Prims.of_int (909)) (Prims.of_int (15)))
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
                        if i >= Prims.int_zero
@@ -4108,11 +4120,11 @@ let (nth_binder :
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
                             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                               (Prims.of_int (904)) (Prims.of_int (16))
-                               (Prims.of_int (904)) (Prims.of_int (62)))
+                               (Prims.of_int (906)) (Prims.of_int (16))
+                               (Prims.of_int (906)) (Prims.of_int (62)))
                             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                               (Prims.of_int (905)) (Prims.of_int (2))
-                               (Prims.of_int (907)) (Prims.of_int (15)))
+                               (Prims.of_int (907)) (Prims.of_int (2))
+                               (Prims.of_int (909)) (Prims.of_int (15)))
                             (if k < Prims.int_zero
                              then fail "not enough binders"
                              else
@@ -4137,21 +4149,21 @@ let (name_appears_in :
     fun t ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-           (Prims.of_int (915)) (Prims.of_int (4)) (Prims.of_int (920))
+           (Prims.of_int (917)) (Prims.of_int (4)) (Prims.of_int (922))
            (Prims.of_int (12)))
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-           (Prims.of_int (922)) (Prims.of_int (2)) (Prims.of_int (924))
+           (Prims.of_int (924)) (Prims.of_int (2)) (Prims.of_int (926))
            (Prims.of_int (16)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ ->
               fun t1 ->
                 FStar_Tactics_Effect.tac_bind
                   (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                     (Prims.of_int (914)) (Prims.of_int (10))
-                     (Prims.of_int (914)) (Prims.of_int (11)))
+                     (Prims.of_int (916)) (Prims.of_int (10))
+                     (Prims.of_int (916)) (Prims.of_int (11)))
                   (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                     (Prims.of_int (915)) (Prims.of_int (4))
-                     (Prims.of_int (920)) (Prims.of_int (12)))
+                     (Prims.of_int (917)) (Prims.of_int (4))
+                     (Prims.of_int (922)) (Prims.of_int (12)))
                   (Obj.magic (FStar_Tactics_Builtins.inspect t1))
                   (fun uu___1 ->
                      (fun uu___1 ->
@@ -4161,12 +4173,12 @@ let (name_appears_in :
                               (FStar_Tactics_Effect.tac_bind
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.Derived.fst"
-                                    (Prims.of_int (917)) (Prims.of_int (6))
-                                    (Prims.of_int (918)) (Prims.of_int (21)))
+                                    (Prims.of_int (919)) (Prims.of_int (6))
+                                    (Prims.of_int (920)) (Prims.of_int (21)))
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.Derived.fst"
-                                    (Prims.of_int (914)) (Prims.of_int (10))
-                                    (Prims.of_int (914)) (Prims.of_int (11)))
+                                    (Prims.of_int (916)) (Prims.of_int (10))
+                                    (Prims.of_int (916)) (Prims.of_int (11)))
                                  (if
                                     (FStar_Reflection_Builtins.inspect_fv fv)
                                       = nm
@@ -4188,21 +4200,21 @@ let (name_appears_in :
                       | () ->
                           FStar_Tactics_Effect.tac_bind
                             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                               (Prims.of_int (922)) (Prims.of_int (6))
-                               (Prims.of_int (922)) (Prims.of_int (30)))
+                               (Prims.of_int (924)) (Prims.of_int (6))
+                               (Prims.of_int (924)) (Prims.of_int (30)))
                             (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                               (Prims.of_int (922)) (Prims.of_int (32))
-                               (Prims.of_int (922)) (Prims.of_int (37)))
+                               (Prims.of_int (924)) (Prims.of_int (32))
+                               (Prims.of_int (924)) (Prims.of_int (37)))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Derived.fst"
-                                     (Prims.of_int (922)) (Prims.of_int (13))
-                                     (Prims.of_int (922)) (Prims.of_int (30)))
+                                     (Prims.of_int (924)) (Prims.of_int (13))
+                                     (Prims.of_int (924)) (Prims.of_int (30)))
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Derived.fst"
-                                     (Prims.of_int (922)) (Prims.of_int (6))
-                                     (Prims.of_int (922)) (Prims.of_int (30)))
+                                     (Prims.of_int (924)) (Prims.of_int (6))
+                                     (Prims.of_int (924)) (Prims.of_int (30)))
                                   (Obj.magic
                                      (FStar_Tactics_Visit.visit_tm ff t))
                                   (fun uu___1 ->
@@ -4239,11 +4251,11 @@ let rec (mk_abs :
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                          (Prims.of_int (931)) (Prims.of_int (13))
-                          (Prims.of_int (931)) (Prims.of_int (27)))
+                          (Prims.of_int (933)) (Prims.of_int (13))
+                          (Prims.of_int (933)) (Prims.of_int (27)))
                        (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                          (Prims.of_int (932)) (Prims.of_int (4))
-                          (Prims.of_int (932)) (Prims.of_int (22)))
+                          (Prims.of_int (934)) (Prims.of_int (4))
+                          (Prims.of_int (934)) (Prims.of_int (22)))
                        (Obj.magic (mk_abs args' t))
                        (fun uu___ ->
                           (fun t' ->
@@ -4262,58 +4274,89 @@ let (string_to_term_with_lb :
       fun t ->
         FStar_Tactics_Effect.tac_bind
           (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-             (Prims.of_int (940)) (Prims.of_int (20)) (Prims.of_int (943))
-             (Prims.of_int (27)))
+             (Prims.of_int (942)) (Prims.of_int (14)) (Prims.of_int (942))
+             (Prims.of_int (32)))
           (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-             (Prims.of_int (940)) (Prims.of_int (4)) (Prims.of_int (945))
-             (Prims.of_int (71)))
-          (Obj.magic
-             (FStar_Tactics_Util.fold_left
-                (fun uu___ ->
-                   fun uu___1 ->
-                     match (uu___, uu___1) with
-                     | ((e1, lb_bvs), (i, v)) ->
-                         FStar_Tactics_Effect.tac_bind
-                           (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                              (Prims.of_int (941)) (Prims.of_int (20))
-                              (Prims.of_int (941)) (Prims.of_int (37)))
-                           (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                              (Prims.of_int (941)) (Prims.of_int (8))
-                              (Prims.of_int (942)) (Prims.of_int (25)))
-                           (Obj.magic
-                              (FStar_Tactics_Builtins.push_bv_dsenv e1 i))
-                           (fun uu___2 ->
-                              FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___3 ->
-                                   match uu___2 with
-                                   | (e2, bv) -> (e2, ((v, bv) :: lb_bvs)))))
-                (e, []) letbindings))
-          (fun uu___ ->
+             (Prims.of_int (943)) (Prims.of_int (4)) (Prims.of_int (948))
+             (Prims.of_int (75)))
+          (FStar_Tactics_Effect.lift_div_tac
              (fun uu___ ->
-                match uu___ with
-                | (e1, lb_bvs) ->
-                    Obj.magic
-                      (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                            (Prims.of_int (944)) (Prims.of_int (12))
-                            (Prims.of_int (944)) (Prims.of_int (30)))
-                         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                            (Prims.of_int (945)) (Prims.of_int (4))
-                            (Prims.of_int (945)) (Prims.of_int (71)))
-                         (Obj.magic
-                            (FStar_Tactics_Builtins.string_to_term e1 t))
-                         (fun uu___1 ->
-                            (fun t1 ->
+                FStar_Reflection_Builtins.pack_ln
+                  FStar_Reflection_Data.Tv_Unknown))
+          (fun uu___ ->
+             (fun unk ->
+                Obj.magic
+                  (FStar_Tactics_Effect.tac_bind
+                     (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
+                        (Prims.of_int (943)) (Prims.of_int (20))
+                        (Prims.of_int (946)) (Prims.of_int (27)))
+                     (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
+                        (Prims.of_int (943)) (Prims.of_int (4))
+                        (Prims.of_int (948)) (Prims.of_int (75)))
+                     (Obj.magic
+                        (FStar_Tactics_Util.fold_left
+                           (fun uu___ ->
+                              fun uu___1 ->
+                                match (uu___, uu___1) with
+                                | ((e1, lb_bvs), (i, v)) ->
+                                    FStar_Tactics_Effect.tac_bind
+                                      (FStar_Range.mk_range
+                                         "FStar.Tactics.Derived.fst"
+                                         (Prims.of_int (944))
+                                         (Prims.of_int (20))
+                                         (Prims.of_int (944))
+                                         (Prims.of_int (37)))
+                                      (FStar_Range.mk_range
+                                         "FStar.Tactics.Derived.fst"
+                                         (Prims.of_int (944))
+                                         (Prims.of_int (8))
+                                         (Prims.of_int (945))
+                                         (Prims.of_int (25)))
+                                      (Obj.magic
+                                         (FStar_Tactics_Builtins.push_bv_dsenv
+                                            e1 i))
+                                      (fun uu___2 ->
+                                         FStar_Tactics_Effect.lift_div_tac
+                                           (fun uu___3 ->
+                                              match uu___2 with
+                                              | (e2, bv) ->
+                                                  (e2, ((v, bv) :: lb_bvs)))))
+                           (e, []) letbindings))
+                     (fun uu___ ->
+                        (fun uu___ ->
+                           match uu___ with
+                           | (e1, lb_bvs) ->
                                Obj.magic
-                                 (FStar_Tactics_Util.fold_left
-                                    (fun t2 ->
-                                       fun uu___1 ->
-                                         match uu___1 with
-                                         | (i, bv) ->
-                                             FStar_Tactics_Builtins.pack
-                                               (FStar_Reflection_Data.Tv_Let
-                                                  (false, [], bv, i, t2))) t1
-                                    lb_bvs)) uu___1))) uu___)
+                                 (FStar_Tactics_Effect.tac_bind
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.Derived.fst"
+                                       (Prims.of_int (947))
+                                       (Prims.of_int (12))
+                                       (Prims.of_int (947))
+                                       (Prims.of_int (30)))
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.Derived.fst"
+                                       (Prims.of_int (948))
+                                       (Prims.of_int (4))
+                                       (Prims.of_int (948))
+                                       (Prims.of_int (75)))
+                                    (Obj.magic
+                                       (FStar_Tactics_Builtins.string_to_term
+                                          e1 t))
+                                    (fun uu___1 ->
+                                       (fun t1 ->
+                                          Obj.magic
+                                            (FStar_Tactics_Util.fold_left
+                                               (fun t2 ->
+                                                  fun uu___1 ->
+                                                    match uu___1 with
+                                                    | (i, bv) ->
+                                                        FStar_Tactics_Builtins.pack
+                                                          (FStar_Reflection_Data.Tv_Let
+                                                             (false, [], bv,
+                                                               unk, i, t2)))
+                                               t1 lb_bvs)) uu___1))) uu___)))
+               uu___)
 let (trans : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     apply_lemma
@@ -4324,10 +4367,10 @@ let (trans : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
 let (smt_sync : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (957))
-         (Prims.of_int (40)) (Prims.of_int (957)) (Prims.of_int (56)))
-      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (957))
-         (Prims.of_int (29)) (Prims.of_int (957)) (Prims.of_int (56)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (960))
+         (Prims.of_int (40)) (Prims.of_int (960)) (Prims.of_int (56)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (960))
+         (Prims.of_int (29)) (Prims.of_int (960)) (Prims.of_int (56)))
       (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
       (fun uu___1 ->
          (fun uu___1 -> Obj.magic (FStar_Tactics_Builtins.t_smt_sync uu___1))
@@ -4338,10 +4381,10 @@ let (smt_sync' :
     fun ifuel ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-           (Prims.of_int (961)) (Prims.of_int (15)) (Prims.of_int (961))
+           (Prims.of_int (964)) (Prims.of_int (15)) (Prims.of_int (964))
            (Prims.of_int (29)))
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-           (Prims.of_int (962)) (Prims.of_int (4)) (Prims.of_int (965))
+           (Prims.of_int (965)) (Prims.of_int (4)) (Prims.of_int (968))
            (Prims.of_int (20)))
         (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
         (fun uu___ ->
@@ -4349,11 +4392,11 @@ let (smt_sync' :
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (962)) (Prims.of_int (18))
-                      (Prims.of_int (963)) (Prims.of_int (68)))
+                      (Prims.of_int (965)) (Prims.of_int (18))
+                      (Prims.of_int (966)) (Prims.of_int (68)))
                    (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-                      (Prims.of_int (965)) (Prims.of_int (4))
-                      (Prims.of_int (965)) (Prims.of_int (20)))
+                      (Prims.of_int (968)) (Prims.of_int (4))
+                      (Prims.of_int (968)) (Prims.of_int (20)))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ ->
                          {

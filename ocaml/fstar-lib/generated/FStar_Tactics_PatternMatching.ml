@@ -704,10 +704,11 @@ let (term_head :
               | FStar_Reflection_Data.Tv_Abs (x, t1) -> "Tv_Abs"
               | FStar_Reflection_Data.Tv_Arrow (x, t1) -> "Tv_Arrow"
               | FStar_Reflection_Data.Tv_Type uu___2 -> "Tv_Type"
-              | FStar_Reflection_Data.Tv_Refine (x, t1) -> "Tv_Refine"
+              | FStar_Reflection_Data.Tv_Refine (x, uu___2, t1) ->
+                  "Tv_Refine"
               | FStar_Reflection_Data.Tv_Const cst -> "Tv_Const"
               | FStar_Reflection_Data.Tv_Uvar (i, t1) -> "Tv_Uvar"
-              | FStar_Reflection_Data.Tv_Let (r, attrs, b, t1, t2) ->
+              | FStar_Reflection_Data.Tv_Let (r, attrs, b, uu___2, t1, t2) ->
                   "Tv_Let"
               | FStar_Reflection_Data.Tv_Match (t1, uu___2, branches) ->
                   "Tv_Match"
@@ -3329,7 +3330,7 @@ let rec (hoist_and_apply :
                            (FStar_Range.mk_range
                               "FStar.Tactics.PatternMatching.fst"
                               (Prims.of_int (708)) (Prims.of_int (4))
-                              (Prims.of_int (709)) (Prims.of_int (113)))
+                              (Prims.of_int (709)) (Prims.of_int (131)))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___ ->
                                  FStar_List_Tot_Base.length hoisted_args))
@@ -3348,7 +3349,7 @@ let rec (hoist_and_apply :
                                          (Prims.of_int (709))
                                          (Prims.of_int (4))
                                          (Prims.of_int (709))
-                                         (Prims.of_int (113)))
+                                         (Prims.of_int (131)))
                                       (Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
                                             (FStar_Range.mk_range
@@ -3383,102 +3384,127 @@ let rec (hoist_and_apply :
                                                     (Prims.of_int (709))
                                                     (Prims.of_int (9))
                                                     (Prims.of_int (709))
-                                                    (Prims.of_int (113)))
+                                                    (Prims.of_int (131)))
                                                  (FStar_Range.mk_range
                                                     "FStar.Tactics.PatternMatching.fst"
                                                     (Prims.of_int (709))
                                                     (Prims.of_int (4))
                                                     (Prims.of_int (709))
-                                                    (Prims.of_int (113)))
+                                                    (Prims.of_int (131)))
                                                  (Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (FStar_Range.mk_range
                                                           "FStar.Tactics.PatternMatching.fst"
                                                           (Prims.of_int (709))
-                                                          (Prims.of_int (38))
+                                                          (Prims.of_int (29))
                                                           (Prims.of_int (709))
-                                                          (Prims.of_int (112)))
+                                                          (Prims.of_int (46)))
                                                        (FStar_Range.mk_range
                                                           "FStar.Tactics.PatternMatching.fst"
                                                           (Prims.of_int (709))
                                                           (Prims.of_int (9))
                                                           (Prims.of_int (709))
-                                                          (Prims.of_int (113)))
+                                                          (Prims.of_int (131)))
                                                        (Obj.magic
-                                                          (FStar_Tactics_Effect.tac_bind
-                                                             (FStar_Range.mk_range
-                                                                "FStar.Tactics.PatternMatching.fst"
-                                                                (Prims.of_int (709))
-                                                                (Prims.of_int (65))
-                                                                (Prims.of_int (709))
-                                                                (Prims.of_int (111)))
-                                                             (FStar_Range.mk_range
-                                                                "FStar.Tactics.PatternMatching.fst"
-                                                                (Prims.of_int (709))
-                                                                (Prims.of_int (38))
-                                                                (Prims.of_int (709))
-                                                                (Prims.of_int (112)))
-                                                             (Obj.magic
-                                                                (FStar_Tactics_Effect.tac_bind
-                                                                   (FStar_Range.mk_range
+                                                          (FStar_Tactics_Builtins.pack
+                                                             FStar_Reflection_Data.Tv_Unknown))
+                                                       (fun uu___ ->
+                                                          (fun uu___ ->
+                                                             Obj.magic
+                                                               (FStar_Tactics_Effect.tac_bind
+                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (709))
-                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (56))
                                                                     (Prims.of_int (709))
-                                                                    (Prims.of_int (96)))
-                                                                   (FStar_Range.mk_range
+                                                                    (Prims.of_int (130)))
+                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (709))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (9))
                                                                     (Prims.of_int (709))
-                                                                    (Prims.of_int (111)))
-                                                                   (Obj.magic
+                                                                    (Prims.of_int (131)))
+                                                                  (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (709))
-                                                                    (Prims.of_int (67))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (709))
-                                                                    (Prims.of_int (83)))
+                                                                    (Prims.of_int (129)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (709))
-                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (56))
                                                                     (Prims.of_int (709))
-                                                                    (Prims.of_int (96)))
+                                                                    (Prims.of_int (130)))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (709))
+                                                                    (Prims.of_int (84))
+                                                                    (Prims.of_int (709))
+                                                                    (Prims.of_int (114)))
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (709))
+                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (709))
+                                                                    (Prims.of_int (129)))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (709))
+                                                                    (Prims.of_int (85))
+                                                                    (Prims.of_int (709))
+                                                                    (Prims.of_int (101)))
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (709))
+                                                                    (Prims.of_int (84))
+                                                                    (Prims.of_int (709))
+                                                                    (Prims.of_int (114)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.pack
                                                                     (FStar_Reflection_Data.Tv_Var
                                                                     bv)))
                                                                     (fun
-                                                                    uu___ ->
+                                                                    uu___1 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___1 ->
-                                                                    (uu___,
+                                                                    uu___2 ->
+                                                                    (uu___1,
                                                                     FStar_Reflection_Data.Q_Explicit)))))
-                                                                   (fun uu___
+                                                                    (fun
+                                                                    uu___1 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    uu___1 ::
+                                                                    hoisted_args))))
+                                                                    (fun
+                                                                    uu___1 ->
+                                                                    (fun
+                                                                    uu___1 ->
+                                                                    Obj.magic
+                                                                    (hoist_and_apply
+                                                                    head rest
+                                                                    uu___1))
+                                                                    uu___1)))
+                                                                  (fun uu___1
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___1 ->
-                                                                    uu___ ::
-                                                                    hoisted_args))))
-                                                             (fun uu___ ->
-                                                                (fun uu___ ->
-                                                                   Obj.magic
-                                                                    (hoist_and_apply
-                                                                    head rest
-                                                                    uu___))
-                                                                  uu___)))
-                                                       (fun uu___ ->
-                                                          FStar_Tactics_Effect.lift_div_tac
-                                                            (fun uu___1 ->
-                                                               FStar_Reflection_Data.Tv_Let
-                                                                 (false, [],
-                                                                   bv,
-                                                                   arg_term,
-                                                                   uu___)))))
+                                                                    uu___2 ->
+                                                                    FStar_Reflection_Data.Tv_Let
+                                                                    (false,
+                                                                    [], bv,
+                                                                    uu___,
+                                                                    arg_term,
+                                                                    uu___1)))))
+                                                            uu___)))
                                                  (fun uu___ ->
                                                     (fun uu___ ->
                                                        Obj.magic
