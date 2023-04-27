@@ -15,5 +15,6 @@
 
 (ocamllex pulselexer)
 
-(menhir (modules pulseparser) )
+(menhir (modules pulseparser fstarparser))
+
 

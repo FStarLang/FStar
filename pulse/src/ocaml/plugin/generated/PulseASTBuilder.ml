@@ -1,10 +1,10 @@
 open Prims
 let extension_parser :
-  'uuuuu 'uuuuu1 .
+  'uuuuu .
     'uuuuu ->
       Prims.string ->
         FStar_Compiler_Range.range ->
-          (FStar_Parser_AST_Util.error_message, 'uuuuu1)
+          (FStar_Parser_AST_Util.error_message, FStar_Parser_AST.decl')
             FStar_Pervasives.either
   =
   fun ctx ->
@@ -19,12 +19,6 @@ let extension_parser :
                 FStar_Parser_AST_Util.range = r
               }
         | FStar_Pervasives.Inl pulse_ast ->
-            (FStar_Compiler_Util.print_string
-               "Successfully parsed pulse term!\n";
-             FStar_Pervasives.Inl
-               {
-                 FStar_Parser_AST_Util.message = "not yet";
-                 FStar_Parser_AST_Util.range = rng
-               })
-let (uu___10 : unit) =
+            FStar_Pervasives.Inr (pulse_ast.FStar_Parser_AST.d)
+let (uu___9 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse" extension_parser
