@@ -115,34 +115,46 @@ let withlocal_soundness #f #g #t #c d soundness =
                    (mk_stt_comp ru rret_t c1_pre c1_post)) =
     rbody_typing in
 
+  let rx_tm = RT.var_as_term x in
+
+  assert (WT.with_local_bodypost_body rpost ra x ==
+          PReflUtil.mk_star
+            (RT.open_or_close_term'
+               (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit))) (RT.CloseVar x) 0)
+            (RT.open_or_close_term'
+               (PReflUtil.mk_exists (R.pack_universe R.Uv_Zero) ra
+                  (PReflUtil.mk_abs ra R.Q_Explicit
+                     (PReflUtil.mk_pts_to ra (RT.bound_var 2) full_perm_tm (RT.bound_var 0))))
+               (RT.CloseVar x) 0));
+
+  let y = fresh g in
+  let g_y = RT.extend_env (extend_env_l f g) y (PReflUtil.mk_ref ra) in
+
   let pre_equiv
-    : RT.equiv (extend_env_l f g)
-               c1_pre 
-               (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit)) =
-    RT.EQ_Refl _ _ in
+    : RT.equiv g_y
+        (RT.open_or_close_term' c1_pre (RT.open_with_var y) 0)
+        (RT.open_or_close_term'
+           (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
+           (RT.open_with_var y) 0) = RT.EQ_Refl _ _ in
 
   let post_equiv
-    : RT.equiv (extend_env_l f g)
-               (mk_star
-                  (elab_term (comp_post c))
-                  (elab_term
-                     (Tm_ExistsSL U_zero init_t
-                        (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false)))
-               (WT.with_local_bodypost_body rpost ra x) = magic () in
+    : RT.equiv g_y
+        (RT.open_or_close_term' c1_post (RT.open_with_var y) 0)
+        (RT.open_or_close_term'
+           (WT.with_local_bodypost rpost ra rret_t x)
+           (RT.open_with_var y) 0) = magic () in
 
-  let post_equiv
-    : RT.equiv (extend_env_l f g)
-               c1_post
-               (WT.with_local_bodypost rpost ra rret_t x) =
-    mk_abs_equiv _ _ _ _ _ post_equiv in
-
-  let comp_equiv
-    : RT.equiv (extend_env_l f g)
-               c1
-               (mk_stt_comp ru rret_t
-                  (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
-                  (WT.with_local_bodypost rpost ra rret_t x)) =
-    mk_stt_comp_equiv _ _ _ _ _ _ _ pre_equiv post_equiv in
+  let arrow_codom_equiv
+    : RT.equiv g_y
+               (RT.open_or_close_term'
+                  (mk_stt_comp ru rret_t c1_pre c1_post)
+                  (RT.open_with_var y) 0)
+               (RT.open_or_close_term'
+                  (mk_stt_comp ru rret_t
+                     (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
+                     (WT.with_local_bodypost rpost ra rret_t x))
+                  (RT.open_with_var y) 0) =
+    PReflUtil.mk_stt_comp_equiv _ ru (RT.open_or_close_term' rret_t (RT.open_with_var y) 0) _ _ _ _ pre_equiv post_equiv in
 
   let arrow_equiv
     : RT.equiv (extend_env_l f g)
@@ -154,7 +166,7 @@ let withlocal_soundness #f #g #t #c d soundness =
                   (mk_stt_comp ru rret_t
                      (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
                      (WT.with_local_bodypost rpost ra rret_t x))) =
-    mk_arrow_equiv _ _ _ _ comp_equiv in
+    RT.equiv_arrow _ _ _ arrow_codom_equiv in
                
 
   let rbody_typing

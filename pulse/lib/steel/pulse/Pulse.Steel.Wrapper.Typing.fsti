@@ -356,11 +356,9 @@ let with_local_bodypost_body (post:term) (a:term) (x:var) : term =
   let post_app = pack_ln (Tv_App post (x_tm, Q_Explicit)) in
   // exists_ (R.pts_to r full_perm)
   let exists_tm =
-    let t = pack_ln (Tv_FVar (pack_fv pts_to_lid)) in
-    let t = pack_ln (Tv_App t (a, Q_Implicit)) in
-    let t = pack_ln (Tv_App t ((RT.bound_var 1), Q_Explicit)) in
-    let t = pack_ln (Tv_App t (full_perm_tm, Q_Explicit)) in
-    mk_exists (pack_universe Uv_Zero) a t in
+    mk_exists (pack_universe Uv_Zero) a
+      (mk_abs a Q_Explicit
+         (mk_pts_to a (RT.bound_var 2) full_perm_tm (RT.bound_var 0))) in
   let star_tm = mk_star post_app exists_tm in
   RT.open_or_close_term' star_tm (RT.CloseVar x) 0
 
