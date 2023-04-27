@@ -380,7 +380,7 @@ val with_local_typing
   (init_typing:RT.typing g init a)
   (pre_typing:RT.typing g pre vprop_tm)
   (ret_t_typing:RT.typing g ret_t (pack_ln (Tv_Type u)))
-  (post_typing:RT.typing g post (mk_arrow (a, Q_Explicit) vprop_tm))
+  (post_typing:RT.typing g post (mk_arrow (ret_t, Q_Explicit) vprop_tm))
   (body_typing:RT.typing g 
                          body
                          (mk_arrow
