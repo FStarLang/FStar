@@ -73,10 +73,10 @@ endif
 .PHONY: check-for-changes
 check-for-changes:
 	# Test if no new files appeared
-	git status
+	git status ..
 	test "" = "$$(git ls-files --others --exclude-standard -- ..)"
 	# Test if nothing has changed
-	git diff-index --exit-code HEAD
+	if ! git diff-index --exit-code HEAD .. ; then git diff .. ; false ; fi
 
 .PHONY: ci
 ci:
