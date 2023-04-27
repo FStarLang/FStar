@@ -128,7 +128,7 @@ let withlocal_soundness #f #g #t #c d soundness =
                   (elab_term
                      (Tm_ExistsSL U_zero init_t
                         (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false)))
-               (WT.with_local_bodypost_body rpost ra rret_t x) = magic () in
+               (WT.with_local_bodypost_body rpost ra x) = magic () in
 
   let post_equiv
     : RT.equiv (extend_env_l f g)
