@@ -305,12 +305,12 @@ let rec elab_exp (e:src_exp)
       pack_ln (Tv_Const R.C_False)
 
     | EBVar n -> 
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
       // tun because type does not matter at a use site
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_Var bv)
 
     | ELam t e ->
@@ -346,9 +346,9 @@ and elab_ty (t:src_ty)
           
     | TRefineBool e ->
       let e = elab_exp e in
-      let bv = R.pack_bv (RT.make_bv 0 RT.bool_ty) in
+      let bv = R.pack_bv (RT.make_bv 0) in
       let refinement = r_b2t (R.pack_ln (Tv_App e (R.pack_ln (Tv_BVar bv), Q_Explicit))) in
-      R.pack_ln (Tv_Refine bv refinement)
+      R.pack_ln (Tv_Refine bv RT.bool_ty refinement)
 
 let elab_eqn (e1 e2:src_exp)
   : R.term
@@ -1423,7 +1423,7 @@ let subtyping_soundness #f (#sg:src_env) (#t0 #t1:s_ty) (ds:sub_typing f sg t0 t
     | S_Refl _ _ -> admit ()  //RT.ST_Refl _ _
     | S_ELab _ _ _ d -> d
 
-let bv0 = R.pack_bv (RT.make_bv 0 RT.bool_ty)
+let bv0 = R.pack_bv (RT.make_bv 0)
 
 let bv_as_arg (x:R.bv)
   = let open R in
@@ -1442,7 +1442,7 @@ let mk_refine (e:R.term)
   : R.term 
   = let open R in
     let ref = apply e (bv_as_arg bv0) in
-    pack_ln (Tv_Refine bv0 (r_b2t ref))
+    pack_ln (Tv_Refine bv0 RT.bool_ty (r_b2t ref))
 
 #push-options "--fuel 4"
 let apply_refinement_closed (e:src_exp { ln e && closed e })
@@ -1523,7 +1523,7 @@ let rec soundness (#f:RT.fstar_top_env)
       RT.T_Const _ _ _ RT.CT_False
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
+      RT.T_Var _ (R.pack_bv (RT.make_bv x))
 
     | T_Lam _ t e t' x dt de ->
       let de : RT.typing (extend_env_l f ((x,Inl t)::sg))
