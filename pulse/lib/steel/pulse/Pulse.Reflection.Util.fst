@@ -570,3 +570,16 @@ let mk_ref (a:R.term) : R.term =
   let open R in
   let t = pack_ln (Tv_FVar (pack_fv ref_lid)) in
   pack_ln (Tv_App t (a, Q_Explicit))
+
+let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv pts_to_lid)) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (r, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (perm, Q_Explicit)) in
+  pack_ln (Tv_App t (v, Q_Explicit))
+
+let full_perm_tm : R.term =
+  let open R in
+  pack_ln (Tv_FVar (pack_fv full_perm_lid))
+

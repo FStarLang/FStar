@@ -14,7 +14,7 @@ val par_soundness
   (#t:st_term)
   (#c:comp)
   (d:st_typing f g t c{T_Par? d})
-  (soundness: soundness_t d)
+  (soundness:soundness_t d)
   : GTot (RT.typing (extend_env_l f g)
                     (elab_st_typing d)
                     (elab_comp c))
