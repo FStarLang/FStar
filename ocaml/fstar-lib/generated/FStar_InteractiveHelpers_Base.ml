@@ -1871,69 +1871,62 @@ let rec (_fresh_bv :
   Prims.string Prims.list ->
     Prims.string ->
       Prims.int ->
-        FStar_Reflection_Types.typ ->
-          (FStar_Reflection_Types.bv, unit) FStar_Tactics_Effect.tac_repr)
+        (FStar_Reflection_Types.bv, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun binder_names ->
     fun basename ->
       fun i ->
-        fun ty ->
-          FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
-               (Prims.of_int (316)) (Prims.of_int (13)) (Prims.of_int (316))
-               (Prims.of_int (39)))
-            (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
-               (Prims.of_int (319)) (Prims.of_int (2)) (Prims.of_int (320))
-               (Prims.of_int (29)))
-            (FStar_Tactics_Effect.lift_div_tac
-               (fun uu___ -> Prims.strcat basename (Prims.string_of_int i)))
-            (fun uu___ ->
-               (fun name ->
-                  if FStar_List_Tot_Base.mem name binder_names
-                  then
-                    Obj.magic
-                      (_fresh_bv binder_names basename (i + Prims.int_one) ty)
-                  else
-                    Obj.magic (FStar_Tactics_Builtins.fresh_bv_named name ty))
-                 uu___)
+        FStar_Tactics_Effect.tac_bind
+          (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
+             (Prims.of_int (316)) (Prims.of_int (13)) (Prims.of_int (316))
+             (Prims.of_int (39)))
+          (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
+             (Prims.of_int (319)) (Prims.of_int (2)) (Prims.of_int (320))
+             (Prims.of_int (26)))
+          (FStar_Tactics_Effect.lift_div_tac
+             (fun uu___ -> Prims.strcat basename (Prims.string_of_int i)))
+          (fun uu___ ->
+             (fun name ->
+                if FStar_List_Tot_Base.mem name binder_names
+                then
+                  Obj.magic
+                    (_fresh_bv binder_names basename (i + Prims.int_one))
+                else Obj.magic (FStar_Tactics_Builtins.fresh_bv_named name))
+               uu___)
 let (fresh_bv :
   FStar_Reflection_Types.env ->
     Prims.string ->
-      FStar_Reflection_Types.typ ->
-        (FStar_Reflection_Types.bv, unit) FStar_Tactics_Effect.tac_repr)
+      (FStar_Reflection_Types.bv, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun e ->
     fun basename ->
-      fun ty ->
-        FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
-             (Prims.of_int (323)) (Prims.of_int (16)) (Prims.of_int (323))
-             (Prims.of_int (32)))
-          (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
-             (Prims.of_int (324)) (Prims.of_int (2)) (Prims.of_int (325))
-             (Prims.of_int (38)))
-          (FStar_Tactics_Effect.lift_div_tac
-             (fun uu___ -> FStar_Reflection_Builtins.binders_of_env e))
-          (fun uu___ ->
-             (fun binders ->
-                Obj.magic
-                  (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range
-                        "FStar.InteractiveHelpers.Base.fst"
-                        (Prims.of_int (324)) (Prims.of_int (21))
-                        (Prims.of_int (324)) (Prims.of_int (55)))
-                     (FStar_Range.mk_range
-                        "FStar.InteractiveHelpers.Base.fst"
-                        (Prims.of_int (325)) (Prims.of_int (2))
-                        (Prims.of_int (325)) (Prims.of_int (38)))
-                     (Obj.magic
-                        (FStar_Tactics_Util.map
-                           FStar_Tactics_Derived.name_of_binder binders))
-                     (fun uu___ ->
-                        (fun binder_names ->
-                           Obj.magic
-                             (_fresh_bv binder_names basename Prims.int_zero
-                                ty)) uu___))) uu___)
+      FStar_Tactics_Effect.tac_bind
+        (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
+           (Prims.of_int (323)) (Prims.of_int (16)) (Prims.of_int (323))
+           (Prims.of_int (32)))
+        (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
+           (Prims.of_int (324)) (Prims.of_int (2)) (Prims.of_int (325))
+           (Prims.of_int (35)))
+        (FStar_Tactics_Effect.lift_div_tac
+           (fun uu___ -> FStar_Reflection_Builtins.binders_of_env e))
+        (fun uu___ ->
+           (fun binders ->
+              Obj.magic
+                (FStar_Tactics_Effect.tac_bind
+                   (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
+                      (Prims.of_int (324)) (Prims.of_int (21))
+                      (Prims.of_int (324)) (Prims.of_int (55)))
+                   (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
+                      (Prims.of_int (325)) (Prims.of_int (2))
+                      (Prims.of_int (325)) (Prims.of_int (35)))
+                   (Obj.magic
+                      (FStar_Tactics_Util.map
+                         FStar_Tactics_Derived.name_of_binder binders))
+                   (fun uu___ ->
+                      (fun binder_names ->
+                         Obj.magic
+                           (_fresh_bv binder_names basename Prims.int_zero))
+                        uu___))) uu___)
 let (fresh_binder :
   FStar_Reflection_Types.env ->
     Prims.string ->
@@ -1946,10 +1939,10 @@ let (fresh_binder :
         FStar_Tactics_Effect.tac_bind
           (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (328)) (Prims.of_int (11)) (Prims.of_int (328))
-             (Prims.of_int (33)))
+             (Prims.of_int (30)))
           (FStar_Range.mk_range "FStar.InteractiveHelpers.Base.fst"
              (Prims.of_int (329)) (Prims.of_int (2)) (Prims.of_int (329))
-             (Prims.of_int (17))) (Obj.magic (fresh_bv e basename ty))
+             (Prims.of_int (17))) (Obj.magic (fresh_bv e basename))
           (fun bv ->
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___ -> FStar_Reflection_Derived.mk_binder bv ty))

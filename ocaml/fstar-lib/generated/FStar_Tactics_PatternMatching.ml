@@ -3343,7 +3343,7 @@ let rec (hoist_and_apply :
                                          (Prims.of_int (708))
                                          (Prims.of_int (13))
                                          (Prims.of_int (708))
-                                         (Prims.of_int (71)))
+                                         (Prims.of_int (53)))
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.PatternMatching.fst"
                                          (Prims.of_int (709))
@@ -3351,30 +3351,9 @@ let rec (hoist_and_apply :
                                          (Prims.of_int (709))
                                          (Prims.of_int (131)))
                                       (Obj.magic
-                                         (FStar_Tactics_Effect.tac_bind
-                                            (FStar_Range.mk_range
-                                               "FStar.Tactics.PatternMatching.fst"
-                                               (Prims.of_int (708))
-                                               (Prims.of_int (54))
-                                               (Prims.of_int (708))
-                                               (Prims.of_int (71)))
-                                            (FStar_Range.mk_range
-                                               "FStar.Tactics.PatternMatching.fst"
-                                               (Prims.of_int (708))
-                                               (Prims.of_int (13))
-                                               (Prims.of_int (708))
-                                               (Prims.of_int (71)))
-                                            (Obj.magic
-                                               (FStar_Tactics_Builtins.pack
-                                                  FStar_Reflection_Data.Tv_Unknown))
-                                            (fun uu___ ->
-                                               (fun uu___ ->
-                                                  Obj.magic
-                                                    (FStar_Tactics_Builtins.fresh_bv_named
-                                                       (Prims.strcat "x"
-                                                          (Prims.string_of_int
-                                                             n)) uu___))
-                                                 uu___)))
+                                         (FStar_Tactics_Builtins.fresh_bv_named
+                                            (Prims.strcat "x"
+                                               (Prims.string_of_int n))))
                                       (fun uu___ ->
                                          (fun bv ->
                                             Obj.magic

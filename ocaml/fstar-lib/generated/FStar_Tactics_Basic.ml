@@ -5260,16 +5260,14 @@ let (launch_process :
                FStar_Tactics_Monad.fail
                  "launch_process: will not run anything unless --unsafe_tactic_exec is provided")
 let (fresh_bv_named :
-  Prims.string ->
-    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac)
-  =
+  Prims.string -> FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac) =
   fun nm ->
-    fun t ->
-      FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
-        (fun uu___ ->
-           let uu___1 =
-             FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None t in
-           FStar_Tactics_Monad.ret uu___1)
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 =
+           FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None
+             FStar_Syntax_Syntax.tun in
+         FStar_Tactics_Monad.ret uu___1)
 let (change : FStar_Syntax_Syntax.typ -> unit FStar_Tactics_Monad.tac) =
   fun ty ->
     let uu___ =

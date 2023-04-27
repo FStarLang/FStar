@@ -918,7 +918,7 @@ let (mk_class :
                                                                     (Prims.of_int (147))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (147))
-                                                                    (Prims.of_int (50)))
+                                                                    (Prims.of_int (46)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Typeclasses.fst"
                                                                     (Prims.of_int (148))
@@ -927,7 +927,7 @@ let (mk_class :
                                                                     (Prims.of_int (20)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.fresh_bv_named
-                                                                    "d" cod1))
+                                                                    "d"))
                                                                     (fun
                                                                     uu___9 ->
                                                                     (fun dbv

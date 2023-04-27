@@ -1718,21 +1718,19 @@ let (ngoals_smt : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr) =
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> FStar_List_Tot_Base.length uu___1))
 let (fresh_bv :
-  FStar_Reflection_Types.typ ->
-    (FStar_Reflection_Types.bv, unit) FStar_Tactics_Effect.tac_repr)
-  =
-  fun t ->
+  unit -> (FStar_Reflection_Types.bv, unit) FStar_Tactics_Effect.tac_repr) =
+  fun uu___ ->
     FStar_Tactics_Effect.tac_bind
       (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (382))
          (Prims.of_int (12)) (Prims.of_int (382)) (Prims.of_int (20)))
       (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (383))
-         (Prims.of_int (4)) (Prims.of_int (383)) (Prims.of_int (44)))
+         (Prims.of_int (4)) (Prims.of_int (383)) (Prims.of_int (42)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
-      (fun uu___ ->
+      (fun uu___1 ->
          (fun i ->
             Obj.magic
               (FStar_Tactics_Builtins.fresh_bv_named
-                 (Prims.strcat "x" (Prims.string_of_int i)) t)) uu___)
+                 (Prims.strcat "x" (Prims.string_of_int i)))) uu___1)
 let (fresh_binder_named :
   Prims.string ->
     FStar_Reflection_Types.typ ->
@@ -1743,11 +1741,11 @@ let (fresh_binder_named :
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
            (Prims.of_int (386)) (Prims.of_int (14)) (Prims.of_int (386))
-           (Prims.of_int (35)))
+           (Prims.of_int (33)))
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
            (Prims.of_int (386)) (Prims.of_int (4)) (Prims.of_int (386))
-           (Prims.of_int (37)))
-        (Obj.magic (FStar_Tactics_Builtins.fresh_bv_named nm t))
+           (Prims.of_int (35)))
+        (Obj.magic (FStar_Tactics_Builtins.fresh_bv_named nm))
         (fun uu___ ->
            FStar_Tactics_Effect.lift_div_tac
              (fun uu___1 -> FStar_Reflection_Derived.mk_binder uu___ t))
@@ -1777,11 +1775,11 @@ let (fresh_implicit_binder_named :
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
            (Prims.of_int (394)) (Prims.of_int (23)) (Prims.of_int (394))
-           (Prims.of_int (44)))
+           (Prims.of_int (42)))
         (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
            (Prims.of_int (394)) (Prims.of_int (4)) (Prims.of_int (394))
-           (Prims.of_int (46)))
-        (Obj.magic (FStar_Tactics_Builtins.fresh_bv_named nm t))
+           (Prims.of_int (44)))
+        (Obj.magic (FStar_Tactics_Builtins.fresh_bv_named nm))
         (fun uu___ ->
            FStar_Tactics_Effect.lift_div_tac
              (fun uu___1 ->

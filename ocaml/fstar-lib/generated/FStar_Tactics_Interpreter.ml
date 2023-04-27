@@ -1367,16 +1367,14 @@ let (uu___156 : unit) =
                                                                     =
                                                                     let uu___128
                                                                     =
-                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "fresh_bv_named"
                                                                     FStar_Tactics_Basic.fresh_bv_named
                                                                     FStar_Syntax_Embeddings.e_string
-                                                                    FStar_Reflection_Embeddings.e_term
                                                                     FStar_Reflection_Embeddings.e_bv
                                                                     FStar_Tactics_Basic.fresh_bv_named
                                                                     FStar_TypeChecker_NBETerm.e_string
-                                                                    FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_bv in
                                                                     let uu___129
                                                                     =
