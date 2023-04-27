@@ -13,7 +13,7 @@ module R = FStar.Reflection
 module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
 
-#push-options "--z3rlimit_factor 20"
+#push-options "--z3rlimit_factor 20 --fuel 10"
 
 let withlocal_soundness #f #g #t #c d soundness =
   let T_WithLocal _ init body init_t c x init_typing init_t_typing c_typing body_typing = d in
@@ -70,10 +70,14 @@ let withlocal_soundness #f #g #t #c d soundness =
                           (elab_comp (close_comp (comp_withlocal_body x init_t init c) x))) =
     mk_t_abs _ _ #_ #_ #_ #ref_init_t_typing RT.pp_name_default rref_init_t_typing rbody_typing in
 
-  assume (close_term (comp_res c) x == comp_res c);
-  assume (close_term (comp_pre c) x == comp_pre c);
+  assume (close_comp c x == c);
+  // assume (close_term (comp_res c) x == comp_res c);
+  // assume (close_term (comp_pre c) x == comp_pre c);
   assume (close_term init_t x == init_t);
   assume (close_term init x == init);
+  assume (close_term' (comp_post c) x 1 == comp_post c);
+  assume (close_term' init_t x 1 == init_t);
+  assume (close_term' init_t x 2 == init_t);
 
   let cbody_closed = close_comp (comp_withlocal_body x init_t init c) x in
   let c1 = elab_comp cbody_closed in
@@ -81,14 +85,77 @@ let withlocal_soundness #f #g #t #c d soundness =
     (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
     (WT.with_local_bodypost rpost ra rret_t x) in
 
+  assert (close_term' (comp_withlocal_body_post (comp_post c) init_t (null_var x)) x 1 ==
+          Tm_Star
+            (comp_post c)
+            (Tm_ExistsSL U_zero init_t (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false));
+
+  assert (elab_term
+            (Tm_Star
+               (comp_post c)
+               (Tm_ExistsSL U_zero init_t (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false)) ==
+          mk_star
+            (elab_term (comp_post c))
+            (elab_term (Tm_ExistsSL U_zero init_t (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false)));
+
   let c1_pre = elab_term (Tm_Star (comp_pre c) (mk_pts_to init_t (null_bvar 0) init)) in
-  let c1_post = mk_abs rret_t R.Q_Explicit (elab_term (comp_post cbody_closed)) in
+  let c1_post = mk_abs rret_t R.Q_Explicit
+    (mk_star
+       (elab_term (comp_post c))
+       (elab_term (Tm_ExistsSL U_zero init_t (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false))) in
 
   assert (c1 == mk_stt_comp ru rret_t c1_pre c1_post);
   assert (c1_pre == mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit));
 
-  admit ();
+  let rbody_typing
+    : RT.typing (extend_env_l f g)
+                rbody
+                (mk_arrow
+                   (PReflUtil.mk_ref ra, R.Q_Explicit)
+                   (mk_stt_comp ru rret_t c1_pre c1_post)) =
+    rbody_typing in
 
+  let pre_equiv
+    : RT.equiv (extend_env_l f g)
+               c1_pre 
+               (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit)) =
+    RT.EQ_Refl _ _ in
+
+  let post_equiv
+    : RT.equiv (extend_env_l f g)
+               (mk_star
+                  (elab_term (comp_post c))
+                  (elab_term
+                     (Tm_ExistsSL U_zero init_t
+                        (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false)))
+               (WT.with_local_bodypost_body rpost ra rret_t x) = magic () in
+
+  let post_equiv
+    : RT.equiv (extend_env_l f g)
+               c1_post
+               (WT.with_local_bodypost rpost ra rret_t x) =
+    mk_abs_equiv _ _ _ _ _ post_equiv in
+
+  let comp_equiv
+    : RT.equiv (extend_env_l f g)
+               c1
+               (mk_stt_comp ru rret_t
+                  (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
+                  (WT.with_local_bodypost rpost ra rret_t x)) =
+    mk_stt_comp_equiv _ _ _ _ _ _ _ pre_equiv post_equiv in
+
+  let arrow_equiv
+    : RT.equiv (extend_env_l f g)
+               (mk_arrow
+                  (PReflUtil.mk_ref ra, R.Q_Explicit)
+                  (mk_stt_comp ru rret_t c1_pre c1_post))
+               (mk_arrow
+                  (PReflUtil.mk_ref ra, R.Q_Explicit)
+                  (mk_stt_comp ru rret_t
+                     (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
+                     (WT.with_local_bodypost rpost ra rret_t x))) =
+    mk_arrow_equiv _ _ _ _ comp_equiv in
+               
 
   let rbody_typing
     : RT.typing
@@ -98,6 +165,7 @@ let withlocal_soundness #f #g #t #c d soundness =
            (PReflUtil.mk_ref ra, R.Q_Explicit)
            (mk_stt_comp ru rret_t
               (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
-              (WT.with_local_bodypost rpost ra rret_t x))) = magic () in
+              (WT.with_local_bodypost rpost ra rret_t x))) =
+    RT.T_Sub _ _ _ _ rbody_typing (RT.ST_Equiv _ _ _ arrow_equiv) in
 
   WT.with_local_typing x a_typing init_typing pre_typing ret_t_typing post_typing rbody_typing

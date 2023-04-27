@@ -541,6 +541,16 @@ let mk_star_equiv (g:R.env) (t1 t2 t3 t4:R.term)
   
   admit ()
 
+let mk_arrow_equiv (g:R.env) (dom:arrow_dom) (out1 out2:R.term)
+  (out_equiv:RT.equiv g out1 out2)
+  : RT.equiv g (mk_arrow dom out1) (mk_arrow dom out2) =
+  admit ()
+
+let mk_abs_equiv (g:R.env) (t:R.term) (q:R.aqualv) (body1 body2:R.term)
+  (body_equiv:RT.equiv g body1 body2)
+  : RT.equiv g (mk_abs t q body1) (mk_abs t q body2) =
+  admit ()
+
 let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res pre1 post1 pre2 post2:R.term)
   (pre_eq:RT.equiv g pre1 pre2)
   (post_eq:RT.equiv g post1 post2)

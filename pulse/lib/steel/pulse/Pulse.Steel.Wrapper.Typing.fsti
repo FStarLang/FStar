@@ -350,7 +350,7 @@ val rewrite_typing
                         p
                         (mk_abs unit_tm Q_Explicit q)))
 
-let with_local_bodypost (post:term) (a:term) (ret_t:term) (x:var) : term =
+let with_local_bodypost_body (post:term) (a:term) (ret_t:term) (x:var) : term =
   let x_tm = RT.var_as_term x in
   // post x
   let post_app = pack_ln (Tv_App post (x_tm, Q_Explicit)) in
@@ -362,8 +362,10 @@ let with_local_bodypost (post:term) (a:term) (ret_t:term) (x:var) : term =
     let t = pack_ln (Tv_App t (full_perm_tm, Q_Explicit)) in
     mk_exists (pack_universe Uv_Zero) a t in
   let star_tm = mk_star post_app exists_tm in
-  let p_closed = RT.open_or_close_term' star_tm (RT.CloseVar x) 0 in
-  mk_abs ret_t Q_Explicit p_closed
+  RT.open_or_close_term' star_tm (RT.CloseVar x) 0
+
+let with_local_bodypost (post:term) (a:term) (ret_t:term) (x:var) : term =
+  mk_abs ret_t Q_Explicit (with_local_bodypost_body post a ret_t x)
 
 
 val with_local_typing
