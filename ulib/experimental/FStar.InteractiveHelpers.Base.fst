@@ -312,20 +312,20 @@ let genv_abstract_bvs ge =
 /// Versions of ``fresh_bv`` and ``fresh_binder`` inspired by the standard library
 /// We make sure the name is fresh because we need to be able to generate valid code
 /// (it is thus not enough to have a fresh integer).
-let rec _fresh_bv binder_names basename i ty : Tac bv =
+let rec _fresh_bv binder_names basename i : Tac bv =
   let name = basename ^ string_of_int i in
   (* In worst case the performance is quadratic in the number of binders.
    * TODO: fix that, it actually probably happens for anonymous variables ('_') *)
-  if List.mem name binder_names then _fresh_bv binder_names basename (i+1) ty
-  else fresh_bv_named name ty
+  if List.mem name binder_names then _fresh_bv binder_names basename (i+1)
+  else fresh_bv_named name
 
-let fresh_bv (e : env) (basename : string) (ty : typ) : Tac bv =
+let fresh_bv (e : env) (basename : string) : Tac bv =
   let binders = binders_of_env e in
   let binder_names = Tactics.map name_of_binder binders in
-  _fresh_bv binder_names basename 0 ty
+  _fresh_bv binder_names basename 0
 
 let fresh_binder (e : env) (basename : string) (ty : typ) : Tac binder =
-  let bv = fresh_bv e basename ty in
+  let bv = fresh_bv e basename in
   mk_binder bv ty
 
 let genv_push_fresh_binder (ge : genv) (basename : string) (ty : typ) : Tac (genv & binder) =

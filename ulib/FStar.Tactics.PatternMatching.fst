@@ -705,7 +705,7 @@ let rec hoist_and_apply (head:term) (arg_terms:list term) (hoisted_args:list arg
   | [] -> mk_app head (List.rev hoisted_args)
   | arg_term::rest ->
     let n = List.Tot.length hoisted_args in
-    let bv = fresh_bv_named ("x" ^ (string_of_int n)) (pack Tv_Unknown) in
+    let bv = fresh_bv_named ("x" ^ (string_of_int n)) in
     pack (Tv_Let false [] bv (pack Tv_Unknown) arg_term (hoist_and_apply head rest ((pack (Tv_Var bv), Q_Explicit)::hoisted_args)))
   
 let specialize_abspat_continuation' (continuation: abspat_continuation)

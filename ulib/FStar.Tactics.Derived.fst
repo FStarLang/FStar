@@ -375,15 +375,15 @@ let ngoals_smt () : Tac int = List.Tot.Base.length (smt_goals ())
 
 (* Create a fresh bound variable (bv), using a generic name. See also
 [fresh_bv_named]. *)
-let fresh_bv t : Tac bv =
+let fresh_bv () : Tac bv =
     (* These bvs are fresh anyway through a separate counter,
      * but adding the integer allows for more readability when
      * generating code *)
     let i = fresh () in
-    fresh_bv_named ("x" ^ string_of_int i) t
+    fresh_bv_named ("x" ^ string_of_int i)
 
 let fresh_binder_named nm t : Tac binder =
-    mk_binder (fresh_bv_named nm t) t
+    mk_binder (fresh_bv_named nm) t
 
 let fresh_binder t : Tac binder =
     (* See comment in fresh_bv *)
@@ -391,7 +391,7 @@ let fresh_binder t : Tac binder =
     fresh_binder_named ("x" ^ string_of_int i) t
 
 let fresh_implicit_binder_named nm t : Tac binder =
-    mk_implicit_binder (fresh_bv_named nm t) t
+    mk_implicit_binder (fresh_bv_named nm) t
 
 let fresh_implicit_binder t : Tac binder =
     (* See comment in fresh_bv *)

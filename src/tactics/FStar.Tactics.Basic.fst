@@ -1703,9 +1703,9 @@ let launch_process (prog : string) (args : list string) (input : string) : tac s
     else
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
 
-let fresh_bv_named (nm : string) (t : typ) : tac bv =
+let fresh_bv_named (nm : string) : tac bv =
     // The `bind idtac` thunks the tactic. Not really needed, just being paranoid
-    idtac ;! ret (gen_bv nm None t)
+    idtac ;! ret (gen_bv nm None S.tun)
 
 let change (ty : typ) : tac unit = wrap_err "change" <| (
     if_verbose (fun () -> BU.print1 "change: ty = %s\n" (Print.term_to_string ty)) ;!

@@ -55,7 +55,7 @@ let iszero (x : int) : int =
         set_guard_policy SMT;
         let x = quote x in
         let t_int = quote int in
-        let _f = fresh_bv t_int in
+        let _f = fresh_bv () in
         let t = Tv_Match x None
                     [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
                      (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in

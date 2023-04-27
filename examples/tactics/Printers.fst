@@ -58,7 +58,8 @@ let mk_printer_fun (dom : term) : Tac term =
     set_guard_policy SMT;
     let e = top_env () in
     (* Recursive binding *)
-    let ff = fresh_bv_named "ff_rec" (mk_printer_type dom) in
+    let ff = fresh_bv_named "ff_rec"  in
+    let ffty = mk_printer_type dom in
     let fftm = pack (Tv_Var ff) in
 
     let x = fresh_binder_named "v" dom in
@@ -99,7 +100,7 @@ let mk_printer_fun (dom : term) : Tac term =
         // Wrap it in a let rec; basically:
         // let rec ff = fun t -> match t with { .... } in ff x
         let xtm = pack (Tv_Var (bv_of_binder x)) in
-        let b = pack (Tv_Let true [] ff f (mk_e_app fftm [xtm])) in
+        let b = pack (Tv_Let true [] ff ffty f (mk_e_app fftm [xtm])) in
         (* debug ("b = " ^ term_to_string b); *)
 
         // Wrap it in a lambda taking the initial argument

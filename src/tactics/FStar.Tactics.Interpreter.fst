@@ -465,9 +465,9 @@ let () =
         launch_process e_string (e_list e_string) e_string e_string
         launch_process NBET.e_string (NBET.e_list NBET.e_string) NBET.e_string NBET.e_string;
 
-      mk_tac_step_2 0 "fresh_bv_named"
-        fresh_bv_named e_string RE.e_term RE.e_bv
-        fresh_bv_named NBET.e_string NRE.e_term NRE.e_bv;
+      mk_tac_step_1 0 "fresh_bv_named"
+        fresh_bv_named e_string RE.e_bv
+        fresh_bv_named NBET.e_string NRE.e_bv;
 
       mk_tac_step_1 0 "change"
         change RE.e_term e_unit

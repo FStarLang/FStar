@@ -26,7 +26,7 @@ let mk_if (test e_true e_false: term) : Tac term =
 
 let t () : Tac unit =
   let b = `bool in
-  let test' = fresh_bv b in
+  let test' = fresh_bv () in
   let test = pack (Tv_Var test') in
   let e_true = quote 3 in
   let e_false = quote () in

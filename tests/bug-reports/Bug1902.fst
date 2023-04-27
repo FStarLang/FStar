@@ -70,7 +70,7 @@ let craft_f' use_f_type: Tac decls =
       pack (
         Tv_Match n' None
         [ (Pat_Constant   (C_Int 0), (`(*`*)0))
-        ; (Pat_Wild (fresh_bv (`(*`*)int)),
+        ; (Pat_Wild (fresh_bv ()),
                     call2 (pack (Tv_FVar name))
                       (call2 (`(*`*)(+)) m' (`(*`*)  1 ))
                       (call2 (`(*`*)(+)) n' (`(*`*)(-1)))

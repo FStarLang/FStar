@@ -253,7 +253,7 @@ and param_pat (s:param_state) (p : pattern) : Tac (param_state & (pattern & patt
     //      Pat_Dot_Term (bv_of_binder bR) (param' s' t)))
 
   | Pat_Constant c ->
-    let b = fresh_bv_named "cR" (`_) in
+    let b = fresh_bv_named "cR" in
     (s, (Pat_Constant c,
          Pat_Constant c,
          Pat_Wild b))

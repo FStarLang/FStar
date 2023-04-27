@@ -24,7 +24,6 @@ open FStar.Reflection.Const
 open FStar.Reflection.Data
 
 ///// Cannot open FStar.Tactics.Derived here /////
-private let fresh_bv = fresh_bv_named "x"
 private let bv_to_string (bv : bv) : Tac string =
     let bvv = inspect_bv bv in
     unseal (bvv.bv_ppname)
