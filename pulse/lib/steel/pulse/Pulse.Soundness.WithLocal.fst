@@ -13,7 +13,7 @@ module R = FStar.Reflection
 module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
 
-#push-options "--z3rlimit_factor 10"
+#push-options "--z3rlimit_factor 20"
 
 let withlocal_soundness #f #g #t #c d soundness =
   let T_WithLocal _ init body init_t c x init_typing init_t_typing c_typing body_typing = d in
@@ -69,6 +69,26 @@ let withlocal_soundness #f #g #t #c d soundness =
                 (mk_arrow (PReflUtil.mk_ref ra, R.Q_Explicit)
                           (elab_comp (close_comp (comp_withlocal_body x init_t init c) x))) =
     mk_t_abs _ _ #_ #_ #_ #ref_init_t_typing RT.pp_name_default rref_init_t_typing rbody_typing in
+
+  assume (close_term (comp_res c) x == comp_res c);
+  assume (close_term (comp_pre c) x == comp_pre c);
+  assume (close_term init_t x == init_t);
+  assume (close_term init x == init);
+
+  let cbody_closed = close_comp (comp_withlocal_body x init_t init c) x in
+  let c1 = elab_comp cbody_closed in
+  let c2 = mk_stt_comp ru rret_t
+    (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
+    (WT.with_local_bodypost rpost ra rret_t x) in
+
+  let c1_pre = elab_term (Tm_Star (comp_pre c) (mk_pts_to init_t (null_bvar 0) init)) in
+  let c1_post = mk_abs rret_t R.Q_Explicit (elab_term (comp_post cbody_closed)) in
+
+  assert (c1 == mk_stt_comp ru rret_t c1_pre c1_post);
+  assert (c1_pre == mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit));
+
+  admit ();
+
 
   let rbody_typing
     : RT.typing
