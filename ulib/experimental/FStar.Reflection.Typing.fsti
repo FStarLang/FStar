@@ -36,7 +36,8 @@ val inspect_pack (t:R.term_view)
           [SMTPat R.(inspect_ln (pack_ln t))]
   
 val pack_inspect (t:R.term)
-  : Lemma (ensures R.(pack_ln (inspect_ln t) == t))
+  : Lemma (requires ~(Tv_Unknown? (inspect_ln t)))
+          (ensures R.(pack_ln (inspect_ln t) == t))
           [SMTPat R.(pack_ln (inspect_ln t))]
   
 val inspect_pack_bv (t:R.bv_view)
@@ -72,7 +73,8 @@ val inspect_pack_fv (nm:R.name)
           [SMTPat (R.inspect_fv (R.pack_fv nm))]
 
 val pack_inspect_universe (u:R.universe)
-  : Lemma (ensures R.pack_universe (R.inspect_universe u) == u)
+  : Lemma (requires ~(Uv_Unk? (inspect_universe u)))
+          (ensures R.pack_universe (R.inspect_universe u) == u)
           [SMTPat (R.pack_universe (R.inspect_universe u))]
 
 val inspect_pack_universe (u:R.universe_view)

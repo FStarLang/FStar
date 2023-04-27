@@ -11,6 +11,11 @@ let rec allP #a (pred : a -> Type0) (l : list a) : Type0 =
   | [] -> True
   | x::xs -> pred x /\ allP pred xs
 
+let optP #a (pred : a -> Type0) (o : option a) : Type0 =
+  match o with
+  | None -> True
+  | Some x -> pred x
+
 let rec memP_allP #a (pred : a -> Type) (x : a) (l : list a)
   : Lemma (requires allP pred l /\ L.memP x l)
           (ensures pred x)
@@ -356,10 +361,12 @@ let rec univ_faithful_lemma (u1 u2 : universe) =
   | Uv_Zero, Uv_Zero -> ()
   | Uv_Succ u1, Uv_Succ u2 -> univ_faithful_lemma u1 u2
   | Uv_Max us1, Uv_Max us2 ->
+    assert (faithful_univ u1);
+    assert (inspect_universe u1 == Uv_Max us1);
     assume (allP faithful_univ us1); // ?????????
     assume (allP faithful_univ us2);
     univ_faithful_lemma_list us1 us2;
-    assume (defined (univ_eq u1 u2)); // FIXME
+    assume (defined (univ_eq u1 u2)); // FIXME, somehow the pack/inspect is tripping the solver?
     ()
   | Uv_BVar _, Uv_BVar _ -> ()
   | Uv_Name _, Uv_Name _ -> ()
@@ -392,8 +399,8 @@ let rec faithful t =
     allP faithful_univ us
 
   | Tv_Unknown -> False
-  | Tv_App h (a, q) ->
-    faithful h /\ faithful a /\ faithful_qual q
+  | Tv_App h a ->
+    faithful h /\ faithful_arg a
   | Tv_Abs b t  ->
     faithful_binder b /\ faithful t
   | Tv_Arrow b c ->
@@ -410,9 +417,23 @@ let rec faithful t =
      /\ faithful e
      /\ faithful b
 
-  | Tv_Match sc o brs -> False
-  | Tv_AscribedC e c tacopt eq -> False
-  | Tv_AscribedT e c tacopt eq -> False
+  | Tv_Match sc o brs ->
+    faithful sc
+     /\ None? o // stopgap
+     /\ allP faithful_branch brs
+
+  | Tv_AscribedT e t tacopt eq ->
+    faithful e
+     /\ faithful t
+     /\ optP faithful tacopt
+
+  | Tv_AscribedC e c tacopt eq ->
+    faithful e
+     /\ faithful_comp c
+     /\ optP faithful tacopt
+
+and faithful_arg (a : argv) : Type0 =
+  faithful (fst a) /\ faithful_qual (snd a)
 
 and faithful_qual (q:aqualv) : Type0 =
   match q with
@@ -429,6 +450,25 @@ and faithful_binding_bv (bv:bv) : Type0 =
   match inspect_bv bv with
   | {bv_index = i; bv_sort = s} -> faithful s
 
+and faithful_branch (b : branch) : Type0 =
+  let (p, t) = b in
+  faithful_pattern p /\ faithful t
+
+and faithful_pattern (p : pattern) : Type0 =
+  match p with
+  | Pat_Constant _ -> True
+  | Pat_Cons h usopt pats ->
+    optP (allP faithful_univ) usopt
+     /\ allP faithful_pattern_arg pats
+  (* non-binding bvs are always OK *)
+  | Pat_Var bv -> True
+  | Pat_Wild bv -> True
+  | Pat_Dot_Term None -> True
+  | Pat_Dot_Term (Some t) -> faithful t
+
+and faithful_pattern_arg (pb : pattern * bool) =
+  faithful_pattern (fst pb)
+
 and faithful_attrs ats = allP faithful ats
 
 and faithful_comp c =
@@ -436,11 +476,15 @@ and faithful_comp c =
   | C_Total t -> faithful t
   | C_GTotal t -> faithful t
   | C_Lemma pre post pats -> faithful pre /\ faithful post /\ faithful pats
-  | C_Eff us ef r args decs -> False
-
-let faithful_term = t:term{faithful t}
+  | C_Eff us ef r args decs ->
+    allP faithful_univ us
+     /\ faithful r
+     /\ allP faithful_arg args
+     /\ allP faithful decs
 
 val faithful_lemma (t1:term) (t2:term) : Lemma (requires faithful t1 /\ faithful t2) (ensures defined (term_eq t1 t2))
+
+#push-options "--z3rlimit 20"
 
 [@@admit_termination]
 let rec faithful_lemma (t1 t2 : term) =
@@ -453,11 +497,9 @@ let rec faithful_lemma (t1 t2 : term) =
     ()
 
   | Tv_Const c1, Tv_Const c2 -> ()
-  | Tv_App h1 (a1, q1), Tv_App h2 (a2, q2) ->
+  | Tv_App h1 a1, Tv_App h2 a2 ->
     faithful_lemma h1 h2;
-    faithful_lemma a1 a2;
-    (match q1, q2 with | Q_Meta t1, Q_Meta t2 -> faithful_lemma t1 t2 | _ -> ());
-    ()
+    faithful_lemma_arg a1 a2
   | Tv_Abs b1 t1, Tv_Abs b2 t2 ->
     faithful_lemma_binder b1 b2;
     faithful_lemma t1 t2
@@ -481,15 +523,78 @@ let rec faithful_lemma (t1 t2 : term) =
     assert (defined (binding_bv_eq x1 x2));
     assert (defined (term_eq e1 e2));
     assert (defined (term_eq b1 b2));
-    assume (defined (eq_eq r1 r2
+    assert (defined (eq_eq r1 r2
      &&& list_eq term_eq ats1 ats2
      &&& binding_bv_eq x1 x2
      &&& term_eq e1 e2
-     &&& term_eq b1 b2)); // fixme again
+     &&& term_eq b1 b2));
     assume (defined (term_eq t1 t2)); // ???
     ()
 
+  | Tv_Match sc1 o1 brs1, Tv_Match sc2 o2 brs2 ->
+    faithful_lemma sc1 sc2;
+    assert (None? o1);
+    assert (None? o2);
+    assume (allP faithful_branch brs1); // FIXME trivial
+    assume (allP faithful_branch brs2);
+    faithful_lemma_branches brs1 brs2;
+    assert (defined (list_eq br_eq brs1 brs2));
+    assert (defined (term_eq sc1 sc2
+     &&& opt_eq match_returns_ascription_eq o1 o2
+     &&& list_eq br_eq brs1 brs2));
+    assume (defined (term_eq t1 t2)); // FIXME trivial
+    ()
+
+  | Tv_AscribedT e1 t1 tacopt1 eq1, Tv_AscribedT e2 t2 tacopt2 eq2 ->
+    faithful_lemma e1 e2;
+    faithful_lemma t1 t2;
+    (match tacopt1, tacopt2 with | Some t1, Some t2 -> faithful_lemma t1 t2 | _ -> ());
+    ()
+
+  | Tv_AscribedC e1 c1 tacopt1 eq1, Tv_AscribedC e2 c2 tacopt2 eq2 ->
+    faithful_lemma e1 e2;
+    faithful_lemma_comp c1 c2;
+    (match tacopt1, tacopt2 with | Some t1, Some t2 -> faithful_lemma t1 t2 | _ -> ());
+    ()
+
   | _ -> assert (defined (term_eq t1 t2)) (* rest of the cases trivial *)
+
+and faithful_lemma_pattern (p1 p2 : pattern) : Lemma (requires faithful_pattern p1 /\ faithful_pattern p2) (ensures defined (pat_eq p1 p2)) =
+  match p1, p2 with
+  | Pat_Var v1, Pat_Var v2 -> ()
+  | Pat_Constant c1, Pat_Constant c2 -> ()
+  | Pat_Wild v1, Pat_Wild v2 -> ()
+  | Pat_Dot_Term (Some t1), Pat_Dot_Term (Some t2) -> faithful_lemma t1 t2
+  | Pat_Cons f1 us1 args1, Pat_Cons f2 us2 args2 ->
+    (match us1, us2 with | Some us1, Some us2 -> univ_faithful_lemma_list us1 us2 | _ -> ());
+    assume (defined (list_eq (pair_eq pat_eq eq_eq) args1 args2));
+    assert (defined (
+        fv_eq f1 f2
+        &&& opt_eq (list_eq univ_eq) us1 us2
+        &&& list_eq (pair_eq pat_eq eq_eq) args1 args2));
+    assume (defined (pat_eq p1 p2));
+    ()
+
+  | _ -> ()
+
+and faithful_lemma_branch (br1 br2 : branch) : Lemma (requires faithful_branch br1 /\ faithful_branch br2) (ensures defined (br_eq br1 br2)) =
+  faithful_lemma_pattern (fst br1) (fst br2);
+  faithful_lemma (snd br1) (snd br2)
+
+and faithful_lemma_branches (brs1 brs2 : list branch) : Lemma (requires allP faithful_branch brs1 /\ allP faithful_branch brs2) (ensures defined (list_eq br_eq brs1 brs2)) =
+  introduce forall x y. L.memP x brs1 /\ L.memP y brs2 ==> defined (br_eq x y) with
+   (introduce forall y. L.memP x brs1 /\ L.memP y brs2 ==> defined (br_eq x y) with
+    (introduce (L.memP x brs1 /\ L.memP y brs2) ==> (defined (br_eq x y)) with h. (
+     faithful_lemma_branch x y
+     )
+    )
+   )
+  ;
+  defined_list br_eq brs1 brs2
+
+and faithful_lemma_arg (a1 a2 : argv) : Lemma (requires faithful_arg a1 /\ faithful_arg a2) (ensures defined (arg_eq a1 a2)) =
+  faithful_lemma (fst a1) (fst a2);
+  (match snd a1, snd a2 with | Q_Meta t1, Q_Meta t2 -> faithful_lemma t1 t2 | _ -> ())
 
 and faithful_lemma_binder (b1 b2 : binder) : Lemma (requires faithful_binder b1 /\ faithful_binder b2) (ensures defined (binder_eq b1 b2)) =
   let bv1 = inspect_binder b1 in
@@ -535,9 +640,39 @@ and faithful_lemma_comp (c1 c2 : comp) : Lemma (requires faithful_comp c1 /\ fai
     faithful_lemma pre1 pre2;
     faithful_lemma post1 post2;
     faithful_lemma pat1 pat2
-  | C_Eff _ _ _ _ _, C_Eff _ _ _ _ _ -> assert False (*forbidden for now*)
+  | C_Eff us1 e1 r1 args1 dec1, C_Eff us2 e2 r2 args2 dec2 ->
+    univ_faithful_lemma_list us1 us2;
+    faithful_lemma r1 r2;
+    introduce forall x y. L.memP x args1 /\ L.memP y args2 ==> defined (arg_eq x y) with
+     (introduce forall y. L.memP x args1 /\ L.memP y args2 ==> defined (arg_eq x y) with
+      (introduce (L.memP x args1 /\ L.memP y args2) ==> (defined (arg_eq x y)) with h. (
+       faithful_lemma_arg x y
+       )
+      )
+     )
+    ;
+    defined_list arg_eq args1 args2;
+    introduce forall x y. L.memP x dec1 /\ L.memP y dec2 ==> defined (term_eq x y) with
+     (introduce forall y. L.memP x dec1 /\ L.memP y dec2 ==> defined (term_eq x y) with
+      (introduce (L.memP x dec1 /\ L.memP y dec2) ==> (defined (term_eq x y)) with h. (
+       faithful_lemma x y
+       )
+      )
+     )
+    ;
+    defined_list term_eq dec1 dec2;
+    assert (defined(
+    list_eq univ_eq us1 us2
+     &&& eq_eq e1 e2
+     &&& term_eq r1 r2
+     &&& list_eq arg_eq args1 args2
+     &&& list_eq term_eq dec1 dec2));
+    assume (defined (comp_eq c1 c2)); // FIXME, trivial from above
+    ()
   | _ -> ()
+#pop-options
 
+let faithful_term = t:term{faithful t}
 let term_eq_dec (t1 t2 : faithful_term) : (b:bool{b <==> t1 == t2}) =
   faithful_lemma t1 t2;
   match term_eq t1 t2 with
