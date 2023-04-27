@@ -914,6 +914,7 @@ let rec (apply_solution :
           Pulse_Syntax.Tm_Arrow
             ((apply_solution_binder sol b), q,
               (apply_solution_comp sol body))
+      | Pulse_Syntax.Tm_FStar t1 -> Pulse_Syntax.Tm_FStar t1
 and (apply_solution_binder :
   (Pulse_Syntax.term * Pulse_Syntax.term) Prims.list ->
     Pulse_Syntax.binder -> Pulse_Syntax.binder)
@@ -963,6 +964,7 @@ let rec (contains_uvar : Pulse_Syntax.term -> Prims.bool) =
         (contains_uvar t1) || (contains_uvar body)
     | Pulse_Syntax.Tm_Arrow (b, q, body) ->
         (contains_uvar_binder b) || (contains_uvar_comp body)
+    | Pulse_Syntax.Tm_FStar t1 -> false
 and (contains_uvar_binder : Pulse_Syntax.binder -> Prims.bool) =
   fun b -> contains_uvar b.Pulse_Syntax.binder_ty
 and (contains_uvar_comp : Pulse_Syntax.comp -> Prims.bool) =

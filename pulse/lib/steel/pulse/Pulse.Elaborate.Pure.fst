@@ -113,6 +113,9 @@ let rec elab_term (top:term)
     | Tm_UVar _
     | Tm_Unknown ->
       pack_ln R.Tv_Unknown
+
+    | Tm_FStar t ->
+      t
     
 and elab_comp (c:comp) 
   : R.term

@@ -100,6 +100,9 @@ let rec term_to_string (t:term)
 
     | Tm_Unknown -> "_"
     
+    | Tm_FStar t ->
+      T.term_to_string t
+      
 and binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s:%s" 

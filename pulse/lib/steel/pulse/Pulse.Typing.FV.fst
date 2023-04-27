@@ -11,6 +11,13 @@ open Pulse.Soundness.Common
 
 let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x))
 
+let freevars_close_term_host_term (t:host_term) (x:var) (i:index)
+  : Lemma
+    (ensures (freevars (close_term' (Tm_FStar t) x i)
+            `Set.equal`
+             (freevars (Tm_FStar t) `set_minus` x)))
+  = admit()
+
 #push-options "--query_stats --z3rlimit_factor 2"
 let rec freevars_close_term' (e:term) (x:var) (i:index)
   : Lemma 
@@ -55,6 +62,9 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
     | Tm_Arrow b _ body ->
       freevars_close_term' b.binder_ty x i;
       freevars_close_comp body x (i + 1)
+    
+    | Tm_FStar t ->
+      freevars_close_term_host_term t x i
 
 and freevars_close_comp (c:comp)
                         (x:var)

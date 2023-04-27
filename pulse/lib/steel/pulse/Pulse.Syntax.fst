@@ -72,6 +72,12 @@ type fv = {
 }
 let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
 
+let not_tv_unknown (t:R.term) = R.inspect_ln t =!= R.Tv_Unknown
+let host_term = t:R.term { not_tv_unknown t }
+let host_term_equality (t1 t2:host_term)
+  : Lemma
+    (ensures R.term_eq t1 t2 <==> t1==t2)
+  = admit()
 
 [@@ no_auto_projectors]
 noeq
@@ -95,6 +101,7 @@ type term =
   | Tm_Inames     : term  // type inames
   | Tm_EmpInames  : term
   | Tm_UVar       : int -> term
+  | Tm_FStar      : host_term -> term
   | Tm_Unknown    : term
 
 
@@ -169,7 +176,7 @@ let rec freevars (t:term)
     | Tm_Let t e1 e2 ->
       Set.union (Set.union (freevars t) (freevars e1)) (freevars e2)
     | Tm_Pure p -> freevars p
-
+    | Tm_FStar t -> RT.freevars t
     | Tm_Arrow b _ body -> Set.union (freevars b.binder_ty) (freevars_comp body)
   
 and freevars_comp (c:comp) : Set.set var =
@@ -280,6 +287,9 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
     ln' b.binder_ty i &&
     ln_c' c (i + 1)
     
+  | Tm_FStar t ->
+    RT.ln' t i
+
 and ln_c' (c:comp) (i:int)
   : Tot bool (decreases c)
   = match c with
@@ -365,6 +375,12 @@ let rec ln_st' (t:st_term) (i:int)
 let ln (t:term) = ln' t (-1)
 let ln_st (t:st_term) = ln_st' t (-1)
 let ln_c (c:comp) = ln_c' c (-1)
+assume
+val elab_term_placeholder (t:term) : R.term
+
+let open_or_close_host_term (t:host_term) (v:term) (i:index)
+  : Lemma (not_tv_unknown (RT.open_or_close_term' t (RT.OpenWith (elab_term_placeholder v)) i))
+  = admit()
 
 let rec open_term' (t:term) (v:term) (i:index)
   : Tot term (decreases t)
@@ -420,6 +436,10 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Arrow {b with binder_ty=open_term' b.binder_ty v i} q
                (open_comp' c v (i + 1))
   
+    | Tm_FStar t ->
+      open_or_close_host_term t v i;
+      Tm_FStar (RT.open_or_close_term' t (RT.OpenWith (elab_term_placeholder v)) i)
+
 and open_comp' (c:comp) (v:term) (i:index)
   : Tot comp (decreases c)
   = match c with
@@ -582,6 +602,9 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_Arrow b q c ->
       Tm_Arrow {b with binder_ty=close_term' b.binder_ty v i} q
                (close_comp' c v (i + 1))
+
+    | Tm_FStar t ->
+      Tm_FStar (RT.open_or_close_term' t (RT.CloseVar v) i)
 
 and close_comp' (c:comp) (v:var) (i:index)
   : Tot comp (decreases c)
@@ -777,6 +800,11 @@ let rec close_open_inverse' (t:term)
       close_open_inverse' b.binder_ty x i;
       close_open_inverse_comp' body x (i + 1)
 
+    | Tm_FStar t ->
+      assume (elab_term_placeholder (term_of_var x) ==
+              R.(pack_ln (Tv_Var (RT.var_as_bv x))));
+      RT.close_open_inverse' i t x
+
 and close_open_inverse_comp' (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
                              (i:index)
@@ -953,6 +981,9 @@ let rec eq_tm (t1 t2:term)
       eq_comp c1 c2
     | Tm_UVar z1, Tm_UVar z2 ->
       z1=z2
+    | Tm_FStar t1, Tm_FStar t2 ->
+      host_term_equality t1 t2;
+      R.term_eq t1 t2
     | _ -> false
     
 and eq_comp (c1 c2:comp) 

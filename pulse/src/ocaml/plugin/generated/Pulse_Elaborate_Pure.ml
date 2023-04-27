@@ -160,6 +160,7 @@ let rec (elab_term : Pulse_Syntax.term -> FStar_Reflection_Types.term) =
         FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
     | Pulse_Syntax.Tm_Unknown ->
         FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
+    | Pulse_Syntax.Tm_FStar t -> t
 and (elab_comp : Pulse_Syntax.comp -> FStar_Reflection_Types.term) =
   fun c ->
     match c with

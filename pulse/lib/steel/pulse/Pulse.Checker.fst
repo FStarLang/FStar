@@ -159,7 +159,7 @@ let maybe_add_elim_pure (pre:list term) (t:st_term) : T.Tac (bool & st_term) =
       t
       pure_props
 
-#push-options "--z3rlimit_factor 20"
+#push-options "--z3rlimit_factor 40"
 let rec combine_if_branches (f:RT.fstar_top_env)
   (g_then:env)
   (e_then:st_term)
@@ -738,6 +738,7 @@ let tag_of_term (t:term) =
   | Tm_Unknown -> "Tm_Unknown"
   | Tm_UVar _ -> "Tm_UVar"
   | Tm_BVar _ -> "Tm_BVar"
+  | Tm_FStar _ -> "Tm_FStar"
 
 let maybe_log t =
   let _ =

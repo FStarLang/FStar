@@ -258,6 +258,8 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
                   (shift_bvs_in_else body (n + 1))
   | Tm_Arrow _ _ _ ->
     T.fail "Unexpected Tm_Arrow in shift_bvs_in_else"
+  | Tm_FStar _ ->
+    T.fail "Embedded host terms are not fully handled in shift_bvs_in_else"
   | Tm_Type _
   | Tm_VProp
   | Tm_Inames

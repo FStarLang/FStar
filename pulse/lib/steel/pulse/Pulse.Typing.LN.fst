@@ -19,6 +19,12 @@ val elab_ln_inverse (e:term)
     (ensures ln e)
 
 
+assume
+val open_term_ln_host' (t:host_term) (x:R.term) (i:index)
+  : Lemma 
+    (requires RT.ln' (RT.open_or_close_term' t (RT.OpenWith x) i) (i - 1))
+    (ensures RT.ln' t i)
+
 let rec open_term_ln' (e:term)
                       (x:term)
                       (i:index)
@@ -66,6 +72,9 @@ let rec open_term_ln' (e:term)
     | Tm_Arrow b _ body ->
       open_term_ln' b.binder_ty x i;
       open_comp_ln' body x (i + 1)
+
+    | Tm_FStar t ->
+      open_term_ln_host' t (elab_term_placeholder x) i
 
 and open_comp_ln' (c:comp)
                        (x:term)
@@ -189,6 +198,12 @@ let open_st_term_ln (e:st_term) (v:var)
     (ensures ln_st' e 0)
   = open_st_term_ln' e (term_of_var v) 0
 
+assume
+val r_ln_weakening (e:R.term) (i j:int)
+  : Lemma 
+    (requires RT.ln' e i /\ i <= j)
+    (ensures RT.ln' e j)
+
 let rec ln_weakening (e:term) (i j:int)
   : Lemma 
     (requires ln' e i /\ i <= j)
@@ -234,6 +249,9 @@ let rec ln_weakening (e:term) (i j:int)
     | Tm_Arrow b _ body ->
       ln_weakening b.binder_ty i j;
       ln_weakening_comp body (i + 1) (j + 1)
+    
+    | Tm_FStar t ->
+      r_ln_weakening t i j
 
 and ln_weakening_comp (c:comp) (i j:int)
   : Lemma 
@@ -342,6 +360,12 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Protect t ->
       ln_weakening_st t i j
       
+assume
+val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
+  : Lemma 
+    (requires RT.ln' e i)
+    (ensures RT.ln' (RT.open_or_close_term' e (RT.OpenWith x) i) (i - 1))
+
 let rec open_term_ln_inv' (e:term)
                           (x:term { ln x })
                           (i:index)
@@ -389,6 +413,11 @@ let rec open_term_ln_inv' (e:term)
     | Tm_Arrow b _ body ->
       open_term_ln_inv' b.binder_ty x i;
       open_comp_ln_inv' body x (i + 1)
+
+    | Tm_FStar t ->
+      Pulse.Elaborate.elab_ln x (-1);
+      assume (elab_term x == elab_term_placeholder x);
+      r_open_term_ln_inv' t (elab_term_placeholder x) i
 
 and open_comp_ln_inv' (c:comp)
                       (x:term { ln x })
@@ -502,7 +531,13 @@ let rec open_term_ln_inv_st' (t:st_term)
 
     | Tm_Protect t ->
       open_term_ln_inv_st' t x i
-      
+
+assume
+val r_close_term_ln' (e:R.term) (x:var) (i:index)
+  : Lemma 
+    (requires RT.ln' e (i - 1))
+    (ensures RT.ln' (RT.open_or_close_term' e (RT.CloseVar x) i) i)
+
 let rec close_term_ln' (e:term)
                        (x:var)
                        (i:index)
@@ -549,6 +584,9 @@ let rec close_term_ln' (e:term)
     | Tm_Arrow b _ body ->
       close_term_ln' b.binder_ty x i;
       close_comp_ln' body x (i + 1)
+
+    | Tm_FStar t ->
+      r_close_term_ln' t x i
 
 and close_comp_ln' (c:comp)
                    (x:var)

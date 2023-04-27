@@ -241,6 +241,10 @@ let rec apply_solution (sol:list (term * term)) (t:term)
                q
                (apply_solution_comp sol body)
 
+    | Tm_FStar t ->
+      //TODO: What does inference mean for terms that contain embedded F* terms?
+      Tm_FStar t
+
 and apply_solution_binder (sol:list (term & term))
                           (b:binder)
   : binder
@@ -302,6 +306,10 @@ let rec contains_uvar (t:term)
     | Tm_Arrow b q body ->
       (contains_uvar_binder b) ||
       (contains_uvar_comp body)
+
+    | Tm_FStar t ->
+      // TODO: should embedded F* terms be allowed to contain Pulse uvars?
+      false
 
 and contains_uvar_binder  (b:binder)
   : bool
