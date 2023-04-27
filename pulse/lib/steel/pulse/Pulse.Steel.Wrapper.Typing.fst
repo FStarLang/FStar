@@ -26,3 +26,4 @@ let stt_atomic_admit_typing _ _ _ = admit ()
 let stt_ghost_admit_typing _ _ _ = admit ()
 
 let rewrite_typing _ _ _ = admit ()
+let with_local_typing _ _ _ _ _ _ _ = admit ()
