@@ -109,7 +109,7 @@ val env_open_modules      : env -> list name
 (** [push_binder] extends the environment with a single binder.
     This is useful as one traverses the syntax of a term,
     pushing binders as one traverses a binder in a lambda,
-    match, etc. *)
+    match, etc. TODO: Should this really be push_bv? *)
 val push_binder           : env -> binder -> env
 
 (** Attributes are terms, not to be confused with Prims.attribute. *)

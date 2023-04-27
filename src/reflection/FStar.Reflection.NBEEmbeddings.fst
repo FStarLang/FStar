@@ -446,8 +446,10 @@ let e_term_view_aq aq =
         | Tv_Type u ->
             mkConstruct ref_Tv_Type.fv [] [as_arg (embed e_universe cb u)]
 
-        | Tv_Refine (bv, t) ->
-            mkConstruct ref_Tv_Refine.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_term_aq (shift aq)) cb t)]
+        | Tv_Refine (bv, sort, t) ->
+            mkConstruct ref_Tv_Refine.fv [] [as_arg (embed e_bv cb bv);
+                                             as_arg (embed (e_term_aq aq) cb sort);
+                                             as_arg (embed (e_term_aq (shift aq)) cb t)]
 
         | Tv_Const c ->
             mkConstruct ref_Tv_Const.fv [] [as_arg (embed e_const cb c)]
@@ -455,10 +457,11 @@ let e_term_view_aq aq =
         | Tv_Uvar (u, d) ->
             mkConstruct ref_Tv_Uvar.fv [] [as_arg (embed e_int cb u); as_arg (mk_lazy cb (u,d) U.t_ctx_uvar_and_sust Lazy_uvar)]
 
-        | Tv_Let (r, attrs, b, t1, t2) ->
+        | Tv_Let (r, attrs, b, ty, t1, t2) ->
             mkConstruct ref_Tv_Let.fv [] [as_arg (embed e_bool cb r);
                                    as_arg (embed (e_list e_term) cb attrs);
                                    as_arg (embed e_bv cb b);
+                                   as_arg (embed (e_term_aq aq) cb ty);
                                    as_arg (embed (e_term_aq aq) cb t1);
                                    as_arg (embed (e_term_aq (shift aq)) cb t2)]
 
@@ -523,10 +526,11 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed e_universe cb u) (fun u ->
             Some <| Tv_Type u)
 
-        | Construct (fv, _, [(t, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Refine.lid ->
+        | Construct (fv, _, [(t, _); (sort, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Refine.lid ->
             BU.bind_opt (unembed e_bv cb b) (fun b ->
+            BU.bind_opt (unembed e_term cb sort) (fun sort ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            Some <| Tv_Refine (b, t)))
+            Some <| Tv_Refine (b, sort, t))))
 
         | Construct (fv, _, [(c, _)]) when S.fv_eq_lid fv ref_Tv_Const.lid ->
             BU.bind_opt (unembed e_const cb c) (fun c ->
@@ -537,13 +541,14 @@ let e_term_view_aq aq =
             let ctx_u_s : ctx_uvar_and_subst = unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
-        | Construct (fv, _, [(t2, _); (t1, _); (b, _); (attrs, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
+        | Construct (fv, _, [(t2, _); (t1, _); (ty, _); (b, _); (attrs, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
             BU.bind_opt (unembed e_bool cb r) (fun r ->
             BU.bind_opt (unembed (e_list e_term) cb attrs) (fun attrs ->
             BU.bind_opt (unembed e_bv cb b) (fun b ->
+            BU.bind_opt (unembed e_term cb ty) (fun ty ->
             BU.bind_opt (unembed e_term cb t1) (fun t1 ->
             BU.bind_opt (unembed e_term cb t2) (fun t2 ->
-            Some <| Tv_Let (r, attrs, b, t1, t2))))))
+            Some <| Tv_Let (r, attrs, b, ty, t1, t2)))))))
 
         | Construct (fv, _, [(brs, _); (ret_opt, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
@@ -579,16 +584,14 @@ let e_term_view = e_term_view_aq (0, [])
 let e_bv_view =
     let embed_bv_view cb (bvv:bv_view) : t =
         mkConstruct ref_Mk_bv.fv [] [as_arg (embed e_string cb bvv.bv_ppname);
-                              as_arg (embed e_int    cb bvv.bv_index);
-                              as_arg (embed e_term   cb bvv.bv_sort)]
+                              as_arg (embed e_int    cb bvv.bv_index)]
     in
     let unembed_bv_view cb (t : t) : option bv_view =
         match t.nbe_t with
-        | Construct (fv, _, [(s, _); (idx, _); (nm, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
+        | Construct (fv, _, [(idx, _); (nm, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
             BU.bind_opt (unembed e_string cb nm) (fun nm ->
             BU.bind_opt (unembed e_int cb idx) (fun idx ->
-            BU.bind_opt (unembed e_term cb s) (fun s ->
-            Some <| { bv_ppname = nm ; bv_index = idx ; bv_sort = s })))
+            Some <| { bv_ppname = nm ; bv_index = idx }))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv_view: %s" (t_to_string t)));
@@ -603,16 +606,18 @@ let e_binder_view =
   let embed_binder_view cb (bview:binder_view) : t =
     mkConstruct ref_Mk_binder.fv [] [as_arg (embed e_bv cb bview.binder_bv);
                                      as_arg (embed e_aqualv cb bview.binder_qual);
-                                     as_arg (embed e_attributes cb bview.binder_attrs)] in
+                                     as_arg (embed e_attributes cb bview.binder_attrs);
+                                     as_arg (embed e_term cb bview.binder_sort)] in
 
   let unembed_binder_view cb (t:t) : option binder_view =
     match t.nbe_t with
-    | Construct (fv, _, [(attrs, _); (q, _); (bv, _)])
+    | Construct (fv, _, [(sort, _); (attrs, _); (q, _); (bv, _)])
       when S.fv_eq_lid fv ref_Mk_binder.lid ->
       BU.bind_opt (unembed e_bv cb bv) (fun bv ->
       BU.bind_opt (unembed e_aqualv cb q) (fun q ->
       BU.bind_opt (unembed e_attributes cb attrs) (fun attrs ->
-      Some <| RD.({binder_bv=bv;binder_qual=q;binder_attrs=attrs}))))
+      BU.bind_opt (unembed e_term cb sort) (fun sort ->
+      Some <| RD.({binder_bv=bv;binder_qual=q;binder_attrs=attrs;binder_sort=sort})))))
 
     | _ ->
       Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder_view: %s" (t_to_string t)));

@@ -44,7 +44,7 @@ let rec split_arith () =
         | Implies p q ->
             let _ = implies_intro () in
             seq split_arith l_revert
-        | Forall x p ->
+        | Forall _x _sort _p ->
             let bs = forall_intros () in
             seq split_arith (fun () -> l_revert_all bs)
         | _ ->

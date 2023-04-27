@@ -149,7 +149,8 @@ let mk_class (nm:string) : Tac decls =
                   let tcdict = pack_binder {
                     binder_bv=dbv;
                     binder_qual=Q_Meta tcr;
-                    binder_attrs=[]
+                    binder_attrs=[];
+                    binder_sort=cod;
                   } in
                   let proj_name = cur_module () @ [base ^ s] in
                   let proj = pack (Tv_FVar (pack_fv proj_name)) in
@@ -176,7 +177,8 @@ let mk_class (nm:string) : Tac decls =
                         let b1 = pack_binder {
                           binder_bv=bv;
                           binder_qual=Q_Meta tcr;
-                          binder_attrs=[]
+                          binder_attrs=[];
+                          binder_sort=(inspect_binder b1).binder_sort;
                         } in
                         mk_arr_curried (ps@(b1::bs')) cod
                   in

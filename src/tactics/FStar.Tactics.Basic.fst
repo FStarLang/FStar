@@ -1977,7 +1977,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         let b = (match b' with
         | [b'] -> b'
         | _ -> failwith "impossible") in
-        ret <| Tv_Refine (b.binder_bv, t)
+        ret <| Tv_Refine (b.binder_bv, b.binder_bv.sort, t)
 
     | Tm_constant c ->
         ret <| Tv_Const (inspect_const c)
@@ -1997,7 +1997,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            ret <| Tv_Let (false, lb.lbattrs, b.binder_bv, lb.lbdef, t2)
+            ret <| Tv_Let (false, lb.lbattrs, b.binder_bv, bv.sort, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
@@ -2010,7 +2010,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
             | [lb] ->
                 (match lb.lbname with
                  | Inr _ -> ret Tv_Unknown
-                 | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
+                 | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
@@ -2064,7 +2064,8 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
     | Tv_Type u ->
         ret <| S.mk (Tm_type u) Range.dummyRange
 
-    | Tv_Refine (bv, t) ->
+    | Tv_Refine (bv, sort, t) ->
+        let bv = { bv with sort = sort } in
         ret <| U.refine bv t
 
     | Tv_Const c ->
@@ -2073,11 +2074,13 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
     | Tv_Uvar (_u, ctx_u_s) ->
         ret <| S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
-    | Tv_Let (false, attrs, bv, t1, t2) ->
+    | Tv_Let (false, attrs, bv, ty, t1, t2) ->
+        let bv = { bv with sort = ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) Range.dummyRange
 
-    | Tv_Let (true, attrs, bv, t1, t2) ->
+    | Tv_Let (true, attrs, bv, ty, t1, t2) ->
+        let bv = { bv with sort = ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange

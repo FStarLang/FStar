@@ -94,10 +94,10 @@ let seal_pp_name x : pp_name_t = FStar.Sealed.Inhabited.seal x
 let mk_binder (pp_name:pp_name_t) (x:var) (ty:term) (q:aqualv)
   = pack_binder
       { binder_bv=pack_bv ({bv_ppname=pp_name;
-                            bv_index=x;
-                            bv_sort=ty});
+                            bv_index=x});
         binder_qual=q;
-        binder_attrs=[] }
+        binder_attrs=[];
+        binder_sort=ty}
 
 let extend_env (e:env) (x:var) (ty:term) : env =
   R.push_binder e (mk_binder (seal_pp_name "x") x ty Q_Explicit)
@@ -123,8 +123,7 @@ let bv_index (x:bv)
   = (inspect_bv x).bv_index
 
 let binder_sort (b:binder) =
-  let { binder_bv = bv } = inspect_binder b in 
-  (inspect_bv bv).bv_sort
+  (inspect_binder b).binder_sort
 
 let binder_qual (b:binder) =
   let { binder_qual = q } = inspect_binder b in q
@@ -137,22 +136,20 @@ type open_or_close =
 
 let tun = pack_ln Tv_Unknown
 
-let make_bv (n:nat) (t:term) = {
+let make_bv (n:nat) = {
   bv_ppname = pp_name_default;
   bv_index = n;
-  bv_sort = t
 }
-let make_bv_with_name (s:pp_name_t) (n:nat) (t:term) = {
+let make_bv_with_name (s:pp_name_t) (n:nat) = {
   bv_ppname = s;
   bv_index = n;
-  bv_sort = t
 }
-let var_as_bv (v:nat) = pack_bv (make_bv v tun)
+let var_as_bv (v:nat) = pack_bv (make_bv v)
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
 
 let binder_of_t_q t q = mk_binder pp_name_default 0 t q
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
-let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i tun)))
+let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i)))
 
 let open_with_var (x:var) = OpenWith (pack_ln (Tv_Var (var_as_bv x)))
   
@@ -233,17 +230,18 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
       let b' = open_or_close_binder' b v i in
       pack_ln (Tv_Arrow b' (open_or_close_comp' c v (i + 1)))      
 
-    | Tv_Refine bv f ->
-      let bv' = open_or_close_bv' bv v i in
-      pack_ln (Tv_Refine bv' (open_or_close_term' f v (i + 1)))
+    | Tv_Refine bv sort f ->
+      pack_ln (Tv_Refine bv (open_or_close_term' sort v i)
+                            (open_or_close_term' f v (i + 1)))
 
     | Tv_Uvar j c ->
       pack_ln (Tv_Uvar j (open_or_close_ctx_uvar_and_subst c v i))
       
-    | Tv_Let recf attrs bv def body ->
+    | Tv_Let recf attrs bv ty def body ->
       pack_ln (Tv_Let recf 
                       (open_or_close_terms' attrs v i)
-                      (open_or_close_bv' bv v i)
+                      bv
+                      (open_or_close_term' ty v i)
                       (if recf 
                        then open_or_close_term' def v (i + 1)
                        else open_or_close_term' def v i)
@@ -272,17 +270,13 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
                              | Some tac -> Some (open_or_close_term' tac v i))
                              b)
 
-and open_or_close_bv' (b:bv) (v:open_or_close) (i:nat)
-  : Tot bv (decreases b)
-  = let bv = inspect_bv b in
-    pack_bv ({bv with bv_sort = open_or_close_term' bv.bv_sort v i})
-
 and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
   : Tot binder (decreases b)
   = let bndr  = inspect_binder b in
-    pack_binder {binder_bv=open_or_close_bv' bndr.binder_bv v i;
+    pack_binder {binder_bv=bndr.binder_bv;
                  binder_qual=bndr.binder_qual;
-                 binder_attrs=open_or_close_terms' bndr.binder_attrs v i}
+                 binder_attrs=open_or_close_terms' bndr.binder_attrs v i;
+                 binder_sort=open_or_close_term' bndr.binder_sort v i}
 
 and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
   : Tot comp (decreases c)
@@ -338,10 +332,10 @@ and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat)
       Pat_Cons fv us pats
       
     | Pat_Var bv ->
-      Pat_Var (open_or_close_bv' bv v i)
+      Pat_Var bv
 
     | Pat_Wild bv ->
-      Pat_Wild (open_or_close_bv' bv v i)
+      Pat_Wild bv
 
     | Pat_Dot_Term topt ->
       Pat_Dot_Term (match topt with
@@ -399,11 +393,9 @@ val rename (t:term) (x y:var) : term
 val rename_spec (t:term) (x y:var)
   : Lemma (rename t x y == open_or_close_term' t (Rename x y) 0)
   
-let bv_as_binder bv = pack_binder {binder_bv=bv; binder_qual=Q_Explicit; binder_attrs=[]}
-
-val bv_index_of_make_bv (n:nat) (t:term)
-  : Lemma (ensures bv_index (pack_bv (make_bv n t)) == n)
-          [SMTPat (bv_index (pack_bv (make_bv n t)))]
+val bv_index_of_make_bv (n:nat)
+  : Lemma (ensures bv_index (pack_bv (make_bv n)) == n)
+          [SMTPat (bv_index (pack_bv (make_bv n)))]
 
 let constant_as_term (v:vconst) = pack_ln (Tv_Const v)
 let unit_exp = constant_as_term C_Unit
@@ -466,12 +458,13 @@ let rec freevars (e:term)
     | Tv_Arrow b c ->
       Set.union (freevars_binder b) (freevars_comp c)
 
-    | Tv_Refine bv f ->
-      Set.union (freevars_bv bv) (freevars f)
+    | Tv_Refine bv sort f ->
+       freevars sort `Set.union`
+       freevars f
       
-    | Tv_Let recf attrs bv def body ->
+    | Tv_Let recf attrs bv ty def body ->
       freevars_terms attrs `Set.union`
-      freevars_bv bv `Set.union`
+      freevars ty `Set.union`
       freevars def `Set.union`
       freevars body
 
@@ -528,16 +521,11 @@ and freevars_terms (ts:list term)
     | t::ts ->
       freevars t `Set.union`
       freevars_terms ts
-
-and freevars_bv (b:bv)
-  : Tot (Set.set var) (decreases b)
-  = let bv = inspect_bv b in
-    freevars bv.bv_sort
     
 and freevars_binder (b:binder)
   : Tot (Set.set var) (decreases b)
   = let bndr  = inspect_binder b in
-    freevars_bv bndr.binder_bv `Set.union`
+    freevars bndr.binder_sort `Set.union`
     freevars_terms bndr.binder_attrs 
     
 
@@ -551,8 +539,7 @@ and freevars_pattern (p:pattern)
       freevars_patterns pats
       
     | Pat_Var bv 
-    | Pat_Wild bv ->
-      freevars_bv bv
+    | Pat_Wild bv -> Set.empty
 
     | Pat_Dot_Term topt ->
       freevars_opt topt freevars
@@ -599,18 +586,18 @@ type term_ctxt =
   | Ctxt_abs_body        : binder -> term_ctxt -> term_ctxt
   | Ctxt_arrow_binder    : binder_ctxt -> comp -> term_ctxt
   | Ctxt_arrow_comp      : binder -> comp_ctxt -> term_ctxt
-  | Ctxt_refine_bv       : bv_ctxt -> term -> term_ctxt
-  | Ctxt_refine_ref      : bv -> term_ctxt -> term_ctxt
-  | Ctxt_let_bv          : bool -> list term -> bv_ctxt -> term -> term -> term_ctxt
-  | Ctxt_let_def         : bool -> list term -> bv -> term_ctxt -> term -> term_ctxt
-  | Ctxt_let_body        : bool -> list term -> bv -> term -> term_ctxt -> term_ctxt
+  | Ctxt_refine_sort     : bv -> term_ctxt -> term -> term_ctxt
+  | Ctxt_refine_ref      : bv -> typ -> term_ctxt -> term_ctxt
+  | Ctxt_let_sort        : bool -> list term -> bv -> term_ctxt -> term -> term -> term_ctxt
+  | Ctxt_let_def         : bool -> list term -> bv -> term -> term_ctxt -> term -> term_ctxt
+  | Ctxt_let_body        : bool -> list term -> bv -> term -> term -> term_ctxt -> term_ctxt
   | Ctxt_match_scrutinee : term_ctxt -> option match_returns_ascription -> list branch -> term_ctxt
 
 and bv_ctxt =
   | Ctxt_bv : sealed string -> nat -> term_ctxt -> bv_ctxt
 
 and binder_ctxt =
-  | Ctxt_binder : bv_ctxt -> aqualv -> list term -> binder_ctxt
+  | Ctxt_binder : bv -> aqualv -> list term -> term_ctxt -> binder_ctxt
 
 and comp_ctxt =
   | Ctxt_total  : term_ctxt -> comp_ctxt
@@ -625,30 +612,27 @@ let rec apply_term_ctxt (e:term_ctxt) (t:term) : Tot term (decreases e) =
   | Ctxt_abs_body b e -> pack_ln (Tv_Abs b (apply_term_ctxt e t))
   | Ctxt_arrow_binder b c -> pack_ln (Tv_Arrow (apply_binder_ctxt b t) c)
   | Ctxt_arrow_comp b c -> pack_ln (Tv_Arrow b (apply_comp_ctxt c t))
-  | Ctxt_refine_bv b phi -> pack_ln (Tv_Refine (apply_bv_ctxt b t) phi)
-  | Ctxt_refine_ref b phi -> pack_ln (Tv_Refine b (apply_term_ctxt phi t))
-  | Ctxt_let_bv b attrs bv def body ->
-    pack_ln (Tv_Let b attrs (apply_bv_ctxt bv t) def body)
-  | Ctxt_let_def b attrs bv def body ->
-    pack_ln (Tv_Let b attrs bv (apply_term_ctxt def t) body)
-  | Ctxt_let_body b attrs bv def body ->
-    pack_ln (Tv_Let b attrs bv def (apply_term_ctxt body t))
+  | Ctxt_refine_sort b sort phi -> pack_ln (Tv_Refine b (apply_term_ctxt sort t) phi)
+  | Ctxt_refine_ref b sort phi -> pack_ln (Tv_Refine b sort (apply_term_ctxt phi t))
+  
+  | Ctxt_let_sort b attrs bv sort def body ->
+    pack_ln (Tv_Let b attrs bv (apply_term_ctxt sort t) def body)
+  | Ctxt_let_def b attrs bv sort def body ->
+    pack_ln (Tv_Let b attrs bv sort (apply_term_ctxt def t) body)
+  | Ctxt_let_body b attrs bv sort def body ->
+    pack_ln (Tv_Let b attrs bv sort def (apply_term_ctxt body t))
+    
   | Ctxt_match_scrutinee sc ret brs ->
     pack_ln (Tv_Match (apply_term_ctxt sc t) ret brs)
 
-and apply_bv_ctxt (b:bv_ctxt) (t:term) : Tot bv (decreases b) =
-  let Ctxt_bv bv_ppname bv_index ty = b in
-  pack_bv {bv_ppname; bv_index; bv_sort=apply_term_ctxt ty t}
-
 and apply_binder_ctxt (b:binder_ctxt) (t:term) : Tot binder (decreases b) =
-  let Ctxt_binder bv binder_qual binder_attrs = b in
-  pack_binder {binder_bv=apply_bv_ctxt bv t; binder_qual; binder_attrs}
+  let Ctxt_binder binder_bv binder_qual binder_attrs ctxt = b in
+  pack_binder {binder_bv; binder_qual; binder_attrs; binder_sort=apply_term_ctxt ctxt t}
 
 and apply_comp_ctxt (c:comp_ctxt) (t:term) : Tot comp (decreases c) =
   match c with
   | Ctxt_total e -> pack_comp (C_Total (apply_term_ctxt e t))
   | Ctxt_gtotal e -> pack_comp (C_GTotal (apply_term_ctxt e t))
-
 
 noeq
 type constant_typing: vconst -> term -> Type0 = 
@@ -790,7 +774,7 @@ type typing : env -> term -> term -> Type0 =
      u2:universe ->     
      typing g t (tm_type u1) ->
      typing (extend_env g x t) (open_term e x) (tm_type u2) ->
-     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0 t)) e)) (tm_type u1)
+     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0)) t e)) (tm_type u1)
 
   | T_PropIrrelevance:
      g:env -> 
@@ -963,16 +947,16 @@ let rec ln' (e:term) (n:int)
       ln'_binder b n &&
       ln'_comp c (n + 1)
 
-    | Tv_Refine bv f ->
-      ln'_bv bv n &&
+    | Tv_Refine bv sort f ->
+      ln' sort n &&
       ln' f (n + 1)
 
     | Tv_Uvar _ _ ->
       false
       
-    | Tv_Let recf attrs bv def body ->
+    | Tv_Let recf attrs bv ty def body ->
       ln'_terms attrs n &&
-      ln'_bv bv n &&
+      ln' ty n &&
       (if recf then ln' def (n + 1) else ln' def n) &&
       ln' body (n + 1)
 
@@ -1021,15 +1005,10 @@ and ln'_args (ts:list argv) (i:int)
       ln' t i &&
       ln'_args ts i
 
-and ln'_bv (b:bv) (n:int) 
-  : Tot bool (decreases b)
-  = let bv = inspect_bv b in
-    ln' bv.bv_sort n
-    
 and ln'_binder (b:binder) (n:int)
   : Tot bool (decreases b)
   = let bndr  = inspect_binder b in
-    ln'_bv bndr.binder_bv n &&
+    ln' bndr.binder_sort n &&
     ln'_terms bndr.binder_attrs n
 
 and ln'_terms (ts:list term) (n:int)
@@ -1059,8 +1038,8 @@ and ln'_pattern (p:pattern) (i:int)
       ln'_patterns pats i
       
     | Pat_Var bv 
-    | Pat_Wild bv ->
-      ln'_bv bv i
+    | Pat_Wild bv -> true
+
 
     | Pat_Dot_Term topt ->
       (match topt with
@@ -1121,12 +1100,6 @@ val open_close_inverse' (i:nat) (t:term { ln' t (i - 1) }) (x:var)
                        (open_with_var x)
                        i
                 == t)
-
-val open_close_inverse'_bv (i:nat) (b:bv { ln'_bv b (i - 1) }) (x:var) 
-  : Lemma (ensures open_or_close_bv' (open_or_close_bv' b (CloseVar x) i)
-                                     (open_with_var x)
-                                     i
-                   == b)    
 
 val open_close_inverse'_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:var)
   : Lemma (ensures open_or_close_binder'
@@ -1240,14 +1213,6 @@ val close_open_inverse'_binder (i:nat) (b:binder) (x:var{ ~(x `Set.mem` freevars
                        (CloseVar x)
                        i
                 == b)
-
-val close_open_inverse'_bv (i:nat) (bv:bv) (x:var{ ~(x `Set.mem` freevars_bv bv) })
-  : Lemma 
-       (ensures open_or_close_bv' 
-                       (open_or_close_bv' bv (open_with_var x) i)
-                       (CloseVar x)
-                       i
-                == bv)
 
 val close_open_inverse'_terms (i:nat) (ts:list term) (x:var{ ~(x `Set.mem` freevars_terms ts) })
   : Lemma 

@@ -55,7 +55,6 @@ val bv_eq : comparator_for bv
 let bv_eq x1 x2 =
   let v1 = inspect_bv x1 in
   let v2 = inspect_bv x2 in
-  assume (v1.bv_sort == v2.bv_sort); // FIXME: remove bv sorts
   pack_inspect_bv x1;
   pack_inspect_bv x2;
   if v1.bv_index = v2.bv_index then Eq else Neq
@@ -213,8 +212,10 @@ and term_view_eq tv1 tv2 =
   | Tv_Type u1, Tv_Type u2 ->
     univ_eq u1 u2
 
-  | Tv_Refine v1 r1, Tv_Refine v2 r2 ->
-    binding_bv_eq v1 v2 &&& term_eq r1 r2
+  | Tv_Refine v1 sort1 r1, Tv_Refine v2 sort2 r2 ->
+    binding_bv_eq v1 v2
+     &&& term_eq sort1 sort2
+     &&& term_eq r1 r2
 
   | Tv_Const c1, Tv_Const c2 ->
     const_eq c1 c2
@@ -222,10 +223,11 @@ and term_view_eq tv1 tv2 =
   | Tv_Uvar n1 u1, Tv_Uvar n2 u2 ->
     eq_eq n1 n2 &&& ctxu_eq u1 u2
 
-  | Tv_Let r1 attrs1 bv1 e1 b1, Tv_Let r2 attrs2 bv2 e2 b2 ->
+  | Tv_Let r1 attrs1 bv1 ty1 e1 b1, Tv_Let r2 attrs2 bv2 ty2 e2 b2 ->
     eq_eq r1 r2
      &&& list_eq term_eq attrs1 attrs2
      &&& binding_bv_eq bv1 bv2
+     &&& term_eq ty1 ty2
      &&& term_eq e1 e2
      &&& term_eq b1 b2
 
@@ -266,7 +268,7 @@ and binding_bv_eq x1 x2 =
   pack_inspect_bv x1;
   pack_inspect_bv x2;
   if v1.bv_index = v2.bv_index
-   then term_eq v1.bv_sort v2.bv_sort
+   then Eq
    else Neq
 
 and match_returns_ascription_eq (b1, (tc1, tacopt1, eq1)) (b2, (tc2, tacopt2, eq2)) =
@@ -281,6 +283,7 @@ and binder_eq b1 b2 =
   pack_inspect_binder b1;
   pack_inspect_binder b2;
   binding_bv_eq bv1.binder_bv bv2.binder_bv
+   &&& term_eq bv1.binder_sort bv2.binder_sort
    &&& aqual_eq bv1.binder_qual bv2.binder_qual
    &&& list_eq term_eq bv1.binder_attrs bv2.binder_attrs
 
@@ -407,13 +410,16 @@ let rec faithful t =
     faithful_binder b /\ faithful_comp c
   | Tv_Type u ->
     faithful_univ u
-  | Tv_Refine b phi ->
-    faithful_binding_bv b /\ faithful phi
+  | Tv_Refine b sort phi ->
+    faithful_binding_bv b
+     /\ faithful sort
+     /\ faithful phi
 
   | Tv_Uvar n u -> False
-  | Tv_Let r ats x e b ->
+  | Tv_Let r ats x ty e b ->
     faithful_attrs ats
      /\ faithful_binding_bv x
+     /\ faithful ty
      /\ faithful e
      /\ faithful b
 
@@ -446,9 +452,7 @@ and faithful_binder (b:binder) : Type0 =
   | {binder_bv = bv; binder_qual = q; binder_attrs = attrs} ->
     faithful_qual q /\ faithful_binding_bv bv /\ faithful_attrs attrs
 
-and faithful_binding_bv (bv:bv) : Type0 =
-  match inspect_bv bv with
-  | {bv_index = i; bv_sort = s} -> faithful s
+and faithful_binding_bv (bv:bv) : Type0 = True
 
 and faithful_branch (b : branch) : Type0 =
   let (p, t) = b in
@@ -508,24 +512,28 @@ let rec faithful_lemma (t1 t2 : term) =
     faithful_lemma_comp c1 c2
   | Tv_Type u1, Tv_Type u2 ->
     univ_faithful_lemma u1 u2
-  | Tv_Refine b1 t1, Tv_Refine b2 t2 ->
+  | Tv_Refine b1 sort1 t1, Tv_Refine b2 sort2 t2 ->
     faithful_lemma_binding_bv b1 b2;
+    faithful_lemma sort1 sort2;
     faithful_lemma t1 t2
 
-  | Tv_Let r1 ats1 x1 e1 b1, Tv_Let r2 ats2 x2 e2 b2 ->
+  | Tv_Let r1 ats1 x1 ty1 e1 b1, Tv_Let r2 ats2 x2 ty2 e2 b2 ->
     assert (defined (eq_eq r1 r2));
     faithful_lemma_attrs ats1 ats2;
     faithful_lemma_binding_bv x1 x2;
+    faithful_lemma ty1 ty2;
     faithful_lemma e1 e2;
     faithful_lemma b1 b2;
     assert (defined (eq_eq r1 r2));
     assert (defined (list_eq term_eq ats1 ats2));
     assert (defined (binding_bv_eq x1 x2));
+    assert (defined (term_eq ty1 ty2));
     assert (defined (term_eq e1 e2));
     assert (defined (term_eq b1 b2));
     assert (defined (eq_eq r1 r2
      &&& list_eq term_eq ats1 ats2
      &&& binding_bv_eq x1 x2
+     &&& term_eq ty1 ty2
      &&& term_eq e1 e2
      &&& term_eq b1 b2));
     assume (defined (term_eq t1 t2)); // ???
@@ -616,9 +624,7 @@ and faithful_lemma_qual (q1 q2 : aqualv) : Lemma (requires faithful_qual q1 /\ f
   | _ -> ()
 
 and faithful_lemma_binding_bv (b1 b2 : bv) : Lemma (requires faithful_binding_bv b1 /\ faithful_binding_bv b2) (ensures defined (binding_bv_eq b1 b2)) =
-  let v1 = inspect_bv b1 in
-  let v2 = inspect_bv b2 in
-  if v1.bv_index = v2.bv_index then faithful_lemma v1.bv_sort v2.bv_sort
+  ()
 
 and faithful_lemma_attrs (at1 at2 : list term) : Lemma (requires faithful_attrs at1 /\ faithful_attrs at2) (ensures defined (list_eq term_eq at1 at2)) =
   // TODO: factor out
