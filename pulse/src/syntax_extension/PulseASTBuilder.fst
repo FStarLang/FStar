@@ -9,8 +9,9 @@ let extension_parser ctx contents rng =
       Inl { message = err; range = r }
 
   | Inl pulse_ast -> 
-      BU.print_string "Successfully parsed pulse term!\n";
-      Inl { message = "not yet"; range = rng }
+      Inr pulse_ast.d
+      // BU.print_string "Successfully parsed pulse term!\n";
+      // Inl { message = "not yet"; range = rng }
 
 let _ = 
     register_extension_parser "pulse" extension_parser
