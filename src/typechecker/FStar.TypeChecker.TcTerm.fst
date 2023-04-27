@@ -490,7 +490,8 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
           let cflags = U.comp_flags c in
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
                 | Some (DECREASES d) -> d
-                | _ -> bs |> filter_types_and_functions |> Decreases_lex in
+                | _ -> bs |> filter_types_and_functions |> Decreases_lex
+      in
 
       let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
       let rec mk_precedes_lex env l l_prev : term =
@@ -4079,7 +4080,7 @@ and check_inner_let_rec env top =
 (******************************************************************************)
 and build_let_rec_env _top_level env lbs : list letbinding * env_t * guard_t =
    let env0 = env in
-   let termination_check_enabled (lbname:lbname) (lbdef:term) (lbtyp:term)
+   let termination_check_enabled (attrs:list attribute) (lbname:lbname) (lbdef:term) (lbtyp:term)
      : option (int * term) // when enabled returns recursion arity;
                             // plus the term elaborated with implicit binders
                             // (TODO: move all that logic to desugaring)
@@ -4119,7 +4120,10 @@ and build_let_rec_env _top_level env lbs : list letbinding * env_t * guard_t =
       * abstraction's body. So we can just check the effect `c` for
       * totality. Another way of seeing this check is that we take
       * the minimum amount of binders from the actuals and formals. *)
-     if U.comp_effect_name c |> Env.lookup_effect_quals env |> List.contains TotalEffect then
+     if U.has_attribute attrs Const.admit_termination_lid then (
+       log_issue env.range (Warning_WarnOnUse, "Admitting termination of " ^ Print.lbname_to_string lbname);
+       None
+     ) else if U.comp_effect_name c |> Env.lookup_effect_quals env |> List.contains TotalEffect then
        Some (nformals, U.abs actuals body body_lc)
      else
        None
@@ -4143,7 +4147,7 @@ and build_let_rec_env _top_level env lbs : list letbinding * env_t * guard_t =
         // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
         // Removed that check. Rest of the code relies on env.letrecs = []
         let lb, env =
-            match termination_check_enabled lb.lbname lbdef lbtyp with
+            match termination_check_enabled lb.lbattrs lb.lbname lbdef lbtyp with
             // AR: we need to add the binding of the let rec after adding the
             // binders of the lambda term, and so, here we just note in the env that
             // we are typechecking a let rec, the recursive binding will be added in
