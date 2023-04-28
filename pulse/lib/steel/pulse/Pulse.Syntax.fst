@@ -158,12 +158,10 @@ let rec close_open_inverse_st'  (t:st_term)
       
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
-          (decreases t)
   = close_open_inverse' t x 0
 
 let close_open_inverse_st (t:st_term) (x:var { ~(x `Set.mem` freevars_st t) } )
   : Lemma (ensures close_st_term (open_st_term t x) x == t)
-          (decreases t)
   = close_open_inverse_st' t x 0
 
 let open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
