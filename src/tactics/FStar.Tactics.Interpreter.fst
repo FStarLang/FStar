@@ -48,6 +48,7 @@ module NRE     = FStar.Reflection.NBEEmbeddings
 module Print   = FStar.Syntax.Print
 module RE      = FStar.Reflection.Embeddings
 module S       = FStar.Syntax.Syntax
+module SS      = FStar.Syntax.Subst
 module TcComm  = FStar.TypeChecker.Common
 module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
@@ -92,6 +93,29 @@ let primitive_steps () : list Cfg.primitive_step =
     BU.must (!__primitive_steps_ref)
     @ (native_tactics_steps ())
 
+(* This function attempts to reconstruct the reduction head of a
+stuck tactic term, to provide a better error message for the user. *)
+let rec t_head_of (t : term) : term =
+    match (SS.compress t).n with
+    | Tm_app _ ->
+      (* If the head is a ctor, or an uninterpreted fv, do not shrink
+         further. Otherwise we will get failures saying that 'Success'
+         or 'dump' got stuck, which is not helpful. *)
+      let h, args = U.head_and_args_full t in
+      let h = U.unmeta h in
+      begin match (SS.compress h).n with
+      | Tm_uinst _
+      | Tm_fvar _
+      | Tm_bvar _ // should not occur
+      | Tm_name _
+      | Tm_constant _ -> t
+      | _ -> t_head_of h
+      end
+    | Tm_match (t, _, _, _)
+    | Tm_ascribed (t, _, _)
+    | Tm_meta (t, _) -> t_head_of t
+    | _ -> t
+
 let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b =
     bind get (fun proof_state ->
     let rng = embedded_tac_b.pos in
@@ -134,7 +158,9 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         bind (set ps) (fun _ -> traise e)
 
     | None ->
-        Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
+        Err.raise_error (Err.Fatal_TacticGotStuck,
+          (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n\
+                       Reduction stopped at: %s" (Print.term_to_string (t_head_of result)))) proof_state.main_context.range
     )
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =

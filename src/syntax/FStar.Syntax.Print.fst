@@ -912,3 +912,11 @@ let rec emb_typ_to_string = function
     | ET_app (h, []) -> h
     | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
     | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
+
+let fv_qual_to_string fvq =
+  match fvq with
+  | Data_ctor -> "Data_ctor"
+  | Record_projector _ -> "Record_projector _"
+  | Record_ctor _ -> "Record_ctor _"
+  | Unresolved_projector _ -> "Unresolved_projector _"
+  | Unresolved_constructor _ -> "Unresolved_constructor _"
