@@ -10,6 +10,8 @@ import hashlib
 
 # The path to the F* executable
 fstar = sys.argv[1]
+# The file to test
+file = sys.argv[2]
 
 # approximating a test to decide if a string is an F* comment
 # some ulib files have trailing comments in a variety of styles
@@ -228,9 +230,8 @@ def validate_response(response, file_contents):
     return True
 
 # A function to test fstar on a single file
-def test_file(file):
+def test_file(filepath):
     # prepend the path ../../ulib to the file
-    filepath = os.path.join("../../ulib", file)
     print(f"Testing {filepath}")
     # flush stdout
     sys.stdout.flush()
@@ -265,21 +266,9 @@ def test_file(file):
     # Validate the response
     return validate_response(response, contents)
 
-# List all files in ../../ulib
-files = os.listdir("../../ulib")
-# Filter the list to only include .fst and .fsti files
-files = [f for f in files if f.endswith(".fst") or f.endswith(".fsti")]
-succeeded = True
-# For each file files, test fstar on the file
-for file in files:
-    # If the test fails, exit with code 1
-    if not test_file(file):
-        print(f" *** Failed test on {file}")
-        succeeded = False
-
-if succeeded:
-    print("All tests passed")
+if test_file(file):
+    print(f"OK {file}")
     sys.exit(0)
 else:
-    print("Some tests failed")
+    print(f"Testing {file} FAILED")
     sys.exit(1)
