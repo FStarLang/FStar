@@ -150,6 +150,9 @@ let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
 
 let binder_of_t_q t q = mk_binder pp_name_default 0 t q
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
+let mk_total t = pack_comp (C_Total t)
+let mk_arrow ty qual t : R.term =
+  R.pack_ln (R.Tv_Arrow (binder_of_t_q ty qual) (mk_total t))
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i tun)))
 
 let open_with_var (x:var) = OpenWith (pack_ln (Tv_Var (var_as_bv x)))
@@ -413,7 +416,6 @@ let bool_ty = pack_ln (Tv_FVar bool_fv)
 let u_zero = pack_universe Uv_Zero
 let u_max u1 u2 = pack_universe (Uv_Max [u1; u2])
 let u_succ u = pack_universe (Uv_Succ u)
-let mk_total t = pack_comp (C_Total t)
 let tm_type u = pack_ln (Tv_Type u)
 let tm_prop = 
   let prop_fv = R.pack_fv R.prop_qn in
@@ -875,7 +877,7 @@ and equiv : env -> term -> term -> Type0 =
       equiv g t1 t2 ->
       equiv g t0 t2
   
-  | EQ_Beta:
+  | EQ_Beta:  // may be e should be ln 0?
       g:env ->
       t:R.typ ->
       q:R.aqualv ->
@@ -1313,11 +1315,36 @@ val close_with_not_free_var (t:R.term) (x:var) (i:nat)
       (requires ~ (Set.mem x (freevars t)))
       (ensures open_or_close_term' t (CloseVar x) i == t)
 
-// may be it should require typing of one of e1 or e2 in g?
-val equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv) (x:var)
-  (eq:equiv g e1 e2)
-  : equiv g (mk_abs ty q (open_or_close_term' e1 (CloseVar x) 0))
-            (mk_abs ty q (open_or_close_term' e2 (CloseVar x) 0))
+// val equiv_close (#g:R.env) (#e1 #e2:R.term) (#ty:R.term) (x:var) (q:R.aqualv)
+//   (eq:equiv (extend_env g x ty) e1 e2)
+//   : equiv g (mk_abs ty q (open_or_close_term' e1 (CloseVar x) 0))
+//             (mk_abs ty q (open_or_close_term' e2 (CloseVar x) 0))
+
+// val equiv_open (#g:R.env) (#e1 #e2:R.term) (#ty:R.term) (#q:R.aqualv)
+//   (x:var{None? (lookup_bvar g x)})
+//   (eq:equiv g (mk_abs ty q e1) (mk_abs ty q e2))
+//   : equiv (extend_env g x ty)
+//           (open_or_close_term' e1 (open_with_var x) 0)
+//           (open_or_close_term' e2 (open_with_var x) 0)
+
+// may be it should require e1 and e2 to be ln at 0,
+//   and x not in FV e1 and FV e2
+val equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
+  (x:var{None? (lookup_bvar g x)})
+  (eq:equiv (extend_env g x ty)
+            (open_or_close_term' e1 (open_with_var x) 0)
+            (open_or_close_term' e2 (open_with_var x) 0))
+  : equiv g (mk_abs ty q e1)
+            (mk_abs ty q e2)
+
+val equiv_arrow (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
+  (x:var{None? (lookup_bvar g x)})
+  (eq:equiv (extend_env g x ty)
+            (open_or_close_term' e1 (open_with_var x) 0)
+            (open_or_close_term' e2 (open_with_var x) 0))
+  : equiv g (mk_arrow ty q e1)
+            (mk_arrow ty q e2)
+
 
 //
 // Type of the top-level tactic that would splice-in the definitions
