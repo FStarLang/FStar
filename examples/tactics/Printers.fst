@@ -33,10 +33,11 @@ let mk_flatten ts = mk_concat (`"") ts
 let paren (e : term) : Tac term =
     mk_flatten [mk_stringlit "("; e; mk_stringlit ")"]
 
-let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
+let mk_print_bv (self : name) (f : term) (bvty : bv & typ) : Tac term =
+    let bv, ty = bvty in
     (* debug ("self = " ^ String.concat "." self ^ "\n>>>>>> f = : " ^ term_to_string f); *)
     let mk n = pack (Tv_FVar (pack_fv n)) in
-    match inspect (type_of_bv bv) with
+    match inspect ty with
     | Tv_FVar fv ->
         if inspect_fv fv = self
         then mk_e_app f [pack (Tv_Var bv)]
@@ -79,8 +80,8 @@ let mk_printer_fun (dom : term) : Tac term =
             let (name, t) = ctor in
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
-            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, (Pat_Var bv, false))) t_args in
-            let bvs, pats = List.Tot.split bv_pats in
+            let bv_ty_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" in ((bv, ti), (Pat_Var bv, false))) t_args in
+            let bvs, pats = List.Tot.split bv_ty_pats in
             let head = pack (Tv_Const (C_String pn)) in
             let bod = mk_concat (mk_stringlit " ") (head :: TU.map (mk_print_bv xt_ns fftm) bvs) in
             let bod = match t_args with | [] -> bod | _ -> paren bod in
