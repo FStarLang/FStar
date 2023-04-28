@@ -14,19 +14,33 @@ extract-steel-plugin:
 	+$(MAKE) -C ocaml/plugin -f extract-steel.Makefile
 
 .PHONY: extract-pulse-plugin
-extract-pulse-plugin: verify-steel
+extract-pulse-plugin: rebuild-and-verify-steel
 	+$(MAKE) -C ocaml/plugin -f extract-pulse.Makefile
 
 .PHONY: extract-extraction
 extract-extraction:
 	+$(MAKE) -C extraction
 
-.PHONY: verify-steel
-verify-steel: extract-steel-plugin
+# NOTE: while verification of Steel does not in itself need extracting
+# the krml extraction rules, the following `rebuild-and-verify-steel`
+# rule also recompiles the Steel plugin, so it is not possible to
+# extract the extraction rules in parallel with this rule. Adding a
+# dependency on `extract-extraction` is one way to solve this
+# problem. This solution also solves 2 more problems:
+#
+# * the Steel plugin is recompiled 2 times instead of 3: once instead
+#   of twice for Steel + extraction with this rule, in addition to the
+#   one time for Pulse with the `boot` rule.
+#
+# * extracting LibSteel may need the krml extraction rules compiled
+#   into the Steel plugin
+
+.PHONY: rebuild-and-verify-steel
+rebuild-and-verify-steel: extract-steel-plugin extract-extraction
 	+$(MAKE) -C .. verify-steel
 
 .PHONY: extract-c
-extract-c: verify-steel
+extract-c: rebuild-and-verify-steel
 	+$(MAKE) -C c extract
 
 .PHONY: extract
@@ -59,10 +73,10 @@ endif
 .PHONY: check-for-changes
 check-for-changes:
 	# Test if no new files appeared
-	git status
+	git status ..
 	test "" = "$$(git ls-files --others --exclude-standard -- ..)"
 	# Test if nothing has changed
-	git diff-index --exit-code HEAD
+	if ! git diff-index --exit-code HEAD .. ; then git diff .. ; false ; fi
 
 .PHONY: ci
 ci:
