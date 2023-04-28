@@ -237,7 +237,7 @@ let withlocal_soundness #f #g #t #c d soundness =
            (RT.open_or_close_term'
               (WT.with_local_bodypost_body rpost ra x)
               (RT.open_with_var y) 1)) =
-    RT.equiv_abs _ _ z post_equiv in
+    equiv_abs _ _ z post_equiv in
 
   let post_equiv
     : RT.equiv g_y
@@ -270,7 +270,7 @@ let withlocal_soundness #f #g #t #c d soundness =
            (mk_stt_comp ru rret_t
               (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
               (WT.with_local_bodypost rpost ra rret_t x))) =
-    RT.equiv_arrow _ _ _ arrow_codom_equiv in
+    equiv_arrow _ _ _ arrow_codom_equiv in
 
   let rbody_typing
     : RT.typing

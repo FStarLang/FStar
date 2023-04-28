@@ -916,3 +916,27 @@ val close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
   : Lemma
     (requires ~ (x `Set.mem` freevars_comp c))
     (ensures close_comp' c x i == c)
+
+
+//// TEMPORARY : THEY SHOULD COME FROM FStar.Reflection.Typing.fsti WHEN THE BRANCHES STORM IS GONE ////
+let equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
+  (x:var{None? (RT.lookup_bvar g x)})
+  (eq:RT.equiv (RT.extend_env g x ty)
+               (RT.open_or_close_term' e1 (RT.open_with_var x) 0)
+               (RT.open_or_close_term' e2 (RT.open_with_var x) 0))
+  : RT.equiv g (RT.mk_abs ty q e1)
+               (RT.mk_abs ty q e2) = admit ()
+
+let equiv_arrow (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
+  (x:var{None? (RT.lookup_bvar g x)})
+  (eq:RT.equiv (RT.extend_env g x ty)
+               (RT.open_or_close_term' e1 (RT.open_with_var x) 0)
+               (RT.open_or_close_term' e2 (RT.open_with_var x) 0))
+  : RT.equiv g (RT.mk_arrow ty q e1)
+               (RT.mk_arrow ty q e2) = admit ()
+
+let equiv_abs_close (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
+  (x:var{None? (RT.lookup_bvar g x)})
+  (eq:RT.equiv (RT.extend_env g x ty) e1 e2)
+  : RT.equiv g (RT.mk_abs ty q (RT.open_or_close_term' e1 (RT.CloseVar x) 0))
+               (RT.mk_abs ty q (RT.open_or_close_term' e2 (RT.CloseVar x) 0)) = admit ()

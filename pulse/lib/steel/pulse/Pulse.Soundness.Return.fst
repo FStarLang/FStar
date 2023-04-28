@@ -109,7 +109,7 @@ let return_soundess
       : RT.equiv (extend_env_l f g)
                  (WT.return_post_with_eq ru rt re rpost_abs x)
                  elab_c_post
-      = RT.equiv_abs_close rt R.Q_Explicit x post_body_eq in
+      = equiv_abs_close rt R.Q_Explicit x post_body_eq in
 
     match ctag with
     | STT ->
