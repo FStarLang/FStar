@@ -77,7 +77,7 @@ let withlocal_soundness #f #g #t #c d soundness =
   //   need to match it to what is expected by wrapper withlocal typing
 
   FV.comp_typing_freevars c_typing;
-  close_comp_with_not_free_var c x 0;
+  close_comp_with_non_free_var c x 0;
   assert (close_comp c x == c);
   FV.tot_typing_freevars init_typing;
   close_with_non_freevar init x 0;
