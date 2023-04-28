@@ -10,7 +10,7 @@ let (always : Prims.int -> Prims.bool -> unit) =
              let uu___3 = FStar_Compiler_Util.string_of_int id in
              FStar_Compiler_Util.format1 "Assertion failed: test %s" uu___3 in
            (FStar_Errors_Codes.Fatal_AssertionFailure, uu___2) in
-         FStar_Errors.raise_error uu___1 FStar_Compiler_Range.dummyRange)
+         FStar_Errors.raise_error uu___1 FStar_Compiler_Range_Type.dummyRange)
 let (x : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
@@ -27,7 +27,7 @@ let (m : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "m" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
 let tm : 'uuuuu . 'uuuuu -> 'uuuuu FStar_Syntax_Syntax.syntax =
-  fun t -> FStar_Syntax_Syntax.mk t FStar_Compiler_Range.dummyRange
+  fun t -> FStar_Syntax_Syntax.mk t FStar_Compiler_Range_Type.dummyRange
 let (nm : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term) =
   fun x1 -> FStar_Syntax_Syntax.bv_to_name x1
 let (app :
@@ -42,7 +42,7 @@ let (app :
           let uu___2 = FStar_Compiler_List.map FStar_Syntax_Syntax.as_arg ts in
           (x1, uu___2) in
         FStar_Syntax_Syntax.Tm_app uu___1 in
-      FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+      FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let rec (term_eq' :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.bool)

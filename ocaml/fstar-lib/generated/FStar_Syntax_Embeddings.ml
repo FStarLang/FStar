@@ -73,7 +73,7 @@ type norm_cb =
 type shadow_term =
   FStar_Syntax_Syntax.term FStar_Thunk.t FStar_Pervasives_Native.option
 type embed_t =
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     shadow_term -> norm_cb -> FStar_Syntax_Syntax.term
 type 'a unembed_t =
   Prims.bool -> norm_cb -> 'a FStar_Pervasives_Native.option
@@ -258,7 +258,7 @@ let lazy_embed :
   'a .
     'a printer ->
       FStar_Syntax_Syntax.emb_typ ->
-        FStar_Compiler_Range.range ->
+        FStar_Compiler_Range_Type.range ->
           FStar_Syntax_Syntax.term ->
             'a ->
               (unit -> FStar_Syntax_Syntax.term) -> FStar_Syntax_Syntax.term
@@ -1566,7 +1566,7 @@ let (e_norm_step : norm_step embedding) =
                    else ();
                    FStar_Pervasives_Native.None))) in
   mk_emb_full em un typ printer1 emb_t_norm_step
-let (e_range : FStar_Compiler_Range.range embedding) =
+let (e_range : FStar_Compiler_Range_Type.range embedding) =
   let em r rng _shadow _norm =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r)) rng in
@@ -1595,7 +1595,7 @@ let (e_range : FStar_Compiler_Range.range embedding) =
       (uu___2, []) in
     FStar_Syntax_Syntax.ET_app uu___1 in
   mk_emb_full em un FStar_Syntax_Syntax.t_range
-    FStar_Compiler_Range.string_of_range uu___
+    FStar_Compiler_Range_Ops.string_of_range uu___
 let (e_vconfig : FStar_VConfig.vconfig embedding) =
   let em vcfg rng _shadow norm =
     let uu___ =
@@ -2318,7 +2318,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
             let uu___3 = FStar_Syntax_Syntax.mk_Total eb.typ in
             (uu___2, uu___3) in
           FStar_Syntax_Syntax.Tm_arrow uu___1 in
-        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange in
+        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange in
       let emb_t_arr_a_b =
         FStar_Syntax_Syntax.ET_fun ((ea.emb_typ), (eb.emb_typ)) in
       let printer1 f = "<fun>" in

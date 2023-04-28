@@ -459,14 +459,14 @@ let (tc_data :
                                                                     FStar_Syntax_Syntax.mk
                                                                     (FStar_Syntax_Syntax.Tm_type
                                                                     u1)
-                                                                    FStar_Compiler_Range.dummyRange in
+                                                                    FStar_Compiler_Range_Type.dummyRange in
                                                                    let uu___14
                                                                     =
                                                                     FStar_Syntax_Syntax.mk
                                                                     (FStar_Syntax_Syntax.Tm_type
                                                                     (FStar_Syntax_Syntax.U_name
                                                                     u2))
-                                                                    FStar_Compiler_Range.dummyRange in
+                                                                    FStar_Compiler_Range_Type.dummyRange in
                                                                    FStar_TypeChecker_Rel.teq
                                                                     env'1
                                                                     uu___13
@@ -1007,19 +1007,19 @@ let (get_optimized_haseq_axiom :
                        FStar_Compiler_List.map
                          FStar_Syntax_Util.arg_of_non_null_binder bs2 in
                      FStar_Syntax_Syntax.mk_Tm_app ind uu___2
-                       FStar_Compiler_Range.dummyRange in
+                       FStar_Compiler_Range_Type.dummyRange in
                    let ind2 =
                      let uu___2 =
                        FStar_Compiler_List.map
                          FStar_Syntax_Util.arg_of_non_null_binder ibs1 in
                      FStar_Syntax_Syntax.mk_Tm_app ind1 uu___2
-                       FStar_Compiler_Range.dummyRange in
+                       FStar_Compiler_Range_Type.dummyRange in
                    let haseq_ind =
                      let uu___2 =
                        let uu___3 = FStar_Syntax_Syntax.as_arg ind2 in
                        [uu___3] in
                      FStar_Syntax_Syntax.mk_Tm_app FStar_Syntax_Util.t_haseq
-                       uu___2 FStar_Compiler_Range.dummyRange in
+                       uu___2 FStar_Compiler_Range_Type.dummyRange in
                    let bs' =
                      FStar_Compiler_List.filter
                        (fun b ->
@@ -1043,7 +1043,7 @@ let (get_optimized_haseq_axiom :
                                 [uu___4] in
                               FStar_Syntax_Syntax.mk_Tm_app
                                 FStar_Syntax_Util.t_haseq uu___3
-                                FStar_Compiler_Range.dummyRange in
+                                FStar_Compiler_Range_Type.dummyRange in
                             FStar_Syntax_Util.mk_conj t3 uu___2)
                        FStar_Syntax_Util.t_true bs' in
                    let fml = FStar_Syntax_Util.mk_imp haseq_bs haseq_ind in
@@ -1093,7 +1093,7 @@ let (get_optimized_haseq_axiom :
                               [uu___3] in
                             FStar_Syntax_Syntax.mk_Tm_app
                               FStar_Syntax_Util.tforall uu___2
-                              FStar_Compiler_Range.dummyRange) ibs1 fml1 in
+                              FStar_Compiler_Range_Type.dummyRange) ibs1 fml1 in
                    let fml3 =
                      FStar_Compiler_List.fold_right
                        (fun b ->
@@ -1114,7 +1114,7 @@ let (get_optimized_haseq_axiom :
                               [uu___3] in
                             FStar_Syntax_Syntax.mk_Tm_app
                               FStar_Syntax_Util.tforall uu___2
-                              FStar_Compiler_Range.dummyRange) bs2 fml2 in
+                              FStar_Compiler_Range_Type.dummyRange) bs2 fml2 in
                    let axiom_lid = get_haseq_axiom_lid lid in
                    (axiom_lid, fml3, bs2, ibs1, haseq_bs))
 let (optimized_haseq_soundness_for_data :
@@ -1155,7 +1155,7 @@ let (optimized_haseq_soundness_for_data :
                            [uu___3] in
                          FStar_Syntax_Syntax.mk_Tm_app
                            FStar_Syntax_Util.t_haseq uu___2
-                           FStar_Compiler_Range.dummyRange in
+                           FStar_Compiler_Range_Type.dummyRange in
                        let sort_range =
                          ((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos in
                        let haseq_b1 =
@@ -1190,7 +1190,7 @@ let (optimized_haseq_soundness_for_data :
                          [uu___5] in
                        uu___3 :: uu___4 in
                      FStar_Syntax_Syntax.mk_Tm_app FStar_Syntax_Util.tforall
-                       uu___2 FStar_Compiler_Range.dummyRange) dbs3 cond
+                       uu___2 FStar_Compiler_Range_Type.dummyRange) dbs3 cond
           | uu___1 -> FStar_Syntax_Util.t_true
 let (optimized_haseq_ty :
   FStar_Syntax_Syntax.sigelts ->
@@ -1328,7 +1328,7 @@ let (optimized_haseq_scheme :
                                                        (lid, us1, fml1));
                                                   FStar_Syntax_Syntax.sigrng
                                                     =
-                                                    FStar_Compiler_Range.dummyRange;
+                                                    FStar_Compiler_Range_Type.dummyRange;
                                                   FStar_Syntax_Syntax.sigquals
                                                     =
                                                     [FStar_Syntax_Syntax.InternalAssumption];
@@ -1418,7 +1418,7 @@ let (unoptimized_haseq_data :
                                [uu___3] in
                              FStar_Syntax_Syntax.mk_Tm_app
                                FStar_Syntax_Util.t_haseq uu___2
-                               FStar_Compiler_Range.dummyRange in
+                               FStar_Compiler_Range_Type.dummyRange in
                            let haseq_sort1 =
                              let uu___2 = is_mutual sort in
                              if uu___2
@@ -1446,7 +1446,7 @@ let (unoptimized_haseq_data :
                              [uu___3] in
                            FStar_Syntax_Syntax.mk_Tm_app
                              FStar_Syntax_Util.tforall uu___2
-                             FStar_Compiler_Range.dummyRange) dbs3 cond in
+                             FStar_Compiler_Range_Type.dummyRange) dbs3 cond in
                   FStar_Syntax_Util.mk_conj acc cond1
               | uu___1 -> acc
 let (unoptimized_haseq_ty :
@@ -1504,20 +1504,20 @@ let (unoptimized_haseq_ty :
                            FStar_Compiler_List.map
                              FStar_Syntax_Util.arg_of_non_null_binder bs2 in
                          FStar_Syntax_Syntax.mk_Tm_app ind uu___2
-                           FStar_Compiler_Range.dummyRange in
+                           FStar_Compiler_Range_Type.dummyRange in
                        let ind2 =
                          let uu___2 =
                            FStar_Compiler_List.map
                              FStar_Syntax_Util.arg_of_non_null_binder ibs1 in
                          FStar_Syntax_Syntax.mk_Tm_app ind1 uu___2
-                           FStar_Compiler_Range.dummyRange in
+                           FStar_Compiler_Range_Type.dummyRange in
                        let haseq_ind =
                          let uu___2 =
                            let uu___3 = FStar_Syntax_Syntax.as_arg ind2 in
                            [uu___3] in
                          FStar_Syntax_Syntax.mk_Tm_app
                            FStar_Syntax_Util.t_haseq uu___2
-                           FStar_Compiler_Range.dummyRange in
+                           FStar_Compiler_Range_Type.dummyRange in
                        let t_datas =
                          FStar_Compiler_List.filter
                            (fun s ->
@@ -1579,7 +1579,8 @@ let (unoptimized_haseq_ty :
                                   [uu___3] in
                                 FStar_Syntax_Syntax.mk_Tm_app
                                   FStar_Syntax_Util.tforall uu___2
-                                  FStar_Compiler_Range.dummyRange) ibs1 fml1 in
+                                  FStar_Compiler_Range_Type.dummyRange) ibs1
+                           fml1 in
                        let fml3 =
                          FStar_Compiler_List.fold_right
                            (fun b ->
@@ -1600,7 +1601,8 @@ let (unoptimized_haseq_ty :
                                   [uu___3] in
                                 FStar_Syntax_Syntax.mk_Tm_app
                                   FStar_Syntax_Util.tforall uu___2
-                                  FStar_Compiler_Range.dummyRange) bs2 fml2 in
+                                  FStar_Compiler_Range_Type.dummyRange) bs2
+                           fml2 in
                        FStar_Syntax_Util.mk_conj acc fml3)
 let (unoptimized_haseq_scheme :
   FStar_Syntax_Syntax.sigelt ->
@@ -1645,7 +1647,7 @@ let (unoptimized_haseq_scheme :
                      {
                        FStar_Syntax_Syntax.sigel = uu___2;
                        FStar_Syntax_Syntax.sigrng =
-                         FStar_Compiler_Range.dummyRange;
+                         FStar_Compiler_Range_Type.dummyRange;
                        FStar_Syntax_Syntax.sigquals =
                          [FStar_Syntax_Syntax.InternalAssumption];
                        FStar_Syntax_Syntax.sigmeta =
@@ -2400,7 +2402,7 @@ let (mk_discriminator_and_indexed_projectors :
                                       uvs lbtyp
                                       FStar_Parser_Const.effect_Tot_lid
                                       uu___4 []
-                                      FStar_Compiler_Range.dummyRange in
+                                      FStar_Compiler_Range_Type.dummyRange in
                                   let impl =
                                     let uu___3 =
                                       let uu___4 =
@@ -2805,7 +2807,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                       = [];
                                                     FStar_Syntax_Syntax.lbpos
                                                       =
-                                                      FStar_Compiler_Range.dummyRange
+                                                      FStar_Compiler_Range_Type.dummyRange
                                                   } in
                                                 let impl =
                                                   let uu___7 =

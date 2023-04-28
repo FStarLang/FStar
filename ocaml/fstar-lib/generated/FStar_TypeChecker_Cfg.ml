@@ -1678,9 +1678,10 @@ let (to_fsteps : FStar_TypeChecker_Env.step Prims.list -> fsteps) =
   fun s -> FStar_Compiler_List.fold_right fstep_add_one s default_steps
 type psc =
   {
-  psc_range: FStar_Compiler_Range.range ;
+  psc_range: FStar_Compiler_Range_Type.range ;
   psc_subst: unit -> FStar_Syntax_Syntax.subst_t }
-let (__proj__Mkpsc__item__psc_range : psc -> FStar_Compiler_Range.range) =
+let (__proj__Mkpsc__item__psc_range : psc -> FStar_Compiler_Range_Type.range)
+  =
   fun projectee ->
     match projectee with | { psc_range; psc_subst;_} -> psc_range
 let (__proj__Mkpsc__item__psc_subst :
@@ -1689,10 +1690,10 @@ let (__proj__Mkpsc__item__psc_subst :
     match projectee with | { psc_range; psc_subst;_} -> psc_subst
 let (null_psc : psc) =
   {
-    psc_range = FStar_Compiler_Range.dummyRange;
+    psc_range = FStar_Compiler_Range_Type.dummyRange;
     psc_subst = (fun uu___ -> [])
   }
-let (psc_range : psc -> FStar_Compiler_Range.range) =
+let (psc_range : psc -> FStar_Compiler_Range_Type.range) =
   fun psc1 -> psc1.psc_range
 let (psc_subst : psc -> FStar_Syntax_Syntax.subst_t) =
   fun psc1 -> psc1.psc_subst ()
@@ -1991,7 +1992,7 @@ let (log_nbe : cfg -> (unit -> unit) -> unit) =
 let embed_simple :
   'a .
     'a FStar_Syntax_Embeddings.embedding ->
-      FStar_Compiler_Range.range -> 'a -> FStar_Syntax_Syntax.term
+      FStar_Compiler_Range_Type.range -> 'a -> FStar_Syntax_Syntax.term
   =
   fun emb ->
     fun r ->
@@ -2329,12 +2330,12 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                let uu___1 =
                  let uu___2 = FStar_BigInt.to_int_fs from_l in
                  let uu___3 = FStar_BigInt.to_int_fs from_c in
-                 FStar_Compiler_Range.mk_pos uu___2 uu___3 in
+                 FStar_Compiler_Range_Type.mk_pos uu___2 uu___3 in
                let uu___2 =
                  let uu___3 = FStar_BigInt.to_int_fs to_l in
                  let uu___4 = FStar_BigInt.to_int_fs to_c in
-                 FStar_Compiler_Range.mk_pos uu___3 uu___4 in
-               FStar_Compiler_Range.mk_range fn1 uu___1 uu___2 in
+                 FStar_Compiler_Range_Type.mk_pos uu___3 uu___4 in
+               FStar_Compiler_Range_Type.mk_range fn1 uu___1 uu___2 in
              let uu___1 =
                embed_simple FStar_Syntax_Embeddings.e_range psc1.psc_range r in
              FStar_Pervasives_Native.Some uu___1

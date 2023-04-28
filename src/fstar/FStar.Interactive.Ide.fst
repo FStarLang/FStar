@@ -279,7 +279,7 @@ let deserialize_interactive_query js_query =
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
 
 let parse_interactive_query query_str : query =
-  match Util.json_of_string query_str with
+  match json_of_string query_str with
   | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
   | Some request -> deserialize_interactive_query request
 
@@ -1135,7 +1135,7 @@ let js_repl_eval_js st query_js =
 let js_repl_eval_str st query_str =
   let js_response, st_opt =
     js_repl_eval st (parse_interactive_query query_str) in
-  (List.map Util.string_of_json js_response), st_opt
+  (List.map string_of_json js_response), st_opt
 
 (** This too is called from FStar.js **)
 let js_repl_init_opts () =

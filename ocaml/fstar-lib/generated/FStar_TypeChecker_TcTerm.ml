@@ -259,7 +259,7 @@ let (check_no_escape :
 let (check_expected_aqual_for_binder :
   FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.binder ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
   =
   fun aq ->
@@ -613,7 +613,7 @@ let (check_expected_effect :
                                          FStar_Compiler_Effect.op_Bar_Greater
                                            uu___12 FStar_Ident.string_of_lid in
                                        let uu___12 =
-                                         FStar_Compiler_Range.string_of_range
+                                         FStar_Compiler_Range_Ops.string_of_range
                                            e.FStar_Syntax_Syntax.pos in
                                        FStar_Compiler_Util.format2
                                          "Missing annotation for a layered effect (%s) computation at %s"
@@ -738,7 +738,7 @@ let (check_expected_effect :
                                       if uu___8
                                       then
                                         let uu___9 =
-                                          FStar_Compiler_Range.string_of_range
+                                          FStar_Compiler_Range_Ops.string_of_range
                                             e1.FStar_Syntax_Syntax.pos in
                                         let uu___10 =
                                           FStar_TypeChecker_Rel.guard_to_string
@@ -855,7 +855,7 @@ let (get_pat_vars :
       FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
   = fun all -> fun pats -> get_pat_vars' all false pats
 let (check_pat_fvs :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.binder Prims.list -> unit)
@@ -1285,14 +1285,14 @@ let (guard_letrecs :
                              let uu___7 =
                                FStar_Syntax_Print.term_to_string e1 in
                              let uu___8 =
-                               FStar_Compiler_Range.string_of_range
+                               FStar_Compiler_Range_Ops.string_of_range
                                  e1.FStar_Syntax_Syntax.pos in
                              let uu___9 =
                                FStar_Syntax_Print.term_to_string t1 in
                              let uu___10 =
                                FStar_Syntax_Print.term_to_string e2 in
                              let uu___11 =
-                               FStar_Compiler_Range.string_of_range
+                               FStar_Compiler_Range_Ops.string_of_range
                                  e2.FStar_Syntax_Syntax.pos in
                              let uu___12 =
                                FStar_Syntax_Print.term_to_string t2 in
@@ -1595,7 +1595,7 @@ let rec (tc_term :
          let uu___3 =
            let uu___4 = FStar_TypeChecker_Env.get_range env in
            FStar_Compiler_Effect.op_Less_Bar
-             FStar_Compiler_Range.string_of_range uu___4 in
+             FStar_Compiler_Range_Ops.string_of_range uu___4 in
          let uu___4 =
            FStar_Compiler_Util.string_of_bool
              env.FStar_TypeChecker_Env.phase1 in
@@ -1720,7 +1720,7 @@ let rec (tc_term :
                ((let uu___6 =
                    let uu___7 = FStar_TypeChecker_Env.get_range env in
                    FStar_Compiler_Effect.op_Less_Bar
-                     FStar_Compiler_Range.string_of_range uu___7 in
+                     FStar_Compiler_Range_Ops.string_of_range uu___7 in
                  let uu___7 = FStar_Syntax_Print.term_to_string e in
                  let uu___8 =
                    let uu___9 = FStar_Syntax_Subst.compress e in
@@ -1735,7 +1735,7 @@ let rec (tc_term :
                      let uu___8 =
                        let uu___9 = FStar_TypeChecker_Env.get_range env in
                        FStar_Compiler_Effect.op_Less_Bar
-                         FStar_Compiler_Range.string_of_range uu___9 in
+                         FStar_Compiler_Range_Ops.string_of_range uu___9 in
                      let uu___9 = FStar_Syntax_Print.term_to_string e1 in
                      let uu___10 =
                        FStar_TypeChecker_Common.lcomp_to_string lc in
@@ -1756,7 +1756,7 @@ and (tc_maybe_toplevel_term :
   fun env ->
     fun e ->
       let env1 =
-        if e.FStar_Syntax_Syntax.pos = FStar_Compiler_Range.dummyRange
+        if e.FStar_Syntax_Syntax.pos = FStar_Compiler_Range_Type.dummyRange
         then env
         else FStar_TypeChecker_Env.set_range env e.FStar_Syntax_Syntax.pos in
       FStar_TypeChecker_Env.def_check_closed_in_env e.FStar_Syntax_Syntax.pos
@@ -1768,7 +1768,7 @@ and (tc_maybe_toplevel_term :
           let uu___3 =
             let uu___4 = FStar_TypeChecker_Env.get_range env1 in
             FStar_Compiler_Effect.op_Less_Bar
-              FStar_Compiler_Range.string_of_range uu___4 in
+              FStar_Compiler_Range_Ops.string_of_range uu___4 in
           let uu___4 = FStar_Syntax_Print.tag_of_term top in
           let uu___5 = FStar_Syntax_Print.term_to_string top in
           FStar_Compiler_Util.print3 "Typechecking %s (%s): %s\n" uu___3
@@ -2511,7 +2511,7 @@ and (tc_maybe_toplevel_term :
              | (unary_op, uu___6) ->
                  let head =
                    let uu___7 =
-                     FStar_Compiler_Range.union_ranges
+                     FStar_Compiler_Range_Ops.union_ranges
                        unary_op.FStar_Syntax_Syntax.pos
                        (FStar_Pervasives_Native.fst a).FStar_Syntax_Syntax.pos in
                    FStar_Syntax_Syntax.mk
@@ -2536,7 +2536,7 @@ and (tc_maybe_toplevel_term :
              | (unary_op, uu___7) ->
                  let head =
                    let uu___8 =
-                     FStar_Compiler_Range.union_ranges
+                     FStar_Compiler_Range_Ops.union_ranges
                        unary_op.FStar_Syntax_Syntax.pos
                        (FStar_Pervasives_Native.fst a).FStar_Syntax_Syntax.pos in
                    FStar_Syntax_Syntax.mk
@@ -2561,7 +2561,7 @@ and (tc_maybe_toplevel_term :
              | (unary_op, uu___7) ->
                  let head =
                    let uu___8 =
-                     FStar_Compiler_Range.union_ranges
+                     FStar_Compiler_Range_Ops.union_ranges
                        unary_op.FStar_Syntax_Syntax.pos
                        (FStar_Pervasives_Native.fst a).FStar_Syntax_Syntax.pos in
                    FStar_Syntax_Syntax.mk
@@ -2586,7 +2586,7 @@ and (tc_maybe_toplevel_term :
              | (unary_op, uu___6) ->
                  let head =
                    let uu___7 =
-                     FStar_Compiler_Range.union_ranges
+                     FStar_Compiler_Range_Ops.union_ranges
                        unary_op.FStar_Syntax_Syntax.pos
                        (FStar_Pervasives_Native.fst a1).FStar_Syntax_Syntax.pos in
                    FStar_Syntax_Syntax.mk
@@ -3238,7 +3238,7 @@ and (tc_maybe_toplevel_term :
               if uu___3
               then
                 let uu___4 =
-                  FStar_Compiler_Range.string_of_range
+                  FStar_Compiler_Range_Ops.string_of_range
                     top.FStar_Syntax_Syntax.pos in
                 let uu___5 = FStar_Syntax_Print.term_to_string top in
                 let uu___6 = print_expected_ty_str env0 in
@@ -3877,7 +3877,7 @@ and (tc_match :
                                      if uu___8
                                      then
                                        let uu___9 =
-                                         FStar_Compiler_Range.string_of_range
+                                         FStar_Compiler_Range_Ops.string_of_range
                                            top.FStar_Syntax_Syntax.pos in
                                        let uu___10 =
                                          FStar_TypeChecker_Common.lcomp_to_string
@@ -3901,7 +3901,7 @@ and (tc_synth :
       (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
         FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
         Prims.list ->
-        FStar_Compiler_Range.range ->
+        FStar_Compiler_Range_Type.range ->
           (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
             FStar_TypeChecker_Env.guard_t))
   =
@@ -4218,7 +4218,7 @@ and (tc_value :
            | (t, uu___1, g0) ->
                let uu___2 =
                  let uu___3 =
-                   let uu___4 = FStar_Compiler_Range.string_of_range r in
+                   let uu___4 = FStar_Compiler_Range_Ops.string_of_range r in
                    Prims.op_Hat "user-provided implicit term at " uu___4 in
                  FStar_TypeChecker_Util.new_implicit_var uu___3 r env1 t in
                (match uu___2 with
@@ -4374,11 +4374,12 @@ and (tc_value :
                      let uu___5 = FStar_Syntax_Syntax.lid_of_fv fv1 in
                      FStar_Syntax_Print.lid_to_string uu___5 in
                    let uu___5 =
-                     FStar_Compiler_Range.string_of_range
+                     FStar_Compiler_Range_Ops.string_of_range
                        e.FStar_Syntax_Syntax.pos in
-                   let uu___6 = FStar_Compiler_Range.string_of_range range in
+                   let uu___6 =
+                     FStar_Compiler_Range_Ops.string_of_range range in
                    let uu___7 =
-                     FStar_Compiler_Range.string_of_use_range range in
+                     FStar_Compiler_Range_Ops.string_of_use_range range in
                    let uu___8 = FStar_Syntax_Print.term_to_string t in
                    FStar_Compiler_Util.print5
                      "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
@@ -4474,7 +4475,7 @@ and (tc_value :
                            if uu___5
                            then
                              let uu___6 =
-                               FStar_Compiler_Range.string_of_range
+                               FStar_Compiler_Range_Ops.string_of_range
                                  top.FStar_Syntax_Syntax.pos in
                              let uu___7 =
                                FStar_Syntax_Print.term_to_string phi1 in
@@ -4553,7 +4554,7 @@ and (tc_value :
           failwith uu___1
 and (tc_constant :
   FStar_TypeChecker_Env.env ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Const.sconst -> FStar_Syntax_Syntax.typ)
   =
   fun env ->
@@ -5996,7 +5997,7 @@ and (tc_abs :
                                     FStar_Pervasives_Native.None) in
                                 FStar_Syntax_Syntax.Tm_ascribed uu___11 in
                               FStar_Syntax_Syntax.mk uu___10
-                                FStar_Compiler_Range.dummyRange in
+                                FStar_Compiler_Range_Type.dummyRange in
                             (uu___8, uu___9, (FStar_Pervasives.Inr ()))
                           else
                             (let uu___9 =
@@ -6385,7 +6386,7 @@ and (check_application_args :
                if uu___1
                then
                  let uu___2 =
-                   FStar_Compiler_Range.string_of_range
+                   FStar_Compiler_Range_Ops.string_of_range
                      head.FStar_Syntax_Syntax.pos in
                  let uu___3 = FStar_Syntax_Print.term_to_string thead in
                  FStar_Compiler_Util.print2 "(%s) Type of head is %s\n"
@@ -7033,18 +7034,18 @@ and (check_application_args :
                                  | [] -> head.FStar_Syntax_Syntax.pos
                                  | ((t2, uu___7), uu___8, uu___9)::uu___10 ->
                                      let uu___11 =
-                                       FStar_Compiler_Range.def_range
+                                       FStar_Compiler_Range_Type.def_range
                                          head.FStar_Syntax_Syntax.pos in
                                      let uu___12 =
                                        let uu___13 =
-                                         FStar_Compiler_Range.use_range
+                                         FStar_Compiler_Range_Type.use_range
                                            head.FStar_Syntax_Syntax.pos in
                                        let uu___14 =
-                                         FStar_Compiler_Range.use_range
+                                         FStar_Compiler_Range_Type.use_range
                                            t2.FStar_Syntax_Syntax.pos in
-                                       FStar_Compiler_Range.union_rng uu___13
-                                         uu___14 in
-                                     FStar_Compiler_Range.range_of_rng
+                                       FStar_Compiler_Range_Ops.union_rng
+                                         uu___13 uu___14 in
+                                     FStar_Compiler_Range_Type.range_of_rng
                                        uu___11 uu___12 in
                                let uu___7 =
                                  FStar_TypeChecker_Util.new_implicit_var
@@ -7134,18 +7135,18 @@ and (check_application_args :
                                       | ((t2, uu___7), uu___8, uu___9)::uu___10
                                           ->
                                           let uu___11 =
-                                            FStar_Compiler_Range.def_range
+                                            FStar_Compiler_Range_Type.def_range
                                               head.FStar_Syntax_Syntax.pos in
                                           let uu___12 =
                                             let uu___13 =
-                                              FStar_Compiler_Range.use_range
+                                              FStar_Compiler_Range_Type.use_range
                                                 head.FStar_Syntax_Syntax.pos in
                                             let uu___14 =
-                                              FStar_Compiler_Range.use_range
+                                              FStar_Compiler_Range_Type.use_range
                                                 t2.FStar_Syntax_Syntax.pos in
-                                            FStar_Compiler_Range.union_rng
+                                            FStar_Compiler_Range_Ops.union_rng
                                               uu___13 uu___14 in
-                                          FStar_Compiler_Range.range_of_rng
+                                          FStar_Compiler_Range_Type.range_of_rng
                                             uu___11 uu___12 in
                                     let uu___7 =
                                       FStar_TypeChecker_Env.new_implicit_var_aux
@@ -8342,7 +8343,7 @@ and (tc_pat :
                    [uu___3] in
                  FStar_Compiler_List.op_At ty_args uu___2 in
                FStar_Syntax_Syntax.mk_Tm_app disc uu___1
-                 FStar_Compiler_Range.dummyRange in
+                 FStar_Compiler_Range_Type.dummyRange in
              let tm1 =
                let uu___1 =
                  let uu___2 =
@@ -8350,7 +8351,7 @@ and (tc_pat :
                      FStar_Syntax_Syntax.as_arg in
                  [uu___2] in
                FStar_Syntax_Syntax.mk_Tm_app inner_t uu___1
-                 FStar_Compiler_Range.dummyRange in
+                 FStar_Compiler_Range_Type.dummyRange in
              FStar_Syntax_Util.abs [x_b] tm1 FStar_Pervasives_Native.None in
            match p.FStar_Syntax_Syntax.v with
            | FStar_Syntax_Syntax.Pat_dot_term uu___1 ->
@@ -8531,7 +8532,7 @@ and (tc_pat :
                      then
                        (let uu___3 =
                           let uu___4 =
-                            FStar_Compiler_Range.string_of_range
+                            FStar_Compiler_Range_Ops.string_of_range
                               p.FStar_Syntax_Syntax.p in
                           let uu___5 =
                             FStar_Syntax_Print.pat_to_string simple_pat in
@@ -9045,7 +9046,7 @@ and (tc_eqn :
                                                  let fail uu___12 =
                                                    let uu___13 =
                                                      let uu___14 =
-                                                       FStar_Compiler_Range.string_of_range
+                                                       FStar_Compiler_Range_Ops.string_of_range
                                                          pat_exp1.FStar_Syntax_Syntax.pos in
                                                      let uu___15 =
                                                        FStar_Syntax_Print.term_to_string
@@ -9075,7 +9076,7 @@ and (tc_eqn :
                                                        ->
                                                        let uu___13 =
                                                          let uu___14 =
-                                                           FStar_Compiler_Range.string_of_range
+                                                           FStar_Compiler_Range_Ops.string_of_range
                                                              pattern2.FStar_Syntax_Syntax.p in
                                                          let uu___15 =
                                                            FStar_Syntax_Print.pat_to_string
@@ -9609,7 +9610,7 @@ and (tc_eqn :
                                                                     FStar_Syntax_Syntax.mk_Tm_app
                                                                     pat_bv_tm
                                                                     uu___16
-                                                                    FStar_Compiler_Range.dummyRange)) in
+                                                                    FStar_Compiler_Range_Type.dummyRange)) in
                                                                  let pat_bv_tms2
                                                                    =
                                                                    let env1 =
@@ -10850,7 +10851,7 @@ and (build_let_rec_env :
     fun env ->
       fun lbs ->
         let env0 = env in
-        let termination_check_enabled lbname lbdef lbtyp =
+        let termination_check_enabled attrs lbname lbdef lbtyp =
           let uu___ = FStar_Options.ml_ish () in
           if uu___
           then FStar_Pervasives_Native.None
@@ -10892,21 +10893,38 @@ and (build_let_rec_env :
                        else ();
                        (let nformals = FStar_Compiler_List.length formals in
                         let uu___5 =
-                          let uu___6 =
-                            FStar_Compiler_Effect.op_Bar_Greater
-                              (FStar_Syntax_Util.comp_effect_name c)
-                              (FStar_TypeChecker_Env.lookup_effect_quals env) in
-                          FStar_Compiler_Effect.op_Bar_Greater uu___6
-                            (FStar_Compiler_List.contains
-                               FStar_Syntax_Syntax.TotalEffect) in
+                          FStar_Syntax_Util.has_attribute attrs
+                            FStar_Parser_Const.admit_termination_lid in
                         if uu___5
                         then
-                          let uu___6 =
-                            let uu___7 =
-                              FStar_Syntax_Util.abs actuals1 body body_lc in
-                            (nformals, uu___7) in
-                          FStar_Pervasives_Native.Some uu___6
-                        else FStar_Pervasives_Native.None)))) in
+                          ((let uu___7 =
+                              let uu___8 =
+                                let uu___9 =
+                                  FStar_Syntax_Print.lbname_to_string lbname in
+                                Prims.op_Hat "Admitting termination of "
+                                  uu___9 in
+                              (FStar_Errors_Codes.Warning_WarnOnUse, uu___8) in
+                            FStar_Errors.log_issue
+                              env.FStar_TypeChecker_Env.range uu___7);
+                           FStar_Pervasives_Native.None)
+                        else
+                          (let uu___7 =
+                             let uu___8 =
+                               FStar_Compiler_Effect.op_Bar_Greater
+                                 (FStar_Syntax_Util.comp_effect_name c)
+                                 (FStar_TypeChecker_Env.lookup_effect_quals
+                                    env) in
+                             FStar_Compiler_Effect.op_Bar_Greater uu___8
+                               (FStar_Compiler_List.contains
+                                  FStar_Syntax_Syntax.TotalEffect) in
+                           if uu___7
+                           then
+                             let uu___8 =
+                               let uu___9 =
+                                 FStar_Syntax_Util.abs actuals1 body body_lc in
+                               (nformals, uu___9) in
+                             FStar_Pervasives_Native.Some uu___8
+                           else FStar_Pervasives_Native.None))))) in
         let check_annot univ_vars t =
           let env01 = FStar_TypeChecker_Env.push_univ_vars env0 univ_vars in
           let uu___ =
@@ -11052,6 +11070,7 @@ and (build_let_rec_env :
                                let uu___4 =
                                  let uu___5 =
                                    termination_check_enabled
+                                     lb.FStar_Syntax_Syntax.lbattrs
                                      lb.FStar_Syntax_Syntax.lbname lbdef
                                      lbtyp1 in
                                  match uu___5 with
@@ -11585,7 +11604,7 @@ and (check_lbtyp :
                                    let uu___10 =
                                      FStar_Syntax_Syntax.range_of_lbname
                                        lb.FStar_Syntax_Syntax.lbname in
-                                   FStar_Compiler_Range.string_of_range
+                                   FStar_Compiler_Range_Ops.string_of_range
                                      uu___10 in
                                  let uu___10 =
                                    FStar_Syntax_Print.term_to_string t2 in
@@ -12541,7 +12560,7 @@ let rec (universe_of_aux :
                        then
                          let uu___6 =
                            let uu___7 = FStar_TypeChecker_Env.get_range env3 in
-                           FStar_Compiler_Range.string_of_range uu___7 in
+                           FStar_Compiler_Range_Ops.string_of_range uu___7 in
                          let uu___7 = FStar_Syntax_Print.term_to_string hd2 in
                          FStar_Compiler_Util.print2
                            "%s: About to type-check %s\n" uu___6 uu___7
@@ -12740,7 +12759,7 @@ let rec (__typeof_tot_or_gtot_term_fastpath :
              | (unary_op, uu___4) ->
                  let head =
                    let uu___5 =
-                     FStar_Compiler_Range.union_ranges
+                     FStar_Compiler_Range_Ops.union_ranges
                        unary_op.FStar_Syntax_Syntax.pos
                        (FStar_Pervasives_Native.fst a).FStar_Syntax_Syntax.pos in
                    FStar_Syntax_Syntax.mk
@@ -12765,7 +12784,7 @@ let rec (__typeof_tot_or_gtot_term_fastpath :
              | (unary_op, uu___4) ->
                  let head =
                    let uu___5 =
-                     FStar_Compiler_Range.union_ranges
+                     FStar_Compiler_Range_Ops.union_ranges
                        unary_op.FStar_Syntax_Syntax.pos
                        (FStar_Pervasives_Native.fst a1).FStar_Syntax_Syntax.pos in
                    FStar_Syntax_Syntax.mk

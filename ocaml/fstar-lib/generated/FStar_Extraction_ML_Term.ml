@@ -36,7 +36,7 @@ let (eraseTypeDeep :
         (FStar_Extraction_ML_Util.udelta_unfold g) t
 let fail :
   'uuuuu .
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       (FStar_Errors_Codes.raw_error * Prims.string) -> 'uuuuu
   = fun r -> fun err -> FStar_Errors.raise_error err r
 let err_ill_typed_application :
@@ -81,7 +81,8 @@ let err_ill_typed_application :
 let err_ill_typed_erasure :
   'uuuuu .
     FStar_Extraction_ML_UEnv.uenv ->
-      FStar_Compiler_Range.range -> FStar_Extraction_ML_Syntax.mlty -> 'uuuuu
+      FStar_Compiler_Range_Type.range ->
+        FStar_Extraction_ML_Syntax.mlty -> 'uuuuu
   =
   fun env ->
     fun pos ->
@@ -138,7 +139,8 @@ let (err_unexpected_eff :
 let err_cannot_extract_effect :
   'uuuuu .
     FStar_Ident.lident ->
-      FStar_Compiler_Range.range -> Prims.string -> Prims.string -> 'uuuuu
+      FStar_Compiler_Range_Type.range ->
+        Prims.string -> Prims.string -> 'uuuuu
   =
   fun l ->
     fun r ->
@@ -702,7 +704,7 @@ let (maybe_eta_expand_coercion :
           uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Krml) in
         if uu___ then e else eta_expand g expect e
 let (apply_coercion :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_Extraction_ML_UEnv.uenv ->
       FStar_Extraction_ML_Syntax.mlexpr ->
         FStar_Extraction_ML_Syntax.mlty ->
@@ -851,7 +853,7 @@ let (apply_coercion :
                         (e1, ty1, expect1)) in
              aux e ty expect)
 let (maybe_coerce :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_Extraction_ML_UEnv.uenv ->
       FStar_Extraction_ML_Syntax.mlexpr ->
         FStar_Extraction_ML_Syntax.mlty ->
@@ -1408,7 +1410,7 @@ let rec (extract_one_pat :
                             FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
                           uu___2.FStar_TypeChecker_Env.dsenv in
                         FStar_ToSyntax_ToSyntax.desugar_machine_integer
-                          uu___1 c sw FStar_Compiler_Range.dummyRange in
+                          uu___1 c sw FStar_Compiler_Range_Type.dummyRange in
                       let uu___1 = term_as_mlexpr g source_term in
                       (match uu___1 with
                        | (mlterm, uu___2, mlty) -> (mlterm, mlty)) in
@@ -1450,7 +1452,7 @@ let rec (extract_one_pat :
                 let t =
                   let uu___ = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
                   FStar_TypeChecker_TcTerm.tc_constant uu___
-                    FStar_Compiler_Range.dummyRange s in
+                    FStar_Compiler_Range_Type.dummyRange s in
                 let mlty = term_as_mlty g t in
                 let uu___ =
                   let uu___1 =
@@ -2515,7 +2517,7 @@ and (term_as_mlexpr' :
         (fun u ->
            let uu___1 =
              let uu___2 =
-               FStar_Compiler_Range.string_of_range
+               FStar_Compiler_Range_Ops.string_of_range
                  top1.FStar_Syntax_Syntax.pos in
              let uu___3 = FStar_Syntax_Print.tag_of_term top1 in
              let uu___4 = FStar_Syntax_Print.term_to_string top1 in
@@ -3746,7 +3748,7 @@ and (term_as_mlexpr' :
                             [uu___7] in
                           FStar_Compiler_List.op_At uu___5 uu___6 in
                         FStar_Ident.lid_of_path uu___4
-                          FStar_Compiler_Range.dummyRange in
+                          FStar_Compiler_Range_Type.dummyRange in
                       FStar_TypeChecker_Env.set_current_module uu___2 uu___3 in
                     FStar_Compiler_Effect.op_Bar_Greater lbs1
                       (FStar_Compiler_List.map

@@ -340,7 +340,8 @@ let rec (read_chunk : unit -> input_chunks) =
                    let uu___6 = FStar_Compiler_Util.int_of_string c in
                    (false, uu___5, uu___6)
                | uu___5 ->
-                   (FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
+                   (FStar_Errors.log_issue
+                      FStar_Compiler_Range_Type.dummyRange
                       (FStar_Errors_Codes.Warning_WrongErrorLocation,
                         (Prims.op_Hat
                            "Error locations may be wrong, unrecognized string after #push: "
@@ -366,7 +367,8 @@ let rec (read_chunk : unit -> input_chunks) =
                       (symbol, false, uu___8) in
                     Info uu___7))
               | uu___5 ->
-                  (FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
+                  (FStar_Errors.log_issue
+                     FStar_Compiler_Range_Type.dummyRange
                      (FStar_Errors_Codes.Error_IDEUnrecognized,
                        (Prims.op_Hat "Unrecognized \"#info\" request: " l));
                    FStar_Compiler_Effect.exit Prims.int_one))
@@ -378,7 +380,8 @@ let rec (read_chunk : unit -> input_chunks) =
                     (FStar_Compiler_Util.clear_string_builder s.chunk;
                      Completions prefix)
                 | uu___6 ->
-                    (FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
+                    (FStar_Errors.log_issue
+                       FStar_Compiler_Range_Type.dummyRange
                        (FStar_Errors_Codes.Error_IDEUnrecognized,
                          (Prims.op_Hat
                             "Unrecognized \"#completions\" request: " l));
@@ -443,8 +446,8 @@ let (deps_of_our_file :
                              intf impl in
                          (FStar_Errors_Codes.Warning_MissingInterfaceOrImplementation,
                            uu___5) in
-                       FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                         uu___4
+                       FStar_Errors.log_issue
+                         FStar_Compiler_Range_Type.dummyRange uu___4
                      else ());
                     FStar_Pervasives_Native.Some intf)
                | impl::[] -> FStar_Pervasives_Native.None
@@ -455,8 +458,8 @@ let (deps_of_our_file :
                            "Unexpected: ended up with %s"
                            (FStar_String.concat " " same_name) in
                        (FStar_Errors_Codes.Warning_UnexpectedFile, uu___5) in
-                     FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                       uu___4);
+                     FStar_Errors.log_issue
+                       FStar_Compiler_Range_Type.dummyRange uu___4);
                     FStar_Pervasives_Native.None) in
              (deps1, maybe_intf, dep_graph))
 type m_timestamps =
@@ -595,7 +598,7 @@ let (format_info :
   FStar_TypeChecker_Env.env ->
     Prims.string ->
       FStar_Syntax_Syntax.term ->
-        FStar_Compiler_Range.range ->
+        FStar_Compiler_Range_Type.range ->
           Prims.string FStar_Pervasives_Native.option -> Prims.string)
   =
   fun env ->
@@ -603,7 +606,7 @@ let (format_info :
       fun typ ->
         fun range ->
           fun doc ->
-            let uu___ = FStar_Compiler_Range.string_of_range range in
+            let uu___ = FStar_Compiler_Range_Ops.string_of_range range in
             let uu___1 = FStar_TypeChecker_Normalize.term_to_string env typ in
             let uu___2 =
               match doc with
@@ -828,7 +831,7 @@ let rec (go :
                           | uu___2 ->
                               let l =
                                 FStar_Ident.lid_of_path ns
-                                  FStar_Compiler_Range.dummyRange in
+                                  FStar_Compiler_Range_Type.dummyRange in
                               let uu___3 =
                                 FStar_Syntax_DsEnv.resolve_module_name
                                   env.FStar_TypeChecker_Env.dsenv l true in
@@ -868,7 +871,7 @@ let rec (go :
                       match stack with
                       | [] ->
                           (FStar_Errors.log_issue
-                             FStar_Compiler_Range.dummyRange
+                             FStar_Compiler_Range_Type.dummyRange
                              (FStar_Errors_Codes.Error_IDETooManyPops,
                                "too many pops");
                            FStar_Compiler_Effect.exit Prims.int_one)
@@ -922,7 +925,7 @@ let (interactive_mode : Prims.string -> unit) =
        FStar_Compiler_Option.isSome uu___2 in
      if uu___1
      then
-       FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
+       FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
          (FStar_Errors_Codes.Warning_IDEIgnoreCodeGen,
            "code-generation is not supported in interactive mode, ignoring the codegen flag")
      else ());
@@ -936,10 +939,12 @@ let (interactive_mode : Prims.string -> unit) =
           | (stack, env1, ts) ->
               let initial_range =
                 let uu___3 =
-                  FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
+                  FStar_Compiler_Range_Type.mk_pos Prims.int_one
+                    Prims.int_zero in
                 let uu___4 =
-                  FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
-                FStar_Compiler_Range.mk_range filename uu___3 uu___4 in
+                  FStar_Compiler_Range_Type.mk_pos Prims.int_one
+                    Prims.int_zero in
+                FStar_Compiler_Range_Type.mk_range filename uu___3 uu___4 in
               let env2 = FStar_TypeChecker_Env.set_range env1 initial_range in
               let env3 =
                 match maybe_intf with

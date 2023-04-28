@@ -19,7 +19,7 @@ let (fstar_refl_lid : Prims.string Prims.list -> FStar_Ident.lident) =
   fun s ->
     FStar_Ident.lid_of_path
       (FStar_Compiler_List.op_At ["FStar"; "Reflection"] s)
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (fstar_refl_builtins_lid : Prims.string -> FStar_Ident.lident) =
   fun s -> fstar_refl_lid ["Builtins"; s]
 let (fstar_refl_syntax_lid : Prims.string -> FStar_Ident.lident) =
@@ -249,15 +249,16 @@ let (ref_Mk_bv : refl_constant) =
       let uu___1 = fstar_refl_data_lid "bv_view" in
       let uu___2 =
         let uu___3 =
-          FStar_Ident.mk_ident ("bv_ppname", FStar_Compiler_Range.dummyRange) in
+          FStar_Ident.mk_ident
+            ("bv_ppname", FStar_Compiler_Range_Type.dummyRange) in
         let uu___4 =
           let uu___5 =
             FStar_Ident.mk_ident
-              ("bv_index", FStar_Compiler_Range.dummyRange) in
+              ("bv_index", FStar_Compiler_Range_Type.dummyRange) in
           let uu___6 =
             let uu___7 =
               FStar_Ident.mk_ident
-                ("bv_sort", FStar_Compiler_Range.dummyRange) in
+                ("bv_sort", FStar_Compiler_Range_Type.dummyRange) in
             [uu___7] in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
@@ -274,15 +275,16 @@ let (ref_Mk_binder : refl_constant) =
       let uu___1 = fstar_refl_data_lid "binder_view" in
       let uu___2 =
         let uu___3 =
-          FStar_Ident.mk_ident ("binder_bv", FStar_Compiler_Range.dummyRange) in
+          FStar_Ident.mk_ident
+            ("binder_bv", FStar_Compiler_Range_Type.dummyRange) in
         let uu___4 =
           let uu___5 =
             FStar_Ident.mk_ident
-              ("binder_qual", FStar_Compiler_Range.dummyRange) in
+              ("binder_qual", FStar_Compiler_Range_Type.dummyRange) in
           let uu___6 =
             let uu___7 =
               FStar_Ident.mk_ident
-                ("binder_attrs", FStar_Compiler_Range.dummyRange) in
+                ("binder_attrs", FStar_Compiler_Range_Type.dummyRange) in
             [uu___7] in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
@@ -299,18 +301,20 @@ let (ref_Mk_lb : refl_constant) =
       let uu___1 = fstar_refl_data_lid "lb_view" in
       let uu___2 =
         let uu___3 =
-          FStar_Ident.mk_ident ("lb_fv", FStar_Compiler_Range.dummyRange) in
+          FStar_Ident.mk_ident
+            ("lb_fv", FStar_Compiler_Range_Type.dummyRange) in
         let uu___4 =
           let uu___5 =
-            FStar_Ident.mk_ident ("lb_us", FStar_Compiler_Range.dummyRange) in
+            FStar_Ident.mk_ident
+              ("lb_us", FStar_Compiler_Range_Type.dummyRange) in
           let uu___6 =
             let uu___7 =
               FStar_Ident.mk_ident
-                ("lb_typ", FStar_Compiler_Range.dummyRange) in
+                ("lb_typ", FStar_Compiler_Range_Type.dummyRange) in
             let uu___8 =
               let uu___9 =
                 FStar_Ident.mk_ident
-                  ("lb_def", FStar_Compiler_Range.dummyRange) in
+                  ("lb_def", FStar_Compiler_Range_Type.dummyRange) in
               [uu___9] in
             uu___7 :: uu___8 in
           uu___5 :: uu___6 in
@@ -411,17 +415,17 @@ let (ref_E_Mult : refl_constant) = fstar_refl_data_const "Mult"
 let (t_exp : FStar_Syntax_Syntax.term) =
   let uu___ =
     FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"]
-      FStar_Compiler_Range.dummyRange in
+      FStar_Compiler_Range_Type.dummyRange in
   FStar_Syntax_Syntax.tconst uu___
 let (ord_Lt_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (ord_Eq_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Eq"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (ord_Gt_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Gt"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (ord_Lt : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr ord_Lt_lid
 let (ord_Eq : FStar_Syntax_Syntax.term) =

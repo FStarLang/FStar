@@ -425,7 +425,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
               false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid(), tval, def, [], lb.lbpos),
+              mk_lb (Inr lbname, uvs, PC.effect_Tot_lid, tval, def, lb.lbattrs, lb.lbpos),
               quals_opt
           in
           gen, lb::lbs, quals_opt)

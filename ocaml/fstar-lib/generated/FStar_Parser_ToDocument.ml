@@ -735,27 +735,32 @@ let (cat_with_colon :
       let uu___ = FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon y in
       FStar_Pprint.op_Hat_Hat x uu___
 let (comment_stack :
-  (Prims.string * FStar_Compiler_Range.range) Prims.list
+  (Prims.string * FStar_Compiler_Range_Type.range) Prims.list
     FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref []
 type decl_meta =
   {
-  r: FStar_Compiler_Range.range ;
+  r: FStar_Compiler_Range_Type.range ;
   has_qs: Prims.bool ;
   has_attrs: Prims.bool }
-let (__proj__Mkdecl_meta__item__r : decl_meta -> FStar_Compiler_Range.range)
-  = fun projectee -> match projectee with | { r; has_qs; has_attrs;_} -> r
+let (__proj__Mkdecl_meta__item__r :
+  decl_meta -> FStar_Compiler_Range_Type.range) =
+  fun projectee -> match projectee with | { r; has_qs; has_attrs;_} -> r
 let (__proj__Mkdecl_meta__item__has_qs : decl_meta -> Prims.bool) =
   fun projectee -> match projectee with | { r; has_qs; has_attrs;_} -> has_qs
 let (__proj__Mkdecl_meta__item__has_attrs : decl_meta -> Prims.bool) =
   fun projectee ->
     match projectee with | { r; has_qs; has_attrs;_} -> has_attrs
 let (dummy_meta : decl_meta) =
-  { r = FStar_Compiler_Range.dummyRange; has_qs = false; has_attrs = false }
+  {
+    r = FStar_Compiler_Range_Type.dummyRange;
+    has_qs = false;
+    has_attrs = false
+  }
 let with_comment :
   'uuuuu .
     ('uuuuu -> FStar_Pprint.document) ->
-      'uuuuu -> FStar_Compiler_Range.range -> FStar_Pprint.document
+      'uuuuu -> FStar_Compiler_Range_Type.range -> FStar_Pprint.document
   =
   fun printer ->
     fun tm ->
@@ -769,7 +774,7 @@ let with_comment :
                 let uu___1 = str c in
                 FStar_Pprint.op_Hat_Hat uu___1 FStar_Pprint.hardline in
               let uu___1 =
-                FStar_Compiler_Range.range_before_pos crange print_pos in
+                FStar_Compiler_Range_Ops.range_before_pos crange print_pos in
               if uu___1
               then
                 (FStar_Compiler_Effect.op_Colon_Equals comment_stack cs;
@@ -777,13 +782,14 @@ let with_comment :
                   comments_before_pos uu___3 print_pos lookahead_pos))
               else
                 (let uu___3 =
-                   FStar_Compiler_Range.range_before_pos crange lookahead_pos in
+                   FStar_Compiler_Range_Ops.range_before_pos crange
+                     lookahead_pos in
                  (acc, uu___3)) in
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_Compiler_Range.start_of_range tmrange in
-            FStar_Compiler_Range.end_of_line uu___2 in
-          let uu___2 = FStar_Compiler_Range.end_of_range tmrange in
+            let uu___2 = FStar_Compiler_Range_Ops.start_of_range tmrange in
+            FStar_Compiler_Range_Ops.end_of_line uu___2 in
+          let uu___2 = FStar_Compiler_Range_Ops.end_of_range tmrange in
           comments_before_pos FStar_Pprint.empty uu___1 uu___2 in
         match uu___ with
         | (comments, has_lookahead) ->
@@ -791,7 +797,7 @@ let with_comment :
             let comments1 =
               if has_lookahead
               then
-                let pos = FStar_Compiler_Range.end_of_range tmrange in
+                let pos = FStar_Compiler_Range_Ops.end_of_range tmrange in
                 let uu___1 = comments_before_pos comments pos pos in
                 FStar_Pervasives_Native.fst uu___1
               else comments in
@@ -804,7 +810,7 @@ let with_comment_sep :
   'uuuuu 'uuuuu1 .
     ('uuuuu -> 'uuuuu1) ->
       'uuuuu ->
-        FStar_Compiler_Range.range -> (FStar_Pprint.document * 'uuuuu1)
+        FStar_Compiler_Range_Type.range -> (FStar_Pprint.document * 'uuuuu1)
   =
   fun printer ->
     fun tm ->
@@ -816,7 +822,7 @@ let with_comment_sep :
           | (c, crange)::cs ->
               let comment = str c in
               let uu___1 =
-                FStar_Compiler_Range.range_before_pos crange print_pos in
+                FStar_Compiler_Range_Ops.range_before_pos crange print_pos in
               if uu___1
               then
                 (FStar_Compiler_Effect.op_Colon_Equals comment_stack cs;
@@ -831,13 +837,14 @@ let with_comment_sep :
                   comments_before_pos uu___3 print_pos lookahead_pos))
               else
                 (let uu___3 =
-                   FStar_Compiler_Range.range_before_pos crange lookahead_pos in
+                   FStar_Compiler_Range_Ops.range_before_pos crange
+                     lookahead_pos in
                  (acc, uu___3)) in
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_Compiler_Range.start_of_range tmrange in
-            FStar_Compiler_Range.end_of_line uu___2 in
-          let uu___2 = FStar_Compiler_Range.end_of_range tmrange in
+            let uu___2 = FStar_Compiler_Range_Ops.start_of_range tmrange in
+            FStar_Compiler_Range_Ops.end_of_line uu___2 in
+          let uu___2 = FStar_Compiler_Range_Ops.end_of_range tmrange in
           comments_before_pos FStar_Pprint.empty uu___1 uu___2 in
         match uu___ with
         | (comments, has_lookahead) ->
@@ -845,7 +852,7 @@ let with_comment_sep :
             let comments1 =
               if has_lookahead
               then
-                let pos = FStar_Compiler_Range.end_of_range tmrange in
+                let pos = FStar_Compiler_Range_Ops.end_of_range tmrange in
                 let uu___1 = comments_before_pos comments pos pos in
                 FStar_Pervasives_Native.fst uu___1
               else comments in
@@ -853,7 +860,7 @@ let with_comment_sep :
 let rec (place_comments_until_pos :
   Prims.int ->
     Prims.int ->
-      FStar_Compiler_Range.pos ->
+      FStar_Compiler_Range_Type.pos ->
         decl_meta ->
           FStar_Pprint.document ->
             Prims.bool -> Prims.bool -> FStar_Pprint.document)
@@ -868,14 +875,14 @@ let rec (place_comments_until_pos :
                 let uu___ = FStar_Compiler_Effect.op_Bang comment_stack in
                 match uu___ with
                 | (comment, crange)::cs when
-                    FStar_Compiler_Range.range_before_pos crange pos ->
+                    FStar_Compiler_Range_Ops.range_before_pos crange pos ->
                     (FStar_Compiler_Effect.op_Colon_Equals comment_stack cs;
                      (let lnum =
                         let uu___2 =
                           let uu___3 =
                             let uu___4 =
-                              FStar_Compiler_Range.start_of_range crange in
-                            FStar_Compiler_Range.line_of_pos uu___4 in
+                              FStar_Compiler_Range_Ops.start_of_range crange in
+                            FStar_Compiler_Range_Ops.line_of_pos uu___4 in
                           uu___3 - lbegin in
                         max k uu___2 in
                       let lnum1 = min (Prims.of_int (2)) lnum in
@@ -887,8 +894,9 @@ let rec (place_comments_until_pos :
                           FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
                         FStar_Pprint.op_Hat_Hat doc uu___2 in
                       let uu___2 =
-                        let uu___3 = FStar_Compiler_Range.end_of_range crange in
-                        FStar_Compiler_Range.line_of_pos uu___3 in
+                        let uu___3 =
+                          FStar_Compiler_Range_Ops.end_of_range crange in
+                        FStar_Compiler_Range_Ops.line_of_pos uu___3 in
                       place_comments_until_pos Prims.int_one uu___2 pos
                         meta_decl doc1 true init))
                 | uu___1 ->
@@ -896,7 +904,8 @@ let rec (place_comments_until_pos :
                     then FStar_Pprint.empty
                     else
                       (let lnum =
-                         let uu___3 = FStar_Compiler_Range.line_of_pos pos in
+                         let uu___3 =
+                           FStar_Compiler_Range_Ops.line_of_pos pos in
                          uu___3 - lbegin in
                        let lnum1 = min (Prims.of_int (3)) lnum in
                        let lnum2 =
@@ -930,12 +939,12 @@ let separate_map_with_comments :
                   let meta_decl = extract_meta x in
                   let r = meta_decl.r in
                   let doc1 =
-                    let uu___1 = FStar_Compiler_Range.start_of_range r in
+                    let uu___1 = FStar_Compiler_Range_Ops.start_of_range r in
                     place_comments_until_pos Prims.int_one last_line uu___1
                       meta_decl doc false false in
                   let uu___1 =
-                    let uu___2 = FStar_Compiler_Range.end_of_range r in
-                    FStar_Compiler_Range.line_of_pos uu___2 in
+                    let uu___2 = FStar_Compiler_Range_Ops.end_of_range r in
+                    FStar_Compiler_Range_Ops.line_of_pos uu___2 in
                   let uu___2 =
                     let uu___3 =
                       let uu___4 = f x in FStar_Pprint.op_Hat_Hat sep uu___4 in
@@ -950,8 +959,8 @@ let separate_map_with_comments :
                   let meta_decl = extract_meta x in
                   let uu___1 =
                     let uu___2 =
-                      FStar_Compiler_Range.end_of_range meta_decl.r in
-                    FStar_Compiler_Range.line_of_pos uu___2 in
+                      FStar_Compiler_Range_Ops.end_of_range meta_decl.r in
+                    FStar_Compiler_Range_Ops.line_of_pos uu___2 in
                   let uu___2 =
                     let uu___3 = f x in FStar_Pprint.op_Hat_Hat prefix uu___3 in
                   (uu___1, uu___2) in
@@ -976,12 +985,12 @@ let separate_map_with_comments_kw :
                   let meta_decl = extract_meta x in
                   let r = meta_decl.r in
                   let doc1 =
-                    let uu___1 = FStar_Compiler_Range.start_of_range r in
+                    let uu___1 = FStar_Compiler_Range_Ops.start_of_range r in
                     place_comments_until_pos Prims.int_one last_line uu___1
                       meta_decl doc false false in
                   let uu___1 =
-                    let uu___2 = FStar_Compiler_Range.end_of_range r in
-                    FStar_Compiler_Range.line_of_pos uu___2 in
+                    let uu___2 = FStar_Compiler_Range_Ops.end_of_range r in
+                    FStar_Compiler_Range_Ops.line_of_pos uu___2 in
                   let uu___2 =
                     let uu___3 = f sep x in
                     FStar_Pprint.op_Hat_Hat doc1 uu___3 in
@@ -995,8 +1004,8 @@ let separate_map_with_comments_kw :
                   let meta_decl = extract_meta x in
                   let uu___1 =
                     let uu___2 =
-                      FStar_Compiler_Range.end_of_range meta_decl.r in
-                    FStar_Compiler_Range.line_of_pos uu___2 in
+                      FStar_Compiler_Range_Ops.end_of_range meta_decl.r in
+                    FStar_Compiler_Range_Ops.line_of_pos uu___2 in
                   let uu___2 = f prefix x in (uu___1, uu___2) in
                 let uu___1 = FStar_Compiler_List.fold_left fold_fun init xs1 in
                 FStar_Pervasives_Native.snd uu___1
@@ -1175,7 +1184,7 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
              match uu___1 with
              | (p, t) ->
                  let uu___2 =
-                   FStar_Compiler_Range.union_ranges
+                   FStar_Compiler_Range_Ops.union_ranges
                      p.FStar_Parser_AST.prange t.FStar_Parser_AST.range in
                  { r = uu___2; has_qs = false; has_attrs = false })
     | FStar_Parser_AST.Val (lid, t) ->
@@ -1395,7 +1404,7 @@ and (p_typeDecl :
                            | FStar_Parser_AST.VpRecord (record, uu___6) ->
                                FStar_Pervasives_Native.None) in
                     FStar_Compiler_Util.dflt uu___3 uu___4 in
-                  FStar_Compiler_Range.extend_to_end_of_line uu___2 in
+                  FStar_Compiler_Range_Ops.extend_to_end_of_line uu___2 in
                 let uu___2 =
                   with_comment_sep p_constructorBranch (uid, payload, attrs)
                     range in
@@ -1415,7 +1424,7 @@ and (p_typeDeclRecord :
       | (lid, aq, attrs, t) ->
           let uu___1 =
             let uu___2 =
-              FStar_Compiler_Range.extend_to_end_of_line
+              FStar_Compiler_Range_Ops.extend_to_end_of_line
                 t.FStar_Parser_AST.range in
             with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
               uu___2 in
@@ -4762,7 +4771,7 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
     | FStar_Const.Const_range_of -> str "range_of"
     | FStar_Const.Const_set_range_of -> str "set_range_of"
     | FStar_Const.Const_range r ->
-        let uu___1 = FStar_Compiler_Range.string_of_range r in str uu___1
+        let uu___1 = FStar_Compiler_Range_Ops.string_of_range r in str uu___1
     | FStar_Const.Const_reify uu___1 -> str "reify"
     | FStar_Const.Const_reflect lid ->
         let uu___1 = p_quident lid in
@@ -4865,7 +4874,7 @@ let (modul_to_document : FStar_Parser_AST.modul -> FStar_Pprint.document) =
         FStar_Compiler_Effect.op_Bar_Greater uu___2
           (FStar_Pprint.separate FStar_Pprint.hardline)
 let (comments_to_document :
-  (Prims.string * FStar_Compiler_Range.range) Prims.list ->
+  (Prims.string * FStar_Compiler_Range_Type.range) Prims.list ->
     FStar_Pprint.document)
   =
   fun comments ->
@@ -4889,9 +4898,9 @@ let (extract_decl_range : FStar_Parser_AST.decl -> decl_meta) =
     }
 let (decls_with_comments_to_document :
   FStar_Parser_AST.decl Prims.list ->
-    (Prims.string * FStar_Compiler_Range.range) Prims.list ->
-      (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
-        Prims.list))
+    (Prims.string * FStar_Compiler_Range_Type.range) Prims.list ->
+      (FStar_Pprint.document * (Prims.string *
+        FStar_Compiler_Range_Type.range) Prims.list))
   =
   fun decls ->
     fun comments ->
@@ -4904,7 +4913,7 @@ let (decls_with_comments_to_document :
                (FStar_Compiler_Effect.op_Colon_Equals comment_stack comments;
                 (let initial_comment =
                    let uu___2 =
-                     FStar_Compiler_Range.start_of_range first_range in
+                     FStar_Compiler_Range_Ops.start_of_range first_range in
                    place_comments_until_pos Prims.int_zero Prims.int_one
                      uu___2 dummy_meta FStar_Pprint.empty false true in
                  let doc =
@@ -4916,9 +4925,9 @@ let (decls_with_comments_to_document :
                   (uu___3, comments1)))))
 let (modul_with_comments_to_document :
   FStar_Parser_AST.modul ->
-    (Prims.string * FStar_Compiler_Range.range) Prims.list ->
-      (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
-        Prims.list))
+    (Prims.string * FStar_Compiler_Range_Type.range) Prims.list ->
+      (FStar_Pprint.document * (Prims.string *
+        FStar_Compiler_Range_Type.range) Prims.list))
   =
   fun m ->
     fun comments ->
@@ -4929,7 +4938,7 @@ let (modul_with_comments_to_document :
       decls_with_comments_to_document decls comments
 let (decl_with_comments_to_document :
   FStar_Parser_AST.decl ->
-    (Prims.string * FStar_Compiler_Range.range) Prims.list ->
-      (FStar_Pprint.document * (Prims.string * FStar_Compiler_Range.range)
-        Prims.list))
+    (Prims.string * FStar_Compiler_Range_Type.range) Prims.list ->
+      (FStar_Pprint.document * (Prims.string *
+        FStar_Compiler_Range_Type.range) Prims.list))
   = fun d -> fun comments -> decls_with_comments_to_document [d] comments

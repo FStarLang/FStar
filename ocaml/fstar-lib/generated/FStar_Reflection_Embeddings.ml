@@ -2,7 +2,8 @@ open Prims
 let (noaqs : FStar_Syntax_Syntax.antiquotations) = (Prims.int_zero, [])
 let mk_emb :
   'uuuuu .
-    (FStar_Compiler_Range.range -> 'uuuuu -> FStar_Syntax_Syntax.term) ->
+    (FStar_Compiler_Range_Type.range -> 'uuuuu -> FStar_Syntax_Syntax.term)
+      ->
       (Prims.bool ->
          FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option)
         ->
@@ -18,7 +19,7 @@ let mk_emb :
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings.embedding ->
-      FStar_Compiler_Range.range -> 'uuuuu -> FStar_Syntax_Syntax.term
+      FStar_Compiler_Range_Type.range -> 'uuuuu -> FStar_Syntax_Syntax.term
   =
   fun e ->
     fun r ->
@@ -207,7 +208,7 @@ let (e_aqualv :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_Q_Meta.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange in
+            uu___ FStar_Compiler_Range_Type.dummyRange in
     {
       FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
@@ -572,7 +573,7 @@ let (e_const :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_C_Int.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.C_String s ->
           let uu___ =
             let uu___1 =
@@ -581,7 +582,7 @@ let (e_const :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_C_String.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.C_Range r1 ->
           let uu___ =
             let uu___1 =
@@ -590,7 +591,7 @@ let (e_const :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_C_Range.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.C_Reify ->
           FStar_Reflection_Constants.ref_C_Reify.FStar_Reflection_Constants.t
       | FStar_Reflection_Data.C_Reflect ns ->
@@ -601,7 +602,7 @@ let (e_const :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_C_Reflect.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange in
+            uu___ FStar_Compiler_Range_Type.dummyRange in
     {
       FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
@@ -2192,7 +2193,7 @@ let (e_exp : FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedding) =
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_E_Var.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.Mult (e1, e2) ->
           let uu___ =
             let uu___1 =
@@ -2206,7 +2207,7 @@ let (e_exp : FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedding) =
             uu___1 :: uu___2 in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_E_Mult.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange in
+            uu___ FStar_Compiler_Range_Type.dummyRange in
     {
       FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
@@ -2314,7 +2315,7 @@ let (e_qualifier :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_qual_Reflectable.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.Discriminator l ->
           let uu___ =
             let uu___1 =
@@ -2323,7 +2324,7 @@ let (e_qualifier :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_qual_Discriminator.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.Action l ->
           let uu___ =
             let uu___1 =
@@ -2332,7 +2333,7 @@ let (e_qualifier :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_qual_Action.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.Projector (l, i) ->
           let uu___ =
             let uu___1 =
@@ -2343,7 +2344,7 @@ let (e_qualifier :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_qual_Projector.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.RecordType (ids1, ids2) ->
           let uu___ =
             let uu___1 =
@@ -2357,7 +2358,7 @@ let (e_qualifier :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_qual_RecordType.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange
+            uu___ FStar_Compiler_Range_Type.dummyRange
       | FStar_Reflection_Data.RecordConstructor (ids1, ids2) ->
           let uu___ =
             let uu___1 =
@@ -2371,7 +2372,7 @@ let (e_qualifier :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_qual_RecordConstructor.FStar_Reflection_Constants.t
-            uu___ FStar_Compiler_Range.dummyRange in
+            uu___ FStar_Compiler_Range_Type.dummyRange in
     {
       FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;

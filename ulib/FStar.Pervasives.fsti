@@ -1163,6 +1163,8 @@ val no_auto_projectors : unit
 *)
 val no_subtyping : unit
 
+val admit_termination : unit
+
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head
     symbol is not marked irreducible.

@@ -3,7 +3,7 @@ let (disentangle_abbrevs_from_bundle :
   FStar_Syntax_Syntax.sigelt Prims.list ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
       FStar_Ident.lident Prims.list ->
-        FStar_Compiler_Range.range ->
+        FStar_Compiler_Range_Type.range ->
           (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.sigelt
             Prims.list))
   =

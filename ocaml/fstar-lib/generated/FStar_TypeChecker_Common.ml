@@ -41,7 +41,7 @@ type 'a problem =
   logical_guard: FStar_Syntax_Syntax.term ;
   logical_guard_uvar: FStar_Syntax_Syntax.ctx_uvar ;
   reason: Prims.string Prims.list ;
-  loc: FStar_Compiler_Range.range ;
+  loc: FStar_Compiler_Range_Type.range ;
   rank: rank_t FStar_Pervasives_Native.option }
 let __proj__Mkproblem__item__pid : 'a . 'a problem -> Prims.int =
   fun projectee ->
@@ -88,7 +88,7 @@ let __proj__Mkproblem__item__reason :
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
         reason; loc; rank;_} -> reason
 let __proj__Mkproblem__item__loc :
-  'a . 'a problem -> FStar_Compiler_Range.range =
+  'a . 'a problem -> FStar_Compiler_Range_Type.range =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
@@ -183,7 +183,7 @@ type identifier_info =
   identifier:
     (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ;
   identifier_ty: FStar_Syntax_Syntax.typ ;
-  identifier_range: FStar_Compiler_Range.range }
+  identifier_range: FStar_Compiler_Range_Type.range }
 let (__proj__Mkidentifier_info__item__identifier :
   identifier_info ->
     (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either)
@@ -197,7 +197,7 @@ let (__proj__Mkidentifier_info__item__identifier_ty :
     match projectee with
     | { identifier; identifier_ty; identifier_range;_} -> identifier_ty
 let (__proj__Mkidentifier_info__item__identifier_range :
-  identifier_info -> FStar_Compiler_Range.range) =
+  identifier_info -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
     | { identifier; identifier_ty; identifier_range;_} -> identifier_range
@@ -239,7 +239,7 @@ let (mk_by_tactic :
         let uu___2 = let uu___3 = FStar_Syntax_Syntax.as_arg f in [uu___3] in
         uu___1 :: uu___2 in
       FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu___
-        FStar_Compiler_Range.dummyRange
+        FStar_Compiler_Range_Type.dummyRange
 let rec (delta_depth_greater_than :
   FStar_Syntax_Syntax.delta_depth ->
     FStar_Syntax_Syntax.delta_depth -> Prims.bool)
@@ -314,7 +314,8 @@ let (id_info_table_empty : id_info_table) =
   { id_info_enabled = false; id_info_db = uu___; id_info_buffer = [] }
 let (print_identifier_info : identifier_info -> Prims.string) =
   fun info ->
-    let uu___ = FStar_Compiler_Range.string_of_range info.identifier_range in
+    let uu___ =
+      FStar_Compiler_Range_Ops.string_of_range info.identifier_range in
     let uu___1 =
       match info.identifier with
       | FStar_Pervasives.Inl x -> FStar_Syntax_Print.bv_to_string x
@@ -334,8 +335,8 @@ let (id_info__insert :
       fun info ->
         let range = info.identifier_range in
         let use_range =
-          let uu___ = FStar_Compiler_Range.use_range range in
-          FStar_Compiler_Range.set_def_range range uu___ in
+          let uu___ = FStar_Compiler_Range_Type.use_range range in
+          FStar_Compiler_Range_Type.set_def_range range uu___ in
         let id_ty =
           match info.identifier with
           | FStar_Pervasives.Inr uu___ -> ty_map info.identifier_ty
@@ -346,11 +347,11 @@ let (id_info__insert :
             identifier_ty = id_ty;
             identifier_range = use_range
           } in
-        let fn = FStar_Compiler_Range.file_of_range use_range in
-        let start = FStar_Compiler_Range.start_of_range use_range in
+        let fn = FStar_Compiler_Range_Ops.file_of_range use_range in
+        let start = FStar_Compiler_Range_Ops.start_of_range use_range in
         let uu___ =
-          let uu___1 = FStar_Compiler_Range.line_of_pos start in
-          let uu___2 = FStar_Compiler_Range.col_of_pos start in
+          let uu___1 = FStar_Compiler_Range_Ops.line_of_pos start in
+          let uu___2 = FStar_Compiler_Range_Ops.col_of_pos start in
           (uu___1, uu___2) in
         match uu___ with
         | (row, col) ->
@@ -368,7 +369,8 @@ let (id_info_insert :
   id_info_table ->
     (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either
       ->
-      FStar_Syntax_Syntax.typ -> FStar_Compiler_Range.range -> id_info_table)
+      FStar_Syntax_Syntax.typ ->
+        FStar_Compiler_Range_Type.range -> id_info_table)
   =
   fun table ->
     fun id ->
@@ -447,14 +449,14 @@ let (id_info_at_pos :
           | FStar_Pervasives_Native.Some info ->
               let last_col =
                 let uu___1 =
-                  FStar_Compiler_Range.end_of_range info.identifier_range in
-                FStar_Compiler_Range.col_of_pos uu___1 in
+                  FStar_Compiler_Range_Ops.end_of_range info.identifier_range in
+                FStar_Compiler_Range_Ops.col_of_pos uu___1 in
               if col <= last_col
               then FStar_Pervasives_Native.Some info
               else FStar_Pervasives_Native.None
 let (check_uvar_ctx_invariant :
   Prims.string ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       Prims.bool ->
         FStar_Syntax_Syntax.gamma -> FStar_Syntax_Syntax.binders -> unit)
   =
@@ -482,7 +484,7 @@ let (check_uvar_ctx_invariant :
                 (FStar_String.concat "::\n") in
             let fail uu___ =
               let uu___1 =
-                let uu___2 = FStar_Compiler_Range.string_of_range r in
+                let uu___2 = FStar_Compiler_Range_Ops.string_of_range r in
                 let uu___3 = print_gamma g in
                 let uu___4 = FStar_Syntax_Print.binders_to_string ", " bs in
                 FStar_Compiler_Util.format5
@@ -520,7 +522,7 @@ type implicit =
   imp_reason: Prims.string ;
   imp_uvar: FStar_Syntax_Syntax.ctx_uvar ;
   imp_tm: FStar_Syntax_Syntax.term ;
-  imp_range: FStar_Compiler_Range.range }
+  imp_range: FStar_Compiler_Range_Type.range }
 let (__proj__Mkimplicit__item__imp_reason : implicit -> Prims.string) =
   fun projectee ->
     match projectee with
@@ -536,7 +538,7 @@ let (__proj__Mkimplicit__item__imp_tm : implicit -> FStar_Syntax_Syntax.term)
     match projectee with
     | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_tm
 let (__proj__Mkimplicit__item__imp_range :
-  implicit -> FStar_Compiler_Range.range) =
+  implicit -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
     | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_range

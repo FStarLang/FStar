@@ -743,7 +743,7 @@ let (new_uvar :
         FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option
           ->
           FStar_Syntax_Syntax.ctx_uvar Prims.list ->
-            FStar_Compiler_Range.range ->
+            FStar_Compiler_Range_Type.range ->
               (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar) tac)
   =
   fun reason ->
@@ -778,7 +778,7 @@ let (mk_irrelevant_goal :
       FStar_Syntax_Syntax.typ ->
         FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option
           ->
-          FStar_Compiler_Range.range ->
+          FStar_Compiler_Range_Type.range ->
             FStar_Options.optionstate ->
               Prims.string -> FStar_Tactics_Types.goal tac)
   =
@@ -807,7 +807,7 @@ let (add_irrelevant_goal' :
       FStar_Syntax_Syntax.typ ->
         FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option
           ->
-          FStar_Compiler_Range.range ->
+          FStar_Compiler_Range_Type.range ->
             FStar_Options.optionstate -> Prims.string -> unit tac)
   =
   fun reason ->
@@ -842,7 +842,7 @@ let (goal_of_guard :
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option
-          -> FStar_Compiler_Range.range -> FStar_Tactics_Types.goal tac)
+          -> FStar_Compiler_Range_Type.range -> FStar_Tactics_Types.goal tac)
   =
   fun reason ->
     fun e ->

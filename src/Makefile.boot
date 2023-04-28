@@ -33,6 +33,8 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
+# TODO: Do we really need this anymore? Which (implementation) modules
+# from src/basic are *not* extracted?
 EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		\
 		FStar.VConfig FStar.Options FStar.Ident FStar.Errors FStar.Errors.Codes FStar.Const	\
 		FStar.Order FStar.Dependencies		\
@@ -43,7 +45,8 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		
 		FStar.Interactive.Incremental FStar.Interactive.Legacy	\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
 		FStar.Main FStar.Compiler.List FStar.Compiler.Option    \
-		FStar.Compiler.Dyn FStar.GenSym
+		FStar.Compiler.Dyn FStar.Json FStar.Compiler.Range.Type \
+		FStar.Compiler.Range.Ops FStar.GenSym
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES

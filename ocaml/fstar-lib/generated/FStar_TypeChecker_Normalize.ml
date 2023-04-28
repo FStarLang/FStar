@@ -90,40 +90,41 @@ type branches =
   (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.term
     FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term) Prims.list
 type stack_elt =
-  | Arg of (closure * FStar_Syntax_Syntax.aqual * FStar_Compiler_Range.range)
-  
+  | Arg of (closure * FStar_Syntax_Syntax.aqual *
+  FStar_Compiler_Range_Type.range) 
   | UnivArgs of (FStar_Syntax_Syntax.universe Prims.list *
-  FStar_Compiler_Range.range) 
+  FStar_Compiler_Range_Type.range) 
   | MemoLazy of (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo 
   | Match of (env * FStar_Syntax_Syntax.match_returns_ascription
   FStar_Pervasives_Native.option * branches *
   FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
-  FStar_TypeChecker_Cfg.cfg * FStar_Compiler_Range.range) 
+  FStar_TypeChecker_Cfg.cfg * FStar_Compiler_Range_Type.range) 
   | Abs of (env * FStar_Syntax_Syntax.binders * env *
   FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
-  FStar_Compiler_Range.range) 
+  FStar_Compiler_Range_Type.range) 
   | App of (env * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
-  FStar_Compiler_Range.range) 
+  FStar_Compiler_Range_Type.range) 
   | CBVApp of (env * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
-  FStar_Compiler_Range.range) 
-  | Meta of (env * FStar_Syntax_Syntax.metadata * FStar_Compiler_Range.range)
-  
+  FStar_Compiler_Range_Type.range) 
+  | Meta of (env * FStar_Syntax_Syntax.metadata *
+  FStar_Compiler_Range_Type.range) 
   | Let of (env * FStar_Syntax_Syntax.binders *
-  FStar_Syntax_Syntax.letbinding * FStar_Compiler_Range.range) 
+  FStar_Syntax_Syntax.letbinding * FStar_Compiler_Range_Type.range) 
   | Cfg of (FStar_TypeChecker_Cfg.cfg * (FStar_Syntax_Syntax.term *
   FStar_Compiler_Util.time) FStar_Pervasives_Native.option) 
 let (uu___is_Arg : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Arg _0 -> true | uu___ -> false
 let (__proj__Arg__item___0 :
   stack_elt ->
-    (closure * FStar_Syntax_Syntax.aqual * FStar_Compiler_Range.range))
+    (closure * FStar_Syntax_Syntax.aqual * FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | Arg _0 -> _0
 let (uu___is_UnivArgs : stack_elt -> Prims.bool) =
   fun projectee ->
     match projectee with | UnivArgs _0 -> true | uu___ -> false
 let (__proj__UnivArgs__item___0 :
   stack_elt ->
-    (FStar_Syntax_Syntax.universe Prims.list * FStar_Compiler_Range.range))
+    (FStar_Syntax_Syntax.universe Prims.list *
+      FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | UnivArgs _0 -> _0
 let (uu___is_MemoLazy : stack_elt -> Prims.bool) =
   fun projectee ->
@@ -138,7 +139,7 @@ let (__proj__Match__item___0 :
     (env * FStar_Syntax_Syntax.match_returns_ascription
       FStar_Pervasives_Native.option * branches *
       FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
-      FStar_TypeChecker_Cfg.cfg * FStar_Compiler_Range.range))
+      FStar_TypeChecker_Cfg.cfg * FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | Match _0 -> _0
 let (uu___is_Abs : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Abs _0 -> true | uu___ -> false
@@ -146,34 +147,34 @@ let (__proj__Abs__item___0 :
   stack_elt ->
     (env * FStar_Syntax_Syntax.binders * env *
       FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
-      FStar_Compiler_Range.range))
+      FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | Abs _0 -> _0
 let (uu___is_App : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | App _0 -> true | uu___ -> false
 let (__proj__App__item___0 :
   stack_elt ->
     (env * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
-      FStar_Compiler_Range.range))
+      FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | App _0 -> _0
 let (uu___is_CBVApp : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | CBVApp _0 -> true | uu___ -> false
 let (__proj__CBVApp__item___0 :
   stack_elt ->
     (env * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
-      FStar_Compiler_Range.range))
+      FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | CBVApp _0 -> _0
 let (uu___is_Meta : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Meta _0 -> true | uu___ -> false
 let (__proj__Meta__item___0 :
   stack_elt ->
-    (env * FStar_Syntax_Syntax.metadata * FStar_Compiler_Range.range))
+    (env * FStar_Syntax_Syntax.metadata * FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | Meta _0 -> _0
 let (uu___is_Let : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Let _0 -> true | uu___ -> false
 let (__proj__Let__item___0 :
   stack_elt ->
     (env * FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.letbinding *
-      FStar_Compiler_Range.range))
+      FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | Let _0 -> _0
 let (uu___is_Cfg : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Cfg _0 -> true | uu___ -> false
@@ -466,7 +467,7 @@ let rec (inline_closure_env :
                        | FStar_Syntax_Syntax.Tm_uvar uu___2 ->
                            let uu___3 =
                              let uu___4 =
-                               FStar_Compiler_Range.string_of_range
+                               FStar_Compiler_Range_Ops.string_of_range
                                  t1.FStar_Syntax_Syntax.pos in
                              let uu___5 =
                                FStar_Syntax_Print.term_to_string t1 in
@@ -2610,7 +2611,7 @@ let (should_unfold :
                let uu___2 = FStar_Syntax_Print.fv_to_string fv in
                let uu___3 =
                  let uu___4 = FStar_Syntax_Syntax.range_of_fv fv in
-                 FStar_Compiler_Range.string_of_range uu___4 in
+                 FStar_Compiler_Range_Ops.string_of_range uu___4 in
                let uu___4 = string_of_res res in
                FStar_Compiler_Util.print3
                  "should_unfold: For %s (%s), unfolding res = %s\n" uu___2
@@ -2783,12 +2784,12 @@ let decide_unfolding :
                       FStar_Const.Const_reflect uu___2 in
                     FStar_Syntax_Syntax.Tm_constant uu___1 in
                   FStar_Syntax_Syntax.mk uu___
-                    FStar_Compiler_Range.dummyRange in
+                    FStar_Compiler_Range_Type.dummyRange in
                 let stack2 =
                   push
                     (App
                        (empty_env, ref, FStar_Pervasives_Native.None,
-                         FStar_Compiler_Range.dummyRange)) stack1 in
+                         FStar_Compiler_Range_Type.dummyRange)) stack1 in
                 FStar_Pervasives_Native.Some (cfg, stack2)
 let (on_domain_lids : FStar_Ident.lident Prims.list) =
   [FStar_Parser_Const.fext_on_domain_lid;
@@ -4461,7 +4462,7 @@ let rec (norm :
                then
                  let uu___3 =
                    let uu___4 =
-                     FStar_Compiler_Range.string_of_range
+                     FStar_Compiler_Range_Ops.string_of_range
                        t1.FStar_Syntax_Syntax.pos in
                    let uu___5 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Compiler_Util.format2
