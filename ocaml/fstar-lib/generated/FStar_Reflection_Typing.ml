@@ -132,6 +132,20 @@ let (mk_abs :
       fun t ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_Abs ((binder_of_t_q ty qual), t))
+let (mk_total : FStar_Reflection_Types.typ -> FStar_Reflection_Types.comp) =
+  fun t ->
+    FStar_Reflection_Builtins.pack_comp (FStar_Reflection_Data.C_Total t)
+let (mk_arrow :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Data.aqualv ->
+      FStar_Reflection_Types.typ -> FStar_Reflection_Types.term)
+  =
+  fun ty ->
+    fun qual ->
+      fun t ->
+        FStar_Reflection_Builtins.pack_ln
+          (FStar_Reflection_Data.Tv_Arrow
+             ((binder_of_t_q ty qual), (mk_total t)))
 let (bound_var : Prims.nat -> FStar_Reflection_Types.term) =
   fun i ->
     FStar_Reflection_Builtins.pack_ln
@@ -503,9 +517,6 @@ let (u_succ :
   FStar_Reflection_Types.universe -> FStar_Reflection_Types.universe) =
   fun u ->
     FStar_Reflection_Builtins.pack_universe (FStar_Reflection_Data.Uv_Succ u)
-let (mk_total : FStar_Reflection_Types.typ -> FStar_Reflection_Types.comp) =
-  fun t ->
-    FStar_Reflection_Builtins.pack_comp (FStar_Reflection_Data.C_Total t)
 let (tm_type :
   FStar_Reflection_Types.universe -> FStar_Reflection_Types.term) =
   fun u ->
@@ -1222,6 +1233,40 @@ let (equiv_abs :
     fun e1 ->
       fun e2 ->
         fun uu___ -> fun uu___1 -> fun uu___2 -> fun uu___3 -> Prims.admit ()
+let (equiv_arrow :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            FStar_Reflection_Data.var ->
+              (unit, unit, unit) equiv -> (unit, unit, unit) equiv)
+  =
+  fun g ->
+    fun e1 ->
+      fun e2 ->
+        fun uu___ -> fun uu___1 -> fun uu___2 -> fun uu___3 -> Prims.admit ()
+let (equiv_abs_close :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            FStar_Reflection_Data.var ->
+              (unit, unit, unit) equiv -> (unit, unit, unit) equiv)
+  =
+  fun g ->
+    fun e1 ->
+      fun e2 ->
+        fun ty ->
+          fun q ->
+            fun x ->
+              fun eq ->
+                let eq1 = eq in
+                equiv_abs g
+                  (open_or_close_term' e1 (CloseVar x) Prims.int_zero)
+                  (open_or_close_term' e2 (CloseVar x) Prims.int_zero) ty q x
+                  eq1
 type 'g fstar_env_fvs = unit
 type fstar_env = FStar_Reflection_Types.env
 type fstar_top_env = fstar_env
