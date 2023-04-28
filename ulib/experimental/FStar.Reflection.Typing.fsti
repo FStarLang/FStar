@@ -1345,6 +1345,17 @@ val equiv_arrow (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
   : equiv g (mk_arrow ty q e1)
             (mk_arrow ty q e2)
 
+val equiv_abs_close (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
+  (x:var{None? (lookup_bvar g x)})
+  (eq:equiv (extend_env g x ty) e1 e2)
+  : equiv g (mk_abs ty q (open_or_close_term' e1 (CloseVar x) 0))
+            (mk_abs ty q (open_or_close_term' e2 (CloseVar x) 0))
+
+val open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
+  : Lemma
+      (requires ln' e i /\ i < j)
+      (ensures open_or_close_term' e (OpenWith t) j == e)
+      [SMTPat (ln' e i); SMTPat (open_or_close_term' e (OpenWith t) j)]
 
 //
 // Type of the top-level tactic that would splice-in the definitions

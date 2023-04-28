@@ -791,3 +791,173 @@ and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
     close_args_with_not_free_var tl x i
 
 let equiv_abs _ _ _ _ = admit ()
+let equiv_arrow _ _ _ _ = admit ()
+let equiv_abs_close  _ _ _ _ = admit ()
+
+let rec open_with_gt_ln e i t j
+  : Lemma (requires ln' e i /\ i < j)
+          (ensures open_or_close_term' e (OpenWith t) j == e)
+          (decreases e) =
+  match inspect_ln e with
+  | Tv_UInst _ _
+  | Tv_FVar _
+  | Tv_Type _
+  | Tv_Const _
+  | Tv_Unknown
+  | Tv_Var _
+  | Tv_BVar _ -> ()
+  | Tv_App hd argv -> 
+    open_with_gt_ln hd i t j;
+    open_with_gt_ln (fst argv) i t j
+  | Tv_Abs b body ->
+    open_with_gt_ln_binder b i t j;
+    open_with_gt_ln body (i + 1) t (j + 1)
+  | Tv_Arrow b c ->
+    open_with_gt_ln_binder b i t j;
+    open_with_gt_ln_comp c (i + 1) t (j + 1)
+  | Tv_Refine bv f ->
+    open_with_gt_ln_bv bv i t j;
+    open_with_gt_ln f (i + 1) t (j + 1)
+  | Tv_Uvar j c -> admit ()
+  | Tv_Let recf attrs bv def body ->
+    open_with_gt_ln_terms attrs i t j;
+    open_with_gt_ln_bv bv i t j;
+    (if recf
+     then open_with_gt_ln def (i + 1) t (j + 1)
+     else open_with_gt_ln def i t j);
+    open_with_gt_ln body (i + 1) t (j + 1)
+  | Tv_Match scr ret brs ->
+    open_with_gt_ln scr i t j;
+    (match ret with
+     | None -> ()
+     | Some ret -> open_with_gt_ln_match_returns ret i t j);
+    open_with_gt_ln_branches brs i t j
+  | Tv_AscribedT e t1 tac _ ->
+    open_with_gt_ln e i t j;
+    open_with_gt_ln t1 i t j;
+    (match tac with
+     | None -> ()
+     | Some tac -> open_with_gt_ln tac i t j)
+  | Tv_AscribedC e c tac _ ->
+    open_with_gt_ln e i t j;
+    open_with_gt_ln_comp c i t j;
+    (match tac with
+     | None -> ()
+     | Some tac -> open_with_gt_ln tac i t j)
+
+and open_with_gt_ln_binder (b:binder) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_binder b i /\ i < j)
+          (ensures open_or_close_binder' b (OpenWith t) j == b)
+          (decreases b) =
+
+  let {binder_bv;binder_attrs} = inspect_binder b in
+  open_with_gt_ln_bv binder_bv i t j;
+  open_with_gt_ln_terms binder_attrs i t j
+
+and open_with_gt_ln_comp (c:comp) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_comp c i /\ i < j)
+          (ensures open_or_close_comp' c (OpenWith t) j == c)
+          (decreases c) =
+  
+  match inspect_comp c with
+  | C_Total t1
+  | C_GTotal t1 -> open_with_gt_ln t1 i t j
+  | C_Lemma pre post pats ->
+    open_with_gt_ln pre i t j;
+    open_with_gt_ln post i t j;
+    open_with_gt_ln pats i t j
+  | C_Eff _ _ res args decrs ->
+    open_with_gt_ln res i t j;
+    open_args_with_gt_ln_args args i t j;
+    open_with_gt_ln_terms decrs i t j
+
+and open_with_gt_ln_bv (bv:bv) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_bv bv i /\ i < j)
+          (ensures open_or_close_bv' bv (OpenWith t) j == bv)
+          (decreases bv) =
+  let {bv_sort} = inspect_bv bv in
+  open_with_gt_ln bv_sort i t j
+
+and open_with_gt_ln_terms (l:list term) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_terms l i /\ i < j)
+          (ensures open_or_close_terms' l (OpenWith t) j == l)
+          (decreases l) =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    open_with_gt_ln hd i t j;
+    open_with_gt_ln_terms tl i t j
+
+and open_with_gt_ln_match_returns (m:match_returns_ascription) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_match_returns m i /\ i < j)
+          (ensures open_or_close_match_returns' m (OpenWith t) j == m)
+          (decreases m) =
+  
+  let b, (ret, as_, _) = m in
+  open_with_gt_ln_binder b i t j;
+  (match ret with
+   | Inl t1 -> open_with_gt_ln t1 (i + 1) t (j + 1)
+   | Inr c -> open_with_gt_ln_comp c (i + 1) t (j + 1));
+  (match as_ with
+   | None -> ()
+   | Some t1 -> open_with_gt_ln t1 (i + 1) t (j + 1))
+
+
+and open_with_gt_ln_branches (l:list branch) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_branches l i /\ i < j)
+          (ensures open_or_close_branches' l (OpenWith t) j == l)
+          (decreases l) =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    open_with_gt_ln_branch hd i t j;
+    open_with_gt_ln_branches tl i t j
+
+and open_args_with_gt_ln_args (l:list argv) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_args l i /\ i < j)
+          (ensures open_or_close_args' l (OpenWith t) j == l)
+          (decreases l) =
+  
+  match l with
+  | [] -> ()
+  | (t1, _)::tl ->
+    open_with_gt_ln t1 i t j;
+    open_args_with_gt_ln_args tl i t j
+
+and open_with_gt_ln_branch (b:branch) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_branch b i /\ i < j)
+          (ensures open_or_close_branch' b (OpenWith t) j == b)
+          (decreases b) =
+  
+  let p, t1 = b in
+  open_with_gt_ln_pat p i t j;
+  let k = binder_offset_pattern p in
+  open_with_gt_ln t1 (i + k) t (j + k)
+
+and open_with_gt_ln_pat (p:pattern) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_pattern p i /\ i < j)
+          (ensures open_or_close_pattern' p (OpenWith t) j == p)
+          (decreases p) =
+  
+  match p with
+  | Pat_Constant _ -> ()
+  | Pat_Cons _ _ pats ->
+    open_with_gt_ln_pats pats i t j
+  | Pat_Var bv
+  | Pat_Wild bv -> open_with_gt_ln_bv bv i t j
+  | Pat_Dot_Term topt ->
+    (match topt with
+     | None -> ()
+     | Some t1 -> open_with_gt_ln t1 i t j)
+
+and open_with_gt_ln_pats (l:list (pattern & bool)) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln'_patterns l i /\ i < j)
+          (ensures open_or_close_patterns' l (OpenWith t) j == l)
+          (decreases l) =
+  
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    open_with_gt_ln_pat (fst hd) i t j;
+    let k = binder_offset_pattern (fst hd) in
+    open_with_gt_ln_pats tl (i + k) t (j + k)
