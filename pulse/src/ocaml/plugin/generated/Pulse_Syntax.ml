@@ -863,3 +863,39 @@ let rec (leftmost_head_and_args :
         (match uu___ with
          | (hd1, args) -> (hd1, (FStar_List_Tot_Base.op_At args [(q, arg)])))
     | uu___ -> (t, [])
+let (equiv_abs :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            var ->
+              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                (unit, unit, unit) FStar_Reflection_Typing.equiv)
+  =
+  fun g ->
+    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()
+let (equiv_arrow :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            var ->
+              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                (unit, unit, unit) FStar_Reflection_Typing.equiv)
+  =
+  fun g ->
+    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()
+let (equiv_abs_close :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            var ->
+              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                (unit, unit, unit) FStar_Reflection_Typing.equiv)
+  =
+  fun g ->
+    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()
