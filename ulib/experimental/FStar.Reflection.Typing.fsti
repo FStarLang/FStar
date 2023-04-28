@@ -1315,18 +1315,6 @@ val close_with_not_free_var (t:R.term) (x:var) (i:nat)
       (requires ~ (Set.mem x (freevars t)))
       (ensures open_or_close_term' t (CloseVar x) i == t)
 
-// val equiv_close (#g:R.env) (#e1 #e2:R.term) (#ty:R.term) (x:var) (q:R.aqualv)
-//   (eq:equiv (extend_env g x ty) e1 e2)
-//   : equiv g (mk_abs ty q (open_or_close_term' e1 (CloseVar x) 0))
-//             (mk_abs ty q (open_or_close_term' e2 (CloseVar x) 0))
-
-// val equiv_open (#g:R.env) (#e1 #e2:R.term) (#ty:R.term) (#q:R.aqualv)
-//   (x:var{None? (lookup_bvar g x)})
-//   (eq:equiv g (mk_abs ty q e1) (mk_abs ty q e2))
-//   : equiv (extend_env g x ty)
-//           (open_or_close_term' e1 (open_with_var x) 0)
-//           (open_or_close_term' e2 (open_with_var x) 0)
-
 // may be it should require e1 and e2 to be ln at 0,
 //   and x not in FV e1 and FV e2
 val equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
@@ -1345,6 +1333,7 @@ val equiv_arrow (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
   : equiv g (mk_arrow ty q e1)
             (mk_arrow ty q e2)
 
+// the proof for this requires e1 and e2 to be ln
 val equiv_abs_close (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
   (x:var{None? (lookup_bvar g x)})
   (eq:equiv (extend_env g x ty) e1 e2)

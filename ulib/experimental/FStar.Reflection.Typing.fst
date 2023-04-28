@@ -792,7 +792,25 @@ and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
 
 let equiv_abs _ _ _ _ = admit ()
 let equiv_arrow _ _ _ _ = admit ()
-let equiv_abs_close  _ _ _ _ = admit ()
+
+let equiv_abs_close #g #e1 #e2 ty q x eq =
+  // TODO: the following can be the preconditions?
+  //       or derived from equiv?
+  assume (ln' e1 (-1));
+  assume (ln' e2 (-1));
+  open_close_inverse' 0 e1 x;
+  open_close_inverse' 0 e2 x;
+  let eq
+    : equiv (extend_env g x ty)
+        (open_or_close_term'
+           (open_or_close_term' e1 (CloseVar x) 0)
+           (open_with_var x) 0)
+        (open_or_close_term'
+           (open_or_close_term' e2 (CloseVar x) 0)
+           (open_with_var x) 0) =
+    eq in
+  
+  equiv_abs _ _ _ eq
 
 let rec open_with_gt_ln e i t j
   : Lemma (requires ln' e i /\ i < j)
