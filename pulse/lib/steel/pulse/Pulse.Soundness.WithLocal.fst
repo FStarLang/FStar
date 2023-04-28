@@ -181,6 +181,9 @@ let withlocal_soundness #f #g #t #c d soundness =
          (PReflUtil.mk_pts_to ra (RT.bound_var 2) full_perm_tm (RT.bound_var 0)))) (RT.CloseVar x) 0) (RT.open_with_var y) 1)
                (RT.open_with_var z) 0));
 
+  RT.well_typed_terms_are_ln _ _ _ post_typing;
+  assert (RT.ln' (elab_term (comp_post c)) 0);
+
   let postl_equiv
     : RT.equiv g_z
         (RT.open_or_close_term'
@@ -195,50 +198,16 @@ let withlocal_soundness #f #g #t #c d soundness =
                  (RT.CloseVar x) 0)
               (RT.open_with_var y) 1)
            (RT.open_with_var z) 0) =
-    
-    let d
-      : RT.equiv (RT.extend_env (extend_env_l f g) x rret_t)
-          (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
-          (RT.open_or_close_term' (elab_term (comp_post c)) (RT.open_with_var x) 0) =
-      RT.EQ_Beta _ rret_t _ _ _ in
-
-    let d
-      : RT.equiv (extend_env_l f g)
-          (RT.open_or_close_term'
-             (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
-             (RT.CloseVar x) 0)
-          (RT.open_or_close_term'
-             (RT.open_or_close_term' (elab_term (comp_post c)) (RT.open_with_var x) 0)
-             (RT.CloseVar x) 0) =
-      RT.equiv_close x rret_t d in
-
-    assume (~ (x `Set.mem` (RT.freevars (elab_term (comp_post c)))));
-
-    RT.close_open_inverse' 0 (elab_term (comp_post c)) x;
-
-    let d
-      : RT.equiv (extend_env_l f g)
-          (RT.open_or_close_term'
-             (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
-             (RT.CloseVar x) 0)
-          (elab_term (comp_post c)) = d in
-
-    let d : RT.equiv g_y
-      (RT.open_or_close_term'
-         (RT.open_or_close_term'
-             (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
-             (RT.CloseVar x) 0)
-         (RT.open_with_var y) 1)
-      (RT.open_or_close_term'
-         (elab_term (comp_post c))
-         (RT.open_with_var y) 1) =
+    assume (RT.open_or_close_term' rpost (RT.CloseVar x) 0 == rpost);
+    assume (RT.open_or_close_term' rret_t (RT.open_with_var y) 1 == rret_t);
+    assume (RT.open_or_close_term' rpost (RT.open_with_var z) 0 == rpost);
+    let d : RT.equiv g_z
+              (RT.open_or_close_term' (elab_term (comp_post c)) (RT.open_with_var z) 0)
+              (R.pack_ln (R.Tv_App rpost ((RT.var_as_term z), R.Q_Explicit))) =
       
-      RT.equiv_open y (PReflUtil.mk_ref ra) 1 d in
-
-    RT.EQ_Sym _ _ _ (RT.equiv_open z (RT.open_or_close_term' rret_t (RT.open_with_var y) 0) 0 d)
-
+      RT.EQ_Sym _ _ _ (RT.EQ_Beta _ rret_t R.Q_Explicit (elab_term (comp_post c)) (RT.var_as_term z)) in
+    d
   in
-
   let postr_equiv
     : RT.equiv g_z
         (RT.open_or_close_term'
@@ -256,16 +225,9 @@ let withlocal_soundness #f #g #t #c d soundness =
               (RT.open_with_var y) 1)
            (RT.open_with_var z) 0) =
 
-    assume (
-      RT.open_or_close_term'
-                 (PReflUtil.mk_exists (R.pack_universe R.Uv_Zero) ra
-                                         (mk_abs ra R.Q_Explicit
-                                            (PReflUtil.mk_pts_to ra (RT.bound_var 2) full_perm_tm (RT.bound_var 0))))
-                                      (RT.CloseVar x) 0 ==
-      
-      PReflUtil.mk_exists (R.pack_universe R.Uv_Zero) ra
-                                         (mk_abs ra R.Q_Explicit
-                                            (PReflUtil.mk_pts_to ra (RT.bound_var 2) full_perm_tm (RT.bound_var 0))));
+    assume (~ (x `Set.mem` RT.freevars ra));
+    RT.close_with_not_free_var ra x 0;
+    RT.close_with_not_free_var ra x 1;
     RT.EQ_Refl _ _
   in
 

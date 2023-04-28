@@ -131,8 +131,8 @@ let elim_exists_soundness
           Pulse.Reflection.Util.mk_reveal ru rt rx_tm);
 
   let post_eq =
-    RT.equiv_abs (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
-      (RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rp rreveal_x)  in
+    RT.equiv_abs_close (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
+      (RT.EQ_Beta (RT.extend_env (extend_env_l f g) _ _) rt R.Q_Explicit rp rreveal_x)  in
 
   let comp_equiv = elab_stghost_equiv (extend_env_l f g) c _ _ (RT.EQ_Refl _ _) post_eq in
   let d = WT.elim_exists_typing x rt_typing rp_typing in

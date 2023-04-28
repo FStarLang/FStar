@@ -15,7 +15,7 @@ open Pulse.Soundness.Common
 
 
 (* x:t1 -> stt t2 pre post   ~    x:t1 -> stt t2 ((fun x -> pre) x) post *)
-let equiv_arrow (g:R.env) (t1:R.term) (u2:R.universe) (t2:R.term) (pre:R.term) (post:R.term) //need some ln preconditions
+let mequiv_arrow (g:R.env) (t1:R.term) (u2:R.universe) (t2:R.term) (pre:R.term) (post:R.term) //need some ln preconditions
   : GTot (RT.equiv g (mk_arrow (t1, R.Q_Explicit)
                                (mk_stt_comp u2 t2 pre post))
                      (mk_arrow (t1, R.Q_Explicit)
@@ -150,7 +150,7 @@ let elab_bind_typing (f:stt_env)
                                             (R.mk_app (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
                                                      [bound_var 0, R.Q_Explicit])
                                                 (elab_comp_post c2)))
-      = RT.(T_Sub _ _ _ _ r2_typing (ST_Equiv _ _ _ (equiv_arrow _ _ _ _ _ _))) in
+      = RT.(T_Sub _ _ _ _ r2_typing (ST_Equiv _ _ _ (mequiv_arrow _ _ _ _ _ _))) in
     let d : RT.typing _ (elab_bind bc r1 r2) _ = 
        inst_bind_g 
         (inst_bind_f

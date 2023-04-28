@@ -96,7 +96,7 @@ let return_soundess
               (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re))) (RT.CloseVar x) 0) in
 
     let post_body_eq
-      : RT.equiv (extend_env_l f g)
+      : RT.equiv (RT.extend_env (extend_env_l f g) x _)
                  (mk_star
                     (R.pack_ln (R.Tv_App rpost_abs (rx_tm, R.Q_Explicit)))
                     (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re)))
@@ -109,7 +109,7 @@ let return_soundess
       : RT.equiv (extend_env_l f g)
                  (WT.return_post_with_eq ru rt re rpost_abs x)
                  elab_c_post
-      = RT.equiv_abs rt R.Q_Explicit x post_body_eq in
+      = RT.equiv_abs_close rt R.Q_Explicit x post_body_eq in
 
     match ctag with
     | STT ->
