@@ -164,20 +164,126 @@ let close_open_inverse_st (t:st_term) (x:var { ~(x `Set.mem` freevars_st t) } )
   : Lemma (ensures close_st_term (open_st_term t x) x == t)
   = close_open_inverse_st' t x 0
 
-let open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
+let rec open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
   : Lemma
       (requires ln' e i /\ i < j)
-      (ensures open_term' e t j == e) =
-  admit ()
+      (ensures open_term' e t j == e)
+      (decreases e) =
+  match e with
+  | Tm_BVar _
+  | Tm_Var _
+  | Tm_FVar _
+  | Tm_UInst _ _
+  | Tm_Constant _
+  | Tm_Emp
+  | Tm_Type _
+  | Tm_VProp
+  | Tm_Inames
+  | Tm_EmpInames
+  | Tm_UVar _
+  | Tm_Unknown -> ()
+  | Tm_Refine b phi ->
+    open_with_gt_ln b.binder_ty i t j;
+    open_with_gt_ln phi (i + 1) t (j + 1)
+  | Tm_PureApp e1 _ e2 ->
+    open_with_gt_ln e1 i t j;
+    open_with_gt_ln e2 i t j
+  | Tm_Let t1 e1 e2 ->
+    open_with_gt_ln t1 i t j;
+    open_with_gt_ln e1 i t j;
+    open_with_gt_ln e2 (i + 1) t (j + 1)
+  | Tm_Pure p -> open_with_gt_ln p i t j
+  | Tm_Star e1 e2 ->
+    open_with_gt_ln e1 i t j;
+    open_with_gt_ln e2 i t j
+  | Tm_ExistsSL _ t1 body _
+  | Tm_ForallSL _ t1 body ->
+    open_with_gt_ln t1 i t j;
+    open_with_gt_ln body (i + 1) t (j + 1)
+  | Tm_Arrow b _ c ->
+    open_with_gt_ln b.binder_ty i t j;
+    open_with_gt_ln_comp c (i + 1) t (j + 1)
 
-let close_with_non_freevar (e:term) (x:var) (i:nat)
+and open_with_gt_ln_comp (c:comp) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln_c' c i /\ i < j)
+          (ensures open_comp' c t j == c)
+          (decreases c) =
+  match c with
+  | C_Tot t1 -> open_with_gt_ln t1 i t j
+  | C_ST s -> open_with_gt_ln_st s i t j
+  | C_STAtomic inames s
+  | C_STGhost inames s ->
+    open_with_gt_ln inames i t j;
+    open_with_gt_ln_st s i t j
+
+and open_with_gt_ln_st (s:st_comp) (i:nat) (t:term) (j:nat)
+  : Lemma (requires ln_st_comp s i /\ i < j)
+          (ensures open_st_comp' s t j == s)
+          (decreases s) =
+  let {res; pre; post} = s in
+  open_with_gt_ln res i t j;
+  open_with_gt_ln pre i t j;
+  open_with_gt_ln post (i + 1) t (j + 1)
+
+let rec close_with_non_freevar (e:term) (x:var) (i:nat)
   : Lemma
       (requires ~ (x `Set.mem` freevars e))
-      (ensures close_term' e x i == e) =
-  admit ()
+      (ensures close_term' e x i == e)
+      (decreases e) =
+  
+  match e with
+  | Tm_BVar _
+  | Tm_Var _
+  | Tm_FVar _
+  | Tm_UInst _ _
+  | Tm_Constant _
+  | Tm_Emp
+  | Tm_Type _
+  | Tm_VProp
+  | Tm_Inames
+  | Tm_EmpInames
+  | Tm_UVar _
+  | Tm_Unknown -> ()
+  | Tm_Refine b phi ->
+    close_with_non_freevar b.binder_ty x i;
+    close_with_non_freevar phi x (i + 1)
+  | Tm_PureApp t1 _ t2
+  | Tm_Star t1 t2 ->
+    close_with_non_freevar t1 x i;
+    close_with_non_freevar t2 x i
+  | Tm_Let t1 e1 e2 ->
+    close_with_non_freevar t1 x i;
+    close_with_non_freevar e1 x i;
+    close_with_non_freevar e2 x (i + 1)
+  | Tm_Pure p -> close_with_non_freevar p x i
+  | Tm_ExistsSL _ t1 body _
+  | Tm_ForallSL _ t1 body ->
+    close_with_non_freevar t1 x i;
+    close_with_non_freevar body x (i + 1)
+  | Tm_Arrow b _ c ->
+    close_with_non_freevar b.binder_ty x i;
+    close_comp_with_non_free_var c x (i + 1)
 
-let close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
+and close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
   : Lemma
     (requires ~ (x `Set.mem` freevars_comp c))
-    (ensures close_comp' c x i == c) =
-  admit ()
+    (ensures close_comp' c x i == c)
+    (decreases c) =
+  match c with
+  | C_Tot t1 -> close_with_non_freevar t1 x i
+  | C_ST s -> close_with_non_freevar_st s x i
+  | C_STAtomic inames s
+  | C_STGhost inames s ->
+    close_with_non_freevar inames x i;
+    close_with_non_freevar_st s x i
+
+and close_with_non_freevar_st (s:st_comp) (x:var) (i:nat)
+  : Lemma
+    (requires ~ (x `Set.mem` freevars_st_comp s))
+    (ensures close_st_comp' s x i == s)
+    (decreases s) =
+  let {res; pre; post} = s in
+  close_with_non_freevar res x i;
+  close_with_non_freevar pre x i;
+  close_with_non_freevar post x (i + 1)
+
