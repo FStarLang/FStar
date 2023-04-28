@@ -1044,3 +1044,21 @@ let rec leftmost_head_and_args (t:term) : term & list (option qualifier & term) 
     let hd, args = leftmost_head_and_args hd in
     hd, args@[q, arg]
   | _ -> t, []
+
+let open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
+  : Lemma
+      (requires ln' e i /\ i < j)
+      (ensures open_term' e t j == e) =
+  admit ()
+
+let close_with_non_freevar (e:term) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (x `Set.mem` freevars e))
+      (ensures close_term' e x i == e) =
+  admit ()
+
+let close_comp_with_not_free_var (c:comp) (x:var) (i:nat)
+  : Lemma
+    (requires ~ (x `Set.mem` freevars_comp c))
+    (ensures close_comp' c x i == c) =
+  admit ()

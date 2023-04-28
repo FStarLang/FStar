@@ -365,7 +365,6 @@ let with_local_bodypost_body (post:term) (a:term) (x:var) : term =
 let with_local_bodypost (post:term) (a:term) (ret_t:term) (x:var) : term =
   mk_abs ret_t Q_Explicit (with_local_bodypost_body post a x)
 
-
 val with_local_typing
   (#g:env)
   (#u:universe)
