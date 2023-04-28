@@ -1641,27 +1641,6 @@ let (mk_star_equiv :
   fun g ->
     fun t1 ->
       fun t2 -> fun t3 -> fun t4 -> fun eq1 -> fun eq2 -> Prims.admit ()
-let (mk_arrow_equiv :
-  FStar_Reflection_Types.env ->
-    arrow_dom ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term ->
-          (unit, unit, unit) FStar_Reflection_Typing.equiv ->
-            (unit, unit, unit) FStar_Reflection_Typing.equiv)
-  =
-  fun g -> fun dom -> fun out1 -> fun out2 -> fun out_equiv -> Prims.admit ()
-let (mk_abs_equiv :
-  FStar_Reflection_Types.env ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Data.aqualv ->
-        FStar_Reflection_Types.term ->
-          FStar_Reflection_Types.term ->
-            (unit, unit, unit) FStar_Reflection_Typing.equiv ->
-              (unit, unit, unit) FStar_Reflection_Typing.equiv)
-  =
-  fun g ->
-    fun t ->
-      fun q -> fun body1 -> fun body2 -> fun body_equiv -> Prims.admit ()
 let (mk_stt_comp_equiv :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.universe ->
