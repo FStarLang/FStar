@@ -6,6 +6,7 @@ module T = FStar.Tactics
 module P = Pulse.Syntax.Printer
 open FStar.List.Tot
 open Pulse.Syntax
+open Pulse.Syntax.Naming
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Checker.Common

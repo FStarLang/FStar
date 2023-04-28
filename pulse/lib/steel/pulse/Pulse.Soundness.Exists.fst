@@ -4,6 +4,7 @@ module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax
+open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
 open Pulse.Typing
 open Pulse.Elaborate.Pure

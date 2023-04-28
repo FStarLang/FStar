@@ -5,6 +5,7 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
+open Pulse.Syntax.Naming
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
@@ -22,13 +23,7 @@ let rec elab_term_bv_sort (t:term)
   = admit()
       
               
-#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 20 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
-let placeholder_eq (v:term)
-  : Lemma 
-    (ensures elab_term_placeholder v == elab_term v)
-    [SMTPat (elab_term_placeholder v)]
-  = admit()
-          
+#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 20 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"          
 let rec elab_open_commute' (e:term)
                            (v:term)
                            (n:index)

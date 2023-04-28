@@ -6,7 +6,7 @@ module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
-
+open Pulse.Syntax.Naming
 module FTB = FStar.Tactics
 
 // let fstar_env =

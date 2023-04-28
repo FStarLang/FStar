@@ -4,6 +4,7 @@ module R = FStar.Reflection
 module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
+open Pulse.Syntax.Naming
 open Pulse.Typing
 open Pulse.Elaborate.Pure
 
@@ -74,7 +75,7 @@ let rec open_term_ln' (e:term)
       open_comp_ln' body x (i + 1)
 
     | Tm_FStar t ->
-      open_term_ln_host' t (elab_term_placeholder x) i
+      open_term_ln_host' t (elab_term x) i
 
 and open_comp_ln' (c:comp)
                        (x:term)
@@ -416,8 +417,7 @@ let rec open_term_ln_inv' (e:term)
 
     | Tm_FStar t ->
       Pulse.Elaborate.elab_ln x (-1);
-      assume (elab_term x == elab_term_placeholder x);
-      r_open_term_ln_inv' t (elab_term_placeholder x) i
+      r_open_term_ln_inv' t (elab_term x) i
 
 and open_comp_ln_inv' (c:comp)
                       (x:term { ln x })
