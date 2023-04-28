@@ -194,18 +194,80 @@ let withlocal_soundness #f #g #t #c d soundness =
                  (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
                  (RT.CloseVar x) 0)
               (RT.open_with_var y) 1)
-           (RT.open_with_var z) 0) = magic () in
+           (RT.open_with_var z) 0) =
+    
+    let d
+      : RT.equiv (RT.extend_env (extend_env_l f g) x rret_t)
+          (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
+          (RT.open_or_close_term' (elab_term (comp_post c)) (RT.open_with_var x) 0) =
+      RT.EQ_Beta _ rret_t _ _ _ in
+
+    let d
+      : RT.equiv (extend_env_l f g)
+          (RT.open_or_close_term'
+             (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
+             (RT.CloseVar x) 0)
+          (RT.open_or_close_term'
+             (RT.open_or_close_term' (elab_term (comp_post c)) (RT.open_with_var x) 0)
+             (RT.CloseVar x) 0) =
+      RT.equiv_close x rret_t d in
+
+    assume (~ (x `Set.mem` (RT.freevars (elab_term (comp_post c)))));
+
+    RT.close_open_inverse' 0 (elab_term (comp_post c)) x;
+
+    let d
+      : RT.equiv (extend_env_l f g)
+          (RT.open_or_close_term'
+             (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
+             (RT.CloseVar x) 0)
+          (elab_term (comp_post c)) = d in
+
+    let d : RT.equiv g_y
+      (RT.open_or_close_term'
+         (RT.open_or_close_term'
+             (R.pack_ln (R.Tv_App rpost (rx_tm, R.Q_Explicit)))
+             (RT.CloseVar x) 0)
+         (RT.open_with_var y) 1)
+      (RT.open_or_close_term'
+         (elab_term (comp_post c))
+         (RT.open_with_var y) 1) =
+      
+      RT.equiv_open y (PReflUtil.mk_ref ra) 1 d in
+
+    RT.EQ_Sym _ _ _ (RT.equiv_open z (RT.open_or_close_term' rret_t (RT.open_with_var y) 0) 0 d)
+
+  in
 
   let postr_equiv
     : RT.equiv g_z
         (RT.open_or_close_term'
-               (RT.open_or_close_term' (elab_term (Tm_ExistsSL U_zero init_t (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false)) (RT.open_with_var y) 1)
-               (RT.open_with_var z) 0)
+           (RT.open_or_close_term'
+              (elab_term (Tm_ExistsSL U_zero init_t (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false))
+              (RT.open_with_var y) 1)
+           (RT.open_with_var z) 0)
         (RT.open_or_close_term'
-               (RT.open_or_close_term' (RT.open_or_close_term' (PReflUtil.mk_exists (R.pack_universe R.Uv_Zero) ra
-      (mk_abs ra R.Q_Explicit
-         (PReflUtil.mk_pts_to ra (RT.bound_var 2) full_perm_tm (RT.bound_var 0)))) (RT.CloseVar x) 0) (RT.open_with_var y) 1)
-               (RT.open_with_var z) 0) = magic () in
+           (RT.open_or_close_term'
+              (RT.open_or_close_term'
+                 (PReflUtil.mk_exists (R.pack_universe R.Uv_Zero) ra
+                                         (mk_abs ra R.Q_Explicit
+                                            (PReflUtil.mk_pts_to ra (RT.bound_var 2) full_perm_tm (RT.bound_var 0))))
+                                      (RT.CloseVar x) 0)
+              (RT.open_with_var y) 1)
+           (RT.open_with_var z) 0) =
+
+    assume (
+      RT.open_or_close_term'
+                 (PReflUtil.mk_exists (R.pack_universe R.Uv_Zero) ra
+                                         (mk_abs ra R.Q_Explicit
+                                            (PReflUtil.mk_pts_to ra (RT.bound_var 2) full_perm_tm (RT.bound_var 0))))
+                                      (RT.CloseVar x) 0 ==
+      
+      PReflUtil.mk_exists (R.pack_universe R.Uv_Zero) ra
+                                         (mk_abs ra R.Q_Explicit
+                                            (PReflUtil.mk_pts_to ra (RT.bound_var 2) full_perm_tm (RT.bound_var 0))));
+    RT.EQ_Refl _ _
+  in
 
   let post_equiv
     : RT.equiv g_z
