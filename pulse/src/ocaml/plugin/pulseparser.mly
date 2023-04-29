@@ -23,6 +23,10 @@ open FStar_Ident
 open FStar_String
 module AU = FStar_Parser_AST_Util
 
+let lhs _ = FStar_Compiler_Range.dummyRange
+let rhs _ i = FStar_Compiler_Range.dummyRange
+let rhs2 _ i j = FStar_Compiler_Range.dummyRange
+
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
@@ -44,8 +48,15 @@ let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) 
     let p = pos_of_lexpos r in
     let r = mk_range (file_of_range (lhs())) p p in
     DeclSyntaxExtension (extension_name, s, r)
+
+let pos_of_lexpos (p:Lexing.position) = FStar_Parser_Util.pos_of_lexpos p
+
+let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
+
 %}
 
+/* pulse specific tokens; rest are inherited from F* */
+%token MUT VAR FN INVARIANT WHILE
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
@@ -58,6 +69,7 @@ let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) 
 %token <string * bool> INT32
 %token <string * bool> INT64
 %token <string * bool> INT
+%token <string> RANGE
 
 %token <string> UINT8
 %token <string> UINT16
@@ -77,35 +89,39 @@ let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) 
 */
 %token <string option> SEMICOLON_OP
 
-%token FORALL EXISTS ASSUME ATTRIBUTES
-%token EQUALTYPE SUBTYPE SUBKIND BY
+%token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
+%token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
+%token NOEXTRACT
+%token NOEQUALITY UNOPTEQUALITY PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
+%token TYP_APP_LESS TYP_APP_GREATER SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
-%token FALSE FUN IF IN
-%token MATCH
-%token OPEN REC THEN TRUE CALC
+%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
+%token MATCH OF
+%token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INTRO ELIM
-%token WHEN AS RETURNS RETURNS_EQ WITH HASH AMP 
-%token LPAREN RPAREN LPAREN_RPAREN COMMA LARROW RARROW
+%token INCLUDE
+%token WHEN AS RETURNS RETURNS_EQ WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
-%token QMARK INVARIANT WHILE
+%token QMARK
 %token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
-%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE
+%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
-%token REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token SQUIGGLY_RARROW
+%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
+%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SPLICET SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES DECREASES LBRACE_COLON_WELL_FOUNDED
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
-%token BACKTICK_PERC TYP_APP_LESS TYP_APP_GREATER
-%token TRY FUNCTION
-%token MUT VAR FN
+%token BACKTICK_PERC
+
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
+%token<string * string * Lexing.position>  BLOB
 
 /* These are artificial */
+%token EOF
 
 %nonassoc THEN
 %nonassoc ELSE
@@ -129,42 +145,48 @@ let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) 
 %start pulseDecl
 %start peekFnId
 %type <unit> pulseDecl
-%type <FStar_Ident.ident> peekFnId
+%type <string> peekFnId
 %%
 
 /* This is to just peek at the name of the top-level definition */
 peekFnId:
-  | FN lid=lident
-      { lid }
+  | FN id=lident
+      { FStar_Ident.string_of_id id }
 
 /* This is the main entry point for the pulse parser */
 pulseDecl:
-  | FN lid=lidentOrOperator lbp=nonempty_list(pulseMultiBinder) COLON ascription=pulseComputationType EQUALS tm=pulseStmt 
+  | FN lid=lident lbp=nonempty_list(pulseMultiBinder) ascription=pulseComputationType LBRACE tm=pulseStmt RBRACE
       { () }
 
+embeddedFStarTerm:
+  | t=atomicTerm
+    { () }
+    
 pulseMultiBinder:
-  | LPAREN qual_ids=nonempty_list(lidentOrUnderscore) COLON t=simpleArrow r=refineOpt RPAREN
+  | LPAREN qual_ids=nonempty_list(lidentOrUnderscore) COLON t=embeddedFStarTerm RPAREN
      { () }
 
 pulseComputationType:
-  | REQUIRES t=pulseVprop
-    RETURNS i=IDENT r=term
-    ENSURES t2=pulseVprop
+  | REQUIRES t=embeddedFStarTerm
+    RETURNS i=lidentOrUnderscore COLON r=term
+    ENSURES t2=embeddedFStarTerm
       { () }
 
 
 pulseStmtNoSeq:
-  | tm=atomicTerm
+  | tm=embeddedFStarTerm
       { () }
-  | VAR maybeMut i=IDENT typOpt=option(atomicTerm) EQUALS tm=atomicTerm
+  | i=IDENT COLON_EQUALS a=embeddedFStarTerm
+     { () }
+  | VAR maybeMut i=IDENT typOpt=option(embeddedFStarTerm) EQUALS tm=embeddedFStarTerm
       { () }
   | LBRACE pulseStmt RBRACE
       { () }
-  | IF tm=atomicTerm c=option(returnsAnnot) LBRACE th=pulseStmt RBRACE e=elseOpt
+  | IF tm=embeddedFStarTerm c=option(returnsAnnot) LBRACE th=pulseStmt RBRACE e=elseOpt
       { () }  
-  | MATCH tm=atomicTerm c=option(returnsAnnot) LBRACE brs=list(pulseMatchBranch) RBRACE
+  | MATCH tm=embeddedFStarTerm c=option(returnsAnnot) LBRACE brs=list(pulseMatchBranch) RBRACE
       { () }
-  | WHILE tm=atomicTerm c=option(returnsAnnot) INVARIANT v=pulseVprop LBRACE body=pulseStmt RBRACE
+  | WHILE tm=embeddedFStarTerm c=option(returnsAnnot) INVARIANT v=pulseVprop LBRACE body=pulseStmt RBRACE
       { () }
 
 returnsAnnot:
@@ -190,8 +212,7 @@ maybeMut:
   |     { false }
 
 pulseVprop:
-  | atomicTerm { () }
-  | atomicTerm op=OPINFIX0a pulseVprop { () }
+  | embeddedFStarTerm { () }
   | EXISTS list(multiBinder) DOT pulseVprop { () }
 
 /****************************************************************/
@@ -208,15 +229,16 @@ letoperatorbinding:
         let h tm
 	  = ( ( match ascr_opt with
               | None   -> pat
-              | Some t -> mk_pattern (PatAscribed(pat, t)) (rhs2 parseState 1 2) )
+              | Some t -> mk_pattern (PatAscribed(pat, t)) (rng $startpos(pat) $endpos(ascr_opt)) )
 	    , tm)
 	in
 	match pat.pat, tm with
         | _               , Some tm -> h tm
         | PatVar (v, _, _), None    ->
           let v = lid_of_ns_and_id [] v in
-          h (mk_term (Var v) (rhs parseState 1) Expr)
-        | _ -> raise_error (Fatal_SyntaxError, "Syntax error: let-punning expects a name, not a pattern") (rhs parseState 2)
+          h (mk_term (Var v) (rng $startpos(pat) $endpos(pat)) Expr)
+        | _ -> raise_error (Fatal_SyntaxError, "Syntax error: let-punning expects a name, not a pattern")
+                           (rng $startpos(ascr_opt) $endpos(ascr_opt))
     }
 
 

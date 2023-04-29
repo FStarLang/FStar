@@ -4,14 +4,13 @@ open FStar.Parser.AST.Util
 module BU = FStar.Compiler.Util
 module List = FStar.Compiler.List
 let extension_parser ctx contents rng =
-  match Pulse.Parser.parse contents rng with
+  match Pulse.Parser.parse_peek_id contents rng with
   | Inr (err, r) ->
       Inl { message = err; range = r }
 
-  | Inl pulse_ast -> 
-      Inr pulse_ast.d
-      // BU.print_string "Successfully parsed pulse term!\n";
-      // Inl { message = "not yet"; range = rng }
+  | Inl id ->
+      BU.print1 "Successfully peeked at fn %s!\n" id;
+      Inl { message = "not yet"; range = rng }
 
 let _ = 
     register_extension_parser "pulse" extension_parser

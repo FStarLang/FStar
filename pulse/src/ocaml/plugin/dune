@@ -13,8 +13,6 @@
  (flags (:standard -w -A))
 )
 
-(ocamllex pulselexer)
-
-(menhir (modules pulseparser fstarparser))
+(menhir (modules pulseparser))
 
 
