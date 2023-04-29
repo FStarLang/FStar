@@ -14,7 +14,7 @@ endif
 FSTAR_FILES:=$(wildcard $(LIB_STEEL)/*.fst $(LIB_STEEL)/*.fsti)
 
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --include $(LIB_STEEL) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --warn_error @241 --already_cached '*,-Steel'
-EXTRACT_MODULES=--extract '+Steel.Effect.Common +Steel.ST.GenElim.Base'
+EXTRACT_MODULES=--extract '+Steel.Effect.Common +Steel.ST.GenElim1.Base'
 
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 

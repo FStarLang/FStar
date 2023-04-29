@@ -1,4 +1,4 @@
-module Steel.ST.GenElim.Base
+module Steel.ST.GenElim1.Base
 
 irreducible let gen_elim_reduce = ()
 

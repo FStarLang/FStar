@@ -1,4 +1,4 @@
-module Steel.ST.GenElim
+module Steel.ST.GenElim1
 
 let gen_elim_f
   (p: vprop)
