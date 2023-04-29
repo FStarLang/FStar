@@ -64,11 +64,7 @@ share:
 	+$(MAKE) -C ../share/steel
 
 .PHONY: test
-ifeq (,$(STEEL_NIGHTLY_CI))
-test: share
-else
 test: proofs share
-endif
 
 .PHONY: check-for-changes
 check-for-changes:
