@@ -1,7 +1,7 @@
 module Steel.ST.C.Types.Base
 
 open Steel.C.Model.PCM
-open Steel.ST.GenElim
+open Steel.ST.GenElim1
 
 #set-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
 
@@ -759,7 +759,7 @@ let has_focus_ref_equiv_to
   rewrite (has_focus_ref0 r c r2') (has_focus_ref r c r2');
   rewrite (ref_equiv0 r1' r2') (ref_equiv r1' r2')
 
-#push-options "--split_queries"
+#push-options "--split_queries always"
 #restart-solver
 
 let has_focus_ref_id

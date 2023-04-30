@@ -138,7 +138,9 @@ let (try_readback_st_comp :
                                                                     FStar_Reflection_Data.binder_qual
                                                                     = aq;
                                                                     FStar_Reflection_Data.binder_attrs
-                                                                    = attrs;_}
+                                                                    = attrs;
+                                                                    FStar_Reflection_Data.binder_sort
+                                                                    = sort;_}
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -333,7 +335,9 @@ let (try_readback_st_comp :
                                                                     FStar_Reflection_Data.binder_qual
                                                                     = aq;
                                                                     FStar_Reflection_Data.binder_attrs
-                                                                    = attrs;_}
+                                                                    = attrs;
+                                                                    FStar_Reflection_Data.binder_sort
+                                                                    = uu___3;_}
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -351,11 +355,11 @@ let (try_readback_st_comp :
                                                                     (Prims.of_int (17)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     FStar_Reflection_Builtins.inspect_bv
                                                                     bv))
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     (fun
                                                                     bv_view
                                                                     ->
@@ -383,12 +387,12 @@ let (try_readback_st_comp :
                                                                     (FStar_Pervasives_Native.fst
                                                                     res)))
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     Obj.magic
                                                                     (op_let_Question
-                                                                    uu___3
+                                                                    uu___4
                                                                     (fun res'
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
@@ -409,12 +413,12 @@ let (try_readback_st_comp :
                                                                     (FStar_Pervasives_Native.fst
                                                                     opened)))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     Obj.magic
                                                                     (op_let_Question
-                                                                    uu___4
+                                                                    uu___5
                                                                     (fun
                                                                     opened'
                                                                     ->
@@ -436,12 +440,12 @@ let (try_readback_st_comp :
                                                                     (FStar_Pervasives_Native.fst
                                                                     pre)))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Obj.magic
                                                                     (op_let_Question
-                                                                    uu___5
+                                                                    uu___6
                                                                     (fun pre'
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
@@ -461,20 +465,20 @@ let (try_readback_st_comp :
                                                                     (readback_ty
                                                                     body))
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    (fun
-                                                                    uu___6 ->
-                                                                    Obj.magic
-                                                                    (op_let_Question
-                                                                    uu___6
+                                                                    uu___7 ->
                                                                     (fun
                                                                     uu___7 ->
+                                                                    Obj.magic
+                                                                    (op_let_Question
+                                                                    uu___7
+                                                                    (fun
+                                                                    uu___8 ->
                                                                     (fun
                                                                     post' ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     if
                                                                     fv_lid =
                                                                     Pulse_Reflection_Util.stt_atomic_lid
@@ -506,12 +510,12 @@ let (try_readback_st_comp :
                                                                     Pulse_Syntax.post
                                                                     = post'
                                                                     })))))
-                                                                    uu___7)))
+                                                                    uu___8)))
+                                                                    uu___7))))
                                                                     uu___6))))
                                                                     uu___5))))
                                                                     uu___4))))
-                                                                    uu___3))))
-                                                                    uu___3)))
+                                                                    uu___4)))
                                                                     uu___2))
                                                       | uu___2 ->
                                                           Obj.repr
@@ -969,7 +973,7 @@ let rec (readback_ty :
                                              else Obj.magic (aux ())
                                          | uu___1 -> Obj.magic (aux ())))
                                    uu___))) uu___)))
-       | FStar_Reflection_Data.Tv_Refine (bv, phi) ->
+       | FStar_Reflection_Data.Tv_Refine (bv, sort, phi) ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
@@ -987,13 +991,11 @@ let rec (readback_ty :
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Range.mk_range "Pulse.Readback.fst"
                                  (Prims.of_int (243)) (Prims.of_int (14))
-                                 (Prims.of_int (243)) (Prims.of_int (41)))
+                                 (Prims.of_int (243)) (Prims.of_int (30)))
                               (FStar_Range.mk_range "Pulse.Readback.fst"
                                  (Prims.of_int (243)) (Prims.of_int (4))
                                  (Prims.of_int (247)) (Prims.of_int (43)))
-                              (Obj.magic
-                                 (readback_ty
-                                    bv_view.FStar_Reflection_Data.bv_sort))
+                              (Obj.magic (readback_ty sort))
                               (fun uu___ ->
                                  (fun uu___ ->
                                     Obj.magic
@@ -1058,7 +1060,8 @@ let rec (readback_ty :
                          match uu___ with
                          | { FStar_Reflection_Data.binder_bv = bv;
                              FStar_Reflection_Data.binder_qual = aq;
-                             FStar_Reflection_Data.binder_attrs = attrs;_} ->
+                             FStar_Reflection_Data.binder_attrs = attrs;
+                             FStar_Reflection_Data.binder_sort = sort;_} ->
                              (match aq with
                               | FStar_Reflection_Data.Q_Meta uu___1 ->
                                   Obj.magic
@@ -1142,7 +1145,7 @@ let rec (readback_ty :
                                                                     (Prims.of_int (266))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (266))
-                                                                    (Prims.of_int (49)))
+                                                                    (Prims.of_int (38)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Readback.fst"
                                                                     (Prims.of_int (266))
@@ -1151,7 +1154,7 @@ let rec (readback_ty :
                                                                     (Prims.of_int (110)))
                                                                     (Obj.magic
                                                                     (readback_ty
-                                                                    bv_view.FStar_Reflection_Data.bv_sort))
+                                                                    sort))
                                                                     (fun
                                                                     uu___2 ->
                                                                     (fun
@@ -1259,7 +1262,7 @@ let rec (readback_ty :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Derived.fail "readback_ty: unexpected Tv_Uvar"))
-       | FStar_Reflection_Data.Tv_Let (recf, attrs, bv, def, body) ->
+       | FStar_Reflection_Data.Tv_Let (recf, attrs, bv, ty, def, body) ->
            Obj.magic
              (Obj.repr
                 (if recf
@@ -1287,14 +1290,12 @@ let rec (readback_ty :
                                       (Prims.of_int (295))
                                       (Prims.of_int (19))
                                       (Prims.of_int (295))
-                                      (Prims.of_int (46)))
+                                      (Prims.of_int (33)))
                                    (FStar_Range.mk_range "Pulse.Readback.fst"
                                       (Prims.of_int (295)) (Prims.of_int (6))
                                       (Prims.of_int (299))
                                       (Prims.of_int (69)))
-                                   (Obj.magic
-                                      (readback_ty
-                                         bv_view.FStar_Reflection_Data.bv_sort))
+                                   (Obj.magic (readback_ty ty))
                                    (fun uu___1 ->
                                       (fun uu___1 ->
                                          Obj.magic
@@ -1392,10 +1393,10 @@ and (readback_comp :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (313))
-         (Prims.of_int (13)) (Prims.of_int (313)) (Prims.of_int (47)))
-      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (314))
-         (Prims.of_int (2)) (Prims.of_int (318)) (Prims.of_int (49)))
+      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (317))
+         (Prims.of_int (13)) (Prims.of_int (317)) (Prims.of_int (47)))
+      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (318))
+         (Prims.of_int (2)) (Prims.of_int (322)) (Prims.of_int (49)))
       (Obj.magic (try_readback_st_comp t readback_ty))
       (fun uu___ ->
          (fun ropt ->
@@ -1409,11 +1410,11 @@ and (readback_comp :
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Range.mk_range "Pulse.Readback.fst"
-                           (Prims.of_int (317)) (Prims.of_int (14))
-                           (Prims.of_int (317)) (Prims.of_int (27)))
+                           (Prims.of_int (321)) (Prims.of_int (14))
+                           (Prims.of_int (321)) (Prims.of_int (27)))
                         (FStar_Range.mk_range "Pulse.Readback.fst"
-                           (Prims.of_int (317)) (Prims.of_int (4))
-                           (Prims.of_int (318)) (Prims.of_int (49)))
+                           (Prims.of_int (321)) (Prims.of_int (4))
+                           (Prims.of_int (322)) (Prims.of_int (49)))
                         (Obj.magic (readback_ty t))
                         (fun uu___1 ->
                            (fun uu___1 ->

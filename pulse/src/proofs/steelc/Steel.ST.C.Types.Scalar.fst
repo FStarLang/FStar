@@ -1,5 +1,5 @@
 module Steel.ST.C.Types.Scalar
-open Steel.ST.GenElim
+open Steel.ST.GenElim1
 friend Steel.ST.C.Types.Base
 open Steel.ST.C.Types.Base
 

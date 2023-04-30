@@ -37,8 +37,7 @@ let (vprop_equiv_ext_type : FStar_Reflection_Types.term) =
             {
               FStar_Reflection_Data.bv_ppname =
                 FStar_Reflection_Typing.pp_name_default;
-              FStar_Reflection_Data.bv_index = index;
-              FStar_Reflection_Data.bv_sort = vprop_tm
+              FStar_Reflection_Data.bv_index = index
             })) in
   Pulse_Reflection_Util.mk_arrow (vprop_tm, FStar_Reflection_Data.Q_Explicit)
     (Pulse_Reflection_Util.mk_arrow

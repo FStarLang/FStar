@@ -72,7 +72,7 @@ let try_readback_st_comp
          | [res; pre; post] ->
            (match inspect_ln (fst post) with
             | Tv_Abs b body ->
-              let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs } =
+              let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs; binder_sort=sort } =
                   inspect_binder b
               in    
               let bv_view = inspect_bv bv in
@@ -81,7 +81,7 @@ let try_readback_st_comp
                       attrs == []                /\
                       // bv_view.bv_ppname == "_"   /\
                       bv_view.bv_index == 0      /\
-                      bv_view.bv_sort == fst res /\
+                      sort == fst res /\
                       snd res == Q_Explicit      /\
                       snd pre == Q_Explicit      /\
                       snd post == Q_Explicit);
@@ -238,9 +238,9 @@ let rec readback_ty (t:R.term)
     | _ -> aux ()
     end
   
-  | Tv_Refine bv phi ->
+  | Tv_Refine bv sort phi ->
     let bv_view = inspect_bv bv in
-    let? ty = readback_ty bv_view.bv_sort in
+    let? ty = readback_ty sort in
     let? phi = readback_ty phi in
     let r = Tm_Refine {binder_ty=ty;binder_ppname=bv_view.bv_ppname} phi in
     assume (elab_term r == t);
@@ -249,7 +249,7 @@ let rec readback_ty (t:R.term)
   | Tv_Abs _ _ -> None  //T.fail "readback_ty: unexpected Tv_Abs"
 
   | Tv_Arrow b c -> (
-    let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs } =
+    let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs; binder_sort=sort } =
         inspect_binder b
     in
     assume (attrs == []);
@@ -263,7 +263,7 @@ let rec readback_ty (t:R.term)
       let c_view = inspect_comp c in
       (match c_view with
        | C_Total c_t ->
-         let? b_ty' = readback_ty bv_view.bv_sort in
+         let? b_ty' = readback_ty sort in
          let? c' = readback_comp c_t in
          Some (Tm_Arrow {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname} q c' <: ty:term{ elab_term ty == t})
       | _ -> None)
@@ -285,14 +285,14 @@ let rec readback_ty (t:R.term)
 
   | Tv_Uvar _ _ -> T.fail "readback_ty: unexpected Tv_Uvar"
 
-  | Tv_Let recf attrs bv def body ->
+  | Tv_Let recf attrs bv ty def body ->
     if recf
     then T.fail "readback_ty: unexpected recursive Tv_Let"
     else begin
       assume (attrs == []);
       let bv_view = inspect_bv bv in
       assume (bv_view.bv_index == 0);
-      let? bv_t' = readback_ty bv_view.bv_sort in
+      let? bv_t' = readback_ty ty in
       let? def' = readback_ty def in
       let? body' = readback_ty body in
       FStar.Sealed.sealed_singl bv_view.bv_ppname RT.pp_name_default;
@@ -304,8 +304,12 @@ let rec readback_ty (t:R.term)
   | Tv_AscribedT _ _ _ _
   | Tv_AscribedC _ _ _ _ -> T.fail "readbackty: ascription nodes not supported"
 
-  | Tv_Unknown -> Some (Tm_Unknown)
-  
+  | Tv_Unknown ->
+    (* Given the new precondition for the bijection lemma,
+    we cannot guarantee that t is pack (Tv_Unknown), it could
+    be any other term not properly reflected. Admit this proof for now. *)
+    admit();
+    Some Tm_Unknown
   
 and readback_comp (t:R.term)
   : T.Tac (option (c:comp{ elab_comp c == t})) =
