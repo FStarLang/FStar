@@ -583,13 +583,13 @@ let e_term_view = e_term_view_aq (0, [])
 
 let e_bv_view =
     let embed_bv_view cb (bvv:bv_view) : t =
-        mkConstruct ref_Mk_bv.fv [] [as_arg (embed e_string cb bvv.bv_ppname);
+        mkConstruct ref_Mk_bv.fv [] [as_arg (embed (e_sealed e_string) cb bvv.bv_ppname);
                               as_arg (embed e_int    cb bvv.bv_index)]
     in
     let unembed_bv_view cb (t : t) : option bv_view =
         match t.nbe_t with
         | Construct (fv, _, [(idx, _); (nm, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
-            BU.bind_opt (unembed e_string cb nm) (fun nm ->
+            BU.bind_opt (unembed (e_sealed e_string) cb nm) (fun nm ->
             BU.bind_opt (unembed e_int cb idx) (fun idx ->
             Some <| { bv_ppname = nm ; bv_index = idx }))
 
