@@ -460,9 +460,6 @@ and (pat_eq :
            | (FStar_Reflection_Data.Pat_Var (v1, st1),
               FStar_Reflection_Data.Pat_Var (v2, st2)) ->
                Obj.magic (Obj.repr (bv_eq v1 v2))
-           | (FStar_Reflection_Data.Pat_Wild (v1, st1),
-              FStar_Reflection_Data.Pat_Wild (v2, st2)) ->
-               Obj.magic (Obj.repr (bv_eq v1 v2))
            | (FStar_Reflection_Data.Pat_Constant c1,
               FStar_Reflection_Data.Pat_Constant c2) ->
                Obj.magic (Obj.repr (const_eq c1 c2))

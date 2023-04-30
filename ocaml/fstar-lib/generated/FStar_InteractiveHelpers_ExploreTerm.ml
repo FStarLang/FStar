@@ -4024,51 +4024,6 @@ and (explore_pattern :
                                          (fun uu___1 ->
                                             (ge1, x,
                                               FStar_Tactics_Types.Continue)))))
-                        | FStar_Reflection_Data.Pat_Wild (bv, st) ->
-                            Obj.magic
-                              (Obj.repr
-                                 (FStar_Tactics_Effect.tac_bind
-                                    (FStar_Range.mk_range
-                                       "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                       (Prims.of_int (565))
-                                       (Prims.of_int (14))
-                                       (Prims.of_int (565))
-                                       (Prims.of_int (56)))
-                                    (FStar_Range.mk_range
-                                       "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                       (Prims.of_int (566))
-                                       (Prims.of_int (4))
-                                       (Prims.of_int (566))
-                                       (Prims.of_int (20)))
-                                    (Obj.magic
-                                       (FStar_Tactics_Effect.tac_bind
-                                          (FStar_Range.mk_range
-                                             "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                             (Prims.of_int (565))
-                                             (Prims.of_int (34))
-                                             (Prims.of_int (565))
-                                             (Prims.of_int (45)))
-                                          (FStar_Range.mk_range
-                                             "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                             (Prims.of_int (565))
-                                             (Prims.of_int (14))
-                                             (Prims.of_int (565))
-                                             (Prims.of_int (56)))
-                                          (Obj.magic
-                                             (FStar_Tactics_Builtins.unseal
-                                                st))
-                                          (fun uu___1 ->
-                                             (fun uu___1 ->
-                                                Obj.magic
-                                                  (FStar_InteractiveHelpers_Base.genv_push_bv
-                                                     ge0 bv uu___1 false
-                                                     FStar_Pervasives_Native.None))
-                                               uu___1)))
-                                    (fun ge1 ->
-                                       FStar_Tactics_Effect.lift_div_tac
-                                         (fun uu___1 ->
-                                            (ge1, x,
-                                              FStar_Tactics_Types.Continue)))))
                         | FStar_Reflection_Data.Pat_Dot_Term uu___1 ->
                             Obj.magic
                               (Obj.repr

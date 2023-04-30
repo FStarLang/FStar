@@ -1477,19 +1477,6 @@ let rec (extract_one_pat :
                           FStar_Pervasives_Native.Some
                             ((FStar_Extraction_ML_Syntax.MLP_Var x1), [])),
                        true))
-            | FStar_Syntax_Syntax.Pat_wild x ->
-                let uu___ =
-                  FStar_Extraction_ML_UEnv.extend_bv g x ([], expected_ty)
-                    false imp in
-                (match uu___ with
-                 | (g1, x1, uu___1) ->
-                     (g1,
-                       (if imp
-                        then FStar_Pervasives_Native.None
-                        else
-                          FStar_Pervasives_Native.Some
-                            ((FStar_Extraction_ML_Syntax.MLP_Var x1), [])),
-                       true))
             | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
                 (g, FStar_Pervasives_Native.None, true)
             | FStar_Syntax_Syntax.Pat_cons (f, uu___, pats) ->

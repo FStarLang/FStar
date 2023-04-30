@@ -739,21 +739,16 @@ and (visit_pat :
                  (Obj.repr
                     (FStar_Tactics_Effect.lift_div_tac
                        (fun uu___ -> FStar_Reflection_Data.Pat_Var (bv, st))))
-           | FStar_Reflection_Data.Pat_Wild (bv, st) ->
-               Obj.magic
-                 (Obj.repr
-                    (FStar_Tactics_Effect.lift_div_tac
-                       (fun uu___ -> FStar_Reflection_Data.Pat_Wild (bv, st))))
            | FStar_Reflection_Data.Pat_Dot_Term eopt ->
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                          (Prims.of_int (100)) (Prims.of_int (19))
-                          (Prims.of_int (100)) (Prims.of_int (47)))
+                          (Prims.of_int (99)) (Prims.of_int (19))
+                          (Prims.of_int (99)) (Prims.of_int (47)))
                        (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                          (Prims.of_int (100)) (Prims.of_int (6))
-                          (Prims.of_int (100)) (Prims.of_int (47)))
+                          (Prims.of_int (99)) (Prims.of_int (6))
+                          (Prims.of_int (99)) (Prims.of_int (47)))
                        (Obj.magic
                           (FStar_Tactics_Util.map_opt (visit_tm ff) eopt))
                        (fun uu___ ->
@@ -771,10 +766,10 @@ and (visit_comp :
   fun ff ->
     fun c ->
       FStar_Tactics_Effect.tac_bind
+        (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (101))
+           (Prims.of_int (11)) (Prims.of_int (101)) (Prims.of_int (25)))
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (102))
-           (Prims.of_int (11)) (Prims.of_int (102)) (Prims.of_int (25)))
-        (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (103))
-           (Prims.of_int (2)) (Prims.of_int (125)) (Prims.of_int (15)))
+           (Prims.of_int (2)) (Prims.of_int (124)) (Prims.of_int (15)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> FStar_Reflection_Builtins.inspect_comp c))
         (fun uu___ ->
@@ -782,21 +777,21 @@ and (visit_comp :
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                      (Prims.of_int (104)) (Prims.of_int (4))
-                      (Prims.of_int (123)) (Prims.of_int (35)))
+                      (Prims.of_int (103)) (Prims.of_int (4))
+                      (Prims.of_int (122)) (Prims.of_int (35)))
                    (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                      (Prims.of_int (125)) (Prims.of_int (2))
-                      (Prims.of_int (125)) (Prims.of_int (15)))
+                      (Prims.of_int (124)) (Prims.of_int (2))
+                      (Prims.of_int (124)) (Prims.of_int (15)))
                    (match cv with
                     | FStar_Reflection_Data.C_Total ret ->
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                                (Prims.of_int (106)) (Prims.of_int (18))
-                                (Prims.of_int (106)) (Prims.of_int (33)))
+                                (Prims.of_int (105)) (Prims.of_int (18))
+                                (Prims.of_int (105)) (Prims.of_int (33)))
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                                (Prims.of_int (107)) (Prims.of_int (8))
-                                (Prims.of_int (107)) (Prims.of_int (19)))
+                                (Prims.of_int (106)) (Prims.of_int (8))
+                                (Prims.of_int (106)) (Prims.of_int (19)))
                              (Obj.magic (visit_tm ff ret))
                              (fun ret1 ->
                                 FStar_Tactics_Effect.lift_div_tac
@@ -806,11 +801,11 @@ and (visit_comp :
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                                (Prims.of_int (110)) (Prims.of_int (18))
-                                (Prims.of_int (110)) (Prims.of_int (33)))
+                                (Prims.of_int (109)) (Prims.of_int (18))
+                                (Prims.of_int (109)) (Prims.of_int (33)))
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                                (Prims.of_int (111)) (Prims.of_int (8))
-                                (Prims.of_int (111)) (Prims.of_int (20)))
+                                (Prims.of_int (110)) (Prims.of_int (8))
+                                (Prims.of_int (110)) (Prims.of_int (20)))
                              (Obj.magic (visit_tm ff ret))
                              (fun ret1 ->
                                 FStar_Tactics_Effect.lift_div_tac
@@ -820,11 +815,11 @@ and (visit_comp :
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                                (Prims.of_int (114)) (Prims.of_int (18))
-                                (Prims.of_int (114)) (Prims.of_int (33)))
+                                (Prims.of_int (113)) (Prims.of_int (18))
+                                (Prims.of_int (113)) (Prims.of_int (33)))
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                                (Prims.of_int (115)) (Prims.of_int (8))
-                                (Prims.of_int (117)) (Prims.of_int (29)))
+                                (Prims.of_int (114)) (Prims.of_int (8))
+                                (Prims.of_int (116)) (Prims.of_int (29)))
                              (Obj.magic (visit_tm ff pre))
                              (fun uu___ ->
                                 (fun pre1 ->
@@ -832,15 +827,15 @@ and (visit_comp :
                                      (FStar_Tactics_Effect.tac_bind
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.Visit.fst"
-                                           (Prims.of_int (115))
+                                           (Prims.of_int (114))
                                            (Prims.of_int (19))
-                                           (Prims.of_int (115))
+                                           (Prims.of_int (114))
                                            (Prims.of_int (35)))
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.Visit.fst"
-                                           (Prims.of_int (116))
+                                           (Prims.of_int (115))
                                            (Prims.of_int (8))
-                                           (Prims.of_int (117))
+                                           (Prims.of_int (116))
                                            (Prims.of_int (29)))
                                         (Obj.magic (visit_tm ff post))
                                         (fun uu___ ->
@@ -849,15 +844,15 @@ and (visit_comp :
                                                 (FStar_Tactics_Effect.tac_bind
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.Visit.fst"
-                                                      (Prims.of_int (116))
+                                                      (Prims.of_int (115))
                                                       (Prims.of_int (19))
-                                                      (Prims.of_int (116))
+                                                      (Prims.of_int (115))
                                                       (Prims.of_int (35)))
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.Visit.fst"
-                                                      (Prims.of_int (117))
+                                                      (Prims.of_int (116))
                                                       (Prims.of_int (8))
-                                                      (Prims.of_int (117))
+                                                      (Prims.of_int (116))
                                                       (Prims.of_int (29)))
                                                    (Obj.magic
                                                       (visit_tm ff pats))
@@ -873,11 +868,11 @@ and (visit_comp :
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                                (Prims.of_int (120)) (Prims.of_int (18))
-                                (Prims.of_int (120)) (Prims.of_int (33)))
+                                (Prims.of_int (119)) (Prims.of_int (18))
+                                (Prims.of_int (119)) (Prims.of_int (33)))
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
-                                (Prims.of_int (121)) (Prims.of_int (8))
-                                (Prims.of_int (123)) (Prims.of_int (35)))
+                                (Prims.of_int (120)) (Prims.of_int (8))
+                                (Prims.of_int (122)) (Prims.of_int (35)))
                              (Obj.magic (visit_tm ff res))
                              (fun uu___ ->
                                 (fun res1 ->
@@ -885,15 +880,15 @@ and (visit_comp :
                                      (FStar_Tactics_Effect.tac_bind
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.Visit.fst"
-                                           (Prims.of_int (121))
+                                           (Prims.of_int (120))
                                            (Prims.of_int (19))
-                                           (Prims.of_int (121))
+                                           (Prims.of_int (120))
                                            (Prims.of_int (62)))
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.Visit.fst"
-                                           (Prims.of_int (122))
+                                           (Prims.of_int (121))
                                            (Prims.of_int (8))
-                                           (Prims.of_int (123))
+                                           (Prims.of_int (122))
                                            (Prims.of_int (35)))
                                         (Obj.magic
                                            (FStar_Tactics_Util.map
@@ -903,15 +898,15 @@ and (visit_comp :
                                                      FStar_Tactics_Effect.tac_bind
                                                        (FStar_Range.mk_range
                                                           "FStar.Tactics.Visit.fst"
-                                                          (Prims.of_int (121))
+                                                          (Prims.of_int (120))
                                                           (Prims.of_int (39))
-                                                          (Prims.of_int (121))
+                                                          (Prims.of_int (120))
                                                           (Prims.of_int (52)))
                                                        (FStar_Range.mk_range
                                                           "FStar.Tactics.Visit.fst"
-                                                          (Prims.of_int (121))
+                                                          (Prims.of_int (120))
                                                           (Prims.of_int (38))
-                                                          (Prims.of_int (121))
+                                                          (Prims.of_int (120))
                                                           (Prims.of_int (56)))
                                                        (Obj.magic
                                                           (visit_tm ff a))
@@ -926,15 +921,15 @@ and (visit_comp :
                                                 (FStar_Tactics_Effect.tac_bind
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.Visit.fst"
-                                                      (Prims.of_int (122))
+                                                      (Prims.of_int (121))
                                                       (Prims.of_int (20))
-                                                      (Prims.of_int (122))
+                                                      (Prims.of_int (121))
                                                       (Prims.of_int (43)))
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.Visit.fst"
-                                                      (Prims.of_int (123))
+                                                      (Prims.of_int (122))
                                                       (Prims.of_int (8))
-                                                      (Prims.of_int (123))
+                                                      (Prims.of_int (122))
                                                       (Prims.of_int (35)))
                                                    (Obj.magic
                                                       (FStar_Tactics_Util.map

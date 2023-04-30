@@ -248,7 +248,6 @@ and pat' =
   | Pat_cons of (fv * universes FStar_Pervasives_Native.option * (pat'
   withinfo_t * Prims.bool) Prims.list) 
   | Pat_var of bv 
-  | Pat_wild of bv 
   | Pat_dot_term of term' syntax FStar_Pervasives_Native.option 
 and letbinding =
   {
@@ -576,11 +575,6 @@ let (uu___is_Pat_var : pat' -> Prims.bool) =
   fun projectee -> match projectee with | Pat_var _0 -> true | uu___ -> false
 let (__proj__Pat_var__item___0 : pat' -> bv) =
   fun projectee -> match projectee with | Pat_var _0 -> _0
-let (uu___is_Pat_wild : pat' -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Pat_wild _0 -> true | uu___ -> false
-let (__proj__Pat_wild__item___0 : pat' -> bv) =
-  fun projectee -> match projectee with | Pat_wild _0 -> _0
 let (uu___is_Pat_dot_term : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_dot_term _0 -> true | uu___ -> false
@@ -2044,7 +2038,6 @@ let (pat_bvs : pat -> bv Prims.list) =
       match p1.v with
       | Pat_dot_term uu___ -> b
       | Pat_constant uu___ -> b
-      | Pat_wild x -> x :: b
       | Pat_var x -> x :: b
       | Pat_cons (uu___, uu___1, pats) ->
           FStar_Compiler_List.fold_left
@@ -2165,7 +2158,6 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
                 | uu___1 -> false))
           else false
       | (Pat_var uu___, Pat_var uu___1) -> true
-      | (Pat_wild uu___, Pat_wild uu___1) -> true
       | (Pat_dot_term uu___, Pat_dot_term uu___1) -> true
       | (uu___, uu___1) -> false
 let (delta_constant : delta_depth) = Delta_constant_at_level Prims.int_zero

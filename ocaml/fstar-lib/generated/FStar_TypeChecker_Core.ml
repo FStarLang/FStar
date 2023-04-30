@@ -195,33 +195,6 @@ let (open_pat :
                           (bx'.FStar_Syntax_Syntax.binder_bv));
                      FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
                    }, sub1))
-        | FStar_Syntax_Syntax.Pat_wild x ->
-            let bx =
-              let uu___ =
-                let uu___1 =
-                  FStar_Syntax_Subst.subst sub x.FStar_Syntax_Syntax.sort in
-                {
-                  FStar_Syntax_Syntax.ppname = (x.FStar_Syntax_Syntax.ppname);
-                  FStar_Syntax_Syntax.index = (x.FStar_Syntax_Syntax.index);
-                  FStar_Syntax_Syntax.sort = uu___1
-                } in
-              FStar_Syntax_Syntax.mk_binder uu___ in
-            let uu___ = fresh_binder g1 bx in
-            (match uu___ with
-             | (g2, bx') ->
-                 let sub1 =
-                   let uu___1 =
-                     FStar_Syntax_Subst.shift_subst Prims.int_one sub in
-                   (FStar_Syntax_Syntax.DB
-                      (Prims.int_zero, (bx'.FStar_Syntax_Syntax.binder_bv)))
-                     :: uu___1 in
-                 (g2,
-                   {
-                     FStar_Syntax_Syntax.v =
-                       (FStar_Syntax_Syntax.Pat_wild
-                          (bx'.FStar_Syntax_Syntax.binder_bv));
-                     FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
-                   }, sub1))
         | FStar_Syntax_Syntax.Pat_dot_term eopt ->
             let eopt1 =
               FStar_Compiler_Util.map_option (FStar_Syntax_Subst.subst sub)
@@ -3049,21 +3022,6 @@ and (check' :
                                                                     return
                                                                     (eff_br,
                                                                     tbr))
-                                                               | FStar_Syntax_Syntax.Pat_wild
-                                                                   uu___12 ->
-                                                                   (match rest
-                                                                    with
-                                                                    | 
-                                                                    uu___13::uu___14
-                                                                    ->
-                                                                    fail
-                                                                    "Redundant branches after wildcard"
-                                                                    | 
-                                                                    uu___13
-                                                                    ->
-                                                                    return
-                                                                    (eff_br,
-                                                                    tbr))
                                                                | uu___12 ->
                                                                    check_branches
                                                                     next_path_condition
@@ -3338,22 +3296,6 @@ and (check' :
                                                                     return
                                                                     eff_br)
                                                                     | 
-                                                                    FStar_Syntax_Syntax.Pat_wild
-                                                                    uu___16
-                                                                    ->
-                                                                    (match rest
-                                                                    with
-                                                                    | 
-                                                                    uu___17::uu___18
-                                                                    ->
-                                                                    fail
-                                                                    "Redundant branches after wildcard"
-                                                                    | 
-                                                                    uu___17
-                                                                    ->
-                                                                    return
-                                                                    eff_br)
-                                                                    | 
                                                                     uu___16
                                                                     ->
                                                                     check_branches
@@ -3540,20 +3482,6 @@ and (check_pat :
                          t_const uu___4 in
                      op_let_Bang uu___3 (fun uu___4 -> return ([], [])))
         | FStar_Syntax_Syntax.Pat_var bv ->
-            let b =
-              FStar_Syntax_Syntax.mk_binder
-                {
-                  FStar_Syntax_Syntax.ppname =
-                    (bv.FStar_Syntax_Syntax.ppname);
-                  FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
-                  FStar_Syntax_Syntax.sort = t_sc
-                } in
-            let uu___ =
-              with_context "check_pat_binder" FStar_Pervasives_Native.None
-                (fun uu___1 -> check_binders g [b]) in
-            op_let_Bang uu___
-              (fun uu___1 -> match uu___1 with | u::[] -> return ([b], [u]))
-        | FStar_Syntax_Syntax.Pat_wild bv ->
             let b =
               FStar_Syntax_Syntax.mk_binder
                 {
@@ -3884,8 +3812,6 @@ and (pattern_branch_condition :
         match pat.FStar_Syntax_Syntax.v with
         | FStar_Syntax_Syntax.Pat_var uu___ ->
             return FStar_Pervasives_Native.None
-        | FStar_Syntax_Syntax.Pat_wild uu___ ->
-            return FStar_Pervasives_Native.None
         | FStar_Syntax_Syntax.Pat_constant c ->
             let const_exp =
               let uu___ =
@@ -3910,7 +3836,7 @@ and (pattern_branch_condition :
                 let uu___1 =
                   FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
                     FStar_Syntax_Syntax.tun in
-                FStar_Syntax_Syntax.Pat_wild uu___1 in
+                FStar_Syntax_Syntax.Pat_var uu___1 in
               FStar_Syntax_Syntax.withinfo uu___ pos in
             let mk_head_discriminator uu___ =
               let pat1 =
@@ -3935,7 +3861,7 @@ and (pattern_branch_condition :
                     let uu___3 =
                       FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
                         FStar_Syntax_Syntax.tun in
-                    FStar_Syntax_Syntax.Pat_wild uu___3 in
+                    FStar_Syntax_Syntax.Pat_var uu___3 in
                   FStar_Syntax_Syntax.withinfo uu___2
                     pat1.FStar_Syntax_Syntax.p in
                 (uu___1, FStar_Pervasives_Native.None,
@@ -4017,8 +3943,6 @@ and (pattern_branch_condition :
                           | FStar_Syntax_Syntax.Pat_dot_term uu___3 ->
                               return FStar_Pervasives_Native.None
                           | FStar_Syntax_Syntax.Pat_var uu___3 ->
-                              return FStar_Pervasives_Native.None
-                          | FStar_Syntax_Syntax.Pat_wild uu___3 ->
                               return FStar_Pervasives_Native.None
                           | uu___3 ->
                               let scrutinee_sub_term = mk_ith_projector i in

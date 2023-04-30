@@ -2321,7 +2321,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                                   uu___11
                                                                   FStar_Pervasives_Native.None
                                                                   FStar_Syntax_Syntax.tun in
-                                                              FStar_Syntax_Syntax.Pat_wild
+                                                              FStar_Syntax_Syntax.Pat_var
                                                                 uu___10 in
                                                             pos uu___9 in
                                                           (uu___8, b)))) in
@@ -2351,7 +2351,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                FStar_Syntax_Syntax.new_bv
                                                  FStar_Pervasives_Native.None
                                                  FStar_Syntax_Syntax.tun in
-                                             FStar_Syntax_Syntax.Pat_wild
+                                             FStar_Syntax_Syntax.Pat_var
                                                uu___6 in
                                            pos uu___5 in
                                          (uu___4,
@@ -2667,7 +2667,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                                     uu___15
                                                                     FStar_Pervasives_Native.None
                                                                     FStar_Syntax_Syntax.tun in
-                                                                    FStar_Syntax_Syntax.Pat_wild
+                                                                    FStar_Syntax_Syntax.Pat_var
                                                                     uu___14 in
                                                                     pos
                                                                     uu___13 in

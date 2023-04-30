@@ -267,9 +267,6 @@ let rec (inspect_ln :
           | FStar_Syntax_Syntax.Pat_var bv ->
               FStar_Reflection_Data.Pat_Var
                 (bv, (bv.FStar_Syntax_Syntax.sort))
-          | FStar_Syntax_Syntax.Pat_wild bv ->
-              FStar_Reflection_Data.Pat_Wild
-                (bv, (bv.FStar_Syntax_Syntax.sort))
           | FStar_Syntax_Syntax.Pat_dot_term eopt ->
               FStar_Reflection_Data.Pat_Dot_Term eopt in
         let brs1 =
@@ -524,9 +521,6 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
           | FStar_Reflection_Data.Pat_Var (bv, _sort) ->
               FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_var bv)
-          | FStar_Reflection_Data.Pat_Wild (bv, _sort) ->
-              FStar_Compiler_Effect.op_Less_Bar wrap
-                (FStar_Syntax_Syntax.Pat_wild bv)
           | FStar_Reflection_Data.Pat_Dot_Term eopt ->
               FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_dot_term eopt) in
@@ -1298,9 +1292,6 @@ and (pattern_eq :
                subpats1 subpats2)
       | (FStar_Reflection_Data.Pat_Var (bv1, uu___),
          FStar_Reflection_Data.Pat_Var (bv2, uu___1)) ->
-          binding_bv_eq bv1 bv2
-      | (FStar_Reflection_Data.Pat_Wild (bv1, uu___),
-         FStar_Reflection_Data.Pat_Wild (bv2, uu___1)) ->
           binding_bv_eq bv1 bv2
       | (FStar_Reflection_Data.Pat_Dot_Term topt1,
          FStar_Reflection_Data.Pat_Dot_Term topt2) ->

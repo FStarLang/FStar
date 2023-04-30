@@ -336,11 +336,6 @@ let (is_true_pat : FStar_Syntax_Syntax.pat -> Prims.bool) =
     | FStar_Syntax_Syntax.Pat_constant (FStar_Const.Const_bool (true)) ->
         true
     | uu___ -> false
-let (is_wild_pat : FStar_Syntax_Syntax.pat -> Prims.bool) =
-  fun p ->
-    match p.FStar_Syntax_Syntax.v with
-    | FStar_Syntax_Syntax.Pat_wild uu___ -> true
-    | uu___ -> false
 let (is_tuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
   fun lid ->
     (FStar_Parser_Const.is_tuple_data_lid' lid) ||
@@ -1106,20 +1101,6 @@ let rec (resugar_term' :
                mk
                  (FStar_Parser_AST.Let
                     (FStar_Parser_AST.NoLetQualifier, bnds, body)))
-      | FStar_Syntax_Syntax.Tm_match
-          (e, asc_opt, (pat1, uu___1, t1)::(pat2, uu___2, t2)::[], uu___3)
-          when (is_true_pat pat1) && (is_wild_pat pat2) ->
-          let asc_opt1 =
-            resugar_match_returns env e t.FStar_Syntax_Syntax.pos asc_opt in
-          let uu___4 =
-            let uu___5 =
-              let uu___6 = resugar_term' env e in
-              let uu___7 = resugar_term' env t1 in
-              let uu___8 = resugar_term' env t2 in
-              (uu___6, FStar_Pervasives_Native.None, asc_opt1, uu___7,
-                uu___8) in
-            FStar_Parser_AST.If uu___5 in
-          mk uu___4
       | FStar_Syntax_Syntax.Tm_match (e, asc_opt, branches, uu___1) ->
           let resugar_branch uu___2 =
             match uu___2 with
@@ -2002,7 +1983,6 @@ and (resugar_pat' :
                           match pattern.FStar_Syntax_Syntax.v with
                           | FStar_Syntax_Syntax.Pat_var bv ->
                               FStar_Compiler_Util.set_mem bv branch_bv
-                          | FStar_Syntax_Syntax.Pat_wild uu___2 -> false
                           | uu___2 -> true in
                         is_implicit && might_be_used) args in
              Prims.op_Negation uu___) in
@@ -2166,11 +2146,6 @@ and (resugar_pat' :
                    let uu___1 = to_arg_qual imp_opt in
                    resugar_bv_as_pat' env v uu___1 branch_bv
                      FStar_Pervasives_Native.None)
-          | FStar_Syntax_Syntax.Pat_wild uu___ ->
-              let uu___1 =
-                let uu___2 = let uu___3 = to_arg_qual imp_opt in (uu___3, []) in
-                FStar_Parser_AST.PatWild uu___2 in
-              mk uu___1
           | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
               mk
                 (FStar_Parser_AST.PatWild
