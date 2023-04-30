@@ -16,13 +16,10 @@ jobs:
         run: |
           echo "FSTAR_BRANCH=$(jq -c -r '.RepoVersions.fstar' src/ci/config.json || echo master)" >> $GITHUB_ENV
           echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' src/ci/config.json)" >> $GITHUB_ENV
-      - name: Determine the build flavor
-        run: |
-          if docker image inspect fstar:local-branch-$FSTAR_BRANCH ; then echo CI_FLAVOR=hierarchic >> $GITHUB_ENV ; else echo CI_FLAVOR=ci >> $GITHUB_ENV ; fi
       - name: Build Steel and its dependencies
         run: |
           ci_docker_image_tag=steel:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
-          docker buildx build -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg STEEL_NIGHTLY_CI=1 .
+          docker buildx build -t $ci_docker_image_tag -f src/ci/ci.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg STEEL_NIGHTLY_CI=1 .
       - name: Compute elapsed time
         if: ${{ always() }}
         run: |
