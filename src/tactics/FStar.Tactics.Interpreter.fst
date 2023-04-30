@@ -53,6 +53,7 @@ module TcComm  = FStar.TypeChecker.Common
 module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
 module U       = FStar.Syntax.Util
+module PC      = FStar.Parser.Const
 
 let tacdbg = BU.mk_ref false
 
@@ -121,7 +122,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     let rng = embedded_tac_b.pos in
 
     (* First, reify it from Tac a into __tac a *)
-    let embedded_tac_b = U.mk_reify embedded_tac_b (Some FStar.Parser.Const.effect_TAC_lid) in
+    let embedded_tac_b = U.mk_reify embedded_tac_b (Some PC.effect_TAC_lid) in
 
     let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (embed E.e_proofstate rng proof_state ncb)]
@@ -158,9 +159,26 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         bind (set ps) (fun _ -> traise e)
 
     | None ->
+        (* The tactic got stuck, try to provide a helpful error message. *)
+        let h_result = t_head_of result in
+        let maybe_admit_tip =
+          (* (ab)use the map visitor to check whether the reduced head
+          contains an admit, which is a common error *)
+          let has_admit = BU.mk_ref false in
+          let _ : term =
+            Syntax.Visit.visit_term (fun t ->
+              match t.n with
+              | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> (has_admit := true; S.tun)
+              | _ -> S.tun
+            ) h_result
+          in
+          if !has_admit
+          then "\nThe term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
+          else ""
+        in
         Err.raise_error (Err.Fatal_TacticGotStuck,
-          (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n\
-                       Reduction stopped at: %s" (Print.term_to_string (t_head_of result)))) proof_state.main_context.range
+          (BU.format2 "Tactic got stuck!\n\
+                       Reduction stopped at: %s%s" (Print.term_to_string h_result) maybe_admit_tip)) proof_state.main_context.range
     )
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
