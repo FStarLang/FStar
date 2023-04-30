@@ -1383,7 +1383,9 @@ let rec (readback_ty :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> FStar_Pervasives_Native.None)))) uu___
+                   (fun uu___ ->
+                      FStar_Pervasives_Native.Some Pulse_Syntax.Tm_Unknown))))
+      uu___
 and (readback_comp :
   FStar_Reflection_Types.term ->
     (Pulse_Syntax.comp FStar_Pervasives_Native.option, unit)
