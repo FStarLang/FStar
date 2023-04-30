@@ -431,7 +431,7 @@ let (mk_name : Prims.nat -> FStar_Reflection_Types.term) =
     FStar_Reflection_Builtins.pack_ln
       (FStar_Reflection_Data.Tv_Var
          (FStar_Reflection_Builtins.pack_bv
-            (FStar_Reflection_Typing.make_bv i tun)))
+            (FStar_Reflection_Typing.make_bv i)))
 type arrow_dom = (FStar_Reflection_Types.term * FStar_Reflection_Data.aqualv)
 let (mk_arrow :
   arrow_dom -> FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =

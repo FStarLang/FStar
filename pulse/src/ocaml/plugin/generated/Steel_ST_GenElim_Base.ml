@@ -1663,8 +1663,14 @@ let rec (solve_gen_elim_nondep' :
                                                                     "_");
                                                                     FStar_Reflection_Data.bv_index
                                                                     =
-                                                                    (Prims.of_int (964));
-                                                                    FStar_Reflection_Data.bv_sort
+                                                                    (Prims.of_int (964))
+                                                                    });
+                                                                    FStar_Reflection_Data.binder_qual
+                                                                    =
+                                                                    FStar_Reflection_Data.Q_Explicit;
+                                                                    FStar_Reflection_Data.binder_attrs
+                                                                    = [];
+                                                                    FStar_Reflection_Data.binder_sort
                                                                     =
                                                                     (FStar_Reflection_Builtins.pack_ln
                                                                     (FStar_Reflection_Data.Tv_App
@@ -1689,12 +1695,6 @@ let rec (solve_gen_elim_nondep' :
                                                                     ["Prims";
                                                                     "unit"]))),
                                                                     FStar_Reflection_Data.Q_Explicit))))
-                                                                    });
-                                                                    FStar_Reflection_Data.binder_qual
-                                                                    =
-                                                                    FStar_Reflection_Data.Q_Explicit;
-                                                                    FStar_Reflection_Data.binder_attrs
-                                                                    = []
                                                                     }),
                                                                     (FStar_Reflection_Builtins.pack_comp
                                                                     (FStar_Reflection_Data.C_Total
@@ -1784,8 +1784,14 @@ let rec (solve_gen_elim_nondep' :
                                                                     "_");
                                                                     FStar_Reflection_Data.bv_index
                                                                     =
-                                                                    (Prims.of_int (967));
-                                                                    FStar_Reflection_Data.bv_sort
+                                                                    (Prims.of_int (967))
+                                                                    });
+                                                                    FStar_Reflection_Data.binder_qual
+                                                                    =
+                                                                    FStar_Reflection_Data.Q_Explicit;
+                                                                    FStar_Reflection_Data.binder_attrs
+                                                                    = [];
+                                                                    FStar_Reflection_Data.binder_sort
                                                                     =
                                                                     (FStar_Reflection_Builtins.pack_ln
                                                                     (FStar_Reflection_Data.Tv_App
@@ -1810,12 +1816,6 @@ let rec (solve_gen_elim_nondep' :
                                                                     ["Prims";
                                                                     "unit"]))),
                                                                     FStar_Reflection_Data.Q_Explicit))))
-                                                                    });
-                                                                    FStar_Reflection_Data.binder_qual
-                                                                    =
-                                                                    FStar_Reflection_Data.Q_Explicit;
-                                                                    FStar_Reflection_Data.binder_attrs
-                                                                    = []
                                                                     }),
                                                                     (FStar_Reflection_Builtins.pack_comp
                                                                     (FStar_Reflection_Data.C_Total
