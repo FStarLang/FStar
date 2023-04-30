@@ -94,8 +94,8 @@ and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   | Pat_Cons fv us l ->
       let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
       Pat_Cons fv us l
-  | Pat_Var bv -> Pat_Var bv
-  | Pat_Wild bv -> Pat_Wild bv
+  | Pat_Var bv st -> Pat_Var bv st
+  | Pat_Wild bv st -> Pat_Wild bv st
   | Pat_Dot_Term eopt ->
       Pat_Dot_Term (map_opt (visit_tm ff) eopt)
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =

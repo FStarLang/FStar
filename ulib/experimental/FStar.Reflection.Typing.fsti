@@ -179,8 +179,8 @@ and binder_offset_pattern (p:pattern)
     | Pat_Constant _
     | Pat_Dot_Term _ -> 0
 
-    | Pat_Var _
-    | Pat_Wild _ -> 1
+    | Pat_Var _ _
+    | Pat_Wild _ _ -> 1
 
     | Pat_Cons fv us pats -> 
       binder_offset_patterns pats
@@ -333,12 +333,12 @@ and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat)
     | Pat_Cons fv us pats -> 
       let pats = open_or_close_patterns' pats v i in
       Pat_Cons fv us pats
-      
-    | Pat_Var bv ->
-      Pat_Var bv
 
-    | Pat_Wild bv ->
-      Pat_Wild bv
+    | Pat_Var bv st ->
+      Pat_Var bv st
+
+    | Pat_Wild bv st ->
+      Pat_Wild bv st
 
     | Pat_Dot_Term topt ->
       Pat_Dot_Term (match topt with
@@ -540,8 +540,8 @@ and freevars_pattern (p:pattern)
     | Pat_Cons fv us pats -> 
       freevars_patterns pats
       
-    | Pat_Var bv 
-    | Pat_Wild bv -> Set.empty
+    | Pat_Var bv _
+    | Pat_Wild bv _ -> Set.empty
 
     | Pat_Dot_Term topt ->
       freevars_opt topt freevars
@@ -1039,8 +1039,8 @@ and ln'_pattern (p:pattern) (i:int)
     | Pat_Cons fv us pats -> 
       ln'_patterns pats i
       
-    | Pat_Var bv 
-    | Pat_Wild bv -> true
+    | Pat_Var bv _
+    | Pat_Wild bv _ -> true
 
 
     | Pat_Dot_Term topt ->

@@ -469,11 +469,11 @@ let find_subequality dbg tm p =
 
 /// Look for an equality in a postcondition which can be used for rewriting.
 val find_equality_from_post :
-  bool -> genv -> term -> bv -> typ -> term -> typ -> effect_info ->
+  bool -> genv -> term -> bv -> typ -> term -> effect_info ->
   list term_view -> list term_view -> Tac (genv & option term)
-let find_equality_from_post dbg ge0 tm let_bv let_bvty ret_value ret_type einfo parents children =
+let find_equality_from_post dbg ge0 tm let_bv let_bvty ret_value einfo parents children =
   print_dbg dbg "[> find_equality_from_post";
-  let tinfo = get_type_info_from_type ret_type in
+  let tinfo = get_type_info_from_type let_bvty in
   (* Compute the post-condition *)
   let ge1, _, post_prop =
     pre_post_to_propositions dbg ge0 einfo.ei_type ret_value (Some (mk_binder let_bv let_bvty))
@@ -531,7 +531,7 @@ let rec find_context_equality_aux dbg ge0 tm (opt_bv : option bv)
       if let_bv_is_tm && effect_type_is_pure einfo.ei_type then ge0, Some def
       else
         let ret_value = pack (Tv_Var bv') in
-        begin match find_equality_from_post dbg ge0 tm bv' ty ret_value ty // FIXME no need to duplciate
+        begin match find_equality_from_post dbg ge0 tm bv' ty ret_value
                                             einfo parents children with
         | ge1, Some p -> ge1, Some p
         | _, None -> find_context_equality_aux dbg ge0 tm opt_bv parents' (tv :: children)

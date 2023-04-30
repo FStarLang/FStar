@@ -277,10 +277,10 @@ let rec e_pattern_aq aq =
               [as_arg (embed e_fv cb fv);
                as_arg (embed (e_option (e_list e_universe)) cb us_opt);
                as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps)]
-        | Pat_Var bv ->
-            mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
-        | Pat_Wild bv ->
-            mkConstruct ref_Pat_Wild.fv [] [as_arg (embed e_bv cb bv)]
+        | Pat_Var (bv, sort) ->
+            mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_sealed e_term) cb sort)]
+        | Pat_Wild (bv, sort) ->
+            mkConstruct ref_Pat_Wild.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_sealed e_term) cb sort)]
         | Pat_Dot_Term eopt ->
             mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed (e_option e_term) cb eopt)]
     in
@@ -296,13 +296,15 @@ let rec e_pattern_aq aq =
             BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps) (fun ps ->
             Some <| Pat_Cons (f, us, ps))))
 
-        | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
+        | Construct (fv, [], [(sort, _); (bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
             BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-            Some <| Pat_Var bv)
+            BU.bind_opt (unembed (e_sealed e_term) cb sort) (fun sort ->
+            Some <| Pat_Var (bv, sort)))
 
-        | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Wild.lid ->
+        | Construct (fv, [], [(sort, _); (bv, _)]) when S.fv_eq_lid fv ref_Pat_Wild.lid ->
             BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-            Some <| Pat_Wild bv)
+            BU.bind_opt (unembed (e_sealed e_term) cb sort) (fun sort ->
+            Some <| Pat_Wild (bv, sort)))
 
         | Construct (fv, [], [(eopt, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
             BU.bind_opt (unembed (e_option e_term) cb eopt) (fun eopt ->

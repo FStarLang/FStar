@@ -561,8 +561,8 @@ and explore_pattern dbg dfs #a f x ge0 pat =
         ge0, x, flag
     in
     fold_left explore_pat (ge0, x, Continue) patterns
-  | Pat_Var bv | Pat_Wild bv ->
-    let ge1 = genv_push_bv ge0 bv (pack_ln Tv_Unknown) false None in // FIXME!!!!!!!!!!!!
+  | Pat_Var bv st | Pat_Wild bv st ->
+    let ge1 = genv_push_bv ge0 bv (unseal st) false None in
     ge1, x, Continue
   | Pat_Dot_Term _ -> ge0, x, Continue
 

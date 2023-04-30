@@ -2019,8 +2019,8 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
-            | Pat_var bv -> Pat_Var bv
-            | Pat_wild bv -> Pat_Wild bv
+            | Pat_var bv -> Pat_Var (bv, bv.sort)
+            | Pat_wild bv -> Pat_Wild (bv, bv.sort)
             | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map SS.open_branch brs in
@@ -2091,8 +2091,8 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
             | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
-            | Pat_Var  bv -> wrap <| Pat_var bv
-            | Pat_Wild bv -> wrap <| Pat_wild bv
+            | Pat_Var  (bv, _sort) -> wrap <| Pat_var bv
+            | Pat_Wild (bv, _sort) -> wrap <| Pat_wild bv
             | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
