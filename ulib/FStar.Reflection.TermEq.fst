@@ -315,9 +315,13 @@ and br_eq br1 br2 = pair_eq pat_eq term_eq br1 br2
 
 and pat_eq p1 p2 =
   match p1, p2 with
-  | Pat_Var v1, Pat_Var v2 -> bv_eq v1 v2
+  | Pat_Var v1 st1, Pat_Var v2 st2 ->
+    Sealed.sealed_singl st1 st2;
+    bv_eq v1 v2
+  | Pat_Wild v1 st1, Pat_Wild v2 st2 ->
+    Sealed.sealed_singl st1 st2;
+    bv_eq v1 v2
   | Pat_Constant c1, Pat_Constant c2 -> const_eq c1 c2
-  | Pat_Wild v1, Pat_Wild v2 -> bv_eq v1 v2
   | Pat_Dot_Term t1, Pat_Dot_Term t2 -> opt_eq term_eq t1 t2
   | Pat_Cons f1 us1 args1, Pat_Cons f2 us2 args2 ->
     fv_eq f1 f2
@@ -465,8 +469,8 @@ and faithful_pattern (p : pattern) : Type0 =
     optP (allP faithful_univ) usopt
      /\ allP faithful_pattern_arg pats
   (* non-binding bvs are always OK *)
-  | Pat_Var bv -> True
-  | Pat_Wild bv -> True
+  | Pat_Var bv _ -> True
+  | Pat_Wild bv _ -> True
   | Pat_Dot_Term None -> True
   | Pat_Dot_Term (Some t) -> faithful t
 
@@ -569,9 +573,9 @@ let rec faithful_lemma (t1 t2 : term) =
 
 and faithful_lemma_pattern (p1 p2 : pattern) : Lemma (requires faithful_pattern p1 /\ faithful_pattern p2) (ensures defined (pat_eq p1 p2)) =
   match p1, p2 with
-  | Pat_Var v1, Pat_Var v2 -> ()
+  | Pat_Var v1 _, Pat_Var v2 _ -> ()
+  | Pat_Wild v1 _, Pat_Wild v2 _ -> ()
   | Pat_Constant c1, Pat_Constant c2 -> ()
-  | Pat_Wild v1, Pat_Wild v2 -> ()
   | Pat_Dot_Term (Some t1), Pat_Dot_Term (Some t2) -> faithful_lemma t1 t2
   | Pat_Cons f1 us1 args1, Pat_Cons f2 us2 args2 ->
     (match us1, us2 with | Some us1, Some us2 -> univ_faithful_lemma_list us1 us2 | _ -> ());
