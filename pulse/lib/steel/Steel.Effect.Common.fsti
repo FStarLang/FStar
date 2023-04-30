@@ -649,22 +649,17 @@ let vrewrite (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot vprop 
 
 exception Appears
 
-let on_sort_bv (f : term -> Tac unit) (xbv:bv) : Tac unit =
-  f (inspect_bv xbv).bv_sort
-
 let on_sort_binder (f : term -> Tac unit) (b:binder) : Tac unit =
-  let bv = (inspect_binder b).binder_bv in
-  on_sort_bv f bv
+  let bv = (inspect_binder b) in
+  f bv.binder_sort
 
 let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
   let tv = inspect t in
   (match tv with
   | Tv_FVar _
-  | Tv_UInst _ _ -> ()
-  | Tv_Var bv ->
-      on_sort_bv ff bv
-
-  | Tv_BVar bv -> on_sort_bv ff bv
+  | Tv_UInst _ _
+  | Tv_Var _
+  | Tv_BVar _ -> ()
 
   | Tv_Type _ -> ()
   | Tv_Const c -> ()
@@ -681,10 +676,11 @@ let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
        visit_tm ff l;
        visit_tm ff r
 
-  | Tv_Refine b r ->
+  | Tv_Refine b sort r ->
+      visit_tm ff sort;
       visit_tm ff r
 
-  | Tv_Let r attrs b def t ->
+  | Tv_Let r attrs b ty def t ->
       visit_tm ff def;
       visit_tm ff t
 
@@ -1854,9 +1850,7 @@ let set_abduction_variable () : Tac unit =
   let g = cur_goal () in
   match inspect_unascribe g with
   | Tv_Arrow b _ ->
-    let bv = (inspect_binder b).binder_bv in
-    let bv = inspect_bv bv in
-    let pr = bv.bv_sort in
+    let pr = (inspect_binder b).binder_sort in
     exact (set_abduction_variable_term pr)
   | _ -> fail "Not an arrow goal"
 
@@ -1900,11 +1894,11 @@ let canon_l_r (use_smt:bool)
   //Build an amap where atoms are mapped to names
   //The type of these names is carrier_t passed by the caller
 
-  let am_bv : list (atom & bv) = mapi (fun i (a, _) ->
-    let x = fresh_bv_named ("x" ^ (string_of_int i)) carrier_t in
-    (a, x)) (fst am) in
+  let am_bv : list (atom & bv & typ) = mapi (fun i (a, _) ->
+    let x = fresh_bv_named ("x" ^ (string_of_int i)) in
+    (a, x, carrier_t)) (fst am) in
 
-  let am_bv_term : amap term = map (fun (a, bv) -> a, pack (Tv_Var bv)) am_bv, snd am in
+  let am_bv_term : amap term = map (fun (a, bv, _sort) -> a, pack (Tv_Var bv)) am_bv, snd am in
 
   let mdenote_tm (e:exp) : term = mdenote_gen
     m_unit
@@ -1943,11 +1937,12 @@ let canon_l_r (use_smt:bool)
 
   //fold over names and quantify over them
 
-  let aux_goal = fold_right (fun (_, bv) t ->
+  let aux_goal = fold_right (fun (_, bv, sort) t ->
     let b = pack_binder {
       binder_bv=bv;
       binder_qual=Q_Explicit;
-      binder_attrs=[]
+      binder_attrs=[];
+      binder_sort=sort;
     } in
     let t = close_term b t in
     let t = pack_ln (Tv_Abs b t) in
@@ -1974,7 +1969,7 @@ let canon_l_r (use_smt:bool)
 
     //Open the forall binders in A, and use the fresh names to build an amap
 
-    let am = fold_left (fun am (a, _) ->
+    let am = fold_left (fun am (a, _, _sort) ->
       let b = forall_intro () in
       let bv = (inspect_binder b).binder_bv in
       (a, pack (Tv_Var bv))::am) [] am_bv, snd am in

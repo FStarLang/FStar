@@ -112,7 +112,6 @@ let vprop_equiv_ext_type : R.term =
   let mk_bv index = pack_ln (Tv_BVar (pack_bv {
     bv_ppname = RT.pp_name_default;
     bv_index = index;
-    bv_sort = vprop_tm;
   })) in
 
   mk_arrow

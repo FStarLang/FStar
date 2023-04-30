@@ -135,10 +135,9 @@ and translate_exists_sl_body (g:R.env) (t:R.term)
   : T.Tac (err term)
   = match inspect_ln t with
     | Tv_Abs b body ->
-      let bv = (inspect_binder b).binder_bv in
-      let bvv = inspect_bv bv in
+      let sort = (inspect_binder b).binder_sort in
       let u = U_unknown in
-      let t = readback_maybe_unknown_ty bvv.bv_sort in
+      let t = readback_maybe_unknown_ty sort in
       let? body = translate_vprop g body in
       Inl (Tm_ExistsSL u t body should_elim_true)
     | _ -> Inr "in readback exists: the arg not a lambda"
@@ -150,9 +149,9 @@ and translate_exists_formula (g:R.env) (t:R.term)
                             (term_to_string t))
     in
     match term_as_formula t with
-    | Exists bv body ->
+    | Exists bv sort body ->
       let bv = inspect_bv bv in
-      let t = readback_maybe_unknown_ty bv.bv_sort in
+      let t = readback_maybe_unknown_ty sort in
       let? body = translate_vprop g body in
       Inl (Tm_ExistsSL U_unknown t body should_elim_true)
     | _ -> 
@@ -209,7 +208,7 @@ let readback_comp (t:R.term)
 
 let translate_binder (g:R.env) (b:R.binder)
   : T.Tac (err (binder & option qualifier))
-  = let {binder_bv=bv; binder_qual=aq; binder_attrs=attrs} =
+  = let {binder_bv=bv; binder_qual=aq; binder_attrs=attrs;binder_sort=sort} =
         R.inspect_binder b
     in
     match attrs, aq with
@@ -219,7 +218,7 @@ let translate_binder (g:R.env) (b:R.binder)
       let q = Readback.readback_qual aq in
       let bv_view = R.inspect_bv bv in
       assume (bv_view.bv_index == 0);
-      let b_ty' = readback_maybe_unknown_ty bv_view.bv_sort in      
+      let b_ty' = readback_maybe_unknown_ty sort in
       Inl ({binder_ty=b_ty';binder_ppname=bv_view.bv_ppname}, q)
 
 let is_head_fv (t:R.term) (fv:list string) : T.Tac (option (list R.argv)) = 
@@ -538,7 +537,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
                translate_st_app_or_return g]
               t
                
-    | R.Tv_Let false [] bv def body ->
+    | R.Tv_Let false [] bv ty def body ->
       let is_mut, def =
         match (inspect_ln def) with
         | Tv_App hd arg ->

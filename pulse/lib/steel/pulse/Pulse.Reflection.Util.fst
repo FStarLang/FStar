@@ -155,7 +155,7 @@ let mk_total t = R.C_Total t
 let binder_of_t_q t q = RT.binder_of_t_q t q
 let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
 let bound_var i : R.term = RT.bound_var i
-let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i tun))) 
+let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i)))
 
 let arrow_dom = (R.term & R.aqualv)
 let mk_arrow (f:arrow_dom) (out:R.term) : R.term =
