@@ -326,11 +326,6 @@ let subst_pat' s p : (pat * int) =
         let x = {x with sort=subst' s x.sort} in
         {p with v=Pat_var x}, n + 1
 
-      | Pat_wild x ->
-        let s = shift_subst' n s in
-        let x = {x with sort=subst' s x.sort} in
-        {p with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
-
       | Pat_dot_term eopt ->
         let s = shift_subst' n s in
         let eopt = U.map_option (subst' s) eopt in
@@ -615,11 +610,6 @@ let open_pat (p:pat) : pat * subst_t =
             let sub = DB(0, x')::shift_subst 1 sub in
             {p with v=Pat_var x'}, sub
 
-        | Pat_wild x ->
-            let x' = {freshen_bv x with sort=subst sub x.sort} in
-            let sub = DB(0, x')::shift_subst 1 sub in
-            {p with v=Pat_wild x'}, sub
-
         | Pat_dot_term eopt ->
             let eopt = U.map_option (subst sub) eopt in
             {p with v=Pat_dot_term eopt}, sub
@@ -668,11 +658,6 @@ let close_pat p =
          let x = {x with sort=subst sub x.sort} in
          let sub = NM(x, 0)::shift_subst 1 sub in
          {p with v=Pat_var x}, sub
-
-       | Pat_wild x ->
-         let x = {x with sort=subst sub x.sort} in
-         let sub = NM(x, 0)::shift_subst 1 sub in
-         {p with v=Pat_wild x}, sub
 
        | Pat_dot_term eopt ->
          let eopt = U.map_option (subst sub) eopt in

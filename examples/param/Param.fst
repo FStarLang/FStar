@@ -239,12 +239,6 @@ and param_pat (s:param_state) (p : pattern) : Tac (param_state & (pattern & patt
           Pat_Var (bv_of_binder b1) (Sealed.seal (binder_sort b1)),
           Pat_Var (bv_of_binder bR) (Sealed.seal (binder_sort bR))))
 
-  | Pat_Wild bv sort ->
-    let (s', (b0, b1, bR)) = push_binder (mk_binder bv (unseal sort)) s in
-    (s', (Pat_Wild (bv_of_binder b0) (Sealed.seal (binder_sort b0)),
-          Pat_Wild (bv_of_binder b1) (Sealed.seal (binder_sort b1)),
-          Pat_Wild (bv_of_binder bR) (Sealed.seal (binder_sort bR))))
-
   | Pat_Dot_Term t ->
     fail "no dot pats"
     //let (s', (b0, b1, bR)) = push_binder (pack_binder bv Q_Explicit) s in
@@ -256,7 +250,7 @@ and param_pat (s:param_state) (p : pattern) : Tac (param_state & (pattern & patt
     let b = fresh_bv_named "cR" in
     (s, (Pat_Constant c,
          Pat_Constant c,
-         Pat_Wild b (seal (`_))))
+         Pat_Var b (seal (`_))))
 
 and param_br (s:param_state) (br : branch) : Tac branch =
   let (pat, t) = br in

@@ -84,12 +84,6 @@ let open_pat (g:env) (p:pat)
           let sub = DB(0, bx'.binder_bv)::Subst.shift_subst 1 sub in
           g, {p with v=Pat_var bx'.binder_bv}, sub
 
-        | Pat_wild x ->
-          let bx = S.mk_binder {x with sort = Subst.subst sub x.sort} in
-          let g, bx' = fresh_binder g bx in
-          let sub = DB(0, bx'.binder_bv)::Subst.shift_subst 1 sub in
-          g, {p with v=Pat_wild bx'.binder_bv}, sub        
-
         | Pat_dot_term eopt ->
           let eopt = BU.map_option (Subst.subst sub) eopt in
           g, {p with v=Pat_dot_term eopt}, sub
@@ -1409,8 +1403,7 @@ and check' (g:env) (e:term)
                       (fun _ -> check_subtype g' (Some b) tbr expect_tbr) ;!
                     return (join_eff eff_br acc_eff, expect_tbr))) in
           match p.v with
-          | Pat_var _
-          | Pat_wild _ ->
+          | Pat_var _ ->
             //trivially exhaustive
             (match rest with
              | _ :: _ -> fail "Redundant branches after wildcard"
@@ -1487,8 +1480,7 @@ and check' (g:env) (e:term)
                   check_relation g' rel tbr expect_tbr;!
                   return (join_eff eff_br acc_eff, expect_tbr))) in
           match p.v with
-          | Pat_var _
-          | Pat_wild _ ->
+          | Pat_var _ ->
             //trivially exhaustive
             (match rest with
              | _ :: _ -> fail "Redundant branches after wildcard"
@@ -1580,8 +1572,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
     let! _ = check_subtype g (Some e) t_const (unrefine_tsc t_sc) in
     return ([], [])
 
-  | Pat_var bv
-  | Pat_wild bv ->
+  | Pat_var bv ->
     let b = S.mk_binder {bv with sort=t_sc} in
     let! [u] = with_context "check_pat_binder" None (fun _ -> check_binders g [b]) in
     return ([b], [u])
@@ -1684,8 +1675,7 @@ and pattern_branch_condition (g:env)
                              (pat:pat)
   : result (option term)
   = match pat.v with
-    | Pat_var _
-    | Pat_wild _ -> 
+    | Pat_var _ -> 
       return None
     | Pat_constant c -> 
       let const_exp = 
@@ -1697,11 +1687,11 @@ and pattern_branch_condition (g:env)
       return (Some (U.mk_decidable_eq t_const scrutinee const_exp))
 
     | Pat_cons(fv, us_opt, sub_pats) ->
-      let wild_pat pos = S.withinfo (Pat_wild (S.new_bv None S.tun)) pos in
+      let wild_pat pos = S.withinfo (Pat_var (S.new_bv None S.tun)) pos in
       let mk_head_discriminator () =
         let pat = S.withinfo (Pat_cons(fv, us_opt, List.map (fun (s, b) -> wild_pat s.p, b) sub_pats)) pat.p in
         let branch1 = (pat, None, U.exp_true_bool) in
-        let branch2 = (S.withinfo (Pat_wild (S.new_bv None S.tun)) pat.p, None, U.exp_false_bool) in
+        let branch2 = (S.withinfo (Pat_var (S.new_bv None S.tun)) pat.p, None, U.exp_false_bool) in
         S.mk (Tm_match(scrutinee, None, [branch1; branch2], None)) scrutinee.pos
       in
       let mk_ith_projector i =
@@ -1733,8 +1723,7 @@ and pattern_branch_condition (g:env)
           (fun i (pi, _) ->
             match pi.v with
             | Pat_dot_term _
-            | Pat_var _
-            | Pat_wild _ -> 
+            | Pat_var _ -> 
               return None
             | _ ->
               let scrutinee_sub_term = mk_ith_projector i in

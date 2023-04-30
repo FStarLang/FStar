@@ -194,7 +194,6 @@ let ref_C_Reflect   = fstar_refl_data_const "C_Reflect"
 let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"
 let ref_Pat_Cons     = fstar_refl_data_const "Pat_Cons"
 let ref_Pat_Var      = fstar_refl_data_const "Pat_Var"
-let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
 let ref_Pat_Dot_Term = fstar_refl_data_const "Pat_Dot_Term"
 
 (* universe_view *)

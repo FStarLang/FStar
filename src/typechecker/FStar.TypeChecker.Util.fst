@@ -433,7 +433,6 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     | Pat_constant c ->
         [], mk (Tm_constant c)
 
-    | Pat_wild x
     | Pat_var x  ->
         [x], mk (Tm_name x)
 

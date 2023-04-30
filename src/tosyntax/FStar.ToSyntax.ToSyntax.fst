@@ -719,9 +719,13 @@ let check_linear_pattern_variables pats r =
   // returns the set of pattern variables
   let rec pat_vars p = match p.v with
     | Pat_dot_term _
-    | Pat_wild _
     | Pat_constant _ -> S.no_names
-    | Pat_var x -> BU.set_add x S.no_names
+    | Pat_var x ->
+      (* Only consider variables that actually have names,
+      not wildcards. *)
+      if string_of_id x.ppname = Ident.reserved_prefix
+      then S.no_names
+      else BU.set_add x S.no_names
     | Pat_cons(_, _, pats) ->
       let aux out (p, _) =
           let p_vars = pat_vars p in
@@ -854,8 +858,7 @@ let rec desugar_data_pat
         in
         (* Check that the ascription is over a variable, and not something else *)
         begin match p.v with
-          | Pat_var _
-          | Pat_wild _ -> ()
+          | Pat_var _ -> ()
           | _ when top && top_level_ascr_allowed -> ()
           | _ ->
             raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly,
@@ -868,7 +871,7 @@ let rec desugar_data_pat
         let aq = trans_bqual env aq in
         let attrs = attrs |> List.map (desugar_term env) in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, aqs, env, LocalBinder(x, aq, attrs), pos <| Pat_wild x, []
+        loc, aqs, env, LocalBinder(x, aq, attrs), pos <| Pat_var x, []
 
       | PatConst c ->
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
@@ -1023,8 +1026,7 @@ and desugar_binding_pat_maybe_top top env p
   else
     let (env, binder, p), aq = desugar_data_pat true env p in
     let p = match p with
-      | [{v=Pat_var _}, _]
-      | [{v=Pat_wild _}, _] -> []
+      | [{v=Pat_var _}, _] -> []
       | _ -> p in
     (env, binder, p), aq
 
@@ -1685,8 +1687,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
            // TODO unsure if keep _ or [] on second comp below
            let body, aq = desugar_term_aq env t2 in
            let body = match pat with
-             | []
-             | [{v=Pat_wild _}, _] -> body
+             | [] -> body
              | _ ->
                S.mk (Tm_match(S.bv_to_name x, None, desugar_disjunctive_pattern pat None body, None)) top.range
            in
@@ -1722,7 +1723,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let t3', aq3 = desugar_term_aq env t3 in
       mk (Tm_match(t1', asc_opt,
                     [(withinfo (Pat_constant (Const_bool true)) t1.range, None, t2');
-                     (withinfo (Pat_wild x) t1.range, None, t3')], None)), join_aqs [aq1;aq0;aq2;aq3]
+                     (withinfo (Pat_var x) t1.range, None, t3')], None)), join_aqs [aq1;aq0;aq2;aq3]
 
     | TryWith(e, branches) ->
       let r = top.range in

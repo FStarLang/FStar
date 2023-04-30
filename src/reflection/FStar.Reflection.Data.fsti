@@ -48,7 +48,6 @@ type pattern =
     | Pat_Constant of vconst
     | Pat_Cons     of fv * option (list universe) * list (pattern * bool)
     | Pat_Var      of bv * typ
-    | Pat_Wild     of bv * typ
     | Pat_Dot_Term of option term
 
 type branch = pattern * term

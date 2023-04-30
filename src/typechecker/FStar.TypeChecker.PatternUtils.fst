@@ -91,7 +91,8 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
               | Pat_dot_term _ ->
                 (p, true)::aux formals' pats'
 
-              | Pat_wild _ -> //it's ok; it's not going to be bound anyway
+              // Only allow it if it won't be bound
+              | Pat_var v when string_of_id (v.ppname) = Ident.reserved_prefix ->
                 let a = Syntax.new_bv (Some p.p) tun in
                 let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
                 (p, true)::aux formals' pats'
@@ -140,7 +141,6 @@ let raw_pat_as_exp (env:Env.env) (p:pat)
             | Some e -> SS.compress e, bs
           end
 
-        | Pat_wild x
         | Pat_var x ->
           mk (Tm_name x) p.p, x::bs
 
@@ -185,6 +185,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
              let x = {x with sort=t_x} in
              x, guard, Env.push_bv env x
     in
+    // TODO: remove wildcards
     let rec pat_as_arg_with_env env (p:pat) :
                                     (list bv    //all pattern-bound vars including wild-cards, in proper order
                                     * list bv   //just the accessible vars, for the disjunctive pattern test
@@ -219,11 +220,6 @@ let pat_as_exp (introduce_bv_uvars:bool)
                 let p = {p with v=Pat_dot_term (Some e)} in
                 [], [], [], env, e, conj_guard g g', p
               | Some e -> [], [], [], env, e, Env.trivial_guard, p)
-
-           | Pat_wild x ->
-             let x, g, env = intro_bv env x in
-             let e = mk (Tm_name x) p.p in
-             ([x], [], [x], env, e, g, p)
 
            | Pat_var x ->
              let x, g, env = intro_bv env x in

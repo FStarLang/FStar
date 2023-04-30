@@ -209,8 +209,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
         debug cfg (fun () -> BU.print2 "matches_pat (%s, %s)\n" (t_to_string scrutinee0) (P.pat_to_string p));
         let scrutinee = unlazy_unmeta scrutinee0 in
         let r = match p.v with
-        | Pat_var bv
-        | Pat_wild bv ->
+        | Pat_var bv ->
             // important to use the non-unfolded variant, some embeddings
             // have no decent unfolding (i.e. they cheat)
             Inl [scrutinee0]
@@ -571,9 +570,6 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
             | Pat_var bvar ->
               let x = S.gen_bv' bvar.ppname None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_var x)
-            | Pat_wild bvar ->
-              let x = S.gen_bv' bvar.ppname None (readback cfg (translate cfg bs bvar.sort)) in
-              (mkAccuVar x :: bs, Pat_wild x)
             | Pat_dot_term eopt ->
               (bs,
                Pat_dot_term (BU.map_option (fun e -> readback cfg (translate cfg bs e)) eopt))

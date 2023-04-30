@@ -1426,11 +1426,6 @@ let mk_exists (u:universe) (x:bv) (body:typ) : typ =
 let close_exists_no_univs bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_exists_no_univ b.binder_bv f) bs f
 
-let is_wild_pat p =
-    match p.v with
-    | Pat_wild _ -> true
-    | _ -> false
-
 let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
