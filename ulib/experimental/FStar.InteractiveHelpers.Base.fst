@@ -571,10 +571,6 @@ and deep_apply_subst_in_pattern e pat subst =
     let st = Sealed.seal (deep_apply_subst e (unseal st) subst) in
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     Pat_Var bv st, subst
-  | Pat_Wild bv st ->
-    let st = Sealed.seal (deep_apply_subst e (unseal st) subst) in
-    let bv, subst = deep_apply_subst_in_bv e bv subst in
-    Pat_Wild bv st, subst
   | Pat_Dot_Term eopt ->
     Pat_Dot_Term (map_opt (fun t -> deep_apply_subst e t subst) eopt), subst
 

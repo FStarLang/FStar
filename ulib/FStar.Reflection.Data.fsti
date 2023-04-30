@@ -40,7 +40,6 @@ type pattern =
                                                     // whether the argument was an explicitly-provided
                                                     // implicit argument
     | Pat_Var      : bv -> sealed typ -> pattern    // Pattern bound variable
-    | Pat_Wild     : bv -> sealed typ -> pattern    // Wildcard (GM: why is this not Pat_var too?)
     | Pat_Dot_Term : option term -> pattern         // Dot pattern: resolved by other elements in the pattern and type
 
 type branch = pattern * term  // | pattern -> term

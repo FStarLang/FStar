@@ -472,9 +472,6 @@ and rebuild_closure cfg env stack t =
             | Pat_var x ->
               let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
               {p with v=Pat_var x}, dummy::env
-            | Pat_wild x ->
-              let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
-              {p with v=Pat_wild x}, dummy::env
             | Pat_dot_term eopt ->
               let eopt = BU.map_option (non_tail_inline_closure_env cfg env) eopt in
               {p with v=Pat_dot_term eopt}, env
@@ -2826,9 +2823,6 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             | Pat_var x ->
               let x = {x with sort=norm_or_whnf env x.sort} in
               {p with v=Pat_var x}, dummy::env
-            | Pat_wild x ->
-              let x = {x with sort=norm_or_whnf env x.sort} in
-              {p with v=Pat_wild x}, dummy::env
             | Pat_dot_term eopt ->
               let eopt = BU.map_option (norm_or_whnf env) eopt in
               {p with v=Pat_dot_term eopt}, env
@@ -2931,8 +2925,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             let scrutinee = U.unlazy scrutinee in
             let head, args = U.head_and_args scrutinee in
             match p.v with
-            | Pat_var bv
-            | Pat_wild bv -> Inl [(bv, scrutinee_orig)]
+            | Pat_var bv -> Inl [(bv, scrutinee_orig)]
             | Pat_dot_term _ -> Inl []
             | Pat_constant s -> begin
               match scrutinee.n with

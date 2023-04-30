@@ -931,10 +931,7 @@ let rec extract_one_pat (imp : bool)
         let mlty = term_as_mlty g t in
         g, Some (MLP_Const (mlconst_of_const p.p s), []), ok mlty
 
-    | Pat_var x | Pat_wild x ->
-        // JP,NS: Pat_wild turns into a binder in the internal syntax because
-        // the types of other terms may depend on it
-
+    | Pat_var x ->
         //In some cases, the computed_mlty based on the F* computed sort x.sort
         //can be more precise than the type in ML. see e.g., Bug2595
         //So, prefer to extend the environment with the expected ML type of the

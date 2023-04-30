@@ -376,8 +376,6 @@ let rec e_pattern_aq aq =
                S.as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) rng ps)] rng
         | Pat_Var (bv, sort) ->
             S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed e_bv rng bv); S.as_arg (embed (e_sealed e_term) rng sort)] rng
-        | Pat_Wild (bv, sort) ->
-            S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed e_bv rng bv); S.as_arg (embed (e_sealed e_term) rng sort)] rng
         | Pat_Dot_Term eopt ->
             S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed (e_option e_term) rng eopt)]
                         rng
@@ -400,11 +398,6 @@ let rec e_pattern_aq aq =
             BU.bind_opt (unembed' w e_bv bv) (fun bv ->
             BU.bind_opt (unembed' w (e_sealed e_term) sort) (fun sort ->
             Some <| Pat_Var (bv, sort)))
-
-        | Tm_fvar fv, [(bv, _); (sort, _)] when S.fv_eq_lid fv ref_Pat_Wild.lid ->
-            BU.bind_opt (unembed' w e_bv bv) (fun bv ->
-            BU.bind_opt (unembed' w (e_sealed e_term) sort) (fun sort ->
-            Some <| Pat_Wild (bv, sort)))
 
         | Tm_fvar fv, [(eopt, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
             BU.bind_opt (unembed' w (e_option e_term) eopt) (fun eopt ->
