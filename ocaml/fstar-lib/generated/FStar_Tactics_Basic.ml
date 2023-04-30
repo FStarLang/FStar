@@ -6379,9 +6379,11 @@ let rec (inspect :
                        (fv, us_opt, uu___4) in
                      FStar_Reflection_Data.Pat_Cons uu___3
                  | FStar_Syntax_Syntax.Pat_var bv ->
-                     FStar_Reflection_Data.Pat_Var bv
+                     FStar_Reflection_Data.Pat_Var
+                       (bv, (bv.FStar_Syntax_Syntax.sort))
                  | FStar_Syntax_Syntax.Pat_wild bv ->
-                     FStar_Reflection_Data.Pat_Wild bv
+                     FStar_Reflection_Data.Pat_Wild
+                       (bv, (bv.FStar_Syntax_Syntax.sort))
                  | FStar_Syntax_Syntax.Pat_dot_term eopt ->
                      FStar_Reflection_Data.Pat_Dot_Term eopt in
                let brs1 =
@@ -6543,10 +6545,10 @@ let (pack' :
                     (fv, us_opt, uu___2) in
                   FStar_Syntax_Syntax.Pat_cons uu___1 in
                 FStar_Compiler_Effect.op_Less_Bar wrap uu___
-            | FStar_Reflection_Data.Pat_Var bv ->
+            | FStar_Reflection_Data.Pat_Var (bv, _sort) ->
                 FStar_Compiler_Effect.op_Less_Bar wrap
                   (FStar_Syntax_Syntax.Pat_var bv)
-            | FStar_Reflection_Data.Pat_Wild bv ->
+            | FStar_Reflection_Data.Pat_Wild (bv, _sort) ->
                 FStar_Compiler_Effect.op_Less_Bar wrap
                   (FStar_Syntax_Syntax.Pat_wild bv)
             | FStar_Reflection_Data.Pat_Dot_Term eopt ->

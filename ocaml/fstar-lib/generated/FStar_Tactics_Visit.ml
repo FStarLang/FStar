@@ -734,16 +734,16 @@ and (visit_pat :
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___ ->
                                FStar_Reflection_Data.Pat_Cons (fv, us, l1)))))
-           | FStar_Reflection_Data.Pat_Var bv ->
+           | FStar_Reflection_Data.Pat_Var (bv, st) ->
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.lift_div_tac
-                       (fun uu___ -> FStar_Reflection_Data.Pat_Var bv)))
-           | FStar_Reflection_Data.Pat_Wild bv ->
+                       (fun uu___ -> FStar_Reflection_Data.Pat_Var (bv, st))))
+           | FStar_Reflection_Data.Pat_Wild (bv, st) ->
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.lift_div_tac
-                       (fun uu___ -> FStar_Reflection_Data.Pat_Wild bv)))
+                       (fun uu___ -> FStar_Reflection_Data.Pat_Wild (bv, st))))
            | FStar_Reflection_Data.Pat_Dot_Term eopt ->
                Obj.magic
                  (Obj.repr

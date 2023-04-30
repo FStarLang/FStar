@@ -182,8 +182,8 @@ and (binder_offset_pattern : FStar_Reflection_Data.pattern -> Prims.nat) =
     match p with
     | FStar_Reflection_Data.Pat_Constant uu___ -> Prims.int_zero
     | FStar_Reflection_Data.Pat_Dot_Term uu___ -> Prims.int_zero
-    | FStar_Reflection_Data.Pat_Var uu___ -> Prims.int_one
-    | FStar_Reflection_Data.Pat_Wild uu___ -> Prims.int_one
+    | FStar_Reflection_Data.Pat_Var (uu___, uu___1) -> Prims.int_one
+    | FStar_Reflection_Data.Pat_Wild (uu___, uu___1) -> Prims.int_one
     | FStar_Reflection_Data.Pat_Cons (fv, us, pats) ->
         binder_offset_patterns pats
 let rec (open_or_close_term' :
@@ -410,10 +410,10 @@ and (open_or_close_pattern' :
         | FStar_Reflection_Data.Pat_Cons (fv, us, pats) ->
             let pats1 = open_or_close_patterns' pats v i in
             FStar_Reflection_Data.Pat_Cons (fv, us, pats1)
-        | FStar_Reflection_Data.Pat_Var bv ->
-            FStar_Reflection_Data.Pat_Var bv
-        | FStar_Reflection_Data.Pat_Wild bv ->
-            FStar_Reflection_Data.Pat_Wild bv
+        | FStar_Reflection_Data.Pat_Var (bv, st) ->
+            FStar_Reflection_Data.Pat_Var (bv, st)
+        | FStar_Reflection_Data.Pat_Wild (bv, st) ->
+            FStar_Reflection_Data.Pat_Wild (bv, st)
         | FStar_Reflection_Data.Pat_Dot_Term topt ->
             FStar_Reflection_Data.Pat_Dot_Term
               ((match topt with
@@ -655,8 +655,8 @@ and (freevars_pattern :
     match p with
     | FStar_Reflection_Data.Pat_Constant uu___ -> FStar_Set.empty ()
     | FStar_Reflection_Data.Pat_Cons (fv, us, pats) -> freevars_patterns pats
-    | FStar_Reflection_Data.Pat_Var bv -> FStar_Set.empty ()
-    | FStar_Reflection_Data.Pat_Wild bv -> FStar_Set.empty ()
+    | FStar_Reflection_Data.Pat_Var (bv, uu___) -> FStar_Set.empty ()
+    | FStar_Reflection_Data.Pat_Wild (bv, uu___) -> FStar_Set.empty ()
     | FStar_Reflection_Data.Pat_Dot_Term topt -> freevars_opt topt freevars
 and (freevars_patterns :
   (FStar_Reflection_Data.pattern * Prims.bool) Prims.list ->
@@ -1176,8 +1176,8 @@ and (ln'_pattern : FStar_Reflection_Data.pattern -> Prims.int -> Prims.bool)
       match p with
       | FStar_Reflection_Data.Pat_Constant uu___ -> true
       | FStar_Reflection_Data.Pat_Cons (fv, us, pats) -> ln'_patterns pats i
-      | FStar_Reflection_Data.Pat_Var bv -> true
-      | FStar_Reflection_Data.Pat_Wild bv -> true
+      | FStar_Reflection_Data.Pat_Var (bv, uu___) -> true
+      | FStar_Reflection_Data.Pat_Wild (bv, uu___) -> true
       | FStar_Reflection_Data.Pat_Dot_Term topt ->
           (match topt with
            | FStar_Pervasives_Native.None -> true

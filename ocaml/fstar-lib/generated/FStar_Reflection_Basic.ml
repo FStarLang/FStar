@@ -265,9 +265,11 @@ let rec (inspect_ln :
                 (fv, us_opt, uu___2) in
               FStar_Reflection_Data.Pat_Cons uu___1
           | FStar_Syntax_Syntax.Pat_var bv ->
-              FStar_Reflection_Data.Pat_Var bv
+              FStar_Reflection_Data.Pat_Var
+                (bv, (bv.FStar_Syntax_Syntax.sort))
           | FStar_Syntax_Syntax.Pat_wild bv ->
-              FStar_Reflection_Data.Pat_Wild bv
+              FStar_Reflection_Data.Pat_Wild
+                (bv, (bv.FStar_Syntax_Syntax.sort))
           | FStar_Syntax_Syntax.Pat_dot_term eopt ->
               FStar_Reflection_Data.Pat_Dot_Term eopt in
         let brs1 =
@@ -519,10 +521,10 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
                   (fv, us_opt, uu___2) in
                 FStar_Syntax_Syntax.Pat_cons uu___1 in
               FStar_Compiler_Effect.op_Less_Bar wrap uu___
-          | FStar_Reflection_Data.Pat_Var bv ->
+          | FStar_Reflection_Data.Pat_Var (bv, _sort) ->
               FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_var bv)
-          | FStar_Reflection_Data.Pat_Wild bv ->
+          | FStar_Reflection_Data.Pat_Wild (bv, _sort) ->
               FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_wild bv)
           | FStar_Reflection_Data.Pat_Dot_Term eopt ->
@@ -1294,10 +1296,12 @@ and (pattern_eq :
             ((eqlist ())
                ((eqprod ()) pattern_eq (fun b1 -> fun b2 -> b1 = b2))
                subpats1 subpats2)
-      | (FStar_Reflection_Data.Pat_Var bv1, FStar_Reflection_Data.Pat_Var
-         bv2) -> binding_bv_eq bv1 bv2
-      | (FStar_Reflection_Data.Pat_Wild bv1, FStar_Reflection_Data.Pat_Wild
-         bv2) -> binding_bv_eq bv1 bv2
+      | (FStar_Reflection_Data.Pat_Var (bv1, uu___),
+         FStar_Reflection_Data.Pat_Var (bv2, uu___1)) ->
+          binding_bv_eq bv1 bv2
+      | (FStar_Reflection_Data.Pat_Wild (bv1, uu___),
+         FStar_Reflection_Data.Pat_Wild (bv2, uu___1)) ->
+          binding_bv_eq bv1 bv2
       | (FStar_Reflection_Data.Pat_Dot_Term topt1,
          FStar_Reflection_Data.Pat_Dot_Term topt2) ->
           (eqopt ()) term_eq topt1 topt2

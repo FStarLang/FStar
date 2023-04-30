@@ -457,14 +457,15 @@ and (pat_eq :
       (fun p1 ->
          fun p2 ->
            match (p1, p2) with
-           | (FStar_Reflection_Data.Pat_Var v1, FStar_Reflection_Data.Pat_Var
-              v2) -> Obj.magic (Obj.repr (bv_eq v1 v2))
+           | (FStar_Reflection_Data.Pat_Var (v1, st1),
+              FStar_Reflection_Data.Pat_Var (v2, st2)) ->
+               Obj.magic (Obj.repr (bv_eq v1 v2))
+           | (FStar_Reflection_Data.Pat_Wild (v1, st1),
+              FStar_Reflection_Data.Pat_Wild (v2, st2)) ->
+               Obj.magic (Obj.repr (bv_eq v1 v2))
            | (FStar_Reflection_Data.Pat_Constant c1,
               FStar_Reflection_Data.Pat_Constant c2) ->
                Obj.magic (Obj.repr (const_eq c1 c2))
-           | (FStar_Reflection_Data.Pat_Wild v1,
-              FStar_Reflection_Data.Pat_Wild v2) ->
-               Obj.magic (Obj.repr (bv_eq v1 v2))
            | (FStar_Reflection_Data.Pat_Dot_Term t1,
               FStar_Reflection_Data.Pat_Dot_Term t2) ->
                Obj.magic (Obj.repr (opt_eq term_eq t1 t2))

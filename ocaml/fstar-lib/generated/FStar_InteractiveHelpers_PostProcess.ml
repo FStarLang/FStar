@@ -3748,14 +3748,13 @@ let (find_equality_from_post :
         FStar_Reflection_Types.bv ->
           FStar_Reflection_Types.typ ->
             FStar_Reflection_Types.term ->
-              FStar_Reflection_Types.typ ->
-                FStar_InteractiveHelpers_Effectful.effect_info ->
+              FStar_InteractiveHelpers_Effectful.effect_info ->
+                FStar_Reflection_Data.term_view Prims.list ->
                   FStar_Reflection_Data.term_view Prims.list ->
-                    FStar_Reflection_Data.term_view Prims.list ->
-                      ((FStar_InteractiveHelpers_Base.genv *
-                         FStar_Reflection_Types.term
-                         FStar_Pervasives_Native.option),
-                        unit) FStar_Tactics_Effect.tac_repr)
+                    ((FStar_InteractiveHelpers_Base.genv *
+                       FStar_Reflection_Types.term
+                       FStar_Pervasives_Native.option),
+                      unit) FStar_Tactics_Effect.tac_repr)
   =
   fun dbg ->
     fun ge0 ->
@@ -3763,103 +3762,100 @@ let (find_equality_from_post :
         fun let_bv ->
           fun let_bvty ->
             fun ret_value ->
-              fun ret_type ->
-                fun einfo ->
-                  fun parents ->
-                    fun children ->
-                      FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range
-                           "FStar.InteractiveHelpers.PostProcess.fst"
-                           (Prims.of_int (475)) (Prims.of_int (2))
-                           (Prims.of_int (475)) (Prims.of_int (44)))
-                        (FStar_Range.mk_range
-                           "FStar.InteractiveHelpers.PostProcess.fst"
-                           (Prims.of_int (476)) (Prims.of_int (2))
-                           (Prims.of_int (493)) (Prims.of_int (27)))
-                        (Obj.magic
-                           (FStar_InteractiveHelpers_Base.print_dbg dbg
-                              "[> find_equality_from_post"))
-                        (fun uu___ ->
-                           (fun uu___ ->
-                              Obj.magic
-                                (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range
-                                      "FStar.InteractiveHelpers.PostProcess.fst"
-                                      (Prims.of_int (476))
-                                      (Prims.of_int (14))
-                                      (Prims.of_int (476))
-                                      (Prims.of_int (46)))
-                                   (FStar_Range.mk_range
-                                      "FStar.InteractiveHelpers.PostProcess.fst"
-                                      (Prims.of_int (478)) (Prims.of_int (2))
-                                      (Prims.of_int (493))
-                                      (Prims.of_int (27)))
-                                   (Obj.magic
-                                      (FStar_InteractiveHelpers_ExploreTerm.get_type_info_from_type
-                                         ret_type))
-                                   (fun uu___1 ->
-                                      (fun tinfo ->
-                                         Obj.magic
-                                           (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (479))
-                                                 (Prims.of_int (4))
-                                                 (Prims.of_int (480))
-                                                 (Prims.of_int (78)))
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (478))
-                                                 (Prims.of_int (2))
-                                                 (Prims.of_int (493))
-                                                 (Prims.of_int (27)))
-                                              (Obj.magic
-                                                 (FStar_InteractiveHelpers_Effectful.pre_post_to_propositions
-                                                    dbg ge0
-                                                    einfo.FStar_InteractiveHelpers_Effectful.ei_type
-                                                    ret_value
-                                                    (FStar_Pervasives_Native.Some
-                                                       (FStar_Reflection_Derived.mk_binder
-                                                          let_bv let_bvty))
-                                                    tinfo
-                                                    einfo.FStar_InteractiveHelpers_Effectful.ei_pre
-                                                    einfo.FStar_InteractiveHelpers_Effectful.ei_post
-                                                    parents children))
-                                              (fun uu___1 ->
-                                                 (fun uu___1 ->
-                                                    match uu___1 with
-                                                    | (ge1, uu___2,
-                                                       post_prop) ->
-                                                        Obj.magic
-                                                          (FStar_Tactics_Effect.tac_bind
-                                                             (FStar_Range.mk_range
-                                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                (Prims.of_int (482))
-                                                                (Prims.of_int (2))
-                                                                (Prims.of_int (482))
-                                                                (Prims.of_int (79)))
-                                                             (FStar_Range.mk_range
-                                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                (Prims.of_int (484))
-                                                                (Prims.of_int (2))
-                                                                (Prims.of_int (493))
-                                                                (Prims.of_int (27)))
-                                                             (Obj.magic
-                                                                (FStar_Tactics_Effect.tac_bind
-                                                                   (FStar_Range.mk_range
+              fun einfo ->
+                fun parents ->
+                  fun children ->
+                    FStar_Tactics_Effect.tac_bind
+                      (FStar_Range.mk_range
+                         "FStar.InteractiveHelpers.PostProcess.fst"
+                         (Prims.of_int (475)) (Prims.of_int (2))
+                         (Prims.of_int (475)) (Prims.of_int (44)))
+                      (FStar_Range.mk_range
+                         "FStar.InteractiveHelpers.PostProcess.fst"
+                         (Prims.of_int (476)) (Prims.of_int (2))
+                         (Prims.of_int (493)) (Prims.of_int (27)))
+                      (Obj.magic
+                         (FStar_InteractiveHelpers_Base.print_dbg dbg
+                            "[> find_equality_from_post"))
+                      (fun uu___ ->
+                         (fun uu___ ->
+                            Obj.magic
+                              (FStar_Tactics_Effect.tac_bind
+                                 (FStar_Range.mk_range
+                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                    (Prims.of_int (476)) (Prims.of_int (14))
+                                    (Prims.of_int (476)) (Prims.of_int (46)))
+                                 (FStar_Range.mk_range
+                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                    (Prims.of_int (478)) (Prims.of_int (2))
+                                    (Prims.of_int (493)) (Prims.of_int (27)))
+                                 (Obj.magic
+                                    (FStar_InteractiveHelpers_ExploreTerm.get_type_info_from_type
+                                       let_bvty))
+                                 (fun uu___1 ->
+                                    (fun tinfo ->
+                                       Obj.magic
+                                         (FStar_Tactics_Effect.tac_bind
+                                            (FStar_Range.mk_range
+                                               "FStar.InteractiveHelpers.PostProcess.fst"
+                                               (Prims.of_int (479))
+                                               (Prims.of_int (4))
+                                               (Prims.of_int (480))
+                                               (Prims.of_int (78)))
+                                            (FStar_Range.mk_range
+                                               "FStar.InteractiveHelpers.PostProcess.fst"
+                                               (Prims.of_int (478))
+                                               (Prims.of_int (2))
+                                               (Prims.of_int (493))
+                                               (Prims.of_int (27)))
+                                            (Obj.magic
+                                               (FStar_InteractiveHelpers_Effectful.pre_post_to_propositions
+                                                  dbg ge0
+                                                  einfo.FStar_InteractiveHelpers_Effectful.ei_type
+                                                  ret_value
+                                                  (FStar_Pervasives_Native.Some
+                                                     (FStar_Reflection_Derived.mk_binder
+                                                        let_bv let_bvty))
+                                                  tinfo
+                                                  einfo.FStar_InteractiveHelpers_Effectful.ei_pre
+                                                  einfo.FStar_InteractiveHelpers_Effectful.ei_post
+                                                  parents children))
+                                            (fun uu___1 ->
+                                               (fun uu___1 ->
+                                                  match uu___1 with
+                                                  | (ge1, uu___2, post_prop)
+                                                      ->
+                                                      Obj.magic
+                                                        (FStar_Tactics_Effect.tac_bind
+                                                           (FStar_Range.mk_range
+                                                              "FStar.InteractiveHelpers.PostProcess.fst"
+                                                              (Prims.of_int (482))
+                                                              (Prims.of_int (2))
+                                                              (Prims.of_int (482))
+                                                              (Prims.of_int (79)))
+                                                           (FStar_Range.mk_range
+                                                              "FStar.InteractiveHelpers.PostProcess.fst"
+                                                              (Prims.of_int (484))
+                                                              (Prims.of_int (2))
+                                                              (Prims.of_int (493))
+                                                              (Prims.of_int (27)))
+                                                           (Obj.magic
+                                                              (FStar_Tactics_Effect.tac_bind
+                                                                 (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
                                                                     (Prims.of_int (482))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (482))
                                                                     (Prims.of_int (79)))
-                                                                   (FStar_Range.mk_range
+                                                                 (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
                                                                     (Prims.of_int (482))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (482))
                                                                     (Prims.of_int (79)))
-                                                                   (Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
                                                                     (Prims.of_int (482))
@@ -3884,8 +3880,8 @@ let (find_equality_from_post :
                                                                     Prims.strcat
                                                                     "Computed post: "
                                                                     uu___3))))
-                                                                   (fun
-                                                                    uu___3 ->
+                                                                 (fun uu___3
+                                                                    ->
                                                                     (fun
                                                                     uu___3 ->
                                                                     Obj.magic
@@ -3893,11 +3889,10 @@ let (find_equality_from_post :
                                                                     dbg
                                                                     uu___3))
                                                                     uu___3)))
-                                                             (fun uu___3 ->
-                                                                (fun uu___3
-                                                                   ->
-                                                                   Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
+                                                           (fun uu___3 ->
+                                                              (fun uu___3 ->
+                                                                 Obj.magic
+                                                                   (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
                                                                     (Prims.of_int (485))
@@ -3946,8 +3941,8 @@ let (find_equality_from_post :
                                                                     (ge1,
                                                                     (FStar_Pervasives_Native.Some
                                                                     tm1))))))
-                                                                  uu___3)))
-                                                   uu___1))) uu___1))) uu___)
+                                                                uu___3)))
+                                                 uu___1))) uu___1))) uu___)
 let rec (find_context_equality_aux :
   Prims.bool ->
     FStar_InteractiveHelpers_Base.genv ->
@@ -4328,7 +4323,7 @@ let rec (find_context_equality_aux :
                                                                     dbg ge0
                                                                     tm bv' ty
                                                                     ret_value
-                                                                    ty einfo
+                                                                    einfo
                                                                     parents
                                                                     children))
                                                                     (fun
