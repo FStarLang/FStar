@@ -1,5 +1,5 @@
 module Steel.ST.C.Types.Struct
-open Steel.ST.GenElim
+open Steel.ST.GenElim1
 friend Steel.ST.C.Types.Base
 friend Steel.ST.C.Types.Struct.Aux
 open Steel.ST.C.Types.Struct.Aux

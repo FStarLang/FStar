@@ -1,7 +1,7 @@
 module Steel.ST.C.Types.Base
 
 open Steel.C.Model.PCM
-open Steel.ST.GenElim
+open Steel.ST.GenElim1
 
 #set-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
 
