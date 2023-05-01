@@ -98,7 +98,8 @@ type term_view =
   | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> term_view
-  | Tv_Unknown  : term_view // Baked in "None"
+  | Tv_Unknown  : term_view // An underscore: _
+  | Tv_Unsupp : term_view // failed to inspect, not supported
 
 let notAscription (tv:term_view) : bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)

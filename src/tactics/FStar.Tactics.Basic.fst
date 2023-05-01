@@ -1986,9 +1986,9 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head), (ctx_u, s))
 
     | Tm_let ((false, [lb]), t2) ->
-        if lb.lbunivs <> [] then ret <| Tv_Unknown else
+        if lb.lbunivs <> [] then ret <| Tv_Unsupp else
         begin match lb.lbname with
-        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inr _ -> ret <| Tv_Unsupp // no top level lets
         | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             let b = S.mk_binder bv in
@@ -2001,15 +2001,15 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         end
 
     | Tm_let ((true, [lb]), t2) ->
-        if lb.lbunivs <> [] then ret <| Tv_Unknown else
+        if lb.lbunivs <> [] then ret <| Tv_Unsupp else
         begin match lb.lbname with
-        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inr _ -> ret <| Tv_Unsupp // no top level lets
         | Inl bv ->
             let lbs, t2 = SS.open_let_rec [lb] t2 in
             match lbs with
             | [lb] ->
                 (match lb.lbname with
-                 | Inr _ -> ret Tv_Unknown
+                 | Inr _ -> ret Tv_Unsupp
                  | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
@@ -2031,7 +2031,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
-        ret <| Tv_Unknown
+        ret <| Tv_Unsupp
     )
 
 (* This function could actually be pure, it doesn't need freshness
@@ -2105,6 +2105,9 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
+
+    | Tv_Unsupp ->
+        fail "cannot pack Tv_Unsupp"
 
 let pack (tv:term_view) : tac term = pack' tv false
 let pack_curried (tv:term_view) : tac term = pack' tv true

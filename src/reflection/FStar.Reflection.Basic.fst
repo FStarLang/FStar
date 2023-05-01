@@ -255,18 +255,18 @@ let rec inspect_ln (t:term) : term_view =
                 (ctx_u, s))
 
     | Tm_let ((false, [lb]), t2) ->
-        if lb.lbunivs <> [] then Tv_Unknown else
+        if lb.lbunivs <> [] then Tv_Unsupp else
         begin match lb.lbname with
-        | Inr _ -> Tv_Unknown // no top level lets
+        | Inr _ -> Tv_Unsupp // no top level lets
         | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             Tv_Let (false, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
-        if lb.lbunivs <> [] then Tv_Unknown else
+        if lb.lbunivs <> [] then Tv_Unsupp else
         begin match lb.lbname with
-        | Inr _  -> Tv_Unknown // no top level lets
+        | Inr _  -> Tv_Unsupp // no top level lets
         | Inl bv -> Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
         end
 
@@ -290,7 +290,7 @@ let rec inspect_ln (t:term) : term_view =
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (Print.tag_of_term t) (Print.term_to_string t));
-        Tv_Unknown
+        Tv_Unsupp
 
 let inspect_comp (c : comp) : comp_view =
     let get_dec (flags : list cflag) : list term =
@@ -438,6 +438,11 @@ let pack_ln (tv:term_view) : term =
         S.mk (Tm_ascribed(e, (Inr c, tacopt, use_eq), None)) Range.dummyRange
 
     | Tv_Unknown ->
+        S.mk Tm_unknown Range.dummyRange
+
+    | Tv_Unsupp ->
+        Err.log_issue Range.dummyRange
+            (Err.Warning_CantInspect, "packing a Tv_Unsupp into Tm_unknown");
         S.mk Tm_unknown Range.dummyRange
 
 let compare_bv (x:bv) (y:bv) : order =

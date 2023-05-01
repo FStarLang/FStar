@@ -512,6 +512,9 @@ let e_term_view_aq aq =
 
         | Tv_Unknown ->
             { ref_Tv_Unknown.t with pos = rng }
+
+        | Tv_Unsupp ->
+            { ref_Tv_Unsupp.t with pos = rng }
     in
     let unembed_term_view w (t:term) : option term_view =
         let hd, args = U.head_and_args t in
@@ -599,6 +602,9 @@ let e_term_view_aq aq =
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
             Some <| Tv_Unknown
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unsupp.lid ->
+            Some <| Tv_Unsupp
 
         | _ ->
             if w then
