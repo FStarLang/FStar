@@ -520,6 +520,7 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
 let print_module ((path, m): string * structure) =
   Format.set_formatter_out_channel (open_out_bin path);
   structure Format.std_formatter m;
+  Format.print_char '\n';
   Format.pp_print_flush Format.std_formatter ()
 
 let print (out_dir: string option) (ext: string) (ml: mllib) =
