@@ -1,4 +1,5 @@
 #include "Steel_SpinLock.h"
+#include <assert.h>
 #include <pthread.h>
 
 void Steel_SpinLock_new_lock (Steel_SpinLock_lock____ *dst) {
