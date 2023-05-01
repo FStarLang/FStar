@@ -2422,10 +2422,6 @@ let (norm_term_env :
         let uu___ =
           FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.get
             (fun ps ->
-               let opts =
-                 match ps.FStar_Tactics_Types.goals with
-                 | g::uu___1 -> g.FStar_Tactics_Types.opts
-                 | uu___1 -> FStar_Options.peek () in
                let uu___1 =
                  FStar_Tactics_Monad.if_verbose
                    (fun uu___2 ->
@@ -6947,9 +6943,90 @@ let with_compat_pre_core :
     fun f ->
       FStar_Tactics_Monad.mk_tac
         (fun ps ->
-           FStar_Options.push ();
-           (let res = FStar_Options.set_options "--compat_pre_core 0" in
-            let r = FStar_Tactics_Monad.run f ps in FStar_Options.pop (); r))
+           FStar_Options.with_saved_options
+             (fun uu___ ->
+                let _res = FStar_Options.set_options "--compat_pre_core 0" in
+                FStar_Tactics_Monad.run f ps))
+let (get_vconfig : unit -> FStar_VConfig.vconfig FStar_Tactics_Monad.tac) =
+  fun uu___ ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
+      (fun g ->
+         let vcfg =
+           FStar_Options.with_saved_options
+             (fun uu___1 ->
+                (let uu___3 =
+                   FStar_Compiler_Util.smap_copy g.FStar_Tactics_Types.opts in
+                 FStar_Options.set uu___3);
+                FStar_Options.get_vconfig ()) in
+         FStar_Tactics_Monad.ret vcfg)
+let (set_vconfig : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
+  fun vcfg ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
+      (fun g ->
+         let opts' =
+           FStar_Options.with_saved_options
+             (fun uu___ ->
+                (let uu___2 =
+                   FStar_Compiler_Util.smap_copy g.FStar_Tactics_Types.opts in
+                 FStar_Options.set uu___2);
+                FStar_Options.set_vconfig vcfg;
+                FStar_Options.peek ()) in
+         let g' =
+           {
+             FStar_Tactics_Types.goal_main_env =
+               (g.FStar_Tactics_Types.goal_main_env);
+             FStar_Tactics_Types.goal_ctx_uvar =
+               (g.FStar_Tactics_Types.goal_ctx_uvar);
+             FStar_Tactics_Types.opts = opts';
+             FStar_Tactics_Types.is_guard = (g.FStar_Tactics_Types.is_guard);
+             FStar_Tactics_Types.label = (g.FStar_Tactics_Types.label)
+           } in
+         FStar_Tactics_Monad.replace_cur g')
+let (t_smt_sync : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
+  fun vcfg ->
+    let uu___ =
+      FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
+        (fun goal ->
+           let uu___1 = FStar_Tactics_Types.get_phi goal in
+           match uu___1 with
+           | FStar_Pervasives_Native.None ->
+               FStar_Tactics_Monad.fail "Goal is not irrelevant"
+           | FStar_Pervasives_Native.Some phi ->
+               let e = FStar_Tactics_Types.goal_env goal in
+               let ans =
+                 FStar_Options.with_saved_options
+                   (fun uu___2 ->
+                      FStar_Options.set_vconfig vcfg;
+                      (e.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve_sync
+                        FStar_Pervasives_Native.None e phi) in
+               if ans
+               then
+                 (mark_uvar_as_already_checked
+                    goal.FStar_Tactics_Types.goal_ctx_uvar;
+                  solve goal FStar_Syntax_Util.exp_unit)
+               else FStar_Tactics_Monad.fail "SMT did not solve this goal") in
+    FStar_Compiler_Effect.op_Less_Bar
+      (FStar_Tactics_Monad.wrap_err "t_smt_sync") uu___
+let (free_uvars :
+  FStar_Syntax_Syntax.term ->
+    FStar_BigInt.t Prims.list FStar_Tactics_Monad.tac)
+  =
+  fun tm ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uvs =
+           let uu___1 =
+             let uu___2 = FStar_Syntax_Free.uvars_uncached tm in
+             FStar_Compiler_Effect.op_Bar_Greater uu___2
+               FStar_Compiler_Util.set_elements in
+           FStar_Compiler_Effect.op_Bar_Greater uu___1
+             (FStar_Compiler_List.map
+                (fun u ->
+                   let uu___2 =
+                     FStar_Syntax_Unionfind.uvar_id
+                       u.FStar_Syntax_Syntax.ctx_uvar_head in
+                   FStar_BigInt.of_int_fs uu___2)) in
+         FStar_Tactics_Monad.ret uvs)
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->

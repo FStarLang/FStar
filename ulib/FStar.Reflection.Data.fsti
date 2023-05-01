@@ -61,7 +61,7 @@ let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
 noeq
 type bv_view = {
     bv_ppname : ppname_t;
-    bv_index : int;
+    bv_index : nat;
     bv_sort : typ;
 }
 
@@ -77,7 +77,7 @@ type universe_view =
   | Uv_Zero : universe_view
   | Uv_Succ : universe -> universe_view
   | Uv_Max  : universes -> universe_view
-  | Uv_BVar : int -> universe_view
+  | Uv_BVar : nat -> universe_view
   | Uv_Name : univ_name -> universe_view
   | Uv_Unif : universe_uvar -> universe_view
   | Uv_Unk   : universe_view
@@ -94,7 +94,7 @@ type term_view =
   | Tv_Type   : universe -> term_view
   | Tv_Refine : bv:bv -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
-  | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
+  | Tv_Uvar   : nat -> ctx_uvar_and_subst -> term_view
   | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> term_view

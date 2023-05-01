@@ -6,6 +6,8 @@ u_boot_fsts
 u_ocaml-output
 
 dep.graph
+dep_simpl.graph
+depgraph.pdf
 
 [Bb]in/
 [Oo]bj/

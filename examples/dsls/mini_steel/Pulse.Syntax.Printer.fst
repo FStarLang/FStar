@@ -214,6 +214,11 @@ let rec st_term_to_string (t:st_term)
 						  (term_to_string p)
 								(term_to_string q)
 
+    | Tm_WithLocal init e ->
+      sprintf "let mut _ = %s in %s"
+        (term_to_string init)
+        (st_term_to_string e)
+
     | Tm_Admit c u t post ->
       sprintf "%s<%s> %s%s"
         (match c with

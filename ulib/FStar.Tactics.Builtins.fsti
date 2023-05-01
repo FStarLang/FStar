@@ -26,6 +26,7 @@ open FStar.Reflection.Data
 open FStar.Reflection.Const
 open FStar.Tactics.Types
 open FStar.Tactics.Result
+open FStar.VConfig
 
 (** Observe a sealed value. See Sealed.seal too. *)
 val unseal : #a:Type -> sealed a -> Tac a
@@ -428,6 +429,23 @@ It is an escape hatch for maintaining backward compatibility
 for code that breaks with the core typechecker. *)
 val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a
 
+(** Get the [vconfig], including fuel, ifuel, rlimit, etc,
+associated with the current goal. *)
+val get_vconfig : unit -> Tac vconfig
+
+(** Set the [vconfig], including fuel, ifuel, rlimit, etc, associated
+with the current goal. This vconfig will be used if the goal is
+attempted by SMT at the end of a tactic run. *)
+val set_vconfig : vconfig -> Tac unit
+
+(** Attempt to solve the current goal with SMT immediately, and fail
+if it cannot be solved. The vconfig specifies fuels, limits, etc. The
+current goal's vconfig is ignored in favor of this one. *)
+val t_smt_sync : vconfig -> Tac unit
+
+(** This returns the free uvars that appear in a term. This is not
+a reflection primitive as it depends on the state of the UF graph. *)
+val free_uvars : term -> Tac (list int)
 
 
 (***** APIs used in the meta DSL framework *****)

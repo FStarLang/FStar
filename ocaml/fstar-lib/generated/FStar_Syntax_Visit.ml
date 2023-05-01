@@ -216,8 +216,9 @@ let (on_sub_term :
       | FStar_Syntax_Syntax.Tm_name uu___ -> tm1
       | FStar_Syntax_Syntax.Tm_uvar uu___ -> tm1
       | FStar_Syntax_Syntax.Tm_uinst (f, us) ->
+          let f1 = f_term vfs f in
           let us1 = FStar_Compiler_List.map (f_univ vfs) us in
-          mk (FStar_Syntax_Syntax.Tm_uinst (f, us1))
+          mk (FStar_Syntax_Syntax.Tm_uinst (f1, us1))
       | FStar_Syntax_Syntax.Tm_type u ->
           let uu___ =
             let uu___1 = f_univ vfs u in FStar_Syntax_Syntax.Tm_type uu___1 in
@@ -362,13 +363,15 @@ let (on_sub_comp_typ :
         FStar_Compiler_List.map (f_univ vfs)
           ct.FStar_Syntax_Syntax.comp_univs in
       let uu___1 = f_term vfs ct.FStar_Syntax_Syntax.result_typ in
+      let uu___2 =
+        FStar_Compiler_List.map (f_arg vfs)
+          ct.FStar_Syntax_Syntax.effect_args in
       {
         FStar_Syntax_Syntax.comp_univs = uu___;
         FStar_Syntax_Syntax.effect_name =
           (ct.FStar_Syntax_Syntax.effect_name);
         FStar_Syntax_Syntax.result_typ = uu___1;
-        FStar_Syntax_Syntax.effect_args =
-          (ct.FStar_Syntax_Syntax.effect_args);
+        FStar_Syntax_Syntax.effect_args = uu___2;
         FStar_Syntax_Syntax.flags = (ct.FStar_Syntax_Syntax.flags)
       }
 let (on_sub_comp :

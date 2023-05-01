@@ -5,20 +5,17 @@
 INCLUDE_PATHS = \
 	../ulib \
 	basic \
-	basic/boot \
 	extraction \
 	fstar \
 	parser \
 	prettyprint \
-	prettyprint/boot \
 	reflection \
 	smtencoding \
 	syntax \
 	tactics \
 	tosyntax \
 	typechecker \
-	tests \
-	tests/boot
+	tests
 
 CACHE_DIR?=$(FSTAR_HOME)/src/.cache.boot
 

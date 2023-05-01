@@ -1775,3 +1775,13 @@ let rec (emb_typ_to_string : FStar_Syntax_Syntax.emb_typ -> Prims.string) =
             let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
           Prims.op_Hat uu___2 uu___3 in
         Prims.op_Hat "(" uu___1
+let (fv_qual_to_string : FStar_Syntax_Syntax.fv_qual -> Prims.string) =
+  fun fvq ->
+    match fvq with
+    | FStar_Syntax_Syntax.Data_ctor -> "Data_ctor"
+    | FStar_Syntax_Syntax.Record_projector uu___ -> "Record_projector _"
+    | FStar_Syntax_Syntax.Record_ctor uu___ -> "Record_ctor _"
+    | FStar_Syntax_Syntax.Unresolved_projector uu___ ->
+        "Unresolved_projector _"
+    | FStar_Syntax_Syntax.Unresolved_constructor uu___ ->
+        "Unresolved_constructor _"

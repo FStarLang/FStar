@@ -127,7 +127,7 @@ let (parse_z3_version_lines :
           (let msg =
              FStar_Compiler_Util.format2
                "Expected Z3 version \"%s\", got \"%s\"" _z3version_expected
-               out in
+               (FStar_Compiler_Util.trim_string out) in
            FStar_Pervasives_Native.Some msg)
     | uu___ -> FStar_Pervasives_Native.Some "No Z3 version string found"
 let (z3version_warning_message :
@@ -171,7 +171,7 @@ let (check_z3version : unit -> unit) =
         | FStar_Pervasives_Native.None -> ()
         | FStar_Pervasives_Native.Some (e, msg) ->
             let msg1 =
-              FStar_Compiler_Util.format4 "%s\n%s\n%s\n%s\n" msg
+              FStar_Compiler_Util.format4 "%s\n%s\n%s\n%s" msg
                 "Please download the version of Z3 corresponding to your platform from:"
                 _z3url "and add the bin/ subdirectory into your PATH" in
             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange (e, msg1)))

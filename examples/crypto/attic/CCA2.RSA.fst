@@ -27,6 +27,8 @@ module CCA2.RSA
 open FStar.BaseTypes
 open FStar.List.Tot
 
+open FStar.UInt8
+
 assume type pkey
 assume type skey
 type bytes = list byte

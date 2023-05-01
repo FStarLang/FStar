@@ -2908,6 +2908,8 @@ let rec (head_matches :
            uu___1) -> HeadMatch true
         | (FStar_Syntax_Syntax.Tm_match uu___, FStar_Syntax_Syntax.Tm_match
            uu___1) -> HeadMatch true
+        | (FStar_Syntax_Syntax.Tm_quoted uu___, FStar_Syntax_Syntax.Tm_quoted
+           uu___1) -> HeadMatch true
         | (FStar_Syntax_Syntax.Tm_abs uu___, FStar_Syntax_Syntax.Tm_abs
            uu___1) -> HeadMatch true
         | uu___ ->
@@ -13762,7 +13764,9 @@ let (discharge_guard' :
                                     (env, vc2, uu___13) in
                                   [uu___12]) in
                              let vcs1 =
-                               let uu___10 = FStar_Options.split_queries () in
+                               let uu___10 =
+                                 let uu___11 = FStar_Options.split_queries () in
+                                 uu___11 = FStar_Options.Always in
                                if uu___10
                                then
                                  FStar_Compiler_Effect.op_Bar_Greater vcs
