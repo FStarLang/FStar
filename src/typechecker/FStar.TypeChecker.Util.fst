@@ -190,7 +190,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     //Rather than use U.arrow_formals_comp, we use un_arrow here
     //since the former collapses adjacent Tot annotations, e.g.,
     //    x:t -> Tot (y:t -> M)
-    // is collapsed, breaking arities
+    // is collapsed, possibly breaking arities.
       match (SS.compress t).n with
       | Tm_arrow (bs, c) ->
         Subst.open_comp bs c
@@ -202,19 +202,23 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
       let get_decreases c =
           U.comp_flags c |> BU.prefix_until (function DECREASES _ -> true | _ -> false)
       in
-      match lbtyp_opt with
-      | None ->
-        let bs, c = un_arrow tarr in
-        (match get_decreases c with
-         | Some (pfx, DECREASES d, sfx) ->
+      let fallback () =
+        let bs, c = U.arrow_formals_comp tarr in
+        match get_decreases c with
+        | Some (pfx, DECREASES d, sfx) ->
            let c = Env.comp_set_flags env c (pfx @ sfx) in
            U.arrow bs c, tarr, true
-         | _ -> tarr, tarr, true)
+        | _ -> tarr, tarr, true
+      in
+      match lbtyp_opt with
+      | None ->
+        fallback()
 
       | Some annot ->
         let bs, c = un_arrow tarr in
-        let bs', c' = un_arrow annot in
-        if List.length bs <> List.length bs'
+        let n_bs = List.length bs in
+        let bs', c' = N.get_n_binders env n_bs annot in
+        if List.length bs' <> n_bs
         then Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Arity mismatch on let rec annotation")
                                 rng;
         let move_decreases d flags flags' =
@@ -307,8 +311,9 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
               | Tm_ascribed (body', (Inr c, tac_opt, use_eq), lopt) ->
                 let tarr = mk_arrow c in
                 let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
-                let bs', c = un_arrow tarr in
-                if List.length bs' <> List.length bs
+                let n_bs = List.length bs in
+                let bs', c = N.get_n_binders env n_bs tarr in
+                if List.length bs' <> n_bs
                 then failwith "Impossible"
                 else let subst = U.rename_binders bs' bs in
                      let c = SS.subst_comp subst c in
