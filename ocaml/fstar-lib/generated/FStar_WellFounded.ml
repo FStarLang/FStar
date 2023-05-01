@@ -15,3 +15,4 @@ type ('a, 'rel, 'f, 'uuuuu, 'uuuuu1) as_well_founded = 'rel
 type ('a, 'r, 'subur, 'subuw, 'ruwf, 'uuuuu, 'uuuuu1) subrelation_as_wf =
   'subur
 type ('a, 'b, 'rub, 'f, 'x, 'y) inverse_image = 'rub
+

@@ -12,3 +12,4 @@ type ('a, 'r, 'x, 'y) squash_binrel = unit
 
 type ('a, 'r, 'wfur, 'uuuuu,
   'uuuuu1) lift_binrel_squashed_as_well_founded_relation = unit
+
