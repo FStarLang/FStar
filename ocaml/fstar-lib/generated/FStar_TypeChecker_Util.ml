@@ -170,18 +170,14 @@ let (extract_let_rec_annotation :
                  else ());
                 (let env1 =
                    FStar_TypeChecker_Env.push_univ_vars env univ_vars1 in
-                 let un_arrow t3 =
+                 let un_arrow t3 = FStar_Syntax_Util.arrow_formals_comp t3 in
+                 let is_arr t3 =
                    let uu___6 =
                      let uu___7 = FStar_Syntax_Subst.compress t3 in
                      uu___7.FStar_Syntax_Syntax.n in
                    match uu___6 with
-                   | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
-                       FStar_Syntax_Subst.open_comp bs c
-                   | uu___7 ->
-                       FStar_Errors.raise_error
-                         (FStar_Errors_Codes.Fatal_LetRecArgumentMismatch,
-                           "Recursive functions must be introduced at arrow types")
-                         rng in
+                   | FStar_Syntax_Syntax.Tm_arrow uu___7 -> true
+                   | uu___7 -> false in
                  let reconcile_let_rec_ascription_and_body_type tarr
                    lbtyp_opt =
                    let get_decreases c =
@@ -192,32 +188,33 @@ let (extract_let_rec_annotation :
                              match uu___6 with
                              | FStar_Syntax_Syntax.DECREASES uu___7 -> true
                              | uu___7 -> false)) in
+                   let fallback uu___6 =
+                     let uu___7 = un_arrow tarr in
+                     match uu___7 with
+                     | (bs, c) ->
+                         let uu___8 = get_decreases c in
+                         (match uu___8 with
+                          | FStar_Pervasives_Native.Some
+                              (pfx, FStar_Syntax_Syntax.DECREASES d, sfx) ->
+                              let c1 =
+                                FStar_TypeChecker_Env.comp_set_flags env1 c
+                                  (FStar_Compiler_List.op_At pfx sfx) in
+                              let uu___9 = FStar_Syntax_Util.arrow bs c1 in
+                              (uu___9, tarr, true)
+                          | uu___9 -> (tarr, tarr, true)) in
                    match lbtyp_opt with
-                   | FStar_Pervasives_Native.None ->
-                       let uu___6 = un_arrow tarr in
-                       (match uu___6 with
-                        | (bs, c) ->
-                            let uu___7 = get_decreases c in
-                            (match uu___7 with
-                             | FStar_Pervasives_Native.Some
-                                 (pfx, FStar_Syntax_Syntax.DECREASES d, sfx)
-                                 ->
-                                 let c1 =
-                                   FStar_TypeChecker_Env.comp_set_flags env1
-                                     c (FStar_Compiler_List.op_At pfx sfx) in
-                                 let uu___8 = FStar_Syntax_Util.arrow bs c1 in
-                                 (uu___8, tarr, true)
-                             | uu___8 -> (tarr, tarr, true)))
+                   | FStar_Pervasives_Native.None -> fallback ()
                    | FStar_Pervasives_Native.Some annot ->
                        let uu___6 = un_arrow tarr in
                        (match uu___6 with
                         | (bs, c) ->
-                            let uu___7 = un_arrow annot in
+                            let n_bs = FStar_Compiler_List.length bs in
+                            let uu___7 =
+                              FStar_TypeChecker_Normalize.get_n_binders env1
+                                n_bs annot in
                             (match uu___7 with
                              | (bs', c') ->
-                                 (if
-                                    (FStar_Compiler_List.length bs) <>
-                                      (FStar_Compiler_List.length bs')
+                                 (if (FStar_Compiler_List.length bs') <> n_bs
                                   then
                                     FStar_Errors.raise_error
                                       (FStar_Errors_Codes.Fatal_LetRecArgumentMismatch,
@@ -440,15 +437,17 @@ let (extract_let_rec_annotation :
                                         tarr lbtyp_opt in
                                     (match uu___8 with
                                      | (tarr1, lbtyp, recheck) ->
-                                         let uu___9 = un_arrow tarr1 in
+                                         let n_bs =
+                                           FStar_Compiler_List.length bs in
+                                         let uu___9 =
+                                           FStar_TypeChecker_Normalize.get_n_binders
+                                             env1 n_bs tarr1 in
                                          (match uu___9 with
                                           | (bs', c1) ->
                                               if
                                                 (FStar_Compiler_List.length
                                                    bs')
-                                                  <>
-                                                  (FStar_Compiler_List.length
-                                                     bs)
+                                                  <> n_bs
                                               then failwith "Impossible"
                                               else
                                                 (let subst =
