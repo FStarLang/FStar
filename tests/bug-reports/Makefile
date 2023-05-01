@@ -153,7 +153,7 @@ Bug2684d.verify: OTHERFLAGS += --cache_checked_modules
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
 %.iverify: %.fsti
-	@echo '[CHECK_I   $<]'
+	$(call msg, "CHECK_I", $<)
 	$(Q)$(FSTAR) $(SIL) $^
 	@touch $@
 
