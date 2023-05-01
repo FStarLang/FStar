@@ -569,6 +569,14 @@ Guidelines for the changelog:
      which to enable profiling. The output of F* on its finished
      message changed to not print the time it took to verify a module.
 
+   * [PR #2776](https://github.com/FStarLang/FStar/pull/2776): The
+     `--split_queries` option now takes an argument, one of `no`,
+     `on_failure` and `always`. The default is `on_failure`, with
+     the same behavior as previously (split a query and retry when
+     the SMT solver does not return a helpful error). Using
+     `--split_queries always` mimics the old `--split_queries`,
+     splitting all queries eagerly. Using `--split_queries no` disables
+     splitting altogether.
 
 ## Editors
 

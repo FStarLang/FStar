@@ -127,7 +127,7 @@ let (parse_z3_version_lines :
           (let msg =
              FStar_Compiler_Util.format2
                "Expected Z3 version \"%s\", got \"%s\"" _z3version_expected
-               out in
+               (FStar_Compiler_Util.trim_string out) in
            FStar_Pervasives_Native.Some msg)
     | uu___ -> FStar_Pervasives_Native.Some "No Z3 version string found"
 let (z3version_warning_message :
@@ -171,10 +171,11 @@ let (check_z3version : unit -> unit) =
         | FStar_Pervasives_Native.None -> ()
         | FStar_Pervasives_Native.Some (e, msg) ->
             let msg1 =
-              FStar_Compiler_Util.format4 "%s\n%s\n%s\n%s\n" msg
+              FStar_Compiler_Util.format4 "%s\n%s\n%s\n%s" msg
                 "Please download the version of Z3 corresponding to your platform from:"
                 _z3url "and add the bin/ subdirectory into your PATH" in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange (e, msg1)))
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              (e, msg1)))
     else ()
 type label = Prims.string
 let (status_tag : z3status -> Prims.string) =
@@ -320,7 +321,7 @@ let (new_z3proc :
         (FStar_Pervasives_Native.snd cmd_and_args) (fun s -> s = "Done!")
 let (warn_handler : Prims.string -> unit) =
   fun s ->
-    FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
+    FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
       (FStar_Errors_Codes.Warning_UnexpectedZ3Output,
         (Prims.op_Hat "Unexpected output from Z3: \"" (Prims.op_Hat s "\"")))
 let (new_z3proc_with_id :
@@ -487,7 +488,7 @@ let (__proj__Mksmt_output__item__smt_labels :
         smt_labels;_} -> smt_labels
 let (smt_output_sections :
   Prims.string FStar_Pervasives_Native.option ->
-    FStar_Compiler_Range.range -> Prims.string Prims.list -> smt_output)
+    FStar_Compiler_Range_Type.range -> Prims.string Prims.list -> smt_output)
   =
   fun log_file ->
     fun r ->
@@ -570,7 +571,7 @@ let (smt_output_sections :
                                   }))))))
 let (doZ3Exe :
   Prims.string FStar_Pervasives_Native.option ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       Prims.bool ->
         Prims.string ->
           FStar_SMTEncoding_Term.error_labels -> (z3status * z3statistics))
@@ -967,7 +968,7 @@ let (cache_hit :
         else FStar_Pervasives_Native.None
 let (z3_job :
   Prims.string FStar_Pervasives_Native.option ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       Prims.bool ->
         FStar_SMTEncoding_Term.error_labels ->
           Prims.string ->
@@ -1008,7 +1009,7 @@ let (z3_job :
                       z3result_log_file = log_file
                     }
 let (ask :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (FStar_SMTEncoding_Term.decl Prims.list ->
        (FStar_SMTEncoding_Term.decl Prims.list * Prims.bool))
       ->

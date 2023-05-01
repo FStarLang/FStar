@@ -1,5 +1,7 @@
 module QuickTestNBE
 
+open FStar.Range
+
 irreducible let va_qattr = ()
 
 noeq type vale_state = {vs_ok:bool;}

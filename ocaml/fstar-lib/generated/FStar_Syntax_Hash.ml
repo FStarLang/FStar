@@ -93,8 +93,6 @@ let hash_pair :
       fun x ->
         let uu___ = h (FStar_Pervasives_Native.fst x) in
         let uu___1 = i (FStar_Pervasives_Native.snd x) in mix uu___ uu___1
-let (hash_byte : FStar_BaseTypes.byte -> FStar_Hash.hash_code mm) =
-  fun b -> let uu___ = FStar_Hash.of_int (FStar_UInt8.v b) in ret uu___
 let rec (hash_term : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
   fun t -> maybe_memoize t hash_term'
 and (hash_comp :
@@ -421,7 +419,7 @@ and (hash_uvar :
 and (hash_universe_uvar :
   (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
     FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version *
-    FStar_Compiler_Range.range) -> FStar_Hash.hash_code mm)
+    FStar_Compiler_Range_Type.range) -> FStar_Hash.hash_code mm)
   =
   fun u -> let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in of_int uu___
 and (hash_ascription :
@@ -456,8 +454,7 @@ and (hash_constant : FStar_Syntax_Syntax.sconst -> FStar_Hash.hash_code mm) =
         mix uu___1 uu___2
     | FStar_Const.Const_char c ->
         let uu___1 = of_int (Prims.of_int (317)) in
-        let uu___2 = of_int (FStar_UInt32.v (FStar_Char.u32_of_char c)) in
-        mix uu___1 uu___2
+        let uu___2 = of_int (FStar_Char.int_of_char c) in mix uu___1 uu___2
     | FStar_Const.Const_real s ->
         let uu___1 = of_int (Prims.of_int (337)) in
         let uu___2 = of_string s in mix uu___1 uu___2
@@ -469,7 +466,7 @@ and (hash_constant : FStar_Syntax_Syntax.sconst -> FStar_Hash.hash_code mm) =
     | FStar_Const.Const_range r ->
         let uu___1 = of_int (Prims.of_int (367)) in
         let uu___2 =
-          let uu___3 = FStar_Compiler_Range.string_of_range r in
+          let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
           of_string uu___3 in
         mix uu___1 uu___2
     | FStar_Const.Const_reify uu___1 -> of_int (Prims.of_int (367))
@@ -566,7 +563,7 @@ and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code mm) =
             let uu___4 = of_string s in
             let uu___5 =
               let uu___6 =
-                let uu___7 = FStar_Compiler_Range.string_of_range r in
+                let uu___7 = FStar_Compiler_Range_Ops.string_of_range r in
                 of_string uu___7 in
               [uu___6] in
             uu___4 :: uu___5 in
@@ -969,7 +966,7 @@ and (equal_constant :
          | (FStar_Const.Const_set_range_of, FStar_Const.Const_set_range_of)
              -> true
          | (FStar_Const.Const_range r1, FStar_Const.Const_range r2) ->
-             let uu___2 = FStar_Compiler_Range.compare r1 r2 in
+             let uu___2 = FStar_Compiler_Range_Ops.compare r1 r2 in
              uu___2 = Prims.int_zero
          | (FStar_Const.Const_reify uu___2, FStar_Const.Const_reify uu___3)
              -> true
@@ -1071,7 +1068,7 @@ and (equal_meta :
       | (FStar_Syntax_Syntax.Meta_labeled (s1, r1, uu___),
          FStar_Syntax_Syntax.Meta_labeled (s2, r2, uu___1)) ->
           (s1 = s2) &&
-            (let uu___2 = FStar_Compiler_Range.compare r1 r2 in
+            (let uu___2 = FStar_Compiler_Range_Ops.compare r1 r2 in
              uu___2 = Prims.int_zero)
       | (FStar_Syntax_Syntax.Meta_desugared msi1,
          FStar_Syntax_Syntax.Meta_desugared msi2) -> msi1 = msi2

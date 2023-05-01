@@ -632,7 +632,7 @@ let (mk_type :
   =
   fun u ->
     FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (is_type :
   env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe result) =
   fun g ->
@@ -1064,12 +1064,12 @@ let (curry_arrow :
       fun c ->
         let tail =
           FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_arrow (xs, c))
-            FStar_Compiler_Range.dummyRange in
+            FStar_Compiler_Range_Type.dummyRange in
         let uu___ =
           let uu___1 =
             let uu___2 = FStar_Syntax_Syntax.mk_Total tail in ([x], uu___2) in
           FStar_Syntax_Syntax.Tm_arrow uu___1 in
-        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (curry_abs :
   FStar_Syntax_Syntax.binder ->
     FStar_Syntax_Syntax.binder ->
@@ -1134,7 +1134,7 @@ let (curry_application :
       (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
         FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
         Prims.list ->
-        FStar_Compiler_Range.range ->
+        FStar_Compiler_Range_Type.range ->
           FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun hd ->
@@ -2144,7 +2144,7 @@ let rec (check_relation :
                                                                     uu___15 in
                                                                  FStar_Syntax_Syntax.mk_Tm_app
                                                                    e1 uu___14
-                                                                   FStar_Compiler_Range.dummyRange in
+                                                                   FStar_Compiler_Range_Type.dummyRange in
                                                                FStar_Pervasives_Native.Some
                                                                  uu___13)
                                                         else

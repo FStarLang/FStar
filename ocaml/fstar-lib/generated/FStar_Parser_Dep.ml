@@ -131,7 +131,7 @@ let (namespace_of_module :
   fun f ->
     let lid =
       let uu___ = FStar_Ident.path_of_text f in
-      FStar_Ident.lid_of_path uu___ FStar_Compiler_Range.dummyRange in
+      FStar_Ident.lid_of_path uu___ FStar_Compiler_Range_Type.dummyRange in
     let uu___ = FStar_Ident.ns_of_lid lid in
     match uu___ with
     | [] -> FStar_Pervasives_Native.None
@@ -520,7 +520,8 @@ let (cache_file_name : Prims.string -> Prims.string) =
                   "Did not expect %s to be already checked, but found it in an unexpected location %s instead of %s"
                   mname path uu___5 in
               (FStar_Errors_Codes.Warning_UnexpectedCheckedFile, uu___4) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___3
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___3
           else ());
          (let uu___2 =
             (FStar_Compiler_Util.file_exists expected_cache_file) &&
@@ -680,37 +681,42 @@ let (dependences_of :
                 (FStar_Compiler_List.filter (fun k -> k <> fn))
 let (print_graph : dependence_graph -> unit) =
   fun graph ->
-    FStar_Compiler_Util.print_endline
-      "A DOT-format graph has been dumped in the current directory as dep.graph";
-    FStar_Compiler_Util.print_endline
-      "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
-    FStar_Compiler_Util.print_endline
-      "Hint: cat dep.graph | grep -v _ | grep -v prims";
-    (let uu___3 =
-       let uu___4 =
-         let uu___5 =
-           let uu___6 =
-             let uu___7 =
-               let uu___8 = deps_keys graph in
-               FStar_Compiler_List.unique uu___8 in
+    (let uu___1 =
+       let uu___2 = FStar_Options.silent () in Prims.op_Negation uu___2 in
+     if uu___1
+     then
+       (FStar_Compiler_Util.print_endline
+          "A DOT-format graph has been dumped in the current directory as dep.graph";
+        FStar_Compiler_Util.print_endline
+          "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
+        FStar_Compiler_Util.print_endline
+          "Hint: cat dep.graph | grep -v _ | grep -v prims")
+     else ());
+    (let uu___1 =
+       let uu___2 =
+         let uu___3 =
+           let uu___4 =
+             let uu___5 =
+               let uu___6 = deps_keys graph in
+               FStar_Compiler_List.unique uu___6 in
              FStar_Compiler_List.collect
                (fun k ->
                   let deps1 =
-                    let uu___8 =
-                      let uu___9 = deps_try_find graph k in
-                      FStar_Compiler_Util.must uu___9 in
-                    uu___8.edges in
+                    let uu___6 =
+                      let uu___7 = deps_try_find graph k in
+                      FStar_Compiler_Util.must uu___7 in
+                    uu___6.edges in
                   let r s = FStar_Compiler_Util.replace_char s 46 95 in
                   let print dep =
-                    let uu___8 =
-                      let uu___9 = lowercase_module_name k in r uu___9 in
-                    FStar_Compiler_Util.format2 "  \"%s\" -> \"%s\"" uu___8
+                    let uu___6 =
+                      let uu___7 = lowercase_module_name k in r uu___7 in
+                    FStar_Compiler_Util.format2 "  \"%s\" -> \"%s\"" uu___6
                       (r (module_name_of_dep dep)) in
-                  FStar_Compiler_List.map print deps1) uu___7 in
-           FStar_String.concat "\n" uu___6 in
-         FStar_String.op_Hat uu___5 "\n}\n" in
-       FStar_String.op_Hat "digraph {\n" uu___4 in
-     FStar_Compiler_Util.write_file "dep.graph" uu___3)
+                  FStar_Compiler_List.map print deps1) uu___5 in
+           FStar_String.concat "\n" uu___4 in
+         FStar_String.op_Hat uu___3 "\n}\n" in
+       FStar_String.op_Hat "digraph {\n" uu___2 in
+     FStar_Compiler_Util.write_file "dep.graph" uu___1)
 let (build_inclusion_candidates_list :
   unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
@@ -928,8 +934,8 @@ let (enter_namespace :
                              "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
                              prefix1 suffix str str in
                          (FStar_Errors_Codes.Warning_UnexpectedFile, uu___4) in
-                       FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                         uu___3
+                       FStar_Errors.log_issue
+                         FStar_Compiler_Range_Type.dummyRange uu___3
                      else ());
                     (let filename =
                        let uu___3 =
@@ -1417,6 +1423,24 @@ let (collect_one :
                      (false, uu___6) in
                    P_dep uu___5 in
                  add_to_parsing_data uu___4
+             | FStar_Const.Const_range_of ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       FStar_Compiler_Effect.op_Bar_Greater "fstar.range"
+                         FStar_Ident.lid_of_str in
+                     (false, uu___5) in
+                   P_dep uu___4 in
+                 add_to_parsing_data uu___3
+             | FStar_Const.Const_set_range_of ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       FStar_Compiler_Effect.op_Bar_Greater "fstar.range"
+                         FStar_Ident.lid_of_str in
+                     (false, uu___5) in
+                   P_dep uu___4 in
+                 add_to_parsing_data uu___3
              | uu___3 -> ()
            and collect_term' uu___2 =
              match uu___2 with
@@ -2665,10 +2689,10 @@ let (print_full : deps -> unit) =
                  let mn = lowercase_module_name fsti in
                  let range_of_file fsti1 =
                    let r =
-                     FStar_Compiler_Range.set_file_of_range
-                       FStar_Compiler_Range.dummyRange fsti1 in
-                   let uu___2 = FStar_Compiler_Range.def_range r in
-                   FStar_Compiler_Range.set_use_range r uu___2 in
+                     FStar_Compiler_Range_Ops.set_file_of_range
+                       FStar_Compiler_Range_Type.dummyRange fsti1 in
+                   let uu___2 = FStar_Compiler_Range_Type.def_range r in
+                   FStar_Compiler_Range_Type.set_use_range r uu___2 in
                  let uu___2 =
                    let uu___3 = has_implementation deps1.file_system_map mn in
                    Prims.op_Negation uu___3 in

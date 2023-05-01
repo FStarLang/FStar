@@ -7,11 +7,11 @@ open FStar.Compiler.List
 module List = FStar.Compiler.List
 module Util = FStar.Compiler.Util
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ident = {idText:string;
               idRange:range}
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lident = {ns:ipath; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // Cached version of the namespace

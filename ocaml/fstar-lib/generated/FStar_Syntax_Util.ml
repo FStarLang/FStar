@@ -372,7 +372,7 @@ let (eq_univs :
     fun u2 -> let uu___ = compare_univs u1 u2 in uu___ = Prims.int_zero
 let (ml_comp :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    FStar_Compiler_Range.range -> FStar_Syntax_Syntax.comp)
+    FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.comp)
   =
   fun t ->
     fun r ->
@@ -422,7 +422,7 @@ let (comp_eff_name_res_and_args :
 let (effect_indices_from_repr :
   FStar_Syntax_Syntax.term ->
     Prims.bool ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         Prims.string -> FStar_Syntax_Syntax.term Prims.list)
   =
   fun repr ->
@@ -855,7 +855,7 @@ let mk_lazy :
     'a ->
       FStar_Syntax_Syntax.typ ->
         FStar_Syntax_Syntax.lazy_kind ->
-          FStar_Compiler_Range.range FStar_Pervasives_Native.option ->
+          FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option ->
             FStar_Syntax_Syntax.term
   =
   fun t ->
@@ -865,7 +865,8 @@ let mk_lazy :
           let rng =
             match r with
             | FStar_Pervasives_Native.Some r1 -> r1
-            | FStar_Pervasives_Native.None -> FStar_Compiler_Range.dummyRange in
+            | FStar_Pervasives_Native.None ->
+                FStar_Compiler_Range_Type.dummyRange in
           let i =
             let uu___ = FStar_Compiler_Dyn.mkdyn t in
             {
@@ -1404,26 +1405,26 @@ let (quals_of_sigelt :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.qualifier Prims.list) =
   fun x -> x.FStar_Syntax_Syntax.sigquals
 let (range_of_sigelt :
-  FStar_Syntax_Syntax.sigelt -> FStar_Compiler_Range.range) =
+  FStar_Syntax_Syntax.sigelt -> FStar_Compiler_Range_Type.range) =
   fun x -> x.FStar_Syntax_Syntax.sigrng
 let range_of_arg :
   'uuuuu 'uuuuu1 .
     ('uuuuu FStar_Syntax_Syntax.syntax * 'uuuuu1) ->
-      FStar_Compiler_Range.range
+      FStar_Compiler_Range_Type.range
   =
   fun uu___ -> match uu___ with | (hd, uu___1) -> hd.FStar_Syntax_Syntax.pos
 let range_of_args :
   'uuuuu 'uuuuu1 .
     ('uuuuu FStar_Syntax_Syntax.syntax * 'uuuuu1) Prims.list ->
-      FStar_Compiler_Range.range -> FStar_Compiler_Range.range
+      FStar_Compiler_Range_Type.range -> FStar_Compiler_Range_Type.range
   =
   fun args ->
     fun r ->
       FStar_Compiler_Effect.op_Bar_Greater args
         (FStar_Compiler_List.fold_left
            (fun r1 ->
-              fun a -> FStar_Compiler_Range.union_ranges r1 (range_of_arg a))
-           r)
+              fun a ->
+                FStar_Compiler_Range_Ops.union_ranges r1 (range_of_arg a)) r)
 let (mk_app :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
@@ -1650,7 +1651,14 @@ let (arrow :
               let uu___4 = FStar_Syntax_Subst.close_comp bs c in
               (uu___3, uu___4) in
             FStar_Syntax_Syntax.Tm_arrow uu___2 in
-          FStar_Syntax_Syntax.mk uu___1 c.FStar_Syntax_Syntax.pos
+          let uu___2 =
+            FStar_Compiler_List.fold_left
+              (fun a ->
+                 fun b ->
+                   FStar_Compiler_Range_Ops.union_ranges a
+                     ((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos)
+              c.FStar_Syntax_Syntax.pos bs in
+          FStar_Syntax_Syntax.mk uu___1 uu___2
 let (flat_arrow :
   FStar_Syntax_Syntax.binder Prims.list ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
@@ -1719,7 +1727,8 @@ let (refine :
         FStar_Syntax_Syntax.Tm_refine uu___1 in
       let uu___1 =
         let uu___2 = FStar_Syntax_Syntax.range_of_bv b in
-        FStar_Compiler_Range.union_ranges uu___2 t.FStar_Syntax_Syntax.pos in
+        FStar_Compiler_Range_Ops.union_ranges uu___2
+          t.FStar_Syntax_Syntax.pos in
       FStar_Syntax_Syntax.mk uu___ uu___1
 let (branch : FStar_Syntax_Syntax.branch -> FStar_Syntax_Syntax.branch) =
   fun b -> FStar_Syntax_Subst.close_branch b
@@ -1962,7 +1971,9 @@ let (mk_letbinding :
         FStar_Ident.lident ->
           FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
             FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list
-              -> FStar_Compiler_Range.range -> FStar_Syntax_Syntax.letbinding)
+              ->
+              FStar_Compiler_Range_Type.range ->
+                FStar_Syntax_Syntax.letbinding)
   =
   fun lbname ->
     fun univ_vars ->
@@ -1990,7 +2001,8 @@ let (close_univs_and_mk_letbinding :
             FStar_Syntax_Syntax.term ->
               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list
                 ->
-                FStar_Compiler_Range.range -> FStar_Syntax_Syntax.letbinding)
+                FStar_Compiler_Range_Type.range ->
+                  FStar_Syntax_Syntax.letbinding)
   =
   fun recs ->
     fun lbname ->
@@ -2138,27 +2150,28 @@ let (is_builtin_tactic : FStar_Ident.lident -> Prims.bool) =
 let (ktype : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.mk
     (FStar_Syntax_Syntax.Tm_type FStar_Syntax_Syntax.U_unknown)
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (ktype0 : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.mk
     (FStar_Syntax_Syntax.Tm_type FStar_Syntax_Syntax.U_zero)
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (type_u :
   unit -> (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.universe)) =
   fun uu___ ->
     let u =
       let uu___1 =
-        FStar_Syntax_Unionfind.univ_fresh FStar_Compiler_Range.dummyRange in
+        FStar_Syntax_Unionfind.univ_fresh
+          FStar_Compiler_Range_Type.dummyRange in
       FStar_Compiler_Effect.op_Less_Bar
         (fun uu___2 -> FStar_Syntax_Syntax.U_unif uu___2) uu___1 in
     let uu___1 =
       FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
-        FStar_Compiler_Range.dummyRange in
+        FStar_Compiler_Range_Type.dummyRange in
     (uu___1, u)
 let (type_with_u : FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.typ) =
   fun u ->
     FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (attr_eq :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun a ->
@@ -2172,36 +2185,36 @@ let (attr_substitute : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
       FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.attr_substitute_lid
         FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
     FStar_Syntax_Syntax.Tm_fvar uu___1 in
-  FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+  FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (exp_true_bool : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.mk
     (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool true))
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (exp_false_bool : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.mk
     (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool false))
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (exp_unit : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.mk
     (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_unit)
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (exp_int : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s ->
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant
          (FStar_Const.Const_int (s, FStar_Pervasives_Native.None)))
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (exp_char : FStar_BaseTypes.char -> FStar_Syntax_Syntax.term) =
   fun c ->
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_char c))
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (exp_string : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s ->
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant
-         (FStar_Const.Const_string (s, FStar_Compiler_Range.dummyRange)))
-      FStar_Compiler_Range.dummyRange
+         (FStar_Const.Const_string (s, FStar_Compiler_Range_Type.dummyRange)))
+      FStar_Compiler_Range_Type.dummyRange
 let (fvar_const : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l ->
     FStar_Syntax_Syntax.fvar l FStar_Syntax_Syntax.delta_constant
@@ -2266,8 +2279,8 @@ let (mk_conj_opt :
                 (tand, uu___3) in
               FStar_Syntax_Syntax.Tm_app uu___2 in
             let uu___2 =
-              FStar_Compiler_Range.union_ranges phi11.FStar_Syntax_Syntax.pos
-                phi2.FStar_Syntax_Syntax.pos in
+              FStar_Compiler_Range_Ops.union_ranges
+                phi11.FStar_Syntax_Syntax.pos phi2.FStar_Syntax_Syntax.pos in
             FStar_Syntax_Syntax.mk uu___1 uu___2 in
           FStar_Pervasives_Native.Some uu___
 let (mk_binop :
@@ -2289,7 +2302,7 @@ let (mk_binop :
             (op_t, uu___2) in
           FStar_Syntax_Syntax.Tm_app uu___1 in
         let uu___1 =
-          FStar_Compiler_Range.union_ranges phi1.FStar_Syntax_Syntax.pos
+          FStar_Compiler_Range_Ops.union_ranges phi1.FStar_Syntax_Syntax.pos
             phi2.FStar_Syntax_Syntax.pos in
         FStar_Syntax_Syntax.mk uu___ uu___1
 let (mk_neg :
@@ -2420,7 +2433,7 @@ let (mk_untyped_eq2 :
           (teq, uu___2) in
         FStar_Syntax_Syntax.Tm_app uu___1 in
       let uu___1 =
-        FStar_Compiler_Range.union_ranges e1.FStar_Syntax_Syntax.pos
+        FStar_Compiler_Range_Ops.union_ranges e1.FStar_Syntax_Syntax.pos
           e2.FStar_Syntax_Syntax.pos in
       FStar_Syntax_Syntax.mk uu___ uu___1
 let (mk_eq2 :
@@ -2447,7 +2460,7 @@ let (mk_eq2 :
               (eq_inst, uu___2) in
             FStar_Syntax_Syntax.Tm_app uu___1 in
           let uu___1 =
-            FStar_Compiler_Range.union_ranges e1.FStar_Syntax_Syntax.pos
+            FStar_Compiler_Range_Ops.union_ranges e1.FStar_Syntax_Syntax.pos
               e2.FStar_Syntax_Syntax.pos in
           FStar_Syntax_Syntax.mk uu___ uu___1
 let (mk_eq3_no_univ :
@@ -2478,7 +2491,7 @@ let (mk_eq3_no_univ :
               (teq3, uu___2) in
             FStar_Syntax_Syntax.Tm_app uu___1 in
           let uu___1 =
-            FStar_Compiler_Range.union_ranges e1.FStar_Syntax_Syntax.pos
+            FStar_Compiler_Range_Ops.union_ranges e1.FStar_Syntax_Syntax.pos
               e2.FStar_Syntax_Syntax.pos in
           FStar_Syntax_Syntax.mk uu___ uu___1
 let (mk_has_type :
@@ -2496,7 +2509,7 @@ let (mk_has_type :
             (FStar_Syntax_Syntax.Tm_uinst
                (t_has_type,
                  [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero]))
-            FStar_Compiler_Range.dummyRange in
+            FStar_Compiler_Range_Type.dummyRange in
         let uu___ =
           let uu___1 =
             let uu___2 =
@@ -2509,7 +2522,7 @@ let (mk_has_type :
               uu___3 :: uu___4 in
             (t_has_type1, uu___2) in
           FStar_Syntax_Syntax.Tm_app uu___1 in
-        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (tforall : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.forall_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
@@ -2545,7 +2558,7 @@ let (mk_decidable_eq :
             (decidable_eq, uu___2) in
           FStar_Syntax_Syntax.Tm_app uu___1 in
         let uu___1 =
-          FStar_Compiler_Range.union_ranges e1.FStar_Syntax_Syntax.pos
+          FStar_Compiler_Range_Ops.union_ranges e1.FStar_Syntax_Syntax.pos
             e2.FStar_Syntax_Syntax.pos in
         FStar_Syntax_Syntax.mk uu___ uu___1
 let (b_and : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.op_And
@@ -2566,7 +2579,7 @@ let (mk_and :
           (b_and, uu___2) in
         FStar_Syntax_Syntax.Tm_app uu___1 in
       let uu___1 =
-        FStar_Compiler_Range.union_ranges e1.FStar_Syntax_Syntax.pos
+        FStar_Compiler_Range_Ops.union_ranges e1.FStar_Syntax_Syntax.pos
           e2.FStar_Syntax_Syntax.pos in
       FStar_Syntax_Syntax.mk uu___ uu___1
 let (mk_and_l :
@@ -2668,7 +2681,7 @@ let (mk_forall_aux :
               uu___3 :: uu___4 in
             (fa, uu___2) in
           FStar_Syntax_Syntax.Tm_app uu___1 in
-        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (mk_forall_no_univ :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
@@ -2723,7 +2736,7 @@ let (mk_exists_aux :
               uu___3 :: uu___4 in
             (fa, uu___2) in
           FStar_Syntax_Syntax.Tm_app uu___1 in
-        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (mk_exists_no_univ :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
@@ -2780,9 +2793,10 @@ let (if_then_else :
           (uu___, FStar_Pervasives_Native.None, t2) in
         let uu___ =
           let uu___1 =
-            FStar_Compiler_Range.union_ranges t1.FStar_Syntax_Syntax.pos
+            FStar_Compiler_Range_Ops.union_ranges t1.FStar_Syntax_Syntax.pos
               t2.FStar_Syntax_Syntax.pos in
-          FStar_Compiler_Range.union_ranges b.FStar_Syntax_Syntax.pos uu___1 in
+          FStar_Compiler_Range_Ops.union_ranges b.FStar_Syntax_Syntax.pos
+            uu___1 in
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_match
              (b, FStar_Pervasives_Native.None, [then_branch; else_branch],
@@ -3359,7 +3373,7 @@ let (destruct_typ_as_formula :
 let (action_as_lb :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.action ->
-      FStar_Compiler_Range.range -> FStar_Syntax_Syntax.sigelt)
+      FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.sigelt)
   =
   fun eff_lid ->
     fun a ->
@@ -3505,10 +3519,10 @@ let (dm4f_lid :
           (fun s ->
              Prims.op_Hat "_dm4f_" (Prims.op_Hat s (Prims.op_Hat "_" name)))
           p in
-      FStar_Ident.lid_of_path p' FStar_Compiler_Range.dummyRange
+      FStar_Ident.lid_of_path p' FStar_Compiler_Range_Type.dummyRange
 let (mk_list :
   FStar_Syntax_Syntax.term ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.term Prims.list -> FStar_Syntax_Syntax.term)
   =
   fun typ ->
@@ -3971,7 +3985,7 @@ let (remove_attr :
         (fun a -> let uu___ = is_fvar attr a in Prims.op_Negation uu___)
         attrs
 let (process_pragma :
-  FStar_Syntax_Syntax.pragma -> FStar_Compiler_Range.range -> unit) =
+  FStar_Syntax_Syntax.pragma -> FStar_Compiler_Range_Type.range -> unit) =
   fun p ->
     fun r ->
       FStar_Errors.set_option_warning_callback_range

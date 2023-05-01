@@ -112,7 +112,7 @@ let (version_to_string : FStar_Syntax_Syntax.version -> Prims.string) =
 let (univ_uvar_to_string :
   (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
     FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version *
-    FStar_Compiler_Range.range) -> Prims.string)
+    FStar_Compiler_Range_Type.range) -> Prims.string)
   =
   fun u ->
     let uu___ = FStar_Options.hide_uvar_nums () in
@@ -391,7 +391,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                  uu___6
            | FStar_Syntax_Syntax.Tm_meta
                (t, FStar_Syntax_Syntax.Meta_labeled (l, r, b)) ->
-               let uu___3 = FStar_Compiler_Range.string_of_range r in
+               let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
                let uu___4 = term_to_string t in
                FStar_Compiler_Util.format3 "Meta_labeled(%s, %s){%s}" l
                  uu___3 uu___4
@@ -399,7 +399,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                (t, FStar_Syntax_Syntax.Meta_named l) ->
                let uu___3 = lid_to_string l in
                let uu___4 =
-                 FStar_Compiler_Range.string_of_range
+                 FStar_Compiler_Range_Ops.string_of_range
                    t.FStar_Syntax_Syntax.pos in
                let uu___5 = term_to_string t in
                FStar_Compiler_Util.format3 "Meta_named(%s, %s){%s}" uu___3
@@ -621,14 +621,14 @@ and (ctx_uvar_to_string_aux :
         else
           (let uu___1 =
              let uu___2 =
-               FStar_Compiler_Range.start_of_range
+               FStar_Compiler_Range_Ops.start_of_range
                  ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_range in
-             FStar_Compiler_Range.string_of_pos uu___2 in
+             FStar_Compiler_Range_Ops.string_of_pos uu___2 in
            let uu___2 =
              let uu___3 =
-               FStar_Compiler_Range.end_of_range
+               FStar_Compiler_Range_Ops.end_of_range
                  ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_range in
-             FStar_Compiler_Range.string_of_pos uu___3 in
+             FStar_Compiler_Range_Ops.string_of_pos uu___3 in
            FStar_Compiler_Util.format2 "(%s-%s) " uu___1 uu___2) in
       let uu___ =
         binders_to_string ", " ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_binders in
@@ -1112,7 +1112,7 @@ and (metadata_to_string : FStar_Syntax_Syntax.metadata -> Prims.string) =
         let uu___1 = sli lid in
         FStar_Compiler_Util.format1 "{Meta_named %s}" uu___1
     | FStar_Syntax_Syntax.Meta_labeled (l, r, uu___1) ->
-        let uu___2 = FStar_Compiler_Range.string_of_range r in
+        let uu___2 = FStar_Compiler_Range_Ops.string_of_range r in
         FStar_Compiler_Util.format2 "{Meta_labeled (%s, %s)}" l uu___2
     | FStar_Syntax_Syntax.Meta_desugared msi -> "{Meta_desugared}"
     | FStar_Syntax_Syntax.Meta_monadic (m, t) ->
@@ -1146,30 +1146,26 @@ let (term_to_string' :
       then term_to_string x
       else FStar_Syntax_Print_Pretty.term_to_string' env x
 let (binder_to_json :
-  FStar_Syntax_DsEnv.env ->
-    FStar_Syntax_Syntax.binder -> FStar_Compiler_Util.json)
-  =
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.binder -> FStar_Json.json) =
   fun env ->
     fun b ->
       let n =
         let uu___ =
           let uu___1 = nm_to_string b.FStar_Syntax_Syntax.binder_bv in
           bqual_to_string' uu___1 b.FStar_Syntax_Syntax.binder_qual in
-        FStar_Compiler_Util.JsonStr uu___ in
+        FStar_Json.JsonStr uu___ in
       let t =
         let uu___ =
           term_to_string' env
             (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-        FStar_Compiler_Util.JsonStr uu___ in
-      FStar_Compiler_Util.JsonAssoc [("name", n); ("type", t)]
+        FStar_Json.JsonStr uu___ in
+      FStar_Json.JsonAssoc [("name", n); ("type", t)]
 let (binders_to_json :
-  FStar_Syntax_DsEnv.env ->
-    FStar_Syntax_Syntax.binders -> FStar_Compiler_Util.json)
-  =
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.binders -> FStar_Json.json) =
   fun env ->
     fun bs ->
       let uu___ = FStar_Compiler_List.map (binder_to_json env) bs in
-      FStar_Compiler_Util.JsonList uu___
+      FStar_Json.JsonList uu___
 let (enclose_universes : Prims.string -> Prims.string) =
   fun s ->
     let uu___ = FStar_Options.print_universes () in
@@ -1334,7 +1330,7 @@ let (eff_extraction_mode_to_string :
     | FStar_Syntax_Syntax.Extract_primitive -> "primitive"
 let (eff_decl_to_string' :
   Prims.bool ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
         FStar_Syntax_Syntax.eff_decl -> Prims.string)
   =
@@ -1400,7 +1396,7 @@ let (eff_decl_to_string :
   Prims.bool -> FStar_Syntax_Syntax.eff_decl -> Prims.string) =
   fun for_free ->
     fun ed ->
-      eff_decl_to_string' for_free FStar_Compiler_Range.dummyRange [] ed
+      eff_decl_to_string' for_free FStar_Compiler_Range_Type.dummyRange [] ed
 let (sub_eff_to_string : FStar_Syntax_Syntax.sub_eff -> Prims.string) =
   fun se ->
     let tsopt_to_string ts_opt =
@@ -1533,7 +1529,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                  let uu___4 =
                    FStar_Syntax_Syntax.mk
                      (FStar_Syntax_Syntax.Tm_arrow (tps, c))
-                     FStar_Compiler_Range.dummyRange in
+                     FStar_Compiler_Range_Type.dummyRange in
                  FStar_Syntax_Subst.open_univ_vars univs uu___4 in
                (match uu___3 with
                 | (univs1, t) ->
@@ -1775,3 +1771,13 @@ let rec (emb_typ_to_string : FStar_Syntax_Syntax.emb_typ -> Prims.string) =
             let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
           Prims.op_Hat uu___2 uu___3 in
         Prims.op_Hat "(" uu___1
+let (fv_qual_to_string : FStar_Syntax_Syntax.fv_qual -> Prims.string) =
+  fun fvq ->
+    match fvq with
+    | FStar_Syntax_Syntax.Data_ctor -> "Data_ctor"
+    | FStar_Syntax_Syntax.Record_projector uu___ -> "Record_projector _"
+    | FStar_Syntax_Syntax.Record_ctor uu___ -> "Record_ctor _"
+    | FStar_Syntax_Syntax.Unresolved_projector uu___ ->
+        "Unresolved_projector _"
+    | FStar_Syntax_Syntax.Unresolved_constructor uu___ ->
+        "Unresolved_constructor _"

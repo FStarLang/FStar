@@ -448,12 +448,12 @@ let (load_module_from_cache :
                  (FStar_Compiler_Effect.op_Colon_Equals already_failed true;
                   (let uu___3 =
                      let uu___4 =
-                       FStar_Compiler_Range.mk_pos Prims.int_zero
+                       FStar_Compiler_Range_Type.mk_pos Prims.int_zero
                          Prims.int_zero in
                      let uu___5 =
-                       FStar_Compiler_Range.mk_pos Prims.int_zero
+                       FStar_Compiler_Range_Type.mk_pos Prims.int_zero
                          Prims.int_zero in
-                     FStar_Compiler_Range.mk_range fn1 uu___4 uu___5 in
+                     FStar_Compiler_Range_Type.mk_range fn1 uu___4 uu___5 in
                    let uu___4 =
                      let uu___5 =
                        FStar_Compiler_Util.format3
@@ -558,10 +558,12 @@ let (store_module_to_cache :
             | FStar_Pervasives.Inl msg ->
                 let uu___1 =
                   let uu___2 =
-                    FStar_Compiler_Range.mk_pos Prims.int_zero Prims.int_zero in
+                    FStar_Compiler_Range_Type.mk_pos Prims.int_zero
+                      Prims.int_zero in
                   let uu___3 =
-                    FStar_Compiler_Range.mk_pos Prims.int_zero Prims.int_zero in
-                  FStar_Compiler_Range.mk_range fn uu___2 uu___3 in
+                    FStar_Compiler_Range_Type.mk_pos Prims.int_zero
+                      Prims.int_zero in
+                  FStar_Compiler_Range_Type.mk_range fn uu___2 uu___3 in
                 let uu___2 =
                   let uu___3 =
                     FStar_Compiler_Util.format2 "%s was not written since %s"

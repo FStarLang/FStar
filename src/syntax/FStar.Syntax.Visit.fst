@@ -127,6 +127,7 @@ let on_sub_term vfs (tm : term) : term =
     tm
 
   | Tm_uinst (f, us) ->
+    let f = f_term vfs f in
     let us = map (f_univ vfs) us in
     mk (Tm_uinst (f, us))
 
@@ -225,7 +226,7 @@ let on_sub_comp_typ vfs ct =
     comp_univs  = map (f_univ vfs) ct.comp_univs;
     effect_name = ct.effect_name;
     result_typ  = (f_term vfs) ct.result_typ;
-    effect_args = ct.effect_args;
+    effect_args = map (f_arg vfs) ct.effect_args;
     flags       = ct.flags;
   }
 

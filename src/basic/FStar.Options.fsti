@@ -30,6 +30,8 @@ type debug_level_t =
   | Extreme
   | Other of string
 
+type split_queries_t = | No | OnFailure | Always
+
 type option_val =
   | Bool of bool
   | String of string
@@ -206,7 +208,7 @@ val smtencoding_l_arith_default : unit    -> bool
 val smtencoding_l_arith_native  : unit    -> bool
 val smtencoding_valid_intro     : unit    -> bool
 val smtencoding_valid_elim      : unit    -> bool
-val split_queries               : unit    -> bool
+val split_queries               : unit    -> split_queries_t
 val tactic_raw_binders          : unit    -> bool
 val tactics_failhard            : unit    -> bool
 val tactics_info                : unit    -> bool

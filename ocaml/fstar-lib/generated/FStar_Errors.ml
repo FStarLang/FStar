@@ -124,8 +124,8 @@ let (update_flags :
       FStar_Compiler_List.collect set_flag_for_range error_range_settings in
     FStar_Compiler_List.op_At uu___ FStar_Errors_Codes.default_settings
 type error =
-  (FStar_Errors_Codes.raw_error * Prims.string * FStar_Compiler_Range.range *
-    Prims.string Prims.list)
+  (FStar_Errors_Codes.raw_error * Prims.string *
+    FStar_Compiler_Range_Type.range * Prims.string Prims.list)
 type issue_level =
   | ENotImplemented 
   | EInfo 
@@ -144,7 +144,7 @@ type issue =
   {
   issue_msg: Prims.string ;
   issue_level: issue_level ;
-  issue_range: FStar_Compiler_Range.range FStar_Pervasives_Native.option ;
+  issue_range: FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option ;
   issue_number: Prims.int FStar_Pervasives_Native.option ;
   issue_ctx: Prims.string Prims.list }
 let (__proj__Mkissue__item__issue_msg : issue -> Prims.string) =
@@ -158,7 +158,7 @@ let (__proj__Mkissue__item__issue_level : issue -> issue_level) =
     | { issue_msg; issue_level = issue_level1; issue_range; issue_number;
         issue_ctx;_} -> issue_level1
 let (__proj__Mkissue__item__issue_range :
-  issue -> FStar_Compiler_Range.range FStar_Pervasives_Native.option) =
+  issue -> FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { issue_msg; issue_level = issue_level1; issue_range; issue_number;
@@ -253,38 +253,38 @@ let (format_issue : issue -> Prims.string) =
       match issue1.issue_range with
       | FStar_Pervasives_Native.None -> ("", "")
       | FStar_Pervasives_Native.Some r when
-          r = FStar_Compiler_Range.dummyRange ->
+          r = FStar_Compiler_Range_Type.dummyRange ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Compiler_Range.def_range r in
+              let uu___3 = FStar_Compiler_Range_Type.def_range r in
               let uu___4 =
-                FStar_Compiler_Range.def_range
-                  FStar_Compiler_Range.dummyRange in
+                FStar_Compiler_Range_Type.def_range
+                  FStar_Compiler_Range_Type.dummyRange in
               uu___3 = uu___4 in
             if uu___2
             then ""
             else
-              (let uu___4 = FStar_Compiler_Range.string_of_range r in
+              (let uu___4 = FStar_Compiler_Range_Ops.string_of_range r in
                FStar_Compiler_Util.format1 " (see also %s)" uu___4) in
           ("", uu___1)
       | FStar_Pervasives_Native.Some r ->
           let uu___1 =
-            let uu___2 = FStar_Compiler_Range.string_of_use_range r in
+            let uu___2 = FStar_Compiler_Range_Ops.string_of_use_range r in
             FStar_Compiler_Util.format1 "%s: " uu___2 in
           let uu___2 =
             let uu___3 =
-              (let uu___4 = FStar_Compiler_Range.use_range r in
-               let uu___5 = FStar_Compiler_Range.def_range r in
+              (let uu___4 = FStar_Compiler_Range_Type.use_range r in
+               let uu___5 = FStar_Compiler_Range_Type.def_range r in
                uu___4 = uu___5) ||
-                (let uu___4 = FStar_Compiler_Range.def_range r in
+                (let uu___4 = FStar_Compiler_Range_Type.def_range r in
                  let uu___5 =
-                   FStar_Compiler_Range.def_range
-                     FStar_Compiler_Range.dummyRange in
+                   FStar_Compiler_Range_Type.def_range
+                     FStar_Compiler_Range_Type.dummyRange in
                  uu___4 = uu___5) in
             if uu___3
             then ""
             else
-              (let uu___5 = FStar_Compiler_Range.string_of_range r in
+              (let uu___5 = FStar_Compiler_Range_Ops.string_of_range r in
                FStar_Compiler_Util.format1 " (see also %s)" uu___5) in
           (uu___1, uu___2) in
     match uu___ with
@@ -320,7 +320,7 @@ let (compare_issues : issue -> issue -> Prims.int) =
       | (FStar_Pervasives_Native.Some uu___, FStar_Pervasives_Native.None) ->
           Prims.int_one
       | (FStar_Pervasives_Native.Some r1, FStar_Pervasives_Native.Some r2) ->
-          FStar_Compiler_Range.compare_use_range r1 r2
+          FStar_Compiler_Range_Ops.compare_use_range r1 r2
 let (mk_default_handler : Prims.bool -> error_handler) =
   fun print ->
     let issues = FStar_Compiler_Util.mk_ref [] in
@@ -369,7 +369,7 @@ let (current_handler : error_handler FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref default_handler
 let (mk_issue :
   issue_level ->
-    FStar_Compiler_Range.range FStar_Pervasives_Native.option ->
+    FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option ->
       Prims.string ->
         Prims.int FStar_Pervasives_Native.option ->
           Prims.string Prims.list -> issue)
@@ -480,7 +480,7 @@ let (error_context : error_context_t) =
   { push; pop; clear = clear1; get; set }
 let (get_ctx : unit -> Prims.string Prims.list) =
   fun uu___ -> error_context.get ()
-let (diag : FStar_Compiler_Range.range -> Prims.string -> unit) =
+let (diag : FStar_Compiler_Range_Type.range -> Prims.string -> unit) =
   fun r ->
     fun msg ->
       let uu___ = FStar_Options.debug_any () in
@@ -491,7 +491,7 @@ let (diag : FStar_Compiler_Range.range -> Prims.string -> unit) =
              FStar_Pervasives_Native.None [])
       else ()
 let (warn_unsafe_options :
-  FStar_Compiler_Range.range FStar_Pervasives_Native.option ->
+  FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option ->
     Prims.string -> unit)
   =
   fun rng_opt ->
@@ -516,7 +516,7 @@ let (warn_unsafe_options :
           add_one uu___1
       | uu___1 -> ()
 let (set_option_warning_callback_range :
-  FStar_Compiler_Range.range FStar_Pervasives_Native.option -> unit) =
+  FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
 let (uu___279 :
@@ -606,7 +606,7 @@ let (lookup :
              with_level level'
          | uu___1 -> with_level level)
 let (log_issue_ctx :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (FStar_Errors_Codes.raw_error * Prims.string) ->
       Prims.string Prims.list -> unit)
   =
@@ -645,7 +645,7 @@ let (log_issue_ctx :
                         uu___6 in
                     failwith uu___5))
 let (log_issue :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (FStar_Errors_Codes.raw_error * Prims.string) -> unit)
   =
   fun r ->
@@ -698,7 +698,7 @@ let (stop_if_err : unit -> unit) =
 let raise_error :
   'a .
     (FStar_Errors_Codes.raw_error * Prims.string) ->
-      FStar_Compiler_Range.range -> 'a
+      FStar_Compiler_Range_Type.range -> 'a
   =
   fun uu___ ->
     fun r ->
@@ -810,9 +810,8 @@ let (find_multiset_discrepancy :
                  if h = hd
                  then (h, (n + Prims.int_one)) :: t
                  else (hd, Prims.int_one) :: (h, n) :: t) in
-      let summ l = collect l in
-      let l11 = let uu___ = sort l1 in summ uu___ in
-      let l21 = let uu___ = sort l2 in summ uu___ in
+      let l11 = let uu___ = sort l1 in collect uu___ in
+      let l21 = let uu___ = sort l2 in collect uu___ in
       let rec aux l12 l22 =
         match (l12, l22) with
         | ([], []) -> FStar_Pervasives_Native.None

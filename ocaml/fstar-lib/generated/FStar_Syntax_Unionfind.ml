@@ -117,7 +117,7 @@ let (fail_if_ro : unit -> unit) =
       FStar_Errors.raise_error
         (FStar_Errors_Codes.Fatal_BadUvar,
           "Internal error: UF graph was in read-only mode")
-        FStar_Compiler_Range.dummyRange
+        FStar_Compiler_Range_Type.dummyRange
     else ()
 let (set : uf -> unit) =
   fun u -> fail_if_ro (); FStar_Compiler_Effect.op_Colon_Equals state u
@@ -180,9 +180,7 @@ let (chk_v_t :
     | (u, v, rng) ->
         let uvar_to_string u1 =
           let uu___1 =
-            let uu___2 =
-              let uu___3 = get_term_graph () in
-              FStar_Unionfind.puf_id uu___3 u1 in
+            let uu___2 = FStar_Unionfind.puf_unique_id u1 in
             FStar_Compiler_Effect.op_Bar_Greater uu___2
               FStar_Compiler_Util.string_of_int in
           Prims.op_Hat "?" uu___1 in
@@ -212,7 +210,7 @@ let (uvar_unique_id : FStar_Syntax_Syntax.uvar -> Prims.int) =
   fun u -> let uu___ = chk_v_t u in FStar_Unionfind.puf_unique_id uu___
 let (fresh :
   FStar_Syntax_Syntax.uvar_decoration ->
-    FStar_Compiler_Range.range -> FStar_Syntax_Syntax.uvar)
+    FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.uvar)
   =
   fun decoration ->
     fun rng ->
@@ -280,21 +278,17 @@ let (union : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.uvar -> unit) =
       set_term_graph uu___
 let (get_univ_graph : unit -> ugraph) =
   fun uu___ -> let uu___1 = get () in uu___1.univ_graph
-let (chk_v_u :
-  (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
-    FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version *
-    FStar_Compiler_Range.range) ->
-    FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
-      FStar_Unionfind.p_uvar)
+let chk_v_u :
+  'uuuuu .
+    ('uuuuu FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version *
+      FStar_Compiler_Range_Type.range) -> 'uuuuu FStar_Unionfind.p_uvar
   =
   fun uu___ ->
     match uu___ with
     | (u, v, rng) ->
         let uvar_to_string u1 =
           let uu___1 =
-            let uu___2 =
-              let uu___3 = get_univ_graph () in
-              FStar_Unionfind.puf_id uu___3 u1 in
+            let uu___2 = FStar_Unionfind.puf_unique_id u1 in
             FStar_Compiler_Effect.op_Bar_Greater uu___2
               FStar_Compiler_Util.string_of_int in
           Prims.op_Hat "?" uu___1 in
@@ -332,7 +326,7 @@ let (univ_uvar_id : FStar_Syntax_Syntax.universe_uvar -> Prims.int) =
     let uu___ = get_univ_graph () in
     let uu___1 = chk_v_u u in FStar_Unionfind.puf_id uu___ uu___1
 let (univ_fresh :
-  FStar_Compiler_Range.range -> FStar_Syntax_Syntax.universe_uvar) =
+  FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.universe_uvar) =
   fun rng ->
     fail_if_ro ();
     (let uu___1 =

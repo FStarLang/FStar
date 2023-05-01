@@ -1301,6 +1301,7 @@ let rec head_matches env t1 t2 : match_result =
 
     | Tm_let _, Tm_let _
     | Tm_match _, Tm_match _
+    | Tm_quoted _, Tm_quoted _
     | Tm_abs _, Tm_abs _ -> HeadMatch true
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
@@ -4986,7 +4987,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                 else [env,vc,FStar.Options.peek ()]
             in
             let vcs =
-              if Options.split_queries ()
+              if Options.split_queries () = Options.Always
               then vcs |>
                    List.collect
                      (fun (env, goal, opts) ->

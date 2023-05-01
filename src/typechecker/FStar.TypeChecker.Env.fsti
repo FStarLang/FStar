@@ -224,6 +224,7 @@ and solver_t = {
     spinoff_strictly_positive_goals: option (env -> goal -> list (env * goal));
     handle_smt_goal :env -> goal -> list (env * goal);
     solve           :option (unit -> string) -> env -> goal -> unit; //call to the smt solver
+    solve_sync      :option (unit -> string) -> env -> goal -> bool; //call to the smt solver
     finish          :unit -> unit;
     refresh         :unit -> unit;
 }

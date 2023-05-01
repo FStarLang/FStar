@@ -293,11 +293,11 @@ let decreases_lid  = pconst "decreases"
 let reveal = p2l ["FStar"; "Ghost"; "reveal"]
 let hide   = p2l ["FStar"; "Ghost"; "hide"]
 
+(* FStar.Range *)
+let labeled_lid    = p2l ["FStar"; "Range"; "labeled"]
+let range_lid      = p2l ["FStar"; "Range"; "range"]
+let range_0        = p2l ["FStar"; "Range"; "range_0"]
 
-let range_lid      = pconst "range"
-let range_of_lid   = pconst "range_of"
-let labeled_lid    = pconst "labeled"
-let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
 

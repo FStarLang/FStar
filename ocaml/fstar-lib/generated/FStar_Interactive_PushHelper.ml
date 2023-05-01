@@ -292,8 +292,7 @@ let (push_repl :
                         =
                         (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
                     }))
-let (add_issues_to_push_fragment :
-  FStar_Compiler_Util.json Prims.list -> unit) =
+let (add_issues_to_push_fragment : FStar_Json.json Prims.list -> unit) =
   fun issues ->
     let uu___ = FStar_Compiler_Effect.op_Bang repl_stack in
     match uu___ with

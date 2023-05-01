@@ -174,6 +174,11 @@ let term_eq_old             = from_tac_2 B.term_eq_old
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
   from_tac_2 B.with_compat_pre_core n (to_tac_0 (f ()))
 
+let get_vconfig             = from_tac_1 B.get_vconfig
+let set_vconfig             = from_tac_1 B.set_vconfig
+let t_smt_sync              = from_tac_1 B.t_smt_sync
+let free_uvars              = from_tac_1 B.free_uvars
+
 
 type ('env, 't0, 't1) subtyping_token = unit
 type ('env, 't0, 't1) equiv_token = unit

@@ -1851,12 +1851,6 @@ let close_guard env binders g =
 
 (* Generating new implicit variables *)
 let new_tac_implicit_var reason r env k should_check uvar_typedness_deps meta =
-    match U.destruct k FStar.Parser.Const.range_of_lid with
-     | Some [_; (tm, _)] ->
-       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
-       t, [], trivial_guard
-
-     | _ ->
       let binders = all_binders env in
       let gamma = env.gamma in
       let decoration = {
@@ -1935,24 +1929,6 @@ let pure_precondition_for_trivial_post env u t wp r =
     wp
     [trivial_post |> S.as_arg]
     r
-
-
-(* <Move> this out of here *)
-let dummy_solver = {
-    init=(fun _ -> ());
-    push=(fun _ -> ());
-    pop=(fun _ -> ());
-    snapshot=(fun _ -> (0, 0, 0), ());
-    rollback=(fun _ _ -> ());
-    encode_sig=(fun _ _ -> ());
-    preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
-    spinoff_strictly_positive_goals=None;
-    handle_smt_goal=(fun e g -> [e,g]);
-    solve=(fun _ _ _ -> ());
-    finish=(fun () -> ());
-    refresh=(fun () -> ());
-}
-(* </Move> *)
 
 let get_letrec_arity (env:env) (lbname:lbname) : option int =
   let compare_either f1 f2 e1 e2 : bool =

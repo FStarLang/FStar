@@ -2,9 +2,6 @@ module RB = FStar_Reflection_Basic
 
 let compare_bv              = RB.compare_bv
 let lookup_typ              = RB.lookup_typ
-let is_free                 = RB.is_free
-let free_bvs                = RB.free_bvs
-let free_uvars              = RB.free_uvars
 let lookup_attr             = RB.lookup_attr
 let all_defs_in_env         = RB.all_defs_in_env
 let defs_in_module          = RB.defs_in_module

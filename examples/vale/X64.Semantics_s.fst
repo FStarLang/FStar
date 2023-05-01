@@ -15,7 +15,6 @@
 *)
 module X64.Semantics_s
 
-open FStar.BaseTypes
 open X64.Machine_s
 
 module F = FStar.FunctionalExtensionality

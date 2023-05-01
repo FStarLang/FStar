@@ -17,6 +17,16 @@ let (uu___is_Other : debug_level_t -> Prims.bool) =
   fun projectee -> match projectee with | Other _0 -> true | uu___ -> false
 let (__proj__Other__item___0 : debug_level_t -> Prims.string) =
   fun projectee -> match projectee with | Other _0 -> _0
+type split_queries_t =
+  | No 
+  | OnFailure 
+  | Always 
+let (uu___is_No : split_queries_t -> Prims.bool) =
+  fun projectee -> match projectee with | No -> true | uu___ -> false
+let (uu___is_OnFailure : split_queries_t -> Prims.bool) =
+  fun projectee -> match projectee with | OnFailure -> true | uu___ -> false
+let (uu___is_Always : split_queries_t -> Prims.bool) =
+  fun projectee -> match projectee with | Always -> true | uu___ -> false
 type option_val =
   | Bool of Prims.bool 
   | String of Prims.string 
@@ -352,7 +362,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("smtencoding.l_arith_repr", (String "boxwrap"));
   ("smtencoding.valid_intro", (Bool true));
   ("smtencoding.valid_elim", (Bool false));
-  ("split_queries", (Bool false));
+  ("split_queries", (String "on_failure"));
   ("tactics_failhard", (Bool false));
   ("tactics_info", (Bool false));
   ("tactic_raw_binders", (Bool false));
@@ -608,8 +618,8 @@ let (get_smtencoding_valid_intro : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "smtencoding.valid_intro" as_bool
 let (get_smtencoding_valid_elim : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "smtencoding.valid_elim" as_bool
-let (get_split_queries : unit -> Prims.bool) =
-  fun uu___ -> lookup_opt "split_queries" as_bool
+let (get_split_queries : unit -> Prims.string) =
+  fun uu___ -> lookup_opt "split_queries" as_string
 let (get_tactic_raw_binders : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "tactic_raw_binders" as_bool
 let (get_tactics_failhard : unit -> Prims.bool) =
@@ -1210,7 +1220,7 @@ let rec (specs_with_types :
                         String s))
               | uu___1 -> failwith "impos")),
            (SimpleStr "positive integer or pair of positive integers"))),
-      "Repeats SMT queries to check for robustness\n\t\t--quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible\n\t\t--quake N/M/k works as above, except it will unconditionally run M times\n\t\t--quake N is an alias for --quake N/N\n\t\t--quake N/k is an alias for --quake N/N/k\n\tUsing --quake disables --retry.");
+      "Repeats SMT queries to check for robustness\n\t\t--quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible\n\t\t--quake N/M/k works as above, except it will unconditionally run M times\n\t\t--quake N is an alias for --quake N/N\n\t\t--quake N/k is an alias for --quake N/N/k\n\tUsing --quake disables --retry. When quake testing, queries are not splitted for error reporting unless\n'--split_queries always' is given. Queries from the smt_sync tactic are not quake-tested.");
     (FStar_Getopt.noshort, "query_stats", (Const (Bool true)),
       "Print SMT query statistics");
     (FStar_Getopt.noshort, "record_hints", (Const (Bool true)),
@@ -1249,8 +1259,9 @@ let rec (specs_with_types :
       "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
     (FStar_Getopt.noshort, "smtencoding.valid_elim", BoolStr,
       "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
-    (FStar_Getopt.noshort, "split_queries", (Const (Bool true)),
-      "Split SMT verification conditions into several separate queries, one per goal");
+    (FStar_Getopt.noshort, "split_queries",
+      (EnumStr ["no"; "on_failure"; "always"]),
+      "Split SMT verification conditions into several separate queries, one per goal.\nHelps with localizing errors.\n\t\t- Use 'no' to disable (this may reduce the quality of error messages).\n\t\t- Use 'on_failure' to split queries and retry when discharging fails (the default)\n\t\t- Use 'yes' to always split.");
     (FStar_Getopt.noshort, "tactic_raw_binders", (Const (Bool true)),
       "Do not use the lexical scope of tactics to improve binder names");
     (FStar_Getopt.noshort, "tactics_failhard", (Const (Bool true)),
@@ -2004,7 +2015,20 @@ let (smtencoding_valid_intro : unit -> Prims.bool) =
   fun uu___ -> get_smtencoding_valid_intro ()
 let (smtencoding_valid_elim : unit -> Prims.bool) =
   fun uu___ -> get_smtencoding_valid_elim ()
-let (split_queries : unit -> Prims.bool) = fun uu___ -> get_split_queries ()
+let (parse_split_queries :
+  Prims.string -> split_queries_t FStar_Pervasives_Native.option) =
+  fun s ->
+    match s with
+    | "no" -> FStar_Pervasives_Native.Some No
+    | "on_failure" -> FStar_Pervasives_Native.Some OnFailure
+    | "always" -> FStar_Pervasives_Native.Some Always
+    | uu___ -> FStar_Pervasives_Native.None
+let (split_queries : unit -> split_queries_t) =
+  fun uu___ ->
+    let uu___1 =
+      let uu___2 = get_split_queries () in
+      FStar_Compiler_Effect.op_Bar_Greater uu___2 parse_split_queries in
+    FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Compiler_Util.must
 let (tactic_raw_binders : unit -> Prims.bool) =
   fun uu___ -> get_tactic_raw_binders ()
 let (tactics_failhard : unit -> Prims.bool) =

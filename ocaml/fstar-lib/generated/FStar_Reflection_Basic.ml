@@ -286,7 +286,7 @@ let rec (inspect_ln :
               let uu___4 = FStar_Syntax_Print.tag_of_term t1 in
               let uu___5 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format2
-                "inspect_ln: outside of expected syntax (%s, %s)\n" uu___4
+                "inspect_ln: outside of expected syntax (%s, %s)" uu___4
                 uu___5 in
             (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
           FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___2);
@@ -396,7 +396,7 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
                (FStar_Syntax_Syntax.Decreases_lex decrs)] in
         let ct =
           let uu___ =
-            FStar_Ident.lid_of_path ef FStar_Compiler_Range.dummyRange in
+            FStar_Ident.lid_of_path ef FStar_Compiler_Range_Type.dummyRange in
           let uu___1 = FStar_Compiler_List.map pack_arg args in
           {
             FStar_Syntax_Syntax.comp_univs = us;
@@ -419,13 +419,13 @@ let (pack_const : FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.sconst)
     | FStar_Reflection_Data.C_True -> FStar_Const.Const_bool true
     | FStar_Reflection_Data.C_False -> FStar_Const.Const_bool false
     | FStar_Reflection_Data.C_String s ->
-        FStar_Const.Const_string (s, FStar_Compiler_Range.dummyRange)
+        FStar_Const.Const_string (s, FStar_Compiler_Range_Type.dummyRange)
     | FStar_Reflection_Data.C_Range r -> FStar_Const.Const_range r
     | FStar_Reflection_Data.C_Reify ->
         FStar_Const.Const_reify FStar_Pervasives_Native.None
     | FStar_Reflection_Data.C_Reflect ns ->
         let uu___ =
-          FStar_Ident.lid_of_path ns FStar_Compiler_Range.dummyRange in
+          FStar_Ident.lid_of_path ns FStar_Compiler_Range_Type.dummyRange in
         FStar_Const.Const_reflect uu___
 let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
   fun tv ->
@@ -447,38 +447,38 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
           c.FStar_Syntax_Syntax.pos
     | FStar_Reflection_Data.Tv_Type u ->
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
-          FStar_Compiler_Range.dummyRange
+          FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Refine (bv, t) ->
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_refine (bv, t))
           t.FStar_Syntax_Syntax.pos
     | FStar_Reflection_Data.Tv_Const c ->
         let uu___ =
           let uu___1 = pack_const c in FStar_Syntax_Syntax.Tm_constant uu___1 in
-        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Uvar (u, ctx_u_s) ->
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_uvar ctx_u_s)
-          FStar_Compiler_Range.dummyRange
+          FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Let (false, attrs, bv, t1, t2) ->
         let lb =
           FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
             bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
-            attrs FStar_Compiler_Range.dummyRange in
+            attrs FStar_Compiler_Range_Type.dummyRange in
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_let ((false, [lb]), t2))
-          FStar_Compiler_Range.dummyRange
+          FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Let (true, attrs, bv, t1, t2) ->
         let lb =
           FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
             bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
-            attrs FStar_Compiler_Range.dummyRange in
+            attrs FStar_Compiler_Range_Type.dummyRange in
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_let ((true, [lb]), t2))
-          FStar_Compiler_Range.dummyRange
+          FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Match (t, ret_opt, brs) ->
         let wrap v =
           {
             FStar_Syntax_Syntax.v = v;
-            FStar_Syntax_Syntax.p = FStar_Compiler_Range.dummyRange
+            FStar_Syntax_Syntax.p = FStar_Compiler_Range_Type.dummyRange
           } in
         let rec pack_pat p =
           match p with
@@ -518,20 +518,22 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_match
              (t, ret_opt, brs1, FStar_Pervasives_Native.None))
-          FStar_Compiler_Range.dummyRange
+          FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt, use_eq) ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_ascribed
              (e, ((FStar_Pervasives.Inl t), tacopt, use_eq),
-               FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
+               FStar_Pervasives_Native.None))
+          FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt, use_eq) ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_ascribed
              (e, ((FStar_Pervasives.Inr c), tacopt, use_eq),
-               FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
+               FStar_Pervasives_Native.None))
+          FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Unknown ->
         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
-          FStar_Compiler_Range.dummyRange
+          FStar_Compiler_Range_Type.dummyRange
 let (compare_bv :
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> FStar_Order.order) =
   fun x ->
@@ -540,28 +542,6 @@ let (compare_bv :
       if n < Prims.int_zero
       then FStar_Order.Lt
       else if n = Prims.int_zero then FStar_Order.Eq else FStar_Order.Gt
-let (is_free :
-  FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool) =
-  fun x -> fun t -> FStar_Syntax_Util.is_free_in x t
-let (free_bvs :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv Prims.list) =
-  fun t ->
-    let uu___ = FStar_Syntax_Free.names t in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      FStar_Compiler_Util.set_elements
-let (free_uvars : FStar_Syntax_Syntax.term -> FStar_BigInt.t Prims.list) =
-  fun t ->
-    let uu___ =
-      let uu___1 = FStar_Syntax_Free.uvars_uncached t in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1
-        FStar_Compiler_Util.set_elements in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_List.map
-         (fun u ->
-            let uu___1 =
-              FStar_Syntax_Unionfind.uvar_id
-                u.FStar_Syntax_Syntax.ctx_uvar_head in
-            FStar_BigInt.of_int_fs uu___1))
 let (lookup_attr :
   FStar_Syntax_Syntax.term ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.fv Prims.list)
@@ -569,7 +549,7 @@ let (lookup_attr :
   fun attr ->
     fun env ->
       let uu___ =
-        let uu___1 = FStar_Syntax_Subst.compress attr in
+        let uu___1 = FStar_Syntax_Subst.compress_subst attr in
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_fvar fv ->
@@ -750,7 +730,7 @@ let (embed_vconfig : FStar_VConfig.vconfig -> FStar_Syntax_Syntax.term) =
   fun vcfg ->
     let uu___ =
       FStar_Syntax_Embeddings.embed FStar_Syntax_Embeddings.e_vconfig vcfg in
-    uu___ FStar_Compiler_Range.dummyRange FStar_Pervasives_Native.None
+    uu___ FStar_Compiler_Range_Type.dummyRange FStar_Pervasives_Native.None
       FStar_Syntax_Embeddings.id_norm_cb
 let (inspect_sigelt :
   FStar_Syntax_Syntax.sigelt -> FStar_Reflection_Data.sigelt_view) =
@@ -910,7 +890,7 @@ let (pack_sigelt :
     | FStar_Reflection_Data.Sg_Inductive (nm, us_names, param_bs, ty, ctors)
         ->
         let ind_lid =
-          FStar_Ident.lid_of_path nm FStar_Compiler_Range.dummyRange in
+          FStar_Ident.lid_of_path nm FStar_Compiler_Range_Type.dummyRange in
         (check_lid ind_lid;
          (let s = FStar_Syntax_Subst.univ_var_closing us_names in
           let nparam = FStar_Compiler_List.length param_bs in
@@ -919,7 +899,8 @@ let (pack_sigelt :
             match uu___1 with
             | (nm1, ty1) ->
                 let lid =
-                  FStar_Ident.lid_of_path nm1 FStar_Compiler_Range.dummyRange in
+                  FStar_Ident.lid_of_path nm1
+                    FStar_Compiler_Range_Type.dummyRange in
                 let ty2 =
                   let uu___2 = FStar_Syntax_Syntax.mk_Total ty1 in
                   FStar_Syntax_Util.arrow param_bs uu___2 in
@@ -958,7 +939,7 @@ let (pack_sigelt :
           }))
     | FStar_Reflection_Data.Sg_Val (nm, us_names, ty) ->
         let val_lid =
-          FStar_Ident.lid_of_path nm FStar_Compiler_Range.dummyRange in
+          FStar_Ident.lid_of_path nm FStar_Compiler_Range_Type.dummyRange in
         (check_lid val_lid;
          (let typ = FStar_Syntax_Subst.close_univ_vars us_names ty in
           FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
@@ -1000,28 +981,62 @@ let (pack_lb :
         let def1 = FStar_Syntax_Subst.subst s def in
         FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inr fv) us typ1
           FStar_Parser_Const.effect_Tot_lid def1 []
-          FStar_Compiler_Range.dummyRange
+          FStar_Compiler_Range_Type.dummyRange
 let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =
   fun bv ->
-    let uu___ = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
-    let uu___1 = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index in
-    {
-      FStar_Reflection_Data.bv_ppname = uu___;
-      FStar_Reflection_Data.bv_index = uu___1;
-      FStar_Reflection_Data.bv_sort = (bv.FStar_Syntax_Syntax.sort)
-    }
+    if bv.FStar_Syntax_Syntax.index < Prims.int_zero
+    then
+      (let uu___1 =
+         let uu___2 =
+           let uu___3 =
+             FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+           let uu___4 =
+             FStar_Syntax_Print.term_to_string bv.FStar_Syntax_Syntax.sort in
+           FStar_Compiler_Util.format3
+             "inspect_bv: index is negative (%s : %s), index = %s" uu___3
+             uu___4 (Prims.string_of_int bv.FStar_Syntax_Syntax.index) in
+         (FStar_Errors_Codes.Warning_CantInspect, uu___2) in
+       FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___1)
+    else ();
+    (let uu___1 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+     let uu___2 = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index in
+     {
+       FStar_Reflection_Data.bv_ppname = uu___1;
+       FStar_Reflection_Data.bv_index = uu___2;
+       FStar_Reflection_Data.bv_sort = (bv.FStar_Syntax_Syntax.sort)
+     })
 let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
   fun bvv ->
-    let uu___ =
-      FStar_Ident.mk_ident
-        ((bvv.FStar_Reflection_Data.bv_ppname),
-          FStar_Compiler_Range.dummyRange) in
-    let uu___1 = FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index in
-    {
-      FStar_Syntax_Syntax.ppname = uu___;
-      FStar_Syntax_Syntax.index = uu___1;
-      FStar_Syntax_Syntax.sort = (bvv.FStar_Reflection_Data.bv_sort)
-    }
+    (let uu___1 =
+       let uu___2 = FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index in
+       uu___2 < Prims.int_zero in
+     if uu___1
+     then
+       let uu___2 =
+         let uu___3 =
+           let uu___4 =
+             FStar_Syntax_Print.term_to_string
+               bvv.FStar_Reflection_Data.bv_sort in
+           let uu___5 =
+             let uu___6 =
+               FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index in
+             Prims.string_of_int uu___6 in
+           FStar_Compiler_Util.format3
+             "pack_bv: index is negative (%s : %s), index = %s"
+             bvv.FStar_Reflection_Data.bv_ppname uu___4 uu___5 in
+         (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
+       FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___2
+     else ());
+    (let uu___1 =
+       FStar_Ident.mk_ident
+         ((bvv.FStar_Reflection_Data.bv_ppname),
+           FStar_Compiler_Range_Type.dummyRange) in
+     let uu___2 = FStar_BigInt.to_int_fs bvv.FStar_Reflection_Data.bv_index in
+     {
+       FStar_Syntax_Syntax.ppname = uu___1;
+       FStar_Syntax_Syntax.index = uu___2;
+       FStar_Syntax_Syntax.sort = (bvv.FStar_Reflection_Data.bv_sort)
+     })
 let (inspect_binder :
   FStar_Syntax_Syntax.binder -> FStar_Reflection_Data.binder_view) =
   fun b ->

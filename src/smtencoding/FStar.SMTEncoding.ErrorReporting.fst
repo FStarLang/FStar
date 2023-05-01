@@ -169,7 +169,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
 
                 | _ -> //not in the form produced by an application of M_stronger
-                  fallback ("arg not a quant: " ^ (Term.print_smt_term arg))
+                  fallback ("arg not a quant: ")// ^ (Term.print_smt_term arg))
               end
           with Not_a_wp_implication msg -> fallback msg
           end
