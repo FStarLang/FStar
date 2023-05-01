@@ -248,7 +248,7 @@ let local_fv = mk_tests_lid "local"
 //
 // When we translate F* syntax to Pulse,
 //   the else branch when translating if (i.e. Tm_match)
-//   are an issue, as the pattern there is Pat_Wild bv,
+//   are an issue, as the pattern there is Pat_Var bv,
 //   which eats up 0th bv index
 //
 let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
@@ -565,7 +565,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
             end
 
     | R.Tv_Match b _ [(Pat_Constant C_True, then_);
-                      (Pat_Wild _, else_)] ->
+                      (Pat_Var _ _, else_)] ->
       let? b = readback_ty g (pack_ln (inspect_ln_unascribe b)) in
       let? then_ = translate_st_term g then_ in
       let? else_ = translate_st_term g else_ in
