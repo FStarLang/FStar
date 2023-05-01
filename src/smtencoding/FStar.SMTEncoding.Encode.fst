@@ -435,11 +435,17 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
 
                     | _ -> false
                 in
+                let is_arrow t =
+                  match (U.unrefine (N.unfold_whnf' [EraseUniverses] env.tcenv t)).n with
+                  | Tm_arrow _ -> true
+                  | _ -> false
+                in
                 //Do not thunk ...
                 nsstr lid <> "Prims"  //things in prims
                 && not (quals |> List.contains Logic) //logic qualified terms
                 && not (is_squash t_norm) //ambient squashed properties
                 && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
+                && not (is_arrow t_norm) // : functions, idem, also see #2894
               in
               let thunked, vars =
                  match vars with
@@ -536,7 +542,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
               g, env
 
 
-let declare_top_level_let env x t t_norm =
+let declare_top_level_let env x t t_norm : fvar_binding * decls_t * env_t =
   match lookup_fvar_binding env x.fv_name.v with
   (* Need to introduce a new name decl *)
   | None ->
@@ -847,7 +853,7 @@ let encode_top_level_let :
             let (binders, body, tres_comp) = destruct_bound_function t_norm e in
             let curry = fvb.smt_arity <> List.length binders in
             let pre_opt, tres = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
-            if Env.debug env0.tcenv <| Options.Other "SMTEncodingReify"
+            if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
             then BU.print4 "Encoding let rec %s: \n\tbinders=[%s], \n\tbody=%s, \n\ttres=%s\n"
                               (Print.lbname_to_string lbn)
                               (Print.binders_to_string ", " binders)
