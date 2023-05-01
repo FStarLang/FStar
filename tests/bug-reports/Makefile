@@ -213,10 +213,11 @@ RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyp
 PushPopProjectors.extract: PushPopProjectors.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen FSharp $^
 
-output-accept: Bug310.ml Bug2058.ml Bug2595.ml
+output-accept: Bug310.ml Bug2058.ml Bug2595.ml Bug2699.ml
 	cp Bug310.ml Bug310.ml.expected
 	cp Bug2058.ml Bug2058.ml.expected
 	cp Bug2595.ml Bug2595.ml.expected
+	cp Bug2699.ml Bug2699.ml.expected
 
 %.extract: %.fst
 	@mkdir -p out_$*
