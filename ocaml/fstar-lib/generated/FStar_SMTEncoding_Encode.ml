@@ -1790,19 +1790,36 @@ let (encode_free_var :
                                                  fv1
                                                  FStar_Parser_Const.unit_lid
                                            | uu___12 -> false) in
-                                    (((let uu___9 = FStar_Ident.nsstr lid in
-                                       uu___9 <> "Prims") &&
-                                        (let uu___9 =
-                                           FStar_Compiler_Effect.op_Bar_Greater
-                                             quals
-                                             (FStar_Compiler_List.contains
-                                                FStar_Syntax_Syntax.Logic) in
+                                    let is_arrow t =
+                                      let uu___9 =
+                                        let uu___10 =
+                                          let uu___11 =
+                                            FStar_TypeChecker_Normalize.unfold_whnf'
+                                              [FStar_TypeChecker_Env.EraseUniverses]
+                                              env.FStar_SMTEncoding_Env.tcenv
+                                              t in
+                                          FStar_Syntax_Util.unrefine uu___11 in
+                                        uu___10.FStar_Syntax_Syntax.n in
+                                      match uu___9 with
+                                      | FStar_Syntax_Syntax.Tm_arrow uu___10
+                                          -> true
+                                      | uu___10 -> false in
+                                    ((((let uu___9 = FStar_Ident.nsstr lid in
+                                        uu___9 <> "Prims") &&
+                                         (let uu___9 =
+                                            FStar_Compiler_Effect.op_Bar_Greater
+                                              quals
+                                              (FStar_Compiler_List.contains
+                                                 FStar_Syntax_Syntax.Logic) in
+                                          Prims.op_Negation uu___9))
+                                        &&
+                                        (let uu___9 = is_squash t_norm in
                                          Prims.op_Negation uu___9))
                                        &&
-                                       (let uu___9 = is_squash t_norm in
+                                       (let uu___9 = is_type t_norm in
                                         Prims.op_Negation uu___9))
                                       &&
-                                      (let uu___9 = is_type t_norm in
+                                      (let uu___9 = is_arrow t_norm in
                                        Prims.op_Negation uu___9) in
                                   let uu___8 =
                                     match vars with
@@ -2170,8 +2187,7 @@ let (declare_top_level_let :
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
         FStar_Syntax_Syntax.term ->
           (FStar_SMTEncoding_Env.fvar_binding *
-            FStar_SMTEncoding_Term.decls_elt Prims.list *
-            FStar_SMTEncoding_Env.env_t))
+            FStar_SMTEncoding_Term.decls_t * FStar_SMTEncoding_Env.env_t))
   =
   fun env ->
     fun x ->
@@ -3104,7 +3120,7 @@ let (encode_top_level_let :
                                                                (FStar_TypeChecker_Env.debug
                                                                   env01.FStar_SMTEncoding_Env.tcenv)
                                                                (FStar_Options.Other
-                                                                  "SMTEncodingReify") in
+                                                                  "SMTEncoding") in
                                                            if uu___17
                                                            then
                                                              let uu___18 =
