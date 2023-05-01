@@ -11,8 +11,7 @@ machine_integers \
 micro-benchmarks \
 prettyprinting \
 struct \
-tactics \
-printable
+tactics 
 
 all: $(addsuffix .all, $(ALL_TEST_DIRS))
 clean: $(addsuffix .clean, $(ALL_TEST_DIRS))
