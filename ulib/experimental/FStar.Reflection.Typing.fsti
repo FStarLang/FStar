@@ -36,7 +36,7 @@ val inspect_pack (t:R.term_view)
           [SMTPat R.(inspect_ln (pack_ln t))]
   
 val pack_inspect (t:R.term)
-  : Lemma (requires ~(Tv_Unknown? (inspect_ln t)))
+  : Lemma (requires ~(Tv_Unsupp? (inspect_ln t)))
           (ensures R.(pack_ln (inspect_ln t) == t))
           [SMTPat R.(pack_ln (inspect_ln t))]
   
@@ -191,6 +191,7 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
     | Tv_FVar _
     | Tv_Type _
     | Tv_Const _
+    | Tv_Unsupp
     | Tv_Unknown -> t
     | Tv_Var x ->
       (match v with
@@ -443,6 +444,7 @@ let rec freevars (e:term)
     | Tv_Type _
     | Tv_Const _
     | Tv_Unknown 
+    | Tv_Unsupp
     | Tv_BVar _ -> Set.empty
 
     | Tv_Var x -> Set.singleton (bv_index x)
@@ -933,6 +935,7 @@ let rec ln' (e:term) (n:int)
     | Tv_Type _
     | Tv_Const _
     | Tv_Unknown 
+    | Tv_Unsupp
     | Tv_Var _ -> true
     | Tv_BVar m -> bv_index m <= n
     | Tv_App e1 (e2, _) -> ln' e1 n && ln' e2 n

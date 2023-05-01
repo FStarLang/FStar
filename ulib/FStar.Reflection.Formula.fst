@@ -138,6 +138,7 @@ let term_as_formula' (t:term) : Tac formula =
     | Tv_Arrow _ _
     | Tv_Uvar _ _
     | Tv_Unknown
+    | Tv_Unsupp
     | Tv_Refine _ _ _ -> F_Unknown
 
     (* Other constants? *)

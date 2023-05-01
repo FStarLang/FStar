@@ -188,7 +188,8 @@ let rec head (t : term) : term =
     | Tv_BVar _
     | Tv_FVar _
     | Tv_UInst _ _
-    | Tv_Arrow _ _ -> t
+    | Tv_Arrow _ _
+    | Tv_Unsupp -> t
 
 (** Checks if a term `t` is equal to some FV (a top level name).
 Ignores universes and ascriptions. *)

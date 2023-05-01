@@ -217,6 +217,7 @@ let term_head t : Tac string =
   | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
   | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
   | Tv_Unknown -> "Tv_Unknown"
+  | Tv_Unsupp -> "Tv_Unsupp"
 
 let string_of_match_exception = function
   | NameMismatch (qn1, qn2) ->
