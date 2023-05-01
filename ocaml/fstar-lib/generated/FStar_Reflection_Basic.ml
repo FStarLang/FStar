@@ -228,10 +228,10 @@ let rec (inspect_ln :
         FStar_Reflection_Data.Tv_Uvar uu___
     | FStar_Syntax_Syntax.Tm_let ((false, lb::[]), t2) ->
         if lb.FStar_Syntax_Syntax.lbunivs <> []
-        then FStar_Reflection_Data.Tv_Unknown
+        then FStar_Reflection_Data.Tv_Unsupp
         else
           (match lb.FStar_Syntax_Syntax.lbname with
-           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unknown
+           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unsupp
            | FStar_Pervasives.Inl bv ->
                FStar_Reflection_Data.Tv_Let
                  (false, (lb.FStar_Syntax_Syntax.lbattrs), bv,
@@ -239,10 +239,10 @@ let rec (inspect_ln :
                    (lb.FStar_Syntax_Syntax.lbdef), t2))
     | FStar_Syntax_Syntax.Tm_let ((true, lb::[]), t2) ->
         if lb.FStar_Syntax_Syntax.lbunivs <> []
-        then FStar_Reflection_Data.Tv_Unknown
+        then FStar_Reflection_Data.Tv_Unsupp
         else
           (match lb.FStar_Syntax_Syntax.lbname with
-           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unknown
+           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unsupp
            | FStar_Pervasives.Inl bv ->
                FStar_Reflection_Data.Tv_Let
                  (true, (lb.FStar_Syntax_Syntax.lbattrs), bv,
@@ -292,7 +292,7 @@ let rec (inspect_ln :
                 uu___5 in
             (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
           FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___2);
-         FStar_Reflection_Data.Tv_Unknown)
+         FStar_Reflection_Data.Tv_Unsupp)
 let (inspect_comp :
   FStar_Syntax_Syntax.comp -> FStar_Reflection_Data.comp_view) =
   fun c ->
@@ -550,6 +550,12 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
     | FStar_Reflection_Data.Tv_Unknown ->
         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
           FStar_Compiler_Range_Type.dummyRange
+    | FStar_Reflection_Data.Tv_Unsupp ->
+        (FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+           (FStar_Errors_Codes.Warning_CantInspect,
+             "packing a Tv_Unsupp into Tm_unknown");
+         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
+           FStar_Compiler_Range_Type.dummyRange)
 let (compare_bv :
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> FStar_Order.order) =
   fun x ->

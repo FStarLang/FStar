@@ -1183,6 +1183,16 @@ let (e_term_view_aq :
             FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
             FStar_Syntax_Syntax.hash_code =
               (uu___.FStar_Syntax_Syntax.hash_code)
+          }
+      | FStar_Reflection_Data.Tv_Unsupp ->
+          let uu___ =
+            FStar_Reflection_Constants.ref_Tv_Unsupp.FStar_Reflection_Constants.t in
+          {
+            FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+            FStar_Syntax_Syntax.pos = rng;
+            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+            FStar_Syntax_Syntax.hash_code =
+              (uu___.FStar_Syntax_Syntax.hash_code)
           } in
     let unembed_term_view w t =
       let uu___ = FStar_Syntax_Util.head_and_args t in
@@ -1453,6 +1463,13 @@ let (e_term_view_aq :
                FStar_Compiler_Effect.op_Less_Bar
                  (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
                  FStar_Reflection_Data.Tv_Unknown
+           | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+               FStar_Syntax_Syntax.fv_eq_lid fv
+                 FStar_Reflection_Constants.ref_Tv_Unsupp.FStar_Reflection_Constants.lid
+               ->
+               FStar_Compiler_Effect.op_Less_Bar
+                 (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
+                 FStar_Reflection_Data.Tv_Unsupp
            | uu___2 ->
                (if w
                 then

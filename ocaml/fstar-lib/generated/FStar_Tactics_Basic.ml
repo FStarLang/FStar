@@ -6302,13 +6302,13 @@ let rec (inspect :
                if lb.FStar_Syntax_Syntax.lbunivs <> []
                then
                  FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
-                   FStar_Reflection_Data.Tv_Unknown
+                   FStar_Reflection_Data.Tv_Unsupp
                else
                  (match lb.FStar_Syntax_Syntax.lbname with
                   | FStar_Pervasives.Inr uu___3 ->
                       FStar_Compiler_Effect.op_Less_Bar
                         FStar_Tactics_Monad.ret
-                        FStar_Reflection_Data.Tv_Unknown
+                        FStar_Reflection_Data.Tv_Unsupp
                   | FStar_Pervasives.Inl bv ->
                       let b = FStar_Syntax_Syntax.mk_binder bv in
                       let uu___3 = FStar_Syntax_Subst.open_term [b] t21 in
@@ -6331,13 +6331,13 @@ let rec (inspect :
                if lb.FStar_Syntax_Syntax.lbunivs <> []
                then
                  FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
-                   FStar_Reflection_Data.Tv_Unknown
+                   FStar_Reflection_Data.Tv_Unsupp
                else
                  (match lb.FStar_Syntax_Syntax.lbname with
                   | FStar_Pervasives.Inr uu___3 ->
                       FStar_Compiler_Effect.op_Less_Bar
                         FStar_Tactics_Monad.ret
-                        FStar_Reflection_Data.Tv_Unknown
+                        FStar_Reflection_Data.Tv_Unsupp
                   | FStar_Pervasives.Inl bv ->
                       let uu___3 = FStar_Syntax_Subst.open_let_rec [lb] t21 in
                       (match uu___3 with
@@ -6347,7 +6347,7 @@ let rec (inspect :
                                 (match lb1.FStar_Syntax_Syntax.lbname with
                                  | FStar_Pervasives.Inr uu___4 ->
                                      FStar_Tactics_Monad.ret
-                                       FStar_Reflection_Data.Tv_Unknown
+                                       FStar_Reflection_Data.Tv_Unsupp
                                  | FStar_Pervasives.Inl bv1 ->
                                      FStar_Compiler_Effect.op_Less_Bar
                                        FStar_Tactics_Monad.ret
@@ -6407,7 +6407,7 @@ let rec (inspect :
                    (FStar_Errors_Codes.Warning_CantInspect, uu___5) in
                  FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos uu___4);
                 FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
-                  FStar_Reflection_Data.Tv_Unknown)) in
+                  FStar_Reflection_Data.Tv_Unsupp)) in
     FStar_Tactics_Monad.wrap_err "inspect" uu___
 let (pack' :
   FStar_Reflection_Data.term_view ->
@@ -6584,6 +6584,8 @@ let (pack' :
             FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
               FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
+      | FStar_Reflection_Data.Tv_Unsupp ->
+          FStar_Tactics_Monad.fail "cannot pack Tv_Unsupp"
 let (pack :
   FStar_Reflection_Data.term_view ->
     FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)

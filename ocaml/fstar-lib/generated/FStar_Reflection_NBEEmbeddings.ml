@@ -1193,6 +1193,10 @@ let (e_term_view_aq :
       | FStar_Reflection_Data.Tv_Unknown ->
           mkConstruct
             FStar_Reflection_Constants.ref_Tv_Unknown.FStar_Reflection_Constants.fv
+            [] []
+      | FStar_Reflection_Data.Tv_Unsupp ->
+          mkConstruct
+            FStar_Reflection_Constants.ref_Tv_Unsupp.FStar_Reflection_Constants.fv
             [] [] in
     let unembed_term_view cb t =
       match t.FStar_TypeChecker_NBETerm.nbe_t with
@@ -1464,6 +1468,13 @@ let (e_term_view_aq :
           FStar_Compiler_Effect.op_Less_Bar
             (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
             FStar_Reflection_Data.Tv_Unknown
+      | FStar_TypeChecker_NBETerm.Construct (fv, uu___, []) when
+          FStar_Syntax_Syntax.fv_eq_lid fv
+            FStar_Reflection_Constants.ref_Tv_Unsupp.FStar_Reflection_Constants.lid
+          ->
+          FStar_Compiler_Effect.op_Less_Bar
+            (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
+            FStar_Reflection_Data.Tv_Unsupp
       | uu___ ->
           ((let uu___2 =
               let uu___3 =

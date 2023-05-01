@@ -174,6 +174,7 @@ type term_view =
   | Tv_AscribedC of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool) 
   | Tv_Unknown 
+  | Tv_Unsupp 
 let (uu___is_Tv_Var : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Var _0 -> true | uu___ -> false
 let (__proj__Tv_Var__item___0 : term_view -> FStar_Syntax_Syntax.bv) =
@@ -262,6 +263,8 @@ let (__proj__Tv_AscribedC__item___0 :
   = fun projectee -> match projectee with | Tv_AscribedC _0 -> _0
 let (uu___is_Tv_Unknown : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Unknown -> true | uu___ -> false
+let (uu___is_Tv_Unsupp : term_view -> Prims.bool) =
+  fun projectee -> match projectee with | Tv_Unsupp -> true | uu___ -> false
 let (notAscription : term_view -> Prims.bool) =
   fun tv ->
     (Prims.op_Negation (uu___is_Tv_AscribedT tv)) &&
