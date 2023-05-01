@@ -220,14 +220,14 @@ output-accept: Bug310.ml Bug2058.ml Bug2595.ml Bug2699.ml
 	cp Bug2699.ml Bug2699.ml.expected
 
 %.extract: %.fst
-	@mkdir -p out_$*
-	@echo '[EXTRACT   $<]'
+	$(Q)mkdir -p out_$*
+	$(call msg, "EXTRACT", $<)
 	$(Q)$(FSTAR) $(SIL) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen OCaml $^
-	@echo '[OCAMLOPT  $<]'
-	@$(OCAMLOPT) out_$*/$(CAPPED).ml -o $(CAPPED).exe
-	@echo '[RUN       $(CAPPED).exe]'
-	@./$(CAPPED).exe
-	@touch $@
+	$(call msg, "OCAMLOPT", $<)
+	$(Q)$(OCAMLOPT) out_$*/$(CAPPED).ml -o $(CAPPED).exe
+	$(call msg, "RUN", $(CAPPED).exe)
+	$(Q)./$(CAPPED).exe
+	$(Q)touch $@
 
 extract: $(subst .fst,.extract,$(SHOULD_EXTRACT_CLOSED))
 
