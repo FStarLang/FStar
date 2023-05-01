@@ -1,6 +1,6 @@
 open Prims
 let (unpack_lsp_query :
-  (Prims.string * FStar_Compiler_Util.json) Prims.list ->
+  (Prims.string * FStar_Json.json) Prims.list ->
     FStar_Interactive_JsonHelper.lsp_query)
   =
   fun r ->
@@ -181,7 +181,7 @@ let (unpack_lsp_query :
     | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
         FStar_Interactive_JsonHelper.wrap_jsfail qid expected got
 let (deserialize_lsp_query :
-  FStar_Compiler_Util.json -> FStar_Interactive_JsonHelper.lsp_query) =
+  FStar_Json.json -> FStar_Interactive_JsonHelper.lsp_query) =
   fun js_query ->
     try
       (fun uu___ ->
@@ -198,7 +198,7 @@ let (deserialize_lsp_query :
 let (parse_lsp_query :
   Prims.string -> FStar_Interactive_JsonHelper.lsp_query) =
   fun query_str ->
-    let uu___1 = FStar_Compiler_Util.json_of_string query_str in
+    let uu___1 = FStar_Json.json_of_string query_str in
     match uu___1 with
     | FStar_Pervasives_Native.None ->
         {
@@ -213,9 +213,11 @@ let (repl_state_init :
   Prims.string -> FStar_Interactive_Ide_Types.repl_state) =
   fun fname ->
     let intial_range =
-      let uu___ = FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
-      let uu___1 = FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
-      FStar_Compiler_Range.mk_range fname uu___ uu___1 in
+      let uu___ =
+        FStar_Compiler_Range_Type.mk_pos Prims.int_one Prims.int_zero in
+      let uu___1 =
+        FStar_Compiler_Range_Type.mk_pos Prims.int_one Prims.int_zero in
+      FStar_Compiler_Range_Type.mk_range fname uu___ uu___1 in
     let env = FStar_Universal.init_env FStar_Parser_Dep.empty_deps in
     let env1 = FStar_TypeChecker_Env.set_range env intial_range in
     let uu___ = FStar_Compiler_Util.open_stdin () in
@@ -509,7 +511,7 @@ let rec (go : FStar_Interactive_Ide_Types.grepl_state -> Prims.int) =
                   query.FStar_Interactive_JsonHelper.query_id response in
               (if false
                then
-                 (let uu___3 = FStar_Compiler_Util.string_of_json response' in
+                 (let uu___3 = FStar_Json.string_of_json response' in
                   FStar_Compiler_Util.print1_error "<<< %s\n" uu___3)
                else ();
                FStar_Interactive_JsonHelper.write_jsonrpc response')

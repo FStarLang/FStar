@@ -109,7 +109,7 @@ let (universe_to_string : FStar_Ident.ident Prims.list -> Prims.string) =
     else ""
 let rec (resugar_universe :
   FStar_Syntax_Syntax.universe ->
-    FStar_Compiler_Range.range -> FStar_Parser_AST.term)
+    FStar_Compiler_Range_Type.range -> FStar_Parser_AST.term)
   =
   fun u ->
     fun r ->
@@ -183,7 +183,7 @@ let rec (resugar_universe :
 let (resugar_universe' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.universe ->
-      FStar_Compiler_Range.range -> FStar_Parser_AST.term)
+      FStar_Compiler_Range_Type.range -> FStar_Parser_AST.term)
   = fun env -> fun u -> fun r -> resugar_universe u r
 type expected_arity = Prims.int FStar_Pervasives_Native.option
 let rec (resugar_term_as_op :
@@ -415,7 +415,7 @@ let (can_resugar_machine_integer : FStar_Syntax_Syntax.fv -> Prims.bool) =
     FStar_Compiler_Option.isSome uu___
 let (resugar_machine_integer :
   FStar_Syntax_Syntax.fv ->
-    Prims.string -> FStar_Compiler_Range.range -> FStar_Parser_AST.term)
+    Prims.string -> FStar_Compiler_Range_Type.range -> FStar_Parser_AST.term)
   =
   fun fv ->
     fun i ->
@@ -1628,7 +1628,7 @@ and (resugar_calc :
 and (resugar_match_returns :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         (FStar_Syntax_Syntax.binder *
           ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
@@ -1870,7 +1870,7 @@ and (resugar_comp' :
 and (resugar_binder' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.binder ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         FStar_Parser_AST.binder FStar_Pervasives_Native.option)
   =
   fun env ->
@@ -2400,7 +2400,7 @@ let (resugar_typ :
             failwith
               "Impossible : only Sig_inductive_typ can be resugared as types"
 let (mk_decl :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
       FStar_Parser_AST.decl' -> FStar_Parser_AST.decl)
   =
@@ -2553,7 +2553,7 @@ let (resugar_combinators :
           resugar_layered_eff_combinators env combs1
 let (resugar_eff_decl' :
   FStar_Syntax_DsEnv.env ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
         FStar_Syntax_Syntax.eff_decl -> FStar_Parser_AST.decl)
   =
@@ -2962,13 +2962,13 @@ let (resugar_pat :
     fun branch_bv -> let uu___ = noenv resugar_pat' in uu___ p branch_bv
 let (resugar_binder :
   FStar_Syntax_Syntax.binder ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Parser_AST.binder FStar_Pervasives_Native.option)
   = fun b -> fun r -> let uu___ = noenv resugar_binder' in uu___ b r
 let (resugar_tscheme : FStar_Syntax_Syntax.tscheme -> FStar_Parser_AST.decl)
   = fun ts -> let uu___ = noenv resugar_tscheme' in uu___ ts
 let (resugar_eff_decl :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
       FStar_Syntax_Syntax.eff_decl -> FStar_Parser_AST.decl)
   =

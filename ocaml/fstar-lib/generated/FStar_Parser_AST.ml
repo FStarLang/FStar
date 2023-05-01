@@ -96,7 +96,7 @@ type term' =
   | ElimAnd of (term * term * term * binder * binder * term) 
 and term = {
   tm: term' ;
-  range: FStar_Compiler_Range.range ;
+  range: FStar_Compiler_Range_Type.range ;
   level: level }
 and calc_step =
   | CalcStep of (term * term * term) 
@@ -109,7 +109,7 @@ and binder' =
 and binder =
   {
   b: binder' ;
-  brange: FStar_Compiler_Range.range ;
+  brange: FStar_Compiler_Range_Type.range ;
   blevel: level ;
   aqual: arg_qualifier FStar_Pervasives_Native.option ;
   battributes: term Prims.list }
@@ -132,7 +132,7 @@ and pattern' =
   | PatVQuote of term 
 and pattern = {
   pat: pattern' ;
-  prange: FStar_Compiler_Range.range }
+  prange: FStar_Compiler_Range_Type.range }
 and arg_qualifier =
   | Implicit 
   | Equality 
@@ -411,7 +411,7 @@ let (__proj__ElimAnd__item___0 :
 let (__proj__Mkterm__item__tm : term -> term') =
   fun projectee ->
     match projectee with | { tm; range; level = level1;_} -> tm
-let (__proj__Mkterm__item__range : term -> FStar_Compiler_Range.range) =
+let (__proj__Mkterm__item__range : term -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with | { tm; range; level = level1;_} -> range
 let (__proj__Mkterm__item__level : term -> level) =
@@ -447,7 +447,8 @@ let (__proj__NoName__item___0 : binder' -> term) =
 let (__proj__Mkbinder__item__b : binder -> binder') =
   fun projectee ->
     match projectee with | { b; brange; blevel; aqual; battributes;_} -> b
-let (__proj__Mkbinder__item__brange : binder -> FStar_Compiler_Range.range) =
+let (__proj__Mkbinder__item__brange :
+  binder -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
     | { b; brange; blevel; aqual; battributes;_} -> brange
@@ -534,8 +535,9 @@ let (__proj__PatVQuote__item___0 : pattern' -> term) =
   fun projectee -> match projectee with | PatVQuote _0 -> _0
 let (__proj__Mkpattern__item__pat : pattern -> pattern') =
   fun projectee -> match projectee with | { pat; prange;_} -> pat
-let (__proj__Mkpattern__item__prange : pattern -> FStar_Compiler_Range.range)
-  = fun projectee -> match projectee with | { pat; prange;_} -> prange
+let (__proj__Mkpattern__item__prange :
+  pattern -> FStar_Compiler_Range_Type.range) =
+  fun projectee -> match projectee with | { pat; prange;_} -> prange
 let (uu___is_Implicit : arg_qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Implicit -> true | uu___ -> false
 let (uu___is_Equality : arg_qualifier -> Prims.bool) =
@@ -810,7 +812,7 @@ type decl' =
 and decl =
   {
   d: decl' ;
-  drange: FStar_Compiler_Range.range ;
+  drange: FStar_Compiler_Range_Type.range ;
   quals: qualifiers ;
   attrs: attributes_ }
 and effect_decl =
@@ -903,7 +905,8 @@ let (__proj__Splice__item___0 :
   fun projectee -> match projectee with | Splice _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee -> match projectee with | { d; drange; quals; attrs;_} -> d
-let (__proj__Mkdecl__item__drange : decl -> FStar_Compiler_Range.range) =
+let (__proj__Mkdecl__item__drange : decl -> FStar_Compiler_Range_Type.range)
+  =
   fun projectee ->
     match projectee with | { d; drange; quals; attrs;_} -> drange
 let (__proj__Mkdecl__item__quals : decl -> qualifiers) =
@@ -940,7 +943,7 @@ let (__proj__Interface__item___0 :
   fun projectee -> match projectee with | Interface _0 -> _0
 type file = modul
 type inputFragment = (file, decl Prims.list) FStar_Pervasives.either
-let (decl_drange : decl -> FStar_Compiler_Range.range) =
+let (decl_drange : decl -> FStar_Compiler_Range_Type.range) =
   fun decl1 -> decl1.drange
 let (check_id : FStar_Ident.ident -> unit) =
   fun id ->
@@ -962,7 +965,7 @@ let (check_id : FStar_Ident.ident -> unit) =
 let at_most_one :
   'uuuuu .
     Prims.string ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         'uuuuu Prims.list -> 'uuuuu FStar_Pervasives_Native.option
   =
   fun s ->
@@ -979,7 +982,8 @@ let at_most_one :
               (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration, uu___2) in
             FStar_Errors.raise_error uu___1 r
 let (mk_decl :
-  decl' -> FStar_Compiler_Range.range -> decoration Prims.list -> decl) =
+  decl' -> FStar_Compiler_Range_Type.range -> decoration Prims.list -> decl)
+  =
   fun d ->
     fun r ->
       fun decorations ->
@@ -1001,7 +1005,7 @@ let (mk_decl :
         { d; drange = r; quals = qualifiers1; attrs = attributes_2 }
 let (mk_binder_with_attrs :
   binder' ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       level ->
         arg_qualifier FStar_Pervasives_Native.option ->
           term Prims.list -> binder)
@@ -1014,14 +1018,15 @@ let (mk_binder_with_attrs :
             { b; brange = r; blevel = l; aqual = i; battributes = attrs }
 let (mk_binder :
   binder' ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       level -> arg_qualifier FStar_Pervasives_Native.option -> binder)
   = fun b -> fun r -> fun l -> fun i -> mk_binder_with_attrs b r l i []
-let (mk_term : term' -> FStar_Compiler_Range.range -> level -> term) =
+let (mk_term : term' -> FStar_Compiler_Range_Type.range -> level -> term) =
   fun t -> fun r -> fun l -> { tm = t; range = r; level = l }
 let (mk_uminus :
   term ->
-    FStar_Compiler_Range.range -> FStar_Compiler_Range.range -> level -> term)
+    FStar_Compiler_Range_Type.range ->
+      FStar_Compiler_Range_Type.range -> level -> term)
   =
   fun t ->
     fun rminus ->
@@ -1043,7 +1048,7 @@ let (mk_uminus :
                   (uu___2, [t]) in
                 Op uu___1 in
           mk_term t1 r l
-let (mk_pattern : pattern' -> FStar_Compiler_Range.range -> pattern) =
+let (mk_pattern : pattern' -> FStar_Compiler_Range_Type.range -> pattern) =
   fun p -> fun r -> { pat = p; prange = r }
 let (un_curry_abs : pattern Prims.list -> term -> term') =
   fun ps ->
@@ -1053,7 +1058,8 @@ let (un_curry_abs : pattern Prims.list -> term -> term') =
       | uu___ -> Abs (ps, body)
 let (mk_function :
   (pattern * term FStar_Pervasives_Native.option * term) Prims.list ->
-    FStar_Compiler_Range.range -> FStar_Compiler_Range.range -> term)
+    FStar_Compiler_Range_Type.range ->
+      FStar_Compiler_Range_Type.range -> term)
   =
   fun branches ->
     fun r1 ->
@@ -1086,19 +1092,20 @@ let (un_function :
             ((mk_pattern (PatApp (p, pats)) p.prange), body)
       | uu___ -> FStar_Pervasives_Native.None
 let (lid_with_range :
-  FStar_Ident.lident -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
+  FStar_Ident.lident -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident)
+  =
   fun lid ->
     fun r ->
       let uu___ = FStar_Ident.path_of_lid lid in
       FStar_Ident.lid_of_path uu___ r
-let (consPat : FStar_Compiler_Range.range -> pattern -> pattern -> pattern')
-  =
+let (consPat :
+  FStar_Compiler_Range_Type.range -> pattern -> pattern -> pattern') =
   fun r ->
     fun hd ->
       fun tl ->
         PatApp
           ((mk_pattern (PatName FStar_Parser_Const.cons_lid) r), [hd; tl])
-let (consTerm : FStar_Compiler_Range.range -> term -> term -> term) =
+let (consTerm : FStar_Compiler_Range_Type.range -> term -> term -> term) =
   fun r ->
     fun hd ->
       fun tl ->
@@ -1106,13 +1113,14 @@ let (consTerm : FStar_Compiler_Range.range -> term -> term -> term) =
           (Construct
              (FStar_Parser_Const.cons_lid, [(hd, Nothing); (tl, Nothing)])) r
           Expr
-let (mkConsList : FStar_Compiler_Range.range -> term Prims.list -> term) =
+let (mkConsList : FStar_Compiler_Range_Type.range -> term Prims.list -> term)
+  =
   fun r ->
     fun elts ->
       let nil = mk_term (Construct (FStar_Parser_Const.nil_lid, [])) r Expr in
       FStar_Compiler_List.fold_right (fun e -> fun tl -> consTerm r e tl)
         elts nil
-let (unit_const : FStar_Compiler_Range.range -> term) =
+let (unit_const : FStar_Compiler_Range_Type.range -> term) =
   fun r -> mk_term (Const FStar_Const.Const_unit) r Expr
 let (ml_comp : term -> term) =
   fun t ->
@@ -1124,7 +1132,8 @@ let (tot_comp : term -> term) =
     let ml = mk_term (Name FStar_Parser_Const.effect_Tot_lid) t.range Expr in
     let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
 let (mkApp :
-  term -> (term * imp) Prims.list -> FStar_Compiler_Range.range -> term) =
+  term -> (term * imp) Prims.list -> FStar_Compiler_Range_Type.range -> term)
+  =
   fun t ->
     fun args ->
       fun r ->
@@ -1140,7 +1149,7 @@ let (mkApp :
                         match uu___2 with
                         | (a, imp1) -> mk_term (App (t1, a, imp1)) r Un) t
                    args)
-let (mkRefSet : FStar_Compiler_Range.range -> term Prims.list -> term) =
+let (mkRefSet : FStar_Compiler_Range_Type.range -> term Prims.list -> term) =
   fun r ->
     fun elts ->
       let uu___ =
@@ -1176,7 +1185,7 @@ let (mkRefSet : FStar_Compiler_Range.range -> term Prims.list -> term) =
                  mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts
             empty
 let (mkExplicitApp :
-  term -> term Prims.list -> FStar_Compiler_Range.range -> term) =
+  term -> term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
   fun t ->
     fun args ->
       fun r ->
@@ -1196,7 +1205,7 @@ let (mkExplicitApp :
                  FStar_Compiler_List.fold_left
                    (fun t1 -> fun a -> mk_term (App (t1, a, Nothing)) r Un) t
                    args)
-let (mkAdmitMagic : FStar_Compiler_Range.range -> term) =
+let (mkAdmitMagic : FStar_Compiler_Range_Type.range -> term) =
   fun r ->
     let admit =
       let admit_name =
@@ -1217,7 +1226,7 @@ let (mkAdmitMagic : FStar_Compiler_Range.range -> term) =
     let admit_magic = mk_term (Seq (admit, magic)) r Expr in admit_magic
 let mkWildAdmitMagic :
   'uuuuu .
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       (pattern * 'uuuuu FStar_Pervasives_Native.option * term)
   =
   fun r ->
@@ -1228,7 +1237,7 @@ let focusBranches :
   'uuuuu .
     (Prims.bool * (pattern * 'uuuuu FStar_Pervasives_Native.option * term))
       Prims.list ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         (pattern * 'uuuuu FStar_Pervasives_Native.option * term) Prims.list
   =
   fun branches ->
@@ -1253,7 +1262,7 @@ let focusBranches :
 let focusLetBindings :
   'uuuuu .
     (Prims.bool * ('uuuuu * term)) Prims.list ->
-      FStar_Compiler_Range.range -> ('uuuuu * term) Prims.list
+      FStar_Compiler_Range_Type.range -> ('uuuuu * term) Prims.list
   =
   fun lbs ->
     fun r ->
@@ -1279,7 +1288,8 @@ let focusLetBindings :
 let focusAttrLetBindings :
   'uuuuu 'uuuuu1 .
     ('uuuuu * (Prims.bool * ('uuuuu1 * term))) Prims.list ->
-      FStar_Compiler_Range.range -> ('uuuuu * ('uuuuu1 * term)) Prims.list
+      FStar_Compiler_Range_Type.range ->
+        ('uuuuu * ('uuuuu1 * term)) Prims.list
   =
   fun lbs ->
     fun r ->
@@ -1309,13 +1319,13 @@ let focusAttrLetBindings :
              (fun uu___1 ->
                 match uu___1 with | (attr, (uu___2, lb)) -> (attr, lb)))
 let (mkFsTypApp :
-  term -> term Prims.list -> FStar_Compiler_Range.range -> term) =
+  term -> term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
   fun t ->
     fun args ->
       fun r ->
         let uu___ = FStar_Compiler_List.map (fun a -> (a, FsTypApp)) args in
         mkApp t uu___ r
-let (mkTuple : term Prims.list -> FStar_Compiler_Range.range -> term) =
+let (mkTuple : term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
   fun args ->
     fun r ->
       let cons =
@@ -1323,7 +1333,7 @@ let (mkTuple : term Prims.list -> FStar_Compiler_Range.range -> term) =
           (FStar_Compiler_List.length args) r in
       let uu___ = FStar_Compiler_List.map (fun x -> (x, Nothing)) args in
       mkApp (mk_term (Name cons) r Expr) uu___ r
-let (mkDTuple : term Prims.list -> FStar_Compiler_Range.range -> term) =
+let (mkDTuple : term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
   fun args ->
     fun r ->
       let cons =
@@ -1336,7 +1346,7 @@ let (mkRefinedBinder :
     term ->
       Prims.bool ->
         term FStar_Pervasives_Native.option ->
-          FStar_Compiler_Range.range ->
+          FStar_Compiler_Range_Type.range ->
             arg_qualifier FStar_Pervasives_Native.option ->
               term Prims.list -> binder)
   =
@@ -1373,7 +1383,8 @@ let (mkRefinedPattern :
     term ->
       Prims.bool ->
         term FStar_Pervasives_Native.option ->
-          FStar_Compiler_Range.range -> FStar_Compiler_Range.range -> pattern)
+          FStar_Compiler_Range_Type.range ->
+            FStar_Compiler_Range_Type.range -> pattern)
   =
   fun pat ->
     fun t ->
@@ -2427,7 +2438,7 @@ let (thunk : term -> term) =
       mk_pattern (PatWild (FStar_Pervasives_Native.None, [])) ens.range in
     mk_term (Abs ([wildpat], ens)) ens.range Expr
 let (ident_of_binder :
-  FStar_Compiler_Range.range -> binder -> FStar_Ident.ident) =
+  FStar_Compiler_Range_Type.range -> binder -> FStar_Ident.ident) =
   fun r ->
     fun b ->
       match b.b with
@@ -2441,7 +2452,7 @@ let (ident_of_binder :
               "Wildcard binders in quantifiers are not allowed") r
 let (idents_of_binders :
   binder Prims.list ->
-    FStar_Compiler_Range.range -> FStar_Ident.ident Prims.list)
+    FStar_Compiler_Range_Type.range -> FStar_Ident.ident Prims.list)
   =
   fun bs ->
     fun r ->

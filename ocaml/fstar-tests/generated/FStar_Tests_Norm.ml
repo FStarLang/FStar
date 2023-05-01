@@ -67,11 +67,11 @@ let (mk_let :
                    FStar_Syntax_Syntax.lbdef = e;
                    FStar_Syntax_Syntax.lbattrs = [];
                    FStar_Syntax_Syntax.lbpos =
-                     FStar_Compiler_Range.dummyRange
-                 }]), e'1)) FStar_Compiler_Range.dummyRange
+                     FStar_Compiler_Range_Type.dummyRange
+                 }]), e'1)) FStar_Compiler_Range_Type.dummyRange
 let (lid : Prims.string -> FStar_Ident.lident) =
   fun x ->
-    FStar_Ident.lid_of_path ["Test"; x] FStar_Compiler_Range.dummyRange
+    FStar_Ident.lid_of_path ["Test"; x] FStar_Compiler_Range_Type.dummyRange
 let (znat_l : FStar_Syntax_Syntax.fv) =
   let uu___ = lid "Z" in
   FStar_Syntax_Syntax.lid_as_fv uu___ FStar_Syntax_Syntax.delta_constant
@@ -86,7 +86,7 @@ let (tm_fv :
   =
   fun fv ->
     FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (znat : FStar_Syntax_Syntax.term) = tm_fv znat_l
 let (snat :
   FStar_Syntax_Syntax.term ->
@@ -99,9 +99,10 @@ let (snat :
         let uu___3 = let uu___4 = FStar_Syntax_Syntax.as_arg s in [uu___4] in
         (uu___2, uu___3) in
       FStar_Syntax_Syntax.Tm_app uu___1 in
-    FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+    FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let pat : 'uuuuu . 'uuuuu -> 'uuuuu FStar_Syntax_Syntax.withinfo_t =
-  fun p -> FStar_Syntax_Syntax.withinfo p FStar_Compiler_Range.dummyRange
+  fun p ->
+    FStar_Syntax_Syntax.withinfo p FStar_Compiler_Range_Type.dummyRange
 let (snat_type : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) =
   let uu___ =
     let uu___1 = lid "snat" in
@@ -121,7 +122,8 @@ let (mk_match :
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_match
            (h, FStar_Pervasives_Native.None, branches1,
-             FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
+             FStar_Pervasives_Native.None))
+        FStar_Compiler_Range_Type.dummyRange
 let (pred_nat :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -155,7 +157,7 @@ let (pred_nat :
                FStar_Syntax_Syntax.index = Prims.int_zero;
                FStar_Syntax_Syntax.sort =
                  (FStar_Tests_Util.x.FStar_Syntax_Syntax.sort)
-             }) FStar_Compiler_Range.dummyRange in
+             }) FStar_Compiler_Range_Type.dummyRange in
       (uu___, FStar_Pervasives_Native.None, uu___1) in
     mk_match s [zbranch; sbranch]
 let (minus_nat :
@@ -214,7 +216,8 @@ let (minus_nat :
         (uu___, FStar_Pervasives_Native.None, uu___1) in
       let lb =
         let uu___ =
-          FStar_Ident.lid_of_path ["Pure"] FStar_Compiler_Range.dummyRange in
+          FStar_Ident.lid_of_path ["Pure"]
+            FStar_Compiler_Range_Type.dummyRange in
         let uu___1 =
           let uu___2 =
             let uu___3 =
@@ -233,7 +236,7 @@ let (minus_nat :
           FStar_Syntax_Syntax.lbeff = uu___;
           FStar_Syntax_Syntax.lbdef = uu___1;
           FStar_Syntax_Syntax.lbattrs = [];
-          FStar_Syntax_Syntax.lbpos = FStar_Compiler_Range.dummyRange
+          FStar_Syntax_Syntax.lbpos = FStar_Compiler_Range_Type.dummyRange
         } in
       let uu___ =
         let uu___1 =
@@ -245,7 +248,7 @@ let (minus_nat :
               [FStar_Syntax_Syntax.NM (minus1, Prims.int_zero)] uu___3 in
           ((true, [lb]), uu___2) in
         FStar_Syntax_Syntax.Tm_let uu___1 in
-      FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+      FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (encode_nat : Prims.int -> FStar_Syntax_Syntax.term) =
   fun n ->
     let rec aux out n1 =

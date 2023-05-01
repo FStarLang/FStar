@@ -52,7 +52,7 @@ type proofstate =
   depth: Prims.int ;
   __dump: proofstate -> Prims.string -> unit ;
   psc: FStar_TypeChecker_Cfg.psc ;
-  entry_range: FStar_Compiler_Range.range ;
+  entry_range: FStar_Compiler_Range_Type.range ;
   guard_policy: guard_policy ;
   freshness: Prims.int ;
   tac_verb_dbg: Prims.bool ;
@@ -105,7 +105,7 @@ let (__proj__Mkproofstate__item__psc :
         psc; entry_range; guard_policy = guard_policy1; freshness;
         tac_verb_dbg; local_state; urgency;_} -> psc
 let (__proj__Mkproofstate__item__entry_range :
-  proofstate -> FStar_Compiler_Range.range) =
+  proofstate -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
@@ -148,7 +148,7 @@ let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_uvar
          ((g.goal_ctx_uvar), ([], FStar_Syntax_Syntax.NoUseRange)))
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
   fun g -> FStar_Syntax_Util.ctx_uvar_typ g.goal_ctx_uvar
 let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
@@ -389,12 +389,12 @@ let (tracepoint : proofstate -> Prims.bool) =
      if uu___1 then ps.__dump ps "TRACE" else ());
     true
 let (set_proofstate_range :
-  proofstate -> FStar_Compiler_Range.range -> proofstate) =
+  proofstate -> FStar_Compiler_Range_Type.range -> proofstate) =
   fun ps ->
     fun r ->
       let uu___ =
-        let uu___1 = FStar_Compiler_Range.def_range r in
-        FStar_Compiler_Range.set_def_range ps.entry_range uu___1 in
+        let uu___1 = FStar_Compiler_Range_Type.def_range r in
+        FStar_Compiler_Range_Type.set_def_range ps.entry_range uu___1 in
       {
         main_context = (ps.main_context);
         all_implicits = (ps.all_implicits);

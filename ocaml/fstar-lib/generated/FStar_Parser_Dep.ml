@@ -131,7 +131,7 @@ let (namespace_of_module :
   fun f ->
     let lid =
       let uu___ = FStar_Ident.path_of_text f in
-      FStar_Ident.lid_of_path uu___ FStar_Compiler_Range.dummyRange in
+      FStar_Ident.lid_of_path uu___ FStar_Compiler_Range_Type.dummyRange in
     let uu___ = FStar_Ident.ns_of_lid lid in
     match uu___ with
     | [] -> FStar_Pervasives_Native.None
@@ -520,7 +520,8 @@ let (cache_file_name : Prims.string -> Prims.string) =
                   "Did not expect %s to be already checked, but found it in an unexpected location %s instead of %s"
                   mname path uu___5 in
               (FStar_Errors_Codes.Warning_UnexpectedCheckedFile, uu___4) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___3
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___3
           else ());
          (let uu___2 =
             (FStar_Compiler_Util.file_exists expected_cache_file) &&
@@ -933,8 +934,8 @@ let (enter_namespace :
                              "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
                              prefix1 suffix str str in
                          (FStar_Errors_Codes.Warning_UnexpectedFile, uu___4) in
-                       FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                         uu___3
+                       FStar_Errors.log_issue
+                         FStar_Compiler_Range_Type.dummyRange uu___3
                      else ());
                     (let filename =
                        let uu___3 =
@@ -1422,6 +1423,24 @@ let (collect_one :
                      (false, uu___6) in
                    P_dep uu___5 in
                  add_to_parsing_data uu___4
+             | FStar_Const.Const_range_of ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       FStar_Compiler_Effect.op_Bar_Greater "fstar.range"
+                         FStar_Ident.lid_of_str in
+                     (false, uu___5) in
+                   P_dep uu___4 in
+                 add_to_parsing_data uu___3
+             | FStar_Const.Const_set_range_of ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       FStar_Compiler_Effect.op_Bar_Greater "fstar.range"
+                         FStar_Ident.lid_of_str in
+                     (false, uu___5) in
+                   P_dep uu___4 in
+                 add_to_parsing_data uu___3
              | uu___3 -> ()
            and collect_term' uu___2 =
              match uu___2 with
@@ -2670,10 +2689,10 @@ let (print_full : deps -> unit) =
                  let mn = lowercase_module_name fsti in
                  let range_of_file fsti1 =
                    let r =
-                     FStar_Compiler_Range.set_file_of_range
-                       FStar_Compiler_Range.dummyRange fsti1 in
-                   let uu___2 = FStar_Compiler_Range.def_range r in
-                   FStar_Compiler_Range.set_use_range r uu___2 in
+                     FStar_Compiler_Range_Ops.set_file_of_range
+                       FStar_Compiler_Range_Type.dummyRange fsti1 in
+                   let uu___2 = FStar_Compiler_Range_Type.def_range r in
+                   FStar_Compiler_Range_Type.set_use_range r uu___2 in
                  let uu___2 =
                    let uu___3 = has_implementation deps1.file_system_map mn in
                    Prims.op_Negation uu___3 in

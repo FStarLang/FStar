@@ -58,7 +58,7 @@ let (univ_to_string : FStar_Syntax_Syntax.universe -> Prims.string) =
       (fun uu___ ->
          let e =
            FStar_Syntax_Resugar.resugar_universe u
-             FStar_Compiler_Range.dummyRange in
+             FStar_Compiler_Range_Type.dummyRange in
          let d = FStar_Parser_ToDocument.term_to_document e in pp d)
 let (tscheme_to_string : FStar_Syntax_Syntax.tscheme -> Prims.string) =
   fun ts ->
@@ -81,14 +81,14 @@ let (binder_to_string' :
         (fun uu___ ->
            let uu___1 =
              FStar_Syntax_Resugar.resugar_binder b
-               FStar_Compiler_Range.dummyRange in
+               FStar_Compiler_Range_Type.dummyRange in
            match uu___1 with
            | FStar_Pervasives_Native.None -> ""
            | FStar_Pervasives_Native.Some e ->
                let d = FStar_Parser_ToDocument.binder_to_document e in pp d)
 let (eff_decl_to_string' :
   Prims.bool ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
         FStar_Syntax_Syntax.eff_decl -> Prims.string)
   =

@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2023 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,8 +13,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Range
+module FStar.Json
 
-assume new type range
+open FStar.Compiler.Effect
 
-val prims_to_fstar_range : Prims.range -> Tot range
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of list json
+| JsonAssoc of list (string * json)
+
+val json_of_string : string -> option json
+val string_of_json : json -> string

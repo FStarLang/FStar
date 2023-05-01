@@ -60,7 +60,8 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                    "Malformed JSON hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
-             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+             FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+               uu___4
            else ()
        | FStar_Compiler_Util.UnableToOpen ->
            let uu___3 = FStar_Options.use_hints () in
@@ -72,7 +73,8 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                    "Unable to open hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
-             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+             FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+               uu___4
            else ())
 let (finalize_hints_db : Prims.string -> unit) =
   fun src_filename ->
@@ -307,7 +309,7 @@ type query_settings =
   query_decl: FStar_SMTEncoding_Term.decl ;
   query_name: Prims.string ;
   query_index: Prims.int ;
-  query_range: FStar_Compiler_Range.range ;
+  query_range: FStar_Compiler_Range_Type.range ;
   query_fuel: Prims.int ;
   query_ifuel: Prims.int ;
   query_rlimit: Prims.int ;
@@ -351,7 +353,7 @@ let (__proj__Mkquery_settings__item__query_index :
         query_all_labels; query_suffix; query_hash;
         query_can_be_split_and_retried; query_term;_} -> query_index
 let (__proj__Mkquery_settings__item__query_range :
-  query_settings -> FStar_Compiler_Range.range) =
+  query_settings -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
@@ -898,7 +900,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                  let range =
                    let uu___3 =
                      let uu___4 =
-                       FStar_Compiler_Range.string_of_range
+                       FStar_Compiler_Range_Ops.string_of_range
                          settings.query_range in
                      Prims.op_Hat uu___4 (Prims.op_Hat at_log_file ")") in
                    Prims.op_Hat "(" uu___3 in
@@ -1665,7 +1667,7 @@ let (report : FStar_TypeChecker_Env.env -> query_settings -> answer -> unit)
                    with
                    | FStar_Pervasives_Native.Some (l, uu___2) ->
                        FStar_Ident.range_of_lid l
-                   | uu___2 -> FStar_Compiler_Range.dummyRange in
+                   | uu___2 -> FStar_Compiler_Range_Type.dummyRange in
                  let uu___2 =
                    let uu___3 =
                      let uu___4 = FStar_Compiler_Util.string_of_int nsuccess in
@@ -1795,7 +1797,7 @@ let (encode_and_ask :
                let uu___3 =
                  let uu___4 = FStar_TypeChecker_Env.get_range tcenv in
                  FStar_Compiler_Effect.op_Less_Bar
-                   FStar_Compiler_Range.string_of_range uu___4 in
+                   FStar_Compiler_Range_Ops.string_of_range uu___4 in
                FStar_Compiler_Util.format1 "Starting query at %s" uu___3 in
              FStar_SMTEncoding_Encode.push uu___2);
             (let pop uu___2 =
@@ -1803,7 +1805,7 @@ let (encode_and_ask :
                  let uu___4 =
                    let uu___5 = FStar_TypeChecker_Env.get_range tcenv in
                    FStar_Compiler_Effect.op_Less_Bar
-                     FStar_Compiler_Range.string_of_range uu___5 in
+                     FStar_Compiler_Range_Ops.string_of_range uu___5 in
                  FStar_Compiler_Util.format1 "Ending query at %s" uu___4 in
                FStar_SMTEncoding_Encode.pop uu___3 in
              finally pop

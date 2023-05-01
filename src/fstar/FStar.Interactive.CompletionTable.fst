@@ -446,18 +446,18 @@ let first_import_of_path (path: path) : option string =
   | { imports = imports } :: _ -> List.last_opt imports
 
 let alist_of_ns_info ns_info =
-  [("name", FStar.Compiler.Util.JsonStr ns_info.ns_name);
-   ("loaded", FStar.Compiler.Util.JsonBool ns_info.ns_loaded)]
+  [("name", Json.JsonStr ns_info.ns_name);
+   ("loaded", Json.JsonBool ns_info.ns_loaded)]
 
 let alist_of_mod_info mod_info =
-  [("name", FStar.Compiler.Util.JsonStr mod_info.mod_name);
-   ("path", FStar.Compiler.Util.JsonStr mod_info.mod_path);
-   ("loaded", FStar.Compiler.Util.JsonBool mod_info.mod_loaded)]
+  [("name", Json.JsonStr mod_info.mod_name);
+   ("path", Json.JsonStr mod_info.mod_path);
+   ("loaded", Json.JsonBool mod_info.mod_loaded)]
 
 let json_of_completion_result (result: completion_result) =
-  Util.JsonList [Util.JsonInt result.completion_match_length;
-                 Util.JsonStr result.completion_annotation;
-                 Util.JsonStr result.completion_candidate]
+  Json.JsonList [Json.JsonInt result.completion_match_length;
+                 Json.JsonStr result.completion_annotation;
+                 Json.JsonStr result.completion_candidate]
 
 let completion_result_of_lid (path, _lid) =
   { completion_match_length = match_length_of_path path;

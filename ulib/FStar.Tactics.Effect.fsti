@@ -88,12 +88,12 @@ let tac_bind (a:Type) (b:Type)
   (t1:tac_repr a wp_f)
   (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_wp_compact b (tac_bind_wp wp_f wp_g)) =
   fun ps ->
-  let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
+  let ps = set_proofstate_range ps r1 in
   let ps = incr_depth ps in
   let r = t1 ps in
   match r with
   | Success a ps' ->
-    let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
+    let ps' = set_proofstate_range ps' r2 in
     // Force evaluation of __tracepoint q even on the interpreter
     begin match tracepoint ps' with
           | true -> t2 a (decr_depth ps')

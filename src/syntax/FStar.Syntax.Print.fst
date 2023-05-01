@@ -26,6 +26,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
+open FStar.Json
 
 module Errors     = FStar.Errors
 module U          = FStar.Compiler.Util
