@@ -197,6 +197,7 @@ let rec (open_or_close_term' :
         | FStar_Reflection_Data.Tv_FVar uu___ -> t
         | FStar_Reflection_Data.Tv_Type uu___ -> t
         | FStar_Reflection_Data.Tv_Const uu___ -> t
+        | FStar_Reflection_Data.Tv_Unsupp -> t
         | FStar_Reflection_Data.Tv_Unknown -> t
         | FStar_Reflection_Data.Tv_Var x ->
             (match v with
@@ -575,6 +576,7 @@ let rec (freevars :
     | FStar_Reflection_Data.Tv_Type uu___ -> FStar_Set.empty ()
     | FStar_Reflection_Data.Tv_Const uu___ -> FStar_Set.empty ()
     | FStar_Reflection_Data.Tv_Unknown -> FStar_Set.empty ()
+    | FStar_Reflection_Data.Tv_Unsupp -> FStar_Set.empty ()
     | FStar_Reflection_Data.Tv_BVar uu___ -> FStar_Set.empty ()
     | FStar_Reflection_Data.Tv_Var x -> FStar_Set.singleton (bv_index x)
     | FStar_Reflection_Data.Tv_App (e1, (e2, uu___)) ->
@@ -1094,6 +1096,7 @@ let rec (ln' : FStar_Reflection_Types.term -> Prims.int -> Prims.bool) =
       | FStar_Reflection_Data.Tv_Type uu___ -> true
       | FStar_Reflection_Data.Tv_Const uu___ -> true
       | FStar_Reflection_Data.Tv_Unknown -> true
+      | FStar_Reflection_Data.Tv_Unsupp -> true
       | FStar_Reflection_Data.Tv_Var uu___ -> true
       | FStar_Reflection_Data.Tv_BVar m -> (bv_index m) <= n
       | FStar_Reflection_Data.Tv_App (e1, (e2, uu___)) ->

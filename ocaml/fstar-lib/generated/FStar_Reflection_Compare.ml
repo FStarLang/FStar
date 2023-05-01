@@ -209,6 +209,8 @@ let rec (compare_term :
                         compare_term e11 e21))
       | (FStar_Reflection_Data.Tv_Unknown, FStar_Reflection_Data.Tv_Unknown)
           -> FStar_Order.Eq
+      | (FStar_Reflection_Data.Tv_Unsupp, FStar_Reflection_Data.Tv_Unsupp) ->
+          FStar_Order.Eq
       | (FStar_Reflection_Data.Tv_Var uu___, uu___1) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_Data.Tv_Var uu___1) -> FStar_Order.Gt
       | (FStar_Reflection_Data.Tv_BVar uu___, uu___1) -> FStar_Order.Lt
@@ -262,6 +264,8 @@ let rec (compare_term :
          (uu___1, uu___2, uu___3, uu___4)) -> FStar_Order.Gt
       | (FStar_Reflection_Data.Tv_Unknown, uu___) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_Data.Tv_Unknown) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Unsupp, uu___) -> FStar_Order.Lt
+      | (uu___, FStar_Reflection_Data.Tv_Unsupp) -> FStar_Order.Gt
 and (compare_term_list :
   FStar_Reflection_Types.term Prims.list ->
     FStar_Reflection_Types.term Prims.list -> FStar_Order.order)
