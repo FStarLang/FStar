@@ -222,6 +222,7 @@ let ref_Tv_Match   = fstar_refl_data_const "Tv_Match"
 let ref_Tv_AscT    = fstar_refl_data_const "Tv_AscribedT"
 let ref_Tv_AscC    = fstar_refl_data_const "Tv_AscribedC"
 let ref_Tv_Unknown = fstar_refl_data_const "Tv_Unknown"
+let ref_Tv_Unsupp  = fstar_refl_data_const "Tv_Unsupp"
 
 (* comp_view *)
 let ref_C_Total   = fstar_refl_data_const "C_Total"

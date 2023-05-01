@@ -480,8 +480,9 @@ let e_term_view_aq aq =
                          as_arg (embed (e_option (e_term_aq aq)) cb tacopt);
                          as_arg (embed e_bool cb use_eq)]
 
-        | Tv_Unknown ->
-            mkConstruct ref_Tv_Unknown.fv [] []
+        | Tv_Unknown -> mkConstruct ref_Tv_Unknown.fv [] []
+
+        | Tv_Unsupp -> mkConstruct ref_Tv_Unsupp.fv [] []
     in
     let unembed_term_view cb (t:t) : option term_view =
         match t.nbe_t with
@@ -567,6 +568,9 @@ let e_term_view_aq aq =
 
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
             Some <| Tv_Unknown
+
+        | Construct (fv, _, []) when S.fv_eq_lid fv ref_Tv_Unsupp.lid ->
+            Some <| Tv_Unsupp
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term_view: %s" (t_to_string t)));

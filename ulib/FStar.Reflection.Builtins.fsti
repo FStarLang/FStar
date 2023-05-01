@@ -45,7 +45,7 @@ but the inspect and pack should be consistent with this model.
 
 (* Views *)
 val inspect_ln     : (t:term) -> tv:term_view{tv << t}
-val pack_ln        : term_view -> term
+val pack_ln        : tv:term_view{~(Tv_Unsupp? tv)} -> term
 
 val inspect_comp   : (c:comp) -> cv:comp_view{cv << c}
 val pack_comp      : comp_view -> comp
@@ -69,8 +69,8 @@ val inspect_universe : u:universe -> uv:universe_view{uv << u}
 val pack_universe    : universe_view -> universe
 
 (* The bijection lemmas: the view exposes all details of terms. *)
-val pack_inspect_inv : (t:term) -> Lemma (~(Tv_Unknown? (inspect_ln t) ==> pack_ln (inspect_ln t) == t))
-val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
+val pack_inspect_inv : (t:term) -> Lemma (~(Tv_Unsupp? (inspect_ln t)) ==> pack_ln (inspect_ln t) == t)
+val inspect_pack_inv : (tv:term_view{~(Tv_Unsupp? tv)}) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
 val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
 val inspect_pack_comp_inv : (cv:comp_view) -> Lemma (inspect_comp (pack_comp cv) == cv)
@@ -84,8 +84,8 @@ val pack_inspect_binder (b:binder) : Lemma (pack_binder (inspect_binder b) == b)
 val pack_inspect_fv (fv:fv) : Lemma (ensures pack_fv (inspect_fv fv) == fv)
 val inspect_pack_fv (nm:name) : Lemma (ensures inspect_fv (pack_fv nm) == nm)
 
-val pack_inspect_universe (u:universe) : Lemma (~(Uv_Unk? (inspect_universe u)) ==> pack_universe (inspect_universe u) == u)
-val inspect_pack_universe (u:universe_view) : Lemma (inspect_universe (pack_universe u) == u)
+val pack_inspect_universe (u:universe) : Lemma (pack_universe (inspect_universe u) == u)
+val inspect_pack_universe (uv:universe_view) : Lemma (inspect_universe (pack_universe uv) == uv)
 
 (** These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
