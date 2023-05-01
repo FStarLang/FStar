@@ -46,6 +46,7 @@ let rec not_do_much e: Tac term =
   | Tv_Type _
   | Tv_Uvar _ _
   | Tv_Refine _ _ _
+  | Tv_Unsupp
   | Tv_Unknown ->
       // Looks like we ended up visiting a type argument of an application.
       e
