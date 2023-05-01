@@ -215,7 +215,7 @@ to expressions ``exp``.
    :start-after: //SNIPPET_START: sub0$
    :end-before: //SNIPPET_END: sub0$
 
-These kind of substituions are sometimes called "parallel
+These kind of substitutions are sometimes called "parallel
 substitutions"---the each variable is substituted independently of the
 others.
 

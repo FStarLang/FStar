@@ -39,7 +39,7 @@ represent such a *stateful computation* as a program whose type is
    :start-after: //SNIPPET_START: st$
    :end-before: //SNIPPET_END: st$
 
-An ``st a`` computation is a function which when given an initial
+A ``(st a)`` computation is a function which when given an initial
 value for the state ``s0`` returns a pair ``(x, s1)`` with the result
 of the computation ``x:a`` and a final value for the state ``s1``.
 
@@ -64,7 +64,7 @@ read the state and increment it twice, one would write:
 This is quite clumsy, since at each call to ``read_and_increment_v0``
 we had to be careful to pass it the "the most recent version" of the
 state. For instance, a small typo could easily have caused us to write
-the program below, where we pass ``s0`` to the second can of
+the program below, where we pass ``s0`` to the second call of
 ``read_and_increment``, causing the program to only increment the
 state once.
 
@@ -100,7 +100,7 @@ stateful computations.
    :end-before: //SNIPPET_END: write$
 
 * The function ``bind`` is perhaps the most interesting. Given a
-  stateful computation ``f: st a`` and another computatoin ``g : a ->
+  stateful computation ``f: st a`` and another computation ``g : a ->
   st b`` which depends on the result of ``f`` and then may read or
   write the state returning a ``b``; ``bind f g`` composes ``f`` and
   ``g`` sequentially, passing the initial state ``s0`` to ``f``, then

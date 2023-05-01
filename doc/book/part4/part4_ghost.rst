@@ -204,7 +204,7 @@ that must be erased, F* also provides a way to mark certain *value
 types* as erasable.
 
 Consider introducing an inductive type definition that is meant to
-describe a proof term only and for that proof term to introduce to
+describe a proof term only and for that proof term to introduce no
 runtime overhead. In a system like Coq, the type of Coq propositions
 ``Prop`` serves this purpose, but ``prop`` in F* is quite
 different. Instead, F* allows an inductive type definition to be

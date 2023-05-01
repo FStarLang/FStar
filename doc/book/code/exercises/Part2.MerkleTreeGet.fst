@@ -12,7 +12,7 @@ let concat #n #m (s0:lstring n) (s1:lstring m)
   = FStar.String.concat_length s0 s1;
     s0 ^ s1
 
-//A parameter, lenght of the hash in characters,
+//A parameter, length of the hash in characters,
 //e.g., this would be 32, if a character is 1 byte
 //and we're using SHA-256
 assume

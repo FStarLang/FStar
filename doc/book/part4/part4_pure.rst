@@ -51,7 +51,7 @@ pos``, and, indeed, ``factorial`` can be used at this type.
 Actually, in all the code we've seen so far, what's happening under
 the covers is that F* infers a type for a pure program similar to
 ``Pure t pre post`` and then checks that that type can be subsumed to
-user-provided specification of the form ``Tot t'``.
+a user-provided specification of the form ``Tot t'``.
 
 In this chapter, we look into how these ``Pure`` specifications work,
 starting with a primer on Floyd-Hoare Logic and weakest precondition

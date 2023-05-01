@@ -28,7 +28,7 @@ let concat #n #m (s0:lstring n) (s1:lstring m)
   = FStar.String.concat_length s0 s1;
     s0 ^ s1
 
-//A parameter, lenght of the hash in characters, 
+//A parameter, length of the hash in characters, 
 //e.g., this would be 32, if a character is 1 byte
 //and we're using SHA-256
 assume
@@ -90,7 +90,7 @@ type resource_with_evidence : nat -> Type =
       hashes:list hash_t { L.length ri == L.length hashes } ->
       resource_with_evidence (L.length ri)
 
-/// Retrieves data refereces by the path, together with the hashes
+/// Retrieves data references by the path, together with the hashes
 /// of the sibling nodes along that path
 let rec get_with_evidence (#h:_)
                           (rid:resource_id)

@@ -142,7 +142,7 @@ too.
 
 Another useful combinator derives the well-foundedness of a relation
 ``r: binrel b`` if it can be defined as the inverse image under some
-funcion ``f: a -> b`` of some other well-founded relation ``r:
+function ``f: a -> b`` of some other well-founded relation ``r:
 binrel``.
 
 .. literalinclude:: ../code/Part2.WellFounded.fst

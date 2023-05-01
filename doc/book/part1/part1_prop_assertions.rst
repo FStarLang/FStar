@@ -15,7 +15,7 @@ easy to prove ``17 : x:int{x >= 0}`` in F*. Under the covers, F*
 proves that ``(x >= 0) [17/x]`` reduces to ``true``, yet no explicit
 term is given to prove this fact. Instead, F* encodes facts about a
 program (including things like the semantics of arithmetic operators
-like ``>=``) to the classical logic of an SMT solver and asks it (Z3
+like ``>=``) in the classical logic of an SMT solver and asks it (Z3
 typically) to prove whether the formula ``17 >= 0`` is valid in a
 context including all encoded facts about a program. If Z3 is able to
 prove it valid, F* accepts the formula as true, without ever
