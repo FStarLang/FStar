@@ -127,10 +127,7 @@ let rec univ_eq (u1 u2 : universe) : cmpres u1 u2 =
   pack_inspect_universe u2;
   let uv1 = inspect_universe u1 in
   let uv2 = inspect_universe u2 in
-  match uv1, uv2 with
-  | Uv_Unk, _
-  | _, Uv_Unk -> Unknown
-  | _ -> univ_view_eq uv1 uv2
+  univ_view_eq uv1 uv2
 and univ_view_eq (uv1 uv2 : universe_view) : cmpres uv1 uv2 =
   match uv1, uv2 with
   | Uv_Zero, Uv_Zero -> Eq
@@ -160,10 +157,12 @@ let const_eq c1 c2 =
 val ctxu_eq : comparator_for ctx_uvar_and_subst
 let ctxu_eq _ _ = Unknown
 
+let term_view_supp = tv:term_view{~(Tv_Unsupp? tv)}
+
 val term_eq         : t1:term -> t2:term -> cmpres t1 t2
 val binder_eq       : b1:binder -> b2:binder -> cmpres b1 b2
 val aqual_eq        : q1:aqualv -> q2:aqualv -> cmpres q1 q2
-val term_view_eq    : x:term_view -> y:term_view -> cmpres x y
+val term_view_eq    : x:term_view_supp -> y:term_view_supp -> cmpres x y
 val arg_eq          : x:argv -> y:argv -> cmpres x y
 val binding_bv_eq   : x:bv -> y:bv -> cmpres x y
 val comp_eq         : x:comp -> y:comp -> cmpres x y
@@ -186,11 +185,11 @@ let rec term_eq t1 t2 =
   let tv1 = inspect_ln t1 in
   let tv2 = inspect_ln t2 in
   match tv1, tv2 with
-  | Tv_Unknown, _
-  | _, Tv_Unknown -> Unknown
+  | Tv_Unsupp, _
+  | _, Tv_Unsupp -> Unknown
   | _ -> term_view_eq tv1 tv2
 
-and term_view_eq tv1 tv2 =
+and term_view_eq (tv1 tv2 : (tv:term_view{~(Tv_Unsupp? tv)})) =
   match tv1, tv2 with
   | Tv_Var v1, Tv_Var v2 -> bv_eq v1 v2
   | Tv_BVar v1, Tv_BVar v2 -> bv_eq v1 v2
@@ -397,12 +396,13 @@ let rec faithful t =
   | Tv_Var _
   | Tv_BVar _
   | Tv_FVar _
+  | Tv_Unknown
   | Tv_Const _ -> True
 
   | Tv_UInst f us ->
     allP faithful_univ us
 
-  | Tv_Unknown -> False
+  | Tv_Unsupp -> False
   | Tv_App h a ->
     faithful h /\ faithful_arg a
   | Tv_Abs b t  ->
@@ -564,6 +564,8 @@ let rec faithful_lemma (t1 t2 : term) =
     faithful_lemma_comp c1 c2;
     (match tacopt1, tacopt2 with | Some t1, Some t2 -> faithful_lemma t1 t2 | _ -> ());
     ()
+
+  | Tv_Unknown, Tv_Unknown -> ()
 
   | _ -> assert (defined (term_eq t1 t2)) (* rest of the cases trivial *)
 

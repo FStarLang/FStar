@@ -63,6 +63,7 @@ let rec term_to_ast_string (t:term) : Tac string =
   | Tv_AscribedT e t _ use_eq -> "Tv_AscribedT " ^ paren (term_to_ast_string e ^ ", " ^ term_to_ast_string t ^ ", " ^ string_of_bool use_eq)
   | Tv_AscribedC e c _ use_eq -> "Tv_AscribedC " ^ paren (term_to_ast_string e ^ ", " ^ comp_to_ast_string c ^ ", " ^ string_of_bool use_eq)
   | Tv_Unknown -> "_"
+  | Tv_Unsupp -> "<Tv_Unsupp>"
 
 and match_returns_to_string (ret_opt:option match_returns_ascription) : Tac string =
   let tacopt_to_string tacopt : Tac string =

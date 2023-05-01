@@ -40,6 +40,7 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
     | Tv_Const c -> Tv_Const c
     | Tv_Uvar i u -> Tv_Uvar i u
     | Tv_Unknown -> Tv_Unknown
+    | Tv_Unsupp -> Tv_Unsupp
     | Tv_Arrow b c ->
         let b = on_sort_binder (visit_tm ff) b in
         let c = visit_comp ff c in
