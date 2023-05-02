@@ -129,6 +129,7 @@ let on_sub_term vfs (tm : term) : term =
     tm
 
   | Tm_uinst (f, us) ->
+    let f = f_term vfs f in
     let us = map (f_univ vfs) us in
     mk (Tm_uinst (f, us))
 
