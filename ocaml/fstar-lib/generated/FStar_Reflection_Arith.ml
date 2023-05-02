@@ -188,9 +188,9 @@ type 'a tm =
 let return : 'a . 'a -> 'a tm =
   fun uu___ ->
     (fun x ->
-       Obj.magic
-         (fun i ->
-            FStar_Tactics_Effect.lift_div_tac
+       fun i ->
+         Obj.magic
+           (FStar_Tactics_Effect.lift_div_tac
               (fun uu___ -> FStar_Pervasives.Inr (x, i)))) uu___
 let op_let_Bang : 'a 'b . 'a tm -> ('a -> 'b tm) -> 'b tm =
   fun m ->
@@ -355,9 +355,9 @@ let (atom : FStar_Reflection_Types.term -> expr tm) =
 let fail : 'a . Prims.string -> 'a tm =
   fun uu___ ->
     (fun s ->
-       Obj.magic
-         (fun i ->
-            FStar_Tactics_Effect.lift_div_tac
+       fun i ->
+         Obj.magic
+           (FStar_Tactics_Effect.lift_div_tac
               (fun uu___ -> FStar_Pervasives.Inl s))) uu___
 let rec (as_arith_expr : FStar_Reflection_Types.term -> expr tm) =
   fun t ->
