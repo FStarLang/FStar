@@ -17,5 +17,4 @@ FSTAR_REALIZED_MODULES=All Buffer Bytes Char CommonST Constructive Dyn Float Gho
 NOEXTRACT_STEEL_MODULES = -FStar.MSTTotal -FStar.MST -FStar.NMSTTotal -FStar.NMST
 
 NOEXTRACT_MODULES:=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) Printf) \
-  -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full $(NOEXTRACT_STEEL_MODULES) \
-  -FStar.Reflection.TermEq # Temp, extraction does not build in OCaml
+  -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full $(NOEXTRACT_STEEL_MODULES)
