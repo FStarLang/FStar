@@ -260,7 +260,6 @@ let maybe_trim_lines start_column comment =
     String.concat "\n" (List.map (fun s -> String.tail s trim_width) comment_lines)
 
 let comment_buffer = Buffer.create 128
-let blob_buffer = Buffer.create 128
 
 let start_comment lexbuf =
   Buffer.add_string comment_buffer "(*" ;
@@ -442,12 +441,6 @@ let rec token lexbuf =
 match%sedlex lexbuf with
  | "%splice" -> SPLICE
  | "%splice_t" -> SPLICET
- | "```", ident ->
-   let s = L.lexeme lexbuf in
-   let name = BatString.lchop ~n:3 s in
-   Buffer.clear blob_buffer;
-   let pos = L.current_pos lexbuf in
-   uninterpreted_blob name pos blob_buffer lexbuf
  | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
@@ -635,21 +628,6 @@ match%sedlex lexbuf with
  | any ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    comment inner buffer startpos lexbuf
- | _ -> assert false
-
-and uninterpreted_blob name pos buffer lexbuf =
-match %sedlex lexbuf with
- | "```" ->
-   BLOB(name, Buffer.contents buffer, pos)
- | eof ->
-   EOF
- | newline ->
-   L.new_line lexbuf;
-   Buffer.add_string buffer (L.lexeme lexbuf);
-   uninterpreted_blob name pos buffer lexbuf
- | any ->
-   Buffer.add_string buffer (L.lexeme lexbuf);
-   uninterpreted_blob name pos buffer lexbuf
  | _ -> assert false
 
 and ignore_endline lexbuf =

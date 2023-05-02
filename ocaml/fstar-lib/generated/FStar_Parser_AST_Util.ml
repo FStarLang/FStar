@@ -1050,16 +1050,16 @@ let (__proj__Mkopen_namespaces_and_abbreviations__item__module_abbreviations
 type error_message =
   {
   message: Prims.string ;
-  range: FStar_Compiler_Range.range }
+  range: FStar_Compiler_Range_Type.range }
 let (__proj__Mkerror_message__item__message : error_message -> Prims.string)
   = fun projectee -> match projectee with | { message; range;_} -> message
 let (__proj__Mkerror_message__item__range :
-  error_message -> FStar_Compiler_Range.range) =
+  error_message -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | { message; range;_} -> range
 type extension_parser =
   open_namespaces_and_abbreviations ->
     Prims.string ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         (error_message, FStar_Parser_AST.decl') FStar_Pervasives.either
 let (extension_parser_table : extension_parser FStar_Compiler_Util.smap) =
   FStar_Compiler_Util.smap_create (Prims.of_int (20))

@@ -9199,6 +9199,42 @@ and (desugar_decl_noattrs :
                 FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
               } in
             let env1 = FStar_Syntax_DsEnv.push_sigelt env se in (env1, [se])
+        | FStar_Parser_AST.DeclSyntaxExtension (extension_name, code, range)
+            ->
+            let extension_parser =
+              FStar_Parser_AST_Util.lookup_extension_parser extension_name in
+            (match extension_parser with
+             | FStar_Pervasives_Native.None ->
+                 let uu___ =
+                   let uu___1 =
+                     FStar_Compiler_Util.format1
+                       "Unknown syntax extension %s" extension_name in
+                   (FStar_Errors_Codes.Fatal_SyntaxError, uu___1) in
+                 FStar_Errors.raise_error uu___ range
+             | FStar_Pervasives_Native.Some parser ->
+                 let opens =
+                   let uu___ =
+                     FStar_Syntax_DsEnv.open_modules_and_namespaces env in
+                   {
+                     FStar_Parser_AST_Util.open_namespaces = uu___;
+                     FStar_Parser_AST_Util.module_abbreviations = []
+                   } in
+                 let uu___ = parser opens code range in
+                 (match uu___ with
+                  | FStar_Pervasives.Inl error ->
+                      FStar_Errors.raise_error
+                        (FStar_Errors_Codes.Fatal_SyntaxError,
+                          (error.FStar_Parser_AST_Util.message))
+                        error.FStar_Parser_AST_Util.range
+                  | FStar_Pervasives.Inr d' ->
+                      desugar_decl_aux env
+                        {
+                          FStar_Parser_AST.d = d';
+                          FStar_Parser_AST.drange =
+                            (d.FStar_Parser_AST.drange);
+                          FStar_Parser_AST.quals = (d.FStar_Parser_AST.quals);
+                          FStar_Parser_AST.attrs = (d.FStar_Parser_AST.attrs)
+                        }))
 let (desugar_decls :
   env_t ->
     FStar_Parser_AST.decl Prims.list ->
