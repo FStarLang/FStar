@@ -221,8 +221,9 @@ let (on_sub_term :
       | FStar_Syntax_Syntax.Tm_name uu___ -> tm1
       | FStar_Syntax_Syntax.Tm_uvar uu___ -> tm1
       | FStar_Syntax_Syntax.Tm_uinst (f, us) ->
+          let f1 = f_term vfs f in
           let us1 = FStar_Compiler_List.map (f_univ vfs) us in
-          mk (FStar_Syntax_Syntax.Tm_uinst (f, us1))
+          mk (FStar_Syntax_Syntax.Tm_uinst (f1, us1))
       | FStar_Syntax_Syntax.Tm_type u ->
           let uu___ =
             let uu___1 = f_univ vfs u in FStar_Syntax_Syntax.Tm_type uu___1 in

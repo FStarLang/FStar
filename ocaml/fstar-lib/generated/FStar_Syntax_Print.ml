@@ -1489,7 +1489,27 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                 let uu___5 = term_to_string f in
                 FStar_Compiler_Util.format2 "assume %s : %s" uu___4 uu___5)
          | FStar_Syntax_Syntax.Sig_let (lbs, uu___2) ->
-             lbs_to_string x.FStar_Syntax_Syntax.sigquals lbs
+             let lbs1 =
+               let uu___3 =
+                 FStar_Compiler_List.map
+                   (fun lb ->
+                      {
+                        FStar_Syntax_Syntax.lbname =
+                          (lb.FStar_Syntax_Syntax.lbname);
+                        FStar_Syntax_Syntax.lbunivs =
+                          (lb.FStar_Syntax_Syntax.lbunivs);
+                        FStar_Syntax_Syntax.lbtyp =
+                          (lb.FStar_Syntax_Syntax.lbtyp);
+                        FStar_Syntax_Syntax.lbeff =
+                          (lb.FStar_Syntax_Syntax.lbeff);
+                        FStar_Syntax_Syntax.lbdef =
+                          (lb.FStar_Syntax_Syntax.lbdef);
+                        FStar_Syntax_Syntax.lbattrs = [];
+                        FStar_Syntax_Syntax.lbpos =
+                          (lb.FStar_Syntax_Syntax.lbpos)
+                      }) (FStar_Pervasives_Native.snd lbs) in
+               ((FStar_Pervasives_Native.fst lbs), uu___3) in
+             lbs_to_string x.FStar_Syntax_Syntax.sigquals lbs1
          | FStar_Syntax_Syntax.Sig_bundle (ses, uu___2) ->
              let uu___3 =
                let uu___4 = FStar_Compiler_List.map sigelt_to_string ses in
@@ -1763,3 +1783,13 @@ let rec (emb_typ_to_string : FStar_Syntax_Syntax.emb_typ -> Prims.string) =
             let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
           Prims.op_Hat uu___2 uu___3 in
         Prims.op_Hat "(" uu___1
+let (fv_qual_to_string : FStar_Syntax_Syntax.fv_qual -> Prims.string) =
+  fun fvq ->
+    match fvq with
+    | FStar_Syntax_Syntax.Data_ctor -> "Data_ctor"
+    | FStar_Syntax_Syntax.Record_projector uu___ -> "Record_projector _"
+    | FStar_Syntax_Syntax.Record_ctor uu___ -> "Record_ctor _"
+    | FStar_Syntax_Syntax.Unresolved_projector uu___ ->
+        "Unresolved_projector _"
+    | FStar_Syntax_Syntax.Unresolved_constructor uu___ ->
+        "Unresolved_constructor _"
