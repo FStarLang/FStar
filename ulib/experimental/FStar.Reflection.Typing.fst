@@ -103,9 +103,9 @@ let subtyping_token_weakening (g:env)
                               (t0 t1:term)
                              (d:FTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1) = magic ()
 
-let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (_:typing g e t) = admit ()
+let well_typed_terms_are_ln _ _ _ _ = admit ()
 
-let type_correctness (g:R.env) (e:R.term) (t:R.term) (_:typing g e t) = magic ()
+let type_correctness _ _ _ _ = admit ()
 
 let rec binder_offset_pattern_invariant (p:pattern) (s:open_or_close) (i:nat)
   : Lemma (ensures binder_offset_pattern p ==
