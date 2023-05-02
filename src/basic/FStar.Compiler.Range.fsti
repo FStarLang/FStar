@@ -14,53 +14,8 @@
    limitations under the License.
 *)
 module FStar.Compiler.Range
-open FStar.Compiler.Effect
-open FStar.BaseTypes
-open FStar.Compiler.Util
-module List = FStar.Compiler.List
 
-[@@ PpxDerivingYoJson; PpxDerivingShow]
-new val rng : Type0
-
-[@@ PpxDerivingYoJson; PpxDerivingShow]
-new val range : Type0
-
-[@@ PpxDerivingYoJson; PpxDerivingShow]
-new val pos : Type0
-
-val dummyRange: range
-val use_range: range -> rng
-val def_range: range -> rng
-val range_of_rng: def_rng:rng -> use_rng:rng -> range
-val set_use_range: range -> rng -> range
-val set_def_range: range -> rng -> range
-val mk_pos: int -> int -> pos
-val mk_range: string -> pos -> pos -> range
-
-val union_rng: rng -> rng -> rng
-val union_ranges: range -> range -> range
-
-val rng_included: rng -> rng -> bool
-val string_of_pos: pos -> string
-val string_of_range: range -> string
-val string_of_def_range: range -> string
-val string_of_use_range: range -> string
-val file_of_range: range -> string
-val set_file_of_range: range -> string -> range
-val start_of_range: range -> pos
-val end_of_range: range -> pos
-val file_of_use_range: range -> string
-val start_of_use_range: range -> pos
-val end_of_use_range: range -> pos
-val line_of_pos: pos -> int
-val col_of_pos: pos -> int
-val end_range: range -> range
-val compare: range -> range -> int
-val compare_use_range: range -> range -> int
-val range_before_pos : range -> pos -> bool
-val end_of_line: pos -> pos
-val extend_to_end_of_line: range -> range
-
-val json_of_pos : pos -> json
-val json_of_use_range : range -> json
-val json_of_def_range : range -> json
+(* This module simply bundles together these other two. See their
+interfaces for reference. *)
+include FStar.Compiler.Range.Type
+include FStar.Compiler.Range.Ops

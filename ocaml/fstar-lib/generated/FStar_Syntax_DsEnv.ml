@@ -600,7 +600,7 @@ let (has_all_in_scope : env -> Prims.bool) =
       env1.modules
 let (set_bv_range :
   FStar_Syntax_Syntax.bv ->
-    FStar_Compiler_Range.range -> FStar_Syntax_Syntax.bv)
+    FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.bv)
   =
   fun bv ->
     fun r ->
@@ -612,7 +612,7 @@ let (set_bv_range :
       }
 let (bv_to_name :
   FStar_Syntax_Syntax.bv ->
-    FStar_Compiler_Range.range -> FStar_Syntax_Syntax.term)
+    FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.term)
   =
   fun bv ->
     fun r ->
@@ -865,7 +865,7 @@ let try_lookup_id'' :
                   aux env1.scope_mods
 let found_local_binding :
   'uuuuu 'uuuuu1 .
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       ('uuuuu * FStar_Syntax_Syntax.bv * 'uuuuu1) -> FStar_Syntax_Syntax.term
   =
   fun r -> fun uu___ -> match uu___ with | (id', x, uu___1) -> bv_to_name x r
@@ -2380,7 +2380,7 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
                  | FStar_Pervasives_Native.Some l1 ->
                      let uu___2 = FStar_Ident.range_of_lid l1 in
                      FStar_Compiler_Effect.op_Less_Bar
-                       FStar_Compiler_Range.string_of_range uu___2
+                       FStar_Compiler_Range_Ops.string_of_range uu___2
                  | FStar_Pervasives_Native.None -> "<unknown>")
             | FStar_Pervasives_Native.None -> "<unknown>" in
           let uu___ =
@@ -3413,33 +3413,3 @@ let fail_or2 :
           let uu___2 = FStar_Ident.range_of_id id in
           FStar_Errors.raise_error uu___1 uu___2
       | FStar_Pervasives_Native.Some r -> r
-let (resolve_name :
-  env ->
-    FStar_Ident.lident ->
-      (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv)
-        FStar_Pervasives.either FStar_Pervasives_Native.option)
-  =
-  fun e ->
-    fun name ->
-      let uu___ = try_lookup_name false false e name in
-      match uu___ with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some (Term_name (e1, attrs)) ->
-          let uu___1 =
-            let uu___2 = FStar_Syntax_Subst.compress e1 in
-            uu___2.FStar_Syntax_Syntax.n in
-          (match uu___1 with
-           | FStar_Syntax_Syntax.Tm_name n ->
-               FStar_Pervasives_Native.Some (FStar_Pervasives.Inl n)
-           | FStar_Syntax_Syntax.Tm_fvar fv ->
-               FStar_Pervasives_Native.Some (FStar_Pervasives.Inr fv)
-           | uu___2 -> FStar_Pervasives_Native.None)
-      | FStar_Pervasives_Native.Some (Eff_name (se, l)) ->
-          let uu___1 = delta_depth_of_declaration in
-          let uu___2 =
-            let uu___3 =
-              FStar_Syntax_Syntax.lid_as_fv l
-                FStar_Syntax_Syntax.delta_constant
-                FStar_Pervasives_Native.None in
-            FStar_Pervasives.Inr uu___3 in
-          FStar_Pervasives_Native.Some uu___2

@@ -22,30 +22,19 @@ open FStar.Tactics.Effect
 open FStar.Tactics.Types
 open FStar.Tactics.Util
 
-let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
-  let bvv = inspect_bv xbv in
-  let bvv = { bvv with bv_sort = f bvv.bv_sort } in
-  let bv = pack_bv bvv in
-  bv
-
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
   let bview = inspect_binder b in
-  let bv = on_sort_bv f bview.binder_bv in
-  pack_binder {bview with binder_bv=bv}
+  let bview = { bview with binder_sort = f bview.binder_sort } in
+  pack_binder bview
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
   let tv = inspect_ln t in
   let tv' =
     match tv with
     | Tv_FVar _
+    | Tv_Var _
+    | Tv_BVar _
     | Tv_UInst _ _ -> tv
-    | Tv_Var bv ->
-        let bv = on_sort_bv (visit_tm ff) bv in
-        Tv_Var bv
-
-    | Tv_BVar bv ->
-        let bv = on_sort_bv (visit_tm ff) bv in
-        Tv_BVar bv
 
     | Tv_Type u -> Tv_Type u
     | Tv_Const c -> Tv_Const c
@@ -63,15 +52,15 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
          let l = visit_tm ff l in
          let r = visit_tm ff r in
          Tv_App l (r, q)
-    | Tv_Refine b r ->
-        let b = on_sort_bv (visit_tm ff) b in
+    | Tv_Refine b sort r ->
+        let sort = visit_tm ff sort in
         let r = visit_tm ff r in
-        Tv_Refine b r
-    | Tv_Let r attrs b def t ->
-        let b = on_sort_bv (visit_tm ff) b in
+        Tv_Refine b sort r
+    | Tv_Let r attrs b ty def t ->
+        let ty = visit_tm ff ty in
         let def = visit_tm ff def in
         let t = visit_tm ff t in
-        Tv_Let r attrs b def t
+        Tv_Let r attrs b ty def t
     | Tv_Match sc ret_opt brs ->
         let sc = visit_tm ff sc in
         let ret_opt = map_opt (fun (b, asc) ->
@@ -105,12 +94,8 @@ and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   | Pat_Cons fv us l ->
       let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
       Pat_Cons fv us l
-  | Pat_Var bv ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      Pat_Var bv
-  | Pat_Wild bv ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      Pat_Wild bv
+  | Pat_Var bv -> Pat_Var bv
+  | Pat_Wild bv -> Pat_Wild bv
   | Pat_Dot_Term eopt ->
       Pat_Dot_Term (map_opt (visit_tm ff) eopt)
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =

@@ -1,0 +1,41 @@
+proof-state: State dump @ depth 0 (at the time of failure):
+Location: Bug2899.fst(7,12-7,18)
+Goal 1/1:
+ |- _ : Prims.squash Prims.l_True
+
+>> Got issues: [
+Bug2899.fst(7,12-7,18): (Error 228) user tactic failed: `Tactic got stuck!
+Reduction stopped at: FStar.Tactics.Result.Success (Prims.admit ()) "(((proofstate)))"
+The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?`
+>>]
+proof-state: State dump @ depth 0 (at the time of failure):
+Location: Bug2899.fst(10,12-10,18)
+Goal 1/1:
+ |- _ : Prims.squash Prims.l_True
+
+>> Got issues: [
+Bug2899.fst(10,12-10,18): (Error 228) user tactic failed: `Tactic got stuck!
+Reduction stopped at: Prims.admit ()
+The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?`
+>>]
+proof-state: State dump @ depth 0 (at the time of failure):
+Location: Bug2899.fst(13,12-13,18)
+Goal 1/1:
+ |- _ : Prims.squash Prims.l_True
+
+>> Got issues: [
+Bug2899.fst(13,12-13,18): (Error 228) user tactic failed: `Tactic got stuck!
+Reduction stopped at: FStar.Tactics.Builtins.dump (Prims.admit ()) "(((proofstate)))"
+The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?`
+>>]
+proof-state: State dump @ depth 0 (at the time of failure):
+Location: Bug2899.fst(17,50-17,66)
+Goal 1/1:
+(tac: (_: Prims.unit -> FStar.Tactics.Effect.Tac Prims.unit)) |- _ : Prims.squash Prims.l_True
+
+>> Got issues: [
+Bug2899.fst(17,72-17,75): (Error 228) user tactic failed: `Tactic got stuck!
+Reduction stopped at: reify (tac ()) "(((proofstate)))"` (see also Bug2899.fst(17,50-17,66))
+>>]
+Verified module: Bug2899
+All verification conditions discharged successfully

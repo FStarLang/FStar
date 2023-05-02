@@ -25,13 +25,13 @@ let mk_if (test e_true e_false: term) : Tac term =
   m
 
 let t () : Tac unit =
-  let b = quote bool in
-  let test' = fresh_bv b in
+  let b = `bool in
+  let test' = fresh_bv () in
   let test = pack (Tv_Var test') in
   let e_true = quote 3 in
   let e_false = quote () in
   let body = mk_if test e_true e_false in
-  let res = pack (Tv_Abs (mk_binder test') body) in
+  let res = pack (Tv_Abs (mk_binder test' b) body) in
   // should print: function true -> 3 | false -> ()
   //debug (term_to_string res);
   t_exact true true res

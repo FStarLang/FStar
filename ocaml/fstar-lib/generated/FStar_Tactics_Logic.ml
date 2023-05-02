@@ -333,20 +333,20 @@ let (pose_lemma :
                                                                     "uu___");
                                                                     FStar_Reflection_Data.bv_index
                                                                     =
-                                                                    (Prims.of_int (100));
-                                                                    FStar_Reflection_Data.bv_sort
+                                                                    (Prims.of_int (100))
+                                                                    });
+                                                                    FStar_Reflection_Data.binder_qual
+                                                                    =
+                                                                    FStar_Reflection_Data.Q_Explicit;
+                                                                    FStar_Reflection_Data.binder_attrs
+                                                                    = [];
+                                                                    FStar_Reflection_Data.binder_sort
                                                                     =
                                                                     (FStar_Reflection_Builtins.pack_ln
                                                                     (FStar_Reflection_Data.Tv_FVar
                                                                     (FStar_Reflection_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "unit"])))
-                                                                    });
-                                                                    FStar_Reflection_Data.binder_qual
-                                                                    =
-                                                                    FStar_Reflection_Data.Q_Explicit;
-                                                                    FStar_Reflection_Data.binder_attrs
-                                                                    = []
                                                                     }), t))),
                                                                     FStar_Reflection_Data.Q_Explicit)))))
                                                             | uu___2 ->
@@ -486,20 +486,20 @@ let (pose_lemma :
                                                                     "uu___");
                                                                     FStar_Reflection_Data.bv_index
                                                                     =
-                                                                    (Prims.of_int (107));
-                                                                    FStar_Reflection_Data.bv_sort
+                                                                    (Prims.of_int (107))
+                                                                    });
+                                                                    FStar_Reflection_Data.binder_qual
+                                                                    =
+                                                                    FStar_Reflection_Data.Q_Explicit;
+                                                                    FStar_Reflection_Data.binder_attrs
+                                                                    = [];
+                                                                    FStar_Reflection_Data.binder_sort
                                                                     =
                                                                     (FStar_Reflection_Builtins.pack_ln
                                                                     (FStar_Reflection_Data.Tv_FVar
                                                                     (FStar_Reflection_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "unit"])))
-                                                                    });
-                                                                    FStar_Reflection_Data.binder_qual
-                                                                    =
-                                                                    FStar_Reflection_Data.Q_Explicit;
-                                                                    FStar_Reflection_Data.binder_attrs
-                                                                    = []
                                                                     }),
                                                                     uu___3))),
                                                                     FStar_Reflection_Data.Q_Explicit)))))))
@@ -651,8 +651,8 @@ let rec (visit :
                            (fun uu___2 ->
                               (fun uu___2 ->
                                  match uu___2 with
-                                 | FStar_Reflection_Formula.Forall (b, phi)
-                                     ->
+                                 | FStar_Reflection_Formula.Forall
+                                     (_b, _sort, _phi) ->
                                      Obj.magic
                                        (Obj.repr
                                           (FStar_Tactics_Effect.tac_bind

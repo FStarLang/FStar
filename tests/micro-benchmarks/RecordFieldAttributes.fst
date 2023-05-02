@@ -29,7 +29,7 @@ let unpack_field (b : T.binder) : T.Tac (string * option T.term * T.term) =
       bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
     let attr_opt = match attrs with | [] -> None | _ -> Some (FStar.List.Tot.hd attrs) in
     let bvv = T.inspect_bv bv in
-    (T.name_of_bv bv, attr_opt, bvv.bv_sort)
+    (T.name_of_bv bv, attr_opt, T.binder_sort b)
 
 // returns a list of (field name, optional attribute, field type)
 let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string * option T.term * T.term)) = 

@@ -227,11 +227,11 @@ let rec elab_exp (e:src_exp)
       pack_ln (Tv_Const R.C_False)
 
     | EBVar n -> 
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_Var bv)
 
     | ELam t e ->
@@ -267,9 +267,9 @@ and elab_ty (t:src_ty)
           
     | TRefineBool e ->
       let e = elab_exp e in
-      let bv = R.pack_bv (RT.make_bv 0 RT.bool_ty) in
+      let bv = R.pack_bv (RT.make_bv 0) in
       let refinement = r_b2t e in
-      R.pack_ln (Tv_Refine bv refinement)
+      R.pack_ln (Tv_Refine bv RT.bool_ty refinement)
 
 let rec freevars_elab_exp (e:src_exp)
   : Lemma (freevars e `Set.equal` RT.freevars (elab_exp e))
@@ -723,7 +723,7 @@ let rec soundness (#f:fstar_top_env)
       RT.T_Const _ _ _ RT.CT_False
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
+      RT.T_Var _ (R.pack_bv (RT.make_bv x))
 
     | T_Lam _ t e t' x dt de ->
       let de : RT.typing (extend_env_l f ((x,Inl t)::sg))

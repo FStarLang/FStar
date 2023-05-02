@@ -35,7 +35,7 @@ let (core_check :
                     (fun uu___4 ->
                        let uu___5 =
                          let uu___6 = FStar_TypeChecker_Env.get_range env in
-                         FStar_Compiler_Range.string_of_range uu___6 in
+                         FStar_Compiler_Range_Ops.string_of_range uu___6 in
                        let uu___6 =
                          FStar_TypeChecker_Core.print_error_short err in
                        let uu___7 = FStar_Syntax_Print.term_to_string sol in
@@ -48,7 +48,7 @@ let (core_check :
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env
 type implicits = FStar_TypeChecker_Env.implicits
-let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range.range) =
+let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range_Type.range) =
   fun g ->
     (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 let (normalize :
@@ -416,7 +416,7 @@ let (proc_guard' :
         FStar_TypeChecker_Common.guard_t ->
           FStar_Syntax_Syntax.should_check_uvar
             FStar_Pervasives_Native.option ->
-            FStar_Compiler_Range.range -> unit FStar_Tactics_Monad.tac)
+            FStar_Compiler_Range_Type.range -> unit FStar_Tactics_Monad.tac)
   =
   fun simplify ->
     fun reason ->
@@ -571,7 +571,7 @@ let (proc_guard :
     env ->
       FStar_TypeChecker_Common.guard_t ->
         FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option
-          -> FStar_Compiler_Range.range -> unit FStar_Tactics_Monad.tac)
+          -> FStar_Compiler_Range_Type.range -> unit FStar_Tactics_Monad.tac)
   = proc_guard' true
 let (tc_unifier_solved_implicits :
   FStar_TypeChecker_Env.env ->
@@ -898,7 +898,8 @@ let (__do_unify_wflags :
                               FStar_Tactics_Monad.mlog
                                 (fun uu___7 ->
                                    let uu___8 =
-                                     FStar_Compiler_Range.string_of_range r in
+                                     FStar_Compiler_Range_Ops.string_of_range
+                                       r in
                                    FStar_Compiler_Util.print2
                                      ">> do_unify error, (%s) at (%s)\n" msg
                                      uu___8)
@@ -2339,7 +2340,7 @@ let (intro_rec :
                             FStar_Syntax_Util.mk_letbinding
                               (FStar_Pervasives.Inl bv) [] uu___8
                               FStar_Parser_Const.effect_Tot_lid uu___9 []
-                              FStar_Compiler_Range.dummyRange in
+                              FStar_Compiler_Range_Type.dummyRange in
                           let body = FStar_Syntax_Syntax.bv_to_name bv in
                           let uu___8 =
                             FStar_Syntax_Subst.close_let_rec [lb] body in
@@ -2682,7 +2683,7 @@ let (try_unify_by_application :
       env ->
         FStar_Syntax_Syntax.term ->
           FStar_Syntax_Syntax.term ->
-            FStar_Compiler_Range.range ->
+            FStar_Compiler_Range_Type.range ->
               (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
                 FStar_Syntax_Syntax.ctx_uvar) Prims.list
                 FStar_Tactics_Monad.tac)
@@ -4854,7 +4855,7 @@ let (uvar_env :
                       | (typ, uvar_typ) ->
                           FStar_Tactics_Monad.ret
                             (typ, FStar_TypeChecker_Env.trivial_guard,
-                              FStar_Compiler_Range.dummyRange)) in
+                              FStar_Compiler_Range_Type.dummyRange)) in
            FStar_Tactics_Monad.op_let_Bang uu___
              (fun uu___1 ->
                 match uu___1 with
@@ -5259,16 +5260,14 @@ let (launch_process :
                FStar_Tactics_Monad.fail
                  "launch_process: will not run anything unless --unsafe_tactic_exec is provided")
 let (fresh_bv_named :
-  Prims.string ->
-    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac)
-  =
+  Prims.string -> FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac) =
   fun nm ->
-    fun t ->
-      FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
-        (fun uu___ ->
-           let uu___1 =
-             FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None t in
-           FStar_Tactics_Monad.ret uu___1)
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 =
+           FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None
+             FStar_Syntax_Syntax.tun in
+         FStar_Tactics_Monad.ret uu___1)
 let (change : FStar_Syntax_Syntax.typ -> unit FStar_Tactics_Monad.tac) =
   fun ty ->
     let uu___ =
@@ -6278,7 +6277,9 @@ let rec (inspect :
                       | uu___3 -> failwith "impossible" in
                     FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                       (FStar_Reflection_Data.Tv_Refine
-                         ((b1.FStar_Syntax_Syntax.binder_bv), t4)))
+                         ((b1.FStar_Syntax_Syntax.binder_bv),
+                           ((b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort),
+                           t4)))
            | FStar_Syntax_Syntax.Tm_constant c ->
                let uu___2 =
                  let uu___3 = FStar_Reflection_Basic.inspect_const c in
@@ -6324,6 +6325,7 @@ let rec (inspect :
                              (FStar_Reflection_Data.Tv_Let
                                 (false, (lb.FStar_Syntax_Syntax.lbattrs),
                                   (b1.FStar_Syntax_Syntax.binder_bv),
+                                  (bv.FStar_Syntax_Syntax.sort),
                                   (lb.FStar_Syntax_Syntax.lbdef), t22))))
            | FStar_Syntax_Syntax.Tm_let ((true, lb::[]), t21) ->
                if lb.FStar_Syntax_Syntax.lbunivs <> []
@@ -6353,6 +6355,7 @@ let rec (inspect :
                                           (true,
                                             (lb1.FStar_Syntax_Syntax.lbattrs),
                                             bv1,
+                                            (bv1.FStar_Syntax_Syntax.sort),
                                             (lb1.FStar_Syntax_Syntax.lbdef),
                                             t22)))
                             | uu___4 ->
@@ -6447,58 +6450,79 @@ let (pack' :
       | FStar_Reflection_Data.Tv_Type u ->
           let uu___ =
             FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
-              FStar_Compiler_Range.dummyRange in
+              FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-      | FStar_Reflection_Data.Tv_Refine (bv, t) ->
-          let uu___ = FStar_Syntax_Util.refine bv t in
+      | FStar_Reflection_Data.Tv_Refine (bv, sort, t) ->
+          let bv1 =
+            {
+              FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
+              FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+              FStar_Syntax_Syntax.sort = sort
+            } in
+          let uu___ = FStar_Syntax_Util.refine bv1 t in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
       | FStar_Reflection_Data.Tv_Const c ->
           let uu___ =
             let uu___1 =
               let uu___2 = FStar_Reflection_Basic.pack_const c in
               FStar_Syntax_Syntax.Tm_constant uu___2 in
-            FStar_Syntax_Syntax.mk uu___1 FStar_Compiler_Range.dummyRange in
+            FStar_Syntax_Syntax.mk uu___1
+              FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
       | FStar_Reflection_Data.Tv_Uvar (_u, ctx_u_s) ->
           let uu___ =
             FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_uvar ctx_u_s)
-              FStar_Compiler_Range.dummyRange in
+              FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-      | FStar_Reflection_Data.Tv_Let (false, attrs, bv, t1, t2) ->
+      | FStar_Reflection_Data.Tv_Let (false, attrs, bv, ty, t1, t2) ->
+          let bv1 =
+            {
+              FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
+              FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+              FStar_Syntax_Syntax.sort = ty
+            } in
           let lb =
-            FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
-              bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid
-              t1 attrs FStar_Compiler_Range.dummyRange in
+            FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv1) []
+              bv1.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid
+              t1 attrs FStar_Compiler_Range_Type.dummyRange in
           let uu___ =
             let uu___1 =
               let uu___2 =
                 let uu___3 =
                   let uu___4 =
-                    let uu___5 = FStar_Syntax_Syntax.mk_binder bv in [uu___5] in
+                    let uu___5 = FStar_Syntax_Syntax.mk_binder bv1 in
+                    [uu___5] in
                   FStar_Syntax_Subst.close uu___4 t2 in
                 ((false, [lb]), uu___3) in
               FStar_Syntax_Syntax.Tm_let uu___2 in
-            FStar_Syntax_Syntax.mk uu___1 FStar_Compiler_Range.dummyRange in
+            FStar_Syntax_Syntax.mk uu___1
+              FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-      | FStar_Reflection_Data.Tv_Let (true, attrs, bv, t1, t2) ->
+      | FStar_Reflection_Data.Tv_Let (true, attrs, bv, ty, t1, t2) ->
+          let bv1 =
+            {
+              FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
+              FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+              FStar_Syntax_Syntax.sort = ty
+            } in
           let lb =
-            FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
-              bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid
-              t1 attrs FStar_Compiler_Range.dummyRange in
+            FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv1) []
+              bv1.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid
+              t1 attrs FStar_Compiler_Range_Type.dummyRange in
           let uu___ = FStar_Syntax_Subst.close_let_rec [lb] t2 in
           (match uu___ with
            | (lbs, body) ->
                let uu___1 =
                  FStar_Syntax_Syntax.mk
                    (FStar_Syntax_Syntax.Tm_let ((true, lbs), body))
-                   FStar_Compiler_Range.dummyRange in
+                   FStar_Compiler_Range_Type.dummyRange in
                FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                  uu___1)
       | FStar_Reflection_Data.Tv_Match (t, ret_opt, brs) ->
           let wrap v =
             {
               FStar_Syntax_Syntax.v = v;
-              FStar_Syntax_Syntax.p = FStar_Compiler_Range.dummyRange
+              FStar_Syntax_Syntax.p = FStar_Compiler_Range_Type.dummyRange
             } in
           let rec pack_pat p =
             match p with
@@ -6541,7 +6565,7 @@ let (pack' :
             FStar_Syntax_Syntax.mk
               (FStar_Syntax_Syntax.Tm_match
                  (t, ret_opt, brs2, FStar_Pervasives_Native.None))
-              FStar_Compiler_Range.dummyRange in
+              FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
       | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt, use_eq) ->
           let uu___ =
@@ -6549,7 +6573,7 @@ let (pack' :
               (FStar_Syntax_Syntax.Tm_ascribed
                  (e, ((FStar_Pervasives.Inl t), tacopt, use_eq),
                    FStar_Pervasives_Native.None))
-              FStar_Compiler_Range.dummyRange in
+              FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
       | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt, use_eq) ->
           let uu___ =
@@ -6557,12 +6581,12 @@ let (pack' :
               (FStar_Syntax_Syntax.Tm_ascribed
                  (e, ((FStar_Pervasives.Inr c), tacopt, use_eq),
                    FStar_Pervasives_Native.None))
-              FStar_Compiler_Range.dummyRange in
+              FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
       | FStar_Reflection_Data.Tv_Unknown ->
           let uu___ =
             FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
-              FStar_Compiler_Range.dummyRange in
+              FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
 let (pack :
   FStar_Reflection_Data.term_view ->
@@ -6814,7 +6838,8 @@ let (push_bv_dsenv :
   =
   fun e ->
     fun i ->
-      let ident = FStar_Ident.mk_ident (i, FStar_Compiler_Range.dummyRange) in
+      let ident =
+        FStar_Ident.mk_ident (i, FStar_Compiler_Range_Type.dummyRange) in
       let uu___ =
         FStar_Syntax_DsEnv.push_bv e.FStar_TypeChecker_Env.dsenv ident in
       match uu___ with
@@ -6925,9 +6950,9 @@ let (comp_to_string :
   fun c ->
     let s = FStar_Syntax_Print.comp_to_string c in FStar_Tactics_Monad.ret s
 let (range_to_string :
-  FStar_Compiler_Range.range -> Prims.string FStar_Tactics_Monad.tac) =
+  FStar_Compiler_Range_Type.range -> Prims.string FStar_Tactics_Monad.tac) =
   fun r ->
-    let uu___ = FStar_Compiler_Range.string_of_range r in
+    let uu___ = FStar_Compiler_Range_Ops.string_of_range r in
     FStar_Tactics_Monad.ret uu___
 let (term_eq_old :
   FStar_Syntax_Syntax.term ->
@@ -7147,7 +7172,7 @@ let (refl_check_relation :
                             Prims.op_Hat "check_relation failed: " uu___7 in
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                         FStar_Errors.raise_error uu___5
-                          FStar_Compiler_Range.dummyRange))))
+                          FStar_Compiler_Range_Type.dummyRange))))
           else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_subtyping :
   env ->
@@ -7220,7 +7245,7 @@ let (refl_core_check_term :
                           uu___7 in
                       (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                     FStar_Errors.raise_error uu___5
-                      FStar_Compiler_Range.dummyRange))))
+                      FStar_Compiler_Range_Type.dummyRange))))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_tc_term :
   env ->
@@ -7532,7 +7557,7 @@ let (refl_universe_of :
             FStar_Errors.raise_error
               (FStar_Errors_Codes.Fatal_IllTyped,
                 "Unresolved variable in universe_of callback")
-              FStar_Compiler_Range.dummyRange
+              FStar_Compiler_Range_Type.dummyRange
         | u1 -> u1 in
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
       if uu___
@@ -7577,7 +7602,7 @@ let (refl_universe_of :
                             Prims.op_Hat "universe_of failed: " uu___7 in
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                         FStar_Errors.raise_error uu___5
-                          FStar_Compiler_Range.dummyRange))))
+                          FStar_Compiler_Range_Type.dummyRange))))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
 let (refl_check_prop_validity :
   env ->
@@ -7626,7 +7651,7 @@ let (refl_check_prop_validity :
                    (dbg_refl g (fun uu___6 -> msg);
                     FStar_Errors.raise_error
                       (FStar_Errors_Codes.Fatal_IllTyped, msg)
-                      FStar_Compiler_Range.dummyRange));
+                      FStar_Compiler_Range_Type.dummyRange));
               FStar_TypeChecker_Rel.force_trivial_guard g
                 {
                   FStar_TypeChecker_Common.guard_f =
@@ -7851,210 +7876,6 @@ let (refl_maybe_unfold_head :
                 FStar_Compiler_Effect.op_Bar_Greater eopt
                   FStar_Compiler_Util.must))
       else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
-let (push_open_namespace :
-  env -> Prims.string Prims.list -> env FStar_Tactics_Monad.tac) =
-  fun e ->
-    fun ns ->
-      let lid = FStar_Ident.lid_of_path ns FStar_Compiler_Range.dummyRange in
-      let uu___ =
-        let uu___1 =
-          FStar_Syntax_DsEnv.push_namespace e.FStar_TypeChecker_Env.dsenv lid in
-        {
-          FStar_TypeChecker_Env.solver = (e.FStar_TypeChecker_Env.solver);
-          FStar_TypeChecker_Env.range = (e.FStar_TypeChecker_Env.range);
-          FStar_TypeChecker_Env.curmodule =
-            (e.FStar_TypeChecker_Env.curmodule);
-          FStar_TypeChecker_Env.gamma = (e.FStar_TypeChecker_Env.gamma);
-          FStar_TypeChecker_Env.gamma_sig =
-            (e.FStar_TypeChecker_Env.gamma_sig);
-          FStar_TypeChecker_Env.gamma_cache =
-            (e.FStar_TypeChecker_Env.gamma_cache);
-          FStar_TypeChecker_Env.modules = (e.FStar_TypeChecker_Env.modules);
-          FStar_TypeChecker_Env.expected_typ =
-            (e.FStar_TypeChecker_Env.expected_typ);
-          FStar_TypeChecker_Env.sigtab = (e.FStar_TypeChecker_Env.sigtab);
-          FStar_TypeChecker_Env.attrtab = (e.FStar_TypeChecker_Env.attrtab);
-          FStar_TypeChecker_Env.instantiate_imp =
-            (e.FStar_TypeChecker_Env.instantiate_imp);
-          FStar_TypeChecker_Env.effects = (e.FStar_TypeChecker_Env.effects);
-          FStar_TypeChecker_Env.generalize =
-            (e.FStar_TypeChecker_Env.generalize);
-          FStar_TypeChecker_Env.letrecs = (e.FStar_TypeChecker_Env.letrecs);
-          FStar_TypeChecker_Env.top_level =
-            (e.FStar_TypeChecker_Env.top_level);
-          FStar_TypeChecker_Env.check_uvars =
-            (e.FStar_TypeChecker_Env.check_uvars);
-          FStar_TypeChecker_Env.use_eq_strict =
-            (e.FStar_TypeChecker_Env.use_eq_strict);
-          FStar_TypeChecker_Env.is_iface = (e.FStar_TypeChecker_Env.is_iface);
-          FStar_TypeChecker_Env.admit = (e.FStar_TypeChecker_Env.admit);
-          FStar_TypeChecker_Env.lax = (e.FStar_TypeChecker_Env.lax);
-          FStar_TypeChecker_Env.lax_universes =
-            (e.FStar_TypeChecker_Env.lax_universes);
-          FStar_TypeChecker_Env.phase1 = (e.FStar_TypeChecker_Env.phase1);
-          FStar_TypeChecker_Env.failhard = (e.FStar_TypeChecker_Env.failhard);
-          FStar_TypeChecker_Env.nosynth = (e.FStar_TypeChecker_Env.nosynth);
-          FStar_TypeChecker_Env.uvar_subtyping =
-            (e.FStar_TypeChecker_Env.uvar_subtyping);
-          FStar_TypeChecker_Env.tc_term = (e.FStar_TypeChecker_Env.tc_term);
-          FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
-            (e.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
-          FStar_TypeChecker_Env.universe_of =
-            (e.FStar_TypeChecker_Env.universe_of);
-          FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-            (e.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-          FStar_TypeChecker_Env.teq_nosmt_force =
-            (e.FStar_TypeChecker_Env.teq_nosmt_force);
-          FStar_TypeChecker_Env.subtype_nosmt_force =
-            (e.FStar_TypeChecker_Env.subtype_nosmt_force);
-          FStar_TypeChecker_Env.qtbl_name_and_index =
-            (e.FStar_TypeChecker_Env.qtbl_name_and_index);
-          FStar_TypeChecker_Env.normalized_eff_names =
-            (e.FStar_TypeChecker_Env.normalized_eff_names);
-          FStar_TypeChecker_Env.fv_delta_depths =
-            (e.FStar_TypeChecker_Env.fv_delta_depths);
-          FStar_TypeChecker_Env.proof_ns = (e.FStar_TypeChecker_Env.proof_ns);
-          FStar_TypeChecker_Env.synth_hook =
-            (e.FStar_TypeChecker_Env.synth_hook);
-          FStar_TypeChecker_Env.try_solve_implicits_hook =
-            (e.FStar_TypeChecker_Env.try_solve_implicits_hook);
-          FStar_TypeChecker_Env.splice = (e.FStar_TypeChecker_Env.splice);
-          FStar_TypeChecker_Env.mpreprocess =
-            (e.FStar_TypeChecker_Env.mpreprocess);
-          FStar_TypeChecker_Env.postprocess =
-            (e.FStar_TypeChecker_Env.postprocess);
-          FStar_TypeChecker_Env.identifier_info =
-            (e.FStar_TypeChecker_Env.identifier_info);
-          FStar_TypeChecker_Env.tc_hooks = (e.FStar_TypeChecker_Env.tc_hooks);
-          FStar_TypeChecker_Env.dsenv = uu___1;
-          FStar_TypeChecker_Env.nbe = (e.FStar_TypeChecker_Env.nbe);
-          FStar_TypeChecker_Env.strict_args_tab =
-            (e.FStar_TypeChecker_Env.strict_args_tab);
-          FStar_TypeChecker_Env.erasable_types_tab =
-            (e.FStar_TypeChecker_Env.erasable_types_tab);
-          FStar_TypeChecker_Env.enable_defer_to_tac =
-            (e.FStar_TypeChecker_Env.enable_defer_to_tac);
-          FStar_TypeChecker_Env.unif_allow_ref_guards =
-            (e.FStar_TypeChecker_Env.unif_allow_ref_guards);
-          FStar_TypeChecker_Env.erase_erasable_args =
-            (e.FStar_TypeChecker_Env.erase_erasable_args);
-          FStar_TypeChecker_Env.core_check =
-            (e.FStar_TypeChecker_Env.core_check)
-        } in
-      FStar_Tactics_Monad.ret uu___
-let (push_module_abbrev :
-  env ->
-    Prims.string -> Prims.string Prims.list -> env FStar_Tactics_Monad.tac)
-  =
-  fun e ->
-    fun n ->
-      fun m ->
-        let mlid = FStar_Ident.lid_of_path m FStar_Compiler_Range.dummyRange in
-        let ident = FStar_Ident.id_of_text n in
-        let uu___ =
-          let uu___1 =
-            FStar_Syntax_DsEnv.push_module_abbrev
-              e.FStar_TypeChecker_Env.dsenv ident mlid in
-          {
-            FStar_TypeChecker_Env.solver = (e.FStar_TypeChecker_Env.solver);
-            FStar_TypeChecker_Env.range = (e.FStar_TypeChecker_Env.range);
-            FStar_TypeChecker_Env.curmodule =
-              (e.FStar_TypeChecker_Env.curmodule);
-            FStar_TypeChecker_Env.gamma = (e.FStar_TypeChecker_Env.gamma);
-            FStar_TypeChecker_Env.gamma_sig =
-              (e.FStar_TypeChecker_Env.gamma_sig);
-            FStar_TypeChecker_Env.gamma_cache =
-              (e.FStar_TypeChecker_Env.gamma_cache);
-            FStar_TypeChecker_Env.modules = (e.FStar_TypeChecker_Env.modules);
-            FStar_TypeChecker_Env.expected_typ =
-              (e.FStar_TypeChecker_Env.expected_typ);
-            FStar_TypeChecker_Env.sigtab = (e.FStar_TypeChecker_Env.sigtab);
-            FStar_TypeChecker_Env.attrtab = (e.FStar_TypeChecker_Env.attrtab);
-            FStar_TypeChecker_Env.instantiate_imp =
-              (e.FStar_TypeChecker_Env.instantiate_imp);
-            FStar_TypeChecker_Env.effects = (e.FStar_TypeChecker_Env.effects);
-            FStar_TypeChecker_Env.generalize =
-              (e.FStar_TypeChecker_Env.generalize);
-            FStar_TypeChecker_Env.letrecs = (e.FStar_TypeChecker_Env.letrecs);
-            FStar_TypeChecker_Env.top_level =
-              (e.FStar_TypeChecker_Env.top_level);
-            FStar_TypeChecker_Env.check_uvars =
-              (e.FStar_TypeChecker_Env.check_uvars);
-            FStar_TypeChecker_Env.use_eq_strict =
-              (e.FStar_TypeChecker_Env.use_eq_strict);
-            FStar_TypeChecker_Env.is_iface =
-              (e.FStar_TypeChecker_Env.is_iface);
-            FStar_TypeChecker_Env.admit = (e.FStar_TypeChecker_Env.admit);
-            FStar_TypeChecker_Env.lax = (e.FStar_TypeChecker_Env.lax);
-            FStar_TypeChecker_Env.lax_universes =
-              (e.FStar_TypeChecker_Env.lax_universes);
-            FStar_TypeChecker_Env.phase1 = (e.FStar_TypeChecker_Env.phase1);
-            FStar_TypeChecker_Env.failhard =
-              (e.FStar_TypeChecker_Env.failhard);
-            FStar_TypeChecker_Env.nosynth = (e.FStar_TypeChecker_Env.nosynth);
-            FStar_TypeChecker_Env.uvar_subtyping =
-              (e.FStar_TypeChecker_Env.uvar_subtyping);
-            FStar_TypeChecker_Env.tc_term = (e.FStar_TypeChecker_Env.tc_term);
-            FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
-              (e.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
-            FStar_TypeChecker_Env.universe_of =
-              (e.FStar_TypeChecker_Env.universe_of);
-            FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-              (e.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-            FStar_TypeChecker_Env.teq_nosmt_force =
-              (e.FStar_TypeChecker_Env.teq_nosmt_force);
-            FStar_TypeChecker_Env.subtype_nosmt_force =
-              (e.FStar_TypeChecker_Env.subtype_nosmt_force);
-            FStar_TypeChecker_Env.qtbl_name_and_index =
-              (e.FStar_TypeChecker_Env.qtbl_name_and_index);
-            FStar_TypeChecker_Env.normalized_eff_names =
-              (e.FStar_TypeChecker_Env.normalized_eff_names);
-            FStar_TypeChecker_Env.fv_delta_depths =
-              (e.FStar_TypeChecker_Env.fv_delta_depths);
-            FStar_TypeChecker_Env.proof_ns =
-              (e.FStar_TypeChecker_Env.proof_ns);
-            FStar_TypeChecker_Env.synth_hook =
-              (e.FStar_TypeChecker_Env.synth_hook);
-            FStar_TypeChecker_Env.try_solve_implicits_hook =
-              (e.FStar_TypeChecker_Env.try_solve_implicits_hook);
-            FStar_TypeChecker_Env.splice = (e.FStar_TypeChecker_Env.splice);
-            FStar_TypeChecker_Env.mpreprocess =
-              (e.FStar_TypeChecker_Env.mpreprocess);
-            FStar_TypeChecker_Env.postprocess =
-              (e.FStar_TypeChecker_Env.postprocess);
-            FStar_TypeChecker_Env.identifier_info =
-              (e.FStar_TypeChecker_Env.identifier_info);
-            FStar_TypeChecker_Env.tc_hooks =
-              (e.FStar_TypeChecker_Env.tc_hooks);
-            FStar_TypeChecker_Env.dsenv = uu___1;
-            FStar_TypeChecker_Env.nbe = (e.FStar_TypeChecker_Env.nbe);
-            FStar_TypeChecker_Env.strict_args_tab =
-              (e.FStar_TypeChecker_Env.strict_args_tab);
-            FStar_TypeChecker_Env.erasable_types_tab =
-              (e.FStar_TypeChecker_Env.erasable_types_tab);
-            FStar_TypeChecker_Env.enable_defer_to_tac =
-              (e.FStar_TypeChecker_Env.enable_defer_to_tac);
-            FStar_TypeChecker_Env.unif_allow_ref_guards =
-              (e.FStar_TypeChecker_Env.unif_allow_ref_guards);
-            FStar_TypeChecker_Env.erase_erasable_args =
-              (e.FStar_TypeChecker_Env.erase_erasable_args);
-            FStar_TypeChecker_Env.core_check =
-              (e.FStar_TypeChecker_Env.core_check)
-          } in
-        FStar_Tactics_Monad.ret uu___
-let (resolve_name :
-  env ->
-    Prims.string Prims.list ->
-      (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv)
-        FStar_Pervasives.either FStar_Pervasives_Native.option
-        FStar_Tactics_Monad.tac)
-  =
-  fun e ->
-    fun n ->
-      let l = FStar_Ident.lid_of_path n FStar_Compiler_Range.dummyRange in
-      let uu___ =
-        FStar_Syntax_DsEnv.resolve_name e.FStar_TypeChecker_Env.dsenv l in
-      FStar_Tactics_Monad.ret uu___
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in
@@ -8350,7 +8171,7 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
           } in
         env5
 let (proofstate_of_goals :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     env ->
       FStar_Tactics_Types.goal Prims.list ->
         FStar_TypeChecker_Common.implicit Prims.list ->
@@ -8384,7 +8205,7 @@ let (proofstate_of_goals :
             } in
           ps
 let (proofstate_of_goal_ty :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     env ->
       FStar_Syntax_Syntax.typ ->
         (FStar_Tactics_Types.proofstate * FStar_Syntax_Syntax.term))
@@ -8401,7 +8222,7 @@ let (proofstate_of_goal_ty :
                 g_u.FStar_TypeChecker_Common.implicits in
             let uu___1 = FStar_Tactics_Types.goal_witness g in (ps, uu___1)
 let (proofstate_of_all_implicits :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     env ->
       implicits ->
         (FStar_Tactics_Types.proofstate * FStar_Syntax_Syntax.term))

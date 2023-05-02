@@ -142,8 +142,7 @@ let ref_Mk_bv =
     let lid = fstar_refl_data_lid "Mkbv_view" in
     let attr = Record_ctor (fstar_refl_data_lid "bv_view", [
                                 Ident.mk_ident ("bv_ppname", Range.dummyRange);
-                                Ident.mk_ident ("bv_index" , Range.dummyRange);
-                                Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
+                                Ident.mk_ident ("bv_index" , Range.dummyRange)]) in
     let fv = lid_as_fv lid delta_constant (Some attr) in
     { lid = lid
     ; fv  = fv
@@ -155,7 +154,8 @@ let ref_Mk_binder =
   let attr = Record_ctor (fstar_refl_data_lid "binder_view", [
                             Ident.mk_ident ("binder_bv", Range.dummyRange);
                             Ident.mk_ident ("binder_qual", Range.dummyRange);
-                            Ident.mk_ident ("binder_attrs", Range.dummyRange)]) in
+                            Ident.mk_ident ("binder_attrs", Range.dummyRange);
+                            Ident.mk_ident ("binder_sort"  , Range.dummyRange)]) in
   let fv = lid_as_fv lid delta_constant (Some attr) in
   { lid = lid;
     fv = fv;
@@ -166,7 +166,7 @@ let ref_Mk_lb =
     let attr = Record_ctor (fstar_refl_data_lid "lb_view", [
                                 Ident.mk_ident ("lb_fv"  , Range.dummyRange);
                                 Ident.mk_ident ("lb_us"  , Range.dummyRange);
-				Ident.mk_ident ("lb_typ" , Range.dummyRange);
+                                Ident.mk_ident ("lb_typ" , Range.dummyRange);
                                 Ident.mk_ident ("lb_def" , Range.dummyRange)
                                 ]) in
     let fv = lid_as_fv lid delta_constant (Some attr) in

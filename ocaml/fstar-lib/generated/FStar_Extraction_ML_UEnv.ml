@@ -294,7 +294,7 @@ let (lookup_fv_generic :
       | FStar_Pervasives_Native.Some r -> r
       | FStar_Pervasives_Native.None -> FStar_Pervasives.Inl false
 let (try_lookup_fv :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     uenv ->
       FStar_Syntax_Syntax.fv -> exp_binding FStar_Pervasives_Native.option)
   =
@@ -319,7 +319,8 @@ let (try_lookup_fv :
              FStar_Pervasives_Native.None)
         | FStar_Pervasives.Inl (false) -> FStar_Pervasives_Native.None
 let (lookup_fv :
-  FStar_Compiler_Range.range -> uenv -> FStar_Syntax_Syntax.fv -> exp_binding)
+  FStar_Compiler_Range_Type.range ->
+    uenv -> FStar_Syntax_Syntax.fv -> exp_binding)
   =
   fun r ->
     fun g ->
@@ -330,7 +331,7 @@ let (lookup_fv :
         | FStar_Pervasives.Inl b ->
             let uu___1 =
               let uu___2 =
-                FStar_Compiler_Range.string_of_range
+                FStar_Compiler_Range_Ops.string_of_range
                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
               let uu___3 =
                 FStar_Syntax_Print.lid_to_string
@@ -356,7 +357,7 @@ let (lookup_bv : uenv -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
             let uu___1 =
               let uu___2 =
                 FStar_Ident.range_of_id bv.FStar_Syntax_Syntax.ppname in
-              FStar_Compiler_Range.string_of_range uu___2 in
+              FStar_Compiler_Range_Ops.string_of_range uu___2 in
             let uu___2 = FStar_Syntax_Print.bv_to_string bv in
             FStar_Compiler_Util.format2 "(%s) bound Variable %s not found\n"
               uu___1 uu___2 in

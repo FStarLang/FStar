@@ -95,12 +95,12 @@ let (dump_symbols_for_lid :
   FStar_Ident.lident -> FStar_Interactive_Ide_Types.query qst) =
   fun l ->
     let r = FStar_Ident.range_of_lid l in
-    let start_pos = FStar_Compiler_Range.start_of_range r in
-    let end_pos = FStar_Compiler_Range.end_of_range r in
-    let start_line = FStar_Compiler_Range.line_of_pos start_pos in
-    let start_col = FStar_Compiler_Range.col_of_pos start_pos in
-    let end_line = FStar_Compiler_Range.line_of_pos end_pos in
-    let end_col = FStar_Compiler_Range.col_of_pos end_pos in
+    let start_pos = FStar_Compiler_Range_Ops.start_of_range r in
+    let end_pos = FStar_Compiler_Range_Ops.end_of_range r in
+    let start_line = FStar_Compiler_Range_Ops.line_of_pos start_pos in
+    let start_col = FStar_Compiler_Range_Ops.col_of_pos start_pos in
+    let end_line = FStar_Compiler_Range_Ops.line_of_pos end_pos in
+    let end_col = FStar_Compiler_Range_Ops.col_of_pos end_pos in
     let position = ("<input>", start_line, start_col) in
     let uu___ =
       let uu___1 =
@@ -109,16 +109,16 @@ let (dump_symbols_for_lid :
           (FStar_Pervasives_Native.Some position),
           ["type"; "documentation"; "defined-at"],
           (FStar_Pervasives_Native.Some
-             (FStar_Compiler_Util.JsonAssoc
-                [("fname", (FStar_Compiler_Util.JsonStr "<input>"));
+             (FStar_Json.JsonAssoc
+                [("fname", (FStar_Json.JsonStr "<input>"));
                 ("beg",
-                  (FStar_Compiler_Util.JsonList
-                     [FStar_Compiler_Util.JsonInt start_line;
-                     FStar_Compiler_Util.JsonInt start_col]));
+                  (FStar_Json.JsonList
+                     [FStar_Json.JsonInt start_line;
+                     FStar_Json.JsonInt start_col]));
                 ("end",
-                  (FStar_Compiler_Util.JsonList
-                     [FStar_Compiler_Util.JsonInt end_line;
-                     FStar_Compiler_Util.JsonInt end_col]))]))) in
+                  (FStar_Json.JsonList
+                     [FStar_Json.JsonInt end_line;
+                     FStar_Json.JsonInt end_col]))]))) in
       FStar_Interactive_Ide_Types.Lookup uu___1 in
     as_query uu___
 let (dump_symbols :
@@ -144,14 +144,14 @@ let (push_decl :
               let pq =
                 let uu___1 =
                   let uu___2 =
-                    FStar_Compiler_Range.start_of_range
+                    FStar_Compiler_Range_Ops.start_of_range
                       d.FStar_Parser_AST.drange in
-                  FStar_Compiler_Range.line_of_pos uu___2 in
+                  FStar_Compiler_Range_Ops.line_of_pos uu___2 in
                 let uu___2 =
                   let uu___3 =
-                    FStar_Compiler_Range.start_of_range
+                    FStar_Compiler_Range_Ops.start_of_range
                       d.FStar_Parser_AST.drange in
-                  FStar_Compiler_Range.col_of_pos uu___3 in
+                  FStar_Compiler_Range_Ops.col_of_pos uu___3 in
                 {
                   FStar_Interactive_Ide_Types.push_kind = push_kind;
                   FStar_Interactive_Ide_Types.push_line = uu___1;
@@ -212,8 +212,8 @@ let (inspect_repl_stack :
       FStar_Interactive_Ide_Types.push_kind ->
         Prims.bool ->
           (fragment_progress -> unit) ->
-            (FStar_Interactive_Ide_Types.query Prims.list *
-              FStar_Compiler_Util.json Prims.list) qst)
+            (FStar_Interactive_Ide_Types.query Prims.list * FStar_Json.json
+              Prims.list) qst)
   =
   fun s ->
     fun ds ->
@@ -341,18 +341,18 @@ let (parse_code : Prims.string -> FStar_Parser_ParseIt.parse_result) =
     let uu___ =
       let uu___1 =
         let uu___2 =
-          FStar_Compiler_Range.file_of_range
+          FStar_Compiler_Range_Ops.file_of_range
             FStar_Interactive_Ide_Types.initial_range in
         let uu___3 =
           let uu___4 =
-            FStar_Compiler_Range.start_of_range
+            FStar_Compiler_Range_Ops.start_of_range
               FStar_Interactive_Ide_Types.initial_range in
-          FStar_Compiler_Range.line_of_pos uu___4 in
+          FStar_Compiler_Range_Ops.line_of_pos uu___4 in
         let uu___4 =
           let uu___5 =
-            FStar_Compiler_Range.start_of_range
+            FStar_Compiler_Range_Ops.start_of_range
               FStar_Interactive_Ide_Types.initial_range in
-          FStar_Compiler_Range.col_of_pos uu___5 in
+          FStar_Compiler_Range_Ops.col_of_pos uu___5 in
         {
           FStar_Parser_ParseIt.frag_fname = uu___2;
           FStar_Parser_ParseIt.frag_text = code;
@@ -362,8 +362,8 @@ let (parse_code : Prims.string -> FStar_Parser_ParseIt.parse_result) =
       FStar_Parser_ParseIt.Incremental uu___1 in
     FStar_Parser_ParseIt.parse uu___
 let (syntax_issue :
-  (FStar_Errors_Codes.raw_error * Prims.string * FStar_Compiler_Range.range)
-    -> FStar_Errors.issue)
+  (FStar_Errors_Codes.raw_error * Prims.string *
+    FStar_Compiler_Range_Type.range) -> FStar_Errors.issue)
   =
   fun uu___ ->
     match uu___ with
@@ -389,8 +389,8 @@ let (run_full_buffer :
         FStar_Interactive_Ide_Types.full_buffer_request_kind ->
           Prims.bool ->
             (fragment_progress -> unit) ->
-              (FStar_Interactive_Ide_Types.query Prims.list *
-                FStar_Compiler_Util.json Prims.list))
+              (FStar_Interactive_Ide_Types.query Prims.list * FStar_Json.json
+                Prims.list))
   =
   fun st ->
     fun qid1 ->
@@ -415,10 +415,10 @@ let (run_full_buffer :
                          match uu___1 with
                          | (d, uu___2) ->
                              let start =
-                               FStar_Compiler_Range.start_of_range
+                               FStar_Compiler_Range_Ops.start_of_range
                                  d.FStar_Parser_AST.drange in
                              let start_line =
-                               FStar_Compiler_Range.line_of_pos start in
+                               FStar_Compiler_Range_Ops.line_of_pos start in
                              start_line <= line) decls
                 | FStar_Interactive_Ide_Types.LaxToPosition
                     (uu___, line, _col) ->
@@ -427,10 +427,10 @@ let (run_full_buffer :
                          match uu___1 with
                          | (d, uu___2) ->
                              let start =
-                               FStar_Compiler_Range.start_of_range
+                               FStar_Compiler_Range_Ops.start_of_range
                                  d.FStar_Parser_AST.drange in
                              let start_line =
-                               FStar_Compiler_Range.line_of_pos start in
+                               FStar_Compiler_Range_Ops.line_of_pos start in
                              start_line <= line) decls
                 | uu___ -> decls in
               let qs =

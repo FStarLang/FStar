@@ -96,11 +96,9 @@ let safe_tcc e t =
 
 let get_type_info_from_type (ty:typ) : Tac type_info =
   match inspect ty with
-  | Tv_Refine bv refin ->
-    let bview : bv_view = inspect_bv bv in
-    let raw_type : typ = bview.bv_sort in
-    let raw_type = prettify_term false raw_type in
-    let b : binder = mk_binder bv in
+  | Tv_Refine bv sort refin ->
+    let raw_type = prettify_term false sort  in
+    let b : binder = mk_binder bv sort in
     let refin = prettify_term false refin in
     let refin = pack (Tv_Abs b refin) in
     mk_type_info raw_type (Some refin)
@@ -194,13 +192,13 @@ let safe_typ_or_comp dbg e t =
                    "\n-comp: " ^ acomp_to_string c);
     Some (TC_Comp c [] 0)
 
-val subst_bv_in_comp : env -> bv -> term -> comp -> Tac comp
-let subst_bv_in_comp e b t c =
-  apply_subst_in_comp e c [(b, t)]
+val subst_bv_in_comp : env -> bv -> typ -> term -> comp -> Tac comp
+let subst_bv_in_comp e b sort t c =
+  apply_subst_in_comp e c [((b, sort), t)]
 
 val subst_binder_in_comp : env -> binder -> term -> comp -> Tac comp
 let subst_binder_in_comp e b t c =
-  subst_bv_in_comp e (bv_of_binder b) t c
+  subst_bv_in_comp e (bv_of_binder b) (binder_sort b) t c
 
 /// Utility for computations: unfold a type until it is of the form Tv_Arrow _ _,
 /// fail otherwise
@@ -242,10 +240,8 @@ let rec unfold_until_arrow e ty0 =
         unfold_until_arrow e ty'
       | _ -> mfail ("unfold_until_arrow: could not unfold: " ^ term_to_string ty0)
       end
-    | Tv_Refine bv ref ->
-      (* Continue with the type of bv *)
-      let ty' = type_of_bv bv in
-      unfold_until_arrow e ty'
+    | Tv_Refine bv sort ref ->
+      unfold_until_arrow e sort
     | Tv_AscribedT body _ _ _
     | Tv_AscribedC body _ _ _ ->
       unfold_until_arrow e body
@@ -337,7 +333,7 @@ val flush_typ_or_comp : bool -> env -> typ_or_comp ->
 /// - the remaining binders
 /// - the instantiation corresponding to the arrows we have stripped so far, and
 ///   which will be applied all at once
-let rec _flush_typ_or_comp_comp (dbg : bool) (e:env) (rem : list binder) (inst : list (bv & term))
+let rec _flush_typ_or_comp_comp (dbg : bool) (e:env) (rem : list binder) (inst : list ((bv & typ) & term))
                                 (c:comp) : Tac comp =
   let flush c inst =
     let inst = List.rev inst in
@@ -356,7 +352,7 @@ let rec _flush_typ_or_comp_comp (dbg : bool) (e:env) (rem : list binder) (inst :
     in
     match inspect ty with
     | Tv_Arrow b' c' ->
-      _flush_typ_or_comp_comp dbg e rem' ((bv_of_binder b', pack (Tv_Var (bv_of_binder b)))::inst) c'
+      _flush_typ_or_comp_comp dbg e rem' (((bv_of_binder b', binder_sort b'), pack (Tv_Var (bv_of_binder b)))::inst) c'
     | _ ->
       mfail ("_flush_typ_or_comp: inconsistent state" ^
              "\n-comp: " ^ acomp_to_string c ^
@@ -494,23 +490,23 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       explore_term dbg dfs f x0 ge1 pl1 c1 body
     | Tv_Arrow br c0 -> x0, Continue (* TODO: we might want to explore that *)
     | Tv_Type _ -> x0, Continue
-    | Tv_Refine bv ref ->
+    | Tv_Refine bv sort ref ->
       let bvv = inspect_bv bv in
-      let x1, flag1 = explore_term dbg dfs f x0 ge0 pl1 None bvv.bv_sort in
+      let x1, flag1 = explore_term dbg dfs f x0 ge0 pl1 None sort in
       if flag1 = Continue then
-        let ge1 = genv_push_bv ge0 bv false None in
+        let ge1 = genv_push_bv ge0 bv sort false None in
         explore_term dbg dfs f x1 ge1 pl1 None ref
       else x1, convert_ctrl_flag flag1
     | Tv_Const _ -> x0, Continue
     | Tv_Uvar _ _ -> x0, Continue
-    | Tv_Let recf attrs bv def body ->
+    | Tv_Let recf attrs bv ty def body ->
       (* Binding definition exploration - for the target computation: initially we
        * used the type of the definition, however it is often unnecessarily complex.
        * Now, we use the type of the binder used for the binding. *)
-      let def_c = Some (TC_Typ (type_of_bv bv) [] 0) in
+      let def_c = Some (TC_Typ ty [] 0) in
       let explore_def x = explore_term dbg dfs f x ge0 pl1 def_c def in
       (* Exploration of the following instructions *)
-      let ge1 = genv_push_bv ge0 bv false (Some def) in
+      let ge1 = genv_push_bv ge0 bv ty false (Some def) in
       let explore_next x = explore_term dbg dfs f x ge1 pl1 c0 body in
       (* Perform the exploration in the proper order *)
       let expl1, expl2 = if dfs then explore_next, explore_def else explore_def, explore_next in
@@ -566,7 +562,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
     in
     fold_left explore_pat (ge0, x, Continue) patterns
   | Pat_Var bv | Pat_Wild bv ->
-    let ge1 = genv_push_bv ge0 bv false None in
+    let ge1 = genv_push_bv ge0 bv (pack_ln Tv_Unknown) false None in // FIXME!!!!!!!!!!!!
     ge1, x, Continue
   | Pat_Dot_Term _ -> ge0, x, Continue
 
@@ -598,14 +594,16 @@ let free_in t =
 
 /// Returns the list of abstract variables appearing in a term, in the order in
 /// which they were introduced in the context.
-val abs_free_in : genv -> term -> Tac (list bv)
+val abs_free_in : genv -> term -> Tac (list (bv & typ))
 let abs_free_in ge t =
   let fvl = free_in t in
   let absl = List.rev (genv_abstract_bvs ge) in
   let is_free_in_term bv =
     Some? (List.Tot.find (bv_eq bv) fvl)
   in
-  let absfree = List.Tot.filter is_free_in_term absl in
+  let absfree = List.Tot.concatMap
+    (fun (bv, ty) -> if is_free_in_term bv then [bv,ty] else []) absl
+  in
   absfree
 
 /// Returns the list of free shadowed variables appearing in a term.

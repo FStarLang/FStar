@@ -92,7 +92,7 @@ val unify_env              : env -> term -> term -> tac bool
 val unify_guard_env        : env -> term -> term -> tac bool
 val match_env              : env -> term -> term -> tac bool
 val launch_process         : string -> list string -> string -> tac string
-val fresh_bv_named         : string -> typ -> tac bv
+val fresh_bv_named         : string -> tac bv
 val change                 : typ -> tac unit
 val get_guard_policy       : unit -> tac guard_policy
 val set_guard_policy       : guard_policy -> tac unit

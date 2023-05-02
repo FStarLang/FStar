@@ -3478,8 +3478,9 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
 
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
-  // Not for the `fail` attribute though! We only keep that one on the first
-  // new decl.
+  // However, we still pass `attrs` to desguar_decl_noattrs so that a Sig_let
+  // can propagate them to individual bindings. Also the `fail` attribute behaves
+  // differentrly! We only keep that one on the first new decl.
   let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
                                          * will shadow a previous val *)
   let attrs = List.map (desugar_term env) d.attrs in
@@ -3493,7 +3494,7 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
       let d = { d with attrs = [] } in
       let errs, r = Errors.catch_errors (fun () ->
                       Options.with_saved_options (fun () ->
-                        desugar_decl_noattrs env d)) in
+                        desugar_decl_noattrs attrs env d)) in
       begin match errs, r with
       | [], Some (env, ses) ->
         (* Succeeded desugaring, carry on, but make a Sig_fail *)
@@ -3529,7 +3530,7 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
         end
       end
     | None ->
-      desugar_decl_noattrs env d
+      desugar_decl_noattrs attrs env d
   in
 
   let rec val_attrs (ses:list sigelt) : list S.term =
@@ -3549,7 +3550,7 @@ and desugar_decl env (d:decl) :(env_t * sigelts) =
   let env, ses = desugar_decl_aux env d in
   env, ses |> List.map generalize_annotated_univs
 
-and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
+and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
   match d.d with
   | Pragma p ->
@@ -3729,6 +3730,13 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                 fvs
                 ([], [])
           in
+          (* Propagate top-level attrs to each lb. The lb.lbattrs field should be empty,
+           * but just being safe here. *)
+          let lbs =
+            let (isrec, lbs0) = lbs in
+            let lbs0 = lbs0 |> List.map (fun lb -> { lb with lbattrs = lb.lbattrs @ val_attrs @ top_attrs }) in
+            (isrec, lbs0)
+          in
           // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
           //   (List.map Print.fv_to_string fvs |> String.concat ", ")
           //   (Print.quals_to_string val_quals)
@@ -3745,19 +3753,11 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
             then S.Logic::quals
             else quals in
           let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
-          (*
-           * AR: we first desugar the term with no attributes and then add attributes in the end, see desugar_decl above
-           *     this used to be fine, because subsequent typechecker then works on terms that have attributes
-           *     however this doesn't work if we want access to the attributes during desugaring, e.g. when warning about deprecated defns.
-           *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms
-           *)
-          let attrs = List.map (desugar_term env) d.attrs in
-          (* GM: Plus the val attrs, concatenated below *)
           let s = { sigel = Sig_let(lbs, names);
                     sigquals = quals;
                     sigrng = d.drange;
-                    sigmeta = default_sigmeta  ;
-                    sigattrs = val_attrs @ attrs;
+                    sigmeta = default_sigmeta;
+                    sigattrs = val_attrs @ top_attrs;
                     sigopts = None; } in
           let env = push_sigelt env s in
           env, [s]

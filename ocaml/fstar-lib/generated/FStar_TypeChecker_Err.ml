@@ -5,7 +5,7 @@ let (info_at_pos :
       Prims.int ->
         Prims.int ->
           ((Prims.string, FStar_Ident.lid) FStar_Pervasives.either *
-            FStar_Syntax_Syntax.typ * FStar_Compiler_Range.range)
+            FStar_Syntax_Syntax.typ * FStar_Compiler_Range_Type.range)
             FStar_Pervasives_Native.option)
   =
   fun env ->
@@ -117,21 +117,22 @@ let (errors_smt_detail :
                   match uu___ with
                   | (e, msg, r, ctx) ->
                       let uu___1 =
-                        if r = FStar_Compiler_Range.dummyRange
+                        if r = FStar_Compiler_Range_Type.dummyRange
                         then
                           let uu___2 = FStar_TypeChecker_Env.get_range env in
                           (e, msg, uu___2, ctx)
                         else
                           (let r' =
-                             let uu___3 = FStar_Compiler_Range.use_range r in
-                             FStar_Compiler_Range.set_def_range r uu___3 in
+                             let uu___3 =
+                               FStar_Compiler_Range_Type.use_range r in
+                             FStar_Compiler_Range_Type.set_def_range r uu___3 in
                            let uu___3 =
                              let uu___4 =
-                               FStar_Compiler_Range.file_of_range r' in
+                               FStar_Compiler_Range_Ops.file_of_range r' in
                              let uu___5 =
                                let uu___6 =
                                  FStar_TypeChecker_Env.get_range env in
-                               FStar_Compiler_Range.file_of_range uu___6 in
+                               FStar_Compiler_Range_Ops.file_of_range uu___6 in
                              uu___4 <> uu___5 in
                            if uu___3
                            then
@@ -139,21 +140,23 @@ let (errors_smt_detail :
                                let uu___5 =
                                  let uu___6 =
                                    let uu___7 =
-                                     FStar_Compiler_Range.string_of_use_range
+                                     FStar_Compiler_Range_Ops.string_of_use_range
                                        r in
                                    let uu___8 =
                                      let uu___9 =
                                        let uu___10 =
                                          let uu___11 =
-                                           FStar_Compiler_Range.use_range r in
+                                           FStar_Compiler_Range_Type.use_range
+                                             r in
                                          let uu___12 =
-                                           FStar_Compiler_Range.def_range r in
+                                           FStar_Compiler_Range_Type.def_range
+                                             r in
                                          uu___11 <> uu___12 in
                                        if uu___10
                                        then
                                          let uu___11 =
                                            let uu___12 =
-                                             FStar_Compiler_Range.string_of_def_range
+                                             FStar_Compiler_Range_Ops.string_of_def_range
                                                r in
                                            Prims.op_Hat uu___12 ")" in
                                          Prims.op_Hat
@@ -187,7 +190,7 @@ let (add_errors :
     fun errs -> add_errors_smt_detail env errs (FStar_Pervasives.Inl "")
 let (log_issue :
   FStar_TypeChecker_Env.env ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       (FStar_Errors_Codes.raw_error * Prims.string) -> unit)
   =
   fun env ->

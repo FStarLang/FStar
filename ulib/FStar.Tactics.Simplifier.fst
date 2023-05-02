@@ -235,12 +235,12 @@ let rec simplify_point () =
             else if is_false p then apply_lemma (`lem_false_imp_p)
             else tiff ()
 
-        | Forall b p ->
+        | Forall _b _sort p ->
                  if is_true p  then apply_lemma (`lem_fa_true)
             else if is_false p then or_else (fun () -> apply_lemma (`lem_fa_false); inhabit ()) tiff
             else tiff ()
 
-        | Exists b p ->
+        | Exists _b _sort p ->
                  if is_false p then apply_lemma (`lem_ex_false)
             else if is_true  p then or_else (fun () -> apply_lemma (`lem_ex_true); inhabit ()) tiff
             else tiff ()
@@ -282,12 +282,12 @@ and recurse () : Tac unit =
         | Implies _ _ ->
             seq (fun () -> apply_lemma (`imp_cong)) simplify_point
 
-        | Forall _ _ ->
+        | Forall _ _ _ ->
             apply_lemma (`fa_cong);
             let _ = intro () in
             simplify_point ()
 
-        | Exists _ _ ->
+        | Exists _ _ _ ->
             apply_lemma (`ex_cong);
             let _ = intro () in
             simplify_point ()

@@ -334,7 +334,7 @@ val launch_process : string -> list string -> string -> Tac string
 (** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh inaccessible integer within
 the bv too. *)
-val fresh_bv_named : string -> typ -> Tac bv
+val fresh_bv_named : string -> Tac bv
 
 (** Change the goal to another type, given that it is convertible
 to the current type. *)

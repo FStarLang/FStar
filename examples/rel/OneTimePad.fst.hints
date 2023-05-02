@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "88814e2064db669276a2203279475356"
+      "c87c6b5b8314e10e072d3d386be6e00b"
     ],
     [
       "OneTimePad.xor_at",
@@ -89,7 +89,7 @@
         "token_correspondence_OneTimePad.xor"
       ],
       0,
-      "9007efb50e7f59f07c4862a0555e4b76"
+      "7ef1b6e137947d95a6067e75ff445e2a"
     ],
     [
       "OneTimePad.one_time_pad_ok",
@@ -127,7 +127,7 @@
         "token_correspondence_OneTimePad.xor_at", "typing_OneTimePad.xor_b"
       ],
       0,
-      "38c05ae00e96391ffecd713bd20f7495"
+      "8986371d99ced9984d288d1dc78fd0b0"
     ]
   ]
 ]

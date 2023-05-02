@@ -5,9 +5,9 @@ type constant =
   | Unit 
   | Bool of Prims.bool 
   | Int of FStar_BigInt.t 
-  | String of (Prims.string * FStar_Compiler_Range.range) 
+  | String of (Prims.string * FStar_Compiler_Range_Type.range) 
   | Char of FStar_Char.char 
-  | Range of FStar_Compiler_Range.range 
+  | Range of FStar_Compiler_Range_Type.range 
   | SConst of FStar_Const.sconst 
 let (uu___is_Unit : constant -> Prims.bool) =
   fun projectee -> match projectee with | Unit -> true | uu___ -> false
@@ -22,7 +22,7 @@ let (__proj__Int__item___0 : constant -> FStar_BigInt.t) =
 let (uu___is_String : constant -> Prims.bool) =
   fun projectee -> match projectee with | String _0 -> true | uu___ -> false
 let (__proj__String__item___0 :
-  constant -> (Prims.string * FStar_Compiler_Range.range)) =
+  constant -> (Prims.string * FStar_Compiler_Range_Type.range)) =
   fun projectee -> match projectee with | String _0 -> _0
 let (uu___is_Char : constant -> Prims.bool) =
   fun projectee -> match projectee with | Char _0 -> true | uu___ -> false
@@ -30,7 +30,7 @@ let (__proj__Char__item___0 : constant -> FStar_Char.char) =
   fun projectee -> match projectee with | Char _0 -> _0
 let (uu___is_Range : constant -> Prims.bool) =
   fun projectee -> match projectee with | Range _0 -> true | uu___ -> false
-let (__proj__Range__item___0 : constant -> FStar_Compiler_Range.range) =
+let (__proj__Range__item___0 : constant -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | Range _0 -> _0
 let (uu___is_SConst : constant -> Prims.bool) =
   fun projectee -> match projectee with | SConst _0 -> true | uu___ -> false
@@ -84,7 +84,7 @@ and t' =
   FStar_Syntax_Syntax.aqual) Prims.list * Prims.int * Prims.bool Prims.list) 
 and t = {
   nbe_t: t' ;
-  nbe_r: FStar_Compiler_Range.range }
+  nbe_r: FStar_Compiler_Range_Type.range }
 and comp =
   | Tot of t 
   | GTot of t 
@@ -258,7 +258,7 @@ let (__proj__LocalLetRec__item___0 :
   = fun projectee -> match projectee with | LocalLetRec _0 -> _0
 let (__proj__Mkt__item__nbe_t : t -> t') =
   fun projectee -> match projectee with | { nbe_t; nbe_r;_} -> nbe_t
-let (__proj__Mkt__item__nbe_r : t -> FStar_Compiler_Range.range) =
+let (__proj__Mkt__item__nbe_r : t -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | { nbe_t; nbe_r;_} -> nbe_r
 let (uu___is_Tot : comp -> Prims.bool) =
   fun projectee -> match projectee with | Tot _0 -> true | uu___ -> false
@@ -380,9 +380,10 @@ let (isAccu : t -> Prims.bool) =
   fun trm -> match trm.nbe_t with | Accu uu___ -> true | uu___ -> false
 let (isNotAccu : t -> Prims.bool) =
   fun x -> match x.nbe_t with | Accu (uu___, uu___1) -> false | uu___ -> true
-let (mk_rt : FStar_Compiler_Range.range -> t' -> t) =
+let (mk_rt : FStar_Compiler_Range_Type.range -> t' -> t) =
   fun r -> fun t1 -> { nbe_t = t1; nbe_r = r }
-let (mk_t : t' -> t) = fun t1 -> mk_rt FStar_Compiler_Range.dummyRange t1
+let (mk_t : t' -> t) =
+  fun t1 -> mk_rt FStar_Compiler_Range_Type.dummyRange t1
 let (nbe_t_of_t : t -> t') = fun t1 -> t1.nbe_t
 let (mkConstruct :
   FStar_Syntax_Syntax.fv ->
@@ -550,7 +551,7 @@ let (constant_to_string : constant -> Prims.string) =
           (FStar_Compiler_Util.string_of_char c1)
     | String (s, uu___) -> FStar_Compiler_Util.format1 "\"%s\"" s
     | Range r ->
-        let uu___ = FStar_Compiler_Range.string_of_range r in
+        let uu___ = FStar_Compiler_Range_Ops.string_of_range r in
         FStar_Compiler_Util.format1 "Range %s" uu___
     | SConst s -> FStar_Syntax_Print.const_to_string s
 let rec (t_to_string : t -> Prims.string) =
@@ -913,7 +914,7 @@ let (e_char : FStar_Char.char embedding) =
     FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_char in
   mk_emb' em un uu___ uu___1
 let (e_string : Prims.string embedding) =
-  let em _cb s = Constant (String (s, FStar_Compiler_Range.dummyRange)) in
+  let em _cb s = Constant (String (s, FStar_Compiler_Range_Type.dummyRange)) in
   let un _cb s =
     match s with
     | Constant (String (s1, uu___)) -> FStar_Pervasives_Native.Some s1
@@ -1199,7 +1200,7 @@ let e_either :
         lid_as_typ FStar_Parser_Const.either_lid
           [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero] uu___1 in
       mk_emb em un uu___ etyp
-let (e_range : FStar_Compiler_Range.range embedding) =
+let (e_range : FStar_Compiler_Range_Type.range embedding) =
   let em cb r = Constant (Range r) in
   let un cb t1 =
     match t1 with
@@ -1535,7 +1536,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
               FStar_Compiler_Util.format1 "Not an embedded norm_step: %s"
                 uu___4 in
             (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
-          FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
+          FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   let uu___ =
     let uu___1 =
@@ -1827,7 +1828,7 @@ let (string_of_list' : FStar_Char.char Prims.list -> t) =
   fun l ->
     let s = FStar_String.string_of_list l in
     FStar_Compiler_Effect.op_Less_Bar mk_t
-      (Constant (String (s, FStar_Compiler_Range.dummyRange)))
+      (Constant (String (s, FStar_Compiler_Range_Type.dummyRange)))
 let (string_compare' : Prims.string -> Prims.string -> t) =
   fun s1 ->
     fun s2 ->
@@ -2010,12 +2011,12 @@ let (mk_range : args -> t FStar_Pervasives_Native.option) =
                let uu___1 =
                  let uu___2 = FStar_BigInt.to_int_fs from_l in
                  let uu___3 = FStar_BigInt.to_int_fs from_c in
-                 FStar_Compiler_Range.mk_pos uu___2 uu___3 in
+                 FStar_Compiler_Range_Type.mk_pos uu___2 uu___3 in
                let uu___2 =
                  let uu___3 = FStar_BigInt.to_int_fs to_l in
                  let uu___4 = FStar_BigInt.to_int_fs to_c in
-                 FStar_Compiler_Range.mk_pos uu___3 uu___4 in
-               FStar_Compiler_Range.mk_range fn1 uu___1 uu___2 in
+                 FStar_Compiler_Range_Type.mk_pos uu___3 uu___4 in
+               FStar_Compiler_Range_Type.mk_range fn1 uu___1 uu___2 in
              let uu___1 = embed e_range bogus_cbs r in
              FStar_Pervasives_Native.Some uu___1
          | uu___1 -> FStar_Pervasives_Native.None)

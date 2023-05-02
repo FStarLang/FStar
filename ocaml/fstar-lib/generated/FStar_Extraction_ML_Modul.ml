@@ -24,18 +24,18 @@ let (fail_exp :
                         let uu___11 =
                           let uu___12 = FStar_Syntax_Print.lid_to_string lid in
                           Prims.op_Hat "Not yet implemented:" uu___12 in
-                        (uu___11, FStar_Compiler_Range.dummyRange) in
+                        (uu___11, FStar_Compiler_Range_Type.dummyRange) in
                       FStar_Const.Const_string uu___10 in
                     FStar_Syntax_Syntax.Tm_constant uu___9 in
                   FStar_Syntax_Syntax.mk uu___8
-                    FStar_Compiler_Range.dummyRange in
+                    FStar_Compiler_Range_Type.dummyRange in
                 FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.as_arg
                   uu___7 in
               [uu___6] in
             uu___4 :: uu___5 in
           (uu___2, uu___3) in
         FStar_Syntax_Syntax.Tm_app uu___1 in
-      FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+      FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (always_fail :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -1120,7 +1120,7 @@ let (extract_reifiable_effect :
          | uu___2 ->
              let uu___3 =
                let uu___4 =
-                 FStar_Compiler_Range.string_of_range
+                 FStar_Compiler_Range_Ops.string_of_range
                    tm.FStar_Syntax_Syntax.pos in
                let uu___5 = FStar_Syntax_Print.term_to_string tm in
                FStar_Compiler_Util.format2 "(%s) Not an fv: %s" uu___4 uu___5 in

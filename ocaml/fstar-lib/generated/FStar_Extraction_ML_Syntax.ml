@@ -323,8 +323,8 @@ type meta =
   | CMacro 
   | Deprecated of Prims.string 
   | RemoveUnusedTypeParameters of (Prims.int Prims.list *
-  FStar_Compiler_Range.range) 
-  | HasValDecl of FStar_Compiler_Range.range 
+  FStar_Compiler_Range_Type.range) 
+  | HasValDecl of FStar_Compiler_Range_Type.range 
 let (uu___is_Mutable : meta -> Prims.bool) =
   fun projectee -> match projectee with | Mutable -> true | uu___ -> false
 let (uu___is_Assumed : meta -> Prims.bool) =
@@ -396,13 +396,13 @@ let (uu___is_RemoveUnusedTypeParameters : meta -> Prims.bool) =
     | RemoveUnusedTypeParameters _0 -> true
     | uu___ -> false
 let (__proj__RemoveUnusedTypeParameters__item___0 :
-  meta -> (Prims.int Prims.list * FStar_Compiler_Range.range)) =
+  meta -> (Prims.int Prims.list * FStar_Compiler_Range_Type.range)) =
   fun projectee -> match projectee with | RemoveUnusedTypeParameters _0 -> _0
 let (uu___is_HasValDecl : meta -> Prims.bool) =
   fun projectee ->
     match projectee with | HasValDecl _0 -> true | uu___ -> false
-let (__proj__HasValDecl__item___0 : meta -> FStar_Compiler_Range.range) =
-  fun projectee -> match projectee with | HasValDecl _0 -> _0
+let (__proj__HasValDecl__item___0 : meta -> FStar_Compiler_Range_Type.range)
+  = fun projectee -> match projectee with | HasValDecl _0 -> _0
 type metadata = meta Prims.list
 type mlletflavor =
   | Rec 

@@ -1,3 +1,5 @@
+open FStar_Json
+
 let max_int = Z.of_int max_int
 let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
 let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
@@ -527,14 +529,6 @@ let colorize_cyan s =
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
-
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of Z.t
-| JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -1235,40 +1229,6 @@ let read_hints (filename: string) : hints_read_result =
       MalformedJson
    | Sys_error _ ->
       UnableToOpen
-
-(** Interactive protocol **)
-
-exception UnsupportedJson
-
-let json_of_yojson yjs: json option =
-  let rec aux yjs =
-    match yjs with
-    | `Null -> JsonNull
-    | `Bool b -> JsonBool b
-    | `Int i -> JsonInt (Z.of_int i)
-    | `String s -> JsonStr s
-    | `List l -> JsonList (List.map aux l)
-    | `Assoc a -> JsonAssoc (List.map (fun (k, v) -> (k, aux v)) a)
-    | _ -> raise UnsupportedJson in
-  try Some (aux yjs) with UnsupportedJson -> None
-
-let rec yojson_of_json js =
-  match js with
-  | JsonNull -> `Null
-  | JsonBool b -> `Bool b
-  | JsonInt i -> `Int (Z.to_int i)
-  | JsonStr s -> `String s
-  | JsonList l -> `List (List.map yojson_of_json l)
-  | JsonAssoc a -> `Assoc (List.map (fun (k, v) -> (k, yojson_of_json v)) a)
-
-let json_of_string str : json option =
-  let open Yojson.Basic in
-  try
-    json_of_yojson (Yojson.Basic.from_string str)
-  with Yojson.Json_error _ -> None
-
-let string_of_json json =
-  Yojson.Basic.to_string (yojson_of_json json)
 
 (* Outside of this file the reference to FStar_Util.ref must use the following combinators *)
 (* Export it at the end of the file so that we don't break other internal uses of ref *)

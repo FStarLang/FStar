@@ -26,6 +26,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
+open FStar.Json
 
 module Errors     = FStar.Errors
 module U          = FStar.Compiler.Util
@@ -750,7 +751,11 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_assume(lid, us, f) ->
         if Options.print_universes () then U.format3 "assume %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
         else U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
-      | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
+      | Sig_let(lbs, _) ->
+        (* FIXME: do not print the propagated qualifiers on top-level letbindings,
+        vale fails when parsing them. *)
+        let lbs = (fst lbs, List.map (fun lb -> { lb with lbattrs = [] }) (snd lbs)) in
+        lbs_to_string x.sigquals lbs
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_fail (errs, lax, ses) ->
         U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
@@ -912,3 +917,11 @@ let rec emb_typ_to_string = function
     | ET_app (h, []) -> h
     | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
     | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
+
+let fv_qual_to_string fvq =
+  match fvq with
+  | Data_ctor -> "Data_ctor"
+  | Record_projector _ -> "Record_projector _"
+  | Record_ctor _ -> "Record_ctor _"
+  | Unresolved_projector _ -> "Unresolved_projector _"
+  | Unresolved_constructor _ -> "Unresolved_constructor _"

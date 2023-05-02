@@ -131,7 +131,7 @@ let (namespace_of_module :
   fun f ->
     let lid =
       let uu___ = FStar_Ident.path_of_text f in
-      FStar_Ident.lid_of_path uu___ FStar_Compiler_Range.dummyRange in
+      FStar_Ident.lid_of_path uu___ FStar_Compiler_Range_Type.dummyRange in
     let uu___ = FStar_Ident.ns_of_lid lid in
     match uu___ with
     | [] -> FStar_Pervasives_Native.None
@@ -520,7 +520,8 @@ let (cache_file_name : Prims.string -> Prims.string) =
                   "Did not expect %s to be already checked, but found it in an unexpected location %s instead of %s"
                   mname path uu___5 in
               (FStar_Errors_Codes.Warning_UnexpectedCheckedFile, uu___4) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___3
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___3
           else ());
          (let uu___2 =
             (FStar_Compiler_Util.file_exists expected_cache_file) &&
@@ -935,8 +936,8 @@ let (enter_namespace :
                              "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
                              prefix1 suffix str str in
                          (FStar_Errors_Codes.Warning_UnexpectedFile, uu___4) in
-                       FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                         uu___3
+                       FStar_Errors.log_issue
+                         FStar_Compiler_Range_Type.dummyRange uu___3
                      else ());
                     (let filename =
                        let uu___3 =
@@ -1276,7 +1277,6 @@ let (collect_one :
              | FStar_Parser_AST.Polymonadic_subcomp (uu___2, uu___3, t) ->
                  collect_term t
              | FStar_Parser_AST.Pragma uu___2 -> ()
-             | FStar_Parser_AST.DeclSyntaxExtension uu___2 -> ()
              | FStar_Parser_AST.TopLevelModule lid ->
                  (FStar_Compiler_Util.incr num_of_toplevelmods;
                   (let uu___3 =
@@ -2691,10 +2691,10 @@ let (print_full : deps -> unit) =
                  let mn = lowercase_module_name fsti in
                  let range_of_file fsti1 =
                    let r =
-                     FStar_Compiler_Range.set_file_of_range
-                       FStar_Compiler_Range.dummyRange fsti1 in
-                   let uu___2 = FStar_Compiler_Range.def_range r in
-                   FStar_Compiler_Range.set_use_range r uu___2 in
+                     FStar_Compiler_Range_Ops.set_file_of_range
+                       FStar_Compiler_Range_Type.dummyRange fsti1 in
+                   let uu___2 = FStar_Compiler_Range_Type.def_range r in
+                   FStar_Compiler_Range_Type.set_use_range r uu___2 in
                  let uu___2 =
                    let uu___3 = has_implementation deps1.file_system_map mn in
                    Prims.op_Negation uu___3 in

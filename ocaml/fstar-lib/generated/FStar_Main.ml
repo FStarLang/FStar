@@ -200,13 +200,13 @@ let go : 'uuuuu . 'uuuuu -> unit =
                             (match filenames with
                              | [] ->
                                  (FStar_Errors.log_issue
-                                    FStar_Compiler_Range.dummyRange
+                                    FStar_Compiler_Range_Type.dummyRange
                                     (FStar_Errors_Codes.Error_MissingFileName,
                                       "--ide: Name of current file missing in command line invocation\n");
                                   FStar_Compiler_Effect.exit Prims.int_one)
                              | uu___13::uu___14::uu___15 ->
                                  (FStar_Errors.log_issue
-                                    FStar_Compiler_Range.dummyRange
+                                    FStar_Compiler_Range_Type.dummyRange
                                     (FStar_Errors_Codes.Error_TooManyFiles,
                                       "--ide: Too many files in command line invocation\n");
                                   FStar_Compiler_Effect.exit Prims.int_one)
@@ -251,7 +251,7 @@ let go : 'uuuuu . 'uuuuu -> unit =
                              FStar_Errors.raise_error
                                (FStar_Errors_Codes.Error_MissingFileName,
                                  "No file provided")
-                               FStar_Compiler_Range.dummyRange)))))))
+                               FStar_Compiler_Range_Type.dummyRange)))))))
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
     FStar_Syntax_Syntax.lazyinfo ->

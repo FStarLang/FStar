@@ -166,14 +166,14 @@ type term' =
   | Quant of (qop * term Prims.list Prims.list * Prims.int
   FStar_Pervasives_Native.option * sort Prims.list * term) 
   | Let of (term Prims.list * term) 
-  | Labeled of (term * Prims.string * FStar_Compiler_Range.range) 
+  | Labeled of (term * Prims.string * FStar_Compiler_Range_Type.range) 
   | LblPos of (term * Prims.string) 
 and term =
   {
   tm: term' ;
   freevars:
     (Prims.string * sort * Prims.bool) Prims.list FStar_Syntax_Syntax.memo ;
-  rng: FStar_Compiler_Range.range }
+  rng: FStar_Compiler_Range_Type.range }
 let (uu___is_Integer : term' -> Prims.bool) =
   fun projectee -> match projectee with | Integer _0 -> true | uu___ -> false
 let (__proj__Integer__item___0 : term' -> Prims.string) =
@@ -212,7 +212,7 @@ let (__proj__Let__item___0 : term' -> (term Prims.list * term)) =
 let (uu___is_Labeled : term' -> Prims.bool) =
   fun projectee -> match projectee with | Labeled _0 -> true | uu___ -> false
 let (__proj__Labeled__item___0 :
-  term' -> (term * Prims.string * FStar_Compiler_Range.range)) =
+  term' -> (term * Prims.string * FStar_Compiler_Range_Type.range)) =
   fun projectee -> match projectee with | Labeled _0 -> _0
 let (uu___is_LblPos : term' -> Prims.bool) =
   fun projectee -> match projectee with | LblPos _0 -> true | uu___ -> false
@@ -225,7 +225,7 @@ let (__proj__Mkterm__item__freevars :
     (Prims.string * sort * Prims.bool) Prims.list FStar_Syntax_Syntax.memo)
   =
   fun projectee -> match projectee with | { tm; freevars; rng;_} -> freevars
-let (__proj__Mkterm__item__rng : term -> FStar_Compiler_Range.range) =
+let (__proj__Mkterm__item__rng : term -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | { tm; freevars; rng;_} -> rng
 type pat = term
 type fv = (Prims.string * sort * Prims.bool)
@@ -462,7 +462,7 @@ let (fv_sort : fv -> sort) =
 let (fv_force : fv -> Prims.bool) =
   fun x ->
     let uu___ = x in match uu___ with | (uu___1, uu___2, force) -> force
-type error_label = (fv * Prims.string * FStar_Compiler_Range.range)
+type error_label = (fv * Prims.string * FStar_Compiler_Range_Type.range)
 type error_labels = error_label Prims.list
 let (fv_eq : fv -> fv -> Prims.bool) =
   fun x ->
@@ -600,7 +600,7 @@ let rec (hash_of_term' : term' -> Prims.string) =
     | Labeled (t1, r1, r2) ->
         let uu___ = hash_of_term t1 in
         let uu___1 =
-          let uu___2 = FStar_Compiler_Range.string_of_range r2 in
+          let uu___2 = FStar_Compiler_Range_Ops.string_of_range r2 in
           Prims.op_Hat r1 uu___2 in
         Prims.op_Hat uu___ uu___1
     | LblPos (t1, r) ->
@@ -683,47 +683,49 @@ let (isInjective : Prims.string -> Prims.bool) =
            FStar_Compiler_List.existsML (fun c -> c = 46) uu___1 in
          Prims.op_Negation uu___)
     else false
-let (mk : term' -> FStar_Compiler_Range.range -> term) =
+let (mk : term' -> FStar_Compiler_Range_Type.range -> term) =
   fun t ->
     fun r ->
       let uu___ = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
       { tm = t; freevars = uu___; rng = r }
-let (mkTrue : FStar_Compiler_Range.range -> term) =
+let (mkTrue : FStar_Compiler_Range_Type.range -> term) =
   fun r -> mk (App (TrueOp, [])) r
-let (mkFalse : FStar_Compiler_Range.range -> term) =
+let (mkFalse : FStar_Compiler_Range_Type.range -> term) =
   fun r -> mk (App (FalseOp, [])) r
 let (mkUnreachable : term) =
-  mk (App ((Var "Unreachable"), [])) FStar_Compiler_Range.dummyRange
-let (mkInteger : Prims.string -> FStar_Compiler_Range.range -> term) =
+  mk (App ((Var "Unreachable"), [])) FStar_Compiler_Range_Type.dummyRange
+let (mkInteger : Prims.string -> FStar_Compiler_Range_Type.range -> term) =
   fun i ->
     fun r ->
       let uu___ =
         let uu___1 = FStar_Compiler_Util.ensure_decimal i in Integer uu___1 in
       mk uu___ r
-let (mkInteger' : Prims.int -> FStar_Compiler_Range.range -> term) =
+let (mkInteger' : Prims.int -> FStar_Compiler_Range_Type.range -> term) =
   fun i ->
     fun r ->
       let uu___ = FStar_Compiler_Util.string_of_int i in mkInteger uu___ r
-let (mkReal : Prims.string -> FStar_Compiler_Range.range -> term) =
+let (mkReal : Prims.string -> FStar_Compiler_Range_Type.range -> term) =
   fun i -> fun r -> mk (Real i) r
-let (mkBoundV : Prims.int -> FStar_Compiler_Range.range -> term) =
+let (mkBoundV : Prims.int -> FStar_Compiler_Range_Type.range -> term) =
   fun i -> fun r -> mk (BoundV i) r
-let (mkFreeV : fv -> FStar_Compiler_Range.range -> term) =
+let (mkFreeV : fv -> FStar_Compiler_Range_Type.range -> term) =
   fun x -> fun r -> mk (FreeV x) r
-let (mkApp' : (op * term Prims.list) -> FStar_Compiler_Range.range -> term) =
+let (mkApp' :
+  (op * term Prims.list) -> FStar_Compiler_Range_Type.range -> term) =
   fun f -> fun r -> mk (App f) r
 let (mkApp :
-  (Prims.string * term Prims.list) -> FStar_Compiler_Range.range -> term) =
+  (Prims.string * term Prims.list) -> FStar_Compiler_Range_Type.range -> term)
+  =
   fun uu___ ->
     fun r -> match uu___ with | (s, args) -> mk (App ((Var s), args)) r
-let (mkNot : term -> FStar_Compiler_Range.range -> term) =
+let (mkNot : term -> FStar_Compiler_Range_Type.range -> term) =
   fun t ->
     fun r ->
       match t.tm with
       | App (TrueOp, uu___) -> mkFalse r
       | App (FalseOp, uu___) -> mkTrue r
       | uu___ -> mkApp' (Not, [t]) r
-let (mkAnd : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkAnd : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun uu___ ->
     fun r ->
       match uu___ with
@@ -739,7 +741,7 @@ let (mkAnd : (term * term) -> FStar_Compiler_Range.range -> term) =
            | (App (And, ts1), uu___1) ->
                mkApp' (And, (FStar_Compiler_List.op_At ts1 [t2])) r
            | uu___1 -> mkApp' (And, [t1; t2]) r)
-let (mkOr : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkOr : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun uu___ ->
     fun r ->
       match uu___ with
@@ -755,7 +757,7 @@ let (mkOr : (term * term) -> FStar_Compiler_Range.range -> term) =
            | (App (Or, ts1), uu___1) ->
                mkApp' (Or, (FStar_Compiler_List.op_At ts1 [t2])) r
            | uu___1 -> mkApp' (Or, [t1; t2]) r)
-let (mkImp : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkImp : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun uu___ ->
     fun r ->
       match uu___ with
@@ -770,30 +772,32 @@ let (mkImp : (term * term) -> FStar_Compiler_Range.range -> term) =
                  (Imp, uu___3) in
                mkApp' uu___2 r
            | uu___1 -> mkApp' (Imp, [t1; t2]) r)
-let (mk_bin_op : op -> (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mk_bin_op :
+  op -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun op1 ->
     fun uu___ ->
       fun r -> match uu___ with | (t1, t2) -> mkApp' (op1, [t1; t2]) r
-let (mkMinus : term -> FStar_Compiler_Range.range -> term) =
+let (mkMinus : term -> FStar_Compiler_Range_Type.range -> term) =
   fun t -> fun r -> mkApp' (Minus, [t]) r
-let (mkNatToBv : Prims.int -> term -> FStar_Compiler_Range.range -> term) =
+let (mkNatToBv :
+  Prims.int -> term -> FStar_Compiler_Range_Type.range -> term) =
   fun sz -> fun t -> fun r -> mkApp' ((NatToBv sz), [t]) r
-let (mkBvUext : Prims.int -> term -> FStar_Compiler_Range.range -> term) =
-  fun sz -> fun t -> fun r -> mkApp' ((BvUext sz), [t]) r
-let (mkBvToNat : term -> FStar_Compiler_Range.range -> term) =
+let (mkBvUext : Prims.int -> term -> FStar_Compiler_Range_Type.range -> term)
+  = fun sz -> fun t -> fun r -> mkApp' ((BvUext sz), [t]) r
+let (mkBvToNat : term -> FStar_Compiler_Range_Type.range -> term) =
   fun t -> fun r -> mkApp' (BvToNat, [t]) r
-let (mkBvAnd : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkBvAnd : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op BvAnd
-let (mkBvXor : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkBvXor : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op BvXor
-let (mkBvOr : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkBvOr : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op BvOr
-let (mkBvAdd : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkBvAdd : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op BvAdd
-let (mkBvSub : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkBvSub : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op BvSub
 let (mkBvShl :
-  Prims.int -> (term * term) -> FStar_Compiler_Range.range -> term) =
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->
     fun uu___ ->
       fun r ->
@@ -806,7 +810,7 @@ let (mkBvShl :
               (BvShl, uu___2) in
             mkApp' uu___1 r
 let (mkBvShr :
-  Prims.int -> (term * term) -> FStar_Compiler_Range.range -> term) =
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->
     fun uu___ ->
       fun r ->
@@ -819,7 +823,7 @@ let (mkBvShr :
               (BvShr, uu___2) in
             mkApp' uu___1 r
 let (mkBvUdiv :
-  Prims.int -> (term * term) -> FStar_Compiler_Range.range -> term) =
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->
     fun uu___ ->
       fun r ->
@@ -832,7 +836,7 @@ let (mkBvUdiv :
               (BvUdiv, uu___2) in
             mkApp' uu___1 r
 let (mkBvMod :
-  Prims.int -> (term * term) -> FStar_Compiler_Range.range -> term) =
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->
     fun uu___ ->
       fun r ->
@@ -845,7 +849,7 @@ let (mkBvMod :
               (BvMod, uu___2) in
             mkApp' uu___1 r
 let (mkBvMul :
-  Prims.int -> (term * term) -> FStar_Compiler_Range.range -> term) =
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->
     fun uu___ ->
       fun r ->
@@ -857,11 +861,11 @@ let (mkBvMul :
                   :: uu___3 in
               (BvMul, uu___2) in
             mkApp' uu___1 r
-let (mkBvUlt : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkBvUlt : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op BvUlt
-let (mkIff : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkIff : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op Iff
-let (mkEq : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkEq : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun uu___ ->
     fun r ->
       match uu___ with
@@ -870,29 +874,30 @@ let (mkEq : (term * term) -> FStar_Compiler_Range.range -> term) =
            | (App (Var f1, s1::[]), App (Var f2, s2::[])) when
                (f1 = f2) && (isInjective f1) -> mk_bin_op Eq (s1, s2) r
            | uu___1 -> mk_bin_op Eq (t1, t2) r)
-let (mkLT : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkLT : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op LT
-let (mkLTE : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkLTE : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op LTE
-let (mkGT : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkGT : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op GT
-let (mkGTE : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkGTE : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op GTE
-let (mkAdd : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkAdd : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op Add
-let (mkSub : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkSub : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op Sub
-let (mkDiv : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkDiv : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op Div
-let (mkRealDiv : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkRealDiv : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op RealDiv
-let (mkMul : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkMul : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op Mul
-let (mkMod : (term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkMod : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op Mod
-let (mkRealOfInt : term -> FStar_Compiler_Range.range -> term) =
+let (mkRealOfInt : term -> FStar_Compiler_Range_Type.range -> term) =
   fun t -> fun r -> mkApp ("to_real", [t]) r
-let (mkITE : (term * term * term) -> FStar_Compiler_Range.range -> term) =
+let (mkITE : (term * term * term) -> FStar_Compiler_Range_Type.range -> term)
+  =
   fun uu___ ->
     fun r ->
       match uu___ with
@@ -908,7 +913,7 @@ let (mkITE : (term * term * term) -> FStar_Compiler_Range.range -> term) =
                     mkImp uu___4 r
                 | (uu___2, App (TrueOp, uu___3)) -> mkImp (t1, t2) r
                 | (uu___2, uu___3) -> mkApp' (ITE, [t1; t2; t3]) r))
-let (mkCases : term Prims.list -> FStar_Compiler_Range.range -> term) =
+let (mkCases : term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
   fun t ->
     fun r ->
       match t with
@@ -1027,7 +1032,7 @@ and (print_smt_term_list_list : term Prims.list Prims.list -> Prims.string) =
              Prims.op_Hat "; [ " uu___1 in
            Prims.op_Hat s uu___) "" l
 let (mkQuant :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     Prims.bool ->
       (qop * term Prims.list Prims.list * Prims.int
         FStar_Pervasives_Native.option * sort Prims.list * term) -> term)
@@ -1070,8 +1075,8 @@ let (mkQuant :
                        (qop1, uu___5, wopt, vars, body) in
                      Quant uu___4 in
                    mk uu___3 r)
-let (mkLet : (term Prims.list * term) -> FStar_Compiler_Range.range -> term)
-  =
+let (mkLet :
+  (term Prims.list * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun uu___ ->
     fun r ->
       match uu___ with
@@ -1208,7 +1213,7 @@ let (inst : term Prims.list -> term -> term) =
 let (subst : term -> fv -> term -> term) =
   fun t -> fun fv1 -> fun s -> let uu___ = abstr [fv1] t in inst [s] uu___
 let (mkQuant' :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (qop * term Prims.list Prims.list * Prims.int
       FStar_Pervasives_Native.option * fv Prims.list * term) -> term)
   =
@@ -1226,7 +1231,7 @@ let (mkQuant' :
             (qop1, uu___2, wopt, uu___3, uu___4) in
           mkQuant r true uu___1
 let (mkForall :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (pat Prims.list Prims.list * fvs * term) -> term)
   =
   fun r ->
@@ -1235,7 +1240,7 @@ let (mkForall :
       | (pats, vars, body) ->
           mkQuant' r (Forall, pats, FStar_Pervasives_Native.None, vars, body)
 let (mkForall'' :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (pat Prims.list Prims.list * Prims.int FStar_Pervasives_Native.option *
       sort Prims.list * term) -> term)
   =
@@ -1245,7 +1250,7 @@ let (mkForall'' :
       | (pats, wopt, sorts, body) ->
           mkQuant r true (Forall, pats, wopt, sorts, body)
 let (mkForall' :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (pat Prims.list Prims.list * Prims.int FStar_Pervasives_Native.option *
       fvs * term) -> term)
   =
@@ -1255,7 +1260,7 @@ let (mkForall' :
       | (pats, wopt, vars, body) ->
           mkQuant' r (Forall, pats, wopt, vars, body)
 let (mkExists :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (pat Prims.list Prims.list * fvs * term) -> term)
   =
   fun r ->
@@ -1264,7 +1269,8 @@ let (mkExists :
       | (pats, vars, body) ->
           mkQuant' r (Exists, pats, FStar_Pervasives_Native.None, vars, body)
 let (mkLet' :
-  ((fv * term) Prims.list * term) -> FStar_Compiler_Range.range -> term) =
+  ((fv * term) Prims.list * term) -> FStar_Compiler_Range_Type.range -> term)
+  =
   fun uu___ ->
     fun r ->
       match uu___ with
@@ -1274,7 +1280,8 @@ let (mkLet' :
            | (vars, es) ->
                let uu___2 = let uu___3 = abstr vars body in (es, uu___3) in
                mkLet uu___2 r)
-let (norng : FStar_Compiler_Range.range) = FStar_Compiler_Range.dummyRange
+let (norng : FStar_Compiler_Range_Type.range) =
+  FStar_Compiler_Range_Type.dummyRange
 let (mkDefineFun :
   (Prims.string * fv Prims.list * sort * term * caption) -> decl) =
   fun uu___ ->
@@ -1317,7 +1324,7 @@ let (fresh_token : (Prims.string * sort) -> Prims.int -> decl) =
             } in
           Assume a
 let (fresh_constructor :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (Prims.string * sort Prims.list * sort * Prims.int) -> decl)
   =
   fun rng ->
@@ -1364,7 +1371,7 @@ let (fresh_constructor :
             } in
           Assume a
 let (injective_constructor :
-  FStar_Compiler_Range.range ->
+  FStar_Compiler_Range_Type.range ->
     (Prims.string * constructor_field Prims.list * sort) -> decl Prims.list)
   =
   fun rng ->
@@ -1432,7 +1439,7 @@ let (injective_constructor :
           FStar_Compiler_Effect.op_Bar_Greater uu___1
             FStar_Compiler_List.flatten
 let (constructor_to_decl :
-  FStar_Compiler_Range.range -> constructor_t -> decl Prims.list) =
+  FStar_Compiler_Range_Type.range -> constructor_t -> decl Prims.list) =
   fun rng ->
     fun uu___ ->
       match uu___ with
@@ -1712,8 +1719,8 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
           let s = aux' depth n names t1 in
           if print_ranges && (t1.rng <> norng)
           then
-            let uu___ = FStar_Compiler_Range.string_of_range t1.rng in
-            let uu___1 = FStar_Compiler_Range.string_of_use_range t1.rng in
+            let uu___ = FStar_Compiler_Range_Ops.string_of_range t1.rng in
+            let uu___1 = FStar_Compiler_Range_Ops.string_of_use_range t1.rng in
             FStar_Compiler_Util.format3 "\n;; def=%s; use=%s\n%s\n" uu___
               uu___1 s
           else s in
@@ -1931,9 +1938,9 @@ let (mk_Range_const : unit -> term) =
        ("Range_const", uu___3) in
      mkApp uu___2 norng)
 let (mk_Term_type : term) = mkApp ("Tm_type", []) norng
-let (mk_Term_app : term -> term -> FStar_Compiler_Range.range -> term) =
+let (mk_Term_app : term -> term -> FStar_Compiler_Range_Type.range -> term) =
   fun t1 -> fun t2 -> fun r -> mkApp ("Tm_app", [t1; t2]) r
-let (mk_Term_uvar : Prims.int -> FStar_Compiler_Range.range -> term) =
+let (mk_Term_uvar : Prims.int -> FStar_Compiler_Range_Type.range -> term) =
   fun i ->
     fun r ->
       let uu___ =
@@ -2172,7 +2179,7 @@ let (mk_tester : Prims.string -> term -> term) =
   fun n -> fun t -> mkApp ((Prims.op_Hat "is-" n), [t]) t.rng
 let (mk_ApplyTF : term -> term -> term) =
   fun t -> fun t' -> mkApp ("ApplyTF", [t; t']) t.rng
-let (mk_ApplyTT : term -> term -> FStar_Compiler_Range.range -> term) =
+let (mk_ApplyTT : term -> term -> FStar_Compiler_Range_Type.range -> term) =
   fun t -> fun t' -> fun r -> mkApp ("ApplyTT", [t; t']) r
 let (kick_partial_app : term -> term) =
   fun t ->
@@ -2180,7 +2187,8 @@ let (kick_partial_app : term -> term) =
       let uu___1 = mkApp ("__uu__PartialApp", []) t.rng in
       mk_ApplyTT uu___1 t t.rng in
     FStar_Compiler_Effect.op_Bar_Greater uu___ mk_Valid
-let (mk_String_const : Prims.string -> FStar_Compiler_Range.range -> term) =
+let (mk_String_const :
+  Prims.string -> FStar_Compiler_Range_Type.range -> term) =
   fun s ->
     fun r ->
       let uu___ =
@@ -2188,7 +2196,7 @@ let (mk_String_const : Prims.string -> FStar_Compiler_Range.range -> term) =
         ("FString_const", uu___1) in
       mkApp uu___ r
 let (mk_Precedes :
-  term -> term -> term -> term -> FStar_Compiler_Range.range -> term) =
+  term -> term -> term -> term -> FStar_Compiler_Range_Type.range -> term) =
   fun x1 ->
     fun x2 ->
       fun x3 ->
@@ -2205,13 +2213,13 @@ let rec (n_fuel : Prims.int -> term) =
          let uu___2 = let uu___3 = n_fuel (n - Prims.int_one) in [uu___3] in
          ("SFuel", uu___2) in
        mkApp uu___1 norng)
-let (mk_and_l : term Prims.list -> FStar_Compiler_Range.range -> term) =
+let (mk_and_l : term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
   fun l ->
     fun r ->
       let uu___ = mkTrue r in
       FStar_Compiler_List.fold_right (fun p1 -> fun p2 -> mkAnd (p1, p2) r) l
         uu___
-let (mk_or_l : term Prims.list -> FStar_Compiler_Range.range -> term) =
+let (mk_or_l : term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
   fun l ->
     fun r ->
       let uu___ = mkFalse r in
