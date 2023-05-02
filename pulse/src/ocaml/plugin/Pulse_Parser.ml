@@ -18,6 +18,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "invariant" -> PP.INVARIANT
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
+    | IDENT "ref" -> PP.REF
     (* the rest are just copied from FStar_Parser_Parse *)
     | IDENT s -> PP.IDENT s
     | AMP -> PP.AMP
@@ -229,19 +230,13 @@ let parse_decl (s:string) (r:range) =
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
   try
-    let _ = MenhirLib.Convert.Simplified.traditional2revised PP.pulseDecl lexer in
-    U.print_string "Parsed full decl";
-    ()
+    let d = MenhirLib.Convert.Simplified.traditional2revised PP.pulseDecl lexer in
+    Inl r
   with
   | e ->
     let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStar_Compiler_Range.mk_range fn pos pos in
-    FStar_Compiler_Util.print3 
-         "Failed to parse decl Syntax error @ %s\n%s\n%s\n"
-          (FStar_Compiler_Range.string_of_range r)
-          (Printexc.to_string e)
-          (Printexc.get_backtrace());
-    ()
+    Inr ("Syntax error", r)
 
  
 let parse_peek_id (s:string) (r:range) =
@@ -250,8 +245,6 @@ let parse_peek_id (s:string) (r:range) =
   let lexbuf, lexer = lexbuf_and_lexer s r in
   try
     let lid = MenhirLib.Convert.Simplified.traditional2revised PP.peekFnId lexer in
-    U.print1 "Parsed decl id %s" lid;
-    parse_decl s r;
     Inl lid
   with
   | e ->

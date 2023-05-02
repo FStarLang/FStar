@@ -6,13 +6,13 @@ fn fibonacci(n:nat)
   returns  _ : nat
   ensures emp
  {
-   var mut i0 = 1;
-   var mut i1 = 1;
-   var mut ctr = 1;   
+   let mut i0 = 1;
+   let mut i1 = 1;
+   let mut ctr = 1;   
    while (ctr < n) 
    invariant exists (n:pos). (pts_to ctr n * pts_to i1 (fib_spec n) * pts_to i0 (fib_spec (n - 1)))
    {
-      var tmp = i0;
+      let tmp = i0;
       i0 := i1;
       i1 := (tmp + i0);
       ctr := (ctr + 1)

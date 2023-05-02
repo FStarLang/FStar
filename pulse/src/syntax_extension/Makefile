@@ -11,8 +11,8 @@ include $(FSTAR_HOME)/src/Makefile.boot.common
 
 OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
-
-EXTRACT_FILES=PulseASTBuilder.ml
+ADDITIONAL_INCLUDES=
+EXTRACT_FILES=PulseASTBuilder.ml PulseSugar.ml PulseDesugar.ml
 extract: $(addprefix $(OUTPUT_DIRECTORY)/,$(EXTRACT_FILES))
 
 # And then, in a separate invocation, from each .checked.lax we
@@ -21,6 +21,7 @@ $(OUTPUT_DIRECTORY)/%.ml: %.fst
 	mkdir -p $(OUTPUT_DIRECTORY)
 	$(call msg, "EXTRACT", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< \
+		   $(addprefix --include , $(ADDITIONAL_INCLUDES)) \
 		   --odir "$(OUTPUT_DIRECTORY)" \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $<))

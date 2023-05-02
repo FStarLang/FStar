@@ -21,6 +21,7 @@ open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
+open PulseSugar
 module AU = FStar_Parser_AST_Util
 
 let lhs _ = FStar_Compiler_Range.dummyRange
@@ -56,7 +57,7 @@ let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT VAR FN INVARIANT WHILE
+%token MUT VAR FN INVARIANT WHILE REF
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
@@ -144,7 +145,7 @@ let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
 
 %start pulseDecl
 %start peekFnId
-%type <unit> pulseDecl
+%type <PulseSugar.decl> pulseDecl
 %type <string> peekFnId
 %%
 
@@ -155,65 +156,82 @@ peekFnId:
 
 /* This is the main entry point for the pulse parser */
 pulseDecl:
-  | FN lid=lident lbp=nonempty_list(pulseMultiBinder) ascription=pulseComputationType LBRACE tm=pulseStmt RBRACE
-      { () }
+  | FN lid=lident bs=nonempty_list(pulseMultiBinder) ascription=pulseComputationType LBRACE body=pulseStmt RBRACE
+    {
+      let r = rng ($startpos($1)) ($endpos($7)) in
+      mk_decl lid (List.flatten bs) ascription body r
+    }
 
 embeddedFStarTerm:
   | t=atomicTerm
-    { () }
+    { t }
     
 pulseMultiBinder:
   | LPAREN qual_ids=nonempty_list(lidentOrUnderscore) COLON t=embeddedFStarTerm RPAREN
-     { () }
+    { List.map (fun id -> (None, id, t)) qual_ids }
 
 pulseComputationType:
-  | REQUIRES t=embeddedFStarTerm
+  | REQUIRES t=pulseVprop
     RETURNS i=lidentOrUnderscore COLON r=term
-    ENSURES t2=embeddedFStarTerm
-      { () }
+    ENSURES t2=pulseVprop
+    { mk_comp ST t i r t2 (rng ($startpos($1)) ($endpos(t2))) }
 
 
 pulseStmtNoSeq:
   | tm=embeddedFStarTerm
-      { () }
-  | i=IDENT COLON_EQUALS a=embeddedFStarTerm
-     { () }
-  | VAR maybeMut i=IDENT typOpt=option(embeddedFStarTerm) EQUALS tm=embeddedFStarTerm
-      { () }
-  | LBRACE pulseStmt RBRACE
-      { () }
-  | IF tm=embeddedFStarTerm c=option(returnsAnnot) LBRACE th=pulseStmt RBRACE e=elseOpt
-      { () }  
+    { mk_expr tm }
+  | i=lident COLON_EQUALS a=embeddedFStarTerm
+    { mk_assignment i a }
+  | LET q=option(mutOrRefQualifier) i=lident typOpt=option(embeddedFStarTerm) EQUALS tm=embeddedFStarTerm
+    { mk_let_binding q i typOpt (Some tm) }
+  | LBRACE s=pulseStmt RBRACE
+    { mk_block s }
+  | IF tm=embeddedFStarTerm vp=option(returnsVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
+    { mk_if tm vp th e }
   | MATCH tm=embeddedFStarTerm c=option(returnsAnnot) LBRACE brs=list(pulseMatchBranch) RBRACE
-      { () }
-  | WHILE tm=embeddedFStarTerm c=option(returnsAnnot) INVARIANT v=pulseVprop LBRACE body=pulseStmt RBRACE
-      { () }
+    { mk_match tm c brs }
+  | WHILE tm=embeddedFStarTerm INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
+    { mk_while tm i v body }
 
 returnsAnnot:
-  | RETURNS pulseComputationType
-      { () }
+  | RETURNS s=pulseComputationType
+    { s }
+
+returnsVprop:
+  | RETURNS s=pulseVprop
+    { s }
 
 pulseMatchBranch:
-  | LBRACE pat=disjunctivePattern RARROW e=pulseStmt RBRACE
-      { () }
+  | LBRACE pat=pulsePattern RARROW e=pulseStmt RBRACE
+    { (pat, e) }
 
+pulsePattern:
+  | p=tuplePattern { p }
+  
 pulseStmt:
-  | pulseStmtNoSeq 
-    { () }
-  | pulseStmtNoSeq SEMICOLON s=option(pulseStmt)
-    { () }
+  | s=pulseStmtNoSeq 
+    { mk_stmt s (rng ($startpos(s)) ($endpos(s))) }
+  | s1=pulseStmtNoSeq SEMICOLON s2=option(pulseStmt)
+    {
+      let s1 = mk_stmt s1 (rng ($startpos(s1)) ($endpos(s1))) in
+      match s2 with
+      | None -> s1
+      | Some s2 -> mk_stmt (mk_sequence s1 s2) (rng ($startpos(s1)) ($endpos(s2)))
+    }
 
-elseOpt:
+elseBlock:
   | ELSE LBRACE p=pulseStmt RBRACE
-      { () }
+    { p }
 
-maybeMut:
-  | MUT { true }
-  |     { false }
+mutOrRefQualifier:
+  | MUT { MUT }
+  | REF { REF }
 
 pulseVprop:
-  | embeddedFStarTerm { () }
-  | EXISTS list(multiBinder) DOT pulseVprop { () }
+  | t=embeddedFStarTerm
+    { VPropTerm t }
+  | EXISTS bs=nonempty_list(pulseMultiBinder) DOT body=pulseVprop
+    { mk_vprop_exists (List.flatten bs) body }
 
 /****************************************************************/
 /** F* term syntax **/
