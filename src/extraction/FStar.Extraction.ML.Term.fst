@@ -536,7 +536,14 @@ let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
         //                   (Code.string_of_mlty (current_module_of_uenv g) ty)
         //                   (Code.string_of_mlty (current_module_of_uenv g) expect)
         //                   e ty expect;
-        match e.expr, ty, expect with
+        (* The expected type may be an abbreviation and not a literal
+        arrow. Try to unfold it. *)
+        let rec undelta mlty =
+          match Util.udelta_unfold g mlty with
+          | Some t -> undelta t
+          | None -> mlty
+        in
+        match e.expr, ty, undelta expect with
         | MLE_Fun(arg::rest, body), MLTY_Fun(t0, _, t1), MLTY_Fun(s0, _, s1) ->
           let body =
                  match rest with
