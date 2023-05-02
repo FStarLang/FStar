@@ -3479,8 +3479,9 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
 
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
-  // Not for the `fail` attribute though! We only keep that one on the first
-  // new decl.
+  // However, we still pass `attrs` to desguar_decl_noattrs so that a Sig_let
+  // can propagate them to individual bindings. Also the `fail` attribute behaves
+  // differentrly! We only keep that one on the first new decl.
   let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
                                          * will shadow a previous val *)
   let attrs = List.map (desugar_term env) d.attrs in
