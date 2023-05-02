@@ -10,6 +10,8 @@ let u_var (s:string) : universe = U_var s
 let u_max (u0:universe) (u1:universe) : universe = U_max (u0, u1)
 let u_unknown : universe = U_unknown
 
+type qualifier = Pulse_Syntax.qualifier
+let as_qual (imp:bool) = if imp then Some Pulse_Syntax.Implicit else None
 type bv = Pulse_Syntax.bv
 let mk_bv (i:index) (name:string) (r:range) : bv =
  { bv_index = i; bv_ppname=name; bv_range=r }
@@ -70,7 +72,7 @@ let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
 type st_term = Pulse_Syntax.st_term
 let tm_return (t:term) : st_term = Tm_Return(STT, false, t)
 
-let tm_abs (bs:binder list) (annot:comp) (body:st_term) : st_term =
+let tm_abs (bs:(qualifier option * binder) list) (annot:comp) (body:st_term) : st_term =
    let pre, post =
      match annot with
      | C_ST st 
@@ -86,7 +88,7 @@ let tm_abs (bs:binder list) (annot:comp) (body:st_term) : st_term =
      | hd::tl -> 
        Tm_Abs (hd, None, None, aux tl, None)
    in
-   aux bs
+   aux (List.map snd bs)
 
 let tm_st_app (head:term) (q:S.aqual) (arg:term) : st_term =
   Tm_STApp(head, map_aqual q, arg)

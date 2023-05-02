@@ -20,6 +20,8 @@ val mk_nm (i:index) (name:string) (r:range) : nm
 val fv : Type0
 val mk_fv (nm:lident) (r:range) : fv
 
+val qualifier : Type0
+val as_qual (imp:bool) : option qualifier
 val term : Type0
 val binder : Type0
 val comp : Type0
@@ -43,7 +45,7 @@ val atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 
 val st_term : Type0
 val tm_return (t:term) : st_term
-val tm_abs (bs:list binder) (annot:comp) (body:st_term) : st_term
+val tm_abs (bs:list (option qualifier & binder)) (annot:comp) (body:st_term) : st_term
 val tm_st_app (head:term) (q:FStar.Syntax.Syntax.aqual) (arg:term) : st_term
 val tm_bind (x:option (ident & term)) (e1:st_term) (e2:st_term) : st_term
 val tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) : st_term

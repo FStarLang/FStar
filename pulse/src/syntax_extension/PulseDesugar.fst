@@ -11,15 +11,15 @@ module L = FStar.Compiler.List
 module U = FStar.Syntax.Util
 module TcEnv = FStar.TypeChecker.Env
 module SS = FStar.Syntax.Subst
-type env = { 
+type env_t = { 
   tcenv: TcEnv.env;
-  dsenv: D.env;
   local_refs: list ident
 }
 
 let push_bv env x =
-  let dsenv, bv = D.push_bv env.dsenv x in
-  let env = { env with dsenv } in
+  let dsenv, bv = D.push_bv env.tcenv.dsenv x in
+  let tcenv = { env.tcenv with dsenv = dsenv } in
+  let env = { env with tcenv } in
   env, bv
 
 let r_ = FStar.Compiler.Range.dummyRange
@@ -38,8 +38,8 @@ let stapp_assignment (lhs rhs:S.term)
     SW.(tm_st_app (tm_expr app) None (tm_expr rhs))
 
 
-let resolve_name (env:env) (id:ident) : S.term = 
-    match D.try_lookup_id env.dsenv id with
+let resolve_name (env:env_t) (id:ident) : S.term = 
+    match D.try_lookup_id env.tcenv.dsenv id with
     | None -> failwith "Name not found"
     | Some t -> t
 
@@ -59,7 +59,7 @@ let pulse_arrow_formals (t:S.term) =
     )
     else None
 
-let stapp_or_return (env:env) (s:S.term) 
+let stapp_or_return (env:env_t) (s:S.term) 
   : SW.st_term
   = let ret s = SW.(tm_return (tm_expr s)) in
     let head, args = U.head_and_args_full s in
@@ -121,18 +121,21 @@ let stapp_or_return (env:env) (s:S.term)
     | _ -> ret s
 
 
-let desugar_term (env:env) (t:A.term)
-  : SW.term 
-  = SW.tm_expr (ToSyntax.desugar_term env.dsenv t)
+let tosyntax (env:env_t) (t:A.term)
+  : S.term
+  = ToSyntax.desugar_term env.tcenv.dsenv t
   
-let desugar_term_opt (env:env) (t:option A.term)
+let desugar_term (env:env_t) (t:A.term)
+  : SW.term 
+  = SW.tm_expr (tosyntax env t)
+  
+let desugar_term_opt (env:env_t) (t:option A.term)
   : SW.term
   = match t with
     | None -> SW.tm_unknown
     | Some e -> desugar_term env e
 
-
-let rec interpret_vprop_constructors (env:env) (v:S.term)
+let rec interpret_vprop_constructors (env:env_t) (v:S.term)
   : SW.term
   = let head, args = U.head_and_args_full v in
     match head.n, args with
@@ -151,11 +154,11 @@ let rec interpret_vprop_constructors (env:env) (v:S.term)
       
     | _ -> SW.tm_expr v
   
-let rec desugar_vprop (env:env) (v:Sugar.vprop)
+let rec desugar_vprop (env:env_t) (v:Sugar.vprop)
   : SW.vprop
   = match v with
     | Sugar.VPropTerm t -> 
-      let t = ToSyntax.desugar_term env.dsenv t in
+      let t = tosyntax env t in
       interpret_vprop_constructors env t
     | Sugar.VPropExists { binders; body } ->
       let rec aux env binders =
@@ -171,18 +174,18 @@ let rec desugar_vprop (env:env) (v:Sugar.vprop)
       aux env binders
   
 (* s has already been transformed with explicit dereferences for r-values *)
-let rec desugar_stmt (env:env) (s:Sugar.stmt)
+let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : SW.st_term
   = let open SW in
     let open Sugar in
     match s.s with
     | Expr { e } -> 
-      let tm = ToSyntax.desugar_term env.dsenv e in
+      let tm = tosyntax env e in
       tm_return (tm_expr tm)
 
     | Assignment { id; value } ->
       let lhs = resolve_name env id in
-      let value = ToSyntax.desugar_term env.dsenv value in
+      let value = tosyntax env value in
       stapp_assignment lhs value
 
     | Sequence { s1={s=LetBinding lb}; s2 } ->
@@ -214,7 +217,7 @@ let rec desugar_stmt (env:env) (s:Sugar.stmt)
       failwith "Match is not yet handled"
 
     | While { head; id; invariant; body } ->
-      let head = stapp_or_return env (ToSyntax.desugar_term env.dsenv head) in
+      let head = stapp_or_return env (tosyntax env head) in
       let invariant = 
         let env, bv = push_bv env id in
         SW.close_term (desugar_vprop env invariant) bv.index
@@ -225,7 +228,7 @@ let rec desugar_stmt (env:env) (s:Sugar.stmt)
     | LetBinding _ -> 
       failwith "Terminal let binding"
 
-and desugar_bind (env:env) (lb:_) (s2:Sugar.stmt) 
+and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) 
   : SW.st_term
   = let open Sugar in
     let annot = desugar_term_opt env lb.typ in
@@ -240,7 +243,7 @@ and desugar_bind (env:env) (lb:_) (s2:Sugar.stmt)
     | Some e1 -> (
       match lb.qualifier with
       | None -> //just a regular bind
-        let s1 = stapp_or_return env (ToSyntax.desugar_term env.dsenv e1) in
+        let s1 = stapp_or_return env (tosyntax env e1) in
         SW.tm_bind (Some (lb.id, annot)) s1 s2
       
       | Some MUT //these are handled the same for now
@@ -249,16 +252,84 @@ and desugar_bind (env:env) (lb:_) (s2:Sugar.stmt)
         SW.tm_let_mut lb.id annot e1 s2
     )
 
-and desugar_sequence (env:env) (s1 s2:Sugar.stmt)
+and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt)
   : SW.st_term
   = let s1 = desugar_stmt env s1 in
     let s2 = desugar_stmt env s2 in
     SW.tm_bind None s1 s2
 
-let explicit_rvalues (env:env) (s:Sugar.stmt)
+let explicit_rvalues (env:env_t) (s:Sugar.stmt)
   : Sugar.stmt
   = s
+
+let qual = option SW.qualifier
+let as_qual (q:A.aqual) : qual =
+  match q with
+  | Some A.Implicit -> SW.as_qual true
+  | _ -> SW.as_qual false
   
-let desugar_decl (env:env) (p:Sugar.decl)
+let desugar_binders (env:env_t) (bs:Sugar.binders)
+  : ML (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
+  = let rec aux env bs 
+      : ML (env_t & list (qual & ident & SW.term) & list S.bv)
+      = match bs with
+        | [] -> env, [], []
+        | (aq, b, t)::bs ->
+          let t = desugar_term env t in
+          let env, bv = push_bv env b in
+          let env, bs, bvs = aux env bs in
+          let bs = L.map (fun (aq, x, t) -> aq, x, SW.close_term t bv.index) bs in
+          env, (as_qual aq, b, t)::bs, bv::bvs
+    in
+    let env, bs, bvs = aux env bs in
+    env, L.map (fun (aq, b, t) -> aq, SW.mk_binder b t) bs, bvs
+
+let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
+  : SW.comp
+  = let pre = desugar_vprop env c.precondition in
+    let ret = desugar_term env c.return_type in
+    let env1, bv = push_bv env c.return_name in
+    let post = SW.close_term (desugar_vprop env1 c.postcondition) bv.index in
+    match c.tag with
+    | Sugar.ST -> SW.(mk_comp pre (mk_binder c.return_name ret) post)
+    | Sugar.STAtomic inames ->
+      let inames = desugar_term env inames in
+      SW.(atomic_comp inames pre (mk_binder c.return_name ret) post)
+    | Sugar.STGhost inames ->
+      let inames = desugar_term env inames in
+      SW.(ghost_comp inames pre (mk_binder c.return_name ret) post)      
+
+let desugar_decl (env:env_t)
+                 (p:Sugar.decl)
   : ML SW.st_term
-  = admit()
+  = let env, bs, bvs = desugar_binders env p.binders in
+    let body = desugar_stmt env p.body in
+    let body = L.fold_right (fun (bv:S.bv) body -> SW.close_st_term body bv.index) bvs body in
+    let comp = desugar_computation_type env p.ascription in
+    SW.tm_abs bs comp body
+
+let name = list string
+let initialize_env (env:TcEnv.env)
+                   (open_namespaces: list name)
+                   (module_abbrevs: list (string & name))
+  : env_t
+  = let dsenv = env.dsenv in
+    let dsenv =
+      L.fold_left
+        (fun env ns -> D.push_namespace env (Ident.lid_of_path ns r_))
+        dsenv
+        open_namespaces
+    in
+    let dsenv =
+      L.fold_left
+        (fun env (m, n) -> 
+          D.push_module_abbrev env (Ident.id_of_text m) (Ident.lid_of_path n r_))
+        dsenv
+        module_abbrevs
+    in
+    let env = { env with dsenv } in
+    { 
+      tcenv = env;
+      local_refs = []
+    }
+
