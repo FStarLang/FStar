@@ -21,9 +21,6 @@ open FStar.Reflection.Data
 open FStar.Reflection.Const
 open FStar.Order
 
-let type_of_bv (bv : bv) : typ =
-    (inspect_bv bv).bv_sort
-
 let bv_of_binder (b : binder) : bv = (inspect_binder b).binder_bv
 
 let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv} =
@@ -35,22 +32,24 @@ let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv
 (*
  * AR: add versions that take attributes as arguments?
  *)
-let mk_binder (bv : bv) : binder =
+let mk_binder (bv : bv) (sort : typ) : binder =
   pack_binder {
     binder_bv=bv;
     binder_qual=Q_Explicit;
-    binder_attrs=[]
+    binder_attrs=[];
+    binder_sort = sort;
   }
 
-let mk_implicit_binder (bv : bv) : binder =
+let mk_implicit_binder (bv : bv) (sort : typ) : binder =
   pack_binder {
     binder_bv=bv;
     binder_qual=Q_Implicit;
-    binder_attrs=[]
+    binder_attrs=[];
+    binder_sort = sort;
   }
 
 let type_of_binder (b : binder) : typ =
-    type_of_bv (bv_of_binder b)
+    (inspect_binder b).binder_sort
 
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
@@ -174,9 +173,9 @@ let mkpair (t1 t2 : term) : term =
 let rec head (t : term) : term =
     match inspect_ln t with
     | Tv_Match t _ _
-    | Tv_Let _ _ _ t _
+    | Tv_Let _ _ _ _ t _
     | Tv_Abs _ t
-    | Tv_Refine _ t
+    | Tv_Refine _ _ t
     | Tv_App t _
     | Tv_AscribedT t _ _ _
     | Tv_AscribedC t _ _ _ -> head t

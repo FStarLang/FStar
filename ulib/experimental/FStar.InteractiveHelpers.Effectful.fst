@@ -93,10 +93,7 @@ let rec decompose_application_aux (e : env) (t : term) :
       | Some hd_ty' ->
         match inspect hd_ty' with
         | Tv_Arrow b c ->
-          let bv = (inspect_binder b).binder_bv in
-          let bview = inspect_bv bv in
-          let ty = bview.bv_sort in
-          Some (get_type_info_from_type ty)
+          Some (get_type_info_from_type (binder_sort b))
         | _ -> None
     in
     let cast_info = mk_cast_info a a_type param_type in
@@ -390,7 +387,7 @@ let compute_pre_type dbg e pre =
 val opt_remove_refin : typ -> Tac typ
 let opt_remove_refin ty =
   match inspect ty with
-  | Tv_Refine bv _ -> (inspect_bv bv).bv_sort
+  | Tv_Refine _ sort _ -> sort
   | _ -> ty
 
 val compute_post_type : bool -> env -> term -> term -> Tac pre_post_type
@@ -530,9 +527,9 @@ let is_st_get dbg t : Tac bool =
 let is_let_st_get dbg (t : term_view) =
   print_dbg dbg ("[> is_let_st_get:\n" ^ term_to_string t);
   match t with
-  | Tv_Let recf attrs bv def body ->
+  | Tv_Let recf attrs bv ty def body ->
     print_dbg dbg "The term is a let expression";
-    if is_st_get dbg def then Some bv else None
+    if is_st_get dbg def then Some (bv, ty) else None
   | _ ->
     print_dbg dbg "The term is not a let expression";
     None
@@ -577,11 +574,11 @@ let related_term_is_effectul dbg ge tv : Tac bool =
   | Tv_Abs br body -> false
   | Tv_Arrow br c0 -> false
   | Tv_Type _ -> false
-  | Tv_Refine bv ref ->
+  | Tv_Refine bv sort ref ->
     false
   | Tv_Const _ -> false
   | Tv_Uvar _ _ -> false
-  | Tv_Let recf attrs bv def body -> is_effectful def
+  | Tv_Let recf attrs bv ty def body -> is_effectful def
   | Tv_Match scrutinee _ret_opt branches ->
     (* TODO: we need to keep track of the relation between parents and children *)
     (* We assume the term under focus is in one the branches of the match - this
@@ -603,7 +600,7 @@ val find_mem_in_related:
      dbg:bool
   -> ge:genv
   -> tms:list term_view
-  -> Tac (option bv)
+  -> Tac (option (bv & typ))
 
 let rec find_mem_in_related dbg ge tms =
   match tms with
@@ -611,9 +608,9 @@ let rec find_mem_in_related dbg ge tms =
   | tv :: tms' ->
     print_dbg dbg ("[> find_mem_in_related:\n" ^ term_to_string tv);
     match is_let_st_get dbg tv with
-    | Some bv ->
+    | Some bvt ->
       print_dbg dbg "Term is of the form `let x = FStar.HyperStack.ST.get ()`: success";
-      Some bv
+      Some bvt
     | None ->
       print_dbg dbg "Term is not of the form `let x = FStar.HyperStack.ST.get ()`: continuing";
       if related_term_is_effectul dbg ge tv
@@ -640,11 +637,11 @@ val find_mem_in_children:
 let rec find_mem_in_children dbg ge child =
   (* We stop whenever we find an expression which is not a let-binding *)
   match inspect child with
-  | Tv_Let recf attrs bv def body ->
+  | Tv_Let recf attrs bv ty def body ->
     if is_st_get dbg def then ge, Some bv
     else if term_has_effectful_comp dbg ge.env def <> Some false then ge, None
     else
-      let ge1 = genv_push_bv ge bv false None in
+      let ge1 = genv_push_bv ge bv ty false None in
       find_mem_in_children dbg ge1 body
   | _ -> ge, None
 
@@ -688,9 +685,9 @@ let pre_post_to_propositions dbg ge0 etype v ret_abs_binder ret_type opt_pre opt
       print_dbg dbg "Looking for the final state in the context";
       let b2_opt = find_mem_in_related dbg ge0 children in
       (* Introduce state variables if necessary *)
-      let opt_push_fresh_state opt_bv basename ge : Tac (term & binder & genv) =
-        match opt_bv with
-        | Some bv -> pack (Tv_Var bv), mk_binder bv, ge
+      let opt_push_fresh_state opt_bvt basename ge : Tac (term & binder & genv) =
+        match opt_bvt with
+        | Some (bv, ty) -> pack (Tv_Var bv), mk_binder bv ty, ge
         | None -> genv_push_fresh_var ge basename (`HS.mem)
       in
       let h1, b1, ge1 = opt_push_fresh_state b1_opt "__h0_" ge0 in

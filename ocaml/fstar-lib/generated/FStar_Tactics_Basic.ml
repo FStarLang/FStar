@@ -5260,16 +5260,14 @@ let (launch_process :
                FStar_Tactics_Monad.fail
                  "launch_process: will not run anything unless --unsafe_tactic_exec is provided")
 let (fresh_bv_named :
-  Prims.string ->
-    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac)
-  =
+  Prims.string -> FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac) =
   fun nm ->
-    fun t ->
-      FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
-        (fun uu___ ->
-           let uu___1 =
-             FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None t in
-           FStar_Tactics_Monad.ret uu___1)
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 =
+           FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None
+             FStar_Syntax_Syntax.tun in
+         FStar_Tactics_Monad.ret uu___1)
 let (change : FStar_Syntax_Syntax.typ -> unit FStar_Tactics_Monad.tac) =
   fun ty ->
     let uu___ =
@@ -6279,7 +6277,9 @@ let rec (inspect :
                       | uu___3 -> failwith "impossible" in
                     FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                       (FStar_Reflection_Data.Tv_Refine
-                         ((b1.FStar_Syntax_Syntax.binder_bv), t4)))
+                         ((b1.FStar_Syntax_Syntax.binder_bv),
+                           ((b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort),
+                           t4)))
            | FStar_Syntax_Syntax.Tm_constant c ->
                let uu___2 =
                  let uu___3 = FStar_Reflection_Basic.inspect_const c in
@@ -6325,6 +6325,7 @@ let rec (inspect :
                              (FStar_Reflection_Data.Tv_Let
                                 (false, (lb.FStar_Syntax_Syntax.lbattrs),
                                   (b1.FStar_Syntax_Syntax.binder_bv),
+                                  (bv.FStar_Syntax_Syntax.sort),
                                   (lb.FStar_Syntax_Syntax.lbdef), t22))))
            | FStar_Syntax_Syntax.Tm_let ((true, lb::[]), t21) ->
                if lb.FStar_Syntax_Syntax.lbunivs <> []
@@ -6354,6 +6355,7 @@ let rec (inspect :
                                           (true,
                                             (lb1.FStar_Syntax_Syntax.lbattrs),
                                             bv1,
+                                            (bv1.FStar_Syntax_Syntax.sort),
                                             (lb1.FStar_Syntax_Syntax.lbdef),
                                             t22)))
                             | uu___4 ->
@@ -6450,8 +6452,14 @@ let (pack' :
             FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
               FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-      | FStar_Reflection_Data.Tv_Refine (bv, t) ->
-          let uu___ = FStar_Syntax_Util.refine bv t in
+      | FStar_Reflection_Data.Tv_Refine (bv, sort, t) ->
+          let bv1 =
+            {
+              FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
+              FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+              FStar_Syntax_Syntax.sort = sort
+            } in
+          let uu___ = FStar_Syntax_Util.refine bv1 t in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
       | FStar_Reflection_Data.Tv_Const c ->
           let uu___ =
@@ -6466,27 +6474,40 @@ let (pack' :
             FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_uvar ctx_u_s)
               FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-      | FStar_Reflection_Data.Tv_Let (false, attrs, bv, t1, t2) ->
+      | FStar_Reflection_Data.Tv_Let (false, attrs, bv, ty, t1, t2) ->
+          let bv1 =
+            {
+              FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
+              FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+              FStar_Syntax_Syntax.sort = ty
+            } in
           let lb =
-            FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
-              bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid
+            FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv1) []
+              bv1.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid
               t1 attrs FStar_Compiler_Range_Type.dummyRange in
           let uu___ =
             let uu___1 =
               let uu___2 =
                 let uu___3 =
                   let uu___4 =
-                    let uu___5 = FStar_Syntax_Syntax.mk_binder bv in [uu___5] in
+                    let uu___5 = FStar_Syntax_Syntax.mk_binder bv1 in
+                    [uu___5] in
                   FStar_Syntax_Subst.close uu___4 t2 in
                 ((false, [lb]), uu___3) in
               FStar_Syntax_Syntax.Tm_let uu___2 in
             FStar_Syntax_Syntax.mk uu___1
               FStar_Compiler_Range_Type.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-      | FStar_Reflection_Data.Tv_Let (true, attrs, bv, t1, t2) ->
+      | FStar_Reflection_Data.Tv_Let (true, attrs, bv, ty, t1, t2) ->
+          let bv1 =
+            {
+              FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
+              FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+              FStar_Syntax_Syntax.sort = ty
+            } in
           let lb =
-            FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
-              bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid
+            FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv1) []
+              bv1.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid
               t1 attrs FStar_Compiler_Range_Type.dummyRange in
           let uu___ = FStar_Syntax_Subst.close_let_rec [lb] t2 in
           (match uu___ with

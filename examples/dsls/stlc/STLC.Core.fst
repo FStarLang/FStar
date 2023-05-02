@@ -312,12 +312,12 @@ let rec elab_exp (e:stlc_exp)
       pack_ln (Tv_Const C_Unit)
 
     | EBVar n -> 
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
       // tun because type does not matter at a use site
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_Var bv)
 
     | ELam t e ->
@@ -484,7 +484,7 @@ let rec soundness (#sg:stlc_env)
       RT.T_Const _ _ _ RT.CT_Unit
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
+      RT.T_Var _ (R.pack_bv (RT.make_bv x))
 
     | T_Lam _ t e t' x de ->
       let de : RT.typing (extend_env_l g ((x,t)::sg))

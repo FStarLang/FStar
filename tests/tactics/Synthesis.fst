@@ -55,7 +55,7 @@ let iszero (x : int) : int =
         set_guard_policy SMT;
         let x = quote x in
         let t_int = quote int in
-        let _f = fresh_bv t_int in
+        let _f = fresh_bv () in
         let t = Tv_Match x None
                     [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
                      (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
@@ -67,8 +67,8 @@ let _ = assert (iszero 2 = 0)
 
 let mk_let () : Tac unit =
    match (inspect (quote ( let f x = if x<=1 then 1 else x - 1 in f 5 ))) with
-   | Tv_Let r attrs b t1 t2 ->
-     let t = pack (Tv_Let r attrs b t1 t2) in
+   | Tv_Let r attrs b ty t1 t2 ->
+     let t = pack (Tv_Let r attrs b ty t1 t2) in
      exact_guard t
    | _ -> dump "uh oh"; exact (`0)
 
@@ -77,12 +77,12 @@ let _ = assert (f2 == 4)
 
 let mk_let_rec () : Tac unit =
    match (inspect (quote ( let rec fr (x:nat) = if x <= 1 then 1 else fr (x-1) in fr 5 ))) with
-   | Tv_Let r attrs b t1 t2 ->
-     let t = pack (Tv_Let r attrs b t1 t2) in
+   | Tv_Let r attrs b ty t1 t2 ->
+     let t = pack (Tv_Let r attrs b ty t1 t2) in
      exact_guard t
    | _ -> dump "uh oh"; exact (`0)
 
 let f3 : int = synth mk_let_rec
 let _ = assert_norm (f3 == 1)
-let ascribe : int = synth (fun () -> exact (pack (Tv_AscribedT (`0) (`int) None false)))
 
+let ascribe : int = synth (fun () -> exact (pack (Tv_AscribedT (`0) (`int) None false)))

@@ -242,7 +242,7 @@ let rec inspect_ln (t:term) : term_view =
         end
 
     | Tm_refine (bv, t) ->
-        Tv_Refine (bv, t)
+        Tv_Refine (bv, bv.sort, t)
 
     | Tm_constant c ->
         Tv_Const (inspect_const c)
@@ -260,14 +260,14 @@ let rec inspect_ln (t:term) : term_view =
         | Inr _ -> Tv_Unknown // no top level lets
         | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
-            Tv_Let (false, lb.lbattrs, bv, lb.lbdef, t2)
+            Tv_Let (false, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
         begin match lb.lbname with
         | Inr _  -> Tv_Unknown // no top level lets
-        | Inl bv -> Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2)
+        | Inl bv -> Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
         end
 
     | Tm_match (t, ret_opt, brs, _) ->
@@ -401,8 +401,8 @@ let pack_ln (tv:term_view) : term =
     | Tv_Type u ->
         mk (Tm_type u) Range.dummyRange
 
-    | Tv_Refine (bv, t) ->
-        mk (Tm_refine (bv, t)) t.pos
+    | Tv_Refine (bv, sort, t) ->
+        mk (Tm_refine ({bv with sort=sort}, t)) t.pos
 
     | Tv_Const c ->
         S.mk (Tm_constant (pack_const c)) Range.dummyRange
@@ -410,11 +410,13 @@ let pack_ln (tv:term_view) : term =
     | Tv_Uvar (u, ctx_u_s) ->
       S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
-    | Tv_Let (false, attrs, bv, t1, t2) ->
+    | Tv_Let (false, attrs, bv, ty, t1, t2) ->
+        let bv = { bv with sort=ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let ((false, [lb]), t2)) Range.dummyRange
 
-    | Tv_Let (true, attrs, bv, t1, t2) ->
+    | Tv_Let (true, attrs, bv, ty, t1, t2) ->
+        let bv = { bv with sort=ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let ((true, [lb]), t2)) Range.dummyRange
 
@@ -695,21 +697,19 @@ let inspect_bv (bv:bv) : bv_view =
     {
       bv_ppname = Ident.string_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
-      bv_sort = bv.sort;
     }
 
 let pack_bv (bvv:bv_view) : bv =
     if Z.to_int_fs bvv.bv_index < 0 then (
         Err.log_issue Range.dummyRange
-            (Err.Warning_CantInspect, BU.format3 "pack_bv: index is negative (%s : %s), index = %s"
+            (Err.Warning_CantInspect, BU.format2 "pack_bv: index is negative (%s), index = %s"
                                          bvv.bv_ppname
-                                         (Print.term_to_string bvv.bv_sort)
                                          (string_of_int (Z.to_int_fs bvv.bv_index)))
     );
     {
       ppname = Ident.mk_ident (bvv.bv_ppname, Range.dummyRange);
       index = Z.to_int_fs bvv.bv_index; // Guaranteed to be a nat
-      sort = bvv.bv_sort;
+      sort = S.tun;
     }
 
 let inspect_binder (b:binder) : binder_view = 
@@ -717,13 +717,14 @@ let inspect_binder (b:binder) : binder_view =
   {
     binder_bv = b.binder_bv;
     binder_qual = inspect_bqual (b.binder_qual);
-    binder_attrs = attrs
+    binder_attrs = attrs;
+    binder_sort = b.binder_bv.sort;
   }
 
 let pack_binder (bview:binder_view) : binder = 
   let pqual, attrs = U.parse_positivity_attributes bview.binder_attrs in
   {
-    binder_bv=bview.binder_bv;
+    binder_bv= { bview.binder_bv with sort = bview.binder_sort };
     binder_qual=pack_bqual (bview.binder_qual);
     binder_positivity=pqual;
     binder_attrs=attrs
@@ -792,8 +793,9 @@ let rec term_eq (t1:term) (t2:term) : bool =
   | Tv_Type u1, Tv_Type u2 ->
     univ_eq u1 u2
 
-  | Tv_Refine (b1, t1), Tv_Refine (b2, t2) ->
-    term_eq b1.sort b2.sort && term_eq t1 t2
+  | Tv_Refine (b1, sort1, t1), Tv_Refine (b2, sort2, t2) ->
+    (* No need to compare bvs *)
+    term_eq sort1 sort2 && term_eq t1 t2
 
   | Tv_Const c1, Tv_Const c2 ->
     const_eq c1 c2
@@ -812,10 +814,11 @@ let rec term_eq (t1:term) (t2:term) : bool =
      *)
     n1 = n2
 
-  | Tv_Let (r1, ats1, bv1, m1, n1), Tv_Let (r2, ats2, bv2, m2, n2) ->
+  | Tv_Let (r1, ats1, bv1, ty1, m1, n1), Tv_Let (r2, ats2, bv2, ty2, m2, n2) ->
+    (* no need to compare bvs *)
     r1 = r2 &&
      eqlist term_eq ats1 ats2 &&
-     term_eq bv1.sort bv2.sort &&
+     term_eq ty1 ty2 &&
      term_eq m1 m2 &&
      term_eq n1 n2
 
