@@ -10,8 +10,9 @@ open Pulse.Steel.Wrapper
 
 [@@"opaque_to_smt"]
 ```pulse
-fn test_write_10 (x:(ref U32.t))
-                 (#n:(erased U32.t))
+fn test_write_10 (x:ref U32.t)
+                 (#n:erased U32.t)
+                 
    requires (pts_to x full_perm n)
    returns _ : unit
    ensures  (pts_to x full_perm 0ul)

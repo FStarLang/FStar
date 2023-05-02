@@ -158,13 +158,9 @@ pulseDecl:
       let r = rng ($startpos($1)) ($endpos($7)) in
       mk_decl lid (List.flatten bs) ascription body r
     }
-
-embeddedFStarTerm:
-  | t=atomicTerm
-    { t }
     
 pulseMultiBinder:
-  | LPAREN qual_ids=nonempty_list(q=option(HASH) id=lidentOrUnderscore { (q, id) }) COLON t=embeddedFStarTerm RPAREN
+  | LPAREN qual_ids=nonempty_list(q=option(HASH) id=lidentOrUnderscore { (q, id) }) COLON t=appTerm RPAREN
     { List.map (fun (q, id) -> (as_aqual q, id, t)) qual_ids }
 
 pulseComputationType:
@@ -175,21 +171,22 @@ pulseComputationType:
 
 
 pulseStmtNoSeq:
-  | tm=embeddedFStarTerm
+  | tm=appTerm
     { mk_expr tm }
-  | i=lident COLON_EQUALS a=embeddedFStarTerm
+  | i=lident COLON_EQUALS a=noSeqTerm
     { mk_assignment i a }
-  | LET q=option(mutOrRefQualifier) i=lident typOpt=option(embeddedFStarTerm) EQUALS tm=embeddedFStarTerm
+  | LET q=option(mutOrRefQualifier) i=lident typOpt=option(appTerm) EQUALS tm=noSeqTerm
     { mk_let_binding q i typOpt (Some tm) }
   | LBRACE s=pulseStmt RBRACE
     { mk_block s }
-  | IF tm=embeddedFStarTerm vp=option(returnsVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
+  | IF tm=appTermNoRecordExp vp=option(returnsVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
     { mk_if tm vp th e }
-  | MATCH tm=embeddedFStarTerm c=option(returnsAnnot) LBRACE brs=list(pulseMatchBranch) RBRACE
+  | MATCH tm=appTermNoRecordExp c=option(returnsAnnot) LBRACE brs=list(pulseMatchBranch) RBRACE
     { mk_match tm c brs }
-  | WHILE tm=embeddedFStarTerm INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
+  | WHILE tm=appTerm INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
     { mk_while tm i v body }
 
+%inline
 returnsAnnot:
   | RETURNS s=pulseComputationType
     { s }
@@ -225,7 +222,7 @@ mutOrRefQualifier:
   | REF { REF }
 
 pulseVprop:
-  | t=embeddedFStarTerm
+  | t=atomicTerm
     { VPropTerm t }
   | EXISTS bs=nonempty_list(pulseMultiBinder) DOT body=pulseVprop
     { mk_vprop_exists (List.flatten bs) body }
