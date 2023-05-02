@@ -10,17 +10,17 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
 
-let rec elab_term_bv_sort (t:term)
-  : Lemma
-    (ensures 
-      (R.Tv_Var? (R.inspect_ln (elab_term t)) \/
-       R.Tv_BVar? (R.inspect_ln (elab_term t))) ==>
-      (match R.inspect_ln (elab_term t) with
-       | R.Tv_Var bv
-       | R.Tv_BVar bv ->
-         let vv = R.inspect_bv bv in
-         vv.bv_sort == RT.tun))
-  = admit()
+// let rec elab_term_bv_sort (t:term)
+//   : Lemma
+//     (ensures 
+//       (R.Tv_Var? (R.inspect_ln (elab_term t)) \/
+//        R.Tv_BVar? (R.inspect_ln (elab_term t))) ==>
+//       (match R.inspect_ln (elab_term t) with
+//        | R.Tv_Var bv
+//        | R.Tv_BVar bv ->
+//          let vv = R.inspect_bv bv in
+//          vv.bv_sort == RT.tun))
+//   = admit()
       
               
 #push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 20 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"          
@@ -32,8 +32,7 @@ let rec elab_open_commute' (e:term)
               elab_term (open_term' e v n))
           (decreases e)
   = match e with
-    | Tm_BVar m ->
-      elab_term_bv_sort v
+    | Tm_BVar _
     | Tm_UVar _
     | Tm_Var _
     | Tm_FVar _

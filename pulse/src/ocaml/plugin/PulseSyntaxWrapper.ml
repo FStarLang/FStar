@@ -3,7 +3,7 @@ open FStar_Ident
 open Pulse_Syntax
 module S = FStar_Syntax_Syntax
 type universe = Pulse_Syntax.universe
-
+type range = FStar_Compiler_Range.range
 let u_zero : universe = U_zero
 let u_succ (u:universe) : universe = U_succ u
 let u_var (s:string) : universe = U_var s
@@ -20,8 +20,9 @@ type nm = Pulse_Syntax.nm
 let mk_nm (i:index) (name:string) (r:range) : nm =
  { nm_index = i; nm_ppname=name; nm_range= r}
 
+
 type fv = Pulse_Syntax.fv
-let mk_fv (nm:lident) (r:range) : fv =
+let mk_fv (nm:lident) (r:range) : fv = 
  { fv_name = FStar_Ident.path_of_lid nm;
    fv_range = r }
 
@@ -57,7 +58,7 @@ let mk_st_comp (pre:term) (ret:binder) (post:term) : st_comp =
   { u = U_unknown;
     res = ret.binder_ty;
     pre = pre;
-    post = (* close_binder *) post
+    post = post
   }
 
 let mk_comp (pre:term) (ret:binder) (post:term) : comp =
@@ -105,7 +106,6 @@ let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) : st_ter
 let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_term) : st_term =
    Tm_If (head, then_, else_, returns_annot)
 
-module Pulse_Syntax_Naming = Pulse_Syntax (* for now *)
 let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v
 let close_comp t v = Pulse_Syntax_Naming.close_comp t v

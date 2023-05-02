@@ -32,7 +32,7 @@ let mk_reveal (u:universe) (t:term) (e:term) : term =
   Tm_PureApp hd None e
 
 let mk_hide (u:universe) (t:term) (e:term) : term =
-  let hd = Tm_UInst hide_lid [u] in
+  let hd = Tm_UInst (as_fv hide_lid) [u] in
   let hd = Tm_PureApp hd (Some Implicit) t in
   Tm_PureApp hd None e
 

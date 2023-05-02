@@ -45,7 +45,7 @@ let rec check_valid_solution (t1 t2:term) (uv_sols:list (term & term))
 let is_reveal_uvar (t:term) : option (universe & term & term) =
   match t with
   | Tm_PureApp (Tm_PureApp (Tm_UInst l [u]) (Some Implicit) ty) None (Tm_UVar n) ->
-    if l = RUtil.reveal_lid
+    if l.fv_name = RUtil.reveal_lid
     then Some (u, ty, Tm_UVar n)
     else None
   | _ -> None
@@ -53,7 +53,7 @@ let is_reveal_uvar (t:term) : option (universe & term & term) =
 let is_reveal (t:term) : bool =
   let hd, _ = leftmost_head_and_args t in
   match hd with
-  | Tm_UInst l [_] -> l = RUtil.reveal_lid
+  | Tm_UInst l [_] -> l.fv_name = RUtil.reveal_lid
   | _ -> false
 
 let rec match_typ (t1 t2:term) (uv_sols:list (term & term))
