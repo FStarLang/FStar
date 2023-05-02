@@ -76,6 +76,12 @@ let (fstar_tactics_unfold_side_Both : tac_constant) =
   fstar_tactics_data ["Types"; "Both"]
 let (fstar_tactics_unfold_side_Neither : tac_constant) =
   fstar_tactics_data ["Types"; "Neither"]
+let (fstar_tactics_effect_label : tac_constant) =
+  fstar_tactics_const ["Types"; "effect_label"]
+let (fstar_tactics_effect_label_ETotal : tac_constant) =
+  fstar_tactics_data ["Types"; "E_Total"]
+let (fstar_tactics_effect_label_EGhost : tac_constant) =
+  fstar_tactics_data ["Types"; "E_Ghost"]
 let (fstar_tactics_guard_policy : tac_constant) =
   fstar_tactics_const ["Types"; "guard_policy"]
 let (fstar_tactics_SMT : tac_constant) = fstar_tactics_data ["Types"; "SMT"]
@@ -856,6 +862,80 @@ let (e_unfold_side_nbe :
   {
     FStar_TypeChecker_NBETerm.em = embed_unfold_side;
     FStar_TypeChecker_NBETerm.un = unembed_unfold_side;
+    FStar_TypeChecker_NBETerm.typ = uu___;
+    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+  }
+let (e_effect_label :
+  FStar_Tactics_Types.effect_label FStar_Syntax_Embeddings.embedding) =
+  let embed_effect_label rng s =
+    match s with
+    | FStar_Tactics_Types.E_Total -> fstar_tactics_effect_label_ETotal.t
+    | FStar_Tactics_Types.E_Ghost -> fstar_tactics_effect_label_EGhost.t in
+  let unembed_effect_label w t =
+    let uu___ =
+      let uu___1 = FStar_Syntax_Subst.compress t in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_fvar fv when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          fstar_tactics_effect_label_ETotal.lid
+        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Total
+    | FStar_Syntax_Syntax.Tm_fvar fv when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          fstar_tactics_effect_label_EGhost.lid
+        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Ghost
+    | uu___1 ->
+        (if w
+         then
+           (let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Syntax_Print.term_to_string t in
+                FStar_Compiler_Util.format1
+                  "Not an embedded effect_label: %s" uu___5 in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
+            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
+         else ();
+         FStar_Pervasives_Native.None) in
+  mk_emb embed_effect_label unembed_effect_label fstar_tactics_effect_label.t
+let (e_effect_label_nbe :
+  FStar_Tactics_Types.effect_label FStar_TypeChecker_NBETerm.embedding) =
+  let embed_effect_label cb res =
+    match res with
+    | FStar_Tactics_Types.E_Total ->
+        mkConstruct fstar_tactics_effect_label_ETotal.fv [] []
+    | FStar_Tactics_Types.E_Ghost ->
+        mkConstruct fstar_tactics_effect_label_EGhost.fv [] [] in
+  let unembed_effect_label cb t =
+    let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
+    match uu___ with
+    | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          fstar_tactics_effect_label_ETotal.lid
+        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Total
+    | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          fstar_tactics_effect_label_EGhost.lid
+        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Ghost
+    | uu___1 ->
+        ((let uu___3 =
+            FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
+          if uu___3
+          then
+            let uu___4 =
+              let uu___5 =
+                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
+                FStar_Compiler_Util.format1
+                  "Not an embedded effect_label: %s" uu___6 in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___4
+          else ());
+         FStar_Pervasives_Native.None) in
+  let uu___ = mkFV fstar_tactics_effect_label.fv [] [] in
+  let uu___1 = fv_as_emb_typ fstar_tactics_effect_label.fv in
+  {
+    FStar_TypeChecker_NBETerm.em = embed_effect_label;
+    FStar_TypeChecker_NBETerm.un = unembed_effect_label;
     FStar_TypeChecker_NBETerm.typ = uu___;
     FStar_TypeChecker_NBETerm.emb_typ = uu___1
   }
