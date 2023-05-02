@@ -18,7 +18,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "invariant" -> PP.INVARIANT
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
-    | IDENT "ref" -> PP.REF
+    (*     | IDENT "ref" -> PP.REF *)
     (* the rest are just copied from FStar_Parser_Parse *)
     | IDENT s -> PP.IDENT s
     | AMP -> PP.AMP

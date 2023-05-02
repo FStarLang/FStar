@@ -12,6 +12,7 @@ module U = FStar.Syntax.Util
 module TcEnv = FStar.TypeChecker.Env
 module SS = FStar.Syntax.Subst
 module R = FStar.Compiler.Range
+module BU = FStar.Compiler.Util
 type error = string & R.range
 
 let err a = either a error
@@ -143,7 +144,16 @@ let tosyntax (env:env_t) (t:A.term)
   = try 
       return (ToSyntax.desugar_term env.tcenv.dsenv t)
     with 
-      | _ -> fail "tosyntax failed on embedded term" t.range
+      | e -> 
+        let msg =
+          match FStar.Errors.issue_of_exn e with
+          | Some i -> FStar.Errors.format_issue i
+          | None -> SW.print_exn e
+        in
+        fail (BU.format2 "tosyntax failed on embedded term: %s\n msg %s\n"
+                         (A.term_to_string t)
+                         msg)
+             t.range
   
 let desugar_term (env:env_t) (t:A.term)
   : err SW.term 
@@ -331,14 +341,30 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
       let? inames = desugar_term env inames in
       return SW.(ghost_comp inames pre (mk_binder c.return_name ret) post)      
 
+let as_string (s:either string string) : string =
+   match s with
+   | Inl s -> s
+   | Inr s -> "to_string failed: " ^ s
+
 let desugar_decl (env:env_t)
                  (p:Sugar.decl)
   : err SW.st_term 
   = let? env, bs, bvs = desugar_binders env p.binders in
     let? body = desugar_stmt env p.body in
-    let body = L.fold_right (fun (bv:S.bv) body -> SW.close_st_term body bv.index) bvs body in
     let? comp = desugar_computation_type env p.ascription in
-    return (SW.tm_abs bs comp body)
+    let rec aux (bs:list (option SW.qualifier & SW.binder)) (bvs:list S.bv) =
+      match bs, bvs with
+      | [(q, last)], [last_bv] -> 
+        let body = SW.close_st_term body last_bv.S.index in
+        let comp = SW.close_comp comp last_bv.S.index in
+        return (SW.tm_abs last q (SW.comp_pre comp) body (Some (SW.comp_post comp)))
+      | (q, b)::bs, bv::bvs ->
+        let? body = aux bs bvs in
+        let body = SW.close_st_term body bv.index in
+        return (SW.tm_abs b q SW.tm_emp body None)
+      | _ -> fail "Unexpected empty binders in decl" r_
+    in
+    aux bs bvs
 
 let name = list string
 
@@ -347,12 +373,14 @@ let initialize_env (env:TcEnv.env)
                    (module_abbrevs: list (string & name))
   : env_t
   = let dsenv = env.dsenv in
+    let dsenv = D.set_current_module dsenv (TcEnv.current_module env) in
     let dsenv =
-      L.fold_left
-        (fun env ns -> D.push_namespace env (Ident.lid_of_path ns r_))
-        dsenv
+      L.fold_right
+        (fun ns env -> D.push_namespace env (Ident.lid_of_path ns r_))
         open_namespaces
+        dsenv
     in
+    let dsenv = D.push_namespace dsenv (TcEnv.current_module env) in
     let dsenv =
       L.fold_left
         (fun env (m, n) -> 

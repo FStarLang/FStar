@@ -307,7 +307,17 @@ let (tosyntax :
                return uu___1) ()
       with
       | uu___ ->
-          fail "tosyntax failed on embedded term" t.FStar_Parser_AST.range
+          let msg =
+            let uu___1 = FStar_Errors.issue_of_exn uu___ in
+            match uu___1 with
+            | FStar_Pervasives_Native.Some i -> FStar_Errors.format_issue i
+            | FStar_Pervasives_Native.None ->
+                PulseSyntaxWrapper.print_exn uu___ in
+          let uu___1 =
+            let uu___2 = FStar_Parser_AST.term_to_string t in
+            FStar_Compiler_Util.format2
+              "tosyntax failed on embedded term: %s\n msg %s\n" uu___2 msg in
+          fail uu___1 t.FStar_Parser_AST.range
 let (desugar_term :
   env_t -> FStar_Parser_AST.term -> PulseSyntaxWrapper.term err) =
   fun env ->
@@ -672,6 +682,12 @@ let (desugar_computation_type :
                                     PulseSyntaxWrapper.ghost_comp inames1 pre
                                       uu___6 post1 in
                                   return uu___5))))
+let (as_string :
+  (Prims.string, Prims.string) FStar_Pervasives.either -> Prims.string) =
+  fun s ->
+    match s with
+    | FStar_Pervasives.Inl s1 -> s1
+    | FStar_Pervasives.Inr s1 -> Prims.op_Hat "to_string failed: " s1
 let (desugar_decl :
   env_t -> PulseSugar.decl -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -684,18 +700,44 @@ let (desugar_decl :
                let uu___2 = desugar_stmt env1 p.PulseSugar.body2 in
                op_let_Question uu___2
                  (fun body ->
-                    let body1 =
-                      FStar_Compiler_List.fold_right
-                        (fun bv ->
-                           fun body2 ->
-                             PulseSyntaxWrapper.close_st_term body2
-                               bv.FStar_Syntax_Syntax.index) bvs body in
                     let uu___3 =
                       desugar_computation_type env1 p.PulseSugar.ascription in
                     op_let_Question uu___3
                       (fun comp ->
-                         let uu___4 = PulseSyntaxWrapper.tm_abs bs comp body1 in
-                         return uu___4)))
+                         let rec aux bs1 bvs1 =
+                           match (bs1, bvs1) with
+                           | ((q, last)::[], last_bv::[]) ->
+                               let body1 =
+                                 PulseSyntaxWrapper.close_st_term body
+                                   last_bv.FStar_Syntax_Syntax.index in
+                               let comp1 =
+                                 PulseSyntaxWrapper.close_comp comp
+                                   last_bv.FStar_Syntax_Syntax.index in
+                               let uu___4 =
+                                 let uu___5 =
+                                   PulseSyntaxWrapper.comp_pre comp1 in
+                                 let uu___6 =
+                                   let uu___7 =
+                                     PulseSyntaxWrapper.comp_post comp1 in
+                                   FStar_Pervasives_Native.Some uu___7 in
+                                 PulseSyntaxWrapper.tm_abs last q uu___5
+                                   body1 uu___6 in
+                               return uu___4
+                           | ((q, b)::bs2, bv::bvs2) ->
+                               let uu___4 = aux bs2 bvs2 in
+                               op_let_Question uu___4
+                                 (fun body1 ->
+                                    let body2 =
+                                      PulseSyntaxWrapper.close_st_term body1
+                                        bv.FStar_Syntax_Syntax.index in
+                                    let uu___5 =
+                                      PulseSyntaxWrapper.tm_abs b q
+                                        PulseSyntaxWrapper.tm_emp body2
+                                        FStar_Pervasives_Native.None in
+                                    return uu___5)
+                           | uu___4 ->
+                               fail "Unexpected empty binders in decl" r_ in
+                         aux bs bvs)))
 type name = Prims.string Prims.list
 let (initialize_env :
   FStar_TypeChecker_Env.env ->
@@ -706,13 +748,19 @@ let (initialize_env :
       fun module_abbrevs ->
         let dsenv = env.FStar_TypeChecker_Env.dsenv in
         let dsenv1 =
-          FStar_Compiler_List.fold_left
-            (fun env1 ->
-               fun ns ->
-                 let uu___ = FStar_Ident.lid_of_path ns r_ in
-                 FStar_Syntax_DsEnv.push_namespace env1 uu___) dsenv
-            open_namespaces in
+          let uu___ = FStar_TypeChecker_Env.current_module env in
+          FStar_Syntax_DsEnv.set_current_module dsenv uu___ in
         let dsenv2 =
+          FStar_Compiler_List.fold_right
+            (fun ns ->
+               fun env1 ->
+                 let uu___ = FStar_Ident.lid_of_path ns r_ in
+                 FStar_Syntax_DsEnv.push_namespace env1 uu___)
+            open_namespaces dsenv1 in
+        let dsenv3 =
+          let uu___ = FStar_TypeChecker_Env.current_module env in
+          FStar_Syntax_DsEnv.push_namespace dsenv2 uu___ in
+        let dsenv4 =
           FStar_Compiler_List.fold_left
             (fun env1 ->
                fun uu___ ->
@@ -721,7 +769,7 @@ let (initialize_env :
                      let uu___1 = FStar_Ident.id_of_text m in
                      let uu___2 = FStar_Ident.lid_of_path n r_ in
                      FStar_Syntax_DsEnv.push_module_abbrev env1 uu___1 uu___2)
-            dsenv1 module_abbrevs in
+            dsenv3 module_abbrevs in
         let env1 =
           {
             FStar_TypeChecker_Env.solver = (env.FStar_TypeChecker_Env.solver);
@@ -800,7 +848,7 @@ let (initialize_env :
               (env.FStar_TypeChecker_Env.identifier_info);
             FStar_TypeChecker_Env.tc_hooks =
               (env.FStar_TypeChecker_Env.tc_hooks);
-            FStar_TypeChecker_Env.dsenv = dsenv2;
+            FStar_TypeChecker_Env.dsenv = dsenv4;
             FStar_TypeChecker_Env.nbe = (env.FStar_TypeChecker_Env.nbe);
             FStar_TypeChecker_Env.strict_args_tab =
               (env.FStar_TypeChecker_Env.strict_args_tab);

@@ -45,7 +45,7 @@ val atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 
 val st_term : Type0
 val tm_return (t:term) : st_term
-val tm_abs (bs:list (option qualifier & binder)) (annot:comp) (body:st_term) : st_term
+val tm_abs (b:binder) (q:option qualifier) (pre:term) (body:st_term) (post:option term) : st_term
 val tm_st_app (head:term) (q:FStar.Syntax.Syntax.aqual) (arg:term) : st_term
 val tm_bind (x:option (ident & term)) (e1:st_term) (e2:st_term) : st_term
 val tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) : st_term
@@ -54,4 +54,10 @@ val tm_if (head:term) (returns_annot:option vprop) (then_ else_:st_term) : st_te
 
 val close_term (t:term) (v:var) : term
 val close_st_term (t:st_term) (v:var) : st_term
-val close_comp (t:comp) (v:var) : st_term
+val close_comp (t:comp) (v:var) : comp
+val comp_pre (c:comp) : term
+val comp_post (c:comp) : term
+
+val print_exn (e:exn) : string
+val st_term_to_string (env:FStar.TypeChecker.Env.env) (_:st_term) : either string string
+val comp_to_string (env:FStar.TypeChecker.Env.env) (_:comp) : either string string

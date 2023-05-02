@@ -73,23 +73,13 @@ let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
 type st_term = Pulse_Syntax.st_term
 let tm_return (t:term) : st_term = Tm_Return(STT, false, t)
 
-let tm_abs (bs:(qualifier option * binder) list) (annot:comp) (body:st_term) : st_term =
-   let pre, post =
-     match annot with
-     | C_ST st 
-     | C_STAtomic (_, st)
-     | C_STGhost (_, st)  -> Some st.pre, Some st.post
-     | _ -> None, None
-   in
-   let rec aux bs = 
-     match bs with
-     | [] -> failwith "Empty binders in tm_abs"
-     | [ last ] ->
-       Tm_Abs (last, None, pre, body, post)
-     | hd::tl -> 
-       Tm_Abs (hd, None, None, aux tl, None)
-   in
-   aux (List.map snd bs)
+let tm_abs (b:binder)
+           (q:qualifier option)
+           (pre:term)
+           (body:st_term)
+           (post:term option)
+  : st_term 
+  = Tm_Abs(b, q, Some pre, body, post)
 
 let tm_st_app (head:term) (q:S.aqual) (arg:term) : st_term =
   Tm_STApp(head, map_aqual q, arg)
@@ -109,3 +99,39 @@ let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_ter
 let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v
 let close_comp t v = Pulse_Syntax_Naming.close_comp t v
+let comp_pre c =
+  match c with
+   | C_ST st
+   | C_STAtomic (_, st)
+   | C_STGhost (_, st) -> st.pre
+   | _ -> tm_emp
+
+let comp_post c =
+  match c with
+   | C_ST st
+   | C_STAtomic (_, st)
+   | C_STGhost (_, st) -> st.post
+   | _ -> tm_emp
+
+let print_exn (e:exn) = Printexc.to_string e
+
+open FStar_Pervasives
+module Env = FStar_TypeChecker_Env
+let tac_to_string (env:Env.env) f =
+    let ps =
+        FStar_Tactics_Basic.proofstate_of_goals 
+                (Env.get_range env)
+                env
+                []
+                []
+    in
+    match f ps with
+    | FStar_Tactics_Result.Success (x, _) -> Inl x
+    | FStar_Tactics_Result.Failed (exn, _) -> Inr (print_exn exn)
+  
+let st_term_to_string (env:Env.env) (t:st_term)
+  : (string, string) either
+  = tac_to_string env (Pulse_Syntax_Printer.st_term_to_string t)
+let comp_to_string (env:Env.env) (t:comp)
+  : (string, string) either
+  = tac_to_string env (Pulse_Syntax_Printer.comp_to_string t)  

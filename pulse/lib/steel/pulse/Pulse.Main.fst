@@ -683,6 +683,7 @@ let check_pulse (namespaces:list string)
   = fun env ->
       match Pulse.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
       | Inl st_term ->
+        T.print (Printf.sprintf "Translated term is\n%s\n" (P.st_term_to_string st_term));
         main st_term Tm_Emp env
       | Inr (msg, range) ->
         T.fail (Printf.sprintf "Error @ %s: %s"
