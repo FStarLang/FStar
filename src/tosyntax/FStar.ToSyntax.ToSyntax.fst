@@ -4015,7 +4015,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
       let open FStar.Parser.AST.Util in
       let opens = {
         open_namespaces = open_modules_and_namespaces env;
-        module_abbreviations = []
+        module_abbreviations = module_abbrevs env
       } in
       match parser opens code range with
       | Inl error ->

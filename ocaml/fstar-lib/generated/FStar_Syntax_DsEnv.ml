@@ -413,6 +413,14 @@ let (open_modules_and_namespaces : env -> FStar_Ident.lident Prims.list) =
          | Open_module_or_namespace (lid, _info) ->
              FStar_Pervasives_Native.Some lid
          | uu___1 -> FStar_Pervasives_Native.None) env1.scope_mods
+let (module_abbrevs :
+  env -> (FStar_Ident.ident * FStar_Ident.lident) Prims.list) =
+  fun env1 ->
+    FStar_Compiler_List.filter_map
+      (fun uu___ ->
+         match uu___ with
+         | Module_abbrev (l, m) -> FStar_Pervasives_Native.Some (l, m)
+         | uu___1 -> FStar_Pervasives_Native.None) env1.scope_mods
 let (set_current_module : env -> FStar_Ident.lident -> env) =
   fun e ->
     fun l ->

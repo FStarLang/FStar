@@ -9215,9 +9215,10 @@ and (desugar_decl_noattrs :
                  let opens =
                    let uu___ =
                      FStar_Syntax_DsEnv.open_modules_and_namespaces env in
+                   let uu___1 = FStar_Syntax_DsEnv.module_abbrevs env in
                    {
                      FStar_Parser_AST_Util.open_namespaces = uu___;
-                     FStar_Parser_AST_Util.module_abbreviations = []
+                     FStar_Parser_AST_Util.module_abbreviations = uu___1
                    } in
                  let uu___ = parser opens code range in
                  (match uu___ with

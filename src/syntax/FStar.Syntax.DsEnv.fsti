@@ -82,6 +82,7 @@ val current_module: env -> lident
 val set_current_module: env -> lident -> env
 val open_modules: env -> list (lident * modul)
 val open_modules_and_namespaces: env -> list lident
+val module_abbrevs: env -> list (ident * lident)
 val iface_decls : env -> lident -> option (list Parser.AST.decl)
 val set_iface_decls: env -> lident -> list Parser.AST.decl -> env
 val try_lookup_id: env -> ident -> option term

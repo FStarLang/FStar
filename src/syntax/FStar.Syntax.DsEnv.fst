@@ -113,6 +113,11 @@ let open_modules_and_namespaces env =
                    | Open_module_or_namespace (lid, _info) -> Some lid
                    | _ -> None)
     env.scope_mods
+let module_abbrevs env : list (ident & lident)=
+  List.filter_map (function
+                   | Module_abbrev (l, m) -> Some (l, m)
+                   | _ -> None)
+    env.scope_mods
 let set_current_module e l = {e with curmodule=Some l}
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
