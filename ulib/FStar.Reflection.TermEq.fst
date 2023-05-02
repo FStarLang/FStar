@@ -5,6 +5,13 @@ open FStar.Reflection.Data
 open FStar.Reflection.Builtins
 module L = FStar.List.Tot
 
+(*
+This file raised several limitations of the SMT encoding. Lines marked
+with #2908 are seemingly consequences of issue #2908 and should be removed.
+In fact many auxiliary lemmas should be removed as they should become
+obvious. Lines marked with *** should not be needed.
+*)
+
 let rec allP0 #a (pred : a -> Type0) (l : list a) : Type0 =
   match l with
   | [] -> True
@@ -19,7 +26,7 @@ let optP0 #a (pred : a -> Type0) (o : option a) : Type0 =
   match o with
   | None -> True
   | Some x -> pred x
-  
+
 let optP #a #b (top:b) (pred : (x:a{x << top}) -> Type0) (o : option a{o << top}) : Type0 =
   match o with
   | None -> True
@@ -350,8 +357,6 @@ and pat_eq p1 p2 =
   | Pat_Constant c1, Pat_Constant c2 -> const_eq c1 c2
   | Pat_Dot_Term t1, Pat_Dot_Term t2 -> opt_dec_eq p1 p2 term_eq t1 t2
   | Pat_Cons f1 us1 args1, Pat_Cons f2 us2 args2 ->
-    assert (us1 << p1);
-    assert (us2 << p2);
     fv_eq f1 f2
      &&& opt_dec_eq p1 p2 (list_dec_eq p1 p2 univ_eq) us1 us2
      &&& list_dec_eq p1 p2 pat_arg_eq args1 args2
@@ -394,16 +399,27 @@ let rec faithful_univ (u : universe) =
   | Uv_Succ u -> faithful_univ u
   | Uv_Max us -> allP u faithful_univ us
 
+let faithful_univ_UvMax (u : universe) (us : list universe)
+  : Lemma (requires inspect_universe u == Uv_Max us /\ faithful_univ u)
+          (ensures allP u faithful_univ us)
+  = assert_norm (faithful_univ u <==> allP u faithful_univ us) // #2908
+
+let univ_eq_UvMax (u1 u2 : universe) (us1 us2 : list universe)
+  : Lemma (requires inspect_universe u1 == Uv_Max us1 /\
+                    inspect_universe u2 == Uv_Max us2)
+          (ensures univ_eq u1 u2 == list_dec_eq u1 u2 univ_eq us1 us2)
+  = assert_norm (univ_eq u1 u2 == list_dec_eq u1 u2 univ_eq us1 us2) // #2908
+
 val univ_faithful_lemma (u1 u2 : universe) : Lemma (requires faithful_univ u1 /\ faithful_univ u2) (ensures defined (univ_eq u1 u2))
 let rec univ_faithful_lemma (u1 u2 : universe) =
   match inspect_universe u1, inspect_universe u2 with
   | Uv_Zero, Uv_Zero -> ()
   | Uv_Succ u1, Uv_Succ u2 -> univ_faithful_lemma u1 u2
   | Uv_Max us1, Uv_Max us2 ->
-    assert_norm (faithful_univ u1 <==> allP u1 faithful_univ us1); // #2908
-    assert_norm (faithful_univ u2 <==> allP u2 faithful_univ us2); // #2908
+    (****)faithful_univ_UvMax u1 us1;
+    (***)faithful_univ_UvMax u2 us2;
     univ_faithful_lemma_list u1 u2 us1 us2;
-    assert_norm (univ_eq u1 u2 == list_dec_eq u1 u2 univ_eq us1 us2); // #2908
+    (***)univ_eq_UvMax u1 u2 us1 us2;
     ()
   | Uv_BVar _, Uv_BVar _ -> ()
   | Uv_Name _, Uv_Name _ -> ()
@@ -521,6 +537,69 @@ val faithful_lemma (t1:term) (t2:term) : Lemma (requires faithful t1 /\ faithful
 
 #push-options "--z3rlimit 40"
 
+let faithful_Tv_UInst (t : term) (f : fv) (us : list universe)
+  : Lemma (requires inspect_ln t == Tv_UInst f us
+                  /\ faithful t)
+          (ensures allP t faithful_univ us)
+  = ()
+
+let faithful_Tv_Let (t : term) (recf : bool) (attrs : list term) (bv:bv) (ty:typ) (def body : term)
+  : Lemma (requires inspect_ln t == Tv_Let recf attrs bv ty def body
+                  /\ faithful t)
+          (ensures faithful_attrs attrs)
+  = ()
+
+module T = FStar.Tactics
+
+let term_eq_Tv_Let (t1 t2 : term) (recf1 recf2 : bool) (attrs1 attrs2 : list term) (bv1 bv2:bv) (ty1 ty2:typ) (def1 def2 body1 body2: term)
+  : Lemma (requires inspect_ln t1 == Tv_Let recf1 attrs1 bv1 ty1 def1 body1
+                  /\ inspect_ln t2 == Tv_Let recf2 attrs2 bv2 ty2 def2 body2)
+          (ensures term_eq t1 t2 == (eq_eq recf1 recf2 &&& list_dec_eq t1 t2 term_eq attrs1 attrs2 &&& binding_bv_eq bv1 bv2 &&& term_eq ty1 ty2 &&& term_eq def1 def2 &&& term_eq body1 body2))
+  = assume (term_eq t1 t2 == (eq_eq recf1 recf2 &&& list_dec_eq t1 t2 term_eq attrs1 attrs2 &&& binding_bv_eq bv1 bv2 &&& term_eq ty1 ty2 &&& term_eq def1 def2 &&& term_eq body1 body2)) // #2908, somehow assert_norm also does not work
+
+let faithful_Tv_Match (t : term) (sc : term) (o : option match_returns_ascription) (brs : list branch)
+  : Lemma (requires inspect_ln t == Tv_Match sc o brs /\ faithful t)
+          (ensures allP t faithful_branch brs)
+  = assert_norm (faithful t ==> allP t faithful_branch brs)
+
+let term_eq_Tv_Match (t1 t2 : term) (sc1 sc2 : term) (o1 o2 : option match_returns_ascription) (brs1 brs2 : list branch)
+  : Lemma (requires inspect_ln t1 == Tv_Match sc1 o1 brs1
+                  /\ inspect_ln t2 == Tv_Match sc2 o2 brs2)
+          (ensures term_eq t1 t2 == (term_eq sc1 sc2
+                    &&& opt_dec_eq t1 t2 match_returns_ascription_eq o1 o2
+                    &&& list_dec_eq t1 t2 br_eq brs1 brs2))
+  = assume (term_eq t1 t2 == (term_eq sc1 sc2
+                    &&& opt_dec_eq t1 t2 match_returns_ascription_eq o1 o2
+                   &&& list_dec_eq t1 t2 br_eq brs1 brs2)) // #2908, somehow assert_norm also does not work
+
+let faithful_Pat_Cons (p : pattern) (f:fv) (ous : option universes) (args : list (pattern & bool))
+  : Lemma (requires p == Pat_Cons f ous args /\ faithful_pattern p)
+          (ensures allP p faithful_pattern_arg args)
+  = assert_norm (faithful_pattern p ==> allP p faithful_pattern_arg args) // #2908
+
+let pat_eq_Pat_Cons (p1 p2 : pattern) (f1 f2 : fv) (ous1 ous2 : option universes) (args1 args2 : list (pattern & bool))
+  : Lemma (requires p1 == Pat_Cons f1 ous1 args1 /\ p2 == Pat_Cons f2 ous2 args2)
+          (ensures pat_eq p1 p2 == (fv_eq f1 f2
+                                    &&& opt_dec_eq p1 p2 (list_dec_eq p1 p2 univ_eq) ous1 ous2
+                                    &&& list_dec_eq p1 p2 pat_arg_eq args1 args2))
+  = assert_norm (pat_eq p1 p2 == (fv_eq f1 f2
+                                    &&& opt_dec_eq p1 p2 (list_dec_eq p1 p2 univ_eq) ous1 ous2
+                                    &&& list_dec_eq p1 p2 pat_arg_eq args1 args2))
+
+let comp_eq_C_Eff (c1 c2 : comp) (us1 us2 : universes) (ef1 ef2 : name) (t1 t2 : typ) (args1 args2 : list argv) (dec1 dec2 : list term)
+  : Lemma (requires inspect_comp c1 == C_Eff us1 ef1 t1 args1 dec1
+                  /\ inspect_comp c2 == C_Eff us2 ef2 t2 args2 dec2)
+          (ensures comp_eq c1 c2 == (list_dec_eq c1 c2 univ_eq us1 us2
+                                        &&& eq_eq ef1 ef2
+                                        &&& term_eq t1 t2
+                                        &&& list_dec_eq c1 c2 arg_eq args1 args2
+                                        &&& list_dec_eq c1 c2 term_eq dec1 dec2))
+  = assume (comp_eq c1 c2 == (list_dec_eq c1 c2 univ_eq us1 us2
+                                        &&& eq_eq ef1 ef2
+                                        &&& term_eq t1 t2
+                                        &&& list_dec_eq c1 c2 arg_eq args1 args2
+                                        &&& list_dec_eq c1 c2 term_eq dec1 dec2)) // #2908, assert_norm doesn't work
+
 let rec faithful_lemma (t1 t2 : term) =
   match inspect_ln t1, inspect_ln t2 with
   | Tv_Var _, Tv_Var _
@@ -529,14 +608,7 @@ let rec faithful_lemma (t1 t2 : term) =
   | Tv_UInst f1 us1, Tv_UInst f2 us2 ->
     let tv1 = inspect_ln t1 in
     let tv2 = inspect_ln t2 in
-    assert (us1 << t1);
-    assert (us2 << t2);
-    assert_norm (faithful t1 ==> allP t1 faithful_univ us1);
-    assert_norm (faithful t2 ==> allP t2 faithful_univ us2);
-    assert_norm (allP t1 faithful_univ us1);
-    assert_norm (allP t2 faithful_univ us2);
     univ_faithful_lemma_list t1 t2 us1 us2;
-    assert_norm (term_eq t1 t2 == (fv_eq f1 f2 &&& list_dec_eq t1 t2 univ_eq us1 us2));
     ()
 
   | Tv_Const c1, Tv_Const c2 -> ()
@@ -556,29 +628,19 @@ let rec faithful_lemma (t1 t2 : term) =
     faithful_lemma t1 t2
 
   | Tv_Let r1 ats1 x1 ty1 e1 b1, Tv_Let r2 ats2 x2 ty2 e2 b2 ->
-    assume (faithful t1 ==> faithful_attrs ats1); //2908
-    assume (faithful t2 ==> faithful_attrs ats2); //2908
     faithful_lemma_attrs_dec t1 t2 ats1 ats2;
     faithful_lemma ty1 ty2;
     faithful_lemma e1 e2;
     faithful_lemma b1 b2;
-    assume (
-     (eq_eq r1 r2
-     &&& list_dec_eq t1 t2 term_eq ats1 ats2
-     &&& binding_bv_eq x1 x2
-     &&& term_eq ty1 ty2
-     &&& term_eq e1 e2
-     &&& term_eq b1 b2) == (term_eq t1 t2)); // #2908
+    (***)term_eq_Tv_Let t1 t2 r1 r2 ats1 ats2 x1 x2 ty1 ty2 e1 e2 b1 b2;
     ()
 
   | Tv_Match sc1 o1 brs1, Tv_Match sc2 o2 brs2 ->
-    assume ((term_eq sc1 sc2
-     &&& opt_dec_eq t1 t2 match_returns_ascription_eq o1 o2
-     &&& list_dec_eq t1 t2 br_eq brs1 brs2) == term_eq t1 t2); // #2908
-    assert_norm (faithful t1 ==> allP t1 faithful_branch brs1); // #2908
-    assert_norm (faithful t2 ==> allP t2 faithful_branch brs2); // #2908
+    (***)faithful_Tv_Match t1 sc1 o1 brs1;
+    (***)faithful_Tv_Match t2 sc2 o2 brs2;
     faithful_lemma sc1 sc2;
     faithful_lemma_branches t1 t2 brs1 brs2;
+    (***)term_eq_Tv_Match t1 t2 sc1 sc2 o1 o2 brs1 brs2;
     ()
 
   | Tv_AscribedT e1 t1 tacopt1 eq1, Tv_AscribedT e2 t2 tacopt2 eq2 ->
@@ -603,20 +665,16 @@ and faithful_lemma_pattern (p1 p2 : pattern) : Lemma (requires faithful_pattern 
   | Pat_Constant c1, Pat_Constant c2 -> ()
   | Pat_Dot_Term (Some t1), Pat_Dot_Term (Some t2) -> faithful_lemma t1 t2
   | Pat_Cons f1 uso1 args1, Pat_Cons f2 uso2 args2 ->
-    assert_norm (faithful_pattern p1 ==> allP p1 faithful_pattern_arg args1); // #2908
-    assert_norm (faithful_pattern p2 ==> allP p2 faithful_pattern_arg args2); // #2908
+    (***)faithful_Pat_Cons p1 f1 uso1 args1;
+    (***)faithful_Pat_Cons p2 f2 uso2 args2;
     let aux : squash (defined (opt_dec_eq p1 p2 (list_dec_eq p1 p2 univ_eq) uso1 uso2)) =
       match uso1, uso2 with
       | Some us1, Some us2 ->
         univ_faithful_lemma_list p1 p2 us1 us2
       | _ -> ()
     in
-    assert (defined (opt_dec_eq p1 p2 (list_dec_eq p1 p2 univ_eq) uso1 uso2));
     faithful_lemma_pattern_args p1 p2 args1 args2;
-    assert_norm (
-        (fv_eq f1 f2
-        &&& opt_dec_eq p1 p2 (list_dec_eq p1 p2 univ_eq) uso1 uso2
-        &&& list_dec_eq p1 p2 pat_arg_eq args1 args2) == pat_eq p1 p2)
+    (***)pat_eq_Pat_Cons p1 p2 f1 f2 uso1 uso2 args1 args2
 
   | _ -> ()
 
@@ -736,12 +794,7 @@ and faithful_lemma_comp (c1 c2 : comp) : Lemma (requires faithful_comp c1 /\ fai
      )
     ;
     defined_list_dec c1 c2 term_eq dec1 dec2;
-    assume (
-       (list_dec_eq c1 c2 univ_eq us1 us2
-        &&& eq_eq e1 e2
-        &&& term_eq r1 r2
-        &&& list_dec_eq c1 c2 arg_eq args1 args2
-        &&& list_dec_eq c1 c2 term_eq dec1 dec2) == comp_eq c1 c2); // #2908
+    (***)comp_eq_C_Eff c1 c2 us1 us2 e1 e2 r1 r2 args1 args2 dec1 dec2;
     ()
   | _ -> ()
 #pop-options
