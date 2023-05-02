@@ -123,3 +123,7 @@ type unfold_side =
   | Right
   | Both
   | Neither
+
+type effect_label =
+  | E_Total
+  | E_Ghost
