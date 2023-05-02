@@ -11,9 +11,9 @@ open Pulse.Steel.Wrapper
 ```pulse
 fn test_write_10 (x:ref U32.t)
                  (#n:erased U32.t)
-   requires (pts_to x full_perm n)
+   requires pts_to x full_perm n
    returns _ : unit
-   ensures  (pts_to x full_perm 0ul)
+   ensures  pts_to x full_perm 0ul
 {
     x := 1ul;
     x := 0ul;
@@ -24,9 +24,9 @@ fn test_write_10 (x:ref U32.t)
 fn test_read (r:ref U32.t)
              (#n:erased U32.t)
              (#p:perm)
-   requires (pts_to r p n)
+   requires pts_to r p n
    returns x : U32.t
-   ensures  (pts_to r p x)
+   ensures pts_to r p x
 {
   let x = !r;
   x
@@ -36,12 +36,12 @@ fn test_read (r:ref U32.t)
 ```pulse
 fn swap (r1 r2:ref U32.t)
         (#n1 #n2:erased U32.t)
-  requires (
-      pts_to r1 full_perm n1 `star`
+  requires 
+     (pts_to r1 full_perm n1 `star`
       pts_to r2 full_perm n2)
   returns _ : unit
-  ensures (
-      pts_to r1 full_perm n2 `star`
+  ensures
+     (pts_to r1 full_perm n2 `star`
       pts_to r2 full_perm n1)
 {
   let x = !r1;
@@ -55,13 +55,13 @@ fn swap (r1 r2:ref U32.t)
 ```pulse
 fn call_swap2 (r1 r2:ref U32.t)
               (#n1 #n2:erased U32.t)
-   requires (
-      pts_to r1 full_perm n1 `star`
-      pts_to r2 full_perm n2)
+   requires
+      (pts_to r1 full_perm n1 `star`
+       pts_to r2 full_perm n2)
    returns _ : unit
-   ensures (
-      pts_to r1 full_perm n1 `star`
-      pts_to r2 full_perm n2)
+   ensures
+      (pts_to r1 full_perm n1 `star`
+       pts_to r2 full_perm n2)
 {
    swap r1 r2;
    swap r1 r2
@@ -72,13 +72,13 @@ fn call_swap2 (r1 r2:ref U32.t)
 ```pulse
 fn swap_with_elim_pure (r1 r2:ref U32.t) 
                        (#n1 #n2:erased U32.t)
-   requires (
-     pts_to r1 full_perm n1 `star`
-     pts_to r2 full_perm n2)
+   requires
+     (pts_to r1 full_perm n1 `star`
+      pts_to r2 full_perm n2)
    returns _ : unit
-   ensures (
-     pts_to r1 full_perm n2 `star`
-     pts_to r2 full_perm n1)
+   ensures
+     (pts_to r1 full_perm n2 `star`
+      pts_to r2 full_perm n1)
 {
    let x = !r1;
    let y = !r2;

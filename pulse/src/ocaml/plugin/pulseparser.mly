@@ -222,7 +222,7 @@ mutOrRefQualifier:
   | REF { REF }
 
 pulseVprop:
-  | t=atomicTerm
+  | t=appTermNoRecordExp
     { VPropTerm t }
   | EXISTS bs=nonempty_list(pulseMultiBinder) DOT body=pulseVprop
     { mk_vprop_exists (List.flatten bs) body }
