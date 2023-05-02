@@ -1,4 +1,4 @@
-module PulseASTBuilder
+module Pulse_ASTBuilder
 open FStar.Parser.AST
 open FStar.Parser.AST.Util
 open FStar.Ident

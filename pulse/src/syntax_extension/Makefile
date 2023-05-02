@@ -13,7 +13,7 @@ FSTAR_BOOT_OPTIONS+=--include .
 OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
 ADDITIONAL_INCLUDES=
-EXTRACT_FILES=PulseASTBuilder.ml PulseSugar.ml PulseDesugar.ml
+EXTRACT_FILES=Pulse_ASTBuilder.ml PulseSugar.ml PulseDesugar.ml
 extract: $(addprefix $(OUTPUT_DIRECTORY)/,$(EXTRACT_FILES))
 
 # And then, in a separate invocation, from each .checked.lax we
