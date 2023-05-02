@@ -14,4 +14,3 @@ val tot_typing_ln (#f:_) (#g:_) (#e:_) (#t:_)
 val st_typing_ln  (#f:_) (#g:_) (#t:_) (#c:_)
                   (st:st_typing f g t c)
   : Lemma (ln_st t /\ ln_c c)
-

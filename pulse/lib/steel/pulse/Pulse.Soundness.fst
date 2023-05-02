@@ -20,6 +20,7 @@ module Exists = Pulse.Soundness.Exists
 module While = Pulse.Soundness.While
 module Admit = Pulse.Soundness.Admit
 module Par = Pulse.Soundness.Par
+module WithLocal = Pulse.Soundness.WithLocal
 module Rewrite = Pulse.Soundness.Rewrite
 module Comp = Pulse.Soundness.Comp
 module LN = Pulse.Typing.LN
@@ -291,7 +292,8 @@ let rec soundness (f:stt_env)
     | T_Par _ _ _ _ _ _ _ _ _ _ ->
       Par.par_soundness d soundness
 
-    | T_WithLocal _ _ _ _ _ _ _ _ _ _ -> admit ()
+    | T_WithLocal _ _ _ _ _ _ _ _ _ _ ->
+      WithLocal.withlocal_soundness d soundness
 
     | T_Rewrite _ _ _ _ _ ->
       Rewrite.rewrite_soundness d

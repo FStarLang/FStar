@@ -572,7 +572,8 @@ let (steel_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
                 (FStar_Pervasives_Native.snd
                    e1.FStar_Extraction_ML_Syntax.loc) in
             (FStar_Errors_Codes.Fatal_ExtractionUnsupported, uu___6) in
-          FStar_Errors.raise_error uu___5 FStar_Compiler_Range.dummyRange
+          FStar_Errors.raise_error uu___5
+            FStar_Compiler_Range_Type.dummyRange
       | uu___ ->
           FStar_Compiler_Effect.raise
             FStar_Extraction_Krml.NotSupportedByKrmlExtension
@@ -648,8 +649,8 @@ let (steel_translate_let : FStar_Extraction_Krml.translate_let_t) =
                            uu___15 in
                        (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
                          uu___13) in
-                     FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
-                       uu___12);
+                     FStar_Errors.log_issue
+                       FStar_Compiler_Range_Type.dummyRange uu___12);
                     FStar_Pervasives_Native.Some
                       (FStar_Extraction_Krml.DGlobal
                          (meta1, name1, (FStar_Compiler_List.length tvars),

@@ -254,7 +254,7 @@ let struct_field
     ()
     (struct_field_lift_fpu p k)
 
-#push-options "--split_queries"
+#push-options "--split_queries always"
 
 #restart-solver
 let struct_field_ext
@@ -406,7 +406,7 @@ let substruct_lift_fpu'
       | _ -> v k
     )
 
-#push-options "--query_stats --z3rlimit 64 --split_queries"
+#push-options "--query_stats --z3rlimit 64 --split_queries always"
 
 #restart-solver
 let substruct_lift_fpu_prf

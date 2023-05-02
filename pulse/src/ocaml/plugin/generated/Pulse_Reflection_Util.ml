@@ -431,7 +431,7 @@ let (mk_name : Prims.nat -> FStar_Reflection_Types.term) =
     FStar_Reflection_Builtins.pack_ln
       (FStar_Reflection_Data.Tv_Var
          (FStar_Reflection_Builtins.pack_bv
-            (FStar_Reflection_Typing.make_bv i tun)))
+            (FStar_Reflection_Typing.make_bv i)))
 type arrow_dom = (FStar_Reflection_Types.term * FStar_Reflection_Data.aqualv)
 let (mk_arrow :
   arrow_dom -> FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
@@ -723,7 +723,7 @@ let (stt_vprop_equiv :
 let (return_stt_lid : Prims.string Prims.list) =
   mk_steel_wrapper_lid "return_stt"
 let (return_stt_noeq_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "return_stt_noeq"
+  mk_steel_wrapper_lid "return"
 let (return_stt_atomic_lid : Prims.string Prims.list) =
   mk_steel_wrapper_lid "return_stt_atomic"
 let (return_stt_atomic_noeq_lid : Prims.string Prims.list) =
@@ -1716,3 +1716,36 @@ let (mk_ref : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
     FStar_Reflection_Builtins.pack_ln
       (FStar_Reflection_Data.Tv_App
          (t, (a, FStar_Reflection_Data.Q_Explicit)))
+let (mk_pts_to :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun a ->
+    fun r ->
+      fun perm ->
+        fun v ->
+          let t =
+            FStar_Reflection_Builtins.pack_ln
+              (FStar_Reflection_Data.Tv_FVar
+                 (FStar_Reflection_Builtins.pack_fv pts_to_lid)) in
+          let t1 =
+            FStar_Reflection_Builtins.pack_ln
+              (FStar_Reflection_Data.Tv_App
+                 (t, (a, FStar_Reflection_Data.Q_Implicit))) in
+          let t2 =
+            FStar_Reflection_Builtins.pack_ln
+              (FStar_Reflection_Data.Tv_App
+                 (t1, (r, FStar_Reflection_Data.Q_Explicit))) in
+          let t3 =
+            FStar_Reflection_Builtins.pack_ln
+              (FStar_Reflection_Data.Tv_App
+                 (t2, (perm, FStar_Reflection_Data.Q_Explicit))) in
+          FStar_Reflection_Builtins.pack_ln
+            (FStar_Reflection_Data.Tv_App
+               (t3, (v, FStar_Reflection_Data.Q_Explicit)))
+let (full_perm_tm : FStar_Reflection_Types.term) =
+  FStar_Reflection_Builtins.pack_ln
+    (FStar_Reflection_Data.Tv_FVar
+       (FStar_Reflection_Builtins.pack_fv full_perm_lid))

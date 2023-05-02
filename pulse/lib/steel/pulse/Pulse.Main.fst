@@ -36,6 +36,11 @@ let main t pre : RT.dsl_tac_t = main' t pre
 // let parse_and_check (s:string) : RT.dsl_tac_t = main (parse s) Tm_Emp
 
 let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
+let tuple3_lid = ["FStar"; "Pervasives"; "Native"; "tuple3"]
+let tuple4_lid = ["FStar"; "Pervasives"; "Native"; "tuple4"]
+let tuple5_lid = ["FStar"; "Pervasives"; "Native"; "tuple5"]
+let tuple6_lid = ["FStar"; "Pervasives"; "Native"; "tuple6"]
+let tuple7_lid = ["FStar"; "Pervasives"; "Native"; "tuple7"]
 
 let err a = either a string
 
@@ -80,9 +85,21 @@ let readback_ty (g:R.env) (t:R.term)
       unexpected_term "readback failed" t    
     | Some t -> Inl t
 
+let mk_star (l:list term) : term =
+  match l with
+  | [] -> Tm_Emp
+  | [x] -> x
+  | [x; y] -> Tm_Star x y
+  | x::y::tl ->
+    List.Tot.fold_left (fun t x -> Tm_Star t x) (Tm_Star x y) tl
+
+let is_ntuple (s:R.name) : bool =
+  s = tuple2_lid || s = tuple3_lid || s = tuple4_lid ||
+  s = tuple5_lid || s = tuple6_lid || s = tuple7_lid
+
 let rec translate_vprop (g:R.env) (t:R.term)
   : T.Tac (err vprop)
-  = let hd, _ = collect_app t in
+  = let hd, args = collect_app t in
     match inspect_ln hd with
     | Tv_FVar fv ->
       let qn = inspect_fv fv in
@@ -90,8 +107,11 @@ let rec translate_vprop (g:R.env) (t:R.term)
       then translate_exists g t
       else if qn = exists_qn
       then translate_exists_formula g t
-      else if qn = star_lid || qn = tuple2_lid
+      else if qn = star_lid
       then translate_star g t
+      else if is_ntuple qn
+      then let? l = translate_vprop_list g (List.Tot.map fst args) in
+           Inl (mk_star l)
       else if qn = pure_lid
       then translate_pure g t     
       else readback_ty g t
@@ -115,10 +135,9 @@ and translate_exists_sl_body (g:R.env) (t:R.term)
   : T.Tac (err term)
   = match inspect_ln t with
     | Tv_Abs b body ->
-      let bv = (inspect_binder b).binder_bv in
-      let bvv = inspect_bv bv in
+      let sort = (inspect_binder b).binder_sort in
       let u = U_unknown in
-      let t = readback_maybe_unknown_ty bvv.bv_sort in
+      let t = readback_maybe_unknown_ty sort in
       let? body = translate_vprop g body in
       Inl (Tm_ExistsSL u t body should_elim_true)
     | _ -> Inr "in readback exists: the arg not a lambda"
@@ -130,9 +149,9 @@ and translate_exists_formula (g:R.env) (t:R.term)
                             (term_to_string t))
     in
     match term_as_formula t with
-    | Exists bv body ->
+    | Exists bv sort body ->
       let bv = inspect_bv bv in
-      let t = readback_maybe_unknown_ty bv.bv_sort in
+      let t = readback_maybe_unknown_ty sort in
       let? body = translate_vprop g body in
       Inl (Tm_ExistsSL U_unknown t body should_elim_true)
     | _ -> 
@@ -150,10 +169,10 @@ and translate_star (g:R.env) (t:R.term)
     match inspect_ln hd, args with
     | Tv_FVar fv, [(l, _); (r, _)] ->
       let lid = inspect_fv fv in
-      if lid = star_lid || lid = tuple2_lid
+      if lid = star_lid
       then let? l = translate_vprop g l in
            let? r = translate_vprop g r in
-           Inl (Tm_Star l r)
+           Inl (mk_star [l; r])
       else Inr "Not a star"
     | _ ->  Inr "Not a star"
 
@@ -168,6 +187,14 @@ and translate_pure (g:R.env) (t:R.term)
       else Inr "Not a pure"
     | _ ->  Inr "Not a pure"
 
+and translate_vprop_list (g:R.env) (l:list R.term) : T.Tac (err (list term)) =
+  match l with
+  | [] -> Inl []
+  | hd::tl ->
+    let? hd = translate_vprop g hd in
+    let? tl = translate_vprop_list g tl in
+    Inl (hd::tl)
+
 let readback_comp (t:R.term)
   : T.Tac (err comp)
   = try match Readback.readback_comp t with
@@ -181,7 +208,7 @@ let readback_comp (t:R.term)
 
 let translate_binder (g:R.env) (b:R.binder)
   : T.Tac (err (binder & option qualifier))
-  = let {binder_bv=bv; binder_qual=aq; binder_attrs=attrs} =
+  = let {binder_bv=bv; binder_qual=aq; binder_attrs=attrs;binder_sort=sort} =
         R.inspect_binder b
     in
     match attrs, aq with
@@ -191,7 +218,7 @@ let translate_binder (g:R.env) (b:R.binder)
       let q = Readback.readback_qual aq in
       let bv_view = R.inspect_bv bv in
       assume (bv_view.bv_index == 0);
-      let b_ty' = readback_maybe_unknown_ty bv_view.bv_sort in      
+      let b_ty' = readback_maybe_unknown_ty sort in
       Inl ({binder_ty=b_ty';binder_ppname=bv_view.bv_ppname}, q)
 
 let is_head_fv (t:R.term) (fv:list string) : T.Tac (option (list R.argv)) = 
@@ -512,7 +539,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
                translate_st_app_or_return g]
               t
                
-    | R.Tv_Let false [] bv def body ->
+    | R.Tv_Let false [] bv ty def body ->
       let is_mut, def =
         match (inspect_ln def) with
         | Tv_App hd arg ->

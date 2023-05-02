@@ -155,7 +155,7 @@ let mk_total t = R.C_Total t
 let binder_of_t_q t q = RT.binder_of_t_q t q
 let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
 let bound_var i : R.term = RT.bound_var i
-let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i tun))) 
+let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i)))
 
 let arrow_dom = (R.term & R.aqualv)
 let mk_arrow (f:arrow_dom) (out:R.term) : R.term =
@@ -245,7 +245,7 @@ let stt_vprop_equiv (t1 t2:R.term) =
 		pack_ln (Tv_App t (t2, Q_Explicit))
 
 let return_stt_lid = mk_steel_wrapper_lid "return_stt"
-let return_stt_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
+let return_stt_noeq_lid = mk_steel_wrapper_lid "return"
 let return_stt_atomic_lid = mk_steel_wrapper_lid "return_stt_atomic"
 let return_stt_atomic_noeq_lid = mk_steel_wrapper_lid "return_stt_atomic_noeq"
 let return_stt_ghost_lid = mk_steel_wrapper_lid "return_stt_ghost"
@@ -570,3 +570,16 @@ let mk_ref (a:R.term) : R.term =
   let open R in
   let t = pack_ln (Tv_FVar (pack_fv ref_lid)) in
   pack_ln (Tv_App t (a, Q_Explicit))
+
+let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv pts_to_lid)) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (r, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (perm, Q_Explicit)) in
+  pack_ln (Tv_App t (v, Q_Explicit))
+
+let full_perm_tm : R.term =
+  let open R in
+  pack_ln (Tv_FVar (pack_fv full_perm_lid))
+

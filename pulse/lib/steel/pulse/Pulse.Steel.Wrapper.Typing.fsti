@@ -335,17 +335,57 @@ val stt_ghost_admit_typing
 
 val rewrite_typing
   (#g:env)
-		(#p:term)
-		(#q:term)
-		(p_typing:RT.typing g p vprop_tm)
-		(q_typing:RT.typing g q vprop_tm)
-		(equiv:RT.typing g (`()) (stt_vprop_equiv p q))
+  (#p:term)
+  (#q:term)
+  (p_typing:RT.typing g p vprop_tm)
+  (q_typing:RT.typing g q vprop_tm)
+  (equiv:RT.typing g (`()) (stt_vprop_equiv p q))
 
 		: GTot (RT.typing g
-		                  (mk_rewrite p q)
-																				(mk_stt_ghost_comp
-																				   uzero
-																							unit_tm
-																							emp_inames_tm
-																							p
-																							(mk_abs unit_tm Q_Explicit q)))
+                      (mk_rewrite p q)
+                      (mk_stt_ghost_comp
+                        uzero
+                        unit_tm
+                        emp_inames_tm
+                        p
+                        (mk_abs unit_tm Q_Explicit q)))
+
+let with_local_bodypost_body (post:term) (a:term) (x:var) : term =
+  let x_tm = RT.var_as_term x in
+  // post x
+  let post_app = pack_ln (Tv_App post (x_tm, Q_Explicit)) in
+  // exists_ (R.pts_to r full_perm)
+  let exists_tm =
+    mk_exists (pack_universe Uv_Zero) a
+      (mk_abs a Q_Explicit
+         (mk_pts_to a (RT.bound_var 2) full_perm_tm (RT.bound_var 0))) in
+  let star_tm = mk_star post_app exists_tm in
+  RT.open_or_close_term' star_tm (RT.CloseVar x) 0
+
+let with_local_bodypost (post:term) (a:term) (ret_t:term) (x:var) : term =
+  mk_abs ret_t Q_Explicit (with_local_bodypost_body post a x)
+
+val with_local_typing
+  (#g:env)
+  (#u:universe)
+  (#a:term)
+  (#init:term)
+  (#pre:term)
+  (#ret_t:term)
+  (#post:term)
+  (#body:term)
+  (x:var{None? (RT.lookup_bvar g x)})
+  (a_typing:RT.typing g a (pack_ln (Tv_Type (pack_universe Uv_Zero))))
+  (init_typing:RT.typing g init a)
+  (pre_typing:RT.typing g pre vprop_tm)
+  (ret_t_typing:RT.typing g ret_t (pack_ln (Tv_Type u)))
+  (post_typing:RT.typing g post (mk_arrow (ret_t, Q_Explicit) vprop_tm))
+  (body_typing:RT.typing g 
+                         body
+                         (mk_arrow
+                            (mk_ref a, Q_Explicit)
+                            (mk_stt_comp u ret_t
+                               (mk_star pre (mk_pts_to a (RT.bound_var 0) full_perm_tm init))
+                               (with_local_bodypost post a ret_t x))))
+  : GTot (RT.typing g (mk_withlocal u a init pre ret_t post body)
+                    (mk_stt_comp u ret_t pre post))

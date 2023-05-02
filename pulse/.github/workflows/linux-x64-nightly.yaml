@@ -1,0 +1,70 @@
+name: Steel nightly test
+on:
+  schedule:
+    - cron: '1 23 * * *'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: [self-hosted, linux, X64]
+    steps:
+      - name: Record initial timestamp
+        run: |
+          echo "CI_INITIAL_TIMESTAMP=$(date '+%s')" >> $GITHUB_ENV
+      - name: Check out repo        
+        uses: actions/checkout@v2
+      - name: Identify the base FStar branch and the notification channel
+        run: |
+          echo "FSTAR_BRANCH=$(jq -c -r '.RepoVersions.fstar' src/ci/config.json || echo master)" >> $GITHUB_ENV
+          echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' src/ci/config.json)" >> $GITHUB_ENV
+      - name: Build Steel and its dependencies
+        run: |
+          ci_docker_image_tag=steel:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          docker buildx build -t $ci_docker_image_tag -f src/ci/ci.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg STEEL_NIGHTLY_CI=1 .
+      - name: Compute elapsed time
+        if: ${{ always() }}
+        run: |
+          CI_FINAL_TIMESTAMP=$(date '+%s')
+          CI_TIME_DIFF=$(( $CI_FINAL_TIMESTAMP - $CI_INITIAL_TIMESTAMP ))
+          echo "CI_TIME_DIFF_S=$(( $CI_TIME_DIFF % 60 ))" >> $GITHUB_ENV
+          echo "CI_TIME_DIFF_M=$(( ($CI_TIME_DIFF / 60) % 60 ))" >> $GITHUB_ENV
+          echo "CI_TIME_DIFF_H=$(( $CI_TIME_DIFF / 3600 ))" >> $GITHUB_ENV
+          case ${{ job.status }} in
+          (success)
+            echo "CI_EMOJI=✅" >> $GITHUB_ENV
+            ;;
+          (cancelled)
+            echo "CI_EMOJI=⚠" >> $GITHUB_ENV
+            ;;
+          (*)
+            echo "CI_EMOJI=❌" >> $GITHUB_ENV
+            ;;
+          esac
+          echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
+      - name: Post to the Slack channel
+        if: ${{ always() }}
+        id: slack
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          channel-id: ${{ env.CI_SLACK_CHANNEL }}
+          payload: |
+            {
+              "blocks" : [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🌃 ${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ job.status }}>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

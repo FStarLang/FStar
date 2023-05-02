@@ -1,5 +1,5 @@
 module Steel.ST.C.Types.Array
-open Steel.ST.GenElim
+open Steel.ST.GenElim1
 friend Steel.ST.C.Types.Base
 friend Steel.ST.C.Types.Struct.Aux
 open Steel.ST.C.Types.Struct.Aux
@@ -406,7 +406,7 @@ let has_array_of_base'
     array_ref_offset al == 0sz /\
     Ghost.reveal len == n
 
-#push-options "--z3rlimit 16 --split_queries"
+#push-options "--z3rlimit 16 --split_queries always"
 
 #restart-solver
 
@@ -750,7 +750,7 @@ let struct_field_eq_cell
   Steel.ST.C.Model.Struct.struct_field_ext #(A.array_domain n) #(A.array_range t n) (struct_field_pcm (base_array_fd td n)) (A.array_elements_pcm td.pcm n) (fun _ -> ()) k
 
 (*
-#push-options "--split_queries --z3rlimit 16"
+#push-options "--split_queries always --z3rlimit 16"
 
 #restart-solver
 let has_array_cell_array_of_ref
@@ -1064,7 +1064,7 @@ let unarray_cell
   array_pts_to_intro a (Seq.upd s (SZ.v i) v) _ _ ();
   has_array_cell_drop _ _ _
 
-#push-options "--split_queries --z3rlimit 16"
+#push-options "--split_queries always --z3rlimit 16"
 
 let t_array_ref_shift
   (#t: Type)

@@ -1,5 +1,5 @@
 module Steel.ST.C.Types.UserStruct
-open Steel.ST.GenElim
+open Steel.ST.GenElim1
 open Steel.ST.C.Types.Base
 module RW = Steel.ST.C.Types.Rewrite
 module MRW = Steel.ST.C.Model.Rewrite

@@ -470,7 +470,7 @@ let pts_to_intro_from_base
   rewrite (R.pts_to _ _) (R.pts_to (ref_of_array r) (array_pcm_carrier_of_seq r.len x));
   intro_pts_to0 r _ x
 
-#push-options "--z3rlimit 16 --split_queries"
+#push-options "--z3rlimit 16 --split_queries always"
 
 #restart-solver
 let focus_cell
@@ -946,7 +946,7 @@ let ref_of_array_of_ref_base
   (ref_of_array (g_array_of_ref r) == ref_focus r (array_of_ref_conn p))
 = ref_of_array_id (g_array_of_ref r)
 
-#push-options "--split_queries"
+#push-options "--split_queries always"
 
 #restart-solver
 let ref_of_array_of_ref
@@ -1013,7 +1013,7 @@ let array_of_ref
   intro_pts_to1 a _ _ _;
   return a
 
-#push-options "--split_queries --z3rlimit 32 --query_stats"
+#push-options "--split_queries always --z3rlimit 32 --query_stats"
 
 #restart-solver
 let unarray_of_ref

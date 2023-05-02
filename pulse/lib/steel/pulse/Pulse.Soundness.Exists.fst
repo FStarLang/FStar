@@ -123,7 +123,7 @@ let elim_exists_soundness
   assert (~ (Set.mem x (freevars p)));
 
   let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
-  let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x tun))) in
+  let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x))) in
 
   let rreveal_x = Pulse.Reflection.Util.mk_reveal ru rt rx_tm in
 
@@ -132,8 +132,8 @@ let elim_exists_soundness
           Pulse.Reflection.Util.mk_reveal ru rt rx_tm);
 
   let post_eq =
-    RT.equiv_abs (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
-      (RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rp rreveal_x)  in
+    equiv_abs_close (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
+      (RT.EQ_Beta (RT.extend_env (extend_env_l f g) _ _) rt R.Q_Explicit rp rreveal_x)  in
 
   let comp_equiv = elab_stghost_equiv (extend_env_l f g) c _ _ (RT.EQ_Refl _ _) post_eq in
   let d = WT.elim_exists_typing x rt_typing rp_typing in

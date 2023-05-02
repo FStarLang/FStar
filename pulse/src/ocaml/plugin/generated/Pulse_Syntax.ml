@@ -41,34 +41,24 @@ let (__proj__U_max__item___1 : universe -> universe) =
 let (uu___is_U_unknown : universe -> Prims.bool) =
   fun projectee -> match projectee with | U_unknown -> true | uu___ -> false
 type ppname = FStar_Reflection_Typing.pp_name_t
-type 'r range_singleton_trigger = unit
-type range = FStar_Range.range
 type bv = {
   bv_index: index ;
-  bv_ppname: ppname ;
-  bv_range: range }
+  bv_ppname: ppname }
 let (__proj__Mkbv__item__bv_index : bv -> index) =
   fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_index
+    match projectee with | { bv_index; bv_ppname;_} -> bv_index
 let (__proj__Mkbv__item__bv_ppname : bv -> ppname) =
   fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_ppname
-let (__proj__Mkbv__item__bv_range : bv -> range) =
-  fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_range
+    match projectee with | { bv_index; bv_ppname;_} -> bv_ppname
 type nm = {
   nm_index: var ;
-  nm_ppname: ppname ;
-  nm_range: range }
+  nm_ppname: ppname }
 let (__proj__Mknm__item__nm_index : nm -> var) =
   fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_index
+    match projectee with | { nm_index; nm_ppname;_} -> nm_index
 let (__proj__Mknm__item__nm_ppname : nm -> ppname) =
   fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_ppname
-let (__proj__Mknm__item__nm_range : nm -> range) =
-  fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_range
+    match projectee with | { nm_index; nm_ppname;_} -> nm_ppname
 type qualifier =
   | Implicit 
 let (uu___is_Implicit : qualifier -> Prims.bool) = fun projectee -> true
@@ -77,22 +67,11 @@ let (should_elim_true : should_elim_t) =
   FStar_Sealed_Inhabited.seal false true
 let (should_elim_false : should_elim_t) =
   FStar_Sealed_Inhabited.seal false false
-type fv = {
-  fv_name: FStar_Reflection_Types.name ;
-  fv_range: range }
-let (__proj__Mkfv__item__fv_name : fv -> FStar_Reflection_Types.name) =
-  fun projectee -> match projectee with | { fv_name; fv_range;_} -> fv_name
-let (__proj__Mkfv__item__fv_range : fv -> range) =
-  fun projectee -> match projectee with | { fv_name; fv_range;_} -> fv_range
-let (as_fv : FStar_Reflection_Types.name -> fv) =
-  fun l -> { fv_name = l; fv_range = FStar_Range.range_0 }
-type 't not_tv_unknown = unit
-type host_term = FStar_Reflection_Types.term
 type term =
   | Tm_BVar of bv 
   | Tm_Var of nm 
-  | Tm_FVar of fv 
-  | Tm_UInst of fv * universe Prims.list 
+  | Tm_FVar of FStar_Reflection_Types.name 
+  | Tm_UInst of FStar_Reflection_Types.name * universe Prims.list 
   | Tm_Constant of constant 
   | Tm_Refine of binder * term 
   | Tm_PureApp of term * qualifier FStar_Pervasives_Native.option * term 
@@ -108,7 +87,6 @@ type term =
   | Tm_Inames 
   | Tm_EmpInames 
   | Tm_UVar of Prims.int 
-  | Tm_FStar of host_term 
   | Tm_Unknown 
 and binder = {
   binder_ty: term ;
@@ -152,8 +130,6 @@ let uu___is_Tm_Inames uu___ =
 let uu___is_Tm_EmpInames uu___ =
   match uu___ with | Tm_EmpInames _ -> true | _ -> false
 let uu___is_Tm_UVar uu___ = match uu___ with | Tm_UVar _ -> true | _ -> false
-let uu___is_Tm_FStar uu___ =
-  match uu___ with | Tm_FStar _ -> true | _ -> false
 let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
 let uu___is_C_Tot uu___ = match uu___ with | C_Tot _ -> true | _ -> false
@@ -242,7 +218,6 @@ let rec (freevars : term -> var FStar_Set.set) =
         FStar_Set.union (FStar_Set.union (freevars t1) (freevars e1))
           (freevars e2)
     | Tm_Pure p -> freevars p
-    | Tm_FStar t1 -> FStar_Reflection_Typing.freevars t1
     | Tm_Arrow (b, uu___, body) ->
         FStar_Set.union (freevars b.binder_ty) (freevars_comp body)
 and (freevars_comp : comp -> var FStar_Set.set) =
@@ -304,8 +279,7 @@ let rec (ln' : term -> Prims.int -> Prims.bool) =
   fun t ->
     fun i ->
       match t with
-      | Tm_BVar { bv_index = j; bv_ppname = uu___; bv_range = uu___1;_} ->
-          j <= i
+      | Tm_BVar { bv_index = j; bv_ppname = uu___;_} -> j <= i
       | Tm_Var uu___ -> true
       | Tm_FVar uu___ -> true
       | Tm_UInst (uu___, uu___1) -> true
@@ -330,7 +304,6 @@ let rec (ln' : term -> Prims.int -> Prims.bool) =
           (ln' t1 i) && (ln' body (i + Prims.int_one))
       | Tm_Arrow (b, uu___, c) ->
           (ln' b.binder_ty i) && (ln_c' c (i + Prims.int_one))
-      | Tm_FStar t1 -> FStar_Reflection_Typing.ln' t1 i
 and (ln_c' : comp -> Prims.int -> Prims.bool) =
   fun c ->
     fun i ->
@@ -388,8 +361,6 @@ let rec (ln_st' : st_term -> Prims.int -> Prims.bool) =
 let (ln : term -> Prims.bool) = fun t -> ln' t (Prims.of_int (-1))
 let (ln_st : st_term -> Prims.bool) = fun t -> ln_st' t (Prims.of_int (-1))
 let (ln_c : comp -> Prims.bool) = fun c -> ln_c' c (Prims.of_int (-1))
-let (elab_term_placeholder : term -> FStar_Reflection_Types.term) =
-  fun t -> failwith "Not yet implemented:elab_term_placeholder"
 let rec (open_term' : term -> term -> index -> term) =
   fun t ->
     fun v ->
@@ -435,11 +406,6 @@ let rec (open_term' : term -> term -> index -> term) =
                  binder_ty = (open_term' b.binder_ty v i);
                  binder_ppname = (b.binder_ppname)
                }, q, (open_comp' c v (i + Prims.int_one)))
-        | Tm_FStar t1 ->
-            Tm_FStar
-              (FStar_Reflection_Typing.open_or_close_term' t1
-                 (FStar_Reflection_Typing.OpenWith (elab_term_placeholder v))
-                 i)
 and (open_comp' : comp -> term -> index -> comp) =
   fun c ->
     fun v ->
@@ -536,8 +502,7 @@ let (open_term : term -> var -> term) =
         (Tm_Var
            {
              nm_index = v;
-             nm_ppname = FStar_Reflection_Typing.pp_name_default;
-             nm_range = FStar_Range.range_0
+             nm_ppname = FStar_Reflection_Typing.pp_name_default
            }) Prims.int_zero
 let (open_st_term : st_term -> var -> st_term) =
   fun t ->
@@ -546,8 +511,7 @@ let (open_st_term : st_term -> var -> st_term) =
         (Tm_Var
            {
              nm_index = v;
-             nm_ppname = FStar_Reflection_Typing.pp_name_default;
-             nm_range = FStar_Range.range_0
+             nm_ppname = FStar_Reflection_Typing.pp_name_default
            }) Prims.int_zero
 let (open_comp_with : comp -> term -> comp) =
   fun c -> fun x -> open_comp' c x Prims.int_zero
@@ -558,13 +522,7 @@ let rec (close_term' : term -> var -> index -> term) =
         match t with
         | Tm_Var nm1 ->
             if nm1.nm_index = v
-            then
-              Tm_BVar
-                {
-                  bv_index = i;
-                  bv_ppname = (nm1.nm_ppname);
-                  bv_range = (nm1.nm_range)
-                }
+            then Tm_BVar { bv_index = i; bv_ppname = (nm1.nm_ppname) }
             else t
         | Tm_BVar uu___ -> t
         | Tm_FVar uu___ -> t
@@ -606,10 +564,6 @@ let rec (close_term' : term -> var -> index -> term) =
                  binder_ty = (close_term' b.binder_ty v i);
                  binder_ppname = (b.binder_ppname)
                }, q, (close_comp' c v (i + Prims.int_one)))
-        | Tm_FStar t1 ->
-            Tm_FStar
-              (FStar_Reflection_Typing.open_or_close_term' t1
-                 (FStar_Reflection_Typing.CloseVar v) i)
 and (close_comp' : comp -> var -> index -> comp) =
   fun c ->
     fun v ->
@@ -755,11 +709,7 @@ let (comp_inames : comp -> term) =
 let (term_of_var : var -> term) =
   fun x ->
     Tm_Var
-      {
-        nm_index = x;
-        nm_ppname = FStar_Reflection_Typing.pp_name_default;
-        nm_range = FStar_Range.range_0
-      }
+      { nm_index = x; nm_ppname = FStar_Reflection_Typing.pp_name_default }
 let (null_binder : term -> binder) =
   fun t ->
     { binder_ty = t; binder_ppname = FStar_Reflection_Typing.pp_name_default
@@ -771,39 +721,27 @@ let (mk_binder : Prims.string -> term -> binder) =
         binder_ty = t;
         binder_ppname = (FStar_Reflection_Typing.seal_pp_name s)
       }
-let (mk_bvar : Prims.string -> FStar_Range.range -> index -> term) =
+let (mk_bvar : Prims.string -> index -> term) =
   fun s ->
-    fun r ->
-      fun i ->
-        Tm_BVar
-          {
-            bv_index = i;
-            bv_ppname = (FStar_Reflection_Typing.seal_pp_name s);
-            bv_range = r
-          }
+    fun i ->
+      Tm_BVar
+        { bv_index = i; bv_ppname = (FStar_Reflection_Typing.seal_pp_name s)
+        }
 let (null_var : var -> term) =
   fun v ->
     Tm_Var
-      {
-        nm_index = v;
-        nm_ppname = FStar_Reflection_Typing.pp_name_default;
-        nm_range = FStar_Range.range_0
-      }
+      { nm_index = v; nm_ppname = FStar_Reflection_Typing.pp_name_default }
 let (null_bvar : index -> term) =
   fun i ->
     Tm_BVar
-      {
-        bv_index = i;
-        bv_ppname = FStar_Reflection_Typing.pp_name_default;
-        bv_range = FStar_Range.range_0
-      }
+      { bv_index = i; bv_ppname = FStar_Reflection_Typing.pp_name_default }
 let (gen_uvar : term -> (term, unit) FStar_Tactics_Effect.tac_repr) =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "Pulse.Syntax.fst" (Prims.of_int (940))
-         (Prims.of_int (10)) (Prims.of_int (940)) (Prims.of_int (22)))
-      (FStar_Range.mk_range "Pulse.Syntax.fst" (Prims.of_int (940))
-         (Prims.of_int (2)) (Prims.of_int (940)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (745))
+         (Prims.of_int (10)) (Prims.of_int (745)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (745))
+         (Prims.of_int (2)) (Prims.of_int (745)) (Prims.of_int (22)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> Tm_UVar uu___))
@@ -818,9 +756,8 @@ let rec (eq_tm : term -> term -> Prims.bool) =
       | (Tm_Unknown, Tm_Unknown) -> true
       | (Tm_BVar x1, Tm_BVar x2) -> x1.bv_index = x2.bv_index
       | (Tm_Var x1, Tm_Var x2) -> x1.nm_index = x2.nm_index
-      | (Tm_FVar x1, Tm_FVar x2) -> x1.fv_name = x2.fv_name
-      | (Tm_UInst (x1, us1), Tm_UInst (x2, us2)) ->
-          (x1.fv_name = x2.fv_name) && (us1 = us2)
+      | (Tm_FVar x1, Tm_FVar x2) -> x1 = x2
+      | (Tm_UInst (x1, us1), Tm_UInst (x2, us2)) -> (x1 = x2) && (us1 = us2)
       | (Tm_Constant c1, Tm_Constant c2) -> c1 = c2
       | (Tm_Refine (b1, t11), Tm_Refine (b2, t21)) ->
           (eq_tm b1.binder_ty b2.binder_ty) && (eq_tm t11 t21)
@@ -839,8 +776,6 @@ let rec (eq_tm : term -> term -> Prims.bool) =
       | (Tm_Arrow (b1, q1, c1), Tm_Arrow (b2, q2, c2)) ->
           ((eq_tm b1.binder_ty b2.binder_ty) && (q1 = q2)) && (eq_comp c1 c2)
       | (Tm_UVar z1, Tm_UVar z2) -> z1 = z2
-      | (Tm_FStar t11, Tm_FStar t21) ->
-          FStar_Reflection_Builtins.term_eq t11 t21
       | uu___ -> false
 and (eq_comp : comp -> comp -> Prims.bool) =
   fun c1 ->
@@ -928,3 +863,39 @@ let rec (leftmost_head_and_args :
         (match uu___ with
          | (hd1, args) -> (hd1, (FStar_List_Tot_Base.op_At args [(q, arg)])))
     | uu___ -> (t, [])
+let (equiv_abs :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            var ->
+              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                (unit, unit, unit) FStar_Reflection_Typing.equiv)
+  =
+  fun g ->
+    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()
+let (equiv_arrow :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            var ->
+              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                (unit, unit, unit) FStar_Reflection_Typing.equiv)
+  =
+  fun g ->
+    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()
+let (equiv_abs_close :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            var ->
+              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                (unit, unit, unit) FStar_Reflection_Typing.equiv)
+  =
+  fun g ->
+    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()

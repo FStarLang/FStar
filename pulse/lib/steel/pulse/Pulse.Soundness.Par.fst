@@ -73,7 +73,7 @@ let par_soundness
   elab_open_commute' postL (mk_fst uL uR aL aR x_tm) 0;
   elab_open_commute' postR (mk_snd uL uR aL aR x_tm) 0;
 
-  let post_body_eq : RT.equiv (extend_env_l f g)
+  let post_body_eq : RT.equiv (RT.extend_env (extend_env_l f g) x _)
     (mk_star (R.pack_ln (R.Tv_App rpostL (PReflUtil.mk_fst ru ru raL raR rx_tm, R.Q_Explicit)))
              (R.pack_ln (R.Tv_App rpostR (PReflUtil.mk_snd ru ru raL raR rx_tm, R.Q_Explicit))))
     (elab_term (Tm_Star (open_term' postL (mk_fst uL uR aL aR x_tm) 0)
@@ -86,7 +86,7 @@ let par_soundness
     : RT.equiv (extend_env_l f g)
                (mk_abs _ R.Q_Explicit _)
                (mk_abs _ R.Q_Explicit _)
-    = RT.equiv_abs _ _ x post_body_eq in
+    = equiv_abs_close _ _ x post_body_eq in
 
   let d = WT.par_typing x raL_typing raR_typing rpreL_typing rpostL_typing
     rpreR_typing rpostR_typing

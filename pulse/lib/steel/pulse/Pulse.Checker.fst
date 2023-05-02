@@ -16,6 +16,7 @@ open Pulse.Checker.Bind
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module FV = Pulse.Typing.FV
+
 let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
