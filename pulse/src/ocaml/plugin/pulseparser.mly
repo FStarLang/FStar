@@ -28,9 +28,6 @@ let lhs _ = FStar_Compiler_Range.dummyRange
 let rhs _ i = FStar_Compiler_Range.dummyRange
 let rhs2 _ i j = FStar_Compiler_Range.dummyRange
 
-let logic_qualifier_deprecation_warning =
-  "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
-
 let mk_meta_tac m = Meta m
 
 let old_attribute_syntax_warning =
@@ -45,11 +42,11 @@ let none_to_empty_list x =
   | None -> []
   | Some l -> l
 
-let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) : FStar_Parser_AST.decl' =
-    let p = pos_of_lexpos r in
-    let r = mk_range (file_of_range (lhs())) p p in
-    DeclSyntaxExtension (extension_name, s, r)
-
+let as_aqual (q:unit option) =
+    match q with
+    | None -> None
+    | Some _ -> Some Implicit
+    
 let pos_of_lexpos (p:Lexing.position) = FStar_Parser_Util.pos_of_lexpos p
 
 let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
@@ -167,8 +164,8 @@ embeddedFStarTerm:
     { t }
     
 pulseMultiBinder:
-  | LPAREN qual_ids=nonempty_list(lidentOrUnderscore) COLON t=embeddedFStarTerm RPAREN
-    { List.map (fun id -> (None, id, t)) qual_ids }
+  | LPAREN qual_ids=nonempty_list(q=option(HASH) id=lidentOrUnderscore { (q, id) }) COLON t=embeddedFStarTerm RPAREN
+    { List.map (fun (q, id) -> (as_aqual q, id, t)) qual_ids }
 
 pulseComputationType:
   | REQUIRES t=pulseVprop
