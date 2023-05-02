@@ -672,3 +672,19 @@ let check' (t:R.term) (g:RT.fstar_top_env)
 
 [@@plugin]
 let check (t:R.term) : RT.dsl_tac_t = check' t
+  
+[@@plugin]
+let check_pulse (namespaces:list string)
+                (module_abbrevs:list (string & string))
+                (content:string)
+                (file_name:string)
+                (line col:int)
+  : RT.dsl_tac_t
+  = fun env ->
+      match PulseASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
+      | Inl st_term ->
+        main st_term Tm_Emp env
+      | Inr (msg, range) ->
+        T.fail (Printf.sprintf "Error @ %s: %s"
+                  (T.range_to_string range)
+                  msg)

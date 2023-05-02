@@ -1,4 +1,5 @@
 module CustomSyntax
+module PM = Pulse.Main
 
 ```pulse
 fn fibonacci(n:nat)
