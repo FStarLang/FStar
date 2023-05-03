@@ -463,7 +463,7 @@ val subtyping_token (g:env) (t0 t1:typ) : Type0
 
 val equiv_token (g:env) (t0 t1:typ) : Type0
 
-val typing_token (g:env) (e:term) (c:effect_label & typ) : Type0
+val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
 
 val check_subtyping (g:env) (t0 t1:typ)
   : Tac (option (subtyping_token g t0 t1))
@@ -471,10 +471,10 @@ val check_subtyping (g:env) (t0 t1:typ)
 val check_equiv (g:env) (t0 t1:typ)
   : Tac (option (equiv_token g t0 t1))
 
-val core_check_term (g:env) (e:term) (eff:effect_label)
+val core_check_term (g:env) (e:term) (eff:tot_or_ghost)
   : Tac (option (t:typ{typing_token g e (eff, t)}))
 
-val tc_term (g:env) (e:term) (eff:effect_label)
+val tc_term (g:env) (e:term) (eff:tot_or_ghost)
   : Tac (option (r:(term & typ){typing_token g (fst r) (eff, snd r)}))
 
 val universe_of (g:env) (e:term)

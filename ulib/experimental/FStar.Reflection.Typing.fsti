@@ -583,515 +583,6 @@ and freevars_match_returns (m:match_returns_ascription)
     let as_ = freevars_opt as_ freevars in
     b `Set.union` ret `Set.union` as_
 
-//
-// term_ctxt is used to define the equiv relation later,
-//   basically putting two equiv terms in a hole gives equiv terms
-//
-// The abs, arrow, refine, and let cases don't seem right here,
-//   since to prove their equiv, we need to extend gamma for their bodies
-//
-// If this is useful only for app, then may be we should remove it,
-//   and add app rules to the equiv relation itself
-
-[@@ no_auto_projectors]
-noeq
-type term_ctxt =
-  | Ctxt_hole            : term_ctxt
-  | Ctxt_app_head        : term_ctxt -> argv -> term_ctxt
-  | Ctxt_app_arg         : term -> aqualv -> term_ctxt -> term_ctxt
-  // | Ctxt_abs_binder      : binder_ctxt -> term -> term_ctxt
-  // | Ctxt_abs_body        : binder -> term_ctxt -> term_ctxt
-  // | Ctxt_arrow_binder    : binder_ctxt -> comp -> term_ctxt
-  // | Ctxt_arrow_comp      : binder -> comp_ctxt -> term_ctxt
-  // | Ctxt_refine_sort     : bv -> term_ctxt -> term -> term_ctxt
-  // | Ctxt_refine_ref      : bv -> typ -> term_ctxt -> term_ctxt
-  // | Ctxt_let_sort        : bool -> list term -> bv -> term_ctxt -> term -> term -> term_ctxt
-  // | Ctxt_let_def         : bool -> list term -> bv -> term -> term_ctxt -> term -> term_ctxt
-  // | Ctxt_let_body        : bool -> list term -> bv -> term -> term -> term_ctxt -> term_ctxt
-  // | Ctxt_match_scrutinee : term_ctxt -> option match_returns_ascription -> list branch -> term_ctxt
-
-// and bv_ctxt =
-//   | Ctxt_bv : sealed string -> nat -> term_ctxt -> bv_ctxt
-
-// and binder_ctxt =
-//   | Ctxt_binder : bv -> aqualv -> list term -> term_ctxt -> binder_ctxt
-
-// and comp_ctxt =
-//   | Ctxt_total  : term_ctxt -> comp_ctxt
-//   | Ctxt_gtotal : term_ctxt -> comp_ctxt
-
-let rec apply_term_ctxt (e:term_ctxt) (t:term) : Tot term (decreases e) =
-  match e with
-  | Ctxt_hole -> t
-  | Ctxt_app_head e arg -> pack_ln (Tv_App (apply_term_ctxt e t) arg)
-  | Ctxt_app_arg hd q e -> pack_ln (Tv_App hd (apply_term_ctxt e t, q))
-//   | Ctxt_abs_binder b body -> pack_ln (Tv_Abs (apply_binder_ctxt b t) body)
-//   | Ctxt_abs_body b e -> pack_ln (Tv_Abs b (apply_term_ctxt e t))
-//   | Ctxt_arrow_binder b c -> pack_ln (Tv_Arrow (apply_binder_ctxt b t) c)
-//   | Ctxt_arrow_comp b c -> pack_ln (Tv_Arrow b (apply_comp_ctxt c t))
-//   | Ctxt_refine_sort b sort phi -> pack_ln (Tv_Refine b (apply_term_ctxt sort t) phi)
-//   | Ctxt_refine_ref b sort phi -> pack_ln (Tv_Refine b sort (apply_term_ctxt phi t))
-  
-//   | Ctxt_let_sort b attrs bv sort def body ->
-//     pack_ln (Tv_Let b attrs bv (apply_term_ctxt sort t) def body)
-//   | Ctxt_let_def b attrs bv sort def body ->
-//     pack_ln (Tv_Let b attrs bv sort (apply_term_ctxt def t) body)
-//   | Ctxt_let_body b attrs bv sort def body ->
-//     pack_ln (Tv_Let b attrs bv sort def (apply_term_ctxt body t))
-    
-//   | Ctxt_match_scrutinee sc ret brs ->
-//     pack_ln (Tv_Match (apply_term_ctxt sc t) ret brs)
-
-// and apply_binder_ctxt (b:binder_ctxt) (t:term) : Tot binder (decreases b) =
-//   let Ctxt_binder binder_bv binder_qual binder_attrs ctxt = b in
-//   pack_binder {binder_bv; binder_qual; binder_attrs; binder_sort=apply_term_ctxt ctxt t}
-
-// and apply_comp_ctxt (c:comp_ctxt) (t:term) : Tot comp (decreases c) =
-//   match c with
-//   | Ctxt_total e -> pack_comp (C_Total (apply_term_ctxt e t))
-//   | Ctxt_gtotal e -> pack_comp (C_GTotal (apply_term_ctxt e t))
-
-noeq
-type constant_typing: vconst -> term -> Type0 = 
-  | CT_Unit: constant_typing C_Unit unit_ty
-  | CT_True: constant_typing C_True bool_ty
-  | CT_False: constant_typing C_False bool_ty
-
-[@@ no_auto_projectors]
-noeq
-type univ_eq : universe -> universe -> Type0 = 
-  | UN_Refl : 
-    u:universe ->
-    univ_eq u u
-
-  | UN_MaxCongL :
-    u:universe ->
-    u':universe ->
-    v:universe ->
-    univ_eq u u' ->
-    univ_eq (u_max u v) (u_max u' v)
-
-  | UN_MaxCongR :
-    u:universe ->
-    v:universe ->
-    v':universe ->
-    univ_eq v v' ->
-    univ_eq (u_max u v) (u_max u v')
-
-  | UN_MaxComm:
-    u:universe ->
-    v:universe ->
-    univ_eq (u_max u v) (u_max v u)
-
-  | UN_MaxLeq:
-    u:universe ->
-    v:universe ->
-    univ_leq u v ->
-    univ_eq (u_max u v) v
-
-and univ_leq : universe -> universe -> Type0 = 
-  | UNLEQ_Refl:
-    u:universe ->
-    univ_leq u u
-
-  | UNLEQ_Succ:
-    u:universe ->
-    v:universe ->
-    univ_leq u v ->
-    univ_leq u (u_succ v)
-
-  | UNLEQ_Max:
-    u:universe ->
-    v:universe ->
-    univ_leq u (u_max u v)
-
-let mk_if (scrutinee then_ else_:R.term) : R.term =
-  pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
-                                    (Pat_Constant C_False, else_)])
-
-
-// effect and type
-type comp_typ = T.effect_label & typ
-
-let close_comp_typ' (c:comp_typ) (x:var) (i:nat) =
-  fst c, open_or_close_term' (snd c) (CloseVar x) i
-
-let close_comp_typ (c:comp_typ) (x:var) =
-  close_comp_typ' c x 0
-
-let open_comp_typ' (c:comp_typ) (x:var) (i:nat) =
-  fst c, open_or_close_term' (snd c) (open_with_var x) i
-
-let open_comp_typ (c:comp_typ) (x:var) =
-  open_comp_typ' c x 0
-
-let freevars_comp_typ (c:comp_typ) = freevars (snd c)
-
-let mk_comp (c:comp_typ) : R.comp =
-  match fst c with
-  | T.E_Total -> mk_total (snd c)
-  | T.E_Ghost -> mk_ghost (snd c)
-
-let mk_arrow_ct ty qual (c:comp_typ) : R.term =
-  R.pack_ln (R.Tv_Arrow (binder_of_t_q ty qual) (mk_comp c))
- 
-type relation =
-  | R_Eq
-  | R_Sub
-
-//
-// TODO: support for erasable attribute
-//
-let is_non_informative_name (l:name) : bool =
-  l = R.squash_qn ||
-  l = ["FStar"; "Ghost"; "erased"]
-
-let is_non_informative_fv (f:fv) : bool =
-  is_non_informative_name (inspect_fv f)
-
-[@@ no_auto_projectors]
-noeq
-type non_informative : term -> Type0 =
-  | Non_informative_type:
-    u:universe ->
-    non_informative (pack_ln (Tv_Type u))
-  
-  | Non_informative_fv:
-    x:fv{is_non_informative_fv x} ->
-    non_informative (pack_ln (Tv_FVar x))
-  
-  | Non_informative_uinst:
-    x:fv ->
-    us:list universe ->
-    non_informative (pack_ln (Tv_UInst x us))
-
-  | Non_informative_app:
-    t:term ->
-    arg:argv ->
-    non_informative t ->
-    non_informative (pack_ln (Tv_App t arg))
-
-  | Non_informative_total_arrow:
-    t0:term ->
-    q:aqualv ->
-    t1:term ->
-    non_informative t1 ->
-    non_informative (mk_arrow_ct t0 q (T.E_Total, t1))
-  
-  | Non_informative_ghost_arrow:
-    t0:term ->
-    q:aqualv ->
-    t1:term ->
-    non_informative (mk_arrow_ct t0 q (T.E_Ghost, t1))
-    
-
-[@@ no_auto_projectors]
-noeq
-type typing : env -> term -> comp_typ -> Type0 =
-  | T_Token :
-    g:env ->
-    e:term ->
-    c:comp_typ ->
-    squash (FTB.typing_token g e c) ->
-    typing g e c
-
-  | T_Var : 
-     g:env ->
-     x:bv { Some? (lookup_bvar g (bv_index x)) } ->
-     typing g (pack_ln (Tv_Var x)) (T.E_Total, Some?.v (lookup_bvar g (bv_index x)))
-
-  | T_FVar :
-     g:env ->
-     x:fv { Some? (lookup_fvar g x) } -> 
-     typing g (pack_ln (Tv_FVar x)) (T.E_Total, Some?.v (lookup_fvar g x))
-
-  | T_UInst :
-     g:env ->
-     x:fv ->
-     us:list universe { Some? (lookup_fvar_uinst g x us) } ->
-     typing g (pack_ln (Tv_UInst x us)) (T.E_Total, Some?.v (lookup_fvar_uinst g x us))
-
-  | T_Const:
-     g:env ->
-     v:vconst ->
-     t:term ->
-     constant_typing v t ->
-     typing g (constant_as_term v) (T.E_Total, t)
-
-  | T_Abs :
-     g:env ->
-     x:var { None? (lookup_bvar g x) } ->
-     ty:term ->
-     body:term { ~(x `Set.mem` freevars body) } ->
-     body_c:comp_typ ->
-     u:universe ->
-     pp_name:pp_name_t ->
-     q:aqualv ->
-     typing g ty (T.E_Ghost, tm_type u) ->
-     typing (extend_env g x ty) (open_term body x) body_c ->
-     typing g (pack_ln (Tv_Abs (mk_binder pp_name 0 ty q) body))
-              (T.E_Total,
-               pack_ln (Tv_Arrow (mk_binder pp_name 0 ty q)
-                                 (mk_comp (close_comp_typ body_c x))))
-
-  | T_App :
-     g:env ->
-     e1:term ->
-     e2:term ->
-     x:binder ->
-     t:term ->
-     eff:T.effect_label ->
-     typing g e1 (eff, pack_ln (Tv_Arrow x (mk_comp (eff, t)))) ->
-     typing g e2 (eff, binder_sort x) ->
-     typing g (pack_ln (Tv_App e1 (e2, binder_qual x)))
-              (eff, open_with t e2)
-
-  | T_Arrow:
-     g:env ->
-     x:var { None? (lookup_bvar g x) } ->
-     t1:term ->
-     t2:term { ~(x `Set.mem` freevars t2) } ->
-     u1:universe ->
-     u2:universe ->
-     pp_name:pp_name_t ->
-     q:aqualv ->
-     eff:T.effect_label ->
-     typing g t1 (T.E_Ghost, tm_type u1) ->
-     typing (extend_env g x t1) (open_term t2 x) (T.E_Ghost, tm_type u2) ->
-     typing g (pack_ln (Tv_Arrow (mk_binder pp_name 0 t1 q) (mk_comp (eff, t2))))
-              (T.E_Total, tm_type (u_max u1 u2))
-
-  | T_Refine:
-     g:env ->
-     x:var { None? (lookup_bvar g x) } ->     
-     t:term ->
-     e:term { ~(x `Set.mem` freevars e) } ->
-     u1:universe ->
-     u2:universe ->     
-     typing g t (T.E_Ghost, tm_type u1) ->
-     typing (extend_env g x t) (open_term e x) (T.E_Ghost, tm_type u2) ->
-     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0)) t e)) (T.E_Total, tm_type u1)
-
-  | T_PropIrrelevance:
-     g:env -> 
-     e:term -> 
-     t:term ->
-     typing g e (T.E_Ghost, t) ->
-     typing g t (T.E_Ghost, tm_prop) ->
-     typing g (`()) (T.E_Total, t)
-     
-  | T_Sub:
-     g:env ->
-     e:term ->
-     c:comp_typ ->
-     c':comp_typ ->
-     typing g e c ->
-     sub_comp g c c' ->
-     typing g e c'
-
-  | T_If: 
-     g:env ->
-     scrutinee:term ->
-     then_:term ->
-     else_:term ->
-     ty:term ->
-     u_ty:universe ->
-     hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) } ->
-     eff:T.effect_label ->
-     typing g scrutinee (eff, bool_ty) ->
-     typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ (eff, ty) ->
-     typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty) ->
-     typing g ty (T.E_Ghost, tm_type u_ty) -> //typedness of ty cannot rely on hyp
-     typing g (mk_if scrutinee then_ else_) (eff, ty)
-
-  // | T_Match: 
-  //    g:env ->
-  //    scrutinee:term ->
-  //    i_ty:term ->
-  //    branches:list branch ->
-  //    ty:term ->
-  //    typing g scrutinee i_ty ->
-  //    branches_typing g scrutinee i_ty branches ty ->
-  //    typing g (pack_ln (Tv_Match scrutinee None branches)) ty
-
-and related : env -> term -> relation -> term -> Type0 =
-  | Rel_equiv:
-    g:env ->
-    t0:term ->
-    t1:term ->
-    rel:relation ->
-    equiv g t0 t1 ->
-    related g t0 rel t1
-
-  | Rel_subtyping_token:
-    g:env ->
-    t0:term ->
-    t1:term ->
-    squash (FTB.subtyping_token g t0 t1) ->
-    related g t0 R_Sub t1
-
-  | Rel_univ_eq:  // can it be part of the equiv relation?
-    g:env ->
-    u:universe ->
-    v:universe ->
-    rel:relation ->
-    univ_eq u v ->
-    related g (tm_type u) rel (tm_type v)
-
-  | Rel_arrow:
-    g:env ->
-    t1:term ->
-    t2:term ->
-    q:aqualv ->
-    c1:comp_typ ->
-    c2:comp_typ ->
-    rel:relation ->
-    x:var{
-      None? (lookup_bvar g x) /\
-      ~ (x `Set.mem` (freevars_comp_typ c1 `Set.union` freevars_comp_typ c2))
-    } ->
-    related g t2 rel t1 ->
-    related_comp (extend_env g x t2)
-                 (open_comp_typ c1 x)
-                 rel
-                 (open_comp_typ c2 x) ->
-    related g (mk_arrow_ct t1 q c1) rel (mk_arrow_ct t2 q c2)
-
-  | Rel_abs:
-    g:env ->
-    t1:term ->
-    t2:term ->
-    q:aqualv ->
-    e1:term ->
-    e2:term ->
-    x:var{
-      None? (lookup_bvar g x) /\ ~ (x `Set.mem` (freevars e1 `Set.union` freevars e2))
-    } ->
-    related g t1 R_Eq t2 ->
-    related (extend_env g x t1)
-            (open_or_close_term' e1 (open_with_var x) 0)
-            R_Eq
-            (open_or_close_term' e2 (open_with_var x) 0) ->
-    related g (mk_abs t1 q e1) R_Eq (mk_abs t2 q e2)
-
-and equiv : env -> term -> term -> Type0 =
-  | EQ_Refl:
-      g:env ->
-      t0:term ->
-      equiv g t0 t0
-
-  | EQ_Sym:
-      g:env ->
-      t0:term ->
-      t1:term ->
-      equiv g t0 t1 ->
-      equiv g t1 t0
-
-  | EQ_Trans:
-      g:env ->
-      t0:term ->
-      t1:term ->
-      t2:term ->
-      equiv g t0 t1 ->
-      equiv g t1 t2 ->
-      equiv g t0 t2
-  
-  | EQ_Beta:  // may be e should be ln 0?
-      g:env ->
-      t:R.typ ->
-      q:R.aqualv ->
-      e:R.term ->
-      arg:R.term ->
-      equiv g (R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
-              (open_or_close_term' e (OpenWith arg) 0)
-
-  | EQ_Token:
-      g:env ->
-      t0:term ->
-      t1:term ->
-      squash (FTB.equiv_token g t0 t1) ->
-      equiv g t0 t1
-
-  | EQ_Ctxt:
-      g:env ->
-      t0:term ->
-      t1:term ->
-      ctxt:term_ctxt ->
-      equiv g t0 t1 ->
-      equiv g (apply_term_ctxt ctxt t0) (apply_term_ctxt ctxt t1)
-
-and related_comp : env -> comp_typ -> relation -> comp_typ -> Type0 =
-  | Relc_typ:
-    g:env ->
-    t0:term ->
-    t1:term ->
-    eff:T.effect_label ->
-    rel:relation ->
-    related g t0 rel t1 ->
-    related_comp g (eff, t0) rel (eff, t1)
-  
-  | Relc_total_ghost:
-    g:env ->
-    t:term ->
-    related_comp g (T.E_Total, t) R_Sub (T.E_Ghost, t)
-
-  | Relc_ghost_total:
-    g:env ->
-    t:term ->
-    non_informative t ->
-    related_comp g (T.E_Ghost, t) R_Sub (T.E_Total, t)
-
-// and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
-
-and sub_typing (g:env) (t1 t2:term) = related g t1 R_Sub t2
-
-and sub_comp (g:env) (c1 c2:comp_typ) = related_comp g c1 R_Sub c2
-
-type tot_typing (g:env) (e:term) (t:term) = typing g e (T.E_Total, t)
-
-type ghost_typing (g:env) (e:term) (t:term) = typing g e (T.E_Ghost, t)
-
-let bindings = list (var & term)
-let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
-
-let rec extend_env_l (g:env) (bs:bindings) 
-  : env
-  = match bs with
-    | [] -> g
-    | (x,t)::bs -> extend_env (extend_env_l g bs) x t
-
-val subtyping_token_renaming (g:env)
-                             (bs0:bindings)
-                             (bs1:bindings)
-                             (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
-                             (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
-                             (t:term)
-                             (t0 t1:term)
-                             (d:FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
-  : FTB.subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
-                        (rename t0 x y)
-                        (rename t1 x y)
-
-val subtyping_token_weakening (g:env)
-                              (bs0:bindings)
-                              (bs1:bindings)
-                              (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
-                              (t:term)
-                              (t0 t1:term)
-                              (d:FTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
-  : FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
-
-let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
-                  (d:typing g t (T.E_Total, tm_type (u_max u u)))
-   : typing g t (T.E_Total, tm_type u)
-   = let ue
-       : univ_eq (u_max u u) u
-       = UN_MaxLeq u u (UNLEQ_Refl u)
-     in
-
-     T_Sub _ _ _ _ d (Relc_typ _ _ _ T.E_Total _ (Rel_univ_eq _ _ _ R_Sub ue))
-
-#push-options "--ifuel 2"
 
 let rec ln' (e:term) (n:int)
   : Tot bool (decreases e)
@@ -1245,6 +736,524 @@ and ln'_match_returns (m:match_returns_ascription) (i:int)
 
 let ln (t:term) = ln' t (-1)
 let ln_comp (c:comp) = ln'_comp c (-1)
+
+
+//
+// term_ctxt is used to define the equiv relation later,
+//   basically putting two equiv terms in a hole gives equiv terms
+//
+// The abs, arrow, refine, and let cases don't seem right here,
+//   since to prove their equiv, we need to extend gamma for their bodies
+//
+// If this is useful only for app, then may be we should remove it,
+//   and add app rules to the equiv relation itself
+
+[@@ no_auto_projectors]
+noeq
+type term_ctxt =
+  | Ctxt_hole            : term_ctxt
+  | Ctxt_app_head        : term_ctxt -> argv -> term_ctxt
+  | Ctxt_app_arg         : term -> aqualv -> term_ctxt -> term_ctxt
+  // | Ctxt_abs_binder      : binder_ctxt -> term -> term_ctxt
+  // | Ctxt_abs_body        : binder -> term_ctxt -> term_ctxt
+  // | Ctxt_arrow_binder    : binder_ctxt -> comp -> term_ctxt
+  // | Ctxt_arrow_comp      : binder -> comp_ctxt -> term_ctxt
+  // | Ctxt_refine_sort     : bv -> term_ctxt -> term -> term_ctxt
+  // | Ctxt_refine_ref      : bv -> typ -> term_ctxt -> term_ctxt
+  // | Ctxt_let_sort        : bool -> list term -> bv -> term_ctxt -> term -> term -> term_ctxt
+  // | Ctxt_let_def         : bool -> list term -> bv -> term -> term_ctxt -> term -> term_ctxt
+  // | Ctxt_let_body        : bool -> list term -> bv -> term -> term -> term_ctxt -> term_ctxt
+  // | Ctxt_match_scrutinee : term_ctxt -> option match_returns_ascription -> list branch -> term_ctxt
+
+// and bv_ctxt =
+//   | Ctxt_bv : sealed string -> nat -> term_ctxt -> bv_ctxt
+
+// and binder_ctxt =
+//   | Ctxt_binder : bv -> aqualv -> list term -> term_ctxt -> binder_ctxt
+
+// and comp_ctxt =
+//   | Ctxt_total  : term_ctxt -> comp_ctxt
+//   | Ctxt_gtotal : term_ctxt -> comp_ctxt
+
+let rec apply_term_ctxt (e:term_ctxt) (t:term) : Tot term (decreases e) =
+  match e with
+  | Ctxt_hole -> t
+  | Ctxt_app_head e arg -> pack_ln (Tv_App (apply_term_ctxt e t) arg)
+  | Ctxt_app_arg hd q e -> pack_ln (Tv_App hd (apply_term_ctxt e t, q))
+//   | Ctxt_abs_binder b body -> pack_ln (Tv_Abs (apply_binder_ctxt b t) body)
+//   | Ctxt_abs_body b e -> pack_ln (Tv_Abs b (apply_term_ctxt e t))
+//   | Ctxt_arrow_binder b c -> pack_ln (Tv_Arrow (apply_binder_ctxt b t) c)
+//   | Ctxt_arrow_comp b c -> pack_ln (Tv_Arrow b (apply_comp_ctxt c t))
+//   | Ctxt_refine_sort b sort phi -> pack_ln (Tv_Refine b (apply_term_ctxt sort t) phi)
+//   | Ctxt_refine_ref b sort phi -> pack_ln (Tv_Refine b sort (apply_term_ctxt phi t))
+  
+//   | Ctxt_let_sort b attrs bv sort def body ->
+//     pack_ln (Tv_Let b attrs bv (apply_term_ctxt sort t) def body)
+//   | Ctxt_let_def b attrs bv sort def body ->
+//     pack_ln (Tv_Let b attrs bv sort (apply_term_ctxt def t) body)
+//   | Ctxt_let_body b attrs bv sort def body ->
+//     pack_ln (Tv_Let b attrs bv sort def (apply_term_ctxt body t))
+    
+//   | Ctxt_match_scrutinee sc ret brs ->
+//     pack_ln (Tv_Match (apply_term_ctxt sc t) ret brs)
+
+// and apply_binder_ctxt (b:binder_ctxt) (t:term) : Tot binder (decreases b) =
+//   let Ctxt_binder binder_bv binder_qual binder_attrs ctxt = b in
+//   pack_binder {binder_bv; binder_qual; binder_attrs; binder_sort=apply_term_ctxt ctxt t}
+
+// and apply_comp_ctxt (c:comp_ctxt) (t:term) : Tot comp (decreases c) =
+//   match c with
+//   | Ctxt_total e -> pack_comp (C_Total (apply_term_ctxt e t))
+//   | Ctxt_gtotal e -> pack_comp (C_GTotal (apply_term_ctxt e t))
+
+noeq
+type constant_typing: vconst -> term -> Type0 = 
+  | CT_Unit: constant_typing C_Unit unit_ty
+  | CT_True: constant_typing C_True bool_ty
+  | CT_False: constant_typing C_False bool_ty
+
+[@@ no_auto_projectors]
+noeq
+type univ_eq : universe -> universe -> Type0 = 
+  | UN_Refl : 
+    u:universe ->
+    univ_eq u u
+
+  | UN_MaxCongL :
+    u:universe ->
+    u':universe ->
+    v:universe ->
+    univ_eq u u' ->
+    univ_eq (u_max u v) (u_max u' v)
+
+  | UN_MaxCongR :
+    u:universe ->
+    v:universe ->
+    v':universe ->
+    univ_eq v v' ->
+    univ_eq (u_max u v) (u_max u v')
+
+  | UN_MaxComm:
+    u:universe ->
+    v:universe ->
+    univ_eq (u_max u v) (u_max v u)
+
+  | UN_MaxLeq:
+    u:universe ->
+    v:universe ->
+    univ_leq u v ->
+    univ_eq (u_max u v) v
+
+and univ_leq : universe -> universe -> Type0 = 
+  | UNLEQ_Refl:
+    u:universe ->
+    univ_leq u u
+
+  | UNLEQ_Succ:
+    u:universe ->
+    v:universe ->
+    univ_leq u v ->
+    univ_leq u (u_succ v)
+
+  | UNLEQ_Max:
+    u:universe ->
+    v:universe ->
+    univ_leq u (u_max u v)
+
+let mk_if (scrutinee then_ else_:R.term) : R.term =
+  pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
+                                    (Pat_Constant C_False, else_)])
+
+
+// effect and type
+type comp_typ = T.tot_or_ghost & typ
+
+let close_comp_typ' (c:comp_typ) (x:var) (i:nat) =
+  fst c, open_or_close_term' (snd c) (CloseVar x) i
+
+let close_comp_typ (c:comp_typ) (x:var) =
+  close_comp_typ' c x 0
+
+let open_comp_typ' (c:comp_typ) (x:var) (i:nat) =
+  fst c, open_or_close_term' (snd c) (open_with_var x) i
+
+let open_comp_typ (c:comp_typ) (x:var) =
+  open_comp_typ' c x 0
+
+let freevars_comp_typ (c:comp_typ) = freevars (snd c)
+
+let mk_comp (c:comp_typ) : R.comp =
+  match fst c with
+  | T.E_Total -> mk_total (snd c)
+  | T.E_Ghost -> mk_ghost (snd c)
+
+let mk_arrow_ct ty qual (c:comp_typ) : R.term =
+  R.pack_ln (R.Tv_Arrow (binder_of_t_q ty qual) (mk_comp c))
+ 
+type relation =
+  | R_Eq
+  | R_Sub
+
+//
+// TODO: support for erasable attribute
+//
+let is_non_informative_name (l:name) : bool =
+  l = R.unit_lid ||
+  l = R.squash_qn ||
+  l = ["FStar"; "Ghost"; "erased"]
+
+let is_non_informative_fv (f:fv) : bool =
+  is_non_informative_name (inspect_fv f)
+
+[@@ no_auto_projectors]
+noeq
+type non_informative : term -> Type0 =
+  | Non_informative_type:
+    u:universe ->
+    non_informative (pack_ln (Tv_Type u))
+  
+  | Non_informative_fv:
+    x:fv{is_non_informative_fv x} ->
+    non_informative (pack_ln (Tv_FVar x))
+  
+  | Non_informative_uinst:
+    x:fv ->
+    us:list universe ->
+    non_informative (pack_ln (Tv_UInst x us))
+
+  | Non_informative_app:
+    t:term ->
+    arg:argv ->
+    non_informative t ->
+    non_informative (pack_ln (Tv_App t arg))
+
+  | Non_informative_total_arrow:
+    t0:term ->
+    q:aqualv ->
+    t1:term ->
+    non_informative t1 ->
+    non_informative (mk_arrow_ct t0 q (T.E_Total, t1))
+  
+  | Non_informative_ghost_arrow:
+    t0:term ->
+    q:aqualv ->
+    t1:term ->
+    non_informative (mk_arrow_ct t0 q (T.E_Ghost, t1))
+    
+
+[@@ no_auto_projectors]
+noeq
+type typing : env -> term -> comp_typ -> Type0 =
+  | T_Token :
+    g:env ->
+    e:term ->
+    c:comp_typ ->
+    squash (FTB.typing_token g e c) ->
+    typing g e c
+
+  | T_Var : 
+     g:env ->
+     x:bv { Some? (lookup_bvar g (bv_index x)) } ->
+     typing g (pack_ln (Tv_Var x)) (T.E_Total, Some?.v (lookup_bvar g (bv_index x)))
+
+  | T_FVar :
+     g:env ->
+     x:fv { Some? (lookup_fvar g x) } -> 
+     typing g (pack_ln (Tv_FVar x)) (T.E_Total, Some?.v (lookup_fvar g x))
+
+  | T_UInst :
+     g:env ->
+     x:fv ->
+     us:list universe { Some? (lookup_fvar_uinst g x us) } ->
+     typing g (pack_ln (Tv_UInst x us)) (T.E_Total, Some?.v (lookup_fvar_uinst g x us))
+
+  | T_Const:
+     g:env ->
+     v:vconst ->
+     t:term ->
+     constant_typing v t ->
+     typing g (constant_as_term v) (T.E_Total, t)
+
+  | T_Abs :
+     g:env ->
+     x:var { None? (lookup_bvar g x) } ->
+     ty:term ->
+     body:term { ~(x `Set.mem` freevars body) } ->
+     body_c:comp_typ ->
+     u:universe ->
+     pp_name:pp_name_t ->
+     q:aqualv ->
+     ty_eff:T.tot_or_ghost ->
+     typing g ty (ty_eff, tm_type u) ->
+     typing (extend_env g x ty) (open_term body x) body_c ->
+     typing g (pack_ln (Tv_Abs (mk_binder pp_name 0 ty q) body))
+              (T.E_Total,
+               pack_ln (Tv_Arrow (mk_binder pp_name 0 ty q)
+                                 (mk_comp (close_comp_typ body_c x))))
+
+  | T_App :
+     g:env ->
+     e1:term ->
+     e2:term ->
+     x:binder ->
+     t:term ->
+     eff:T.tot_or_ghost ->
+     typing g e1 (eff, pack_ln (Tv_Arrow x (mk_comp (eff, t)))) ->
+     typing g e2 (eff, binder_sort x) ->
+     typing g (pack_ln (Tv_App e1 (e2, binder_qual x)))
+              (eff, open_with t e2)
+
+  | T_Arrow:
+     g:env ->
+     x:var { None? (lookup_bvar g x) } ->
+     t1:term ->
+     t2:term { ~(x `Set.mem` freevars t2) } ->
+     u1:universe ->
+     u2:universe ->
+     pp_name:pp_name_t ->
+     q:aqualv ->
+     eff:T.tot_or_ghost ->
+     t1_eff:T.tot_or_ghost ->
+     t2_eff:T.tot_or_ghost ->
+     typing g t1 (t1_eff, tm_type u1) ->
+     typing (extend_env g x t1) (open_term t2 x) (t2_eff, tm_type u2) ->
+     typing g (pack_ln (Tv_Arrow (mk_binder pp_name 0 t1 q) (mk_comp (eff, t2))))
+              (T.E_Total, tm_type (u_max u1 u2))
+
+  | T_Refine:
+     g:env ->
+     x:var { None? (lookup_bvar g x) } ->     
+     t:term ->
+     e:term { ~(x `Set.mem` freevars e) } ->
+     u1:universe ->
+     u2:universe ->
+     t_eff:T.tot_or_ghost ->
+     e_eff:T.tot_or_ghost ->
+     typing g t (t_eff, tm_type u1) ->
+     typing (extend_env g x t) (open_term e x) (e_eff, tm_type u2) ->
+     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0)) t e)) (T.E_Total, tm_type u1)
+
+  | T_PropIrrelevance:
+     g:env -> 
+     e:term -> 
+     t:term ->
+     e_eff:T.tot_or_ghost ->
+     t_eff:T.tot_or_ghost ->
+     typing g e (e_eff, t) ->
+     typing g t (t_eff, tm_prop) ->
+     typing g (`()) (T.E_Total, t)
+     
+  | T_Sub:
+     g:env ->
+     e:term ->
+     c:comp_typ ->
+     c':comp_typ ->
+     typing g e c ->
+     sub_comp g c c' ->
+     typing g e c'
+
+  | T_If: 
+     g:env ->
+     scrutinee:term ->
+     then_:term ->
+     else_:term ->
+     ty:term ->
+     u_ty:universe ->
+     hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) } ->
+     eff:T.tot_or_ghost ->
+     ty_eff:T.tot_or_ghost ->
+     typing g scrutinee (eff, bool_ty) ->
+     typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ (eff, ty) ->
+     typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty) ->
+     typing g ty (ty_eff, tm_type u_ty) -> //typedness of ty cannot rely on hyp
+     typing g (mk_if scrutinee then_ else_) (eff, ty)
+
+  // | T_Match: 
+  //    g:env ->
+  //    scrutinee:term ->
+  //    i_ty:term ->
+  //    branches:list branch ->
+  //    ty:term ->
+  //    typing g scrutinee i_ty ->
+  //    branches_typing g scrutinee i_ty branches ty ->
+  //    typing g (pack_ln (Tv_Match scrutinee None branches)) ty
+
+and related : env -> term -> relation -> term -> Type0 =
+  | Rel_equiv:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    rel:relation ->
+    equiv g t0 t1 ->
+    related g t0 rel t1
+
+  | Rel_subtyping_token:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    squash (FTB.subtyping_token g t0 t1) ->
+    related g t0 R_Sub t1
+
+  | Rel_arrow:
+    g:env ->
+    t1:term ->
+    t2:term ->
+    q:aqualv ->
+    c1:comp_typ ->
+    c2:comp_typ ->
+    rel:relation ->
+    x:var{
+      None? (lookup_bvar g x) /\
+      ~ (x `Set.mem` (freevars_comp_typ c1 `Set.union` freevars_comp_typ c2))
+    } ->
+    related g t2 rel t1 ->
+    related_comp (extend_env g x t2)
+                 (open_comp_typ c1 x)
+                 rel
+                 (open_comp_typ c2 x) ->
+    related g (mk_arrow_ct t1 q c1) rel (mk_arrow_ct t2 q c2)
+
+  | Rel_abs:
+    g:env ->
+    t1:term ->
+    t2:term ->
+    q:aqualv ->
+    e1:term ->
+    e2:term ->
+    x:var{
+      None? (lookup_bvar g x) /\ ~ (x `Set.mem` (freevars e1 `Set.union` freevars e2))
+    } ->
+    related g t1 R_Eq t2 ->
+    related (extend_env g x t1)
+            (open_or_close_term' e1 (open_with_var x) 0)
+            R_Eq
+            (open_or_close_term' e2 (open_with_var x) 0) ->
+    related g (mk_abs t1 q e1) R_Eq (mk_abs t2 q e2)
+
+and equiv : env -> term -> term -> Type0 =
+  | EQ_Refl:
+    g:env ->
+    t0:term ->
+    equiv g t0 t0
+
+  | EQ_Sym:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    equiv g t0 t1 ->
+    equiv g t1 t0
+
+  | EQ_Trans:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    t2:term ->
+    equiv g t0 t1 ->
+    equiv g t1 t2 ->
+    equiv g t0 t2
+
+  | EQ_Univ:
+    g:env ->
+    u:universe ->
+    v:universe ->
+    univ_eq u v ->
+    equiv g (tm_type u) (tm_type v)
+
+  | EQ_Beta:
+    g:env ->
+    t:R.typ ->
+    q:R.aqualv ->
+    e:R.term { ln' e 0 } ->
+    arg:R.term { ln arg } ->
+    equiv g (R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+            (open_or_close_term' e (OpenWith arg) 0)
+
+  | EQ_Token:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    squash (FTB.equiv_token g t0 t1) ->
+    equiv g t0 t1
+
+  | EQ_Ctxt:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    ctxt:term_ctxt ->
+    equiv g t0 t1 ->
+    equiv g (apply_term_ctxt ctxt t0) (apply_term_ctxt ctxt t1)
+
+and related_comp : env -> comp_typ -> relation -> comp_typ -> Type0 =
+  | Relc_typ:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    eff:T.tot_or_ghost ->
+    rel:relation ->
+    related g t0 rel t1 ->
+    related_comp g (eff, t0) rel (eff, t1)
+  
+  | Relc_total_ghost:
+    g:env ->
+    t:term ->
+    related_comp g (T.E_Total, t) R_Sub (T.E_Ghost, t)
+
+  | Relc_ghost_total:
+    g:env ->
+    t:term ->
+    non_informative t ->
+    related_comp g (T.E_Ghost, t) R_Sub (T.E_Total, t)
+
+// and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
+
+and sub_typing (g:env) (t1 t2:term) = related g t1 R_Sub t2
+
+and sub_comp (g:env) (c1 c2:comp_typ) = related_comp g c1 R_Sub c2
+
+type tot_typing (g:env) (e:term) (t:term) = typing g e (T.E_Total, t)
+
+type ghost_typing (g:env) (e:term) (t:term) = typing g e (T.E_Ghost, t)
+
+let bindings = list (var & term)
+let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
+
+let rec extend_env_l (g:env) (bs:bindings) 
+  : env
+  = match bs with
+    | [] -> g
+    | (x,t)::bs -> extend_env (extend_env_l g bs) x t
+
+val subtyping_token_renaming (g:env)
+                             (bs0:bindings)
+                             (bs1:bindings)
+                             (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
+                             (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
+                             (t:term)
+                             (t0 t1:term)
+                             (d:FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
+  : FTB.subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
+                        (rename t0 x y)
+                        (rename t1 x y)
+
+val subtyping_token_weakening (g:env)
+                              (bs0:bindings)
+                              (bs1:bindings)
+                              (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
+                              (t:term)
+                              (t0 t1:term)
+                              (d:FTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
+  : FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
+
+let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
+                  (d:typing g t (T.E_Total, tm_type (u_max u u)))
+   : typing g t (T.E_Total, tm_type u)
+   = let ue
+       : univ_eq (u_max u u) u
+       = UN_MaxLeq u u (UNLEQ_Refl u)
+     in
+
+     T_Sub _ _ _ _ d (Relc_typ _ _ _ T.E_Total _ (Rel_equiv _ _ _ _ (EQ_Univ _ _ _ ue)))
+
 
 val well_typed_terms_are_ln (g:R.env) (e:R.term) (c:comp_typ) (_:typing g e c)
   : Lemma (ensures ln e /\ ln (snd c))

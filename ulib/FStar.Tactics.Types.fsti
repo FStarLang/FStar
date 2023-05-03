@@ -67,6 +67,6 @@ type unfold_side =
 //
 // Used in the reflection typing judgment
 //
-type effect_label =
+type tot_or_ghost =
   | E_Total
   | E_Ghost
