@@ -479,7 +479,7 @@ type my_erased (a:Type) = | E of a
 
 
 let typing (f:RT.fstar_top_env) (g:env) (e:term) (t:term) =
-    RT.typing (extend_env_l f g) (elab_term e) (elab_term t)
+    RT.tot_typing (extend_env_l f g) (elab_term e) (elab_term t)
 
 let tot_typing (f:RT.fstar_top_env) (g:env) (e:term) (t:term) =
     my_erased (typing f g e t)

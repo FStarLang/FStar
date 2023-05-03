@@ -21,9 +21,9 @@ let return_soundess
   (#t:st_term)
   (#c:comp)
   (d:st_typing f g t c{T_Return? d})
-  : GTot (RT.typing (extend_env_l f g)
-                    (elab_st_typing d)
-                    (elab_comp c)) =
+  : GTot (RT.tot_typing (extend_env_l f g)
+                        (elab_st_typing d)
+                        (elab_comp c)) =
 
   let T_Return _ ctag use_eq u t e post x t_typing e_typing post_typing = d in
   let ru = elab_universe u in
@@ -31,13 +31,13 @@ let return_soundess
   let re = elab_term e in
   let rpost = elab_term post in
   let rpost_abs = mk_abs rt R.Q_Explicit rpost in
-  let rt_typing : RT.typing _ rt (R.pack_ln (R.Tv_Type ru)) =
+  let rt_typing : RT.tot_typing _ rt (R.pack_ln (R.Tv_Type ru)) =
     tot_typing_soundness t_typing in
-  let re_typing : RT.typing _ re rt =
+  let re_typing : RT.tot_typing _ re rt =
     tot_typing_soundness e_typing in
   let rpost_abs_typing
-    : RT.typing _ rpost_abs
-                  (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
+    : RT.tot_typing _ rpost_abs
+                      (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
     mk_t_abs_tot f g RT.pp_name_default t_typing post_typing in
   
   let rx_tm = RT.var_as_term x in
@@ -46,7 +46,9 @@ let return_soundess
     : RT.equiv (extend_env_l f g)
                (R.pack_ln (R.Tv_App rpost_abs (re, R.Q_Explicit)))
                elab_c_pre
-    = RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rpost re in  
+    = assume (RT.ln' rpost 0);
+      assume (RT.ln re);
+      RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rpost re in  
   
   let comp_equiv_noeq (_:unit{use_eq == false})
     : (match ctag with
@@ -125,20 +127,20 @@ let return_soundess
   match ctag, use_eq with
   | STT, true ->
     let d = WT.return_stt_typing x rt_typing re_typing rpost_abs_typing in
-    RT.T_Sub _ _ _ _ d (RT.ST_Equiv _ _ _ (comp_equiv_eq ()))
+    RT.T_Sub _ _ _ _ d (RT.Relc_typ _ _ _ _ _ (RT.Rel_equiv _ _ _ _ (comp_equiv_eq ())))
   | STT, false ->
     let d = WT.return_stt_noeq_typing rt_typing re_typing rpost_abs_typing in
-    RT.T_Sub _ _ _ _ d (RT.ST_Equiv _ _ _ (comp_equiv_noeq ()))
+    RT.T_Sub _ _ _ _ d (RT.Relc_typ _ _ _ _ _ (RT.Rel_equiv _ _ _ _ (comp_equiv_noeq ())))
   | STT_Atomic, true ->
     let d = WT.return_stt_atomic_typing x rt_typing re_typing rpost_abs_typing in
-    RT.T_Sub _ _ _ _ d (RT.ST_Equiv _ _ _ (comp_equiv_eq ()))
+    RT.T_Sub _ _ _ _ d (RT.Relc_typ _ _ _ _ _ (RT.Rel_equiv _ _ _ _ (comp_equiv_eq ())))
   | STT_Atomic, false ->
     let d = WT.return_stt_atomic_noeq_typing rt_typing re_typing rpost_abs_typing in
-    RT.T_Sub _ _ _ _ d (RT.ST_Equiv _ _ _ (comp_equiv_noeq ()))
+    RT.T_Sub _ _ _ _ d (RT.Relc_typ _ _ _ _ _ (RT.Rel_equiv _ _ _ _ (comp_equiv_noeq ())))
   | STT_Ghost, true ->
     let d = WT.return_stt_ghost_typing x rt_typing re_typing rpost_abs_typing in
-    RT.T_Sub _ _ _ _ d (RT.ST_Equiv _ _ _ (comp_equiv_eq ()))
+    RT.T_Sub _ _ _ _ d (RT.Relc_typ _ _ _ _ _ (RT.Rel_equiv _ _ _ _ (comp_equiv_eq ())))
   | STT_Ghost, false ->
     let d = WT.return_stt_ghost_noeq_typing rt_typing re_typing rpost_abs_typing in
-    RT.T_Sub _ _ _ _ d (RT.ST_Equiv _ _ _ (comp_equiv_noeq ()))
+    RT.T_Sub _ _ _ _ d (RT.Relc_typ _ _ _ _ _ (RT.Rel_equiv _ _ _ _ (comp_equiv_noeq ())))
 #pop-options

@@ -42,9 +42,9 @@ let tabs_t (d:'a) =
     #x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
     #c:comp ->
     body_typing:st_typing f ((x, Inl ty)::g) (open_st_term body x) c { body_typing << d } ->
-    GTot (RT.typing (extend_env_l f g)
-                    (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-                      (elab_term (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
+    GTot (RT.tot_typing (extend_env_l f g)
+            (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+            (elab_term (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
 
 let lift_soundness
   (f:stt_env)
@@ -53,7 +53,7 @@ let lift_soundness
   (c:comp)
   (d:st_typing f g t c{T_Lift? d})
   (soundness:soundness_t d)
-  : GTot (RT.typing (extend_env_l f g) (elab_st_typing d) (elab_comp c)) =
+  : GTot (RT.tot_typing (extend_env_l f g) (elab_st_typing d) (elab_comp c)) =
   LN.st_typing_ln d;
   let T_Lift _ e c1 c2 e_typing lc = d in
   LN.st_typing_ln e_typing;
@@ -74,7 +74,7 @@ let frame_soundness
   (c:comp)
   (d:st_typing f g t c{T_Frame? d})
   (soundness:soundness_t d)
-  : GTot (RT.typing (extend_env_l f g) (elab_st_typing d) (elab_comp c)) =
+  : GTot (RT.tot_typing (extend_env_l f g) (elab_st_typing d) (elab_comp c)) =
 
   let T_Frame _ e c frame frame_typing e_typing = d in
   let r_e_typing = soundness _ _ _ _ e_typing in
@@ -88,18 +88,20 @@ let stapp_soundness
   (c:comp)
   (d:st_typing f g t c{T_STApp? d})
   (soundness:soundness_t d)
-  : GTot (RT.typing (extend_env_l f g) (elab_st_typing d) (elab_comp c)) =
+  : GTot (RT.tot_typing (extend_env_l f g) (elab_st_typing d) (elab_comp c)) =
 
   let T_STApp _ head formal q res arg head_typing arg_typing = d in
   let r_head = elab_term head in
   let r_arg = elab_term arg in
   let r_head_typing
-    : RT.typing _ r_head (elab_term (Tm_Arrow {binder_ty=formal;binder_ppname=RT.pp_name_default} q res))
+    : RT.tot_typing _ r_head
+        (elab_term (Tm_Arrow {binder_ty=formal;binder_ppname=RT.pp_name_default} q res))
     = tot_typing_soundness head_typing
   in
   let r_arg_typing = tot_typing_soundness arg_typing in
   RT.T_App _ _ _ (binder_of_t_q_s (elab_term formal) (elab_qual q) RT.pp_name_default)
                  (elab_comp res)
+                 _
                  r_head_typing
                  r_arg_typing
 
@@ -110,7 +112,7 @@ let stequiv_soundness
   (c:comp)
   (d:st_typing f g t c{T_Equiv? d})
   (soundness:soundness_t d)            
-  : GTot (RT.typing (extend_env_l f g) (elab_st_typing d) (elab_comp c)) =
+  : GTot (RT.tot_typing (extend_env_l f g) (elab_st_typing d) (elab_comp c)) =
 
   let T_Equiv _ e c c' e_typing equiv = d in
   LN.st_typing_ln d;
@@ -129,19 +131,19 @@ let bind_soundness
   (d:st_typing f g t c{T_Bind? d})
   (soundness: soundness_t d)
   (mk_t_abs: tabs_t d)
-  : GTot (RT.typing (extend_env_l f g)
-                    (elab_st_typing d)
-                    (elab_comp c))
+  : GTot (RT.tot_typing (extend_env_l f g)
+                        (elab_st_typing d)
+                        (elab_comp c))
   = let T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc = d in
     LN.st_typing_ln e1_typing;
     LN.st_typing_ln e2_typing;      
     FV.st_typing_freevars_inv e1_typing x;
     let r1_typing
-      : RT.typing _ _ (elab_comp c1)
+      : RT.tot_typing _ _ (elab_comp c1)
       = soundness _ _ _ _ e1_typing
     in
     let r2_typing
-      : RT.typing _ _ (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x)))
+      : RT.tot_typing _ _ (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x)))
       = mk_t_abs None _ t_typing e2_typing
     in
     match bc with
@@ -176,22 +178,22 @@ let if_soundness
   (soundness:soundness_t d)
   (ct_soundness: (f:stt_env -> g:env -> c:comp -> uc:universe ->
                   d':comp_typing f g c uc{d' << d} ->
-              GTot (RT.typing (extend_env_l f g)
+              GTot (RT.tot_typing (extend_env_l f g)
                               (elab_comp c)
                               (RT.tm_type (elab_universe uc)))))
-  : GTot (RT.typing (extend_env_l f g)
-                    (elab_st_typing d)
-                    (elab_comp c)) =
+  : GTot (RT.tot_typing (extend_env_l f g)
+                        (elab_st_typing d)
+                        (elab_comp c)) =
 
   let T_If _ b e1 e2  _ u_c hyp b_typing e1_typing e2_typing (E c_typing) = d in
-  let rb_typing : RT.typing (extend_env_l f g)
-                            (elab_term b)
-                            RT.bool_ty =
+  let rb_typing : RT.tot_typing (extend_env_l f g)
+                                (elab_term b)
+                                RT.bool_ty =
     tot_typing_soundness b_typing in
   let g_then = (hyp, Inl (mk_eq2 U_zero tm_bool b tm_true))::g in
   let re1_typing
 
-    : RT.typing (RT.extend_env (extend_env_l f g)
+    : RT.tot_typing (RT.extend_env (extend_env_l f g)
                                hyp
                                (RT.eq2 (R.pack_universe R.Uv_Zero)
                                        RT.bool_ty
@@ -202,7 +204,7 @@ let if_soundness
     soundness f g_then e1 c e1_typing in
   let g_else = (hyp, Inl (mk_eq2 U_zero tm_bool b tm_false))::g in
   let re2_typing
-    : RT.typing (RT.extend_env (extend_env_l f g)
+    : RT.tot_typing (RT.extend_env (extend_env_l f g)
                                hyp
                                (RT.eq2 (R.pack_universe R.Uv_Zero)
                                        RT.bool_ty
@@ -216,7 +218,7 @@ let if_soundness
   in
   assume (~(hyp `Set.mem` RT.freevars (elab_st_typing e1_typing)));
   assume (~(hyp `Set.mem` RT.freevars (elab_st_typing e2_typing)));  
-  RT.T_If _ _ _ _ _ _ _ rb_typing re1_typing re2_typing c_typing
+  RT.T_If _ _ _ _ _ _ _ _ _ rb_typing re1_typing re2_typing c_typing
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 2"
@@ -225,7 +227,7 @@ let rec soundness (f:stt_env)
                   (t:st_term)
                   (c:comp)
                   (d:st_typing f g t c)
-  : GTot (RT.typing (extend_env_l f g) (elab_st_typing d) (elab_comp c))
+  : GTot (RT.tot_typing (extend_env_l f g) (elab_st_typing d) (elab_comp c))
          (decreases d)
   = let mk_t_abs (#f:stt_env)
                  (#g:env)
@@ -238,9 +240,9 @@ let rec soundness (f:stt_env)
                  (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) })
                  (#c:comp)
                  (body_typing:st_typing f ((x, Inl ty)::g) (open_st_term body x) c { body_typing << d })
-      : GTot (RT.typing (extend_env_l f g)
-                        (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-                        (elab_term (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
+      : GTot (RT.tot_typing (extend_env_l f g)
+                (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+                (elab_term (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
       = let E t_typing = t_typing in
         let r_t_typing = tot_typing_soundness (E t_typing) in
         let r_body_typing = soundness _ _ _ _ body_typing in
@@ -306,9 +308,9 @@ let soundness_lemma
   (t:st_term)
   (c:comp)
   (d:st_typing f g t c)
-  : Lemma (ensures RT.typing (extend_env_l f g)
-                             (elab_st_typing d)
-                             (elab_comp c))
+  : Lemma (ensures RT.tot_typing (extend_env_l f g)
+                                 (elab_st_typing d)
+                                 (elab_comp c))
   = FStar.Squash.bind_squash
       #(st_typing f g t c)
       ()

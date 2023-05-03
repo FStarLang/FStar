@@ -574,7 +574,7 @@ let (comp_admit :
       | Pulse_Syntax.STT_Ghost ->
           Pulse_Syntax.C_STGhost (Pulse_Syntax.Tm_EmpInames, s)
 type ('f, 'g, 'e, 't) typing =
-  (unit, unit, unit) FStar_Reflection_Typing.typing
+  (unit, unit, unit) FStar_Reflection_Typing.tot_typing
 type ('f, 'g, 'e, 't) tot_typing = unit
 type ('f, 'g, 't, 'u) universe_of = unit
 type ('f, 'g, 'u, 't) non_informative_t =
