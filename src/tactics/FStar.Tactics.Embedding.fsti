@@ -34,7 +34,7 @@ val e_direction              : embedding direction
 val e_ctrl_flag              : embedding ctrl_flag
 val e_guard_policy           : embedding guard_policy
 val e_unfold_side            : embedding Core.side
-val e_effect_label           : embedding effect_label
+val e_tot_or_ghost           : embedding tot_or_ghost
 
 val e_exn_nbe                : NBETerm.embedding exn
 val e_proofstate_nbe         : NBETerm.embedding proofstate
@@ -44,7 +44,7 @@ val e_direction_nbe          : NBETerm.embedding direction
 val e_ctrl_flag_nbe          : NBETerm.embedding ctrl_flag
 val e_guard_policy_nbe       : NBETerm.embedding guard_policy
 val e_unfold_side_nbe        : NBETerm.embedding Core.side
-val e_effect_label_nbe       : NBETerm.embedding effect_label
+val e_tot_or_ghost_nbe       : NBETerm.embedding tot_or_ghost
 
 val unfold_lazy_proofstate   : lazyinfo -> term
 val unfold_lazy_goal         : lazyinfo -> term

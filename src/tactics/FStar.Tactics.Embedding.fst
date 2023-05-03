@@ -101,9 +101,9 @@ let fstar_tactics_unfold_side_Right   = fstar_tactics_data  ["Types"; "Right"]
 let fstar_tactics_unfold_side_Both    = fstar_tactics_data  ["Types"; "Both"]
 let fstar_tactics_unfold_side_Neither = fstar_tactics_data  ["Types"; "Neither"]
 
-let fstar_tactics_effect_label        = fstar_tactics_const ["Types"; "effect_label"]
-let fstar_tactics_effect_label_ETotal = fstar_tactics_data ["Types"; "E_Total"]
-let fstar_tactics_effect_label_EGhost = fstar_tactics_data ["Types"; "E_Ghost"]
+let fstar_tactics_tot_or_ghost        = fstar_tactics_const ["Types"; "tot_or_ghost"]
+let fstar_tactics_tot_or_ghost_ETotal = fstar_tactics_data ["Types"; "E_Total"]
+let fstar_tactics_tot_or_ghost_EGhost = fstar_tactics_data ["Types"; "E_Ghost"]
 
 let fstar_tactics_guard_policy  = fstar_tactics_const ["Types"; "guard_policy"]
 let fstar_tactics_SMT           = fstar_tactics_data  ["Types"; "SMT"]
@@ -488,44 +488,44 @@ let e_unfold_side_nbe  =
   ; NBETerm.typ = mkFV fstar_tactics_unfold_side.fv [] []
   ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_unfold_side.fv }
 
-let e_effect_label =
-  let embed_effect_label (rng:Range.range) (s:effect_label) : term =
+let e_tot_or_ghost =
+  let embed_tot_or_ghost (rng:Range.range) (s:tot_or_ghost) : term =
     match s with
-    | E_Total -> fstar_tactics_effect_label_ETotal.t
-    | E_Ghost -> fstar_tactics_effect_label_EGhost.t
+    | E_Total -> fstar_tactics_tot_or_ghost_ETotal.t
+    | E_Ghost -> fstar_tactics_tot_or_ghost_EGhost.t
   in
-  let unembed_effect_label w (t : term) : option effect_label =
+  let unembed_tot_or_ghost w (t : term) : option tot_or_ghost =
     match (SS.compress t).n with
-    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_effect_label_ETotal.lid -> Some E_Total
-    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_effect_label_EGhost.lid -> Some E_Ghost
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_tot_or_ghost_ETotal.lid -> Some E_Total
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_tot_or_ghost_EGhost.lid -> Some E_Ghost
     | _ ->
       if w then
         Err.log_issue t.pos (Err.Warning_NotEmbedded,
-                             BU.format1 "Not an embedded effect_label: %s" (Print.term_to_string t));
+                             BU.format1 "Not an embedded tot_or_ghost: %s" (Print.term_to_string t));
         None
   in
-  mk_emb embed_effect_label unembed_effect_label fstar_tactics_effect_label.t
+  mk_emb embed_tot_or_ghost unembed_tot_or_ghost fstar_tactics_tot_or_ghost.t
 
-let e_effect_label_nbe  =
-  let embed_effect_label cb (res:effect_label) : NBET.t =
+let e_tot_or_ghost_nbe  =
+  let embed_tot_or_ghost cb (res:tot_or_ghost) : NBET.t =
     match res with
-    | E_Total -> mkConstruct fstar_tactics_effect_label_ETotal.fv [] []
-    | E_Ghost -> mkConstruct fstar_tactics_effect_label_EGhost.fv [] []
+    | E_Total -> mkConstruct fstar_tactics_tot_or_ghost_ETotal.fv [] []
+    | E_Ghost -> mkConstruct fstar_tactics_tot_or_ghost_EGhost.fv [] []
   in
-  let unembed_effect_label cb (t:NBET.t) : option effect_label =
+  let unembed_tot_or_ghost cb (t:NBET.t) : option tot_or_ghost =
     match NBETerm.nbe_t_of_t t with
-    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_effect_label_ETotal.lid -> Some E_Total
-    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_effect_label_EGhost.lid -> Some E_Ghost
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_tot_or_ghost_ETotal.lid -> Some E_Total
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_tot_or_ghost_EGhost.lid -> Some E_Ghost
     | _ ->
       if !Options.debug_embedding then
         Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded,
-                                        BU.format1 "Not an embedded effect_label: %s" (NBETerm.t_to_string t));
+                                        BU.format1 "Not an embedded tot_or_ghost: %s" (NBETerm.t_to_string t));
       None
   in
-  { NBETerm.em = embed_effect_label
-  ; NBETerm.un = unembed_effect_label
-  ; NBETerm.typ = mkFV fstar_tactics_effect_label.fv [] []
-  ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_effect_label.fv }
+  { NBETerm.em = embed_tot_or_ghost
+  ; NBETerm.un = unembed_tot_or_ghost
+  ; NBETerm.typ = mkFV fstar_tactics_tot_or_ghost.fv [] []
+  ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_tot_or_ghost.fv }
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =

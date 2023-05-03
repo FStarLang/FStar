@@ -2322,18 +2322,18 @@ let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
 let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =
   refl_check_relation g t0 t1 Equality
 
-let effect_label_to_must_tot (eff:effect_label) : bool =
+let to_must_tot (eff:tot_or_ghost) : bool =
   match eff with
   | E_Total -> true
   | E_Ghost -> false
 
-let refl_core_check_term (g:env) (e:term) (eff:effect_label) : tac (option typ) =
+let refl_core_check_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
          dbg_refl g (fun _ ->
            BU.format1 "refl_core_check_term: %s\n" (Print.term_to_string e));
-         let must_tot = effect_label_to_must_tot eff in
+         let must_tot = to_must_tot eff in
          let gh = fun g guard ->
            Rel.force_trivial_guard g
              {Env.trivial_guard with guard_f = NonTrivial guard};
@@ -2350,14 +2350,14 @@ let refl_core_check_term (g:env) (e:term) (eff:effect_label) : tac (option typ) 
            Errors.raise_error (Errors.Fatal_IllTyped, "core_check_term callback failed: " ^(Core.print_error err)) Range.dummyRange)
   else ret None
 
-let refl_tc_term (g:env) (e:term) (eff:effect_label) : tac (option (term & typ)) =
+let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ)) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
     dbg_refl g (fun _ ->
       BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
-    let must_tot = effect_label_to_must_tot eff in
+    let must_tot = to_must_tot eff in
     //
     // we don't instantiate implicits at the end of e
     // it is unlikely that we will be able to resolve them,
