@@ -218,8 +218,7 @@ let if_soundness
   in
   assume (~(hyp `Set.mem` RT.freevars (elab_st_typing e1_typing)));
   assume (~(hyp `Set.mem` RT.freevars (elab_st_typing e2_typing)));  
-  RT.T_If _ _ _ _ _ _ _ _ rb_typing re1_typing re2_typing
-    (RT.T_Sub _ _ _ _ c_typing (RT.Relc_total_ghost _ _))
+  RT.T_If _ _ _ _ _ _ _ _ _ rb_typing re1_typing re2_typing c_typing
 #pop-options
 
 #push-options "--query_stats --fuel 2 --ifuel 2"

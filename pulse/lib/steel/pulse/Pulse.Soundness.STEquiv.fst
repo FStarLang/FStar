@@ -124,9 +124,7 @@ let st_equiv_soundness (f:stt_env)
                        (RT.open_term (elab_term (comp_post c0)) x)
                        (RT.open_term (elab_term (comp_post c1)) x))
                     (RT.CloseVar x) 0);
-          RT.T_Abs _ _ _ (`()) _ _ _ R.Q_Explicit
-                 (RT.T_Sub _ _ _ _ r_res_typing (RT.Relc_total_ghost _ _))
-                 post_equiv
+          RT.T_Abs _ _ _ (`()) _ _ _ R.Q_Explicit _ r_res_typing post_equiv
     in
     let d = stt_vprop_equiv_abstract d in
     let abs_post0_typing
@@ -144,7 +142,7 @@ let st_equiv_soundness (f:stt_env)
     let (| pf, d |) =
       inst_intro_vprop_post_equiv r_res_typing abs_post0_typing abs_post1_typing d in
     let post_equiv =
-      RT.T_PropIrrelevance _ _ _ (RT.T_Sub _ _ _ _ d (RT.Relc_total_ghost _ _))
+      RT.T_PropIrrelevance _ _ _ _ _ d
         (RT.T_Sub _ _ _ _
            (stt_vprop_post_equiv_is_prop r_res_typing abs_post0_typing abs_post1_typing)
            (RT.Relc_total_ghost _ _))

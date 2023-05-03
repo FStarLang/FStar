@@ -248,5 +248,4 @@ let vprop_equiv_unit_soundness (#f:stt_env) (#g:env) (#v0 #v1:term)
   = let (| pf, s |) = vprop_equiv_soundness d0 eq in
     let d1 = fst (vprop_equiv_typing _ _ _ _ eq) d0 in
     let s_prop = stt_vprop_equiv_is_prop (tot_typing_soundness d0) (tot_typing_soundness d1) in
-    RT.T_PropIrrelevance _ _ _ (RT.T_Sub _ _ _ _ s (RT.Relc_total_ghost _ _))
-                               (RT.T_Sub _ _ _ _ s_prop (RT.Relc_total_ghost _ _))
+    RT.T_PropIrrelevance _ _ _ _ _ s s_prop

@@ -84,7 +84,8 @@ let mk_t_abs_tot (f:RT.fstar_top_env) (g:env)
              (RT.close_term r_body x)
              (T.E_Total, r_c)
              (elab_universe u) ppname (elab_qual q)
-             (RT.T_Sub _ _ _ _ r_t_typing (RT.Relc_total_ghost _ _))
+             _
+             r_t_typing
              r_body_typing
     in
     elab_open_commute' body (null_var x) 0;
@@ -133,7 +134,8 @@ let mk_t_abs (f:RT.fstar_top_env) (g:env)
              (RT.close_term r_body x)
              (T.E_Total, r_c)
              (elab_universe u) ppname (elab_qual q)
-             (RT.T_Sub _ _ _ _ r_t_typing (RT.Relc_total_ghost _ _))
+             _
+             r_t_typing
              r_body_typing
 
 (*** Typing of combinators used
