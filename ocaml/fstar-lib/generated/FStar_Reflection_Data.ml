@@ -89,39 +89,39 @@ let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Q_Meta _0 -> _0
 type argv = (FStar_Syntax_Syntax.term * aqualv)
 let (as_ppname : Prims.string -> Prims.string) = fun x -> x
-type bv_view =
-  {
+type bv_view = {
   bv_ppname: Prims.string ;
-  bv_index: FStar_BigInt.t ;
-  bv_sort: typ }
+  bv_index: FStar_BigInt.t }
 let (__proj__Mkbv_view__item__bv_ppname : bv_view -> Prims.string) =
   fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_ppname
+    match projectee with | { bv_ppname; bv_index;_} -> bv_ppname
 let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
   fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_index
-let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
-  fun projectee ->
-    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
+    match projectee with | { bv_ppname; bv_index;_} -> bv_index
 type binder_view =
   {
   binder_bv: FStar_Syntax_Syntax.bv ;
   binder_qual: aqualv ;
-  binder_attrs: FStar_Syntax_Syntax.term Prims.list }
+  binder_attrs: FStar_Syntax_Syntax.term Prims.list ;
+  binder_sort: typ }
 let (__proj__Mkbinder_view__item__binder_bv :
   binder_view -> FStar_Syntax_Syntax.bv) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_attrs;_} -> binder_bv
+    | { binder_bv; binder_qual; binder_attrs; binder_sort;_} -> binder_bv
 let (__proj__Mkbinder_view__item__binder_qual : binder_view -> aqualv) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_attrs;_} -> binder_qual
+    | { binder_bv; binder_qual; binder_attrs; binder_sort;_} -> binder_qual
 let (__proj__Mkbinder_view__item__binder_attrs :
   binder_view -> FStar_Syntax_Syntax.term Prims.list) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_attrs;_} -> binder_attrs
+    | { binder_bv; binder_qual; binder_attrs; binder_sort;_} -> binder_attrs
+let (__proj__Mkbinder_view__item__binder_sort : binder_view -> typ) =
+  fun projectee ->
+    match projectee with
+    | { binder_bv; binder_qual; binder_attrs; binder_sort;_} -> binder_sort
 type universe_view =
   | Uv_Zero 
   | Uv_Succ of FStar_Syntax_Syntax.universe 
@@ -166,11 +166,11 @@ type term_view =
   | Tv_Abs of (FStar_Syntax_Syntax.binder * FStar_Syntax_Syntax.term) 
   | Tv_Arrow of (FStar_Syntax_Syntax.binder * FStar_Syntax_Syntax.comp) 
   | Tv_Type of FStar_Syntax_Syntax.universe 
-  | Tv_Refine of (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) 
+  | Tv_Refine of (FStar_Syntax_Syntax.bv * typ * FStar_Syntax_Syntax.term) 
   | Tv_Const of vconst 
   | Tv_Uvar of (FStar_BigInt.t * FStar_Syntax_Syntax.ctx_uvar_and_subst) 
   | Tv_Let of (Prims.bool * FStar_Syntax_Syntax.term Prims.list *
-  FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term *
+  FStar_Syntax_Syntax.bv * typ * FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.term) 
   | Tv_Match of (FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.match_returns_ascription FStar_Pervasives_Native.option
@@ -222,7 +222,7 @@ let (uu___is_Tv_Refine : term_view -> Prims.bool) =
   fun projectee ->
     match projectee with | Tv_Refine _0 -> true | uu___ -> false
 let (__proj__Tv_Refine__item___0 :
-  term_view -> (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term)) =
+  term_view -> (FStar_Syntax_Syntax.bv * typ * FStar_Syntax_Syntax.term)) =
   fun projectee -> match projectee with | Tv_Refine _0 -> _0
 let (uu___is_Tv_Const : term_view -> Prims.bool) =
   fun projectee ->
@@ -239,7 +239,7 @@ let (uu___is_Tv_Let : term_view -> Prims.bool) =
 let (__proj__Tv_Let__item___0 :
   term_view ->
     (Prims.bool * FStar_Syntax_Syntax.term Prims.list *
-      FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term *
+      FStar_Syntax_Syntax.bv * typ * FStar_Syntax_Syntax.term *
       FStar_Syntax_Syntax.term))
   = fun projectee -> match projectee with | Tv_Let _0 -> _0
 let (uu___is_Tv_Match : term_view -> Prims.bool) =

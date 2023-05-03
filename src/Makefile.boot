@@ -22,7 +22,6 @@ FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_mod
 
 # Tests.* goes to fstar-tests, the rest to fstar-lib
 OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(DUNE_SNAPSHOT)/fstar-lib/generated)
-FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -47,7 +46,7 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
 		FStar.Main FStar.Compiler.List FStar.Compiler.Option    \
 		FStar.Compiler.Dyn FStar.Json FStar.Compiler.Range.Type \
-		FStar.Compiler.Range.Ops
+		FStar.Compiler.Range.Ops FStar.GenSym
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES
@@ -65,7 +64,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # recent than its dependences.
 %.checked.lax:
 	$(call msg, "LAXCHECK", $(basename $(basename $(notdir $@))))
-	$(Q)$(FSTAR_C) $< --already_cached '*,'-$(basename $(notdir $<))
+	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< --already_cached '*,'-$(basename $(notdir $<))
 	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
@@ -101,14 +100,16 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	$(Q)$(SED) 's,fstar-lib/generated/FStar_Test,fstar-tests/generated/FStar_Test,g' <._depend >.depend
 	$(Q)mkdir -p $(CACHE_DIR)
 
-.PHONY: depgraph.pdf
-depgraph.pdf :
+.PHONY: dep.graph
+dep.graph:
 	$(call msg, "DEPEND")
-	$(Q)$(FSTAR_C) --dep graph\
+	$(Q)$(FSTAR_C) --dep graph		\
 		fstar/FStar.Main.fst		\
 		tests/FStar.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)
+
+depgraph.pdf: dep.graph
 	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph
 	$(call msg, "DOT", $@)
 	$(Q)dot -Tpdf -o $@ dep_simpl.graph

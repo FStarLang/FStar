@@ -210,43 +210,6 @@ let (extend_to_end_of_line :
     let uu___1 = start_of_range r in
     let uu___2 = let uu___3 = end_of_range r in end_of_line uu___3 in
     FStar_Compiler_Range_Type.mk_range uu___ uu___1 uu___2
-let (prims_to_fstar_range :
-  ((Prims.string * (Prims.int * Prims.int) * (Prims.int * Prims.int)) *
-    (Prims.string * (Prims.int * Prims.int) * (Prims.int * Prims.int))) ->
-    FStar_Compiler_Range_Type.range)
-  =
-  fun r ->
-    let uu___ = r in
-    match uu___ with
-    | (r1, r2) ->
-        let uu___1 = r1 in
-        (match uu___1 with
-         | (f1, s1, e1) ->
-             let uu___2 = r2 in
-             (match uu___2 with
-              | (f2, s2, e2) ->
-                  let s11 =
-                    FStar_Compiler_Range_Type.mk_pos
-                      (FStar_Pervasives_Native.fst s1)
-                      (FStar_Pervasives_Native.snd s1) in
-                  let e11 =
-                    FStar_Compiler_Range_Type.mk_pos
-                      (FStar_Pervasives_Native.fst e1)
-                      (FStar_Pervasives_Native.snd e1) in
-                  let s21 =
-                    FStar_Compiler_Range_Type.mk_pos
-                      (FStar_Pervasives_Native.fst s2)
-                      (FStar_Pervasives_Native.snd s2) in
-                  let e21 =
-                    FStar_Compiler_Range_Type.mk_pos
-                      (FStar_Pervasives_Native.fst e2)
-                      (FStar_Pervasives_Native.snd e2) in
-                  let r11 = FStar_Compiler_Range_Type.mk_rng f1 s11 e11 in
-                  let r21 = FStar_Compiler_Range_Type.mk_rng f2 s21 e21 in
-                  {
-                    FStar_Compiler_Range_Type.def_range = r11;
-                    FStar_Compiler_Range_Type.use_range = r21
-                  }))
 let (json_of_pos : FStar_Compiler_Range_Type.pos -> FStar_Json.json) =
   fun pos ->
     let uu___ =

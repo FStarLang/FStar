@@ -334,7 +334,7 @@ val launch_process : string -> list string -> string -> Tac string
 (** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh inaccessible integer within
 the bv too. *)
-val fresh_bv_named : string -> typ -> Tac bv
+val fresh_bv_named : string -> Tac bv
 
 (** Change the goal to another type, given that it is convertible
 to the current type. *)
@@ -415,6 +415,9 @@ val term_to_string : term -> Tac string
 on [term_to_string]. *)
 val comp_to_string : comp -> Tac string
 
+(** Print a source range as a string *)
+val range_to_string : range -> Tac string
+
 (** A variant of Reflection.term_eq that may inspect more underlying
 details of terms. This function could distinguish two _otherwise equal
 terms_, but that distinction cannot leave the Tac effect.
@@ -460,7 +463,7 @@ val subtyping_token (g:env) (t0 t1:typ) : Type0
 
 val equiv_token (g:env) (t0 t1:typ) : Type0
 
-val typing_token (g:env) (e:term) (t:typ) : Type0
+val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
 
 val check_subtyping (g:env) (t0 t1:typ)
   : Tac (option (subtyping_token g t0 t1))
@@ -468,18 +471,18 @@ val check_subtyping (g:env) (t0 t1:typ)
 val check_equiv (g:env) (t0 t1:typ)
   : Tac (option (equiv_token g t0 t1))
 
-val core_check_term (g:env) (e:term)
-  : Tac (option (t:typ{typing_token g e t}))
+val core_check_term (g:env) (e:term) (eff:tot_or_ghost)
+  : Tac (option (t:typ{typing_token g e (eff, t)}))
 
-val tc_term (g:env) (e:term)
-  : Tac (option (r:(term & typ){typing_token g (fst r) (snd r)}))
+val tc_term (g:env) (e:term) (eff:tot_or_ghost)
+  : Tac (option (r:(term & typ){typing_token g (fst r) (eff, snd r)}))
 
 val universe_of (g:env) (e:term)
-  : Tac (option (u:universe{typing_token g e (pack_ln (Tv_Type u))}))
+  : Tac (option (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}))
 
 type prop_validity_token (g:env) (t:term) =
-  e:term{typing_token g t (pack_ln (Tv_FVar (pack_fv prop_qn))) /\
-         typing_token g e t}
+  e:term{typing_token g t (E_Total, pack_ln (Tv_FVar (pack_fv prop_qn))) /\
+         typing_token g e (E_Total, t)}
 
 val check_prop_validity (g:env) (t:term)
   : Tac (option (prop_validity_token g t))

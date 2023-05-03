@@ -6,6 +6,7 @@ open FStar.Compiler.Range
 open FStar.Compiler.List
 module List = FStar.Compiler.List
 module Util = FStar.Compiler.Util
+module GS = FStar.GenSym
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ident = {idText:string;
@@ -22,26 +23,9 @@ let mk_ident (text,range) = {idText=text; idRange=range}
 let set_id_range r i = { i with idRange=r }
 
 let reserved_prefix = "uu___"
-let _gen, _secret_ref =
-    let x = Util.mk_ref 0 in
-    let next_id () = let v = !x in x := v + 1; v in
-    let reset () = x := 0 in
-    (next_id, reset), x
-
-let next_id () = fst _gen ()
-let reset_gensym () = snd _gen ()
-
-let with_frozen_gensym f =
-  let v = !_secret_ref in
-  let r =
-    try f () with
-    | e -> (_secret_ref := v; raise e)
-  in
-  _secret_ref := v;
-  r
 
 let gen' s r =
-    let i = next_id() in
+    let i = GS.next_id() in
     mk_ident (s ^ string_of_int i, r)
 
 let gen r = gen' reserved_prefix r

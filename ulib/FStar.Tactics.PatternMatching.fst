@@ -209,10 +209,10 @@ let term_head t : Tac string =
   | Tv_Abs x t -> "Tv_Abs"
   | Tv_Arrow x t -> "Tv_Arrow"
   | Tv_Type _ -> "Tv_Type"
-  | Tv_Refine x t -> "Tv_Refine"
+  | Tv_Refine x _ t -> "Tv_Refine"
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
-  | Tv_Let r attrs b t1 t2 -> "Tv_Let"
+  | Tv_Let r attrs b _ t1 t2 -> "Tv_Let"
   | Tv_Match t _ branches -> "Tv_Match"
   | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
   | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
@@ -705,8 +705,8 @@ let rec hoist_and_apply (head:term) (arg_terms:list term) (hoisted_args:list arg
   | [] -> mk_app head (List.rev hoisted_args)
   | arg_term::rest ->
     let n = List.Tot.length hoisted_args in
-    let bv = fresh_bv_named ("x" ^ (string_of_int n)) (pack Tv_Unknown) in
-    pack (Tv_Let false [] bv arg_term (hoist_and_apply head rest ((pack (Tv_Var bv), Q_Explicit)::hoisted_args)))
+    let bv = fresh_bv_named ("x" ^ (string_of_int n)) in
+    pack (Tv_Let false [] bv (pack Tv_Unknown) arg_term (hoist_and_apply head rest ((pack (Tv_Var bv), Q_Explicit)::hoisted_args)))
   
 let specialize_abspat_continuation' (continuation: abspat_continuation)
                                     (solution_term:term)

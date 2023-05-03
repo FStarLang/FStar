@@ -162,7 +162,7 @@ let (label_goals :
                                  ->
                                  let post_name =
                                    let uu___3 =
-                                     let uu___4 = FStar_Ident.next_id () in
+                                     let uu___4 = FStar_GenSym.next_id () in
                                      FStar_Compiler_Effect.op_Less_Bar
                                        FStar_Compiler_Util.string_of_int
                                        uu___4 in
@@ -178,7 +178,7 @@ let (label_goals :
                                             let uu___6 =
                                               let uu___7 =
                                                 let uu___8 =
-                                                  FStar_Ident.next_id () in
+                                                  FStar_GenSym.next_id () in
                                                 FStar_Compiler_Effect.op_Less_Bar
                                                   FStar_Compiler_Util.string_of_int
                                                   uu___8 in
@@ -392,7 +392,7 @@ let (label_goals :
                    | (sorts', post) ->
                        let new_post_name =
                          let uu___3 =
-                           let uu___4 = FStar_Ident.next_id () in
+                           let uu___4 = FStar_GenSym.next_id () in
                            FStar_Compiler_Effect.op_Less_Bar
                              FStar_Compiler_Util.string_of_int uu___4 in
                          Prims.op_Hat "^^post_condition_" uu___3 in
@@ -403,7 +403,7 @@ let (label_goals :
                                 let uu___4 =
                                   let uu___5 =
                                     let uu___6 =
-                                      let uu___7 = FStar_Ident.next_id () in
+                                      let uu___7 = FStar_GenSym.next_id () in
                                       FStar_Compiler_Effect.op_Less_Bar
                                         FStar_Compiler_Util.string_of_int
                                         uu___7 in

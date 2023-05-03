@@ -940,7 +940,7 @@ let (tc_one_file :
     fun pre_fn ->
       fun fn ->
         fun parsing_data ->
-          FStar_Ident.reset_gensym ();
+          FStar_GenSym.reset_gensym ();
           (let maybe_restore_opts uu___1 =
              let uu___2 =
                let uu___3 = FStar_Options.interactive () in

@@ -127,8 +127,8 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                            split_arith
                                                            FStar_Tactics_Logic.l_revert))
                                                      uu___4)))
-                                    | FStar_Reflection_Formula.Forall 
-                                        (x, p) ->
+                                    | FStar_Reflection_Formula.Forall
+                                        (_x, _sort, _p) ->
                                         Obj.magic
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind

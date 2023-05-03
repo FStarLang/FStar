@@ -253,7 +253,7 @@ and param_pat (s:param_state) (p : pattern) : Tac (param_state & (pattern & patt
     //      Pat_Dot_Term (bv_of_binder bR) (param' s' t)))
 
   | Pat_Constant c ->
-    let b = fresh_bv_named "cR" (`_) in
+    let b = fresh_bv_named "cR" in
     (s, (Pat_Constant c,
          Pat_Constant c,
          Pat_Wild b))
@@ -266,7 +266,7 @@ and param_br (s:param_state) (br : branch) : Tac branch =
 and push_binder (b:binder) (s:param_state) : Tac (param_state & (binder & binder & binder)) =
   let bv = (inspect_binder b).binder_bv in
   let q = (inspect_binder b).binder_qual in
-  let typ = (inspect_bv bv).bv_sort in
+  let typ = (inspect_binder b).binder_sort in
   let name = (inspect_bv bv).bv_ppname in
   let decor (s : sealed string) (t : string) : Tac string = (unseal s ^ t) in
   let bx0 = fresh_binder_named (decor name "0") (replace_by s false typ) in

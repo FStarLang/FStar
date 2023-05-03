@@ -375,15 +375,15 @@ let ngoals_smt () : Tac int = List.Tot.Base.length (smt_goals ())
 
 (* Create a fresh bound variable (bv), using a generic name. See also
 [fresh_bv_named]. *)
-let fresh_bv t : Tac bv =
+let fresh_bv () : Tac bv =
     (* These bvs are fresh anyway through a separate counter,
      * but adding the integer allows for more readability when
      * generating code *)
     let i = fresh () in
-    fresh_bv_named ("x" ^ string_of_int i) t
+    fresh_bv_named ("x" ^ string_of_int i)
 
 let fresh_binder_named nm t : Tac binder =
-    mk_binder (fresh_bv_named nm t)
+    mk_binder (fresh_bv_named nm) t
 
 let fresh_binder t : Tac binder =
     (* See comment in fresh_bv *)
@@ -391,7 +391,7 @@ let fresh_binder t : Tac binder =
     fresh_binder_named ("x" ^ string_of_int i) t
 
 let fresh_implicit_binder_named nm t : Tac binder =
-    mk_implicit_binder (fresh_bv_named nm t)
+    mk_implicit_binder (fresh_bv_named nm) t
 
 let fresh_implicit_binder t : Tac binder =
     (* See comment in fresh_bv *)
@@ -537,6 +537,8 @@ let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
 let binder_to_term (b : binder) : Tac term =
   let bview = inspect_binder b in
   bv_to_term bview.binder_bv
+let binder_sort (b : binder) : Tac typ =
+  (inspect_binder b).binder_sort
 
 // Cannot define this inside `assumption` due to #1091
 private
@@ -937,12 +939,13 @@ let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
 let string_to_term_with_lb
   (letbindings: list (string * term))
   (e: env) (t: string): Tac term
-  = let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->
+  = let unk = pack_ln Tv_Unknown in
+    let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->
         let e, bv = push_bv_dsenv e i in
         e, (v,bv)::lb_bvs
       ) (e, []) letbindings in
     let t = string_to_term e t in
-    fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv i t)) t lb_bvs
+    fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv unk i t)) t lb_bvs
 
 private
 val lem_trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->

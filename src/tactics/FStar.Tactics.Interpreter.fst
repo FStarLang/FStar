@@ -509,9 +509,9 @@ let () =
         launch_process e_string (e_list e_string) e_string e_string
         launch_process NBET.e_string (NBET.e_list NBET.e_string) NBET.e_string NBET.e_string;
 
-      mk_tac_step_2 0 "fresh_bv_named"
-        fresh_bv_named e_string RE.e_term RE.e_bv
-        fresh_bv_named NBET.e_string NRE.e_term NRE.e_bv;
+      mk_tac_step_1 0 "fresh_bv_named"
+        fresh_bv_named e_string RE.e_bv
+        fresh_bv_named NBET.e_string NRE.e_bv;
 
       mk_tac_step_1 0 "change"
         change RE.e_term e_unit
@@ -565,6 +565,10 @@ let () =
         comp_to_string RE.e_comp e_string
         comp_to_string NRE.e_comp NBET.e_string;
 
+      mk_tac_step_1 0 "range_to_string"
+        range_to_string FStar.Syntax.Embeddings.e_range e_string
+        range_to_string FStar.TypeChecker.NBETerm.e_range NBET.e_string;
+
       mk_tac_step_2 0 "term_eq_old"
         term_eq_old RE.e_term RE.e_term e_bool
         term_eq_old NRE.e_term NRE.e_term NBET.e_bool;
@@ -599,13 +603,13 @@ let () =
         refl_check_equiv RE.e_env RE.e_term RE.e_term (e_option e_unit)
         refl_check_equiv NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
 
-      mk_tac_step_2 0 "core_check_term"
-        refl_core_check_term RE.e_env RE.e_term (e_option RE.e_term)
-        refl_core_check_term NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
+      mk_tac_step_3 0 "core_check_term"
+        refl_core_check_term RE.e_env RE.e_term E.e_tot_or_ghost (e_option RE.e_term)
+        refl_core_check_term NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option NRE.e_term);
 
-      mk_tac_step_2 0 "tc_term"
-        refl_tc_term RE.e_env RE.e_term (e_option (e_tuple2 RE.e_term RE.e_term))
-        refl_tc_term NRE.e_env NRE.e_term (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
+      mk_tac_step_3 0 "tc_term"
+        refl_tc_term RE.e_env RE.e_term E.e_tot_or_ghost (e_option (e_tuple2 RE.e_term RE.e_term))
+        refl_tc_term NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
 
       mk_tac_step_2 0 "universe_of"
         refl_universe_of RE.e_env RE.e_term (e_option RE.e_universe)

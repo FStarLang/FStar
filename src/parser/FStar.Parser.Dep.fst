@@ -484,7 +484,7 @@ exception Exit
 
 (* In public interface *)
 
-let core_modules =
+let core_modules () =
   [Options.prims_basename () ;
    Options.pervasives_basename () ;
    Options.pervasives_native_basename ()]
@@ -503,7 +503,7 @@ let hard_coded_dependencies full_filename =
   let implicit_ns_deps = List.map (fun l -> l, Open_namespace) implicit_ns_deps in
 
   (* The core libraries do not have any implicit dependencies *)
-  if List.mem (module_name_of_file filename) core_modules then []
+  if List.mem (module_name_of_file filename) (core_modules ()) then []
   else match (namespace_of_module (lowercase_module_name full_filename)) with
        | None -> implicit_ns_deps @ implicit_module_deps
          (*

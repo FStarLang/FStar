@@ -92,7 +92,7 @@ val unify_env              : env -> term -> term -> tac bool
 val unify_guard_env        : env -> term -> term -> tac bool
 val match_env              : env -> term -> term -> tac bool
 val launch_process         : string -> list string -> string -> tac string
-val fresh_bv_named         : string -> typ -> tac bv
+val fresh_bv_named         : string -> tac bv
 val change                 : typ -> tac unit
 val get_guard_policy       : unit -> tac guard_policy
 val set_guard_policy       : guard_policy -> tac unit
@@ -113,6 +113,7 @@ val string_to_term         : env -> string -> tac term
 val push_bv_dsenv          : env -> string -> tac (env * bv)
 val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
+val range_to_string        : Range.range -> tac string
 
 val term_eq_old            : term -> term -> tac bool
 val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
@@ -127,8 +128,8 @@ val free_uvars             : term -> tac (list Z.t)
 
 val refl_check_subtyping              : env -> typ -> typ -> tac (option unit)
 val refl_check_equiv                  : env -> typ -> typ -> tac (option unit)
-val refl_core_check_term              : env -> term -> tac (option typ)
-val refl_tc_term                      : env -> term -> tac (option (term & typ))
+val refl_core_check_term              : env -> term -> tot_or_ghost -> tac (option typ)
+val refl_tc_term                      : env -> term -> tot_or_ghost -> tac (option (term & typ))
 val refl_universe_of                  : env -> term -> tac (option universe)
 val refl_check_prop_validity          : env -> term -> tac (option unit)
 val refl_instantiate_implicits        : env -> term -> tac (option (term & typ))

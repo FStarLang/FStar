@@ -62,14 +62,14 @@ noeq
 type bv_view = {
     bv_ppname : ppname_t;
     bv_index : nat;
-    bv_sort : typ;
 }
 
 noeq
 type binder_view = {
   binder_bv : bv;
   binder_qual : aqualv;
-  binder_attrs : list term
+  binder_attrs : list term;
+  binder_sort : typ;
 }
 
 noeq
@@ -80,7 +80,7 @@ type universe_view =
   | Uv_BVar : nat -> universe_view
   | Uv_Name : univ_name -> universe_view
   | Uv_Unif : universe_uvar -> universe_view
-  | Uv_Unk   : universe_view
+  | Uv_Unk  : universe_view
 
 noeq
 type term_view =
@@ -92,10 +92,10 @@ type term_view =
   | Tv_Abs    : bv:binder -> body:term -> term_view
   | Tv_Arrow  : bv:binder -> c:comp -> term_view
   | Tv_Type   : universe -> term_view
-  | Tv_Refine : bv:bv -> ref:term -> term_view
+  | Tv_Refine : bv:bv -> sort:typ -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : nat -> ctx_uvar_and_subst -> term_view
-  | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
+  | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> ty:typ -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> term_view

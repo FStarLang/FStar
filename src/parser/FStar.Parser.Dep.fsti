@@ -35,7 +35,7 @@ val lowercase_module_name : string -> string
 
 val build_inclusion_candidates_list : unit -> list (string * string)
 
-val core_modules  : list string
+val core_modules (_: unit) : list string
 (* Given a filename, returns the list of automatically opened modules
 and namespaces *)
 val hard_coded_dependencies : string -> list (lident * open_kind)

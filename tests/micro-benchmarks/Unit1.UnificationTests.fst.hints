@@ -23,7 +23,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion", "unit_typing" ],
       0,
-      "6b7756b76c220228cb3cff44d0714436"
+      "208e95285c50773fd0c7558c3d7f5475"
     ],
     [
       "Unit1.UnificationTests.test_unit_valued_implicits4",
@@ -32,7 +32,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion", "unit_typing" ],
       0,
-      "8e0f47d0a88790a9ab62895ef528b9db"
+      "d65870e16d370de0ade463a02ad9a7f2"
     ]
   ]
 ]

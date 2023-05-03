@@ -126,7 +126,7 @@ let (set_hint_correlator :
             | [] ->
                 let uu___1 = FStar_TypeChecker_Env.current_module env in
                 let uu___2 =
-                  let uu___3 = FStar_Ident.next_id () in
+                  let uu___3 = FStar_GenSym.next_id () in
                   FStar_Compiler_Effect.op_Bar_Greater uu___3
                     FStar_Compiler_Util.string_of_int in
                 FStar_Ident.lid_add_suffix uu___1 uu___2
@@ -950,14 +950,12 @@ let (tc_sig_let :
                                        r
                                    else ();
                                    (let uu___5 =
-                                      let uu___6 =
-                                        let uu___7 =
-                                          FStar_Parser_Const.effect_ALL_lid
-                                            () in
+                                      FStar_Syntax_Syntax.mk_lb
                                         ((FStar_Pervasives.Inr lbname), uvs,
-                                          uu___7, tval, def, [],
+                                          FStar_Parser_Const.effect_Tot_lid,
+                                          tval, def,
+                                          (lb.FStar_Syntax_Syntax.lbattrs),
                                           (lb.FStar_Syntax_Syntax.lbpos)) in
-                                      FStar_Syntax_Syntax.mk_lb uu___6 in
                                     (false, uu___5, quals_opt1))) in
                             (match uu___2 with
                              | (gen1, lb1, quals_opt1) ->

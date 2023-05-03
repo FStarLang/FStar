@@ -751,7 +751,11 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_assume(lid, us, f) ->
         if Options.print_universes () then U.format3 "assume %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
         else U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
-      | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
+      | Sig_let(lbs, _) ->
+        (* FIXME: do not print the propagated qualifiers on top-level letbindings,
+        vale fails when parsing them. *)
+        let lbs = (fst lbs, List.map (fun lb -> { lb with lbattrs = [] }) (snd lbs)) in
+        lbs_to_string x.sigquals lbs
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_fail (errs, lax, ses) ->
         U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"

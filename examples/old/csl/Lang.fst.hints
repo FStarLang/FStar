@@ -1,0 +1,136 @@
+[
+  "¸_Ñÿ(0Äð(\u007f4í\u000bp¡ª",
+  [
+    [
+      "Lang.__proj__Return__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3b7831d9973ba6ea1ea4e42a3c37eb98"
+      ],
+      0,
+      "0f04b6ce8760a63395c8cec92a62a041"
+    ],
+    [
+      "Lang.__proj__Return__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Lang.Return",
+        "refinement_interpretation_Tm_refine_3b7831d9973ba6ea1ea4e42a3c37eb98"
+      ],
+      0,
+      "38564e954773287c77692be019db0df3"
+    ],
+    [
+      "Lang.__proj__Read__item__id",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8b0b214c8c365de975ef6f968fef05ff"
+      ],
+      0,
+      "df15a1ad0b3c9aaf14494be10ded3078"
+    ],
+    [
+      "Lang.__proj__Write__item__id",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d48ca6a107dccb6956bc9f7c46bdf471"
+      ],
+      0,
+      "2b0a23a61533b0c89391ea0ed4a0977a"
+    ],
+    [
+      "Lang.__proj__Write__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d48ca6a107dccb6956bc9f7c46bdf471"
+      ],
+      0,
+      "347243a24a605afab05f24df9c8f9112"
+    ],
+    [
+      "Lang.__proj__Bind__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "65309886b960eab0fdf515c1fee59336"
+    ],
+    [
+      "Lang.__proj__Bind__item__b",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "c8f572c5340ba9a9c2024648b599cce8"
+    ],
+    [
+      "Lang.__proj__Bind__item__c1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Lang.Bind",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "c612eea23d30b3ab0a4cc735a7466c7e"
+    ],
+    [
+      "Lang.__proj__Bind__item__c2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Lang.Bind",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "e1b564c60c80fd0df4c9f7ac6165f41e"
+    ],
+    [
+      "Lang.wpsep_command",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Lang_pretyping_ed25d9a66ef27c141140a01a63efac21",
+        "binder_x_7191e7ec7ec842c79d6210488d715978_1",
+        "data_elim_Lang.Alloc", "data_elim_Lang.Bind", "data_elim_Lang.Read",
+        "data_elim_Lang.Return", "data_elim_Lang.Write",
+        "data_typing_intro_Lang.Alloc@tok", "disc_equation_Lang.Alloc",
+        "disc_equation_Lang.Bind", "disc_equation_Lang.Read",
+        "disc_equation_Lang.Return", "disc_equation_Lang.Write",
+        "equality_tok_Lang.Alloc@tok", "equation_Lang.addr",
+        "fuel_guarded_inversion_Lang.command",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Lang.Bind",
+        "typing_tok_Lang.Alloc@tok", "unit_typing",
+        "well_founded_ordering_on_codomain_Lang.Bind"
+      ],
+      0,
+      "d40db5f767d69f392026821fd012568a"
+    ]
+  ]
+]

@@ -16,6 +16,8 @@
 
 module FStar.NMST
 
+#set-options "--compat_pre_typed_indexed_effects"
+
 module W = FStar.Witnessed.Core
 module P = FStar.Preorder
 

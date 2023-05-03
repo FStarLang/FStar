@@ -2490,6 +2490,8 @@ and solve_rigid_flex_or_flex_rigid_subtyping
               //a precise meet of all the upper bounds
               //Rather than giving up, try again with a narrowing heuristic
               //i.e., solve ?u = t_base, with the guard formula phi
+            let x = freshen_bv x in
+            let _, phi = SS.open_term [S.mk_binder x] phi in
             let eq_prob, wl =
                 new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
             def_check_prob "meet_or_join4" (TProb eq_prob);

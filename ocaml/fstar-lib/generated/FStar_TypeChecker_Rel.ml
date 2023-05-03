@@ -5690,52 +5690,71 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                          (x, phi))) ->
                                                          (FStar_Syntax_Unionfind.rollback
                                                             tx;
-                                                          (let uu___17 =
-                                                             new_problem wl1
-                                                               env t_base
-                                                               FStar_TypeChecker_Common.EQ
-                                                               this_flex
-                                                               FStar_Pervasives_Native.None
-                                                               tp.FStar_TypeChecker_Common.loc
-                                                               "widened subtyping" in
+                                                          (let x1 =
+                                                             FStar_Syntax_Syntax.freshen_bv
+                                                               x in
+                                                           let uu___17 =
+                                                             let uu___18 =
+                                                               let uu___19 =
+                                                                 FStar_Syntax_Syntax.mk_binder
+                                                                   x1 in
+                                                               [uu___19] in
+                                                             FStar_Syntax_Subst.open_term
+                                                               uu___18 phi in
                                                            match uu___17 with
-                                                           | (eq_prob1, wl2)
+                                                           | (uu___18, phi1)
                                                                ->
-                                                               (def_check_prob
-                                                                  "meet_or_join4"
-                                                                  (FStar_TypeChecker_Common.TProb
+                                                               let uu___19 =
+                                                                 new_problem
+                                                                   wl1 env
+                                                                   t_base
+                                                                   FStar_TypeChecker_Common.EQ
+                                                                   this_flex
+                                                                   FStar_Pervasives_Native.None
+                                                                   tp.FStar_TypeChecker_Common.loc
+                                                                   "widened subtyping" in
+                                                               (match uu___19
+                                                                with
+                                                                | (eq_prob1,
+                                                                   wl2) ->
+                                                                    (
+                                                                    def_check_prob
+                                                                    "meet_or_join4"
+                                                                    (FStar_TypeChecker_Common.TProb
                                                                     eq_prob1);
-                                                                (let phi1 =
-                                                                   guard_on_element
-                                                                    wl2 tp x
-                                                                    phi in
-                                                                 let wl3 =
-                                                                   let uu___19
+                                                                    (
+                                                                    let phi2
                                                                     =
-                                                                    let uu___20
+                                                                    guard_on_element
+                                                                    wl2 tp x1
+                                                                    phi1 in
+                                                                    let wl3 =
+                                                                    let uu___21
+                                                                    =
+                                                                    let uu___22
                                                                     =
                                                                     FStar_Syntax_Util.mk_conj
-                                                                    phi1
+                                                                    phi2
                                                                     (p_guard
                                                                     (FStar_TypeChecker_Common.TProb
                                                                     eq_prob1)) in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___20 in
-                                                                   solve_prob'
+                                                                    uu___22 in
+                                                                    solve_prob'
                                                                     false
                                                                     (FStar_TypeChecker_Common.TProb
                                                                     tp)
-                                                                    uu___19
+                                                                    uu___21
                                                                     [] wl2 in
-                                                                 let uu___19
-                                                                   =
-                                                                   attempt
+                                                                    let uu___21
+                                                                    =
+                                                                    attempt
                                                                     [
                                                                     FStar_TypeChecker_Common.TProb
                                                                     eq_prob1]
                                                                     wl3 in
-                                                                 solve
-                                                                   uu___19))))
+                                                                    solve
+                                                                    uu___21)))))
                                                      | uu___16 ->
                                                          let uu___17 =
                                                            FStar_Thunk.map

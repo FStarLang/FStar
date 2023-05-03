@@ -24,7 +24,6 @@ open FStar.Reflection.Const
 open FStar.Reflection.Data
 
 ///// Cannot open FStar.Tactics.Derived here /////
-private let fresh_bv = fresh_bv_named "x"
 private let bv_to_string (bv : bv) : Tac string =
     let bvv = inspect_bv bv in
     unseal (bvv.bv_ppname)
@@ -57,8 +56,8 @@ noeq type formula =
   | Not    : term -> formula
   | Implies: term -> term -> formula
   | Iff    : term -> term -> formula
-  | Forall : bv -> term -> formula
-  | Exists : bv -> term -> formula
+  | Forall : bv -> typ -> term -> formula
+  | Exists : bv -> typ -> term -> formula
   | App    : term -> term -> formula
   | Name   : bv -> formula
   | FV     : fv -> formula
@@ -67,15 +66,13 @@ noeq type formula =
 
 let mk_Forall (typ : term) (pred : term) : Tac formula =
     let b = pack_bv ({ bv_ppname = as_ppname "x";
-                       bv_sort = typ;
                        bv_index = 0; }) in
-    Forall b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
+    Forall b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let mk_Exists (typ : term) (pred : term) : Tac formula =
     let b = pack_bv ({ bv_ppname = as_ppname "x";
-                       bv_sort = typ;
                        bv_index = 0; }) in
-    Exists b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
+    Exists b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let term_as_formula' (t:term) : Tac formula =
     match inspect_unascribe t with
@@ -134,14 +131,14 @@ let term_as_formula' (t:term) : Tac formula =
         IntLit i
 
     (* Not formulas. *)
-    | Tv_Let _ _ _ _ _
+    | Tv_Let _ _ _ _ _ _
     | Tv_Match _ _ _
     | Tv_Type _
     | Tv_Abs _ _
     | Tv_Arrow _ _
     | Tv_Uvar _ _
     | Tv_Unknown
-    | Tv_Refine _ _ -> F_Unknown
+    | Tv_Refine _ _ _ -> F_Unknown
 
     (* Other constants? *)
     | Tv_Const _ -> F_Unknown
@@ -179,8 +176,8 @@ let formula_as_term_view (f:formula) : Tot term_view =
     | Implies p q     -> mk_app' (Tv_FVar (pack_fv imp_qn)) [(p,e);(q,e)]
     | Not p           -> mk_app' (Tv_FVar (pack_fv not_qn)) [(p,e)]
     | Iff p q         -> mk_app' (Tv_FVar (pack_fv iff_qn)) [(p,e);(q,e)]
-    | Forall b t      -> Tv_Unknown // TODO: decide on meaning of this
-    | Exists b t      -> Tv_Unknown // TODO: ^
+    | Forall b sort t -> Tv_Unknown // TODO: decide on meaning of this
+    | Exists b sort t -> Tv_Unknown // TODO: ^
 
     | App p q ->
         Tv_App p (q, Q_Explicit)
@@ -223,8 +220,8 @@ let formula_to_string (f:formula) : Tac string =
     | Implies p q ->  "Implies (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
     | Not p ->  "Not (" ^ term_to_string p ^ ")"
     | Iff p q ->  "Iff (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
-    | Forall bs t -> "Forall <bs> (" ^ term_to_string t ^ ")"
-    | Exists bs t -> "Exists <bs> (" ^ term_to_string t ^ ")"
+    | Forall bs _sort t -> "Forall <bs> (" ^ term_to_string t ^ ")"
+    | Exists bs _sort t -> "Exists <bs> (" ^ term_to_string t ^ ")"
     | App p q ->  "App (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
     | Name bv ->  "Name (" ^ bv_to_string bv ^ ")"
     | FV fv -> "FV (" ^ flatten_name (inspect_fv fv) ^ ")"

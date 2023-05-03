@@ -1497,7 +1497,27 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                 let uu___5 = term_to_string f in
                 FStar_Compiler_Util.format2 "assume %s : %s" uu___4 uu___5)
          | FStar_Syntax_Syntax.Sig_let (lbs, uu___2) ->
-             lbs_to_string x.FStar_Syntax_Syntax.sigquals lbs
+             let lbs1 =
+               let uu___3 =
+                 FStar_Compiler_List.map
+                   (fun lb ->
+                      {
+                        FStar_Syntax_Syntax.lbname =
+                          (lb.FStar_Syntax_Syntax.lbname);
+                        FStar_Syntax_Syntax.lbunivs =
+                          (lb.FStar_Syntax_Syntax.lbunivs);
+                        FStar_Syntax_Syntax.lbtyp =
+                          (lb.FStar_Syntax_Syntax.lbtyp);
+                        FStar_Syntax_Syntax.lbeff =
+                          (lb.FStar_Syntax_Syntax.lbeff);
+                        FStar_Syntax_Syntax.lbdef =
+                          (lb.FStar_Syntax_Syntax.lbdef);
+                        FStar_Syntax_Syntax.lbattrs = [];
+                        FStar_Syntax_Syntax.lbpos =
+                          (lb.FStar_Syntax_Syntax.lbpos)
+                      }) (FStar_Pervasives_Native.snd lbs) in
+               ((FStar_Pervasives_Native.fst lbs), uu___3) in
+             lbs_to_string x.FStar_Syntax_Syntax.sigquals lbs1
          | FStar_Syntax_Syntax.Sig_bundle (ses, uu___2) ->
              let uu___3 =
                let uu___4 = FStar_Compiler_List.map sigelt_to_string ses in
