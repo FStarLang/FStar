@@ -5,10 +5,10 @@ let (inst_bind_t2 :
       FStar_Reflection_Types.env ->
         FStar_Reflection_Types.term ->
           FStar_Reflection_Types.term ->
-            (unit, unit, unit) FStar_Reflection_Typing.typing ->
+            (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
               FStar_Reflection_Types.term ->
-                (unit, unit, unit) FStar_Reflection_Typing.typing ->
-                  (unit, unit, unit) FStar_Reflection_Typing.typing)
+                (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
+                  (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
   =
   fun u1 ->
     fun u2 ->
@@ -23,10 +23,10 @@ let (inst_bind_pre :
         FStar_Reflection_Types.term ->
           FStar_Reflection_Types.term ->
             FStar_Reflection_Types.term ->
-              (unit, unit, unit) FStar_Reflection_Typing.typing ->
+              (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
                 FStar_Reflection_Types.term ->
-                  (unit, unit, unit) FStar_Reflection_Typing.typing ->
-                    (unit, unit, unit) FStar_Reflection_Typing.typing)
+                  (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
+                    (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
   =
   fun u1 ->
     fun u2 ->
@@ -43,10 +43,10 @@ let (inst_bind_post1 :
           FStar_Reflection_Types.term ->
             FStar_Reflection_Types.term ->
               FStar_Reflection_Types.term ->
-                (unit, unit, unit) FStar_Reflection_Typing.typing ->
+                (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
                   FStar_Reflection_Types.term ->
-                    (unit, unit, unit) FStar_Reflection_Typing.typing ->
-                      (unit, unit, unit) FStar_Reflection_Typing.typing)
+                    (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
+                      (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
   =
   fun u1 ->
     fun u2 ->
@@ -66,10 +66,11 @@ let (inst_bind_post2 :
             FStar_Reflection_Types.term ->
               FStar_Reflection_Types.term ->
                 FStar_Reflection_Types.term ->
-                  (unit, unit, unit) FStar_Reflection_Typing.typing ->
+                  (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
                     FStar_Reflection_Types.term ->
-                      (unit, unit, unit) FStar_Reflection_Typing.typing ->
-                        (unit, unit, unit) FStar_Reflection_Typing.typing)
+                      (unit, unit, unit) FStar_Reflection_Typing.tot_typing
+                        ->
+                        (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
   =
   fun u1 ->
     fun u2 ->
@@ -91,10 +92,12 @@ let (inst_bind_f :
               FStar_Reflection_Types.term ->
                 FStar_Reflection_Types.term ->
                   FStar_Reflection_Types.term ->
-                    (unit, unit, unit) FStar_Reflection_Typing.typing ->
+                    (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
                       FStar_Reflection_Types.term ->
-                        (unit, unit, unit) FStar_Reflection_Typing.typing ->
-                          (unit, unit, unit) FStar_Reflection_Typing.typing)
+                        (unit, unit, unit) FStar_Reflection_Typing.tot_typing
+                          ->
+                          (unit, unit, unit)
+                            FStar_Reflection_Typing.tot_typing)
   =
   fun u1 ->
     fun u2 ->
@@ -117,10 +120,12 @@ let (inst_bind_g :
               FStar_Reflection_Types.term ->
                 FStar_Reflection_Types.term ->
                   FStar_Reflection_Types.term ->
-                    (unit, unit, unit) FStar_Reflection_Typing.typing ->
+                    (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
                       FStar_Reflection_Types.term ->
-                        (unit, unit, unit) FStar_Reflection_Typing.typing ->
-                          (unit, unit, unit) FStar_Reflection_Typing.typing)
+                        (unit, unit, unit) FStar_Reflection_Typing.tot_typing
+                          ->
+                          (unit, unit, unit)
+                            FStar_Reflection_Typing.tot_typing)
   =
   fun u1 ->
     fun u2 ->
@@ -142,5 +147,6 @@ let (inst_bind_g :
                                       t2 post1 post2)
                                    FStar_Reflection_Data.Q_Explicit),
                                 (Pulse_Soundness_Common.bind_res u2 t2 pre
-                                   post2), head_typing, g_typing) in
+                                   post2), FStar_Tactics_Types.E_Total,
+                                head_typing, g_typing) in
                           d
