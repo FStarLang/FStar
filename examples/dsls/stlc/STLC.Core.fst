@@ -435,7 +435,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
 let rec elab_ty_soundness (g:RT.fstar_top_env)
                           (sg:stlc_env)
                           (t:stlc_ty)
-  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) (RT.tm_type RT.u_zero))
+  : GTot (RT.tot_typing (extend_env_l g sg) (elab_ty t) (RT.tm_type RT.u_zero))
          (decreases t)
   = match t with
     | TUnit -> 
@@ -448,12 +448,12 @@ let rec elab_ty_soundness (g:RT.fstar_top_env)
       elab_ty_freevars t2;
       let t2_ok = elab_ty_soundness g ((x, t1)::sg) t2 in
       let arr_max 
-        : RT.typing 
+        : RT.tot_typing 
                (extend_env_l g sg)
                (elab_ty t)
                (RT.tm_type RT.(u_max u_zero u_zero))
             =  RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) 
-                          _ _ RT.pp_name_default R.Q_Explicit t1_ok t2_ok
+                          _ _ RT.pp_name_default R.Q_Explicit T.E_Total _ _ t1_ok t2_ok
       in
       RT.simplify_umax arr_max
 
@@ -475,9 +475,9 @@ let rec soundness (#sg:stlc_env)
                   (#st:stlc_ty)
                   (dd:stlc_typing sg se st)
                   (g:RT.fstar_top_env)
-  : GTot (RT.typing (extend_env_l g sg)
-                    (elab_exp se)
-                    (elab_ty st))
+  : GTot (RT.tot_typing (extend_env_l g sg)
+                        (elab_exp se)
+                        (elab_ty st))
          (decreases dd)
   = match dd with
     | T_Unit _ ->
@@ -487,14 +487,14 @@ let rec soundness (#sg:stlc_env)
       RT.T_Var _ (R.pack_bv (RT.make_bv x))
 
     | T_Lam _ t e t' x de ->
-      let de : RT.typing (extend_env_l g ((x,t)::sg))
-                         (elab_exp (open_exp e x))
-                         (elab_ty t')
+      let de : RT.tot_typing (extend_env_l g ((x,t)::sg))
+                             (elab_exp (open_exp e x))
+                             (elab_ty t')
             = soundness de g 
       in    
-      let de : RT.typing (RT.extend_env (extend_env_l g sg) x (elab_ty t))
-                         (elab_exp (open_exp e x))
-                         (elab_ty t')
+      let de : RT.tot_typing (RT.extend_env (extend_env_l g sg) x (elab_ty t))
+                             (elab_exp (open_exp e x))
+                             (elab_ty t')
              = de
       in
       fresh_is_fresh sg;
@@ -504,32 +504,33 @@ let rec soundness (#sg:stlc_env)
                    x
                    (elab_ty t) 
                    (elab_exp e)
-                   (elab_ty t')
+                   (T.E_Total, elab_ty t')
                    _
                    RT.pp_name_default
                    R.Q_Explicit
+                   _
                    (elab_ty_soundness g sg t)
                    de
       in
       dd
     | T_App _ e1 e2 t t' d1 d2 ->
       let dt1 
-        : RT.typing (extend_env_l g sg)
-                    (elab_exp e1)
-                    (elab_ty (TArrow t t'))
+        : RT.tot_typing (extend_env_l g sg)
+                        (elab_exp e1)
+                        (elab_ty (TArrow t t'))
         = soundness d1 g
       in
       let dt2
-        : RT.typing (extend_env_l g sg)
-                    (elab_exp e2)
-                    (elab_ty t)
+        : RT.tot_typing (extend_env_l g sg)
+                        (elab_exp e2)
+                        (elab_ty t)
         = soundness d2 g
       in
       let dt :
-        RT.typing (extend_env_l g sg)
-                  (elab_exp (EApp e1 e2))
-                  (RT.open_with (elab_ty t') (elab_exp e2))
-        = RT.T_App _ _ _ _ _ dt1 dt2
+        RT.tot_typing (extend_env_l g sg)
+                      (elab_exp (EApp e1 e2))
+                      (RT.open_with (elab_ty t') (elab_exp e2))
+        = RT.T_App _ _ _ _ _ _ dt1 dt2
       in
       dt
 
@@ -539,9 +540,9 @@ let soundness_lemma (sg:stlc_env)
                     (g:RT.fstar_top_env)
   : Lemma
     (requires stlc_typing sg se st)
-    (ensures  RT.typing (extend_env_l g sg)
-                        (elab_exp se)
-                        (elab_ty st))
+    (ensures  RT.tot_typing (extend_env_l g sg)
+                            (elab_exp se)
+                            (elab_ty st))
   = FStar.Squash.bind_squash 
       #(stlc_typing sg se st)
       ()
