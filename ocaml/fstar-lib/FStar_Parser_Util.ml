@@ -32,6 +32,12 @@ let rhspos () n =
 let rhs2 () n m =
   mksyn_range (Parsing.rhs_start_pos n) (Parsing.rhs_end_pos m)
 
+let translate_range (pos : Lexing.position * Lexing.position) =
+  mksyn_range (fst pos) (snd pos)
+
+let translate_range2 (pos1 : Lexing.position * Lexing.position) (pos2 : Lexing.position * Lexing.position) =
+  mksyn_range (fst pos1) (snd pos2)
+
 exception WrappedError of exn * range
 exception ReportedError
 exception StopProcessing

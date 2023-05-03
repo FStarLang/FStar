@@ -22,6 +22,10 @@ open FStar_Const
 open FStar_Ident
 open FStar_String
 
+(* Shorthands *)
+let rr = FStar_Parser_Util.translate_range
+let rr2 = FStar_Parser_Util.translate_range2
+
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
@@ -188,14 +192,14 @@ decoration:
 
 decl:
   | ASSUME lid=uident COLON phi=formula
-      { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
+      { mk_decl (Assume(lid, phi)) (rr $loc) [ Qualifier Assumption ] }
 
   | ds=list(decoration) decl=rawDecl
-      { mk_decl decl (rhs parseState 2) ds }
+      { mk_decl decl (rr $loc(decl)) ds }
 
   | ds=list(decoration) decl=typeclassDecl
       { let (decl, extra_attrs) = decl in
-        let d = mk_decl decl (rhs parseState 2) ds in
+        let d = mk_decl decl (rr $loc(decl)) ds in
         { d with attrs = extra_attrs @ d.attrs }
       }
 
@@ -214,7 +218,7 @@ typeclassDecl:
   | INSTANCE q=letqualifier lb=letbinding
       {
         (* Making a single letbinding *)
-        let r = rhs2 parseState 1 3 in
+        let r = rr $loc in
         let lbs = focusLetBindings [lb] r in (* lbs is a singleton really *)
         let d = TopLevelLet(q, lbs) in
 
@@ -235,8 +239,8 @@ rawDecl:
       { Include uid }
   | MODULE uid1=uident EQUALS uid2=quident
       { ModuleAbbrev(uid1, uid2) }
-  | MODULE qlident
-      { raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rhs parseState 2) }
+  | MODULE q=qlident
+      { raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rr $loc(q)) }
   | MODULE uid=quident
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,typeDecl)
@@ -245,7 +249,7 @@ rawDecl:
       { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t))]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
-        let r = rhs2 parseState 1 3 in
+        let r = rr $loc in
         let lbs = focusLetBindings lbs r in
         if q <> Rec && List.length lbs <> 1
         then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
@@ -254,13 +258,13 @@ rawDecl:
   | VAL c=constant
       {
         (* This is just to provide a better error than "syntax error" *)
-        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rhs2 parseState 1 2)
+        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rr $loc)
       }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
       {
         let t = match flatten bss with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
+          | bs -> mk_term (Product(bs, t)) (rr2 $loc(bss) $loc(t)) Type_level
         in Val(lid, t)
       }
   | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
@@ -338,29 +342,29 @@ letoperatorbinding:
         let h tm
 	  = ( ( match ascr_opt with
               | None   -> pat
-              | Some t -> mk_pattern (PatAscribed(pat, t)) (rhs2 parseState 1 2) )
+              | Some t -> mk_pattern (PatAscribed(pat, t)) (rr2 $loc(pat) $loc(ascr_opt)) )
 	    , tm)
 	in
 	match pat.pat, tm with
         | _               , Some tm -> h tm
         | PatVar (v, _, _), None    ->
           let v = lid_of_ns_and_id [] v in
-          h (mk_term (Var v) (rhs parseState 1) Expr)
-        | _ -> raise_error (Fatal_SyntaxError, "Syntax error: let-punning expects a name, not a pattern") (rhs parseState 2)
+          h (mk_term (Var v) (rr $loc(pat)) Expr)
+        | _ -> raise_error (Fatal_SyntaxError, "Syntax error: let-punning expects a name, not a pattern") (rr $loc(ascr_opt))
     }
 
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
-        let pat = mk_pattern (PatVar(lid, None, [])) (rhs parseState 2) in
-        let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 3) in
-        let pos = rhs2 parseState 1 6 in
+        let pat = mk_pattern (PatVar(lid, None, [])) (rr $loc(lid)) in
+        let pat = mk_pattern (PatApp (pat, flatten lbp)) (rr2 $loc(focus_opt) $loc(lbp)) in
+        let pos = rr2 $loc(focus_opt) $loc(tm) in
         match ascr_opt with
         | None -> (focus_opt, (pat, tm))
         | Some t -> (focus_opt, (mk_pattern (PatAscribed(pat, t)) pos, tm))
       }
-  | focus_opt=maybeFocus pat=tuplePattern ascr=ascribeTyp EQUALS tm=term
-      { focus_opt, (mk_pattern (PatAscribed(pat, ascr)) (rhs2 parseState 1 4), tm) }
+  | focus_opt=maybeFocus pat=tuplePattern ascr=ascribeTyp eq=EQUALS tm=term
+      { focus_opt, (mk_pattern (PatAscribed(pat, ascr)) (rr2 $loc(focus_opt) $loc(eq)), tm) }
   | focus_opt=maybeFocus pat=tuplePattern EQUALS tm=term
       { focus_opt, (pat, tm) }
 
@@ -413,7 +417,7 @@ layeredEffectDefinition:
 
 effectDecl:
   | lid=lident action_params=binders EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rhs2 parseState 1 3) [] }
+    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rr $loc) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -518,15 +522,15 @@ disjunctivePattern:
 
 tuplePattern:
   | pats=separated_nonempty_list(COMMA, constructorPattern)
-      { match pats with | [x] -> x | l -> mk_pattern (PatTuple (l, false)) (rhs parseState 1) }
+      { match pats with | [x] -> x | l -> mk_pattern (PatTuple (l, false)) (rr $loc) }
 
 constructorPattern:
   | pat=constructorPattern COLON_COLON pats=constructorPattern
-      { mk_pattern (consPat (rhs parseState 3) pat pats) (rhs2 parseState 1 3) }
+      { mk_pattern (consPat (rr $loc(pats)) pat pats) (rr $loc) }
   | uid=quident args=nonempty_list(atomicPattern)
       {
-        let head_pat = mk_pattern (PatName uid) (rhs parseState 1) in
-        mk_pattern (PatApp (head_pat, args)) (rhs2 parseState 1 2)
+        let head_pat = mk_pattern (PatName uid) (rr $loc(uid)) in
+        mk_pattern (PatApp (head_pat, args)) (rr $loc)
       }
   | pat=atomicPattern
       { pat }
@@ -534,54 +538,54 @@ constructorPattern:
 atomicPattern:
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
-        let pos_t = rhs2 parseState 2 4 in
-        let pos = rhs2 parseState 1 6 in
+        let pos_t = rr2 $loc(pat) $loc(t) in
+        let pos = rr $loc in
         mkRefinedPattern pat t true phi_opt pos_t pos
       }
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
-      { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
+      { mk_pattern (PatList pats) (rr2 $loc($1) $loc($3)) }
   | LBRACE record_pat=right_flexible_nonempty_list(SEMICOLON, fieldPattern) RBRACE
-      { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) }
+      { mk_pattern (PatRecord record_pat) (rr $loc) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
-      { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
+      { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
+  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rr $loc(tv)) }
   | LPAREN op=operator RPAREN
-      { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
+      { mk_pattern (PatOp op) (rr $loc) }
   | UNDERSCORE
-      { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
+      { mk_pattern (PatWild (None, [])) (rr $loc) }
   | HASH UNDERSCORE
-      { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
+      { mk_pattern (PatWild (Some Implicit, [])) (rr $loc) }
   | c=constant
-      { mk_pattern (PatConst c) (rhs parseState 1) }
+      { mk_pattern (PatConst c) (rr $loc(c)) }
   | BACKTICK_PERC q=atomicTerm
-      { mk_pattern (PatVQuote q) (rhs2 parseState 1 2) }
+      { mk_pattern (PatVQuote q) (rr $loc) }
   | qual_id=aqualifiedWithAttrs(lident)
     {
       let (aqual, attrs), lid = qual_id in
-      mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) }
+      mk_pattern (PatVar (lid, aqual, attrs)) (rr $loc(qual_id)) }
   | uid=quident
-      { mk_pattern (PatName uid) (rhs parseState 1) }
+      { mk_pattern (PatName uid) (rr $loc(uid)) }
 
 fieldPattern:
   | p = separated_pair(qlident, EQUALS, tuplePattern)
       { p }
   | lid=qlident
-      { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rhs parseState 1) }
+      { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rr $loc(lid)) }
 
   (* (x : t) is already covered by atomicPattern *)
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
   | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
-      { let r = rhs2 parseState 1 5 in
+      { let r = rr $loc in
         let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) r]
       }
 
   | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let r = rhs2 parseState 1 3 in
+      { let r = rr $loc in
         let id = gen r in
         let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
         let asc = (t, None) in
@@ -590,8 +594,8 @@ patternOrMultibinder:
   | pat=atomicPattern { [pat] }
   | LPAREN qual_id0=aqualifiedWithAttrs(lident) qual_ids=nonempty_list(aqualifiedWithAttrs(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
-        let pos = rhs2 parseState 1 7 in
-        let t_pos = rhs parseState 5 in
+        let pos = rr $loc in
+        let t_pos = rr $loc(t) in
         let qual_ids = qual_id0 :: qual_ids in
         List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
       }
@@ -600,20 +604,20 @@ binder:
   | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
      {
        let (q, attrs), lid = aqualifiedWithAttrs_lid in
-       mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
+       mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs
      }
 
-  | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
+  | tv=tvar { mk_binder (TVariable tv) (rr $loc) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
   | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
-      { let r = rhs2 parseState 1 5 in
+      { let r = rr $loc in
         [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
       }
 
   | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let r = rhs2 parseState 1 3 in
+      { let r = rr $loc in
         let id = gen r in
         [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
       }
@@ -622,7 +626,7 @@ multiBinder:
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
        List.map (fun ((q, attrs), x) ->
-         mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q attrs) qual_ids
+         mkRefinedBinder x t should_bind_var r (rr $loc) q attrs) qual_ids
      }
 
 binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
@@ -663,37 +667,37 @@ qlidentOrOperator:
 
 matchMaybeOp:
   | MATCH {None}
-  | op=MATCH_OP { Some (mk_ident ("let" ^ op, rhs parseState 1)) }
+  | op=MATCH_OP { Some (mk_ident ("let" ^ op, rr $loc(op))) }
 
 ifMaybeOp:
   | IF {None}
-  | op=IF_OP { Some (mk_ident ("let" ^ op, rhs parseState 1)) }
+  | op=IF_OP { Some (mk_ident ("let" ^ op, rr $loc(op))) }
 
 lidentOrUnderscore:
-  | id=IDENT { mk_ident(id, rhs parseState 1)}
-  | UNDERSCORE { gen (rhs parseState 1) }
+  | id=IDENT { mk_ident(id, rr $loc(id))}
+  | UNDERSCORE { gen (rr $loc) }
 
 lident:
-  | id=IDENT { mk_ident(id, rhs parseState 1)}
+  | id=IDENT { mk_ident(id, rr $loc(id))}
 
 uident:
-  | id=NAME { mk_ident(id, rhs parseState 1) }
+  | id=NAME { mk_ident(id, rr $loc(id)) }
 
 tvar:
-  | tv=TVAR { mk_ident(tv, rhs parseState 1) }
+  | tv=TVAR { mk_ident(tv, rr $loc(tv)) }
 
 
 /******************************************************************************/
 /*                            Types and terms                                 */
 /******************************************************************************/
 
-thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild (None, [])) (rr $loc)], t)) (rr $loc) Expr }
 
 thunk2(X):
   | t=X
-     { let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
-       let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
-       mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+     { let u = mk_term (Const Const_unit) (rr $loc) Expr in
+       let t = mk_term (Seq (u, t)) (rr $loc) Expr in
+       mk_term (Abs ([mk_pattern (PatWild (None, [])) (rr $loc)], t)) (rr $loc) Expr }
 
 ascribeTyp:
   | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }
@@ -711,7 +715,7 @@ term:
   | e=noSeqTerm
       { e }
   | e1=noSeqTerm SEMICOLON e2=term
-      { mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Seq(e1, e2)) (rr2 $loc(e1) $loc(e2)) Expr }
 (* Added this form for sequencing; *)
 (* but it results in an additional shift/reduce conflict *)
 (* ... which is actually be benign, since the same conflict already *)
@@ -719,17 +723,17 @@ term:
   | e1=noSeqTerm op=SEMICOLON_OP e2=term
       { let t = match op with
 	  | Some op ->
-	     let op = mk_ident ("let" ^ op, rhs parseState 2) in
-	     let pat = mk_pattern (PatWild(None, [])) (rhs parseState 2) in
+	     let op = mk_ident ("let" ^ op, rr $loc(op)) in
+	     let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
 	     LetOperator ([(op, pat, e1)], e2)
 	  | None   ->
              log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
-	     Bind(gen (rhs parseState 2), e1, e2)
-        in mk_term t (rhs2 parseState 1 3) Expr
+	     Bind(gen (rr $loc(op)), e1, e2)
+        in mk_term t (rr2 $loc(e1) $loc(e2)) Expr
       }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
     { log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
-      mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
+      mk_term (Bind(x, e1, e2)) (rr2 $loc(x) $loc(e2)) Expr }
 
 match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
@@ -738,26 +742,26 @@ match_returning:
 noSeqTerm:
   | t=typ  { t }
   | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
-      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rhs2 parseState 1 4) Expr }
+      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rr2 $loc(e) $loc(tactic_opt)) Expr }
   | e=tmIff EQUALTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
       {
         log_issue (lhs parseState)
 	          (Warning_BleedingEdge_Feature,
 		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
-        mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rhs2 parseState 1 4) Expr
+        mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rr2 $loc(e) $loc(tactic_opt)) Expr
       }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
         let opid = mk_ident (string_of_id op ^ "<-", range_of_id op) in
-        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rr2 $loc(e1) $loc(e3)) Expr
       }
   | REQUIRES t=typ
-      { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
+      { mk_term (Requires(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
   | ENSURES t=typ
-      { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
+      { mk_term (Ensures(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES t=typ
-      { mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level }
+      { mk_term (Decreases (t, None)) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES LBRACE_COLON_WELL_FOUNDED t=noSeqTerm RBRACE
       (*
        * decreases clause with relation is written as e1 e2,
@@ -767,112 +771,112 @@ noSeqTerm:
        *)
       { match t.tm with
         | App (t1, t2, _) ->
-	  let ot = mk_term (WFOrder (t1, t2)) (rhs2 parseState 3 3) Type_level in
-	  mk_term (Decreases (ot, None)) (rhs2 parseState 1 4) Type_level
+	  let ot = mk_term (WFOrder (t1, t2)) (rr2 $loc(t) $loc(t)) Type_level in
+	  mk_term (Decreases (ot, None)) (rr2 $loc($1) $loc($4)) Type_level
 	| _ ->
 	  raise_error (Fatal_SyntaxError,
-	    "Syntax error: To use well-founded relations, write e1 e2") (rhs parseState 3) }
+	    "Syntax error: To use well-founded relations, write e1 e2") (rr $loc(t)) }
 
   | ATTRIBUTES es=nonempty_list(atomicTerm)
-      { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
+      { mk_term (Attributes es) (rr2 $loc($1) $loc(es)) Type_level }
   | op=ifMaybeOp e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
-      { mk_term (If(e1, op, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr }
+      { mk_term (If(e1, op, ret_opt, e2, e3)) (rr2 $loc(op) $loc(e3)) Expr }
   | op=ifMaybeOp e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm
       {
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 5) Expr in
-        mk_term (If(e1, op, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
+        let e3 = mk_term (Const Const_unit) (rr2 $loc(op) $loc(e2)) Expr in
+        mk_term (If(e1, op, ret_opt, e2, e3)) (rr2 $loc(op) $loc(e2)) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
-         let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
-         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
+         let branches = focusBranches (pbs) (rr2 $loc($1) $loc(pbs)) in
+         mk_term (TryWith(e1, branches)) (rr2 $loc($1) $loc(pbs)) Expr
       }
   | op=matchMaybeOp e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
       {
-        let branches = focusBranches pbs (rhs2 parseState 1 5) in
-        mk_term (Match(e, op, ret_opt, branches)) (rhs2 parseState 1 5) Expr
+        let branches = focusBranches pbs (rr2 $loc(op) $loc(pbs)) in
+        mk_term (Match(e, op, ret_opt, branches)) (rr2 $loc(op) $loc(pbs)) Expr
       }
   | LET OPEN t=term IN e=term
       {
             match t.tm with
             | Ascribed(r, rty, None, _) ->
-              mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 5) Expr
+              mk_term (LetOpenRecord(r, rty, e)) (rr2 $loc($1) $loc(e)) Expr
 
             | Name uid ->
-              mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr
+              mk_term (LetOpen(uid, e)) (rr2 $loc($1) $loc(e)) Expr
 
             | _ ->
               raise_error (Fatal_SyntaxError, "Syntax error: local opens expects either opening\n\
                                                a module or namespace using `let open T in e`\n\
                                                or, a record type with `let open e <: t in e'`")
-                          (rhs parseState 3)
+                          (rr $loc(t))
       }
 
   | attrs=ioption(attribute)
     LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
       {
         let lbs = (attrs, lb)::lbs in
-        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
-        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
+        let lbs = focusAttrLetBindings lbs (rr2 $loc($2) $loc(q)) in
+        mk_term (Let(q, lbs, e)) (rr2 $loc(attrs) $loc($6)) Expr
       }
   | op=let_op b=letoperatorbinding lbs=list(op=and_op b=letoperatorbinding {(op, b)}) IN e=term
     { let lbs = (op, b)::lbs in
       mk_term (LetOperator ( List.map (fun (op, (pat, tm)) -> (op, pat, tm)) lbs
-			   , e)) (rhs2 parseState 1 5) Expr
+			   , e)) (rr2 $loc(op) $loc(e)) Expr
     }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
-        let branches = focusBranches pbs (rhs2 parseState 1 2) in
-        mk_function branches (lhs parseState) (rhs2 parseState 1 2)
+        let branches = focusBranches pbs (rr2 $loc($1) $loc(pbs)) in
+        mk_function branches (lhs parseState) (rr2 $loc($1) $loc(pbs))
       }
-  | ASSUME e=atomicTerm
-      { let a = set_lid_range assume_lid (rhs parseState 1) in
-        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+  | a=ASSUME e=atomicTerm
+      { let a = set_lid_range assume_lid (rr $loc(a)) in
+        mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
       }
 
-  | ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
+  | a=ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
       {
         match tactic_opt with
         | None ->
-          let a = set_lid_range assert_lid (rhs parseState 1) in
-          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+          let a = set_lid_range assert_lid (rr $loc(a)) in
+          mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
         | Some tac ->
-          let a = set_lid_range assert_by_tactic_lid (rhs parseState 1) in
-          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
+          let a = set_lid_range assert_by_tactic_lid (rr $loc(a)) in
+          mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e; tac] (rr $loc)
       }
 
-   | UNDERSCORE BY tactic=thunk(atomicTerm)
+   | u=UNDERSCORE BY tactic=thunk(atomicTerm)
      {
-         let a = set_lid_range synth_lid (rhs parseState 1) in
-         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+         let a = set_lid_range synth_lid (rr $loc(u)) in
+         mkExplicitApp (mk_term (Var a) (rr $loc(u)) Expr) [tactic] (rr $loc)
      }
 
-   | SYNTH tactic=atomicTerm
+   | s=SYNTH tactic=atomicTerm
      {
-         let a = set_lid_range synth_lid (rhs parseState 1) in
-         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+         let a = set_lid_range synth_lid (rr $loc(s)) in
+         mkExplicitApp (mk_term (Var a) (rr $loc(s)) Expr) [tactic] (rr $loc)
      }
 
    | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=list(calcStep) RBRACE
      {
-         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
+         mk_term (CalcProof (rel, init, steps)) (rr2 $loc($1) $loc($7)) Expr
      }
 
    | INTRO FORALL bs=binders DOT p=noSeqTerm WITH e=noSeqTerm
      {
-        mk_term (IntroForall(bs, p, e)) (rhs2 parseState 1 7) Expr
+        mk_term (IntroForall(bs, p, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
    | INTRO EXISTS bs=binders DOT p=noSeqTerm WITH vs=list(atomicTerm) AND e=noSeqTerm
      {
         if List.length bs <> List.length vs
-        then raise_error (Fatal_SyntaxError, "Syntax error: expected instantiations for all binders") (rhs parseState 7)
-        else mk_term (IntroExists(bs, p, vs, e)) (rhs2 parseState 1 9) Expr
+        then raise_error (Fatal_SyntaxError, "Syntax error: expected instantiations for all binders") (rr $loc(vs))
+        else mk_term (IntroExists(bs, p, vs, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
    | INTRO p=tmFormula IMPLIES q=tmFormula WITH y=singleBinder DOT e=noSeqTerm
      {
-        mk_term (IntroImplies(p, q, y, e)) (rhs2 parseState 1 8) Expr
+        mk_term (IntroImplies(p, q, y, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
    | INTRO p=tmFormula DISJUNCTION q=tmConjunction WITH lr=NAME e=noSeqTerm
@@ -880,40 +884,40 @@ noSeqTerm:
         let b =
             if lr = "Left" then true
             else if lr = "Right" then false
-            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \\/ expects either 'Left' or 'Right'") (rhs parseState 6)
+            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \\/ expects either 'Left' or 'Right'") (rr $loc(lr))
         in
-        mk_term (IntroOr(b, p, q, e))  (rhs2 parseState 1 7) Expr
+        mk_term (IntroOr(b, p, q, e))  (rr2 $loc($1) $loc(e)) Expr
      }
 
    | INTRO p=tmConjunction CONJUNCTION q=tmTuple WITH e1=noSeqTerm AND e2=noSeqTerm
      {
-        mk_term (IntroAnd(p, q, e1, e2))  (rhs2 parseState 1 8) Expr
+        mk_term (IntroAnd(p, q, e1, e2))  (rr2 $loc($1) $loc(e2)) Expr
      }
 
    | ELIM FORALL xs=binders DOT p=noSeqTerm WITH vs=list(atomicTerm)
      {
-        mk_term (ElimForall(xs, p, vs)) (rhs2 parseState 1 7) Expr
+        mk_term (ElimForall(xs, p, vs)) (rr2 $loc($1) $loc(vs)) Expr
      }
 
    | ELIM EXISTS bs=binders DOT p=noSeqTerm RETURNS q=noSeqTerm WITH y=singleBinder DOT e=noSeqTerm
      {
-        mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 11) Expr
+        mk_term (ElimExists(bs, p, q, y, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
    | ELIM p=tmFormula IMPLIES q=tmFormula WITH e=noSeqTerm
      {
-        mk_term (ElimImplies(p, q, e)) (rhs2 parseState 1 6) Expr
+        mk_term (ElimImplies(p, q, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
    | ELIM p=tmFormula DISJUNCTION q=tmConjunction RETURNS r=noSeqTerm WITH x=singleBinder DOT e1=noSeqTerm AND y=singleBinder DOT e2=noSeqTerm
      {
-        mk_term (ElimOr(p, q, r, x, e1, y, e2)) (rhs2 parseState 1 14) Expr
+        mk_term (ElimOr(p, q, r, x, e1, y, e2)) (rr2 $loc($1) $loc(e2)) Expr
      }
 
    | ELIM p=tmConjunction CONJUNCTION q=tmTuple RETURNS r=noSeqTerm WITH xs=binders DOT e=noSeqTerm
      {
         match xs with
-        | [x;y] -> mk_term (ElimAnd(p, q, r, x, y, e)) (rhs2 parseState 1 10) Expr
+        | [x;y] -> mk_term (ElimAnd(p, q, r, x, y, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
 singleBinder:
@@ -921,12 +925,12 @@ singleBinder:
     {
        match bs with
        | [b] -> b
-       | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 1)
+       | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rr $loc(bs))
     }
 
 calcRel:
-  | i=binop_name { mk_term (Op (i, [])) (rhs parseState 1) Expr }
-  | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
+  | i=binop_name { mk_term (Op (i, [])) (rr $loc(i)) Expr }
+  | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rr $loc) Un }
   | t=atomicTerm { t }
 
 calcStep:
@@ -935,7 +939,7 @@ calcStep:
          let justif =
              match justif with
              | Some t -> t
-             | None -> mk_term (Const Const_unit) (rhs2 parseState 2 4) Expr
+             | None -> mk_term (Const Const_unit) (rr2 $loc($2) $loc($4)) Expr
          in
          CalcStep (rel, justif, next)
      }
@@ -947,10 +951,10 @@ typ:
       {
         match bs with
         | [] ->
-          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
+          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rr2 $loc(q) $loc($3))
         | _ ->
-          let idents = idents_of_binders bs (rhs2 parseState 1 3) in
-          mk_term (q (bs, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
+          let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
+          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
       }
 
 %inline quantifier:
@@ -970,7 +974,7 @@ conjunctivePat:
 simpleTerm:
   | e=tmIff { e }
   | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
-      { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un }
+      { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
 
 maybeFocusArrow:
   | RARROW          { false }
@@ -981,7 +985,7 @@ patternBranch:
       {
         let pat = match pat with
           | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 1)
+          | ps -> mk_pattern (PatOr ps) (rr2 $loc(pat) $loc(pat))
         in
         (focus, (pat, when_opt, e))
       }
@@ -993,13 +997,13 @@ patternBranch:
 
 
 tmIff:
-  | e1=tmImplies IFF e2=tmIff
-      { mk_term (Op(mk_ident("<==>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Formula }
+  | e1=tmImplies tok=IFF e2=tmIff
+      { mk_term (Op(mk_ident("<==>", rr $loc(tok)), [e1; e2])) (rr2 $loc(e1) $loc(e2)) Formula }
   | e=tmImplies { e }
 
 tmImplies:
-  | e1=tmArrow(tmFormula) IMPLIES e2=tmImplies
-      { mk_term (Op(mk_ident("==>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Formula }
+  | e1=tmArrow(tmFormula) tok=IMPLIES e2=tmImplies
+      { mk_term (Op(mk_ident("==>", rr $loc(tok)), [e1; e2])) (rr2 $loc(e1) $loc(e2)) Formula }
   | e=tmArrow(tmFormula)
       { e }
 
@@ -1010,10 +1014,10 @@ tmArrow(Tm):
      {
        let ((aq_opt, attrs), dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
-         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
+         | None -> mk_binder_with_attrs (NoName dom_tm) (rr $loc(dom)) Un aq_opt attrs
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rr2 $loc(dom) $loc(dom)) aq_opt attrs
        in
-       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+       mk_term (Product([b], tgt)) (rr2 $loc(dom) $loc(tgt))  Un
      }
   | e=Tm { e }
 
@@ -1022,10 +1026,10 @@ simpleArrow:
      {
        let ((aq_opt, attrs), dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
-         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
+         | None -> mk_binder_with_attrs (NoName dom_tm) (rr $loc(dom)) Un aq_opt attrs
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rr2 $loc(dom) $loc(dom)) aq_opt attrs
        in
-       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+       mk_term (Product([b], tgt)) (rr2 $loc(dom) $loc(tgt))  Un
      }
   | e=tmEqNoRefinement { e }
 
@@ -1040,13 +1044,13 @@ simpleArrowDomain:
   | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 tmFormula:
-  | e1=tmFormula DISJUNCTION e2=tmConjunction
-      { mk_term (Op(mk_ident("\\/", rhs parseState 2), [e1;e2])) (rhs2 parseState 1 3) Formula }
+  | e1=tmFormula tok=DISJUNCTION e2=tmConjunction
+      { mk_term (Op(mk_ident("\\/", rr $loc(tok)), [e1;e2])) (rr2 $loc(e1) $loc(e2)) Formula }
   | e=tmConjunction { e }
 
 tmConjunction:
-  | e1=tmConjunction CONJUNCTION e2=tmTuple
-      { mk_term (Op(mk_ident("/\\", rhs parseState 2), [e1;e2])) (rhs2 parseState 1 3) Formula }
+  | e1=tmConjunction tok=CONJUNCTION e2=tmTuple
+      { mk_term (Op(mk_ident("/\\", rr $loc(tok)), [e1;e2])) (rr2 $loc(e1) $loc(e2)) Formula }
   | e=tmTuple { e }
 
 tmTuple:
@@ -1054,46 +1058,46 @@ tmTuple:
       {
         match el with
           | [x] -> x
-          | components -> mkTuple components (rhs2 parseState 1 1)
+          | components -> mkTuple components (rr2 $loc(el) $loc(el))
       }
 
 
 tmEqWith(X):
-  | e1=tmEqWith(X) EQUALS e2=tmEqWith(X)
-      { mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+  | e1=tmEqWith(X) tok=EQUALS e2=tmEqWith(X)
+      { mk_term (Op(mk_ident("=", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
   (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
   (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
-  | e1=tmEqWith(X) COLON_EQUALS e2=tmEqWith(X)
-      { mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEqWith(X) PIPE_RIGHT e2=tmEqWith(X)
-      { mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+  | e1=tmEqWith(X) tok=COLON_EQUALS e2=tmEqWith(X)
+      { mk_term (Op(mk_ident(":=", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
+  | e1=tmEqWith(X) tok=PIPE_RIGHT e2=tmEqWith(X)
+      { mk_term (Op(mk_ident("|>", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
   | e1=tmEqWith(X) op=operatorInfix0ad12 e2=tmEqWith(X)
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEqWith(X) MINUS e2=tmEqWith(X)
-      { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | MINUS e=tmEqWith(X)
-      { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
+      { mk_term (Op(op, [e1; e2])) (rr2 $loc(e1) $loc(e2)) Un}
+  | e1=tmEqWith(X) tok=MINUS e2=tmEqWith(X)
+      { mk_term (Op(mk_ident("-", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
+  | tok=MINUS e=tmEqWith(X)
+      { mk_uminus e (rr $loc(tok)) (rr $loc) Expr }
   | QUOTE e=tmEqWith(X)
-      { mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un }
+      { mk_term (Quote (e, Dynamic)) (rr $loc) Un }
   | BACKTICK e=tmEqWith(X)
-      { mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un }
+      { mk_term (Quote (e, Static)) (rr $loc) Un }
   | BACKTICK_AT e=atomicTerm
-      { let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
-        mk_term (Antiquote q) (rhs2 parseState 1 3) Un }
+      { let q = mk_term (Quote (e, Dynamic)) (rr $loc) Un in
+        mk_term (Antiquote q) (rr $loc) Un }
   | BACKTICK_HASH e=atomicTerm
-      { mk_term (Antiquote e) (rhs2 parseState 1 3) Un }
+      { mk_term (Antiquote e) (rr $loc) Un }
   | e=tmNoEqWith(X)
       { e }
 
 tmNoEqWith(X):
   | e1=tmNoEqWith(X) COLON_COLON e2=tmNoEqWith(X)
-      { consTerm (rhs parseState 2) e1 e2 }
+      { consTerm (rr $loc) e1 e2 }
   | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
             let dom =
                match extract_named_refinement e1 with
                | Some (x, t, f) ->
-                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None [] in
+                 let dom = mkRefinedBinder x t true f (rr $loc(e1)) None [] in
                  Inl dom
                | _ ->
                  Inr e1
@@ -1104,40 +1108,40 @@ tmNoEqWith(X):
                 | Sum(dom', res) -> dom::dom', res
                 | _ -> [dom], tail
             in
-            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+            mk_term (Sum(dom, res)) (rr2 $loc(e1) $loc(e2)) Type_level
       }
   | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
-      { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
   | e1=tmNoEqWith(X) BACKTICK op=tmNoEqWith(X) BACKTICK e2=tmNoEqWith(X)
-      { mkApp op [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) }
+      { mkApp op [ e1, Infix; e2, Nothing ] (rr $loc) }
  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
-      { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
   | LBRACE e=recordExp RBRACE { e }
   | BACKTICK_PERC e=atomicTerm
-      { mk_term (VQuote e) (rhs2 parseState 1 3) Un }
+      { mk_term (VQuote e) (rr $loc) Un }
   | op=TILDE e=atomicTerm
-      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
+      { mk_term (Op(mk_ident (op, rr $loc(op)), [e])) (rr $loc) Formula }
   | e=X { e }
 
 binop_name:
-  | o=OPINFIX0a              { mk_ident (o, rhs parseState 1) }
-  | o=OPINFIX0b              { mk_ident (o, rhs parseState 1) }
-  | o=OPINFIX0c              { mk_ident (o, rhs parseState 1) }
-  | o=EQUALS                 { mk_ident ("=", rhs parseState 1) }
-  | o=OPINFIX0d              { mk_ident (o, rhs parseState 1) }
-  | o=OPINFIX1               { mk_ident (o, rhs parseState 1) }
-  | o=OPINFIX2               { mk_ident (o, rhs parseState 1) }
-  | o=OPINFIX3               { mk_ident (o, rhs parseState 1) }
-  | o=OPINFIX4               { mk_ident (o, rhs parseState 1) }
-  | o=IMPLIES                { mk_ident ("==>", rhs parseState 1) }
-  | o=CONJUNCTION            { mk_ident ("/\\", rhs parseState 1) }
-  | o=DISJUNCTION            { mk_ident ("\\/", rhs parseState 1) }
-  | o=IFF                    { mk_ident ("<==>", rhs parseState 1) }
-  | o=PIPE_RIGHT             { mk_ident ("|>", rhs parseState 1) }
-  | o=COLON_EQUALS           { mk_ident (":=", rhs parseState 1) }
-  | o=COLON_COLON            { mk_ident ("::", rhs parseState 1) }
-  | o=OP_MIXFIX_ASSIGNMENT   { mk_ident (o, rhs parseState 1) }
-  | o=OP_MIXFIX_ACCESS       { mk_ident (o, rhs parseState 1) }
+  | o=OPINFIX0a              { mk_ident (o, rr $loc) }
+  | o=OPINFIX0b              { mk_ident (o, rr $loc) }
+  | o=OPINFIX0c              { mk_ident (o, rr $loc) }
+  | o=EQUALS                 { mk_ident ("=", rr $loc) }
+  | o=OPINFIX0d              { mk_ident (o, rr $loc) }
+  | o=OPINFIX1               { mk_ident (o, rr $loc) }
+  | o=OPINFIX2               { mk_ident (o, rr $loc) }
+  | o=OPINFIX3               { mk_ident (o, rr $loc) }
+  | o=OPINFIX4               { mk_ident (o, rr $loc) }
+  | o=IMPLIES                { mk_ident ("==>", rr $loc) }
+  | o=CONJUNCTION            { mk_ident ("/\\", rr $loc) }
+  | o=DISJUNCTION            { mk_ident ("\\/", rr $loc) }
+  | o=IFF                    { mk_ident ("<==>", rr $loc) }
+  | o=PIPE_RIGHT             { mk_ident ("|>", rr $loc) }
+  | o=COLON_EQUALS           { mk_ident (":=", rr $loc) }
+  | o=COLON_COLON            { mk_ident ("::", rr $loc) }
+  | o=OP_MIXFIX_ASSIGNMENT   { mk_ident (o, rr $loc) }
+  | o=OP_MIXFIX_ACCESS       { mk_ident (o, rr $loc) }
 
 tmEqNoRefinement:
   | e=tmEqWith(appTermNoRecordExp) { e }
@@ -1153,8 +1157,8 @@ tmRefinement:
       {
         let t = match phi_opt with
           | None -> NamedTyp(id, e)
-          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
-        in mk_term t (rhs2 parseState 1 4) Type_level
+          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rr2 $loc(id) $loc(e)) Type_level None, phi)
+        in mk_term t (rr2 $loc(id) $loc(phi_opt)) Type_level
       }
   | e=appTerm  { e }
 
@@ -1166,17 +1170,17 @@ refineOpt:
 
 recordExp:
   | record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
-      { mk_term (Record (None, record_fields)) (rhs parseState 1) Expr }
+      { mk_term (Record (None, record_fields)) (rr $loc(record_fields)) Expr }
   | e=appTerm WITH  record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
-      { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Record (Some e, record_fields)) (rr2 $loc(e) $loc(record_fields)) Expr }
 
 simpleDef:
   | e=separated_pair(qlidentOrOperator, EQUALS, noSeqTerm) { e }
-  | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un }
+  | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
 
 %inline appTermCommon(argTerm):
   | head=indexingTerm args=list(argTerm)
-      { mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) }
+      { mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) }
 
 appTerm:
   | t=appTermCommon(t=argTerm {t} | h=maybeHash LBRACE t=recordExp RBRACE {h, t}) {t}
@@ -1214,33 +1218,33 @@ atomicTermQUident:
   | id=quident
     {
         let t = Name id in
-        let e = mk_term t (rhs parseState 1) Un in
+        let e = mk_term t (rr $loc(id)) Un in
               e
     }
   | id=quident DOT_LPAREN t=term RPAREN
     {
-      mk_term (LetOpen (id, t)) (rhs2 parseState 1 4) Expr
+      mk_term (LetOpen (id, t)) (rr2 $loc(id) $loc($4)) Expr
     }
 
 atomicTermNotQUident:
-  | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
-  | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
-  | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
+  | UNDERSCORE { mk_term Wild (rr $loc) Un }
+  | tv=tvar     { mk_term (Tvar tv) (rr $loc) Type_level }
+  | c=constant { mk_term (Const c) (rr $loc) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }
   | LPAREN op=operator RPAREN
-      { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
+      { mk_term (Op(op, [])) (rr2 $loc($1) $loc($3)) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
-      { mkDTuple (e0::el) (rhs2 parseState 1 5) }
+      { mkDTuple (e0::el) (rr2 $loc($1) $loc($5)) }
   | e=projectionLHS field_projs=list(DOT id=qlident {id})
-      { fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs }
+      { fold_left (fun e lid -> mk_term (Project(e, lid)) (rr2 $loc(e) $loc(field_projs)) Expr ) e field_projs }
   | BEGIN e=term END
       { e }
 
 (* Tm: atomicTermQUident or atomicTermNotQUident *)
 opPrefixTerm(Tm):
   | op=OPPREFIX e=Tm
-      { mk_term (Op(mk_ident(op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Expr }
+      { mk_term (Op(mk_ident(op, rr $loc(op)), [e])) (rr2 $loc(op) $loc(e)) Expr }
 
 
 projectionLHS:
@@ -1259,25 +1263,25 @@ projectionLHS:
          * generated. *)
         let e1 = match sort_opt with
           | None -> e
-          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None,false)) (rhs2 parseState 1 4) level
-        in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
+          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None,false)) (rr2 $loc($1) $loc($4)) level
+        in mk_term (Paren e1) (rr2 $loc($1) $loc($4)) (e.level)
       }
   | LBRACK_BAR es=semiColonTermList BAR_RBRACK
       {
-        let l = mkConsList (rhs2 parseState 1 3) es in
-        let pos = (rhs2 parseState 1 3) in
+        let l = mkConsList (rr2 $loc($1) $loc($3)) es in
+        let pos = (rr2 $loc($1) $loc($3)) in
         mkExplicitApp (mk_term (Var (array_of_list_lid)) pos Expr) [l] pos
       }
   | LBRACK es=semiColonTermList RBRACK
-      { mkConsList (rhs2 parseState 1 3) es }
+      { mkConsList (rr2 $loc($1) $loc($3)) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
-      { mk_term (LexList es) (rhs2 parseState 1 3) Type_level }
+      { mk_term (LexList es) (rr2 $loc($1) $loc($3)) Type_level }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
-      { mkRefSet (rhs2 parseState 1 3) es }
+      { mkRefSet (rr2 $loc($1) $loc($3)) es }
   | ns=quident QMARK_DOT id=lident
-      { mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Projector (ns, id)) (rr2 $loc(ns) $loc(id)) Expr }
   | lid=quident QMARK
-      { mk_term (Discrim lid) (rhs2 parseState 1 2) Un }
+      { mk_term (Discrim lid) (rr2 $loc(lid) $loc($2)) Un }
 
 fsTypeArgs:
   | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
@@ -1289,10 +1293,10 @@ qidentWithTypeArgs(Qid,TypeArgs):
   | id=Qid targs_opt=TypeArgs
       {
         let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rhs parseState 1) Un in
+        let e = mk_term t (rr $loc(id)) Un in
         match targs_opt with
         | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
+        | Some targs -> mkFsTypApp e targs (rr2 $loc(id) $loc(targs_opt))
       }
 
 hasSort:
@@ -1359,32 +1363,32 @@ universeFrom:
   | u1=universeFrom op_plus=OPINFIX2 u2=universeFrom
        {
          if op_plus <> "+"
-         then log_issue (rhs parseState 2) (Error_OpPlusInUniverse, ("The operator " ^ op_plus ^ " was found in universe context."
+         then log_issue (rr $loc(u1)) (Error_OpPlusInUniverse, ("The operator " ^ op_plus ^ " was found in universe context."
                            ^ "The only allowed operator in that context is +."));
-         mk_term (Op(mk_ident (op_plus, rhs parseState 2), [u1 ; u2])) (rhs2 parseState 1 3) Expr
+         mk_term (Op(mk_ident (op_plus, rr $loc(op_plus)), [u1 ; u2])) (rr2 $loc(u1) $loc(u2)) Expr
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
         if string_of_id max <> string_of_lid max_lid
-        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
+        then log_issue (rr $loc(max)) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
-        let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
-        mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
+        let max = mk_term (Var (lid_of_ids [max])) (rr $loc(max)) Expr in
+        mkApp max (map (fun u -> u, Nothing) us) (rr $loc)
       }
 
 atomicUniverse:
   | UNDERSCORE
-      { mk_term Wild (rhs parseState 1) Expr }
+      { mk_term Wild (rr $loc) Expr }
   | n=INT
       {
         if snd n then
           log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
-        mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
+        mk_term (Const (Const_int (fst n, None))) (rr $loc(n)) Expr
       }
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
   | LPAREN u=universeFrom RPAREN
-    { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
+    { u (*mk_term (Paren u) (rr2 $loc($1) $loc($3)) Expr*) }
 
 warn_error_list:
   | e=warn_error EOF { e }
@@ -1418,19 +1422,16 @@ string:
   | s=STRING { s }
 
 %inline operator:
-  | op=OPPREFIX
-    { mk_ident (op, rhs parseState 1) }
-  | op=binop_name
-    { op }
-  | op=TILDE
-    { mk_ident (op, rhs parseState 1) }
+  | op=OPPREFIX     { mk_ident (op, rr $loc) }
+  | op=binop_name   { op }
+  | op=TILDE        { mk_ident (op, rr $loc) }
   | op=and_op       {op}
   | op=let_op       {op}
 
 %inline and_op:
-  | op=AND_OP { mk_ident ("and" ^ op, rhs parseState 1) }
+  | op=AND_OP { mk_ident ("and" ^ op, rr $loc) }
 %inline let_op:
-  | op=LET_OP { mk_ident ("let" ^ op, rhs parseState 1) }
+  | op=LET_OP { mk_ident ("let" ^ op, rr $loc) }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
@@ -1440,13 +1441,13 @@ string:
   | op=OPINFIX0d
   | op=OPINFIX1
   | op=OPINFIX2
-     { mk_ident (op, rhs parseState 1) }
+     { mk_ident (op, rr $loc) }
 
 %inline dotOperator:
-  | DOT_LPAREN e=term RPAREN { mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 }
-  | DOT_LBRACK e=term RBRACK { mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 }
-  | DOT_LBRACK_BAR e=term BAR_RBRACK { mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 }
-  | DOT_LENS_PAREN_LEFT e=term LENS_PAREN_RIGHT { mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 }
+  | op=DOT_LPAREN e=term RPAREN { mk_ident (".()", rr $loc(op)), e, rr2 $loc(op) $loc($3) }
+  | op=DOT_LBRACK e=term RBRACK { mk_ident (".[]", rr $loc(op)), e, rr2 $loc(op) $loc($3) }
+  | op=DOT_LBRACK_BAR e=term BAR_RBRACK { mk_ident (".[||]", rr $loc(op)), e, rr2 $loc(op) $loc($3) }
+  | op=DOT_LENS_PAREN_LEFT e=term LENS_PAREN_RIGHT { mk_ident (".(||)", rr $loc(op)), e, rr2 $loc(op) $loc($3) }
 
 some(X):
   | x=X { Some x }
