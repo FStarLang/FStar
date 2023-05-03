@@ -135,7 +135,6 @@ ci-uregressions-ulong:
 1: dune-fstar
 
 2:
-	+$(MAKE) -C src/ocaml-output generated-files
 	+$(MAKE) -C src ocaml
 	+$(MAKE) dune-fstar
 

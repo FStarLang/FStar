@@ -1,22 +1,8 @@
-HAS_MENHIR := $(shell command -v menhir 2> /dev/null)
-MENHIR_MIN_VERSION:=20161115
-ifdef HAS_MENHIR
-HAS_VALID_MENHIR := $(shell expr `menhir --version | sed -e 's/.*version \([0-9]*\)/\1/'` \>= $(MENHIR_MIN_VERSION))
-else
-HAS_VALID_MENHIR := 0
-endif
-
 include ../../.common.mk
-
-MENHIR=menhir #--explain --infer -la 1 --table
-OCAMLLEX=ocamllex
-FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 
 FSTAR_HOME = ../..
 DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(realpath $(FSTAR_HOME)/ocaml))
 export DUNE_SNAPSHOT
-
-FStar_Parser_Parse_ml=$(DUNE_SNAPSHOT)/fstar-lib/generated/FStar_Parser_Parse.ml
 
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
@@ -34,24 +20,6 @@ export INSTALL_EXEC
 
 all: dune-snapshot
 
-# We derive parse.mly in two ways:
-# - if we have menhir, we generate it from from the Menhir parser
-#   ../parser/parse.mly (and save a copy of the generated mly in ../parser/ml)
-# - if we don't have menhir, we take the saved copy above that is under version
-#   control
-parse.mly: ../parser/parse.mly
-ifeq ($(HAS_VALID_MENHIR), 1)
-	@# TODO : call menhir directly when positions are fixed instead of
-	@# letting OCamlbuild go through ocamlyacc
-	$(call msg, "MENHIR PREPROCESS")
-	$(Q)$(MENHIR) --only-preprocess-for-ocamlyacc $< > $@
-else
-	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
-endif
-
-.PHONY: generated-files
-generated-files: $(FStar_Parser_Parse_ml) $(FStar_Version_ml)
-
 .PHONY: dune-stdlib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib source-files
 
 # FIXME: dune-fstar-snapshot should also depend on dune-verify-ulib,
@@ -65,39 +33,7 @@ dune-verify-ulib:
 dune-stdlib-snapshot: dune-verify-ulib
 	$(MAKE) -C ../../ulib -f Makefile.extract dune-snapshot
 
-dune-snapshot: generated-files dune-fstar-snapshot dune-stdlib-snapshot
-
-$(FStar_Parser_Parse_ml): parse.mly
-	@# We are opening the same module twice but we need these modules
-	@# open for the definition of tokens
-	$(Q)echo "open Prims" > $@
-	$(Q)echo "open FStar_Errors" >> $@
-	$(Q)echo "open FStar_Compiler_List" >> $@
-	$(Q)echo "open FStar_Compiler_Util" >> $@
-	$(Q)echo "open FStar_Compiler_Range" >> $@
-	$(Q)echo "open FStar_Options" >> $@
-	$(Q)echo "open FStar_Syntax_Syntax" >> $@
-	$(Q)echo "open FStar_Parser_Const" >> $@
-	$(Q)echo "open FStar_Syntax_Util" >> $@
-	$(Q)echo "open FStar_Parser_AST" >> $@
-	$(Q)echo "open FStar_Parser_Util" >> $@
-	$(Q)echo "open FStar_Const" >> $@
-	$(Q)echo "open FStar_Ident" >> $@
-	$(Q)echo "open FStar_String" >> $@
-	@# TODO: create a proper OCamlbuild rule for this production so that
-	@# OCamlbuild knows how to generate parse.mly first (possibly using
-	@# menhir) and removes the production as needed.
-	$(call msg, "OCAMLYACC")
-	$(Q)ocamlyacc parse.mly 2> yac-log
-	$(Q)cat yac-log
-	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 6 ]; then \
-	  echo "shift-reduce conflicts have increased; please fix" && rm -f $@ && false; \
-	fi
-	@if grep -q "reduce/reduce" yac-log ; then \
-	  echo "A reduce-reduce conflict was introduced; please fix" && rm -f $@ && false; \
-	fi
-	$(Q)cat parse.ml >> $@
-	$(Q)rm parse.ml parse.mli
+dune-snapshot: dune-fstar-snapshot dune-stdlib-snapshot
 
 # ------------------------------------------------------------------------------
 # Preparing a release... these targets are not optimized and the Makefile is
@@ -204,8 +140,6 @@ endif
 # snapshot.
 clean:
 	$(call msg, "CLEAN", "src/ocaml-output")
-	$(Q)rm -f $(FStar_Version_ml) parse.mly
 	$(Q)rm -f *.tar.gz *.zip
 	$(Q)rm -f version_platform.txt
-	$(Q)rm -f yac-log
 	$(Q)rm -rf fstar

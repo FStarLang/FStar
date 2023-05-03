@@ -61,7 +61,7 @@ let none_to_empty_list x =
 %token <string> UINT64
 %token <string> SIZET
 %token <string> REAL
-%token <char> CHAR
+%token <FStar_Char.char> CHAR
 %token <bool> LET
 %token <string> LET_OP
 %token <string> AND_OP
