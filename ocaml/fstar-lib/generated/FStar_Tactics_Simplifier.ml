@@ -320,8 +320,8 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                     (Prims.of_int (212)) (Prims.of_int (4))
                     (Prims.of_int (212)) (Prims.of_int (11)))
                  (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                    (Prims.of_int (213)) (Prims.of_int (4))
-                    (Prims.of_int (266)) (Prims.of_int (81)))
+                    (Prims.of_int (212)) (Prims.of_int (12))
+                    (Prims.of_int (213)) (Prims.of_int (26)))
                  (Obj.magic (FStar_Tactics_Builtins.norm []))
                  (fun uu___2 ->
                     (fun uu___2 ->
@@ -333,8 +333,8 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                (Prims.of_int (213)) (Prims.of_int (23)))
                             (FStar_Range.mk_range
                                "FStar.Tactics.Simplifier.fst"
-                               (Prims.of_int (214)) (Prims.of_int (4))
-                               (Prims.of_int (266)) (Prims.of_int (81)))
+                               (Prims.of_int (213)) (Prims.of_int (26))
+                               (Prims.of_int (214)) (Prims.of_int (32)))
                             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
                             (fun uu___3 ->
                                (fun g ->
@@ -1260,8 +1260,8 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                     (Prims.of_int (270)) (Prims.of_int (4))
                     (Prims.of_int (270)) (Prims.of_int (11)))
                  (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                    (Prims.of_int (271)) (Prims.of_int (4))
-                    (Prims.of_int (304)) (Prims.of_int (74)))
+                    (Prims.of_int (270)) (Prims.of_int (12))
+                    (Prims.of_int (271)) (Prims.of_int (26)))
                  (Obj.magic (FStar_Tactics_Builtins.norm []))
                  (fun uu___2 ->
                     (fun uu___2 ->
@@ -1273,8 +1273,8 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                (Prims.of_int (271)) (Prims.of_int (23)))
                             (FStar_Range.mk_range
                                "FStar.Tactics.Simplifier.fst"
-                               (Prims.of_int (272)) (Prims.of_int (4))
-                               (Prims.of_int (304)) (Prims.of_int (74)))
+                               (Prims.of_int (271)) (Prims.of_int (26))
+                               (Prims.of_int (272)) (Prims.of_int (32)))
                             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
                             (fun uu___3 ->
                                (fun g ->
@@ -1388,10 +1388,10 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (34)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (286))
+                                                                    (Prims.of_int (35))
                                                                     (Prims.of_int (287))
-                                                                    (Prims.of_int (12))
-                                                                    (Prims.of_int (288))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.apply_lemma
                                                                     (FStar_Reflection_Builtins.pack_ln
@@ -1446,10 +1446,10 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (34)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (291))
+                                                                    (Prims.of_int (35))
                                                                     (Prims.of_int (292))
-                                                                    (Prims.of_int (12))
-                                                                    (Prims.of_int (293))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.apply_lemma
                                                                     (FStar_Reflection_Builtins.pack_ln
