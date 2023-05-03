@@ -1047,6 +1047,10 @@ and sub_typing (g:env) (t1 t2:term) = related g t1 R_Sub t2
 
 and sub_comp (g:env) (c1 c2:comp_typ) = related_comp g c1 R_Sub c2
 
+type tot_typing (g:env) (e:term) (t:term) = typing g e (T.E_Total, t)
+
+type ghost_typing (g:env) (e:term) (t:term) = typing g e (T.E_Ghost, t)
+
 let bindings = list (var & term)
 let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
 
