@@ -7186,8 +7186,7 @@ let (refl_check_equiv :
       FStar_Syntax_Syntax.typ ->
         unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
   = fun g -> fun t0 -> fun t1 -> refl_check_relation g t0 t1 Equality
-let (effect_label_to_must_tot :
-  FStar_Tactics_Types.effect_label -> Prims.bool) =
+let (to_must_tot : FStar_Tactics_Types.tot_or_ghost -> Prims.bool) =
   fun eff ->
     match eff with
     | FStar_Tactics_Types.E_Total -> true
@@ -7195,7 +7194,7 @@ let (effect_label_to_must_tot :
 let (refl_core_check_term :
   env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Tactics_Types.effect_label ->
+      FStar_Tactics_Types.tot_or_ghost ->
         FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
           FStar_Tactics_Monad.tac)
   =
@@ -7212,7 +7211,7 @@ let (refl_core_check_term :
                     let uu___4 = FStar_Syntax_Print.term_to_string e in
                     FStar_Compiler_Util.format1 "refl_core_check_term: %s\n"
                       uu___4);
-               (let must_tot = effect_label_to_must_tot eff in
+               (let must_tot = to_must_tot eff in
                 let gh g1 guard =
                   FStar_TypeChecker_Rel.force_trivial_guard g1
                     {
@@ -7259,7 +7258,7 @@ let (refl_core_check_term :
 let (refl_tc_term :
   env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Tactics_Types.effect_label ->
+      FStar_Tactics_Types.tot_or_ghost ->
         (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ)
           FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
   =
@@ -7276,7 +7275,7 @@ let (refl_tc_term :
                     let uu___4 = FStar_Syntax_Print.term_to_string e in
                     FStar_Compiler_Util.format1 "refl_tc_term: %s\n" uu___4);
                dbg_refl g (fun uu___4 -> "refl_tc_term: starting tc {\n");
-               (let must_tot = effect_label_to_must_tot eff in
+               (let must_tot = to_must_tot eff in
                 let g1 =
                   {
                     FStar_TypeChecker_Env.solver =

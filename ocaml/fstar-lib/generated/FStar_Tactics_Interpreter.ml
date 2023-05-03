@@ -1769,12 +1769,12 @@ let (uu___156 : unit) =
                                                                     FStar_Tactics_Basic.refl_core_check_term
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    FStar_Tactics_Embedding.e_effect_label
+                                                                    FStar_Tactics_Embedding.e_tot_or_ghost
                                                                     uu___176
                                                                     FStar_Tactics_Basic.refl_core_check_term
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    FStar_Tactics_Embedding.e_effect_label_nbe
+                                                                    FStar_Tactics_Embedding.e_tot_or_ghost_nbe
                                                                     uu___177 in
                                                                     let uu___176
                                                                     =
@@ -1804,12 +1804,12 @@ let (uu___156 : unit) =
                                                                     FStar_Tactics_Basic.refl_tc_term
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    FStar_Tactics_Embedding.e_effect_label
+                                                                    FStar_Tactics_Embedding.e_tot_or_ghost
                                                                     uu___178
                                                                     FStar_Tactics_Basic.refl_tc_term
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    FStar_Tactics_Embedding.e_effect_label_nbe
+                                                                    FStar_Tactics_Embedding.e_tot_or_ghost_nbe
                                                                     uu___179 in
                                                                     let uu___178
                                                                     =

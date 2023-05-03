@@ -477,10 +477,10 @@ let (uu___is_Both : unfold_side -> Prims.bool) =
   fun projectee -> match projectee with | Both -> true | uu___ -> false
 let (uu___is_Neither : unfold_side -> Prims.bool) =
   fun projectee -> match projectee with | Neither -> true | uu___ -> false
-type effect_label =
+type tot_or_ghost =
   | E_Total 
   | E_Ghost 
-let (uu___is_E_Total : effect_label -> Prims.bool) =
+let (uu___is_E_Total : tot_or_ghost -> Prims.bool) =
   fun projectee -> match projectee with | E_Total -> true | uu___ -> false
-let (uu___is_E_Ghost : effect_label -> Prims.bool) =
+let (uu___is_E_Ghost : tot_or_ghost -> Prims.bool) =
   fun projectee -> match projectee with | E_Ghost -> true | uu___ -> false
