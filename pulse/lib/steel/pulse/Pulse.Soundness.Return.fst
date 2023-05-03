@@ -46,7 +46,9 @@ let return_soundess
     : RT.equiv (extend_env_l f g)
                (R.pack_ln (R.Tv_App rpost_abs (re, R.Q_Explicit)))
                elab_c_pre
-    = RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rpost re in  
+    = assume (RT.ln' rpost 0);
+      assume (RT.ln re);
+      RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rpost re in  
   
   let comp_equiv_noeq (_:unit{use_eq == false})
     : (match ctag with

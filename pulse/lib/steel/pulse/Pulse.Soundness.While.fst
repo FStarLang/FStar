@@ -55,7 +55,9 @@ let while_soundness
     let pre_eq : RT.equiv (extend_env_l f g)
                           (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
                           (RT.open_or_close_term' (elab_term inv) (RT.OpenWith true_tm) 0)
-      = RT.EQ_Beta _ bool_tm R.Q_Explicit (elab_term inv) true_tm  in
+      = assume (RT.ln' (elab_term inv) 0);
+        assume (RT.ln true_tm);
+        RT.EQ_Beta _ bool_tm R.Q_Explicit (elab_term inv) true_tm  in
     RT.T_Sub _ _ _ _ d
       (RT.Relc_typ _ _ _ _ _
          (RT.Rel_equiv _ _ _ _
@@ -78,3 +80,4 @@ let while_soundness
           (elab_stt_equiv _ _ _ _ (RT.EQ_Refl _ _) post_eq)))
     
 #pop-options
+

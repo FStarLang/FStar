@@ -371,14 +371,18 @@ let reveal_ghost_ref _ = ()
 
 let reveal_ghost_pts_to_sl _ _ _ = ()
 
+#push-options "--z3rlimit 20 --warn_error -271"
 let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_invariant (ghost_pts_to_sl r p)) =
   let aux (x y : erased a) (m:mem)
     : Lemma (requires (interp (ghost_pts_to_sl r p x) m /\ interp (ghost_pts_to_sl r p y) m))
             (ensures  (x == y))
+            [SMTPat ()]
     =
     Mem.pts_to_join (Ghost.reveal r) (Some (Ghost.reveal x, p)) (Some (Ghost.reveal y, p)) m
   in
-  Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+  assert (forall x y m. interp (ghost_pts_to_sl r p x) m /\ interp (ghost_pts_to_sl r p y) m ==> x == y);
+  assert (is_witness_invariant (ghost_pts_to_sl r p))
+#pop-options
 
 let ghost_alloc_aux (#a:Type) (#u:_) (x:a)
   : SteelGhostT (ref a) u

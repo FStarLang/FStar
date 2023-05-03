@@ -77,7 +77,11 @@ let par_soundness
              (R.pack_ln (R.Tv_App rpostR (PReflUtil.mk_snd ru ru raL raR rx_tm, R.Q_Explicit))))
     (elab_term (Tm_Star (open_term' postL (mk_fst uL uR aL aR x_tm) 0)
                         (open_term' postR (mk_snd uL uR aL aR x_tm) 0)))
-    = mk_star_equiv _ _ _ _ _
+    = assume (RT.ln' (elab_term postL) 0);
+      assume (RT.ln (elab_term (mk_fst uL uR aL aR x_tm)));
+      assume (RT.ln' (elab_term postR) 0);
+      assume (RT.ln (elab_term (mk_snd uL uR aL aR x_tm)));
+      mk_star_equiv _ _ _ _ _
         (RT.EQ_Beta _ raL _ (elab_term postL) _)
         (RT.EQ_Beta _ raR _ (elab_term postR) _) in
 

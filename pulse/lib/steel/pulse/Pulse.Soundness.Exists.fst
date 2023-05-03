@@ -51,6 +51,8 @@ let intro_exists_erased_soundness
   let reveal_re = elab_term (mk_reveal u t e) in
 
   let d = WT.intro_exists_erased_typing rt_typing rp_typing re_typing in
+  assume (RT.ln' rp 0);
+  assume (RT.ln reveal_re);
   RT.T_Sub _ _ _ _ d
     (RT.Relc_typ _ _ _ _ _
        (RT.Rel_equiv _ _ _ _
@@ -90,6 +92,8 @@ let intro_exists_soundness
   in
 
   let d = WT.intro_exists_typing rt_typing rp_typing re_typing in
+  assume (RT.ln' rp 0);
+  assume (RT.ln re);
   RT.T_Sub _ _ _ _ d
     (RT.Relc_typ _ _ _ _ _
        (RT.Rel_equiv _ _ _ _
@@ -135,6 +139,8 @@ let elim_exists_soundness
           Pulse.Reflection.Util.mk_reveal ru rt rx_tm);
 
   let post_eq =
+    assume (RT.ln' rp 0);
+    assume (RT.ln rreveal_x);
     equiv_abs_close (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
       (RT.EQ_Beta (RT.extend_env (extend_env_l f g) _ _) rt R.Q_Explicit rp rreveal_x)  in
 
