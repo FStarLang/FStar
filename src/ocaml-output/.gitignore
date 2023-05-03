@@ -26,7 +26,6 @@ FStar_ST.ml
 FStar_String.ml
 FStar_Unionfind.ml
 FStar_Util.ml
-FStar_Version.ml
 main.ml
 parse.ml
 parse.mli

@@ -50,7 +50,7 @@ else
 endif
 
 .PHONY: generated-files
-generated-files: $(FStar_Parser_Parse_ml) $(FStar_Version_ml)
+generated-files: $(FStar_Parser_Parse_ml)
 
 .PHONY: dune-stdlib-snapshot dune-snapshot dune-fstar-snapshot dune-verify-ulib source-files
 
@@ -204,7 +204,7 @@ endif
 # snapshot.
 clean:
 	$(call msg, "CLEAN", "src/ocaml-output")
-	$(Q)rm -f $(FStar_Version_ml) parse.mly
+	$(Q)rm -f parse.mly
 	$(Q)rm -f *.tar.gz *.zip
 	$(Q)rm -f version_platform.txt
 	$(Q)rm -f yac-log

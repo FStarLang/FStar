@@ -67,7 +67,7 @@ jobs:
           echo "ci_docker_builder=$ci_docker_builder" >> $GITHUB_ENV
           docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
           if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL .
+          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
@@ -107,6 +107,13 @@ jobs:
           esac
           echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
           echo 'CI_STATUS='"$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
+      - name: Output build log error summary
+        if: ${{ always () }}
+        run: |
+          # Just outputs to the github snippet. Could be part of slack message.
+          # This command never triggers a failure
+          grep -C10 -Ew ' \*\*\* |\(Error' BUILDLOG || true
+
       - name: Post to the Slack channel
         if: ${{ always() && (github.event_name != 'workflow_dispatch') }}
         id: slack
