@@ -19,13 +19,13 @@ let debug (msg: unit -> T.Tac string) =
   
 let rtb_core_check_term f e =
   debug (fun _ -> Printf.sprintf "Calling core_check_term on %s" (T.term_to_string e));
-  let res = RTB.core_check_term f e in
+  let res = RTB.core_check_term f e E_Total in
   debug (fun _ -> "Returned");
   res
 
 let rtb_tc_term f e =
   debug (fun _ -> Printf.sprintf "Calling tc_term on %s" (T.term_to_string e));
-  let res = RTB.tc_term f e in
+  let res = RTB.tc_term f e E_Total in
   debug (fun _ -> "Returned");
   res
 
@@ -67,17 +67,17 @@ let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
                          (T.term_to_string rt))
     | Some ru ->
       let uopt = readback_universe ru in
-      let proof : squash (RTB.typing_token f rt (R.pack_ln (R.Tv_Type ru))) =
+      let proof : squash (RTB.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
           FStar.Squash.get_proof _
       in
-      let proof : RT.typing f rt (R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
+      let proof : RT.typing f rt (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
       match uopt with
       | None -> T.fail "check_universe: failed to readback the universe"
       | Some u -> (| u, E proof |)
 
 
 let tc_meta_callback (f:R.env) (e:R.term) 
-  : T.Tac (option (e:R.term & t:R.term & RT.typing f e t))
+  : T.Tac (option (e:R.term & t:R.term & RT.tot_typing f e t))
   = let res =
       match catch_all (fun _ -> rtb_tc_term f e) with
       | None -> None
@@ -131,7 +131,7 @@ let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
         (| t, ty, tok |)
 
 let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
-  : T.Tac (option (e:R.term & RT.typing f e t))
+  : T.Tac (option (e:R.term & RT.tot_typing f e t))
   = let ropt = catch_all (fun _ -> rtb_tc_term f e) in
     match ropt with
     | None -> None
@@ -141,8 +141,10 @@ let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
       | None -> None
       | Some p -> //p:subtyping_token f te t
         Some (| e,
-                RT.T_Sub _ _ _ _ (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e te)))
-                             (RT.ST_Token _ _ _ (FStar.Squash.return_squash p)) |)
+                RT.T_Sub _ _ _ _
+                  (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e (E_Total, te))))
+                  (RT.Relc_typ _ _ _ E_Total RT.R_Sub
+                     (RT.Rel_subtyping_token _ _ _ (FStar.Squash.return_squash p))) |)
 
 let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
   : T.Tac (e:term & typing f g e t)
@@ -159,7 +161,7 @@ let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
         | None -> T.fail "readback failed"
 
 let tc_with_core (f:R.env) (e:R.term) 
-  : T.Tac (option (t:R.term & RT.typing f e t))
+  : T.Tac (option (t:R.term & RT.tot_typing f e t))
   = let ropt = catch_all (fun _ -> rtb_core_check_term f e) in
     match ropt with
     | None -> None

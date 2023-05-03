@@ -16,20 +16,20 @@ val stc_soundness
   (#st:st_comp)
   (d_st:st_comp_typing f g st)
   
-  : GTot (RT.typing (extend_env_l f g)
-                    (elab_term st.res)
-                    (RT.tm_type (elab_universe st.u)) &
-          RT.typing (extend_env_l f g)
-                    (elab_term st.pre)
-                    vprop_tm &
-          RT.typing (extend_env_l f g)
-                    (mk_abs (elab_term st.res) R.Q_Explicit
-                                                   (elab_term st.post))
-                    (post1_type_bind (elab_term st.res)))
+  : GTot (RT.tot_typing (extend_env_l f g)
+                        (elab_term st.res)
+                        (RT.tm_type (elab_universe st.u)) &
+          RT.tot_typing (extend_env_l f g)
+                        (elab_term st.pre)
+                        vprop_tm &
+          RT.tot_typing (extend_env_l f g)
+                        (mk_abs (elab_term st.res) R.Q_Explicit
+                           (elab_term st.post))
+                        (post1_type_bind (elab_term st.res)))
 
 val comp_typing_soundness (f:stt_env)
                           (g:env)
                           (c:comp)
                           (uc:universe)
                           (d:comp_typing f g c uc)
-  : GTot (RT.typing (extend_env_l f g) (elab_comp c) (RT.tm_type (elab_universe uc)))
+  : GTot (RT.tot_typing (extend_env_l f g) (elab_comp c) (RT.tm_type (elab_universe uc)))

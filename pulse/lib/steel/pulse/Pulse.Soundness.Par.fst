@@ -22,9 +22,9 @@ let par_soundness
   (#c:comp)
   (d:st_typing f g t c{T_Par? d})
   (soundness: soundness_t d)
-  : GTot (RT.typing (extend_env_l f g)
-                    (elab_st_typing d)
-                    (elab_comp c)) =
+  : GTot (RT.tot_typing (extend_env_l f g)
+                        (elab_st_typing d)
+                        (elab_comp c)) =
 
   let T_Par _ eL cL eR cR x cL_typing cR_typing eL_typing eR_typing = d in
 
@@ -39,24 +39,24 @@ let par_soundness
   let reR = elab_st_typing eR_typing in
 
   let reL_typing
-    : RT.typing _ reL (elab_comp cL) =
+    : RT.tot_typing _ reL (elab_comp cL) =
     soundness f g eL cL eL_typing in
 
   let reR_typing
-    : RT.typing _ reR (elab_comp cR) =
+    : RT.tot_typing _ reR (elab_comp cR) =
     soundness f g eR cR eR_typing in
 
   let (raL_typing, rpreL_typing, rpostL_typing)
-    : (RT.typing _ raL (R.pack_ln (R.Tv_Type ru)) &
-       RT.typing _ rpreL vprop_tm &
-       RT.typing _ rpostL (mk_arrow (raL, R.Q_Explicit) vprop_tm)) =
+    : (RT.tot_typing _ raL (R.pack_ln (R.Tv_Type ru)) &
+       RT.tot_typing _ rpreL vprop_tm &
+       RT.tot_typing _ rpostL (mk_arrow (raL, R.Q_Explicit) vprop_tm)) =
 
     inversion_of_stt_typing f g cL ru (Comp.comp_typing_soundness f g cL (comp_u cL) cL_typing) in
 
   let (raR_typing, rpreR_typing, rpostR_typing)
-    : (RT.typing _ raR (R.pack_ln (R.Tv_Type ru)) &
-       RT.typing _ rpreR vprop_tm &
-       RT.typing _ rpostR (mk_arrow (raR, R.Q_Explicit) vprop_tm)) =
+    : (RT.tot_typing _ raR (R.pack_ln (R.Tv_Type ru)) &
+       RT.tot_typing _ rpreR vprop_tm &
+       RT.tot_typing _ rpostR (mk_arrow (raR, R.Q_Explicit) vprop_tm)) =
 
     inversion_of_stt_typing f g cR ru (Comp.comp_typing_soundness f g cR (comp_u cR) cR_typing) in
 
@@ -92,5 +92,6 @@ let par_soundness
     reL_typing reR_typing in
   
   RT.T_Sub _ _ _ _ d
-    (RT.ST_Equiv _ _ _ (elab_stt_equiv _ c _ _ (RT.EQ_Refl _ _) post_eq))
+    (RT.Relc_typ _ _ _ _ _
+       (RT.Rel_equiv _ _ _ _ (elab_stt_equiv _ c _ _ (RT.EQ_Refl _ _) post_eq)))
 #pop-options

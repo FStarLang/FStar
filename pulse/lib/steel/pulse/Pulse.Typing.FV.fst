@@ -177,7 +177,7 @@ let vars_of_env_r (g:R.env) = Set.intension (contains_r g)
 
 assume
 val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) 
-                         (_:RT.typing g e t)
+                         (_:RT.tot_typing g e t)
   : Lemma 
     (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
              RT.freevars t `Set.subset` (vars_of_env_r g))
