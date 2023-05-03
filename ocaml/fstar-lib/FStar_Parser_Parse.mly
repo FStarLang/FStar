@@ -175,7 +175,7 @@ attribute:
         let _ =
             match x with
             | _::_::_ ->
-                  log_issue (lhs parseState) (Warning_DeprecatedAttributeSyntax,
+                  log_issue (rr $loc) (Warning_DeprecatedAttributeSyntax,
                                               old_attribute_syntax_warning)
             | _ -> () in
          x
@@ -437,14 +437,14 @@ subEffect:
           | ("lift_wp", lift_wp) ->
              { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp; braced=true }
           | _ ->
-             raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (lhs parseState)
+             raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (rr $loc)
           end
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
                   | "lift_wp", "lift" -> tm1, tm2
                   | "lift", "lift_wp" -> tm2, tm1
-                  | _ -> raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
+                  | _ -> raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (rr $loc)
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp); braced=true }
      }
@@ -465,10 +465,10 @@ polymonadic_subcomp:
 qualifier:
   | ASSUME        { Assumption }
   | INLINE        {
-    raise_error (Fatal_InlineRenamedAsUnfold, "The 'inline' qualifier has been renamed to 'unfold'") (lhs parseState)
+    raise_error (Fatal_InlineRenamedAsUnfold, "The 'inline' qualifier has been renamed to 'unfold'") (rr $loc)
    }
   | UNFOLDABLE    {
-              raise_error (Fatal_UnfoldableDeprecated, "The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it") (lhs parseState)
+              raise_error (Fatal_UnfoldableDeprecated, "The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it") (rr $loc)
    }
   | INLINE_FOR_EXTRACTION {
      Inline_for_extraction
@@ -485,7 +485,7 @@ qualifier:
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
-  | LOGIC         { log_issue (lhs parseState) (Warning_logicqualifier,
+  | LOGIC         { log_issue (rr $loc) (Warning_logicqualifier,
                                                 logic_qualifier_deprecation_warning);
                     Logic }
   | OPAQUE        { Opaque }
@@ -727,12 +727,12 @@ term:
 	     let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
 	     LetOperator ([(op, pat, e1)], e2)
 	  | None   ->
-             log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+             log_issue (rr $loc) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
 	     Bind(gen (rr $loc(op)), e1, e2)
         in mk_term t (rr2 $loc(e1) $loc(e2)) Expr
       }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-    { log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+    { log_issue (rr $loc) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
       mk_term (Bind(x, e1, e2)) (rr2 $loc(x) $loc(e2)) Expr }
 
 match_returning:
@@ -745,7 +745,7 @@ noSeqTerm:
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rr2 $loc(e) $loc(tactic_opt)) Expr }
   | e=tmIff EQUALTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
       {
-        log_issue (lhs parseState)
+        log_issue (rr $loc)
 	          (Warning_BleedingEdge_Feature,
 		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
         mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rr2 $loc(e) $loc(tactic_opt)) Expr
@@ -827,7 +827,7 @@ noSeqTerm:
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
         let branches = focusBranches pbs (rr2 $loc($1) $loc(pbs)) in
-        mk_function branches (lhs parseState) (rr2 $loc($1) $loc(pbs))
+        mk_function branches (rr $loc) (rr2 $loc($1) $loc(pbs))
       }
   | a=ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rr $loc(a)) in
@@ -1312,11 +1312,11 @@ constant:
   | n=INT
      {
         if snd n then
-          log_issue (lhs parseState) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         Const_int (fst n, None)
      }
   | c=CHAR { Const_char c }
-  | s=STRING { Const_string (s,lhs(parseState)) }
+  | s=STRING { Const_string (s, rr $loc) }
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
   | r=REAL { Const_real r }
@@ -1324,28 +1324,28 @@ constant:
   | n=INT8
       {
         if snd n then
-          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 8-bit signed integers");
+          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 8-bit signed integers");
         Const_int (fst n, Some (Signed, Int8))
       }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
   | n=INT16
       {
         if snd n then
-          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 16-bit signed integers");
+          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 16-bit signed integers");
         Const_int (fst n, Some (Signed, Int16))
       }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
   | n=INT32
       {
         if snd n then
-          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 32-bit signed integers");
+          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 32-bit signed integers");
         Const_int (fst n, Some (Signed, Int32))
       }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
   | n=INT64
       {
         if snd n then
-          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
+          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       }
   | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
@@ -1383,7 +1383,7 @@ atomicUniverse:
   | n=INT
       {
         if snd n then
-          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rr $loc(n)) Expr
       }
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
