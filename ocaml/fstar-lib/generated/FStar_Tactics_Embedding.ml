@@ -76,6 +76,12 @@ let (fstar_tactics_unfold_side_Both : tac_constant) =
   fstar_tactics_data ["Types"; "Both"]
 let (fstar_tactics_unfold_side_Neither : tac_constant) =
   fstar_tactics_data ["Types"; "Neither"]
+let (fstar_tactics_tot_or_ghost : tac_constant) =
+  fstar_tactics_const ["Types"; "tot_or_ghost"]
+let (fstar_tactics_tot_or_ghost_ETotal : tac_constant) =
+  fstar_tactics_data ["Types"; "E_Total"]
+let (fstar_tactics_tot_or_ghost_EGhost : tac_constant) =
+  fstar_tactics_data ["Types"; "E_Ghost"]
 let (fstar_tactics_guard_policy : tac_constant) =
   fstar_tactics_const ["Types"; "guard_policy"]
 let (fstar_tactics_SMT : tac_constant) = fstar_tactics_data ["Types"; "SMT"]
@@ -87,7 +93,7 @@ let (fstar_tactics_Force : tac_constant) =
   fstar_tactics_data ["Types"; "Force"]
 let mk_emb :
   'a .
-    (FStar_Compiler_Range.range -> 'a -> FStar_Syntax_Syntax.term) ->
+    (FStar_Compiler_Range_Type.range -> 'a -> FStar_Syntax_Syntax.term) ->
       (Prims.bool ->
          FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option)
         -> FStar_Syntax_Syntax.term -> 'a FStar_Syntax_Embeddings.embedding
@@ -102,7 +108,7 @@ let mk_emb :
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings.embedding ->
-      FStar_Compiler_Range.range -> 'uuuuu -> FStar_Syntax_Syntax.term
+      FStar_Compiler_Range_Type.range -> 'uuuuu -> FStar_Syntax_Syntax.term
   =
   fun e ->
     fun r ->
@@ -217,7 +223,7 @@ let (e_proofstate_nbe :
         FStar_Syntax_Syntax.blob = uu___;
         FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate;
         FStar_Syntax_Syntax.ltyp = (fstar_tactics_proofstate.t);
-        FStar_Syntax_Syntax.rng = FStar_Compiler_Range.dummyRange
+        FStar_Syntax_Syntax.rng = FStar_Compiler_Range_Type.dummyRange
       } in
     let thunk =
       FStar_Thunk.mk
@@ -225,7 +231,8 @@ let (e_proofstate_nbe :
            FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
              (FStar_TypeChecker_NBETerm.Constant
                 (FStar_TypeChecker_NBETerm.String
-                   ("(((proofstate.nbe)))", FStar_Compiler_Range.dummyRange)))) in
+                   ("(((proofstate.nbe)))",
+                     FStar_Compiler_Range_Type.dummyRange)))) in
     FStar_TypeChecker_NBETerm.mk_t
       (FStar_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
   let unembed_proofstate _cb t =
@@ -253,7 +260,8 @@ let (e_proofstate_nbe :
                 FStar_Compiler_Util.format1
                   "Not an embedded NBE proofstate: %s\n" uu___6 in
               (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___4
           else ());
          FStar_Pervasives_Native.None) in
   let uu___ = mkFV fstar_tactics_proofstate.fv [] [] in
@@ -306,7 +314,7 @@ let (e_goal_nbe :
         FStar_Syntax_Syntax.blob = uu___;
         FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_goal;
         FStar_Syntax_Syntax.ltyp = (fstar_tactics_goal.t);
-        FStar_Syntax_Syntax.rng = FStar_Compiler_Range.dummyRange
+        FStar_Syntax_Syntax.rng = FStar_Compiler_Range_Type.dummyRange
       } in
     let thunk =
       FStar_Thunk.mk
@@ -314,7 +322,7 @@ let (e_goal_nbe :
            FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
              (FStar_TypeChecker_NBETerm.Constant
                 (FStar_TypeChecker_NBETerm.String
-                   ("(((goal.nbe)))", FStar_Compiler_Range.dummyRange)))) in
+                   ("(((goal.nbe)))", FStar_Compiler_Range_Type.dummyRange)))) in
     FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
       (FStar_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
   let unembed_goal _cb t =
@@ -342,7 +350,8 @@ let (e_goal_nbe :
                 FStar_Compiler_Util.format1 "Not an embedded NBE goal: %s"
                   uu___6 in
               (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___4
           else ());
          FStar_Pervasives_Native.None) in
   let uu___ = mkFV fstar_tactics_goal.fv [] [] in
@@ -677,7 +686,8 @@ let (e_direction_nbe :
                 FStar_Compiler_Util.format1 "Not an embedded direction: %s"
                   uu___6 in
               (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___4
           else ());
          FStar_Pervasives_Native.None) in
   let uu___ = mkFV fstar_tactics_direction.fv [] [] in
@@ -753,7 +763,8 @@ let (e_ctrl_flag_nbe :
                 FStar_Compiler_Util.format1 "Not an embedded ctrl_flag: %s"
                   uu___6 in
               (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___4
           else ());
          FStar_Pervasives_Native.None) in
   let uu___ = mkFV fstar_tactics_ctrl_flag.fv [] [] in
@@ -842,7 +853,8 @@ let (e_unfold_side_nbe :
                 FStar_Compiler_Util.format1 "Not an embedded unfold_side: %s"
                   uu___6 in
               (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___4
           else ());
          FStar_Pervasives_Native.None) in
   let uu___ = mkFV fstar_tactics_unfold_side.fv [] [] in
@@ -850,6 +862,80 @@ let (e_unfold_side_nbe :
   {
     FStar_TypeChecker_NBETerm.em = embed_unfold_side;
     FStar_TypeChecker_NBETerm.un = unembed_unfold_side;
+    FStar_TypeChecker_NBETerm.typ = uu___;
+    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+  }
+let (e_tot_or_ghost :
+  FStar_Tactics_Types.tot_or_ghost FStar_Syntax_Embeddings.embedding) =
+  let embed_tot_or_ghost rng s =
+    match s with
+    | FStar_Tactics_Types.E_Total -> fstar_tactics_tot_or_ghost_ETotal.t
+    | FStar_Tactics_Types.E_Ghost -> fstar_tactics_tot_or_ghost_EGhost.t in
+  let unembed_tot_or_ghost w t =
+    let uu___ =
+      let uu___1 = FStar_Syntax_Subst.compress t in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_fvar fv when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          fstar_tactics_tot_or_ghost_ETotal.lid
+        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Total
+    | FStar_Syntax_Syntax.Tm_fvar fv when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          fstar_tactics_tot_or_ghost_EGhost.lid
+        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Ghost
+    | uu___1 ->
+        (if w
+         then
+           (let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Syntax_Print.term_to_string t in
+                FStar_Compiler_Util.format1
+                  "Not an embedded tot_or_ghost: %s" uu___5 in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
+            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
+         else ();
+         FStar_Pervasives_Native.None) in
+  mk_emb embed_tot_or_ghost unembed_tot_or_ghost fstar_tactics_tot_or_ghost.t
+let (e_tot_or_ghost_nbe :
+  FStar_Tactics_Types.tot_or_ghost FStar_TypeChecker_NBETerm.embedding) =
+  let embed_tot_or_ghost cb res =
+    match res with
+    | FStar_Tactics_Types.E_Total ->
+        mkConstruct fstar_tactics_tot_or_ghost_ETotal.fv [] []
+    | FStar_Tactics_Types.E_Ghost ->
+        mkConstruct fstar_tactics_tot_or_ghost_EGhost.fv [] [] in
+  let unembed_tot_or_ghost cb t =
+    let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
+    match uu___ with
+    | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          fstar_tactics_tot_or_ghost_ETotal.lid
+        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Total
+    | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          fstar_tactics_tot_or_ghost_EGhost.lid
+        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Ghost
+    | uu___1 ->
+        ((let uu___3 =
+            FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
+          if uu___3
+          then
+            let uu___4 =
+              let uu___5 =
+                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
+                FStar_Compiler_Util.format1
+                  "Not an embedded tot_or_ghost: %s" uu___6 in
+              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
+            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+              uu___4
+          else ());
+         FStar_Pervasives_Native.None) in
+  let uu___ = mkFV fstar_tactics_tot_or_ghost.fv [] [] in
+  let uu___1 = fv_as_emb_typ fstar_tactics_tot_or_ghost.fv in
+  {
+    FStar_TypeChecker_NBETerm.em = embed_tot_or_ghost;
+    FStar_TypeChecker_NBETerm.un = unembed_tot_or_ghost;
     FStar_TypeChecker_NBETerm.typ = uu___;
     FStar_TypeChecker_NBETerm.emb_typ = uu___1
   }

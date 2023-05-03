@@ -48,10 +48,12 @@ module NRE     = FStar.Reflection.NBEEmbeddings
 module Print   = FStar.Syntax.Print
 module RE      = FStar.Reflection.Embeddings
 module S       = FStar.Syntax.Syntax
+module SS      = FStar.Syntax.Subst
 module TcComm  = FStar.TypeChecker.Common
 module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
 module U       = FStar.Syntax.Util
+module PC      = FStar.Parser.Const
 
 let tacdbg = BU.mk_ref false
 
@@ -92,12 +94,35 @@ let primitive_steps () : list Cfg.primitive_step =
     BU.must (!__primitive_steps_ref)
     @ (native_tactics_steps ())
 
+(* This function attempts to reconstruct the reduction head of a
+stuck tactic term, to provide a better error message for the user. *)
+let rec t_head_of (t : term) : term =
+    match (SS.compress t).n with
+    | Tm_app _ ->
+      (* If the head is a ctor, or an uninterpreted fv, do not shrink
+         further. Otherwise we will get failures saying that 'Success'
+         or 'dump' got stuck, which is not helpful. *)
+      let h, args = U.head_and_args_full t in
+      let h = U.unmeta h in
+      begin match (SS.compress h).n with
+      | Tm_uinst _
+      | Tm_fvar _
+      | Tm_bvar _ // should not occur
+      | Tm_name _
+      | Tm_constant _ -> t
+      | _ -> t_head_of h
+      end
+    | Tm_match (t, _, _, _)
+    | Tm_ascribed (t, _, _)
+    | Tm_meta (t, _) -> t_head_of t
+    | _ -> t
+
 let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b =
     bind get (fun proof_state ->
     let rng = embedded_tac_b.pos in
 
     (* First, reify it from Tac a into __tac a *)
-    let embedded_tac_b = U.mk_reify embedded_tac_b (Some FStar.Parser.Const.effect_TAC_lid) in
+    let embedded_tac_b = U.mk_reify embedded_tac_b (Some PC.effect_TAC_lid) in
 
     let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (embed E.e_proofstate rng proof_state ncb)]
@@ -134,7 +159,26 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         bind (set ps) (fun _ -> traise e)
 
     | None ->
-        Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
+        (* The tactic got stuck, try to provide a helpful error message. *)
+        let h_result = t_head_of result in
+        let maybe_admit_tip =
+          (* (ab)use the map visitor to check whether the reduced head
+          contains an admit, which is a common error *)
+          let has_admit = BU.mk_ref false in
+          let _ : term =
+            Syntax.Visit.visit_term (fun t ->
+              match t.n with
+              | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> (has_admit := true; S.tun)
+              | _ -> S.tun
+            ) h_result
+          in
+          if !has_admit
+          then "\nThe term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
+          else ""
+        in
+        Err.raise_error (Err.Fatal_TacticGotStuck,
+          (BU.format2 "Tactic got stuck!\n\
+                       Reduction stopped at: %s%s" (Print.term_to_string h_result) maybe_admit_tip)) proof_state.main_context.range
     )
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
@@ -465,9 +509,9 @@ let () =
         launch_process e_string (e_list e_string) e_string e_string
         launch_process NBET.e_string (NBET.e_list NBET.e_string) NBET.e_string NBET.e_string;
 
-      mk_tac_step_2 0 "fresh_bv_named"
-        fresh_bv_named e_string RE.e_term RE.e_bv
-        fresh_bv_named NBET.e_string NRE.e_term NRE.e_bv;
+      mk_tac_step_1 0 "fresh_bv_named"
+        fresh_bv_named e_string RE.e_bv
+        fresh_bv_named NBET.e_string NRE.e_bv;
 
       mk_tac_step_1 0 "change"
         change RE.e_term e_unit
@@ -521,6 +565,10 @@ let () =
         comp_to_string RE.e_comp e_string
         comp_to_string NRE.e_comp NBET.e_string;
 
+      mk_tac_step_1 0 "range_to_string"
+        range_to_string FStar.Syntax.Embeddings.e_range e_string
+        range_to_string FStar.TypeChecker.NBETerm.e_range NBET.e_string;
+
       mk_tac_step_2 0 "term_eq_old"
         term_eq_old RE.e_term RE.e_term e_bool
         term_eq_old NRE.e_term NRE.e_term NBET.e_bool;
@@ -555,13 +603,13 @@ let () =
         refl_check_equiv RE.e_env RE.e_term RE.e_term (e_option e_unit)
         refl_check_equiv NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
 
-      mk_tac_step_2 0 "core_check_term"
-        refl_core_check_term RE.e_env RE.e_term (e_option RE.e_term)
-        refl_core_check_term NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
+      mk_tac_step_3 0 "core_check_term"
+        refl_core_check_term RE.e_env RE.e_term E.e_tot_or_ghost (e_option RE.e_term)
+        refl_core_check_term NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option NRE.e_term);
 
-      mk_tac_step_2 0 "tc_term"
-        refl_tc_term RE.e_env RE.e_term (e_option (e_tuple2 RE.e_term RE.e_term))
-        refl_tc_term NRE.e_env NRE.e_term (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
+      mk_tac_step_3 0 "tc_term"
+        refl_tc_term RE.e_env RE.e_term E.e_tot_or_ghost (e_option (e_tuple2 RE.e_term RE.e_term))
+        refl_tc_term NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
 
       mk_tac_step_2 0 "universe_of"
         refl_universe_of RE.e_env RE.e_term (e_option RE.e_universe)

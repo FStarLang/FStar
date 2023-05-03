@@ -123,3 +123,7 @@ type unfold_side =
   | Right
   | Both
   | Neither
+
+type tot_or_ghost =
+  | E_Total
+  | E_Ghost

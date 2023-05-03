@@ -3,19 +3,19 @@ let (is_arith_goal :
   unit -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Tactics.Arith.fst" (Prims.of_int (24))
+      (FStar_Range.mk_range "FStar.Tactics.Arith.fst" (Prims.of_int (24))
          (Prims.of_int (12)) (Prims.of_int (24)) (Prims.of_int (23)))
-      (Prims.mk_range "FStar.Tactics.Arith.fst" (Prims.of_int (25))
+      (FStar_Range.mk_range "FStar.Tactics.Arith.fst" (Prims.of_int (25))
          (Prims.of_int (4)) (Prims.of_int (27)) (Prims.of_int (16)))
       (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
       (fun uu___1 ->
          (fun g ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (Prims.mk_range "FStar.Tactics.Arith.fst"
+                 (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                     (Prims.of_int (25)) (Prims.of_int (10))
                     (Prims.of_int (25)) (Prims.of_int (34)))
-                 (Prims.mk_range "FStar.Tactics.Arith.fst"
+                 (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                     (Prims.of_int (25)) (Prims.of_int (4))
                     (Prims.of_int (27)) (Prims.of_int (16)))
                  (Obj.magic
@@ -30,9 +30,9 @@ let (is_arith_goal :
 let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (Prims.mk_range "FStar.Tactics.Arith.fst" (Prims.of_int (31))
+      (FStar_Range.mk_range "FStar.Tactics.Arith.fst" (Prims.of_int (31))
          (Prims.of_int (7)) (Prims.of_int (31)) (Prims.of_int (23)))
-      (Prims.mk_range "FStar.Tactics.Arith.fst" (Prims.of_int (31))
+      (FStar_Range.mk_range "FStar.Tactics.Arith.fst" (Prims.of_int (31))
          (Prims.of_int (4)) (Prims.of_int (52)) (Prims.of_int (7)))
       (Obj.magic (is_arith_goal ()))
       (fun uu___1 ->
@@ -41,10 +41,10 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
             then
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Tactics.Arith.fst"
+                   (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                       (Prims.of_int (33)) (Prims.of_int (8))
                       (Prims.of_int (33)) (Prims.of_int (16)))
-                   (Prims.mk_range "FStar.Tactics.Arith.fst"
+                   (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                       (Prims.of_int (34)) (Prims.of_int (8))
                       (Prims.of_int (35)) (Prims.of_int (14)))
                    (Obj.magic (FStar_Tactics_Builtins.prune ""))
@@ -52,10 +52,10 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                       (fun uu___2 ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range "FStar.Tactics.Arith.fst"
+                              (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                                  (Prims.of_int (34)) (Prims.of_int (8))
                                  (Prims.of_int (34)) (Prims.of_int (21)))
-                              (Prims.mk_range "FStar.Tactics.Arith.fst"
+                              (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                                  (Prims.of_int (35)) (Prims.of_int (8))
                                  (Prims.of_int (35)) (Prims.of_int (14)))
                               (Obj.magic
@@ -67,10 +67,10 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
             else
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (Prims.mk_range "FStar.Tactics.Arith.fst"
+                   (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                       (Prims.of_int (38)) (Prims.of_int (16))
                       (Prims.of_int (38)) (Prims.of_int (27)))
-                   (Prims.mk_range "FStar.Tactics.Arith.fst"
+                   (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                       (Prims.of_int (39)) (Prims.of_int (8))
                       (Prims.of_int (51)) (Prims.of_int (14)))
                    (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
@@ -78,10 +78,10 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                       (fun g ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (Prims.mk_range "FStar.Tactics.Arith.fst"
+                              (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                                  (Prims.of_int (39)) (Prims.of_int (14))
                                  (Prims.of_int (39)) (Prims.of_int (31)))
-                              (Prims.mk_range "FStar.Tactics.Arith.fst"
+                              (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                                  (Prims.of_int (39)) (Prims.of_int (8))
                                  (Prims.of_int (51)) (Prims.of_int (14)))
                               (Obj.magic
@@ -105,13 +105,13 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                         Obj.magic
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Tactics.Arith.fst"
                                                    (Prims.of_int (45))
                                                    (Prims.of_int (20))
                                                    (Prims.of_int (45))
                                                    (Prims.of_int (36)))
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Tactics.Arith.fst"
                                                    (Prims.of_int (46))
                                                    (Prims.of_int (12))
@@ -127,18 +127,18 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                            split_arith
                                                            FStar_Tactics_Logic.l_revert))
                                                      uu___4)))
-                                    | FStar_Reflection_Formula.Forall 
-                                        (x, p) ->
+                                    | FStar_Reflection_Formula.Forall
+                                        (_x, _sort, _p) ->
                                         Obj.magic
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Tactics.Arith.fst"
                                                    (Prims.of_int (48))
                                                    (Prims.of_int (21))
                                                    (Prims.of_int (48))
                                                    (Prims.of_int (37)))
-                                                (Prims.mk_range
+                                                (FStar_Range.mk_range
                                                    "FStar.Tactics.Arith.fst"
                                                    (Prims.of_int (49))
                                                    (Prims.of_int (12))

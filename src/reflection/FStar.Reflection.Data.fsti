@@ -65,15 +65,14 @@ val as_ppname (s:string) : Tot string
 type bv_view = {
     bv_ppname : string;
     bv_index : Z.t;
-    bv_sort : typ;
 }
 
 type binder_view = {
   binder_bv : bv;
   binder_qual : aqualv;
-  binder_attrs : list term
+  binder_attrs : list term;
+  binder_sort : typ;
 }
-
 
 type universe_view =
   | Uv_Zero : universe_view
@@ -93,10 +92,10 @@ type term_view =
     | Tv_Abs       of binder * term
     | Tv_Arrow     of binder * comp
     | Tv_Type      of universe
-    | Tv_Refine    of bv * term
+    | Tv_Refine    of bv * typ * term
     | Tv_Const     of vconst
     | Tv_Uvar      of Z.t * ctx_uvar_and_subst
-    | Tv_Let       of bool * list term * bv * term * term
+    | Tv_Let       of bool * list term * bv * typ * term * term
     | Tv_Match     of term * option match_returns_ascription * list branch
     | Tv_AscribedT of term * term * option term * bool  //if the boolean flag is true, the ascription is an equality ascription
                                                          //see also Syntax

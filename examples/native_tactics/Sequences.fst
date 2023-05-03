@@ -54,7 +54,7 @@ let try_unref_eq () : Tac unit =
   match f with
   | Comp (Eq (Some t)) l r ->
     begin match inspect t with
-    | Tv_Refine _ _ ->
+    | Tv_Refine _ _ _ ->
         apply_lemma (`unrefine_eq_lem);
         norm []
     | _ ->

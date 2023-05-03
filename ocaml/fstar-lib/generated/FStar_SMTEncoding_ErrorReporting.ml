@@ -11,8 +11,8 @@ let (__proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee -> match projectee with | Not_a_wp_implication uu___ -> uu___
 let (sort_labels :
   (FStar_SMTEncoding_Term.error_label * Prims.bool) Prims.list ->
-    ((FStar_SMTEncoding_Term.fv * Prims.string * FStar_Compiler_Range.range)
-      * Prims.bool) Prims.list)
+    ((FStar_SMTEncoding_Term.fv * Prims.string *
+      FStar_Compiler_Range_Type.range) * Prims.bool) Prims.list)
   =
   fun l ->
     FStar_Compiler_List.sortWith
@@ -20,11 +20,11 @@ let (sort_labels :
          fun uu___1 ->
            match (uu___, uu___1) with
            | (((uu___2, uu___3, r1), uu___4), ((uu___5, uu___6, r2), uu___7))
-               -> FStar_Compiler_Range.compare r1 r2) l
+               -> FStar_Compiler_Range_Ops.compare r1 r2) l
 let (remove_dups :
   labels ->
-    (FStar_SMTEncoding_Term.fv * Prims.string * FStar_Compiler_Range.range)
-      Prims.list)
+    (FStar_SMTEncoding_Term.fv * Prims.string *
+      FStar_Compiler_Range_Type.range) Prims.list)
   =
   fun l ->
     FStar_Compiler_Util.remove_dups
@@ -33,15 +33,15 @@ let (remove_dups :
            match (uu___, uu___1) with
            | ((uu___2, m1, r1), (uu___3, m2, r2)) -> (r1 = r2) && (m1 = m2))
       l
-type msg = (Prims.string * FStar_Compiler_Range.range)
+type msg = (Prims.string * FStar_Compiler_Range_Type.range)
 type ranges =
-  (Prims.string FStar_Pervasives_Native.option * FStar_Compiler_Range.range)
-    Prims.list
+  (Prims.string FStar_Pervasives_Native.option *
+    FStar_Compiler_Range_Type.range) Prims.list
 let (__ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (fresh_label :
   Prims.string ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_SMTEncoding_Term.term -> (label * FStar_SMTEncoding_Term.term))
   =
   fun message ->
@@ -60,7 +60,7 @@ let (fresh_label :
         let lt = FStar_SMTEncoding_Term.mkOr (lterm, t) range in (label1, lt)
 let (label_goals :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_SMTEncoding_Term.term -> (labels * FStar_SMTEncoding_Term.term))
   =
   fun use_env_msg ->
@@ -122,14 +122,14 @@ let (label_goals :
                 | FStar_Pervasives_Native.None -> rng
                 | FStar_Pervasives_Native.Some r1 ->
                     let uu___1 =
-                      let uu___2 = FStar_Compiler_Range.use_range rng in
-                      let uu___3 = FStar_Compiler_Range.use_range r1 in
-                      FStar_Compiler_Range.rng_included uu___2 uu___3 in
+                      let uu___2 = FStar_Compiler_Range_Type.use_range rng in
+                      let uu___3 = FStar_Compiler_Range_Type.use_range r1 in
+                      FStar_Compiler_Range_Ops.rng_included uu___2 uu___3 in
                     if uu___1
                     then rng
                     else
-                      (let uu___3 = FStar_Compiler_Range.def_range rng in
-                       FStar_Compiler_Range.set_def_range r1 uu___3) in
+                      (let uu___3 = FStar_Compiler_Range_Type.def_range rng in
+                       FStar_Compiler_Range_Type.set_def_range r1 uu___3) in
               fresh_label msg2 rng1 t in
             let rec aux default_msg ropt post_name_opt labels1 q1 =
               match q1.FStar_SMTEncoding_Term.tm with
@@ -162,7 +162,7 @@ let (label_goals :
                                  ->
                                  let post_name =
                                    let uu___3 =
-                                     let uu___4 = FStar_Ident.next_id () in
+                                     let uu___4 = FStar_GenSym.next_id () in
                                      FStar_Compiler_Effect.op_Less_Bar
                                        FStar_Compiler_Util.string_of_int
                                        uu___4 in
@@ -178,7 +178,7 @@ let (label_goals :
                                             let uu___6 =
                                               let uu___7 =
                                                 let uu___8 =
-                                                  FStar_Ident.next_id () in
+                                                  FStar_GenSym.next_id () in
                                                 FStar_Compiler_Effect.op_Less_Bar
                                                   FStar_Compiler_Util.string_of_int
                                                   uu___8 in
@@ -392,7 +392,7 @@ let (label_goals :
                    | (sorts', post) ->
                        let new_post_name =
                          let uu___3 =
-                           let uu___4 = FStar_Ident.next_id () in
+                           let uu___4 = FStar_GenSym.next_id () in
                            FStar_Compiler_Effect.op_Less_Bar
                              FStar_Compiler_Util.string_of_int uu___4 in
                          Prims.op_Hat "^^post_condition_" uu___3 in
@@ -403,7 +403,7 @@ let (label_goals :
                                 let uu___4 =
                                   let uu___5 =
                                     let uu___6 =
-                                      let uu___7 = FStar_Ident.next_id () in
+                                      let uu___7 = FStar_GenSym.next_id () in
                                       FStar_Compiler_Effect.op_Less_Bar
                                         FStar_Compiler_Util.string_of_int
                                         uu___7 in
@@ -748,7 +748,7 @@ let (detail_errors :
             let msg1 =
               let uu___1 =
                 let uu___2 = FStar_TypeChecker_Env.get_range env in
-                FStar_Compiler_Range.string_of_range uu___2 in
+                FStar_Compiler_Range_Ops.string_of_range uu___2 in
               let uu___2 =
                 FStar_Compiler_Util.string_of_int (Prims.of_int (5)) in
               let uu___3 =
@@ -764,7 +764,7 @@ let (detail_errors :
             | ((uu___1, msg1, r), success) ->
                 if success
                 then
-                  let uu___2 = FStar_Compiler_Range.string_of_range r in
+                  let uu___2 = FStar_Compiler_Range_Ops.string_of_range r in
                   FStar_Compiler_Util.print1
                     "OK: proof obligation at %s was proven in isolation\n"
                     uu___2
@@ -778,7 +778,8 @@ let (detail_errors :
                   else
                     (let uu___4 =
                        let uu___5 =
-                         let uu___6 = FStar_Compiler_Range.string_of_range r in
+                         let uu___6 =
+                           FStar_Compiler_Range_Ops.string_of_range r in
                          FStar_Compiler_Util.format2
                            "XX: proof obligation at %s failed\n\t%s\n" uu___6
                            msg1 in

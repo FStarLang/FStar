@@ -136,7 +136,7 @@ let rec visit (callback:unit -> Tac unit) : Tac unit =
                    (fun () ->
                     let g = cur_goal () in
                     match term_as_formula g with
-                    | Forall b phi ->
+                    | Forall _b _sort _phi ->
                         let binders = forall_intros () in
                         seq (fun () -> visit callback) (fun () -> l_revert_all binders)
                     | And p q ->

@@ -74,7 +74,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bdd2c41cc82e5e872d5c2b3d620a6c56"
+      "3629f1a070ea57e2efd27d15cb9e502e"
     ],
     [
       "QuickSort.Seq.partition",
@@ -135,7 +135,7 @@
         "typing_FStar.Seq.Base.upd", "well-founded-ordering-on-nat"
       ],
       0,
-      "6bab778f0db4b23ddd6e4e6b034eb3ee"
+      "d77c0cfcd2f398aef4e6b7b8c4ddd7a3"
     ],
     [
       "QuickSort.Seq.sort",
@@ -201,7 +201,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "99a115da4d3470c97c3a76ff244f30e5"
+      "bef33f0ec9dcb7d5491faa7e83975da1"
     ]
   ]
 ]

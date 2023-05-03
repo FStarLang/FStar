@@ -293,11 +293,11 @@ let decreases_lid  = pconst "decreases"
 let reveal = p2l ["FStar"; "Ghost"; "reveal"]
 let hide   = p2l ["FStar"; "Ghost"; "hide"]
 
+(* FStar.Range *)
+let labeled_lid    = p2l ["FStar"; "Range"; "labeled"]
+let range_lid      = p2l ["FStar"; "Range"; "range"]
+let range_0        = p2l ["FStar"; "Range"; "range_0"]
 
-let range_lid      = pconst "range"
-let range_of_lid   = pconst "range_of"
-let labeled_lid    = pconst "labeled"
-let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
 
@@ -359,6 +359,7 @@ let binder_strictly_positive_attr = psconst "strictly_positive"
 let binder_unused_attr = psconst "unused"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
+let admit_termination_lid = psconst "admit_termination"
 let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]
 
 

@@ -8,11 +8,6 @@ open FStar.Tactics.Derived
 private
 let paren (s:string) : string = "(" ^ s ^ ")"
 
-(* Redefine bv_to_string, which is able to show the type of the bv when in TAC *)
-let bv_to_string (bv : bv) : Tac string =
-    let bvv = inspect_bv bv in
-    "(" ^ name_of_bv bv ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
-
 (* TODO: making this a local definition in print_list fails to extract. *)
 private
 let rec print_list_aux (f:'a -> Tac string) (xs:list 'a) : Tac string =
@@ -49,10 +44,10 @@ let rec term_to_ast_string (t:term) : Tac string =
   | Tv_Abs x e -> "Tv_Abs " ^ paren (binder_to_string x ^ ", " ^ term_to_ast_string e)
   | Tv_Arrow x c -> "Tv_Arrow " ^ paren (binder_to_string x ^ ", " ^ comp_to_ast_string c)
   | Tv_Type u -> "Type" ^ paren (universe_to_ast_string u)
-  | Tv_Refine x e -> "Tv_Refine " ^ paren (bv_to_string x ^ ", " ^ term_to_ast_string e)
+  | Tv_Refine x sort e -> "Tv_Refine " ^ paren (bv_to_string x ^ ", " ^ term_to_ast_string sort ^", " ^ term_to_ast_string e)
   | Tv_Const c -> const_to_ast_string c
   | Tv_Uvar i _ -> "Tv_Uvar " ^ string_of_int i
-  | Tv_Let recf _ x e1 e2 ->
+  | Tv_Let recf _ x _ e1 e2 ->
            "Tv_Let " ^ paren (string_of_bool recf ^ ", " ^
                               bv_to_string x ^ ", " ^
                               term_to_ast_string e1 ^ ", " ^

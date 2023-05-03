@@ -468,8 +468,10 @@ let e_term_view_aq aq =
             S.mk_Tm_app ref_Tv_Type.t [S.as_arg (embed e_universe rng u)]
                         rng
 
-        | Tv_Refine (bv, t) ->
-            S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed e_bv rng bv); S.as_arg (embed (e_term_aq (push aq)) rng t)]
+        | Tv_Refine (bv, s, t) ->
+            S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed e_bv rng bv);
+                                         S.as_arg (embed (e_term_aq aq) rng s);
+                                         S.as_arg (embed (e_term_aq (push aq)) rng t)]
                         rng
 
         | Tv_Const c ->
@@ -482,10 +484,11 @@ let e_term_view_aq aq =
                          S.as_arg (U.mk_lazy (u,d) U.t_ctx_uvar_and_sust Lazy_uvar None)]
                         rng
 
-        | Tv_Let (r, attrs, b, t1, t2) ->
+        | Tv_Let (r, attrs, b, ty, t1, t2) ->
             S.mk_Tm_app ref_Tv_Let.t [S.as_arg (embed e_bool rng r);
                                       S.as_arg (embed (e_list e_term) rng attrs);
                                       S.as_arg (embed e_bv rng b);
+                                      S.as_arg (embed (e_term_aq aq) rng ty);
                                       S.as_arg (embed (e_term_aq aq) rng t1);
                                       S.as_arg (embed (e_term_aq (push aq)) rng t2)]
                         rng
@@ -555,10 +558,11 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed' w e_universe u) (fun u ->
             Some <| Tv_Type u)
 
-        | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine.lid ->
+        | Tm_fvar fv, [(b, _); (sort, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine.lid ->
             BU.bind_opt (unembed' w e_bv b) (fun b ->
+            BU.bind_opt (unembed' w e_term sort) (fun sort ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            Some <| Tv_Refine (b, t)))
+            Some <| Tv_Refine (b, sort, t))))
 
         | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Tv_Const.lid ->
             BU.bind_opt (unembed' w e_const c) (fun c ->
@@ -569,13 +573,14 @@ let e_term_view_aq aq =
             let ctx_u_s : ctx_uvar_and_subst = U.unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
-        | Tm_fvar fv, [(r, _); (attrs, _); (b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
+        | Tm_fvar fv, [(r, _); (attrs, _); (b, _); (ty, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
             BU.bind_opt (unembed' w e_bool r) (fun r ->
             BU.bind_opt (unembed' w (e_list e_term) attrs) (fun attrs ->
             BU.bind_opt (unembed' w e_bv b) (fun b ->
+            BU.bind_opt (unembed' w e_term ty) (fun ty->
             BU.bind_opt (unembed' w e_term t1) (fun t1 ->
             BU.bind_opt (unembed' w e_term t2) (fun t2 ->
-            Some <| Tv_Let (r, attrs, b, t1, t2))))))
+            Some <| Tv_Let (r, attrs, b, ty, t1, t2)))))))
 
         | Tm_fvar fv, [(t, _); (ret_opt, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
@@ -627,19 +632,17 @@ let e_lid : embedding I.lid =
 let e_bv_view =
     let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
         S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed (e_sealed e_string) rng bvv.bv_ppname);
-                                 S.as_arg (embed e_int    rng bvv.bv_index);
-                                 S.as_arg (embed e_term   rng bvv.bv_sort)]
+                                 S.as_arg (embed e_int    rng bvv.bv_index)]
                     rng
     in
     let unembed_bv_view w (t : term) : option bv_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [(nm, _); (idx, _); (s, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
+        | Tm_fvar fv, [(nm, _); (idx, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
             BU.bind_opt (unembed' w (e_sealed e_string) nm) (fun nm ->
             BU.bind_opt (unembed' w e_int idx) (fun idx ->
-            BU.bind_opt (unembed' w e_term s) (fun s ->
-            Some <| { bv_ppname = nm ; bv_index = idx ; bv_sort = s })))
+            Some <| { bv_ppname = nm ; bv_index = idx }))
 
         | _ ->
             if w then
@@ -656,19 +659,21 @@ let e_binder_view =
   let embed_binder_view (rng:Range.range) (bview:binder_view) : term =
     S.mk_Tm_app ref_Mk_binder.t [S.as_arg (embed e_bv rng bview.binder_bv);
                                  S.as_arg (embed e_aqualv rng bview.binder_qual);
-                                 S.as_arg (embed e_attributes rng bview.binder_attrs)]
+                                 S.as_arg (embed e_attributes rng bview.binder_attrs);
+                                 S.as_arg (embed e_term rng bview.binder_sort)]
                 rng in
 
   let unembed_binder_view w (t:term) : option binder_view =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(bv, _); (q, _); (attrs, _)]
+    | Tm_fvar fv, [(bv, _); (q, _); (attrs, _); (sort, _)]
       when S.fv_eq_lid fv ref_Mk_binder.lid ->
       BU.bind_opt (unembed' w e_bv bv) (fun bv ->
       BU.bind_opt (unembed' w e_aqualv q) (fun q ->
       BU.bind_opt (unembed' w e_attributes attrs) (fun attrs ->
-      Some <| RD.({ binder_bv=bv;binder_qual=q; binder_attrs=attrs}))))
+      BU.bind_opt (unembed' w e_term sort) (fun sort ->
+      Some <| RD.({ binder_bv=bv;binder_qual=q; binder_attrs=attrs; binder_sort = sort})))))
 
     | _ ->
       if w then

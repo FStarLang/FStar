@@ -151,7 +151,7 @@ let unify_env               = from_tac_3 B.unify_env
 let unify_guard_env         = from_tac_3 B.unify_guard_env
 let match_env               = from_tac_3 B.match_env
 let launch_process          = from_tac_3 B.launch_process
-let fresh_bv_named          = from_tac_2 B.fresh_bv_named
+let fresh_bv_named          = from_tac_1 B.fresh_bv_named
 let change                  = from_tac_1 B.change
 let get_guard_policy        = from_tac_1 B.get_guard_policy
 let set_guard_policy        = from_tac_1 B.set_guard_policy
@@ -169,6 +169,7 @@ let string_to_term          = from_tac_2 B.string_to_term
 let push_bv_dsenv           = from_tac_2 B.push_bv_dsenv
 let term_to_string          = from_tac_1 B.term_to_string
 let comp_to_string          = from_tac_1 B.comp_to_string
+let range_to_string         = from_tac_1 B.range_to_string
 let term_eq_old             = from_tac_2 B.term_eq_old
 
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
@@ -187,8 +188,8 @@ type ('env, 't) prop_validity_token = unit
 
 let check_subtyping              = from_tac_3 B.refl_check_subtyping
 let check_equiv                  = from_tac_3 B.refl_check_equiv
-let core_check_term              = from_tac_2 B.refl_core_check_term
-let tc_term                      = from_tac_2 B.refl_tc_term
+let core_check_term              = from_tac_3 B.refl_core_check_term
+let tc_term                      = from_tac_3 B.refl_tc_term
 let universe_of                  = from_tac_2 B.refl_universe_of
 let check_prop_validity          = from_tac_2 B.refl_check_prop_validity
 let instantiate_implicits        = from_tac_2 B.refl_instantiate_implicits

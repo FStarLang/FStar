@@ -235,7 +235,7 @@ let (as_wl_deferred :
 let (new_uvar :
   Prims.string ->
     worklist ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         FStar_Syntax_Syntax.binding Prims.list ->
           FStar_Syntax_Syntax.binder Prims.list ->
             FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -597,7 +597,8 @@ let (p_reason : FStar_TypeChecker_Common.prob -> Prims.string Prims.list) =
     match uu___ with
     | FStar_TypeChecker_Common.TProb p -> p.FStar_TypeChecker_Common.reason
     | FStar_TypeChecker_Common.CProb p -> p.FStar_TypeChecker_Common.reason
-let (p_loc : FStar_TypeChecker_Common.prob -> FStar_Compiler_Range.range) =
+let (p_loc :
+  FStar_TypeChecker_Common.prob -> FStar_Compiler_Range_Type.range) =
   fun uu___ ->
     match uu___ with
     | FStar_TypeChecker_Common.TProb p -> p.FStar_TypeChecker_Common.loc
@@ -743,7 +744,7 @@ let (p_env :
       }
 let (def_scope_wf :
   Prims.string ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.binder Prims.list -> unit)
   =
   fun msg ->
@@ -1154,7 +1155,7 @@ let mk_problem :
                   let uu___ =
                     new_uvar
                       (Prims.op_Hat "mk_problem: logical guard for " reason)
-                      wl FStar_Compiler_Range.dummyRange gamma bs
+                      wl FStar_Compiler_Range_Type.dummyRange gamma bs
                       FStar_Syntax_Util.ktype0
                       (FStar_Syntax_Syntax.Allow_untyped "logical guard")
                       FStar_Pervasives_Native.None in
@@ -1238,7 +1239,7 @@ let new_problem :
           FStar_TypeChecker_Common.rel ->
             'uuuuu ->
               FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
-                FStar_Compiler_Range.range ->
+                FStar_Compiler_Range_Type.range ->
                   Prims.string ->
                     ('uuuuu FStar_TypeChecker_Common.problem * worklist)
   =
@@ -1385,7 +1386,7 @@ let (explain :
         then
           let uu___1 =
             FStar_Compiler_Effect.op_Less_Bar
-              FStar_Compiler_Range.string_of_range (p_loc d) in
+              FStar_Compiler_Range_Ops.string_of_range (p_loc d) in
           let uu___2 = prob_to_string' wl d in
           let uu___3 =
             FStar_Compiler_Effect.op_Bar_Greater (p_reason d)
@@ -3197,7 +3198,7 @@ let (head_matches_delta :
           r
 let (kind_type :
   FStar_Syntax_Syntax.binders ->
-    FStar_Compiler_Range.range -> FStar_Syntax_Syntax.typ)
+    FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.typ)
   =
   fun binders ->
     fun r ->
@@ -4123,7 +4124,7 @@ let (apply_substitutive_indexed_subcomp :
                 Prims.int ->
                   worklist ->
                     Prims.string ->
-                      FStar_Compiler_Range.range ->
+                      FStar_Compiler_Range_Type.range ->
                         (FStar_Syntax_Syntax.typ *
                           FStar_TypeChecker_Common.prob Prims.list *
                           worklist))
@@ -4334,7 +4335,7 @@ let (apply_substitutive_indexed_subcomp :
                                                                    FStar_Syntax_Print.binder_to_string
                                                                     b1 in
                                                                  let uu___8 =
-                                                                   FStar_Compiler_Range.string_of_range
+                                                                   FStar_Compiler_Range_Ops.string_of_range
                                                                     r1 in
                                                                  FStar_Compiler_Util.format3
                                                                    "implicit var for additional binder %s in subcomp %s at %s"
@@ -4411,7 +4412,7 @@ let (apply_substitutive_indexed_subcomp :
                                                         env u
                                                         subcomp_ct.FStar_Syntax_Syntax.result_typ
                                                         wp
-                                                        FStar_Compiler_Range.dummyRange in
+                                                        FStar_Compiler_Range_Type.dummyRange in
                                                 (fml,
                                                   (FStar_Compiler_List.op_At
                                                      eff_params_sub_probs
@@ -4432,7 +4433,7 @@ let (apply_ad_hoc_indexed_subcomp :
               ->
               worklist ->
                 Prims.string ->
-                  FStar_Compiler_Range.range ->
+                  FStar_Compiler_Range_Type.range ->
                     (FStar_Syntax_Syntax.typ * FStar_TypeChecker_Common.prob
                       Prims.list * worklist))
   =
@@ -4497,7 +4498,8 @@ let (apply_ad_hoc_indexed_subcomp :
                                  let uu___2 =
                                    FStar_Syntax_Print.binder_to_string b in
                                  let uu___3 =
-                                   FStar_Compiler_Range.string_of_range r1 in
+                                   FStar_Compiler_Range_Ops.string_of_range
+                                     r1 in
                                  FStar_Compiler_Util.format3
                                    "implicit for binder %s in subcomp %s at %s"
                                    uu___2 subcomp_name uu___3
@@ -4664,7 +4666,7 @@ let (apply_ad_hoc_indexed_subcomp :
                                                env u
                                                subcomp_ct.FStar_Syntax_Syntax.result_typ
                                                wp
-                                               FStar_Compiler_Range.dummyRange in
+                                               FStar_Compiler_Range_Type.dummyRange in
                                        (fml,
                                          (FStar_Compiler_List.op_At
                                             f_sub_probs g_sub_probs), wl3))))
@@ -5688,52 +5690,71 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                          (x, phi))) ->
                                                          (FStar_Syntax_Unionfind.rollback
                                                             tx;
-                                                          (let uu___17 =
-                                                             new_problem wl1
-                                                               env t_base
-                                                               FStar_TypeChecker_Common.EQ
-                                                               this_flex
-                                                               FStar_Pervasives_Native.None
-                                                               tp.FStar_TypeChecker_Common.loc
-                                                               "widened subtyping" in
+                                                          (let x1 =
+                                                             FStar_Syntax_Syntax.freshen_bv
+                                                               x in
+                                                           let uu___17 =
+                                                             let uu___18 =
+                                                               let uu___19 =
+                                                                 FStar_Syntax_Syntax.mk_binder
+                                                                   x1 in
+                                                               [uu___19] in
+                                                             FStar_Syntax_Subst.open_term
+                                                               uu___18 phi in
                                                            match uu___17 with
-                                                           | (eq_prob1, wl2)
+                                                           | (uu___18, phi1)
                                                                ->
-                                                               (def_check_prob
-                                                                  "meet_or_join4"
-                                                                  (FStar_TypeChecker_Common.TProb
+                                                               let uu___19 =
+                                                                 new_problem
+                                                                   wl1 env
+                                                                   t_base
+                                                                   FStar_TypeChecker_Common.EQ
+                                                                   this_flex
+                                                                   FStar_Pervasives_Native.None
+                                                                   tp.FStar_TypeChecker_Common.loc
+                                                                   "widened subtyping" in
+                                                               (match uu___19
+                                                                with
+                                                                | (eq_prob1,
+                                                                   wl2) ->
+                                                                    (
+                                                                    def_check_prob
+                                                                    "meet_or_join4"
+                                                                    (FStar_TypeChecker_Common.TProb
                                                                     eq_prob1);
-                                                                (let phi1 =
-                                                                   guard_on_element
-                                                                    wl2 tp x
-                                                                    phi in
-                                                                 let wl3 =
-                                                                   let uu___19
+                                                                    (
+                                                                    let phi2
                                                                     =
-                                                                    let uu___20
+                                                                    guard_on_element
+                                                                    wl2 tp x1
+                                                                    phi1 in
+                                                                    let wl3 =
+                                                                    let uu___21
+                                                                    =
+                                                                    let uu___22
                                                                     =
                                                                     FStar_Syntax_Util.mk_conj
-                                                                    phi1
+                                                                    phi2
                                                                     (p_guard
                                                                     (FStar_TypeChecker_Common.TProb
                                                                     eq_prob1)) in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___20 in
-                                                                   solve_prob'
+                                                                    uu___22 in
+                                                                    solve_prob'
                                                                     false
                                                                     (FStar_TypeChecker_Common.TProb
                                                                     tp)
-                                                                    uu___19
+                                                                    uu___21
                                                                     [] wl2 in
-                                                                 let uu___19
-                                                                   =
-                                                                   attempt
+                                                                    let uu___21
+                                                                    =
+                                                                    attempt
                                                                     [
                                                                     FStar_TypeChecker_Common.TProb
                                                                     eq_prob1]
                                                                     wl3 in
-                                                                 solve
-                                                                   uu___19))))
+                                                                    solve
+                                                                    uu___21)))))
                                                      | uu___16 ->
                                                          let uu___17 =
                                                            FStar_Thunk.map
@@ -11684,11 +11705,11 @@ and (solve_c :
                                let uu___7 =
                                  FStar_Syntax_Syntax.mk
                                    (FStar_Syntax_Syntax.Tm_type u1)
-                                   FStar_Compiler_Range.dummyRange in
+                                   FStar_Compiler_Range_Type.dummyRange in
                                let uu___8 =
                                  FStar_Syntax_Syntax.mk
                                    (FStar_Syntax_Syntax.Tm_type u2)
-                                   FStar_Compiler_Range.dummyRange in
+                                   FStar_Compiler_Range_Type.dummyRange in
                                sub_prob wl1 uu___7
                                  FStar_TypeChecker_Common.EQ uu___8
                                  "effect universes" in
@@ -12814,7 +12835,7 @@ let (new_t_problem :
         FStar_TypeChecker_Common.rel ->
           FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
             FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
-              FStar_Compiler_Range.range ->
+              FStar_Compiler_Range_Type.range ->
                 (FStar_TypeChecker_Common.prob * worklist))
   =
   fun wl ->
@@ -13560,7 +13581,7 @@ let (solve_non_tactic_deferred_constraints :
         FStar_Errors.with_ctx "solve_non_tactic_deferred_constraints"
           (fun uu___ ->
              FStar_TypeChecker_Env.def_check_guard_wf
-               FStar_Compiler_Range.dummyRange
+               FStar_Compiler_Range_Type.dummyRange
                "solve_non_tactic_deferred_constraints.g" env g;
              (let defer_ok =
                 if maybe_defer_flex_flex then DeferFlexFlexOnly else NoDefer in
@@ -14140,7 +14161,8 @@ let (check_implicit_solution_and_discharge_guard :
                       imp_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
                   let uu___4 = FStar_Syntax_Print.term_to_string imp_tm in
                   let uu___5 = FStar_Syntax_Print.term_to_string uvar_ty in
-                  let uu___6 = FStar_Compiler_Range.string_of_range imp_range in
+                  let uu___6 =
+                    FStar_Compiler_Range_Ops.string_of_range imp_range in
                   FStar_Compiler_Util.print5
                     "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
                     uu___3 uu___4 uu___5 imp_reason uu___6
@@ -14405,10 +14427,10 @@ let (check_implicit_solution_and_discharge_guard :
                                let uu___6 =
                                  FStar_Syntax_Print.term_to_string imp_tm in
                                let uu___7 =
-                                 FStar_Compiler_Range.string_of_range
+                                 FStar_Compiler_Range_Ops.string_of_range
                                    imp_range in
                                let uu___8 =
-                                 FStar_Compiler_Range.string_of_range
+                                 FStar_Compiler_Range_Ops.string_of_range
                                    imp_tm.FStar_Syntax_Syntax.pos in
                                FStar_Compiler_Util.format4
                                  "%s (Introduced at %s for %s resolved at %s)"

@@ -305,12 +305,12 @@ let rec elab_exp (e:src_exp)
       pack_ln (Tv_Const R.C_False)
 
     | EBVar n -> 
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
       // tun because type does not matter at a use site
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_Var bv)
 
     | ELam t e ->
@@ -346,9 +346,9 @@ and elab_ty (t:src_ty)
           
     | TRefineBool e ->
       let e = elab_exp e in
-      let bv = R.pack_bv (RT.make_bv 0 RT.bool_ty) in
+      let bv = R.pack_bv (RT.make_bv 0) in
       let refinement = r_b2t (R.pack_ln (Tv_App e (R.pack_ln (Tv_BVar bv), Q_Explicit))) in
-      R.pack_ln (Tv_Refine bv refinement)
+      R.pack_ln (Tv_Refine bv RT.bool_ty refinement)
 
 let elab_eqn (e1 e2:src_exp)
   : R.term
@@ -502,7 +502,7 @@ let check_sub_typing (f:RT.fstar_top_env)
          | None -> T.fail "Not subtypes"
          | Some token ->
            S_ELab sg t0 t1
-             (RT.ST_Token f' t0' t1' (FStar.Squash.return_squash token))
+             (RT.Rel_subtyping_token f' t0' t1' (FStar.Squash.return_squash token))
 
 let weaken (f:RT.fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:s_exp) (t0 t1:s_ty)
   : T.Tac (t:s_ty &
@@ -710,10 +710,10 @@ let src_types_are_closed3 (ty:s_ty) (x:R.var)
   = src_types_are_closed_core ty (RT.open_with_var x) 0;
     RT.open_term_spec (elab_ty ty) x
 
-let b2t_typing (g:RT.fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
-  : RT.typing g (r_b2t t) (RT.tm_type RT.u_zero)
-  = let b2t_typing : RT.typing g _ RT.b2t_ty = RT.T_FVar g RT.b2t_fv in
-    let app_ty : _ = RT.T_App _ _ _ _ _ b2t_typing dt in
+let b2t_typing (g:RT.fstar_env) (t:R.term) (dt:RT.tot_typing g t RT.bool_ty)
+  : RT.tot_typing g (r_b2t t) (RT.tm_type RT.u_zero)
+  = let b2t_typing : RT.tot_typing g _ RT.b2t_ty = RT.T_FVar g RT.b2t_fv in
+    let app_ty : _ = RT.T_App _ _ _ _ (RT.tm_type RT.u_zero) _ b2t_typing dt in
     RT.open_with_spec (RT.tm_type RT.u_zero) t;
     app_ty
 
@@ -1037,9 +1037,8 @@ let core_subtyping_renaming
                         (d:RT.sub_typing (extend_env_l f (sg'@(x,b)::sg)) (elab_ty t0) (elab_ty t1))
   : GTot (RT.sub_typing (extend_env_l f (rename_env sg' x y@(y,b)::sg)) (elab_ty t0) (elab_ty t1))
   = match d with
-    | RT.ST_Equiv _ _ _ _ -> admit ()
-    | RT.ST_UnivEq _ u v ueq ->  RT.ST_UnivEq _ u v ueq
-    | RT.ST_Token _ _ _ tok ->
+    // | RT.ST_UnivEq _ u v ueq ->  RT.ST_UnivEq _ u v ueq
+    | RT.Rel_subtyping_token _ _ _ tok ->
       calc (==) {
         extend_env_l f (sg'@(x,b)::sg);
       (==) { extend_env_equiv f (sg'@(x,b)::sg) }
@@ -1097,7 +1096,8 @@ let core_subtyping_renaming
                           (elab_ty t1))
               = tok
       in
-      RT.ST_Token _ _ _ tok
+      RT.Rel_subtyping_token _ _ _ tok
+    | _ -> admit () 
 
 
 let sub_typing_renaming (#f:RT.fstar_top_env)
@@ -1259,15 +1259,15 @@ let sub_typing_weakening #f (sg sg':src_env)
   = match d with
     | S_Refl _ _  -> S_Refl _ _
     | S_ELab _ _ _ d -> 
-      match d with
-      | RT.ST_Equiv _ _ _ _ -> admit ()
+      (match d with
+      // | RT.ST_Equiv _ _ _ _ -> admit ()
         // let d : RT.sub_typing (extend_env_l f ((sg'@((x, b)::sg)))) (elab_ty t1) (elab_ty t2) = RT.ST_Refl _ _ in
         // S_ELab _ _ _ d
 
-      | RT.ST_UnivEq _ u v ueq -> 
-        S_ELab _ _ _ (RT.ST_UnivEq _ u v ueq)
+      // | RT.ST_UnivEq _ u v ueq -> 
+      //   S_ELab _ _ _ (RT.ST_UnivEq _ u v ueq)
         
-      | RT.ST_Token _ _ _ tok ->
+      | RT.Rel_subtyping_token _ _ _ tok ->
         let tok
           : squash (FTB.subtyping_token 
                       (extend_env_l f (sg'@sg))
@@ -1306,10 +1306,12 @@ let sub_typing_weakening #f (sg sg':src_env)
           = tok
         in
         let d : RT.sub_typing (extend_env_l f ((sg'@((x, b)::sg)))) (elab_ty t1) (elab_ty t2) 
-          = RT.ST_Token _ _ _ tok
+          = RT.Rel_subtyping_token _ _ _ tok
         in
         S_ELab _ _ _ d
-        
+
+      | _ -> admit ())
+
 let rec src_typing_weakening #f (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                              (b:binding)
@@ -1423,7 +1425,7 @@ let subtyping_soundness #f (#sg:src_env) (#t0 #t1:s_ty) (ds:sub_typing f sg t0 t
     | S_Refl _ _ -> admit ()  //RT.ST_Refl _ _
     | S_ELab _ _ _ d -> d
 
-let bv0 = R.pack_bv (RT.make_bv 0 RT.bool_ty)
+let bv0 = R.pack_bv (RT.make_bv 0)
 
 let bv_as_arg (x:R.bv)
   = let open R in
@@ -1442,7 +1444,7 @@ let mk_refine (e:R.term)
   : R.term 
   = let open R in
     let ref = apply e (bv_as_arg bv0) in
-    pack_ln (Tv_Refine bv0 (r_b2t ref))
+    pack_ln (Tv_Refine bv0 RT.bool_ty (r_b2t ref))
 
 #push-options "--fuel 4"
 let apply_refinement_closed (e:src_exp { ln e && closed e })
@@ -1511,9 +1513,9 @@ let rec soundness (#f:RT.fstar_top_env)
                   (#se:src_exp { ln se })
                   (#st:s_ty)
                   (dd:src_typing f sg se st)
-  : GTot (RT.typing (extend_env_l f sg)
-                    (elab_exp se)
-                    (elab_ty st))
+  : GTot (RT.tot_typing (extend_env_l f sg)
+                        (elab_exp se)
+                        (elab_ty st))
          (decreases (height dd))
   = match dd with
     | T_Bool _ true ->
@@ -1523,36 +1525,38 @@ let rec soundness (#f:RT.fstar_top_env)
       RT.T_Const _ _ _ RT.CT_False
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
+      RT.T_Var _ (R.pack_bv (RT.make_bv x))
 
     | T_Lam _ t e t' x dt de ->
-      let de : RT.typing (extend_env_l f ((x,Inl t)::sg))
-                         (elab_exp (open_exp e x))
-                         (elab_ty t')
+      let de : RT.tot_typing (extend_env_l f ((x,Inl t)::sg))
+                             (elab_exp (open_exp e x))
+                             (elab_ty t')
             = soundness de
       in    
-      let de : RT.typing (RT.extend_env (extend_env_l f sg) x (elab_ty t))
-                         (elab_exp (open_exp e x))
-                         (elab_ty t')
+      let de : RT.tot_typing (RT.extend_env (extend_env_l f sg) x (elab_ty t))
+                             (elab_exp (open_exp e x))
+                             (elab_ty t')
              = de
       in
       fresh_is_fresh sg;
-      let dt : RT.typing (extend_env_l f sg) (elab_ty t) (RT.tm_type RT.u_zero) =
+      let dt : RT.tot_typing (extend_env_l f sg) (elab_ty t) (RT.tm_type RT.u_zero) =
         src_ty_ok_soundness sg t dt
       in
       freevars_elab_exp e;
       let dd
-        : RT.typing (extend_env_l f sg)
-                    _ //(R.pack_ln (R.Tv_Abs (RT.mk_binder RT.pp_name_default 0 (elab_ty t) R.Q_Explicit) (elab_exp e)))
-                    (elab_ty (TArrow t t'))
-        = RT.T_Abs (extend_env_l f sg)
+        : RT.tot_typing (extend_env_l f sg)
+                        _ //(R.pack_ln (R.Tv_Abs (RT.mk_binder RT.pp_name_default 0 (elab_ty t) R.Q_Explicit) (elab_exp e)))
+                        (elab_ty (TArrow t t'))
+        = RT.close_term_spec (elab_ty t') x;
+          RT.T_Abs (extend_env_l f sg)
                    x
                    (elab_ty t) 
                    (elab_exp e)
-                   (elab_ty t')
+                   (T.E_Total, elab_ty t')
                    _
                    RT.pp_name_default
                    R.Q_Explicit
+                   _
                    dt
                    de
       in
@@ -1560,15 +1564,15 @@ let rec soundness (#f:RT.fstar_top_env)
 
     | T_App _ e1 e2 t t' t0 d1 d2 st ->
       let dt1 
-        : RT.typing (extend_env_l f sg)
-                    (elab_exp e1)
-                    (elab_ty (TArrow t t'))
+        : RT.tot_typing (extend_env_l f sg)
+                        (elab_exp e1)
+                        (elab_ty (TArrow t t'))
         = soundness d1
       in
       let dt2
-        : RT.typing (extend_env_l f sg)
-                    (elab_exp e2)
-                    (elab_ty t0)
+        : RT.tot_typing (extend_env_l f sg)
+                        (elab_exp e2)
+                        (elab_ty t0)
         = soundness d2
       in
       let st
@@ -1576,12 +1580,12 @@ let rec soundness (#f:RT.fstar_top_env)
         = subtyping_soundness st
       in
       let dt2
-        : RT.typing (extend_env_l f sg)
-                    (elab_exp e2)
-                    (elab_ty t)
-        = RT.T_Sub _ _ _ _ dt2 st
+        : RT.tot_typing (extend_env_l f sg)
+                        (elab_exp e2)
+                        (elab_ty t)
+        = RT.T_Sub _ _ _ _ dt2 (RT.Relc_typ _ _ _ _ _ st)
       in
-      RT.T_App _ _ _ _ _ dt1 dt2
+      RT.T_App _ _ _ _ (elab_ty t') _ dt1 dt2
 
     | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 dt ->
       let db = soundness db in
@@ -1589,19 +1593,19 @@ let rec soundness (#f:RT.fstar_top_env)
       let d2 = soundness d2 in
       let s1 = subtyping_soundness s1 in
       let s2 = subtyping_soundness s2 in
-      let d1 = RT.T_Sub _ _ _ _ d1 s1 in
-      let d2 = RT.T_Sub _ _ _ _ d2 s2 in      
+      let d1 = RT.T_Sub _ _ _ _ d1 (RT.Relc_typ _ _ _ _ _ s1) in
+      let d2 = RT.T_Sub _ _ _ _ d2 (RT.Relc_typ _ _ _ _ _ s2) in      
       let dt = src_ty_ok_soundness _ _ dt in
       freevars_elab_exp e1;
       freevars_elab_exp e2;
-      RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ _ hyp db d1 d2 dt
+      RT.T_If (extend_env_l f sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ _ hyp _ _ db d1 d2 dt
 
 
 and src_ty_ok_soundness (#f:RT.fstar_top_env)
                         (sg:src_env { src_env_ok sg })
                         (t:s_ty)
                         (dt:src_ty_ok f sg t)
- : GTot (RT.typing (extend_env_l f sg) (elab_ty t) (RT.tm_type RT.u_zero))
+ : GTot (RT.tot_typing (extend_env_l f sg) (elab_ty t) (RT.tm_type RT.u_zero))
         (decreases (t_height dt))
  = match dt with
    | OK_TBool _ ->
@@ -1613,7 +1617,7 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
      fresh_is_fresh sg;
      freevars_elab_ty t2;     
      let t2_ok = src_ty_ok_soundness ((x, Inl t1)::sg) _ (src_ty_ok_weakening _ [] _ _ _ ok_t2) in
-     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ RT.pp_name_default R.Q_Explicit t1_ok t2_ok in
+     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ RT.pp_name_default R.Q_Explicit T.E_Total _ _ t1_ok t2_ok in
      RT.simplify_umax arr_max
      
    | OK_TRefine _ e de ->
@@ -1622,42 +1626,43 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
      freevars_elab_exp e;     
      let sg' = ((fresh sg, Inl TBool)::sg) in
      let de = src_typing_weakening_l [] sg' _ _ de in
-     let de : RT.typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
-                        (elab_exp e)
-                        (elab_ty (TArrow TBool TBool)) = soundness de in
+     let de : RT.tot_typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
+                            (elab_exp e)
+                            (elab_ty (TArrow TBool TBool)) = soundness de in
      let arg_x = RT.var_as_term x in
      let arg_x_typing
-       : RT.typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
-                   arg_x
-                   RT.bool_ty
+       : RT.tot_typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
+                       arg_x
+                       RT.bool_ty
        = RT.T_Var _ (RT.var_as_bv x)
      in
      let refinement = apply (elab_exp e) (arg_x, R.Q_Explicit) in
-     let dr : RT.typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
-                        refinement
-                        RT.bool_ty
+     let dr : RT.tot_typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
+                            refinement
+                            RT.bool_ty
             = RT.T_App (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
                        (elab_exp e)
                        (arg_x)
                        (RT.as_binder 0 RT.bool_ty)
                        RT.bool_ty
+                       _
                        de
                        arg_x_typing
      in
-     let dr : RT.typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
-                        (r_b2t refinement)
-                        (RT.tm_type RT.u_zero)
+     let dr : RT.tot_typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
+                            (r_b2t refinement)
+                            (RT.tm_type RT.u_zero)
             = b2t_typing _ _ dr
      in
      apply_refinement_closed e x;
      let refinement' = r_b2t (apply (elab_exp e) (bv_as_arg bv0)) in
      assert (RT.open_term refinement' x == r_b2t refinement);
      let bool_typing
-       : RT.typing (extend_env_l f sg) RT.bool_ty (RT.tm_type RT.u_zero)
+       : RT.tot_typing (extend_env_l f sg) RT.bool_ty (RT.tm_type RT.u_zero)
        = RT.T_FVar _ RT.bool_fv
      in
      freevars_refinement (elab_exp e) bv0;
-     RT.T_Refine (extend_env_l f sg) x RT.bool_ty refinement' _ _ bool_typing dr
+     RT.T_Refine (extend_env_l f sg) x RT.bool_ty refinement' _ _ _ _ bool_typing dr
 
 let soundness_lemma (f:RT.fstar_top_env)
                     (sg:src_env { src_env_ok sg }) 
@@ -1665,9 +1670,9 @@ let soundness_lemma (f:RT.fstar_top_env)
                     (st:s_ty)
   : Lemma
     (requires src_typing f sg se st)
-    (ensures  RT.typing (extend_env_l f sg)
-                        (elab_exp se)
-                        (elab_ty st))
+    (ensures  RT.tot_typing (extend_env_l f sg)
+                            (elab_exp se)
+                            (elab_ty st))
   = FStar.Squash.bind_squash 
       #(src_typing f sg se st)
       ()

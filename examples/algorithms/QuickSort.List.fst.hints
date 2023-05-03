@@ -32,7 +32,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f8d1162c78150bec1e61e8085a138106"
+      "abecc4e4356fa4e87ab0e2835f4f1f19"
     ],
     [
       "QuickSort.List.mem_count",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons", "typing_QuickSort.List.count"
       ],
       0,
-      "b8523ef82ebb447d057f3100321c7285"
+      "9d370b00b17d2fabf0f9d5d9a9719741"
     ],
     [
       "QuickSort.List.partition",
@@ -78,7 +78,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "146394efee4190b6e3d74d7b381c29c3"
+      "3b3cafe22c31541f13eff24661ac3997"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -129,7 +129,7 @@
         "typing_QuickSort.List.partition"
       ],
       0,
-      "87d33588760eda3750df45c7273297a4"
+      "216e6625bdf9018b40f6af54a1822578"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -177,7 +177,7 @@
         "typing_QuickSort.List.sorted", "unit_typing"
       ],
       0,
-      "e12e8f314e12b9bab5bc330ce65f43b0"
+      "0f937aee6c3df0b01c92d6e121f9d1ea"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -191,7 +191,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "461963aa79101662abd13d74839ab2d9"
+      "4090b27cbdc9f9ef21d421030cf1157f"
     ],
     [
       "QuickSort.List.append_count",
@@ -228,7 +228,7 @@
         "typing_FStar.List.Tot.Base.op_At", "typing_QuickSort.List.count"
       ],
       0,
-      "61108eebba31663090f690f7666a8a7c"
+      "337e21861ae2301d07b3b9ac108cc2fd"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -258,7 +258,7 @@
         "typing_QuickSort.List.count"
       ],
       0,
-      "26320a1402d729f39fbdb8aac43bb443"
+      "21266484cf5b953a830700d005c65208"
     ],
     [
       "QuickSort.List.quicksort",
@@ -313,7 +313,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b45a0b71c2cb23f81bfaba5bf96ba5c6"
+      "05ad860d5d12f5a74352de2640174edd"
     ]
   ]
 ]

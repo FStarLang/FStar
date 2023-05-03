@@ -29,7 +29,7 @@ let test () =
       guard (Cons? (List.Tot.rev bs));
       let b = List.Tot.hd (List.Tot.rev bs) in
       match term_as_formula' (type_of_binder b) with
-      | Exists _ _ -> ()
+      | Exists _ _ _ -> ()
       | _ -> fail ("unexpected type for last binder: " ^ term_to_string (type_of_binder b))
     in
     assume (exists x. p x);

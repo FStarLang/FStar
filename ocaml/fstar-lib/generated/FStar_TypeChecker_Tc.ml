@@ -126,7 +126,7 @@ let (set_hint_correlator :
             | [] ->
                 let uu___1 = FStar_TypeChecker_Env.current_module env in
                 let uu___2 =
-                  let uu___3 = FStar_Ident.next_id () in
+                  let uu___3 = FStar_GenSym.next_id () in
                   FStar_Compiler_Effect.op_Bar_Greater uu___3
                     FStar_Compiler_Util.string_of_int in
                 FStar_Ident.lid_add_suffix uu___1 uu___2
@@ -238,7 +238,7 @@ let (tc_type_common :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.tscheme ->
       FStar_Syntax_Syntax.typ ->
-        FStar_Compiler_Range.range -> FStar_Syntax_Syntax.tscheme)
+        FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.tscheme)
   =
   fun env ->
     fun uu___ ->
@@ -274,7 +274,7 @@ let (tc_type_common :
 let (tc_declare_typ :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.tscheme ->
-      FStar_Compiler_Range.range -> FStar_Syntax_Syntax.tscheme)
+      FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.tscheme)
   =
   fun env ->
     fun ts ->
@@ -287,7 +287,7 @@ let (tc_declare_typ :
 let (tc_assume :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.tscheme ->
-      FStar_Compiler_Range.range -> FStar_Syntax_Syntax.tscheme)
+      FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.tscheme)
   =
   fun env ->
     fun ts ->
@@ -748,7 +748,7 @@ let run_phase1 : 'a . (unit -> 'a) -> 'a =
     (let r = f () in FStar_TypeChecker_Core.clear_memo_table (); r)
 let (tc_sig_let :
   FStar_TypeChecker_Env.env ->
-    FStar_Compiler_Range.range ->
+    FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.sigelt ->
         (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list) ->
           FStar_Ident.lident Prims.list ->
@@ -950,14 +950,12 @@ let (tc_sig_let :
                                        r
                                    else ();
                                    (let uu___5 =
-                                      let uu___6 =
-                                        let uu___7 =
-                                          FStar_Parser_Const.effect_ALL_lid
-                                            () in
+                                      FStar_Syntax_Syntax.mk_lb
                                         ((FStar_Pervasives.Inr lbname), uvs,
-                                          uu___7, tval, def, [],
+                                          FStar_Parser_Const.effect_Tot_lid,
+                                          tval, def,
+                                          (lb.FStar_Syntax_Syntax.lbattrs),
                                           (lb.FStar_Syntax_Syntax.lbpos)) in
-                                      FStar_Syntax_Syntax.mk_lb uu___6 in
                                     (false, uu___5, quals_opt1))) in
                             (match uu___2 with
                              | (gen1, lb1, quals_opt1) ->
@@ -4492,7 +4490,7 @@ let (tc_decls :
                    match FStar_Syntax_Util.lids_of_sigelt se with
                    | hd::uu___5 -> FStar_Ident.string_of_lid hd
                    | uu___5 ->
-                       FStar_Compiler_Range.string_of_range
+                       FStar_Compiler_Range_Ops.string_of_range
                          (FStar_Syntax_Util.range_of_sigelt se) in
                  FStar_Profiling.report_and_clear tag
                else ());

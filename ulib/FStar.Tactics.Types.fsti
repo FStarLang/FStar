@@ -63,3 +63,10 @@ type unfold_side =
   | Right
   | Both
   | Neither
+
+//
+// Used in the reflection typing judgment
+//
+type tot_or_ghost =
+  | E_Total
+  | E_Ghost

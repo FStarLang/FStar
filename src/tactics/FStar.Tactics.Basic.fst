@@ -1703,9 +1703,9 @@ let launch_process (prog : string) (args : list string) (input : string) : tac s
     else
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
 
-let fresh_bv_named (nm : string) (t : typ) : tac bv =
+let fresh_bv_named (nm : string) : tac bv =
     // The `bind idtac` thunks the tactic. Not really needed, just being paranoid
-    idtac ;! ret (gen_bv nm None t)
+    idtac ;! ret (gen_bv nm None S.tun)
 
 let change (ty : typ) : tac unit = wrap_err "change" <| (
     if_verbose (fun () -> BU.print1 "change: ty = %s\n" (Print.term_to_string ty)) ;!
@@ -1977,7 +1977,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         let b = (match b' with
         | [b'] -> b'
         | _ -> failwith "impossible") in
-        ret <| Tv_Refine (b.binder_bv, t)
+        ret <| Tv_Refine (b.binder_bv, b.binder_bv.sort, t)
 
     | Tm_constant c ->
         ret <| Tv_Const (inspect_const c)
@@ -1997,7 +1997,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            ret <| Tv_Let (false, lb.lbattrs, b.binder_bv, lb.lbdef, t2)
+            ret <| Tv_Let (false, lb.lbattrs, b.binder_bv, bv.sort, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
@@ -2010,7 +2010,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
             | [lb] ->
                 (match lb.lbname with
                  | Inr _ -> ret Tv_Unknown
-                 | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
+                 | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
@@ -2064,7 +2064,8 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
     | Tv_Type u ->
         ret <| S.mk (Tm_type u) Range.dummyRange
 
-    | Tv_Refine (bv, t) ->
+    | Tv_Refine (bv, sort, t) ->
+        let bv = { bv with sort = sort } in
         ret <| U.refine bv t
 
     | Tv_Const c ->
@@ -2073,11 +2074,13 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
     | Tv_Uvar (_u, ctx_u_s) ->
         ret <| S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
-    | Tv_Let (false, attrs, bv, t1, t2) ->
+    | Tv_Let (false, attrs, bv, ty, t1, t2) ->
+        let bv = { bv with sort = ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) Range.dummyRange
 
-    | Tv_Let (true, attrs, bv, t1, t2) ->
+    | Tv_Let (true, attrs, bv, ty, t1, t2) ->
+        let bv = { bv with sort = ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange
@@ -2190,6 +2193,9 @@ let term_to_string (t:term) : tac string
 let comp_to_string (c:comp) : tac string
   = let s = Print.comp_to_string c in
     ret s
+
+let range_to_string (r:FStar.Compiler.Range.range) : tac string
+  = ret (Range.string_of_range r)
 
 let term_eq_old (t1:term) (t2:term) : tac bool
   = idtac ;!
@@ -2316,13 +2322,18 @@ let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
 let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =
   refl_check_relation g t0 t1 Equality
 
-let refl_core_check_term (g:env) (e:term) : tac (option typ) =
+let to_must_tot (eff:tot_or_ghost) : bool =
+  match eff with
+  | E_Total -> true
+  | E_Ghost -> false
+
+let refl_core_check_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
          dbg_refl g (fun _ ->
-           BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
-         let must_tot = true in
+           BU.format1 "refl_core_check_term: %s\n" (Print.term_to_string e));
+         let must_tot = to_must_tot eff in
          let gh = fun g guard ->
            Rel.force_trivial_guard g
              {Env.trivial_guard with guard_f = NonTrivial guard};
@@ -2330,7 +2341,7 @@ let refl_core_check_term (g:env) (e:term) : tac (option typ) =
          match Core.compute_term_type_handle_guards g e must_tot gh with
          | Inl t ->
            dbg_refl g (fun _ ->
-             BU.format2 "refl_tc_term for %s computed type %s\n"
+             BU.format2 "refl_core_check_term for %s computed type %s\n"
                (Print.term_to_string e)
                (Print.term_to_string t));
            t
@@ -2339,14 +2350,14 @@ let refl_core_check_term (g:env) (e:term) : tac (option typ) =
            Errors.raise_error (Errors.Fatal_IllTyped, "core_check_term callback failed: " ^(Core.print_error err)) Range.dummyRange)
   else ret None
 
-let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
+let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ)) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
     dbg_refl g (fun _ ->
       BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
-    let must_tot = true in
+    let must_tot = to_must_tot eff in
     //
     // we don't instantiate implicits at the end of e
     // it is unlikely that we will be able to resolve them,

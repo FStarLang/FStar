@@ -41,6 +41,9 @@ module CTable = FStar.Interactive.CompletionTable
 module PI = FStar.Parser.ParseIt
 module U = FStar.Compiler.Util
 
+(* Importing this module bring FStar.Json into scope. *)
+include FStar.Json
+
 (***********************)
 (* Global state setup *)
 (***********************)

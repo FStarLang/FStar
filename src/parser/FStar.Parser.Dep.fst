@@ -156,7 +156,7 @@ type parsing_data_elt =
   | P_begin_module of lident  //begin_module
   | P_open of bool * lident  //record_open
   | P_implicit_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
-  | P_dep of bool * lident  //add_dep_on_module
+  | P_dep of bool * lident  //add_dep_on_module, bool=true iff it's a friend dependency
   | P_alias of ident * lident  //record_module_alias
   | P_lid of lident  //record_lid
   | P_inline_for_extraction
@@ -484,7 +484,7 @@ exception Exit
 
 (* In public interface *)
 
-let core_modules =
+let core_modules () =
   [Options.prims_basename () ;
    Options.pervasives_basename () ;
    Options.pervasives_native_basename ()]
@@ -503,7 +503,7 @@ let hard_coded_dependencies full_filename =
   let implicit_ns_deps = List.map (fun l -> l, Open_namespace) implicit_ns_deps in
 
   (* The core libraries do not have any implicit dependencies *)
-  if List.mem (module_name_of_file filename) core_modules then []
+  if List.mem (module_name_of_file filename) (core_modules ()) then []
   else match (namespace_of_module (lowercase_module_name full_filename)) with
        | None -> implicit_ns_deps @ implicit_module_deps
          (*
@@ -881,6 +881,9 @@ let collect_one
             add_to_parsing_data (P_dep (false, (Util.format2 "fstar.%sint%s" u w |> Ident.lid_of_str)))
         | Const_char _ ->
             add_to_parsing_data (P_dep (false, ("fstar.char" |> Ident.lid_of_str)))
+        | Const_range_of
+        | Const_set_range_of ->
+            add_to_parsing_data (P_dep (false, ("fstar.range" |> Ident.lid_of_str)))
         | _ ->
             ()
 

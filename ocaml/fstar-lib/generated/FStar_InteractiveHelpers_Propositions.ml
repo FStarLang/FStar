@@ -41,10 +41,10 @@ let (simp_filter_proposition :
     fun steps ->
       fun p ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "FStar.InteractiveHelpers.Propositions.fst"
+          (FStar_Range.mk_range "FStar.InteractiveHelpers.Propositions.fst"
              (Prims.of_int (52)) (Prims.of_int (14)) (Prims.of_int (52))
              (Prims.of_int (37)))
-          (Prims.mk_range "FStar.InteractiveHelpers.Propositions.fst"
+          (FStar_Range.mk_range "FStar.InteractiveHelpers.Propositions.fst"
              (Prims.of_int (54)) (Prims.of_int (2)) (Prims.of_int (55))
              (Prims.of_int (14)))
           (Obj.magic (FStar_Tactics_Builtins.norm_term_env e steps p))
@@ -52,11 +52,11 @@ let (simp_filter_proposition :
              (fun prop1 ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
+                     (FStar_Range.mk_range
                         "FStar.InteractiveHelpers.Propositions.fst"
                         (Prims.of_int (54)) (Prims.of_int (5))
                         (Prims.of_int (54)) (Prims.of_int (34)))
-                     (Prims.mk_range
+                     (FStar_Range.mk_range
                         "FStar.InteractiveHelpers.Propositions.fst"
                         (Prims.of_int (54)) (Prims.of_int (2))
                         (Prims.of_int (55)) (Prims.of_int (14)))
@@ -80,10 +80,10 @@ let (simp_filter_propositions :
     fun steps ->
       fun pl ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "FStar.InteractiveHelpers.Propositions.fst"
+          (FStar_Range.mk_range "FStar.InteractiveHelpers.Propositions.fst"
              (Prims.of_int (59)) (Prims.of_int (15)) (Prims.of_int (59))
              (Prims.of_int (57)))
-          (Prims.mk_range "FStar.InteractiveHelpers.Propositions.fst"
+          (FStar_Range.mk_range "FStar.InteractiveHelpers.Propositions.fst"
              (Prims.of_int (59)) (Prims.of_int (2)) (Prims.of_int (59))
              (Prims.of_int (57)))
           (Obj.magic
@@ -100,10 +100,10 @@ let (simp_filter_assertions :
     fun steps ->
       fun a ->
         FStar_Tactics_Effect.tac_bind
-          (Prims.mk_range "FStar.InteractiveHelpers.Propositions.fst"
+          (FStar_Range.mk_range "FStar.InteractiveHelpers.Propositions.fst"
              (Prims.of_int (63)) (Prims.of_int (13)) (Prims.of_int (63))
              (Prims.of_int (52)))
-          (Prims.mk_range "FStar.InteractiveHelpers.Propositions.fst"
+          (FStar_Range.mk_range "FStar.InteractiveHelpers.Propositions.fst"
              (Prims.of_int (64)) (Prims.of_int (2)) (Prims.of_int (65))
              (Prims.of_int (26)))
           (Obj.magic (simp_filter_propositions e steps a.pres))
@@ -111,11 +111,11 @@ let (simp_filter_assertions :
              (fun pres ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (Prims.mk_range
+                     (FStar_Range.mk_range
                         "FStar.InteractiveHelpers.Propositions.fst"
                         (Prims.of_int (64)) (Prims.of_int (14))
                         (Prims.of_int (64)) (Prims.of_int (54)))
-                     (Prims.mk_range
+                     (FStar_Range.mk_range
                         "FStar.InteractiveHelpers.Propositions.fst"
                         (Prims.of_int (65)) (Prims.of_int (2))
                         (Prims.of_int (65)) (Prims.of_int (26)))

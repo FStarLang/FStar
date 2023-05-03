@@ -104,7 +104,7 @@ let (pure_wp_uvar :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
       Prims.string ->
-        FStar_Compiler_Range.range ->
+        FStar_Compiler_Range_Type.range ->
           (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t))
   =
   fun env ->
@@ -206,7 +206,7 @@ let (eq_binders :
             (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
         else FStar_Pervasives_Native.None
 let (log_ad_hoc_combinator_warning :
-  Prims.string -> FStar_Compiler_Range.range -> unit) =
+  Prims.string -> FStar_Compiler_Range_Type.range -> unit) =
   fun comb_name ->
     fun r ->
       let uu___ =
@@ -703,7 +703,7 @@ let (bind_combinator_kind :
                                                                     FStar_Syntax_Syntax.mk_Tm_app
                                                                     uu___18
                                                                     uu___19
-                                                                    FStar_Compiler_Range.dummyRange in
+                                                                    FStar_Compiler_Range_Type.dummyRange in
                                                                     (bv,
                                                                     uu___17) in
                                                                     FStar_Syntax_Syntax.NT
@@ -975,7 +975,7 @@ let (bind_combinator_kind :
                                                                     uu___18 in
                                                                     FStar_Syntax_Syntax.mk_Tm_app
                                                                     t uu___16
-                                                                    FStar_Compiler_Range.dummyRange)
+                                                                    FStar_Compiler_Range_Type.dummyRange)
                                                                     | 
                                                                     FStar_Pervasives_Native.None
                                                                     ->
@@ -1142,7 +1142,7 @@ let (bind_combinator_kind :
                                                                     FStar_Syntax_Syntax.mk_Tm_app
                                                                     uu___20
                                                                     uu___21
-                                                                    FStar_Compiler_Range.dummyRange
+                                                                    FStar_Compiler_Range_Type.dummyRange
                                                                     else
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     b
@@ -1197,7 +1197,7 @@ let (bind_combinator_kind :
                                                                     FStar_Syntax_Syntax.mk_Tm_app
                                                                     repr_hd
                                                                     uu___17
-                                                                    FStar_Compiler_Range.dummyRange in
+                                                                    FStar_Compiler_Range_Type.dummyRange in
                                                                     let uu___17
                                                                     =
                                                                     let uu___18
@@ -1339,7 +1339,7 @@ let (validate_indexed_effect_bind_shape :
                       FStar_Pervasives_Native.option ->
                       FStar_Syntax_Syntax.univ_names ->
                         FStar_Syntax_Syntax.typ ->
-                          FStar_Compiler_Range.range ->
+                          FStar_Compiler_Range_Type.range ->
                             Prims.int ->
                               Prims.bool ->
                                 (FStar_Syntax_Syntax.typ *
@@ -2025,7 +2025,7 @@ let (subcomp_combinator_kind :
                                                                     uu___12 in
                                                                   FStar_Syntax_Syntax.mk_Tm_app
                                                                     t uu___10
-                                                                    FStar_Compiler_Range.dummyRange)
+                                                                    FStar_Compiler_Range_Type.dummyRange)
                                                          | FStar_Pervasives_Native.None
                                                              ->
                                                              let uu___8 =
@@ -2157,7 +2157,7 @@ let (subcomp_combinator_kind :
                                                                     uu___12 in
                                                                     FStar_Syntax_Syntax.mk_Tm_app
                                                                     t uu___10
-                                                                    FStar_Compiler_Range.dummyRange)
+                                                                    FStar_Compiler_Range_Type.dummyRange)
                                                               | FStar_Pervasives_Native.None
                                                                   ->
                                                                   let uu___8
@@ -2441,7 +2441,7 @@ let (validate_indexed_effect_subcomp_shape :
                 FStar_Syntax_Syntax.univ_name ->
                   FStar_Syntax_Syntax.typ ->
                     Prims.int ->
-                      FStar_Compiler_Range.range ->
+                      FStar_Compiler_Range_Type.range ->
                         (FStar_Syntax_Syntax.typ *
                           FStar_Syntax_Syntax.indexed_effect_combinator_kind))
   =
@@ -2908,7 +2908,7 @@ let (ite_combinator_kind :
                                                          uu___13 :: uu___14 in
                                                        FStar_Syntax_Syntax.mk_Tm_app
                                                          t uu___12
-                                                         FStar_Compiler_Range.dummyRange in
+                                                         FStar_Compiler_Range_Type.dummyRange in
                                                  let uu___10 =
                                                    let uu___11 =
                                                      FStar_Syntax_Util.eq_tm
@@ -2975,7 +2975,7 @@ let (ite_combinator_kind :
                                                                 uu___14 in
                                                             FStar_Syntax_Syntax.mk_Tm_app
                                                               t uu___12
-                                                              FStar_Compiler_Range.dummyRange in
+                                                              FStar_Compiler_Range_Type.dummyRange in
                                                       let uu___10 =
                                                         let uu___11 =
                                                           FStar_Syntax_Util.eq_tm
@@ -3190,7 +3190,7 @@ let (validate_indexed_effect_ite_shape :
             FStar_Syntax_Syntax.typ ->
               FStar_Syntax_Syntax.term ->
                 Prims.int ->
-                  FStar_Compiler_Range.range ->
+                  FStar_Compiler_Range_Type.range ->
                     (FStar_Syntax_Syntax.term *
                       FStar_Syntax_Syntax.indexed_effect_combinator_kind))
   =
@@ -3544,7 +3544,7 @@ let (lift_combinator_kind :
                                                    uu___10 :: uu___11 in
                                                  FStar_Syntax_Syntax.mk_Tm_app
                                                    t uu___9
-                                                   FStar_Compiler_Range.dummyRange)
+                                                   FStar_Compiler_Range_Type.dummyRange)
                                         | FStar_Pervasives_Native.None ->
                                             let uu___7 =
                                               let uu___8 =
@@ -3617,7 +3617,7 @@ let (validate_indexed_effect_lift_shape :
       FStar_Ident.lident ->
         FStar_Syntax_Syntax.univ_name ->
           FStar_Syntax_Syntax.typ ->
-            FStar_Compiler_Range.range ->
+            FStar_Compiler_Range_Type.range ->
               (FStar_Syntax_Syntax.typ *
                 FStar_Syntax_Syntax.indexed_effect_combinator_kind))
   =
@@ -7022,7 +7022,7 @@ let (tc_non_layered_eff_decl :
                                                          uu___21 in
                                                      FStar_Syntax_Syntax.mk
                                                        uu___20
-                                                       FStar_Compiler_Range.dummyRange in
+                                                       FStar_Compiler_Range_Type.dummyRange in
                                                let mk_repr a wp =
                                                  let uu___18 =
                                                    FStar_Syntax_Syntax.bv_to_name
@@ -7093,7 +7093,7 @@ let (tc_non_layered_eff_decl :
                                                            uu___22 :: uu___23 in
                                                          FStar_Syntax_Syntax.mk_Tm_app
                                                            uu___20 uu___21
-                                                           FStar_Compiler_Range.dummyRange in
+                                                           FStar_Compiler_Range_Type.dummyRange in
                                                        mk_repr a wp in
                                                      let k =
                                                        let uu___20 =
@@ -7202,7 +7202,7 @@ let (tc_non_layered_eff_decl :
                                                              FStar_Syntax_Syntax.mk_Tm_app
                                                                uu___21
                                                                uu___22
-                                                               FStar_Compiler_Range.dummyRange in
+                                                               FStar_Compiler_Range_Type.dummyRange in
                                                            let res =
                                                              let wp =
                                                                let uu___21 =
@@ -7253,7 +7253,7 @@ let (tc_non_layered_eff_decl :
                                                                FStar_Syntax_Syntax.mk_Tm_app
                                                                  uu___21
                                                                  uu___22
-                                                                 FStar_Compiler_Range.dummyRange in
+                                                                 FStar_Compiler_Range_Type.dummyRange in
                                                              mk_repr b wp in
                                                            let maybe_range_arg
                                                              =
@@ -8550,7 +8550,7 @@ let (tc_layered_lift :
 let (check_lift_for_erasable_effects :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
-      FStar_Ident.lident -> FStar_Compiler_Range.range -> unit)
+      FStar_Ident.lident -> FStar_Compiler_Range_Type.range -> unit)
   =
   fun env ->
     fun m1 ->
@@ -8590,7 +8590,7 @@ let (check_lift_for_erasable_effects :
 let (tc_lift :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sub_eff ->
-      FStar_Compiler_Range.range -> FStar_Syntax_Syntax.sub_eff)
+      FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.sub_eff)
   =
   fun env ->
     fun sub ->
@@ -8789,7 +8789,8 @@ let (tc_lift :
                                   (let dmff_env =
                                      FStar_TypeChecker_DMFF.empty env
                                        (FStar_TypeChecker_TcTerm.tc_constant
-                                          env FStar_Compiler_Range.dummyRange) in
+                                          env
+                                          FStar_Compiler_Range_Type.dummyRange) in
                                    let uu___9 =
                                      let uu___10 =
                                        FStar_TypeChecker_Env.push_univ_vars
@@ -9160,7 +9161,7 @@ let (tc_effect_abbrev :
   FStar_TypeChecker_Env.env ->
     (FStar_Ident.lident * FStar_Syntax_Syntax.univ_names *
       FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.comp) ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         (FStar_Ident.lident * FStar_Syntax_Syntax.univ_names *
           FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.comp))
   =
@@ -9349,7 +9350,7 @@ let (check_polymonadic_bind_for_erasable_effects :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
       FStar_Ident.lident ->
-        FStar_Ident.lident -> FStar_Compiler_Range.range -> unit)
+        FStar_Ident.lident -> FStar_Compiler_Range_Type.range -> unit)
   =
   fun env ->
     fun m ->

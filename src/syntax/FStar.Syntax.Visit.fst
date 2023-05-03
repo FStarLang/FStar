@@ -72,7 +72,9 @@ let on_sub_meta vfs (md : metadata) : metadata =
     Meta_monadic_lift (m1, m2, (f_term vfs) typ)
 
   (* no subterms *)
-  | md -> md
+  | Meta_named lid -> Meta_named lid
+  | Meta_labeled (s,r,b) -> Meta_labeled (s,r,b)
+  | Meta_desugared i -> Meta_desugared i
 
 let on_sub_letbinding vfs (lb : letbinding) : letbinding =
   {
@@ -107,7 +109,7 @@ let rec compress (tm:term) : term =
 
   | _ -> tm
 
-(* Not recursive itself! his does not apply anything deeply! The
+(* Not recursive itself! This does not apply anything deeply! The
 recursion on deep subterms comes from the knot being tied below. *)
 let on_sub_term vfs (tm : term) : term =
   let mk t = Syntax.mk t tm.pos in
@@ -127,6 +129,7 @@ let on_sub_term vfs (tm : term) : term =
     tm
 
   | Tm_uinst (f, us) ->
+    let f = f_term vfs f in
     let us = map (f_univ vfs) us in
     mk (Tm_uinst (f, us))
 
@@ -240,7 +243,7 @@ let on_sub_comp vfs c =
 
 let __on_decreases f : cflag -> cflag = function
   | DECREASES (Decreases_lex l)      -> DECREASES (Decreases_lex (map f l))
-  | DECREASES (Decreases_wf  (r, t)) -> DECREASES (Decreases_wf (f r, f t))
+  | DECREASES (Decreases_wf (r, t))  -> DECREASES (Decreases_wf (f r, f t))
   | f -> f
 
 let on_sub_residual_comp vfs (rc : residual_comp) : residual_comp =

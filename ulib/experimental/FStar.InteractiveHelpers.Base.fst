@@ -82,29 +82,25 @@ let rec unzip #a #b (l : list (a & b)) : Tot (list a & list b) =
 /// It can be very useful for debugging.
 let abv_to_string bv : Tac string =
   let bvv = inspect_bv bv in
-  name_of_bv bv ^ " (%" ^ string_of_int (bvv.bv_index) ^ ") : " ^
-  term_to_string bvv.bv_sort
+  name_of_bv bv ^ " (%" ^ string_of_int (bvv.bv_index) ^ ")"
 
 let print_binder_info (full : bool) (b : binder) : Tac unit =
-  let bv, (a, _attrs) =
-    let bview = inspect_binder b in
-    bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
-  let a_str = match a with
+  let open inspect_binder b <: binder_view in
+  let qual_str = match binder_qual with
     | Q_Implicit -> "Implicit"
     | Q_Explicit -> "Explicit"
     | Q_Meta t -> "Meta: " ^ term_to_string t
   in
-
-  let bview = inspect_bv bv in
+  let bview = inspect_bv binder_bv in
   if full then
     print (
       "> print_binder_info:" ^
       "\n- name: " ^ (name_of_binder b) ^
       "\n- as string: " ^ (binder_to_string b) ^
-      "\n- aqual: " ^ a_str ^
-      "\n- ppname: " ^ name_of_bv bv ^
+      "\n- aqual: " ^ qual_str ^
+      "\n- ppname: " ^ name_of_bv binder_bv ^
       "\n- index: " ^ string_of_int bview.bv_index ^
-      "\n- sort: " ^ term_to_string bview.bv_sort
+      "\n- sort: " ^ term_to_string binder_sort
     )
   else print (binder_to_string b)
 
@@ -149,10 +145,10 @@ let term_view_construct (t : term_view) : Tac string =
   | Tv_Abs _ _ -> "Tv_Abs"
   | Tv_Arrow _ _ -> "Tv_Arrow"
   | Tv_Type _ -> "Tv_Type"
-  | Tv_Refine _ _ -> "Tv_Refine"
+  | Tv_Refine _ _ _ -> "Tv_Refine"
   | Tv_Const _ -> "Tv_Const"
   | Tv_Uvar _ _ -> "Tv_Uvar"
-  | Tv_Let _ _ _ _ _ -> "Tv_Let"
+  | Tv_Let _ _ _ _ _ _ -> "Tv_Let"
   | Tv_Match _ _ _ -> "Tv_Match"
   | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
   | Tv_AscribedC _ _ _ _ -> "Tv_AScribedC"
@@ -230,17 +226,17 @@ noeq type genv =
    * Besides the informative goal, the user can replace those parameters (h1
    * and h2 above) by the proper ones then normalize the assertion by using
    * the appropriate command to get a valid assertion. *)
-  bmap : bind_map (bool & term);
+  bmap : bind_map (typ & bool & term);
   (* Whenever we introduce a new variable, we check whether it shadows another
    * variable because it has the same name, and put it in the below
    * list. Of course, for the F* internals such shadowing is not an issue, because
    * the index of every variable should be different, but this is very important
    * when generating code for the user *)
-  svars : list bv;
+  svars : list (bv & typ);
 }
 
 let get_env (e:genv) : env = e.env
-let get_bind_map (e:genv) : bind_map (bool & term) = e.bmap
+let get_bind_map (e:genv) : bind_map (typ & bool & term) = e.bmap
 let mk_genv env bmap svars : genv = Mkgenv env bmap svars
 let mk_init_genv env : genv = mk_genv env [] []
 
@@ -250,41 +246,44 @@ let genv_to_string ge =
     abv_to_string (bv_of_binder b) ^ "\n"
   in
   let binders_str = map binder_to_string (binders_of_env ge.env) in
-  let bmap_elem_to_string (e : bv & (bool & term)) : Tac string =
-    let bv, (abs, t) = e in
+  let bmap_elem_to_string (e : bv & (typ & bool & term)) : Tac string =
+    let bv, (_sort, abs, t) = e in
     "(" ^ abv_to_string bv ^" -> (" ^
     string_of_bool abs ^ ", " ^ term_to_string t ^ "))\n"
   in
   let bmap_str = map bmap_elem_to_string ge.bmap in
-  let svars_str = map (fun bv -> abv_to_string bv ^ "\n") ge.svars in
+  let svars_str = map (fun (bv, _) -> abv_to_string bv ^ "\n") ge.svars in
   let flatten = List.Tot.fold_left (fun x y -> x ^ y) "" in
   "> env:\n" ^ flatten binders_str ^
   "> bmap:\n" ^ flatten bmap_str ^
   "> svars:\n" ^ flatten svars_str
 
-let genv_get (ge:genv) (b:bv) : Tot (option (bool & term)) =
+let genv_get (ge:genv) (b:bv) : Tot (option (typ & bool & term)) =
   bind_map_get ge.bmap b
 
-let genv_get_from_name (ge:genv) (name:string) : Tac (option (bv & (bool & term))) =
-  bind_map_get_from_name ge.bmap name
+let genv_get_from_name (ge:genv) (name:string) : Tac (option ((bv & typ) & (bool & term))) =
+  (* tweak return a bit to include sort *)
+  match bind_map_get_from_name ge.bmap name with
+  | None -> None
+  | Some (bv, (sort, b, x)) -> Some ((bv, sort), (b, x))
 
 /// Push a binder to a ``genv``. Optionally takes a ``term`` which provides the
 /// term the binder is bound to (in a `let _ = _ in` construct for example).
-let genv_push_bv (ge:genv) (b:bv) (abs:bool) (t:option term) : Tac genv =
-  let br = mk_binder b in
+let genv_push_bv (ge:genv) (b:bv) (sort:typ) (abs:bool) (t:option term) : Tac genv =
+  let br = mk_binder b sort in
   let sv = genv_get_from_name ge (name_of_bv b) in
   let svars' = if Some? sv then fst (Some?.v sv) :: ge.svars else ge.svars in
   let e' = push_binder ge.env br in
   let tm = if Some? t then Some?.v t else pack (Tv_Var b) in
-  let bmap' = bind_map_push ge.bmap b (abs, tm) in
+  let bmap' = bind_map_push ge.bmap b (sort, abs, tm) in
   mk_genv e' bmap' svars'
 
 let genv_push_binder (ge:genv) (b:binder) (abs:bool) (t:option term) : Tac genv =
-  genv_push_bv ge (bv_of_binder b) abs t
+  genv_push_bv ge (bv_of_binder b) (binder_sort b) abs t
 
 /// Check if a binder is shadowed by another more recent binder
 let bv_is_shadowed (ge : genv) (bv : bv) : Tot bool =
-  List.Tot.existsb (bv_eq bv) ge.svars
+  List.Tot.existsb (fun (b,_) -> bv_eq bv b) ge.svars
 
 let binder_is_shadowed (ge : genv) (b : binder) : Tot bool =
   bv_is_shadowed ge (bv_of_binder b)
@@ -299,35 +298,35 @@ val bv_is_abstract : genv -> bv -> Tot bool
 let bv_is_abstract ge bv =
   match genv_get ge bv with
   | None -> false
-  | Some (abs, _) -> abs
+  | Some (_, abs, _) -> abs
 
 val binder_is_abstract : genv -> binder -> Tot bool
 let binder_is_abstract ge b =
   bv_is_abstract ge (bv_of_binder b)
 
-val genv_abstract_bvs : genv -> Tot (list bv)
+val genv_abstract_bvs : genv -> Tot (list (bv & typ))
 let genv_abstract_bvs ge =
-  let abs = List.Tot.filter (fun (_, (abs, _)) -> abs) ge.bmap in
-  List.Tot.map (fun (bv, _) -> bv) abs
+  List.Tot.concatMap
+    (fun (bv, (ty, abs, _)) -> if abs then [bv,ty] else []) ge.bmap
 
 /// Versions of ``fresh_bv`` and ``fresh_binder`` inspired by the standard library
 /// We make sure the name is fresh because we need to be able to generate valid code
 /// (it is thus not enough to have a fresh integer).
-let rec _fresh_bv binder_names basename i ty : Tac bv =
+let rec _fresh_bv binder_names basename i : Tac bv =
   let name = basename ^ string_of_int i in
   (* In worst case the performance is quadratic in the number of binders.
    * TODO: fix that, it actually probably happens for anonymous variables ('_') *)
-  if List.mem name binder_names then _fresh_bv binder_names basename (i+1) ty
-  else fresh_bv_named name ty
+  if List.mem name binder_names then _fresh_bv binder_names basename (i+1)
+  else fresh_bv_named name
 
-let fresh_bv (e : env) (basename : string) (ty : typ) : Tac bv =
+let fresh_bv (e : env) (basename : string) : Tac bv =
   let binders = binders_of_env e in
   let binder_names = Tactics.map name_of_binder binders in
-  _fresh_bv binder_names basename 0 ty
+  _fresh_bv binder_names basename 0
 
 let fresh_binder (e : env) (basename : string) (ty : typ) : Tac binder =
-  let bv = fresh_bv e basename ty in
-  mk_binder bv
+  let bv = fresh_bv e basename in
+  mk_binder bv ty
 
 let genv_push_fresh_binder (ge : genv) (basename : string) (ty : typ) : Tac (genv & binder) =
   let b = fresh_binder ge.env basename ty in
@@ -381,12 +380,12 @@ let genv_push_two_fresh_vars ge0 basename ty =
 /// Custom substitutions using the normalizer. This is the easiest and safest
 /// way to perform a substitution: if you want to substitute [v] with [t] in [exp],
 /// just normalize [(fun v -> exp) t]. Note that this may be computationally expensive.
-val norm_apply_subst : env -> term -> list (bv & term) -> Tac term
-val norm_apply_subst_in_comp : env -> comp -> list (bv & term) -> Tac comp
+val norm_apply_subst : env -> term -> list ((bv & typ) & term) -> Tac term
+val norm_apply_subst_in_comp : env -> comp -> list ((bv & typ) & term) -> Tac comp
 
 let norm_apply_subst e t subst =
   let bl, vl = unzip subst in
-  let bl = List.Tot.map mk_binder bl in
+  let bl = List.Tot.map (fun (bv,ty) -> mk_binder bv ty) bl in
   let t1 = mk_abs bl t in
   let t2 = mk_e_app t1 vl in
   norm_term_env e [] t2
@@ -459,18 +458,20 @@ let rec deep_apply_subst e t subst =
     let c = deep_apply_subst_in_comp e c subst in
     pack (Tv_Arrow br c)
   | Tv_Type _ -> t
-  | Tv_Refine bv ref ->
+  | Tv_Refine bv sort ref ->
+    let sort = deep_apply_subst e sort subst in
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     let ref = deep_apply_subst e ref subst in
-    pack (Tv_Refine bv ref)
+    pack (Tv_Refine bv sort ref)
   | Tv_Const _ -> t
   | Tv_Uvar _ _ -> t
-  | Tv_Let recf attrs bv def body ->
+  | Tv_Let recf attrs bv ty def body ->
     (* No need to substitute in the attributes - that we filter for safety *)
-    let bv, subst = deep_apply_subst_in_bv e bv subst in
+    let ty = deep_apply_subst e ty subst in
     let def = deep_apply_subst e def subst in
+    let bv, subst = deep_apply_subst_in_bv e bv subst in
     let body = deep_apply_subst e body subst in
-    pack (Tv_Let recf [] bv def body)
+    pack (Tv_Let recf [] bv ty def body)
   | Tv_Match scrutinee ret_opt branches -> (* TODO: type of pattern variables *)
     let scrutinee = deep_apply_subst e scrutinee subst in
     let ret_opt = map_opt (fun (b, asc) ->
@@ -510,23 +511,22 @@ let rec deep_apply_subst e t subst =
     t
 
 and deep_apply_subst_in_bv e bv subst =
-  let bvv = inspect_bv bv in
-  let ty = deep_apply_subst e bvv.bv_sort subst in
-  let bv' = Tactics.fresh_bv_named (unseal bvv.bv_ppname) ty in
-  bv', (bv, pack (Tv_Var bv'))::subst
+  (* No substitution needs to happen for variables
+    (there is no longer a sort). But, shift the substitution. *)
+  bv, (bv, pack (Tv_Var bv))::subst
 
 (*
  * AR: TODO: should apply subst in attrs?
  *)
 and deep_apply_subst_in_binder e br subst =
-  let bv, (qual, attrs) =
-    let bview = inspect_binder br in
-    bview.binder_bv, (bview.binder_qual, bview.binder_attrs) in
-  let bv, subst = deep_apply_subst_in_bv e bv subst in
+  let open inspect_binder br <: binder_view in
+  let binder_sort = deep_apply_subst e binder_sort subst in
+  let binder_bv, subst = deep_apply_subst_in_bv e binder_bv subst in
   pack_binder {
-    binder_bv=bv;
-    binder_qual=qual;
-    binder_attrs=attrs
+    binder_bv=binder_bv;
+    binder_qual=binder_qual;
+    binder_attrs=binder_attrs;
+    binder_sort=binder_sort;
   }, subst
 
 and deep_apply_subst_in_comp e c subst =
@@ -586,7 +586,7 @@ and deep_apply_subst_in_pattern e pat subst =
 let apply_subst = norm_apply_subst
 let apply_subst_in_comp = norm_apply_subst_in_comp
 
-val opt_apply_subst : env -> option term -> list (bv & term) -> Tac (option term)
+val opt_apply_subst : env -> option term -> list ((bv & typ) & term) -> Tac (option term)
 let opt_apply_subst e opt_t subst =
   match opt_t with
   | None -> None
@@ -595,7 +595,7 @@ let opt_apply_subst e opt_t subst =
 (*** Variable shadowing *)
 /// Introduce fresh variables to generate a substitution for the variables shadowed
 /// in the current environment.
-val generate_shadowed_subst : genv -> Tac (genv & list (bv & bv))
+val generate_shadowed_subst : genv -> Tac (genv & list (bv & typ & bv))
 
 /// In order to introduce variables with coherent types (the variables' types
 /// may be dependent) and make things simpler, we build one big term:
@@ -604,8 +604,8 @@ val generate_shadowed_subst : genv -> Tac (genv & list (bv & bv))
 /// the outermost abstraction, apply the above term to this new variable and
 /// normalize to "apply" the substitution and reveal the next binding.
 
-let rec _generate_shadowed_subst (ge:genv) (t:term) (bvl : list bv) :
-  Tac (genv & list (bv & bv)) =
+let rec _generate_shadowed_subst (ge:genv) (t:term) (bvl : list (bv & typ)) :
+  Tac (genv & list (bv & typ & bv)) =
   match bvl with
   | [] -> ge, []
   | old_bv :: bvl' ->
@@ -614,7 +614,7 @@ let rec _generate_shadowed_subst (ge:genv) (t:term) (bvl : list bv) :
       (* Introduce the new binder *)
       let bv = (inspect_binder b).binder_bv in
       let bvv = inspect_bv bv in
-      let ty = bvv.bv_sort in
+      let ty = binder_sort b in
       let name = unseal bvv.bv_ppname in
       let ge1, fresh = genv_push_fresh_bv ge ("__" ^ name) ty in
       let t1 = mk_e_app t [pack (Tv_Var fresh)] in
@@ -622,12 +622,12 @@ let rec _generate_shadowed_subst (ge:genv) (t:term) (bvl : list bv) :
       (* Recursion *)
       let ge2, nbvl = _generate_shadowed_subst ge1 t2 bvl' in
       (* Return *)
-      ge2, (old_bv, fresh) :: nbvl
+      ge2, (fst old_bv, ty, fresh) :: nbvl
     | _ -> mfail "_subst_with_fresh_vars: not a Tv_Abs"
 
 let generate_shadowed_subst ge =
   (* We need to replace the variables starting with the oldest *)
   let bvl = List.Tot.rev ge.svars in
-  let bl = List.Tot.map mk_binder bvl in
+  let bl = List.Tot.map (fun (bv, sort) -> mk_binder bv sort) bvl in
   let dummy = mk_abs bl (`()) in
   _generate_shadowed_subst ge dummy bvl

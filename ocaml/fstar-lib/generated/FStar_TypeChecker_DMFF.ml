@@ -104,7 +104,7 @@ let (gen_wps_for_free :
               else ());
              (let unknown = FStar_Syntax_Syntax.tun in
               let mk x =
-                FStar_Syntax_Syntax.mk x FStar_Compiler_Range.dummyRange in
+                FStar_Syntax_Syntax.mk x FStar_Compiler_Range_Type.dummyRange in
               let sigelts = FStar_Compiler_Util.mk_ref [] in
               let register env2 lident def =
                 let uu___2 =
@@ -701,7 +701,7 @@ let (gen_wps_for_free :
                         (FStar_Syntax_Util.tforall, uu___5) in
                       FStar_Syntax_Syntax.Tm_app uu___4 in
                     FStar_Syntax_Syntax.mk uu___3
-                      FStar_Compiler_Range.dummyRange in
+                      FStar_Compiler_Range_Type.dummyRange in
                   let rec is_discrete t =
                     let uu___3 =
                       let uu___4 = FStar_Syntax_Subst.compress t in
@@ -948,7 +948,7 @@ let (gen_wps_for_free :
                                 let uu___5 =
                                   FStar_Parser_Const.mk_tuple_data_lid
                                     (FStar_Compiler_List.length args)
-                                    FStar_Compiler_Range.dummyRange in
+                                    FStar_Compiler_Range_Type.dummyRange in
                                 FStar_TypeChecker_Env.lookup_projector env2
                                   uu___5 i in
                               FStar_Syntax_Syntax.fvar uu___4
@@ -3286,7 +3286,7 @@ and (trans_F_ :
                            let uu___6 =
                              FStar_Parser_Const.mk_tuple_data_lid
                                (FStar_Compiler_List.length wp_args)
-                               FStar_Compiler_Range.dummyRange in
+                               FStar_Compiler_Range_Type.dummyRange in
                            FStar_Syntax_Util.is_constructor wp_head uu___6 in
                          Prims.op_Negation uu___5) in
                     if uu___4 then failwith "mismatch" else ());
@@ -3656,7 +3656,8 @@ let (cps_and_elaborate :
                                 let dmff_env =
                                   empty env2
                                     (FStar_TypeChecker_TcTerm.tc_constant
-                                       env2 FStar_Compiler_Range.dummyRange) in
+                                       env2
+                                       FStar_Compiler_Range_Type.dummyRange) in
                                 let wp_type = star_type dmff_env repr in
                                 let uu___8 = recheck_debug "*" env2 wp_type in
                                 let wp_a =

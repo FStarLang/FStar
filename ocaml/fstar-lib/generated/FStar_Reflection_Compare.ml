@@ -147,10 +147,12 @@ let rec (compare_term :
          (b2, e2)) ->
           FStar_Order.lex (compare_binder b1 b2)
             (fun uu___ -> compare_term e1 e2)
-      | (FStar_Reflection_Data.Tv_Refine (bv1, e1),
-         FStar_Reflection_Data.Tv_Refine (bv2, e2)) ->
+      | (FStar_Reflection_Data.Tv_Refine (bv1, sort1, e1),
+         FStar_Reflection_Data.Tv_Refine (bv2, sort2, e2)) ->
           FStar_Order.lex (FStar_Reflection_Builtins.compare_bv bv1 bv2)
-            (fun uu___ -> compare_term e1 e2)
+            (fun uu___ ->
+               FStar_Order.lex (compare_term sort1 sort2)
+                 (fun uu___1 -> compare_term e1 e2))
       | (FStar_Reflection_Data.Tv_Arrow (b1, e1),
          FStar_Reflection_Data.Tv_Arrow (b2, e2)) ->
           FStar_Order.lex (compare_binder b1 b2)
@@ -162,12 +164,14 @@ let rec (compare_term :
       | (FStar_Reflection_Data.Tv_Uvar (u1, uu___),
          FStar_Reflection_Data.Tv_Uvar (u2, uu___1)) ->
           FStar_Order.compare_int u1 u2
-      | (FStar_Reflection_Data.Tv_Let (_r1, _attrs1, bv1, t1, t1'),
-         FStar_Reflection_Data.Tv_Let (_r2, _attrs2, bv2, t2, t2')) ->
+      | (FStar_Reflection_Data.Tv_Let (_r1, _attrs1, bv1, ty1, t1, t1'),
+         FStar_Reflection_Data.Tv_Let (_r2, _attrs2, bv2, ty2, t2, t2')) ->
           FStar_Order.lex (FStar_Reflection_Builtins.compare_bv bv1 bv2)
             (fun uu___ ->
-               FStar_Order.lex (compare_term t1 t2)
-                 (fun uu___1 -> compare_term t1' t2'))
+               FStar_Order.lex (compare_term ty1 ty2)
+                 (fun uu___1 ->
+                    FStar_Order.lex (compare_term t1 t2)
+                      (fun uu___2 -> compare_term t1' t2')))
       | (FStar_Reflection_Data.Tv_Match (uu___, uu___1, uu___2),
          FStar_Reflection_Data.Tv_Match (uu___3, uu___4, uu___5)) ->
           FStar_Order.Eq
@@ -229,9 +233,9 @@ let rec (compare_term :
           FStar_Order.Gt
       | (FStar_Reflection_Data.Tv_Type uu___, uu___1) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_Data.Tv_Type uu___1) -> FStar_Order.Gt
-      | (FStar_Reflection_Data.Tv_Refine (uu___, uu___1), uu___2) ->
+      | (FStar_Reflection_Data.Tv_Refine (uu___, uu___1, uu___2), uu___3) ->
           FStar_Order.Lt
-      | (uu___, FStar_Reflection_Data.Tv_Refine (uu___1, uu___2)) ->
+      | (uu___, FStar_Reflection_Data.Tv_Refine (uu___1, uu___2, uu___3)) ->
           FStar_Order.Gt
       | (FStar_Reflection_Data.Tv_Const uu___, uu___1) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_Data.Tv_Const uu___1) -> FStar_Order.Gt
@@ -239,6 +243,11 @@ let rec (compare_term :
           FStar_Order.Lt
       | (uu___, FStar_Reflection_Data.Tv_Uvar (uu___1, uu___2)) ->
           FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Let
+         (uu___, uu___1, uu___2, uu___3, uu___4, uu___5), uu___6) ->
+          FStar_Order.Lt
+      | (uu___, FStar_Reflection_Data.Tv_Let
+         (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6)) -> FStar_Order.Gt
       | (FStar_Reflection_Data.Tv_Match (uu___, uu___1, uu___2), uu___3) ->
           FStar_Order.Lt
       | (uu___, FStar_Reflection_Data.Tv_Match (uu___1, uu___2, uu___3)) ->

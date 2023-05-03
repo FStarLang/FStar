@@ -426,7 +426,8 @@ let (apply_ml_mode_optimizations : FStar_Ident.lident -> Prims.bool) =
     ((FStar_Options.ml_ish ()) &&
        (let uu___ =
           let uu___1 = FStar_Ident.string_of_lid mname in
-          FStar_Compiler_List.contains uu___1 FStar_Parser_Dep.core_modules in
+          let uu___2 = FStar_Parser_Dep.core_modules () in
+          FStar_Compiler_List.contains uu___1 uu___2 in
         Prims.op_Negation uu___))
       &&
       (let uu___ =

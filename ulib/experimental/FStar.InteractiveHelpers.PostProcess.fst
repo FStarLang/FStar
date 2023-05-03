@@ -85,7 +85,7 @@ let term_is_assert_or_assume t =
 val is_focused_term : term_view -> Tac (option term)
 let is_focused_term tv =
   match tv with
-  | Tv_Let recf attrs _ def body ->
+  | Tv_Let recf attrs _ _ def body ->
     if is_focus_on_term def then Some body else None
   | _ -> None
 
@@ -163,8 +163,8 @@ let find_focused_assert_in_current_goal dbg =
   (* Check that it is an assert or an assume, retrieve the assertion *)
   let res' = 
     match inspect res.res with
-    | Tv_Let _ _ bv0 fterm _ ->
-      let ge' = genv_push_bv res.ge bv0 false None in
+    | Tv_Let _ _ bv0 ty fterm _ ->
+      let ge' = genv_push_bv res.ge bv0 ty false None in
       ({ res with res = fterm; ge = ge' })
     | _ -> res
   in
@@ -192,19 +192,19 @@ let analyze_effectful_term dbg with_gpre with_gpost res =
   (* Analyze the effectful term and check whether it is a 'let' or not *)
   let ge1, studied_term, info, ret_bv, shadowed_bv, is_let =
     begin match inspect res.res with
-    | Tv_Let _ _ bv0 fterm _ ->
+    | Tv_Let _ _ bv0 ty fterm _ ->
       (* Before pushing the binder, check if it shadows another variable.
        * If it is the case, we will need it to correctly output the pre
        * and post-assertions (because for the pre-assertions the variable
        * will not be shadowed yet, while it will be the case for the post-
        * assertions) *)
       print_dbg dbg ("Restraining to: " ^ term_to_string fterm);
-      let shadowed_bv =
+      let shadowed_bv : option bv =
         match genv_get_from_name ge (name_of_bv bv0) with
         | None -> None
-        | Some (sbv, _) -> Some sbv
+        | Some (sbv, _) -> Some (fst sbv)
       in
-      let ge1 = genv_push_bv ge bv0 false None in
+      let ge1 = genv_push_bv ge bv0 ty false None in
       (* If the bv name is "uu___", introduce a fresh variable and use it instead:
        * the underscore might have been introduced when desugaring a let using
        * tuples. If doing that is not necessary, the introduced variable will
@@ -213,7 +213,7 @@ let analyze_effectful_term dbg with_gpre with_gpost res =
         let bvv0 = inspect_bv bv0 in
         let _ = print_dbg dbg ("Variable bound in let: " ^ abv_to_string bv0) in
         if unseal bvv0.bv_ppname = "uu___" (* this is a bit hacky *)
-        then genv_push_fresh_bv ge1 "ret" bvv0.bv_sort
+        then genv_push_fresh_bv ge1 "ret" ty
         else ge1, bv0
       in
       let info = compute_eterm_info dbg ge2.env fterm in
@@ -418,8 +418,8 @@ let formula_construct (f : formula) : Tac string =
   | Not _       -> "Not"
   | Implies _ _ -> "Implies"
   | Iff _ _     -> "Iff"
-  | Forall _ _  -> "Forall"
-  | Exists _ _  -> "Exists"
+  | Forall _ _ _ -> "Forall"
+  | Exists _ _ _ -> "Exists"
   | App _ _     -> "Apply"
   | Name _      -> "Name"
   | FV _        -> "FV"
@@ -469,14 +469,14 @@ let find_subequality dbg tm p =
 
 /// Look for an equality in a postcondition which can be used for rewriting.
 val find_equality_from_post :
-  bool -> genv -> term -> bv -> term -> typ -> effect_info ->
+  bool -> genv -> term -> bv -> typ -> term -> typ -> effect_info ->
   list term_view -> list term_view -> Tac (genv & option term)
-let find_equality_from_post dbg ge0 tm let_bv ret_value ret_type einfo parents children =
+let find_equality_from_post dbg ge0 tm let_bv let_bvty ret_value ret_type einfo parents children =
   print_dbg dbg "[> find_equality_from_post";
   let tinfo = get_type_info_from_type ret_type in
   (* Compute the post-condition *)
   let ge1, _, post_prop =
-    pre_post_to_propositions dbg ge0 einfo.ei_type ret_value (Some (mk_binder let_bv))
+    pre_post_to_propositions dbg ge0 einfo.ei_type ret_value (Some (mk_binder let_bv let_bvty))
                              tinfo einfo.ei_pre einfo.ei_post parents children
   in
   print_dbg dbg ("Computed post: " ^ option_to_string term_to_string post_prop);
@@ -514,7 +514,7 @@ let rec find_context_equality_aux dbg ge0 tm (opt_bv : option bv)
                    "- parent: " ^ term_to_string tv);
     (* We only consider let-bindings *)
     match tv with
-    | Tv_Let _ _ bv' def _ ->
+    | Tv_Let _ _ bv' ty def _ ->
       print_dbg dbg "Is Tv_Let";
       let tm_info = compute_eterm_info dbg ge0.env def in
       let einfo = tm_info.einfo in
@@ -531,8 +531,7 @@ let rec find_context_equality_aux dbg ge0 tm (opt_bv : option bv)
       if let_bv_is_tm && effect_type_is_pure einfo.ei_type then ge0, Some def
       else
         let ret_value = pack (Tv_Var bv') in
-        let ret_typ = type_of_bv bv' in
-        begin match find_equality_from_post dbg ge0 tm bv' ret_value ret_typ
+        begin match find_equality_from_post dbg ge0 tm bv' ty ret_value ty // FIXME no need to duplciate
                                             einfo parents children with
         | ge1, Some p -> ge1, Some p
         | _, None -> find_context_equality_aux dbg ge0 tm opt_bv parents' (tv :: children)
@@ -562,15 +561,18 @@ let rec replace_term_in dbg from_term to_term tm =
     pack (Tv_Abs br body')
   | Tv_Arrow br c0 -> tm (* TODO: we might want to explore that *)
   | Tv_Type _ -> tm
-  | Tv_Refine bv ref ->
+  | Tv_Refine bv sort ref ->
+    let sort' = replace_term_in dbg from_term to_term sort in
     let ref' = replace_term_in dbg from_term to_term ref in
-    pack (Tv_Refine bv ref')
+    pack (Tv_Refine bv sort' ref')
   | Tv_Const _ -> tm
   | Tv_Uvar _ _ -> tm
-  | Tv_Let recf attrs bv def body ->
+  | Tv_Let recf attrs bv ty def body ->
+    (* GM 2023-04-27: leaving ty untouched, old code did not
+       descend into sort. *)
     let def' = replace_term_in dbg from_term to_term def in
     let body' = replace_term_in dbg from_term to_term body in
-    pack (Tv_Let recf attrs bv def' body')
+    pack (Tv_Let recf attrs bv ty def' body')
   | Tv_Match scrutinee ret_opt branches ->  //AR: TODO: account for the returns annotation
     (* Auxiliary function to explore the branches *)
     let explore_branch (br : branch) : Tac branch =
@@ -671,14 +673,14 @@ let unfold_in_assert_or_assume dbg ares =
        * the term is a bv, we can also use the let-binding which introduces it,
        * if it is pure. *)
       let parents = List.Tot.map snd ares.parents in
-      let opt_bv =
+      let opt_bvty : option (bv & typ) =
         match res_view with
         | Tv_Var bv ->
           print_dbg dbg ("The focused term is a local variable: " ^ bv_to_string bv);
           (* Check that the binder was not introduced by an abstraction inside the assertion *)
           if not (Some? (genv_get ares.ge bv)) then
             mfail "unfold_in_assert_or_assume: can't unfold a variable locally introduced in an assertion";
-          Some bv
+          Some (bv, pack_ln Tv_Unknown) // FIXME
         | _ ->
           print_dbg dbg ("The focused term is an arbitrary term: " ^ term_to_string unf_res.res);
           None
@@ -692,8 +694,8 @@ let unfold_in_assert_or_assume dbg ares =
       in
       (* Apply it *)
       let subterm' =
-        match opt_bv, opt_eq_tm with
-        | Some bv, Some eq_tm -> Some (apply_subst ge1.env subterm [(bv, eq_tm)])
+        match opt_bvty, opt_eq_tm with
+        | Some bvty, Some eq_tm -> Some (apply_subst ge1.env subterm [(bvty, eq_tm)])
         | None, Some eq_tm -> Some (replace_term_in dbg unf_res.res eq_tm subterm)
         | _ -> None
       in

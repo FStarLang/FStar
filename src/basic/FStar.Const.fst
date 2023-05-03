@@ -19,9 +19,9 @@ module List = FStar.Compiler.List
 
 open FStar.BaseTypes
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type signedness = | Unsigned | Signed
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type width = | Int8 | Int16 | Int32 | Int64 | Sizet
 
 (* NB:
@@ -37,7 +37,7 @@ type width = | Int8 | Int16 | Int32 | Int64 | Sizet
     eq_const below does that for you
 *)
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type sconst =
   | Const_effect
   | Const_unit

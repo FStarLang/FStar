@@ -1,8 +1,8 @@
 open Prims
-let (initial_range : FStar_Compiler_Range.range) =
-  let uu___ = FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
-  let uu___1 = FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
-  FStar_Compiler_Range.mk_range "<input>" uu___ uu___1
+let (initial_range : FStar_Compiler_Range_Type.range) =
+  let uu___ = FStar_Compiler_Range_Type.mk_pos Prims.int_one Prims.int_zero in
+  let uu___1 = FStar_Compiler_Range_Type.mk_pos Prims.int_one Prims.int_zero in
+  FStar_Compiler_Range_Type.mk_range "<input>" uu___ uu___1
 type completion_context =
   | CKCode 
   | CKOption of Prims.bool 
@@ -87,7 +87,7 @@ let (__proj__Mkpush_query__item__push_code_or_decl :
     match projectee with
     | { push_kind = push_kind1; push_line; push_column; push_peek_only;
         push_code_or_decl;_} -> push_code_or_decl
-type lookup_symbol_range = FStar_Compiler_Util.json
+type lookup_symbol_range = FStar_Json.json
 type query_status =
   | QueryOK 
   | QueryNOK 
@@ -117,8 +117,7 @@ type repl_task =
   | LDSingle of timed_fname 
   | LDInterfaceOfCurrentFile of timed_fname 
   | PushFragment of ((FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
-  FStar_Pervasives.either * push_kind * FStar_Compiler_Util.json Prims.list)
-  
+  FStar_Pervasives.either * push_kind * FStar_Json.json Prims.list) 
   | Noop 
 let (uu___is_LDInterleaved : repl_task -> Prims.bool) =
   fun projectee ->
@@ -144,8 +143,7 @@ let (uu___is_PushFragment : repl_task -> Prims.bool) =
 let (__proj__PushFragment__item___0 :
   repl_task ->
     ((FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
-      FStar_Pervasives.either * push_kind * FStar_Compiler_Util.json
-      Prims.list))
+      FStar_Pervasives.either * push_kind * FStar_Json.json Prims.list))
   = fun projectee -> match projectee with | PushFragment _0 -> _0
 let (uu___is_Noop : repl_task -> Prims.bool) =
   fun projectee -> match projectee with | Noop -> true | uu___ -> false
@@ -195,8 +193,8 @@ type query' =
   | FullBuffer of (Prims.string * full_buffer_request_kind * Prims.bool) 
   | Callback of
   (repl_state ->
-     ((query_status * FStar_Compiler_Util.json Prims.list) * (repl_state,
-       Prims.int) FStar_Pervasives.either))
+     ((query_status * FStar_Json.json Prims.list) * (repl_state, Prims.int)
+       FStar_Pervasives.either))
   
   | Format of Prims.string 
   | RestartSolver 
@@ -285,8 +283,8 @@ let (uu___is_Callback : query' -> Prims.bool) =
 let (__proj__Callback__item___0 :
   query' ->
     repl_state ->
-      ((query_status * FStar_Compiler_Util.json Prims.list) * (repl_state,
-        Prims.int) FStar_Pervasives.either))
+      ((query_status * FStar_Json.json Prims.list) * (repl_state, Prims.int)
+        FStar_Pervasives.either))
   = fun projectee -> match projectee with | Callback _0 -> _0
 let (uu___is_Format : query' -> Prims.bool) =
   fun projectee -> match projectee with | Format _0 -> true | uu___ -> false
@@ -365,8 +363,8 @@ let (__proj__Mkrepl_state__item__repl_buffered_input_queries :
         repl_buffered_input_queries
 type callback_t =
   repl_state ->
-    ((query_status * FStar_Compiler_Util.json Prims.list) * (repl_state,
-      Prims.int) FStar_Pervasives.either)
+    ((query_status * FStar_Json.json Prims.list) * (repl_state, Prims.int)
+      FStar_Pervasives.either)
 type repl_stack_entry_t = (repl_depth_t * (repl_task * repl_state))
 type repl_stack_t = (repl_depth_t * (repl_task * repl_state)) Prims.list
 type grepl_state =
@@ -558,16 +556,15 @@ let (interactive_protocol_features : Prims.string Prims.list) =
   "format";
   "restart-solver";
   "cancel"]
-let (json_of_issue_level :
-  FStar_Errors.issue_level -> FStar_Compiler_Util.json) =
+let (json_of_issue_level : FStar_Errors.issue_level -> FStar_Json.json) =
   fun i ->
-    FStar_Compiler_Util.JsonStr
+    FStar_Json.JsonStr
       (match i with
        | FStar_Errors.ENotImplemented -> "not-implemented"
        | FStar_Errors.EInfo -> "info"
        | FStar_Errors.EWarning -> "warning"
        | FStar_Errors.EError -> "error")
-let (json_of_issue : FStar_Errors.issue -> FStar_Compiler_Util.json) =
+let (json_of_issue : FStar_Errors.issue -> FStar_Json.json) =
   fun issue ->
     let uu___ =
       let uu___1 =
@@ -575,7 +572,7 @@ let (json_of_issue : FStar_Errors.issue -> FStar_Compiler_Util.json) =
           let uu___3 =
             let uu___4 =
               let uu___5 = FStar_Errors.issue_message issue in
-              FStar_Compiler_Util.JsonStr uu___5 in
+              FStar_Json.JsonStr uu___5 in
             ("message", uu___4) in
           let uu___4 =
             let uu___5 =
@@ -585,20 +582,21 @@ let (json_of_issue : FStar_Errors.issue -> FStar_Compiler_Util.json) =
                     match issue.FStar_Errors.issue_range with
                     | FStar_Pervasives_Native.None -> []
                     | FStar_Pervasives_Native.Some r ->
-                        let uu___9 = FStar_Compiler_Range.json_of_use_range r in
+                        let uu___9 =
+                          FStar_Compiler_Range_Ops.json_of_use_range r in
                         [uu___9] in
                   let uu___9 =
                     match issue.FStar_Errors.issue_range with
                     | FStar_Pervasives_Native.Some r when
-                        let uu___10 = FStar_Compiler_Range.def_range r in
-                        let uu___11 = FStar_Compiler_Range.use_range r in
+                        let uu___10 = FStar_Compiler_Range_Type.def_range r in
+                        let uu___11 = FStar_Compiler_Range_Type.use_range r in
                         uu___10 <> uu___11 ->
                         let uu___10 =
-                          FStar_Compiler_Range.json_of_def_range r in
+                          FStar_Compiler_Range_Ops.json_of_def_range r in
                         [uu___10]
                     | uu___10 -> [] in
                   FStar_Compiler_List.op_At uu___8 uu___9 in
-                FStar_Compiler_Util.JsonList uu___7 in
+                FStar_Json.JsonList uu___7 in
               ("ranges", uu___6) in
             [uu___5] in
           uu___3 :: uu___4 in
@@ -606,13 +604,13 @@ let (json_of_issue : FStar_Errors.issue -> FStar_Compiler_Util.json) =
           (match issue.FStar_Errors.issue_number with
            | FStar_Pervasives_Native.None -> []
            | FStar_Pervasives_Native.Some n ->
-               [("number", (FStar_Compiler_Util.JsonInt n))]) uu___2 in
+               [("number", (FStar_Json.JsonInt n))]) uu___2 in
       FStar_Compiler_List.op_At
         [("level", (json_of_issue_level issue.FStar_Errors.issue_level))]
         uu___1 in
     FStar_Compiler_Effect.op_Less_Bar
-      (fun uu___1 -> FStar_Compiler_Util.JsonAssoc uu___1) uu___
-let (js_pushkind : FStar_Compiler_Util.json -> push_kind) =
+      (fun uu___1 -> FStar_Json.JsonAssoc uu___1) uu___
+let (js_pushkind : FStar_Json.json -> push_kind) =
   fun s ->
     let uu___ = FStar_Interactive_JsonHelper.js_str s in
     match uu___ with
@@ -620,8 +618,7 @@ let (js_pushkind : FStar_Compiler_Util.json -> push_kind) =
     | "lax" -> LaxCheck
     | "full" -> FullCheck
     | uu___1 -> FStar_Interactive_JsonHelper.js_fail "push_kind" s
-let (js_reductionrule :
-  FStar_Compiler_Util.json -> FStar_TypeChecker_Env.step) =
+let (js_reductionrule : FStar_Json.json -> FStar_TypeChecker_Env.step) =
   fun s ->
     let uu___ = FStar_Interactive_JsonHelper.js_str s in
     match uu___ with
@@ -634,9 +631,7 @@ let (js_reductionrule :
     | "pure-subterms" -> FStar_TypeChecker_Env.PureSubtermsWithinComputations
     | uu___1 -> FStar_Interactive_JsonHelper.js_fail "reduction rule" s
 let (js_optional_completion_context :
-  FStar_Compiler_Util.json FStar_Pervasives_Native.option ->
-    completion_context)
-  =
+  FStar_Json.json FStar_Pervasives_Native.option -> completion_context) =
   fun k ->
     match k with
     | FStar_Pervasives_Native.None -> CKCode
@@ -656,8 +651,7 @@ let (js_optional_completion_context :
                "completion context (code, set-options, reset-options, open, let-open, include, module-alias)"
                k1)
 let (js_optional_lookup_context :
-  FStar_Compiler_Util.json FStar_Pervasives_Native.option -> lookup_context)
-  =
+  FStar_Json.json FStar_Pervasives_Native.option -> lookup_context) =
   fun k ->
     match k with
     | FStar_Pervasives_Native.None -> LKSymbolOnly

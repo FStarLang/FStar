@@ -26,7 +26,7 @@ let try_unembed :
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings.embedding ->
-      FStar_Compiler_Range.range ->
+      FStar_Compiler_Range_Type.range ->
         'uuuuu -> FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun ea ->
@@ -356,6 +356,8 @@ let (e_attributes : FStar_Syntax_Syntax.attribute Prims.list dualemb) =
 let (e_qualifiers : FStar_Reflection_Data.qualifiers dualemb) =
   (FStar_Reflection_Embeddings.e_qualifiers,
     FStar_Reflection_NBEEmbeddings.e_qualifiers)
+let (e_range : FStar_Compiler_Range_Type.range dualemb) =
+  (FStar_Syntax_Embeddings.e_range, FStar_TypeChecker_NBETerm.e_range)
 let e_list : 'a . 'a dualemb -> 'a Prims.list dualemb =
   fun e ->
     let uu___ =
@@ -664,7 +666,31 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_env
                                                                     e_binder
                                                                     e_env in
-                                                                    [uu___72] in
+                                                                    let uu___73
+                                                                    =
+                                                                    let uu___74
+                                                                    =
+                                                                    mk1
+                                                                    "range_of_term"
+                                                                    FStar_Reflection_Basic.range_of_term
+                                                                    e_term
+                                                                    e_range in
+                                                                    let uu___75
+                                                                    =
+                                                                    let uu___76
+                                                                    =
+                                                                    mk1
+                                                                    "range_of_sigelt"
+                                                                    FStar_Reflection_Basic.range_of_sigelt
+                                                                    e_sigelt
+                                                                    e_range in
+                                                                    [uu___76] in
+                                                                    uu___74
+                                                                    ::
+                                                                    uu___75 in
+                                                                    uu___72
+                                                                    ::
+                                                                    uu___73 in
                                                                     uu___70
                                                                     ::
                                                                     uu___71 in

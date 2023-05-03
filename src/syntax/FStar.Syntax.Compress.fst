@@ -1,5 +1,6 @@
 module FStar.Syntax.Compress
 
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax

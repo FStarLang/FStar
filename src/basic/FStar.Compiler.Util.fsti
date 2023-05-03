@@ -17,6 +17,8 @@ module FStar.Compiler.Util
 open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
+open FStar.Json
+
 module List = FStar.Compiler.List
 
 open FStar.BaseTypes
@@ -142,14 +144,6 @@ type out_channel
 val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list string -> unit
-
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of int
-| JsonStr of string
-| JsonList of list json
-| JsonAssoc of list (string * json)
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -425,9 +419,6 @@ type hints_read_result =
 
 val write_hints: string -> hints_db -> unit
 val read_hints: string -> hints_read_result
-
-val json_of_string : string -> option json
-val string_of_json : json -> string
 
 (* Common interface between F#, Ocaml and F* to read and write references *)
 (* F# uses native references, while OCaml uses both native references (Pervasives) and FStar_Heap ones *)

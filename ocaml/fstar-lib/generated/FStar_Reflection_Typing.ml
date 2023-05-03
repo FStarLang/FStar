@@ -34,11 +34,11 @@ let (mk_binder :
                 (FStar_Reflection_Builtins.pack_bv
                    {
                      FStar_Reflection_Data.bv_ppname = pp_name;
-                     FStar_Reflection_Data.bv_index = x;
-                     FStar_Reflection_Data.bv_sort = ty
+                     FStar_Reflection_Data.bv_index = x
                    });
               FStar_Reflection_Data.binder_qual = q;
-              FStar_Reflection_Data.binder_attrs = []
+              FStar_Reflection_Data.binder_attrs = [];
+              FStar_Reflection_Data.binder_sort = ty
             }
 let (extend_env :
   FStar_Reflection_Types.env ->
@@ -63,12 +63,7 @@ let (bv_index : FStar_Reflection_Types.bv -> FStar_Reflection_Data.var) =
 let (binder_sort :
   FStar_Reflection_Types.binder -> FStar_Reflection_Types.typ) =
   fun b ->
-    let uu___ = FStar_Reflection_Builtins.inspect_binder b in
-    match uu___ with
-    | { FStar_Reflection_Data.binder_bv = bv;
-        FStar_Reflection_Data.binder_qual = uu___1;
-        FStar_Reflection_Data.binder_attrs = uu___2;_} ->
-        (FStar_Reflection_Builtins.inspect_bv bv).FStar_Reflection_Data.bv_sort
+    (FStar_Reflection_Builtins.inspect_binder b).FStar_Reflection_Data.binder_sort
 let (binder_qual :
   FStar_Reflection_Types.binder -> FStar_Reflection_Data.aqualv) =
   fun b ->
@@ -76,7 +71,8 @@ let (binder_qual :
     match uu___ with
     | { FStar_Reflection_Data.binder_bv = uu___1;
         FStar_Reflection_Data.binder_qual = q;
-        FStar_Reflection_Data.binder_attrs = uu___2;_} -> q
+        FStar_Reflection_Data.binder_attrs = uu___2;
+        FStar_Reflection_Data.binder_sort = uu___3;_} -> q
 type open_or_close =
   | OpenWith of FStar_Reflection_Types.term 
   | CloseVar of FStar_Reflection_Data.var 
@@ -101,30 +97,22 @@ let (__proj__Rename__item___1 : open_or_close -> FStar_Reflection_Data.var) =
   fun projectee -> match projectee with | Rename (_0, _1) -> _1
 let (tun : FStar_Reflection_Types.term) =
   FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
-let (make_bv :
-  Prims.nat -> FStar_Reflection_Types.term -> FStar_Reflection_Data.bv_view)
-  =
+let (make_bv : Prims.nat -> FStar_Reflection_Data.bv_view) =
   fun n ->
-    fun t ->
-      {
-        FStar_Reflection_Data.bv_ppname = pp_name_default;
-        FStar_Reflection_Data.bv_index = n;
-        FStar_Reflection_Data.bv_sort = t
-      }
+    {
+      FStar_Reflection_Data.bv_ppname = pp_name_default;
+      FStar_Reflection_Data.bv_index = n
+    }
 let (make_bv_with_name :
-  pp_name_t ->
-    Prims.nat -> FStar_Reflection_Types.term -> FStar_Reflection_Data.bv_view)
-  =
+  pp_name_t -> Prims.nat -> FStar_Reflection_Data.bv_view) =
   fun s ->
     fun n ->
-      fun t ->
-        {
-          FStar_Reflection_Data.bv_ppname = s;
-          FStar_Reflection_Data.bv_index = n;
-          FStar_Reflection_Data.bv_sort = t
-        }
+      {
+        FStar_Reflection_Data.bv_ppname = s;
+        FStar_Reflection_Data.bv_index = n
+      }
 let (var_as_bv : Prims.nat -> FStar_Reflection_Types.bv) =
-  fun v -> FStar_Reflection_Builtins.pack_bv (make_bv v tun)
+  fun v -> FStar_Reflection_Builtins.pack_bv (make_bv v)
 let (var_as_term : FStar_Reflection_Data.var -> FStar_Reflection_Types.term)
   =
   fun v ->
@@ -144,11 +132,39 @@ let (mk_abs :
       fun t ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_Abs ((binder_of_t_q ty qual), t))
+let (mk_total : FStar_Reflection_Types.typ -> FStar_Reflection_Types.comp) =
+  fun t ->
+    FStar_Reflection_Builtins.pack_comp (FStar_Reflection_Data.C_Total t)
+let (mk_ghost : FStar_Reflection_Types.typ -> FStar_Reflection_Types.comp) =
+  fun t ->
+    FStar_Reflection_Builtins.pack_comp (FStar_Reflection_Data.C_GTotal t)
+let (mk_arrow :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Data.aqualv ->
+      FStar_Reflection_Types.typ -> FStar_Reflection_Types.term)
+  =
+  fun ty ->
+    fun qual ->
+      fun t ->
+        FStar_Reflection_Builtins.pack_ln
+          (FStar_Reflection_Data.Tv_Arrow
+             ((binder_of_t_q ty qual), (mk_total t)))
+let (mk_ghost_arrow :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Data.aqualv ->
+      FStar_Reflection_Types.typ -> FStar_Reflection_Types.term)
+  =
+  fun ty ->
+    fun qual ->
+      fun t ->
+        FStar_Reflection_Builtins.pack_ln
+          (FStar_Reflection_Data.Tv_Arrow
+             ((binder_of_t_q ty qual), (mk_ghost t)))
 let (bound_var : Prims.nat -> FStar_Reflection_Types.term) =
   fun i ->
     FStar_Reflection_Builtins.pack_ln
       (FStar_Reflection_Data.Tv_BVar
-         (FStar_Reflection_Builtins.pack_bv (make_bv i tun)))
+         (FStar_Reflection_Builtins.pack_bv (make_bv i)))
 let (open_with_var : FStar_Reflection_Data.var -> open_or_close) =
   fun x ->
     OpenWith
@@ -211,9 +227,7 @@ let rec (open_or_close_term' :
                             {
                               FStar_Reflection_Data.bv_ppname =
                                 (uu___.FStar_Reflection_Data.bv_ppname);
-                              FStar_Reflection_Data.bv_index = i;
-                              FStar_Reflection_Data.bv_sort =
-                                (uu___.FStar_Reflection_Data.bv_sort)
+                              FStar_Reflection_Data.bv_index = i
                             })))
                  else t
              | Rename (y, z) ->
@@ -227,9 +241,7 @@ let rec (open_or_close_term' :
                             {
                               FStar_Reflection_Data.bv_ppname =
                                 (uu___.FStar_Reflection_Data.bv_ppname);
-                              FStar_Reflection_Data.bv_index = z;
-                              FStar_Reflection_Data.bv_sort =
-                                (uu___.FStar_Reflection_Data.bv_sort)
+                              FStar_Reflection_Data.bv_index = z
                             })))
                  else t)
         | FStar_Reflection_Data.Tv_BVar j ->
@@ -250,9 +262,7 @@ let rec (open_or_close_term' :
                                  {
                                    FStar_Reflection_Data.bv_ppname =
                                      (uu___.FStar_Reflection_Data.bv_ppname);
-                                   FStar_Reflection_Data.bv_index = k;
-                                   FStar_Reflection_Data.bv_sort =
-                                     (uu___.FStar_Reflection_Data.bv_sort)
+                                   FStar_Reflection_Data.bv_index = k
                                  }))))
                  else t)
         | FStar_Reflection_Data.Tv_App (hd, argv) ->
@@ -271,20 +281,20 @@ let rec (open_or_close_term' :
             FStar_Reflection_Builtins.pack_ln
               (FStar_Reflection_Data.Tv_Arrow
                  (b', (open_or_close_comp' c v (i + Prims.int_one))))
-        | FStar_Reflection_Data.Tv_Refine (bv, f) ->
-            let bv' = open_or_close_bv' bv v i in
+        | FStar_Reflection_Data.Tv_Refine (bv, sort, f) ->
             FStar_Reflection_Builtins.pack_ln
               (FStar_Reflection_Data.Tv_Refine
-                 (bv', (open_or_close_term' f v (i + Prims.int_one))))
+                 (bv, (open_or_close_term' sort v i),
+                   (open_or_close_term' f v (i + Prims.int_one))))
         | FStar_Reflection_Data.Tv_Uvar (j, c) ->
             FStar_Reflection_Builtins.pack_ln
               (FStar_Reflection_Data.Tv_Uvar
                  (j, (open_or_close_ctx_uvar_and_subst c v i)))
-        | FStar_Reflection_Data.Tv_Let (recf, attrs, bv, def, body) ->
+        | FStar_Reflection_Data.Tv_Let (recf, attrs, bv, ty, def, body) ->
             FStar_Reflection_Builtins.pack_ln
               (FStar_Reflection_Data.Tv_Let
-                 (recf, (open_or_close_terms' attrs v i),
-                   (open_or_close_bv' bv v i),
+                 (recf, (open_or_close_terms' attrs v i), bv,
+                   (open_or_close_term' ty v i),
                    (if recf
                     then open_or_close_term' def v (i + Prims.int_one)
                     else open_or_close_term' def v i),
@@ -320,23 +330,6 @@ let rec (open_or_close_term' :
                     | FStar_Pervasives_Native.Some tac1 ->
                         FStar_Pervasives_Native.Some
                           (open_or_close_term' tac1 v i)), b))
-and (open_or_close_bv' :
-  FStar_Reflection_Types.bv ->
-    open_or_close -> Prims.nat -> FStar_Reflection_Types.bv)
-  =
-  fun b ->
-    fun v ->
-      fun i ->
-        let bv = FStar_Reflection_Builtins.inspect_bv b in
-        FStar_Reflection_Builtins.pack_bv
-          {
-            FStar_Reflection_Data.bv_ppname =
-              (bv.FStar_Reflection_Data.bv_ppname);
-            FStar_Reflection_Data.bv_index =
-              (bv.FStar_Reflection_Data.bv_index);
-            FStar_Reflection_Data.bv_sort =
-              (open_or_close_term' bv.FStar_Reflection_Data.bv_sort v i)
-          }
 and (open_or_close_binder' :
   FStar_Reflection_Types.binder ->
     open_or_close -> Prims.nat -> FStar_Reflection_Types.binder)
@@ -348,12 +341,14 @@ and (open_or_close_binder' :
         FStar_Reflection_Builtins.pack_binder
           {
             FStar_Reflection_Data.binder_bv =
-              (open_or_close_bv' bndr.FStar_Reflection_Data.binder_bv v i);
+              (bndr.FStar_Reflection_Data.binder_bv);
             FStar_Reflection_Data.binder_qual =
               (bndr.FStar_Reflection_Data.binder_qual);
             FStar_Reflection_Data.binder_attrs =
               (open_or_close_terms' bndr.FStar_Reflection_Data.binder_attrs v
-                 i)
+                 i);
+            FStar_Reflection_Data.binder_sort =
+              (open_or_close_term' bndr.FStar_Reflection_Data.binder_sort v i)
           }
 and (open_or_close_comp' :
   FStar_Reflection_Types.comp ->
@@ -430,9 +425,9 @@ and (open_or_close_pattern' :
             let pats1 = open_or_close_patterns' pats v i in
             FStar_Reflection_Data.Pat_Cons (fv, us, pats1)
         | FStar_Reflection_Data.Pat_Var bv ->
-            FStar_Reflection_Data.Pat_Var (open_or_close_bv' bv v i)
+            FStar_Reflection_Data.Pat_Var bv
         | FStar_Reflection_Data.Pat_Wild bv ->
-            FStar_Reflection_Data.Pat_Wild (open_or_close_bv' bv v i)
+            FStar_Reflection_Data.Pat_Wild bv
         | FStar_Reflection_Data.Pat_Dot_Term topt ->
             FStar_Reflection_Data.Pat_Dot_Term
               ((match topt with
@@ -508,15 +503,6 @@ let (rename :
     FStar_Reflection_Data.var ->
       FStar_Reflection_Data.var -> FStar_Reflection_Types.term)
   = fun t -> fun x -> fun y -> FStar_Reflection_Typing_Builtins.rename t x y
-let (bv_as_binder :
-  FStar_Reflection_Types.bv -> FStar_Reflection_Types.binder) =
-  fun bv ->
-    FStar_Reflection_Builtins.pack_binder
-      {
-        FStar_Reflection_Data.binder_bv = bv;
-        FStar_Reflection_Data.binder_qual = FStar_Reflection_Data.Q_Explicit;
-        FStar_Reflection_Data.binder_attrs = []
-      }
 let (constant_as_term :
   FStar_Reflection_Data.vconst -> FStar_Reflection_Types.term) =
   fun v ->
@@ -545,9 +531,6 @@ let (u_succ :
   FStar_Reflection_Types.universe -> FStar_Reflection_Types.universe) =
   fun u ->
     FStar_Reflection_Builtins.pack_universe (FStar_Reflection_Data.Uv_Succ u)
-let (mk_total : FStar_Reflection_Types.typ -> FStar_Reflection_Types.comp) =
-  fun t ->
-    FStar_Reflection_Builtins.pack_comp (FStar_Reflection_Data.C_Total t)
 let (tm_type :
   FStar_Reflection_Types.universe -> FStar_Reflection_Types.term) =
   fun u ->
@@ -617,12 +600,12 @@ let rec (freevars :
         FStar_Set.union (freevars_binder b) (freevars body)
     | FStar_Reflection_Data.Tv_Arrow (b, c) ->
         FStar_Set.union (freevars_binder b) (freevars_comp c)
-    | FStar_Reflection_Data.Tv_Refine (bv, f) ->
-        FStar_Set.union (freevars_bv bv) (freevars f)
-    | FStar_Reflection_Data.Tv_Let (recf, attrs, bv, def, body) ->
+    | FStar_Reflection_Data.Tv_Refine (bv, sort, f) ->
+        FStar_Set.union (freevars sort) (freevars f)
+    | FStar_Reflection_Data.Tv_Let (recf, attrs, bv, ty, def, body) ->
         FStar_Set.union
           (FStar_Set.union
-             (FStar_Set.union (freevars_terms attrs) (freevars_bv bv))
+             (FStar_Set.union (freevars_terms attrs) (freevars ty))
              (freevars def)) (freevars body)
     | FStar_Reflection_Data.Tv_Match (scr, ret, brs) ->
         FStar_Set.union
@@ -674,16 +657,11 @@ and (freevars_terms :
     match ts with
     | [] -> FStar_Set.empty ()
     | t::ts1 -> FStar_Set.union (freevars t) (freevars_terms ts1)
-and (freevars_bv :
-  FStar_Reflection_Types.bv -> FStar_Reflection_Data.var FStar_Set.set) =
-  fun b ->
-    let bv = FStar_Reflection_Builtins.inspect_bv b in
-    freevars bv.FStar_Reflection_Data.bv_sort
 and (freevars_binder :
   FStar_Reflection_Types.binder -> FStar_Reflection_Data.var FStar_Set.set) =
   fun b ->
     let bndr = FStar_Reflection_Builtins.inspect_binder b in
-    FStar_Set.union (freevars_bv bndr.FStar_Reflection_Data.binder_bv)
+    FStar_Set.union (freevars bndr.FStar_Reflection_Data.binder_sort)
       (freevars_terms bndr.FStar_Reflection_Data.binder_attrs)
 and (freevars_pattern :
   FStar_Reflection_Data.pattern -> FStar_Reflection_Data.var FStar_Set.set) =
@@ -691,8 +669,8 @@ and (freevars_pattern :
     match p with
     | FStar_Reflection_Data.Pat_Constant uu___ -> FStar_Set.empty ()
     | FStar_Reflection_Data.Pat_Cons (fv, us, pats) -> freevars_patterns pats
-    | FStar_Reflection_Data.Pat_Var bv -> freevars_bv bv
-    | FStar_Reflection_Data.Pat_Wild bv -> freevars_bv bv
+    | FStar_Reflection_Data.Pat_Var bv -> FStar_Set.empty ()
+    | FStar_Reflection_Data.Pat_Wild bv -> FStar_Set.empty ()
     | FStar_Reflection_Data.Pat_Dot_Term topt -> freevars_opt topt freevars
 and (freevars_patterns :
   (FStar_Reflection_Data.pattern * Prims.bool) Prims.list ->
@@ -732,67 +710,148 @@ and (freevars_match_returns :
           | FStar_Pervasives.Inr c -> freevars_comp c in
         let as_1 = freevars_opt as_ freevars in
         FStar_Set.union (FStar_Set.union b1 ret1) as_1
+let rec (ln' : FStar_Reflection_Types.term -> Prims.int -> Prims.bool) =
+  fun e ->
+    fun n ->
+      match FStar_Reflection_Builtins.inspect_ln e with
+      | FStar_Reflection_Data.Tv_UInst (uu___, uu___1) -> true
+      | FStar_Reflection_Data.Tv_FVar uu___ -> true
+      | FStar_Reflection_Data.Tv_Type uu___ -> true
+      | FStar_Reflection_Data.Tv_Const uu___ -> true
+      | FStar_Reflection_Data.Tv_Unknown -> true
+      | FStar_Reflection_Data.Tv_Var uu___ -> true
+      | FStar_Reflection_Data.Tv_BVar m -> (bv_index m) <= n
+      | FStar_Reflection_Data.Tv_App (e1, (e2, uu___)) ->
+          (ln' e1 n) && (ln' e2 n)
+      | FStar_Reflection_Data.Tv_Abs (b, body) ->
+          (ln'_binder b n) && (ln' body (n + Prims.int_one))
+      | FStar_Reflection_Data.Tv_Arrow (b, c) ->
+          (ln'_binder b n) && (ln'_comp c (n + Prims.int_one))
+      | FStar_Reflection_Data.Tv_Refine (bv, sort, f) ->
+          (ln' sort n) && (ln' f (n + Prims.int_one))
+      | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) -> false
+      | FStar_Reflection_Data.Tv_Let (recf, attrs, bv, ty, def, body) ->
+          (((ln'_terms attrs n) && (ln' ty n)) &&
+             (if recf then ln' def (n + Prims.int_one) else ln' def n))
+            && (ln' body (n + Prims.int_one))
+      | FStar_Reflection_Data.Tv_Match (scr, ret, brs) ->
+          ((ln' scr n) &&
+             (match ret with
+              | FStar_Pervasives_Native.None -> true
+              | FStar_Pervasives_Native.Some m -> ln'_match_returns m n))
+            && (ln'_branches brs n)
+      | FStar_Reflection_Data.Tv_AscribedT (e1, t, tac, b) ->
+          ((ln' e1 n) && (ln' t n)) &&
+            ((match tac with
+              | FStar_Pervasives_Native.None -> true
+              | FStar_Pervasives_Native.Some tac1 -> ln' tac1 n))
+      | FStar_Reflection_Data.Tv_AscribedC (e1, c, tac, b) ->
+          ((ln' e1 n) && (ln'_comp c n)) &&
+            ((match tac with
+              | FStar_Pervasives_Native.None -> true
+              | FStar_Pervasives_Native.Some tac1 -> ln' tac1 n))
+and (ln'_comp : FStar_Reflection_Types.comp -> Prims.int -> Prims.bool) =
+  fun c ->
+    fun i ->
+      match FStar_Reflection_Builtins.inspect_comp c with
+      | FStar_Reflection_Data.C_Total t -> ln' t i
+      | FStar_Reflection_Data.C_GTotal t -> ln' t i
+      | FStar_Reflection_Data.C_Lemma (pre, post, pats) ->
+          ((ln' pre i) && (ln' post i)) && (ln' pats i)
+      | FStar_Reflection_Data.C_Eff (us, eff_name, res, args, decrs) ->
+          ((ln' res i) && (ln'_args args i)) && (ln'_terms decrs i)
+and (ln'_args :
+  FStar_Reflection_Data.argv Prims.list -> Prims.int -> Prims.bool) =
+  fun ts ->
+    fun i ->
+      match ts with
+      | [] -> true
+      | (t, q)::ts1 -> (ln' t i) && (ln'_args ts1 i)
+and (ln'_binder : FStar_Reflection_Types.binder -> Prims.int -> Prims.bool) =
+  fun b ->
+    fun n ->
+      let bndr = FStar_Reflection_Builtins.inspect_binder b in
+      (ln' bndr.FStar_Reflection_Data.binder_sort n) &&
+        (ln'_terms bndr.FStar_Reflection_Data.binder_attrs n)
+and (ln'_terms :
+  FStar_Reflection_Types.term Prims.list -> Prims.int -> Prims.bool) =
+  fun ts ->
+    fun n ->
+      match ts with | [] -> true | t::ts1 -> (ln' t n) && (ln'_terms ts1 n)
+and (ln'_patterns :
+  (FStar_Reflection_Data.pattern * Prims.bool) Prims.list ->
+    Prims.int -> Prims.bool)
+  =
+  fun ps ->
+    fun i ->
+      match ps with
+      | [] -> true
+      | (p, b)::ps1 ->
+          let b0 = ln'_pattern p i in
+          let n = binder_offset_pattern p in
+          let b1 = ln'_patterns ps1 (i + n) in b0 && b1
+and (ln'_pattern : FStar_Reflection_Data.pattern -> Prims.int -> Prims.bool)
+  =
+  fun p ->
+    fun i ->
+      match p with
+      | FStar_Reflection_Data.Pat_Constant uu___ -> true
+      | FStar_Reflection_Data.Pat_Cons (fv, us, pats) -> ln'_patterns pats i
+      | FStar_Reflection_Data.Pat_Var bv -> true
+      | FStar_Reflection_Data.Pat_Wild bv -> true
+      | FStar_Reflection_Data.Pat_Dot_Term topt ->
+          (match topt with
+           | FStar_Pervasives_Native.None -> true
+           | FStar_Pervasives_Native.Some t -> ln' t i)
+and (ln'_branch : FStar_Reflection_Data.branch -> Prims.int -> Prims.bool) =
+  fun br ->
+    fun i ->
+      let uu___ = br in
+      match uu___ with
+      | (p, t) ->
+          let b = ln'_pattern p i in
+          let j = binder_offset_pattern p in
+          let b' = ln' t (i + j) in b && b'
+and (ln'_branches :
+  FStar_Reflection_Data.branch Prims.list -> Prims.int -> Prims.bool) =
+  fun brs ->
+    fun i ->
+      match brs with
+      | [] -> true
+      | br::brs1 -> (ln'_branch br i) && (ln'_branches brs1 i)
+and (ln'_match_returns :
+  FStar_Reflection_Types.match_returns_ascription -> Prims.int -> Prims.bool)
+  =
+  fun m ->
+    fun i ->
+      let uu___ = m in
+      match uu___ with
+      | (b, (ret, as_, eq)) ->
+          let b1 = ln'_binder b i in
+          let ret1 =
+            match ret with
+            | FStar_Pervasives.Inl t -> ln' t (i + Prims.int_one)
+            | FStar_Pervasives.Inr c -> ln'_comp c (i + Prims.int_one) in
+          let as_1 =
+            match as_ with
+            | FStar_Pervasives_Native.None -> true
+            | FStar_Pervasives_Native.Some t -> ln' t (i + Prims.int_one) in
+          (b1 && ret1) && as_1
+let (ln : FStar_Reflection_Types.term -> Prims.bool) =
+  fun t -> ln' t (Prims.of_int (-1))
+let (ln_comp : FStar_Reflection_Types.comp -> Prims.bool) =
+  fun c -> ln'_comp c (Prims.of_int (-1))
 type term_ctxt =
   | Ctxt_hole 
   | Ctxt_app_head of term_ctxt * FStar_Reflection_Data.argv 
   | Ctxt_app_arg of FStar_Reflection_Types.term *
   FStar_Reflection_Data.aqualv * term_ctxt 
-  | Ctxt_abs_binder of binder_ctxt * FStar_Reflection_Types.term 
-  | Ctxt_abs_body of FStar_Reflection_Types.binder * term_ctxt 
-  | Ctxt_arrow_binder of binder_ctxt * FStar_Reflection_Types.comp 
-  | Ctxt_arrow_comp of FStar_Reflection_Types.binder * comp_ctxt 
-  | Ctxt_refine_bv of bv_ctxt * FStar_Reflection_Types.term 
-  | Ctxt_refine_ref of FStar_Reflection_Types.bv * term_ctxt 
-  | Ctxt_let_bv of Prims.bool * FStar_Reflection_Types.term Prims.list *
-  bv_ctxt * FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Ctxt_let_def of Prims.bool * FStar_Reflection_Types.term Prims.list *
-  FStar_Reflection_Types.bv * term_ctxt * FStar_Reflection_Types.term 
-  | Ctxt_let_body of Prims.bool * FStar_Reflection_Types.term Prims.list *
-  FStar_Reflection_Types.bv * FStar_Reflection_Types.term * term_ctxt 
-  | Ctxt_match_scrutinee of term_ctxt *
-  FStar_Reflection_Types.match_returns_ascription
-  FStar_Pervasives_Native.option * FStar_Reflection_Data.branch Prims.list 
-and bv_ctxt =
-  | Ctxt_bv of Prims.string FStar_Sealed.sealed * Prims.nat * term_ctxt 
-and binder_ctxt =
-  | Ctxt_binder of bv_ctxt * FStar_Reflection_Data.aqualv *
-  FStar_Reflection_Types.term Prims.list 
-and comp_ctxt =
-  | Ctxt_total of term_ctxt 
-  | Ctxt_gtotal of term_ctxt 
 let uu___is_Ctxt_hole uu___ =
   match uu___ with | Ctxt_hole _ -> true | _ -> false
 let uu___is_Ctxt_app_head uu___ =
   match uu___ with | Ctxt_app_head _ -> true | _ -> false
 let uu___is_Ctxt_app_arg uu___ =
   match uu___ with | Ctxt_app_arg _ -> true | _ -> false
-let uu___is_Ctxt_abs_binder uu___ =
-  match uu___ with | Ctxt_abs_binder _ -> true | _ -> false
-let uu___is_Ctxt_abs_body uu___ =
-  match uu___ with | Ctxt_abs_body _ -> true | _ -> false
-let uu___is_Ctxt_arrow_binder uu___ =
-  match uu___ with | Ctxt_arrow_binder _ -> true | _ -> false
-let uu___is_Ctxt_arrow_comp uu___ =
-  match uu___ with | Ctxt_arrow_comp _ -> true | _ -> false
-let uu___is_Ctxt_refine_bv uu___ =
-  match uu___ with | Ctxt_refine_bv _ -> true | _ -> false
-let uu___is_Ctxt_refine_ref uu___ =
-  match uu___ with | Ctxt_refine_ref _ -> true | _ -> false
-let uu___is_Ctxt_let_bv uu___ =
-  match uu___ with | Ctxt_let_bv _ -> true | _ -> false
-let uu___is_Ctxt_let_def uu___ =
-  match uu___ with | Ctxt_let_def _ -> true | _ -> false
-let uu___is_Ctxt_let_body uu___ =
-  match uu___ with | Ctxt_let_body _ -> true | _ -> false
-let uu___is_Ctxt_match_scrutinee uu___ =
-  match uu___ with | Ctxt_match_scrutinee _ -> true | _ -> false
-let uu___is_Ctxt_bv uu___ = match uu___ with | Ctxt_bv _ -> true | _ -> false
-let uu___is_Ctxt_binder uu___ =
-  match uu___ with | Ctxt_binder _ -> true | _ -> false
-let uu___is_Ctxt_total uu___ =
-  match uu___ with | Ctxt_total _ -> true | _ -> false
-let uu___is_Ctxt_gtotal uu___ =
-  match uu___ with | Ctxt_gtotal _ -> true | _ -> false
 let rec (apply_term_ctxt :
   term_ctxt -> FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
   fun e ->
@@ -805,78 +864,6 @@ let rec (apply_term_ctxt :
       | Ctxt_app_arg (hd, q, e1) ->
           FStar_Reflection_Builtins.pack_ln
             (FStar_Reflection_Data.Tv_App (hd, ((apply_term_ctxt e1 t), q)))
-      | Ctxt_abs_binder (b, body) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Abs ((apply_binder_ctxt b t), body))
-      | Ctxt_abs_body (b, e1) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Abs (b, (apply_term_ctxt e1 t)))
-      | Ctxt_arrow_binder (b, c) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Arrow ((apply_binder_ctxt b t), c))
-      | Ctxt_arrow_comp (b, c) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Arrow (b, (apply_comp_ctxt c t)))
-      | Ctxt_refine_bv (b, phi) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Refine ((apply_bv_ctxt b t), phi))
-      | Ctxt_refine_ref (b, phi) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Refine (b, (apply_term_ctxt phi t)))
-      | Ctxt_let_bv (b, attrs, bv, def, body) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Let
-               (b, attrs, (apply_bv_ctxt bv t), def, body))
-      | Ctxt_let_def (b, attrs, bv, def, body) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Let
-               (b, attrs, bv, (apply_term_ctxt def t), body))
-      | Ctxt_let_body (b, attrs, bv, def, body) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Let
-               (b, attrs, bv, def, (apply_term_ctxt body t)))
-      | Ctxt_match_scrutinee (sc, ret, brs) ->
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Match
-               ((apply_term_ctxt sc t), ret, brs))
-and (apply_bv_ctxt :
-  bv_ctxt -> FStar_Reflection_Types.term -> FStar_Reflection_Types.bv) =
-  fun b ->
-    fun t ->
-      let uu___ = b in
-      match uu___ with
-      | Ctxt_bv (bv_ppname, bv_index1, ty) ->
-          FStar_Reflection_Builtins.pack_bv
-            {
-              FStar_Reflection_Data.bv_ppname = bv_ppname;
-              FStar_Reflection_Data.bv_index = bv_index1;
-              FStar_Reflection_Data.bv_sort = (apply_term_ctxt ty t)
-            }
-and (apply_binder_ctxt :
-  binder_ctxt -> FStar_Reflection_Types.term -> FStar_Reflection_Types.binder)
-  =
-  fun b ->
-    fun t ->
-      let uu___ = b in
-      match uu___ with
-      | Ctxt_binder (bv, binder_qual1, binder_attrs) ->
-          FStar_Reflection_Builtins.pack_binder
-            {
-              FStar_Reflection_Data.binder_bv = (apply_bv_ctxt bv t);
-              FStar_Reflection_Data.binder_qual = binder_qual1;
-              FStar_Reflection_Data.binder_attrs = binder_attrs
-            }
-and (apply_comp_ctxt :
-  comp_ctxt -> FStar_Reflection_Types.term -> FStar_Reflection_Types.comp) =
-  fun c ->
-    fun t ->
-      match c with
-      | Ctxt_total e ->
-          FStar_Reflection_Builtins.pack_comp
-            (FStar_Reflection_Data.C_Total (apply_term_ctxt e t))
-      | Ctxt_gtotal e ->
-          FStar_Reflection_Builtins.pack_comp
-            (FStar_Reflection_Data.C_GTotal (apply_term_ctxt e t))
 type ('dummyV0, 'dummyV1) constant_typing =
   | CT_Unit 
   | CT_True 
@@ -954,9 +941,99 @@ let (mk_if :
                     FStar_Reflection_Data.C_True), then_);
                ((FStar_Reflection_Data.Pat_Constant
                    FStar_Reflection_Data.C_False), else_)]))
+type comp_typ =
+  (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.typ)
+let (close_comp_typ' :
+  comp_typ ->
+    FStar_Reflection_Data.var ->
+      Prims.nat ->
+        (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term))
+  =
+  fun c ->
+    fun x ->
+      fun i ->
+        ((FStar_Pervasives_Native.fst c),
+          (open_or_close_term' (FStar_Pervasives_Native.snd c) (CloseVar x) i))
+let (close_comp_typ :
+  comp_typ ->
+    FStar_Reflection_Data.var ->
+      (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term))
+  = fun c -> fun x -> close_comp_typ' c x Prims.int_zero
+let (open_comp_typ' :
+  comp_typ ->
+    FStar_Reflection_Data.var ->
+      Prims.nat ->
+        (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term))
+  =
+  fun c ->
+    fun x ->
+      fun i ->
+        ((FStar_Pervasives_Native.fst c),
+          (open_or_close_term' (FStar_Pervasives_Native.snd c)
+             (open_with_var x) i))
+let (open_comp_typ :
+  comp_typ ->
+    FStar_Reflection_Data.var ->
+      (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term))
+  = fun c -> fun x -> open_comp_typ' c x Prims.int_zero
+let (freevars_comp_typ : comp_typ -> FStar_Reflection_Data.var FStar_Set.set)
+  = fun c -> freevars (FStar_Pervasives_Native.snd c)
+let (mk_comp : comp_typ -> FStar_Reflection_Types.comp) =
+  fun c ->
+    match FStar_Pervasives_Native.fst c with
+    | FStar_Tactics_Types.E_Total -> mk_total (FStar_Pervasives_Native.snd c)
+    | FStar_Tactics_Types.E_Ghost -> mk_ghost (FStar_Pervasives_Native.snd c)
+let (mk_arrow_ct :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Data.aqualv -> comp_typ -> FStar_Reflection_Types.term)
+  =
+  fun ty ->
+    fun qual ->
+      fun c ->
+        FStar_Reflection_Builtins.pack_ln
+          (FStar_Reflection_Data.Tv_Arrow
+             ((binder_of_t_q ty qual), (mk_comp c)))
+type relation =
+  | R_Eq 
+  | R_Sub 
+let (uu___is_R_Eq : relation -> Prims.bool) =
+  fun projectee -> match projectee with | R_Eq -> true | uu___ -> false
+let (uu___is_R_Sub : relation -> Prims.bool) =
+  fun projectee -> match projectee with | R_Sub -> true | uu___ -> false
+let (is_non_informative_name : FStar_Reflection_Types.name -> Prims.bool) =
+  fun l ->
+    ((l = FStar_Reflection_Const.unit_lid) ||
+       (l = FStar_Reflection_Const.squash_qn))
+      || (l = ["FStar"; "Ghost"; "erased"])
+let (is_non_informative_fv : FStar_Reflection_Types.fv -> Prims.bool) =
+  fun f -> is_non_informative_name (FStar_Reflection_Builtins.inspect_fv f)
+type 'dummyV0 non_informative =
+  | Non_informative_type of FStar_Reflection_Types.universe 
+  | Non_informative_fv of FStar_Reflection_Types.fv 
+  | Non_informative_uinst of FStar_Reflection_Types.fv *
+  FStar_Reflection_Types.universe Prims.list 
+  | Non_informative_app of FStar_Reflection_Types.term *
+  FStar_Reflection_Data.argv * unit non_informative 
+  | Non_informative_total_arrow of FStar_Reflection_Types.term *
+  FStar_Reflection_Data.aqualv * FStar_Reflection_Types.term * unit
+  non_informative 
+  | Non_informative_ghost_arrow of FStar_Reflection_Types.term *
+  FStar_Reflection_Data.aqualv * FStar_Reflection_Types.term 
+let uu___is_Non_informative_type uu___ uu___1 =
+  match uu___1 with | Non_informative_type _ -> true | _ -> false
+let uu___is_Non_informative_fv uu___ uu___1 =
+  match uu___1 with | Non_informative_fv _ -> true | _ -> false
+let uu___is_Non_informative_uinst uu___ uu___1 =
+  match uu___1 with | Non_informative_uinst _ -> true | _ -> false
+let uu___is_Non_informative_app uu___ uu___1 =
+  match uu___1 with | Non_informative_app _ -> true | _ -> false
+let uu___is_Non_informative_total_arrow uu___ uu___1 =
+  match uu___1 with | Non_informative_total_arrow _ -> true | _ -> false
+let uu___is_Non_informative_ghost_arrow uu___ uu___1 =
+  match uu___1 with | Non_informative_ghost_arrow _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   | T_Token of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.typ * unit 
+  comp_typ * unit 
   | T_Var of FStar_Reflection_Types.env * FStar_Reflection_Types.bv 
   | T_FVar of FStar_Reflection_Types.env * FStar_Reflection_Types.fv 
   | T_UInst of FStar_Reflection_Types.env * FStar_Reflection_Types.fv *
@@ -964,45 +1041,52 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   | T_Const of FStar_Reflection_Types.env * FStar_Reflection_Data.vconst *
   FStar_Reflection_Types.term * (unit, unit) constant_typing 
   | T_Abs of FStar_Reflection_Types.env * FStar_Reflection_Data.var *
-  FStar_Reflection_Types.term * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * FStar_Reflection_Types.universe * pp_name_t *
-  FStar_Reflection_Data.aqualv * (unit, unit, unit) typing * (unit, unit,
-  unit) typing 
+  FStar_Reflection_Types.term * FStar_Reflection_Types.term * comp_typ *
+  FStar_Reflection_Types.universe * pp_name_t * FStar_Reflection_Data.aqualv
+  * FStar_Tactics_Types.tot_or_ghost * (unit, unit, unit) typing * (unit,
+  unit, unit) typing 
   | T_App of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_Types.binder *
-  FStar_Reflection_Types.term * (unit, unit, unit) typing * (unit, unit,
-  unit) typing 
+  FStar_Reflection_Types.term * FStar_Tactics_Types.tot_or_ghost * (unit,
+  unit, unit) typing * (unit, unit, unit) typing 
   | T_Arrow of FStar_Reflection_Types.env * FStar_Reflection_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_Types.universe * FStar_Reflection_Types.universe *
-  pp_name_t * FStar_Reflection_Data.aqualv * (unit, unit, unit) typing *
-  (unit, unit, unit) typing 
+  pp_name_t * FStar_Reflection_Data.aqualv * FStar_Tactics_Types.tot_or_ghost
+  * FStar_Tactics_Types.tot_or_ghost * FStar_Tactics_Types.tot_or_ghost *
+  (unit, unit, unit) typing * (unit, unit, unit) typing 
   | T_Refine of FStar_Reflection_Types.env * FStar_Reflection_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.universe * FStar_Reflection_Types.universe * (
-  unit, unit, unit) typing * (unit, unit, unit) typing 
+  FStar_Reflection_Types.universe * FStar_Reflection_Types.universe *
+  FStar_Tactics_Types.tot_or_ghost * FStar_Tactics_Types.tot_or_ghost *
+  (unit, unit, unit) typing * (unit, unit, unit) typing 
   | T_PropIrrelevance of FStar_Reflection_Types.env *
-  FStar_Reflection_Types.term * FStar_Reflection_Types.term * (unit, 
-  unit, unit) typing * (unit, unit, unit) typing 
+  FStar_Reflection_Types.term * FStar_Reflection_Types.term *
+  FStar_Tactics_Types.tot_or_ghost * FStar_Tactics_Types.tot_or_ghost *
+  (unit, unit, unit) typing * (unit, unit, unit) typing 
   | T_Sub of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * FStar_Reflection_Types.term * (unit, 
-  unit, unit) typing * (unit, unit, unit) sub_typing 
+  comp_typ * comp_typ * (unit, unit, unit) typing * (unit, unit, unit, 
+  unit) related_comp 
   | T_If of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_Types.universe *
-  FStar_Reflection_Data.var * (unit, unit, unit) typing * (unit, unit, 
-  unit) typing * (unit, unit, unit) typing * (unit, unit, unit) typing 
-  | T_Match of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * FStar_Reflection_Data.branch Prims.list *
-  FStar_Reflection_Types.term * (unit, unit, unit) typing * (unit, unit,
-  unit, unit, unit) branches_typing 
-and ('dummyV0, 'dummyV1, 'dummyV2) sub_typing =
-  | ST_Equiv of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * (unit, unit, unit) equiv 
-  | ST_Token of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * unit 
-  | ST_UnivEq of FStar_Reflection_Types.env * FStar_Reflection_Types.universe
-  * FStar_Reflection_Types.universe * (unit, unit) univ_eq 
+  FStar_Reflection_Data.var * FStar_Tactics_Types.tot_or_ghost *
+  FStar_Tactics_Types.tot_or_ghost * (unit, unit, unit) typing * (unit, 
+  unit, unit) typing * (unit, unit, unit) typing * (unit, unit, unit) typing 
+and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) related =
+  | Rel_equiv of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term * relation * (unit, unit, unit) equiv 
+  | Rel_subtyping_token of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.term * FStar_Reflection_Types.term * unit 
+  | Rel_arrow of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term * FStar_Reflection_Data.aqualv * comp_typ *
+  comp_typ * relation * FStar_Reflection_Data.var * (unit, unit, unit, 
+  unit) related * (unit, unit, unit, unit) related_comp 
+  | Rel_abs of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term * FStar_Reflection_Data.aqualv *
+  FStar_Reflection_Types.term * FStar_Reflection_Types.term *
+  FStar_Reflection_Data.var * (unit, unit, unit, unit) related * (unit, 
+  unit, unit, unit) related 
 and ('dummyV0, 'dummyV1, 'dummyV2) equiv =
   | EQ_Refl of FStar_Reflection_Types.env * FStar_Reflection_Types.term 
   | EQ_Sym of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
@@ -1010,6 +1094,8 @@ and ('dummyV0, 'dummyV1, 'dummyV2) equiv =
   | EQ_Trans of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term * (unit, 
   unit, unit) equiv * (unit, unit, unit) equiv 
+  | EQ_Univ of FStar_Reflection_Types.env * FStar_Reflection_Types.universe *
+  FStar_Reflection_Types.universe * (unit, unit) univ_eq 
   | EQ_Beta of FStar_Reflection_Types.env * FStar_Reflection_Types.typ *
   FStar_Reflection_Data.aqualv * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term 
@@ -1017,7 +1103,14 @@ and ('dummyV0, 'dummyV1, 'dummyV2) equiv =
   FStar_Reflection_Types.term * unit 
   | EQ_Ctxt of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * term_ctxt * (unit, unit, unit) equiv 
-and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) branches_typing
+and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) related_comp =
+  | Relc_typ of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term * FStar_Tactics_Types.tot_or_ghost * relation *
+  (unit, unit, unit, unit) related 
+  | Relc_total_ghost of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.term 
+  | Relc_ghost_total of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.term * unit non_informative 
 let uu___is_T_Token uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Token _ -> true | _ -> false
 let uu___is_T_Var uu___2 uu___1 uu___ uu___3 =
@@ -1042,26 +1135,38 @@ let uu___is_T_Sub uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Sub _ -> true | _ -> false
 let uu___is_T_If uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_If _ -> true | _ -> false
-let uu___is_T_Match uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Match _ -> true | _ -> false
-let uu___is_ST_Equiv uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | ST_Equiv _ -> true | _ -> false
-let uu___is_ST_Token uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | ST_Token _ -> true | _ -> false
-let uu___is_ST_UnivEq uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | ST_UnivEq _ -> true | _ -> false
+let uu___is_Rel_equiv uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_equiv _ -> true | _ -> false
+let uu___is_Rel_subtyping_token uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_subtyping_token _ -> true | _ -> false
+let uu___is_Rel_arrow uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_arrow _ -> true | _ -> false
+let uu___is_Rel_abs uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_abs _ -> true | _ -> false
 let uu___is_EQ_Refl uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Refl _ -> true | _ -> false
 let uu___is_EQ_Sym uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Sym _ -> true | _ -> false
 let uu___is_EQ_Trans uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Trans _ -> true | _ -> false
+let uu___is_EQ_Univ uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | EQ_Univ _ -> true | _ -> false
 let uu___is_EQ_Beta uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Beta _ -> true | _ -> false
 let uu___is_EQ_Token uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Token _ -> true | _ -> false
 let uu___is_EQ_Ctxt uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | EQ_Ctxt _ -> true | _ -> false
+let uu___is_Relc_typ uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Relc_typ _ -> true | _ -> false
+let uu___is_Relc_total_ghost uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Relc_total_ghost _ -> true | _ -> false
+let uu___is_Relc_ghost_total uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Relc_ghost_total _ -> true | _ -> false
+type ('g, 't1, 't2) sub_typing = (unit, unit, unit, unit) related
+type ('g, 'c1, 'c2) sub_comp = (unit, unit, unit, unit) related_comp
+type ('g, 'e, 't) tot_typing = (unit, unit, unit) typing
+type ('g, 'e, 't) ghost_typing = (unit, unit, unit) typing
 type bindings =
   (FStar_Reflection_Data.var * FStar_Reflection_Types.term) Prims.list
 let rename_bindings :
@@ -1128,144 +1233,14 @@ let (simplify_umax :
         fun d ->
           let ue = UN_MaxLeq (u, u, (UNLEQ_Refl u)) in
           T_Sub
-            (g, t, (tm_type (u_max u u)), (tm_type u), d,
-              (ST_UnivEq (g, (u_max u u), u, ue)))
-let rec (ln' : FStar_Reflection_Types.term -> Prims.int -> Prims.bool) =
-  fun e ->
-    fun n ->
-      match FStar_Reflection_Builtins.inspect_ln e with
-      | FStar_Reflection_Data.Tv_UInst (uu___, uu___1) -> true
-      | FStar_Reflection_Data.Tv_FVar uu___ -> true
-      | FStar_Reflection_Data.Tv_Type uu___ -> true
-      | FStar_Reflection_Data.Tv_Const uu___ -> true
-      | FStar_Reflection_Data.Tv_Unknown -> true
-      | FStar_Reflection_Data.Tv_Var uu___ -> true
-      | FStar_Reflection_Data.Tv_BVar m -> (bv_index m) <= n
-      | FStar_Reflection_Data.Tv_App (e1, (e2, uu___)) ->
-          (ln' e1 n) && (ln' e2 n)
-      | FStar_Reflection_Data.Tv_Abs (b, body) ->
-          (ln'_binder b n) && (ln' body (n + Prims.int_one))
-      | FStar_Reflection_Data.Tv_Arrow (b, c) ->
-          (ln'_binder b n) && (ln'_comp c (n + Prims.int_one))
-      | FStar_Reflection_Data.Tv_Refine (bv, f) ->
-          (ln'_bv bv n) && (ln' f (n + Prims.int_one))
-      | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) -> false
-      | FStar_Reflection_Data.Tv_Let (recf, attrs, bv, def, body) ->
-          (((ln'_terms attrs n) && (ln'_bv bv n)) &&
-             (if recf then ln' def (n + Prims.int_one) else ln' def n))
-            && (ln' body (n + Prims.int_one))
-      | FStar_Reflection_Data.Tv_Match (scr, ret, brs) ->
-          ((ln' scr n) &&
-             (match ret with
-              | FStar_Pervasives_Native.None -> true
-              | FStar_Pervasives_Native.Some m -> ln'_match_returns m n))
-            && (ln'_branches brs n)
-      | FStar_Reflection_Data.Tv_AscribedT (e1, t, tac, b) ->
-          ((ln' e1 n) && (ln' t n)) &&
-            ((match tac with
-              | FStar_Pervasives_Native.None -> true
-              | FStar_Pervasives_Native.Some tac1 -> ln' tac1 n))
-      | FStar_Reflection_Data.Tv_AscribedC (e1, c, tac, b) ->
-          ((ln' e1 n) && (ln'_comp c n)) &&
-            ((match tac with
-              | FStar_Pervasives_Native.None -> true
-              | FStar_Pervasives_Native.Some tac1 -> ln' tac1 n))
-and (ln'_comp : FStar_Reflection_Types.comp -> Prims.int -> Prims.bool) =
-  fun c ->
-    fun i ->
-      match FStar_Reflection_Builtins.inspect_comp c with
-      | FStar_Reflection_Data.C_Total t -> ln' t i
-      | FStar_Reflection_Data.C_GTotal t -> ln' t i
-      | FStar_Reflection_Data.C_Lemma (pre, post, pats) ->
-          ((ln' pre i) && (ln' post i)) && (ln' pats i)
-      | FStar_Reflection_Data.C_Eff (us, eff_name, res, args, decrs) ->
-          ((ln' res i) && (ln'_args args i)) && (ln'_terms decrs i)
-and (ln'_args :
-  FStar_Reflection_Data.argv Prims.list -> Prims.int -> Prims.bool) =
-  fun ts ->
-    fun i ->
-      match ts with
-      | [] -> true
-      | (t, q)::ts1 -> (ln' t i) && (ln'_args ts1 i)
-and (ln'_bv : FStar_Reflection_Types.bv -> Prims.int -> Prims.bool) =
-  fun b ->
-    fun n ->
-      let bv = FStar_Reflection_Builtins.inspect_bv b in
-      ln' bv.FStar_Reflection_Data.bv_sort n
-and (ln'_binder : FStar_Reflection_Types.binder -> Prims.int -> Prims.bool) =
-  fun b ->
-    fun n ->
-      let bndr = FStar_Reflection_Builtins.inspect_binder b in
-      (ln'_bv bndr.FStar_Reflection_Data.binder_bv n) &&
-        (ln'_terms bndr.FStar_Reflection_Data.binder_attrs n)
-and (ln'_terms :
-  FStar_Reflection_Types.term Prims.list -> Prims.int -> Prims.bool) =
-  fun ts ->
-    fun n ->
-      match ts with | [] -> true | t::ts1 -> (ln' t n) && (ln'_terms ts1 n)
-and (ln'_patterns :
-  (FStar_Reflection_Data.pattern * Prims.bool) Prims.list ->
-    Prims.int -> Prims.bool)
-  =
-  fun ps ->
-    fun i ->
-      match ps with
-      | [] -> true
-      | (p, b)::ps1 ->
-          let b0 = ln'_pattern p i in
-          let n = binder_offset_pattern p in
-          let b1 = ln'_patterns ps1 (i + n) in b0 && b1
-and (ln'_pattern : FStar_Reflection_Data.pattern -> Prims.int -> Prims.bool)
-  =
-  fun p ->
-    fun i ->
-      match p with
-      | FStar_Reflection_Data.Pat_Constant uu___ -> true
-      | FStar_Reflection_Data.Pat_Cons (fv, us, pats) -> ln'_patterns pats i
-      | FStar_Reflection_Data.Pat_Var bv -> ln'_bv bv i
-      | FStar_Reflection_Data.Pat_Wild bv -> ln'_bv bv i
-      | FStar_Reflection_Data.Pat_Dot_Term topt ->
-          (match topt with
-           | FStar_Pervasives_Native.None -> true
-           | FStar_Pervasives_Native.Some t -> ln' t i)
-and (ln'_branch : FStar_Reflection_Data.branch -> Prims.int -> Prims.bool) =
-  fun br ->
-    fun i ->
-      let uu___ = br in
-      match uu___ with
-      | (p, t) ->
-          let b = ln'_pattern p i in
-          let j = binder_offset_pattern p in
-          let b' = ln' t (i + j) in b && b'
-and (ln'_branches :
-  FStar_Reflection_Data.branch Prims.list -> Prims.int -> Prims.bool) =
-  fun brs ->
-    fun i ->
-      match brs with
-      | [] -> true
-      | br::brs1 -> (ln'_branch br i) && (ln'_branches brs1 i)
-and (ln'_match_returns :
-  FStar_Reflection_Types.match_returns_ascription -> Prims.int -> Prims.bool)
-  =
-  fun m ->
-    fun i ->
-      let uu___ = m in
-      match uu___ with
-      | (b, (ret, as_, eq)) ->
-          let b1 = ln'_binder b i in
-          let ret1 =
-            match ret with
-            | FStar_Pervasives.Inl t -> ln' t (i + Prims.int_one)
-            | FStar_Pervasives.Inr c -> ln'_comp c (i + Prims.int_one) in
-          let as_1 =
-            match as_ with
-            | FStar_Pervasives_Native.None -> true
-            | FStar_Pervasives_Native.Some t -> ln' t (i + Prims.int_one) in
-          (b1 && ret1) && as_1
-let (ln : FStar_Reflection_Types.term -> Prims.bool) =
-  fun t -> ln' t (Prims.of_int (-1))
-let (ln_comp : FStar_Reflection_Types.comp -> Prims.bool) =
-  fun c -> ln'_comp c (Prims.of_int (-1))
+            (g, t, (FStar_Tactics_Types.E_Total, (tm_type (u_max u u))),
+              (FStar_Tactics_Types.E_Total, (tm_type u)), d,
+              (Relc_typ
+                 (g, (tm_type (u_max u u)), (tm_type u),
+                   FStar_Tactics_Types.E_Total, R_Sub,
+                   (Rel_equiv
+                      (g, (tm_type (u_max u u)), (tm_type u), R_Sub,
+                        (EQ_Univ (g, (u_max u u), u, ue)))))))
 let (equiv_abs :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.term ->
@@ -1279,6 +1254,40 @@ let (equiv_abs :
     fun e1 ->
       fun e2 ->
         fun uu___ -> fun uu___1 -> fun uu___2 -> fun uu___3 -> Prims.admit ()
+let (equiv_arrow :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            FStar_Reflection_Data.var ->
+              (unit, unit, unit) equiv -> (unit, unit, unit) equiv)
+  =
+  fun g ->
+    fun e1 ->
+      fun e2 ->
+        fun uu___ -> fun uu___1 -> fun uu___2 -> fun uu___3 -> Prims.admit ()
+let (equiv_abs_close :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.typ ->
+          FStar_Reflection_Data.aqualv ->
+            FStar_Reflection_Data.var ->
+              (unit, unit, unit) equiv -> (unit, unit, unit) equiv)
+  =
+  fun g ->
+    fun e1 ->
+      fun e2 ->
+        fun ty ->
+          fun q ->
+            fun x ->
+              fun eq ->
+                let eq1 = eq in
+                equiv_abs g
+                  (open_or_close_term' e1 (CloseVar x) Prims.int_zero)
+                  (open_or_close_term' e2 (CloseVar x) Prims.int_zero) ty q x
+                  eq1
 type 'g fstar_env_fvs = unit
 type fstar_env = FStar_Reflection_Types.env
 type fstar_top_env = fstar_env
