@@ -1030,6 +1030,8 @@ let uu___is_Relc_ghost_total uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Relc_ghost_total _ -> true | _ -> false
 type ('g, 't1, 't2) sub_typing = (unit, unit, unit, unit) related
 type ('g, 'c1, 'c2) sub_comp = (unit, unit, unit, unit) related_comp
+type ('g, 'e, 't) tot_typing = (unit, unit, unit) typing
+type ('g, 'e, 't) ghost_typing = (unit, unit, unit) typing
 type bindings =
   (FStar_Reflection_Data.var * FStar_Reflection_Types.term) Prims.list
 let rename_bindings :
