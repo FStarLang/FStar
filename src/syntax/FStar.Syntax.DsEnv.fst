@@ -113,6 +113,11 @@ let open_modules_and_namespaces env =
                    | Open_module_or_namespace (lid, _info) -> Some lid
                    | _ -> None)
     env.scope_mods
+let module_abbrevs env : list (ident & lident)=
+  List.filter_map (function
+                   | Module_abbrev (l, m) -> Some (l, m)
+                   | _ -> None)
+    env.scope_mods
 let set_current_module e l = {e with curmodule=Some l}
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -1347,3 +1352,17 @@ let fail_or env lookup lid = match lookup lid with
 let fail_or2 lookup id = match lookup id with
   | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^(string_of_id id)^"]")) (range_of_id id)
   | Some r -> r
+
+let resolve_name (e:env) (name:lident)
+  : option (either bv fv)
+  = match try_lookup_name false false e name with
+    | None -> None
+    | Some (Term_name (e, attrs)) -> (
+        match (Subst.compress e).n with
+        | Tm_name n -> Some (Inl n)
+        | Tm_fvar fv -> Some (Inr fv)
+        | _ -> None
+    )
+    | Some (Eff_name(se, l)) ->
+      let _ =  delta_depth_of_declaration in
+      Some (Inr (S.lid_as_fv l delta_constant None))

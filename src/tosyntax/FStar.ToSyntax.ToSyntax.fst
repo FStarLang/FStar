@@ -4003,6 +4003,28 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
     let env = push_sigelt env se in
     env, [se]
 
+  | DeclSyntaxExtension (extension_name, code, range) ->
+    let extension_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
+    match extension_parser with
+    | None ->
+      raise_error 
+        (Errors.Fatal_SyntaxError,
+         BU.format1 "Unknown syntax extension %s" extension_name)
+        range
+    | Some parser ->
+      let open FStar.Parser.AST.Util in
+      let opens = {
+        open_namespaces = open_modules_and_namespaces env;
+        module_abbreviations = module_abbrevs env
+      } in
+      match parser opens code range with
+      | Inl error ->
+        raise_error
+          (Errors.Fatal_SyntaxError, error.message)
+          error.range
+      | Inr d' ->
+        desugar_decl_aux env { d with d=d' }
+
 let desugar_decls env decls =
   let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
