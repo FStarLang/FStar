@@ -6,42 +6,48 @@
 all: boot
 .PHONY: all
 
-# Step 1: we build the initial plugin and the Steel and Pulse library
-# as they are now, and then we blast all generated files
-
-.PHONY: initial-build
-initial-build:
+.PHONY: build
+build:
 	+$(MAKE) -C .. all
-	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
+
+# Extraction rules assume that a snapshot has already been compiled.
 
 .PHONY: extract-ocaml
 extract-ocaml: extract-steel-plugin extract-extraction extract-pulse-plugin
 
 .PHONY: extract-steel-plugin
-extract-steel-plugin: initial-build
+extract-steel-plugin:
 	+$(MAKE) -C ocaml/plugin -f extract-steel.Makefile
 
 .PHONY: extract-pulse-plugin
-extract-pulse-plugin: initial-build
+extract-pulse-plugin:
 	+$(MAKE) -C ocaml/plugin -f extract-pulse.Makefile
 
 .PHONY: extract-extraction
-extract-extraction: initial-build
+extract-extraction:
 	+$(MAKE) -C extraction
 
 .PHONY: extract-c
-extract-c: initial-build
+extract-c:
 	+$(MAKE) -C c extract
 
 .PHONY: extract
 extract: extract-ocaml extract-c
 
 .PHONY: boot
-boot: extract
-	+$(MAKE) -C .. all
+boot:
+	+$(MAKE) extract
+	+$(MAKE) build
+
+.PHONY: clean-snapshot
+clean-snapshot:
+	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
 
 .PHONY: full-boot
-full-boot: boot
+full-boot:
+	+$(MAKE) build
+	+$(MAKE) clean-snapshot
+	+$(MAKE) boot
 
 .PHONY: proofs
 proofs:
