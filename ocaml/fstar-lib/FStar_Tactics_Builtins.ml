@@ -188,8 +188,8 @@ type ('env, 't) prop_validity_token = unit
 
 let check_subtyping              = from_tac_3 B.refl_check_subtyping
 let check_equiv                  = from_tac_3 B.refl_check_equiv
-let core_check_term              = from_tac_2 B.refl_core_check_term
-let tc_term                      = from_tac_2 B.refl_tc_term
+let core_check_term              = from_tac_3 B.refl_core_check_term
+let tc_term                      = from_tac_3 B.refl_tc_term
 let universe_of                  = from_tac_2 B.refl_universe_of
 let check_prop_validity          = from_tac_2 B.refl_check_prop_validity
 let instantiate_implicits        = from_tac_2 B.refl_instantiate_implicits

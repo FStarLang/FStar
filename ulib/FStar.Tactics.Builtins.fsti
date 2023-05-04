@@ -463,7 +463,7 @@ val subtyping_token (g:env) (t0 t1:typ) : Type0
 
 val equiv_token (g:env) (t0 t1:typ) : Type0
 
-val typing_token (g:env) (e:term) (t:typ) : Type0
+val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
 
 val check_subtyping (g:env) (t0 t1:typ)
   : Tac (option (subtyping_token g t0 t1))
@@ -471,18 +471,18 @@ val check_subtyping (g:env) (t0 t1:typ)
 val check_equiv (g:env) (t0 t1:typ)
   : Tac (option (equiv_token g t0 t1))
 
-val core_check_term (g:env) (e:term)
-  : Tac (option (t:typ{typing_token g e t}))
+val core_check_term (g:env) (e:term) (eff:tot_or_ghost)
+  : Tac (option (t:typ{typing_token g e (eff, t)}))
 
-val tc_term (g:env) (e:term)
-  : Tac (option (r:(term & typ){typing_token g (fst r) (snd r)}))
+val tc_term (g:env) (e:term) (eff:tot_or_ghost)
+  : Tac (option (r:(term & typ){typing_token g (fst r) (eff, snd r)}))
 
 val universe_of (g:env) (e:term)
-  : Tac (option (u:universe{typing_token g e (pack_ln (Tv_Type u))}))
+  : Tac (option (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}))
 
 type prop_validity_token (g:env) (t:term) =
-  e:term{typing_token g t (pack_ln (Tv_FVar (pack_fv prop_qn))) /\
-         typing_token g e t}
+  e:term{typing_token g t (E_Total, pack_ln (Tv_FVar (pack_fv prop_qn))) /\
+         typing_token g e (E_Total, t)}
 
 val check_prop_validity (g:env) (t:term)
   : Tac (option (prop_validity_token g t))

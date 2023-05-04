@@ -72,7 +72,9 @@ RUN if [[ -n "$CI_TEST_MIN_OPAM_DEPS" ]] ; then \
 fi
 
 # F* dependencies
+RUN opam install --confirm-level=unsafe-yes menhir # needed to bootstrap
 RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/FStar/fstar.opam
+
 
 # Configure the git user for hint refresh
 RUN git config --global user.name "Dzomo, the Everest Yak" && \
