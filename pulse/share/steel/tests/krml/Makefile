@@ -55,14 +55,25 @@ FSTAR		= $(FSTAR_EXE) --cache_checked_modules \
   --trivial_pre_for_unannotated_effectful_fns false \
   --cmi --warn_error -274
 
+all: world
+
+.PHONY: world base
+
 # This just needs F* + KaRaMeL
-all: $(FILES) $(CUSTOM)
+base: $(FILES) $(CUSTOM)
 
 # Needs node
 wasm: $(WASM_FILES)
 
 # All of the above
-everything: all wasm
+everything: base wasm
+
+_check_node := $(shell node --version)
+ifeq (0,$(.SHELLSTATUS))
+world: everything
+else
+world: base
+endif
 
 .PRECIOUS: %.krml
 
