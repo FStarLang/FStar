@@ -22,10 +22,19 @@ let (let?) (f:err 'a) (g: 'a -> ML (err 'b)) =
   | Inl a -> g a
   | Inr e -> Inr e
 
+let return (x:'a) : err 'a = Inl x
+
 let fail #a (message:string) (range:R.range) : err a =
   Inr (message, range)
 
-let return (x:'a) : err 'a = Inl x
+let rec map_err (f:'a -> err 'b) (l:list 'a)
+  : err (list 'b)
+  = match l with
+    | [] -> return []
+    | hd::tl ->
+      let? hd = f hd in
+      let? tl = map_err f tl in
+      return (hd :: tl)
 
 type env_t = { 
   tcenv: TcEnv.env;
@@ -215,7 +224,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     match s.s with
     | Expr { e } -> 
       let? tm = tosyntax env e in
-      return (tm_return (tm_expr tm))
+      return (stapp_or_return env tm)
 
     | Assignment { id; value } ->
       let? lhs = resolve_name env id in
@@ -263,6 +272,16 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       in
       let? body = desugar_stmt env body in
       return (SW.tm_while head (id, invariant) body)
+
+    | Introduce { vprop; witnesses } -> (
+      match vprop with
+      | VPropTerm _ ->
+        fail "introduce expects an existential formula" s.range
+      | VPropExists _ ->
+        let? vp = desugar_vprop env vprop in
+        let? witnesses = map_err (desugar_term env) witnesses in
+        return (SW.tm_intro_exists false vp witnesses)
+    )
       
     | LetBinding _ -> 
       fail "Terminal let binding" s.range

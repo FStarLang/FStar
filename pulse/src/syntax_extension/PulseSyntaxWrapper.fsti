@@ -51,7 +51,7 @@ val tm_bind (x:option (ident & term)) (e1:st_term) (e2:st_term) : st_term
 val tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) : st_term
 val tm_while (head:st_term) (invariant: (ident & vprop)) (body:st_term) : st_term 
 val tm_if (head:term) (returns_annot:option vprop) (then_ else_:st_term) : st_term
-
+val tm_intro_exists (erased:bool) (vp:vprop) (witnesses:list term) : st_term
 val close_term (t:term) (v:var) : term
 val close_st_term (t:st_term) (v:var) : st_term
 val close_comp (t:comp) (v:var) : comp

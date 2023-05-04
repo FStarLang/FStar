@@ -17,7 +17,8 @@ module P = Pulse.Syntax.Printer
 
 let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
-  = match Pulse.Soundness.Common.check_top_level_environment g with
+  = T.print (Printf.sprintf "About to check pulse term:\n%s\n" (P.st_term_to_string t));
+    match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->
       let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_tot g [] pre in
@@ -683,7 +684,6 @@ let check_pulse (namespaces:list string)
   = fun env ->
       match Pulse.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
       | Inl st_term ->
-        T.print (Printf.sprintf "Translated term is\n%s\n" (P.st_term_to_string st_term));
         main st_term Tm_Emp env
       | Inr (msg, range) ->
         T.fail (Printf.sprintf "Error @ %s: %s"

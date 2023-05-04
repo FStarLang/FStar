@@ -8,9 +8,21 @@ let op_let_Question :
       match f with
       | FStar_Pervasives.Inl a1 -> g a1
       | FStar_Pervasives.Inr e -> FStar_Pervasives.Inr e
+let return : 'a . 'a -> 'a err = fun x -> FStar_Pervasives.Inl x
 let fail : 'a . Prims.string -> FStar_Compiler_Range_Type.range -> 'a err =
   fun message -> fun range -> FStar_Pervasives.Inr (message, range)
-let return : 'a . 'a -> 'a err = fun x -> FStar_Pervasives.Inl x
+let rec map_err :
+  'a 'b . ('a -> 'b err) -> 'a Prims.list -> 'b Prims.list err =
+  fun f ->
+    fun l ->
+      match l with
+      | [] -> return []
+      | hd::tl ->
+          let uu___ = f hd in
+          op_let_Question uu___
+            (fun hd1 ->
+               let uu___1 = map_err f tl in
+               op_let_Question uu___1 (fun tl1 -> return (hd1 :: tl1)))
 type env_t =
   {
   tcenv: FStar_TypeChecker_Env.env ;
@@ -399,11 +411,7 @@ let rec (desugar_stmt :
       | PulseSugar.Expr { PulseSugar.e = e;_} ->
           let uu___ = tosyntax env e in
           op_let_Question uu___
-            (fun tm ->
-               let uu___1 =
-                 let uu___2 = PulseSyntaxWrapper.tm_expr tm in
-                 PulseSyntaxWrapper.tm_return uu___2 in
-               return uu___1)
+            (fun tm -> let uu___1 = stapp_or_return env tm in return uu___1)
       | PulseSugar.Assignment
           { PulseSugar.id = id; PulseSugar.value = value;_} ->
           let uu___ = resolve_name env id in
@@ -492,6 +500,23 @@ let rec (desugar_stmt :
                          let uu___3 =
                            PulseSyntaxWrapper.tm_while head2 (id, invariant1)
                              body1 in
+                         return uu___3)))
+      | PulseSugar.Introduce
+          { PulseSugar.vprop = vprop; PulseSugar.witnesses = witnesses;_} ->
+          (match vprop with
+           | PulseSugar.VPropTerm uu___ ->
+               fail "introduce expects an existential formula"
+                 s.PulseSugar.range1
+           | PulseSugar.VPropExists uu___ ->
+               let uu___1 = desugar_vprop env vprop in
+               op_let_Question uu___1
+                 (fun vp ->
+                    let uu___2 = map_err (desugar_term env) witnesses in
+                    op_let_Question uu___2
+                      (fun witnesses1 ->
+                         let uu___3 =
+                           PulseSyntaxWrapper.tm_intro_exists false vp
+                             witnesses1 in
                          return uu___3)))
       | PulseSugar.LetBinding uu___ ->
           fail "Terminal let binding" s.PulseSugar.range1

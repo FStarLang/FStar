@@ -96,6 +96,9 @@ let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) : st_ter
 let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_term) : st_term =
    Tm_If (head, then_, else_, returns_annot)
 
+let tm_intro_exists (erased:bool) (p:vprop) (witnesses:term list) : st_term =
+  Tm_IntroExists(erased, p, witnesses)
+  
 let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v
 let close_comp t v = Pulse_Syntax_Naming.close_comp t v

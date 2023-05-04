@@ -185,6 +185,8 @@ pulseStmtNoSeq:
     { mk_match tm c brs }
   | WHILE tm=appTerm INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
     { mk_while tm i v body }
+  | INTRO p=pulseVprop WITH ws=nonempty_list(indexingTerm)
+    { mk_intro p ws }
 
 %inline
 returnsAnnot:

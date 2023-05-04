@@ -79,6 +79,11 @@ type stmt' =
       body: stmt;
     }
 
+  | Introduce {
+      vprop:vprop;
+      witnesses:list A.term
+    }
+      
   | Sequence {
       s1:stmt;
       s2:stmt;
@@ -117,6 +122,7 @@ let mk_block stmt = Block { stmt }
 let mk_if head join_vprop then_ else_opt = If { head; join_vprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }
 let mk_while head id invariant body = While { head; id; invariant; body }
+let mk_intro vprop witnesses = Introduce { vprop; witnesses }
 let mk_sequence s1 s2 = Sequence { s1; s2 }
 let mk_stmt s range = { s; range }
 let mk_decl id binders ascription body range = { id; binders; ascription; body; range }

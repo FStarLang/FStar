@@ -1,5 +1,5 @@
 open Prims
-type rng = FStar_Compiler_Range.range
+type rng = FStar_Compiler_Range_Type.range
 type binder =
   (FStar_Parser_AST.aqual * FStar_Ident.ident * FStar_Parser_AST.term)
 type binders = binder Prims.list
@@ -145,6 +145,10 @@ and stmt'__While__payload =
   id2: FStar_Ident.ident ;
   invariant: vprop ;
   body1: stmt }
+and stmt'__Introduce__payload =
+  {
+  vprop: vprop ;
+  witnesses: FStar_Parser_AST.term Prims.list }
 and stmt'__Sequence__payload = {
   s1: stmt ;
   s2: stmt }
@@ -156,6 +160,7 @@ and stmt' =
   | If of stmt'__If__payload 
   | Match of stmt'__Match__payload 
   | While of stmt'__While__payload 
+  | Introduce of stmt'__Introduce__payload 
   | Sequence of stmt'__Sequence__payload 
 and stmt = {
   s: stmt' ;
@@ -246,6 +251,14 @@ let (__proj__Mkstmt'__While__payload__item__body :
   fun projectee ->
     match projectee with
     | { head3 = head; id2 = id; invariant; body1 = body;_} -> body
+let (__proj__Mkstmt'__Introduce__payload__item__vprop :
+  stmt'__Introduce__payload -> vprop) =
+  fun projectee ->
+    match projectee with | { vprop = vprop1; witnesses;_} -> vprop1
+let (__proj__Mkstmt'__Introduce__payload__item__witnesses :
+  stmt'__Introduce__payload -> FStar_Parser_AST.term Prims.list) =
+  fun projectee ->
+    match projectee with | { vprop = vprop1; witnesses;_} -> witnesses
 let (__proj__Mkstmt'__Sequence__payload__item__s1 :
   stmt'__Sequence__payload -> stmt) =
   fun projectee -> match projectee with | { s1; s2;_} -> s1
@@ -282,6 +295,11 @@ let (uu___is_While : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | While _0 -> true | uu___ -> false
 let (__proj__While__item___0 : stmt' -> stmt'__While__payload) =
   fun projectee -> match projectee with | While _0 -> _0
+let (uu___is_Introduce : stmt' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Introduce _0 -> true | uu___ -> false
+let (__proj__Introduce__item___0 : stmt' -> stmt'__Introduce__payload) =
+  fun projectee -> match projectee with | Introduce _0 -> _0
 let (uu___is_Sequence : stmt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sequence _0 -> true | uu___ -> false
@@ -380,6 +398,8 @@ let (mk_while :
     fun id ->
       fun invariant ->
         fun body -> While { head3 = head; id2 = id; invariant; body1 = body }
+let (mk_intro : vprop -> FStar_Parser_AST.term Prims.list -> stmt') =
+  fun vprop1 -> fun witnesses -> Introduce { vprop = vprop1; witnesses }
 let (mk_sequence : stmt -> stmt -> stmt') =
   fun s1 -> fun s2 -> Sequence { s1; s2 }
 let (mk_stmt : stmt' -> rng -> stmt) =
