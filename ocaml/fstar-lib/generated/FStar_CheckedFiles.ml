@@ -227,7 +227,8 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
                checked_fn in
            add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
          else
-           (let entry = FStar_Compiler_Util.load_value_from_file checked_fn in
+           (let entry =
+              FStar_Compiler_Util.load_zipped_value_from_file checked_fn in
             match entry with
             | FStar_Pervasives_Native.None ->
                 let msg =
