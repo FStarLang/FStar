@@ -33,45 +33,45 @@ let withlocal_soundness #f #g #t #c d soundness =
     RT.mk_abs (PReflUtil.mk_ref ra) R.Q_Explicit
       (RT.open_or_close_term' (elab_st_typing body_typing) (RT.CloseVar x) 0) in
   
-  let a_typing:RT.typing rg ra (R.pack_ln (R.Tv_Type (R.pack_universe R.Uv_Zero))) =
+  let a_typing:RT.tot_typing rg ra (R.pack_ln (R.Tv_Type (R.pack_universe R.Uv_Zero))) =
     tot_typing_soundness init_t_typing in
   
-  let rinit_typing:RT.typing rg rinit ra =
+  let rinit_typing:RT.tot_typing rg rinit ra =
     tot_typing_soundness init_typing in
 
   let cres_typing, cpre_typing, cpost_typing =
     Pulse.Soundness.Comp.stc_soundness st_typing in
 
-  let pre_typing:RT.typing rg rpre vprop_tm = cpre_typing in
-  let ret_t_typing:RT.typing rg rret_t (R.pack_ln (R.Tv_Type ru)) = cres_typing in
-  let post_typing:RT.typing rg rpost (mk_arrow (rret_t, R.Q_Explicit) vprop_tm) =
+  let pre_typing:RT.tot_typing rg rpre vprop_tm = cpre_typing in
+  let ret_t_typing:RT.tot_typing rg rret_t (R.pack_ln (R.Tv_Type ru)) = cres_typing in
+  let post_typing:RT.tot_typing rg rpost (mk_arrow (rret_t, R.Q_Explicit) vprop_tm) =
     cpost_typing in
 
   let elab_body_comp = elab_comp (comp_withlocal_body x init_t init c) in
 
   let rbody_typing
-    : RT.typing (extend_env_l f ((x, Inl (mk_ref init_t))::g))
-                (elab_st_typing body_typing)
-                elab_body_comp =
+    : RT.tot_typing (extend_env_l f ((x, Inl (mk_ref init_t))::g))
+                    (elab_st_typing body_typing)
+                    elab_body_comp =
     soundness _ _ _ _ body_typing in
 
   let ref_init_t_typing : typing f g (mk_ref init_t) (Tm_Type U_zero) =
     magic () in
 
   let rref_init_t_typing
-    : RT.typing (extend_env_l f g)
-                (elab_term (mk_ref init_t))
-                (elab_comp (C_Tot (Tm_Type U_zero))) = magic () in
+    : RT.tot_typing (extend_env_l f g)
+                    (elab_term (mk_ref init_t))
+                    (elab_comp (C_Tot (Tm_Type U_zero))) = magic () in
 
   RT.close_term_spec (elab_st_typing body_typing) x;
   assert (RT.open_or_close_term' (elab_st_typing body_typing) (RT.CloseVar x) 0 ==
           RT.close_term (elab_st_typing body_typing) x);
 
   let rbody_typing
-    : RT.typing (extend_env_l f g)
-                rbody
-                (mk_arrow (PReflUtil.mk_ref ra, R.Q_Explicit)
-                          (elab_comp (close_comp (comp_withlocal_body x init_t init c) x))) =
+    : RT.tot_typing (extend_env_l f g)
+                    rbody
+                    (mk_arrow (PReflUtil.mk_ref ra, R.Q_Explicit)
+                              (elab_comp (close_comp (comp_withlocal_body x init_t init c) x))) =
     mk_t_abs _ _ #_ #_ #_ #ref_init_t_typing RT.pp_name_default rref_init_t_typing rbody_typing in
 
   // We now have this rbody typing,
@@ -116,11 +116,11 @@ let withlocal_soundness #f #g #t #c d soundness =
   assert (c1_pre == mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit));
 
   let rbody_typing
-    : RT.typing (extend_env_l f g)
-                rbody
-                (mk_arrow
-                   (PReflUtil.mk_ref ra, R.Q_Explicit)
-                   (mk_stt_comp ru rret_t c1_pre c1_post)) =
+    : RT.tot_typing (extend_env_l f g)
+                    rbody
+                    (mk_arrow
+                       (PReflUtil.mk_ref ra, R.Q_Explicit)
+                       (mk_stt_comp ru rret_t c1_pre c1_post)) =
     rbody_typing in
 
   let rx_tm = RT.var_as_term x in
@@ -274,7 +274,7 @@ let withlocal_soundness #f #g #t #c d soundness =
     equiv_arrow _ _ _ arrow_codom_equiv in
 
   let rbody_typing
-    : RT.typing
+    : RT.tot_typing
         (extend_env_l f g)
         rbody
         (mk_arrow
@@ -282,6 +282,7 @@ let withlocal_soundness #f #g #t #c d soundness =
            (mk_stt_comp ru rret_t
               (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
               (WT.with_local_bodypost rpost ra rret_t x))) =
-    RT.T_Sub _ _ _ _ rbody_typing (RT.ST_Equiv _ _ _ arrow_equiv) in
+    RT.T_Sub _ _ _ _ rbody_typing
+      (RT.Relc_typ _ _ _ _ _ (RT.Rel_equiv _ _ _ _ arrow_equiv)) in
 
   WT.with_local_typing x a_typing rinit_typing pre_typing ret_t_typing post_typing rbody_typing

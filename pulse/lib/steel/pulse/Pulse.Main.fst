@@ -16,7 +16,7 @@ open Pulse.Soundness
 module P = Pulse.Syntax.Printer
 
 let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
-  : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
+  : T.Tac (r:(R.term & R.typ){RT.tot_typing g (fst r) (snd r)})
   = T.print (Printf.sprintf "About to check pulse term:\n%s\n" (P.st_term_to_string t));
     match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
@@ -664,7 +664,7 @@ and translate_par (g:RT.fstar_top_env) (t:R.term)
   | _ -> Inr "par: Not a variable at the head"
 
 let check' (t:R.term) (g:RT.fstar_top_env)
-  : T.Tac (r:(R.term & R.typ){RT.typing g (fst r) (snd r)})
+  : T.Tac (r:(R.term & R.typ){RT.tot_typing g (fst r) (snd r)})
   = match translate_term g t with
     | Inr msg -> T.fail (Printf.sprintf "Failed to translate term: %s" msg)
     | Inl t -> 

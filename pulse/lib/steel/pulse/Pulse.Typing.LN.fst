@@ -8,10 +8,16 @@ open Pulse.Syntax.Naming
 open Pulse.Typing
 open Pulse.Elaborate.Pure
 
-let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (d:RT.typing g e t)
+//
+// TODO: this is needed only for the E_Total flag,
+//       may be the flag should move to reflection
+//
+module T = FStar.Tactics
+
+let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (d:RT.tot_typing g e t)
   : Lemma (ensures RT.ln e /\ RT.ln t) =
 
-  RT.well_typed_terms_are_ln g e t d
+  RT.well_typed_terms_are_ln g e (T.E_Total, t) d
 
 assume
 val elab_ln_inverse (e:term)

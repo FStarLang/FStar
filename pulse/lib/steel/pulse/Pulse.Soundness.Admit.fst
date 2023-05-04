@@ -20,9 +20,9 @@ let admit_soundess
   (#t:st_term)
   (#c:comp)
   (d:st_typing f g t c{T_Admit? d})
-  : GTot (RT.typing (extend_env_l f g)
-                    (elab_st_typing d)
-                    (elab_comp c)) =
+  : GTot (RT.tot_typing (extend_env_l f g)
+                        (elab_st_typing d)
+                        (elab_comp c)) =
 
   let T_Admit _ s c st_typing = d in
 
