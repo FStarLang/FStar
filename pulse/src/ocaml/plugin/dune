@@ -6,7 +6,6 @@
     batteries
     fstar.lib
     menhirLib
-    re
  )
  (modes native)
  (wrapped false)
