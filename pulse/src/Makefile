@@ -6,41 +6,31 @@
 all: boot
 .PHONY: all
 
+# Step 1: we build the initial plugin and the Steel and Pulse library
+# as they are now, and then we blast all generated files
+
+.PHONY: initial-build
+initial-build:
+	+$(MAKE) -C .. all
+	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
+
 .PHONY: extract-ocaml
 extract-ocaml: extract-steel-plugin extract-extraction extract-pulse-plugin
 
 .PHONY: extract-steel-plugin
-extract-steel-plugin:
+extract-steel-plugin: initial-build
 	+$(MAKE) -C ocaml/plugin -f extract-steel.Makefile
 
 .PHONY: extract-pulse-plugin
-extract-pulse-plugin: rebuild-and-verify-steel
+extract-pulse-plugin: initial-build
 	+$(MAKE) -C ocaml/plugin -f extract-pulse.Makefile
 
 .PHONY: extract-extraction
-extract-extraction:
+extract-extraction: initial-build
 	+$(MAKE) -C extraction
 
-# NOTE: while verification of Steel does not in itself need extracting
-# the krml extraction rules, the following `rebuild-and-verify-steel`
-# rule also recompiles the Steel plugin, so it is not possible to
-# extract the extraction rules in parallel with this rule. Adding a
-# dependency on `extract-extraction` is one way to solve this
-# problem. This solution also solves 2 more problems:
-#
-# * the Steel plugin is recompiled 2 times instead of 3: once instead
-#   of twice for Steel + extraction with this rule, in addition to the
-#   one time for Pulse with the `boot` rule.
-#
-# * extracting LibSteel may need the krml extraction rules compiled
-#   into the Steel plugin
-
-.PHONY: rebuild-and-verify-steel
-rebuild-and-verify-steel: extract-steel-plugin extract-extraction
-	+$(MAKE) -C .. verify-steel
-
 .PHONY: extract-c
-extract-c: rebuild-and-verify-steel
+extract-c: initial-build
 	+$(MAKE) -C c extract
 
 .PHONY: extract
@@ -51,9 +41,7 @@ boot: extract
 	+$(MAKE) -C .. all
 
 .PHONY: full-boot
-full-boot:
-	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
-	+$(MAKE) boot
+full-boot: boot
 
 .PHONY: proofs
 proofs:

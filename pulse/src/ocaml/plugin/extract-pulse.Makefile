@@ -14,7 +14,7 @@ endif
 
 FSTAR_FILES:=$(wildcard $(LIB_PULSE)/*.fst $(LIB_PULSE)/*.fsti)
 
-MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --include $(LIB_STEEL) --include $(LIB_PULSE) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --warn_error @241 --already_cached '*,-Pulse' --load_cmxs steel
+MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --include $(LIB_STEEL) --include $(LIB_PULSE) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --warn_error @241 --already_cached '*,' --load_cmxs steel
 EXTRACT_MODULES=--extract '+Pulse,-Pulse.Steel'
 
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
