@@ -304,7 +304,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt)
       | None -> //just a regular bind
         let? s1 = tosyntax env e1 in
         let s1 = stapp_or_return env s1 in
-        return (SW.tm_bind (Some (lb.id, annot)) s1 s2)
+        return (SW.tm_bind (SW.mk_binder lb.id annot) s1 s2)
       
       | Some MUT //these are handled the same for now
       | Some REF -> 
@@ -316,7 +316,8 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt)
   : err SW.st_term
   = let? s1 = desugar_stmt env s1 in
     let? s2 = desugar_stmt env s2 in
-    return (SW.tm_bind None s1 s2)
+    let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_expr S.tun) in
+    return (SW.tm_bind annot s1 s2)
 
 let explicit_rvalues (env:env_t) (s:Sugar.stmt)
   : Sugar.stmt

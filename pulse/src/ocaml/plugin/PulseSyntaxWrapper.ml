@@ -84,8 +84,8 @@ let tm_abs (b:binder)
 let tm_st_app (head:term) (q:S.aqual) (arg:term) : st_term =
   Tm_STApp(head, map_aqual q, arg)
     
-let tm_bind (x:(ident * term) option ) (e1:st_term) (e2:st_term) : st_term =
-  Tm_Bind(e1, e2)    
+let tm_bind (x:binder) (e1:st_term) (e2:st_term) : st_term =
+  Tm_Bind(x, e1, e2)    
   
 let tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) : st_term =
    Tm_WithLocal (v, k)
