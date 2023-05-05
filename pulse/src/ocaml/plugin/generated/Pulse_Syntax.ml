@@ -428,14 +428,18 @@ let (comp_inames : comp -> term) =
     match c with
     | C_STAtomic (inames, uu___) -> inames
     | C_STGhost (inames, uu___) -> inames
-let (term_of_var : var -> term) =
+type nvar = (ppname * var)
+let v_as_nv : 'uuuuu . 'uuuuu -> (FStar_Reflection_Typing.pp_name_t * 'uuuuu)
+  = fun x -> (FStar_Reflection_Typing.pp_name_default, x)
+let (term_of_nvar : nvar -> term) =
   fun x ->
     Tm_Var
       {
-        nm_index = x;
-        nm_ppname = FStar_Reflection_Typing.pp_name_default;
+        nm_index = (FStar_Pervasives_Native.snd x);
+        nm_ppname = (FStar_Pervasives_Native.fst x);
         nm_range = FStar_Range.range_0
       }
+let (term_of_no_name_var : var -> term) = fun x -> term_of_nvar (v_as_nv x)
 let (equiv_abs :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.term ->

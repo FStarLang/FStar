@@ -366,28 +366,14 @@ let rec (open_st_term' :
                 (open_term_opt' post v (i + Prims.int_one)))
         | Pulse_Syntax.Tm_Protect t1 ->
             Pulse_Syntax.Tm_Protect (open_st_term' t1 v i)
-let (open_term : Pulse_Syntax.term -> Pulse_Syntax.var -> Pulse_Syntax.term)
-  =
+let (open_term_nv :
+  Pulse_Syntax.term -> Pulse_Syntax.nvar -> Pulse_Syntax.term) =
   fun t ->
-    fun v ->
-      open_term' t
-        (Pulse_Syntax.Tm_Var
-           {
-             Pulse_Syntax.nm_index = v;
-             Pulse_Syntax.nm_ppname = FStar_Reflection_Typing.pp_name_default;
-             Pulse_Syntax.nm_range = FStar_Range.range_0
-           }) Prims.int_zero
-let (open_st_term :
-  Pulse_Syntax.st_term -> Pulse_Syntax.var -> Pulse_Syntax.st_term) =
+    fun nv -> open_term' t (Pulse_Syntax.term_of_nvar nv) Prims.int_zero
+let (open_st_term_nv :
+  Pulse_Syntax.st_term -> Pulse_Syntax.nvar -> Pulse_Syntax.st_term) =
   fun t ->
-    fun v ->
-      open_st_term' t
-        (Pulse_Syntax.Tm_Var
-           {
-             Pulse_Syntax.nm_index = v;
-             Pulse_Syntax.nm_ppname = FStar_Reflection_Typing.pp_name_default;
-             Pulse_Syntax.nm_range = FStar_Range.range_0
-           }) Prims.int_zero
+    fun nv -> open_st_term' t (Pulse_Syntax.term_of_nvar nv) Prims.int_zero
 let (open_comp_with :
   Pulse_Syntax.comp -> Pulse_Syntax.term -> Pulse_Syntax.comp) =
   fun c -> fun x -> open_comp' c x Prims.int_zero

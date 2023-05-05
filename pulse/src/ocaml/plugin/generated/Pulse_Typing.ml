@@ -495,7 +495,7 @@ let (par_post :
           fun postL ->
             fun postR ->
               fun x ->
-                let x_tm = Pulse_Syntax.term_of_var x in
+                let x_tm = Pulse_Syntax.term_of_no_name_var x in
                 let postL1 =
                   Pulse_Syntax_Naming.open_term' postL
                     (mk_fst uL uR aL aR x_tm) Prims.int_zero in
@@ -645,9 +645,9 @@ and ('f, 'dummyV0, 'dummyV1, 'dummyV2) comp_typing =
   (unit, unit, unit) st_comp_typing 
 and ('f, 'dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of env * Pulse_Syntax.var * Pulse_Syntax.qualifier
-  FStar_Pervasives_Native.option * Pulse_Syntax.term * Pulse_Syntax.universe
-  * Pulse_Syntax.st_term * Pulse_Syntax.comp * unit * (unit, unit, unit,
-  unit) st_typing 
+  FStar_Pervasives_Native.option * Pulse_Syntax.binder *
+  Pulse_Syntax.universe * Pulse_Syntax.st_term * Pulse_Syntax.comp * unit *
+  (unit, unit, unit, unit) st_typing 
   | T_STApp of env * Pulse_Syntax.term * Pulse_Syntax.term *
   Pulse_Syntax.qualifier FStar_Pervasives_Native.option *
   Pulse_Syntax.comp_st * Pulse_Syntax.term * unit * unit 

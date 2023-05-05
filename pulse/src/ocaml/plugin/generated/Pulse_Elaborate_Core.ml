@@ -230,16 +230,16 @@ let rec (elab_st_typing :
           fun d ->
             match d with
             | Pulse_Typing.T_Abs
-                (uu___, x, qual, ty_pulse, _u, body, _c, ty_typing,
-                 body_typing)
-                ->
-                let ty = Pulse_Elaborate_Pure.elab_term ty_pulse in
+                (uu___, x, qual, b, _u, body, _c, ty_typing, body_typing) ->
+                let ty =
+                  Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax.binder_ty in
+                let ppname = b.Pulse_Syntax.binder_ppname in
                 let body1 =
-                  elab_st_typing f ((x, (FStar_Pervasives.Inl ty_pulse)) ::
-                    uu___) (Pulse_Syntax_Naming.open_st_term body x) _c
-                    body_typing in
-                let ppname =
-                  (Pulse_Typing.as_binder ty_pulse).Pulse_Syntax.binder_ppname in
+                  elab_st_typing f
+                    ((x, (FStar_Pervasives.Inl (b.Pulse_Syntax.binder_ty)))
+                    :: uu___)
+                    (Pulse_Syntax_Naming.open_st_term_nv body
+                       ((b.Pulse_Syntax.binder_ppname), x)) _c body_typing in
                 Pulse_Reflection_Util.mk_abs_with_name ppname ty
                   (Pulse_Elaborate_Pure.elab_qual qual)
                   (FStar_Reflection_Typing.close_term body1 x)
@@ -285,8 +285,9 @@ let rec (elab_st_typing :
                 let e21 =
                   elab_st_typing f
                     ((x, (FStar_Pervasives.Inl (Pulse_Syntax.comp_res c1)))
-                    :: uu___) (Pulse_Syntax_Naming.open_st_term e2 x) c2
-                    e2_typing in
+                    :: uu___)
+                    (Pulse_Syntax_Naming.open_st_term_nv e2
+                       (Pulse_Syntax.v_as_nv x)) c2 e2_typing in
                 let ty1 =
                   Pulse_Elaborate_Pure.elab_term (Pulse_Syntax.comp_res c1) in
                 elab_bind f uu___ x c1 c2 c3 bc e11
@@ -413,7 +414,9 @@ let rec (elab_st_typing :
                 let rbody =
                   elab_st_typing f
                     ((x, (FStar_Pervasives.Inl (Pulse_Typing.mk_ref init_t)))
-                    :: uu___) (Pulse_Syntax_Naming.open_st_term uu___1 x)
+                    :: uu___)
+                    (Pulse_Syntax_Naming.open_st_term_nv uu___1
+                       (Pulse_Syntax.v_as_nv x))
                     (Pulse_Typing.comp_withlocal_body x init_t init c1)
                     body_typing in
                 let rbody1 = FStar_Reflection_Typing.close_term rbody x in
