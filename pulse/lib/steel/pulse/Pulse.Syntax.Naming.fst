@@ -114,7 +114,8 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_opt' pre x (i + 1);
       close_open_inverse_opt' post x (i + 2)
 
-    | Tm_Bind e1 e2 ->
+    | Tm_Bind b e1 e2 ->
+      close_open_inverse' b.binder_ty x i;
       close_open_inverse_st' e1 x i;
       close_open_inverse_st' e2 x (i + 1)
 

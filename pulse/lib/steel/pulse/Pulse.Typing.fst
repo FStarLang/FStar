@@ -660,13 +660,14 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       e2:st_term ->
       c1:comp_st ->
       c2:comp_st ->
+      b:binder { b.binder_ty == comp_res c1 }->
       x:var { None? (lookup g x)  /\ ~(x `Set.mem` freevars_st e2) } ->
       c:comp ->
       st_typing f g e1 c1 ->
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
-      st_typing f ((x, Inl (comp_res c1))::g) (open_st_term_nv e2 (v_as_nv x)) c2 ->
+      st_typing f ((x, Inl (comp_res c1))::g) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       bind_comp f g x c1 c2 c ->
-      st_typing f g (Tm_Bind e1 e2) c
+      st_typing f g (Tm_Bind b e1 e2) c
 
   | T_If:
       g:env ->

@@ -142,6 +142,11 @@ let check_abs
 let has_pure_vprops (pre:term) = L.existsb Tm_Pure? (vprop_as_list pre)
 let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit"
 
+let default_binder_annot = {
+    binder_ppname = RT.pp_name_default;
+    binder_ty = Tm_Unknown
+}
+   
 let maybe_add_elim_pure (pre:list term) (t:st_term) : T.Tac (bool & st_term) =
   let pure_props =
     L.flatten (L.map (fun (t:term) ->
@@ -151,7 +156,7 @@ let maybe_add_elim_pure (pre:list term) (t:st_term) : T.Tac (bool & st_term) =
 
   if L.length pure_props = 0
   then false, t
-  else
+  else (
     true,
     L.fold_left 
       (fun t (p:term) ->
@@ -159,9 +164,10 @@ let maybe_add_elim_pure (pre:list term) (t:st_term) : T.Tac (bool & st_term) =
                                     None
                                     p 
         in
-        Tm_Bind (Tm_Protect elim_pure_tm) t)
+        Tm_Bind default_binder_annot (Tm_Protect elim_pure_tm) t)
       t
       pure_props
+  )
 
 #push-options "--z3rlimit_factor 40"
 let rec combine_if_branches (f:RT.fstar_top_env)
@@ -623,7 +629,8 @@ let maybe_infer_intro_exists
         | [] -> T.fail "Impossible"
         | [hd] -> Tm_Protect (one_inst hd)
         | hd::tl -> Tm_Protect 
-                    (Tm_Bind (Tm_Protect (one_inst hd))
+                    (Tm_Bind default_binder_annot
+                             (Tm_Protect (one_inst hd))
                              (build_instantiations solutions tl))
     in
     build_instantiations solutions insts
@@ -922,7 +929,7 @@ let handle_framing_failure
             None
             (Tm_Constant Unit))
       in
-      Tm_Protect (Tm_Bind intro_pure_tm t)
+      Tm_Protect (Tm_Bind default_binder_annot intro_pure_tm t)
     in
     T.print (Printf.sprintf
                      "Handling framing failure in term:\n%s\n\
@@ -950,7 +957,8 @@ let handle_framing_failure
         | [] -> check f g t pre pre_typing post_hint
         | Tm_ExistsSL u ty p se :: rest ->
           let t = 
-              Tm_Bind (Tm_Protect (Tm_IntroExists true 
+              Tm_Bind default_binder_annot
+                      (Tm_Protect (Tm_IntroExists true 
                                       (Tm_ExistsSL u ty p se)
                                       []))
                       (Tm_Protect t)
@@ -980,14 +988,15 @@ let rec maybe_add_elims
       let b = open_term_nv b px in
       let t = maybe_add_elims g [b] t in
       let t = close_st_term t x in
-      let t = Tm_Bind e (Tm_Protect t) in
+      let t = Tm_Bind default_binder_annot e (Tm_Protect t) in
       maybe_add_elims g rest t
     | Tm_Pure p :: rest ->
       let elim_pure_tm = Tm_STApp (Tm_FVar (as_fv elim_pure_explicit_lid))
                                   None
                                   p 
       in
-      Tm_Bind (Tm_Protect elim_pure_tm) 
+      Tm_Bind default_binder_annot
+              (Tm_Protect elim_pure_tm) 
               (Tm_Protect (maybe_add_elims g rest t))
 
     | Tm_Star p q :: rest ->
@@ -998,7 +1007,7 @@ let rec maybe_add_elims
 
 let rec unprotect t = 
   match t with
-  | Tm_Protect (Tm_Bind e1 e2) -> Tm_Bind (Tm_Protect e1) e2
+  | Tm_Protect (Tm_Bind b e1 e2) -> Tm_Bind b (Tm_Protect e1) e2
   | Tm_Protect (Tm_If b then_ else_ post) -> Tm_If b (Tm_Protect then_) (Tm_Protect else_) post
   | Tm_Protect t -> unprotect t
   | _ -> t
@@ -1017,7 +1026,7 @@ let rec print_st_head (t:st_term) =
   | Tm_Abs _ _ _ _ _  -> "Abs"
   | Tm_Protect p -> print_st_head p
   | Tm_Return _ _ p -> print_head p
-  | Tm_Bind _ _ -> "Bind"
+  | Tm_Bind _ _ _ -> "Bind"
   | Tm_If _ _ _ _ -> "If"
   | Tm_While _ _ _ -> "While"
   | Tm_Admit _ _ _ _ -> "Admit"
@@ -1040,7 +1049,7 @@ let rec print_skel (t:st_term) =
   | Tm_Abs _ _ _ body _  -> Printf.sprintf "(fun _ -> %s)" (print_skel body)
   | Tm_Protect p -> Printf.sprintf "(Protect %s)" (print_skel p)
   | Tm_Return _ _ p -> print_head p
-  | Tm_Bind e1 e2 -> Printf.sprintf "(Bind %s %s)" (print_skel e1) (print_skel e2)
+  | Tm_Bind p e1 e2 -> Printf.sprintf "(Bind %s %s)" (print_skel e1) (print_skel e2)
   | Tm_If _ _ _ _ -> "If"
   | Tm_While _ _ _ -> "While"
   | Tm_Admit _ _ _ _ -> "Admit"
@@ -1200,7 +1209,7 @@ let rec check' : bool -> check_t =
     | Tm_STApp _ _ _ ->
       check_stapp allow_inst f g t pre pre_typing post_hint check'
 
-    | Tm_Bind _ _ ->
+    | Tm_Bind _ _ _ ->
       check_bind f g t pre pre_typing post_hint (check' true)
 
 

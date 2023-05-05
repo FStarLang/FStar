@@ -135,7 +135,7 @@ let bind_soundness
   : GTot (RT.tot_typing (extend_env_l f g)
                         (elab_st_typing d)
                         (elab_comp c))
-  = let T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc = d in
+  = let T_Bind _ e1 e2 c1 c2 _ x c e1_typing t_typing e2_typing bc = d in
     LN.st_typing_ln e1_typing;
     LN.st_typing_ln e2_typing;      
     FV.st_typing_freevars_inv e1_typing x;
@@ -264,7 +264,7 @@ let rec soundness (f:stt_env)
     | T_STApp _ _ _ _ _ _ _ _ ->
       stapp_soundness _ _ _ _ d soundness
 
-    | T_Bind _ _e1 _e2 _c1 _c2 _x _c _e1_typing _t_typing _e2_typing _bc ->
+    | T_Bind _ _e1 _e2 _c1 _c2 _b _x _c _e1_typing _t_typing _e2_typing _bc ->
       bind_soundness d soundness mk_t_abs
 
     | T_Equiv _ _ _ _ _ _ ->
