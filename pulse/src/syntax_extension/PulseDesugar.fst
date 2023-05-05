@@ -36,6 +36,15 @@ let rec map_err (f:'a -> err 'b) (l:list 'a)
       let? tl = map_err f tl in
       return (hd :: tl)
 
+
+let as_term (t:S.term)
+  : SW.term
+  = match t.n with
+    | S.Tm_unknown ->
+      SW.tm_unknown
+    | _ -> 
+      SW.tm_expr t
+
 type env_t = { 
   tcenv: TcEnv.env;
   local_refs: list ident
@@ -61,7 +70,7 @@ let stapp_assignment (lhs rhs:S.term)
   = let head_fv = S.lid_as_fv assign_lid S.delta_equational None in
     let head = S.fv_to_tm head_fv in
     let app = S.mk_Tm_app head [(lhs, None)] lhs.pos in
-    SW.(tm_st_app (tm_expr app) None (tm_expr rhs))
+    SW.(tm_st_app (tm_expr app) None (as_term rhs))
 
 
 let resolve_name (env:env_t) (id:ident)
@@ -88,7 +97,7 @@ let pulse_arrow_formals (t:S.term) =
 
 let stapp_or_return (env:env_t) (s:S.term) 
   : SW.st_term
-  = let ret s = SW.(tm_return (tm_expr s)) in
+  = let ret s = SW.(tm_return (as_term s)) in
     let head, args = U.head_and_args_full s in
     match head.n with
     | S.Tm_fvar fv -> (
@@ -138,7 +147,7 @@ let stapp_or_return (env:env_t) (s:S.term)
             then ( //this is an st app
               let head = S.mk_Tm_app head (L.init args) s.pos in
               let last, q = L.last args in
-              SW.(tm_st_app (tm_expr head) q (tm_expr last))
+              SW.(tm_st_app (tm_expr head) q (as_term last))
             )
             else (
               //partial app of a stateful function
@@ -163,11 +172,11 @@ let tosyntax (env:env_t) (t:A.term)
                          (A.term_to_string t)
                          msg)
              t.range
-  
+
 let desugar_term (env:env_t) (t:A.term)
   : err SW.term 
   = let? t = tosyntax env t in
-    return (SW.tm_expr t)
+    return (as_term t)
   
 let desugar_term_opt (env:env_t) (t:option A.term)
   : err SW.term
@@ -186,13 +195,13 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
 
     | S.Tm_fvar fv, [(l, _)]
       when S.fv_eq_lid fv pure_lid ->
-      SW.tm_pure (SW.tm_expr l)
+      SW.tm_pure (as_term l)
 
     | S.Tm_fvar fv, []
       when S.fv_eq_lid fv emp_lid ->
       SW.tm_emp
       
-    | _ -> SW.tm_expr v
+    | _ -> as_term v
   
 let rec desugar_vprop (env:env_t) (v:Sugar.vprop)
   : err SW.vprop
@@ -316,7 +325,7 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt)
   : err SW.st_term
   = let? s1 = desugar_stmt env s1 in
     let? s2 = desugar_stmt env s2 in
-    let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_expr S.tun) in
+    let annot = SW.mk_binder (Ident.id_of_text "_") SW.tm_unknown in
     return (SW.tm_bind annot s1 s2)
 
 let explicit_rvalues (env:env_t) (s:Sugar.stmt)

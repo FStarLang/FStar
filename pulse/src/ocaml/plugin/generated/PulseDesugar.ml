@@ -23,6 +23,11 @@ let rec map_err :
             (fun hd1 ->
                let uu___1 = map_err f tl in
                op_let_Question uu___1 (fun tl1 -> return (hd1 :: tl1)))
+let (as_term : FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.term) =
+  fun t ->
+    match t.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_unknown -> PulseSyntaxWrapper.tm_unknown
+    | uu___ -> PulseSyntaxWrapper.tm_expr t
 type env_t =
   {
   tcenv: FStar_TypeChecker_Env.env ;
@@ -173,7 +178,7 @@ let (stapp_assignment :
         FStar_Syntax_Syntax.mk_Tm_app head
           [(lhs, FStar_Pervasives_Native.None)] lhs.FStar_Syntax_Syntax.pos in
       let uu___ = PulseSyntaxWrapper.tm_expr app in
-      let uu___1 = PulseSyntaxWrapper.tm_expr rhs in
+      let uu___1 = as_term rhs in
       PulseSyntaxWrapper.tm_st_app uu___ FStar_Pervasives_Native.None uu___1
 let (resolve_name :
   env_t -> FStar_Ident.ident -> FStar_Syntax_Syntax.term err) =
@@ -236,8 +241,7 @@ let (stapp_or_return :
   fun env ->
     fun s ->
       let ret s1 =
-        let uu___ = PulseSyntaxWrapper.tm_expr s1 in
-        PulseSyntaxWrapper.tm_return uu___ in
+        let uu___ = as_term s1 in PulseSyntaxWrapper.tm_return uu___ in
       let uu___ = FStar_Syntax_Util.head_and_args_full s in
       match uu___ with
       | (head, args) ->
@@ -299,8 +303,7 @@ let (stapp_or_return :
                                  | (last, q) ->
                                      let uu___8 =
                                        PulseSyntaxWrapper.tm_expr head1 in
-                                     let uu___9 =
-                                       PulseSyntaxWrapper.tm_expr last in
+                                     let uu___9 = as_term last in
                                      PulseSyntaxWrapper.tm_st_app uu___8 q
                                        uu___9)
                               else ret s)))
@@ -336,8 +339,7 @@ let (desugar_term :
     fun t ->
       let uu___ = tosyntax env t in
       op_let_Question uu___
-        (fun t1 ->
-           let uu___1 = PulseSyntaxWrapper.tm_expr t1 in return uu___1)
+        (fun t1 -> let uu___1 = as_term t1 in return uu___1)
 let (desugar_term_opt :
   env_t ->
     FStar_Parser_AST.term FStar_Pervasives_Native.option ->
@@ -363,12 +365,11 @@ let rec (interpret_vprop_constructors :
                PulseSyntaxWrapper.tm_star uu___3 uu___4
            | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
                FStar_Syntax_Syntax.fv_eq_lid fv pure_lid ->
-               let uu___2 = PulseSyntaxWrapper.tm_expr l in
-               PulseSyntaxWrapper.tm_pure uu___2
+               let uu___2 = as_term l in PulseSyntaxWrapper.tm_pure uu___2
            | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                FStar_Syntax_Syntax.fv_eq_lid fv emp_lid ->
                PulseSyntaxWrapper.tm_emp
-           | uu___1 -> PulseSyntaxWrapper.tm_expr v)
+           | uu___1 -> as_term v)
 let rec (desugar_vprop :
   env_t -> PulseSugar.vprop -> PulseSyntaxWrapper.vprop err) =
   fun env ->
@@ -591,9 +592,8 @@ and (desugar_sequence :
                (fun s21 ->
                   let annot =
                     let uu___2 = FStar_Ident.id_of_text "_" in
-                    let uu___3 =
-                      PulseSyntaxWrapper.tm_expr FStar_Syntax_Syntax.tun in
-                    PulseSyntaxWrapper.mk_binder uu___2 uu___3 in
+                    PulseSyntaxWrapper.mk_binder uu___2
+                      PulseSyntaxWrapper.tm_unknown in
                   let uu___2 = PulseSyntaxWrapper.tm_bind annot s11 s21 in
                   return uu___2))
 let (explicit_rvalues : env_t -> PulseSugar.stmt -> PulseSugar.stmt) =

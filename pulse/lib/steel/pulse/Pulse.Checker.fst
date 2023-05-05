@@ -1225,16 +1225,26 @@ let rec check' : bool -> check_t =
     | Tm_ElimExists _ ->
       check_elim_exists f g t pre pre_typing post_hint
 
-    | Tm_IntroExists _ _ []
-    | Tm_IntroExists _ _ [Tm_Unknown]
-    | Tm_IntroExists _ _ (_::_::_) ->    
-      let unary_intros = maybe_infer_intro_exists f g t pre in
-      T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
-                              (P.st_term_to_string unary_intros));
-      check' allow_inst f g unary_intros pre pre_typing post_hint
-
-    | Tm_IntroExists _ _ _ ->
-      check_intro_exists_either f g t None pre pre_typing post_hint
+    | Tm_IntroExists _ _ witnesses ->
+      let should_infer_witnesses =
+        match witnesses with
+        | [w] -> (
+          match w with
+          | Tm_Unknown -> true
+          | _ -> false
+        )
+        | _ -> true
+      in
+      if should_infer_witnesses
+      then (
+        let unary_intros = maybe_infer_intro_exists f g t pre in
+        T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
+                                (P.st_term_to_string unary_intros));
+        check' allow_inst f g unary_intros pre pre_typing post_hint
+      )
+      else (
+        check_intro_exists_either f g t None pre pre_typing post_hint
+      )
 
     | Tm_While _ _ _ ->
       check_while allow_inst f g t pre pre_typing post_hint check'
