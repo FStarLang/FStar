@@ -180,7 +180,7 @@ type st_term =
   FStar_Pervasives_Native.option * st_term * vprop
   FStar_Pervasives_Native.option 
   | Tm_STApp of term * qualifier FStar_Pervasives_Native.option * term 
-  | Tm_Bind of st_term * st_term 
+  | Tm_Bind of binder * st_term * st_term 
   | Tm_If of term * st_term * st_term * vprop FStar_Pervasives_Native.option
   
   | Tm_ElimExists of vprop 
@@ -343,8 +343,9 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
             && (eq_tm_opt q1 q2)
       | (Tm_STApp (h1, o1, t11), Tm_STApp (h2, o2, t21)) ->
           ((eq_tm h1 h2) && (o1 = o2)) && (eq_tm t11 t21)
-      | (Tm_Bind (t11, k1), Tm_Bind (t21, k2)) ->
-          (eq_st_term t11 t21) && (eq_st_term k1 k2)
+      | (Tm_Bind (b1, t11, k1), Tm_Bind (b2, t21, k2)) ->
+          ((eq_tm b1.binder_ty b2.binder_ty) && (eq_st_term t11 t21)) &&
+            (eq_st_term k1 k2)
       | (Tm_IntroExists (b1, p1, l1), Tm_IntroExists (b2, p2, l2)) ->
           ((b1 = b2) && (eq_tm p1 p2)) && (eq_tm_list l1 l2)
       | (Tm_ElimExists p1, Tm_ElimExists p2) -> eq_tm p1 p2
