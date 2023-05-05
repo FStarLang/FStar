@@ -10,7 +10,7 @@ open Pulse.Syntax
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
                             (i:index)
-  : Lemma (ensures close_term' (open_term' t (term_of_var x) i) x i == t)
+  : Lemma (ensures close_term' (open_term' t (term_of_no_name_var x) i) x i == t)
           (decreases t)
   = match t with
     | Tm_BVar _
@@ -58,7 +58,7 @@ let rec close_open_inverse' (t:term)
 and close_open_inverse_comp' (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
                              (i:index)
-  : Lemma (ensures close_comp' (open_comp' c (term_of_var x) i) x i == c)
+  : Lemma (ensures close_comp' (open_comp' c (term_of_no_name_var x) i) x i == c)
           (decreases c)
   = match c with
     | C_Tot t ->
@@ -79,7 +79,7 @@ and close_open_inverse_comp' (c:comp)
 let close_open_inverse_opt' (t:option term)
                             (x:var { ~(x `Set.mem` freevars_opt t) })
                             (i:index)
-  : Lemma (ensures close_term_opt' (open_term_opt' t (term_of_var x) i) x i == t)
+  : Lemma (ensures close_term_opt' (open_term_opt' t (term_of_no_name_var x) i) x i == t)
   = match t with
     | None -> ()
     | Some t -> close_open_inverse' t x i
@@ -88,7 +88,7 @@ let close_open_inverse_opt' (t:option term)
 let rec close_open_inverse_list' (t:list term)
                                  (x:var { ~(x `Set.mem` freevars_list t) })
                                  (i:index)
-  : Lemma (ensures close_term_list' (open_term_list' t (term_of_var x) i) x i == t)
+  : Lemma (ensures close_term_list' (open_term_list' t (term_of_no_name_var x) i) x i == t)
   = match t with
     | [] -> ()
     | hd::tl ->
@@ -99,7 +99,7 @@ let rec close_open_inverse_list' (t:list term)
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
                                 (i:index)
-  : Lemma (ensures close_st_term' (open_st_term' t (term_of_var x) i) x i == t)
+  : Lemma (ensures close_st_term' (open_st_term' t (term_of_no_name_var x) i) x i == t)
           (decreases t)
   = match t with
     | Tm_Return _ _ t ->

@@ -422,7 +422,7 @@ let mk_snd (u1 u2:universe) (a1 a2 e:term) : term =
              e
 
 let par_post (uL uR:universe) (aL aR postL postR:term) (x:var) : term =
-  let x_tm = term_of_var x in
+  let x_tm = term_of_no_name_var x in
   
   let postL = open_term' postL (mk_fst uL uR aL aR x_tm) 0 in
   let postR = open_term' postR (mk_snd uL uR aL aR x_tm) 0 in
@@ -611,14 +611,14 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       g:env ->
       x:var { None? (lookup g x) } ->
       q:option qualifier ->
-      ty:term ->
+      b:binder ->
       u:universe ->
       body:st_term {~ (x `Set.mem` freevars_st body) } ->
       c:comp ->
-      tot_typing f g ty (Tm_Type u) ->
-      st_typing f ((x, Inl ty)::g) (open_st_term body x) c ->
-      st_typing f g (Tm_Abs (as_binder ty) q None body None)
-                    (C_Tot (Tm_Arrow (as_binder ty) q (close_comp c x)))
+      tot_typing f g b.binder_ty (Tm_Type u) ->
+      st_typing f ((x, Inl b.binder_ty)::g) (open_st_term_nv body (b.binder_ppname, x)) c ->
+      st_typing f g (Tm_Abs b q None body None)
+                    (C_Tot (Tm_Arrow b q (close_comp c x)))
   
   | T_STApp :
       g:env ->
@@ -664,7 +664,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       c:comp ->
       st_typing f g e1 c1 ->
       tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
-      st_typing f ((x, Inl (comp_res c1))::g) (open_st_term e2 x) c2 ->
+      st_typing f ((x, Inl (comp_res c1))::g) (open_st_term_nv e2 (v_as_nv x)) c2 ->
       bind_comp f g x c1 c2 c ->
       st_typing f g (Tm_Bind e1 e2) c
 
@@ -778,7 +778,7 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       universe_of f g init_t U_zero ->
       comp_typing f g c (comp_u c) ->
       st_typing f ((x, Inl (mk_ref init_t))::g)
-                (open_st_term body x)
+                (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
       st_typing f g (Tm_WithLocal init body) c
 

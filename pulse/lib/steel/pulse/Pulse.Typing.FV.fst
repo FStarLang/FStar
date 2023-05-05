@@ -351,7 +351,7 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      tot_typing_freevars t_typing;
      tot_typing_freevars e_typing;
      tot_typing_freevars post_typing;
-     freevars_open_term post (term_of_var x) 0;
+     freevars_open_term post (term_of_no_name_var x) 0;
      let post =
        if use_eq then Tm_Star post (Tm_Pure (mk_eq2 u t (null_bvar 0) e))
        else post in
@@ -469,7 +469,7 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 
    | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
-     let x_tm = term_of_var x in
+     let x_tm = term_of_no_name_var x in
      let u = comp_u cL in
      let aL = comp_res cL in
      let aR = comp_res cR in
@@ -492,5 +492,5 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      tot_typing_freevars t_typing;
      tot_typing_freevars pre_typing;
      tot_typing_freevars post_typing;
-     freevars_open_term s.post (term_of_var x) 0
+     freevars_open_term s.post (term_of_no_name_var x) 0
 #pop-options //takes about 60s

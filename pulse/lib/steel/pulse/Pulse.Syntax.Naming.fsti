@@ -393,15 +393,19 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
     | Tm_Protect t ->
       Tm_Protect (open_st_term' t v i)
 
-let open_term t v =
-    open_term' t (Tm_Var { nm_ppname=RT.pp_name_default;
-                           nm_index=v;
-                           nm_range=FStar.Range.range_0}) 0
+let open_term_nv t nv =
+    open_term' t (term_of_nvar nv) 0
 
-let open_st_term t v =
-    open_st_term' t (Tm_Var { nm_ppname=RT.pp_name_default;
-                              nm_index=v;
-                              nm_range=FStar.Range.range_0}) 0
+// Can use this no-name version in specs only
+let open_term t v : GTot term =
+    open_term_nv t (v_as_nv v)
+
+let open_st_term_nv t nv =
+    open_st_term' t (term_of_nvar nv) 0
+
+// Can use this no-name version in specs only
+let open_st_term t v : GTot st_term =
+    open_st_term_nv t (v_as_nv v)
 
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
@@ -566,27 +570,27 @@ let close_comp t v = close_comp' t v 0
 val close_open_inverse' (t:term) 
                         (x:var { ~(x `Set.mem` freevars t) } )
                         (i:index)
-  : Lemma (ensures close_term' (open_term' t (term_of_var x) i) x i == t)
+  : Lemma (ensures close_term' (open_term' t (term_of_no_name_var x) i) x i == t)
 
 val close_open_inverse_comp' (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
                              (i:index)
-  : Lemma (ensures close_comp' (open_comp' c (term_of_var x) i) x i == c)
+  : Lemma (ensures close_comp' (open_comp' c (term_of_no_name_var x) i) x i == c)
 
 val close_open_inverse_opt' (t:option term)
                             (x:var { ~(x `Set.mem` freevars_opt t) })
                             (i:index)
-  : Lemma (ensures close_term_opt' (open_term_opt' t (term_of_var x) i) x i == t)
+  : Lemma (ensures close_term_opt' (open_term_opt' t (term_of_no_name_var x) i) x i == t)
 
 val close_open_inverse_list' (t:list term)
                              (x:var { ~(x `Set.mem` freevars_list t) })
                              (i:index)
-  : Lemma (ensures close_term_list' (open_term_list' t (term_of_var x) i) x i == t)
+  : Lemma (ensures close_term_list' (open_term_list' t (term_of_no_name_var x) i) x i == t)
 
 val close_open_inverse_st' (t:st_term) 
                            (x:var { ~(x `Set.mem` freevars_st t) } )
                            (i:index)
-  : Lemma (ensures close_st_term' (open_st_term' t (term_of_var x) i) x i == t)
+  : Lemma (ensures close_st_term' (open_st_term' t (term_of_no_name_var x) i) x i == t)
 
 val close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)

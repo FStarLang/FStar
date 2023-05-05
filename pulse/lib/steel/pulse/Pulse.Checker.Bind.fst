@@ -20,23 +20,24 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   (e2:st_term)
   (c1:comp_st)
   (c2:comp_st)
-  (x:var)
+  (px:nvar)
   (d_e1:st_typing f g e1 c1)
   (d_c1res:tot_typing f g (comp_res c1) (Tm_Type (comp_u c1)))
-  (d_e2:st_typing f ((x, Inl (comp_res c1))::g) (open_st_term e2 x) c2)
+  (d_e2:st_typing f ((snd px, Inl (comp_res c1))::g) (open_st_term_nv e2 px) c2)
   (res_typing:universe_of f g (comp_res c2) (comp_u c2))
-  (post_typing:tot_typing f ((x, Inl (comp_res c2))::g) (open_term (comp_post c2) x) Tm_VProp)
+  (post_typing:tot_typing f ((snd px, Inl (comp_res c2))::g) (open_term_nv (comp_post c2) px) Tm_VProp)
   : T.TacH (t:st_term &
             c:comp { stateful_comp c ==> comp_pre c == pre } &
             st_typing f g t c)
            (requires fun _ ->
+              let _, x = px in
               comp_pre c1 == pre /\
               None? (lookup g x) /\
               (~(x `Set.mem` freevars_st e2)) /\
               open_term (comp_post c1) x == comp_pre c2 /\
               (~ (x `Set.mem` freevars (comp_post c2))))
            (ensures fun _ _ -> True) =
-
+  let _, x = px in
   match c1, c2 with
   | C_ST _, C_ST _ ->
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
@@ -79,7 +80,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     then begin
       let c2lifted = C_ST (st_comp_of_comp c2) in
       let g' = (x, Inl (comp_res c1))::g in
-      let d_e2 : st_typing f g' (open_st_term e2 x) c2lifted =
+      let d_e2 : st_typing f g' (open_st_term_nv e2 px) c2lifted =
         T_Lift _ _ _ c2lifted d_e2 (Lift_STAtomic_ST _ c2) in
       let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
       (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
@@ -92,7 +93,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
       let c1lifted = C_STAtomic inames (st_comp_of_comp c1) in
       let d_e1 : st_typing f g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STGhost_STAtomic g c1 w) in
-      mk_bind f g pre e1 e2 c1lifted c2 x d_e1 d_c1res d_e2 res_typing post_typing
+      mk_bind f g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
     end
     else T.fail "Cannot compose ghost with stt with non-emp opened invariants"
   | C_ST _, C_STGhost inames _ ->
@@ -101,9 +102,9 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
       let g' = (x, Inl (comp_res c1))::g in
       let w = get_non_informative_witness f g' (comp_u c2) (comp_res c2) in
       let c2lifted = C_STAtomic inames (st_comp_of_comp c2) in
-      let d_e2 : st_typing f g' (open_st_term e2 x) c2lifted =
+      let d_e2 : st_typing f g' (open_st_term_nv e2 px) c2lifted =
         T_Lift _ _ _ c2lifted d_e2 (Lift_STGhost_STAtomic g' c2 w) in
-      mk_bind f g pre e1 e2 c1 c2lifted x d_e1 d_c1res d_e2 res_typing post_typing
+      mk_bind f g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing
     end
     else T.fail "Cannot compose stt with ghost with non-emp opened invariants"
   | C_STAtomic inames _, C_STAtomic _ _ ->
@@ -112,7 +113,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
       let c1lifted = C_ST (st_comp_of_comp c1) in
       let d_e1 : st_typing f g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
-      mk_bind f g pre e1 e2 c1lifted c2 x d_e1 d_c1res d_e2 res_typing post_typing
+      mk_bind f g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
     end
     else T.fail "Cannot compose statomics with non-emp opened invariants"
   | _, _ -> T.fail "bind either not implemented (e.g. ghost) or not possible"
@@ -141,7 +142,8 @@ let check_bind
     if u <> s1.u then T.fail "incorrect universe"
     else (
         let x = fresh g in
-        let next_pre = open_term s1.post x in
+        let px = v_as_nv x in
+        let next_pre = open_term_nv s1.post px in
         // T.print (Printf.sprintf "Bind::e1 %s \n\nx %s\n\ne2 %s\n\nnext_pre %s\n\n"
         //            (P.term_to_string e1)
         //            (string_of_int x)
@@ -153,7 +155,7 @@ let check_bind
         let next_pre_typing : tot_typing f g' next_pre Tm_VProp
           = check_vprop_with_core f g' next_pre
         in
-        let (| e2', c2, d2 |) = check f g' (open_st_term e2 x) next_pre next_pre_typing post_hint in
+        let (| e2', c2, d2 |) = check f g' (open_st_term_nv e2 px) next_pre next_pre_typing post_hint in
         FV.st_typing_freevars d2;
         if C_Tot? c2
         then T.fail "Bind: c2 is not st"
@@ -169,10 +171,10 @@ let check_bind
           else if x `Set.mem` freevars s2.post
           then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
           else (
-            let s2_post_opened = open_term s2.post x in
+            let s2_post_opened = open_term_nv s2.post (v_as_nv x) in
             let post_typing = check_vprop_with_core f ((x, Inl s2.res)::g) s2_post_opened in
             //assume (~ (x `Set.mem` freevars_st e2_closed));
-            mk_bind f g pre e1 e2_closed c1 c2 x d1 t_typing d2 res_typing post_typing
+            mk_bind f g pre e1 e2_closed c1 c2 px d1 t_typing d2 res_typing post_typing
           )
     )
 #pop-options

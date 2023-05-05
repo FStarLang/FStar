@@ -222,7 +222,10 @@ let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
   | C_STAtomic inames _
   | C_STGhost inames _ -> inames
 
-let term_of_var (x:var) = Tm_Var { nm_ppname=RT.pp_name_default; nm_index=x; nm_range=FStar.Range.range_0}
+let nvar = ppname & var 
+let v_as_nv x = RT.pp_name_default, x
+let term_of_nvar (x:nvar) = Tm_Var { nm_ppname=fst x; nm_index=snd x; nm_range=FStar.Range.range_0}
+let term_of_no_name_var (x:var) = term_of_nvar (v_as_nv x)
 
 //// TEMPORARY : THEY SHOULD COME FROM FStar.Reflection.Typing.fsti WHEN THE BRANCHES STORM IS GONE ////
 let equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)

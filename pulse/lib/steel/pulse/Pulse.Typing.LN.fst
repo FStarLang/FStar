@@ -196,14 +196,14 @@ let open_term_ln (e:term) (v:var)
   : Lemma 
     (requires ln (open_term e v))
     (ensures ln' e 0)
-  = open_term_ln' e (term_of_var v) 0
+  = open_term_ln' e (term_of_no_name_var v) 0
 
 
 let open_st_term_ln (e:st_term) (v:var)
   : Lemma 
     (requires ln_st (open_st_term e v))
     (ensures ln_st' e 0)
-  = open_st_term_ln' e (term_of_var v) 0
+  = open_st_term_ln' e (term_of_no_name_var v) 0
 
 assume
 val r_ln_weakening (e:R.term) (i j:int)
@@ -754,9 +754,9 @@ let st_equiv_ln #f #g #c1 #c2 (d:st_equiv f g c1 c2)
     (ensures ln_c c2)
   = let ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_pre eq_post = d in
     vprop_equiv_ln eq_pre;
-    open_term_ln_inv' (comp_post c1) (term_of_var x) 0;
+    open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
     vprop_equiv_ln eq_post;
-    open_term_ln' (comp_post c2) (term_of_var x) 0
+    open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
 
 let bind_comp_ln #f #g #x #c1 #c2 #c (d:bind_comp f g x c1 c2 c)
   : Lemma 
@@ -810,7 +810,7 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       tot_typing_ln t_typing;
       tot_typing_ln e_typing;
       tot_typing_ln post_typing;
-      open_term_ln' post (term_of_var x) 0;
+      open_term_ln' post (term_of_no_name_var x) 0;
       open_term_ln_inv' post e 0;
       if not use_eq
       then ()
@@ -867,7 +867,7 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       open_term_ln_inv' inv tm_false 0
 
     | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
-      let x_tm = term_of_var x in
+      let x_tm = term_of_no_name_var x in
       let u = comp_u cL in
       let aL = comp_res cL in
       let aR = comp_res cR in
@@ -892,5 +892,5 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       tot_typing_ln t_typing;
       tot_typing_ln pre_typing;
       tot_typing_ln post_typing;
-      open_term_ln' s.post (term_of_var x) 0
+      open_term_ln' s.post (term_of_no_name_var x) 0
 #pop-options

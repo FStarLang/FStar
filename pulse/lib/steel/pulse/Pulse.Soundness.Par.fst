@@ -67,7 +67,7 @@ let par_soundness
   let aR = comp_res cR in
   let postL = comp_post cL in
   let postR = comp_post cR in
-  let x_tm = term_of_var x in
+  let x_tm = term_of_no_name_var x in
   let rx_tm = RT.var_as_term x in
 
   elab_open_commute' postL (mk_fst uL uR aL aR x_tm) 0;

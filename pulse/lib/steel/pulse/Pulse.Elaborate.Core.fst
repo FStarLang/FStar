@@ -124,11 +124,12 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
   = match d with
     // | T_Tot _ t _ _ -> elab_term t
 
-    | T_Abs _ x qual ty_pulse _u body _c ty_typing body_typing ->
-      let ty = elab_term ty_pulse in
+    | T_Abs _ x qual b _u body _c ty_typing body_typing ->
+      let ty = elab_term b.binder_ty in
+      let ppname = b.binder_ppname in
       let body = elab_st_typing body_typing in
-      let ppname = (as_binder ty_pulse).binder_ppname in
       mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
+
 
     | T_STApp _ head  _formal qual _res arg head_typing arg_typing ->
       let head = elab_term head in
@@ -154,7 +155,7 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
       let e2 = elab_st_typing e2_typing in
       let ty1 = elab_term (comp_res c1) in
       elab_bind bc e1 (mk_abs ty1 R.Q_Explicit (RT.close_term e2 x))
-      
+
     | T_Frame _ _ c frame _frame_typing e_typing ->
       let e = elab_st_typing e_typing in
       elab_frame c frame e

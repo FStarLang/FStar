@@ -47,6 +47,7 @@ let replace_equiv_post
 
   let {u=u_c;res=res_c;pre=pre_c;post=post_c} = st_comp_of_comp c in
   let x = fresh g in //We could pick x here fresh with respect to both g and post_hint, rather than failing
+  let px = v_as_nv x in
   let g_post = (x, Inl res_c)::g in
 
   let pre_c_typing : tot_typing f g pre_c Tm_VProp =
@@ -56,9 +57,9 @@ let replace_equiv_post
     if u = u_c
     then ty
     else T.fail "T_Abs: re-typechecking the return type returned different universe" in
-  let post_c_opened = open_term post_c x in
+  let post_c_opened = open_term_nv post_c px in
   let post_c_typing
-    : tot_typing f g_post (open_term post_c x) Tm_VProp
+    : tot_typing f g_post (open_term_nv post_c px) Tm_VProp
     = check_vprop_with_core f g_post post_c_opened in
 
   match post_hint with
@@ -72,7 +73,7 @@ let replace_equiv_post
     if (x `Set.mem` freevars post)
     then T.fail "Unexpected variable clash with annotated postcondition"
     else (
-      let post_opened = open_term post x in
+      let post_opened = open_term_nv post px in
       let (| post_opened, post_typing |) = check_vprop f g_post post_opened in
       let post_c_post_eq : vprop_equiv f g_post post_c_opened post_opened =
         check_vprop_equiv f g_post post_c_opened post_opened post_c_typing in
@@ -110,11 +111,12 @@ let check_abs
     let (| t, _, _ |) = check_tot f g t in //elaborate it first
     let (| u, t_typing |) = check_universe f g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
+    let px = ppname, x in
     let g' = (x, Inl t) :: g in
     let pre_opened = 
       match pre_hint with
       | None -> T.fail "Cannot typecheck an function without a precondition"
-      | Some pre_hint -> open_term pre_hint x in
+      | Some pre_hint -> open_term_nv pre_hint px in
     match check_tot f g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
       let pre = close_term pre_opened x in
@@ -125,12 +127,12 @@ let check_abs
           let post = open_term' post (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=Range.range_0}) 1 in
           Some post
       in
-      let (| body', c_body, body_typing |) = check f g' (open_st_term body x) pre_opened (E pre_typing) post in
+      let (| body', c_body, body_typing |) = check f g' (open_st_term_nv body px) pre_opened (E pre_typing) post in
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body' x in
       assume (open_st_term body_closed x == body');
-
-      let tt = T_Abs g x qual t u body_closed c_body t_typing body_typing in
+      let b = {binder_ty=t;binder_ppname=ppname} in
+      let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
       let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
       (| Tm_Abs {binder_ty=t;binder_ppname=ppname} qual None body_closed None, 
          C_Tot tres,
@@ -238,9 +240,10 @@ let check_comp (f:RT.fstar_top_env)
         then T.fail "Unexpected universe"
         else (
           let x = fresh g in
+          let px = v_as_nv x in
           assume (~(x `Set.mem` freevars (comp_post c)));
           let gx = (x, Inl st.res)::g in
-          let (| ty, post_typing |) = check_with_core f gx (open_term (comp_post c) x) in
+          let (| ty, post_typing |) = check_with_core f gx (open_term_nv (comp_post c) px) in
           if not (eq_tm ty Tm_VProp)
           then T.fail "Ill-typed postcondition"
           else (
@@ -842,6 +845,7 @@ let check_admit
   let Tm_Admit c _ t post = t in
   let (| u, t_typing |) = check_universe f g t in
   let x = fresh g in
+  let px = v_as_nv x in
   let post =
     match post, post_hint with
     | None, None
@@ -850,7 +854,7 @@ let check_admit
     | Some post, _
     | _, Some post -> post in
 
-  let post_opened = open_term post x in
+  let post_opened = open_term_nv post px in
   let (| post_opened, post_typing |) =
     check_tot_with_expected_typ f ((x, Inl t)::g) post_opened Tm_VProp in
 
@@ -878,12 +882,13 @@ let check_return
   let Tm_Return c use_eq t = t in
   let (| t, u, ty, uty, d |) = check_tot_univ f g t in
   let x = fresh g in
+  let px = v_as_nv x in
   let (| post, post_typing |) =
     let post =
       match post_hint with
       | None -> Tm_Emp
       | Some post -> post in
-    let post_opened = open_term post x in
+    let post_opened = open_term_nv post px in
     let (| post_opened, post_typing |) =
       check_tot_with_expected_typ f ((x, Inl ty)::g) post_opened Tm_VProp in
     assume (open_term (close_term post_opened x) x == post_opened);
@@ -970,8 +975,9 @@ let rec maybe_add_elims
     | Tm_ExistsSL u ty b se :: rest ->
       let e = Tm_Protect (Tm_ElimExists (Tm_ExistsSL u ty b se)) in
       let x = fresh g in
+      let px = v_as_nv x in
       let g = (x, Inl ty)::g in
-      let b = open_term b x in
+      let b = open_term_nv b px in
       let t = maybe_add_elims g [b] t in
       let t = close_st_term t x in
       let t = Tm_Bind e (Tm_Protect t) in
@@ -1105,6 +1111,7 @@ let check_withlocal
     check_tot_univ f g init in
   if init_u = U_zero
   then let x = fresh g in
+       let px = v_as_nv x in
        if x `Set.mem` freevars_st body
        then T.fail "withlocal: x is free in body"
        else
@@ -1119,11 +1126,11 @@ let check_withlocal
              match post_hint with
              | Some post -> post
              | None -> T.fail "withlocal: no post_hint!" in
-           let (| post_opened, _ |) = check_vprop f g_extended (open_term post x) in
+           let (| post_opened, _ |) = check_vprop f g_extended (open_term_nv post px) in
             close_term post_opened x in
          let body_post = comp_withlocal_body_post post init_t x_tm in
          let (| opened_body, c_body, body_typing |) =
-           check' allow_inst f g_extended (open_st_term body x) body_pre body_pre_typing (Some body_post) in
+           check' allow_inst f g_extended (open_st_term_nv body px) body_pre body_pre_typing (Some body_post) in
          //
          // Checking post equality here to match the typing rule
          // 
