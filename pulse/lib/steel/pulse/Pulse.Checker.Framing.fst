@@ -118,6 +118,8 @@ let check_one_vprop f g (p q:term) : T.Tac (option (vprop_equiv f g p q)) =
       match p, q with
       | Tm_PureApp hd_p _ _, Tm_PureApp hd_q _ _ ->
         eq_tm hd_p hd_q
+      | Tm_FStar _, _
+      | _, Tm_FStar _ -> true
       | _, _ -> false in
     if check_extensional_equality
     then

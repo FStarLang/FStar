@@ -299,10 +299,21 @@ let rec readback_ty (t:R.term)
       Some (Tm_Let bv_t' def' body' <: ty:term { elab_term ty == t })
     end
 
-  | Tv_Match _ _ _ -> T.fail "readbackty: Tv_Match not yet implemented"
+  | Tv_Match _ _ _ -> Some (Tm_FStar t)
 
-  | Tv_AscribedT _ _ _ _
-  | Tv_AscribedC _ _ _ _ -> T.fail "readbackty: ascription nodes not supported"
+  //
+  // The following is dropping the ascription, which is not ideal
+  // However, if we don't, then ascriptions start to come in the way of
+  //   R.term_eq used to decide equality of Tm_FStar terms,
+  //   which then results in framing failures
+  //
+  // At least in the examples it came up, the ascription was a redundant
+  //   ascription on F* Tm_Match
+  //   I tried an F* patch that did not add the ascription, if it was already
+  //   ascribed, but that failed a couple of proofs in HACL* : (
+  //
+  | Tv_AscribedT t _ _ _
+  | Tv_AscribedC t _ _ _ -> Some (Tm_FStar t)
 
   | Tv_Unknown ->
     (* Given the new precondition for the bijection lemma,
