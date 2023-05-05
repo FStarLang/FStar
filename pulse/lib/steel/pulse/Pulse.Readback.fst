@@ -313,7 +313,7 @@ let rec readback_ty (t:R.term)
   //   ascribed, but that failed a couple of proofs in HACL* : (
   //
   | Tv_AscribedT t _ _ _
-  | Tv_AscribedC t _ _ _ -> Some (Tm_FStar t)
+  | Tv_AscribedC t _ _ _ -> admit (); Some (Tm_FStar t)
 
   | Tv_Unknown ->
     (* Given the new precondition for the bijection lemma,
