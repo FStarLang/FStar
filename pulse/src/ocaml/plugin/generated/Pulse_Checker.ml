@@ -7251,7 +7251,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                      (Prims.of_int (1194)) (Prims.of_int (10)))
                   (FStar_Range.mk_range "Pulse.Checker.fst"
                      (Prims.of_int (1196)) (Prims.of_int (2))
-                     (Prims.of_int (1271)) (Prims.of_int (18)))
+                     (Prims.of_int (1266)) (Prims.of_int (18)))
                   (if allow_inst
                    then Obj.magic (Obj.repr (auto_elims g pre t))
                    else
@@ -7268,7 +7268,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                 (Prims.of_int (1196)) (Prims.of_int (53)))
                              (FStar_Range.mk_range "Pulse.Checker.fst"
                                 (Prims.of_int (1197)) (Prims.of_int (2))
-                                (Prims.of_int (1271)) (Prims.of_int (18)))
+                                (Prims.of_int (1266)) (Prims.of_int (18)))
                              (Obj.magic
                                 (FStar_Tactics_Builtins.print
                                    (Prims.strcat "Check: "
@@ -7409,13 +7409,13 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                   "Pulse.Checker.fst"
                                                                   (Prims.of_int (1230))
                                                                   (Prims.of_int (8))
-                                                                  (Prims.of_int (1241))
+                                                                  (Prims.of_int (1236))
                                                                   (Prims.of_int (19)))
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Checker.fst"
-                                                                  (Prims.of_int (1243))
+                                                                  (Prims.of_int (1238))
                                                                   (Prims.of_int (6))
-                                                                  (Prims.of_int (1252))
+                                                                  (Prims.of_int (1247))
                                                                   (Prims.of_int (7)))
                                                                (FStar_Tactics_Effect.lift_div_tac
                                                                   (fun uu___4
@@ -7446,15 +7446,15 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (1245))
+                                                                    (Prims.of_int (1240))
                                                                     (Prims.of_int (27))
-                                                                    (Prims.of_int (1245))
+                                                                    (Prims.of_int (1240))
                                                                     (Prims.of_int (61)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (1246))
+                                                                    (Prims.of_int (1241))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (1248))
+                                                                    (Prims.of_int (1243))
                                                                     (Prims.of_int (67)))
                                                                     (Obj.magic
                                                                     (maybe_infer_intro_exists
@@ -7469,37 +7469,37 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (1246))
+                                                                    (Prims.of_int (1241))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (1247))
+                                                                    (Prims.of_int (1242))
                                                                     (Prims.of_int (67)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (1248))
+                                                                    (Prims.of_int (1243))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (1248))
+                                                                    (Prims.of_int (1243))
                                                                     (Prims.of_int (67)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (1246))
+                                                                    (Prims.of_int (1241))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (1247))
+                                                                    (Prims.of_int (1242))
                                                                     (Prims.of_int (67)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (1246))
+                                                                    (Prims.of_int (1241))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (1247))
+                                                                    (Prims.of_int (1242))
                                                                     (Prims.of_int (67)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (1247))
+                                                                    (Prims.of_int (1242))
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (1247))
+                                                                    (Prims.of_int (1242))
                                                                     (Prims.of_int (66)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"

@@ -148,6 +148,107 @@ let (push_bv :
                 (uu___1.FStar_TypeChecker_Env.core_check)
             } in
           let env1 = { tcenv; local_refs = (env.local_refs) } in (env1, bv)
+let (push_namespace : env_t -> FStar_Ident.lident -> env_t) =
+  fun env ->
+    fun lid ->
+      let dsenv =
+        FStar_Syntax_DsEnv.push_namespace
+          (env.tcenv).FStar_TypeChecker_Env.dsenv lid in
+      let tcenv =
+        let uu___ = env.tcenv in
+        {
+          FStar_TypeChecker_Env.solver = (uu___.FStar_TypeChecker_Env.solver);
+          FStar_TypeChecker_Env.range = (uu___.FStar_TypeChecker_Env.range);
+          FStar_TypeChecker_Env.curmodule =
+            (uu___.FStar_TypeChecker_Env.curmodule);
+          FStar_TypeChecker_Env.gamma = (uu___.FStar_TypeChecker_Env.gamma);
+          FStar_TypeChecker_Env.gamma_sig =
+            (uu___.FStar_TypeChecker_Env.gamma_sig);
+          FStar_TypeChecker_Env.gamma_cache =
+            (uu___.FStar_TypeChecker_Env.gamma_cache);
+          FStar_TypeChecker_Env.modules =
+            (uu___.FStar_TypeChecker_Env.modules);
+          FStar_TypeChecker_Env.expected_typ =
+            (uu___.FStar_TypeChecker_Env.expected_typ);
+          FStar_TypeChecker_Env.sigtab = (uu___.FStar_TypeChecker_Env.sigtab);
+          FStar_TypeChecker_Env.attrtab =
+            (uu___.FStar_TypeChecker_Env.attrtab);
+          FStar_TypeChecker_Env.instantiate_imp =
+            (uu___.FStar_TypeChecker_Env.instantiate_imp);
+          FStar_TypeChecker_Env.effects =
+            (uu___.FStar_TypeChecker_Env.effects);
+          FStar_TypeChecker_Env.generalize =
+            (uu___.FStar_TypeChecker_Env.generalize);
+          FStar_TypeChecker_Env.letrecs =
+            (uu___.FStar_TypeChecker_Env.letrecs);
+          FStar_TypeChecker_Env.top_level =
+            (uu___.FStar_TypeChecker_Env.top_level);
+          FStar_TypeChecker_Env.check_uvars =
+            (uu___.FStar_TypeChecker_Env.check_uvars);
+          FStar_TypeChecker_Env.use_eq_strict =
+            (uu___.FStar_TypeChecker_Env.use_eq_strict);
+          FStar_TypeChecker_Env.is_iface =
+            (uu___.FStar_TypeChecker_Env.is_iface);
+          FStar_TypeChecker_Env.admit = (uu___.FStar_TypeChecker_Env.admit);
+          FStar_TypeChecker_Env.lax = (uu___.FStar_TypeChecker_Env.lax);
+          FStar_TypeChecker_Env.lax_universes =
+            (uu___.FStar_TypeChecker_Env.lax_universes);
+          FStar_TypeChecker_Env.phase1 = (uu___.FStar_TypeChecker_Env.phase1);
+          FStar_TypeChecker_Env.failhard =
+            (uu___.FStar_TypeChecker_Env.failhard);
+          FStar_TypeChecker_Env.nosynth =
+            (uu___.FStar_TypeChecker_Env.nosynth);
+          FStar_TypeChecker_Env.uvar_subtyping =
+            (uu___.FStar_TypeChecker_Env.uvar_subtyping);
+          FStar_TypeChecker_Env.tc_term =
+            (uu___.FStar_TypeChecker_Env.tc_term);
+          FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
+            (uu___.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
+          FStar_TypeChecker_Env.universe_of =
+            (uu___.FStar_TypeChecker_Env.universe_of);
+          FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
+            (uu___.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+          FStar_TypeChecker_Env.teq_nosmt_force =
+            (uu___.FStar_TypeChecker_Env.teq_nosmt_force);
+          FStar_TypeChecker_Env.subtype_nosmt_force =
+            (uu___.FStar_TypeChecker_Env.subtype_nosmt_force);
+          FStar_TypeChecker_Env.qtbl_name_and_index =
+            (uu___.FStar_TypeChecker_Env.qtbl_name_and_index);
+          FStar_TypeChecker_Env.normalized_eff_names =
+            (uu___.FStar_TypeChecker_Env.normalized_eff_names);
+          FStar_TypeChecker_Env.fv_delta_depths =
+            (uu___.FStar_TypeChecker_Env.fv_delta_depths);
+          FStar_TypeChecker_Env.proof_ns =
+            (uu___.FStar_TypeChecker_Env.proof_ns);
+          FStar_TypeChecker_Env.synth_hook =
+            (uu___.FStar_TypeChecker_Env.synth_hook);
+          FStar_TypeChecker_Env.try_solve_implicits_hook =
+            (uu___.FStar_TypeChecker_Env.try_solve_implicits_hook);
+          FStar_TypeChecker_Env.splice = (uu___.FStar_TypeChecker_Env.splice);
+          FStar_TypeChecker_Env.mpreprocess =
+            (uu___.FStar_TypeChecker_Env.mpreprocess);
+          FStar_TypeChecker_Env.postprocess =
+            (uu___.FStar_TypeChecker_Env.postprocess);
+          FStar_TypeChecker_Env.identifier_info =
+            (uu___.FStar_TypeChecker_Env.identifier_info);
+          FStar_TypeChecker_Env.tc_hooks =
+            (uu___.FStar_TypeChecker_Env.tc_hooks);
+          FStar_TypeChecker_Env.dsenv = dsenv;
+          FStar_TypeChecker_Env.nbe = (uu___.FStar_TypeChecker_Env.nbe);
+          FStar_TypeChecker_Env.strict_args_tab =
+            (uu___.FStar_TypeChecker_Env.strict_args_tab);
+          FStar_TypeChecker_Env.erasable_types_tab =
+            (uu___.FStar_TypeChecker_Env.erasable_types_tab);
+          FStar_TypeChecker_Env.enable_defer_to_tac =
+            (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+          FStar_TypeChecker_Env.unif_allow_ref_guards =
+            (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards);
+          FStar_TypeChecker_Env.erase_erasable_args =
+            (uu___.FStar_TypeChecker_Env.erase_erasable_args);
+          FStar_TypeChecker_Env.core_check =
+            (uu___.FStar_TypeChecker_Env.core_check)
+        } in
+      let env1 = { tcenv; local_refs = (env.local_refs) } in env1
 let (r_ : FStar_Compiler_Range_Type.range) =
   FStar_Compiler_Range_Type.dummyRange
 let (star_lid : FStar_Ident.lident) =
@@ -155,7 +256,7 @@ let (star_lid : FStar_Ident.lident) =
 let (emp_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Effect"; "Common"; "emp"] r_
 let (pure_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Steel"; "Effect"; "Common"; "pure"] r_
+  FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "pure"] r_
 let (stt_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt"] r_
 let (assign_lid : FStar_Ident.lident) =
@@ -404,6 +505,21 @@ let rec (desugar_vprop :
                                 PulseSyntaxWrapper.tm_exists b body2 in
                               return uu___4)) in
           aux env binders
+let (mk_bind :
+  PulseSyntaxWrapper.binder ->
+    PulseSyntaxWrapper.st_term ->
+      PulseSyntaxWrapper.st_term -> PulseSyntaxWrapper.st_term)
+  =
+  fun b ->
+    fun s1 ->
+      fun s2 ->
+        let uu___ = PulseSyntaxWrapper.is_tm_intro_exists s1 in
+        if uu___
+        then
+          let uu___1 = PulseSyntaxWrapper.tm_protect s1 in
+          let uu___2 = PulseSyntaxWrapper.tm_protect s2 in
+          PulseSyntaxWrapper.tm_bind b uu___1 uu___2
+        else PulseSyntaxWrapper.tm_bind b s1 s2
 let rec (desugar_stmt :
   env_t -> PulseSugar.stmt -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -422,6 +538,13 @@ let rec (desugar_stmt :
                op_let_Question uu___1
                  (fun value1 ->
                     let uu___2 = stapp_assignment lhs value1 in return uu___2))
+      | PulseSugar.Sequence
+          {
+            PulseSugar.s1 =
+              { PulseSugar.s = PulseSugar.Open l;
+                PulseSugar.range1 = uu___;_};
+            PulseSugar.s2 = s2;_}
+          -> let env1 = push_namespace env l in desugar_stmt env1 s2
       | PulseSugar.Sequence
           {
             PulseSugar.s1 =
@@ -475,13 +598,12 @@ let rec (desugar_stmt :
             PulseSugar.branches = branches;_}
           -> failwith "Match is not yet handled"
       | PulseSugar.While
-          { PulseSugar.head3 = head; PulseSugar.id2 = id;
+          { PulseSugar.guard = guard; PulseSugar.id2 = id;
             PulseSugar.invariant = invariant; PulseSugar.body1 = body;_}
           ->
-          let uu___ = tosyntax env head in
+          let uu___ = desugar_stmt env guard in
           op_let_Question uu___
-            (fun head1 ->
-               let head2 = stapp_or_return env head1 in
+            (fun guard1 ->
                let uu___1 =
                  let uu___2 = push_bv env id in
                  match uu___2 with
@@ -499,8 +621,8 @@ let rec (desugar_stmt :
                     op_let_Question uu___2
                       (fun body1 ->
                          let uu___3 =
-                           PulseSyntaxWrapper.tm_while head2 (id, invariant1)
-                             body1 in
+                           PulseSyntaxWrapper.tm_while guard1
+                             (id, invariant1) body1 in
                          return uu___3)))
       | PulseSugar.Introduce
           { PulseSugar.vprop = vprop; PulseSugar.witnesses = witnesses;_} ->
@@ -519,6 +641,41 @@ let rec (desugar_stmt :
                            PulseSyntaxWrapper.tm_intro_exists false vp
                              witnesses1 in
                          return uu___3)))
+      | PulseSugar.Parallel
+          { PulseSugar.p1 = p1; PulseSugar.p2 = p2; PulseSugar.q1 = q1;
+            PulseSugar.q2 = q2; PulseSugar.b1 = b1; PulseSugar.b2 = b2;_}
+          ->
+          let uu___ = desugar_vprop env p1 in
+          op_let_Question uu___
+            (fun p11 ->
+               let uu___1 = desugar_vprop env p2 in
+               op_let_Question uu___1
+                 (fun p21 ->
+                    let uu___2 = desugar_vprop env q1 in
+                    op_let_Question uu___2
+                      (fun q11 ->
+                         let uu___3 = desugar_vprop env q2 in
+                         op_let_Question uu___3
+                           (fun q21 ->
+                              let uu___4 = desugar_stmt env b1 in
+                              op_let_Question uu___4
+                                (fun b11 ->
+                                   let uu___5 = desugar_stmt env b2 in
+                                   op_let_Question uu___5
+                                     (fun b21 ->
+                                        let uu___6 =
+                                          PulseSyntaxWrapper.tm_par p11 p21
+                                            q11 q21 b11 b21 in
+                                        return uu___6))))))
+      | PulseSugar.Rewrite { PulseSugar.p11 = p1; PulseSugar.p21 = p2;_} ->
+          let uu___ = desugar_vprop env p1 in
+          op_let_Question uu___
+            (fun p11 ->
+               let uu___1 = desugar_vprop env p2 in
+               op_let_Question uu___1
+                 (fun p21 ->
+                    let uu___2 = PulseSyntaxWrapper.tm_rewrite p11 p21 in
+                    return uu___2))
       | PulseSugar.LetBinding uu___ ->
           fail "Terminal let binding" s.PulseSugar.range1
 and (desugar_bind :
@@ -559,7 +716,7 @@ and (desugar_bind :
                                   let uu___4 =
                                     PulseSyntaxWrapper.mk_binder
                                       lb.PulseSugar.id1 annot in
-                                  PulseSyntaxWrapper.tm_bind uu___4 s11 s21 in
+                                  mk_bind uu___4 s11 s21 in
                                 return uu___3)
                        | FStar_Pervasives_Native.Some (PulseSugar.MUT) ->
                            let uu___2 = desugar_term env e1 in
@@ -594,8 +751,7 @@ and (desugar_sequence :
                     let uu___2 = FStar_Ident.id_of_text "_" in
                     PulseSyntaxWrapper.mk_binder uu___2
                       PulseSyntaxWrapper.tm_unknown in
-                  let uu___2 = PulseSyntaxWrapper.tm_bind annot s11 s21 in
-                  return uu___2))
+                  let uu___2 = mk_bind annot s11 s21 in return uu___2))
 let (explicit_rvalues : env_t -> PulseSugar.stmt -> PulseSugar.stmt) =
   fun env -> fun s -> s
 type qual = PulseSyntaxWrapper.qualifier FStar_Pervasives_Native.option

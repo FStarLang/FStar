@@ -39,6 +39,8 @@ type pat =
     }
     
 type stmt' =
+  | Open of lident
+  
   | Expr { 
       e : A.term 
     }
@@ -73,7 +75,7 @@ type stmt' =
     }
 
   | While {
-      head: A.term;
+      guard: stmt;
       id: ident;
       invariant: vprop;
       body: stmt;
@@ -87,6 +89,20 @@ type stmt' =
   | Sequence {
       s1:stmt;
       s2:stmt;
+    }
+
+  | Parallel {
+      p1:vprop;
+      p2:vprop;
+      q1:vprop;
+      q2:vprop;
+      b1:stmt;
+      b2:stmt;
+    }
+
+  | Rewrite {
+      p1:vprop;
+      p2:vprop;
     }
 
 and stmt = {
@@ -121,8 +137,11 @@ let mk_let_binding qualifier id typ init = LetBinding { qualifier; id; typ; init
 let mk_block stmt = Block { stmt }
 let mk_if head join_vprop then_ else_opt = If { head; join_vprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }
-let mk_while head id invariant body = While { head; id; invariant; body }
+let mk_while guard id invariant body = While { guard; id; invariant; body }
 let mk_intro vprop witnesses = Introduce { vprop; witnesses }
 let mk_sequence s1 s2 = Sequence { s1; s2 }
 let mk_stmt s range = { s; range }
 let mk_decl id binders ascription body range = { id; binders; ascription; body; range }
+let mk_open lid = Open lid
+let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
+let mk_rewrite p1 p2 = Rewrite { p1; p2 }

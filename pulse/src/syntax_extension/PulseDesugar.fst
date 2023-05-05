@@ -57,10 +57,16 @@ let push_bv env x =
   let env = { env with tcenv } in
   env, bv
 
+let push_namespace env lid =
+  let dsenv = D.push_namespace env.tcenv.dsenv lid in
+  let tcenv = { env.tcenv with dsenv } in
+  let env = {env with tcenv} in
+  env
+  
 let r_ = FStar.Compiler.Range.dummyRange
 let star_lid = Ident.lid_of_path ["Steel"; "Effect"; "Common"; "star"] r_
 let emp_lid = Ident.lid_of_path ["Steel"; "Effect"; "Common"; "emp"] r_
-let pure_lid = Ident.lid_of_path ["Steel"; "Effect"; "Common"; "pure"] r_
+let pure_lid = Ident.lid_of_path ["Steel"; "ST"; "Util"; "pure"] r_
 let stt_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt"] r_
 let assign_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "write"] r_
 let stt_ghost_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt_ghost"] r_
@@ -224,7 +230,12 @@ let rec desugar_vprop (env:env_t) (v:Sugar.vprop)
           return (SW.tm_exists b body)
       in
       aux env binders
-  
+
+let mk_bind b s1 s2 : SW.st_term = 
+  if SW.is_tm_intro_exists s1
+  then SW.tm_bind b (SW.tm_protect s1) (SW.tm_protect s2)
+  else SW.tm_bind b s1 s2
+
 (* s has already been transformed with explicit dereferences for r-values *)
 let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
@@ -239,6 +250,10 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? lhs = resolve_name env id in
       let? value = tosyntax env value in
       return (stapp_assignment lhs value)
+
+    | Sequence { s1={s=Open l}; s2 } ->
+      let env = push_namespace env l in
+      desugar_stmt env s2
 
     | Sequence { s1={s=LetBinding lb}; s2 } ->
       desugar_bind env lb s2
@@ -271,16 +286,15 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     | Match { head; returns_annot; branches } ->
       failwith "Match is not yet handled"
 
-    | While { head; id; invariant; body } ->
-      let? head = tosyntax env head in
-      let head = stapp_or_return env head in
+    | While { guard; id; invariant; body } ->
+      let? guard = desugar_stmt env guard in
       let? invariant = 
         let env, bv = push_bv env id in
         let? inv = desugar_vprop env invariant in
         return (SW.close_term inv bv.index)
       in
       let? body = desugar_stmt env body in
-      return (SW.tm_while head (id, invariant) body)
+      return (SW.tm_while guard (id, invariant) body)
 
     | Introduce { vprop; witnesses } -> (
       match vprop with
@@ -291,7 +305,22 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
         let? witnesses = map_err (desugar_term env) witnesses in
         return (SW.tm_intro_exists false vp witnesses)
     )
-      
+
+
+    | Parallel { p1; p2; q1; q2; b1; b2 } ->
+      let? p1 = desugar_vprop env p1 in
+      let? p2 = desugar_vprop env p2 in
+      let? q1 = desugar_vprop env q1 in
+      let? q2 = desugar_vprop env q2 in      
+      let? b1 = desugar_stmt env b1 in
+      let? b2 = desugar_stmt env b2 in
+      return (SW.tm_par p1 p2 q1 q2 b1 b2)
+
+    | Rewrite { p1; p2 } ->
+      let? p1 = desugar_vprop env p1 in
+      let? p2 = desugar_vprop env p2 in
+      return (SW.tm_rewrite p1 p2)
+
     | LetBinding _ -> 
       fail "Terminal let binding" s.range
 
@@ -313,7 +342,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt)
       | None -> //just a regular bind
         let? s1 = tosyntax env e1 in
         let s1 = stapp_or_return env s1 in
-        return (SW.tm_bind (SW.mk_binder lb.id annot) s1 s2)
+        return (mk_bind (SW.mk_binder lb.id annot) s1 s2)
       
       | Some MUT //these are handled the same for now
       | Some REF -> 
@@ -326,7 +355,7 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt)
   = let? s1 = desugar_stmt env s1 in
     let? s2 = desugar_stmt env s2 in
     let annot = SW.mk_binder (Ident.id_of_text "_") SW.tm_unknown in
-    return (SW.tm_bind annot s1 s2)
+    return (mk_bind annot s1 s2)
 
 let explicit_rvalues (env:env_t) (s:Sugar.stmt)
   : Sugar.stmt
