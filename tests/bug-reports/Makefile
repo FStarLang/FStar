@@ -50,7 +50,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst \
   Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst Bug2659b.fst\
   Bug2756.fst MutualRecPositivity.fst Bug2806a.fst Bug2806b.fst Bug2806c.fst Bug2806d.fst Bug2809.fst\
-  Bug2849a.fst Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst
+  Bug2849a.fst Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst Bug2895.fst Bug2894.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -112,7 +112,7 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
 	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
 	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
-	PushPopProjectors.fst Bug2412.fst Bug2595.fst Bug2699.fst
+	PushPopProjectors.fst Bug2412.fst Bug2595.fst Bug2699.fst Bug2895.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -192,6 +192,12 @@ Bug2699.ml:
 Bug2699.extract: Bug2699.ml
 	diff -u --strip-trailing-cr Bug2699.ml Bug2699.ml.expected
 
+Bug2895.ml:
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2895 --codegen OCaml Bug2895.fst
+
+Bug2895.extract: Bug2895.ml
+	diff -u --strip-trailing-cr Bug2895.ml Bug2895.ml.expected
+
 
 RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.A.fst
@@ -213,10 +219,12 @@ RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyp
 PushPopProjectors.extract: PushPopProjectors.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen FSharp $^
 
-output-accept: Bug310.ml Bug2058.ml Bug2595.ml
+output-accept: Bug310.ml Bug2058.ml Bug2595.ml Bug2699.ml Bug2895.ml
 	cp Bug310.ml Bug310.ml.expected
 	cp Bug2058.ml Bug2058.ml.expected
 	cp Bug2595.ml Bug2595.ml.expected
+	cp Bug2699.ml Bug2699.ml.expected
+	cp Bug2895.ml Bug2895.ml.expected
 
 %.extract: %.fst
 	$(Q)mkdir -p out_$*
