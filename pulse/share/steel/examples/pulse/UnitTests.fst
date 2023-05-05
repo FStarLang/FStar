@@ -356,3 +356,34 @@ let zero : nat = 0
       intro (exists s. pts_to sum full_perm s) _
     )
 )))
+
+%splice_t[if_then_else_in_specs] (check (`(
+  fun (r:ref U32.t) ->
+      (expects (if true
+                then pts_to r full_perm 0ul
+                else pts_to r full_perm 1ul))
+      (provides (fun _ -> if true
+                          then pts_to r full_perm 1ul
+                          else pts_to r full_perm 0ul))
+                               
+      (
+        // need this for typechecking !r on the next line,
+        //   with inference of implicits
+        rewrite (if true then pts_to r full_perm 0ul else pts_to r full_perm 1ul)
+                (pts_to r full_perm 0ul);
+        let x = !r in
+        r := U32.add x 1ul
+      )
+
+)))
+
+%splice_t[if_then_else_in_specs2] (check (`(
+  fun (r:ref U32.t) (b:bool) ->
+      (expects (pts_to r full_perm (if b then 0ul else 1ul)))
+      (provides (fun _ -> pts_to r full_perm (if b then 1ul else 2ul)))
+      (
+        let x = !r in
+        r := U32.add x 1ul
+      )
+
+)))
