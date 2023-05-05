@@ -1381,20 +1381,21 @@ let rec (readback_ty :
        | FStar_Reflection_Data.Tv_Match (uu___, uu___1, uu___2) ->
            Obj.magic
              (Obj.repr
-                (FStar_Tactics_Derived.fail
-                   "readbackty: Tv_Match not yet implemented"))
-       | FStar_Reflection_Data.Tv_AscribedT (uu___, uu___1, uu___2, uu___3)
-           ->
+                (FStar_Tactics_Effect.lift_div_tac
+                   (fun uu___3 ->
+                      FStar_Pervasives_Native.Some (Pulse_Syntax.Tm_FStar t))))
+       | FStar_Reflection_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
            Obj.magic
              (Obj.repr
-                (FStar_Tactics_Derived.fail
-                   "readbackty: ascription nodes not supported"))
-       | FStar_Reflection_Data.Tv_AscribedC (uu___, uu___1, uu___2, uu___3)
-           ->
+                (FStar_Tactics_Effect.lift_div_tac
+                   (fun uu___3 ->
+                      FStar_Pervasives_Native.Some (Pulse_Syntax.Tm_FStar t1))))
+       | FStar_Reflection_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
            Obj.magic
              (Obj.repr
-                (FStar_Tactics_Derived.fail
-                   "readbackty: ascription nodes not supported"))
+                (FStar_Tactics_Effect.lift_div_tac
+                   (fun uu___3 ->
+                      FStar_Pervasives_Native.Some (Pulse_Syntax.Tm_FStar t1))))
        | FStar_Reflection_Data.Tv_Unknown ->
            Obj.magic
              (Obj.repr
@@ -1409,10 +1410,10 @@ and (readback_comp :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (317))
-         (Prims.of_int (13)) (Prims.of_int (317)) (Prims.of_int (47)))
-      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (318))
-         (Prims.of_int (2)) (Prims.of_int (322)) (Prims.of_int (49)))
+      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (328))
+         (Prims.of_int (13)) (Prims.of_int (328)) (Prims.of_int (47)))
+      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (329))
+         (Prims.of_int (2)) (Prims.of_int (333)) (Prims.of_int (49)))
       (Obj.magic (try_readback_st_comp t readback_ty))
       (fun uu___ ->
          (fun ropt ->
@@ -1426,11 +1427,11 @@ and (readback_comp :
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Range.mk_range "Pulse.Readback.fst"
-                           (Prims.of_int (321)) (Prims.of_int (14))
-                           (Prims.of_int (321)) (Prims.of_int (27)))
+                           (Prims.of_int (332)) (Prims.of_int (14))
+                           (Prims.of_int (332)) (Prims.of_int (27)))
                         (FStar_Range.mk_range "Pulse.Readback.fst"
-                           (Prims.of_int (321)) (Prims.of_int (4))
-                           (Prims.of_int (322)) (Prims.of_int (49)))
+                           (Prims.of_int (332)) (Prims.of_int (4))
+                           (Prims.of_int (333)) (Prims.of_int (49)))
                         (Obj.magic (readback_ty t))
                         (fun uu___1 ->
                            (fun uu___1 ->
