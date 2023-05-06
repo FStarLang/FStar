@@ -72,6 +72,35 @@ let stick_trans
     stick_elim v2 v3
   )
 
+let adjoint_stick_elim
+  (#opened: _)
+  (p q r: vprop)
+  (f: (
+    (opened: _) ->
+    STGhostT unit opened
+    p (fun _ -> q `stick` r)
+  ))
+: STGhostT unit opened
+    (p `star` q)
+    (fun _ -> r)
+= f _;
+  stick_elim q r
+
+let adjoint_stick_intro
+  (#opened: _)
+  (p q r: vprop)
+  (f: (
+    (opened: _) ->
+    STGhostT unit opened
+    (p `star` q) (fun _ -> r)
+  ))
+: STGhostT unit opened
+    p
+    (fun _ -> q `stick` r)
+= stick_intro q r p (fun _ ->
+    f _
+  )
+
 (* The magic wand is a stick (but not the converse) *)
 
 let wand_is_stick
