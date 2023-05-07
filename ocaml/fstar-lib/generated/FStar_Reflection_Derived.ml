@@ -293,6 +293,7 @@ let rec (head : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
     | FStar_Reflection_Data.Tv_FVar uu___ -> t
     | FStar_Reflection_Data.Tv_UInst (uu___, uu___1) -> t
     | FStar_Reflection_Data.Tv_Arrow (uu___, uu___1) -> t
+    | FStar_Reflection_Data.Tv_Unsupp -> t
 let (is_fvar : FStar_Reflection_Types.term -> Prims.string -> Prims.bool) =
   fun t ->
     fun nm ->

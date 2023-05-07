@@ -1453,11 +1453,16 @@ let (check_linear_pattern_variables :
         match p.FStar_Syntax_Syntax.v with
         | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
             FStar_Syntax_Syntax.no_names
-        | FStar_Syntax_Syntax.Pat_wild uu___ -> FStar_Syntax_Syntax.no_names
         | FStar_Syntax_Syntax.Pat_constant uu___ ->
             FStar_Syntax_Syntax.no_names
         | FStar_Syntax_Syntax.Pat_var x ->
-            FStar_Compiler_Util.set_add x FStar_Syntax_Syntax.no_names
+            let uu___ =
+              let uu___1 =
+                FStar_Ident.string_of_id x.FStar_Syntax_Syntax.ppname in
+              uu___1 = FStar_Ident.reserved_prefix in
+            if uu___
+            then FStar_Syntax_Syntax.no_names
+            else FStar_Compiler_Util.set_add x FStar_Syntax_Syntax.no_names
         | FStar_Syntax_Syntax.Pat_cons (uu___, uu___1, pats1) ->
             let aux out uu___2 =
               match uu___2 with
@@ -1679,7 +1684,6 @@ let rec (desugar_data_pat :
                      | (annots', binder1, aqs2) ->
                          ((match p3.FStar_Syntax_Syntax.v with
                            | FStar_Syntax_Syntax.Pat_var uu___4 -> ()
-                           | FStar_Syntax_Syntax.Pat_wild uu___4 -> ()
                            | uu___4 when top && top_level_ascr_allowed -> ()
                            | uu___4 ->
                                FStar_Errors.raise_error
@@ -1700,7 +1704,7 @@ let rec (desugar_data_pat :
                   uu___ in
               let uu___ =
                 FStar_Compiler_Effect.op_Less_Bar pos
-                  (FStar_Syntax_Syntax.Pat_wild x) in
+                  (FStar_Syntax_Syntax.Pat_var x) in
               (loc, aqs, env1, (LocalBinder (x, aq1, attrs1)), uu___, [])
           | FStar_Parser_AST.PatConst c ->
               let x =
@@ -2108,11 +2112,6 @@ and (desugar_binding_pat_maybe_top :
                  match p1 with
                  | ({
                       FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_var
-                        uu___2;
-                      FStar_Syntax_Syntax.p = uu___3;_},
-                    uu___4)::[] -> []
-                 | ({
-                      FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_wild
                         uu___2;
                       FStar_Syntax_Syntax.p = uu___3;_},
                     uu___4)::[] -> []
@@ -3684,12 +3683,6 @@ and (desugar_term_maybe_top :
                                     let body2 =
                                       match pat1 with
                                       | [] -> body1
-                                      | ({
-                                           FStar_Syntax_Syntax.v =
-                                             FStar_Syntax_Syntax.Pat_wild
-                                             uu___8;
-                                           FStar_Syntax_Syntax.p = uu___9;_},
-                                         uu___10)::[] -> body1
                                       | uu___8 ->
                                           let uu___9 =
                                             let uu___10 =
@@ -3821,7 +3814,7 @@ and (desugar_term_maybe_top :
                                           let uu___11 =
                                             let uu___12 =
                                               FStar_Syntax_Syntax.withinfo
-                                                (FStar_Syntax_Syntax.Pat_wild
+                                                (FStar_Syntax_Syntax.Pat_var
                                                    x)
                                                 t1.FStar_Parser_AST.range in
                                             (uu___12,

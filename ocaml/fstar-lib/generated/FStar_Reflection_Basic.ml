@@ -228,10 +228,10 @@ let rec (inspect_ln :
         FStar_Reflection_Data.Tv_Uvar uu___
     | FStar_Syntax_Syntax.Tm_let ((false, lb::[]), t2) ->
         if lb.FStar_Syntax_Syntax.lbunivs <> []
-        then FStar_Reflection_Data.Tv_Unknown
+        then FStar_Reflection_Data.Tv_Unsupp
         else
           (match lb.FStar_Syntax_Syntax.lbname with
-           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unknown
+           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unsupp
            | FStar_Pervasives.Inl bv ->
                FStar_Reflection_Data.Tv_Let
                  (false, (lb.FStar_Syntax_Syntax.lbattrs), bv,
@@ -239,10 +239,10 @@ let rec (inspect_ln :
                    (lb.FStar_Syntax_Syntax.lbdef), t2))
     | FStar_Syntax_Syntax.Tm_let ((true, lb::[]), t2) ->
         if lb.FStar_Syntax_Syntax.lbunivs <> []
-        then FStar_Reflection_Data.Tv_Unknown
+        then FStar_Reflection_Data.Tv_Unsupp
         else
           (match lb.FStar_Syntax_Syntax.lbname with
-           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unknown
+           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unsupp
            | FStar_Pervasives.Inl bv ->
                FStar_Reflection_Data.Tv_Let
                  (true, (lb.FStar_Syntax_Syntax.lbattrs), bv,
@@ -265,9 +265,8 @@ let rec (inspect_ln :
                 (fv, us_opt, uu___2) in
               FStar_Reflection_Data.Pat_Cons uu___1
           | FStar_Syntax_Syntax.Pat_var bv ->
-              FStar_Reflection_Data.Pat_Var bv
-          | FStar_Syntax_Syntax.Pat_wild bv ->
-              FStar_Reflection_Data.Pat_Wild bv
+              FStar_Reflection_Data.Pat_Var
+                (bv, (bv.FStar_Syntax_Syntax.sort))
           | FStar_Syntax_Syntax.Pat_dot_term eopt ->
               FStar_Reflection_Data.Pat_Dot_Term eopt in
         let brs1 =
@@ -293,7 +292,7 @@ let rec (inspect_ln :
                 uu___5 in
             (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
           FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___2);
-         FStar_Reflection_Data.Tv_Unknown)
+         FStar_Reflection_Data.Tv_Unsupp)
 let (inspect_comp :
   FStar_Syntax_Syntax.comp -> FStar_Reflection_Data.comp_view) =
   fun c ->
@@ -519,12 +518,9 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
                   (fv, us_opt, uu___2) in
                 FStar_Syntax_Syntax.Pat_cons uu___1 in
               FStar_Compiler_Effect.op_Less_Bar wrap uu___
-          | FStar_Reflection_Data.Pat_Var bv ->
+          | FStar_Reflection_Data.Pat_Var (bv, _sort) ->
               FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_var bv)
-          | FStar_Reflection_Data.Pat_Wild bv ->
-              FStar_Compiler_Effect.op_Less_Bar wrap
-                (FStar_Syntax_Syntax.Pat_wild bv)
           | FStar_Reflection_Data.Pat_Dot_Term eopt ->
               FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_dot_term eopt) in
@@ -554,6 +550,12 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
     | FStar_Reflection_Data.Tv_Unknown ->
         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
           FStar_Compiler_Range_Type.dummyRange
+    | FStar_Reflection_Data.Tv_Unsupp ->
+        (FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+           (FStar_Errors_Codes.Warning_CantInspect,
+             "packing a Tv_Unsupp into Tm_unknown");
+         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
+           FStar_Compiler_Range_Type.dummyRange)
 let (compare_bv :
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> FStar_Order.order) =
   fun x ->
@@ -1294,10 +1296,9 @@ and (pattern_eq :
             ((eqlist ())
                ((eqprod ()) pattern_eq (fun b1 -> fun b2 -> b1 = b2))
                subpats1 subpats2)
-      | (FStar_Reflection_Data.Pat_Var bv1, FStar_Reflection_Data.Pat_Var
-         bv2) -> binding_bv_eq bv1 bv2
-      | (FStar_Reflection_Data.Pat_Wild bv1, FStar_Reflection_Data.Pat_Wild
-         bv2) -> binding_bv_eq bv1 bv2
+      | (FStar_Reflection_Data.Pat_Var (bv1, uu___),
+         FStar_Reflection_Data.Pat_Var (bv2, uu___1)) ->
+          binding_bv_eq bv1 bv2
       | (FStar_Reflection_Data.Pat_Dot_Term topt1,
          FStar_Reflection_Data.Pat_Dot_Term topt2) ->
           (eqopt ()) term_eq topt1 topt2
