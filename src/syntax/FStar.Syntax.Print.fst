@@ -817,8 +817,8 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_let((true, [{lbname=lb}]), _) ->
     U.format1 "let rec %s" (lbname_to_string lb)
 
-  | Sig_let((true, ({lbname=lb})::_), _) ->
-    U.format1 "let rec %s and ..." (lbname_to_string lb)
+  | Sig_let((true, lbs), _) ->
+    U.format1 "let rec %s" (String.concat " and " (List.map (fun lb -> lbname_to_string lb.lbname) lbs))
 
   | Sig_let _ ->
     failwith "Impossible: sigelt_to_string_short, ill-formed let"
