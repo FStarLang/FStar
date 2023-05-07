@@ -140,6 +140,7 @@ let rec open_close_inverse' (i:nat) (t:term { ln' t (i - 1) }) (x:var)
     | Tv_FVar _
     | Tv_Type _
     | Tv_Const _
+    | Tv_Unsupp
     | Tv_Unknown
     | Tv_Var _ 
     | Tv_BVar _ -> ()
@@ -282,8 +283,7 @@ and open_close_inverse'_pattern (i:nat) (p:pattern{ln'_pattern p (i - 1)}) (x:va
     | Pat_Cons fv us pats -> 
       open_close_inverse'_patterns i pats x
       
-    | Pat_Var bv
-    | Pat_Wild bv -> ()
+    | Pat_Var bv _ -> ()
 
     | Pat_Dot_Term topt ->
       match topt with
@@ -370,6 +370,7 @@ let rec close_open_inverse' (i:nat)
     | Tv_FVar _
     | Tv_Type _
     | Tv_Const _
+    | Tv_Unsupp
     | Tv_Unknown
     | Tv_Var _
     | Tv_BVar _ -> ()
@@ -529,8 +530,7 @@ and close_open_inverse'_pattern (i:nat)
     | Pat_Cons fv us pats -> 
       close_open_inverse'_patterns i pats x
       
-    | Pat_Var bv
-    | Pat_Wild bv -> ()
+    | Pat_Var bv _ -> ()
 
     | Pat_Dot_Term topt ->
       match topt with
@@ -633,6 +633,7 @@ let rec close_with_not_free_var (t:R.term) (x:var) (i:nat)
      | Some tac -> close_with_not_free_var tac x i)
 
   | Tv_Unknown -> ()
+  | Tv_Unsupp -> ()
 
 and close_match_returns_with_not_free_var
   (r:match_returns_ascription)
@@ -687,8 +688,7 @@ and close_pattern_with_not_free_var (p:R.pattern) (x:var) (i:nat)
   | Pat_Constant _ -> ()
   | Pat_Cons _ _ pats ->
     close_patterns_with_not_free_var pats x i
-  | Pat_Var bv
-  | Pat_Wild bv -> ()
+  | Pat_Var bv _ -> ()
   | Pat_Dot_Term topt ->
     (match topt with
      | None -> ()
@@ -789,6 +789,7 @@ let rec open_with_gt_ln e i t j
   | Tv_FVar _
   | Tv_Type _
   | Tv_Const _
+  | Tv_Unsupp
   | Tv_Unknown
   | Tv_Var _
   | Tv_BVar _ -> ()
@@ -922,8 +923,7 @@ and open_with_gt_ln_pat (p:pattern) (i:nat) (t:term) (j:nat)
   | Pat_Constant _ -> ()
   | Pat_Cons _ _ pats ->
     open_with_gt_ln_pats pats i t j
-  | Pat_Var bv
-  | Pat_Wild bv -> ()
+  | Pat_Var bv _ -> ()
   | Pat_Dot_Term topt ->
     (match topt with
      | None -> ()

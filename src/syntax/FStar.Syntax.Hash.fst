@@ -179,7 +179,6 @@ and hash_pat p =
        hash_option (hash_list hash_universe) us;
        hash_list (hash_pair hash_pat hash_bool) args]
   | Pat_var bv -> mix (of_int 101) (hash_bv bv)
-  | Pat_wild bv -> mix (of_int 103) (hash_bv bv)
   | Pat_dot_term t -> mix_list_lit [of_int 107; hash_option hash_term t]
 
 
@@ -523,8 +522,6 @@ and equal_pat p1 p2 =
     equal_opt (equal_list equal_universe) us1 us2 &&
     equal_list (equal_pair equal_pat equal_poly) args1 args2
   | Pat_var bv1, Pat_var bv2 ->
-    equal_bv bv1 bv2
-  | Pat_wild bv1, Pat_wild bv2 ->
     equal_bv bv1 bv2
   | Pat_dot_term t1, Pat_dot_term t2 ->
     equal_opt equal_term t1 t2

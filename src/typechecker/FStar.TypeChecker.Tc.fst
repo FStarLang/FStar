@@ -885,7 +885,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
 let tc_decl env se: list sigelt * list sigelt * Env.env =
    let env = set_hint_correlator env se in
    if Options.debug_module (string_of_lid env.curmodule) then
-     BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
+     BU.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
    if Env.debug env Options.Low then
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
    if se.sigmeta.sigmeta_admit

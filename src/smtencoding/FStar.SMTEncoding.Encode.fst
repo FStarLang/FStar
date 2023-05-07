@@ -1125,6 +1125,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 |> mk_decls_trivial in
         decls@g, env
 
+     (* Irreducible and opaque lets. Replace the definitions by a dummy val decl (if none
+        exists) and re-run. *)
      | Sig_let(lbs, _)
         when se.sigquals |> List.contains S.Irreducible
           || se.sigattrs |> BU.for_some is_opaque_to_smt ->
@@ -1139,6 +1141,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
+     (* Special encoding for b2t *)
      | Sig_let((_, [{lbname=Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 in
        let xx = mk_fv ("x", Term_sort) in
@@ -1158,12 +1161,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 "b2t_typing")] in
        decls |> mk_decls_trivial, env
 
+    (* Discriminators *)
     | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
         BU.print1 "Not encoding discriminator '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
+    (* `unfold let` definitions in prims do not get encoded. *)
     | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
@@ -1171,6 +1176,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         BU.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
+    (* Projectors *)
     | Sig_let((false, [lb]), _)
          when (se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
@@ -1185,6 +1191,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           encode_sigelt env se
      end
 
+    (* A normal let, perhaps recursive. *)
     | Sig_let((is_rec, bindings), _) ->
       let bindings =
         List.map

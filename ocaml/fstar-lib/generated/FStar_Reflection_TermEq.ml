@@ -132,10 +132,7 @@ let rec (univ_eq :
          fun u2 ->
            let uv1 = FStar_Reflection_Builtins.inspect_universe u1 in
            let uv2 = FStar_Reflection_Builtins.inspect_universe u2 in
-           match (uv1, uv2) with
-           | (FStar_Reflection_Data.Uv_Unk, uu___) -> Obj.magic Unknown
-           | (uu___, FStar_Reflection_Data.Uv_Unk) -> Obj.magic Unknown
-           | uu___ -> Obj.magic (univ_view_eq uv1 uv2)) uu___1 uu___
+           Obj.magic (univ_view_eq uv1 uv2)) uu___1 uu___
 and (univ_view_eq :
   FStar_Reflection_Data.universe_view ->
     FStar_Reflection_Data.universe_view ->
@@ -185,6 +182,7 @@ let (const_eq : FStar_Reflection_Data.vconst comparator_for) =
          | uu___ -> Obj.repr Neq)
 let (ctxu_eq : FStar_Reflection_Types.ctx_uvar_and_subst comparator_for) =
   fun uu___ -> fun uu___1 -> Unknown
+type term_view_supp = FStar_Reflection_Data.term_view
 let rec (term_eq :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term ->
@@ -197,14 +195,11 @@ let rec (term_eq :
            let tv1 = FStar_Reflection_Builtins.inspect_ln t1 in
            let tv2 = FStar_Reflection_Builtins.inspect_ln t2 in
            match (tv1, tv2) with
-           | (FStar_Reflection_Data.Tv_Unknown, uu___) -> Obj.magic Unknown
-           | (uu___, FStar_Reflection_Data.Tv_Unknown) -> Obj.magic Unknown
+           | (FStar_Reflection_Data.Tv_Unsupp, uu___) -> Obj.magic Unknown
+           | (uu___, FStar_Reflection_Data.Tv_Unsupp) -> Obj.magic Unknown
            | uu___ -> Obj.magic (term_view_eq tv1 tv2)) uu___1 uu___
 and (term_view_eq :
-  FStar_Reflection_Data.term_view ->
-    FStar_Reflection_Data.term_view ->
-      (FStar_Reflection_Data.term_view, unit, unit) cmpres)
-  =
+  term_view_supp -> term_view_supp -> (term_view_supp, unit, unit) cmpres) =
   fun uu___1 ->
     fun uu___ ->
       (fun tv1 ->
@@ -457,14 +452,12 @@ and (pat_eq :
       (fun p1 ->
          fun p2 ->
            match (p1, p2) with
-           | (FStar_Reflection_Data.Pat_Var v1, FStar_Reflection_Data.Pat_Var
-              v2) -> Obj.magic (Obj.repr (bv_eq v1 v2))
+           | (FStar_Reflection_Data.Pat_Var (v1, st1),
+              FStar_Reflection_Data.Pat_Var (v2, st2)) ->
+               Obj.magic (Obj.repr (bv_eq v1 v2))
            | (FStar_Reflection_Data.Pat_Constant c1,
               FStar_Reflection_Data.Pat_Constant c2) ->
                Obj.magic (Obj.repr (const_eq c1 c2))
-           | (FStar_Reflection_Data.Pat_Wild v1,
-              FStar_Reflection_Data.Pat_Wild v2) ->
-               Obj.magic (Obj.repr (bv_eq v1 v2))
            | (FStar_Reflection_Data.Pat_Dot_Term t1,
               FStar_Reflection_Data.Pat_Dot_Term t2) ->
                Obj.magic (Obj.repr (opt_eq term_eq t1 t2))

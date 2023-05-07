@@ -360,7 +360,8 @@ val tadmit_t : term -> Tac unit
 (** View a term in a fully-named representation *)
 val inspect : term -> Tac term_view
 
-(** Pack a term view on a fully-named representation back into a term *)
+(** Pack a term view on a fully-named representation back into a term.
+Note: calling this with Tv_Unsupp will raise an exception. *)
 val pack    : term_view -> Tac term
 
 (** Similar to [pack] above, but does not flatten arrows, it leaves

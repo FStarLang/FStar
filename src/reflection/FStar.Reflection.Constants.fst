@@ -194,7 +194,6 @@ let ref_C_Reflect   = fstar_refl_data_const "C_Reflect"
 let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"
 let ref_Pat_Cons     = fstar_refl_data_const "Pat_Cons"
 let ref_Pat_Var      = fstar_refl_data_const "Pat_Var"
-let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
 let ref_Pat_Dot_Term = fstar_refl_data_const "Pat_Dot_Term"
 
 (* universe_view *)
@@ -223,6 +222,7 @@ let ref_Tv_Match   = fstar_refl_data_const "Tv_Match"
 let ref_Tv_AscT    = fstar_refl_data_const "Tv_AscribedT"
 let ref_Tv_AscC    = fstar_refl_data_const "Tv_AscribedC"
 let ref_Tv_Unknown = fstar_refl_data_const "Tv_Unknown"
+let ref_Tv_Unsupp  = fstar_refl_data_const "Tv_Unsupp"
 
 (* comp_view *)
 let ref_C_Total   = fstar_refl_data_const "C_Total"
