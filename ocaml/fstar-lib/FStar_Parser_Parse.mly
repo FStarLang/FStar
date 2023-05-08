@@ -1,8 +1,20 @@
 %{
 (*
- We are expected to have only 6 shift-reduce conflicts in ML and 8 in F#.
- A lot (176) of end-of-stream conflicts are also reported and
- should be investigated...
+ Menhir reports the following warnings:
+
+   Warning: 5 states have shift/reduce conflicts.
+   Warning: 6 shift/reduce conflicts were arbitrarily resolved.
+   Warning: 222 end-of-stream conflicts were arbitrarily resolved.
+
+ If you're editing this file, be sure to not increase the warnings,
+ except if you have a really good reason.
+
+ The shift-reduce conflicts are natural in an ML-style language. E.g.,
+ there are S-R conflicts with dangling elses, with a non-delimited match where
+ the BAR is dangling etc.
+
+
+ 
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
@@ -113,7 +125,6 @@ let none_to_empty_list x =
 %nonassoc THEN
 %nonassoc ELSE
 
-
 %right COLON_COLON
 %right AMP
 
@@ -128,6 +139,7 @@ let none_to_empty_list x =
 %left     OPINFIX3
 %left     BACKTICK
 %right    OPINFIX4
+
 
 %start inputFragment
 %start term
@@ -155,11 +167,12 @@ idecl:
  | d=decl startOfNextDeclToken
      { d }
 
+
 startOfNextDeclToken:
  | EOF    { () }
- | ASSUME { () }
  | pragmaStartToken { () }
  | LBRACK_AT { () } (* Attribute start *)
+ | LBRACK_AT_AT { () } (* Attribute start *) 
  | qualifier { () }
  | CLASS { () }
  | INSTANCE { () }
@@ -176,7 +189,6 @@ startOfNextDeclToken:
  | EXCEPTION  { () }
  | NEW_EFFECT  { () }
  | LAYERED_EFFECT  { () }
- | EFFECT  { () }
  | SUB_EFFECT { () }
  | POLYMONADIC_BIND  { () }
  | POLYMONADIC_SUBCOMP  { () }
@@ -187,7 +199,7 @@ pragmaStartToken:
      { () }
  | PRAGMA_RESET_OPTIONS
      { () }
- | PRAGMA_PUSH_OPTIONS s_opt=string?
+ | PRAGMA_PUSH_OPTIONS
      { () }
  | PRAGMA_POP_OPTIONS
      { () }

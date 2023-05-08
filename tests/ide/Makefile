@@ -13,7 +13,8 @@ INCR_TEST_FILES := $(wildcard $(FSTAR_HOME)/ulib/*.fst  $(FSTAR_HOME)/ulib/*.fst
 test_incremental: $(patsubst %, %.test-incr, $(INCR_TEST_FILES))
 
 %.test-incr: %
-	$(Q)python test-incremental.py $(FSTAR_HOME)/bin/fstar.exe $<
+	$(Q)python3 test-incremental.py $(FSTAR_HOME)/bin/fstar.exe $<
+	touch $@
 
 clean: $(addsuffix .clean, $(ALL_TEST_DIRS))
 
