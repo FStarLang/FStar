@@ -5,7 +5,7 @@ ALL_TEST_DIRS=\
 lsp \
 emacs
 
-all: $(addsuffix .all, $(ALL_TEST_DIRS)) # test_incremental WIP! RESTORE!
+all: $(addsuffix .all, $(ALL_TEST_DIRS)) test_incremental
 
 INCR_TEST_FILES := $(wildcard $(FSTAR_HOME)/ulib/*.fst  $(FSTAR_HOME)/ulib/*.fsti)
 
