@@ -149,7 +149,52 @@ inputFragment:
 
 oneDeclOrEOF:
   | EOF { None }
-  | d=decl { Some d }
+  | d=idecl { Some d }
+
+idecl:
+ | d=decl startOfNextDeclToken
+     { d }
+
+startOfNextDeclToken:
+ | EOF    { () }
+ | ASSUME { () }
+ | pragmaStartToken { () }
+ | LBRACK_AT { () } (* Attribute start *)
+ | qualifier { () }
+ | CLASS { () }
+ | INSTANCE { () }
+ | OPEN  { () }
+ | FRIEND  { () }
+ | INCLUDE  { () }
+ | MODULE  { () }
+ | TYPE  { () }
+ | EFFECT  { () }
+ | LET  { () }
+ | VAL  { () }
+ | SPLICE  { () }
+ | SPLICET  { () }
+ | EXCEPTION  { () }
+ | NEW_EFFECT  { () }
+ | LAYERED_EFFECT  { () }
+ | EFFECT  { () }
+ | SUB_EFFECT { () }
+ | POLYMONADIC_BIND  { () }
+ | POLYMONADIC_SUBCOMP  { () }
+ 
+ 
+pragmaStartToken:
+ | PRAGMA_SET_OPTIONS
+     { () }
+ | PRAGMA_RESET_OPTIONS
+     { () }
+ | PRAGMA_PUSH_OPTIONS s_opt=string?
+     { () }
+ | PRAGMA_POP_OPTIONS
+     { () }
+ | PRAGMA_RESTART_SOLVER
+     { () }
+ | PRAGMA_PRINT_EFFECTS_GRAPH
+     { () }
 
 /******************************************************************************/
 /*                      Top level declarations                                */
@@ -285,6 +330,7 @@ rawDecl:
       { Polymonadic_bind b }
   | POLYMONADIC_SUBCOMP c=polymonadic_subcomp
       { Polymonadic_subcomp c }
+
 
 typeDecl:
   (* TODO : change to lident with stratify *)

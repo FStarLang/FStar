@@ -210,9 +210,36 @@ let parse_incremental_decls () =
                             frag_col = 0 } in
   let open FStar.Compiler.Range in
   match parse input with
-  | IncrementalFragment ([d0;d1;d2], _, Some (_, _, rng))
-    when (let p = start_of_range rng in
-          line_of_pos p = 3 && col_of_pos p = 15) ->
-    ()
-  | _ ->
-    failwith "Incremental parsing failed"
+  | IncrementalFragment (decls, _, parse_err) -> (
+      let _ = match parse_err with
+      | None -> 
+        failwith "Incremental parsing failed: Expected syntax error at (3,15), got no error"
+      | Some (_, _, rng) ->
+        let p = start_of_range rng in
+        if line_of_pos p = 3 && col_of_pos p = 15
+        then ()
+        else failwith (format2 "Incremental parsing failed: Expected syntax error at (3,15), got error at (%s, %s)"
+                               (string_of_int (line_of_pos p))
+                               (string_of_int (col_of_pos p)))
+      in
+      match decls with
+      | [d0;d1;d2] -> ()
+      | _ -> failwith (format1 "Incremental parsing failed; expected 3 decls got %s\n"
+                              (string_of_int (List.length decls)))
+      )
+      
+
+  | ParseError (code, message, range) ->
+      let msg = 
+        format2 "Incremental parsing failed: Syntax error @ %s: %s"
+                (Range.string_of_range range)
+                message
+      in
+      failwith msg
+      
+  | ASTFragment _
+  | Term _ ->
+      failwith "Incremental parsing failed: Unexpected output"
+
+    
+    
