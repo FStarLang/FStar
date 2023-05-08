@@ -60,14 +60,20 @@ jobs:
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_skip_image_tag }}
         run: |
           echo "CI_SKIP_IMAGE_TAG=1" >> $GITHUB_ENV
+      - name: Enable resource monitoring
+        if: ${{ vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
+        run: |
+          echo "RESOURCEMONITOR=1'" >> $GITHUB_ENV
+
       - name: Build FStar and its dependencies
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
           ci_docker_builder=builder_fstar_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
           echo "ci_docker_builder=$ci_docker_builder" >> $GITHUB_ENV
           docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
           if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL . |& tee BUILDLOG
+          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg RESOURCEMONITOR=$RESOURCEMONITOR $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
@@ -78,6 +84,44 @@ jobs:
           $ci_docker_status
         env:
           DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
+
+      - name: Collect resource monitoring files and summary
+        if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
+        continue-on-error: true
+        run: |
+          # docker cp needs absolute path, obtain FSTAR_HOME
+          FSTAR_HOME=$(docker run $ci_docker_image_tag /bin/bash -c 'echo $FSTAR_HOME')
+          # We briefly kick up a container from the generated image, so
+          # we can extract files from it. No need to start it though.
+          temp_container=$(docker create $ci_docker_image_tag)
+          docker cp $temp_container:${FSTAR_HOME}/rmon/ rmon
+          docker rm -f $temp_container
+
+          # Also, read these bottom-line values into the environment so they
+          # can go into the Slack message.
+          FSTAR_CI_MEASURE_CPU=$(awk -F':' '/Total CPU/ { print $2 }' rmon/res_summary.txt)
+          FSTAR_CI_MEASURE_MEM=$(awk -F':' '/Total memory/ { print $2 }' rmon/res_summary.txt)
+          echo "FSTAR_CI_MEASURE_CPU=$FSTAR_CI_MEASURE_CPU" >> $GITHUB_ENV
+          echo "FSTAR_CI_MEASURE_MEM=$FSTAR_CI_MEASURE_MEM" >> $GITHUB_ENV
+
+      - name: Save resource monitor summary as artifact
+        if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v3
+        with:
+          name: Resource usage information (summary)
+          path: |
+            rmon/res_summary.txt
+
+      - name: Save resource monitor files as artifact
+        if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v3
+        with:
+          name: Resource usage information (individual)
+          path: |
+            rmon/**/*.runlim
+
       - name: Clean up temporary container
         if: ${{ always() }}
         run: |
@@ -148,7 +192,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "plain_text",
-                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s"
+                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s\nTotal CPU usage: ${{ env.FSTAR_CI_MEASURE_CPU }}\nTotal memory usage: ${{ env.FSTAR_CI_MEASURE_MEM }}"
                   }
                 }
               ]

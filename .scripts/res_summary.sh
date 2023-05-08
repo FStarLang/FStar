@@ -47,3 +47,15 @@ echo "Top 20 CPU time:"
 for fp in "${!cpu[@]}"; do
 	printf " %-80s %12s\n" "$fp" "${cpu[$fp]} s"
 done | sort -k2 -n -r  | head -n 20
+
+TOTMEM=0
+TOTCPU=0
+# Trying to do this in the loops above won't work as the command runs in
+# a subshell, with its own set of variables. Bash is fun :^).
+for fp in "${!mem[@]}"; do
+	TOTMEM=$(($TOTMEM + ${mem[$fp]}))
+	TOTCPU=$(echo $TOTCPU + ${cpu[$fp]} | bc)
+done
+
+echo "Total CPU: $TOTCPU seconds"
+echo "Total memory: $TOTMEM MB"

@@ -9,6 +9,7 @@ FROM ubuntu:22.04
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       jq \
+      bc \
       ca-certificates \
       curl \
       wget \
@@ -79,6 +80,15 @@ RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/FStar/fstar.opam
 # Configure the git user for hint refresh
 RUN git config --global user.name "Dzomo, the Everest Yak" && \
     git config --global user.email "everbld@microsoft.com"
+
+# Set up $HOME/bin
+RUN mkdir $HOME/bin
+RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
+
+# Install runlim, if we are monitoring
+ARG RESOURCEMONITOR=
+RUN [ -z "$RESOURCEMONITOR" ] || git clone https://github.com/arminbiere/runlim
+RUN [ -z "$RESOURCEMONITOR" ] || (cd runlim && ./configure.sh --prefix=$HOME/bin && make && make install)
 
 WORKDIR $HOME/FStar
 
