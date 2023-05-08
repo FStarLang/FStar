@@ -1401,8 +1401,12 @@ let rec (readback_ty :
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
-                      FStar_Pervasives_Native.Some Pulse_Syntax.Tm_Unknown))))
-      uu___
+                      FStar_Pervasives_Native.Some Pulse_Syntax.Tm_Unknown)))
+       | FStar_Reflection_Data.Tv_Unsupp ->
+           Obj.magic
+             (Obj.repr
+                (FStar_Tactics_Effect.lift_div_tac
+                   (fun uu___ -> FStar_Pervasives_Native.None)))) uu___
 and (readback_comp :
   FStar_Reflection_Types.term ->
     (Pulse_Syntax.comp FStar_Pervasives_Native.option, unit)
@@ -1410,10 +1414,10 @@ and (readback_comp :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
+      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (327))
+         (Prims.of_int (13)) (Prims.of_int (327)) (Prims.of_int (47)))
       (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (328))
-         (Prims.of_int (13)) (Prims.of_int (328)) (Prims.of_int (47)))
-      (FStar_Range.mk_range "Pulse.Readback.fst" (Prims.of_int (329))
-         (Prims.of_int (2)) (Prims.of_int (333)) (Prims.of_int (49)))
+         (Prims.of_int (2)) (Prims.of_int (332)) (Prims.of_int (49)))
       (Obj.magic (try_readback_st_comp t readback_ty))
       (fun uu___ ->
          (fun ropt ->
@@ -1427,11 +1431,11 @@ and (readback_comp :
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Range.mk_range "Pulse.Readback.fst"
-                           (Prims.of_int (332)) (Prims.of_int (14))
-                           (Prims.of_int (332)) (Prims.of_int (27)))
+                           (Prims.of_int (331)) (Prims.of_int (14))
+                           (Prims.of_int (331)) (Prims.of_int (27)))
                         (FStar_Range.mk_range "Pulse.Readback.fst"
-                           (Prims.of_int (332)) (Prims.of_int (4))
-                           (Prims.of_int (333)) (Prims.of_int (49)))
+                           (Prims.of_int (331)) (Prims.of_int (4))
+                           (Prims.of_int (332)) (Prims.of_int (49)))
                         (Obj.magic (readback_ty t))
                         (fun uu___1 ->
                            (fun uu___1 ->
