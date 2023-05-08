@@ -49,12 +49,16 @@ let as_aqual (q:unit option) =
     
 let pos_of_lexpos (p:Lexing.position) = FStar_Parser_Util.pos_of_lexpos p
 
+let default_return =
+    gen dummyRange,
+    mk_term (Var (lid_of_ids [(mk_ident("unit", dummyRange))])) dummyRange Un
+    
 let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
-
+let r p = rng (fst p) (snd p)
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT VAR FN INVARIANT WHILE REF
+%token MUT VAR FN INVARIANT WHILE REF PARALLEL REWRITE
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
@@ -162,15 +166,26 @@ pulseDecl:
 pulseMultiBinder:
   | LPAREN qual_ids=nonempty_list(q=option(HASH) id=lidentOrUnderscore { (q, id) }) COLON t=appTerm RPAREN
     { List.map (fun (q, id) -> (as_aqual q, id, t)) qual_ids }
+  | q=option(HASH) id=lidentOrUnderscore
+    { [(as_aqual q, id, mk_term Wild (r ($loc(id))) Un)] }
 
 pulseComputationType:
   | REQUIRES t=pulseVprop
-    RETURNS i=lidentOrUnderscore COLON r=term
+    ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) })
     ENSURES t2=pulseVprop
-    { mk_comp ST t i r t2 (rng ($startpos($1)) ($endpos(t2))) }
+    {
+        let i, r =
+          match ret with
+          | Some (i, r) -> i, r
+          | None -> default_return
+        in
+        mk_comp ST t i r t2 (rng ($startpos($1)) ($endpos(t2)))
+    }
 
 
 pulseStmtNoSeq:
+  | OPEN i=quident
+    { mk_open i }
   | tm=appTerm
     { mk_expr tm }
   | i=lident COLON_EQUALS a=noSeqTerm
@@ -183,10 +198,17 @@ pulseStmtNoSeq:
     { mk_if tm vp th e }
   | MATCH tm=appTermNoRecordExp c=option(returnsAnnot) LBRACE brs=list(pulseMatchBranch) RBRACE
     { mk_match tm c brs }
-  | WHILE tm=appTerm INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
+  | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
     { mk_while tm i v body }
   | INTRO p=pulseVprop WITH ws=nonempty_list(indexingTerm)
     { mk_intro p ws }
+  | PARALLEL REQUIRES p1=pulseVprop AND p2=pulseVprop
+             ENSURES q1=pulseVprop AND q2=pulseVprop
+             LBRACE b1=pulseStmt RBRACE
+             LBRACE b2=pulseStmt RBRACE
+    { mk_par p1 p2 q1 q2 b1 b2 }
+  | REWRITE p1=pulseVprop AS p2=pulseVprop
+    { mk_rewrite p1 p2 }
 
 %inline
 returnsAnnot:

@@ -130,7 +130,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' body x (i + 1);
       freevars_close_term_opt' post x (i + 2)
 
-    | Tm_Bind e1 e2 ->
+    | Tm_Bind b e1 e2 ->
+      freevars_close_term' b.binder_ty x i;
       freevars_close_st_term' e1 x i;
       freevars_close_st_term' e2 x (i + 1)
       
@@ -361,7 +362,7 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      st_typing_freevars d1
 
 
-   | T_Bind _ e1 e2 _ _ x c d1 dc1 d2 bc ->
+   | T_Bind _ e1 e2 _ _ _ x c d1 dc1 d2 bc ->
      st_typing_freevars d1;
      tot_typing_freevars dc1;
      st_typing_freevars d2;

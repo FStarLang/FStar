@@ -658,10 +658,10 @@ and ('f, 'dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax.comp_st * (unit, unit, unit, unit) st_typing * (unit, 
   unit, unit, unit) lift_comp 
   | T_Bind of env * Pulse_Syntax.st_term * Pulse_Syntax.st_term *
-  Pulse_Syntax.comp_st * Pulse_Syntax.comp_st * Pulse_Syntax.var *
-  Pulse_Syntax.comp * (unit, unit, unit, unit) st_typing * unit * (unit,
-  unit, unit, unit) st_typing * (unit, unit, unit, unit, unit, unit)
-  bind_comp 
+  Pulse_Syntax.comp_st * Pulse_Syntax.comp_st * Pulse_Syntax.binder *
+  Pulse_Syntax.var * Pulse_Syntax.comp * (unit, unit, unit, unit) st_typing *
+  unit * (unit, unit, unit, unit) st_typing * (unit, unit, unit, unit, 
+  unit, unit) bind_comp 
   | T_If of env * Pulse_Syntax.term * Pulse_Syntax.st_term *
   Pulse_Syntax.st_term * Pulse_Syntax.comp_st * Pulse_Syntax.universe *
   Pulse_Syntax.var * unit * (unit, unit, unit, unit) st_typing * (unit, 

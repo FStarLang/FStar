@@ -112,7 +112,8 @@ let rec eq_st_term (t1 t2:st_term)
       o1=o2 &&
       eq_tm t1 t2
 
-    | Tm_Bind t1 k1, Tm_Bind t2 k2 ->
+    | Tm_Bind b1 t1 k1, Tm_Bind b2 t2 k2 ->
+      eq_tm b1.binder_ty b2.binder_ty &&
       eq_st_term t1 t2 &&
       eq_st_term k1 k2
       
