@@ -73,6 +73,8 @@ let rec freevars_st (t:st_term)
       Set.union (freevars t1) (freevars t2)
     | Tm_Bind t1 t2 ->
       Set.union (freevars_st t1) (freevars_st t2)
+    | Tm_TotBind t1 t2 ->
+      Set.union (freevars t1) (freevars_st t2)
     | Tm_If t e1 e2 post ->
       Set.union (Set.union (freevars t) (freevars_st e1))
                 (Set.union (freevars_st e2) (freevars_opt post))
@@ -190,6 +192,10 @@ let rec ln_st' (t:st_term) (i:int)
 
     | Tm_Bind t1 t2 ->
       ln_st' t1 i &&
+      ln_st' t2 (i + 1)
+
+    | Tm_TotBind t1 t2 ->
+      ln' t1 i &&
       ln_st' t2 (i + 1)
 
     | Tm_If b then_ else_ post ->
@@ -350,6 +356,10 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
     | Tm_Bind e1 e2 ->
       Tm_Bind (open_st_term' e1 v i)
               (open_st_term' e2 v (i + 1))
+
+    | Tm_TotBind e1 e2 ->
+      Tm_TotBind (open_term' e1 v i) 
+                 (open_st_term' e2 v (i + 1))
 
     | Tm_If b then_ else_ post ->
       Tm_If (open_term' b v i)
@@ -522,6 +532,10 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
       Tm_Bind (close_st_term' e1 v i)
               (close_st_term' e2 v (i + 1))
 
+    | Tm_TotBind e1 e2 ->
+      Tm_TotBind (close_term' e1 v i) 
+                 (close_st_term' e2 v (i + 1))
+
     | Tm_If b then_ else_ post ->
       Tm_If (close_term' b v i)
             (close_st_term' then_ v i)
@@ -600,16 +614,16 @@ val close_open_inverse_st (t:st_term) (x:var { ~(x `Set.mem` freevars_st t) } )
   : Lemma (ensures close_st_term (open_st_term t x) x == t)
           (decreases t)
 
-val open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
+val open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
   : Lemma
       (requires ln' e i /\ i < j)
       (ensures open_term' e t j == e)
 
-val open_with_gt_ln_comp (c:comp) (i:nat) (t:term) (j:nat)
+val open_with_gt_ln_comp (c:comp) (i:int) (t:term) (j:nat)
   : Lemma (requires ln_c' c i /\ i < j)
           (ensures open_comp' c t j == c)
 
-val open_with_gt_ln_st (s:st_comp) (i:nat) (t:term) (j:nat)
+val open_with_gt_ln_st (s:st_comp) (i:int) (t:term) (j:nat)
   : Lemma (requires ln_st_comp s i /\ i < j)
           (ensures open_st_comp' s t j == s)
 

@@ -133,6 +133,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     | Tm_Bind e1 e2 ->
       freevars_close_st_term' e1 x i;
       freevars_close_st_term' e2 x (i + 1)
+
+    | Tm_TotBind e1 e2 ->
+      freevars_close_term' e1 x i;
+      freevars_close_st_term' e2 x (i + 1)
       
     | Tm_If t0 t1 t2 post ->
       freevars_close_term' t0 x i;    
@@ -367,6 +371,12 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      st_typing_freevars d2;
      bind_comp_freevars bc;
      freevars_open_st_term_inv e2 x
+
+   | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing ->
+     tot_typing_freevars e1_typing;
+     st_typing_freevars e2_typing;
+     freevars_open_st_term_inv e2 x;
+     freevars_close_comp c2 x 0
 
    | T_If _ _b e1 e2 _c _u hyp tb d1 d2 (E ct) ->
      assert (t == (Tm_If _b e1 e2 None));

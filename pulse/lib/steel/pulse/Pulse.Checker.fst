@@ -1012,12 +1012,13 @@ let auto_elims (g:env) (ctxt:term) (t:st_term) =
     unprotect t
     
 
-let rec print_st_head (t:st_term) = 
+let rec print_st_head (t:st_term) =
   match t with
   | Tm_Abs _ _ _ _ _  -> "Abs"
   | Tm_Protect p -> print_st_head p
   | Tm_Return _ _ p -> print_head p
   | Tm_Bind _ _ -> "Bind"
+  | Tm_TotBind _ _ -> "TotBind"
   | Tm_If _ _ _ _ -> "If"
   | Tm_While _ _ _ -> "While"
   | Tm_Admit _ _ _ _ -> "Admit"
@@ -1041,6 +1042,7 @@ let rec print_skel (t:st_term) =
   | Tm_Protect p -> Printf.sprintf "(Protect %s)" (print_skel p)
   | Tm_Return _ _ p -> print_head p
   | Tm_Bind e1 e2 -> Printf.sprintf "(Bind %s %s)" (print_skel e1) (print_skel e2)
+  | Tm_TotBind _e1 e2 -> Printf.sprintf "(TotBind _ %s)" (print_skel e2)
   | Tm_If _ _ _ _ -> "If"
   | Tm_While _ _ _ -> "While"
   | Tm_Admit _ _ _ _ -> "Admit"
@@ -1203,6 +1205,8 @@ let rec check' : bool -> check_t =
     | Tm_Bind _ _ ->
       check_bind f g t pre pre_typing post_hint (check' true)
 
+    | Tm_TotBind _ _ ->
+      check_tot_bind f g t pre pre_typing post_hint (check' true)
 
     | Tm_If b e1 e2 post_if ->
       let post =

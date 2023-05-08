@@ -151,7 +151,10 @@ let rec open_st_term_ln' (e:st_term)
     | Tm_Bind e1 e2 ->
       open_st_term_ln' e1 x i;
       open_st_term_ln' e2 x (i + 1)
-
+   
+    | Tm_TotBind e1 e2 ->
+      open_term_ln' e1 x i;
+      open_st_term_ln' e2 x (i + 1)
       
     | Tm_If t0 t1 t2 post ->
       open_term_ln' t0 x i;    
@@ -338,6 +341,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st e1 i j;
       ln_weakening_st e2 (i + 1) (j + 1)
 
+    | Tm_TotBind e1 e2 ->
+      ln_weakening e1 i j;
+      ln_weakening_st e2 (i + 1) (j + 1)
+
     | Tm_Abs b _q pre body post ->
       ln_weakening b.binder_ty i j;
       ln_weakening_opt pre (i + 1) (j + 1);
@@ -505,6 +512,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' e1 x i;
       open_term_ln_inv_st' e2 x (i + 1)
 
+    | Tm_TotBind e1 e2 ->
+      open_term_ln_inv' e1 x i;
+      open_term_ln_inv_st' e2 x (i + 1)
+
     | Tm_STApp l _ r ->
       open_term_ln_inv' l x i;
       open_term_ln_inv' r x i
@@ -669,6 +680,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' e1 x i;
       close_st_term_ln' e2 x (i + 1)
 
+    | Tm_TotBind e1 e2 ->
+      close_term_ln' e1 x i;
+      close_st_term_ln' e2 x (i + 1)
+
     | Tm_STApp l _ r ->
       close_term_ln' l x i;
       close_term_ln' r x i
@@ -790,7 +805,7 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
   : Lemma 
     (ensures ln_st t /\ ln_c c)
     (decreases d)
-  = match d with
+  = match d with  
     | T_Abs _g x _q ty _u body c dt db ->
       tot_typing_ln dt;
       st_typing_ln db;
@@ -827,6 +842,12 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       st_typing_ln d2;
       open_st_term_ln e2 x;
       bind_comp_ln bc
+
+    | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing ->
+      tot_typing_ln e1_typing;
+      st_typing_ln e2_typing;
+      open_st_term_ln e2 x;
+      open_comp_ln_inv' c2 e1 0
 
     | T_If _ _ _ _ _ _ _ tb d1 d2 _ ->
       tot_typing_ln tb;

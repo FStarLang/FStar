@@ -229,10 +229,10 @@ open FStar.Ghost
 val read (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
   : stt a
         (R.pts_to r p n)
-        (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
+        (fun x -> R.pts_to r p x `star` pure (eq2_prop (reveal n) x))
 
 let ( ! ) (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
-  : stt a (R.pts_to r p n) (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x)) =
+  : stt a (R.pts_to r p n) (fun x -> R.pts_to r p x `star` pure (eq2_prop (reveal n) x)) =
   read #a r #n #p
 
 val write (#a:Type) (r:R.ref a) (x:a) (#n:erased a)

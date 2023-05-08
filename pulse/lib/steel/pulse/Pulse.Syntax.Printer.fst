@@ -167,7 +167,12 @@ let rec st_term_to_string (t:st_term)
     | Tm_Bind e1 e2 ->
       sprintf "bind _ = %s in %s"
         (st_term_to_string e1)
-        (st_term_to_string e2)        
+        (st_term_to_string e2)
+
+    | Tm_TotBind e1 e2 ->
+      sprintf "totbind _ = %s in %s"
+        (term_to_string e1)
+        (st_term_to_string e2)
   
     | Tm_Abs b q pre_hint body post ->
       sprintf "(fun (%s%s) {%s} {_.%s} -> %s)"

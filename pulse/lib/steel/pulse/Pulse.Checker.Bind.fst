@@ -12,6 +12,7 @@ open Pulse.Typing
 open Pulse.Checker.Common
 open Pulse.Checker.Pure
 module FV = Pulse.Typing.FV
+module LN = Pulse.Typing.LN
 
 #push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
 let rec mk_bind (f:RT.fstar_top_env) (g:env)
@@ -178,3 +179,39 @@ let check_bind
           )
     )
 #pop-options
+
+let check_tot_bind f g t pre pre_typing post_hint check =
+  let Tm_TotBind e1 e2 = t in
+  let (| e1, u1, t1, _t1_typing, e1_typing |) = check_tot_univ f g e1 in
+  let t1 =
+    let b = {binder_ty=t1;binder_ppname=RT.pp_name_default} in
+    let eq_tm = mk_eq2 u1 t1 (null_bvar 0) e1 in
+    Tm_Refine b eq_tm in
+  let (| e1, e1_typing |) =
+    check_tot_with_expected_typ f g e1 t1 in
+  let x = fresh g in
+  let px = v_as_nv x in
+  let g' = (x, Inl t1)::g in
+  // This is just weakening,
+  //   we have g |- pre : vprop
+  //   g' should follow by some weakening lemma
+  let pre_typing' : tot_typing f g' pre Tm_VProp =
+    check_vprop_with_core f g' pre in
+  let (| e2, c2, e2_typing |) =
+    check f g' (open_st_term_nv e2 px) pre pre_typing' post_hint in
+  if C_Tot? c2
+  then T.fail "Tm_TotBind: e2 is not a stateful computation"
+  else
+    let e2_closed = close_st_term e2 x in
+    assume (open_st_term_nv e2_closed (v_as_nv x) == e2);
+    assert (comp_pre c2 == pre);
+    T.print (Printf.sprintf "c2 is %s\n\n" (P.comp_to_string c2));
+    FV.tot_typing_freevars pre_typing;
+    close_with_non_freevar pre x 0;
+    let c = open_comp_with (close_comp c2 x) e1 in
+    T.print (Printf.sprintf "c is %s\n\n" (P.comp_to_string c));
+    LN.tot_typing_ln pre_typing';
+    open_with_gt_ln pre (-1) e1 0;
+    (| Tm_TotBind e1 e2_closed,
+       c,
+       T_TotBind _ _ _ _ _ x (E e1_typing) e2_typing |)

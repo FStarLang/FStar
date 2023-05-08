@@ -115,6 +115,10 @@ let rec eq_st_term (t1 t2:st_term)
     | Tm_Bind t1 k1, Tm_Bind t2 k2 ->
       eq_st_term t1 t2 &&
       eq_st_term k1 k2
+
+    | Tm_TotBind t1 k1, Tm_TotBind t2 k2 ->
+      eq_tm t1 t2 &&
+      eq_st_term k1 k2
       
     | Tm_IntroExists b1 p1 l1, Tm_IntroExists b2 p2 l2 ->
       b1 = b2 &&
