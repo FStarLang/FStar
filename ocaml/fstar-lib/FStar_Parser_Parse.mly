@@ -56,9 +56,7 @@ let none_to_empty_list x =
   | None -> []
   | Some l -> l
 
-let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) : FStar_Parser_AST.decl' =
-    let p = pos_of_lexpos r in
-    let r = mk_range (file_of_range (lhs())) p p in
+let parse_extension_blob (extension_name:string) (s:string) r : FStar_Parser_AST.decl' =
     DeclSyntaxExtension (extension_name, s, r)
 %}
 
@@ -145,7 +143,6 @@ let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) 
 %left     OPINFIX3
 %left     BACKTICK
 %right    OPINFIX4
-
 
 %start inputFragment
 %start term
@@ -351,7 +348,7 @@ rawDecl:
   | blob=BLOB
       {
         let ext_name, contents, pos = blob in
-        parse_extension_blob ext_name contents pos
+        parse_extension_blob ext_name contents (rr ($loc(blob)))
       }
 
 
