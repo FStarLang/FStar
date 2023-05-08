@@ -3373,8 +3373,8 @@ and (translate_st_term :
       | FStar_Reflection_Data.Tv_Match
           (b, uu___,
            (FStar_Reflection_Data.Pat_Constant
-            (FStar_Reflection_Data.C_True), then_)::(FStar_Reflection_Data.Pat_Wild
-                                                     uu___1, else_)::[])
+            (FStar_Reflection_Data.C_True), then_)::(FStar_Reflection_Data.Pat_Var
+                                                     (uu___1, uu___2), else_)::[])
           ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "Pulse.Main.fst" (Prims.of_int (576))
@@ -3385,10 +3385,10 @@ and (translate_st_term :
                (readback_ty g
                   (FStar_Reflection_Builtins.pack_ln
                      (FStar_Reflection_Derived.inspect_ln_unascribe b))))
-            (fun uu___2 ->
-               (fun uu___2 ->
+            (fun uu___3 ->
+               (fun uu___3 ->
                   Obj.magic
-                    (op_let_Question uu___2
+                    (op_let_Question uu___3
                        (fun b1 ->
                           FStar_Tactics_Effect.tac_bind
                             (FStar_Range.mk_range "Pulse.Main.fst"
@@ -3398,10 +3398,10 @@ and (translate_st_term :
                                (Prims.of_int (577)) (Prims.of_int (6))
                                (Prims.of_int (580)) (Prims.of_int (36)))
                             (Obj.magic (translate_st_term g then_))
-                            (fun uu___3 ->
-                               (fun uu___3 ->
+                            (fun uu___4 ->
+                               (fun uu___4 ->
                                   Obj.magic
-                                    (op_let_Question uu___3
+                                    (op_let_Question uu___4
                                        (fun then_1 ->
                                           FStar_Tactics_Effect.tac_bind
                                             (FStar_Range.mk_range
@@ -3418,10 +3418,10 @@ and (translate_st_term :
                                                (Prims.of_int (36)))
                                             (Obj.magic
                                                (translate_st_term g else_))
-                                            (fun uu___4 ->
-                                               (fun uu___4 ->
+                                            (fun uu___5 ->
+                                               (fun uu___5 ->
                                                   Obj.magic
-                                                    (op_let_Question uu___4
+                                                    (op_let_Question uu___5
                                                        (fun else_1 ->
                                                           FStar_Tactics_Effect.tac_bind
                                                             (FStar_Range.mk_range
@@ -3442,7 +3442,7 @@ and (translate_st_term :
                                                                   Prims.int_zero))
                                                             (fun else_2 ->
                                                                FStar_Tactics_Effect.lift_div_tac
-                                                                 (fun uu___5
+                                                                 (fun uu___6
                                                                     ->
                                                                     FStar_Pervasives.Inl
                                                                     (Pulse_Syntax.Tm_If
@@ -3450,7 +3450,7 @@ and (translate_st_term :
                                                                     then_1,
                                                                     else_2,
                                                                     FStar_Pervasives_Native.None)))))))
-                                                 uu___4)))) uu___3)))) uu___2)
+                                                 uu___5)))) uu___4)))) uu___3)
       | uu___ -> unexpected_term "st_term" t
 and (translate_term :
   FStar_Reflection_Typing.fstar_top_env ->
