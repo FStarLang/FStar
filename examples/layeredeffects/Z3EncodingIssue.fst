@@ -16,6 +16,8 @@
 
 module Z3EncodingIssue
 
+(* UPDATE, 2023-05-08: This works fine with (the
+upcoming) Z3 4.12.2 *)
 
 /// This module illustrates a z3 encoding issue when a layered effect is written in a particular style
 
@@ -200,7 +202,7 @@ assume val fn (_:unit) : STATE unit (fun p h -> p () h)
 ///   BUT this time it succeeds! See the code below after chacha_fn
 
 
-[@@expect_failure]
+(* [@@expect_failure] *) (* See UPDATE above *)
 let chacha_fn ()
 : Chacha unit
   (requires fun _ -> True)
