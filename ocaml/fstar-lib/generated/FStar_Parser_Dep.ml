@@ -1277,6 +1277,7 @@ let (collect_one :
              | FStar_Parser_AST.Polymonadic_subcomp (uu___2, uu___3, t) ->
                  collect_term t
              | FStar_Parser_AST.Pragma uu___2 -> ()
+             | FStar_Parser_AST.DeclSyntaxExtension uu___2 -> ()
              | FStar_Parser_AST.TopLevelModule lid ->
                  (FStar_Compiler_Util.incr num_of_toplevelmods;
                   (let uu___3 =

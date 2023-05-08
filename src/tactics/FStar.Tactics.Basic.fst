@@ -1986,9 +1986,9 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head), (ctx_u, s))
 
     | Tm_let ((false, [lb]), t2) ->
-        if lb.lbunivs <> [] then ret <| Tv_Unknown else
+        if lb.lbunivs <> [] then ret <| Tv_Unsupp else
         begin match lb.lbname with
-        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inr _ -> ret <| Tv_Unsupp // no top level lets
         | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             let b = S.mk_binder bv in
@@ -2001,15 +2001,15 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         end
 
     | Tm_let ((true, [lb]), t2) ->
-        if lb.lbunivs <> [] then ret <| Tv_Unknown else
+        if lb.lbunivs <> [] then ret <| Tv_Unsupp else
         begin match lb.lbname with
-        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inr _ -> ret <| Tv_Unsupp // no top level lets
         | Inl bv ->
             let lbs, t2 = SS.open_let_rec [lb] t2 in
             match lbs with
             | [lb] ->
                 (match lb.lbname with
-                 | Inr _ -> ret Tv_Unknown
+                 | Inr _ -> ret Tv_Unsupp
                  | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
@@ -2019,8 +2019,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
-            | Pat_var bv -> Pat_Var bv
-            | Pat_wild bv -> Pat_Wild bv
+            | Pat_var bv -> Pat_Var (bv, bv.sort)
             | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map SS.open_branch brs in
@@ -2032,7 +2031,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
-        ret <| Tv_Unknown
+        ret <| Tv_Unsupp
     )
 
 (* This function could actually be pure, it doesn't need freshness
@@ -2091,8 +2090,7 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
             | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
-            | Pat_Var  bv -> wrap <| Pat_var bv
-            | Pat_Wild bv -> wrap <| Pat_wild bv
+            | Pat_Var  (bv, _sort) -> wrap <| Pat_var bv
             | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
@@ -2107,6 +2105,9 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
+
+    | Tv_Unsupp ->
+        fail "cannot pack Tv_Unsupp"
 
 let pack (tv:term_view) : tac term = pack' tv false
 let pack_curried (tv:term_view) : tac term = pack' tv true
@@ -2506,6 +2507,19 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term) =
                                (Print.term_to_string e)) e.pos
     else eopt |> must)
   else ret None
+
+let push_open_namespace (e:env) (ns:list string) =
+  let lid = Ident.lid_of_path ns Range.dummyRange in
+  ret { e with dsenv = FStar.Syntax.DsEnv.push_namespace e.dsenv lid }
+
+let push_module_abbrev (e:env) (n:string) (m:list string) =
+  let mlid = Ident.lid_of_path m Range.dummyRange in
+  let ident = Ident.id_of_text n in
+  ret { e with dsenv = FStar.Syntax.DsEnv.push_module_abbrev e.dsenv ident mlid }
+
+let resolve_name (e:env) (n:list string) =
+  let l = Ident.lid_of_path n Range.dummyRange in
+  ret (FStar.Syntax.DsEnv.resolve_name e.dsenv l)
 
 (**** Creating proper environments and proofstates ****)
 

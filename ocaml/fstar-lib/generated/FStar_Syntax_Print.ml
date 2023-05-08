@@ -735,15 +735,7 @@ and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
              let uu___4 = term_to_string x1.FStar_Syntax_Syntax.sort in
              FStar_Compiler_Util.format2 "%s:%s" uu___3 uu___4
            else bv_to_string x1
-       | FStar_Syntax_Syntax.Pat_constant c -> const_to_string c
-       | FStar_Syntax_Syntax.Pat_wild x1 ->
-           let uu___2 = FStar_Options.print_bound_var_types () in
-           if uu___2
-           then
-             let uu___3 = bv_to_string x1 in
-             let uu___4 = term_to_string x1.FStar_Syntax_Syntax.sort in
-             FStar_Compiler_Util.format2 "_wild_%s:%s" uu___3 uu___4
-           else bv_to_string x1)
+       | FStar_Syntax_Syntax.Pat_constant c -> const_to_string c)
 and (lbs_to_string :
   FStar_Syntax_Syntax.qualifier Prims.list ->
     FStar_Syntax_Syntax.letbindings -> Prims.string)
@@ -1646,19 +1638,13 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         ->
         let uu___7 = lbname_to_string lb in
         FStar_Compiler_Util.format1 "let rec %s" uu___7
-    | FStar_Syntax_Syntax.Sig_let
-        ((true,
-          { FStar_Syntax_Syntax.lbname = lb;
-            FStar_Syntax_Syntax.lbunivs = uu___;
-            FStar_Syntax_Syntax.lbtyp = uu___1;
-            FStar_Syntax_Syntax.lbeff = uu___2;
-            FStar_Syntax_Syntax.lbdef = uu___3;
-            FStar_Syntax_Syntax.lbattrs = uu___4;
-            FStar_Syntax_Syntax.lbpos = uu___5;_}::uu___6),
-         uu___7)
-        ->
-        let uu___8 = lbname_to_string lb in
-        FStar_Compiler_Util.format1 "let rec %s and ..." uu___8
+    | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___) ->
+        let uu___1 =
+          let uu___2 =
+            FStar_Compiler_List.map
+              (fun lb -> lbname_to_string lb.FStar_Syntax_Syntax.lbname) lbs in
+          FStar_String.concat " and " uu___2 in
+        FStar_Compiler_Util.format1 "let rec %s" uu___1
     | FStar_Syntax_Syntax.Sig_let uu___ ->
         failwith "Impossible: sigelt_to_string_short, ill-formed let"
     | FStar_Syntax_Syntax.Sig_declare_typ (lid, uu___, t) ->

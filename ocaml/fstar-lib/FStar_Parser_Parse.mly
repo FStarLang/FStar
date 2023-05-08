@@ -33,6 +33,7 @@ open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
+module AU = FStar_Parser_AST_Util
 
 (* Shorthands *)
 let rr = FStar_Parser_Util.translate_range
@@ -55,6 +56,10 @@ let none_to_empty_list x =
   | None -> []
   | Some l -> l
 
+let parse_extension_blob (extension_name:string) (s:string) (r:Lexing.position) : FStar_Parser_AST.decl' =
+    let p = pos_of_lexpos r in
+    let r = mk_range (file_of_range (lhs())) p p in
+    DeclSyntaxExtension (extension_name, s, r)
 %}
 
 %token <string> STRING
@@ -118,6 +123,7 @@ let none_to_empty_list x =
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
+%token<string * string * Lexing.position>  BLOB
 
 /* These are artificial */
 %token EOF
@@ -342,6 +348,11 @@ rawDecl:
       { Polymonadic_bind b }
   | POLYMONADIC_SUBCOMP c=polymonadic_subcomp
       { Polymonadic_subcomp c }
+  | blob=BLOB
+      {
+        let ext_name, contents, pos = blob in
+        parse_extension_blob ext_name contents pos
+      }
 
 
 typeDecl:

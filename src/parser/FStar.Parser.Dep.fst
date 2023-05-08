@@ -809,7 +809,8 @@ let collect_one
         | Polymonadic_bind (_, _, _, t)
         | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
 
-        | Pragma _ ->
+        | Pragma _
+        | DeclSyntaxExtension _ ->
             ()
         | TopLevelModule lid ->
             incr num_of_toplevelmods;

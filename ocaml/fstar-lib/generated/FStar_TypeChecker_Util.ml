@@ -554,8 +554,6 @@ let rec (decorated_pattern_as_term :
     match pat.FStar_Syntax_Syntax.v with
     | FStar_Syntax_Syntax.Pat_constant c ->
         let uu___ = mk (FStar_Syntax_Syntax.Tm_constant c) in ([], uu___)
-    | FStar_Syntax_Syntax.Pat_wild x ->
-        let uu___ = mk (FStar_Syntax_Syntax.Tm_name x) in ([x], uu___)
     | FStar_Syntax_Syntax.Pat_var x ->
         let uu___ = mk (FStar_Syntax_Syntax.Tm_name x) in ([x], uu___)
     | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->

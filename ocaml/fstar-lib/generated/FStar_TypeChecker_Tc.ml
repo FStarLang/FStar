@@ -3755,13 +3755,7 @@ let (tc_decl :
          FStar_Options.debug_module uu___2 in
        if uu___1
        then
-         let uu___2 =
-           let uu___3 =
-             FStar_Compiler_Effect.op_Bar_Greater
-               (FStar_Syntax_Util.lids_of_sigelt se)
-               (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
-           FStar_Compiler_Effect.op_Bar_Greater uu___3
-             (FStar_String.concat ", ") in
+         let uu___2 = FStar_Syntax_Print.sigelt_to_string_short se in
          FStar_Compiler_Util.print1 "Processing %s\n" uu___2
        else ());
       (let uu___2 = FStar_TypeChecker_Env.debug env1 FStar_Options.Low in

@@ -329,9 +329,6 @@ and (hash_pat :
     | FStar_Syntax_Syntax.Pat_var bv ->
         let uu___ = of_int (Prims.of_int (101)) in
         let uu___1 = hash_bv bv in mix uu___ uu___1
-    | FStar_Syntax_Syntax.Pat_wild bv ->
-        let uu___ = of_int (Prims.of_int (103)) in
-        let uu___1 = hash_bv bv in mix uu___ uu___1
     | FStar_Syntax_Syntax.Pat_dot_term t ->
         let uu___ =
           let uu___1 = of_int (Prims.of_int (107)) in
@@ -1047,8 +1044,6 @@ and (equal_pat :
                && (equal_list (equal_pair equal_pat equal_poly) args1 args2)
          | (FStar_Syntax_Syntax.Pat_var bv1, FStar_Syntax_Syntax.Pat_var bv2)
              -> equal_bv bv1 bv2
-         | (FStar_Syntax_Syntax.Pat_wild bv1, FStar_Syntax_Syntax.Pat_wild
-            bv2) -> equal_bv bv1 bv2
          | (FStar_Syntax_Syntax.Pat_dot_term t1,
             FStar_Syntax_Syntax.Pat_dot_term t2) ->
              equal_opt equal_term t1 t2

@@ -195,6 +195,9 @@ let check_prop_validity          = from_tac_2 B.refl_check_prop_validity
 let instantiate_implicits        = from_tac_2 B.refl_instantiate_implicits
 let maybe_relate_after_unfolding = from_tac_3 B.refl_maybe_relate_after_unfolding
 let maybe_unfold_head            = from_tac_2 B.refl_maybe_unfold_head
+let push_open_namespace          = from_tac_2 B.push_open_namespace
+let push_module_abbrev           = from_tac_3 B.push_module_abbrev
+let resolve_name                 = from_tac_2 B.resolve_name
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.catch   (to_tac_0 (t ()))

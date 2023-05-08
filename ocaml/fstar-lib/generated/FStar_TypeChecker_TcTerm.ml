@@ -8361,21 +8361,6 @@ and (tc_pat :
                    "Impossible: Expected an undecorated pattern, got %s"
                    uu___3 in
                failwith uu___2
-           | FStar_Syntax_Syntax.Pat_wild x ->
-               let x1 =
-                 {
-                   FStar_Syntax_Syntax.ppname =
-                     (x.FStar_Syntax_Syntax.ppname);
-                   FStar_Syntax_Syntax.index = (x.FStar_Syntax_Syntax.index);
-                   FStar_Syntax_Syntax.sort = t
-                 } in
-               let uu___1 = let uu___2 = id t in [uu___2] in
-               let uu___2 = FStar_Syntax_Syntax.bv_to_name x1 in
-               ([x1], uu___1, uu___2,
-                 {
-                   FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x1);
-                   FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
-                 }, FStar_TypeChecker_Env.trivial_guard, false)
            | FStar_Syntax_Syntax.Pat_var x ->
                let x1 =
                  {
@@ -8468,7 +8453,7 @@ and (tc_pat :
                            let uu___6 =
                              let uu___7 =
                                FStar_Syntax_Syntax.withinfo
-                                 (FStar_Syntax_Syntax.Pat_wild x)
+                                 (FStar_Syntax_Syntax.Pat_var x)
                                  p.FStar_Syntax_Syntax.p in
                              (uu___7, false) in
                            FStar_Pervasives_Native.Some uu___6)

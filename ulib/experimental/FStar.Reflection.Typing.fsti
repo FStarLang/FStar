@@ -38,7 +38,7 @@ val inspect_pack (t:R.term_view)
           [SMTPat R.(inspect_ln (pack_ln t))]
   
 val pack_inspect (t:R.term)
-  : Lemma (requires ~(Tv_Unknown? (inspect_ln t)))
+  : Lemma (requires ~(Tv_Unsupp? (inspect_ln t)))
           (ensures R.(pack_ln (inspect_ln t) == t))
           [SMTPat R.(pack_ln (inspect_ln t))]
   
@@ -184,8 +184,7 @@ and binder_offset_pattern (p:pattern)
     | Pat_Constant _
     | Pat_Dot_Term _ -> 0
 
-    | Pat_Var _
-    | Pat_Wild _ -> 1
+    | Pat_Var _ _ -> 1
 
     | Pat_Cons fv us pats -> 
       binder_offset_patterns pats
@@ -197,6 +196,7 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
     | Tv_FVar _
     | Tv_Type _
     | Tv_Const _
+    | Tv_Unsupp
     | Tv_Unknown -> t
     | Tv_Var x ->
       (match v with
@@ -338,12 +338,9 @@ and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat)
     | Pat_Cons fv us pats -> 
       let pats = open_or_close_patterns' pats v i in
       Pat_Cons fv us pats
-      
-    | Pat_Var bv ->
-      Pat_Var bv
 
-    | Pat_Wild bv ->
-      Pat_Wild bv
+    | Pat_Var bv st ->
+      Pat_Var bv st
 
     | Pat_Dot_Term topt ->
       Pat_Dot_Term (match topt with
@@ -452,6 +449,7 @@ let rec freevars (e:term)
     | Tv_Type _
     | Tv_Const _
     | Tv_Unknown 
+    | Tv_Unsupp
     | Tv_BVar _ -> Set.empty
 
     | Tv_Var x -> Set.singleton (bv_index x)
@@ -545,8 +543,7 @@ and freevars_pattern (p:pattern)
     | Pat_Cons fv us pats -> 
       freevars_patterns pats
       
-    | Pat_Var bv 
-    | Pat_Wild bv -> Set.empty
+    | Pat_Var bv _ -> Set.empty
 
     | Pat_Dot_Term topt ->
       freevars_opt topt freevars
@@ -592,6 +589,7 @@ let rec ln' (e:term) (n:int)
     | Tv_Type _
     | Tv_Const _
     | Tv_Unknown 
+    | Tv_Unsupp
     | Tv_Var _ -> true
     | Tv_BVar m -> bv_index m <= n
     | Tv_App e1 (e2, _) -> ln' e1 n && ln' e2 n
@@ -693,9 +691,7 @@ and ln'_pattern (p:pattern) (i:int)
     | Pat_Cons fv us pats -> 
       ln'_patterns pats i
       
-    | Pat_Var bv 
-    | Pat_Wild bv -> true
-
+    | Pat_Var bv _ -> true
 
     | Pat_Dot_Term topt ->
       (match topt with

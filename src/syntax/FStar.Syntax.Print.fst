@@ -368,10 +368,6 @@ and pat_to_string x =
       then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
       else bv_to_string x
     | Pat_constant c -> const_to_string c
-    | Pat_wild x ->
-      if Options.print_bound_var_types()
-      then U.format2 "_wild_%s:%s" (bv_to_string x) (term_to_string x.sort)
-      else bv_to_string x
 
 
 and lbs_to_string quals lbs =
@@ -817,8 +813,8 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_let((true, [{lbname=lb}]), _) ->
     U.format1 "let rec %s" (lbname_to_string lb)
 
-  | Sig_let((true, ({lbname=lb})::_), _) ->
-    U.format1 "let rec %s and ..." (lbname_to_string lb)
+  | Sig_let((true, lbs), _) ->
+    U.format1 "let rec %s" (String.concat " and " (List.map (fun lb -> lbname_to_string lb.lbname) lbs))
 
   | Sig_let _ ->
     failwith "Impossible: sigelt_to_string_short, ill-formed let"

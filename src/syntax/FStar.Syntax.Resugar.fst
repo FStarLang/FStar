@@ -207,10 +207,6 @@ let is_true_pat (p:S.pat) : bool = match p.v with
     | Pat_constant (Const_bool true) -> true
     | _ -> false
 
-let is_wild_pat (p:S.pat) : bool = match p.v with
-    | Pat_wild _ -> true
-    | _ -> false
-
 let is_tuple_constructor_lid lid =
      C.is_tuple_data_lid' lid
   || C.is_dtuple_data_lid' lid
@@ -651,14 +647,14 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env t in
       mk (A.Let(A.NoLetQualifier, bnds, body))
 
-    | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)], _)
-      when is_true_pat pat1 && is_wild_pat pat2 ->
-      let asc_opt = resugar_match_returns env e t.pos asc_opt in
-      mk (A.If(resugar_term' env e,
-               None,
-               asc_opt,
-               resugar_term' env t1,
-               resugar_term' env t2))
+    (* | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)], _) *)
+    (*   when is_true_pat pat1 && is_wild_pat pat2 -> *)
+    (*   let asc_opt = resugar_match_returns env e t.pos asc_opt in *)
+    (*   mk (A.If(resugar_term' env e, *)
+    (*            None, *)
+    (*            asc_opt, *)
+    (*            resugar_term' env t1, *)
+    (*            resugar_term' env t2)) *)
 
     | Tm_match(e, asc_opt, branches, _) ->
       let resugar_branch (pat, wopt,b) =
@@ -1058,10 +1054,10 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
   let may_drop_implicits args =
     not (Options.print_implicits ()) &&
     not (List.existsML (fun (pattern, is_implicit) ->
+      //FIXME
              let might_be_used =
                match pattern.v with
                | Pat_var bv -> Util.set_mem bv branch_bv
-               | Pat_wild _ -> false
                | _ -> true in
              is_implicit && might_be_used) args) in
   let resugar_plain_pat_cons' fv args =
@@ -1137,7 +1133,8 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
        | None -> resugar_bv_as_pat' env v (to_arg_qual imp_opt) branch_bv None
       end
 
-    | Pat_wild _ -> mk (A.PatWild (to_arg_qual imp_opt, []))
+    // FIXME: detect unused patterns
+    (* | Pat_wild _ -> mk (A.PatWild (to_arg_qual imp_opt, [])) *)
 
     | Pat_dot_term _ -> mk (A.PatWild (Some A.Implicit, []))
   in

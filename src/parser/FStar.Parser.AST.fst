@@ -239,6 +239,7 @@ type decl' =
   | Pragma of pragma
   | Assume of ident * term
   | Splice of bool * list ident * term  (* bool is true for a typed splice *)
+  | DeclSyntaxExtension of string * string * FStar.Compiler.Range.range
 
 and decl = {
   d:decl';

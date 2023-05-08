@@ -3134,15 +3134,6 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         | Pat_dot_term _ ->
           failwith (BU.format1 "Impossible: Expected an undecorated pattern, got %s" (Print.pat_to_string p))
 
-        | Pat_wild x ->
-          let x = {x with sort=t} in
-          [x],
-          [id t],
-          S.bv_to_name x,
-          {p with v=Pat_wild x},
-          Env.trivial_guard,
-          false
-
         | Pat_var x ->
           let x = {x with sort=t} in
           [x],
@@ -3186,7 +3177,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
             TcUtil.make_record_fields_in_order env uc (Some (Inl t)) rdc f_sub_pats
               (fun _ ->
                 let x = S.new_bv None S.tun in
-                Some (S.withinfo (Pat_wild x) p.p, false))
+                Some (S.withinfo (Pat_var x) p.p, false))
               p.p
           in
           let p = { p with v=Pat_cons(constructor_fv, us_opt, sub_pats) } in
