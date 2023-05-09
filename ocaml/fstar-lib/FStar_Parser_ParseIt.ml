@@ -257,14 +257,8 @@ let parse fn =
                    requires such lookahead to complete a production.
           *)
           let end_pos =
-            if true (* false && not (FStar_Parser_AST.decl_syntax_is_delimited d) *)
-            then (
               rollback lexbuf;
               current_pos lexbuf
-            )
-            else (
-              current_pos lexbuf
-            )
           in
           let raw_contents = contents_at d.drange in
           (*
