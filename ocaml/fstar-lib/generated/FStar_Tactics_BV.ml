@@ -761,8 +761,8 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
          FStar_Tactics_Effect.tac_bind
            (FStar_Range.mk_range "FStar.Tactics.BV.fst" (Prims.of_int (161))
               (Prims.of_int (4)) (Prims.of_int (161)) (Prims.of_int (40)))
-           (FStar_Range.mk_range "FStar.Tactics.BV.fst" (Prims.of_int (162))
-              (Prims.of_int (4)) (Prims.of_int (175)) (Prims.of_int (65)))
+           (FStar_Range.mk_range "FStar.Tactics.BV.fst" (Prims.of_int (161))
+              (Prims.of_int (41)) (Prims.of_int (162)) (Prims.of_int (26)))
            (Obj.magic
               (FStar_Tactics_Builtins.norm
                  [FStar_Pervasives.delta_only ["FStar.BV.bvult"]]))
@@ -774,8 +774,8 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                          (Prims.of_int (162)) (Prims.of_int (12))
                          (Prims.of_int (162)) (Prims.of_int (23)))
                       (FStar_Range.mk_range "FStar.Tactics.BV.fst"
-                         (Prims.of_int (163)) (Prims.of_int (4))
-                         (Prims.of_int (175)) (Prims.of_int (65)))
+                         (Prims.of_int (162)) (Prims.of_int (26))
+                         (Prims.of_int (163)) (Prims.of_int (32)))
                       (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
                       (fun uu___3 ->
                          (fun g ->
@@ -1009,8 +1009,8 @@ let (bv_tac_lt : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
          FStar_Tactics_Effect.tac_bind
            (FStar_Range.mk_range "FStar.Tactics.BV.fst" (Prims.of_int (192))
               (Prims.of_int (11)) (Prims.of_int (192)) (Prims.of_int (39)))
-           (FStar_Range.mk_range "FStar.Tactics.BV.fst" (Prims.of_int (193))
-              (Prims.of_int (2)) (Prims.of_int (198)) (Prims.of_int (8)))
+           (FStar_Range.mk_range "FStar.Tactics.BV.fst" (Prims.of_int (192))
+              (Prims.of_int (42)) (Prims.of_int (193)) (Prims.of_int (51)))
            (FStar_Tactics_Effect.lift_div_tac
               (fun uu___1 ->
                  FStar_Reflection_Builtins.pack_ln
