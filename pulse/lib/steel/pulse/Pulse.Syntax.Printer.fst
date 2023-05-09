@@ -164,8 +164,9 @@ let rec st_term_to_string (t:st_term)
         (qual_to_string q)
         (term_to_string arg)
         
-    | Tm_Bind e1 e2 ->
-      sprintf "bind _ = %s in %s"
+    | Tm_Bind b e1 e2 ->
+      sprintf "bind %s = %s in %s"
+        (binder_to_string b)      
         (st_term_to_string e1)
         (st_term_to_string e2)
 

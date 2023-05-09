@@ -148,7 +148,8 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' body x (i + 1);
       open_term_ln_opt' post x (i + 2)
       
-    | Tm_Bind e1 e2 ->
+    | Tm_Bind b e1 e2 ->
+      open_term_ln' b.binder_ty x i;
       open_st_term_ln' e1 x i;
       open_st_term_ln' e2 x (i + 1)
    
@@ -337,7 +338,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening l i j;
       ln_weakening r i j      
 
-    | Tm_Bind e1 e2 ->
+    | Tm_Bind b e1 e2 ->
+      ln_weakening b.binder_ty i j;
       ln_weakening_st e1 i j;
       ln_weakening_st e2 (i + 1) (j + 1)
 
@@ -508,7 +510,8 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' t2 x i;          
       open_term_ln_inv_opt' post x (i + 1)      
 
-    | Tm_Bind e1 e2 ->
+    | Tm_Bind b e1 e2 ->
+      open_term_ln_inv' b.binder_ty x i;
       open_term_ln_inv_st' e1 x i;
       open_term_ln_inv_st' e2 x (i + 1)
 
@@ -676,7 +679,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' t2 x i;          
       close_term_ln_opt' post x (i + 1)      
 
-    | Tm_Bind e1 e2 ->
+    | Tm_Bind b e1 e2 ->
+      close_term_ln' b.binder_ty x i;
       close_st_term_ln' e1 x i;
       close_st_term_ln' e2 x (i + 1)
 
@@ -836,7 +840,7 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
         close_term_ln' e x 0
       end
 
-    | T_Bind _ _ e2 _ _ x _ d1 dc1 d2 bc ->
+    | T_Bind _ _ e2 _ _ _ x _ d1 dc1 d2 bc ->
       st_typing_ln d1;
       tot_typing_ln dc1;
       st_typing_ln d2;

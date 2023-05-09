@@ -71,8 +71,9 @@ let rec freevars_st (t:st_term)
                                       (freevars_opt post_hint)))
     | Tm_STApp t1 _ t2 ->
       Set.union (freevars t1) (freevars t2)
-    | Tm_Bind t1 t2 ->
-      Set.union (freevars_st t1) (freevars_st t2)
+    | Tm_Bind b t1 t2 ->
+      Set.union (Set.union (freevars b.binder_ty) (freevars_st t1))
+                (freevars_st t2)
     | Tm_TotBind t1 t2 ->
       Set.union (freevars t1) (freevars_st t2)
     | Tm_If t e1 e2 post ->
@@ -190,7 +191,8 @@ let rec ln_st' (t:st_term) (i:int)
       ln' t1 i &&
       ln' t2 i
 
-    | Tm_Bind t1 t2 ->
+    | Tm_Bind b t1 t2 ->
+      ln' b.binder_ty i &&
       ln_st' t1 i &&
       ln_st' t2 (i + 1)
 
@@ -337,6 +339,9 @@ let rec open_term_list' (t:list term) (v:term) (i:index)
     | [] -> []
     | hd::tl -> open_term' hd v i :: open_term_list' tl v i
 
+let open_binder b v i = 
+  {b with binder_ty=open_term' b.binder_ty v i}
+             
 let rec open_st_term' (t:st_term) (v:term) (i:index)
   : Tot st_term (decreases t)
   = match t with
@@ -344,7 +349,7 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
       Tm_Return c use_eq (open_term' t v i)
 
     | Tm_Abs b q pre_hint body post ->
-      Tm_Abs {b with binder_ty=open_term' b.binder_ty v i} q
+      Tm_Abs (open_binder b v i) q
              (open_term_opt' pre_hint v (i + 1))
              (open_st_term' body v (i + 1))
              (open_term_opt' post v (i + 2))
@@ -353,8 +358,9 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
       Tm_STApp (open_term' head v i) q
                (open_term' arg v i)
 
-    | Tm_Bind e1 e2 ->
-      Tm_Bind (open_st_term' e1 v i)
+    | Tm_Bind b e1 e2 ->
+      Tm_Bind (open_binder b v i)
+              (open_st_term' e1 v i)
               (open_st_term' e2 v (i + 1))
 
     | Tm_TotBind e1 e2 ->
@@ -511,7 +517,9 @@ let rec close_term_list' (t:list term) (v:var) (i:index)
     | [] -> []
     | hd::tl -> close_term' hd v i :: close_term_list' tl v i
 
-
+let close_binder b v i =
+  {b with binder_ty=close_term' b.binder_ty v i}
+             
 let rec close_st_term' (t:st_term) (v:var) (i:index)
   : Tot st_term (decreases t)
   = match t with
@@ -519,7 +527,7 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
       Tm_Return c use_eq (close_term' t v i)
 
     | Tm_Abs b q pre_hint body post ->
-      Tm_Abs {b with binder_ty=close_term' b.binder_ty v i} q
+      Tm_Abs (close_binder b v i) q
              (close_term_opt' pre_hint v (i + 1))
              (close_st_term' body v (i + 1))
              (close_term_opt' post v (i + 2))
@@ -528,8 +536,9 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
       Tm_STApp (close_term' head v i) q
                (close_term' arg v i)
 
-    | Tm_Bind e1 e2 ->
-      Tm_Bind (close_st_term' e1 v i)
+    | Tm_Bind b e1 e2 ->
+      Tm_Bind (close_binder b v i)
+              (close_st_term' e1 v i)
               (close_st_term' e2 v (i + 1))
 
     | Tm_TotBind e1 e2 ->

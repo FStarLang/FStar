@@ -141,7 +141,7 @@ and stmt'__Match__payload =
   branches: (FStar_Parser_AST.pattern * stmt) Prims.list }
 and stmt'__While__payload =
   {
-  head3: FStar_Parser_AST.term ;
+  guard: stmt ;
   id2: FStar_Ident.ident ;
   invariant: vprop ;
   body1: stmt }
@@ -152,7 +152,19 @@ and stmt'__Introduce__payload =
 and stmt'__Sequence__payload = {
   s1: stmt ;
   s2: stmt }
+and stmt'__Parallel__payload =
+  {
+  p1: vprop ;
+  p2: vprop ;
+  q1: vprop ;
+  q2: vprop ;
+  b1: stmt ;
+  b2: stmt }
+and stmt'__Rewrite__payload = {
+  p11: vprop ;
+  p21: vprop }
 and stmt' =
+  | Open of FStar_Ident.lident 
   | Expr of stmt'__Expr__payload 
   | Assignment of stmt'__Assignment__payload 
   | LetBinding of stmt'__LetBinding__payload 
@@ -162,6 +174,8 @@ and stmt' =
   | While of stmt'__While__payload 
   | Introduce of stmt'__Introduce__payload 
   | Sequence of stmt'__Sequence__payload 
+  | Parallel of stmt'__Parallel__payload 
+  | Rewrite of stmt'__Rewrite__payload 
 and stmt = {
   s: stmt' ;
   range1: rng }
@@ -231,26 +245,26 @@ let (__proj__Mkstmt'__Match__payload__item__branches :
   fun projectee ->
     match projectee with
     | { head2 = head; returns_annot; branches;_} -> branches
-let (__proj__Mkstmt'__While__payload__item__head :
-  stmt'__While__payload -> FStar_Parser_AST.term) =
+let (__proj__Mkstmt'__While__payload__item__guard :
+  stmt'__While__payload -> stmt) =
   fun projectee ->
     match projectee with
-    | { head3 = head; id2 = id; invariant; body1 = body;_} -> head
+    | { guard; id2 = id; invariant; body1 = body;_} -> guard
 let (__proj__Mkstmt'__While__payload__item__id :
   stmt'__While__payload -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
-    | { head3 = head; id2 = id; invariant; body1 = body;_} -> id
+    | { guard; id2 = id; invariant; body1 = body;_} -> id
 let (__proj__Mkstmt'__While__payload__item__invariant :
   stmt'__While__payload -> vprop) =
   fun projectee ->
     match projectee with
-    | { head3 = head; id2 = id; invariant; body1 = body;_} -> invariant
+    | { guard; id2 = id; invariant; body1 = body;_} -> invariant
 let (__proj__Mkstmt'__While__payload__item__body :
   stmt'__While__payload -> stmt) =
   fun projectee ->
     match projectee with
-    | { head3 = head; id2 = id; invariant; body1 = body;_} -> body
+    | { guard; id2 = id; invariant; body1 = body;_} -> body
 let (__proj__Mkstmt'__Introduce__payload__item__vprop :
   stmt'__Introduce__payload -> vprop) =
   fun projectee ->
@@ -265,6 +279,34 @@ let (__proj__Mkstmt'__Sequence__payload__item__s1 :
 let (__proj__Mkstmt'__Sequence__payload__item__s2 :
   stmt'__Sequence__payload -> stmt) =
   fun projectee -> match projectee with | { s1; s2;_} -> s2
+let (__proj__Mkstmt'__Parallel__payload__item__p1 :
+  stmt'__Parallel__payload -> vprop) =
+  fun projectee -> match projectee with | { p1; p2; q1; q2; b1; b2;_} -> p1
+let (__proj__Mkstmt'__Parallel__payload__item__p2 :
+  stmt'__Parallel__payload -> vprop) =
+  fun projectee -> match projectee with | { p1; p2; q1; q2; b1; b2;_} -> p2
+let (__proj__Mkstmt'__Parallel__payload__item__q1 :
+  stmt'__Parallel__payload -> vprop) =
+  fun projectee -> match projectee with | { p1; p2; q1; q2; b1; b2;_} -> q1
+let (__proj__Mkstmt'__Parallel__payload__item__q2 :
+  stmt'__Parallel__payload -> vprop) =
+  fun projectee -> match projectee with | { p1; p2; q1; q2; b1; b2;_} -> q2
+let (__proj__Mkstmt'__Parallel__payload__item__b1 :
+  stmt'__Parallel__payload -> stmt) =
+  fun projectee -> match projectee with | { p1; p2; q1; q2; b1; b2;_} -> b1
+let (__proj__Mkstmt'__Parallel__payload__item__b2 :
+  stmt'__Parallel__payload -> stmt) =
+  fun projectee -> match projectee with | { p1; p2; q1; q2; b1; b2;_} -> b2
+let (__proj__Mkstmt'__Rewrite__payload__item__p1 :
+  stmt'__Rewrite__payload -> vprop) =
+  fun projectee -> match projectee with | { p11 = p1; p21 = p2;_} -> p1
+let (__proj__Mkstmt'__Rewrite__payload__item__p2 :
+  stmt'__Rewrite__payload -> vprop) =
+  fun projectee -> match projectee with | { p11 = p1; p21 = p2;_} -> p2
+let (uu___is_Open : stmt' -> Prims.bool) =
+  fun projectee -> match projectee with | Open _0 -> true | uu___ -> false
+let (__proj__Open__item___0 : stmt' -> FStar_Ident.lident) =
+  fun projectee -> match projectee with | Open _0 -> _0
 let (uu___is_Expr : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | Expr _0 -> true | uu___ -> false
 let (__proj__Expr__item___0 : stmt' -> stmt'__Expr__payload) =
@@ -305,6 +347,15 @@ let (uu___is_Sequence : stmt' -> Prims.bool) =
     match projectee with | Sequence _0 -> true | uu___ -> false
 let (__proj__Sequence__item___0 : stmt' -> stmt'__Sequence__payload) =
   fun projectee -> match projectee with | Sequence _0 -> _0
+let (uu___is_Parallel : stmt' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Parallel _0 -> true | uu___ -> false
+let (__proj__Parallel__item___0 : stmt' -> stmt'__Parallel__payload) =
+  fun projectee -> match projectee with | Parallel _0 -> _0
+let (uu___is_Rewrite : stmt' -> Prims.bool) =
+  fun projectee -> match projectee with | Rewrite _0 -> true | uu___ -> false
+let (__proj__Rewrite__item___0 : stmt' -> stmt'__Rewrite__payload) =
+  fun projectee -> match projectee with | Rewrite _0 -> _0
 let (__proj__Mkstmt__item__s : stmt -> stmt') =
   fun projectee -> match projectee with | { s; range1 = range;_} -> s
 let (__proj__Mkstmt__item__range : stmt -> rng) =
@@ -392,12 +443,11 @@ let (mk_match :
   fun head ->
     fun returns_annot ->
       fun branches -> Match { head2 = head; returns_annot; branches }
-let (mk_while :
-  FStar_Parser_AST.term -> FStar_Ident.ident -> vprop -> stmt -> stmt') =
-  fun head ->
+let (mk_while : stmt -> FStar_Ident.ident -> vprop -> stmt -> stmt') =
+  fun guard ->
     fun id ->
       fun invariant ->
-        fun body -> While { head3 = head; id2 = id; invariant; body1 = body }
+        fun body -> While { guard; id2 = id; invariant; body1 = body }
 let (mk_intro : vprop -> FStar_Parser_AST.term Prims.list -> stmt') =
   fun vprop1 -> fun witnesses -> Introduce { vprop = vprop1; witnesses }
 let (mk_sequence : stmt -> stmt -> stmt') =
@@ -412,3 +462,11 @@ let (mk_decl :
         fun body ->
           fun range ->
             { id3 = id; binders1; ascription; body2 = body; range2 = range }
+let (mk_open : FStar_Ident.lident -> stmt') = fun lid -> Open lid
+let (mk_par : vprop -> vprop -> vprop -> vprop -> stmt -> stmt -> stmt') =
+  fun p1 ->
+    fun p2 ->
+      fun q1 ->
+        fun q2 -> fun b1 -> fun b2 -> Parallel { p1; p2; q1; q2; b1; b2 }
+let (mk_rewrite : vprop -> vprop -> stmt') =
+  fun p1 -> fun p2 -> Rewrite { p11 = p1; p21 = p2 }

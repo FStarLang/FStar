@@ -14,6 +14,9 @@ open Pulse.Checker.Pure
 module FV = Pulse.Typing.FV
 module LN = Pulse.Typing.LN
 
+let nvar_as_binder (x:nvar) (t:term) : binder =
+  {binder_ty=t;binder_ppname=fst x}
+
 #push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
 let rec mk_bind (f:RT.fstar_top_env) (g:env)
   (pre:term)
@@ -39,15 +42,16 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
               (~ (x `Set.mem` freevars (comp_post c2))))
            (ensures fun _ _ -> True) =
   let _, x = px in
+  let b = nvar_as_binder px (comp_res c1) in
   match c1, c2 with
   | C_ST _, C_ST _ ->
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-    (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+    (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
   | C_STGhost inames1 _, C_STGhost inames2 _ ->
     if eq_tm inames1 inames2
     then begin
       let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose two stghost computations with different opened invariants"
   | C_STAtomic inames _, C_ST _ ->
@@ -57,7 +61,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
       let d_e1 : st_typing f g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
       let bc = Bind_comp g x c1lifted c2 res_typing x post_typing in
-      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose atomic with non-emp opened invariants with stt"
   | C_STGhost inames1 _, C_STAtomic inames2 _ ->
@@ -65,7 +69,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     then begin
       let w = get_non_informative_witness f g (comp_u c1) (comp_res c1) in
       let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
-      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose ghost and atomic with different opened invariants"
   | C_STAtomic inames1 _, C_STGhost inames2 _ ->
@@ -73,7 +77,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     then begin
       let w = get_non_informative_witness f g (comp_u c2) (comp_res c2) in
       let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
-      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose atomic and ghost with different opened invariants"
   | C_ST _, C_STAtomic inames _ ->
@@ -84,7 +88,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
       let d_e2 : st_typing f g' (open_st_term_nv e2 px) c2lifted =
         T_Lift _ _ _ c2lifted d_e2 (Lift_STAtomic_ST _ c2) in
       let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
-      (| Tm_Bind e1 e2, _, T_Bind _ e1 e2 _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose stt with atomic with non-emp opened invariants"
   | C_STGhost inames _, C_ST _ ->
@@ -132,7 +136,7 @@ let check_bind
   : T.Tac (t:st_term &
            c:comp { stateful_comp c ==> comp_pre c == pre } &
            st_typing f g t c) =
-  let Tm_Bind e1 e2 = t  in
+  let Tm_Bind b e1 e2 = t  in
   let (| e1, c1, d1 |) = check f g e1 pre pre_typing None in
   if C_Tot? c1
   then T.fail "Bind: c1 is not st"
@@ -143,7 +147,7 @@ let check_bind
     if u <> s1.u then T.fail "incorrect universe"
     else (
         let x = fresh g in
-        let px = v_as_nv x in
+        let px = b.binder_ppname, x in
         let next_pre = open_term_nv s1.post px in
         // T.print (Printf.sprintf "Bind::e1 %s \n\nx %s\n\ne2 %s\n\nnext_pre %s\n\n"
         //            (P.term_to_string e1)
@@ -172,8 +176,9 @@ let check_bind
           else if x `Set.mem` freevars s2.post
           then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
           else (
-            let s2_post_opened = open_term_nv s2.post (v_as_nv x) in
-            let post_typing = check_vprop_with_core f ((x, Inl s2.res)::g) s2_post_opened in
+            let y = fresh g in
+            let s2_post_opened = open_term_nv s2.post (v_as_nv y) in
+            let post_typing = check_vprop_with_core f ((y, Inl s2.res)::g) s2_post_opened in
             //assume (~ (x `Set.mem` freevars_st e2_closed));
             mk_bind f g pre e1 e2_closed c1 c2 px d1 t_typing d2 res_typing post_typing
           )

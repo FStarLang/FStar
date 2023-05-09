@@ -207,6 +207,13 @@ let readback_comp (t:R.term)
       | _ ->
         unexpected_term "readback failed" t
 
+let translate_bv_ty_as_binder (g:R.env) (x:R.bv) (sort:R.term) =
+    let bv_view = R.inspect_bv x in
+    assume (bv_view.bv_index == 0);
+    let b_ty' = readback_maybe_unknown_ty sort in
+    {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname}
+
+
 let translate_binder (g:R.env) (b:R.binder)
   : T.Tac (err (binder & option qualifier))
   = let {binder_bv=bv; binder_qual=aq; binder_attrs=attrs;binder_sort=sort} =
@@ -217,10 +224,8 @@ let translate_binder (g:R.env) (b:R.binder)
     | _, R.Q_Meta _ -> error "Unexpected binder qualifier"
     | _ -> 
       let q = Readback.readback_qual aq in
-      let bv_view = R.inspect_bv bv in
-      assume (bv_view.bv_index == 0);
-      let b_ty' = readback_maybe_unknown_ty sort in
-      Inl ({binder_ty=b_ty';binder_ppname=bv_view.bv_ppname}, q)
+      let b = translate_bv_ty_as_binder g bv sort in
+      Inl (b, q)
 
 let is_head_fv (t:R.term) (fv:list string) : T.Tac (option (list R.argv)) = 
   let head, args = T.collect_app t in
@@ -308,6 +313,8 @@ let rec shift_bvs_in_else_list (t:list term) (n:nat) : Tac (list term) =
       shift_bvs_in_else hd n ::
       shift_bvs_in_else_list tl n
 
+let shift_bvs_in_else_binder (b:binder) (n:nat) : Tac binder =
+  {b with binder_ty=shift_bvs_in_else b.binder_ty n}
 
 let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
   match t with
@@ -318,8 +325,9 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
     Tm_STApp (shift_bvs_in_else head n)
              q
              (shift_bvs_in_else arg n)
-  | Tm_Bind e1 e2 ->
-    Tm_Bind (shift_bvs_in_else_st e1 n)
+  | Tm_Bind b e1 e2 ->
+    Tm_Bind (shift_bvs_in_else_binder b n)
+            (shift_bvs_in_else_st e1 n)
             (shift_bvs_in_else_st e2 (n + 1))
   | Tm_If b e1 e2 post ->
     Tm_If (shift_bvs_in_else b n)
@@ -553,7 +561,7 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
         | _ -> false, def in
 
       let? body = translate_st_term g body in
-      T.print (Printf.sprintf ("Checking for Tot fv"));
+      let b = translate_bv_ty_as_binder g bv ty in
       let has_mut, def = def_has_qual def local_fv in
       if has_mut
       then let? def = readback_ty g def in
@@ -566,10 +574,10 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
                 begin
                 match def with
                 | Tm_IntroExists _ _ _ -> 
-                  Inl (Tm_Bind (Tm_Protect def) (Tm_Protect body))
+                  Inl (Tm_Bind b (Tm_Protect def) (Tm_Protect body))
                 | _ ->
-                  Inl (Tm_Bind def body)
-                end
+                  Inl (Tm_Bind b def body)
+            end
 
     | R.Tv_Match b _ [(Pat_Constant C_True, then_);
                       (Pat_Var _ _, else_)] ->
