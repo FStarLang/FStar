@@ -7,9 +7,6 @@ module FP = FStar_Parser_Parse
 module PP = Pulseparser
 module S = FStar_Sedlexing
 
-let pos_as_range lexbuf =
-  FStar_Parser_Util.getLexerRange lexbuf
-
 let rewrite_token (tok:FP.token)
   : PP.token
   = match tok with
