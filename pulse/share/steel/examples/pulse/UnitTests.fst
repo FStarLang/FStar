@@ -15,6 +15,10 @@ open Tests.Common
 #push-options "--ide_id_info_off"
 #push-options "--print_universes --print_implicits"
 
+(* Start up the solver and feed it the initial context *)
+let warmup (x:int) = assert (x + 1 > x)
+
+
 %splice_t[test_tot_let] (check (`(
   fun (r:ref U32.t) ->
       (expects (pts_to r full_perm 0ul))
@@ -47,9 +51,6 @@ open Tests.Common
 //       read #(U32.t & U32.t) r
 //     )
 // )))
-
-// (* Start up the solver and feed it the initial context *)
-// let warmup (x:int) = assert (x + 1 > x)
 
 // %splice_t[test_true] (check (`(true)))
 
