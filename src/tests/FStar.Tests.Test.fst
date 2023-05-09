@@ -25,7 +25,7 @@ module O = FStar.Options
 module G = FStar.Getopt
 
 let main argv =
-    BU.print_string "Initializing ...\n";
+    BU.print_string "Initializing tests...\n";
     try
         let res, fs = O.parse_cmd_line () in
         match res with
@@ -44,13 +44,14 @@ let main argv =
           if Unif.run_all () then () else exit 1;
           exit 0
     with 
-      | Error(err, msg, r, _ctx) when not <| FStar.Options.trace_error() ->
-         if r = FStar.Compiler.Range.dummyRange
-         then BU.print_string msg
-         else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) msg;
-         exit 1
-      | Err (raw_error, s, ls)  when not <| FStar.Options.trace_error() ->
-         BU.print2 "%s : [%s]\n" s (String.concat "; " ls);
-         exit 1
-        
-         
+      | Error(err, msg, r, _ctx) when not <| O.trace_error() ->
+        if r = FStar.Compiler.Range.dummyRange
+        then BU.print_string msg
+        else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) msg;
+        exit 1
+      | Err (raw_error, s, ls) when not <| O.trace_error() ->
+        BU.print2 "%s : [%s]\n" s (String.concat "; " ls);
+        exit 1
+      | e ->
+        BU.print2_error "Error\n%s\n%s\n" (BU.message_of_exn e) (BU.trace_of_exn e);
+        exit 1

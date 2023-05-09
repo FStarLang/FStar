@@ -243,7 +243,7 @@ let parse fn =
           | FStar_Errors.Error(e, msg, r, _ctx) ->
             Inr (e, msg, r)
 
-          | Parsing.Parse_error as _e -> 
+          | _e -> 
             Inr (err_of_parse_error ())
         in
         match d with
@@ -257,14 +257,8 @@ let parse fn =
                    requires such lookahead to complete a production.
           *)
           let end_pos =
-            if not (FStar_Parser_AST.decl_syntax_is_delimited d)
-            then (
               rollback lexbuf;
               current_pos lexbuf
-            )
-            else (
-              current_pos lexbuf
-            )
           in
           let raw_contents = contents_at d.drange in
           (*
@@ -323,8 +317,13 @@ let parse fn =
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
-    | Parsing.Parse_error as _e ->
+    | _e ->
+(*
+    | Parsing.Parse_error as _e
+    | FStar_Parser_Parse.MenhirBasics.Error as _e  ->
+*)
       ParseError (err_of_parse_error())
+
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =

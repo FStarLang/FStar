@@ -326,8 +326,8 @@ let (term_as_formula' :
                            (Prims.of_int (94)) (Prims.of_int (22))
                            (Prims.of_int (94)) (Prims.of_int (36)))
                         (FStar_Range.mk_range "FStar.Reflection.Formula.fst"
-                           (Prims.of_int (94)) (Prims.of_int (8))
-                           (Prims.of_int (127)) (Prims.of_int (26)))
+                           (Prims.of_int (93)) (Prims.of_int (26))
+                           (Prims.of_int (94)) (Prims.of_int (39)))
                         (Obj.magic (collect_app h0))
                         (fun uu___1 ->
                            (fun uu___1 ->

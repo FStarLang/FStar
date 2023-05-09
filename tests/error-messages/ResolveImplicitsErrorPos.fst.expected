@@ -1,5 +1,5 @@
 proof-state: State dump @ depth 0 (at the time of failure):
-Location: ResolveImplicitsErrorPos.fst(15,2-16,7)
+Location: ResolveImplicitsErrorPos.fst(14,13-15,14)
 Goal 1/1 (Instantiation of meta argument):
 (_: Prims.unit) |- _ : Prims.int
 

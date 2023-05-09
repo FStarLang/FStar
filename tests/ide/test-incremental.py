@@ -109,54 +109,56 @@ def validate_response(response, file_contents):
         except json.JSONDecodeError:
             print(f"Invalid JSON: {line}")
             return False
+    l = 0
     # Check that the first line is a protocol-info message
-    if json_objects[0]["kind"] != "protocol-info":
-        print("First line is not a protocol-info message")
+    if json_objects[l]["kind"] != "protocol-info":
+        print(f"Line {l} is not a protocol-info message")
         return False
+    l = 1
     # Second line has kind "response" and query-id "1" and status "success"
-    if json_objects[1]["kind"] != "response":
-        print("Second line is not a response message")
+    if json_objects[l]["kind"] != "response":
+        print(f"Line {l} is not a response message")
         return False
-    if json_objects[1]["query-id"] != "1":
-        print("Second line does not have query-id 1")
+    if json_objects[l]["query-id"] != "1":
+        print(f"Line {l} does not have query-id 1")
         return False
-    if json_objects[1]["status"] != "success":
-        print("Second line does not have status success")
+    if json_objects[l]["status"] != "success":
+        print(f"Line {l} does not have status success")
         return False
 
     l = 2
     if json_objects[l]["level"] != "progress" or json_objects[l]["contents"]["stage"] != "full-buffer-started":
-        print("Third line is not a message")
+        print(f"Line {l} is not a message: got {json_objects[l]}")
         return False
     
     l=3
     # Third line has the form {"kind":"message","query-id":"2","level":"info","contents":"Parsed 138 declarations\n"}
     if json_objects[l]["kind"] != "message":
-        print(f"Third line is not a message {json_objects[2]}")
+        print(f"Line {l} is not a message {json_objects[l]}")
         return False
     if json_objects[l]["query-id"] != "2":
-        print("Third line does not have query-id 2")
+        print(f"Line {l} does not have query-id 2")
         return False
     if json_objects[l]["level"] != "info":
-        print("Third line does not have level info")
+        print(f"Line {l} does not have level info")
         return False
     # the contents should match a regular expression of the form "Parsed \d+ declarations"
     # store the number of declarations in a variable
     if not re.match(r"Parsed \d+ declarations", json_objects[l]["contents"]):
-        print("Second line does not have the correct contents")
+        print(f"Line {l} does not have the correct contents")
         return False
     # Check that the number of declarations is 138
     num_decls = int(re.search(r"\d+", json_objects[l]["contents"]).group())
     l=4
     # Fourth line has kind "message" and level "progress" and contents.stage = "full-buffer-fragment-started"
     if json_objects[l]["kind"] != "message":
-        print("Third line is not a message")
+        print(f"Line {l} is not a message; got {json_objects[l]}")
         return False
     if json_objects[l]["level"] != "progress":
-        print("Third line does not have level progress")
+        print(f"Line {l} does not have level progress; got {json_objects[l]}")
         return False
     if json_objects[l]["contents"]["stage"] != "full-buffer-fragment-started":
-        print("Third line does not have stage full-buffer-fragment-started")
+        print(f"Line {l} does not have stage full-buffer-fragment-started; got {json_objects[l]}")
         return False
     l=5
     # Next several messages are progress messages with contents.stage = "loading-dependency"
@@ -252,7 +254,7 @@ def test_file(filepath):
     # Read the response from stdout
     response = p.stdout
     # Print the response to the console for debugging
-    # print(response)
+    #print(response)
     # Check that fstar exited with code 0
     if p.returncode != 0:
         print("F* returned non-zero exit code")
