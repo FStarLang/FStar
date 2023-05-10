@@ -7189,7 +7189,7 @@ let (to_must_tot : FStar_Tactics_Types.tot_or_ghost -> Prims.bool) =
     match eff with
     | FStar_Tactics_Types.E_Total -> true
     | FStar_Tactics_Types.E_Ghost -> false
-let (refl_core_check_term :
+let (refl_core_compute_term_type :
   env ->
     FStar_Syntax_Syntax.term ->
       FStar_Tactics_Types.tot_or_ghost ->
@@ -7207,8 +7207,8 @@ let (refl_core_check_term :
                dbg_refl g
                  (fun uu___3 ->
                     let uu___4 = FStar_Syntax_Print.term_to_string e in
-                    FStar_Compiler_Util.format1 "refl_core_check_term: %s\n"
-                      uu___4);
+                    FStar_Compiler_Util.format1
+                      "refl_core_compute_term_type: %s\n" uu___4);
                (let must_tot = to_must_tot eff in
                 let gh g1 guard =
                   FStar_TypeChecker_Rel.force_trivial_guard g1
@@ -7235,7 +7235,7 @@ let (refl_core_check_term :
                           let uu___6 = FStar_Syntax_Print.term_to_string e in
                           let uu___7 = FStar_Syntax_Print.term_to_string t in
                           FStar_Compiler_Util.format2
-                            "refl_core_check_term for %s computed type %s\n"
+                            "refl_core_compute_term_type for %s computed type %s\n"
                             uu___6 uu___7);
                      t)
                 | FStar_Pervasives.Inr err ->
@@ -7243,16 +7243,93 @@ let (refl_core_check_term :
                        (fun uu___5 ->
                           let uu___6 = FStar_TypeChecker_Core.print_error err in
                           FStar_Compiler_Util.format1
-                            "refl_tc_term failed: %s\n" uu___6);
+                            "refl_core_compute_term_type: %s\n" uu___6);
                      (let uu___5 =
                         let uu___6 =
                           let uu___7 = FStar_TypeChecker_Core.print_error err in
-                          Prims.op_Hat "core_check_term callback failed: "
+                          Prims.op_Hat "core_compute_term_type failed: "
                             uu___7 in
                         (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                       FStar_Errors.raise_error uu___5
                         FStar_Compiler_Range_Type.dummyRange))))
         else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+let (refl_core_check_term :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.typ ->
+        FStar_Tactics_Types.tot_or_ghost ->
+          unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun e ->
+      fun t ->
+        fun eff ->
+          let uu___ =
+            ((no_uvars_in_g g) && (no_uvars_in_term e)) &&
+              (no_uvars_in_term t) in
+          if uu___
+          then
+            Obj.magic
+              (Obj.repr
+                 (refl_typing_builtin_wrapper
+                    (fun uu___1 ->
+                       dbg_refl g
+                         (fun uu___3 ->
+                            let uu___4 = FStar_Syntax_Print.term_to_string e in
+                            let uu___5 = FStar_Syntax_Print.term_to_string t in
+                            FStar_Compiler_Util.format2
+                              "refl_core_check_term: term: %s, type: %s\n"
+                              uu___4 uu___5);
+                       (let must_tot = to_must_tot eff in
+                        let uu___3 =
+                          FStar_TypeChecker_Core.check_term g e t must_tot in
+                        match uu___3 with
+                        | FStar_Pervasives.Inl (FStar_Pervasives_Native.None)
+                            ->
+                            (dbg_refl g
+                               (fun uu___5 ->
+                                  "refl_core_check_term: succeeded with no guard\n");
+                             FStar_Tactics_Monad.ret ())
+                        | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some
+                            guard) ->
+                            (dbg_refl g
+                               (fun uu___5 ->
+                                  "refl_core_check_term: succeeded with guard\n");
+                             FStar_TypeChecker_Rel.force_trivial_guard g
+                               {
+                                 FStar_TypeChecker_Common.guard_f =
+                                   (FStar_TypeChecker_Common.NonTrivial guard);
+                                 FStar_TypeChecker_Common.deferred_to_tac =
+                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                                 FStar_TypeChecker_Common.deferred =
+                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                                 FStar_TypeChecker_Common.univ_ineqs =
+                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                                 FStar_TypeChecker_Common.implicits =
+                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
+                               };
+                             FStar_Tactics_Monad.ret ())
+                        | FStar_Pervasives.Inr err ->
+                            (dbg_refl g
+                               (fun uu___5 ->
+                                  let uu___6 =
+                                    FStar_TypeChecker_Core.print_error err in
+                                  FStar_Compiler_Util.format1
+                                    "refl_core_check_term failed: %s\n"
+                                    uu___6);
+                             (let uu___5 =
+                                let uu___6 =
+                                  let uu___7 =
+                                    FStar_TypeChecker_Core.print_error err in
+                                  Prims.op_Hat
+                                    "refl_core_check_term failed: " uu___7 in
+                                (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
+                              FStar_Errors.raise_error uu___5
+                                FStar_Compiler_Range_Type.dummyRange))))))
+          else
+            Obj.magic
+              (Obj.repr
+                 (FStar_Tactics_Monad.ret FStar_Pervasives_Native.None))
 let (refl_tc_term :
   env ->
     FStar_Syntax_Syntax.term ->
