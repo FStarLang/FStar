@@ -1065,9 +1065,8 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   | T_Let of FStar_Reflection_Types.env * FStar_Reflection_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
   FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
-  FStar_Reflection_Types.universe * FStar_Tactics_Types.tot_or_ghost *
   FStar_Tactics_Types.tot_or_ghost * pp_name_t * (unit, unit, unit) typing *
-  (unit, unit, unit) typing * (unit, unit, unit) typing 
+  (unit, unit, unit) typing 
   | T_Arrow of FStar_Reflection_Types.env * FStar_Reflection_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_Types.universe * FStar_Reflection_Types.universe *
