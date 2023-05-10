@@ -187,13 +187,13 @@ let check_bind
 
 let check_tot_bind f g t pre pre_typing post_hint check =
   let Tm_TotBind e1 e2 = t in
-  let (| e1, u1, t1, _t1_typing, e1_typing |) = check_tot_univ f g e1 in
+  let (| e1, u1, t1, _t1_typing, e1_typing |) = check_term_and_type f g e1 in
   let t1 =
     let b = {binder_ty=t1;binder_ppname=RT.pp_name_default} in
     let eq_tm = mk_eq2 u1 t1 (null_bvar 0) e1 in
     Tm_Refine b eq_tm in
   let (| e1, e1_typing |) =
-    check_tot_with_expected_typ f g e1 t1 in
+    check_term_with_expected_type f g e1 t1 in
   let x = fresh g in
   let px = v_as_nv x in
   let g' = (x, Inl t1)::g in
