@@ -472,8 +472,11 @@ val check_subtyping (g:env) (t0 t1:typ)
 val check_equiv (g:env) (t0 t1:typ)
   : Tac (option (equiv_token g t0 t1))
 
-val core_check_term (g:env) (e:term) (eff:tot_or_ghost)
+val core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost)
   : Tac (option (t:typ{typing_token g e (eff, t)}))
+
+val core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
+  : Tac (option (typing_token g e (eff, t)))
 
 val tc_term (g:env) (e:term) (eff:tot_or_ghost)
   : Tac (option (r:(term & typ){typing_token g (fst r) (eff, snd r)}))
