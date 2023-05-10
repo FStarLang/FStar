@@ -182,3 +182,39 @@ let elab_bind_ghost_l_typing f g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typin
 let elab_bind_ghost_r_typing f g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
   reveal_b reveal_b_typing =
   admit ()
+
+let tot_bind_typing #f #g #t #c d soundness =
+  let T_TotBind _ e1 e2 t1 c2 x e1_typing e2_typing = d in
+
+  let g_x = (x, Inl t1)::g in
+
+  let re1 = elab_term e1 in
+  let rt1 = elab_term t1 in
+  let re2 = elab_st_typing e2_typing in
+
+  let re1_typing : RT.tot_typing (extend_env_l f g) re1 rt1 =
+    tot_typing_soundness e1_typing in
+  
+  let re2_typing : RT.tot_typing (extend_env_l f g_x) re2 (elab_comp c2) =
+    soundness f g_x (open_st_term_nv e2 (v_as_nv x)) c2 e2_typing in
+
+  RT.well_typed_terms_are_ln _ _ _ re2_typing;
+  calc (==) {
+    RT.open_term (RT.close_term re2 x) x;
+       (==) { RT.open_term_spec (RT.close_term re2 x) x }
+    RT.open_or_close_term' (RT.close_term re2 x) (RT.open_with_var x) 0;
+       (==) { RT.close_term_spec re2 x }
+    RT.open_or_close_term' (RT.open_or_close_term' re2 (RT.CloseVar x) 0) (RT.open_with_var x) 0;
+       (==) { RT.open_close_inverse' 0 re2 x }
+    re2;
+  };
+
+  calc (==) {
+    elab_comp (open_comp_with (close_comp c2 x) e1);
+       (==) { elab_comp_open_commute (close_comp c2 x) e1 }
+    RT.open_with (elab_comp (close_comp c2 x)) re1;
+       (==) { elab_comp_close_commute c2 x }
+    RT.open_with (RT.close_term (elab_comp c2) x) re1;
+  };
+
+  RT.T_Let _ x re1 rt1 (RT.close_term re2 x) (elab_comp c2) T.E_Total RT.pp_name_default re1_typing re2_typing

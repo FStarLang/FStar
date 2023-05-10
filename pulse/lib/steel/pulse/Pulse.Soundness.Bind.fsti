@@ -79,3 +79,15 @@ val elab_bind_ghost_r_typing
   : Ghost (RT.tot_typing (extend_env_l f g) (elab_bind bc r1 r2) (elab_comp c))
           (requires Bind_comp_ghost_r? bc)
           (ensures fun _ -> True)
+
+
+val tot_bind_typing
+  (#f:stt_env)
+  (#g:env)
+  (#t:st_term)
+  (#c:comp)
+  (d:st_typing f g t c{T_TotBind? d})
+  (soundness:soundness_t d)
+  : GTot (RT.tot_typing (extend_env_l f g)
+                        (elab_st_typing d)
+                        (elab_comp c))
