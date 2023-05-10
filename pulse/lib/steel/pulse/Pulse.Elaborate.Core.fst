@@ -156,6 +156,12 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
       let ty1 = elab_term (comp_res c1) in
       elab_bind bc e1 (mk_abs_with_name b.binder_ppname ty1 R.Q_Explicit (RT.close_term e2 x))
 
+    | T_TotBind _ e1 e2 t1 _ x _ e2_typing ->
+      let re1 = elab_term e1 in
+      let rt1 = elab_term t1 in
+      let re2 = elab_st_typing e2_typing in
+      RT.mk_let RT.pp_name_default re1 rt1 (RT.close_term re2 x)
+
     | T_Frame _ _ c frame _frame_typing e_typing ->
       let e = elab_st_typing e_typing in
       elab_frame c frame e
