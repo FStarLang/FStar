@@ -158,6 +158,8 @@ let mk_arrow ty qual t : R.term =
 let mk_ghost_arrow ty qual t : R.term =
   R.pack_ln (R.Tv_Arrow (binder_of_t_q ty qual) (mk_ghost t))
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i)))
+let mk_let ppname (e1 t1 e2:R.term) =
+  R.pack_ln (R.Tv_Let false [] (R.pack_bv (make_bv_with_name ppname 0)) t1 e1 e2)
 
 let open_with_var (x:var) = OpenWith (pack_ln (Tv_Var (var_as_bv x)))
   
@@ -998,6 +1000,22 @@ type typing : env -> term -> comp_typ -> Type0 =
      typing g e2 (eff, binder_sort x) ->
      typing g (pack_ln (Tv_App e1 (e2, binder_qual x)))
               (eff, open_with t e2)
+
+  | T_Let:
+     g:env ->
+     x:var { None? (lookup_bvar g x) } ->
+     e1:term ->
+     t1:typ ->
+     e2:term ->
+     t2:typ ->
+     t2_u:universe ->
+     t2_eff:T.tot_or_ghost ->
+     eff:T.tot_or_ghost ->
+     pp_name:pp_name_t ->
+     typing g e1 (eff, t1) ->
+     typing (extend_env g x t1) (open_term e2 x) (eff, t2) ->
+     typing g t2 (t2_eff, tm_type t2_u) ->
+     typing g (mk_let pp_name e1 t1 e2) (eff, t2)
 
   | T_Arrow:
      g:env ->
