@@ -295,6 +295,17 @@ let rec (elab_st_typing :
                      b.Pulse_Syntax.binder_ppname ty1
                      FStar_Reflection_Data.Q_Explicit
                      (FStar_Reflection_Typing.close_term e21 x))
+            | Pulse_Typing.T_TotBind
+                (uu___, e1, e2, t1, uu___1, x, uu___2, e2_typing) ->
+                let re1 = Pulse_Elaborate_Pure.elab_term e1 in
+                let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
+                let re2 =
+                  elab_st_typing f ((x, (FStar_Pervasives.Inl t1)) :: uu___)
+                    (Pulse_Syntax_Naming.open_st_term_nv e2
+                       (Pulse_Syntax.v_as_nv x)) uu___1 e2_typing in
+                FStar_Reflection_Typing.mk_let
+                  FStar_Reflection_Typing.pp_name_default re1 rt1
+                  (FStar_Reflection_Typing.close_term re2 x)
             | Pulse_Typing.T_Frame
                 (uu___, uu___1, c1, frame, _frame_typing, e_typing) ->
                 let e = elab_st_typing f uu___ uu___1 c1 e_typing in
