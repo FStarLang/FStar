@@ -152,7 +152,10 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' b.binder_ty x i;
       open_st_term_ln' e1 x i;
       open_st_term_ln' e2 x (i + 1)
-
+   
+    | Tm_TotBind e1 e2 ->
+      open_term_ln' e1 x i;
+      open_st_term_ln' e2 x (i + 1)
       
     | Tm_If t0 t1 t2 post ->
       open_term_ln' t0 x i;    
@@ -340,6 +343,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st e1 i j;
       ln_weakening_st e2 (i + 1) (j + 1)
 
+    | Tm_TotBind e1 e2 ->
+      ln_weakening e1 i j;
+      ln_weakening_st e2 (i + 1) (j + 1)
+
     | Tm_Abs b _q pre body post ->
       ln_weakening b.binder_ty i j;
       ln_weakening_opt pre (i + 1) (j + 1);
@@ -508,6 +515,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' e1 x i;
       open_term_ln_inv_st' e2 x (i + 1)
 
+    | Tm_TotBind e1 e2 ->
+      open_term_ln_inv' e1 x i;
+      open_term_ln_inv_st' e2 x (i + 1)
+
     | Tm_STApp l _ r ->
       open_term_ln_inv' l x i;
       open_term_ln_inv' r x i
@@ -673,6 +684,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' e1 x i;
       close_st_term_ln' e2 x (i + 1)
 
+    | Tm_TotBind e1 e2 ->
+      close_term_ln' e1 x i;
+      close_st_term_ln' e2 x (i + 1)
+
     | Tm_STApp l _ r ->
       close_term_ln' l x i;
       close_term_ln' r x i
@@ -788,7 +803,24 @@ let comp_typing_ln (#f:_) (#g:_) (#c:_) (#u:_) (d:comp_typing f g c u)
     tot_typing_ln inames_typing;
     st_comp_typing_ln st_typing
 
-#push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 30"
+let st_typing_ln_tot_bind #f #g #t #c (d:st_typing f g t c{T_TotBind? d})
+  (typing_ln:
+     (#f:RT.fstar_top_env ->
+      #g:env ->
+      #e:st_term ->
+      #c:comp ->
+      d':st_typing f g e c{d' << d} ->
+      Lemma (ensures ln_st e /\ ln_c c)))
+  : Lemma (ensures ln_st t /\ ln_c c) =
+
+  let T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing = d in
+  tot_typing_ln e1_typing;
+  typing_ln e2_typing;
+  open_st_term_ln e2 x;
+  close_comp_ln' c2 x 0;
+  open_comp_ln_inv' (close_comp c2 x) e1 0
+
+#push-options "--query_stats --z3rlimit_factor 30 --fuel 8 --ifuel 8"
 let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
                      (d:st_typing f g t c)
   : Lemma 
@@ -832,6 +864,9 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
       open_st_term_ln e2 x;
       bind_comp_ln bc
 
+    | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing ->
+      st_typing_ln_tot_bind d st_typing_ln
+      
     | T_If _ _ _ _ _ _ _ tb d1 d2 _ ->
       tot_typing_ln tb;
       st_typing_ln d1;

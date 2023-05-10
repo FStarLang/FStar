@@ -669,6 +669,17 @@ and st_typing (f:RT.fstar_top_env) : env -> st_term -> comp -> Type =
       bind_comp f g x c1 c2 c ->
       st_typing f g (Tm_Bind b e1 e2) c
 
+  | T_TotBind:
+      g:env ->
+      e1:term ->
+      e2:st_term ->
+      t1:term ->
+      c2:comp_st ->
+      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
+      tot_typing f g e1 t1 ->
+      st_typing f ((x, Inl t1)::g) (open_st_term_nv e2 (v_as_nv x)) c2 ->
+      st_typing f g (Tm_TotBind e1 e2) (open_comp_with (close_comp c2 x) e1)
+
   | T_If:
       g:env ->
       b:term -> 

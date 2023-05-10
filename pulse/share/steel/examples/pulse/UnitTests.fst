@@ -15,6 +15,9 @@ open Tests.Common
 #push-options "--ide_id_info_off"
 #push-options "--print_universes --print_implicits"
 
+(* Start up the solver and feed it the initial context *)
+let warmup (x:int) = assert (x + 1 > x)
+
 [@@ expect_failure]
 %splice_t[tuple_test] (check (`(
   fun (r:ref (U32.t & U32.t)) (n1:erased U32.t) (n2:erased U32.t) ->
@@ -24,9 +27,6 @@ open Tests.Common
       read #(U32.t & U32.t) r
     )
 )))
-
-(* Start up the solver and feed it the initial context *)
-let warmup (x:int) = assert (x + 1 > x)
 
 %splice_t[test_true] (check (`(true)))
 
@@ -384,6 +384,18 @@ let zero : nat = 0
       (
         let x = !r in
         r := U32.add x 1ul
+      )
+
+)))
+
+%splice_t[test_tot_let] (check (`(
+  fun (r:ref U32.t) ->
+      (expects (pts_to r full_perm 0ul))
+      (provides (fun _ -> pts_to r full_perm 2ul))
+      (
+        let x = tot 1ul in
+        let y = tot 1ul in
+        r := U32.add x y
       )
 
 )))

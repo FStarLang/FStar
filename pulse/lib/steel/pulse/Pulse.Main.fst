@@ -247,6 +247,7 @@ let invariant_fv = mk_tests_lid "invariant"
 let par_fv = mk_tests_lid "par"
 let rewrite_fv = mk_tests_lid "rewrite"
 let local_fv = mk_tests_lid "local"
+let tot_fv = mk_tests_lid "tot"
 
 //
 // shift bvs > n by -1
@@ -328,6 +329,9 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
     Tm_Bind (shift_bvs_in_else_binder b n)
             (shift_bvs_in_else_st e1 n)
             (shift_bvs_in_else_st e2 (n + 1))
+  | Tm_TotBind e1 e2 ->
+    Tm_TotBind (shift_bvs_in_else e1 n)
+               (shift_bvs_in_else_st e2 (n + 1))
   | Tm_If b e1 e2 post ->
     Tm_If (shift_bvs_in_else b n)
           (shift_bvs_in_else_st e1 n)
@@ -549,24 +553,29 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
               t
                
     | R.Tv_Let false [] bv ty def body ->
-      let is_mut, def =
+      let def_has_qual def qual_fv : bool & R.term =
         match (inspect_ln def) with
         | Tv_App hd arg ->
           (match (inspect_ln hd) with
            | Tv_FVar fv ->
-             if inspect_fv fv = local_fv then (true, fst arg)
+             if inspect_fv fv = qual_fv then (true, fst arg)
              else false, def
            | _ -> false, def)
         | _ -> false, def in
-      
+
       let? body = translate_st_term g body in
       let b = translate_bv_ty_as_binder g bv ty in
-      if is_mut
+      let has_mut, def = def_has_qual def local_fv in
+      if has_mut
       then let? def = readback_ty g def in
            Inl (Tm_WithLocal def body)
-      else  let? def = translate_st_term g def in
-            begin
-              match def with
+      else let has_tot, def = def_has_qual def tot_fv in
+           if has_tot
+           then let? def = readback_ty g def in
+                Inl (Tm_TotBind def body) 
+           else let? def = translate_st_term g def in
+                begin
+                match def with
                 | Tm_IntroExists _ _ _ -> 
                   Inl (Tm_Bind b (Tm_Protect def) (Tm_Protect body))
                 | _ ->

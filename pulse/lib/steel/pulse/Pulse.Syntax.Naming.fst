@@ -119,6 +119,10 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' e1 x i;
       close_open_inverse_st' e2 x (i + 1)
 
+    | Tm_TotBind e1 e2 ->
+      close_open_inverse' e1 x i;
+      close_open_inverse_st' e2 x (i + 1)
+
     | Tm_STApp l _ r ->
       close_open_inverse' l x i;
       close_open_inverse' r x i
@@ -174,7 +178,7 @@ let close_open_inverse_st (t:st_term) (x:var { ~(x `Set.mem` freevars_st t) } )
           (decreases t)
   = close_open_inverse_st' t x 0
 
-let rec open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
+let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
   : Lemma
       (requires ln' e i /\ i < j)
       (ensures open_term' e t j == e)
@@ -215,7 +219,7 @@ let rec open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
     open_with_gt_ln_comp c (i + 1) t (j + 1)
   | Tm_FStar _ -> admit()
 
-and open_with_gt_ln_comp (c:comp) (i:nat) (t:term) (j:nat)
+and open_with_gt_ln_comp (c:comp) (i:int) (t:term) (j:nat)
   : Lemma (requires ln_c' c i /\ i < j)
           (ensures open_comp' c t j == c)
           (decreases c) =
@@ -227,7 +231,7 @@ and open_with_gt_ln_comp (c:comp) (i:nat) (t:term) (j:nat)
     open_with_gt_ln inames i t j;
     open_with_gt_ln_st s i t j
 
-and open_with_gt_ln_st (s:st_comp) (i:nat) (t:term) (j:nat)
+and open_with_gt_ln_st (s:st_comp) (i:int) (t:term) (j:nat)
   : Lemma (requires ln_st_comp s i /\ i < j)
           (ensures open_st_comp' s t j == s)
           (decreases s) =
@@ -298,4 +302,3 @@ and close_with_non_freevar_st (s:st_comp) (x:var) (i:nat)
   close_with_non_freevar res x i;
   close_with_non_freevar pre x i;
   close_with_non_freevar post x (i + 1)
-

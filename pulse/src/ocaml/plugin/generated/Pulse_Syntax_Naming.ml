@@ -77,6 +77,8 @@ let rec (freevars_st :
         FStar_Set.union
           (FStar_Set.union (freevars b.Pulse_Syntax.binder_ty)
              (freevars_st t1)) (freevars_st t2)
+    | Pulse_Syntax.Tm_TotBind (t1, t2) ->
+        FStar_Set.union (freevars t1) (freevars_st t2)
     | Pulse_Syntax.Tm_If (t1, e1, e2, post) ->
         FStar_Set.union (FStar_Set.union (freevars t1) (freevars_st e1))
           (FStar_Set.union (freevars_st e2) (freevars_opt post))
@@ -174,6 +176,8 @@ let rec (ln_st' : Pulse_Syntax.st_term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax.Tm_Bind (b, t1, t2) ->
           ((ln' b.Pulse_Syntax.binder_ty i) && (ln_st' t1 i)) &&
             (ln_st' t2 (i + Prims.int_one))
+      | Pulse_Syntax.Tm_TotBind (t1, t2) ->
+          (ln' t1 i) && (ln_st' t2 (i + Prims.int_one))
       | Pulse_Syntax.Tm_If (b, then_, else_, post) ->
           (((ln' b i) && (ln_st' then_ i)) && (ln_st' else_ i)) &&
             (ln_opt' post (i + Prims.int_one))
@@ -345,6 +349,9 @@ let rec (open_st_term' :
             Pulse_Syntax.Tm_Bind
               ((open_binder b v i), (open_st_term' e1 v i),
                 (open_st_term' e2 v (i + Prims.int_one)))
+        | Pulse_Syntax.Tm_TotBind (e1, e2) ->
+            Pulse_Syntax.Tm_TotBind
+              ((open_term' e1 v i), (open_st_term' e2 v (i + Prims.int_one)))
         | Pulse_Syntax.Tm_If (b, then_, else_, post) ->
             Pulse_Syntax.Tm_If
               ((open_term' b v i), (open_st_term' then_ v i),
@@ -538,6 +545,10 @@ let rec (close_st_term' :
         | Pulse_Syntax.Tm_Bind (b, e1, e2) ->
             Pulse_Syntax.Tm_Bind
               ((close_binder b v i), (close_st_term' e1 v i),
+                (close_st_term' e2 v (i + Prims.int_one)))
+        | Pulse_Syntax.Tm_TotBind (e1, e2) ->
+            Pulse_Syntax.Tm_TotBind
+              ((close_term' e1 v i),
                 (close_st_term' e2 v (i + Prims.int_one)))
         | Pulse_Syntax.Tm_If (b, then_, else_, post) ->
             Pulse_Syntax.Tm_If

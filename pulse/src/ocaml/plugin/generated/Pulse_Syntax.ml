@@ -181,6 +181,7 @@ type st_term =
   FStar_Pervasives_Native.option 
   | Tm_STApp of term * qualifier FStar_Pervasives_Native.option * term 
   | Tm_Bind of binder * st_term * st_term 
+  | Tm_TotBind of term * st_term 
   | Tm_If of term * st_term * st_term * vprop FStar_Pervasives_Native.option
   
   | Tm_ElimExists of vprop 
@@ -198,6 +199,8 @@ let uu___is_Tm_Abs uu___ = match uu___ with | Tm_Abs _ -> true | _ -> false
 let uu___is_Tm_STApp uu___ =
   match uu___ with | Tm_STApp _ -> true | _ -> false
 let uu___is_Tm_Bind uu___ = match uu___ with | Tm_Bind _ -> true | _ -> false
+let uu___is_Tm_TotBind uu___ =
+  match uu___ with | Tm_TotBind _ -> true | _ -> false
 let uu___is_Tm_If uu___ = match uu___ with | Tm_If _ -> true | _ -> false
 let uu___is_Tm_ElimExists uu___ =
   match uu___ with | Tm_ElimExists _ -> true | _ -> false
@@ -254,10 +257,10 @@ let (null_bvar : index -> term) =
 let (gen_uvar : term -> (term, unit) FStar_Tactics_Effect.tac_repr) =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (151))
-         (Prims.of_int (10)) (Prims.of_int (151)) (Prims.of_int (22)))
-      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (151))
-         (Prims.of_int (2)) (Prims.of_int (151)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (152))
+         (Prims.of_int (10)) (Prims.of_int (152)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (152))
+         (Prims.of_int (2)) (Prims.of_int (152)) (Prims.of_int (22)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> Tm_UVar uu___))
@@ -346,6 +349,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_Bind (b1, t11, k1), Tm_Bind (b2, t21, k2)) ->
           ((eq_tm b1.binder_ty b2.binder_ty) && (eq_st_term t11 t21)) &&
             (eq_st_term k1 k2)
+      | (Tm_TotBind (t11, k1), Tm_TotBind (t21, k2)) ->
+          (eq_tm t11 t21) && (eq_st_term k1 k2)
       | (Tm_IntroExists (b1, p1, l1), Tm_IntroExists (b2, p2, l2)) ->
           ((b1 = b2) && (eq_tm p1 p2)) && (eq_tm_list l1 l2)
       | (Tm_ElimExists p1, Tm_ElimExists p2) -> eq_tm p1 p2

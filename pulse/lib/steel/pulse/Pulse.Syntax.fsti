@@ -123,6 +123,7 @@ type st_term =
   | Tm_Abs        : b:binder -> q:option qualifier -> pre:option vprop -> body:st_term -> post:option vprop -> st_term
   | Tm_STApp      : head:term -> arg_qual:option qualifier -> arg:term -> st_term  
   | Tm_Bind       : b:binder -> e1:st_term -> e2:st_term -> st_term
+  | Tm_TotBind    : e1:term -> e2:st_term -> st_term
   | Tm_If         : b:term -> then_:st_term -> else_:st_term -> post:option vprop -> st_term
   | Tm_ElimExists : vprop -> st_term
   | Tm_IntroExists: erased:bool -> vprop -> witnesses:list term -> st_term
