@@ -53,12 +53,12 @@ let (main' :
                          (FStar_Tactics_Effect.tac_bind
                             (FStar_Range.mk_range "Pulse.Main.fst"
                                (Prims.of_int (24)) (Prims.of_int (38))
-                               (Prims.of_int (24)) (Prims.of_int (75)))
+                               (Prims.of_int (24)) (Prims.of_int (76)))
                             (FStar_Range.mk_range "Pulse.Main.fst"
                                (Prims.of_int (23)) (Prims.of_int (15))
-                               (Prims.of_int (24)) (Prims.of_int (78)))
+                               (Prims.of_int (24)) (Prims.of_int (79)))
                             (Obj.magic
-                               (Pulse_Checker_Pure.check_tot g1 [] pre))
+                               (Pulse_Checker_Pure.check_term g1 [] pre))
                             (fun uu___1 ->
                                (fun uu___1 ->
                                   match uu___1 with
