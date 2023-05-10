@@ -13,7 +13,8 @@
  there are S-R conflicts with dangling elses, with a non-delimited match where
  the BAR is dangling etc.
 
-
+ Note: Some symbols are marked public, so that we can reuse this parser from
+ the parser for the Pulse DSL in FStarLang/steel.
  
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
@@ -586,6 +587,7 @@ binderAttributes:
 disjunctivePattern:
   | pats=separated_nonempty_list(BAR, tuplePattern) { pats }
 
+%public
 tuplePattern:
   | pats=separated_nonempty_list(COMMA, constructorPattern)
       { match pats with | [x] -> x | l -> mk_pattern (PatTuple (l, false)) (rr $loc) }
@@ -710,6 +712,7 @@ aqualifiedWithAttrs(X):
 qlident:
   | ids=path(lident) { lid_of_ids ids }
 
+%public
 quident:
   | ids=path(uident) { lid_of_ids ids }
 
@@ -739,10 +742,12 @@ ifMaybeOp:
   | IF {None}
   | op=IF_OP { Some (mk_ident ("let" ^ op, rr $loc(op))) }
 
+%public
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rr $loc(id))}
   | UNDERSCORE { gen (rr $loc) }
 
+%public
 lident:
   | id=IDENT { mk_ident(id, rr $loc(id))}
 
@@ -805,6 +810,7 @@ match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
   | as_opt=option(AS i=lident {i}) RETURNS_EQ t=tmIff {as_opt,t,true}
 
+%public
 noSeqTerm:
   | t=typ  { t }
   | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
@@ -1248,9 +1254,11 @@ simpleDef:
   | head=indexingTerm args=list(argTerm)
       { mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) }
 
+%public
 appTerm:
   | t=appTermCommon(t=argTerm {t} | h=maybeHash LBRACE t=recordExp RBRACE {h, t}) {t}
 
+%public
 appTermNoRecordExp:
   | t=appTermCommon(argTerm) {t}
 
@@ -1262,6 +1270,7 @@ argTerm:
   |      { Nothing }
   | HASH { Hash }
 
+%public
 indexingTerm:
   | e1=atomicTermNotQUident op_exprs=nonempty_list(dotOperator)
       {
