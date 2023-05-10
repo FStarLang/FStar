@@ -108,7 +108,7 @@ let check_abs
            st_typing f g t c) =
   match t with  
   | Tm_Abs {binder_ty=t;binder_ppname=ppname} qual pre_hint body post_hint ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
-    let (| t, _, _ |) = check_tot f g t in //elaborate it first
+    let (| t, _, _ |) = check_term f g t in //elaborate it first
     let (| u, t_typing |) = check_universe f g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let px = ppname, x in
@@ -117,7 +117,7 @@ let check_abs
       match pre_hint with
       | None -> T.fail "Cannot typecheck an function without a precondition"
       | Some pre_hint -> open_term_nv pre_hint px in
-    match check_tot f g' pre_opened with
+    match check_term f g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
       let pre = close_term pre_opened x in
       let post =
@@ -249,7 +249,7 @@ let check_comp (f:RT.fstar_top_env)
           let px = v_as_nv x in
           assume (~(x `Set.mem` freevars (comp_post c)));
           let gx = (x, Inl st.res)::g in
-          let (| ty, post_typing |) = check_with_core f gx (open_term_nv (comp_post c) px) in
+          let (| ty, post_typing |) = core_check_term f gx (open_term_nv (comp_post c) px) in
           if not (eq_tm ty Tm_VProp)
           then T.fail "Ill-typed postcondition"
           else (
@@ -264,13 +264,13 @@ let check_comp (f:RT.fstar_top_env)
       CT_ST _ _ stc
     | C_STAtomic i st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = check_with_core f g i in
+      let (| ty, i_typing |) = core_check_term f g i in
       if not (eq_tm ty Tm_Inames)
       then T.fail "Ill-typed inames"
       else CT_STAtomic _ _ _ (E i_typing) stc
     | C_STGhost i st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = check_with_core f g i in
+      let (| ty, i_typing |) = core_check_term f g i in
       if not (eq_tm ty Tm_Inames)
       then T.fail "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc
@@ -287,7 +287,7 @@ let check_if (f:RT.fstar_top_env)
            c:comp { stateful_comp c ==> comp_pre c == pre } &
            st_typing f g t c)
   = let (| b, b_typing |) =
-      check_tot_with_expected_typ f g b tm_bool in
+      check_term_with_expected_type f g b tm_bool in
     let hyp = fresh g in
     let g_with_eq (eq_v:term) =
       (hyp, Inl (mk_eq2 U_zero tm_bool b eq_v))::g
@@ -423,7 +423,7 @@ let check_intro_exists_erased
     if u = u'
     then (
       let (| e, e_typing |) = 
-          check_tot_with_expected_typ f g e (mk_erased u ty) in
+          check_term_with_expected_type f g e (mk_erased u ty) in
       let d = T_IntroExistsErased g u ty p e ty_typing t_typing (E e_typing) in
       repack (try_frame_pre pre_typing d) post_hint true
     )
@@ -456,7 +456,7 @@ let check_intro_exists
     if u = u'
     then (
       let (| e, e_typing |) = 
-          check_tot_with_expected_typ f g e ty in
+          check_term_with_expected_type f g e ty in
       let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
       repack (try_frame_pre pre_typing d) post_hint true
     )
@@ -814,15 +814,15 @@ let check_stapp
 
   T.or_else
     (fun _ -> let pure_app = Tm_PureApp head qual arg in
-           let t, ty = instantiate_implicits f g pure_app in
+           let t, ty = instantiate_term_implicits f g pure_app in
            infer_logical_implicits_and_check t (C_Tot ty))
     (fun _ ->
-     let (| head, ty_head, dhead |) = check_tot f g head in
+     let (| head, ty_head, dhead |) = check_term f g head in
      match ty_head with
      | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
        if qual = bqual
        then
-         let (| arg, darg |) = check_tot_with_expected_typ f g arg formal in
+         let (| arg, darg |) = check_term_with_expected_type f g arg formal in
          match comp_typ with
          | C_ST res
          | C_STAtomic _ res
@@ -863,7 +863,7 @@ let check_admit
 
   let post_opened = open_term_nv post px in
   let (| post_opened, post_typing |) =
-    check_tot_with_expected_typ f ((x, Inl t)::g) post_opened Tm_VProp in
+    check_term_with_expected_type f ((x, Inl t)::g) post_opened Tm_VProp in
 
   let post = close_term post_opened x in
   let s = {u;res=t;pre;post} in
@@ -887,7 +887,7 @@ let check_return
            st_typing f g t c) =
 
   let Tm_Return c use_eq t = t in
-  let (| t, u, ty, uty, d |) = check_tot_univ f g t in
+  let (| t, u, ty, uty, d |) = check_term_and_type f g t in
   let x = fresh g in
   let px = v_as_nv x in
   let (| post, post_typing |) =
@@ -897,7 +897,7 @@ let check_return
       | Some post -> post in
     let post_opened = open_term_nv post px in
     let (| post_opened, post_typing |) =
-      check_tot_with_expected_typ f ((x, Inl ty)::g) post_opened Tm_VProp in
+      check_term_with_expected_type f ((x, Inl ty)::g) post_opened Tm_VProp in
     assume (open_term (close_term post_opened x) x == post_opened);
     let post = close_term post_opened x in
     let post_typing : tot_typing f ((x, Inl ty)::g) (open_term post x) Tm_VProp = (E post_typing) in
@@ -1079,9 +1079,9 @@ let check_par
 
   let Tm_Par preL eL postL preR eR postR = t in
   let (| preL, preL_typing |) =
-    check_tot_with_expected_typ f g preL Tm_VProp in
+    check_term_with_expected_type f g preL Tm_VProp in
   let (| preR, preR_typing |) =
-    check_tot_with_expected_typ f g preR Tm_VProp in
+    check_term_with_expected_type f g preR Tm_VProp in
 
   let (| eL, cL, eL_typing |) =
     check' allow_inst f g eL preL (E preL_typing) (Some postL) in
@@ -1119,7 +1119,7 @@ let check_withlocal
   
   let Tm_WithLocal init body = t in
   let (| init, init_u, init_t, init_t_typing, init_typing |) =
-    check_tot_univ f g init in
+    check_term_and_type f g init in
   if init_u = U_zero
   then let x = fresh g in
        let px = v_as_nv x in
