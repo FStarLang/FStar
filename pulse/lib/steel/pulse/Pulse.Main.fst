@@ -329,6 +329,9 @@ let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
     Tm_Bind (shift_bvs_in_else_binder b n)
             (shift_bvs_in_else_st e1 n)
             (shift_bvs_in_else_st e2 (n + 1))
+  | Tm_TotBind e1 e2 ->
+    Tm_TotBind (shift_bvs_in_else e1 n)
+               (shift_bvs_in_else_st e2 (n + 1))
   | Tm_If b e1 e2 post ->
     Tm_If (shift_bvs_in_else b n)
           (shift_bvs_in_else_st e1 n)
