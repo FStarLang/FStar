@@ -165,6 +165,21 @@ let (bound_var : Prims.nat -> FStar_Reflection_Types.term) =
     FStar_Reflection_Builtins.pack_ln
       (FStar_Reflection_Data.Tv_BVar
          (FStar_Reflection_Builtins.pack_bv (make_bv i)))
+let (mk_let :
+  pp_name_t ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun ppname ->
+    fun e1 ->
+      fun t1 ->
+        fun e2 ->
+          FStar_Reflection_Builtins.pack_ln
+            (FStar_Reflection_Data.Tv_Let
+               (false, [],
+                 (FStar_Reflection_Builtins.pack_bv
+                    (make_bv_with_name ppname Prims.int_zero)), t1, e1, e2))
 let (open_with_var : FStar_Reflection_Data.var -> open_or_close) =
   fun x ->
     OpenWith
@@ -1047,6 +1062,12 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   FStar_Reflection_Types.term * FStar_Reflection_Types.binder *
   FStar_Reflection_Types.term * FStar_Tactics_Types.tot_or_ghost * (unit,
   unit, unit) typing * (unit, unit, unit) typing 
+  | T_Let of FStar_Reflection_Types.env * FStar_Reflection_Data.var *
+  FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
+  FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
+  FStar_Reflection_Types.universe * FStar_Tactics_Types.tot_or_ghost *
+  FStar_Tactics_Types.tot_or_ghost * pp_name_t * (unit, unit, unit) typing *
+  (unit, unit, unit) typing * (unit, unit, unit) typing 
   | T_Arrow of FStar_Reflection_Types.env * FStar_Reflection_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_Types.universe * FStar_Reflection_Types.universe *
@@ -1123,6 +1144,8 @@ let uu___is_T_Abs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Abs _ -> true | _ -> false
 let uu___is_T_App uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_App _ -> true | _ -> false
+let uu___is_T_Let uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_Let _ -> true | _ -> false
 let uu___is_T_Arrow uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Arrow _ -> true | _ -> false
 let uu___is_T_Refine uu___2 uu___1 uu___ uu___3 =
