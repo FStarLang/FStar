@@ -1008,14 +1008,11 @@ type typing : env -> term -> comp_typ -> Type0 =
      t1:typ ->
      e2:term ->
      t2:typ ->
-     t2_u:universe ->
-     t2_eff:T.tot_or_ghost ->
      eff:T.tot_or_ghost ->
      pp_name:pp_name_t ->
      typing g e1 (eff, t1) ->
      typing (extend_env g x t1) (open_term e2 x) (eff, t2) ->
-     typing g t2 (t2_eff, tm_type t2_u) ->
-     typing g (mk_let pp_name e1 t1 e2) (eff, t2)
+     typing g (mk_let pp_name e1 t1 e2) (eff, open_with (close_term t2 x) e1)
 
   | T_Arrow:
      g:env ->
