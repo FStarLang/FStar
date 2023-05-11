@@ -368,7 +368,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
     || U.is_lemma t_norm
     || uninterpreted
     then let arg_sorts = match (SS.compress t_norm).n with
-            | Tm_arrow(binders, _) -> binders |> List.map (fun _ -> Term_sort)
+            | Tm_arrow {bs=binders} -> binders |> List.map (fun _ -> Term_sort)
             | _ -> [] in
          let arity = List.length arg_sorts in
          let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity in
@@ -430,7 +430,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                     | Tm_fvar fv ->
                       Syntax.fv_eq_lid fv FStar.Parser.Const.squash_lid
 
-                    | Tm_refine({sort={n=Tm_fvar fv}}, _) ->
+                    | Tm_refine {b={sort={n=Tm_fvar fv}}} ->
                       Syntax.fv_eq_lid fv FStar.Parser.Const.unit_lid
 
                     | _ -> false
@@ -637,7 +637,7 @@ let encode_top_level_let :
         //    but that flattens Tot effects quite aggressively
         let t = U.unascribe <| SS.compress t in
         match t.n with
-        | Tm_arrow (formals, comp) ->
+        | Tm_arrow {bs=formals; comp} ->
           SS.open_comp formals comp
 
         | Tm_refine _ ->
@@ -1067,7 +1067,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
               match ed.binders with
               | [] -> tm
-              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) tm.pos
+              | _ -> S.mk (Tm_abs {bs=ed.binders;
+                                   body=tm;
+                                   rc_opt=Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])}) tm.pos
             in
 
             let encode_action env (a:S.action) =
@@ -1335,7 +1337,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let k =
             match tps with
             | [] -> k
-            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) k.pos
+            | _ -> S.mk (Tm_arrow {bs=tps; comp=S.mk_Total k}) k.pos
           in
           let k = norm_before_encoding env k in
           U.arrow_formals k

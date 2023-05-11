@@ -45,7 +45,7 @@ let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
-        | Tm_arrow(bs, c) ->
+        | Tm_arrow {bs; comp=c} ->
           let binders, _ = SS.open_comp bs c in
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
