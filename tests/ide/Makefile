@@ -10,9 +10,9 @@ all: $(addsuffix .all, $(ALL_TEST_DIRS)) test_incremental
 INCR_TEST_FILES := $(wildcard $(FSTAR_HOME)/ulib/*.fst  $(FSTAR_HOME)/ulib/*.fsti)
 
 .PHONY: test_incremental
-test_incremental: $(patsubst %, %.test-incr, $(INCR_TEST_FILES))
+test_incremental: $(patsubst $(FSTAR_HOME)/ulib/%, %.test-incr, $(INCR_TEST_FILES))
 
-%.test-incr: %
+%.test-incr: $(FSTAR_HOME)/ulib/%
 	$(Q)python3 test-incremental.py $(FSTAR_HOME)/bin/fstar.exe $<
 	touch $@
 
