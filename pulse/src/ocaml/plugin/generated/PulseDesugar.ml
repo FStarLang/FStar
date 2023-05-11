@@ -267,20 +267,23 @@ let (stt_atomic_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt_atomic"] r_
 let (stapp_assignment :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.st_term)
+    FStar_Syntax_Syntax.term ->
+      PulseSyntaxWrapper.range -> PulseSyntaxWrapper.st_term)
   =
   fun lhs ->
     fun rhs ->
-      let head_fv =
-        FStar_Syntax_Syntax.lid_as_fv assign_lid
-          FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None in
-      let head = FStar_Syntax_Syntax.fv_to_tm head_fv in
-      let app =
-        FStar_Syntax_Syntax.mk_Tm_app head
-          [(lhs, FStar_Pervasives_Native.None)] lhs.FStar_Syntax_Syntax.pos in
-      let uu___ = PulseSyntaxWrapper.tm_expr app in
-      let uu___1 = as_term rhs in
-      PulseSyntaxWrapper.tm_st_app uu___ FStar_Pervasives_Native.None uu___1
+      fun r ->
+        let head_fv =
+          FStar_Syntax_Syntax.lid_as_fv assign_lid
+            FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None in
+        let head = FStar_Syntax_Syntax.fv_to_tm head_fv in
+        let app =
+          FStar_Syntax_Syntax.mk_Tm_app head
+            [(lhs, FStar_Pervasives_Native.None)] lhs.FStar_Syntax_Syntax.pos in
+        let uu___ = PulseSyntaxWrapper.tm_expr app in
+        let uu___1 = as_term rhs in
+        PulseSyntaxWrapper.tm_st_app uu___ FStar_Pervasives_Native.None
+          uu___1 r
 let (resolve_name :
   env_t -> FStar_Ident.ident -> FStar_Syntax_Syntax.term err) =
   fun env ->
@@ -341,8 +344,9 @@ let (stapp_or_return :
   env_t -> FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.st_term) =
   fun env ->
     fun s ->
+      let r = s.FStar_Syntax_Syntax.pos in
       let ret s1 =
-        let uu___ = as_term s1 in PulseSyntaxWrapper.tm_return uu___ in
+        let uu___ = as_term s1 in PulseSyntaxWrapper.tm_return uu___ r in
       let uu___ = FStar_Syntax_Util.head_and_args_full s in
       match uu___ with
       | (head, args) ->
@@ -406,7 +410,7 @@ let (stapp_or_return :
                                        PulseSyntaxWrapper.tm_expr head1 in
                                      let uu___9 = as_term last in
                                      PulseSyntaxWrapper.tm_st_app uu___8 q
-                                       uu___9)
+                                       uu___9 r)
                               else ret s)))
            | uu___1 -> ret s)
 let (tosyntax :
@@ -508,18 +512,20 @@ let rec (desugar_vprop :
 let (mk_bind :
   PulseSyntaxWrapper.binder ->
     PulseSyntaxWrapper.st_term ->
-      PulseSyntaxWrapper.st_term -> PulseSyntaxWrapper.st_term)
+      PulseSyntaxWrapper.st_term ->
+        PulseSyntaxWrapper.range -> PulseSyntaxWrapper.st_term)
   =
   fun b ->
     fun s1 ->
       fun s2 ->
-        let uu___ = PulseSyntaxWrapper.is_tm_intro_exists s1 in
-        if uu___
-        then
-          let uu___1 = PulseSyntaxWrapper.tm_protect s1 in
-          let uu___2 = PulseSyntaxWrapper.tm_protect s2 in
-          PulseSyntaxWrapper.tm_bind b uu___1 uu___2
-        else PulseSyntaxWrapper.tm_bind b s1 s2
+        fun r ->
+          let uu___ = PulseSyntaxWrapper.is_tm_intro_exists s1 in
+          if uu___
+          then
+            let uu___1 = PulseSyntaxWrapper.tm_protect s1 in
+            let uu___2 = PulseSyntaxWrapper.tm_protect s2 in
+            PulseSyntaxWrapper.tm_bind b uu___1 uu___2 r
+          else PulseSyntaxWrapper.tm_bind b s1 s2 r
 let rec (desugar_stmt :
   env_t -> PulseSugar.stmt -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -537,7 +543,9 @@ let rec (desugar_stmt :
                let uu___1 = tosyntax env value in
                op_let_Question uu___1
                  (fun value1 ->
-                    let uu___2 = stapp_assignment lhs value1 in return uu___2))
+                    let uu___2 =
+                      stapp_assignment lhs value1 s.PulseSugar.range1 in
+                    return uu___2))
       | PulseSugar.Sequence
           {
             PulseSugar.s1 =
@@ -551,9 +559,9 @@ let rec (desugar_stmt :
               { PulseSugar.s = PulseSugar.LetBinding lb;
                 PulseSugar.range1 = uu___;_};
             PulseSugar.s2 = s2;_}
-          -> desugar_bind env lb s2
+          -> desugar_bind env lb s2 s.PulseSugar.range1
       | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} ->
-          desugar_sequence env s1 s2
+          desugar_sequence env s1 s2 s.PulseSugar.range1
       | PulseSugar.Block { PulseSugar.stmt = stmt;_} -> desugar_stmt env stmt
       | PulseSugar.If
           { PulseSugar.head1 = head; PulseSugar.join_vprop = join_vprop;
@@ -582,7 +590,8 @@ let rec (desugar_stmt :
                                  let uu___5 =
                                    PulseSyntaxWrapper.tm_expr
                                      FStar_Syntax_Syntax.unit_const in
-                                 PulseSyntaxWrapper.tm_return uu___5 in
+                                 PulseSyntaxWrapper.tm_return uu___5
+                                   FStar_Compiler_Range_Type.dummyRange in
                                return uu___4
                            | FStar_Pervasives_Native.Some e ->
                                desugar_stmt env e in
@@ -590,7 +599,7 @@ let rec (desugar_stmt :
                            (fun else_ ->
                               let uu___4 =
                                 PulseSyntaxWrapper.tm_if head1 join_vprop1
-                                  then_1 else_ in
+                                  then_1 else_ s.PulseSugar.range1 in
                               return uu___4))))
       | PulseSugar.Match
           { PulseSugar.head2 = head;
@@ -622,7 +631,7 @@ let rec (desugar_stmt :
                       (fun body1 ->
                          let uu___3 =
                            PulseSyntaxWrapper.tm_while guard1
-                             (id, invariant1) body1 in
+                             (id, invariant1) body1 s.PulseSugar.range1 in
                          return uu___3)))
       | PulseSugar.Introduce
           { PulseSugar.vprop = vprop; PulseSugar.witnesses = witnesses;_} ->
@@ -639,7 +648,7 @@ let rec (desugar_stmt :
                       (fun witnesses1 ->
                          let uu___3 =
                            PulseSyntaxWrapper.tm_intro_exists false vp
-                             witnesses1 in
+                             witnesses1 s.PulseSugar.range1 in
                          return uu___3)))
       | PulseSugar.Parallel
           { PulseSugar.p1 = p1; PulseSugar.p2 = p2; PulseSugar.q1 = q1;
@@ -665,7 +674,8 @@ let rec (desugar_stmt :
                                      (fun b21 ->
                                         let uu___6 =
                                           PulseSyntaxWrapper.tm_par p11 p21
-                                            q11 q21 b11 b21 in
+                                            q11 q21 b11 b21
+                                            s.PulseSugar.range1 in
                                         return uu___6))))))
       | PulseSugar.Rewrite { PulseSugar.p11 = p1; PulseSugar.p21 = p2;_} ->
           let uu___ = desugar_vprop env p1 in
@@ -674,84 +684,91 @@ let rec (desugar_stmt :
                let uu___1 = desugar_vprop env p2 in
                op_let_Question uu___1
                  (fun p21 ->
-                    let uu___2 = PulseSyntaxWrapper.tm_rewrite p11 p21 in
+                    let uu___2 =
+                      PulseSyntaxWrapper.tm_rewrite p11 p21
+                        s.PulseSugar.range1 in
                     return uu___2))
       | PulseSugar.LetBinding uu___ ->
           fail "Terminal let binding" s.PulseSugar.range1
 and (desugar_bind :
   env_t ->
     PulseSugar.stmt'__LetBinding__payload ->
-      PulseSugar.stmt -> PulseSyntaxWrapper.st_term err)
+      PulseSugar.stmt ->
+        FStar_Compiler_Range_Type.range -> PulseSyntaxWrapper.st_term err)
   =
   fun env ->
     fun lb ->
       fun s2 ->
-        let uu___ = desugar_term_opt env lb.PulseSugar.typ in
-        op_let_Question uu___
-          (fun annot ->
-             let uu___1 =
-               let uu___2 = push_bv env lb.PulseSugar.id1 in
-               match uu___2 with
-               | (env1, bv) ->
-                   let uu___3 = desugar_stmt env1 s2 in
-                   op_let_Question uu___3
-                     (fun s21 ->
-                        let uu___4 =
-                          PulseSyntaxWrapper.close_st_term s21
-                            bv.FStar_Syntax_Syntax.index in
-                        return uu___4) in
-             op_let_Question uu___1
-               (fun s21 ->
-                  match lb.PulseSugar.init with
-                  | FStar_Pervasives_Native.None ->
-                      failwith "Uninitialized variables are not yet handled"
-                  | FStar_Pervasives_Native.Some e1 ->
-                      (match lb.PulseSugar.qualifier with
-                       | FStar_Pervasives_Native.None ->
-                           let uu___2 = tosyntax env e1 in
-                           op_let_Question uu___2
-                             (fun s1 ->
-                                let s11 = stapp_or_return env s1 in
-                                let uu___3 =
-                                  let uu___4 =
-                                    PulseSyntaxWrapper.mk_binder
-                                      lb.PulseSugar.id1 annot in
-                                  mk_bind uu___4 s11 s21 in
-                                return uu___3)
-                       | FStar_Pervasives_Native.Some (PulseSugar.MUT) ->
-                           let uu___2 = desugar_term env e1 in
-                           op_let_Question uu___2
-                             (fun e11 ->
-                                let uu___3 =
-                                  PulseSyntaxWrapper.tm_let_mut
-                                    lb.PulseSugar.id1 annot e11 s21 in
-                                return uu___3)
-                       | FStar_Pervasives_Native.Some (PulseSugar.REF) ->
-                           let uu___2 = desugar_term env e1 in
-                           op_let_Question uu___2
-                             (fun e11 ->
-                                let uu___3 =
-                                  PulseSyntaxWrapper.tm_let_mut
-                                    lb.PulseSugar.id1 annot e11 s21 in
-                                return uu___3))))
+        fun r ->
+          let uu___ = desugar_term_opt env lb.PulseSugar.typ in
+          op_let_Question uu___
+            (fun annot ->
+               let uu___1 =
+                 let uu___2 = push_bv env lb.PulseSugar.id1 in
+                 match uu___2 with
+                 | (env1, bv) ->
+                     let uu___3 = desugar_stmt env1 s2 in
+                     op_let_Question uu___3
+                       (fun s21 ->
+                          let uu___4 =
+                            PulseSyntaxWrapper.close_st_term s21
+                              bv.FStar_Syntax_Syntax.index in
+                          return uu___4) in
+               op_let_Question uu___1
+                 (fun s21 ->
+                    match lb.PulseSugar.init with
+                    | FStar_Pervasives_Native.None ->
+                        failwith
+                          "Uninitialized variables are not yet handled"
+                    | FStar_Pervasives_Native.Some e1 ->
+                        (match lb.PulseSugar.qualifier with
+                         | FStar_Pervasives_Native.None ->
+                             let uu___2 = tosyntax env e1 in
+                             op_let_Question uu___2
+                               (fun s1 ->
+                                  let s11 = stapp_or_return env s1 in
+                                  let uu___3 =
+                                    let uu___4 =
+                                      PulseSyntaxWrapper.mk_binder
+                                        lb.PulseSugar.id1 annot in
+                                    mk_bind uu___4 s11 s21 r in
+                                  return uu___3)
+                         | FStar_Pervasives_Native.Some (PulseSugar.MUT) ->
+                             let uu___2 = desugar_term env e1 in
+                             op_let_Question uu___2
+                               (fun e11 ->
+                                  let uu___3 =
+                                    PulseSyntaxWrapper.tm_let_mut
+                                      lb.PulseSugar.id1 annot e11 s21 r in
+                                  return uu___3)
+                         | FStar_Pervasives_Native.Some (PulseSugar.REF) ->
+                             let uu___2 = desugar_term env e1 in
+                             op_let_Question uu___2
+                               (fun e11 ->
+                                  let uu___3 =
+                                    PulseSyntaxWrapper.tm_let_mut
+                                      lb.PulseSugar.id1 annot e11 s21 r in
+                                  return uu___3))))
 and (desugar_sequence :
   env_t ->
-    PulseSugar.stmt -> PulseSugar.stmt -> PulseSyntaxWrapper.st_term err)
+    PulseSugar.stmt ->
+      PulseSugar.stmt -> PulseSugar.rng -> PulseSyntaxWrapper.st_term err)
   =
   fun env ->
     fun s1 ->
       fun s2 ->
-        let uu___ = desugar_stmt env s1 in
-        op_let_Question uu___
-          (fun s11 ->
-             let uu___1 = desugar_stmt env s2 in
-             op_let_Question uu___1
-               (fun s21 ->
-                  let annot =
-                    let uu___2 = FStar_Ident.id_of_text "_" in
-                    PulseSyntaxWrapper.mk_binder uu___2
-                      PulseSyntaxWrapper.tm_unknown in
-                  let uu___2 = mk_bind annot s11 s21 in return uu___2))
+        fun r ->
+          let uu___ = desugar_stmt env s1 in
+          op_let_Question uu___
+            (fun s11 ->
+               let uu___1 = desugar_stmt env s2 in
+               op_let_Question uu___1
+                 (fun s21 ->
+                    let annot =
+                      let uu___2 = FStar_Ident.id_of_text "_" in
+                      PulseSyntaxWrapper.mk_binder uu___2
+                        PulseSyntaxWrapper.tm_unknown in
+                    let uu___2 = mk_bind annot s11 s21 r in return uu___2))
 let (explicit_rvalues : env_t -> PulseSugar.stmt -> PulseSugar.stmt) =
   fun env -> fun s -> s
 type qual = PulseSyntaxWrapper.qualifier FStar_Pervasives_Native.option
@@ -906,7 +923,7 @@ let (desugar_decl :
                                      PulseSyntaxWrapper.comp_post comp1 in
                                    FStar_Pervasives_Native.Some uu___7 in
                                  PulseSyntaxWrapper.tm_abs last q uu___5
-                                   body1 uu___6 in
+                                   body1 uu___6 p.PulseSugar.range2 in
                                return uu___4
                            | ((q, b)::bs2, bv::bvs2) ->
                                let uu___4 = aux bs2 bvs2 in
@@ -918,7 +935,8 @@ let (desugar_decl :
                                     let uu___5 =
                                       PulseSyntaxWrapper.tm_abs b q
                                         PulseSyntaxWrapper.tm_emp body2
-                                        FStar_Pervasives_Native.None in
+                                        FStar_Pervasives_Native.None
+                                        p.PulseSugar.range2 in
                                     return uu___5)
                            | uu___4 ->
                                fail "Unexpected empty binders in decl" r_ in
