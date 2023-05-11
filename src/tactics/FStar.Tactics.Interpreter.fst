@@ -603,9 +603,13 @@ let () =
         refl_check_equiv RE.e_env RE.e_term RE.e_term (e_option e_unit)
         refl_check_equiv NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
 
-      mk_tac_step_3 0 "core_check_term"
-        refl_core_check_term RE.e_env RE.e_term E.e_tot_or_ghost (e_option RE.e_term)
-        refl_core_check_term NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option NRE.e_term);
+      mk_tac_step_3 0 "core_compute_term_type"
+        refl_core_compute_term_type RE.e_env RE.e_term E.e_tot_or_ghost (e_option RE.e_term)
+        refl_core_compute_term_type NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option NRE.e_term);
+
+      mk_tac_step_4 0 "core_check_term"
+        refl_core_check_term RE.e_env RE.e_term RE.e_term E.e_tot_or_ghost (e_option e_unit)
+        refl_core_check_term NRE.e_env NRE.e_term NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option NBET.e_unit);
 
       mk_tac_step_3 0 "tc_term"
         refl_tc_term RE.e_env RE.e_term E.e_tot_or_ghost (e_option (e_tuple2 RE.e_term RE.e_term))

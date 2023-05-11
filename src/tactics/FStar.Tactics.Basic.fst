@@ -2328,12 +2328,12 @@ let to_must_tot (eff:tot_or_ghost) : bool =
   | E_Total -> true
   | E_Ghost -> false
 
-let refl_core_check_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ) =
+let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
          dbg_refl g (fun _ ->
-           BU.format1 "refl_core_check_term: %s\n" (Print.term_to_string e));
+           BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
          let must_tot = to_must_tot eff in
          let gh = fun g guard ->
            Rel.force_trivial_guard g
@@ -2342,13 +2342,37 @@ let refl_core_check_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ) 
          match Core.compute_term_type_handle_guards g e must_tot gh with
          | Inl t ->
            dbg_refl g (fun _ ->
-             BU.format2 "refl_core_check_term for %s computed type %s\n"
+             BU.format2 "refl_core_compute_term_type for %s computed type %s\n"
                (Print.term_to_string e)
                (Print.term_to_string t));
            t
          | Inr err ->
-           dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "core_check_term callback failed: " ^(Core.print_error err)) Range.dummyRange)
+           dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
+  else ret None
+
+let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
+  : tac (option unit) =
+
+  if no_uvars_in_g g &&
+     no_uvars_in_term e &&
+     no_uvars_in_term t
+  then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format2 "refl_core_check_term: term: %s, type: %s\n"
+             (Print.term_to_string e) (Print.term_to_string t));
+         let must_tot = to_must_tot eff in
+         match Core.check_term g e t must_tot with
+         | Inl None ->
+           dbg_refl g (fun _ -> "refl_core_check_term: succeeded with no guard\n");
+           ret ()
+         | Inl (Some guard) ->
+           dbg_refl g (fun _ -> "refl_core_check_term: succeeded with guard\n");
+           Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard};
+           ret ()
+         | Inr err ->
+           dbg_refl g (fun _ -> BU.format1 "refl_core_check_term failed: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
   else ret None
 
 let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ)) =

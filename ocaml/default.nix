@@ -1,5 +1,5 @@
 { batteries, buildDunePackage, includeBinaryAnnotations ? false
-, installShellFiles, lib, makeWrapper, menhirLib, ocaml, pprint, ppxlib
+, installShellFiles, lib, makeWrapper, menhir, menhirLib, ocaml, pprint, ppxlib
 , ppx_deriving, ppx_deriving_yojson, process, removeReferencesTo, sedlex, stdint
 , version, yojson, zarith }:
 
@@ -20,6 +20,7 @@ buildDunePackage {
 
   buildInputs = [
     batteries
+    menhir
     menhirLib
     pprint
     ppx_deriving
