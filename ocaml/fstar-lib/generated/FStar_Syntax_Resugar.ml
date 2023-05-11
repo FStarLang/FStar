@@ -607,7 +607,10 @@ let rec (resugar_term' :
                    FStar_Parser_AST.App uu___4 in
                  mk uu___3
                else typ)
-      | FStar_Syntax_Syntax.Tm_abs (xs, body, uu___1) ->
+      | FStar_Syntax_Syntax.Tm_abs
+          { FStar_Syntax_Syntax.bs = xs; FStar_Syntax_Syntax.body = body;
+            FStar_Syntax_Syntax.rc_opt = uu___1;_}
+          ->
           let uu___2 = FStar_Syntax_Subst.open_term xs body in
           (match uu___2 with
            | (xs1, body1) ->
@@ -641,7 +644,10 @@ let rec (resugar_term' :
                 FStar_Syntax_Subst.compress uu___5 in
               uu___4.FStar_Syntax_Syntax.n in
             match uu___3 with
-            | FStar_Syntax_Syntax.Tm_arrow (xs, body) -> (xs, body)
+            | FStar_Syntax_Syntax.Tm_arrow
+                { FStar_Syntax_Syntax.bs1 = xs;
+                  FStar_Syntax_Syntax.comp = body;_}
+                -> (xs, body)
             | uu___4 -> failwith "impossible: Tm_arrow in resugar_term" in
           (match uu___2 with
            | (xs, body) ->
@@ -669,7 +675,8 @@ let rec (resugar_term' :
                             mk (FStar_Parser_AST.Product ([hd], body3)) in
                           aux body4 tl in
                     aux body2 xs3))
-      | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
+      | FStar_Syntax_Syntax.Tm_refine
+          { FStar_Syntax_Syntax.b = x; FStar_Syntax_Syntax.phi = phi;_} ->
           let uu___1 =
             let uu___2 =
               let uu___3 = FStar_Syntax_Syntax.mk_binder x in [uu___3] in
@@ -687,31 +694,37 @@ let rec (resugar_term' :
                  FStar_Parser_AST.Refine uu___3 in
                mk uu___2)
       | FStar_Syntax_Syntax.Tm_app
-          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-             FStar_Syntax_Syntax.pos = uu___1;
-             FStar_Syntax_Syntax.vars = uu___2;
-             FStar_Syntax_Syntax.hash_code = uu___3;_},
-           (e, uu___4)::[])
+          {
+            FStar_Syntax_Syntax.hd =
+              { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                FStar_Syntax_Syntax.pos = uu___1;
+                FStar_Syntax_Syntax.vars = uu___2;
+                FStar_Syntax_Syntax.hash_code = uu___3;_};
+            FStar_Syntax_Syntax.args = (e, uu___4)::[];_}
           when
           (let uu___5 = FStar_Options.print_implicits () in
            Prims.op_Negation uu___5) &&
             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.b2t_lid)
           -> resugar_term' env e
       | FStar_Syntax_Syntax.Tm_app
-          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-             FStar_Syntax_Syntax.pos = uu___1;
-             FStar_Syntax_Syntax.vars = uu___2;
-             FStar_Syntax_Syntax.hash_code = uu___3;_},
-           ({
-              FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-                (FStar_Const.Const_int (i, FStar_Pervasives_Native.None));
-              FStar_Syntax_Syntax.pos = uu___4;
-              FStar_Syntax_Syntax.vars = uu___5;
-              FStar_Syntax_Syntax.hash_code = uu___6;_},
-            uu___7)::[])
+          {
+            FStar_Syntax_Syntax.hd =
+              { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                FStar_Syntax_Syntax.pos = uu___1;
+                FStar_Syntax_Syntax.vars = uu___2;
+                FStar_Syntax_Syntax.hash_code = uu___3;_};
+            FStar_Syntax_Syntax.args =
+              ({
+                 FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
+                   (FStar_Const.Const_int (i, FStar_Pervasives_Native.None));
+                 FStar_Syntax_Syntax.pos = uu___4;
+                 FStar_Syntax_Syntax.vars = uu___5;
+                 FStar_Syntax_Syntax.hash_code = uu___6;_},
+               uu___7)::[];_}
           when can_resugar_machine_integer fv ->
           resugar_machine_integer fv i t.FStar_Syntax_Syntax.pos
-      | FStar_Syntax_Syntax.Tm_app (e, args) ->
+      | FStar_Syntax_Syntax.Tm_app
+          { FStar_Syntax_Syntax.hd = e; FStar_Syntax_Syntax.args = args;_} ->
           let rec last uu___1 =
             match uu___1 with
             | hd::[] -> [hd]
@@ -843,7 +856,10 @@ let rec (resugar_term' :
                                     FStar_Syntax_Subst.compress term in
                                   uu___6.FStar_Syntax_Syntax.n in
                                 match uu___5 with
-                                | FStar_Syntax_Syntax.Tm_abs (x, e1, uu___6)
+                                | FStar_Syntax_Syntax.Tm_abs
+                                    { FStar_Syntax_Syntax.bs = x;
+                                      FStar_Syntax_Syntax.body = e1;
+                                      FStar_Syntax_Syntax.rc_opt = uu___6;_}
                                     ->
                                     let uu___7 =
                                       FStar_Syntax_Subst.open_term x e1 in
@@ -925,7 +941,11 @@ let rec (resugar_term' :
                    let uu___4 = FStar_Syntax_Subst.compress body in
                    uu___4.FStar_Syntax_Syntax.n in
                  match uu___3 with
-                 | FStar_Syntax_Syntax.Tm_abs (xs, body1, uu___4) ->
+                 | FStar_Syntax_Syntax.Tm_abs
+                     { FStar_Syntax_Syntax.bs = xs;
+                       FStar_Syntax_Syntax.body = body1;
+                       FStar_Syntax_Syntax.rc_opt = uu___4;_}
+                     ->
                      let uu___5 = FStar_Syntax_Subst.open_term xs body1 in
                      (match uu___5 with
                       | (xs1, body2) ->
@@ -943,7 +963,10 @@ let rec (resugar_term' :
                               let uu___8 = FStar_Syntax_Subst.compress body2 in
                               uu___8.FStar_Syntax_Syntax.n in
                             match uu___7 with
-                            | FStar_Syntax_Syntax.Tm_meta (e1, m) ->
+                            | FStar_Syntax_Syntax.Tm_meta
+                                { FStar_Syntax_Syntax.tm2 = e1;
+                                  FStar_Syntax_Syntax.meta = m;_}
+                                ->
                                 let body3 = resugar_term' env e1 in
                                 let uu___8 =
                                   match m with
@@ -1085,7 +1108,11 @@ let rec (resugar_term' :
                     mk uu___2
                 | uu___2 -> resugar_as_app e args1))
       | FStar_Syntax_Syntax.Tm_match
-          (e, FStar_Pervasives_Native.None, (pat, wopt, t1)::[], uu___1) ->
+          { FStar_Syntax_Syntax.scrutinee = e;
+            FStar_Syntax_Syntax.ret_opt = FStar_Pervasives_Native.None;
+            FStar_Syntax_Syntax.brs = (pat, wopt, t1)::[];
+            FStar_Syntax_Syntax.rc_opt1 = uu___1;_}
+          ->
           let uu___2 = FStar_Syntax_Subst.open_branch (pat, wopt, t1) in
           (match uu___2 with
            | (pat1, wopt1, t2) ->
@@ -1101,7 +1128,12 @@ let rec (resugar_term' :
                mk
                  (FStar_Parser_AST.Let
                     (FStar_Parser_AST.NoLetQualifier, bnds, body)))
-      | FStar_Syntax_Syntax.Tm_match (e, asc_opt, branches, uu___1) ->
+      | FStar_Syntax_Syntax.Tm_match
+          { FStar_Syntax_Syntax.scrutinee = e;
+            FStar_Syntax_Syntax.ret_opt = asc_opt;
+            FStar_Syntax_Syntax.brs = branches;
+            FStar_Syntax_Syntax.rc_opt1 = uu___1;_}
+          ->
           let resugar_branch uu___2 =
             match uu___2 with
             | (pat, wopt, b) ->
@@ -1127,7 +1159,10 @@ let rec (resugar_term' :
               (uu___4, FStar_Pervasives_Native.None, asc_opt1, uu___5) in
             FStar_Parser_AST.Match uu___3 in
           mk uu___2
-      | FStar_Syntax_Syntax.Tm_ascribed (e, asc, uu___1) ->
+      | FStar_Syntax_Syntax.Tm_ascribed
+          { FStar_Syntax_Syntax.tm = e; FStar_Syntax_Syntax.asc = asc;
+            FStar_Syntax_Syntax.eff_opt = uu___1;_}
+          ->
           let uu___2 = resugar_ascription env asc in
           (match uu___2 with
            | (asc1, tac_opt, b) ->
@@ -1137,7 +1172,10 @@ let rec (resugar_term' :
                    (uu___5, asc1, tac_opt, b) in
                  FStar_Parser_AST.Ascribed uu___4 in
                mk uu___3)
-      | FStar_Syntax_Syntax.Tm_let ((is_rec, source_lbs), body) ->
+      | FStar_Syntax_Syntax.Tm_let
+          { FStar_Syntax_Syntax.lbs = (is_rec, source_lbs);
+            FStar_Syntax_Syntax.body1 = body;_}
+          ->
           let mk_pat a =
             FStar_Parser_AST.mk_pattern a t.FStar_Syntax_Syntax.pos in
           let uu___1 = FStar_Syntax_Subst.open_let_rec source_lbs body in
@@ -1165,8 +1203,10 @@ let rec (resugar_term' :
                          uu___5.FStar_Syntax_Syntax.n in
                        match uu___4 with
                        | FStar_Syntax_Syntax.Tm_app
-                           (uu___5, (t1, uu___6)::(d, uu___7)::[]) -> 
-                           (t1, d)
+                           { FStar_Syntax_Syntax.hd = uu___5;
+                             FStar_Syntax_Syntax.args =
+                               (t1, uu___6)::(d, uu___7)::[];_}
+                           -> (t1, d)
                        | uu___5 -> failwith "wrong let binding format" in
                      (match uu___3 with
                       | (typ, def) ->
@@ -1175,7 +1215,11 @@ let rec (resugar_term' :
                               let uu___6 = FStar_Syntax_Subst.compress def in
                               uu___6.FStar_Syntax_Syntax.n in
                             match uu___5 with
-                            | FStar_Syntax_Syntax.Tm_abs (b, t1, uu___6) ->
+                            | FStar_Syntax_Syntax.Tm_abs
+                                { FStar_Syntax_Syntax.bs = b;
+                                  FStar_Syntax_Syntax.body = t1;
+                                  FStar_Syntax_Syntax.rc_opt = uu___6;_}
+                                ->
                                 let uu___7 =
                                   FStar_Syntax_Subst.open_term b t1 in
                                 (match uu___7 with
@@ -1298,7 +1342,8 @@ let rec (resugar_term' :
             let uu___2 = let uu___3 = resugar_term' env tm in (uu___3, qi1) in
             FStar_Parser_AST.Quote uu___2 in
           mk uu___1
-      | FStar_Syntax_Syntax.Tm_meta (e, m) ->
+      | FStar_Syntax_Syntax.Tm_meta
+          { FStar_Syntax_Syntax.tm2 = e; FStar_Syntax_Syntax.meta = m;_} ->
           let resugar_meta_desugared uu___1 =
             match uu___1 with
             | FStar_Syntax_Syntax.Sequence ->
@@ -1419,7 +1464,11 @@ and (resugar_calc :
           let uu___1 = FStar_Syntax_Subst.compress rel in
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
-        | FStar_Syntax_Syntax.Tm_abs (b1::b2::[], body, uu___1) ->
+        | FStar_Syntax_Syntax.Tm_abs
+            { FStar_Syntax_Syntax.bs = b1::b2::[];
+              FStar_Syntax_Syntax.body = body;
+              FStar_Syntax_Syntax.rc_opt = uu___1;_}
+            ->
             let uu___2 = FStar_Syntax_Subst.open_term [b1; b2] body in
             (match uu___2 with
              | (b11::b21::[], body1) ->
@@ -1433,7 +1482,10 @@ and (resugar_calc :
                    let uu___4 = FStar_Syntax_Subst.compress body3 in
                    uu___4.FStar_Syntax_Syntax.n in
                  (match uu___3 with
-                  | FStar_Syntax_Syntax.Tm_app (e, args) when
+                  | FStar_Syntax_Syntax.Tm_app
+                      { FStar_Syntax_Syntax.hd = e;
+                        FStar_Syntax_Syntax.args = args;_}
+                      when
                       (FStar_Compiler_List.length args) >= (Prims.of_int (2))
                       ->
                       (match FStar_Compiler_List.rev args with
@@ -2303,7 +2355,10 @@ let (resugar_typ :
                              let uu___8 = FStar_Syntax_Subst.compress term in
                              uu___8.FStar_Syntax_Syntax.n in
                            (match uu___7 with
-                            | FStar_Syntax_Syntax.Tm_arrow (bs3, uu___8) ->
+                            | FStar_Syntax_Syntax.Tm_arrow
+                                { FStar_Syntax_Syntax.bs1 = bs3;
+                                  FStar_Syntax_Syntax.comp = uu___8;_}
+                                ->
                                 let mfields =
                                   FStar_Compiler_Effect.op_Bar_Greater bs3
                                     (FStar_Compiler_List.collect
@@ -2756,7 +2811,12 @@ let (resugar_sigelt' :
                    (is_rec, lbs2) in
              let lbs1 = nopath_lbs lbs in
              let desugared_let =
-               mk (FStar_Syntax_Syntax.Tm_let (lbs1, dummy)) in
+               mk
+                 (FStar_Syntax_Syntax.Tm_let
+                    {
+                      FStar_Syntax_Syntax.lbs = lbs1;
+                      FStar_Syntax_Syntax.body1 = dummy
+                    }) in
              let t = resugar_term' env desugared_let in
              match t.FStar_Parser_AST.tm with
              | FStar_Parser_AST.Let (isrec, lets, uu___3) ->

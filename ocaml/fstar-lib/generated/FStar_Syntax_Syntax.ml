@@ -194,33 +194,72 @@ let (uu___is_BinderStrictlyPositive : positivity_qualifier -> Prims.bool) =
 let (uu___is_BinderUnused : positivity_qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | BinderUnused -> true | uu___ -> false
-type term' =
+type term'__Tm_abs__payload =
+  {
+  bs: binder Prims.list ;
+  body: term' syntax ;
+  rc_opt: residual_comp FStar_Pervasives_Native.option }
+and term'__Tm_arrow__payload = {
+  bs1: binder Prims.list ;
+  comp: comp' syntax }
+and term'__Tm_refine__payload = {
+  b: bv ;
+  phi: term' syntax }
+and term'__Tm_app__payload =
+  {
+  hd: term' syntax ;
+  args:
+    (term' syntax * arg_qualifier FStar_Pervasives_Native.option) Prims.list }
+and term'__Tm_match__payload =
+  {
+  scrutinee: term' syntax ;
+  ret_opt:
+    (binder * ((term' syntax, comp' syntax) FStar_Pervasives.either * term'
+      syntax FStar_Pervasives_Native.option * Prims.bool))
+      FStar_Pervasives_Native.option
+    ;
+  brs:
+    (pat' withinfo_t * term' syntax FStar_Pervasives_Native.option * term'
+      syntax) Prims.list
+    ;
+  rc_opt1: residual_comp FStar_Pervasives_Native.option }
+and term'__Tm_ascribed__payload =
+  {
+  tm: term' syntax ;
+  asc:
+    ((term' syntax, comp' syntax) FStar_Pervasives.either * term' syntax
+      FStar_Pervasives_Native.option * Prims.bool)
+    ;
+  eff_opt: FStar_Ident.lident FStar_Pervasives_Native.option }
+and term'__Tm_let__payload =
+  {
+  lbs: (Prims.bool * letbinding Prims.list) ;
+  body1: term' syntax }
+and term'__Tm_delayed__payload =
+  {
+  tm1: term' syntax ;
+  substs: (subst_elt Prims.list Prims.list * maybe_set_use_range) }
+and term'__Tm_meta__payload = {
+  tm2: term' syntax ;
+  meta: metadata }
+and term' =
   | Tm_bvar of bv 
   | Tm_name of bv 
   | Tm_fvar of fv 
   | Tm_uinst of (term' syntax * universes) 
   | Tm_constant of sconst 
   | Tm_type of universe 
-  | Tm_abs of (binder Prims.list * term' syntax * residual_comp
-  FStar_Pervasives_Native.option) 
-  | Tm_arrow of (binder Prims.list * comp' syntax) 
-  | Tm_refine of (bv * term' syntax) 
-  | Tm_app of (term' syntax * (term' syntax * arg_qualifier
-  FStar_Pervasives_Native.option) Prims.list) 
-  | Tm_match of (term' syntax * (binder * ((term' syntax, comp' syntax)
-  FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option *
-  Prims.bool)) FStar_Pervasives_Native.option * (pat' withinfo_t * term'
-  syntax FStar_Pervasives_Native.option * term' syntax) Prims.list *
-  residual_comp FStar_Pervasives_Native.option) 
-  | Tm_ascribed of (term' syntax * ((term' syntax, comp' syntax)
-  FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option *
-  Prims.bool) * FStar_Ident.lident FStar_Pervasives_Native.option) 
-  | Tm_let of ((Prims.bool * letbinding Prims.list) * term' syntax) 
+  | Tm_abs of term'__Tm_abs__payload 
+  | Tm_arrow of term'__Tm_arrow__payload 
+  | Tm_refine of term'__Tm_refine__payload 
+  | Tm_app of term'__Tm_app__payload 
+  | Tm_match of term'__Tm_match__payload 
+  | Tm_ascribed of term'__Tm_ascribed__payload 
+  | Tm_let of term'__Tm_let__payload 
   | Tm_uvar of (ctx_uvar * (subst_elt Prims.list Prims.list *
   maybe_set_use_range)) 
-  | Tm_delayed of (term' syntax * (subst_elt Prims.list Prims.list *
-  maybe_set_use_range)) 
-  | Tm_meta of (term' syntax * metadata) 
+  | Tm_delayed of term'__Tm_delayed__payload 
+  | Tm_meta of term'__Tm_meta__payload 
   | Tm_lazy of lazyinfo 
   | Tm_quoted of (term' syntax * quoteinfo) 
   | Tm_unknown 
@@ -386,6 +425,92 @@ and arg_qualifier =
   {
   aqual_implicit: Prims.bool ;
   aqual_attributes: term' syntax Prims.list }
+let (__proj__Mkterm'__Tm_abs__payload__item__bs :
+  term'__Tm_abs__payload -> binder Prims.list) =
+  fun projectee -> match projectee with | { bs; body; rc_opt;_} -> bs
+let (__proj__Mkterm'__Tm_abs__payload__item__body :
+  term'__Tm_abs__payload -> term' syntax) =
+  fun projectee -> match projectee with | { bs; body; rc_opt;_} -> body
+let (__proj__Mkterm'__Tm_abs__payload__item__rc_opt :
+  term'__Tm_abs__payload -> residual_comp FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | { bs; body; rc_opt;_} -> rc_opt
+let (__proj__Mkterm'__Tm_arrow__payload__item__bs :
+  term'__Tm_arrow__payload -> binder Prims.list) =
+  fun projectee -> match projectee with | { bs1 = bs; comp;_} -> bs
+let (__proj__Mkterm'__Tm_arrow__payload__item__comp :
+  term'__Tm_arrow__payload -> comp' syntax) =
+  fun projectee -> match projectee with | { bs1 = bs; comp;_} -> comp
+let (__proj__Mkterm'__Tm_refine__payload__item__b :
+  term'__Tm_refine__payload -> bv) =
+  fun projectee -> match projectee with | { b; phi;_} -> b
+let (__proj__Mkterm'__Tm_refine__payload__item__phi :
+  term'__Tm_refine__payload -> term' syntax) =
+  fun projectee -> match projectee with | { b; phi;_} -> phi
+let (__proj__Mkterm'__Tm_app__payload__item__hd :
+  term'__Tm_app__payload -> term' syntax) =
+  fun projectee -> match projectee with | { hd; args;_} -> hd
+let (__proj__Mkterm'__Tm_app__payload__item__args :
+  term'__Tm_app__payload ->
+    (term' syntax * arg_qualifier FStar_Pervasives_Native.option) Prims.list)
+  = fun projectee -> match projectee with | { hd; args;_} -> args
+let (__proj__Mkterm'__Tm_match__payload__item__scrutinee :
+  term'__Tm_match__payload -> term' syntax) =
+  fun projectee ->
+    match projectee with
+    | { scrutinee; ret_opt; brs; rc_opt1 = rc_opt;_} -> scrutinee
+let (__proj__Mkterm'__Tm_match__payload__item__ret_opt :
+  term'__Tm_match__payload ->
+    (binder * ((term' syntax, comp' syntax) FStar_Pervasives.either * term'
+      syntax FStar_Pervasives_Native.option * Prims.bool))
+      FStar_Pervasives_Native.option)
+  =
+  fun projectee ->
+    match projectee with
+    | { scrutinee; ret_opt; brs; rc_opt1 = rc_opt;_} -> ret_opt
+let (__proj__Mkterm'__Tm_match__payload__item__brs :
+  term'__Tm_match__payload ->
+    (pat' withinfo_t * term' syntax FStar_Pervasives_Native.option * term'
+      syntax) Prims.list)
+  =
+  fun projectee ->
+    match projectee with
+    | { scrutinee; ret_opt; brs; rc_opt1 = rc_opt;_} -> brs
+let (__proj__Mkterm'__Tm_match__payload__item__rc_opt :
+  term'__Tm_match__payload -> residual_comp FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { scrutinee; ret_opt; brs; rc_opt1 = rc_opt;_} -> rc_opt
+let (__proj__Mkterm'__Tm_ascribed__payload__item__tm :
+  term'__Tm_ascribed__payload -> term' syntax) =
+  fun projectee -> match projectee with | { tm; asc; eff_opt;_} -> tm
+let (__proj__Mkterm'__Tm_ascribed__payload__item__asc :
+  term'__Tm_ascribed__payload ->
+    ((term' syntax, comp' syntax) FStar_Pervasives.either * term' syntax
+      FStar_Pervasives_Native.option * Prims.bool))
+  = fun projectee -> match projectee with | { tm; asc; eff_opt;_} -> asc
+let (__proj__Mkterm'__Tm_ascribed__payload__item__eff_opt :
+  term'__Tm_ascribed__payload ->
+    FStar_Ident.lident FStar_Pervasives_Native.option)
+  = fun projectee -> match projectee with | { tm; asc; eff_opt;_} -> eff_opt
+let (__proj__Mkterm'__Tm_let__payload__item__lbs :
+  term'__Tm_let__payload -> (Prims.bool * letbinding Prims.list)) =
+  fun projectee -> match projectee with | { lbs; body1 = body;_} -> lbs
+let (__proj__Mkterm'__Tm_let__payload__item__body :
+  term'__Tm_let__payload -> term' syntax) =
+  fun projectee -> match projectee with | { lbs; body1 = body;_} -> body
+let (__proj__Mkterm'__Tm_delayed__payload__item__tm :
+  term'__Tm_delayed__payload -> term' syntax) =
+  fun projectee -> match projectee with | { tm1 = tm; substs;_} -> tm
+let (__proj__Mkterm'__Tm_delayed__payload__item__substs :
+  term'__Tm_delayed__payload ->
+    (subst_elt Prims.list Prims.list * maybe_set_use_range))
+  = fun projectee -> match projectee with | { tm1 = tm; substs;_} -> substs
+let (__proj__Mkterm'__Tm_meta__payload__item__tm :
+  term'__Tm_meta__payload -> term' syntax) =
+  fun projectee -> match projectee with | { tm2 = tm; meta;_} -> tm
+let (__proj__Mkterm'__Tm_meta__payload__item__meta :
+  term'__Tm_meta__payload -> metadata) =
+  fun projectee -> match projectee with | { tm2 = tm; meta;_} -> meta
 let (uu___is_Tm_bvar : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_bvar _0 -> true | uu___ -> false
 let (__proj__Tm_bvar__item___0 : term' -> bv) =
@@ -414,53 +539,35 @@ let (__proj__Tm_type__item___0 : term' -> universe) =
   fun projectee -> match projectee with | Tm_type _0 -> _0
 let (uu___is_Tm_abs : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_abs _0 -> true | uu___ -> false
-let (__proj__Tm_abs__item___0 :
-  term' ->
-    (binder Prims.list * term' syntax * residual_comp
-      FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | Tm_abs _0 -> _0
+let (__proj__Tm_abs__item___0 : term' -> term'__Tm_abs__payload) =
+  fun projectee -> match projectee with | Tm_abs _0 -> _0
 let (uu___is_Tm_arrow : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Tm_arrow _0 -> true | uu___ -> false
-let (__proj__Tm_arrow__item___0 :
-  term' -> (binder Prims.list * comp' syntax)) =
+let (__proj__Tm_arrow__item___0 : term' -> term'__Tm_arrow__payload) =
   fun projectee -> match projectee with | Tm_arrow _0 -> _0
 let (uu___is_Tm_refine : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Tm_refine _0 -> true | uu___ -> false
-let (__proj__Tm_refine__item___0 : term' -> (bv * term' syntax)) =
+let (__proj__Tm_refine__item___0 : term' -> term'__Tm_refine__payload) =
   fun projectee -> match projectee with | Tm_refine _0 -> _0
 let (uu___is_Tm_app : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_app _0 -> true | uu___ -> false
-let (__proj__Tm_app__item___0 :
-  term' ->
-    (term' syntax * (term' syntax * arg_qualifier
-      FStar_Pervasives_Native.option) Prims.list))
-  = fun projectee -> match projectee with | Tm_app _0 -> _0
+let (__proj__Tm_app__item___0 : term' -> term'__Tm_app__payload) =
+  fun projectee -> match projectee with | Tm_app _0 -> _0
 let (uu___is_Tm_match : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Tm_match _0 -> true | uu___ -> false
-let (__proj__Tm_match__item___0 :
-  term' ->
-    (term' syntax * (binder * ((term' syntax, comp' syntax)
-      FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option *
-      Prims.bool)) FStar_Pervasives_Native.option * (pat' withinfo_t * term'
-      syntax FStar_Pervasives_Native.option * term' syntax) Prims.list *
-      residual_comp FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | Tm_match _0 -> _0
+let (__proj__Tm_match__item___0 : term' -> term'__Tm_match__payload) =
+  fun projectee -> match projectee with | Tm_match _0 -> _0
 let (uu___is_Tm_ascribed : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Tm_ascribed _0 -> true | uu___ -> false
-let (__proj__Tm_ascribed__item___0 :
-  term' ->
-    (term' syntax * ((term' syntax, comp' syntax) FStar_Pervasives.either *
-      term' syntax FStar_Pervasives_Native.option * Prims.bool) *
-      FStar_Ident.lident FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | Tm_ascribed _0 -> _0
+let (__proj__Tm_ascribed__item___0 : term' -> term'__Tm_ascribed__payload) =
+  fun projectee -> match projectee with | Tm_ascribed _0 -> _0
 let (uu___is_Tm_let : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_let _0 -> true | uu___ -> false
-let (__proj__Tm_let__item___0 :
-  term' -> ((Prims.bool * letbinding Prims.list) * term' syntax)) =
+let (__proj__Tm_let__item___0 : term' -> term'__Tm_let__payload) =
   fun projectee -> match projectee with | Tm_let _0 -> _0
 let (uu___is_Tm_uvar : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_uvar _0 -> true | uu___ -> false
@@ -471,13 +578,11 @@ let (__proj__Tm_uvar__item___0 :
 let (uu___is_Tm_delayed : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Tm_delayed _0 -> true | uu___ -> false
-let (__proj__Tm_delayed__item___0 :
-  term' ->
-    (term' syntax * (subst_elt Prims.list Prims.list * maybe_set_use_range)))
-  = fun projectee -> match projectee with | Tm_delayed _0 -> _0
+let (__proj__Tm_delayed__item___0 : term' -> term'__Tm_delayed__payload) =
+  fun projectee -> match projectee with | Tm_delayed _0 -> _0
 let (uu___is_Tm_meta : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_meta _0 -> true | uu___ -> false
-let (__proj__Tm_meta__item___0 : term' -> (term' syntax * metadata)) =
+let (__proj__Tm_meta__item___0 : term' -> term'__Tm_meta__payload) =
   fun projectee -> match projectee with | Tm_meta _0 -> _0
 let (uu___is_Tm_lazy : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_lazy _0 -> true | uu___ -> false
@@ -1822,7 +1927,9 @@ let (mk_Tm_app : term -> args -> FStar_Compiler_Range_Type.range -> term) =
   fun t1 ->
     fun args1 ->
       fun p ->
-        match args1 with | [] -> t1 | uu___ -> mk (Tm_app (t1, args1)) p
+        match args1 with
+        | [] -> t1
+        | uu___ -> mk (Tm_app { hd = t1; args = args1 }) p
 let (mk_Tm_uinst : term -> universes -> term) =
   fun t ->
     fun us ->
@@ -1836,14 +1943,21 @@ let (extend_app_n : term -> args -> FStar_Compiler_Range_Type.range -> term)
     fun args' ->
       fun r ->
         match t.n with
-        | Tm_app (head, args1) ->
-            mk_Tm_app head (FStar_Compiler_List.op_At args1 args') r
+        | Tm_app { hd; args = args1;_} ->
+            mk_Tm_app hd (FStar_Compiler_List.op_At args1 args') r
         | uu___ -> mk_Tm_app t args' r
 let (extend_app : term -> arg -> FStar_Compiler_Range_Type.range -> term) =
   fun t -> fun arg1 -> fun r -> extend_app_n t [arg1] r
 let (mk_Tm_delayed :
   (term * subst_ts) -> FStar_Compiler_Range_Type.range -> term) =
-  fun lr -> fun pos -> mk (Tm_delayed lr) pos
+  fun lr ->
+    fun pos ->
+      mk
+        (Tm_delayed
+           {
+             tm1 = (FStar_Pervasives_Native.fst lr);
+             substs = (FStar_Pervasives_Native.snd lr)
+           }) pos
 let (mk_Total : typ -> comp) = fun t -> mk (Total t) t.pos
 let (mk_GTotal : typ -> comp) = fun t -> mk (GTotal t) t.pos
 let (mk_Comp : comp_typ -> comp) = fun ct -> mk (Comp ct) (ct.result_typ).pos

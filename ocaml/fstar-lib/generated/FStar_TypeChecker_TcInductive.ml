@@ -319,7 +319,10 @@ let (tc_data :
                                let uu___5 = FStar_Syntax_Subst.compress t2 in
                                uu___5.FStar_Syntax_Syntax.n in
                              match uu___4 with
-                             | FStar_Syntax_Syntax.Tm_arrow (bs, res) ->
+                             | FStar_Syntax_Syntax.Tm_arrow
+                                 { FStar_Syntax_Syntax.bs1 = bs;
+                                   FStar_Syntax_Syntax.comp = res;_}
+                                 ->
                                  let uu___5 =
                                    FStar_Compiler_Util.first_N ntps bs in
                                  (match uu___5 with
@@ -327,8 +330,10 @@ let (tc_data :
                                       let t3 =
                                         FStar_Syntax_Syntax.mk
                                           (FStar_Syntax_Syntax.Tm_arrow
-                                             (bs', res))
-                                          t2.FStar_Syntax_Syntax.pos in
+                                             {
+                                               FStar_Syntax_Syntax.bs1 = bs';
+                                               FStar_Syntax_Syntax.comp = res
+                                             }) t2.FStar_Syntax_Syntax.pos in
                                       let subst =
                                         FStar_Compiler_Effect.op_Bar_Greater
                                           tps
@@ -785,7 +790,12 @@ let (generalize_and_inst_within :
                                                    uu___17.FStar_Syntax_Syntax.n in
                                                  match uu___16 with
                                                  | FStar_Syntax_Syntax.Tm_arrow
-                                                     (binders1, c) ->
+                                                     {
+                                                       FStar_Syntax_Syntax.bs1
+                                                         = binders1;
+                                                       FStar_Syntax_Syntax.comp
+                                                         = c;_}
+                                                     ->
                                                      let uu___17 =
                                                        FStar_Compiler_Util.first_N
                                                          (FStar_Compiler_List.length
@@ -800,7 +810,12 @@ let (generalize_and_inst_within :
                                                             | uu___18 ->
                                                                 FStar_Syntax_Syntax.mk
                                                                   (FStar_Syntax_Syntax.Tm_arrow
-                                                                    (rest, c))
+                                                                    {
+                                                                    FStar_Syntax_Syntax.bs1
+                                                                    = rest;
+                                                                    FStar_Syntax_Syntax.comp
+                                                                    = c
+                                                                    })
                                                                   (x.FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos in
                                                           (tps1, t3))
                                                  | uu___17 -> ([], ty) in
@@ -990,7 +1005,10 @@ let (get_optimized_haseq_axiom :
                        let uu___3 = FStar_Syntax_Subst.compress t2 in
                        uu___3.FStar_Syntax_Syntax.n in
                      match uu___2 with
-                     | FStar_Syntax_Syntax.Tm_arrow (ibs1, uu___3) -> ibs1
+                     | FStar_Syntax_Syntax.Tm_arrow
+                         { FStar_Syntax_Syntax.bs1 = ibs1;
+                           FStar_Syntax_Syntax.comp = uu___3;_}
+                         -> ibs1
                      | uu___3 -> [] in
                    let ibs1 = FStar_Syntax_Subst.open_binders ibs in
                    let ind =
@@ -1062,7 +1080,10 @@ let (get_optimized_haseq_axiom :
                                [uu___8] in
                              (uu___6, uu___7) in
                            FStar_Syntax_Syntax.Meta_pattern uu___5 in
-                         (fml, uu___4) in
+                         {
+                           FStar_Syntax_Syntax.tm2 = fml;
+                           FStar_Syntax_Syntax.meta = uu___4
+                         } in
                        FStar_Syntax_Syntax.Tm_meta uu___3 in
                      {
                        FStar_Syntax_Syntax.n = uu___2;
@@ -1133,7 +1154,10 @@ let (optimized_haseq_soundness_for_data :
             let uu___1 = FStar_Syntax_Subst.compress dt1 in
             uu___1.FStar_Syntax_Syntax.n in
           match uu___ with
-          | FStar_Syntax_Syntax.Tm_arrow (dbs, uu___1) ->
+          | FStar_Syntax_Syntax.Tm_arrow
+              { FStar_Syntax_Syntax.bs1 = dbs;
+                FStar_Syntax_Syntax.comp = uu___1;_}
+              ->
               let dbs1 =
                 let uu___2 =
                   FStar_Compiler_List.splitAt (FStar_Compiler_List.length bs)
@@ -1371,9 +1395,14 @@ let (unoptimized_haseq_data :
                            (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                       mutuals
                 | FStar_Syntax_Syntax.Tm_uinst (t', uu___1) -> is_mutual t'
-                | FStar_Syntax_Syntax.Tm_refine (bv, t') ->
-                    is_mutual bv.FStar_Syntax_Syntax.sort
-                | FStar_Syntax_Syntax.Tm_app (t', args) ->
+                | FStar_Syntax_Syntax.Tm_refine
+                    { FStar_Syntax_Syntax.b = bv;
+                      FStar_Syntax_Syntax.phi = uu___1;_}
+                    -> is_mutual bv.FStar_Syntax_Syntax.sort
+                | FStar_Syntax_Syntax.Tm_app
+                    { FStar_Syntax_Syntax.hd = t';
+                      FStar_Syntax_Syntax.args = args;_}
+                    ->
                     let uu___1 = is_mutual t' in
                     if uu___1
                     then true
@@ -1382,7 +1411,10 @@ let (unoptimized_haseq_data :
                          FStar_Compiler_List.map FStar_Pervasives_Native.fst
                            args in
                        exists_mutual uu___3)
-                | FStar_Syntax_Syntax.Tm_meta (t', uu___1) -> is_mutual t'
+                | FStar_Syntax_Syntax.Tm_meta
+                    { FStar_Syntax_Syntax.tm2 = t';
+                      FStar_Syntax_Syntax.meta = uu___1;_}
+                    -> is_mutual t'
                 | uu___1 -> false
               and exists_mutual uu___ =
                 match uu___ with
@@ -1394,7 +1426,10 @@ let (unoptimized_haseq_data :
                 let uu___1 = FStar_Syntax_Subst.compress dt1 in
                 uu___1.FStar_Syntax_Syntax.n in
               match uu___ with
-              | FStar_Syntax_Syntax.Tm_arrow (dbs, uu___1) ->
+              | FStar_Syntax_Syntax.Tm_arrow
+                  { FStar_Syntax_Syntax.bs1 = dbs;
+                    FStar_Syntax_Syntax.comp = uu___1;_}
+                  ->
                   let dbs1 =
                     let uu___2 =
                       FStar_Compiler_List.splitAt
@@ -1486,8 +1521,10 @@ let (unoptimized_haseq_ty :
                            let uu___3 = FStar_Syntax_Subst.compress t2 in
                            uu___3.FStar_Syntax_Syntax.n in
                          match uu___2 with
-                         | FStar_Syntax_Syntax.Tm_arrow (ibs1, uu___3) ->
-                             ibs1
+                         | FStar_Syntax_Syntax.Tm_arrow
+                             { FStar_Syntax_Syntax.bs1 = ibs1;
+                               FStar_Syntax_Syntax.comp = uu___3;_}
+                             -> ibs1
                          | uu___3 -> [] in
                        let ibs1 = FStar_Syntax_Subst.open_binders ibs in
                        let ind =
@@ -1548,7 +1585,10 @@ let (unoptimized_haseq_ty :
                                    [uu___8] in
                                  (uu___6, uu___7) in
                                FStar_Syntax_Syntax.Meta_pattern uu___5 in
-                             (fml, uu___4) in
+                             {
+                               FStar_Syntax_Syntax.tm2 = fml;
+                               FStar_Syntax_Syntax.meta = uu___4
+                             } in
                            FStar_Syntax_Syntax.Tm_meta uu___3 in
                          {
                            FStar_Syntax_Syntax.n = uu___2;
@@ -1946,7 +1986,12 @@ let (check_inductive_well_typedness :
                                                         let uu___8 =
                                                           FStar_Syntax_Syntax.mk_Total
                                                             typ in
-                                                        (binders1, uu___8) in
+                                                        {
+                                                          FStar_Syntax_Syntax.bs1
+                                                            = binders1;
+                                                          FStar_Syntax_Syntax.comp
+                                                            = uu___8
+                                                        } in
                                                       FStar_Syntax_Syntax.Tm_arrow
                                                         uu___7 in
                                                     FStar_Syntax_Syntax.mk
@@ -2372,10 +2417,15 @@ let (mk_discriminator_and_indexed_projectors :
                                                    pat_false in
                                                [uu___9] in
                                              uu___7 :: uu___8 in
-                                           (arg_exp,
-                                             FStar_Pervasives_Native.None,
-                                             uu___6,
-                                             FStar_Pervasives_Native.None) in
+                                           {
+                                             FStar_Syntax_Syntax.scrutinee =
+                                               arg_exp;
+                                             FStar_Syntax_Syntax.ret_opt =
+                                               FStar_Pervasives_Native.None;
+                                             FStar_Syntax_Syntax.brs = uu___6;
+                                             FStar_Syntax_Syntax.rc_opt1 =
+                                               FStar_Pervasives_Native.None
+                                           } in
                                          FStar_Syntax_Syntax.Tm_match uu___5 in
                                        FStar_Syntax_Syntax.mk uu___4 p) in
                                   let dd =
@@ -2760,10 +2810,18 @@ let (mk_discriminator_and_indexed_projectors :
                                                           FStar_Syntax_Util.branch
                                                             pat in
                                                         [uu___10] in
-                                                      (arg_exp,
-                                                        returns_annotation,
-                                                        uu___9,
-                                                        FStar_Pervasives_Native.None) in
+                                                      {
+                                                        FStar_Syntax_Syntax.scrutinee
+                                                          = arg_exp;
+                                                        FStar_Syntax_Syntax.ret_opt
+                                                          =
+                                                          returns_annotation;
+                                                        FStar_Syntax_Syntax.brs
+                                                          = uu___9;
+                                                        FStar_Syntax_Syntax.rc_opt1
+                                                          =
+                                                          FStar_Pervasives_Native.None
+                                                      } in
                                                     FStar_Syntax_Syntax.Tm_match
                                                       uu___8 in
                                                   FStar_Syntax_Syntax.mk

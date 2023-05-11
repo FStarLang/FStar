@@ -228,25 +228,54 @@ let (on_sub_term :
           let uu___ =
             let uu___1 = f_univ vfs u in FStar_Syntax_Syntax.Tm_type uu___1 in
           mk uu___
-      | FStar_Syntax_Syntax.Tm_app (hd, args) ->
+      | FStar_Syntax_Syntax.Tm_app
+          { FStar_Syntax_Syntax.hd = hd; FStar_Syntax_Syntax.args = args;_}
+          ->
           let hd1 = f_term vfs hd in
           let args1 = FStar_Compiler_List.map (f_arg vfs) args in
-          mk (FStar_Syntax_Syntax.Tm_app (hd1, args1))
-      | FStar_Syntax_Syntax.Tm_abs (bs, t, rc_opt) ->
+          mk
+            (FStar_Syntax_Syntax.Tm_app
+               {
+                 FStar_Syntax_Syntax.hd = hd1;
+                 FStar_Syntax_Syntax.args = args1
+               })
+      | FStar_Syntax_Syntax.Tm_abs
+          { FStar_Syntax_Syntax.bs = bs; FStar_Syntax_Syntax.body = t;
+            FStar_Syntax_Syntax.rc_opt = rc_opt;_}
+          ->
           let bs1 = FStar_Compiler_List.map (f_binder vfs) bs in
           let t1 = f_term vfs t in
           let rc_opt1 =
             FStar_Compiler_Util.map_opt rc_opt (f_residual_comp vfs) in
-          mk (FStar_Syntax_Syntax.Tm_abs (bs1, t1, rc_opt1))
-      | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+          mk
+            (FStar_Syntax_Syntax.Tm_abs
+               {
+                 FStar_Syntax_Syntax.bs = bs1;
+                 FStar_Syntax_Syntax.body = t1;
+                 FStar_Syntax_Syntax.rc_opt = rc_opt1
+               })
+      | FStar_Syntax_Syntax.Tm_arrow
+          { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = c;_} ->
           let bs1 = FStar_Compiler_List.map (f_binder vfs) bs in
           let c1 = f_comp vfs c in
-          mk (FStar_Syntax_Syntax.Tm_arrow (bs1, c1))
-      | FStar_Syntax_Syntax.Tm_refine (bv, phi) ->
+          mk
+            (FStar_Syntax_Syntax.Tm_arrow
+               { FStar_Syntax_Syntax.bs1 = bs1; FStar_Syntax_Syntax.comp = c1
+               })
+      | FStar_Syntax_Syntax.Tm_refine
+          { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = phi;_} ->
           let bv1 = f_binding_bv vfs bv in
           let phi1 = f_term vfs phi in
-          mk (FStar_Syntax_Syntax.Tm_refine (bv1, phi1))
-      | FStar_Syntax_Syntax.Tm_match (sc, asc_opt, brs, rc_opt) ->
+          mk
+            (FStar_Syntax_Syntax.Tm_refine
+               { FStar_Syntax_Syntax.b = bv1; FStar_Syntax_Syntax.phi = phi1
+               })
+      | FStar_Syntax_Syntax.Tm_match
+          { FStar_Syntax_Syntax.scrutinee = sc;
+            FStar_Syntax_Syntax.ret_opt = asc_opt;
+            FStar_Syntax_Syntax.brs = brs;
+            FStar_Syntax_Syntax.rc_opt1 = rc_opt;_}
+          ->
           let sc1 = f_term vfs sc in
           let asc_opt1 =
             FStar_Compiler_Util.map_opt asc_opt
@@ -259,23 +288,51 @@ let (on_sub_term :
           let brs1 = FStar_Compiler_List.map (f_br vfs) brs in
           let rc_opt1 =
             FStar_Compiler_Util.map_opt rc_opt (f_residual_comp vfs) in
-          mk (FStar_Syntax_Syntax.Tm_match (sc1, asc_opt1, brs1, rc_opt1))
-      | FStar_Syntax_Syntax.Tm_ascribed (e, a, lopt) ->
+          mk
+            (FStar_Syntax_Syntax.Tm_match
+               {
+                 FStar_Syntax_Syntax.scrutinee = sc1;
+                 FStar_Syntax_Syntax.ret_opt = asc_opt1;
+                 FStar_Syntax_Syntax.brs = brs1;
+                 FStar_Syntax_Syntax.rc_opt1 = rc_opt1
+               })
+      | FStar_Syntax_Syntax.Tm_ascribed
+          { FStar_Syntax_Syntax.tm = e; FStar_Syntax_Syntax.asc = a;
+            FStar_Syntax_Syntax.eff_opt = lopt;_}
+          ->
           let e1 = f_term vfs e in
           let a1 = on_sub_ascription vfs a in
-          mk (FStar_Syntax_Syntax.Tm_ascribed (e1, a1, lopt))
-      | FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), t) ->
+          mk
+            (FStar_Syntax_Syntax.Tm_ascribed
+               {
+                 FStar_Syntax_Syntax.tm = e1;
+                 FStar_Syntax_Syntax.asc = a1;
+                 FStar_Syntax_Syntax.eff_opt = lopt
+               })
+      | FStar_Syntax_Syntax.Tm_let
+          { FStar_Syntax_Syntax.lbs = (is_rec, lbs);
+            FStar_Syntax_Syntax.body1 = t;_}
+          ->
           let lbs1 = FStar_Compiler_List.map (on_sub_letbinding vfs) lbs in
           let t1 = f_term vfs t in
-          mk (FStar_Syntax_Syntax.Tm_let ((is_rec, lbs1), t1))
+          mk
+            (FStar_Syntax_Syntax.Tm_let
+               {
+                 FStar_Syntax_Syntax.lbs = (is_rec, lbs1);
+                 FStar_Syntax_Syntax.body1 = t1
+               })
       | FStar_Syntax_Syntax.Tm_quoted (tm2, qi) ->
           let tm3 = f_term vfs tm2 in
           let qi1 = FStar_Syntax_Syntax.on_antiquoted (f_term vfs) qi in
           mk (FStar_Syntax_Syntax.Tm_quoted (tm3, qi1))
-      | FStar_Syntax_Syntax.Tm_meta (t, md) ->
+      | FStar_Syntax_Syntax.Tm_meta
+          { FStar_Syntax_Syntax.tm2 = t; FStar_Syntax_Syntax.meta = md;_} ->
           let t1 = f_term vfs t in
           let md1 = on_sub_meta vfs md in
-          mk (FStar_Syntax_Syntax.Tm_meta (t1, md1))
+          mk
+            (FStar_Syntax_Syntax.Tm_meta
+               { FStar_Syntax_Syntax.tm2 = t1; FStar_Syntax_Syntax.meta = md1
+               })
 let (on_sub_binding_bv :
   vfs_t -> FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv) =
   fun vfs ->

@@ -2855,7 +2855,12 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
                                               let uu___10 =
                                                 FStar_Syntax_Syntax.mk_Total
                                                   typ in
-                                              (binders, uu___10) in
+                                              {
+                                                FStar_Syntax_Syntax.bs1 =
+                                                  binders;
+                                                FStar_Syntax_Syntax.comp =
+                                                  uu___10
+                                              } in
                                             FStar_Syntax_Syntax.Tm_arrow
                                               uu___9 in
                                           let uu___9 =

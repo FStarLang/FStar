@@ -164,7 +164,9 @@ let rec (inspect_ln :
       FStar_Compiler_Effect.op_Bar_Greater t
         FStar_Syntax_Subst.compress_subst in
     match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_meta (t2, uu___) -> inspect_ln t2
+    | FStar_Syntax_Syntax.Tm_meta
+        { FStar_Syntax_Syntax.tm2 = t2; FStar_Syntax_Syntax.meta = uu___;_}
+        -> inspect_ln t2
     | FStar_Syntax_Syntax.Tm_name bv -> FStar_Reflection_Data.Tv_Var bv
     | FStar_Syntax_Syntax.Tm_bvar bv -> FStar_Reflection_Data.Tv_BVar bv
     | FStar_Syntax_Syntax.Tm_fvar fv -> FStar_Reflection_Data.Tv_FVar fv
@@ -175,14 +177,20 @@ let rec (inspect_ln :
          | uu___ ->
              failwith "Reflection::inspect_ln: uinst for a non-fvar node")
     | FStar_Syntax_Syntax.Tm_ascribed
-        (t2, (FStar_Pervasives.Inl ty, tacopt, eq), _elid) ->
-        FStar_Reflection_Data.Tv_AscribedT (t2, ty, tacopt, eq)
+        { FStar_Syntax_Syntax.tm = t2;
+          FStar_Syntax_Syntax.asc = (FStar_Pervasives.Inl ty, tacopt, eq);
+          FStar_Syntax_Syntax.eff_opt = uu___;_}
+        -> FStar_Reflection_Data.Tv_AscribedT (t2, ty, tacopt, eq)
     | FStar_Syntax_Syntax.Tm_ascribed
-        (t2, (FStar_Pervasives.Inr cty, tacopt, eq), elid) ->
-        FStar_Reflection_Data.Tv_AscribedC (t2, cty, tacopt, eq)
-    | FStar_Syntax_Syntax.Tm_app (hd, []) ->
+        { FStar_Syntax_Syntax.tm = t2;
+          FStar_Syntax_Syntax.asc = (FStar_Pervasives.Inr cty, tacopt, eq);
+          FStar_Syntax_Syntax.eff_opt = uu___;_}
+        -> FStar_Reflection_Data.Tv_AscribedC (t2, cty, tacopt, eq)
+    | FStar_Syntax_Syntax.Tm_app
+        { FStar_Syntax_Syntax.hd = uu___; FStar_Syntax_Syntax.args = [];_} ->
         failwith "inspect_ln: empty arguments on Tm_app"
-    | FStar_Syntax_Syntax.Tm_app (hd, args) ->
+    | FStar_Syntax_Syntax.Tm_app
+        { FStar_Syntax_Syntax.hd = hd; FStar_Syntax_Syntax.args = args;_} ->
         let uu___ = last args in
         (match uu___ with
          | (a, q) ->
@@ -192,27 +200,38 @@ let rec (inspect_ln :
                  let uu___3 = init args in FStar_Syntax_Util.mk_app hd uu___3 in
                (uu___2, (a, q')) in
              FStar_Reflection_Data.Tv_App uu___1)
-    | FStar_Syntax_Syntax.Tm_abs ([], uu___, uu___1) ->
-        failwith "inspect_ln: empty arguments on Tm_abs"
-    | FStar_Syntax_Syntax.Tm_abs (b::bs, t2, k) ->
+    | FStar_Syntax_Syntax.Tm_abs
+        { FStar_Syntax_Syntax.bs = []; FStar_Syntax_Syntax.body = uu___;
+          FStar_Syntax_Syntax.rc_opt = uu___1;_}
+        -> failwith "inspect_ln: empty arguments on Tm_abs"
+    | FStar_Syntax_Syntax.Tm_abs
+        { FStar_Syntax_Syntax.bs = b::bs; FStar_Syntax_Syntax.body = t2;
+          FStar_Syntax_Syntax.rc_opt = k;_}
+        ->
         let body =
           match bs with
           | [] -> t2
           | bs1 ->
               FStar_Syntax_Syntax.mk
-                (FStar_Syntax_Syntax.Tm_abs (bs1, t2, k))
-                t2.FStar_Syntax_Syntax.pos in
+                (FStar_Syntax_Syntax.Tm_abs
+                   {
+                     FStar_Syntax_Syntax.bs = bs1;
+                     FStar_Syntax_Syntax.body = t2;
+                     FStar_Syntax_Syntax.rc_opt = k
+                   }) t2.FStar_Syntax_Syntax.pos in
         FStar_Reflection_Data.Tv_Abs (b, body)
     | FStar_Syntax_Syntax.Tm_type u -> FStar_Reflection_Data.Tv_Type u
-    | FStar_Syntax_Syntax.Tm_arrow ([], k) ->
-        failwith "inspect_ln: empty binders on arrow"
+    | FStar_Syntax_Syntax.Tm_arrow
+        { FStar_Syntax_Syntax.bs1 = []; FStar_Syntax_Syntax.comp = uu___;_}
+        -> failwith "inspect_ln: empty binders on arrow"
     | FStar_Syntax_Syntax.Tm_arrow uu___ ->
         let uu___1 = FStar_Syntax_Util.arrow_one_ln t1 in
         (match uu___1 with
          | FStar_Pervasives_Native.Some (b, c) ->
              FStar_Reflection_Data.Tv_Arrow (b, c)
          | FStar_Pervasives_Native.None -> failwith "impossible")
-    | FStar_Syntax_Syntax.Tm_refine (bv, t2) ->
+    | FStar_Syntax_Syntax.Tm_refine
+        { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = t2;_} ->
         FStar_Reflection_Data.Tv_Refine
           (bv, (bv.FStar_Syntax_Syntax.sort), t2)
     | FStar_Syntax_Syntax.Tm_constant c ->
@@ -226,7 +245,10 @@ let rec (inspect_ln :
             FStar_BigInt.of_int_fs uu___2 in
           (uu___1, (ctx_u, s)) in
         FStar_Reflection_Data.Tv_Uvar uu___
-    | FStar_Syntax_Syntax.Tm_let ((false, lb::[]), t2) ->
+    | FStar_Syntax_Syntax.Tm_let
+        { FStar_Syntax_Syntax.lbs = (false, lb::[]);
+          FStar_Syntax_Syntax.body1 = t2;_}
+        ->
         if lb.FStar_Syntax_Syntax.lbunivs <> []
         then FStar_Reflection_Data.Tv_Unsupp
         else
@@ -237,7 +259,10 @@ let rec (inspect_ln :
                  (false, (lb.FStar_Syntax_Syntax.lbattrs), bv,
                    (bv.FStar_Syntax_Syntax.sort),
                    (lb.FStar_Syntax_Syntax.lbdef), t2))
-    | FStar_Syntax_Syntax.Tm_let ((true, lb::[]), t2) ->
+    | FStar_Syntax_Syntax.Tm_let
+        { FStar_Syntax_Syntax.lbs = (true, lb::[]);
+          FStar_Syntax_Syntax.body1 = t2;_}
+        ->
         if lb.FStar_Syntax_Syntax.lbunivs <> []
         then FStar_Reflection_Data.Tv_Unsupp
         else
@@ -248,7 +273,12 @@ let rec (inspect_ln :
                  (true, (lb.FStar_Syntax_Syntax.lbattrs), bv,
                    (bv.FStar_Syntax_Syntax.sort),
                    (lb.FStar_Syntax_Syntax.lbdef), t2))
-    | FStar_Syntax_Syntax.Tm_match (t2, ret_opt, brs, uu___) ->
+    | FStar_Syntax_Syntax.Tm_match
+        { FStar_Syntax_Syntax.scrutinee = t2;
+          FStar_Syntax_Syntax.ret_opt = ret_opt;
+          FStar_Syntax_Syntax.brs = brs;
+          FStar_Syntax_Syntax.rc_opt1 = uu___;_}
+        ->
         let rec inspect_pat p =
           match p.FStar_Syntax_Syntax.v with
           | FStar_Syntax_Syntax.Pat_constant c ->
@@ -442,10 +472,16 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
         let q' = pack_aqual q in FStar_Syntax_Util.mk_app l [(r, q')]
     | FStar_Reflection_Data.Tv_Abs (b, t) ->
         FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_abs ([b], t, FStar_Pervasives_Native.None))
-          t.FStar_Syntax_Syntax.pos
+          (FStar_Syntax_Syntax.Tm_abs
+             {
+               FStar_Syntax_Syntax.bs = [b];
+               FStar_Syntax_Syntax.body = t;
+               FStar_Syntax_Syntax.rc_opt = FStar_Pervasives_Native.None
+             }) t.FStar_Syntax_Syntax.pos
     | FStar_Reflection_Data.Tv_Arrow (b, c) ->
-        FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_arrow ([b], c))
+        FStar_Syntax_Syntax.mk
+          (FStar_Syntax_Syntax.Tm_arrow
+             { FStar_Syntax_Syntax.bs1 = [b]; FStar_Syntax_Syntax.comp = c })
           c.FStar_Syntax_Syntax.pos
     | FStar_Reflection_Data.Tv_Type u ->
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
@@ -453,11 +489,16 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
     | FStar_Reflection_Data.Tv_Refine (bv, sort, t) ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_refine
-             ({
-                FStar_Syntax_Syntax.ppname = (bv.FStar_Syntax_Syntax.ppname);
-                FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
-                FStar_Syntax_Syntax.sort = sort
-              }, t)) t.FStar_Syntax_Syntax.pos
+             {
+               FStar_Syntax_Syntax.b =
+                 {
+                   FStar_Syntax_Syntax.ppname =
+                     (bv.FStar_Syntax_Syntax.ppname);
+                   FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+                   FStar_Syntax_Syntax.sort = sort
+                 };
+               FStar_Syntax_Syntax.phi = t
+             }) t.FStar_Syntax_Syntax.pos
     | FStar_Reflection_Data.Tv_Const c ->
         let uu___ =
           let uu___1 = pack_const c in FStar_Syntax_Syntax.Tm_constant uu___1 in
@@ -477,8 +518,11 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
             bv1.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
             attrs FStar_Compiler_Range_Type.dummyRange in
         FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_let ((false, [lb]), t2))
-          FStar_Compiler_Range_Type.dummyRange
+          (FStar_Syntax_Syntax.Tm_let
+             {
+               FStar_Syntax_Syntax.lbs = (false, [lb]);
+               FStar_Syntax_Syntax.body1 = t2
+             }) FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Let (true, attrs, bv, ty, t1, t2) ->
         let bv1 =
           {
@@ -491,8 +535,11 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
             bv1.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
             attrs FStar_Compiler_Range_Type.dummyRange in
         FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_let ((true, [lb]), t2))
-          FStar_Compiler_Range_Type.dummyRange
+          (FStar_Syntax_Syntax.Tm_let
+             {
+               FStar_Syntax_Syntax.lbs = (true, [lb]);
+               FStar_Syntax_Syntax.body1 = t2
+             }) FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Match (t, ret_opt, brs) ->
         let wrap v =
           {
@@ -533,20 +580,30 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
                    (uu___1, FStar_Pervasives_Native.None, t1)) brs in
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_match
-             (t, ret_opt, brs1, FStar_Pervasives_Native.None))
-          FStar_Compiler_Range_Type.dummyRange
+             {
+               FStar_Syntax_Syntax.scrutinee = t;
+               FStar_Syntax_Syntax.ret_opt = ret_opt;
+               FStar_Syntax_Syntax.brs = brs1;
+               FStar_Syntax_Syntax.rc_opt1 = FStar_Pervasives_Native.None
+             }) FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt, use_eq) ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_ascribed
-             (e, ((FStar_Pervasives.Inl t), tacopt, use_eq),
-               FStar_Pervasives_Native.None))
-          FStar_Compiler_Range_Type.dummyRange
+             {
+               FStar_Syntax_Syntax.tm = e;
+               FStar_Syntax_Syntax.asc =
+                 ((FStar_Pervasives.Inl t), tacopt, use_eq);
+               FStar_Syntax_Syntax.eff_opt = FStar_Pervasives_Native.None
+             }) FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt, use_eq) ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_ascribed
-             (e, ((FStar_Pervasives.Inr c), tacopt, use_eq),
-               FStar_Pervasives_Native.None))
-          FStar_Compiler_Range_Type.dummyRange
+             {
+               FStar_Syntax_Syntax.tm = e;
+               FStar_Syntax_Syntax.asc =
+                 ((FStar_Pervasives.Inr c), tacopt, use_eq);
+               FStar_Syntax_Syntax.eff_opt = FStar_Pervasives_Native.None
+             }) FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Unknown ->
         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
           FStar_Compiler_Range_Type.dummyRange

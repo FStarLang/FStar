@@ -3748,8 +3748,10 @@ let (lookup_effect_abbrev :
                           let uu___13 = FStar_Syntax_Subst.compress t1 in
                           uu___13.FStar_Syntax_Syntax.n in
                         (match uu___12 with
-                         | FStar_Syntax_Syntax.Tm_arrow (binders1, c1) ->
-                             FStar_Pervasives_Native.Some (binders1, c1)
+                         | FStar_Syntax_Syntax.Tm_arrow
+                             { FStar_Syntax_Syntax.bs1 = binders1;
+                               FStar_Syntax_Syntax.comp = c1;_}
+                             -> FStar_Pervasives_Native.Some (binders1, c1)
                          | uu___13 -> failwith "Impossible")))
         | uu___1 -> FStar_Pervasives_Native.None
 let (norm_eff_name : env -> FStar_Ident.lident -> FStar_Ident.lident) =
@@ -3812,10 +3814,14 @@ let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
              ||
              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
             || (fv_has_erasable_attr env1 fv)
-      | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
-          non_informative env1 head
+      | FStar_Syntax_Syntax.Tm_app
+          { FStar_Syntax_Syntax.hd = head;
+            FStar_Syntax_Syntax.args = uu___1;_}
+          -> non_informative env1 head
       | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
-      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
+      | FStar_Syntax_Syntax.Tm_arrow
+          { FStar_Syntax_Syntax.bs1 = uu___1; FStar_Syntax_Syntax.comp = c;_}
+          ->
           ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
              (non_informative env1 (FStar_Syntax_Util.comp_result c)))
             ||
@@ -3834,8 +3840,10 @@ let (num_effect_indices :
           FStar_Compiler_Effect.op_Bar_Greater uu___
             FStar_Syntax_Subst.compress in
         match sig_t.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Tm_arrow (_a::bs, uu___) ->
-            FStar_Compiler_List.length bs
+        | FStar_Syntax_Syntax.Tm_arrow
+            { FStar_Syntax_Syntax.bs1 = _a::bs;
+              FStar_Syntax_Syntax.comp = uu___;_}
+            -> FStar_Compiler_List.length bs
         | uu___ ->
             let uu___1 =
               let uu___2 =
@@ -3886,7 +3894,10 @@ let (lookup_projector :
               let uu___3 = FStar_Syntax_Subst.compress t in
               uu___3.FStar_Syntax_Syntax.n in
             (match uu___2 with
-             | FStar_Syntax_Syntax.Tm_arrow (binders, uu___3) ->
+             | FStar_Syntax_Syntax.Tm_arrow
+                 { FStar_Syntax_Syntax.bs1 = binders;
+                   FStar_Syntax_Syntax.comp = uu___3;_}
+                 ->
                  if
                    (i < Prims.int_zero) ||
                      (i >= (FStar_Compiler_List.length binders))
@@ -4350,7 +4361,10 @@ let wp_sig_aux :
                (match ((md.FStar_Syntax_Syntax.binders),
                         (s1.FStar_Syntax_Syntax.n))
                 with
-                | ([], FStar_Syntax_Syntax.Tm_arrow (b::wp_b::[], c)) when
+                | ([], FStar_Syntax_Syntax.Tm_arrow
+                   { FStar_Syntax_Syntax.bs1 = b::wp_b::[];
+                     FStar_Syntax_Syntax.comp = c;_})
+                    when
                     FStar_Syntax_Syntax.is_teff
                       (FStar_Syntax_Util.comp_result c)
                     ->
@@ -4756,7 +4770,10 @@ let effect_repr_aux :
                                FStar_Compiler_Effect.op_Bar_Greater res_typ
                                  FStar_Syntax_Syntax.as_arg in
                              uu___8 :: (c1.FStar_Syntax_Syntax.effect_args) in
-                           (repr, uu___7) in
+                           {
+                             FStar_Syntax_Syntax.hd = repr;
+                             FStar_Syntax_Syntax.args = uu___7
+                           } in
                          FStar_Syntax_Syntax.Tm_app uu___6 in
                        let uu___6 = get_range env1 in
                        FStar_Syntax_Syntax.mk uu___5 uu___6 in
@@ -4814,7 +4831,9 @@ let (is_reifiable_function : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
         let uu___1 = FStar_Syntax_Subst.compress t in
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
-      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) -> is_reifiable_comp env1 c
+      | FStar_Syntax_Syntax.Tm_arrow
+          { FStar_Syntax_Syntax.bs1 = uu___1; FStar_Syntax_Syntax.comp = c;_}
+          -> is_reifiable_comp env1 c
       | uu___1 -> false
 let (reify_comp :
   env ->
@@ -6375,7 +6394,10 @@ let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
                 let uu___3 =
                   let uu___4 =
                     let uu___5 = FStar_Syntax_Syntax.as_arg e in [uu___5] in
-                  (f, uu___4) in
+                  {
+                    FStar_Syntax_Syntax.hd = f;
+                    FStar_Syntax_Syntax.args = uu___4
+                  } in
                 FStar_Syntax_Syntax.Tm_app uu___3 in
               FStar_Syntax_Syntax.mk uu___2 f.FStar_Syntax_Syntax.pos in
             FStar_Compiler_Effect.op_Less_Bar

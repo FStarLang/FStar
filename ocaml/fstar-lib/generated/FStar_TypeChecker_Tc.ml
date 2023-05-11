@@ -809,13 +809,17 @@ let (tc_sig_let :
                     let uu___1 = FStar_Syntax_Subst.compress def in
                     uu___1.FStar_Syntax_Syntax.n in
                   match uu___ with
-                  | FStar_Syntax_Syntax.Tm_abs (binders, uu___1, uu___2) ->
-                      binders
+                  | FStar_Syntax_Syntax.Tm_abs
+                      { FStar_Syntax_Syntax.bs = binders;
+                        FStar_Syntax_Syntax.body = uu___1;
+                        FStar_Syntax_Syntax.rc_opt = uu___2;_}
+                      -> binders
                   | uu___1 -> [] in
                 match typ1 with
                 | {
                     FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_arrow
-                      (val_bs, c);
+                      { FStar_Syntax_Syntax.bs1 = val_bs;
+                        FStar_Syntax_Syntax.comp = c;_};
                     FStar_Syntax_Syntax.pos = r1;
                     FStar_Syntax_Syntax.vars = uu___;
                     FStar_Syntax_Syntax.hash_code = uu___1;_} ->
@@ -879,7 +883,10 @@ let (tc_sig_let :
                     let uu___2 =
                       let uu___3 =
                         let uu___4 = rename_binders def_bs val_bs in
-                        (uu___4, c) in
+                        {
+                          FStar_Syntax_Syntax.bs1 = uu___4;
+                          FStar_Syntax_Syntax.comp = c
+                        } in
                       FStar_Syntax_Syntax.Tm_arrow uu___3 in
                     FStar_Syntax_Syntax.mk uu___2 r1
                 | uu___ -> typ1 in
@@ -930,12 +937,17 @@ let (tc_sig_let :
                                     | uu___4 ->
                                         FStar_Syntax_Syntax.mk
                                           (FStar_Syntax_Syntax.Tm_ascribed
-                                             ((lb.FStar_Syntax_Syntax.lbdef),
-                                               ((FStar_Pervasives.Inl
-                                                   (lb.FStar_Syntax_Syntax.lbtyp)),
-                                                 FStar_Pervasives_Native.None,
-                                                 false),
-                                               FStar_Pervasives_Native.None))
+                                             {
+                                               FStar_Syntax_Syntax.tm =
+                                                 (lb.FStar_Syntax_Syntax.lbdef);
+                                               FStar_Syntax_Syntax.asc =
+                                                 ((FStar_Pervasives.Inl
+                                                     (lb.FStar_Syntax_Syntax.lbtyp)),
+                                                   FStar_Pervasives_Native.None,
+                                                   false);
+                                               FStar_Syntax_Syntax.eff_opt =
+                                                 FStar_Pervasives_Native.None
+                                             })
                                           (lb.FStar_Syntax_Syntax.lbdef).FStar_Syntax_Syntax.pos in
                                   (if
                                      (lb.FStar_Syntax_Syntax.lbunivs <> [])
@@ -1065,8 +1077,11 @@ let (tc_sig_let :
                               FStar_Syntax_Syntax.mk
                                 (FStar_Syntax_Syntax.Tm_constant
                                    FStar_Const.Const_unit) r in
-                            (((FStar_Pervasives_Native.fst lbs), lbs'2),
-                              uu___5) in
+                            {
+                              FStar_Syntax_Syntax.lbs =
+                                ((FStar_Pervasives_Native.fst lbs), lbs'2);
+                              FStar_Syntax_Syntax.body1 = uu___5
+                            } in
                           FStar_Syntax_Syntax.Tm_let uu___4 in
                         FStar_Syntax_Syntax.mk uu___3 r in
                       let env' =
@@ -1185,7 +1200,11 @@ let (tc_sig_let :
                                    uu___6.FStar_Syntax_Syntax.n in
                                  match uu___5 with
                                  | FStar_Syntax_Syntax.Tm_let
-                                     ((false, lb::[]), e2) ->
+                                     {
+                                       FStar_Syntax_Syntax.lbs =
+                                         (false, lb::[]);
+                                       FStar_Syntax_Syntax.body1 = e2;_}
+                                     ->
                                      let lb_unannotated =
                                        let uu___6 =
                                          let uu___7 =
@@ -1193,7 +1212,12 @@ let (tc_sig_let :
                                          uu___7.FStar_Syntax_Syntax.n in
                                        match uu___6 with
                                        | FStar_Syntax_Syntax.Tm_let
-                                           ((uu___7, lb1::[]), uu___8) ->
+                                           {
+                                             FStar_Syntax_Syntax.lbs =
+                                               (uu___7, lb1::[]);
+                                             FStar_Syntax_Syntax.body1 =
+                                               uu___8;_}
+                                           ->
                                            let uu___9 =
                                              let uu___10 =
                                                FStar_Syntax_Subst.compress
@@ -1211,30 +1235,35 @@ let (tc_sig_let :
                                        {
                                          FStar_Syntax_Syntax.n =
                                            (FStar_Syntax_Syntax.Tm_let
-                                              ((false,
-                                                 [{
-                                                    FStar_Syntax_Syntax.lbname
-                                                      =
-                                                      (lb.FStar_Syntax_Syntax.lbname);
-                                                    FStar_Syntax_Syntax.lbunivs
-                                                      =
-                                                      (lb.FStar_Syntax_Syntax.lbunivs);
-                                                    FStar_Syntax_Syntax.lbtyp
-                                                      =
-                                                      FStar_Syntax_Syntax.tun;
-                                                    FStar_Syntax_Syntax.lbeff
-                                                      =
-                                                      (lb.FStar_Syntax_Syntax.lbeff);
-                                                    FStar_Syntax_Syntax.lbdef
-                                                      =
-                                                      (lb.FStar_Syntax_Syntax.lbdef);
-                                                    FStar_Syntax_Syntax.lbattrs
-                                                      =
-                                                      (lb.FStar_Syntax_Syntax.lbattrs);
-                                                    FStar_Syntax_Syntax.lbpos
-                                                      =
-                                                      (lb.FStar_Syntax_Syntax.lbpos)
-                                                  }]), e2));
+                                              {
+                                                FStar_Syntax_Syntax.lbs =
+                                                  (false,
+                                                    [{
+                                                       FStar_Syntax_Syntax.lbname
+                                                         =
+                                                         (lb.FStar_Syntax_Syntax.lbname);
+                                                       FStar_Syntax_Syntax.lbunivs
+                                                         =
+                                                         (lb.FStar_Syntax_Syntax.lbunivs);
+                                                       FStar_Syntax_Syntax.lbtyp
+                                                         =
+                                                         FStar_Syntax_Syntax.tun;
+                                                       FStar_Syntax_Syntax.lbeff
+                                                         =
+                                                         (lb.FStar_Syntax_Syntax.lbeff);
+                                                       FStar_Syntax_Syntax.lbdef
+                                                         =
+                                                         (lb.FStar_Syntax_Syntax.lbdef);
+                                                       FStar_Syntax_Syntax.lbattrs
+                                                         =
+                                                         (lb.FStar_Syntax_Syntax.lbattrs);
+                                                       FStar_Syntax_Syntax.lbpos
+                                                         =
+                                                         (lb.FStar_Syntax_Syntax.lbpos)
+                                                     }]);
+                                                FStar_Syntax_Syntax.body1 =
+                                                  e2
+                                              });
                                          FStar_Syntax_Syntax.pos =
                                            (e_lax.FStar_Syntax_Syntax.pos);
                                          FStar_Syntax_Syntax.vars =
@@ -1244,7 +1273,10 @@ let (tc_sig_let :
                                        }
                                      else e_lax
                                  | FStar_Syntax_Syntax.Tm_let
-                                     ((true, lbs1), uu___6) ->
+                                     {
+                                       FStar_Syntax_Syntax.lbs = (true, lbs1);
+                                       FStar_Syntax_Syntax.body1 = uu___6;_}
+                                     ->
                                      (FStar_Syntax_Util.check_mutual_universes
                                         lbs1;
                                       e_lax) in
@@ -1608,7 +1640,9 @@ let (tc_sig_let :
                              match r1 with
                              | ({
                                   FStar_Syntax_Syntax.n =
-                                    FStar_Syntax_Syntax.Tm_let (lbs1, e2);
+                                    FStar_Syntax_Syntax.Tm_let
+                                    { FStar_Syntax_Syntax.lbs = lbs1;
+                                      FStar_Syntax_Syntax.body1 = e2;_};
                                   FStar_Syntax_Syntax.pos = uu___5;
                                   FStar_Syntax_Syntax.vars = uu___6;
                                   FStar_Syntax_Syntax.hash_code = uu___7;_},
@@ -1639,9 +1673,10 @@ let (tc_sig_let :
                                    let quals1 =
                                      match e2.FStar_Syntax_Syntax.n with
                                      | FStar_Syntax_Syntax.Tm_meta
-                                         (uu___10,
-                                          FStar_Syntax_Syntax.Meta_desugared
-                                          (FStar_Syntax_Syntax.Masked_effect))
+                                         { FStar_Syntax_Syntax.tm2 = uu___10;
+                                           FStar_Syntax_Syntax.meta =
+                                             FStar_Syntax_Syntax.Meta_desugared
+                                             (FStar_Syntax_Syntax.Masked_effect);_}
                                          ->
                                          FStar_Syntax_Syntax.HasMaskedEffect
                                          :: quals
@@ -4496,7 +4531,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___917 : unit) =
+let (uu___912 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
