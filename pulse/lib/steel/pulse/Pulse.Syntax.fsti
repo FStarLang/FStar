@@ -118,22 +118,83 @@ type ctag =
 (* terms with STT types *)
 [@@ no_auto_projectors]
 noeq
-type st_term =
-  | Tm_Return     : ctag -> bool -> term -> st_term  // bool is whether insert equality in the post
-  | Tm_Abs        : b:binder -> q:option qualifier -> pre:option vprop -> body:st_term -> post:option vprop -> st_term
-  | Tm_STApp      : head:term -> arg_qual:option qualifier -> arg:term -> st_term  
-  | Tm_Bind       : b:binder -> e1:st_term -> e2:st_term -> st_term
-  | Tm_TotBind    : e1:term -> e2:st_term -> st_term
-  | Tm_If         : b:term -> then_:st_term -> else_:st_term -> post:option vprop -> st_term
-  | Tm_ElimExists : vprop -> st_term
-  | Tm_IntroExists: erased:bool -> vprop -> witnesses:list term -> st_term
-  | Tm_While      : term -> st_term -> st_term -> st_term  // inv, cond, body
-  | Tm_Par        : term -> st_term -> term -> term -> st_term -> term -> st_term  // (pre, e, post) for left and right computations
-  | Tm_WithLocal  : term -> st_term -> st_term  // initial value of the local, continuation
+type st_term' =
+  | Tm_Return { 
+      ctag:ctag;
+      insert_eq:bool;
+      term: term;
+    }
+  | Tm_Abs {
+      b:binder;
+      q:option qualifier;
+      pre:option vprop;
+      body:st_term;
+      post:option vprop;
+    }
+  | Tm_STApp {
+      head:term;
+      arg_qual:option qualifier;
+      arg:term;
+    }
+  | Tm_Bind { 
+      binder:binder;
+      head:st_term;
+      body:st_term;
+    }
+  | Tm_TotBind {
+      head:term;
+      body:st_term;
+    } 
+  | Tm_If {
+      b:term;
+      then_:st_term;
+      else_:st_term;
+      post:option vprop;
+    }
+  | Tm_ElimExists {
+      p:vprop;
+    }
+  | Tm_IntroExists {
+      erased:bool;
+      p:vprop;
+      witnesses:list term;
+    }
+  | Tm_While {
+      invariant:term;
+      condition:st_term;
+      body:st_term;
+    }
+  | Tm_Par {
+      pre1:term;
+      body1:st_term;
+      post1:term;
+      pre2:term;
+      body2:st_term;
+      post2:term;
+    }  
+  | Tm_WithLocal {
+      initializer:term;
+      body:st_term;
+    }
+  | Tm_Rewrite {
+      t1:term;
+      t2:term;
+    } 
+  | Tm_Admit {
+      ctag:ctag;
+      u:universe;
+      typ:term;
+      post:option term;
+    }
+  | Tm_Protect {
+      //Wrap a term to indicate that no proof-automation heuristics should be applied
+      t:st_term;
+    }
 
-  | Tm_Rewrite    : term -> term -> st_term
-  | Tm_Admit      : ctag -> universe -> term -> option term -> st_term  // u, a:type_u, optional post
-  | Tm_Protect    : st_term -> st_term //Wrap a term to indicate that no proof-automation heuristics should be applied 
+and st_term = {
+    term : st_term';
+    range : range
+} 
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname=RT.pp_name_default}
@@ -150,7 +211,6 @@ let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=RT.pp_name_defaul
 
 let gen_uvar (t:term) : T.Tac term =
   Tm_UVar (T.fresh ())
-
 
 val eq_tm (t1 t2:term) 
   : b:bool { b <==> (t1 == t2) }
@@ -227,26 +287,3 @@ let nvar = ppname & var
 let v_as_nv x = RT.pp_name_default, x
 let term_of_nvar (x:nvar) = Tm_Var { nm_ppname=fst x; nm_index=snd x; nm_range=FStar.Range.range_0}
 let term_of_no_name_var (x:var) = term_of_nvar (v_as_nv x)
-
-//// TEMPORARY : THEY SHOULD COME FROM FStar.Reflection.Typing.fsti WHEN THE BRANCHES STORM IS GONE ////
-let equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
-  (x:var{None? (RT.lookup_bvar g x)})
-  (eq:RT.equiv (RT.extend_env g x ty)
-               (RT.open_or_close_term' e1 (RT.open_with_var x) 0)
-               (RT.open_or_close_term' e2 (RT.open_with_var x) 0))
-  : RT.equiv g (RT.mk_abs ty q e1)
-               (RT.mk_abs ty q e2) = admit ()
-
-let equiv_arrow (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
-  (x:var{None? (RT.lookup_bvar g x)})
-  (eq:RT.equiv (RT.extend_env g x ty)
-               (RT.open_or_close_term' e1 (RT.open_with_var x) 0)
-               (RT.open_or_close_term' e2 (RT.open_with_var x) 0))
-  : RT.equiv g (RT.mk_arrow ty q e1)
-               (RT.mk_arrow ty q e2) = admit ()
-
-let equiv_abs_close (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
-  (x:var{None? (RT.lookup_bvar g x)})
-  (eq:RT.equiv (RT.extend_env g x ty) e1 e2)
-  : RT.equiv g (RT.mk_abs ty q (RT.open_or_close_term' e1 (RT.CloseVar x) 0))
-               (RT.mk_abs ty q (RT.open_or_close_term' e2 (RT.CloseVar x) 0)) = admit ()

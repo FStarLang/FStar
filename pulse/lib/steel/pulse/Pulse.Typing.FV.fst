@@ -116,68 +116,68 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     (ensures (freevars_st (close_st_term' t x i) `Set.equal`
              (freevars_st t `set_minus` x)))
     (decreases t)
-  = match t with
-    | Tm_Return _ _ t ->
-      freevars_close_term' t x i
+  = match t.term with
+    | Tm_Return { term } ->
+      freevars_close_term' term x i
 
-    | Tm_STApp l _ r ->
-      freevars_close_term' l x i;
-      freevars_close_term' r x i
+    | Tm_STApp { head; arg } ->
+      freevars_close_term' head x i;
+      freevars_close_term' arg x i
     
-    | Tm_Abs b _q pre body post ->
+    | Tm_Abs { b; pre; body; post } ->
       freevars_close_term' b.binder_ty x i;
       freevars_close_term_opt' pre x (i + 1);
       freevars_close_st_term' body x (i + 1);
       freevars_close_term_opt' post x (i + 2)
 
-    | Tm_Bind b e1 e2 ->
-      freevars_close_term' b.binder_ty x i;
-      freevars_close_st_term' e1 x i;
-      freevars_close_st_term' e2 x (i + 1)
+    | Tm_Bind { binder; head; body } ->
+      freevars_close_term' binder.binder_ty x i;
+      freevars_close_st_term' head x i;
+      freevars_close_st_term' body x (i + 1)
 
-    | Tm_TotBind e1 e2 ->
-      freevars_close_term' e1 x i;
-      freevars_close_st_term' e2 x (i + 1)
+    | Tm_TotBind { head; body } ->
+      freevars_close_term' head x i;
+      freevars_close_st_term' body x (i + 1)
       
-    | Tm_If t0 t1 t2 post ->
-      freevars_close_term' t0 x i;    
-      freevars_close_st_term' t1 x i;    
-      freevars_close_st_term' t2 x i;          
+    | Tm_If { b; then_; else_; post } ->
+      freevars_close_term' b x i;    
+      freevars_close_st_term' then_ x i;    
+      freevars_close_st_term' else_ x i;          
       freevars_close_term_opt' post x (i + 1)      
 
-    | Tm_ElimExists t ->
-      freevars_close_term' t x i
+    | Tm_ElimExists { p } ->
+      freevars_close_term' p x i
       
-    | Tm_IntroExists _ p e ->
+    | Tm_IntroExists { p; witnesses } ->
       freevars_close_term' p x i;
-      freevars_close_term_list' e x i
+      freevars_close_term_list' witnesses x i
 
-    | Tm_While inv cond body ->
-      freevars_close_term' inv x (i + 1);
-      freevars_close_st_term' cond x i;
+    | Tm_While { invariant; condition; body } ->
+      freevars_close_term' invariant x (i + 1);
+      freevars_close_st_term' condition x i;
       freevars_close_st_term' body x i
 
-    | Tm_Par preL eL postL preR eR postR ->
-      freevars_close_term' preL x i;
-      freevars_close_st_term' eL x i;
-      freevars_close_term' postL x (i + 1);
-      freevars_close_term' preR x i;
-      freevars_close_st_term' eR x i;
-      freevars_close_term' postR x (i + 1)
+    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      freevars_close_term' pre1 x i;
+      freevars_close_st_term' body1 x i;
+      freevars_close_term' post1 x (i + 1);
+      freevars_close_term' pre2 x i;
+      freevars_close_st_term' body2 x i;
+      freevars_close_term' post2 x (i + 1)
 
-    | Tm_Rewrite p q ->
-      freevars_close_term' p x i;
-      freevars_close_term' q x i
+    | Tm_Rewrite { t1; t2 } ->
+      freevars_close_term' t1 x i;
+      freevars_close_term' t2 x i
 
-    | Tm_WithLocal init e ->
-      freevars_close_term' init x i;
-      freevars_close_st_term' e x (i + 1)
+    | Tm_WithLocal { initializer; body } ->
+      freevars_close_term' initializer x i;
+      freevars_close_st_term' body x (i + 1)
 
-    | Tm_Admit _ _ t post ->
-      freevars_close_term' t x i;
+    | Tm_Admit { typ; post } ->
+      freevars_close_term' typ x i;
       freevars_close_term_opt' post x (i + 1)
 
-    | Tm_Protect t ->
+    | Tm_Protect { t } ->
       freevars_close_st_term' t x i
       
 let freevars_close_term (e:term) (x:var) (i:index)
@@ -380,7 +380,7 @@ let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
      freevars_close_comp c2 x 0
 
    | T_If _ _b e1 e2 _c _u hyp tb d1 d2 (E ct) ->
-     assert (t == (Tm_If _b e1 e2 None));
+     assert (t.term == (Tm_If { b = _b; then_=e1; else_=e2; post=None }));
      calc (Set.subset) {
         freevars_st t;
      (==) {}

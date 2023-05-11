@@ -11,7 +11,7 @@ open Pulse.Checker.Common
 
 val check_bind (f:RT.fstar_top_env)
                (g:env)
-               (t:st_term{Tm_Bind? t})
+               (t:st_term{Tm_Bind? t.term})
                (pre:term)
                (pre_typing:tot_typing f g pre Tm_VProp)
                (post_hint:option term)
@@ -23,7 +23,7 @@ val check_bind (f:RT.fstar_top_env)
 val check_tot_bind
   (f:RT.fstar_top_env)
   (g:env)
-  (t:st_term{Tm_TotBind? t})
+  (t:st_term{Tm_TotBind? t.term})
   (pre:term)
   (pre_typing:tot_typing f g pre Tm_VProp)
   (post_hint:option term)

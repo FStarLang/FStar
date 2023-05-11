@@ -123,7 +123,10 @@ let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (term & term)
     else uv_sols
   else uv_sols
 
-let rec rebuild_head (head:term) (uvs:list term) (uv_sols:list (term & term))
+let union_ranges (r0 r1:range) : T.Tac range = r0
+let with_range (t:st_term') (r:range) : st_term = { term = t; range = r}
+
+let rec rebuild_head (head:term) (uvs:list term) (uv_sols:list (term & term)) (r:range)
   : T.TacH st_term (requires fun _ -> List.Tot.length uvs > 0)
                    (ensures fun _ _ -> True) =
   let hd::tl = uvs in
@@ -132,10 +135,11 @@ let rec rebuild_head (head:term) (uvs:list term) (uv_sols:list (term & term))
   | None -> T.fail "inference failed in building head"
   | Some (_, t2) ->
     match tl with
-    | [] -> Tm_STApp head (Some Implicit) t2
+    | [] -> with_range (Tm_STApp { head; arg_qual= Some Implicit; arg=t2 })
+                       r
     | _ ->
       let app_node = Tm_PureApp head (Some Implicit) t2 in
-      rebuild_head app_node tl uv_sols
+      rebuild_head app_node tl uv_sols r
 
 let try_inst_uvs_in_goal (ctxt:term)
                          (goal:vprop)
@@ -166,7 +170,7 @@ let infer
   (head:term)
   (t_head:term)
   (ctxt_pre:term)
-  
+  (r:range)
   : T.Tac st_term =
 
   let uvs, pre =
@@ -190,7 +194,7 @@ let infer
 
     let uv_sols = try_inst_uvs_in_goal ctxt_pre pre in
     T.print (Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
-    let head = rebuild_head head uvs uv_sols in
+    let head = rebuild_head head uvs uv_sols r in
     T.print (Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
     head
   end

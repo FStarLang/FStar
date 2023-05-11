@@ -147,98 +147,98 @@ let term_list_to_string (sep:string) (t:list term)
 
 let rec st_term_to_string (t:st_term)
   : T.Tac string
-  = match t with
-    | Tm_Return c use_eq t ->
+  = match t.term with
+    | Tm_Return { ctag; insert_eq; term } ->
       sprintf "return_%s%s %s"
-        (match c with
+        (match ctag with
          | STT -> "stt"
          | STT_Atomic -> "stt_atomic"
          | STT_Ghost -> "stt_ghost")
-        (if use_eq then "" else "_noeq")
-        (term_to_string t)
+        (if insert_eq then "" else "_noeq")
+        (term_to_string term)
       
-    | Tm_STApp head q arg ->
+    | Tm_STApp {head; arg_qual; arg } ->
       sprintf "(%s%s %s%s)"
         (if dbg_printing then "<stapp>" else "")
         (term_to_string head)
-        (qual_to_string q)
+        (qual_to_string arg_qual)
         (term_to_string arg)
         
-    | Tm_Bind b e1 e2 ->
+    | Tm_Bind { binder; head; body } ->
       sprintf "bind %s = %s in %s"
-        (binder_to_string b)      
-        (st_term_to_string e1)
-        (st_term_to_string e2)
+        (binder_to_string binder)      
+        (st_term_to_string head)
+        (st_term_to_string body)
 
-    | Tm_TotBind e1 e2 ->
+    | Tm_TotBind { head; body } ->
       sprintf "totbind _ = %s in %s"
-        (term_to_string e1)
-        (st_term_to_string e2)
+        (term_to_string head)
+        (st_term_to_string body)
   
-    | Tm_Abs b q pre_hint body post ->
+    | Tm_Abs { b; q; pre; body; post } ->
       sprintf "(fun (%s%s) {%s} {_.%s} -> %s)"
               (qual_to_string q)
               (binder_to_string b)
-              (term_opt_to_string pre_hint)
+              (term_opt_to_string pre)
               (term_opt_to_string post)
               (st_term_to_string body)
 
-    | Tm_If b t e _ ->
+    | Tm_If { b; then_; else_ } ->
       sprintf "(if %s then %s else %s)"
         (term_to_string b)
-        (st_term_to_string t)
-        (st_term_to_string e)        
+        (st_term_to_string then_)
+        (st_term_to_string else_)        
 
-    | Tm_ElimExists t ->
+    | Tm_ElimExists { p } ->
       sprintf "elim_exists %s"
-        (term_to_string t)
+        (term_to_string p)
 
-    | Tm_IntroExists false t e ->
+    | Tm_IntroExists { erased=false; p; witnesses } ->
       sprintf "intro_exists %s %s"
-        (term_to_string t)
-        (term_list_to_string " " e)
+        (term_to_string p)
+        (term_list_to_string " " witnesses)
 
-    | Tm_IntroExists true t e ->
+    | Tm_IntroExists { erased=true; p; witnesses } ->
       sprintf "intro_exists_erased %s %s"
-        (term_to_string t)
-        (term_list_to_string " " e)
+        (term_to_string p)
+        (term_list_to_string " " witnesses)
 
-    | Tm_While inv cond body ->
+    | Tm_While { invariant; condition; body } ->
       sprintf "while<%s> (%s) {%s}"
-        (term_to_string inv)
-        (st_term_to_string cond)
+        (term_to_string invariant)
+        (st_term_to_string condition)
         (st_term_to_string body)
 
-    | Tm_Par preL eL postL preR eR postR ->
+    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       sprintf "par (<%s> (%s) <%s) (<%s> (%s) <%s)"
-        (term_to_string preL)
-        (st_term_to_string eL)
-        (term_to_string postL)
-        (term_to_string preR)
-        (st_term_to_string eR)
-        (term_to_string postR)
+        (term_to_string pre1)
+        (st_term_to_string body1)
+        (term_to_string post1)
+        (term_to_string pre2)
+        (st_term_to_string body2)
+        (term_to_string post2)
 
-				| Tm_Rewrite p q ->
+    | Tm_Rewrite { t1; t2 } ->
 				  sprintf "rewrite %s %s"
-						  (term_to_string p)
-								(term_to_string q)
+						  (term_to_string t1)
+              (term_to_string t2)
 
-    | Tm_WithLocal init e ->
+    | Tm_WithLocal { initializer; body } ->
       sprintf "let mut _ = %s in %s"
-        (term_to_string init)
-        (st_term_to_string e)
+        (term_to_string initializer)
+        (st_term_to_string body)
 
-    | Tm_Admit c u t post ->
+    | Tm_Admit { ctag; u; typ; post } ->
       sprintf "%s<%s> %s%s"
-        (match c with
+        (match ctag with
          | STT -> "stt_admit"
          | STT_Atomic -> "stt_atomic_admit"
          | STT_Ghost -> "stt_ghost_admit")
         (universe_to_string 0 u)
-        (term_to_string t)
+        (term_to_string typ)
         (match post with
          | None -> ""
          | Some post -> sprintf " %s" (term_to_string post))
 
-    | Tm_Protect t ->
+    | Tm_Protect { t } ->
       st_term_to_string t

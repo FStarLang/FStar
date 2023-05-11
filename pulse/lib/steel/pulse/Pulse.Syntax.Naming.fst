@@ -101,71 +101,71 @@ let rec close_open_inverse_st'  (t:st_term)
                                 (i:index)
   : Lemma (ensures close_st_term' (open_st_term' t (term_of_no_name_var x) i) x i == t)
           (decreases t)
-  = match t with
-    | Tm_Return _ _ t ->
+  = match t.term with
+    | Tm_Return { term = t } ->
       close_open_inverse' t x i
 
-    | Tm_ElimExists p ->
+    | Tm_ElimExists { p } ->
       close_open_inverse' p x i    
 
-    | Tm_Abs b _q pre body post ->
+    | Tm_Abs { b; pre; body; post } ->
       close_open_inverse' b.binder_ty x i;
       close_open_inverse_st' body x (i + 1);
       close_open_inverse_opt' pre x (i + 1);
       close_open_inverse_opt' post x (i + 2)
 
-    | Tm_Bind b e1 e2 ->
-      close_open_inverse' b.binder_ty x i;
-      close_open_inverse_st' e1 x i;
-      close_open_inverse_st' e2 x (i + 1)
+    | Tm_Bind { binder; head; body } ->
+      close_open_inverse' binder.binder_ty x i;
+      close_open_inverse_st' head x i;
+      close_open_inverse_st' body x (i + 1)
 
-    | Tm_TotBind e1 e2 ->
-      close_open_inverse' e1 x i;
-      close_open_inverse_st' e2 x (i + 1)
+    | Tm_TotBind { head; body } ->
+      close_open_inverse' head x i;
+      close_open_inverse_st' body x (i + 1)
 
-    | Tm_STApp l _ r ->
-      close_open_inverse' l x i;
-      close_open_inverse' r x i
+    | Tm_STApp { head; arg } ->
+      close_open_inverse' head x i;
+      close_open_inverse' arg x i
     
-    | Tm_IntroExists _ p l ->
+    | Tm_IntroExists { p; witnesses } ->
       close_open_inverse' p x i;
-      close_open_inverse_list' l x i
+      close_open_inverse_list' witnesses x i
     
-    | Tm_ElimExists t ->
-      close_open_inverse' t x i
+    | Tm_ElimExists { p } ->
+      close_open_inverse' p x i
       
-    | Tm_While inv cond body ->
-      close_open_inverse' inv x (i + 1);
-      close_open_inverse_st' cond x i;
+    | Tm_While { invariant; condition; body } ->
+      close_open_inverse' invariant x (i + 1);
+      close_open_inverse_st' condition x i;
       close_open_inverse_st' body x i
 
-    | Tm_If t0 t1 t2 post ->
-      close_open_inverse' t0 x i;    
-      close_open_inverse_st' t1 x i;    
-      close_open_inverse_st' t2 x i;
+    | Tm_If { b; then_; else_; post } ->
+      close_open_inverse' b x i;    
+      close_open_inverse_st' then_ x i;    
+      close_open_inverse_st' else_ x i;
       close_open_inverse_opt' post x (i + 1)
 
-    | Tm_Par preL eL postL preR eR postR ->
-      close_open_inverse' preL x i;
-      close_open_inverse_st' eL x i;
-      close_open_inverse' postL x (i + 1);
-      close_open_inverse' preR x i;
-      close_open_inverse_st' eR x i;
-      close_open_inverse' postR x (i + 1)
+    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      close_open_inverse' pre1 x i;
+      close_open_inverse_st' body1 x i;
+      close_open_inverse' post1 x (i + 1);
+      close_open_inverse' pre2 x i;
+      close_open_inverse_st' body2 x i;
+      close_open_inverse' post2 x (i + 1)
 
-    | Tm_WithLocal t1 t2 ->
+    | Tm_WithLocal { initializer; body } ->
+      close_open_inverse' initializer x i;
+      close_open_inverse_st' body x (i + 1)
+
+    | Tm_Rewrite { t1; t2 } ->
       close_open_inverse' t1 x i;
-      close_open_inverse_st' t2 x (i + 1)
+      close_open_inverse' t2 x i
 
-    | Tm_Rewrite	t1 t2 ->
-						close_open_inverse' t1 x i;
-						close_open_inverse' t2 x i
-
-    | Tm_Admit _ _ t post ->
-      close_open_inverse' t x i;
+    | Tm_Admit { typ; post } ->
+      close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)
 
-    | Tm_Protect t ->
+    | Tm_Protect { t } ->
       close_open_inverse_st' t x i
       
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )

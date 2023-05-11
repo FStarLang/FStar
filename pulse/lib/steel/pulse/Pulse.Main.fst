@@ -317,60 +317,67 @@ let shift_bvs_in_else_binder (b:binder) (n:nat) : Tac binder =
   {b with binder_ty=shift_bvs_in_else b.binder_ty n}
 
 let rec shift_bvs_in_else_st (t:st_term) (n:nat) : Tac st_term =
-  match t with
-  | Tm_Return c use_eq t -> Tm_Return c use_eq (shift_bvs_in_else t n)
-  | Tm_Abs _ _ _ _ _ ->
+  let t' = 
+  match t.term with
+  | Tm_Return {ctag; insert_eq; term} ->
+    Tm_Return { ctag; insert_eq; term=shift_bvs_in_else term n }
+  | Tm_Abs _ ->
     T.fail "Did not expect an Tm_Abs in shift_bvs_in_else_st"
-  | Tm_STApp head q arg ->
-    Tm_STApp (shift_bvs_in_else head n)
-             q
-             (shift_bvs_in_else arg n)
-  | Tm_Bind b e1 e2 ->
-    Tm_Bind (shift_bvs_in_else_binder b n)
-            (shift_bvs_in_else_st e1 n)
-            (shift_bvs_in_else_st e2 (n + 1))
-  | Tm_TotBind e1 e2 ->
-    Tm_TotBind (shift_bvs_in_else e1 n)
-               (shift_bvs_in_else_st e2 (n + 1))
-  | Tm_If b e1 e2 post ->
-    Tm_If (shift_bvs_in_else b n)
-          (shift_bvs_in_else_st e1 n)
-          (shift_bvs_in_else_st e2 n)
-          (shift_bvs_in_else_opt post (n + 1))
-  | Tm_ElimExists t ->
-    Tm_ElimExists (shift_bvs_in_else t n)
-  | Tm_IntroExists b t e ->
-    Tm_IntroExists b (shift_bvs_in_else t n)
-                     (shift_bvs_in_else_list e n)
-  | Tm_While inv cond body ->
-    Tm_While (shift_bvs_in_else inv (n + 1))
-             (shift_bvs_in_else_st cond n)
-             (shift_bvs_in_else_st body n)
+  | Tm_STApp { head; arg_qual; arg } ->
+    Tm_STApp { head = shift_bvs_in_else head n;
+               arg_qual;
+               arg = shift_bvs_in_else arg n }
+  | Tm_Bind { binder; head; body } ->
+    Tm_Bind { binder = shift_bvs_in_else_binder binder n;
+              head = shift_bvs_in_else_st head n;
+              body = shift_bvs_in_else_st body (n + 1) }
+  | Tm_TotBind {head; body} ->
+    Tm_TotBind { head = shift_bvs_in_else head n;
+                 body = shift_bvs_in_else_st body (n + 1) }
+  | Tm_If { b; then_; else_; post } ->
+    Tm_If { b = shift_bvs_in_else b n;
+            then_ = shift_bvs_in_else_st then_ n;
+            else_ = shift_bvs_in_else_st else_ n;
+            post = shift_bvs_in_else_opt post (n + 1) }
+  | Tm_ElimExists { p } ->
+    Tm_ElimExists { p = shift_bvs_in_else p n }
+  | Tm_IntroExists { erased; p; witnesses } ->
+    Tm_IntroExists { erased; 
+                     p = shift_bvs_in_else p n;
+                     witnesses = shift_bvs_in_else_list witnesses n }
+  | Tm_While { invariant; condition; body } ->
+    Tm_While { invariant = shift_bvs_in_else invariant (n + 1);
+               condition = shift_bvs_in_else_st condition n;
+               body = shift_bvs_in_else_st body n }
 
-  | Tm_Par preL eL postL preR eR postR ->
-    Tm_Par (shift_bvs_in_else preL n)
-           (shift_bvs_in_else_st eL n)
-           (shift_bvs_in_else postL (n + 1))
-           (shift_bvs_in_else preR n)
-           (shift_bvs_in_else_st eR n)
-           (shift_bvs_in_else postR (n + 1))
+  | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+    Tm_Par { pre1 = shift_bvs_in_else pre1 n;
+             body1 = shift_bvs_in_else_st body1 n;
+             post1 = shift_bvs_in_else post1 (n + 1);
+             pre2 = shift_bvs_in_else pre2 n;
+             body2 = shift_bvs_in_else_st body2 n;
+             post2 = shift_bvs_in_else post2 (n + 1) }
 
-  | Tm_Rewrite p q ->
-		Tm_Rewrite (shift_bvs_in_else p n)
-				       (shift_bvs_in_else q n)
+  | Tm_Rewrite { t1; t2 } ->
+		Tm_Rewrite { t1 = shift_bvs_in_else t1 n;
+				         t2 = shift_bvs_in_else t2 n }
 
-  | Tm_WithLocal init e ->
-    Tm_WithLocal (shift_bvs_in_else init n)
-                 (shift_bvs_in_else_st e (n + 1))
+  | Tm_WithLocal { initializer; body } ->
+    Tm_WithLocal { initializer = shift_bvs_in_else initializer n;
+                   body = shift_bvs_in_else_st body (n + 1) }
 
-  | Tm_Admit c u t post ->
-    Tm_Admit c u (shift_bvs_in_else t n)
+  | Tm_Admit { ctag; u; typ; post } ->
+    Tm_Admit { ctag; u;
+               typ = shift_bvs_in_else typ n;
+               post =
                  (match post with
                   | None -> None
-                  | Some post -> Some (shift_bvs_in_else post (n + 1)))
+                  | Some post -> Some (shift_bvs_in_else post (n + 1))) }
 
-  | Tm_Protect t ->
-    Tm_Protect (shift_bvs_in_else_st t n)
+  | Tm_Protect { t } ->
+    Tm_Protect { t = shift_bvs_in_else_st t n }
+  in
+  { term = t'; range = t.range }
 
 let try_seq (fs: list (R.term -> T.Tac (err 'b))) (x:R.term)
   : T.Tac (err 'b)
@@ -386,6 +393,8 @@ let try_seq (fs: list (R.term -> T.Tac (err 'b))) (x:R.term)
     in
     aux "" fs
 
+let wr t t0 = { term = t0; range = range_of t }
+
 let translate_elim (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = let open R in
@@ -396,7 +405,7 @@ let translate_elim (g:RT.fstar_top_env) (t:R.term)
       | Tv_FVar v ->
         if inspect_fv v = elim_fv
         then let? ex = translate_vprop g arg in
-             Inl (Tm_ElimExists ex)
+             Inl (wr t (Tm_ElimExists {p = ex}))
         else Inr "ELIM_EXISTS: Not elim_exists"
       | _ -> Inr "ELIM_EXISTS: Not a fv application")
     | _ -> Inr "ELIM_EXISTS: Not an application"
@@ -424,7 +433,7 @@ let translate_intro (g:RT.fstar_top_env) (t:R.term)
              let? w = map_err (fun (w, _) -> readback_ty g w) witnesses in
              match ex with
              | Tm_ExistsSL _ _ _ _ ->
-               Inl (Tm_IntroExists false ex w)
+               Inl (wr t (Tm_IntroExists {erased=false; p=ex; witnesses=w}))
              | _ -> Inr "INTRO: Unexpected formula, not an existential"
            )
            | _ -> Inr "INTRO: Wrong number of arguments to intro_exists"
@@ -439,6 +448,7 @@ let translate_intro (g:RT.fstar_top_env) (t:R.term)
 let translate_admit (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
   = let open R in
+    let wr = wr t in
     let head, args = T.collect_app t in
     match inspect_ln head, args with
     | Tv_UInst v _, [(t, _)]
@@ -447,52 +457,59 @@ let translate_admit (g:RT.fstar_top_env) (t:R.term)
       let u = U_unknown in
       let l = inspect_fv v in
       if l = stt_admit_lid
-      then Inl (Tm_Admit STT u t None)
+      then Inl (wr (Tm_Admit {ctag = STT; u; typ=t; post=None}))
       else if l = stt_atomic_admit_lid
-      then Inl (Tm_Admit STT_Atomic u t None)
+      then Inl (wr (Tm_Admit {ctag = STT_Atomic; u; typ=t; post=None}))
       else if l = stt_ghost_admit_lid
-      then Inl (Tm_Admit STT_Ghost u t None)
+      then Inl (wr (Tm_Admit {ctag = STT_Ghost; u; typ=t; post=None}))
       else Inr "ADMIT: Unknown admit flavor"
     | _ -> Inr "ADMIT: Unrecognized application"
 
+let tm_Return t0 t b e = wr t0 (Tm_Return { ctag = t; insert_eq = b; term = e})
+let tm_STApp t0 h q a = wr t0 (Tm_STApp { head = h; arg_qual = q; arg = a })
+
 let translate_st_app_or_return (g:R.env) (t:R.term)
   : T.Tac (err st_term)
-  = let? t = readback_ty g t in
+  = let wr = wr t in
+    let tm_Return = tm_Return t in
+    let tm_STApp = tm_STApp t in
+    let? t = readback_ty g t in
     match t with
     | Tm_PureApp head q arg ->
       (match head with
        | Tm_FVar {fv_name=l} ->
          if l = return_stt_lid
-         then Inl (Tm_Return STT true arg)
+         then Inl (tm_Return STT true arg)
          else if l = return_stt_noeq_lid
-         then Inl (Tm_Return STT false arg)
+         then Inl (tm_Return STT false arg)
          else if l = return_stt_atomic_lid
-         then Inl (Tm_Return STT_Atomic true arg)
+         then Inl (tm_Return STT_Atomic true arg)
          else if l = return_stt_atomic_noeq_lid
-         then Inl (Tm_Return STT_Atomic false arg)
+         then Inl (tm_Return STT_Atomic false arg)
          else if l = return_stt_ghost_lid
-         then Inl (Tm_Return STT_Ghost true arg)
+         then Inl (tm_Return STT_Ghost true arg)
          else if l = return_stt_ghost_noeq_lid
-         then Inl (Tm_Return STT_Ghost false arg)
-         else Inl (Tm_STApp head q arg)
-      | _ -> Inl (Tm_STApp head q arg))
-    | _ -> Inl (Tm_Return STT false t)
+         then Inl (tm_Return STT_Ghost false arg)
+         else Inl (tm_STApp head q arg)
+      | _ -> Inl (tm_STApp head q arg))
+    | _ -> Inl (tm_Return STT false t)
 
 let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
-  = match R.inspect_ln t with
+  = let tm_Abs b q pre body post = wr t (Tm_Abs {b; q; pre; body; post}) in
+    match R.inspect_ln t with
     | R.Tv_Abs x body -> (
       let? b, q = translate_binder g x in
       let aux () = 
         let? body = translate_term g body in
-        Inl (Tm_Abs b q (Some Tm_Emp) body None)
+        Inl (tm_Abs b q (Some Tm_Emp) body None)
       in
       match R.inspect_ln body with
       | R.Tv_AscribedT body t None false -> (
         match? readback_comp t with
         | C_ST st ->
           let? body = translate_st_term g body in
-          Inl (Tm_Abs b q (Some st.pre) body (Some st.post))
+          Inl (tm_Abs b q (Some st.pre) body (Some st.post))
         | _ -> 
           aux ()
       )
@@ -514,7 +531,7 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
                   unexpected_term "'provides' should be an abstraction" provides_arg
               in
               let? body = translate_st_term g body in
-              Inl (Tm_Abs b q (Some pre) body (Some post))
+              Inl (tm_Abs b q (Some pre) body (Some post))
             
             | _ -> aux ()
           )
@@ -522,7 +539,7 @@ let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
           | [(expects_arg, _); (body, _)] -> (  
             let? pre = readback_ty g expects_arg in
             let? body = translate_st_term g body in
-            Inl (Tm_Abs b q (Some pre) body None)
+            Inl (tm_Abs b q (Some pre) body None)
           )
 
           | _ -> aux ()
@@ -568,18 +585,21 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
       let has_mut, def = def_has_qual def local_fv in
       if has_mut
       then let? def = readback_ty g def in
-           Inl (Tm_WithLocal def body)
+           Inl (wr t (Tm_WithLocal { initializer=def; body }))
       else let has_tot, def = def_has_qual def tot_fv in
            if has_tot
            then let? def = readback_ty g def in
-                Inl (Tm_TotBind def body) 
+                Inl (wr t (Tm_TotBind{head=def; body}))
            else let? def = translate_st_term g def in
+                let tm_Bind binder head body = 
+                  wr t (Tm_Bind {binder; head; body}) in
+                let tm_Protect t0 = wr t (Tm_Protect {t=t0}) in
                 begin
-                match def with
-                | Tm_IntroExists _ _ _ -> 
-                  Inl (Tm_Bind b (Tm_Protect def) (Tm_Protect body))
+                match def.term with
+                | Tm_IntroExists _ -> 
+                  Inl (tm_Bind b (tm_Protect def) (tm_Protect body))
                 | _ ->
-                  Inl (Tm_Bind b def body)
+                  Inl (tm_Bind b def body)
             end
 
     | R.Tv_Match b _ [(Pat_Constant C_True, then_);
@@ -588,16 +608,16 @@ and translate_st_term (g:RT.fstar_top_env) (t:R.term)
       let? then_ = translate_st_term g then_ in
       let? else_ = translate_st_term g else_ in
       let else_ = shift_bvs_in_else_st else_ 0 in
-      Inl (Tm_If b then_ else_ None)
+      Inl (wr t (Tm_If { b; then_; else_; post=None}))
 
     | _ ->
       unexpected_term "st_term" t
   
-and translate_term (g:RT.fstar_top_env) (t:R.term)
+and translate_term (g:RT.fstar_top_env) (t0:R.term)
   : T.Tac (err st_term)
-  = match readback_ty g t with
-    | Inl t -> Inl (Tm_Return STT false t)
-    | _ -> translate_term' g t
+  = match readback_ty g t0 with
+    | Inl t -> Inl (tm_Return t0 STT false t)
+    | _ -> translate_term' g t0
 
 and translate_while (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
@@ -626,9 +646,9 @@ and translate_while (g:RT.fstar_top_env) (t:R.term)
                | _ -> 
                   Inr "WHILE: Expected while to be decorated with an invariant"
              in
-             let? cond = translate_st_term g cond in
+             let? condition = translate_st_term g cond in
              let? body = translate_st_term g body in
-             Inl (Tm_While inv cond body)
+             Inl (wr t (Tm_While { invariant = inv; condition; body }))
            | _ -> Inr "WHILE: Wrong number of arguments to while"
       else Inr "WHILE: Not while"
     | _ -> Inr "WHILE: Not a variable at the head"
@@ -643,9 +663,9 @@ and translate_rewrite (g:RT.fstar_top_env) (t:R.term)
 			 if inspect_fv v = rewrite_fv
 			 then match args with
 					    | [(p, _); (q, _)] ->
-						     let? p = readback_ty g p in
-						     let? q = readback_ty g q in
-						     Inl (Tm_Rewrite p q)
+						     let? t1 = readback_ty g p in
+						     let? t2 = readback_ty g q in
+						     Inl (wr t (Tm_Rewrite {t1; t2}))
 					    | _ -> Inr "REWRITE: Wrong number of arguments to rewrite"
 			 else Inr "REWRITE: Not rewrite"
 	 | _ ->	Inr "REWRITE: Not a variable at the head" 
@@ -662,21 +682,21 @@ and translate_par (g:RT.fstar_top_env) (t:R.term)
          | [(preL, _); (eL, _); (postL, _);
             (preR, _); (eR, _); (postR, _)] ->
 
-           let? preL = readback_ty g preL in
-           let? eL = translate_st_term g eL in
-           let? postL =
+           let? pre1 = readback_ty g preL in
+           let? body1 = translate_st_term g eL in
+           let? post1 =
              match inspect_ln postL with
              | Tv_Abs _ body -> readback_ty g body
              | _ -> Inr "par: Expected postL to be an abstraction" in
 
-           let? preR = readback_ty g preR in
-           let? eR = translate_st_term g eR in
-           let? postR =
+           let? pre2 = readback_ty g preR in
+           let? body2 = translate_st_term g eR in
+           let? post2 =
              match inspect_ln postR with
              | Tv_Abs _ body -> readback_ty g body
              | _ -> Inr "par: Expected postR to be an abstraction" in
 
-           Inl (Tm_Par preL eL postL preR eR postR)
+           Inl (wr t (Tm_Par { pre1; body1; post1; pre2; body2; post2 }))
          | _ -> Inr "par: Wrong number of arguments"
     else Inr "par: not a par"
   | _ -> Inr "par: Not a variable at the head"

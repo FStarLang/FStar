@@ -46,12 +46,12 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
   match c1, c2 with
   | C_ST _, C_ST _ ->
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-    (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
+    (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
   | C_STGhost inames1 _, C_STGhost inames2 _ ->
     if eq_tm inames1 inames2
     then begin
       let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose two stghost computations with different opened invariants"
   | C_STAtomic inames _, C_ST _ ->
@@ -61,7 +61,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
       let d_e1 : st_typing f g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
       let bc = Bind_comp g x c1lifted c2 res_typing x post_typing in
-      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose atomic with non-emp opened invariants with stt"
   | C_STGhost inames1 _, C_STAtomic inames2 _ ->
@@ -69,7 +69,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     then begin
       let w = get_non_informative_witness f g (comp_u c1) (comp_res c1) in
       let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
-      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose ghost and atomic with different opened invariants"
   | C_STAtomic inames1 _, C_STGhost inames2 _ ->
@@ -77,7 +77,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
     then begin
       let w = get_non_informative_witness f g (comp_u c2) (comp_res c2) in
       let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
-      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose atomic and ghost with different opened invariants"
   | C_ST _, C_STAtomic inames _ ->
@@ -88,7 +88,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
       let d_e2 : st_typing f g' (open_st_term_nv e2 px) c2lifted =
         T_Lift _ _ _ c2lifted d_e2 (Lift_STAtomic_ST _ c2) in
       let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
-      (| Tm_Bind b e1 e2, _, T_Bind _ e1 e2 _ _ _ _ _ d_e1 d_c1res d_e2 bc |)
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
     else T.fail "Cannot compose stt with atomic with non-emp opened invariants"
   | C_STGhost inames _, C_ST _ ->
@@ -128,7 +128,7 @@ let rec mk_bind (f:RT.fstar_top_env) (g:env)
 let check_bind
   (f:RT.fstar_top_env)
   (g:env)
-  (t:st_term{Tm_Bind? t})
+  (t:st_term{Tm_Bind? t.term})
   (pre:term)
   (pre_typing:tot_typing f g pre Tm_VProp)
   (post_hint:option term)
@@ -136,7 +136,7 @@ let check_bind
   : T.Tac (t:st_term &
            c:comp { stateful_comp c ==> comp_pre c == pre } &
            st_typing f g t c) =
-  let Tm_Bind b e1 e2 = t  in
+  let Tm_Bind { binder=b; head=e1; body=e2 } = t.term in
   let (| e1, c1, d1 |) = check f g e1 pre pre_typing None in
   if C_Tot? c1
   then T.fail "Bind: c1 is not st"
@@ -186,7 +186,7 @@ let check_bind
 #pop-options
 
 let check_tot_bind f g t pre pre_typing post_hint check =
-  let Tm_TotBind e1 e2 = t in
+  let Tm_TotBind { head=e1; body=e2 } = t.term in
   let (| e1, u1, t1, _t1_typing, e1_typing |) = check_term_and_type f g e1 in
   let t1 =
     let b = {binder_ty=t1;binder_ppname=RT.pp_name_default} in
@@ -217,6 +217,6 @@ let check_tot_bind f g t pre pre_typing post_hint check =
     T.print (Printf.sprintf "c is %s\n\n" (P.comp_to_string c));
     LN.tot_typing_ln pre_typing';
     open_with_gt_ln pre (-1) e1 0;
-    (| Tm_TotBind e1 e2_closed,
+    (| _,
        c,
-       T_TotBind _ _ _ _ _ x (E e1_typing) e2_typing |)
+       T_TotBind _ _ e2_closed _ _ x (E e1_typing) e2_typing |)

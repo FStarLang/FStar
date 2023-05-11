@@ -94,54 +94,63 @@ let rec eq_tm_list (t1 t2:list term)
 
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
-  = match t1, t2 with
-    | Tm_Return c1 use_eq1 t1, Tm_Return c2 use_eq2 t2 ->
+  = match t1.term, t2.term with
+    | Tm_Return {ctag=c1; insert_eq=b1; term=t1}, 
+      Tm_Return {ctag=c2; insert_eq=b2; term=t2} ->
       c1 = c2 &&
-      use_eq1 = use_eq2 &&
+      b1 = b2 &&
       eq_tm t1 t2
-      
-    | Tm_Abs b1 o1 p1 t1 q1, Tm_Abs b2 o2 p2 t2 q2 ->
+
+    | Tm_Abs { b=b1; q=o1; pre=p1; body=t1; post=q1},
+      Tm_Abs { b=b2; q=o2; pre=p2; body=t2; post=q2} ->
       eq_tm b1.binder_ty b2.binder_ty &&
       o1=o2 &&
       eq_tm_opt p1 p2 &&
       eq_st_term t1 t2 &&
       eq_tm_opt q1 q2
   
-    | Tm_STApp h1 o1 t1, Tm_STApp h2 o2 t2 ->
+    | Tm_STApp { head=h1; arg_qual=o1; arg=t1},
+      Tm_STApp { head=h2; arg_qual=o2; arg=t2} ->
       eq_tm h1 h2 &&
       o1=o2 &&
       eq_tm t1 t2
 
-    | Tm_Bind b1 t1 k1, Tm_Bind b2 t2 k2 ->
+    | Tm_Bind { binder=b1; head=t1; body=k1 },
+      Tm_Bind { binder=b2; head=t2; body=k2 } ->
       eq_tm b1.binder_ty b2.binder_ty &&
       eq_st_term t1 t2 &&
       eq_st_term k1 k2
 
-    | Tm_TotBind t1 k1, Tm_TotBind t2 k2 ->
+    | Tm_TotBind { head=t1; body=k1 },
+      Tm_TotBind { head=t2; body=k2 } ->
       eq_tm t1 t2 &&
       eq_st_term k1 k2
       
-    | Tm_IntroExists b1 p1 l1, Tm_IntroExists b2 p2 l2 ->
+    | Tm_IntroExists { erased=b1; p=p1; witnesses=l1 },
+      Tm_IntroExists { erased=b2; p=p2; witnesses=l2 } ->
       b1 = b2 &&
       eq_tm p1 p2 &&
       eq_tm_list l1 l2
 
-    | Tm_ElimExists p1, Tm_ElimExists p2 ->
+    | Tm_ElimExists {p=p1},
+      Tm_ElimExists {p=p2} ->
       eq_tm p1 p2
 
-    | Tm_If g1 ethen1 eelse1 p1, Tm_If g2 ethen2 eelse2 p2 ->
+    | Tm_If { b=g1; then_=ethen1; else_=eelse1; post=p1},
+      Tm_If { b=g2; then_=ethen2; else_=eelse2; post=p2} ->
       eq_tm g1 g2 &&
       eq_st_term ethen1 ethen2 &&
       eq_st_term eelse1 eelse2 &&
       eq_tm_opt p1 p2
     
-    | Tm_While inv1 cond1 body1, Tm_While inv2 cond2 body2 ->
+    | Tm_While { invariant=inv1; condition=cond1; body=body1 },
+      Tm_While { invariant=inv2; condition=cond2; body=body2 } ->
       eq_tm inv1 inv2 &&
       eq_st_term cond1 cond2 &&
       eq_st_term body1 body2
 
-    | Tm_Par preL1 eL1 postL1 preR1 eR1 postR1,
-      Tm_Par preL2 eL2 postL2 preR2 eR2 postR2 ->      
+    | Tm_Par {pre1=preL1; body1=eL1; post1=postL1; pre2=preR1; body2=eR1; post2=postR1 },
+      Tm_Par {pre1=preL2; body1=eL2; post1=postL2; pre2=preR2; body2=eR2; post2=postR2 } ->
       eq_tm preL1 preL2 &&
       eq_st_term eL1 eL2 &&
       eq_tm postL1 postL2 &&
@@ -149,21 +158,25 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term eR1 eR2 &&
       eq_tm postR1 postR2
 
-    | Tm_WithLocal e1 e2, Tm_WithLocal e3 e4 ->
-      eq_tm e1 e3 &&
-      eq_st_term e2 e4
+    | Tm_WithLocal { initializer=e1; body=b1 },
+      Tm_WithLocal { initializer=e2; body=b2 } ->
+      eq_tm e1 e2 &&
+      eq_st_term b1 b2
 
-    | Tm_Rewrite	e1 e2, Tm_Rewrite e3 e4 ->
-						eq_tm e1 e3 &&
-						eq_tm e2 e4
+    | Tm_Rewrite { t1=l1; t2=r1 },
+      Tm_Rewrite { t1=l2; t2=r2 } ->
+      eq_tm l1 l2 &&
+      eq_tm r1 r2
 
-    | Tm_Admit c1 u1 t1 post1, Tm_Admit c2 u2 t2 post2 ->
+    | Tm_Admit { ctag=c1; u=u1; typ=t1; post=post1 }, 
+      Tm_Admit { ctag=c2; u=u2; typ=t2; post=post2 } ->
       c1 = c2 &&
       u1 = u2 &&
       eq_tm t1 t2 &&
       eq_tm_opt post1 post2
 
-    | Tm_Protect t1, Tm_Protect t2 ->
+    | Tm_Protect { t = t1 },
+      Tm_Protect { t = t2 } ->
       eq_st_term t1 t2
       
     | _ -> false

@@ -90,7 +90,7 @@ let par_soundness
     : RT.equiv (extend_env_l f g)
                (mk_abs _ R.Q_Explicit _)
                (mk_abs _ R.Q_Explicit _)
-    = equiv_abs_close _ _ x post_body_eq in
+    = RT.equiv_abs_close _ _ x post_body_eq in
 
   let d = WT.par_typing x raL_typing raR_typing rpreL_typing rpostL_typing
     rpreR_typing rpostR_typing
