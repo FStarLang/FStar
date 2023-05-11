@@ -160,11 +160,11 @@ let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
   = let rec aux t args =
         match (SS.compress t).n, args with
         | _, [] -> U.canon_arrow t
-        | Tm_arrow(b::bs, c), a::args ->
+        | Tm_arrow {bs=b::bs; comp=c}, a::args ->
           let tail = 
             match bs with
             | [] -> U.comp_result c
-            | _ -> S.mk (Tm_arrow(bs, c)) t.pos
+            | _ -> S.mk (Tm_arrow {bs; comp=c}) t.pos
           in
           let b, tail = SS.open_term_1 b tail in
           let tail = SS.subst [NT(b.binder_bv, fst a)] tail in
@@ -201,7 +201,7 @@ let rec term_as_fv_or_name (t:term)
        | Tm_fvar fv -> Some (Inl (fv, us))
        | _ -> failwith "term_as_fv_or_name: impossible non fvar in uinst")
       
-    | Tm_ascribed (t, _, _) -> 
+    | Tm_ascribed {tm=t} -> 
       term_as_fv_or_name t
       
     | _ -> None
@@ -295,7 +295,7 @@ let max_uniformly_recursive_parameters (env:env_t)
         | Tm_type _
         | Tm_constant _ ->
           n_params
-        | Tm_refine(x, f) ->
+        | Tm_refine {b=x; phi=f} ->
           min (aux x.sort)
               (let _, f = SS.open_term [S.mk_binder x] f in
                aux f)
@@ -327,15 +327,15 @@ let max_uniformly_recursive_parameters (env:env_t)
           let bs, r = U.arrow_formals ty in
           min (min_l bs (fun b -> aux b.binder_bv.sort))
               (aux r)
-        | Tm_match(scrutinee, _, branches, _) ->
+        | Tm_match {scrutinee; brs=branches} ->
           min (aux scrutinee)
               (min_l branches
                      (fun (p, _, t) ->
                        let bs = List.map mk_binder (pat_bvs p) in
                        let bs, t = SS.open_term bs t in
                        aux t))
-        | Tm_meta(t, _)
-        | Tm_ascribed(t, _, _) ->
+        | Tm_meta {tm=t}
+        | Tm_ascribed {tm=t} ->
           aux t
         | _ ->
           0
@@ -461,8 +461,8 @@ let may_be_an_arity env (t:term)
       | Tm_arrow _ ->
         let _, t = U.arrow_formals t in
         aux t
-      | Tm_refine(x, _) -> aux x.sort
-      | Tm_match (_, _, branches, _) ->
+      | Tm_refine {b=x} -> aux x.sort
+      | Tm_match {brs=branches} ->
         List.existsML
          (fun (p, _, t) ->
            let bs = List.map mk_binder (pat_bvs p) in
@@ -470,8 +470,8 @@ let may_be_an_arity env (t:term)
            aux t)
          branches
 
-      | Tm_meta (t, _)
-      | Tm_ascribed(t, _, _) ->
+      | Tm_meta {tm=t}
+      | Tm_ascribed {tm=t} ->
         aux t
 
       (* maybes *)
@@ -614,13 +614,13 @@ let mutuals_unused_in_type (mutuals:list lident) t =
      | Tm_uinst _ ->
       //in these cases, fv_lid is used in t
        false
-     | Tm_abs (bs, t, _) ->
+     | Tm_abs {bs; body=t} ->
        binders_ok bs && ok t
-     | Tm_arrow(bs, c) ->
+     | Tm_arrow {bs; comp=c} ->
        binders_ok bs && ok_comp c
-     | Tm_refine(bv, t) ->
+     | Tm_refine {b=bv; phi=t} ->
        ok bv.sort && ok t
-     | Tm_app(head, args) ->
+     | Tm_app {hd=head; args} ->
        if mutuals_occur_in head
        then false
        else List.for_all
@@ -630,21 +630,21 @@ let mutuals_unused_in_type (mutuals:list lident) t =
                  | Some q -> U.contains_unused_attribute q.aqual_attributes) ||
                 ok a)
               args
-      | Tm_match (t, _, branches, _) ->
+      | Tm_match {scrutinee=t; brs=branches} ->
         ok t &&
         List.for_all
             (fun (_, _, br) -> ok br)
              branches
-      | Tm_ascribed (t, asc, _) ->
+      | Tm_ascribed {tm=t; asc} ->
         ok t
-      | Tm_let ((_, lbs), t) ->
+      | Tm_let {lbs=(_, lbs); body=t} ->
         List.for_all (fun lb -> ok lb.lbtyp && ok lb.lbdef) lbs
         && ok t
       | Tm_uvar _ ->
         false
       | Tm_delayed _ ->
         false
-      | Tm_meta(t, _) ->
+      | Tm_meta {tm=t} ->
         ok t
       | _ ->
         false
@@ -768,11 +768,11 @@ let rec ty_strictly_positive_in_type (env:env)
           "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
         true  //Type, and fvar constants are fine
       
-      | Tm_ascribed (t, _, _)
-      | Tm_meta (t, _) ->
+      | Tm_ascribed {tm=t}
+      | Tm_meta {tm=t} ->
         ty_strictly_positive_in_type env mutuals t unfolded
 
-      | Tm_app (t, args) ->  //the binder type is an application
+      | Tm_app {hd=t; args} ->  //the binder type is an application
         let fv_or_name_opt = term_as_fv_or_name t in
         begin
         match fv_or_name_opt with
@@ -836,7 +836,7 @@ let rec ty_strictly_positive_in_type (env:env)
           end
      end
 
-   | Tm_arrow (_, c) ->  //in_type is an arrow
+   | Tm_arrow {comp=c} ->  //in_type is an arrow
      debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
      let check_comp =
        U.is_pure_or_ghost_comp c ||
@@ -878,7 +878,7 @@ let rec ty_strictly_positive_in_type (env:env)
      )
      
      
-   | Tm_refine (bv, f) ->
+   | Tm_refine {b=bv; phi=f} ->
      debug_positivity env (fun _ ->
        "Checking strict positivity in an Tm_refine, recur in the bv sort)");
      let [b], f = SS.open_term [S.mk_binder bv] f in
@@ -887,7 +887,7 @@ let rec ty_strictly_positive_in_type (env:env)
           ty_strictly_positive_in_type env mutuals f unfolded
      else false
      
-   | Tm_match (scrutinee, _, branches, _) ->
+   | Tm_match {scrutinee; brs=branches} ->
      debug_positivity env (fun _ ->
        "Checking strict positivity in an Tm_match, recur in the branches)");
      if L.existsML (fun mutual -> ty_occurs_in mutual scrutinee) mutuals

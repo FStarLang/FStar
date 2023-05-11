@@ -379,10 +379,10 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
       let rename_in_typ def typ =
         let typ = Subst.compress typ in
         let def_bs = match (Subst.compress def).n with
-                     | Tm_abs (binders, _, _) -> binders
+                     | Tm_abs {bs=binders} -> binders
                      | _ -> [] in
         match typ with
-        | { n = Tm_arrow(val_bs, c); pos = r } -> begin
+        | { n = Tm_arrow {bs=val_bs; comp=c}; pos = r } -> begin
           let has_auto_name bv =
             BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
           let rec rename_binders def_bs val_bs =
@@ -400,7 +400,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
                  //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
                  //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
                  val_b) :: rename_binders bt vt in
-          Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) r end
+          Syntax.mk (Tm_arrow {bs=rename_binders def_bs val_bs; comp=c}) r end
         | _ -> typ in
       { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
 
@@ -420,7 +420,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
                 | Tm_unknown -> lb.lbdef
                 | _ ->
                   (* If there are two type ascriptions we check that they are compatible *)
-                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None, false), None)) lb.lbdef.pos
+                  mk (Tm_ascribed {tm=lb.lbdef; asc=(Inl lb.lbtyp, None, false); eff_opt=None}) lb.lbdef.pos
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
@@ -471,7 +471,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
     (* / preprocess_with *)
 
     (* 2. Turn the top-level lb into a Tm_let with a unit body *)
-    let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) r)) r in
+    let e = mk (Tm_let {lbs=(fst lbs, lbs'); body=mk (Tm_constant (Const_unit)) r}) r in
 
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env' = { env with top_level = true; generalize = should_generalize } in
@@ -479,18 +479,19 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
       if do_two_phases env' then run_phase1 (fun _ ->
         let drop_lbtyp (e_lax:term) :term =
           match (SS.compress e_lax).n with
-          | Tm_let ((false, [ lb ]), e2) ->
+          | Tm_let {lbs=(false, [ lb ]); body=e2} ->
             let lb_unannotated =
               match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1, capturing e from above
-              | Tm_let ((_, [ lb ]), _) ->
+              | Tm_let {lbs=(_, [ lb ])} ->
                 (match (SS.compress lb.lbtyp).n with
                  | Tm_unknown -> true
                  | _ -> false)
               | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
             in
-            if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
+            if lb_unannotated then { e_lax with n = Tm_let {lbs=(false, [ { lb with lbtyp = S.tun } ]);
+                                                            body=e2}}  //erase the type annotation
             else e_lax
-          | Tm_let ((true, lbs), _) ->
+          | Tm_let {lbs=(true, lbs)} ->
             U.check_mutual_universes lbs;
             //leave recursive lets as is; since the decreases clause from the ascription (if any)
             //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
@@ -538,7 +539,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
                         "FStar.TypeChecker.Tc.tc_sig_let-tc-phase2"
     in
     let se, lbs = match r with
-      | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
+      | {n=Tm_let {lbs; body=e}}, _, g when Env.is_trivial g ->
         U.check_mutual_universes (snd lbs);
 
         // Propagate binder names into signature
@@ -553,7 +554,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
 
         //propagate the MaskedEffect tag to the qualifiers
         let quals = match e.n with
-            | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
+            | Tm_meta {meta=Meta_desugared Masked_effect} -> HasMaskedEffect::quals
             | _ -> quals
         in
         { se with sigel = Sig_let(lbs, lids);

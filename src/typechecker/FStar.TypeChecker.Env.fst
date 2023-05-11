@@ -834,7 +834,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
              | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with
-                        | Tm_arrow(binders, c) ->
+                        | Tm_arrow {bs=binders; comp=c} ->
                           Some (binders, c)
                         | _ -> failwith "Impossible"
                     end
@@ -876,9 +876,9 @@ let rec non_informative env t =
       || fv_eq_lid fv Const.squash_lid
       || fv_eq_lid fv Const.erased_lid
       || fv_has_erasable_attr env fv
-    | Tm_app(head, _) -> non_informative env head
+    | Tm_app {hd=head} -> non_informative env head
     | Tm_uinst (t, _) -> non_informative env t
-    | Tm_arrow(_, c) ->
+    | Tm_arrow {comp=c} ->
       (is_pure_or_ghost_comp c && non_informative env (comp_result c))
       || is_erasable_effect env (comp_effect_name c)
     | _ -> false
@@ -886,7 +886,7 @@ let rec non_informative env t =
 let num_effect_indices env name r =
   let sig_t = name |> lookup_effect_lid env |> SS.compress in
   match sig_t.n with
-  | Tm_arrow (_a::bs, _) -> List.length bs
+  | Tm_arrow {bs=_a::bs} -> List.length bs
   | _ ->
     raise_error (Errors.Fatal_UnexpectedSignatureForMonad,
       BU.format2 "Signature for %s not an arrow (%s)" (Ident.string_of_lid name)
@@ -904,7 +904,7 @@ let lookup_projector env lid i =
     let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (Print.lid_to_string lid)) in
     let _, t = lookup_datacon env lid in
     match (compress t).n with
-        | Tm_arrow(binders, _) ->
+        | Tm_arrow {bs=binders} ->
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
@@ -1094,7 +1094,7 @@ let wp_sig_aux decls m =
     let _, s = md.signature |> U.effect_sig_ts |> inst_tscheme in
     let s = Subst.compress s in
     match md.binders, s.n with
-      | [], Tm_arrow([b; wp_b], c) when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
+      | [], Tm_arrow {bs=[b; wp_b]; comp=c} when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
       | _ -> failwith "Impossible"
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
@@ -1229,7 +1229,7 @@ let effect_repr_aux only_reifiable env c u_res =
       let res_typ = c.result_typ in
       let repr = inst_effect_fun_with [u_res] env ed ts in
       check_partial_application effect_name c.effect_args;
-      Some (S.mk (Tm_app (repr, ((res_typ |> S.as_arg)::c.effect_args))) (get_range env))
+      Some (S.mk (Tm_app {hd=repr; args=((res_typ |> S.as_arg)::c.effect_args)}) (get_range env))
 
 let effect_repr env c u_res : option term = effect_repr_aux false env c u_res
 
@@ -1270,7 +1270,7 @@ let is_reifiable_comp (env:env) (c:S.comp) : bool =
 
 let is_reifiable_function (env:env) (t:S.term) : bool =
     match (compress t).n with
-    | Tm_arrow (_, c) -> is_reifiable_comp env c
+    | Tm_arrow {comp=c} -> is_reifiable_comp env c
     | _ -> false
 
 let reify_comp env c u_c : term =
@@ -1784,7 +1784,7 @@ let too_early_in_prims env =
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) f.pos}
+  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app {hd=f; args=[as_arg e]}) f.pos}
 
 let map_guard g map = match g.guard_f with
   | Trivial -> g

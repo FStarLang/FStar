@@ -125,18 +125,48 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        of binders*term*option residual_comp          (* fun (xi:ti) -> t : (M t' wp | N) *)
-  | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
-  | Tm_refine     of bv * term                                   (* x:t{phi} *)
-  | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * option match_returns_ascription * list branch * option residual_comp
-                                                                 (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
-  | Tm_ascribed   of term * ascription * option lident          (* an effect label is the third arg, filled in by the type-checker *)
-  | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
-                                                                   and a delayed substitution of only NM or NT elements *)
-  | Tm_delayed    of term * subst_ts                             (* A delayed substitution --- always force it; never inspect it directly *)
-  | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_abs        {  (* fun (xi:ti) -> t : (M t' wp | N) *)
+      bs:binders;
+      body:term;
+      rc_opt:option residual_comp
+    }
+  | Tm_arrow      {  (* (xi:ti) -> M t' wp *)
+      bs:binders;
+      comp:comp
+    }
+  | Tm_refine     {  (* x:t{phi} *)
+      b:bv;
+      phi:term
+    }
+  | Tm_app        {  (* h tau_1 ... tau_n, args in order from left to right *)
+      hd:term;
+      args:args
+    }
+  | Tm_match      {  (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
+      scrutinee:term;
+      ret_opt:option match_returns_ascription;
+      brs:list branch;
+      rc_opt:option residual_comp
+    }
+  | Tm_ascribed   {  (* an effect label is the third arg, filled in by the type-checker *)
+      tm:term;
+      asc:ascription;
+      eff_opt:option lident
+    }
+  | Tm_let        {  (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
+      lbs:letbindings;
+      body:term
+    }
+  | Tm_uvar       of ctx_uvar_and_subst  (* A unification variable ?u (aka meta-variable)
+                                            and a delayed substitution of only NM or NT elements *)
+  | Tm_delayed    {  (* A delayed substitution --- always force it; never inspect it directly *)
+      tm:term;
+      substs:subst_ts
+    }
+  | Tm_meta       {  (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+      tm:term;
+      meta:metadata
+    }
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)

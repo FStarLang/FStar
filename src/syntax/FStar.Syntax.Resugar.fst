@@ -344,7 +344,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       then mk (A.App (typ, resugar_universe u t.pos, UnivApp))
       else typ
 
-    | Tm_abs(xs, body, _) -> //fun x1 .. xn -> body
+    | Tm_abs {bs=xs; body} -> //fun x1 .. xn -> body
       //before inspecting any syntactic form that has binding structure
       //you must call SS.open_* to replace de Bruijn indexes with names
       let xs, body = SS.open_term xs body in
@@ -368,7 +368,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       (* Flatten the arrow *)
       let xs, body =
         match (SS.compress (U.canon_arrow t)).n with
-        | Tm_arrow (xs, body) -> xs, body
+        | Tm_arrow {bs=xs; comp=body} -> xs, body
         | _ -> failwith "impossible: Tm_arrow in resugar_term"
       in
       let xs, body = SS.open_comp xs body in
@@ -385,22 +385,22 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           aux body tl in
       aux body xs
 
-    | Tm_refine(x, phi) ->
+    | Tm_refine {b=x; phi} ->
       (* bv * term -> binder * term *)
       let x, phi = SS.open_term [S.mk_binder x] phi in
       let b = BU.must (resugar_binder' env (List.hd x) t.pos) in
       mk (A.Refine(b, resugar_term' env phi))
 
-    | Tm_app({n=Tm_fvar fv}, [(e, _)])
+    | Tm_app {hd={n=Tm_fvar fv}; args=[(e, _)]}
       when not (Options.print_implicits())
            && S.fv_eq_lid fv C.b2t_lid ->
       resugar_term' env e
 
-    | Tm_app({n=Tm_fvar fv}, [({n=Tm_constant (Const_int (i, None))}, _)])
+    | Tm_app {hd={n=Tm_fvar fv}; args=[({n=Tm_constant (Const_int (i, None))}, _)]}
       when can_resugar_machine_integer fv ->
       resugar_machine_integer fv i t.pos
 
-    | Tm_app(e, args) ->
+    | Tm_app {hd=e; args} ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last = function
             | hd :: [] -> [hd]
@@ -508,7 +508,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 failwith("wrong arguments to try_with")
             in
             let decomp term = match (SS.compress term).n with
-              | Tm_abs(x, e, _) ->
+              | Tm_abs {bs=x; body=e} ->
                 let x, e = SS.open_term x e in
                 e
               | _ -> failwith("wrong argument format to try_with: " ^ term_to_string (resugar_term' env term)) in
@@ -563,7 +563,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 xs, pats, t
           in
           let resugar_forall_body body = match (SS.compress body).n with
-            | Tm_abs(xs, body, _) ->
+            | Tm_abs {bs=xs; body} ->
                 let xs, body = SS.open_term xs body in
                 let xs =
                   if (Options.print_implicits())
@@ -571,7 +571,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                   else filter_imp_bs xs in
                 let xs = xs |> map_opt (fun b -> resugar_binder' env b t.pos) in
                 let pats, body = match (SS.compress body).n with
-                  | Tm_meta(e, m) ->
+                  | Tm_meta {tm=e; meta=m} ->
                     let body = resugar_term' env e in
                     let pats, body = match m with
                       | Meta_pattern (_, pats) ->
@@ -637,7 +637,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           end
     end
 
-    | Tm_match(e, None, [(pat, wopt, t)], _) ->
+    | Tm_match {scrutinee=e; ret_opt=None; brs=[(pat, wopt, t)]} ->
       (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
         it would be better to print it as `let P = e in e1`. *)
       (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
@@ -656,7 +656,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     (*            resugar_term' env t1, *)
     (*            resugar_term' env t2)) *)
 
-    | Tm_match(e, asc_opt, branches, _) ->
+    | Tm_match {scrutinee=e; ret_opt=asc_opt; brs=branches} ->
       let resugar_branch (pat, wopt,b) =
         let pat, wopt, b = SS.open_branch (pat, wopt, b) in
         let branch_bv = FStar.Syntax.Free.names b in
@@ -671,11 +671,11 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                   None, asc_opt,
                   List.map resugar_branch branches))
 
-    | Tm_ascribed(e, asc, _) ->
+    | Tm_ascribed {tm=e; asc} ->
       let asc, tac_opt, b = resugar_ascription env asc in
       mk (A.Ascribed (resugar_term' env e, asc, tac_opt, b))
 
-    | Tm_let((is_rec, source_lbs), body) ->
+    | Tm_let {lbs=(is_rec, source_lbs); body} ->
       let mk_pat a = A.mk_pattern a t.pos in
       let source_lbs, body = SS.open_let_rec source_lbs body in
       let resugar_one_binding bnd =
@@ -687,11 +687,11 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         in
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
         let typ, def = match (SS.compress td).n with
-          | Tm_app(_, [(t, _); (d, _)]) -> t, d
+          | Tm_app {args=[(t, _); (d, _)]} -> t, d
           | _ -> failwith "wrong let binding format"
         in
         let binders, term, is_pat_app = match (SS.compress def).n with
-          | Tm_abs(b, t, _) ->
+          | Tm_abs {bs=b; body=t} ->
             let b, t = SS.open_term b t in
             let b =
               if (Options.print_implicits())
@@ -742,7 +742,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       in
       mk (A.Quote (resugar_term' env tm, qi))
 
-    | Tm_meta(e, m) ->
+    | Tm_meta {tm=e; meta=m} ->
        let resugar_meta_desugared = function
           | Sequence ->
               let term = resugar_term' env e in
@@ -826,7 +826,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
       | _ -> false
     in
     match (SS.compress rel).n with
-    | Tm_abs ([b1;b2], body, _) ->
+    | Tm_abs {bs=[b1;b2]; body} ->
         let ([b1;b2], body) = SS.open_term [b1;b2] body in
         let body = U.unascribe body in
         let body = match (U.unb2t body) with
@@ -834,7 +834,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
                    | None -> body
         in
         begin match (SS.compress body).n with
-        | Tm_app (e, args) when List.length args >= 2 ->
+        | Tm_app {hd=e; args} when List.length args >= 2 ->
           begin match List.rev args with
           | (a1, None)::(a2, None)::rest ->
             if bv_eq_tm b1.binder_bv a2 && bv_eq_tm b2.binder_bv a1 // mind the flip
@@ -1217,7 +1217,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
             | Sig_datacon (_, univs, term, _, num, _) ->
               (* Todo: resugar univs *)
               begin match (SS.compress term).n with
-                | Tm_arrow(bs, _) ->
+                | Tm_arrow {bs} ->
                   let mfields =
                     bs
                     |> List.collect (fun b ->
@@ -1388,7 +1388,7 @@ let resugar_sigelt' env se : option A.decl =
         (is_rec, lbs)
       in
       let lbs = nopath_lbs lbs in
-      let desugared_let = mk (Tm_let(lbs, dummy)) in
+      let desugared_let = mk (Tm_let {lbs; body=dummy}) in
       let t = resugar_term' env desugared_let in
       begin match t.tm with
         | A.Let(isrec, lets, _) ->

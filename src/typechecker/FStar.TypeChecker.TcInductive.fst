@@ -133,11 +133,11 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
          let arguments, result =
             let t = N.normalize (N.whnf_steps @ [Env.AllowUnboundUniverses]) env t in  //AR: allow unbounded universes, since we haven't typechecked t yet
             match (SS.compress t).n with
-                | Tm_arrow(bs, res) ->
+                | Tm_arrow {bs; comp=res} ->
                   //the type of each datacon is already a function with the type params as arguments
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = BU.first_N ntps bs in
-                  let t = mk (Tm_arrow(bs', res)) t.pos in
+                  let t = mk (Tm_arrow {bs=bs'; comp=res}) t.pos in
                   let subst = tps |> List.mapi (fun i ({binder_bv=x}) -> DB(ntps - (1 + i), x)) in
 (*open*)          let bs, c = U.arrow_formals_comp (SS.subst subst t) in
                   (* check that c is a Tot computation, reject it otherwise
@@ -256,11 +256,11 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas
             | Sig_inductive_typ(tc, _, tps, num_uniform, _, mutuals, datas) ->
               let ty = SS.close_univ_vars uvs x.sort in
               let tps, t = match (SS.compress ty).n with
-                | Tm_arrow(binders, c) ->
+                | Tm_arrow {bs=binders; comp=c} ->
                   let tps, rest = BU.first_N (List.length tps) binders in
                   let t = match rest with
                     | [] -> U.comp_result c
-                    | _ -> mk (Tm_arrow(rest, c)) x.sort.pos
+                    | _ -> mk (Tm_arrow {bs=rest; comp=c}) x.sort.pos
                   in
                   tps, t
                 | _ -> [], ty
@@ -328,7 +328,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:u
   //get the index binders, if any
   let ibs =
     match (SS.compress t).n with
-    | Tm_arrow (ibs, _) -> ibs
+    | Tm_arrow {bs=ibs} -> ibs
     | _                 -> []
   in
   //open the ibs binders
@@ -350,7 +350,8 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:u
   //implication
   let fml = U.mk_imp haseq_bs haseq_ind in
   //attach pattern -- is this the right place ?
-  let fml = { fml with n = Tm_meta (fml, Meta_pattern(binders_to_names ibs, [[S.as_arg haseq_ind]])) } in
+  let fml = { fml with n = Tm_meta {tm=fml;
+                                    meta=Meta_pattern(binders_to_names ibs, [[S.as_arg haseq_ind]])} } in
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
   let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None) ] Range.dummyRange) ibs fml in
@@ -369,7 +370,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
   //apply the universes substitution to dt
   let dt = SS.subst usubst dt in
   match (SS.compress dt).n with
-  | Tm_arrow (dbs, _) ->
+  | Tm_arrow {bs=dbs} ->
     //filter out the inductive type parameters, dbs are the remaining binders
     let dbs = snd (List.splitAt (List.length bs) dbs) in
     //substitute bs into dbs
@@ -497,9 +498,9 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
     match (SS.compress t).n with
     | Tm_fvar fv         -> List.existsb (fun lid -> lid_equals lid fv.fv_name.v) mutuals
     | Tm_uinst (t', _)   -> is_mutual t'
-    | Tm_refine (bv, t') -> is_mutual bv.sort
-    | Tm_app (t', args)  -> if is_mutual t' then true else exists_mutual (List.map fst args)
-    | Tm_meta (t', _)    -> is_mutual t'
+    | Tm_refine {b=bv} -> is_mutual bv.sort
+    | Tm_app {hd=t'; args}  -> if is_mutual t' then true else exists_mutual (List.map fst args)
+    | Tm_meta {tm=t'}    -> is_mutual t'
     | _                  -> false
 
    and exists_mutual = function
@@ -512,7 +513,7 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
   //apply the universes substitution to dt
   let dt = SS.subst usubst dt in
   match (SS.compress dt).n with
-  | Tm_arrow (dbs, _) ->
+  | Tm_arrow {bs=dbs} ->
     //filter out the inductive type parameters, dbs are the remaining binders
     let dbs = snd (List.splitAt (List.length bs) dbs) in
     //substitute bs into dbs
@@ -556,7 +557,7 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list sigelt) (mutuals:list lid
   //get the index binders, if any
   let ibs =
     match (SS.compress t).n with
-    | Tm_arrow (ibs, _) -> ibs
+    | Tm_arrow {bs=ibs} -> ibs
     | _                 -> []
   in
   //open the ibs binders
@@ -585,7 +586,8 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list sigelt) (mutuals:list lid
   let fml = U.mk_imp data_cond haseq_ind in
 
   //attach pattern -- is this the right place ?
-  let fml = { fml with n = Tm_meta (fml, Meta_pattern(binders_to_names ibs, [[S.as_arg haseq_ind]])) } in
+  let fml = { fml with n = Tm_meta {tm=fml;
+                                    meta=Meta_pattern(binders_to_names ibs, [[S.as_arg haseq_ind]])} } in
 
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
@@ -793,7 +795,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
           let body =
             match binders with
             | [] -> typ
-            | _ -> S.mk (Tm_arrow(binders, S.mk_Total typ)) se.sigrng
+            | _ -> S.mk (Tm_arrow {bs=binders; comp=S.mk_Total typ}) se.sigrng
           in
           (univs, body)
       in
@@ -938,7 +940,10 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), None, arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_var (S.new_bv None tun)), None, U.exp_false_bool in
                         let arg_exp = S.bv_to_name unrefined_arg_binder.binder_bv in
-                        mk (Tm_match(arg_exp, None, [U.branch pat_true ; U.branch pat_false], None)) p
+                        mk (Tm_match {scrutinee=arg_exp;
+                                      ret_opt=None;
+                                      brs=[U.branch pat_true ; U.branch pat_false];
+                                      rc_opt=None}) p
                 in
                 let dd = Delta_equational_at_level 1 in
                 let imp = U.abs binders body None in
@@ -1039,7 +1044,10 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 let returns_annotation =
                   let use_eq = true in
                   Some (return_binder, (Inl result_typ, None, use_eq)) in
-                mk (Tm_match(arg_exp, returns_annotation, [U.branch pat], None)) p in
+                mk (Tm_match {scrutinee=arg_exp;
+                              ret_opt=returns_annotation;
+                              brs=[U.branch pat];
+                              rc_opt=None}) p in
               let imp = U.abs binders body None in
               let dd = Delta_equational_at_level 1 in
               let lbtyp = if no_decl then t else tun in

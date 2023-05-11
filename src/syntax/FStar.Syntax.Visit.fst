@@ -136,53 +136,53 @@ let on_sub_term vfs (tm : term) : term =
   | Tm_type u ->
     mk (Tm_type ((f_univ vfs) u))
 
-  | Tm_app (hd, args) ->
+  | Tm_app {hd; args} ->
     let hd    = (f_term vfs) hd in
     let args  = map (f_arg vfs) args in
-    mk (Tm_app (hd, args))
+    mk (Tm_app {hd; args})
 
-  | Tm_abs (bs, t, rc_opt) ->
+  | Tm_abs {bs; body=t; rc_opt} ->
     let bs     = map (f_binder vfs) bs in
     let t      = (f_term vfs) t in
     let rc_opt = map_opt rc_opt (f_residual_comp vfs) in
-    mk (Tm_abs (bs, t, rc_opt))
+    mk (Tm_abs {bs; body=t; rc_opt})
 
-  | Tm_arrow (bs, c) ->
+  | Tm_arrow {bs; comp=c} ->
     let bs    = map (f_binder vfs) bs in
     let c     = (f_comp vfs) c in
-    mk (Tm_arrow (bs, c))
+    mk (Tm_arrow {bs; comp=c})
 
-  | Tm_refine (bv, phi) ->
+  | Tm_refine {b=bv; phi} ->
     let bv    = (f_binding_bv vfs) bv in
     let phi   = (f_term vfs) phi in
-    mk (Tm_refine (bv, phi))
+    mk (Tm_refine {b=bv; phi})
 
-  | Tm_match (sc, asc_opt, brs, rc_opt) ->
+  | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt} ->
     let sc      = (f_term vfs) sc in
     let asc_opt = map_opt asc_opt (fun (b, asc) -> ((f_binder vfs) b, on_sub_ascription vfs asc)) in
     let brs     = map (f_br vfs) brs in
     let rc_opt = map_opt rc_opt (f_residual_comp vfs) in
-    mk (Tm_match (sc, asc_opt, brs, rc_opt))
+    mk (Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt})
 
-  | Tm_ascribed (e, a, lopt) ->
+  | Tm_ascribed {tm=e; asc=a; eff_opt=lopt} ->
     let e = (f_term vfs) e in
     let a = on_sub_ascription vfs a in
-    mk (Tm_ascribed (e, a, lopt))
+    mk (Tm_ascribed {tm=e; asc=a; eff_opt=lopt})
 
-  | Tm_let ((is_rec, lbs), t) ->
+  | Tm_let {lbs=(is_rec, lbs); body=t} ->
     let lbs = map (on_sub_letbinding vfs) lbs in
     let t = (f_term vfs) t in
-    mk (Tm_let ((is_rec, lbs), t))
+    mk (Tm_let {lbs=(is_rec, lbs); body=t})
 
   | Tm_quoted (tm, qi) ->
     let tm = (f_term vfs) tm in
     let qi = Syntax.on_antiquoted (f_term vfs) qi in
     mk (Tm_quoted (tm, qi))
 
-  | Tm_meta (t, md) ->
+  | Tm_meta {tm=t; meta=md} ->
     let t   = (f_term vfs) t in
     let md  = on_sub_meta vfs md in
-    mk (Tm_meta (t, md))
+    mk (Tm_meta {tm=t; meta=md})
 
 let on_sub_binding_bv vfs (x : bv) : bv =
   { x with sort = (f_term vfs) x.sort }

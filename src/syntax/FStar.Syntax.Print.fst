@@ -179,7 +179,7 @@ let rec tag_of_term (t:term) = match t.n with
   | Tm_let _ -> "Tm_let"
   | Tm_uvar _ -> "Tm_uvar"
   | Tm_delayed _ -> "Tm_delayed"
-  | Tm_meta (_, m) -> "Tm_meta:" ^ metadata_to_string m
+  | Tm_meta {meta=m} -> "Tm_meta:" ^ metadata_to_string m
   | Tm_unknown -> "Tm_unknown"
   | Tm_lazy _ -> "Tm_lazy"
 
@@ -192,7 +192,7 @@ and term_to_string x =
       let x = if Options.print_implicits() then x else SU.unmeta x in
       match x.n with
       | Tm_delayed _ ->   failwith "impossible"
-      | Tm_app(_, []) ->  failwith "Empty args!"
+      | Tm_app {args=[]} ->  failwith "Empty args!"
 
       // TODO: add an option to mark where this happens
       | Tm_lazy ({blob=b; lkind=Lazy_embedding (_, thunk)}) ->
@@ -212,21 +212,21 @@ and term_to_string x =
             U.format1 "quote (%s)" (term_to_string tm)
         end
 
-      | Tm_meta(t, Meta_pattern (_, ps)) ->
+      | Tm_meta {tm=t; meta=Meta_pattern (_, ps)} ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format2 "{:pattern %s} %s" pats (term_to_string t)
 
-      | Tm_meta(t, Meta_monadic (m, t')) -> U.format4 ("(MetaMonadic-{%s %s} (%s) %s)") (sli m) (term_to_string t') (tag_of_term t) (term_to_string t)
+      | Tm_meta {tm=t; meta=Meta_monadic (m, t')} -> U.format4 ("(MetaMonadic-{%s %s} (%s) %s)") (sli m) (term_to_string t') (tag_of_term t) (term_to_string t)
 
-      | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format4 ("(MetaMonadicLift-{%s : %s -> %s} %s)") (term_to_string t') (sli m0) (sli m1) (term_to_string t)
+      | Tm_meta {tm=t; meta=Meta_monadic_lift(m0, m1, t')} -> U.format4 ("(MetaMonadicLift-{%s : %s -> %s} %s)") (term_to_string t') (sli m0) (sli m1) (term_to_string t)
 
-      | Tm_meta(t, Meta_labeled(l,r,b)) ->
+      | Tm_meta {tm=t; meta=Meta_labeled(l,r,b)} ->
         U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
 
-      | Tm_meta(t, Meta_named(l)) ->
+      | Tm_meta {tm=t; meta=Meta_named(l)} ->
         U.format3 "Meta_named(%s, %s){%s}" (lid_to_string l) (Range.string_of_range t.pos) (term_to_string t)
 
-      | Tm_meta(t, Meta_desugared _) ->
+      | Tm_meta {tm=t; meta=Meta_desugared _} ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
@@ -253,8 +253,8 @@ and term_to_string x =
         else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
-      | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
-      | Tm_abs(bs, t2, lc) ->
+      | Tm_arrow {bs; comp=c} ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
+      | Tm_abs {bs; body=t2; rc_opt=lc} ->
         begin match lc with
             | Some rc when (Options.print_implicits()) ->
               U.format4 "(fun %s -> (%s $$ (residual) %s %s))"
@@ -265,10 +265,10 @@ and term_to_string x =
             | _ ->
               U.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
         end
-      | Tm_refine(xt, f) -> U.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
-      | Tm_app(t, args) ->  U.format2 "(%s %s)" (term_to_string t) (args_to_string args)
-      | Tm_let(lbs, e) ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-      | Tm_ascribed(e,(annot, topt, b),eff_name) ->
+      | Tm_refine {b=xt; phi=f} -> U.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
+      | Tm_app {hd=t; args} ->  U.format2 "(%s %s)" (term_to_string t) (args_to_string args)
+      | Tm_let {lbs; body=e} ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
+      | Tm_ascribed {tm=e;asc=(annot, topt, b);eff_opt=eff_name} ->
         let annot = match annot with
             | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.string_of_lid |> dflt "default") (term_to_string t)
             | Inr c -> comp_to_string c in
@@ -277,7 +277,7 @@ and term_to_string x =
             | Some t -> U.format1 "by %s" (term_to_string t) in
         let s = if b then "ascribed_eq" else "ascribed" in
         U.format4 "(%s <%s: %s %s)" (term_to_string e) s annot topt
-      | Tm_match(head, asc_opt, branches, lc) ->
+      | Tm_match {scrutinee=head; ret_opt=asc_opt; brs=branches; rc_opt=lc} ->
         let lc_str =
           match lc with
           | Some lc when (Options.print_implicits ()) ->
@@ -763,9 +763,9 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
         if (Options.print_universes())
-        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) Range.dummyRange) in
+        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow {bs=tps; comp=c}) Range.dummyRange) in
              let tps, c = match (Subst.compress t).n with
-                | Tm_arrow(bs, c) -> bs, c
+                | Tm_arrow {bs; comp=c} -> bs, c
                 | _ -> failwith "impossible" in
              U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)

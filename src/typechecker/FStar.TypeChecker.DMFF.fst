@@ -80,7 +80,7 @@ let gen_wps_for_free
   let rec collect_binders (t : term) =
     let t = U.unascribe t in
     match (compress t).n with
-    | Tm_arrow (bs, comp) ->
+    | Tm_arrow {bs; comp} ->
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
           | Total t -> t
@@ -139,10 +139,10 @@ let gen_wps_for_free
 
     let mk_app fv t =
       // The [mk_ctx] and [mk_gctx] helpers therefore do not use implicits either
-      mk (Tm_app (fv,
-        List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv, S.as_aqual_implicit false) binders @
+      mk (Tm_app {hd=fv;
+                  args=List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv, S.as_aqual_implicit false) binders @
         [ S.bv_to_name a, S.as_aqual_implicit false;
-          t, S.as_aqual_implicit false ]))
+          t, S.as_aqual_implicit false ]})
     in
 
     env, mk_app ctx_fv, mk_app gctx_fv
@@ -263,7 +263,7 @@ let gen_wps_for_free
   let ret_tot_wp_a = Some (U.residual_tot wp_a) in
   let mk_generic_app c =
     if List.length binders > 0 then
-      mk (Tm_app (c, args_of_binders binders))
+      mk (Tm_app {hd=c; args=args_of_binders binders})
     else
       c
   in
@@ -308,7 +308,7 @@ let gen_wps_for_free
   let ret_tot_type = Some (U.residual_tot U.ktype) in
   let ret_gtot_type = Some (TcComm.residual_comp_of_lcomp (TcComm.lcomp_of_comp <| S.mk_GTotal U.ktype)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
-    S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)])) Range.dummyRange
+    S.mk (Tm_app {hd=U.tforall; args=[ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)]}) Range.dummyRange
   in
 
   (* For each (target) type t, we define a binary relation in t called ≤_t.
@@ -321,12 +321,12 @@ let gen_wps_for_free
   (* Invariant: [x] and [y] have type [t] *)
   let rec is_discrete t = match (SS.compress t).n with
     | Tm_type _ -> false
-    | Tm_arrow (bs, c) -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_discrete (U.comp_result c)
+    | Tm_arrow {bs; comp=c} -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_discrete (U.comp_result c)
     | _ -> true
   in
   let rec is_monotonic t = match (SS.compress t).n with
     | Tm_type _ -> true
-    | Tm_arrow (bs, c) -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_monotonic (U.comp_result c)
+    | Tm_arrow {bs; comp=c} -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_monotonic (U.comp_result c)
     | _ -> is_discrete t
   in
   let rec mk_rel rel t x y =
@@ -336,8 +336,8 @@ let gen_wps_for_free
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         rel x y
-    | Tm_arrow ([ binder ], { n = GTotal b })
-    | Tm_arrow ([ binder ], { n = Total b }) ->
+    | Tm_arrow {bs=[ binder ]; comp={ n = GTotal b }}
+    | Tm_arrow {bs=[ binder ]; comp={ n = Total b }} ->
         let a = binder.binder_bv.sort in
         if is_monotonic a  || is_monotonic b //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
@@ -356,11 +356,11 @@ let gen_wps_for_free
                 (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
             in
             mk_forall a1 (mk_forall a2 body)
-    | Tm_arrow (binder :: binders, comp) ->
+    | Tm_arrow {bs=binder :: binders; comp} ->
         (* split away the first binder and recurse, so we fall in the case above *)
-        let t = { t with n = Tm_arrow ([ binder ], S.mk_Total (U.arrow binders comp)) } in
+        let t = { t with n = Tm_arrow {bs=[ binder ]; comp=S.mk_Total (U.arrow binders comp)} } in
         mk_rel t x y
-    | Tm_arrow ([], _) ->
+    | Tm_arrow {bs=[]} ->
         failwith "impossible: arrow with empty binders"
     | _ ->
         (* TODO: assert that this is a base type. *)
@@ -374,7 +374,7 @@ let gen_wps_for_free
         let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
         match (SS.compress t).n with
         | Tm_type _ -> U.mk_imp x y
-        | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
+        | Tm_app {hd=head; args} when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
             let projector = S.fvar (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
@@ -386,8 +386,8 @@ let gen_wps_for_free
                   | rel0 :: rels -> rel0, rels
           in
           List.fold_left U.mk_conj rel0 rels
-        | Tm_arrow (binders, { n = GTotal b })
-        | Tm_arrow (binders, { n = Total b }) ->
+        | Tm_arrow {bs=binders; comp={ n = GTotal b }}
+        | Tm_arrow {bs=binders; comp={ n = Total b }} ->
           let bvs = List.mapi (fun i ({binder_bv=bv;binder_qual=q}) -> S.gen_bv ("a" ^ string_of_int i) None bv.sort) binders in
           let args = List.map (fun ai -> S.as_arg (S.bv_to_name ai)) bvs in
           let body = mk_stronger b (U.mk_app x args) (U.mk_app y args) in
@@ -417,7 +417,7 @@ let gen_wps_for_free
           let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body =
-            mk (Tm_meta (body, Meta_pattern(binders_to_names binders, [[as_arg pat]]))) in
+            mk (Tm_meta {tm=body; meta=Meta_pattern(binders_to_names binders, [[as_arg pat]])}) in
           U.close_forall_no_univs binders pattern_guarded_body
         | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in
@@ -498,7 +498,7 @@ let string_of_nm = function
 
 let is_monadic_arrow n =
   match n with
-  | Tm_arrow (_, c) ->
+  | Tm_arrow {comp=c} ->
       nm_of_comp c
   | _ ->
       failwith "unexpected_argument: [is_monadic_arrow]"
@@ -518,10 +518,8 @@ let double_star typ =
     star_once <| typ |> star_once
 
 let rec mk_star_to_type mk env a =
-  mk (Tm_arrow (
-    [S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_bqual_implicit false) None []],
-    mk_Total U.ktype0
-  ))
+  mk (Tm_arrow {bs=[S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_bqual_implicit false) None []];
+                comp=mk_Total U.ktype0})
 
 // The *-transformation for types, purely syntactic. Has been enriched with the
 // [Tm_abs] case to account for parameterized types
@@ -532,7 +530,7 @@ and star_type' env t =
   //BU.print1 "[debug]: star_type' %s\n" (Print.term_to_string t);
   let t = SS.compress t in
   match t.n with
-  | Tm_arrow (binders, _) ->
+  | Tm_arrow {bs=binders} ->
       // TODO: check that this is not a dependent arrow.
       let binders = List.map (fun b ->
         {b with binder_bv={b.binder_bv with sort = star_type' env b.binder_bv.sort}}
@@ -540,21 +538,21 @@ and star_type' env t =
       (* Catch the GTotal case early; it seems relatively innocuous to allow
        * GTotal to appear. TODO fix this as a clean, single pattern-matching. *)
       begin match t.n with
-      | Tm_arrow (_, { n = GTotal hn }) ->
-          mk (Tm_arrow (binders, mk_GTotal (star_type' env hn)))
+      | Tm_arrow {comp={ n = GTotal hn }} ->
+          mk (Tm_arrow {bs=binders; comp=mk_GTotal (star_type' env hn)})
       | _ ->
           match is_monadic_arrow t.n with
           | N hn ->
               // Simple case:
               //   (H_0  -> ... -> H_n)* = H_0* -> ... -> H_n*
-              mk (Tm_arrow (binders, mk_Total (star_type' env hn)))
+              mk (Tm_arrow {bs=binders; comp=mk_Total (star_type' env hn)})
           | M a ->
               // F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
               //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
-              mk (Tm_arrow (
-                binders @ [ S.mk_binder_with_attrs (S.null_bv (mk_star_to_type env a))
-                              (S.as_bqual_implicit false) None []],
-                mk_Total U.ktype0))
+              mk (Tm_arrow {
+                bs=binders @ [ S.mk_binder_with_attrs (S.null_bv (mk_star_to_type env a))
+                              (S.as_bqual_implicit false) None []];
+                comp=mk_Total U.ktype0})
       end
 
   | Tm_app (head, args) ->

@@ -185,7 +185,7 @@ let rec inspect_ln (t:term) : term_view =
     //
     let t = t |> SS.compress_subst in
     match t.n with
-    | Tm_meta (t, _) ->
+    | Tm_meta {tm=t} ->
         inspect_ln t
 
     | Tm_name bv ->
@@ -202,37 +202,37 @@ let rec inspect_ln (t:term) : term_view =
        | Tm_fvar fv -> Tv_UInst (fv, us)
        | _ -> failwith "Reflection::inspect_ln: uinst for a non-fvar node")
 
-    | Tm_ascribed (t, (Inl ty, tacopt, eq), _elid) ->
+    | Tm_ascribed {tm=t; asc=(Inl ty, tacopt, eq)} ->
         Tv_AscribedT (t, ty, tacopt, eq)
 
-    | Tm_ascribed (t, (Inr cty, tacopt, eq), elid) ->
+    | Tm_ascribed {tm=t; asc=(Inr cty, tacopt, eq)} ->
         Tv_AscribedC (t, cty, tacopt, eq)
 
-    | Tm_app (hd, []) ->
+    | Tm_app {args=[]} ->
         failwith "inspect_ln: empty arguments on Tm_app"
 
-    | Tm_app (hd, args) ->
+    | Tm_app {hd; args} ->
         // We split at the last argument, since the term_view does not
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
         let q' = inspect_aqual q in
         Tv_App (U.mk_app hd (init args), (a, q'))
 
-    | Tm_abs ([], _, _) ->
+    | Tm_abs {bs=[]} ->
         failwith "inspect_ln: empty arguments on Tm_abs"
 
-    | Tm_abs (b::bs, t, k) ->
+    | Tm_abs {bs=b::bs; body=t; rc_opt=k} ->
         let body =
             match bs with
             | [] -> t
-            | bs -> S.mk (Tm_abs (bs, t, k)) t.pos
+            | bs -> S.mk (Tm_abs {bs; body=t; rc_opt=k}) t.pos
         in
         Tv_Abs (b, body)
 
     | Tm_type u ->
         Tv_Type u
 
-    | Tm_arrow ([], k) ->
+    | Tm_arrow {bs=[]} ->
         failwith "inspect_ln: empty binders on arrow"
 
     | Tm_arrow _ ->
@@ -241,7 +241,7 @@ let rec inspect_ln (t:term) : term_view =
         | None -> failwith "impossible"
         end
 
-    | Tm_refine (bv, t) ->
+    | Tm_refine {b=bv; phi=t} ->
         Tv_Refine (bv, bv.sort, t)
 
     | Tm_constant c ->
@@ -254,7 +254,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head),
                 (ctx_u, s))
 
-    | Tm_let ((false, [lb]), t2) ->
+    | Tm_let {lbs=(false, [lb]); body=t2} ->
         if lb.lbunivs <> [] then Tv_Unsupp else
         begin match lb.lbname with
         | Inr _ -> Tv_Unsupp // no top level lets
@@ -263,14 +263,14 @@ let rec inspect_ln (t:term) : term_view =
             Tv_Let (false, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
         end
 
-    | Tm_let ((true, [lb]), t2) ->
+    | Tm_let {lbs=(true, [lb]); body=t2} ->
         if lb.lbunivs <> [] then Tv_Unsupp else
         begin match lb.lbname with
         | Inr _  -> Tv_Unsupp // no top level lets
         | Inl bv -> Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
         end
 
-    | Tm_match (t, ret_opt, brs, _) ->
+    | Tm_match {scrutinee=t; ret_opt; brs} ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -392,16 +392,16 @@ let pack_ln (tv:term_view) : term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        mk (Tm_abs ([b], t, None)) t.pos // TODO: effect?
+        mk (Tm_abs {bs=[b]; body=t; rc_opt=None}) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        mk (Tm_arrow ([b], c)) c.pos
+        mk (Tm_arrow {bs=[b]; comp=c}) c.pos
 
     | Tv_Type u ->
         mk (Tm_type u) Range.dummyRange
 
     | Tv_Refine (bv, sort, t) ->
-        mk (Tm_refine ({bv with sort=sort}, t)) t.pos
+        mk (Tm_refine {b={bv with sort=sort}; phi=t}) t.pos
 
     | Tv_Const c ->
         S.mk (Tm_constant (pack_const c)) Range.dummyRange
@@ -412,12 +412,12 @@ let pack_ln (tv:term_view) : term =
     | Tv_Let (false, attrs, bv, ty, t1, t2) ->
         let bv = { bv with sort=ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((false, [lb]), t2)) Range.dummyRange
+        S.mk (Tm_let {lbs=(false, [lb]); body=t2}) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, ty, t1, t2) ->
         let bv = { bv with sort=ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((true, [lb]), t2)) Range.dummyRange
+        S.mk (Tm_let {lbs=(true, [lb]); body=t2}) Range.dummyRange
 
     | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -429,13 +429,13 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
+        S.mk (Tm_match {scrutinee=t; ret_opt; brs; rc_opt=None}) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt, use_eq) ->
-        S.mk (Tm_ascribed(e, (Inl t, tacopt, use_eq), None)) Range.dummyRange
+        S.mk (Tm_ascribed {tm=e; asc=(Inl t, tacopt, use_eq); eff_opt=None}) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt, use_eq) ->
-        S.mk (Tm_ascribed(e, (Inr c, tacopt, use_eq), None)) Range.dummyRange
+        S.mk (Tm_ascribed {tm=e; asc=(Inr c, tacopt, use_eq); eff_opt=None}) Range.dummyRange
 
     | Tv_Unknown ->
         S.mk Tm_unknown Range.dummyRange
