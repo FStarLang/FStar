@@ -14,8 +14,7 @@
    limitations under the License.
 *)
 module FStar.Getopt
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
 open FStar.BaseTypes
 
 val noshort : char

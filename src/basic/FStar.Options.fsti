@@ -19,7 +19,6 @@ open FStar.Getopt
 open FStar.BaseTypes
 open FStar.VConfig
 open FStar.Compiler
-module List = FStar.Compiler.List
 
 //let __test_norm_all = Util.mk_ref false
 

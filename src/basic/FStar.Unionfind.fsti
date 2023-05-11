@@ -16,8 +16,6 @@
 module FStar.Unionfind
 
 open FStar.Compiler.Effect
-module List = FStar.Compiler.List
-open FStar.Compiler.Util
 
 type puf 'a
 type p_uvar 'a
