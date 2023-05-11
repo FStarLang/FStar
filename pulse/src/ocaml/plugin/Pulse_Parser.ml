@@ -4,14 +4,14 @@ open FStar_Pervasives
 open FStar_Compiler_Range
 open FStar_Parser_ParseIt
 module FP = FStar_Parser_Parse
-module PP = Pulseparser
+module PP = Pulse_FStar_Parser
 module S = FStar_Sedlexing
 
 let rewrite_token (tok:FP.token)
   : PP.token
   = match tok with
     | IDENT "mut" -> PP.MUT
-    | IDENT "var" -> PP.VAR
+(*    | IDENT "var" -> PP.VAR *)
     | IDENT "invariant" -> PP.INVARIANT
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN

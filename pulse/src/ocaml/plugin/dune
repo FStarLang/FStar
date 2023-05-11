@@ -12,6 +12,6 @@
  (flags (:standard -w -A))
 )
 
-(menhir (modules pulseparser))
-
-
+(menhir
+ (modules pulseparser FStar_Parser_Parse)
+ (merge_into Pulse_FStar_Parser))

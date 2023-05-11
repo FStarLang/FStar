@@ -12,6 +12,7 @@ ifeq (,$(FSTAR_HOME))
     endif
   endif
 else
+  _fstar_home := $(FSTAR_HOME)
   ifeq ($(OS),Windows_NT)
     OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
   else
@@ -32,9 +33,12 @@ else
 endif
 
 .PHONY: ocaml
-ocaml:
+ocaml: src/ocaml/plugin/FStar_Parser_Parse.mly
 	cd src/ocaml && dune build
 	cd src/ocaml && dune install --prefix=$(STEEL_HOME)
+
+src/ocaml/plugin/FStar_Parser_Parse.mly: $(_fstar_home)/ocaml/fstar-lib/FStar_Parser_Parse.mly
+	cp $^ $@
 
 .PHONY: lib
 lib:
