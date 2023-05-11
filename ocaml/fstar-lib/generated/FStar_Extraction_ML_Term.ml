@@ -747,43 +747,50 @@ let (apply_coercion :
                  match uu___1 with
                  | (pat, w, b) ->
                      let uu___2 = aux b ty1 expect1 in (pat, w, uu___2) in
-               match ((e1.FStar_Extraction_ML_Syntax.expr), ty1, expect1)
-               with
+               let rec undelta mlty =
+                 let uu___1 = FStar_Extraction_ML_Util.udelta_unfold g mlty in
+                 match uu___1 with
+                 | FStar_Pervasives_Native.Some t -> undelta t
+                 | FStar_Pervasives_Native.None -> mlty in
+               let uu___1 =
+                 let uu___2 = undelta expect1 in
+                 ((e1.FStar_Extraction_ML_Syntax.expr), ty1, uu___2) in
+               match uu___1 with
                | (FStar_Extraction_ML_Syntax.MLE_Fun (arg::rest, body),
-                  FStar_Extraction_ML_Syntax.MLTY_Fun (t0, uu___1, t1),
-                  FStar_Extraction_ML_Syntax.MLTY_Fun (s0, uu___2, s1)) ->
+                  FStar_Extraction_ML_Syntax.MLTY_Fun (t0, uu___2, t1),
+                  FStar_Extraction_ML_Syntax.MLTY_Fun (s0, uu___3, s1)) ->
                    let body1 =
                      match rest with
                      | [] -> body
-                     | uu___3 ->
+                     | uu___4 ->
                          FStar_Extraction_ML_Syntax.with_ty t1
                            (FStar_Extraction_ML_Syntax.MLE_Fun (rest, body)) in
                    let body2 = aux body1 t1 s1 in
-                   let uu___3 = type_leq g s0 t0 in
-                   if uu___3
+                   let uu___4 = type_leq g s0 t0 in
+                   if uu___4
                    then
                      FStar_Extraction_ML_Syntax.with_ty expect1
                        (mk_fun arg body2)
                    else
                      (let lb =
-                        let uu___5 =
-                          let uu___6 =
-                            let uu___7 =
-                              let uu___8 =
+                        let uu___6 =
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 =
                                 FStar_Compiler_Effect.op_Less_Bar
                                   (FStar_Extraction_ML_Syntax.with_ty s0)
                                   (FStar_Extraction_ML_Syntax.MLE_Var
                                      (FStar_Pervasives_Native.fst arg)) in
-                              (uu___8, s0, t0) in
-                            FStar_Extraction_ML_Syntax.MLE_Coerce uu___7 in
-                          FStar_Extraction_ML_Syntax.with_ty t0 uu___6 in
+                              (uu___9, s0, t0) in
+                            FStar_Extraction_ML_Syntax.MLE_Coerce uu___8 in
+                          FStar_Extraction_ML_Syntax.with_ty t0 uu___7 in
                         {
                           FStar_Extraction_ML_Syntax.mllb_name =
                             (FStar_Pervasives_Native.fst arg);
                           FStar_Extraction_ML_Syntax.mllb_tysc =
                             (FStar_Pervasives_Native.Some ([], t0));
                           FStar_Extraction_ML_Syntax.mllb_add_unit = false;
-                          FStar_Extraction_ML_Syntax.mllb_def = uu___5;
+                          FStar_Extraction_ML_Syntax.mllb_def = uu___6;
                           FStar_Extraction_ML_Syntax.mllb_meta = [];
                           FStar_Extraction_ML_Syntax.print_typ = false
                         } in
@@ -795,59 +802,59 @@ let (apply_coercion :
                                body2)) in
                       FStar_Extraction_ML_Syntax.with_ty expect1
                         (mk_fun ((FStar_Pervasives_Native.fst arg), s0) body3))
-               | (FStar_Extraction_ML_Syntax.MLE_Let (lbs, body), uu___1,
-                  uu___2) ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 = aux body ty1 expect1 in (lbs, uu___5) in
-                     FStar_Extraction_ML_Syntax.MLE_Let uu___4 in
+               | (FStar_Extraction_ML_Syntax.MLE_Let (lbs, body), uu___2,
+                  uu___3) ->
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 = aux body ty1 expect1 in (lbs, uu___6) in
+                     FStar_Extraction_ML_Syntax.MLE_Let uu___5 in
                    FStar_Compiler_Effect.op_Less_Bar
-                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3
-               | (FStar_Extraction_ML_Syntax.MLE_Match (s, branches), uu___1,
-                  uu___2) ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 =
-                         FStar_Compiler_List.map coerce_branch branches in
-                       (s, uu___5) in
-                     FStar_Extraction_ML_Syntax.MLE_Match uu___4 in
-                   FStar_Compiler_Effect.op_Less_Bar
-                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3
-               | (FStar_Extraction_ML_Syntax.MLE_If (s, b1, b2_opt), uu___1,
-                  uu___2) ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 = aux b1 ty1 expect1 in
+                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___4
+               | (FStar_Extraction_ML_Syntax.MLE_Match (s, branches), uu___2,
+                  uu___3) ->
+                   let uu___4 =
+                     let uu___5 =
                        let uu___6 =
+                         FStar_Compiler_List.map coerce_branch branches in
+                       (s, uu___6) in
+                     FStar_Extraction_ML_Syntax.MLE_Match uu___5 in
+                   FStar_Compiler_Effect.op_Less_Bar
+                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___4
+               | (FStar_Extraction_ML_Syntax.MLE_If (s, b1, b2_opt), uu___2,
+                  uu___3) ->
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 = aux b1 ty1 expect1 in
+                       let uu___7 =
                          FStar_Compiler_Util.map_opt b2_opt
                            (fun b2 -> aux b2 ty1 expect1) in
-                       (s, uu___5, uu___6) in
-                     FStar_Extraction_ML_Syntax.MLE_If uu___4 in
+                       (s, uu___6, uu___7) in
+                     FStar_Extraction_ML_Syntax.MLE_If uu___5 in
                    FStar_Compiler_Effect.op_Less_Bar
-                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3
-               | (FStar_Extraction_ML_Syntax.MLE_Seq es, uu___1, uu___2) ->
-                   let uu___3 = FStar_Compiler_Util.prefix es in
-                   (match uu___3 with
+                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___4
+               | (FStar_Extraction_ML_Syntax.MLE_Seq es, uu___2, uu___3) ->
+                   let uu___4 = FStar_Compiler_Util.prefix es in
+                   (match uu___4 with
                     | (prefix, last) ->
-                        let uu___4 =
-                          let uu___5 =
-                            let uu___6 =
-                              let uu___7 = aux last ty1 expect1 in [uu___7] in
-                            FStar_Compiler_List.op_At prefix uu___6 in
-                          FStar_Extraction_ML_Syntax.MLE_Seq uu___5 in
+                        let uu___5 =
+                          let uu___6 =
+                            let uu___7 =
+                              let uu___8 = aux last ty1 expect1 in [uu___8] in
+                            FStar_Compiler_List.op_At prefix uu___7 in
+                          FStar_Extraction_ML_Syntax.MLE_Seq uu___6 in
                         FStar_Compiler_Effect.op_Less_Bar
-                          (FStar_Extraction_ML_Syntax.with_ty expect1) uu___4)
-               | (FStar_Extraction_ML_Syntax.MLE_Try (s, branches), uu___1,
-                  uu___2) ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 =
+                          (FStar_Extraction_ML_Syntax.with_ty expect1) uu___5)
+               | (FStar_Extraction_ML_Syntax.MLE_Try (s, branches), uu___2,
+                  uu___3) ->
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
                          FStar_Compiler_List.map coerce_branch branches in
-                       (s, uu___5) in
-                     FStar_Extraction_ML_Syntax.MLE_Try uu___4 in
+                       (s, uu___6) in
+                     FStar_Extraction_ML_Syntax.MLE_Try uu___5 in
                    FStar_Compiler_Effect.op_Less_Bar
-                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3
-               | uu___1 ->
+                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___4
+               | uu___2 ->
                    FStar_Extraction_ML_Syntax.with_ty expect1
                      (FStar_Extraction_ML_Syntax.MLE_Coerce
                         (e1, ty1, expect1)) in
