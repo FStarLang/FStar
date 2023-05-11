@@ -634,6 +634,9 @@ let uu___is_Lift_STAtomic_ST uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Lift_STAtomic_ST _ -> true | _ -> false
 let uu___is_Lift_STGhost_STAtomic uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Lift_STGhost_STAtomic _ -> true | _ -> false
+let (wr : Pulse_Syntax.st_term' -> Pulse_Syntax.st_term) =
+  fun t ->
+    { Pulse_Syntax.term1 = t; Pulse_Syntax.range = FStar_Range.range_0 }
 type ('f, 'dummyV0, 'dummyV1) st_comp_typing =
   | STC of env * Pulse_Syntax.st_comp * Pulse_Syntax.var * unit * unit * unit 
 and ('f, 'dummyV0, 'dummyV1, 'dummyV2) comp_typing =

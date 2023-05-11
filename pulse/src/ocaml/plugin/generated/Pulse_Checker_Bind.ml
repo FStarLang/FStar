@@ -84,9 +84,16 @@ let rec (mk_bind :
                                                             (FStar_Tactics_Effect.lift_div_tac
                                                                (fun uu___4 ->
                                                                   FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Syntax.Tm_Bind
-                                                                    (b, e1,
-                                                                    e2)),
+                                                                    ((Pulse_Typing.wr
+                                                                    (Pulse_Syntax.Tm_Bind
+                                                                    {
+                                                                    Pulse_Syntax.binder
+                                                                    = b;
+                                                                    Pulse_Syntax.head1
+                                                                    = e1;
+                                                                    Pulse_Syntax.body1
+                                                                    = e2
+                                                                    })),
                                                                     (Pulse_Typing.bind_comp_out
                                                                     c1 c2),
                                                                     (Pulse_Typing.T_Bind
@@ -119,9 +126,16 @@ let rec (mk_bind :
                                                                  (fun uu___4
                                                                     ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Syntax.Tm_Bind
-                                                                    (b, e1,
-                                                                    e2)),
+                                                                    ((Pulse_Typing.wr
+                                                                    (Pulse_Syntax.Tm_Bind
+                                                                    {
+                                                                    Pulse_Syntax.binder
+                                                                    = b;
+                                                                    Pulse_Syntax.head1
+                                                                    = e1;
+                                                                    Pulse_Syntax.body1
+                                                                    = e2
+                                                                    })),
                                                                     (Pulse_Typing.bind_comp_out
                                                                     c1 c2),
                                                                     (Pulse_Typing.T_Bind
@@ -157,9 +171,16 @@ let rec (mk_bind :
                                                                  (fun uu___4
                                                                     ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Syntax.Tm_Bind
-                                                                    (b, e1,
-                                                                    e2)),
+                                                                    ((Pulse_Typing.wr
+                                                                    (Pulse_Syntax.Tm_Bind
+                                                                    {
+                                                                    Pulse_Syntax.binder
+                                                                    = b;
+                                                                    Pulse_Syntax.head1
+                                                                    = e1;
+                                                                    Pulse_Syntax.body1
+                                                                    = e2
+                                                                    })),
                                                                     (Pulse_Typing.bind_comp_out
                                                                     (Pulse_Syntax.C_ST
                                                                     (Pulse_Syntax.st_comp_of_comp
@@ -223,7 +244,7 @@ let rec (mk_bind :
                                                                     (Prims.of_int (72))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (72))
-                                                                    (Prims.of_int (77)))
+                                                                    (Prims.of_int (63)))
                                                                     (
                                                                     Obj.magic
                                                                     (Pulse_Checker_Pure.get_non_informative_witness
@@ -238,9 +259,16 @@ let rec (mk_bind :
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Syntax.Tm_Bind
-                                                                    (b, e1,
-                                                                    e2)),
+                                                                    ((Pulse_Typing.wr
+                                                                    (Pulse_Syntax.Tm_Bind
+                                                                    {
+                                                                    Pulse_Syntax.binder
+                                                                    = b;
+                                                                    Pulse_Syntax.head1
+                                                                    = e1;
+                                                                    Pulse_Syntax.body1
+                                                                    = e2
+                                                                    })),
                                                                     (Pulse_Typing.bind_comp_ghost_l_out
                                                                     c1 c2),
                                                                     (Pulse_Typing.T_Bind
@@ -288,7 +316,7 @@ let rec (mk_bind :
                                                                     (Prims.of_int (80))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (80))
-                                                                    (Prims.of_int (77)))
+                                                                    (Prims.of_int (63)))
                                                                     (
                                                                     Obj.magic
                                                                     (Pulse_Checker_Pure.get_non_informative_witness
@@ -303,9 +331,16 @@ let rec (mk_bind :
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Syntax.Tm_Bind
-                                                                    (b, e1,
-                                                                    e2)),
+                                                                    ((Pulse_Typing.wr
+                                                                    (Pulse_Syntax.Tm_Bind
+                                                                    {
+                                                                    Pulse_Syntax.binder
+                                                                    = b;
+                                                                    Pulse_Syntax.head1
+                                                                    = e1;
+                                                                    Pulse_Syntax.body1
+                                                                    = e2
+                                                                    })),
                                                                     (Pulse_Typing.bind_comp_ghost_r_out
                                                                     c1 c2),
                                                                     (Pulse_Typing.T_Bind
@@ -342,9 +377,16 @@ let rec (mk_bind :
                                                                  (fun uu___4
                                                                     ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Syntax.Tm_Bind
-                                                                    (b, e1,
-                                                                    e2)),
+                                                                    ((Pulse_Typing.wr
+                                                                    (Pulse_Syntax.Tm_Bind
+                                                                    {
+                                                                    Pulse_Syntax.binder
+                                                                    = b;
+                                                                    Pulse_Syntax.head1
+                                                                    = e1;
+                                                                    Pulse_Syntax.body1
+                                                                    = e2
+                                                                    })),
                                                                     (Pulse_Typing.bind_comp_out
                                                                     c1
                                                                     (Pulse_Syntax.C_ST
@@ -762,16 +804,21 @@ let (check_bind :
               fun check ->
                 FStar_Tactics_Effect.tac_bind
                   (FStar_Range.mk_range "Pulse.Checker.Bind.fst"
-                     (Prims.of_int (139)) (Prims.of_int (24))
-                     (Prims.of_int (139)) (Prims.of_int (25)))
+                     (Prims.of_int (139)) (Prims.of_int (47))
+                     (Prims.of_int (139)) (Prims.of_int (53)))
                   (FStar_Range.mk_range "Pulse.Checker.Bind.fst"
                      (Prims.of_int (138)) (Prims.of_int (31))
-                     (Prims.of_int (139)) (Prims.of_int (29)))
-                  (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> t))
+                     (Prims.of_int (139)) (Prims.of_int (56)))
+                  (FStar_Tactics_Effect.lift_div_tac
+                     (fun uu___ -> t.Pulse_Syntax.term1))
                   (fun uu___ ->
                      (fun uu___ ->
                         match uu___ with
-                        | Pulse_Syntax.Tm_Bind (b, e1, e2) ->
+                        | Pulse_Syntax.Tm_Bind
+                            { Pulse_Syntax.binder = b;
+                              Pulse_Syntax.head1 = e1;
+                              Pulse_Syntax.body1 = e2;_}
+                            ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
                                  (FStar_Range.mk_range
@@ -780,7 +827,7 @@ let (check_bind :
                                     (Prims.of_int (140)) (Prims.of_int (57)))
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Bind.fst"
-                                    (Prims.of_int (139)) (Prims.of_int (29))
+                                    (Prims.of_int (139)) (Prims.of_int (56))
                                     (Prims.of_int (140)) (Prims.of_int (60)))
                                  (Obj.magic
                                     (check f g e1 pre ()
@@ -1351,16 +1398,20 @@ let (check_tot_bind :
               fun check ->
                 FStar_Tactics_Effect.tac_bind
                   (FStar_Range.mk_range "Pulse.Checker.Bind.fst"
-                     (Prims.of_int (189)) (Prims.of_int (25))
-                     (Prims.of_int (189)) (Prims.of_int (26)))
+                     (Prims.of_int (189)) (Prims.of_int (40))
+                     (Prims.of_int (189)) (Prims.of_int (46)))
                   (FStar_Range.mk_range "Pulse.Checker.Bind.fst"
                      (Prims.of_int (188)) (Prims.of_int (57))
-                     (Prims.of_int (189)) (Prims.of_int (29)))
-                  (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> t))
+                     (Prims.of_int (189)) (Prims.of_int (49)))
+                  (FStar_Tactics_Effect.lift_div_tac
+                     (fun uu___ -> t.Pulse_Syntax.term1))
                   (fun uu___ ->
                      (fun uu___ ->
                         match uu___ with
-                        | Pulse_Syntax.Tm_TotBind (e1, e2) ->
+                        | Pulse_Syntax.Tm_TotBind
+                            { Pulse_Syntax.head2 = e1;
+                              Pulse_Syntax.body2 = e2;_}
+                            ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
                                  (FStar_Range.mk_range
@@ -1369,7 +1420,7 @@ let (check_tot_bind :
                                     (Prims.of_int (190)) (Prims.of_int (74)))
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Bind.fst"
-                                    (Prims.of_int (189)) (Prims.of_int (29))
+                                    (Prims.of_int (189)) (Prims.of_int (49))
                                     (Prims.of_int (190)) (Prims.of_int (77)))
                                  (Obj.magic
                                     (Pulse_Checker_Pure.check_term_and_type f
@@ -1584,7 +1635,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (213))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (222))
-                                                                    (Prims.of_int (55)))
+                                                                    (Prims.of_int (63)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -1675,7 +1726,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (217))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (222))
-                                                                    (Prims.of_int (55)))
+                                                                    (Prims.of_int (63)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
@@ -1698,7 +1749,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (220))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (222))
-                                                                    (Prims.of_int (55)))
+                                                                    (Prims.of_int (63)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -1754,10 +1805,15 @@ let (check_tot_bind :
                                                                     (fun
                                                                     uu___7 ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Syntax.Tm_TotBind
-                                                                    (e12,
-                                                                    e2_closed)),
-                                                                    c,
+                                                                    ((Pulse_Typing.wr
+                                                                    (Pulse_Syntax.Tm_TotBind
+                                                                    {
+                                                                    Pulse_Syntax.head2
+                                                                    = e12;
+                                                                    Pulse_Syntax.body2
+                                                                    =
+                                                                    e2_closed
+                                                                    })), c,
                                                                     (Pulse_Typing.T_TotBind
                                                                     (g, e12,
                                                                     e2_closed,

@@ -174,25 +174,89 @@ let (uu___is_STT_Atomic : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Atomic -> true | uu___ -> false
 let (uu___is_STT_Ghost : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Ghost -> true | uu___ -> false
-type st_term =
-  | Tm_Return of ctag * Prims.bool * term 
-  | Tm_Abs of binder * qualifier FStar_Pervasives_Native.option * vprop
-  FStar_Pervasives_Native.option * st_term * vprop
-  FStar_Pervasives_Native.option 
-  | Tm_STApp of term * qualifier FStar_Pervasives_Native.option * term 
-  | Tm_Bind of binder * st_term * st_term 
-  | Tm_TotBind of term * st_term 
-  | Tm_If of term * st_term * st_term * vprop FStar_Pervasives_Native.option
-  
-  | Tm_ElimExists of vprop 
-  | Tm_IntroExists of Prims.bool * vprop * term Prims.list 
-  | Tm_While of term * st_term * st_term 
-  | Tm_Par of term * st_term * term * term * st_term * term 
-  | Tm_WithLocal of term * st_term 
-  | Tm_Rewrite of term * term 
-  | Tm_Admit of ctag * universe * term * term FStar_Pervasives_Native.option
-  
-  | Tm_Protect of st_term 
+type st_term'__Tm_Return__payload =
+  {
+  ctag: ctag ;
+  insert_eq: Prims.bool ;
+  term: term }
+and st_term'__Tm_Abs__payload =
+  {
+  b: binder ;
+  q: qualifier FStar_Pervasives_Native.option ;
+  pre1: vprop FStar_Pervasives_Native.option ;
+  body: st_term ;
+  post1: vprop FStar_Pervasives_Native.option }
+and st_term'__Tm_STApp__payload =
+  {
+  head: term ;
+  arg_qual: qualifier FStar_Pervasives_Native.option ;
+  arg: term }
+and st_term'__Tm_Bind__payload =
+  {
+  binder: binder ;
+  head1: st_term ;
+  body1: st_term }
+and st_term'__Tm_TotBind__payload = {
+  head2: term ;
+  body2: st_term }
+and st_term'__Tm_If__payload =
+  {
+  b1: term ;
+  then_: st_term ;
+  else_: st_term ;
+  post2: vprop FStar_Pervasives_Native.option }
+and st_term'__Tm_ElimExists__payload = {
+  p: vprop }
+and st_term'__Tm_IntroExists__payload =
+  {
+  erased: Prims.bool ;
+  p1: vprop ;
+  witnesses: term Prims.list }
+and st_term'__Tm_While__payload =
+  {
+  invariant: term ;
+  condition: st_term ;
+  body3: st_term }
+and st_term'__Tm_Par__payload =
+  {
+  pre11: term ;
+  body11: st_term ;
+  post11: term ;
+  pre2: term ;
+  body21: st_term ;
+  post21: term }
+and st_term'__Tm_WithLocal__payload = {
+  initializer1: term ;
+  body4: st_term }
+and st_term'__Tm_Rewrite__payload = {
+  t1: term ;
+  t2: term }
+and st_term'__Tm_Admit__payload =
+  {
+  ctag1: ctag ;
+  u1: universe ;
+  typ: term ;
+  post3: term FStar_Pervasives_Native.option }
+and st_term'__Tm_Protect__payload = {
+  t: st_term }
+and st_term' =
+  | Tm_Return of st_term'__Tm_Return__payload 
+  | Tm_Abs of st_term'__Tm_Abs__payload 
+  | Tm_STApp of st_term'__Tm_STApp__payload 
+  | Tm_Bind of st_term'__Tm_Bind__payload 
+  | Tm_TotBind of st_term'__Tm_TotBind__payload 
+  | Tm_If of st_term'__Tm_If__payload 
+  | Tm_ElimExists of st_term'__Tm_ElimExists__payload 
+  | Tm_IntroExists of st_term'__Tm_IntroExists__payload 
+  | Tm_While of st_term'__Tm_While__payload 
+  | Tm_Par of st_term'__Tm_Par__payload 
+  | Tm_WithLocal of st_term'__Tm_WithLocal__payload 
+  | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
+  | Tm_Admit of st_term'__Tm_Admit__payload 
+  | Tm_Protect of st_term'__Tm_Protect__payload 
+and st_term = {
+  term1: st_term' ;
+  range: range }
 let uu___is_Tm_Return uu___ =
   match uu___ with | Tm_Return _ -> true | _ -> false
 let uu___is_Tm_Abs uu___ = match uu___ with | Tm_Abs _ -> true | _ -> false
@@ -257,10 +321,10 @@ let (null_bvar : index -> term) =
 let (gen_uvar : term -> (term, unit) FStar_Tactics_Effect.tac_repr) =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (152))
-         (Prims.of_int (10)) (Prims.of_int (152)) (Prims.of_int (22)))
-      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (152))
-         (Prims.of_int (2)) (Prims.of_int (152)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (213))
+         (Prims.of_int (10)) (Prims.of_int (213)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (213))
+         (Prims.of_int (2)) (Prims.of_int (213)) (Prims.of_int (22)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> Tm_UVar uu___))
@@ -336,46 +400,62 @@ let rec (eq_tm_list : term Prims.list -> term Prims.list -> Prims.bool) =
 let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
-      match (t1, t2) with
-      | (Tm_Return (c1, use_eq1, t11), Tm_Return (c2, use_eq2, t21)) ->
-          ((c1 = c2) && (use_eq1 = use_eq2)) && (eq_tm t11 t21)
-      | (Tm_Abs (b1, o1, p1, t11, q1), Tm_Abs (b2, o2, p2, t21, q2)) ->
+      match ((t1.term1), (t2.term1)) with
+      | (Tm_Return { ctag = c1; insert_eq = b1; term = t11;_}, Tm_Return
+         { ctag = c2; insert_eq = b2; term = t21;_}) ->
+          ((c1 = c2) && (b1 = b2)) && (eq_tm t11 t21)
+      | (Tm_Abs { b = b1; q = o1; pre1 = p1; body = t11; post1 = q1;_},
+         Tm_Abs { b = b2; q = o2; pre1 = p2; body = t21; post1 = q2;_}) ->
           ((((eq_tm b1.binder_ty b2.binder_ty) && (o1 = o2)) &&
               (eq_tm_opt p1 p2))
              && (eq_st_term t11 t21))
             && (eq_tm_opt q1 q2)
-      | (Tm_STApp (h1, o1, t11), Tm_STApp (h2, o2, t21)) ->
+      | (Tm_STApp { head = h1; arg_qual = o1; arg = t11;_}, Tm_STApp
+         { head = h2; arg_qual = o2; arg = t21;_}) ->
           ((eq_tm h1 h2) && (o1 = o2)) && (eq_tm t11 t21)
-      | (Tm_Bind (b1, t11, k1), Tm_Bind (b2, t21, k2)) ->
+      | (Tm_Bind { binder = b1; head1 = t11; body1 = k1;_}, Tm_Bind
+         { binder = b2; head1 = t21; body1 = k2;_}) ->
           ((eq_tm b1.binder_ty b2.binder_ty) && (eq_st_term t11 t21)) &&
             (eq_st_term k1 k2)
-      | (Tm_TotBind (t11, k1), Tm_TotBind (t21, k2)) ->
+      | (Tm_TotBind { head2 = t11; body2 = k1;_}, Tm_TotBind
+         { head2 = t21; body2 = k2;_}) ->
           (eq_tm t11 t21) && (eq_st_term k1 k2)
-      | (Tm_IntroExists (b1, p1, l1), Tm_IntroExists (b2, p2, l2)) ->
+      | (Tm_IntroExists { erased = b1; p1; witnesses = l1;_}, Tm_IntroExists
+         { erased = b2; p1 = p2; witnesses = l2;_}) ->
           ((b1 = b2) && (eq_tm p1 p2)) && (eq_tm_list l1 l2)
-      | (Tm_ElimExists p1, Tm_ElimExists p2) -> eq_tm p1 p2
-      | (Tm_If (g1, ethen1, eelse1, p1), Tm_If (g2, ethen2, eelse2, p2)) ->
+      | (Tm_ElimExists { p = p1;_}, Tm_ElimExists { p = p2;_}) -> eq_tm p1 p2
+      | (Tm_If { b1 = g1; then_ = ethen1; else_ = eelse1; post2 = p1;_},
+         Tm_If { b1 = g2; then_ = ethen2; else_ = eelse2; post2 = p2;_}) ->
           (((eq_tm g1 g2) && (eq_st_term ethen1 ethen2)) &&
              (eq_st_term eelse1 eelse2))
             && (eq_tm_opt p1 p2)
-      | (Tm_While (inv1, cond1, body1), Tm_While (inv2, cond2, body2)) ->
+      | (Tm_While { invariant = inv1; condition = cond1; body3 = body1;_},
+         Tm_While { invariant = inv2; condition = cond2; body3 = body2;_}) ->
           ((eq_tm inv1 inv2) && (eq_st_term cond1 cond2)) &&
             (eq_st_term body1 body2)
-      | (Tm_Par (preL1, eL1, postL1, preR1, eR1, postR1), Tm_Par
-         (preL2, eL2, postL2, preR2, eR2, postR2)) ->
+      | (Tm_Par
+         { pre11 = preL1; body11 = eL1; post11 = postL1; pre2 = preR1;
+           body21 = eR1; post21 = postR1;_},
+         Tm_Par
+         { pre11 = preL2; body11 = eL2; post11 = postL2; pre2 = preR2;
+           body21 = eR2; post21 = postR2;_})
+          ->
           (((((eq_tm preL1 preL2) && (eq_st_term eL1 eL2)) &&
                (eq_tm postL1 postL2))
               && (eq_tm preR1 preR2))
              && (eq_st_term eR1 eR2))
             && (eq_tm postR1 postR2)
-      | (Tm_WithLocal (e1, e2), Tm_WithLocal (e3, e4)) ->
-          (eq_tm e1 e3) && (eq_st_term e2 e4)
-      | (Tm_Rewrite (e1, e2), Tm_Rewrite (e3, e4)) ->
-          (eq_tm e1 e3) && (eq_tm e2 e4)
-      | (Tm_Admit (c1, u1, t11, post1), Tm_Admit (c2, u2, t21, post2)) ->
+      | (Tm_WithLocal { initializer1 = e1; body4 = b1;_}, Tm_WithLocal
+         { initializer1 = e2; body4 = b2;_}) ->
+          (eq_tm e1 e2) && (eq_st_term b1 b2)
+      | (Tm_Rewrite { t1 = l1; t2 = r1;_}, Tm_Rewrite { t1 = l2; t2 = r2;_})
+          -> (eq_tm l1 l2) && (eq_tm r1 r2)
+      | (Tm_Admit { ctag1 = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
+         { ctag1 = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (u1 = u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
-      | (Tm_Protect t11, Tm_Protect t21) -> eq_st_term t11 t21
+      | (Tm_Protect { t = t11;_}, Tm_Protect { t = t21;_}) ->
+          eq_st_term t11 t21
       | uu___ -> false
 let rec (leftmost_head_and_args :
   term ->
@@ -446,39 +526,3 @@ let (term_of_nvar : nvar -> term) =
         nm_range = FStar_Range.range_0
       }
 let (term_of_no_name_var : var -> term) = fun x -> term_of_nvar (v_as_nv x)
-let (equiv_abs :
-  FStar_Reflection_Types.env ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.typ ->
-          FStar_Reflection_Data.aqualv ->
-            var ->
-              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
-                (unit, unit, unit) FStar_Reflection_Typing.equiv)
-  =
-  fun g ->
-    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()
-let (equiv_arrow :
-  FStar_Reflection_Types.env ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.typ ->
-          FStar_Reflection_Data.aqualv ->
-            var ->
-              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
-                (unit, unit, unit) FStar_Reflection_Typing.equiv)
-  =
-  fun g ->
-    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()
-let (equiv_abs_close :
-  FStar_Reflection_Types.env ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.typ ->
-          FStar_Reflection_Data.aqualv ->
-            var ->
-              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
-                (unit, unit, unit) FStar_Reflection_Typing.equiv)
-  =
-  fun g ->
-    fun e1 -> fun e2 -> fun ty -> fun q -> fun x -> fun eq -> Prims.admit ()

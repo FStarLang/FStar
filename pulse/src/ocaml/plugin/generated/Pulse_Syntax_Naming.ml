@@ -64,43 +64,71 @@ let rec (freevars_list :
 let rec (freevars_st :
   Pulse_Syntax.st_term -> Pulse_Syntax.var FStar_Set.set) =
   fun t ->
-    match t with
-    | Pulse_Syntax.Tm_Return (uu___, uu___1, t1) -> freevars t1
-    | Pulse_Syntax.Tm_Abs (b, uu___, pre_hint, body, post_hint) ->
+    match t.Pulse_Syntax.term1 with
+    | Pulse_Syntax.Tm_Return
+        { Pulse_Syntax.ctag = uu___; Pulse_Syntax.insert_eq = uu___1;
+          Pulse_Syntax.term = term;_}
+        -> freevars term
+    | Pulse_Syntax.Tm_Abs
+        { Pulse_Syntax.b = b; Pulse_Syntax.q = uu___;
+          Pulse_Syntax.pre1 = pre; Pulse_Syntax.body = body;
+          Pulse_Syntax.post1 = post;_}
+        ->
         FStar_Set.union (freevars b.Pulse_Syntax.binder_ty)
           (FStar_Set.union (freevars_st body)
-             (FStar_Set.union (freevars_opt pre_hint)
-                (freevars_opt post_hint)))
-    | Pulse_Syntax.Tm_STApp (t1, uu___, t2) ->
-        FStar_Set.union (freevars t1) (freevars t2)
-    | Pulse_Syntax.Tm_Bind (b, t1, t2) ->
+             (FStar_Set.union (freevars_opt pre) (freevars_opt post)))
+    | Pulse_Syntax.Tm_STApp
+        { Pulse_Syntax.head = head; Pulse_Syntax.arg_qual = uu___;
+          Pulse_Syntax.arg = arg;_}
+        -> FStar_Set.union (freevars head) (freevars arg)
+    | Pulse_Syntax.Tm_Bind
+        { Pulse_Syntax.binder = binder; Pulse_Syntax.head1 = head;
+          Pulse_Syntax.body1 = body;_}
+        ->
         FStar_Set.union
-          (FStar_Set.union (freevars b.Pulse_Syntax.binder_ty)
-             (freevars_st t1)) (freevars_st t2)
-    | Pulse_Syntax.Tm_TotBind (t1, t2) ->
-        FStar_Set.union (freevars t1) (freevars_st t2)
-    | Pulse_Syntax.Tm_If (t1, e1, e2, post) ->
-        FStar_Set.union (FStar_Set.union (freevars t1) (freevars_st e1))
-          (FStar_Set.union (freevars_st e2) (freevars_opt post))
-    | Pulse_Syntax.Tm_ElimExists p -> freevars p
-    | Pulse_Syntax.Tm_IntroExists (uu___, e, p) ->
-        FStar_Set.union (freevars e) (freevars_list p)
-    | Pulse_Syntax.Tm_While (inv, cond, body) ->
-        FStar_Set.union (freevars inv)
-          (FStar_Set.union (freevars_st cond) (freevars_st body))
-    | Pulse_Syntax.Tm_Par (preL, eL, postL, preR, eR, postR) ->
+          (FStar_Set.union (freevars binder.Pulse_Syntax.binder_ty)
+             (freevars_st head)) (freevars_st body)
+    | Pulse_Syntax.Tm_TotBind
+        { Pulse_Syntax.head2 = head; Pulse_Syntax.body2 = body;_} ->
+        FStar_Set.union (freevars head) (freevars_st body)
+    | Pulse_Syntax.Tm_If
+        { Pulse_Syntax.b1 = b; Pulse_Syntax.then_ = then_;
+          Pulse_Syntax.else_ = else_; Pulse_Syntax.post2 = post;_}
+        ->
+        FStar_Set.union (FStar_Set.union (freevars b) (freevars_st then_))
+          (FStar_Set.union (freevars_st else_) (freevars_opt post))
+    | Pulse_Syntax.Tm_ElimExists { Pulse_Syntax.p = p;_} -> freevars p
+    | Pulse_Syntax.Tm_IntroExists
+        { Pulse_Syntax.erased = uu___; Pulse_Syntax.p1 = p;
+          Pulse_Syntax.witnesses = witnesses;_}
+        -> FStar_Set.union (freevars p) (freevars_list witnesses)
+    | Pulse_Syntax.Tm_While
+        { Pulse_Syntax.invariant = invariant;
+          Pulse_Syntax.condition = condition; Pulse_Syntax.body3 = body;_}
+        ->
+        FStar_Set.union (freevars invariant)
+          (FStar_Set.union (freevars_st condition) (freevars_st body))
+    | Pulse_Syntax.Tm_Par
+        { Pulse_Syntax.pre11 = pre1; Pulse_Syntax.body11 = body1;
+          Pulse_Syntax.post11 = post1; Pulse_Syntax.pre2 = pre2;
+          Pulse_Syntax.body21 = body2; Pulse_Syntax.post21 = post2;_}
+        ->
         FStar_Set.union
-          (FStar_Set.union (freevars preL)
-             (FStar_Set.union (freevars_st eL) (freevars postL)))
-          (FStar_Set.union (freevars preR)
-             (FStar_Set.union (freevars_st eR) (freevars postR)))
-    | Pulse_Syntax.Tm_WithLocal (t1, t2) ->
-        FStar_Set.union (freevars t1) (freevars_st t2)
-    | Pulse_Syntax.Tm_Rewrite (t1, t2) ->
-        FStar_Set.union (freevars t1) (freevars t2)
-    | Pulse_Syntax.Tm_Admit (uu___, uu___1, t1, post) ->
-        FStar_Set.union (freevars t1) (freevars_opt post)
-    | Pulse_Syntax.Tm_Protect t1 -> freevars_st t1
+          (FStar_Set.union (freevars pre1)
+             (FStar_Set.union (freevars_st body1) (freevars post1)))
+          (FStar_Set.union (freevars pre2)
+             (FStar_Set.union (freevars_st body2) (freevars post2)))
+    | Pulse_Syntax.Tm_WithLocal
+        { Pulse_Syntax.initializer1 = initializer1;
+          Pulse_Syntax.body4 = body;_}
+        -> FStar_Set.union (freevars initializer1) (freevars_st body)
+    | Pulse_Syntax.Tm_Rewrite { Pulse_Syntax.t1 = t1; Pulse_Syntax.t2 = t2;_}
+        -> FStar_Set.union (freevars t1) (freevars t2)
+    | Pulse_Syntax.Tm_Admit
+        { Pulse_Syntax.ctag1 = uu___; Pulse_Syntax.u1 = uu___1;
+          Pulse_Syntax.typ = typ; Pulse_Syntax.post3 = post;_}
+        -> FStar_Set.union (freevars typ) (freevars_opt post)
+    | Pulse_Syntax.Tm_Protect { Pulse_Syntax.t = t1;_} -> freevars_st t1
 let rec (ln' : Pulse_Syntax.term -> Prims.int -> Prims.bool) =
   fun t ->
     fun i ->
@@ -165,40 +193,72 @@ let rec (ln_list' : Pulse_Syntax.term Prims.list -> Prims.int -> Prims.bool)
 let rec (ln_st' : Pulse_Syntax.st_term -> Prims.int -> Prims.bool) =
   fun t ->
     fun i ->
-      match t with
-      | Pulse_Syntax.Tm_Return (uu___, uu___1, t1) -> ln' t1 i
-      | Pulse_Syntax.Tm_Abs (b, uu___, pre_hint, body, post) ->
+      match t.Pulse_Syntax.term1 with
+      | Pulse_Syntax.Tm_Return
+          { Pulse_Syntax.ctag = uu___; Pulse_Syntax.insert_eq = uu___1;
+            Pulse_Syntax.term = term;_}
+          -> ln' term i
+      | Pulse_Syntax.Tm_Abs
+          { Pulse_Syntax.b = b; Pulse_Syntax.q = uu___;
+            Pulse_Syntax.pre1 = pre; Pulse_Syntax.body = body;
+            Pulse_Syntax.post1 = post;_}
+          ->
           (((ln' b.Pulse_Syntax.binder_ty i) &&
               (ln_st' body (i + Prims.int_one)))
-             && (ln_opt' pre_hint (i + Prims.int_one)))
+             && (ln_opt' pre (i + Prims.int_one)))
             && (ln_opt' post (i + (Prims.of_int (2))))
-      | Pulse_Syntax.Tm_STApp (t1, uu___, t2) -> (ln' t1 i) && (ln' t2 i)
-      | Pulse_Syntax.Tm_Bind (b, t1, t2) ->
-          ((ln' b.Pulse_Syntax.binder_ty i) && (ln_st' t1 i)) &&
-            (ln_st' t2 (i + Prims.int_one))
-      | Pulse_Syntax.Tm_TotBind (t1, t2) ->
-          (ln' t1 i) && (ln_st' t2 (i + Prims.int_one))
-      | Pulse_Syntax.Tm_If (b, then_, else_, post) ->
+      | Pulse_Syntax.Tm_STApp
+          { Pulse_Syntax.head = head; Pulse_Syntax.arg_qual = uu___;
+            Pulse_Syntax.arg = arg;_}
+          -> (ln' head i) && (ln' arg i)
+      | Pulse_Syntax.Tm_Bind
+          { Pulse_Syntax.binder = binder; Pulse_Syntax.head1 = head;
+            Pulse_Syntax.body1 = body;_}
+          ->
+          ((ln' binder.Pulse_Syntax.binder_ty i) && (ln_st' head i)) &&
+            (ln_st' body (i + Prims.int_one))
+      | Pulse_Syntax.Tm_TotBind
+          { Pulse_Syntax.head2 = head; Pulse_Syntax.body2 = body;_} ->
+          (ln' head i) && (ln_st' body (i + Prims.int_one))
+      | Pulse_Syntax.Tm_If
+          { Pulse_Syntax.b1 = b; Pulse_Syntax.then_ = then_;
+            Pulse_Syntax.else_ = else_; Pulse_Syntax.post2 = post;_}
+          ->
           (((ln' b i) && (ln_st' then_ i)) && (ln_st' else_ i)) &&
             (ln_opt' post (i + Prims.int_one))
-      | Pulse_Syntax.Tm_ElimExists p -> ln' p i
-      | Pulse_Syntax.Tm_IntroExists (uu___, p, e) ->
-          (ln' p i) && (ln_list' e i)
-      | Pulse_Syntax.Tm_While (inv, cond, body) ->
-          ((ln' inv (i + Prims.int_one)) && (ln_st' cond i)) &&
+      | Pulse_Syntax.Tm_ElimExists { Pulse_Syntax.p = p;_} -> ln' p i
+      | Pulse_Syntax.Tm_IntroExists
+          { Pulse_Syntax.erased = uu___; Pulse_Syntax.p1 = p;
+            Pulse_Syntax.witnesses = witnesses;_}
+          -> (ln' p i) && (ln_list' witnesses i)
+      | Pulse_Syntax.Tm_While
+          { Pulse_Syntax.invariant = invariant;
+            Pulse_Syntax.condition = condition; Pulse_Syntax.body3 = body;_}
+          ->
+          ((ln' invariant (i + Prims.int_one)) && (ln_st' condition i)) &&
             (ln_st' body i)
-      | Pulse_Syntax.Tm_Par (preL, eL, postL, preR, eR, postR) ->
-          (((((ln' preL i) && (ln_st' eL i)) &&
-               (ln' postL (i + Prims.int_one)))
-              && (ln' preR i))
-             && (ln_st' eR i))
-            && (ln' postR (i + Prims.int_one))
-      | Pulse_Syntax.Tm_WithLocal (t1, t2) ->
-          (ln' t1 i) && (ln_st' t2 (i + Prims.int_one))
-      | Pulse_Syntax.Tm_Rewrite (t1, t2) -> (ln' t1 i) && (ln' t2 i)
-      | Pulse_Syntax.Tm_Admit (uu___, uu___1, t1, post) ->
-          (ln' t1 i) && (ln_opt' post (i + Prims.int_one))
-      | Pulse_Syntax.Tm_Protect t1 -> ln_st' t1 i
+      | Pulse_Syntax.Tm_Par
+          { Pulse_Syntax.pre11 = pre1; Pulse_Syntax.body11 = body1;
+            Pulse_Syntax.post11 = post1; Pulse_Syntax.pre2 = pre2;
+            Pulse_Syntax.body21 = body2; Pulse_Syntax.post21 = post2;_}
+          ->
+          (((((ln' pre1 i) && (ln_st' body1 i)) &&
+               (ln' post1 (i + Prims.int_one)))
+              && (ln' pre2 i))
+             && (ln_st' body2 i))
+            && (ln' post2 (i + Prims.int_one))
+      | Pulse_Syntax.Tm_WithLocal
+          { Pulse_Syntax.initializer1 = initializer1;
+            Pulse_Syntax.body4 = body;_}
+          -> (ln' initializer1 i) && (ln_st' body (i + Prims.int_one))
+      | Pulse_Syntax.Tm_Rewrite
+          { Pulse_Syntax.t1 = t1; Pulse_Syntax.t2 = t2;_} ->
+          (ln' t1 i) && (ln' t2 i)
+      | Pulse_Syntax.Tm_Admit
+          { Pulse_Syntax.ctag1 = uu___; Pulse_Syntax.u1 = uu___1;
+            Pulse_Syntax.typ = typ; Pulse_Syntax.post3 = post;_}
+          -> (ln' typ i) && (ln_opt' post (i + Prims.int_one))
+      | Pulse_Syntax.Tm_Protect { Pulse_Syntax.t = t1;_} -> ln_st' t1 i
 let (ln : Pulse_Syntax.term -> Prims.bool) =
   fun t -> ln' t (Prims.of_int (-1))
 let (ln_st : Pulse_Syntax.st_term -> Prims.bool) =
@@ -333,57 +393,152 @@ let rec (open_st_term' :
   fun t ->
     fun v ->
       fun i ->
-        match t with
-        | Pulse_Syntax.Tm_Return (c, use_eq, t1) ->
-            Pulse_Syntax.Tm_Return (c, use_eq, (open_term' t1 v i))
-        | Pulse_Syntax.Tm_Abs (b, q, pre_hint, body, post) ->
-            Pulse_Syntax.Tm_Abs
-              ((open_binder b v i), q,
-                (open_term_opt' pre_hint v (i + Prims.int_one)),
-                (open_st_term' body v (i + Prims.int_one)),
-                (open_term_opt' post v (i + (Prims.of_int (2)))))
-        | Pulse_Syntax.Tm_STApp (head, q, arg) ->
-            Pulse_Syntax.Tm_STApp
-              ((open_term' head v i), q, (open_term' arg v i))
-        | Pulse_Syntax.Tm_Bind (b, e1, e2) ->
-            Pulse_Syntax.Tm_Bind
-              ((open_binder b v i), (open_st_term' e1 v i),
-                (open_st_term' e2 v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_TotBind (e1, e2) ->
-            Pulse_Syntax.Tm_TotBind
-              ((open_term' e1 v i), (open_st_term' e2 v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_If (b, then_, else_, post) ->
-            Pulse_Syntax.Tm_If
-              ((open_term' b v i), (open_st_term' then_ v i),
-                (open_st_term' else_ v i),
-                (open_term_opt' post v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_ElimExists p ->
-            Pulse_Syntax.Tm_ElimExists (open_term' p v i)
-        | Pulse_Syntax.Tm_IntroExists (b, p, e) ->
-            Pulse_Syntax.Tm_IntroExists
-              (b, (open_term' p v i), (open_term_list' e v i))
-        | Pulse_Syntax.Tm_While (inv, cond, body) ->
-            Pulse_Syntax.Tm_While
-              ((open_term' inv v (i + Prims.int_one)),
-                (open_st_term' cond v i), (open_st_term' body v i))
-        | Pulse_Syntax.Tm_Par (preL, eL, postL, preR, eR, postR) ->
-            Pulse_Syntax.Tm_Par
-              ((open_term' preL v i), (open_st_term' eL v i),
-                (open_term' postL v (i + Prims.int_one)),
-                (open_term' preR v i), (open_st_term' eR v i),
-                (open_term' postR v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_WithLocal (e1, e2) ->
-            Pulse_Syntax.Tm_WithLocal
-              ((open_term' e1 v i), (open_st_term' e2 v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_Rewrite (e1, e2) ->
-            Pulse_Syntax.Tm_Rewrite
-              ((open_term' e1 v i), (open_term' e2 v i))
-        | Pulse_Syntax.Tm_Admit (c, u, t1, post) ->
-            Pulse_Syntax.Tm_Admit
-              (c, u, (open_term' t1 v i),
-                (open_term_opt' post v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_Protect t1 ->
-            Pulse_Syntax.Tm_Protect (open_st_term' t1 v i)
+        let t' =
+          match t.Pulse_Syntax.term1 with
+          | Pulse_Syntax.Tm_Return
+              { Pulse_Syntax.ctag = ctag; Pulse_Syntax.insert_eq = insert_eq;
+                Pulse_Syntax.term = term;_}
+              ->
+              Pulse_Syntax.Tm_Return
+                {
+                  Pulse_Syntax.ctag = ctag;
+                  Pulse_Syntax.insert_eq = insert_eq;
+                  Pulse_Syntax.term = (open_term' term v i)
+                }
+          | Pulse_Syntax.Tm_Abs
+              { Pulse_Syntax.b = b; Pulse_Syntax.q = q;
+                Pulse_Syntax.pre1 = pre; Pulse_Syntax.body = body;
+                Pulse_Syntax.post1 = post;_}
+              ->
+              Pulse_Syntax.Tm_Abs
+                {
+                  Pulse_Syntax.b = (open_binder b v i);
+                  Pulse_Syntax.q = q;
+                  Pulse_Syntax.pre1 =
+                    (open_term_opt' pre v (i + Prims.int_one));
+                  Pulse_Syntax.body =
+                    (open_st_term' body v (i + Prims.int_one));
+                  Pulse_Syntax.post1 =
+                    (open_term_opt' post v (i + (Prims.of_int (2))))
+                }
+          | Pulse_Syntax.Tm_STApp
+              { Pulse_Syntax.head = head; Pulse_Syntax.arg_qual = arg_qual;
+                Pulse_Syntax.arg = arg;_}
+              ->
+              Pulse_Syntax.Tm_STApp
+                {
+                  Pulse_Syntax.head = (open_term' head v i);
+                  Pulse_Syntax.arg_qual = arg_qual;
+                  Pulse_Syntax.arg = (open_term' arg v i)
+                }
+          | Pulse_Syntax.Tm_Bind
+              { Pulse_Syntax.binder = binder; Pulse_Syntax.head1 = head;
+                Pulse_Syntax.body1 = body;_}
+              ->
+              Pulse_Syntax.Tm_Bind
+                {
+                  Pulse_Syntax.binder = (open_binder binder v i);
+                  Pulse_Syntax.head1 = (open_st_term' head v i);
+                  Pulse_Syntax.body1 =
+                    (open_st_term' body v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_TotBind
+              { Pulse_Syntax.head2 = head; Pulse_Syntax.body2 = body;_} ->
+              Pulse_Syntax.Tm_TotBind
+                {
+                  Pulse_Syntax.head2 = (open_term' head v i);
+                  Pulse_Syntax.body2 =
+                    (open_st_term' body v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_If
+              { Pulse_Syntax.b1 = b; Pulse_Syntax.then_ = then_;
+                Pulse_Syntax.else_ = else_; Pulse_Syntax.post2 = post;_}
+              ->
+              Pulse_Syntax.Tm_If
+                {
+                  Pulse_Syntax.b1 = (open_term' b v i);
+                  Pulse_Syntax.then_ = (open_st_term' then_ v i);
+                  Pulse_Syntax.else_ = (open_st_term' else_ v i);
+                  Pulse_Syntax.post2 =
+                    (open_term_opt' post v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_ElimExists { Pulse_Syntax.p = p;_} ->
+              Pulse_Syntax.Tm_ElimExists
+                { Pulse_Syntax.p = (open_term' p v i) }
+          | Pulse_Syntax.Tm_IntroExists
+              { Pulse_Syntax.erased = erased; Pulse_Syntax.p1 = p;
+                Pulse_Syntax.witnesses = witnesses;_}
+              ->
+              Pulse_Syntax.Tm_IntroExists
+                {
+                  Pulse_Syntax.erased = erased;
+                  Pulse_Syntax.p1 = (open_term' p v i);
+                  Pulse_Syntax.witnesses = (open_term_list' witnesses v i)
+                }
+          | Pulse_Syntax.Tm_While
+              { Pulse_Syntax.invariant = invariant;
+                Pulse_Syntax.condition = condition;
+                Pulse_Syntax.body3 = body;_}
+              ->
+              Pulse_Syntax.Tm_While
+                {
+                  Pulse_Syntax.invariant =
+                    (open_term' invariant v (i + Prims.int_one));
+                  Pulse_Syntax.condition = (open_st_term' condition v i);
+                  Pulse_Syntax.body3 = (open_st_term' body v i)
+                }
+          | Pulse_Syntax.Tm_Par
+              { Pulse_Syntax.pre11 = pre1; Pulse_Syntax.body11 = body1;
+                Pulse_Syntax.post11 = post1; Pulse_Syntax.pre2 = pre2;
+                Pulse_Syntax.body21 = body2; Pulse_Syntax.post21 = post2;_}
+              ->
+              Pulse_Syntax.Tm_Par
+                {
+                  Pulse_Syntax.pre11 = (open_term' pre1 v i);
+                  Pulse_Syntax.body11 = (open_st_term' body1 v i);
+                  Pulse_Syntax.post11 =
+                    (open_term' post1 v (i + Prims.int_one));
+                  Pulse_Syntax.pre2 = (open_term' pre2 v i);
+                  Pulse_Syntax.body21 = (open_st_term' body2 v i);
+                  Pulse_Syntax.post21 =
+                    (open_term' post2 v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_WithLocal
+              { Pulse_Syntax.initializer1 = initializer1;
+                Pulse_Syntax.body4 = body;_}
+              ->
+              Pulse_Syntax.Tm_WithLocal
+                {
+                  Pulse_Syntax.initializer1 = (open_term' initializer1 v i);
+                  Pulse_Syntax.body4 =
+                    (open_st_term' body v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_Rewrite
+              { Pulse_Syntax.t1 = t1; Pulse_Syntax.t2 = t2;_} ->
+              Pulse_Syntax.Tm_Rewrite
+                {
+                  Pulse_Syntax.t1 = (open_term' t1 v i);
+                  Pulse_Syntax.t2 = (open_term' t2 v i)
+                }
+          | Pulse_Syntax.Tm_Admit
+              { Pulse_Syntax.ctag1 = ctag; Pulse_Syntax.u1 = u;
+                Pulse_Syntax.typ = typ; Pulse_Syntax.post3 = post;_}
+              ->
+              Pulse_Syntax.Tm_Admit
+                {
+                  Pulse_Syntax.ctag1 = ctag;
+                  Pulse_Syntax.u1 = u;
+                  Pulse_Syntax.typ = (open_term' typ v i);
+                  Pulse_Syntax.post3 =
+                    (open_term_opt' post v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_Protect { Pulse_Syntax.t = t1;_} ->
+              Pulse_Syntax.Tm_Protect
+                { Pulse_Syntax.t = (open_st_term' t1 v i) } in
+        {
+          Pulse_Syntax.term1 = t';
+          Pulse_Syntax.range = (t.Pulse_Syntax.range)
+        }
 let (open_term_nv :
   Pulse_Syntax.term -> Pulse_Syntax.nvar -> Pulse_Syntax.term) =
   fun t ->
@@ -530,59 +685,152 @@ let rec (close_st_term' :
   fun t ->
     fun v ->
       fun i ->
-        match t with
-        | Pulse_Syntax.Tm_Return (c, use_eq, t1) ->
-            Pulse_Syntax.Tm_Return (c, use_eq, (close_term' t1 v i))
-        | Pulse_Syntax.Tm_Abs (b, q, pre_hint, body, post) ->
-            Pulse_Syntax.Tm_Abs
-              ((close_binder b v i), q,
-                (close_term_opt' pre_hint v (i + Prims.int_one)),
-                (close_st_term' body v (i + Prims.int_one)),
-                (close_term_opt' post v (i + (Prims.of_int (2)))))
-        | Pulse_Syntax.Tm_STApp (head, q, arg) ->
-            Pulse_Syntax.Tm_STApp
-              ((close_term' head v i), q, (close_term' arg v i))
-        | Pulse_Syntax.Tm_Bind (b, e1, e2) ->
-            Pulse_Syntax.Tm_Bind
-              ((close_binder b v i), (close_st_term' e1 v i),
-                (close_st_term' e2 v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_TotBind (e1, e2) ->
-            Pulse_Syntax.Tm_TotBind
-              ((close_term' e1 v i),
-                (close_st_term' e2 v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_If (b, then_, else_, post) ->
-            Pulse_Syntax.Tm_If
-              ((close_term' b v i), (close_st_term' then_ v i),
-                (close_st_term' else_ v i),
-                (close_term_opt' post v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_ElimExists p ->
-            Pulse_Syntax.Tm_ElimExists (close_term' p v i)
-        | Pulse_Syntax.Tm_IntroExists (b, p, e) ->
-            Pulse_Syntax.Tm_IntroExists
-              (b, (close_term' p v i), (close_term_list' e v i))
-        | Pulse_Syntax.Tm_While (inv, cond, body) ->
-            Pulse_Syntax.Tm_While
-              ((close_term' inv v (i + Prims.int_one)),
-                (close_st_term' cond v i), (close_st_term' body v i))
-        | Pulse_Syntax.Tm_Par (preL, eL, postL, preR, eR, postR) ->
-            Pulse_Syntax.Tm_Par
-              ((close_term' preL v i), (close_st_term' eL v i),
-                (close_term' postL v (i + Prims.int_one)),
-                (close_term' preR v i), (close_st_term' eR v i),
-                (close_term' postR v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_WithLocal (e1, e2) ->
-            Pulse_Syntax.Tm_WithLocal
-              ((close_term' e1 v i),
-                (close_st_term' e2 v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_Rewrite (e1, e2) ->
-            Pulse_Syntax.Tm_Rewrite
-              ((close_term' e1 v i), (close_term' e2 v i))
-        | Pulse_Syntax.Tm_Admit (c, u, t1, post) ->
-            Pulse_Syntax.Tm_Admit
-              (c, u, (close_term' t1 v i),
-                (close_term_opt' post v (i + Prims.int_one)))
-        | Pulse_Syntax.Tm_Protect t1 ->
-            Pulse_Syntax.Tm_Protect (close_st_term' t1 v i)
+        let t' =
+          match t.Pulse_Syntax.term1 with
+          | Pulse_Syntax.Tm_Return
+              { Pulse_Syntax.ctag = ctag; Pulse_Syntax.insert_eq = insert_eq;
+                Pulse_Syntax.term = term;_}
+              ->
+              Pulse_Syntax.Tm_Return
+                {
+                  Pulse_Syntax.ctag = ctag;
+                  Pulse_Syntax.insert_eq = insert_eq;
+                  Pulse_Syntax.term = (close_term' term v i)
+                }
+          | Pulse_Syntax.Tm_Abs
+              { Pulse_Syntax.b = b; Pulse_Syntax.q = q;
+                Pulse_Syntax.pre1 = pre; Pulse_Syntax.body = body;
+                Pulse_Syntax.post1 = post;_}
+              ->
+              Pulse_Syntax.Tm_Abs
+                {
+                  Pulse_Syntax.b = (close_binder b v i);
+                  Pulse_Syntax.q = q;
+                  Pulse_Syntax.pre1 =
+                    (close_term_opt' pre v (i + Prims.int_one));
+                  Pulse_Syntax.body =
+                    (close_st_term' body v (i + Prims.int_one));
+                  Pulse_Syntax.post1 =
+                    (close_term_opt' post v (i + (Prims.of_int (2))))
+                }
+          | Pulse_Syntax.Tm_STApp
+              { Pulse_Syntax.head = head; Pulse_Syntax.arg_qual = arg_qual;
+                Pulse_Syntax.arg = arg;_}
+              ->
+              Pulse_Syntax.Tm_STApp
+                {
+                  Pulse_Syntax.head = (close_term' head v i);
+                  Pulse_Syntax.arg_qual = arg_qual;
+                  Pulse_Syntax.arg = (close_term' arg v i)
+                }
+          | Pulse_Syntax.Tm_Bind
+              { Pulse_Syntax.binder = binder; Pulse_Syntax.head1 = head;
+                Pulse_Syntax.body1 = body;_}
+              ->
+              Pulse_Syntax.Tm_Bind
+                {
+                  Pulse_Syntax.binder = (close_binder binder v i);
+                  Pulse_Syntax.head1 = (close_st_term' head v i);
+                  Pulse_Syntax.body1 =
+                    (close_st_term' body v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_TotBind
+              { Pulse_Syntax.head2 = head; Pulse_Syntax.body2 = body;_} ->
+              Pulse_Syntax.Tm_TotBind
+                {
+                  Pulse_Syntax.head2 = (close_term' head v i);
+                  Pulse_Syntax.body2 =
+                    (close_st_term' body v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_If
+              { Pulse_Syntax.b1 = b; Pulse_Syntax.then_ = then_;
+                Pulse_Syntax.else_ = else_; Pulse_Syntax.post2 = post;_}
+              ->
+              Pulse_Syntax.Tm_If
+                {
+                  Pulse_Syntax.b1 = (close_term' b v i);
+                  Pulse_Syntax.then_ = (close_st_term' then_ v i);
+                  Pulse_Syntax.else_ = (close_st_term' else_ v i);
+                  Pulse_Syntax.post2 =
+                    (close_term_opt' post v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_ElimExists { Pulse_Syntax.p = p;_} ->
+              Pulse_Syntax.Tm_ElimExists
+                { Pulse_Syntax.p = (close_term' p v i) }
+          | Pulse_Syntax.Tm_IntroExists
+              { Pulse_Syntax.erased = erased; Pulse_Syntax.p1 = p;
+                Pulse_Syntax.witnesses = witnesses;_}
+              ->
+              Pulse_Syntax.Tm_IntroExists
+                {
+                  Pulse_Syntax.erased = erased;
+                  Pulse_Syntax.p1 = (close_term' p v i);
+                  Pulse_Syntax.witnesses = (close_term_list' witnesses v i)
+                }
+          | Pulse_Syntax.Tm_While
+              { Pulse_Syntax.invariant = invariant;
+                Pulse_Syntax.condition = condition;
+                Pulse_Syntax.body3 = body;_}
+              ->
+              Pulse_Syntax.Tm_While
+                {
+                  Pulse_Syntax.invariant =
+                    (close_term' invariant v (i + Prims.int_one));
+                  Pulse_Syntax.condition = (close_st_term' condition v i);
+                  Pulse_Syntax.body3 = (close_st_term' body v i)
+                }
+          | Pulse_Syntax.Tm_Par
+              { Pulse_Syntax.pre11 = pre1; Pulse_Syntax.body11 = body1;
+                Pulse_Syntax.post11 = post1; Pulse_Syntax.pre2 = pre2;
+                Pulse_Syntax.body21 = body2; Pulse_Syntax.post21 = post2;_}
+              ->
+              Pulse_Syntax.Tm_Par
+                {
+                  Pulse_Syntax.pre11 = (close_term' pre1 v i);
+                  Pulse_Syntax.body11 = (close_st_term' body1 v i);
+                  Pulse_Syntax.post11 =
+                    (close_term' post1 v (i + Prims.int_one));
+                  Pulse_Syntax.pre2 = (close_term' pre2 v i);
+                  Pulse_Syntax.body21 = (close_st_term' body2 v i);
+                  Pulse_Syntax.post21 =
+                    (close_term' post2 v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_WithLocal
+              { Pulse_Syntax.initializer1 = initializer1;
+                Pulse_Syntax.body4 = body;_}
+              ->
+              Pulse_Syntax.Tm_WithLocal
+                {
+                  Pulse_Syntax.initializer1 = (close_term' initializer1 v i);
+                  Pulse_Syntax.body4 =
+                    (close_st_term' body v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_Rewrite
+              { Pulse_Syntax.t1 = t1; Pulse_Syntax.t2 = t2;_} ->
+              Pulse_Syntax.Tm_Rewrite
+                {
+                  Pulse_Syntax.t1 = (close_term' t1 v i);
+                  Pulse_Syntax.t2 = (close_term' t2 v i)
+                }
+          | Pulse_Syntax.Tm_Admit
+              { Pulse_Syntax.ctag1 = ctag; Pulse_Syntax.u1 = u;
+                Pulse_Syntax.typ = typ; Pulse_Syntax.post3 = post;_}
+              ->
+              Pulse_Syntax.Tm_Admit
+                {
+                  Pulse_Syntax.ctag1 = ctag;
+                  Pulse_Syntax.u1 = u;
+                  Pulse_Syntax.typ = (close_term' typ v i);
+                  Pulse_Syntax.post3 =
+                    (close_term_opt' post v (i + Prims.int_one))
+                }
+          | Pulse_Syntax.Tm_Protect { Pulse_Syntax.t = t1;_} ->
+              Pulse_Syntax.Tm_Protect
+                { Pulse_Syntax.t = (close_st_term' t1 v i) } in
+        {
+          Pulse_Syntax.term1 = t';
+          Pulse_Syntax.range = (t.Pulse_Syntax.range)
+        }
 let (close_term : Pulse_Syntax.term -> Pulse_Syntax.var -> Pulse_Syntax.term)
   = fun t -> fun v -> close_term' t v Prims.int_zero
 let (close_st_term :
