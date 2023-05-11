@@ -83,7 +83,6 @@ let valid #t (c:_cmpres) (x y : t) =
 
 type cmpres #t (x y : t) = c:_cmpres{valid c x y}
 
-unfold // FIXME: Only needed due to #2894
 type comparator_for (t:Type) = x:t -> y:t -> cmpres x y
 
 let (&&&) (#s : Type u#ss) (#t : Type u#tt) (#x #y : s) (#w #z : t)
