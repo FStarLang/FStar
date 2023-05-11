@@ -1401,7 +1401,10 @@ let (encode_free_var :
                     let uu___2 = FStar_Syntax_Subst.compress t_norm in
                     uu___2.FStar_Syntax_Syntax.n in
                   match uu___1 with
-                  | FStar_Syntax_Syntax.Tm_arrow (binders, uu___2) ->
+                  | FStar_Syntax_Syntax.Tm_arrow
+                      { FStar_Syntax_Syntax.bs1 = binders;
+                        FStar_Syntax_Syntax.comp = uu___2;_}
+                      ->
                       FStar_Compiler_Effect.op_Bar_Greater binders
                         (FStar_Compiler_List.map
                            (fun uu___3 -> FStar_SMTEncoding_Term.Term_sort))
@@ -1768,23 +1771,28 @@ let (encode_free_var :
                                                  fv1
                                                  FStar_Parser_Const.squash_lid
                                            | FStar_Syntax_Syntax.Tm_refine
-                                               ({
-                                                  FStar_Syntax_Syntax.ppname
-                                                    = uu___12;
-                                                  FStar_Syntax_Syntax.index =
-                                                    uu___13;
-                                                  FStar_Syntax_Syntax.sort =
-                                                    {
-                                                      FStar_Syntax_Syntax.n =
-                                                        FStar_Syntax_Syntax.Tm_fvar
-                                                        fv1;
-                                                      FStar_Syntax_Syntax.pos
-                                                        = uu___14;
-                                                      FStar_Syntax_Syntax.vars
-                                                        = uu___15;
-                                                      FStar_Syntax_Syntax.hash_code
-                                                        = uu___16;_};_},
-                                                uu___17)
+                                               {
+                                                 FStar_Syntax_Syntax.b =
+                                                   {
+                                                     FStar_Syntax_Syntax.ppname
+                                                       = uu___12;
+                                                     FStar_Syntax_Syntax.index
+                                                       = uu___13;
+                                                     FStar_Syntax_Syntax.sort
+                                                       =
+                                                       {
+                                                         FStar_Syntax_Syntax.n
+                                                           =
+                                                           FStar_Syntax_Syntax.Tm_fvar
+                                                           fv1;
+                                                         FStar_Syntax_Syntax.pos
+                                                           = uu___14;
+                                                         FStar_Syntax_Syntax.vars
+                                                           = uu___15;
+                                                         FStar_Syntax_Syntax.hash_code
+                                                           = uu___16;_};_};
+                                                 FStar_Syntax_Syntax.phi =
+                                                   uu___17;_}
                                                ->
                                                FStar_Syntax_Syntax.fv_eq_lid
                                                  fv1
@@ -2506,8 +2514,10 @@ let (encode_top_level_let :
                   FStar_Compiler_Effect.op_Less_Bar
                     FStar_Syntax_Util.unascribe uu___1 in
                 match t2.FStar_Syntax_Syntax.n with
-                | FStar_Syntax_Syntax.Tm_arrow (formals, comp) ->
-                    FStar_Syntax_Subst.open_comp formals comp
+                | FStar_Syntax_Syntax.Tm_arrow
+                    { FStar_Syntax_Syntax.bs1 = formals;
+                      FStar_Syntax_Syntax.comp = comp;_}
+                    -> FStar_Syntax_Subst.open_comp formals comp
                 | FStar_Syntax_Syntax.Tm_refine uu___1 ->
                     let uu___2 = FStar_Syntax_Util.unrefine t2 in
                     arrow_formals_comp_norm norm uu___2
@@ -3953,13 +3963,17 @@ and (encode_sigelt' :
                 | uu___3 ->
                     FStar_Syntax_Syntax.mk
                       (FStar_Syntax_Syntax.Tm_abs
-                         ((ed.FStar_Syntax_Syntax.binders), tm,
-                           (FStar_Pervasives_Native.Some
-                              (FStar_Syntax_Util.mk_residual_comp
-                                 FStar_Parser_Const.effect_Tot_lid
-                                 FStar_Pervasives_Native.None
-                                 [FStar_Syntax_Syntax.TOTAL]))))
-                      tm.FStar_Syntax_Syntax.pos in
+                         {
+                           FStar_Syntax_Syntax.bs =
+                             (ed.FStar_Syntax_Syntax.binders);
+                           FStar_Syntax_Syntax.body = tm;
+                           FStar_Syntax_Syntax.rc_opt =
+                             (FStar_Pervasives_Native.Some
+                                (FStar_Syntax_Util.mk_residual_comp
+                                   FStar_Parser_Const.effect_Tot_lid
+                                   FStar_Pervasives_Native.None
+                                   [FStar_Syntax_Syntax.TOTAL]))
+                         }) tm.FStar_Syntax_Syntax.pos in
               let encode_action env1 a =
                 let action_defn =
                   let uu___3 =
@@ -4966,7 +4980,10 @@ and (encode_sigelt' :
                      let uu___5 =
                        let uu___6 =
                          let uu___7 = FStar_Syntax_Syntax.mk_Total k in
-                         (tps, uu___7) in
+                         {
+                           FStar_Syntax_Syntax.bs1 = tps;
+                           FStar_Syntax_Syntax.comp = uu___7
+                         } in
                        FStar_Syntax_Syntax.Tm_arrow uu___6 in
                      FStar_Syntax_Syntax.mk uu___5 k.FStar_Syntax_Syntax.pos in
                let k2 = norm_before_encoding env k1 in

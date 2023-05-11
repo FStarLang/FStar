@@ -33,7 +33,10 @@ let (fail_exp :
                   uu___7 in
               [uu___6] in
             uu___4 :: uu___5 in
-          (uu___2, uu___3) in
+          {
+            FStar_Syntax_Syntax.hd = uu___2;
+            FStar_Syntax_Syntax.args = uu___3
+          } in
         FStar_Syntax_Syntax.Tm_app uu___1 in
       FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (always_fail :
@@ -133,17 +136,20 @@ let rec (extract_meta :
          | uu___5 -> FStar_Pervasives_Native.None)
     | {
         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_app
-          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-             FStar_Syntax_Syntax.pos = uu___1;
-             FStar_Syntax_Syntax.vars = uu___2;
-             FStar_Syntax_Syntax.hash_code = uu___3;_},
-           ({
-              FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-                (FStar_Const.Const_string (s, uu___4));
-              FStar_Syntax_Syntax.pos = uu___5;
-              FStar_Syntax_Syntax.vars = uu___6;
-              FStar_Syntax_Syntax.hash_code = uu___7;_},
-            uu___8)::[]);
+          {
+            FStar_Syntax_Syntax.hd =
+              { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                FStar_Syntax_Syntax.pos = uu___1;
+                FStar_Syntax_Syntax.vars = uu___2;
+                FStar_Syntax_Syntax.hash_code = uu___3;_};
+            FStar_Syntax_Syntax.args =
+              ({
+                 FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
+                   (FStar_Const.Const_string (s, uu___4));
+                 FStar_Syntax_Syntax.pos = uu___5;
+                 FStar_Syntax_Syntax.vars = uu___6;
+                 FStar_Syntax_Syntax.hash_code = uu___7;_},
+               uu___8)::[];_};
         FStar_Syntax_Syntax.pos = uu___9; FStar_Syntax_Syntax.vars = uu___10;
         FStar_Syntax_Syntax.hash_code = uu___11;_} ->
         let uu___12 =
@@ -190,7 +196,10 @@ let rec (extract_meta :
         FStar_Syntax_Syntax.pos = uu___2; FStar_Syntax_Syntax.vars = uu___3;
         FStar_Syntax_Syntax.hash_code = uu___4;_} ->
         FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.Substitute
-    | { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_meta (x1, uu___1);
+    | {
+        FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_meta
+          { FStar_Syntax_Syntax.tm2 = x1;
+            FStar_Syntax_Syntax.meta = uu___1;_};
         FStar_Syntax_Syntax.pos = uu___2; FStar_Syntax_Syntax.vars = uu___3;
         FStar_Syntax_Syntax.hash_code = uu___4;_} -> extract_meta x1
     | uu___1 ->
@@ -719,8 +728,11 @@ let (extract_typ_abbrev :
                 | uu___1 -> def in
               let uu___1 =
                 match def1.FStar_Syntax_Syntax.n with
-                | FStar_Syntax_Syntax.Tm_abs (bs, body, uu___2) ->
-                    FStar_Syntax_Subst.open_term bs body
+                | FStar_Syntax_Syntax.Tm_abs
+                    { FStar_Syntax_Syntax.bs = bs;
+                      FStar_Syntax_Syntax.body = body;
+                      FStar_Syntax_Syntax.rc_opt = uu___2;_}
+                    -> FStar_Syntax_Subst.open_term bs body
                 | uu___2 -> ([], def1) in
               (match uu___1 with
                | (bs, body) ->
@@ -1161,7 +1173,11 @@ let (extract_reifiable_effect :
          let action_lb =
            FStar_Syntax_Syntax.mk
              (FStar_Syntax_Syntax.Tm_let
-                (lbs, FStar_Syntax_Util.exp_false_bool))
+                {
+                  FStar_Syntax_Syntax.lbs = lbs;
+                  FStar_Syntax_Syntax.body1 =
+                    FStar_Syntax_Util.exp_false_bool
+                })
              (a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos in
          let uu___2 = FStar_Extraction_ML_Term.term_as_mlexpr g1 action_lb in
          match uu___2 with
@@ -1788,7 +1804,10 @@ let (extract_bundle :
               FStar_Syntax_Subst.compress uu___2 in
             uu___1.FStar_Syntax_Syntax.n in
           match uu___ with
-          | FStar_Syntax_Syntax.Tm_arrow (bs, uu___1) ->
+          | FStar_Syntax_Syntax.Tm_arrow
+              { FStar_Syntax_Syntax.bs1 = bs;
+                FStar_Syntax_Syntax.comp = uu___1;_}
+              ->
               FStar_Compiler_List.map
                 (fun uu___2 ->
                    match uu___2 with
@@ -2404,8 +2423,11 @@ let rec (extract_sig :
                      let uu___7 =
                        FStar_Syntax_Syntax.mk
                          (FStar_Syntax_Syntax.Tm_let
-                            (lbs1, FStar_Syntax_Util.exp_false_bool))
-                         se1.FStar_Syntax_Syntax.sigrng in
+                            {
+                              FStar_Syntax_Syntax.lbs = lbs1;
+                              FStar_Syntax_Syntax.body1 =
+                                FStar_Syntax_Util.exp_false_bool
+                            }) se1.FStar_Syntax_Syntax.sigrng in
                      FStar_Extraction_ML_Term.term_as_mlexpr g uu___7 in
                    (match uu___6 with
                     | (ml_let, uu___7, uu___8) ->
@@ -2460,28 +2482,32 @@ let rec (extract_sig :
                                                    uu___21.FStar_Syntax_Syntax.n in
                                                  match uu___20 with
                                                  | FStar_Syntax_Syntax.Tm_arrow
-                                                     (uu___21,
-                                                      {
-                                                        FStar_Syntax_Syntax.n
-                                                          =
-                                                          FStar_Syntax_Syntax.Comp
-                                                          {
-                                                            FStar_Syntax_Syntax.comp_univs
-                                                              = uu___22;
-                                                            FStar_Syntax_Syntax.effect_name
-                                                              = e;
-                                                            FStar_Syntax_Syntax.result_typ
-                                                              = uu___23;
-                                                            FStar_Syntax_Syntax.effect_args
-                                                              = uu___24;
-                                                            FStar_Syntax_Syntax.flags
-                                                              = uu___25;_};
-                                                        FStar_Syntax_Syntax.pos
-                                                          = uu___26;
-                                                        FStar_Syntax_Syntax.vars
-                                                          = uu___27;
-                                                        FStar_Syntax_Syntax.hash_code
-                                                          = uu___28;_})
+                                                     {
+                                                       FStar_Syntax_Syntax.bs1
+                                                         = uu___21;
+                                                       FStar_Syntax_Syntax.comp
+                                                         =
+                                                         {
+                                                           FStar_Syntax_Syntax.n
+                                                             =
+                                                             FStar_Syntax_Syntax.Comp
+                                                             {
+                                                               FStar_Syntax_Syntax.comp_univs
+                                                                 = uu___22;
+                                                               FStar_Syntax_Syntax.effect_name
+                                                                 = e;
+                                                               FStar_Syntax_Syntax.result_typ
+                                                                 = uu___23;
+                                                               FStar_Syntax_Syntax.effect_args
+                                                                 = uu___24;
+                                                               FStar_Syntax_Syntax.flags
+                                                                 = uu___25;_};
+                                                           FStar_Syntax_Syntax.pos
+                                                             = uu___26;
+                                                           FStar_Syntax_Syntax.vars
+                                                             = uu___27;
+                                                           FStar_Syntax_Syntax.hash_code
+                                                             = uu___28;_};_}
                                                      when
                                                      let uu___29 =
                                                        FStar_Ident.string_of_lid
