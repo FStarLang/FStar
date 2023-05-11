@@ -50,12 +50,12 @@ type env_t = UEnv.uenv
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app(S.fvar (PC.failwith_lid()) delta_constant None, //NS delta: wrong
-               [ S.iarg t
-               ; S.as_arg <|
-                 mk (Tm_constant
-                      (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange)))
-                    Range.dummyRange]))
+    mk (Tm_app {hd=S.fvar (PC.failwith_lid()) delta_constant None; //NS delta: wrong
+                args=[ S.iarg t
+                     ; S.as_arg <|
+                       mk (Tm_constant
+                             (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange)))
+                          Range.dummyRange]})
         Range.dummyRange
 
 let always_fail lid t =
@@ -111,7 +111,7 @@ let rec extract_meta x =
       | "Prims.deprecated" -> Some (Deprecated "")
       | _ -> None
       end
-  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } ->
+  | { n = Tm_app {hd={ n = Tm_fvar fv }; args=[{ n = Tm_constant (Const_string (s, _)) }, _]} } ->
       begin match string_of_lid (lid_of_fv fv) with
       | "FStar.Pervasives.PpxDerivingShowConstant" -> Some (PpxDerivingShowConstant s)
       | "FStar.Pervasives.Comment" -> Some (Comment s)
@@ -126,7 +126,7 @@ let rec extract_meta x =
   // These are only for backwards compatibility, they should be removed at some point.
   | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
   | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
-  | { n = Tm_meta (x, _) } -> extract_meta x
+  | { n = Tm_meta {tm=x} } -> extract_meta x
   | _ ->
     let head, args = U.head_and_args x in
     match (SS.compress head).n, args with
@@ -342,7 +342,7 @@ let extract_typ_abbrev env quals attrs lb
         | _ -> def in
     let bs, body =
         match def.n with
-        | Tm_abs(bs, body, _) ->
+        | Tm_abs {bs; body} ->
           SS.open_term bs body
         | _ -> [], def in
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
@@ -549,7 +549,7 @@ let extract_reifiable_effect g ed
         let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
         let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, [], a.action_defn.pos) in
         let lbs = (false, [lb]) in
-        let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) a.action_defn.pos in
+        let action_lb = mk (Tm_let {lbs; body=U.exp_false_bool}) a.action_defn.pos in
         let a_let, _, ty = Term.term_as_mlexpr g action_lb in
         let exp, tysc = match a_let.expr with
             | MLE_Let((_, [mllb]), _) ->
@@ -859,7 +859,7 @@ let extract_bundle env se =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
         let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
-          | Tm_arrow (bs, _) ->
+          | Tm_arrow {bs} ->
               List.map (fun ({binder_bv={ ppname = ppname }}) -> (string_of_id ppname)) bs
           | _ ->
               []
@@ -1135,7 +1135,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
             let lbs = maybe_normalize_for_extraction (maybe_postprocess_lbs lbs) in
             Term.term_as_mlexpr
                     g
-                    (mk (Tm_let(lbs, U.exp_false_bool)) se.sigrng)
+                    (mk (Tm_let {lbs; body=U.exp_false_bool}) se.sigrng)
           in
           begin
           match ml_let.expr with
@@ -1167,7 +1167,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
                             let lb_lid = (right lbname).fv_name.v in
                             let flags'' =
                                 match (SS.compress t).n with
-                                | Tm_arrow (_, { n = Comp { effect_name = e }})
+                                | Tm_arrow {comp={ n = Comp { effect_name = e }}}
                                     when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
                                     [ StackInline ]
                                 | _ ->
