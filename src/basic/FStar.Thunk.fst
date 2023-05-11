@@ -16,9 +16,9 @@
    limitations under the License.
 *)
 module FStar.Thunk
-open FStar.Pervasives
 open FStar.Compiler.Effect
-module List = FStar.Compiler.List
+
+type thunk (a:Type) : Type = ref (either (unit -> a) a)
 
 let mk (f:unit -> 'a) : thunk 'a = alloc (Inl f)
 let mkv (v:'a) : thunk 'a = alloc (Inr v)

@@ -16,14 +16,9 @@
    limitations under the License.
 *)
 module FStar.Thunk
-open FStar.Pervasives
 open FStar.Compiler.Effect
-module List = FStar.Compiler.List
 
-// GM: I get an F# error if I don't expose the definition of `thunk`,
-//     please ignore it :)
-type thunk 'a = ref (either (unit -> 'a) 'a)
-
+val thunk (a:Type0) : Type0
 type t 'a = thunk 'a
 
 (* Creating thunks *)
