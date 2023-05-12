@@ -301,3 +301,51 @@ let implies_fold
   intro_exists v (fun v -> v `star` pure (squash (elim_implies_t hyp concl v)))
 
 let intro_implies = implies_fold
+
+let elim_forall_t
+  (#t: Type)
+  (p: t -> vprop)
+  (v: vprop)
+: Tot Type
+= (opened: inames) -> (x: t) -> STGhostT unit opened v (fun _ -> p x)
+
+let is_forall
+  (#t: Type)
+  (p: t -> vprop)
+  (v: vprop)
+: GTot prop
+= squash (elim_forall_t p v)
+
+let forall_ p
+= exists_ (fun (v: vprop) ->
+    v `star` pure (is_forall p v)
+  )
+
+let intro_forall
+  v p f
+= let f' : elim_forall_t p v = fun opened x -> f opened x in
+  intro_pure (squash (elim_forall_t p v));
+  intro_exists v (fun v -> v `star` pure (squash (elim_forall_t p v)))
+
+let forall_apply
+  (#opened: inames)
+  (#t: Type)
+  (p: t -> vprop)
+  (v: vprop)
+  (x: t)
+: STGhost unit opened
+    v
+    (fun _ -> p x)
+    (is_forall p v)
+    (fun _ -> True)
+= let sq : squash (is_forall p v) = () in
+  let _ : squash (elim_forall_t p v) = FStar.Squash.join_squash sq in
+  let f : Ghost.erased (elim_forall_t p v) = FStar.IndefiniteDescription.elim_squash #(elim_forall_t p v) () in
+  let f' : elim_forall_t p v = Ghost.reveal f in
+  f' _ x
+
+let elim_forall
+  p x
+= let v = elim_exists () in
+  let _ = elim_pure _ in
+  forall_apply p _ x

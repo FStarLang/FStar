@@ -427,3 +427,27 @@ let wand_is_implies
     assert (interp (hp_of s2) (m2 `join` m1));
     join_commutative m2 m1
   ))
+
+/// A universal quantifier for vprop, similarly to the separating ghost-state implication
+
+val forall_ (#a:Type u#a) (p:a -> vprop) : vprop
+
+val intro_forall (#t:Type) (#opened_invariants:_)
+  (v: vprop)
+  (p: t -> vprop)
+  (f:
+    (opened: inames) ->
+    (x: t) ->
+    STGhostT unit opened
+    v (fun _ -> p x)
+  )
+: STGhostT unit opened_invariants
+    v
+    (fun _ -> forall_ p)
+
+val elim_forall (#t: Type) (#opened_invariants:_)
+  (p: t -> vprop)
+  (x: t)
+: STGhostT unit opened_invariants
+    (forall_ p)
+    (fun _ -> p x)
