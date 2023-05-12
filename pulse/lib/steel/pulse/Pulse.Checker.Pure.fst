@@ -114,9 +114,10 @@ let check_term (f:RT.fstar_top_env) (g:env) (t:term)
            typing f g t ty)
   = let fg = extend_env_l f g in
     let rt = elab_term t in
-    T.print (Printf.sprintf "check_tot : called on %s elaborated to %s"
-            (P.term_to_string t)
-            (T.term_to_string rt));
+    debug (fun _ ->
+            Printf.sprintf "check_tot : called on %s elaborated to %s"
+                      (P.term_to_string t)
+                      (T.term_to_string rt));
     match tc_meta_callback fg rt with
     | None -> 
         T.fail 

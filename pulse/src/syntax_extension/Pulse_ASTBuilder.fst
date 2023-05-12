@@ -54,7 +54,9 @@ let extension_parser
                       (i col, Nothing)]
                       r
         in
-        Inr (Splice (true, [Ident.id_of_text id], splicer))
+        let d = Splice (true, [Ident.id_of_text id], splicer) in
+        let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]  } in
+        Inr d
 
 let _ = 
     register_extension_parser "pulse" extension_parser

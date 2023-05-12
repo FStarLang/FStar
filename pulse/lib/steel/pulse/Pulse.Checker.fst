@@ -377,8 +377,8 @@ let check_elim_exists
   let (| t, t_typing |) = check_vprop f g t in
   match t with
   | Tm_ExistsSL u ty p _ ->
-    T.print (Printf.sprintf "LOG ELIM EXISTS: %s\n"
-                            (P.term_to_string t));
+    // T.print (Printf.sprintf "LOG ELIM EXISTS: %s\n"
+    //                         (P.term_to_string t));
 
     // Could this come from inversion of t_typing?
     let (| u', ty_typing |) = check_universe f g ty in
@@ -480,8 +480,9 @@ let check_intro_exists_either
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c)
-  = T.print (Printf.sprintf "LOG INTRO EXISTS: %s"
-                            (P.term_to_string (intro_exists_vprop st)));
+  = 
+  // T.print (Printf.sprintf "LOG INTRO EXISTS: %s"
+  //                           (P.term_to_string (intro_exists_vprop st)));
     if is_intro_exists_erased st
     then check_intro_exists_erased f g st vprop_typing pre pre_typing post_hint
     else check_intro_exists f g st vprop_typing pre pre_typing post_hint
@@ -698,7 +699,7 @@ let check_while
     let cond_pre_typing =
       check_vprop_with_core f g (comp_pre (comp_while_cond inv)) in
     let (| cond, cond_comp, cond_typing |) =
-      T.print "Check: While condition";
+      // T.print "Check: While condition";
       check' allow_inst f g cond (comp_pre (comp_while_cond inv))
         cond_pre_typing (Some (comp_post (comp_while_cond inv))) in
     if eq_comp cond_comp (comp_while_cond inv)
@@ -706,15 +707,15 @@ let check_while
       let body_pre_typing =
         check_vprop_with_core f g (comp_pre (comp_while_body inv)) in
       let (| body, body_comp, body_typing |) =
-          T.print "Check: While body";
+          // T.print "Check: While body";
           check' allow_inst f g body (comp_pre (comp_while_body inv))
           body_pre_typing (Some (comp_post (comp_while_body inv))) in
       if eq_comp body_comp (comp_while_body inv)
       then let d = T_While g inv cond body inv_typing cond_typing   body_typing in
-           T.print (Printf.sprintf
-                        "Check: Framing while\ninferred pre=%s\n required pre=%s\n"
-                        (P.term_to_string (comp_pre (comp_while inv)))
-                        (P.term_to_string pre));
+          //  T.print (Printf.sprintf
+          //               "Check: Framing while\ninferred pre=%s\n required pre=%s\n"
+          //               (P.term_to_string (comp_pre (comp_while inv)))
+          //               (P.term_to_string pre));
            repack (try_frame_pre pre_typing d) post_hint true
       else T.fail "Cannot typecheck while loop body"
     end
@@ -794,7 +795,7 @@ let check_stapp
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing f g t c) =
-  maybe_log t;
+  // maybe_log t;
   let range = t.range in
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
 
@@ -946,12 +947,12 @@ let handle_framing_failure
                                         body = t }) }
       )
     in
-    T.print (Printf.sprintf
-                     "Handling framing failure in term:\n%s\n\
-                      with unmatched_pre={\n%s\n} and context={\n%s\n}"
-                     (P.st_term_to_string t0)
-                     (terms_to_string failure.unmatched_preconditions)
-                     (terms_to_string failure.remaining_context));
+    // T.print (Printf.sprintf
+    //                  "Handling framing failure in term:\n%s\n\
+    //                   with unmatched_pre={\n%s\n} and context={\n%s\n}"
+    //                  (P.st_term_to_string t0)
+    //                  (terms_to_string failure.unmatched_preconditions)
+    //                  (terms_to_string failure.remaining_context));
     let pures, rest = 
       L.partition (function Tm_Pure _ -> true | _ -> false) failure.unmatched_preconditions
     in
@@ -1232,7 +1233,9 @@ let rec check' : bool -> check_t =
     then auto_elims g pre t
     else t
   in
-  T.print (Printf.sprintf "Check: %s" (print_skel t));
+  T.print (Printf.sprintf "At %s: precondition is %s\n"
+                          (T.range_to_string t.range)
+                          (Pulse.Syntax.Printer.term_to_string pre));
   try 
     match t.term with
     | Tm_Protect _ -> T.fail "Protect should have been removed"
@@ -1278,8 +1281,8 @@ let rec check' : bool -> check_t =
       if should_infer_witnesses
       then (
         let unary_intros = maybe_infer_intro_exists f g t pre in
-        T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
-                                (P.st_term_to_string unary_intros));
+        // T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
+        //                         (P.st_term_to_string unary_intros));
         check' allow_inst f g unary_intros pre pre_typing post_hint
       )
       else (

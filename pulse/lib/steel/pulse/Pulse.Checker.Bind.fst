@@ -210,11 +210,11 @@ let check_tot_bind f g t pre pre_typing post_hint check =
     let e2_closed = close_st_term e2 x in
     assume (open_st_term_nv e2_closed (v_as_nv x) == e2);
     assert (comp_pre c2 == pre);
-    T.print (Printf.sprintf "c2 is %s\n\n" (P.comp_to_string c2));
+    // T.print (Printf.sprintf "c2 is %s\n\n" (P.comp_to_string c2));
     FV.tot_typing_freevars pre_typing;
     close_with_non_freevar pre x 0;
     let c = open_comp_with (close_comp c2 x) e1 in
-    T.print (Printf.sprintf "c is %s\n\n" (P.comp_to_string c));
+    // T.print (Printf.sprintf "c is %s\n\n" (P.comp_to_string c));
     LN.tot_typing_ln pre_typing';
     open_with_gt_ln pre (-1) e1 0;
     (| _,

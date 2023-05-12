@@ -185,17 +185,17 @@ let infer
   if List.Tot.length uvs = 0
   then T.fail "Inference did not find anything to infer"
   else begin
-    T.print (FStar.Printf.sprintf "infer: generated %d uvars,\n\
-                                   ctx: {\n%s\n}\n\
-                                   st_comp.pre:{\n%s\n}"
-               (List.Tot.length uvs)
-               (P.term_list_to_string "\n" (vprop_as_list ctxt_pre))
-               (P.term_list_to_string "\n" (vprop_as_list pre)));
+    // T.print (FStar.Printf.sprintf "infer: generated %d uvars,\n\
+    //                                ctx: {\n%s\n}\n\
+    //                                st_comp.pre:{\n%s\n}"
+    //            (List.Tot.length uvs)
+    //            (P.term_list_to_string "\n" (vprop_as_list ctxt_pre))
+    //            (P.term_list_to_string "\n" (vprop_as_list pre)));
 
     let uv_sols = try_inst_uvs_in_goal ctxt_pre pre in
-    T.print (Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
+    // T.print (Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
     let head = rebuild_head head uvs uv_sols r in
-    T.print (Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
+    // T.print (Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
     head
   end
 
