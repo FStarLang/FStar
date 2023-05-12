@@ -14,8 +14,8 @@
    limitations under the License.
 *)
 module FStar.StringBuffer
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open Prims
+
+open FStar.Compiler.Effect
 open FStar.BigInt
 
 type t

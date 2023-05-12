@@ -20,10 +20,9 @@ let (uu___is_B : sb -> Prims.bool) =
 let (__proj__B__item___0 : sb -> Prims.bool) =
   fun projectee -> match projectee with | B _0 -> _0
 let rec (sb_eq : sb comparator_for') =
-  Obj.magic
-    (fun sb1 ->
-       fun sb2 ->
-         match (sb1, sb2) with
-         | (S s1, S s2) -> Obj.repr (string_eq s1 s2)
-         | (B b1, B b2) -> Obj.repr (bool_eq b1 b2)
-         | uu___ -> Obj.repr false)
+  fun sb1 ->
+    fun sb2 ->
+      match (sb1, sb2) with
+      | (S s1, S s2) -> Obj.magic (Obj.repr (string_eq s1 s2))
+      | (B b1, B b2) -> Obj.magic (Obj.repr (bool_eq b1 b2))
+      | uu___ -> Obj.magic (Obj.repr false)

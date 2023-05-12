@@ -255,7 +255,9 @@ let run_process (id: string) (prog: string) (args: string list) (stdin: string o
    | Some str -> output_string p.outc str);
   flush p.outc;
   close_out p.outc;
-  process_read_all_output p
+  let s = process_read_all_output p in
+  kill_process p;
+  s
 
 type read_result = EOF | SIGINT
 

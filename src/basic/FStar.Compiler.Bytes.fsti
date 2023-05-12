@@ -15,7 +15,6 @@
 *)
 module FStar.Compiler.Bytes
 open FStar.Compiler.Effect
-module List = FStar.Compiler.List
 open FStar.BaseTypes
 
 type bytes = array byte

@@ -112,7 +112,8 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
 	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
 	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
-	PushPopProjectors.fst Bug2412.fst Bug2595.fst Bug2699.fst Bug2895.fst
+	PushPopProjectors.fst Bug2412.fst Bug2595.fst Bug2699.fst Bug2895.fst \
+	ValLetRec.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"

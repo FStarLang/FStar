@@ -28,9 +28,3 @@ noeq type __result a =
     | Failed  : exn:exn         (* Error *)
               -> ps:proofstate  (* The proofstate at time of failure *)
               -> __result a
-
-(* A bit of help for the SMT, unsure if still needed *)
-let result_split #a (r:__result a)
-  : Lemma (Success? r \/ Failed? r)
-          [SMTPat (Success? r); SMTPat (Failed? r)]
-  = ()

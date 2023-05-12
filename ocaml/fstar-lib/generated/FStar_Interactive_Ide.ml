@@ -156,7 +156,9 @@ let (run_repl_ld_transactions :
     fun tasks ->
       fun progress_callback ->
         let debug verb task =
-          let uu___ = FStar_Options.debug_any () in
+          let uu___ =
+            FStar_Options.debug_at_level_no_module
+              (FStar_Options.Other "IDE") in
           if uu___
           then
             let uu___1 = FStar_Interactive_Ide_Types.string_of_repl_task task in
@@ -1703,7 +1705,8 @@ let (run_push_with_deps :
   =
   fun st ->
     fun query ->
-      (let uu___1 = FStar_Options.debug_any () in
+      (let uu___1 =
+         FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
        if uu___1
        then FStar_Compiler_Util.print_string "Reloading dependencies"
        else ());
@@ -2568,7 +2571,8 @@ let (maybe_cancel_queries :
   fun st ->
     fun l ->
       let log_cancellation l1 =
-        let uu___ = FStar_Options.debug_any () in
+        let uu___ =
+          FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
         if uu___
         then
           FStar_Compiler_List.iter
@@ -2761,7 +2765,8 @@ and (validate_and_run_query :
       FStar_Compiler_Effect.op_Colon_Equals repl_current_qid
         (FStar_Pervasives_Native.Some
            (query1.FStar_Interactive_Ide_Types.qid));
-      (let uu___2 = FStar_Options.debug_any () in
+      (let uu___2 =
+         FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
        if uu___2
        then
          let uu___3 = FStar_Interactive_Ide_Types.query_to_string query1 in

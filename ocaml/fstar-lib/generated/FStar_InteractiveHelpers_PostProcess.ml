@@ -306,13 +306,13 @@ let (pp_explore_print_goal :
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___1 ->
             (fun uu___1 ->
-               Obj.magic
-                 (fun uu___2 ->
-                    fun uu___3 ->
-                      fun uu___4 ->
-                        fun uu___5 ->
-                          fun uu___6 ->
-                            FStar_Tactics_Effect.lift_div_tac
+               fun uu___2 ->
+                 fun uu___3 ->
+                   fun uu___4 ->
+                     fun uu___5 ->
+                       fun uu___6 ->
+                         Obj.magic
+                           (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___7 ->
                                  ((), FStar_Tactics_Types.Continue)))) uu___1))
       (fun uu___1 ->
