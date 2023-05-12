@@ -349,7 +349,7 @@ rawDecl:
   | blob=BLOB
       {
         let ext_name, contents, pos = blob in
-        parse_extension_blob ext_name contents (rr ($loc(blob)))
+        parse_extension_blob ext_name contents (rr (pos, pos))
       }
 
 
