@@ -256,7 +256,7 @@ let default_settings : list error_setting =
     Unused01                                          , CFatal, 237;
     Warning_PluginNotImplemented                      , CError, 238;
     Warning_AddImplicitAssumeNewQualifier             , CWarning, 239;
-    Warning_AdmitWithoutDefinition                    , CWarning, 240;
+    Warning_AdmitWithoutDefinition                    , CError, 240;
     Warning_CachedFile                                , CWarning, 241;
     Warning_DefinitionNotTranslated                   , CWarning, 242;
     Warning_DependencyFound                           , CWarning, 243;

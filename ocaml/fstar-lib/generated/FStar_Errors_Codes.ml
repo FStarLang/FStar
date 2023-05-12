@@ -2155,7 +2155,7 @@ let (default_settings : error_setting Prims.list) =
   (Unused01, CFatal, (Prims.of_int (237)));
   (Warning_PluginNotImplemented, CError, (Prims.of_int (238)));
   (Warning_AddImplicitAssumeNewQualifier, CWarning, (Prims.of_int (239)));
-  (Warning_AdmitWithoutDefinition, CWarning, (Prims.of_int (240)));
+  (Warning_AdmitWithoutDefinition, CError, (Prims.of_int (240)));
   (Warning_CachedFile, CWarning, (Prims.of_int (241)));
   (Warning_DefinitionNotTranslated, CWarning, (Prims.of_int (242)));
   (Warning_DependencyFound, CWarning, (Prims.of_int (243)));
