@@ -70,35 +70,50 @@ let ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
 let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, mk_st_comp pre ret post)
 
+module PSB = Pulse_Syntax_Builder
 type st_term = Pulse_Syntax.st_term
-let tm_return (t:term) : st_term = Tm_Return(STT, false, t)
+let tm_return (t:term) r : st_term = PSB.(with_range (tm_return STT false t) r)
 
 let tm_abs (b:binder)
            (q:qualifier option)
            (pre:term)
            (body:st_term)
            (post:term option)
+           r
   : st_term 
-  = Tm_Abs(b, q, Some pre, body, post)
+  = PSB.(with_range (tm_abs b q (Some pre) body post) r)
 
-let tm_st_app (head:term) (q:S.aqual) (arg:term) : st_term =
-  Tm_STApp(head, map_aqual q, arg)
+let tm_st_app (head:term) (q:S.aqual) (arg:term) r : st_term =
+  PSB.(with_range (tm_stapp head (map_aqual q) arg) r)
     
-let tm_bind (x:(ident * term) option ) (e1:st_term) (e2:st_term) : st_term =
-  Tm_Bind(e1, e2)    
+let tm_bind (x:binder) (e1:st_term) (e2:st_term) r : st_term =
+  PSB.(with_range (tm_bind x e1 e2) r)
   
-let tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) : st_term =
-   Tm_WithLocal (v, k)
+let tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) r : st_term =
+  PSB.(with_range (tm_with_local v k) r)
    
-let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) : st_term =
-   Tm_While (snd invariant, head, body)
+let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) r : st_term =
+  PSB.(with_range (tm_while (snd invariant) head body) r)
    
-let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_term) : st_term =
-   Tm_If (head, then_, else_, returns_annot)
+let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_term) r : st_term =
+  PSB.(with_range (tm_if head then_ else_ returns_annot) r)
 
-let tm_intro_exists (erased:bool) (p:vprop) (witnesses:term list) : st_term =
-  Tm_IntroExists(erased, p, witnesses)
-  
+let tm_intro_exists (erased:bool) (p:vprop) (witnesses:term list) r : st_term =
+  PSB.(with_range (tm_intro_exists erased p witnesses) r)
+
+let is_tm_intro_exists (s:st_term) : bool =
+  match s.term1 with
+  | Tm_IntroExists _ -> true
+  | _ -> false
+
+let tm_protect (s:st_term) : st_term = PSB.(with_range (tm_protect s) s.range)
+
+let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
+  PSB.(with_range (tm_par p1 b1 q1 p2 b2 q2) r)
+
+let tm_rewrite p1 p2 r : st_term =
+  PSB.(with_range (tm_rewrite p1 p2) r)
+
 let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v
 let close_comp t v = Pulse_Syntax_Naming.close_comp t v

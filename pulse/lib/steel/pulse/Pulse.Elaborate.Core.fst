@@ -150,11 +150,17 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
        | STT_Ghost, true -> mk_stt_ghost_return ru rty rt rp
        | STT_Ghost, false -> mk_stt_ghost_return_noeq ru rty rt rp)
 
-    | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc ->
+    | T_Bind _ e1 e2 c1 c2 b x c e1_typing t_typing e2_typing bc ->
       let e1 = elab_st_typing e1_typing in
       let e2 = elab_st_typing e2_typing in
       let ty1 = elab_term (comp_res c1) in
-      elab_bind bc e1 (mk_abs ty1 R.Q_Explicit (RT.close_term e2 x))
+      elab_bind bc e1 (mk_abs_with_name b.binder_ppname ty1 R.Q_Explicit (RT.close_term e2 x))
+
+    | T_TotBind _ e1 e2 t1 _ x _ e2_typing ->
+      let re1 = elab_term e1 in
+      let rt1 = elab_term t1 in
+      let re2 = elab_st_typing e2_typing in
+      RT.mk_let RT.pp_name_default re1 rt1 (RT.close_term re2 x)
 
     | T_Frame _ _ c frame _frame_typing e_typing ->
       let e = elab_st_typing e_typing in

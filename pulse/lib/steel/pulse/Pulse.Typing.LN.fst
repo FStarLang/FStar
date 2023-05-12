@@ -134,62 +134,68 @@ let rec open_st_term_ln' (e:st_term)
     (requires ln_st' (open_st_term' e x i) (i - 1))
     (ensures ln_st' e i)
     (decreases e)
-  = match e with
-    | Tm_Return _ _ e ->
+  = match e.term with
+    | Tm_Return { term = e } ->
       open_term_ln' e x i
       
-    | Tm_STApp l _ r ->
+    | Tm_STApp { head=l; arg=r } ->
       open_term_ln' l x i;
       open_term_ln' r x i
 
-    | Tm_Abs b _q pre body post ->
+    | Tm_Abs { b; pre; body; post } ->
       open_term_ln' b.binder_ty x i;
       open_term_ln_opt' pre x (i + 1);
       open_st_term_ln' body x (i + 1);
       open_term_ln_opt' post x (i + 2)
       
-    | Tm_Bind e1 e2 ->
-      open_st_term_ln' e1 x i;
-      open_st_term_ln' e2 x (i + 1)
-
+    | Tm_Bind { binder; head; body } ->
+      open_term_ln' binder.binder_ty x i;
+      open_st_term_ln' head x i;
+      open_st_term_ln' body x (i + 1)
+   
+    | Tm_TotBind { head; body } ->
+      open_term_ln' head x i;
+      open_st_term_ln' body x (i + 1)
       
-    | Tm_If t0 t1 t2 post ->
-      open_term_ln' t0 x i;    
-      open_st_term_ln' t1 x i;    
-      open_st_term_ln' t2 x i;          
+    | Tm_If { b; then_; else_; post } ->
+      open_term_ln' b x i;    
+      open_st_term_ln' then_ x i;    
+      open_st_term_ln' else_ x i;          
       open_term_ln_opt' post x (i + 1)      
 
-    | Tm_ElimExists t -> open_term_ln' t x i
-    | Tm_IntroExists _ p e ->
-      open_term_ln' p x i;
-      open_term_ln_list' e x i
+    | Tm_ElimExists { p } ->
+      open_term_ln' p x i
 
-    | Tm_While inv cond body ->
-      open_term_ln' inv x (i + 1);
-      open_st_term_ln' cond x i;
+    | Tm_IntroExists { p; witnesses } ->
+      open_term_ln' p x i;
+      open_term_ln_list' witnesses x i
+
+    | Tm_While { invariant; condition; body } ->
+      open_term_ln' invariant x (i + 1);
+      open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
-    | Tm_Par preL eL postL preR eR postR ->
-      open_term_ln' preL x i;
-      open_st_term_ln' eL x i;
-      open_term_ln' postL x (i + 1);
-      open_term_ln' preR x i;
-      open_st_term_ln' eR x i;
-      open_term_ln' postR x (i + 1)
+    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      open_term_ln' pre1 x i;
+      open_st_term_ln' body1 x i;
+      open_term_ln' post1 x (i + 1);
+      open_term_ln' pre2 x i;
+      open_st_term_ln' body2 x i;
+      open_term_ln' post2 x (i + 1)
 
-    | Tm_Rewrite p q ->
-      open_term_ln' p x i;
-      open_term_ln' q x i
+    | Tm_Rewrite { t1; t2 } ->
+      open_term_ln' t1 x i;
+      open_term_ln' t2 x i
 
-    | Tm_WithLocal init e ->
-      open_term_ln' init x i;
-      open_st_term_ln' e x (i + 1)
+    | Tm_WithLocal { initializer; body } ->
+      open_term_ln' initializer x i;
+      open_st_term_ln' body x (i + 1)
 
-    | Tm_Admit _ _ t post ->
-      open_term_ln' t x i;
+    | Tm_Admit { typ; post } ->
+      open_term_ln' typ x i;
       open_term_ln_opt' post x (i + 1)
 
-    | Tm_Protect t ->
+    | Tm_Protect { t } ->
       open_st_term_ln' t x i
       
 let open_term_ln (e:term) (v:var)
@@ -307,64 +313,68 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     (requires ln_st' t i /\ i <= j)
     (ensures ln_st' t j)
     (decreases t)
-  = match t with
-    | Tm_Return _ _ t ->
-      ln_weakening t i j
+  = match t.term with
+    | Tm_Return { term } ->
+      ln_weakening term i j
 
-    | Tm_ElimExists t ->
-      ln_weakening t i j
+    | Tm_ElimExists { p } ->
+      ln_weakening p i j
       
-    | Tm_IntroExists _ p e ->
+    | Tm_IntroExists { p; witnesses } ->
       ln_weakening p i j;
-      ln_weakening_list e i j
+      ln_weakening_list witnesses i j
 
-    | Tm_While inv cond body ->
-      ln_weakening inv (i + 1) (j + 1);
-      ln_weakening_st cond i j;
+    | Tm_While { invariant; condition; body } ->
+      ln_weakening invariant (i + 1) (j + 1);
+      ln_weakening_st condition i j;
       ln_weakening_st body i j
-
     
-    | Tm_If t0 t1 t2 post ->
-      ln_weakening t0 i j;    
-      ln_weakening_st t1 i j;    
-      ln_weakening_st t2 i j;          
+    | Tm_If { b; then_; else_; post } ->
+      ln_weakening b i j;    
+      ln_weakening_st then_ i j;    
+      ln_weakening_st else_ i j;          
       ln_weakening_opt post (i + 1) (j + 1)
 
-    | Tm_STApp l _ r ->
-      ln_weakening l i j;
-      ln_weakening r i j      
+    | Tm_STApp { head; arg } ->
+      ln_weakening head i j;
+      ln_weakening arg i j      
 
-    | Tm_Bind e1 e2 ->
-      ln_weakening_st e1 i j;
-      ln_weakening_st e2 (i + 1) (j + 1)
+    | Tm_Bind { binder; head; body } ->
+      ln_weakening binder.binder_ty i j;
+      ln_weakening_st head i j;
+      ln_weakening_st body (i + 1) (j + 1)
 
-    | Tm_Abs b _q pre body post ->
+    | Tm_TotBind { head; body } ->
+      ln_weakening head i j;
+      ln_weakening_st body (i + 1) (j + 1)
+
+    | Tm_Abs { b; pre; body; post } ->
       ln_weakening b.binder_ty i j;
       ln_weakening_opt pre (i + 1) (j + 1);
       ln_weakening_st body (i + 1) (j + 1);
       ln_weakening_opt post (i + 2) (j + 2)
 
-    | Tm_Par preL eL postL preR eR postR ->
-      ln_weakening preL i j;
-      ln_weakening_st eL i j;
-      ln_weakening postL (i + 1) (j + 1);
-      ln_weakening preR i j;
-      ln_weakening_st eR i j;
-      ln_weakening postR (i + 1) (j + 1)
+    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      ln_weakening pre1 i j;
+      ln_weakening_st body1 i j;
+      ln_weakening post1 (i + 1) (j + 1);
+      ln_weakening pre2 i j;
+      ln_weakening_st body2 i j;
+      ln_weakening post2 (i + 1) (j + 1)
 
-    | Tm_Rewrite p q ->
-      ln_weakening p i j;
-      ln_weakening q i j
+    | Tm_Rewrite { t1; t2 } ->
+      ln_weakening t1 i j;
+      ln_weakening t2 i j
 
-    | Tm_WithLocal init e ->
-      ln_weakening init i j;
-      ln_weakening_st e (i + 1) (j + 1)
+    | Tm_WithLocal { initializer; body } ->
+      ln_weakening initializer i j;
+      ln_weakening_st body (i + 1) (j + 1)
 
-    | Tm_Admit _ _ t post ->
-      ln_weakening t i j;
+    | Tm_Admit { typ; post } ->
+      ln_weakening typ i j;
       ln_weakening_opt post (i + 1) (j + 1)
       
-    | Tm_Protect t ->
+    | Tm_Protect { t } ->
       ln_weakening_st t i j
       
 assume
@@ -479,63 +489,68 @@ let rec open_term_ln_inv_st' (t:st_term)
     (requires ln_st' t i)
     (ensures ln_st' (open_st_term' t x i) (i - 1))
     (decreases t)
-  = match t with
-    | Tm_Return _ _ t ->
-      open_term_ln_inv' t x i
+  = match t.term with
+    | Tm_Return { term } ->
+      open_term_ln_inv' term x i
 
-    | Tm_ElimExists t ->
-      open_term_ln_inv' t x i
+    | Tm_ElimExists { p } ->
+      open_term_ln_inv' p x i
       
-    | Tm_IntroExists _ p e ->
+    | Tm_IntroExists { p; witnesses } ->
       open_term_ln_inv' p x i;
-      open_term_ln_inv_list' e x i
+      open_term_ln_inv_list' witnesses x i
 
-    | Tm_While inv cond body ->
-      open_term_ln_inv' inv x (i + 1);
-      open_term_ln_inv_st' cond x i;
+    | Tm_While { invariant; condition; body } ->
+      open_term_ln_inv' invariant x (i + 1);
+      open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
-    | Tm_If t0 t1 t2 post ->
-      open_term_ln_inv' t0 x i;    
-      open_term_ln_inv_st' t1 x i;    
-      open_term_ln_inv_st' t2 x i;          
+    | Tm_If { b; then_; else_; post } ->
+      open_term_ln_inv' b x i;    
+      open_term_ln_inv_st' then_ x i;    
+      open_term_ln_inv_st' else_ x i;          
       open_term_ln_inv_opt' post x (i + 1)      
 
-    | Tm_Bind e1 e2 ->
-      open_term_ln_inv_st' e1 x i;
-      open_term_ln_inv_st' e2 x (i + 1)
+    | Tm_Bind { binder; head; body } ->
+      open_term_ln_inv' binder.binder_ty x i;
+      open_term_ln_inv_st' head x i;
+      open_term_ln_inv_st' body x (i + 1)
 
-    | Tm_STApp l _ r ->
-      open_term_ln_inv' l x i;
-      open_term_ln_inv' r x i
+    | Tm_TotBind { head; body } ->
+      open_term_ln_inv' head x i;
+      open_term_ln_inv_st' body x (i + 1)
 
-    | Tm_Abs b _q pre body post ->
+    | Tm_STApp { head; arg} ->
+      open_term_ln_inv' head x i;
+      open_term_ln_inv' arg x i
+
+    | Tm_Abs { b; pre; body; post } ->
       open_term_ln_inv' b.binder_ty x i;
       open_term_ln_inv_opt' pre x (i + 1);
       open_term_ln_inv_st' body x (i + 1);
       open_term_ln_inv_opt' post x (i + 2)
 
-    | Tm_Par preL eL postL preR eR postR ->
-      open_term_ln_inv' preL x i;
-      open_term_ln_inv_st' eL x i;
-      open_term_ln_inv' postL x (i + 1);
-      open_term_ln_inv' preR x i;
-      open_term_ln_inv_st' eR x i;
-      open_term_ln_inv' postR x (i + 1)
+    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      open_term_ln_inv' pre1 x i;
+      open_term_ln_inv_st' body1 x i;
+      open_term_ln_inv' post1 x (i + 1);
+      open_term_ln_inv' pre2 x i;
+      open_term_ln_inv_st' body2 x i;
+      open_term_ln_inv' post2 x (i + 1)
 
-    | Tm_Rewrite p q ->
-      open_term_ln_inv' p x i;
-      open_term_ln_inv' q x i
+    | Tm_Rewrite { t1; t2 } ->
+      open_term_ln_inv' t1 x i;
+      open_term_ln_inv' t2 x i
 
-    | Tm_WithLocal init e ->
-      open_term_ln_inv' init x i;
-      open_term_ln_inv_st' e x (i + 1)
+    | Tm_WithLocal { initializer; body } ->
+      open_term_ln_inv' initializer x i;
+      open_term_ln_inv_st' body x (i + 1)
 
-    | Tm_Admit _ _ t post ->
-      open_term_ln_inv' t x i;
+    | Tm_Admit { typ; post } ->
+      open_term_ln_inv' typ x i;
       open_term_ln_inv_opt' post x (i + 1)
 
-    | Tm_Protect t ->
+    | Tm_Protect { t } ->
       open_term_ln_inv_st' t x i
 
 assume
@@ -643,63 +658,68 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     (requires ln_st' t (i - 1))
     (ensures ln_st' (close_st_term' t x i) i)
     (decreases t)
-  = match t with
-    | Tm_Return _ _ t ->
-      close_term_ln' t x i
+  = match t.term with
+    | Tm_Return { term } ->
+      close_term_ln' term x i
 
-    | Tm_ElimExists t ->
-      close_term_ln' t x i
+    | Tm_ElimExists { p } ->
+      close_term_ln' p x i
       
-    | Tm_IntroExists _ p e ->
+    | Tm_IntroExists { p; witnesses } ->
       close_term_ln' p x i;
-      close_term_ln_list' e x i
+      close_term_ln_list' witnesses x i
 
-    | Tm_While inv cond body ->
-      close_term_ln' inv x (i + 1);
-      close_st_term_ln' cond x i;
+    | Tm_While { invariant; condition; body } ->
+      close_term_ln' invariant x (i + 1);
+      close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 
-    | Tm_If t0 t1 t2 post ->
-      close_term_ln' t0 x i;    
-      close_st_term_ln' t1 x i;    
-      close_st_term_ln' t2 x i;          
+    | Tm_If { b; then_; else_; post } ->
+      close_term_ln' b x i;    
+      close_st_term_ln' then_ x i;    
+      close_st_term_ln' else_ x i;          
       close_term_ln_opt' post x (i + 1)      
 
-    | Tm_Bind e1 e2 ->
-      close_st_term_ln' e1 x i;
-      close_st_term_ln' e2 x (i + 1)
+    | Tm_Bind { binder; head; body } ->
+      close_term_ln' binder.binder_ty x i;
+      close_st_term_ln' head x i;
+      close_st_term_ln' body x (i + 1)
 
-    | Tm_STApp l _ r ->
-      close_term_ln' l x i;
-      close_term_ln' r x i
+    | Tm_TotBind { head; body } ->
+      close_term_ln' head x i;
+      close_st_term_ln' body x (i + 1)
 
-    | Tm_Abs b _q pre body post ->
+    | Tm_STApp { head; arg } ->
+      close_term_ln' head x i;
+      close_term_ln' arg x i
+
+    | Tm_Abs { b; pre; body; post } ->
       close_term_ln' b.binder_ty x i;
       close_term_ln_opt' pre x (i + 1);
       close_st_term_ln' body x (i + 1);
       close_term_ln_opt' post x (i + 2)
 
-    | Tm_Par preL eL postL preR eR postR ->
-      close_term_ln' preL x i;
-      close_st_term_ln' eL x i;
-      close_term_ln' postL x (i + 1);
-      close_term_ln' preR x i;
-      close_st_term_ln' eR x i;
-      close_term_ln' postR x (i + 1)
+    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      close_term_ln' pre1 x i;
+      close_st_term_ln' body1 x i;
+      close_term_ln' post1 x (i + 1);
+      close_term_ln' pre2 x i;
+      close_st_term_ln' body2 x i;
+      close_term_ln' post2 x (i + 1)
 
-    | Tm_Rewrite p q ->
-      close_term_ln' p x i;
-      close_term_ln' q x i
+    | Tm_Rewrite { t1; t2 } ->
+      close_term_ln' t1 x i;
+      close_term_ln' t2 x i
 
-    | Tm_WithLocal init e ->
-      close_term_ln' init x i;
-      close_st_term_ln' e x (i + 1)
+    | Tm_WithLocal { initializer; body } ->
+      close_term_ln' initializer x i;
+      close_st_term_ln' body x (i + 1)
 
-    | Tm_Admit _ _ t post ->
-      close_term_ln' t x i;
+    | Tm_Admit { typ; post } ->
+      close_term_ln' typ x i;
       close_term_ln_opt' post x (i + 1)
 
-    | Tm_Protect t ->
+    | Tm_Protect { t } ->
       close_st_term_ln' t x i
       
 let close_comp_ln (c:comp) (v:var)
@@ -709,8 +729,6 @@ let close_comp_ln (c:comp) (v:var)
   = close_comp_ln' c v 0
 
 #push-options "--ifuel 2 --z3rlimit_factor 4 --z3cliopt 'smt.qi.eager_threshold=100'"
-
-let test x = assert (x + 1 > x)
 
 let lift_comp_ln #f #g #c1 #c2 (d:lift_comp f g c1 c2)
   : Lemma
@@ -784,7 +802,24 @@ let comp_typing_ln (#f:_) (#g:_) (#c:_) (#u:_) (d:comp_typing f g c u)
     tot_typing_ln inames_typing;
     st_comp_typing_ln st_typing
 
-#push-options "--query_stats --fuel 8 --ifuel 8 --z3rlimit_factor 30"
+let st_typing_ln_tot_bind #f #g #t #c (d:st_typing f g t c{T_TotBind? d})
+  (typing_ln:
+     (#f:RT.fstar_top_env ->
+      #g:env ->
+      #e:st_term ->
+      #c:comp ->
+      d':st_typing f g e c{d' << d} ->
+      Lemma (ensures ln_st e /\ ln_c c)))
+  : Lemma (ensures ln_st t /\ ln_c c) =
+
+  let T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing = d in
+  tot_typing_ln e1_typing;
+  typing_ln e2_typing;
+  open_st_term_ln e2 x;
+  close_comp_ln' c2 x 0;
+  open_comp_ln_inv' (close_comp c2 x) e1 0
+
+#push-options "--query_stats --z3rlimit_factor 30 --fuel 8 --ifuel 8"
 let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
                      (d:st_typing f g t c)
   : Lemma 
@@ -821,13 +856,16 @@ let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
         close_term_ln' e x 0
       end
 
-    | T_Bind _ _ e2 _ _ x _ d1 dc1 d2 bc ->
+    | T_Bind _ _ e2 _ _ _ x _ d1 dc1 d2 bc ->
       st_typing_ln d1;
       tot_typing_ln dc1;
       st_typing_ln d2;
       open_st_term_ln e2 x;
       bind_comp_ln bc
 
+    | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing ->
+      st_typing_ln_tot_bind d st_typing_ln
+      
     | T_If _ _ _ _ _ _ _ tb d1 d2 _ ->
       tot_typing_ln tb;
       st_typing_ln d1;

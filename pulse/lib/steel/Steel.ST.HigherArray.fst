@@ -648,7 +648,7 @@ let memcpy0
 
 #push-options "--z3rlimit 48"
 
-#push-options "--z3rlimit 50"
+#push-options "--z3rlimit 75"
 let blit0 (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
            (src:array t)
            (idx_src: US.t)

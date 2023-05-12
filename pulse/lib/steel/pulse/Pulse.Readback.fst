@@ -316,11 +316,10 @@ let rec readback_ty (t:R.term)
   | Tv_AscribedC t _ _ _ -> admit (); Some (Tm_FStar t)
 
   | Tv_Unknown ->
-    (* Given the new precondition for the bijection lemma,
-    we cannot guarantee that t is pack (Tv_Unknown), it could
-    be any other term not properly reflected. Admit this proof for now. *)
-    admit();
     Some Tm_Unknown
+
+  | Tv_Unsupp ->
+    None
   
 and readback_comp (t:R.term)
   : T.Tac (option (c:comp{ elab_comp c == t})) =

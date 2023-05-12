@@ -92,14 +92,21 @@ let (extension_parser : FStar_Parser_AST_Util.extension_parser) =
                       (abbrevs, FStar_Parser_AST.Nothing) :: uu___4 in
                     (namespaces, FStar_Parser_AST.Nothing) :: uu___3 in
                   FStar_Parser_AST.mkApp head uu___2 r in
-            let uu___1 =
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Ident.id_of_text id in [uu___4] in
-                (true, uu___3, splicer) in
-              FStar_Parser_AST.Splice uu___2 in
-            FStar_Pervasives.Inr uu___1
-let (uu___34 : unit) =
+            let d =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = FStar_Ident.id_of_text id in [uu___3] in
+                (true, uu___2, splicer) in
+              FStar_Parser_AST.Splice uu___1 in
+            let d1 =
+              {
+                FStar_Parser_AST.d = d;
+                FStar_Parser_AST.drange = r;
+                FStar_Parser_AST.quals = [FStar_Parser_AST.Irreducible];
+                FStar_Parser_AST.attrs = [str "uninterpreted_by_smt"]
+              } in
+            FStar_Pervasives.Inr d1
+let (uu___36 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse" extension_parser
 let (parse_pulse :
   FStar_TypeChecker_Env.env ->

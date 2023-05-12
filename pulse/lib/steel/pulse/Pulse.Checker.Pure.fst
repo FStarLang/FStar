@@ -19,7 +19,7 @@ let debug (msg: unit -> T.Tac string) =
   
 let rtb_core_check_term f e =
   debug (fun _ -> Printf.sprintf "Calling core_check_term on %s" (T.term_to_string e));
-  let res = RTB.core_check_term f e E_Total in
+  let res = RTB.core_compute_term_type f e E_Total in
   debug (fun _ -> "Returned");
   res
 
@@ -49,12 +49,34 @@ let rtb_instantiate_implicits f t =
   let res = RTB.instantiate_implicits f t in
   debug (fun _ -> "Returned");
   res
-  
+
+let rtb_core_check_term_at_type g e t =
+  debug (fun _ -> Printf.sprintf "Calling core_check_term on %s and %s"
+                    (T.term_to_string e) (T.term_to_string t));
+  let res = RTB.core_check_term g e t T.E_Total in
+  debug (fun _ -> "Returned");
+  res
+
 let catch_all (f:unit -> Tac (option 'a))
   : Tac (option 'a)
   = match T.catch f with
     | Inl exn -> None
     | Inr v -> v
+
+let instantiate_term_implicits (f:RT.fstar_top_env) (g:env) (t:term) =
+  let f = extend_env_l f g in
+  let rt = elab_term t in
+  let topt = catch_all (fun _ -> rtb_instantiate_implicits f rt) in
+  match topt with
+  | None -> T.fail (Printf.sprintf "%s elaborated to %s; Could not instantiate implicits"
+                       (P.term_to_string t)
+                       (T.term_to_string rt))
+  | Some (t, ty) ->
+    let topt = readback_ty t in
+    let tyopt = readback_ty ty in
+    match topt, tyopt with
+    | Some t, Some ty -> t, ty
+    | _ -> T.fail "instantiate_implicits: could not readback the resulting term/typ"
 
 let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (u:universe & universe_of f0 g t u)
@@ -86,7 +108,31 @@ let tc_meta_callback (f:R.env) (e:R.term)
     in
     res
 
-let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
+let check_term (f:RT.fstar_top_env) (g:env) (t:term)
+  : T.Tac (t:term &
+           ty:term &
+           typing f g t ty)
+  = let fg = extend_env_l f g in
+    let rt = elab_term t in
+    debug (fun _ ->
+            Printf.sprintf "check_tot : called on %s elaborated to %s"
+                      (P.term_to_string t)
+                      (T.term_to_string rt));
+    match tc_meta_callback fg rt with
+    | None -> 
+        T.fail 
+          (Printf.sprintf "check_tot : %s elaborated to %s Not typeable"
+            (P.term_to_string t)
+            (T.term_to_string rt))
+    | Some (| rt, ty', tok |) ->
+      match readback_ty rt, readback_ty ty' with
+      | None, _
+      | _, None -> T.fail "Inexpressible type/term"
+      | Some t, Some ty -> 
+        (| t, ty, tok |)
+
+
+let check_term_and_type (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (t:term &
            u:universe &
            ty:term &
@@ -108,57 +154,22 @@ let check_tot_univ (f:RT.fstar_top_env) (g:env) (t:term)
         let (| u, uty |) = check_universe f g ty in
         (| t, u, ty, uty, tok |)
 
-let check_tot (f:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (t:term &
-           ty:term &
-           typing f g t ty)
-  = let fg = extend_env_l f g in
-    let rt = elab_term t in
-    T.print (Printf.sprintf "check_tot : called on %s elaborated to %s"
-            (P.term_to_string t)
-            (T.term_to_string rt));
-    match tc_meta_callback fg rt with
-    | None -> 
-        T.fail 
-          (Printf.sprintf "check_tot : %s elaborated to %s Not typeable"
-            (P.term_to_string t)
-            (T.term_to_string rt))
-    | Some (| rt, ty', tok |) ->
-      match readback_ty rt, readback_ty ty' with
-      | None, _
-      | _, None -> T.fail "Inexpressible type/term"
-      | Some t, Some ty -> 
-        (| t, ty, tok |)
 
-let tc_expected_meta_callback (f:R.env) (e:R.term) (t:R.term)
-  : T.Tac (option (e:R.term & RT.tot_typing f e t))
-  = let ropt = catch_all (fun _ -> rtb_tc_term f e) in
-    match ropt with
-    | None -> None
-    | Some (e, te) ->
-      //we have typing_token f e te
-      match catch_all (fun _ -> rtb_check_subtyping f te t) with
-      | None -> None
-      | Some p -> //p:subtyping_token f te t
-        Some (| e,
-                RT.T_Sub _ _ _ _
-                  (RT.T_Token _ _ _ (FStar.Squash.get_proof (RTB.typing_token f e (E_Total, te))))
-                  (RT.Relc_typ _ _ _ E_Total RT.R_Sub
-                     (RT.Rel_subtyping_token _ _ _ (FStar.Squash.return_squash p))) |)
+let check_term_with_expected_type (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
+  : T.Tac (e:term & typing f g e t) =
 
-let check_tot_with_expected_typ (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
-  : T.Tac (e:term & typing f g e t)
-  = let fg = extend_env_l f g in
-    let re = elab_term e in
-    let rt = elab_term t in
-    match tc_expected_meta_callback fg re rt with
-    | None -> T.fail (Printf.sprintf "check_tot_with_expected_typ: %s not typeable at %s" 
-                                    (Pulse.Syntax.Printer.term_to_string e)
-                                    (Pulse.Syntax.Printer.term_to_string t))
-    | Some (| re, tok |) ->
-        match readback_ty re with
-        | Some e -> (| e, tok |)
-        | None -> T.fail "readback failed"
+  let e, _ = instantiate_term_implicits f g e in 
+  
+  let fg = extend_env_l f g in
+  let re = elab_term e in
+  let rt = elab_term t in
+
+  let topt = catch_all (fun _ -> rtb_core_check_term_at_type fg re rt) in
+  match topt with
+  | None -> T.fail (Printf.sprintf "check_tot_with_expected_typ: %s not typeable at %s" 
+                      (Pulse.Syntax.Printer.term_to_string e)
+                      (Pulse.Syntax.Printer.term_to_string t))
+  | Some tok -> (| e, RT.T_Token _ _ _ (FStar.Squash.return_squash tok) |)
 
 let tc_with_core (f:R.env) (e:R.term) 
   : T.Tac (option (t:R.term & RT.tot_typing f e t))
@@ -168,7 +179,7 @@ let tc_with_core (f:R.env) (e:R.term)
     | Some (t) ->
       Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |)
 
-let check_with_core (f:RT.fstar_top_env) (g:env) (t:term)
+let core_check_term (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (ty:term &
            typing f g t ty)
   = let fg = extend_env_l f g in
@@ -187,24 +198,34 @@ let check_with_core (f:RT.fstar_top_env) (g:env) (t:term)
         | Some ty -> 
           (| ty, tok |)
 
+let core_check_term_with_expected_type f g e t =
+  let fg = extend_env_l f g in
+  let re = elab_term e in
+  let rt = elab_term t in
+  let topt = catch_all (fun _ -> rtb_core_check_term_at_type fg re rt) in
+  match topt with
+  | None -> T.fail (Printf.sprintf "core_check_term_with_expected_typ: %s not typeable at %s" 
+                      (Pulse.Syntax.Printer.term_to_string e)
+                      (Pulse.Syntax.Printer.term_to_string t))
+  | Some tok -> RT.T_Token _ _ _ (FStar.Squash.return_squash tok)
+
 let check_vprop (f:RT.fstar_top_env)
                 (g:env)
                 (t:term)
-  : T.Tac (t:term & _:tot_typing f g t Tm_VProp)
-  = let (| t, ty, d |) = check_tot f g t in
-    match ty with
-    | Tm_VProp -> (| t, E d |)
-    | _ -> T.fail "Expected a vprop"
+  : T.Tac (t:term & tot_typing f g t Tm_VProp) =
+
+  let (| t, t_typing |) = check_term_with_expected_type f g t Tm_VProp in
+  (| t, E t_typing |)
+
 
 let check_vprop_with_core (f:RT.fstar_top_env)
                           (g:env)
                           (t:term)
-  : T.Tac (tot_typing f g t Tm_VProp)
-  = let (| ty, d |) = check_with_core f g t in
-    match ty with
-    | Tm_VProp -> E d
-    | _ -> T.fail "Expected a vprop"
+  : T.Tac (tot_typing f g t Tm_VProp) =
 
+  let t_typing = core_check_term_with_expected_type f g t Tm_VProp in
+  E t_typing
+  
 let get_non_informative_witness f g u t
   : T.Tac (non_informative_t f g u t)
   = let err () =
@@ -229,20 +250,5 @@ let get_non_informative_witness f g u t
     match eopt with
     | None -> err ()
     | Some e ->
-      let (| x, y |) = check_tot_with_expected_typ f g e (non_informative_witness_t u t) in
+      let (| x, y |) = check_term_with_expected_type f g e (non_informative_witness_t u t) in
       (|x, E y|)
-
-let instantiate_implicits (f:RT.fstar_top_env) (g:env) (t:term) =
-  let f = extend_env_l f g in
-  let rt = elab_term t in
-  let topt = catch_all (fun _ -> rtb_instantiate_implicits f rt) in
-  match topt with
-  | None -> T.fail (Printf.sprintf "%s elaborated to %s; Could not instantiate implicits"
-                       (P.term_to_string t)
-                       (T.term_to_string rt))
-  | Some (t, ty) ->
-    let topt = readback_ty t in
-    let tyopt = readback_ty ty in
-    match topt, tyopt with
-    | Some t, Some ty -> t, ty
-    | _ -> T.fail "instantiate_implicits: could not readback the resulting term/typ"

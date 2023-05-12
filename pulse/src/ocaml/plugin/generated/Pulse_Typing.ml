@@ -634,6 +634,9 @@ let uu___is_Lift_STAtomic_ST uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Lift_STAtomic_ST _ -> true | _ -> false
 let uu___is_Lift_STGhost_STAtomic uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Lift_STGhost_STAtomic _ -> true | _ -> false
+let (wr : Pulse_Syntax.st_term' -> Pulse_Syntax.st_term) =
+  fun t ->
+    { Pulse_Syntax.term1 = t; Pulse_Syntax.range = FStar_Range.range_0 }
 type ('f, 'dummyV0, 'dummyV1) st_comp_typing =
   | STC of env * Pulse_Syntax.st_comp * Pulse_Syntax.var * unit * unit * unit 
 and ('f, 'dummyV0, 'dummyV1, 'dummyV2) comp_typing =
@@ -658,10 +661,13 @@ and ('f, 'dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax.comp_st * (unit, unit, unit, unit) st_typing * (unit, 
   unit, unit, unit) lift_comp 
   | T_Bind of env * Pulse_Syntax.st_term * Pulse_Syntax.st_term *
-  Pulse_Syntax.comp_st * Pulse_Syntax.comp_st * Pulse_Syntax.var *
-  Pulse_Syntax.comp * (unit, unit, unit, unit) st_typing * unit * (unit,
-  unit, unit, unit) st_typing * (unit, unit, unit, unit, unit, unit)
-  bind_comp 
+  Pulse_Syntax.comp_st * Pulse_Syntax.comp_st * Pulse_Syntax.binder *
+  Pulse_Syntax.var * Pulse_Syntax.comp * (unit, unit, unit, unit) st_typing *
+  unit * (unit, unit, unit, unit) st_typing * (unit, unit, unit, unit, 
+  unit, unit) bind_comp 
+  | T_TotBind of env * Pulse_Syntax.term * Pulse_Syntax.st_term *
+  Pulse_Syntax.term * Pulse_Syntax.comp_st * Pulse_Syntax.var * unit * (
+  unit, unit, unit, unit) st_typing 
   | T_If of env * Pulse_Syntax.term * Pulse_Syntax.st_term *
   Pulse_Syntax.st_term * Pulse_Syntax.comp_st * Pulse_Syntax.universe *
   Pulse_Syntax.var * unit * (unit, unit, unit, unit) st_typing * (unit, 
@@ -711,6 +717,8 @@ let uu___is_T_Lift uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | T_Lift _ -> true | _ -> false
 let uu___is_T_Bind uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | T_Bind _ -> true | _ -> false
+let uu___is_T_TotBind uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | T_TotBind _ -> true | _ -> false
 let uu___is_T_If uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | T_If _ -> true | _ -> false
 let uu___is_T_Frame uu___3 uu___2 uu___1 uu___ uu___4 =

@@ -8,3 +8,5 @@ let par = ()
 let invariant = ()
 let rewrite = ()
 let local = ()
+let tot = ()
+
