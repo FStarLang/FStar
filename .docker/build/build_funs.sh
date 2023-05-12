@@ -81,7 +81,7 @@ function fstar_default_build () {
     fi &
 
     # Build F*, along with fstarlib
-    if ! make -j $threads ci-utest-prelude; then
+    if ! make -j $threads ci-pre; then
         echo Warm-up failed
         echo Failure >$result_file
         return 1
