@@ -70,6 +70,13 @@ jobs:
         run: |
           echo "CI_SKIP_IMAGE_TAG=1" >> $GITHUB_ENV
 
+      - name: Make sure base image is present, or build it
+        run: |
+          if ! docker images | grep '^fstar_ci_base '; then
+            echo '*** REBUILDING fstar_ci_base image'
+            docker build -f .docker/base.Dockerfile -t fstar_ci_base .
+          fi
+
       - name: Build FStar and its dependencies
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
