@@ -1060,7 +1060,7 @@ type extension_parser =
   open_namespaces_and_abbreviations ->
     Prims.string ->
       FStar_Compiler_Range_Type.range ->
-        (error_message, FStar_Parser_AST.decl') FStar_Pervasives.either
+        (error_message, FStar_Parser_AST.decl) FStar_Pervasives.either
 let (extension_parser_table : extension_parser FStar_Compiler_Util.smap) =
   FStar_Compiler_Util.smap_create (Prims.of_int (20))
 let (register_extension_parser : Prims.string -> extension_parser -> unit) =
