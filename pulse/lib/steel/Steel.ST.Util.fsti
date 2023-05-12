@@ -297,3 +297,133 @@ val vpattern_rewrite
     (fun _ -> p x2)
     (x1 == x2)
     (fun _ -> True)
+
+/// A separating, ghost-state implication. This is a generalization of
+/// the usual "magic wand", in the sense that we don't care about heap
+/// equations.
+
+val implies_
+  (hyp concl: vprop)
+: Tot vprop
+
+[@@__reduce__]
+let ( @==> ) = implies_
+
+val elim_implies
+  (#opened: _)
+  (hyp concl: vprop)
+: STGhostT unit opened
+    ((hyp @==> concl) `star` hyp)
+    (fun _ -> concl)
+
+val intro_implies
+  (#opened: _)
+  (hyp concl: vprop)
+  (v: vprop)
+  (f_elim: (
+    (opened: inames) ->
+    STGhostT unit opened
+    (v `star` hyp)
+    (fun _ -> concl)
+  ))
+: STGhostT unit opened
+    v
+    (fun _ -> hyp @==> concl)
+
+let implies_uncurry
+  (#opened: _)
+  (h1 h2 c: vprop)
+: STGhostT unit opened
+    (h1 @==> (h2 @==> c))
+    (fun _ -> (h1 `star` h2) @==> c)
+= intro_implies (h1 `star` h2) c (h1 @==> (h2 @==> c)) (fun _ ->
+    elim_implies h1 (h2 @==> c);
+    elim_implies h2 c
+  )
+
+let implies_curry
+  (#opened: _)
+  (h1 h2 c: vprop)
+: STGhostT unit opened
+    ((h1 `star` h2) @==> c)
+    (fun _ -> (h1 @==> (h2 @==> c)))
+= intro_implies h1 (h2 @==> c) ((h1 `star` h2) @==> c) (fun _ ->
+    intro_implies h2 c (((h1 `star` h2) @==> c) `star` h1) (fun _ ->
+    elim_implies (h1 `star` h2) c
+  ))
+
+let implies_join
+  (#opened: _)
+  (h1 c1 h2 c2: vprop)
+: STGhostT unit opened
+    ((h1 @==> c1) `star` (h2 @==> c2))
+    (fun _ -> (h1 `star` h2) @==> (c1 `star` c2))
+= intro_implies (h1 `star` h2) (c1 `star` c2) ((h1 @==> c1) `star` (h2 @==> c2)) (fun _ ->
+    elim_implies h1 c1;
+    elim_implies h2 c2
+  )
+
+let implies_trans
+  (#opened: _)
+  (v1 v2 v3: vprop)
+: STGhostT unit opened
+    ((v1 @==> v2) `star` (v2 @==> v3))
+    (fun _ -> v1 @==> v3)
+= intro_implies v1 v3 ((v1 @==> v2) `star` (v2 @==> v3)) (fun _ ->
+    elim_implies v1 v2;
+    elim_implies v2 v3
+  )
+
+let adjoint_elim_implies
+  (#opened: _)
+  (p q r: vprop)
+  (f: (
+    (opened: _) ->
+    STGhostT unit opened
+    p (fun _ -> q @==> r)
+  ))
+: STGhostT unit opened
+    (p `star` q)
+    (fun _ -> r)
+= f _;
+  elim_implies q r
+
+let adjoint_intro_implies
+  (#opened: _)
+  (p q r: vprop)
+  (f: (
+    (opened: _) ->
+    STGhostT unit opened
+    (p `star` q) (fun _ -> r)
+  ))
+: STGhostT unit opened
+    p
+    (fun _ -> q @==> r)
+= intro_implies q r p (fun _ ->
+    f _
+  )
+
+/// The magic wand is a implies (but not the converse)
+
+let wand_is_implies
+  (#opened: _)
+  (wand: (vprop -> vprop -> vprop))
+  (s1 s2: vprop)
+  (interp_wand:
+    (h: mem) ->
+    Lemma
+    (interp (hp_of (s1 `wand` s2)) h <==> (forall (h1:mem) . (disjoint h h1 /\ interp (hp_of s1) h1) ==> interp (hp_of s2) (h `join` h1)))
+  )
+: STGhostT unit opened
+  (s1 `wand` s2)
+  (fun _ -> s1 @==> s2)
+= intro_implies s1 s2 (s1 `wand` s2) (fun _ ->
+    weaken (s1 `star` (s1 `wand` s2)) s2 (fun m ->
+    interp_star (hp_of s1) (hp_of (s1 `wand` s2)) m;
+    let m1 = FStar.IndefiniteDescription.indefinite_description_ghost mem (fun m1 -> exists m2 . disjoint m1 m2 /\ interp (hp_of s1) m1 /\ interp (hp_of (s1 `wand` s2)) m2 /\ join m1 m2 == m) in
+    let m2 = FStar.IndefiniteDescription.indefinite_description_ghost mem (fun m2 ->
+    disjoint m1 m2 /\ interp (hp_of s1) m1 /\ interp (hp_of (s1 `wand` s2)) m2 /\ join m1 m2 == m) in
+    interp_wand m2;
+    assert (interp (hp_of s2) (m2 `join` m1));
+    join_commutative m2 m1
+  ))

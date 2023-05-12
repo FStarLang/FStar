@@ -231,3 +231,73 @@ let vpattern_rewrite
     (x1 == x2)
     (fun _ -> True)
 = rewrite (p x1) (p x2)
+
+(* Separating ghost-state implication *)
+
+let elim_implies_t
+  (hyp concl: vprop)
+  (v: vprop)
+: Tot Type
+= (opened: inames) -> STGhostT unit opened (v `star` hyp) (fun _ -> concl)
+
+let is_implies
+  (hyp concl: vprop)
+  (v: vprop)
+: GTot prop
+= squash (elim_implies_t hyp concl v)
+
+let implies_
+  (hyp concl: vprop)
+: Tot vprop
+= exists_ (fun (v: vprop) ->
+    v `star` pure (is_implies hyp concl v)
+  )
+
+#set-options "--ide_id_info_off"
+
+let implies_unfold
+  (#opened: _)
+  (hyp concl: vprop)
+: STGhost vprop opened
+    (hyp @==> concl)
+    (fun v -> v)
+    True
+    (fun v -> is_implies hyp concl v)
+= let v = elim_exists () in
+  let _ = elim_pure _ in
+  v
+
+let implies_apply
+  (#opened: _)
+  (v hyp concl: vprop)
+: STGhost unit opened
+    (v `star` hyp)
+    (fun _ -> concl)
+    (is_implies hyp concl v)
+    (fun _ -> True)
+= let sq : squash (is_implies hyp concl v) = () in
+  let _ : squash (elim_implies_t hyp concl v) = FStar.Squash.join_squash sq in
+  let f : Ghost.erased (elim_implies_t hyp concl v) = FStar.IndefiniteDescription.elim_squash #(elim_implies_t hyp concl v) () in
+  Ghost.reveal f _
+
+let elim_implies
+  (#opened: _)
+  (hyp concl: vprop)
+: STGhostT unit opened
+    ((hyp @==> concl) `star` hyp)
+    (fun _ -> concl)
+= let v = implies_unfold hyp concl in
+  implies_apply v hyp concl
+
+let implies_fold
+  (#opened: _)
+  (hyp concl: vprop)
+  (v: vprop)
+  (f_elim: elim_implies_t hyp concl v)
+: STGhostT unit opened
+    v
+    (fun _ -> hyp @==> concl)
+= intro_pure (squash (elim_implies_t hyp concl v));
+  intro_exists v (fun v -> v `star` pure (squash (elim_implies_t hyp concl v)))
+
+let intro_implies = implies_fold
