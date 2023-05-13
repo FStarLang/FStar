@@ -74,7 +74,11 @@ jobs:
         run: |
           if ! docker images | grep '^fstar_ci_base '; then
             echo '*** REBUILDING fstar_ci_base image'
+            CI_IMAGEBUILD_INITIAL_TIMESTAMP=$(date '+%s')
             docker build -f .docker/base.Dockerfile -t fstar_ci_base .
+            CI_IMAGEBUILD_FINAL_TIMESTAMP=$(date '+%s')
+            echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP='$CI_IMAGEBUILD_INITIAL_TIMESTAMP'" >> $GITHUB_ENV
+            echo "CI_IMAGEBUILD_FINAL_TIMESTAMP='$CI_IMAGEBUILD_FINAL_TIMESTAMP'" >> $GITHUB_ENV
           fi
 
       - name: Build FStar and its dependencies
@@ -124,6 +128,15 @@ jobs:
           esac
           echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
           echo 'CI_STATUS='"$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
+          if [ -n "$CI_IMAGEBUILD_INITIALTIMESTAMP" ]; then
+            DIFF=$(( $CI_IMAGEBUILD_FINAL_TIMESTAMP - $CI_IMAGEBUILD_INITIAL_TIMESTAMP ))
+            SS=$(( $DIFF % 60 ))
+            MM=$(( ($DIFF / 60) % 60 ))
+            HH=$(( $DIFF / 3600 ))
+            CI_IMAGEBUILD_MSG=" (base image rebuilt in ${HH}h ${MM}m ${SS}s)"
+            echo "CI_IMAGEBUILD_MSG='$CI_IMAGEBUILD_MSG'" >> $GITHUB_ENV
+          fi
+
       - name: Output build log error summary
         if: ${{ always () }}
         run: |
@@ -165,7 +178,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "plain_text",
-                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s"
+                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s${{env.CI_IMAGEBUILD_MSG}}"
                   }
                 }
               ]
