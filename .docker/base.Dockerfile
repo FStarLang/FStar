@@ -67,7 +67,8 @@ ENV DOTNET_ROOT /home/opam/dotnet
 RUN wget -nv https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a6a-4d0d-b42e-dfd3b880e222/008a93f83aba6d1acf75ded3d2cfba24/dotnet-sdk-6.0.400-linux-x64.tar.gz && \
     mkdir -p $DOTNET_ROOT && \
     tar xf dotnet-sdk-6.0.400-linux-x64.tar.gz -C $DOTNET_ROOT && \
-    echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
+    echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile && \
+    rm -f dotnet-sdk*.tar.gz
 
 # Install OCaml
 ARG OCAML_VERSION=4.12.0
@@ -89,8 +90,9 @@ RUN mkdir $HOME/bin
 RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 
 # Install runlim
-RUN git clone https://github.com/arminbiere/runlim
+RUN git clone --depth 1 https://github.com/arminbiere/runlim
 RUN (cd runlim && ./configure.sh --prefix=$HOME/bin && make && make install)
+RUN rm -rf runlim
 
 WORKDIR $HOME
 
