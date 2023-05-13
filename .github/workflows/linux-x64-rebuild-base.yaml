@@ -1,0 +1,137 @@
+name: Rebuild base image
+on:
+  schedule:
+    # 2AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Update the base image even if running F* CI fails
+        required: true
+        type: boolean
+jobs:
+  build:
+    runs-on: [self-hosted, linux, X64]
+    defaults:
+      run:
+        # Setting the default shell to bash. This is not only more standard,
+        # but also makes sure that we run with -o pipefail, so we can safely
+        # pipe data (such as | tee LOG) without missing out on failures
+        # and getting false positives. If you want to change the default shell,
+        # keep in mind you need a way to handle this.
+        shell: bash
+
+    steps:
+      - name: Rebuild base image from scratch
+        run: |
+          TEMP_IMAGE_NAME=fstar:update-base-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          CI_IMAGEBUILD_INITIAL_TIMESTAMP=$(date '+%s')
+          docker build --pull --no-cache -f .docker/base.Dockerfile -t ${TEMP_IMAGE_NAME} .
+          CI_IMAGEBUILD_FINAL_TIMESTAMP=$(date '+%s')
+          echo "TEMP_IMAGE_NAME=$TEMP_IMAGE_NAME" >> $GITHUB_ENV
+
+      - name: Check that F* CI passes
+        run: |
+          echo "CI_INITIAL_TIMESTAMP=$(date '+%s')" >> $GITHUB_ENV
+          ci_docker_image_tag=fstar:update-base-test-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
+
+          CI_TARGET=uregressions
+          docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_TARGET="$CI_TARGET" . |& tee BUILDLOG
+          ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
+          $ci_docker_status
+
+      - name: Tag base image
+        if: ${{ success () || inputs.force }}
+        run: |
+          docker tag ${TEMP_IMAGE_NAME} fstar_ci_base
+
+      - name: Remove intermediate images
+        if: ${{ always() }}
+        run: |
+          docker rmi -f ${TEMP_IMAGE_NAME} || true
+          docker rmi -f ${ci_docker_image_tag} || true
+
+      - name: Compute elapsed time and status message
+        if: ${{ always() }}
+        run: |
+          CI_FINAL_TIMESTAMP=$(date '+%s')
+          CI_TIME_DIFF=$(( $CI_FINAL_TIMESTAMP - $CI_INITIAL_TIMESTAMP ))
+          echo "CI_TIME_DIFF_S=$(( $CI_TIME_DIFF % 60 ))" >> $GITHUB_ENV
+          echo "CI_TIME_DIFF_M=$(( ($CI_TIME_DIFF / 60) % 60 ))" >> $GITHUB_ENV
+          echo "CI_TIME_DIFF_H=$(( $CI_TIME_DIFF / 3600 ))" >> $GITHUB_ENV
+          case ${{ job.status }} in
+          (success)
+            if orange_contents="$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/orange_file.txt')" && [[ $orange_contents = '' ]] ; then
+              echo "CI_EMOJI=✅" >> $GITHUB_ENV
+            else
+              echo "CI_EMOJI=⚠" >> $GITHUB_ENV
+            fi
+            ;;
+          (cancelled)
+            echo "CI_EMOJI=⚠" >> $GITHUB_ENV
+            ;;
+          (*)
+            echo "CI_EMOJI=❌" >> $GITHUB_ENV
+            ;;
+          esac
+          echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
+          echo 'CI_STATUS='"$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
+          if [ -n "$CI_IMAGEBUILD_INITIALTIMESTAMP" ]; then
+            DIFF=$(( $CI_IMAGEBUILD_FINAL_TIMESTAMP - $CI_IMAGEBUILD_INITIAL_TIMESTAMP ))
+            SS=$(( $DIFF % 60 ))
+            MM=$(( ($DIFF / 60) % 60 ))
+            HH=$(( $DIFF / 3600 ))
+            CI_IMAGEBUILD_MSG=" (base image rebuilt in ${HH}h ${MM}m ${SS}s)"
+            echo "CI_IMAGEBUILD_MSG='$CI_IMAGEBUILD_MSG'" >> $GITHUB_ENV
+          fi
+
+      - name: Output build log error summary
+        if: ${{ always () }}
+        run: |
+          # Just outputs to the github snippet. Could be part of slack message.
+          # This command never triggers a failure
+          grep -C10 -Ew ' \*\*\* |\(Error' BUILDLOG || true
+
+      - name: Post to the Slack channel
+        if: ${{ always() && (github.event_name != 'workflow_dispatch') }}
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ env.CI_SLACK_CHANNEL }}
+          payload: |
+            {
+              "blocks" : [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Update F* base CI image\n<${{ github.event.head_commit.url || github.event.pull_request.html_url }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ github.event.head_commit.author.username || github.event.pull_request.user.login }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "plain_text",
+                    "text": ${{ toJSON(github.event.head_commit.message || github.event.pull_request.title) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ env.CI_STATUS }}>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s${{env.CI_IMAGEBUILD_MSG}}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

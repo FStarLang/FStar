@@ -160,7 +160,7 @@ jobs:
           echo "CI_TIME_DIFF_H=$(( $CI_TIME_DIFF / 3600 ))" >> $GITHUB_ENV
           case ${{ job.status }} in
           (success)
-            if orange_contents="$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/orange_file.txt')" && [[ $orange_contents = '' ]] ; then
+            if orange_contents="$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/orange_file.txt')" && [[ $orange_contents = '' ]] ; then
               echo "CI_EMOJI=✅" >> $GITHUB_ENV
             else
               echo "CI_EMOJI=⚠" >> $GITHUB_ENV
@@ -174,7 +174,7 @@ jobs:
             ;;
           esac
           echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
-          echo 'CI_STATUS='"$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
+          echo 'CI_STATUS='"$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
           if [ -n "$CI_IMAGEBUILD_INITIALTIMESTAMP" ]; then
             DIFF=$(( $CI_IMAGEBUILD_FINAL_TIMESTAMP - $CI_IMAGEBUILD_INITIAL_TIMESTAMP ))
             SS=$(( $DIFF % 60 ))
