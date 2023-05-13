@@ -69,15 +69,13 @@ jobs:
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_skip_image_tag }}
         run: |
           echo "CI_SKIP_IMAGE_TAG=1" >> $GITHUB_ENV
+
       - name: Build FStar and its dependencies
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
-          ci_docker_builder=builder_fstar_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
-          echo "ci_docker_builder=$ci_docker_builder" >> $GITHUB_ENV
-          docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
           if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL . |& tee BUILDLOG
+          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
@@ -86,11 +84,6 @@ jobs:
             docker tag $ci_docker_image_tag fstar:local-commit-$GITHUB_SHA
           fi
           $ci_docker_status
-
-      - name: Clean up temporary container
-        if: ${{ always() }}
-        run: |
-          docker buildx rm $ci_docker_builder
 
       - name: Pushed the generated hints
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_refresh_hints }}
