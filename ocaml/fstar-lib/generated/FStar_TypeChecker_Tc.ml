@@ -3230,10 +3230,33 @@ let (tc_decl' :
                 (let ses =
                    env.FStar_TypeChecker_Env.splice env is_typed lids t
                      se2.FStar_Syntax_Syntax.sigrng in
+                 let ses1 =
+                   if is_typed
+                   then
+                     let sigquals =
+                       match se2.FStar_Syntax_Syntax.sigquals with
+                       | [] -> [FStar_Syntax_Syntax.Visible_default]
+                       | qs -> qs in
+                     FStar_Compiler_List.map
+                       (fun sp ->
+                          {
+                            FStar_Syntax_Syntax.sigel =
+                              (sp.FStar_Syntax_Syntax.sigel);
+                            FStar_Syntax_Syntax.sigrng =
+                              (sp.FStar_Syntax_Syntax.sigrng);
+                            FStar_Syntax_Syntax.sigquals = sigquals;
+                            FStar_Syntax_Syntax.sigmeta =
+                              (sp.FStar_Syntax_Syntax.sigmeta);
+                            FStar_Syntax_Syntax.sigattrs =
+                              (se2.FStar_Syntax_Syntax.sigattrs);
+                            FStar_Syntax_Syntax.sigopts =
+                              (sp.FStar_Syntax_Syntax.sigopts)
+                          }) ses
+                   else ses in
                  let dsenv =
                    FStar_Compiler_List.fold_left
                      FStar_Syntax_DsEnv.push_sigelt_force
-                     env.FStar_TypeChecker_Env.dsenv ses in
+                     env.FStar_TypeChecker_Env.dsenv ses1 in
                  let env1 =
                    {
                      FStar_TypeChecker_Env.solver =
@@ -3344,13 +3367,13 @@ let (tc_decl' :
                     let uu___5 =
                       let uu___6 =
                         FStar_Compiler_List.map
-                          FStar_Syntax_Print.sigelt_to_string ses in
+                          FStar_Syntax_Print.sigelt_to_string ses1 in
                       FStar_Compiler_Effect.op_Less_Bar
                         (FStar_String.concat "\n") uu___6 in
                     FStar_Compiler_Util.print1
                       "Splice returned sigelts {\n%s\n}\n" uu___5
                   else ());
-                 if is_typed then (ses, [], env1) else ([], ses, env1)))
+                 if is_typed then (ses1, [], env1) else ([], ses1, env1)))
            | FStar_Syntax_Syntax.Sig_let (lbs, lids) ->
                let uu___2 =
                  let uu___3 =
@@ -4531,7 +4554,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___912 : unit) =
+let (uu___918 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

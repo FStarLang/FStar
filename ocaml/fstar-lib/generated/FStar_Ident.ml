@@ -9,8 +9,8 @@ let (__proj__Mkident__item__idText : ident -> Prims.string) =
 let (__proj__Mkident__item__idRange :
   ident -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | { idText; idRange;_} -> idRange
-type path = Prims.string Prims.list[@@deriving yojson,show,yojson,show]
-type ipath = ident Prims.list[@@deriving yojson,show,yojson,show]
+type path = Prims.string Prims.list[@@deriving yojson,show]
+type ipath = ident Prims.list[@@deriving yojson,show]
 type lident =
   {
   ns: ipath ;
@@ -95,7 +95,7 @@ let (lid_equals : lident -> lident -> Prims.bool) =
   fun l1 -> fun l2 -> l1.str = l2.str
 let (ident_equals : ident -> ident -> Prims.bool) =
   fun id1 -> fun id2 -> id1.idText = id2.idText
-type lid = lident[@@deriving yojson,show,yojson,show]
+type lid = lident[@@deriving yojson,show]
 let (range_of_lid : lident -> FStar_Compiler_Range_Type.range) =
   fun lid1 -> range_of_id lid1.ident
 let (set_lid_range : lident -> FStar_Compiler_Range_Type.range -> lident) =

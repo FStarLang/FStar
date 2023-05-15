@@ -8413,7 +8413,9 @@ and (desugar_decl_aux :
                      (sigelt.FStar_Syntax_Syntax.sigquals);
                    FStar_Syntax_Syntax.sigmeta =
                      (sigelt.FStar_Syntax_Syntax.sigmeta);
-                   FStar_Syntax_Syntax.sigattrs = attrs1;
+                   FStar_Syntax_Syntax.sigattrs =
+                     (FStar_Compiler_List.op_At
+                        sigelt.FStar_Syntax_Syntax.sigattrs attrs1);
                    FStar_Syntax_Syntax.sigopts =
                      (sigelt.FStar_Syntax_Syntax.sigopts)
                  }) sigelts in
@@ -9310,10 +9312,14 @@ and (desugar_decl_noattrs :
                       ids in
                   (is_typed, uu___2, t1) in
                 FStar_Syntax_Syntax.Sig_splice uu___1 in
+              let uu___1 =
+                FStar_Compiler_List.map
+                  (trans_qual1 FStar_Pervasives_Native.None)
+                  d.FStar_Parser_AST.quals in
               {
                 FStar_Syntax_Syntax.sigel = uu___;
                 FStar_Syntax_Syntax.sigrng = (d.FStar_Parser_AST.drange);
-                FStar_Syntax_Syntax.sigquals = [];
+                FStar_Syntax_Syntax.sigquals = uu___1;
                 FStar_Syntax_Syntax.sigmeta =
                   FStar_Syntax_Syntax.default_sigmeta;
                 FStar_Syntax_Syntax.sigattrs = [];
@@ -9349,13 +9355,19 @@ and (desugar_decl_noattrs :
                           (error.FStar_Parser_AST_Util.message))
                         error.FStar_Parser_AST_Util.range
                   | FStar_Pervasives.Inr d' ->
+                      let quals =
+                        FStar_Compiler_List.op_At d'.FStar_Parser_AST.quals
+                          d.FStar_Parser_AST.quals in
+                      let attrs =
+                        FStar_Compiler_List.op_At d'.FStar_Parser_AST.attrs
+                          d.FStar_Parser_AST.attrs in
                       desugar_decl_aux env
                         {
-                          FStar_Parser_AST.d = d';
+                          FStar_Parser_AST.d = (d'.FStar_Parser_AST.d);
                           FStar_Parser_AST.drange =
                             (d.FStar_Parser_AST.drange);
-                          FStar_Parser_AST.quals = (d.FStar_Parser_AST.quals);
-                          FStar_Parser_AST.attrs = (d.FStar_Parser_AST.attrs)
+                          FStar_Parser_AST.quals = quals;
+                          FStar_Parser_AST.attrs = attrs
                         }))
 let (desugar_decls :
   env_t ->
