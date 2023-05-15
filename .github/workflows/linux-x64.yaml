@@ -234,7 +234,7 @@ jobs:
                 {
                   "type": "section",
                   "text": {
-                    "type": "plain_text",
+                    "type": "mrkdwn",
                     "text": "<${{env.RMON_URL}}|Resource summary>\nTotal CPU usage: ${{ env.FSTAR_CI_MEASURE_CPU }}\nTotal memory usage: ${{ env.FSTAR_CI_MEASURE_MEM }}"
                   }
                 }
