@@ -694,7 +694,14 @@ let encode_top_level_let :
           bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
             (* some, but not all are lemmas; impossible *)
             if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
-            let t_norm = norm_before_encoding env lb.lbtyp in
+            (* #2894: If this is a recursive definition, make sure to unfold the type
+            until the arrow structure is evident (we use whnf for it). Otherwise
+            there will be thunking inconsistencies in the encoding. *)
+            let t_norm =
+              if is_rec
+              then N.unfold_whnf' [Env.AllowUnboundUniverses] env.tcenv lb.lbtyp
+              else norm_before_encoding env lb.lbtyp
+            in
             (* We are declaring the top_level_let with t_norm which might contain *)
             (* non-reified reifiable computation type. *)
             (* TODO : clear this mess, the declaration should have a type corresponding to *)
