@@ -8606,9 +8606,7 @@ and (desugar_decl_aux :
                      (sigelt.FStar_Syntax_Syntax.sigquals);
                    FStar_Syntax_Syntax.sigmeta =
                      (sigelt.FStar_Syntax_Syntax.sigmeta);
-                   FStar_Syntax_Syntax.sigattrs =
-                     (FStar_Compiler_List.op_At
-                        sigelt.FStar_Syntax_Syntax.sigattrs attrs1);
+                   FStar_Syntax_Syntax.sigattrs = attrs1;
                    FStar_Syntax_Syntax.sigopts =
                      (sigelt.FStar_Syntax_Syntax.sigopts)
                  }) sigelts in

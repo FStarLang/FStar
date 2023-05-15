@@ -7,8 +7,8 @@ let __proj__Mkwithinfo_t__item__v : 'a . 'a withinfo_t -> 'a =
 let __proj__Mkwithinfo_t__item__p :
   'a . 'a withinfo_t -> FStar_Compiler_Range_Type.range =
   fun projectee -> match projectee with | { v; p;_} -> p
-type var = FStar_Ident.lident withinfo_t[@@deriving yojson,show,yojson,show]
-type sconst = FStar_Const.sconst[@@deriving yojson,show,yojson,show]
+type var = FStar_Ident.lident withinfo_t[@@deriving yojson,show]
+type sconst = FStar_Const.sconst[@@deriving yojson,show]
 type pragma =
   | SetOptions of Prims.string 
   | ResetOptions of Prims.string FStar_Pervasives_Native.option 
@@ -41,8 +41,14 @@ let (uu___is_RestartSolver : pragma -> Prims.bool) =
 let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | PrintEffectsGraph -> true | uu___ -> false
-type 'a memo = 'a FStar_Pervasives_Native.option FStar_Compiler_Effect.ref
-[@@deriving yojson,show,yojson,show]
+type 'a memo =
+  (('a FStar_Pervasives_Native.option FStar_Compiler_Effect.ref)[@printer
+                                                                  fun fmt ->
+                                                                    fun _ ->
+                                                                    Format.pp_print_string
+                                                                    fmt
+                                                                    "None"])
+[@@deriving yojson,show]
 type emb_typ =
   | ET_abstract 
   | ET_fun of (emb_typ * emb_typ) 
@@ -102,13 +108,13 @@ let (__proj__U_unif__item___0 :
   = fun projectee -> match projectee with | U_unif _0 -> _0
 let (uu___is_U_unknown : universe -> Prims.bool) =
   fun projectee -> match projectee with | U_unknown -> true | uu___ -> false
-type univ_name = FStar_Ident.ident[@@deriving yojson,show,yojson,show]
+type univ_name = FStar_Ident.ident[@@deriving yojson,show]
 type universe_uvar =
   (universe FStar_Pervasives_Native.option FStar_Unionfind.p_uvar * version *
-    FStar_Compiler_Range_Type.range)[@@deriving yojson,show,yojson,show]
-type univ_names = univ_name Prims.list[@@deriving yojson,show,yojson,show]
-type universes = universe Prims.list[@@deriving yojson,show,yojson,show]
-type monad_name = FStar_Ident.lident[@@deriving yojson,show,yojson,show]
+    FStar_Compiler_Range_Type.range)[@@deriving yojson,show]
+type univ_names = univ_name Prims.list[@@deriving yojson,show]
+type universes = universe Prims.list[@@deriving yojson,show]
+type monad_name = FStar_Ident.lident[@@deriving yojson,show]
 type quote_kind =
   | Quote_static 
   | Quote_dynamic [@@deriving yojson,show]
