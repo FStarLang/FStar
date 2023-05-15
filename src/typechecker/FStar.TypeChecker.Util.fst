@@ -1376,7 +1376,7 @@ let strengthen_precondition
        {g0 with guard_f=Trivial}
 
 
-let lcomp_has_trivial_postcondition lc =
+let lcomp_has_trivial_postcondition (lc:lcomp) =
     TcComm.is_tot_or_gtot_lcomp lc
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
                    lc.cflags
@@ -2997,7 +2997,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
     false, [U.mk_letbinding lbname [] S.tun C.effect_Tot_lid def [] Range.dummyRange]
   in
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
-  let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
+  let sig_ctx = mk_sigelt (Sig_let {lbs=lb; lids=[ lident ]}) in
   {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
   mk (Tm_fvar fv) Range.dummyRange
 
@@ -3111,7 +3111,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
           | Sig_fail _ ->
             () (* just ignore it, the member ses have the attribute too *)
 
-          | Sig_let((false, [lb]), _) ->
+          | Sig_let {lbs=(false, [lb])} ->
             let _, body, _ = U.abs_formals lb.lbdef in
             if not (N.non_info_norm env body)
             then raise_error
@@ -3168,7 +3168,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       then err "ill-formed combination";
       check_erasable quals se r;
       match se.sigel with
-      | Sig_let((is_rec, _), _) -> //let rec
+      | Sig_let {lbs=(is_rec, _)} -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)
@@ -3575,7 +3575,7 @@ let try_lookup_record_type env (typename:lident)
       | _, [dc] ->
         let se = Env.lookup_sigelt env dc in
         (match se with
-         | Some ({sigel=Sig_datacon (_, _, t, _, nparms, _)}) ->
+         | Some ({sigel=Sig_datacon {t; num_ty_params=nparms}}) ->
            let formals, c = U.arrow_formals t in
            if nparms < List.length formals
            then let _, fields = List.splitAt nparms formals in //remove params

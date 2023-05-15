@@ -929,7 +929,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         no
 
     // Don't unfold HasMaskedEffect
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _, _, _, _, _ when
             List.contains HasMaskedEffect qs ->
         log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
@@ -940,7 +940,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         no
 
     // Recursive lets may only be unfolded when Zeta is on
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _, _, _, _, _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
         log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
@@ -3297,22 +3297,37 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     let sigattrs = List.map Mktuple3?._3 <| List.map (elim_uvars_aux_t env [] []) s.sigattrs in
     let s = { s with sigattrs } in
     match s.sigel with
-    | Sig_inductive_typ (lid, univ_names, binders, num_uniform, typ, lids, lids') ->
+    | Sig_inductive_typ {lid; us=univ_names; params=binders;
+                         num_uniform_params=num_uniform;
+                         t=typ;
+                         mutuals=lids;
+                         ds=lids'} ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
-      {s with sigel = Sig_inductive_typ(lid, univ_names, binders, num_uniform, typ, lids, lids')}
+      {s with sigel = Sig_inductive_typ {lid;
+                                         us=univ_names;
+                                         params=binders;
+                                         num_uniform_params=num_uniform;
+                                         t=typ;
+                                         mutuals=lids;
+                                         ds=lids'}}
 
-    | Sig_bundle (sigs, lids) ->
-      {s with sigel = Sig_bundle(List.map (elim_uvars env) sigs, lids)}
+    | Sig_bundle {ses=sigs; lids} ->
+      {s with sigel = Sig_bundle {ses=List.map (elim_uvars env) sigs; lids}}
 
-    | Sig_datacon (lid, univ_names, typ, lident, i, lids) ->
+    | Sig_datacon {lid; us=univ_names; t=typ; ty_lid=lident; num_ty_params=i; mutuals=lids} ->
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
-      {s with sigel = Sig_datacon(lid, univ_names, typ, lident, i, lids)}
+      {s with sigel = Sig_datacon {lid;
+                                   us=univ_names;
+                                   t=typ;
+                                   ty_lid=lident;
+                                   num_ty_params=i;
+                                   mutuals=lids}}
 
-    | Sig_declare_typ (lid, univ_names, typ) ->
+    | Sig_declare_typ {lid; us=univ_names; t=typ} ->
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
-      {s with sigel = Sig_declare_typ(lid, univ_names, typ)}
+      {s with sigel = Sig_declare_typ {lid; us=univ_names; t=typ}}
 
-    | Sig_let((b, lbs), lids) ->
+    | Sig_let {lbs=(b, lbs); lids} ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
         let elim t = Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t)) in
@@ -3322,11 +3337,11 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                  lbtyp   = lbtyp;
                  lbdef   = lbdef})
       in
-      {s with sigel = Sig_let((b, lbs), lids)}
+      {s with sigel = Sig_let {lbs=(b, lbs); lids}}
 
-    | Sig_assume (l, us, t) ->
+    | Sig_assume {lid=l; us; phi=t} ->
       let us, _, t = elim_uvars_aux_t env us [] t in
-      {s with sigel = Sig_assume (l, us, t)}
+      {s with sigel = Sig_assume {lid=l; us; phi=t}}
 
     | Sig_new_effect ed ->
       //AR: S.t_unit is just a dummy comp type, we only care about the binders
@@ -3408,9 +3423,9 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                                   lift_wp = elim_tscheme_opt sub_eff.lift_wp} in
       {s with sigel=Sig_sub_effect sub_eff}
 
-    | Sig_effect_abbrev(lid, univ_names, binders, comp, flags) ->
+    | Sig_effect_abbrev {lid; us=univ_names; bs=binders; comp; cflags=flags} ->
       let univ_names, binders, comp = elim_uvars_aux_c env univ_names binders comp in
-      {s with sigel = Sig_effect_abbrev (lid, univ_names, binders, comp, flags)}
+      {s with sigel = Sig_effect_abbrev {lid; us=univ_names; bs=binders; comp; cflags=flags}}
 
     | Sig_pragma _ ->
       s
@@ -3420,15 +3435,29 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_splice _ ->
       s
 
-    | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) ->
+    | Sig_polymonadic_bind {m_lid=m;
+                            n_lid=n;
+                            p_lid=p;
+                            tm=(us_t, t);
+                            typ=(us_ty, ty);
+                            kind=k} ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) }
+      { s with sigel = Sig_polymonadic_bind {m_lid=m;
+                                             n_lid=n;
+                                             p_lid=p;
+                                             tm=(us_t, t);
+                                             typ=(us_ty, ty);
+                                             kind=k} }
 
-    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) ->
+    | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; tm=(us_t, t); typ=(us_ty, ty); kind=k} ->
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
-      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) }
+      { s with sigel = Sig_polymonadic_subcomp {m_lid=m;
+                                                n_lid=n;
+                                                tm=(us_t, t);
+                                                typ=(us_ty, ty);
+                                                kind=k} }
 
 
 let erase_universes env t =

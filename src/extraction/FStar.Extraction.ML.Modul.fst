@@ -194,11 +194,11 @@ let bundle_as_inductive_families env ses quals
     let env, ifams =
         BU.fold_map
         (fun env se -> match se.sigel with
-            | Sig_inductive_typ(l, us, bs, _num_uniform, t, _mut_i, datas) ->
+            | Sig_inductive_typ {lid=l; us; params=bs; t; ds=datas} ->
                 let _us, t = SS.open_univ_vars us t in
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (fun se -> match se.sigel with
-                    | Sig_datacon(d, us, t, l', nparams, _) when Ident.lid_equals l l' ->
+                    | Sig_datacon {lid=d; us; t; ty_lid=l'; num_ty_params=nparams} when Ident.lid_equals l l' ->
                         let _us, t = SS.open_univ_vars us t in
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = BU.first_N (List.length bs) bs' in
@@ -462,11 +462,11 @@ let extract_bundle_iface env se
     in
 
     match se.sigel, se.sigquals with
-    | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
+    | Sig_bundle {ses=[{sigel = Sig_datacon {lid=l; t}}]}, [ExceptionConstructor] ->
         let env, ctor = extract_ctor env [] env ({dname=l; dtyp=t}) in
         env, iface_of_bindings [ctor]
 
-    | Sig_bundle(ses, _), quals ->
+    | Sig_bundle {ses}, quals ->
         if U.has_attribute se.sigattrs PC.erasable_attr
         then env, empty_iface
         else begin
@@ -626,12 +626,13 @@ let split_let_rec_types_and_terms se (env:uenv) (lbs:list letbinding)
             let body = S.tconst PC.c_true_lid in //extract it not as unit, since otherwise it will be treated as erasable
             let lbdef = U.abs formals body None in
             let lb = { lb with lbdef } in
-            let se = { se with sigel = Sig_let ((false, [lb]), []) } in
+            let se = { se with sigel = Sig_let {lbs=(false, [lb]); lids=[]} } in
             se::out, mutuals
           )
     in
     let sigs, lbs = aux [] [] lbs in
-    let lb = {se with sigel = Sig_let ((true, lbs), List.map (fun lb -> lb.lbname |> BU.right |> lid_of_fv) lbs) } in
+    let lb = {se with sigel = Sig_let {lbs=(true, lbs);
+                                       lids=List.map (fun lb -> lb.lbname |> BU.right |> lid_of_fv) lbs} } in
     let sigs = sigs@[lb] in
     // BU.print1 "Split let recs into %s\n"
     //   (List.map Print.sigelt_to_string sigs |> String.concat ";;\n");
@@ -734,13 +735,13 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
     | Sig_datacon _ ->
       extract_bundle_iface g se
 
-    | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
+    | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
       let env, iface, _ =
           extract_type_declaration g true lid se.sigquals se.sigattrs univs t
       in
       env, iface
 
-    | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
+    | Sig_let {lbs=(false, [lb])} when Term.is_arity g lb.lbtyp ->
       if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
       then (
         //Don't extract projectors returning types---not useful for typing generated code and
@@ -753,7 +754,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
         env, iface
       )
       
-    | Sig_let((true, lbs), _)
+    | Sig_let {lbs=(true, lbs)}
       when should_split_let_rec_types_and_terms g lbs ->
       let ses = split_let_rec_types_and_terms se g lbs in
       let iface = {empty_iface with iface_module_name=(current_module_of_uenv g)} in
@@ -763,14 +764,14 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
            g,  iface_union out mls)
         (g, iface) ses
 
-    | Sig_let ((true, lbs), _)
+    | Sig_let {lbs=(true, lbs)}
       when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
       let env, iface, _ =
         extract_let_rec_types se g lbs
       in
       env, iface
 
-    | Sig_declare_typ(lid, _univs, t) ->
+    | Sig_declare_typ {lid; t} ->
       let quals = se.sigquals in
       if quals |> List.contains Assumption
       && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
@@ -779,7 +780,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       else g, empty_iface //it's not assumed, so wait for the corresponding Sig_let to generate code
                     //or, it must be erased
 
-    | Sig_let (lbs, _) ->
+    | Sig_let {lbs} ->
       let g, bindings = Term.extract_lb_iface g lbs in
       g, iface_of_bindings bindings
 
@@ -908,11 +909,11 @@ let extract_bundle env se =
     in
 
     match se.sigel, se.sigquals with
-    | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
+    | Sig_bundle {ses=[{sigel = Sig_datacon {lid=l; t}}]}, [ExceptionConstructor] ->
         let env, ctor = extract_ctor env [] env ({dname=l; dtyp=t}) in
         env, [MLM_Exn ctor]
 
-    | Sig_bundle(ses, _), quals ->
+    | Sig_bundle {ses}, quals ->
         if U.has_attribute se.sigattrs PC.erasable_attr
         then env, []
         else begin
@@ -950,7 +951,7 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list mlmodule1 =
            //          (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
            begin
            match se.sigel with
-           | Sig_let(lbs, _) ->
+           | Sig_let {lbs} ->
                let mk_registration lb : list mlmodule1 =
                   let fv = right lb.lbname in
                   let fv_lid = fv.fv_name.v in
@@ -1012,15 +1013,15 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
           g, []
 
         (* Ignore all non-informative sigelts *)
-        | Sig_let ((_, lbs), _) when List.for_all (lb_irrelevant g) lbs ->
+        | Sig_let {lbs=(_, lbs)} when List.for_all (lb_irrelevant g) lbs ->
           g, []
 
-        | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
+        | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
           //extracting `assume type t : k`
           let env, _, impl = extract_type_declaration g false lid se.sigquals se.sigattrs univs t in
           env, impl
 
-        | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
+        | Sig_let {lbs=(false, [lb])} when Term.is_arity g lb.lbtyp ->
           //extracting `type t = e`
           //or         `let t = e` when e is a type
           if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
@@ -1035,7 +1036,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
             env, impl
           )
 
-        | Sig_let((true, lbs), _)
+        | Sig_let {lbs=(true, lbs)}
           when should_split_let_rec_types_and_terms g lbs ->
           let ses = split_let_rec_types_and_terms se g lbs in
           List.fold_left 
@@ -1044,7 +1045,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
               g,  out@mls)
             (g, []) ses
 
-        | Sig_let((true, lbs), _)
+        | Sig_let {lbs=(true, lbs)}
           when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
           //extracting `let rec t .. : Type = e
           //            and ...
@@ -1053,7 +1054,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
           in
           env, impl
 
-        | Sig_let (lbs, _) ->
+        | Sig_let {lbs} ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
           let maybe_postprocess_lbs lbs =
@@ -1200,12 +1201,12 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
           failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr (current_module_of_uenv g) ml_let))
         end
 
-       | Sig_declare_typ(lid, _, t) ->
+       | Sig_declare_typ {lid; t} ->
          let quals = se.sigquals in
          if quals |> List.contains Assumption
          && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
          then let always_fail =
-                  { se with sigel = Sig_let((false, [always_fail lid t]), []) } in
+                  { se with sigel = Sig_let {lbs=(false, [always_fail lid t]); lids=[]} } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
               | Some l -> //if it's a discriminator, generate real code for it, rather than mlm

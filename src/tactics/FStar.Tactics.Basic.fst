@@ -1758,7 +1758,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
     | None -> fail "type not found in environment"
     | Some se ->
       match se.sigel with
-      | Sig_inductive_typ (_lid, t_us, t_ps, _num_uniform, t_ty, mut, c_lids) ->
+      | Sig_inductive_typ {us=t_us; params=t_ps; t=t_ty; mutuals=mut; ds=c_lids} ->
       (* High-level idea of this huge function:
        * For  Gamma |- w : phi  and  | C : ps -> bs -> t,  we generate a new goal
        *   Gamma |- w' : bs -> phi
@@ -1788,7 +1788,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                     | None -> fail "ctor not found?"
                     | Some se ->
                     match se.sigel with
-                    | Sig_datacon (_c_lid, c_us, c_ty, _t_lid, nparam, mut) ->
+                    | Sig_datacon {us=c_us; t=c_ty; num_ty_params=nparam; mutuals=mut} ->
                         (* BU.print2 "ty of %s = %s\n" (Ident.string_of_lid c_lid) *)
                         (*                             (Print.term_to_string c_ty); *)
                         let fv = S.lid_as_fv c_lid S.delta_constant (Some Data_ctor) in

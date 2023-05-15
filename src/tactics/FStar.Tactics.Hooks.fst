@@ -778,7 +778,7 @@ let handle_smt_goal env goal =
          we retrieve the corresponding term  *)
       let tau =
         match tac.sigel with
-        | Sig_let (_, [lid]) ->
+        | Sig_let {lids=[lid]} ->
           let qn = Env.lookup_qname env lid in
           let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
           let dd =
@@ -847,7 +847,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
           rng in
 
         gs,
-        [{sigel = S.Sig_let ((false, [lb]), lids);  // false ==> non-recursive
+        [{sigel = S.Sig_let {lbs=(false, [lb]); lids};  // false ==> non-recursive
           sigrng = rng;
           sigquals = [S.Visible_default];  // default visibility
           sigmeta = S.default_sigmeta;

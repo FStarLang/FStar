@@ -208,7 +208,7 @@ let rec term_as_fv_or_name (t:term)
 
 let open_sig_inductive_typ env se =
     match se.sigel with
-    | Sig_inductive_typ (lid, ty_us, ty_params, _num_uniform, _, _, _) -> 
+    | Sig_inductive_typ {lid; us=ty_us; params=ty_params} -> 
       let ty_usubst, ty_us = SS.univ_var_opening ty_us in
       let env = push_univ_vars env ty_us in
       let ty_params = SS.subst_binders ty_usubst ty_params in
@@ -364,14 +364,14 @@ let mark_uniform_type_parameters (env:env_t)
                                  (sig:sigelt)
   : sigelt
   = let mark_tycon_parameters tc datas =
-        let Sig_inductive_typ (tc_lid, us, ty_param_binders, _num_uniform, t, mutuals, data_lids) = tc.sigel in
+        let Sig_inductive_typ {lid=tc_lid; us; params=ty_param_binders; t; mutuals; ds=data_lids} = tc.sigel in
         let env, (tc_lid, us, ty_params) = open_sig_inductive_typ env tc in
         let _, ty_param_args = U.args_of_binders ty_params in
         let datacon_fields : list (list binder) =
           List.filter_map
             (fun data ->
               match data.sigel with
-              | Sig_datacon(d_lid, d_us, dt, tc_lid', _, _) ->
+              | Sig_datacon {lid=d_lid; us=d_us; t=dt; ty_lid=tc_lid'} ->
                 if Ident.lid_equals tc_lid tc_lid'
                 then (
                   let dt = SS.subst (mk_univ_subst d_us (L.map U_name us)) dt in
@@ -410,14 +410,20 @@ let mark_uniform_type_parameters (env:env_t)
                  ))
             non_uniform_params
         );            
-        let sigel = Sig_inductive_typ (tc_lid, us, ty_param_binders, Some max_uniform_prefix, t, mutuals, data_lids) in
+        let sigel = Sig_inductive_typ {lid=tc_lid;
+                                       us;
+                                       params=ty_param_binders;
+                                       num_uniform_params=Some max_uniform_prefix;
+                                       t;
+                                       mutuals;
+                                       ds=data_lids} in
         { tc with sigel }
     in 
     match sig.sigel with
-    | Sig_bundle (ses, lids) ->
+    | Sig_bundle {ses; lids} ->
       let tcs, datas = L.partition (fun se -> Sig_inductive_typ? se.sigel) ses in
       let tcs = List.map (fun tc -> mark_tycon_parameters tc datas) tcs in
-      { sig with sigel = Sig_bundle(tcs@datas, lids) }
+      { sig with sigel = Sig_bundle {ses=tcs@datas; lids} }
     
     | _ -> sig
 

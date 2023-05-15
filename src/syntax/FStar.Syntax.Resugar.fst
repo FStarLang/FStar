@@ -1198,9 +1198,9 @@ let resugar_pragma = function
 
 let resugar_typ env datacon_ses se : sigelts * A.tycon =
   match se.sigel with
-  | Sig_inductive_typ (tylid, uvs, bs, _num_uniform, t, _, datacons) ->
+  | Sig_inductive_typ {lid=tylid;us=uvs;params=bs;t;ds=datacons} ->
       let current_datacons, other_datacons = datacon_ses |> List.partition (fun se -> match se.sigel with
-        | Sig_datacon (_, _, _, inductive_lid, _, _) -> lid_equals inductive_lid tylid
+        | Sig_datacon {ty_lid=inductive_lid} -> lid_equals inductive_lid tylid
         | _ -> failwith "unexpected" )
       in
       assert (List.length current_datacons = List.length datacons) ;
@@ -1214,7 +1214,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
         then
           (* Resugar as a record *)
           let resugar_datacon_as_fields fields se = match se.sigel with
-            | Sig_datacon (_, univs, term, _, num, _) ->
+            | Sig_datacon {us=univs; t=term; num_ty_params=num} ->
               (* Todo: resugar univs *)
               begin match (SS.compress term).n with
                 | Tm_arrow {bs} ->
@@ -1235,7 +1235,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
         else
           (* Resugar as a variant *)
           let resugar_datacon constructors se = match se.sigel with
-            | Sig_datacon (l, univs, term, _, num, _) ->
+            | Sig_datacon {lid=l; us=univs; t=term; num_ty_params=num} ->
               (* Todo: resugar univs *)
               let c = (ident_of_lid l, Some (VpArbitrary (resugar_term' env term)), map (resugar_term' env) se.sigattrs)  in
               c::constructors
@@ -1342,7 +1342,7 @@ let resugar_eff_decl' env r q ed =
 
 let resugar_sigelt' env se : option A.decl =
   match se.sigel with
-  | Sig_bundle (ses, _) ->
+  | Sig_bundle {ses} ->
     let decl_typ_ses, datacon_ses = ses |> List.partition
       (fun se -> match se.sigel with
         | Sig_inductive_typ _ | Sig_declare_typ _ -> true
@@ -1363,7 +1363,7 @@ let resugar_sigelt' env se : option A.decl =
         //assert (se.sigquals |> BU.for_some (function | ExceptionConstructor -> true | _ -> false));
         (* Exception constructor declaration case *)
         begin match se.sigel with
-        | Sig_datacon(l, _, _, _, _, _) ->
+        | Sig_datacon {lid=l} ->
           Some (decl'_to_decl se (A.Exception (ident_of_lid l, None)))
         | _ -> failwith "wrong format for resguar to Exception"
         end
@@ -1374,7 +1374,7 @@ let resugar_sigelt' env se : option A.decl =
   | Sig_fail _ ->
     None
 
-  | Sig_let (lbs, _) ->
+  | Sig_let {lbs} ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
       None
     else
@@ -1396,7 +1396,7 @@ let resugar_sigelt' env se : option A.decl =
         | _ -> failwith "Should not happen hopefully"
       end
 
-  | Sig_assume (lid, _, fml) ->
+  | Sig_assume {lid; phi=fml} ->
     Some (decl'_to_decl se (Assume (ident_of_lid lid, resugar_term' env fml)))
 
   | Sig_new_effect ed ->
@@ -1423,7 +1423,7 @@ let resugar_sigelt' env se : option A.decl =
     in
     Some (decl'_to_decl se (A.SubEffect({msource=src; mdest=dst; lift_op=op; braced=false})))
 
-  | Sig_effect_abbrev (lid, vs, bs, c, flags) ->
+  | Sig_effect_abbrev {lid; us=vs; bs; comp=c; cflags=flags} ->
     let bs, c = SS.open_comp bs c in
     let bs =
       if (Options.print_implicits())
@@ -1435,7 +1435,7 @@ let resugar_sigelt' env se : option A.decl =
   | Sig_pragma p ->
     Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))
 
-  | Sig_declare_typ (lid, uvs, t) ->
+  | Sig_declare_typ {lid; us=uvs; t} ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
       None
     else
@@ -1448,17 +1448,17 @@ let resugar_sigelt' env se : option A.decl =
       in
       Some (decl'_to_decl se (A.Val (ident_of_lid lid,t')))
 
-  | Sig_splice (is_typed, ids, t) ->
+  | Sig_splice {is_typed; lids=ids; tac=t} ->
     Some (decl'_to_decl se (A.Splice (is_typed, List.map (fun l -> ident_of_lid l) ids, resugar_term' env t)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _
   | Sig_datacon _ -> None
 
-  | Sig_polymonadic_bind (m, n, p, (_, t), _, _) ->
+  | Sig_polymonadic_bind {m_lid=m; n_lid=n; p_lid=p; tm=(_, t)} ->
     Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
 
-  | Sig_polymonadic_subcomp (m, n, (_, t), _, _) ->
+  | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; tm=(_, t)} ->
     Some (decl'_to_decl se (A.Polymonadic_subcomp (m, n, resugar_term' env t)))
 
 (* Old interface: no envs *)

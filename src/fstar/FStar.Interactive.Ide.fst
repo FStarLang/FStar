@@ -844,7 +844,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [{ SS.lbunivs = univs; SS.lbdef = def }]), _) }] ->
+    | [{ SS.sigel = SS.Sig_let {lbs=(_, [{ SS.lbunivs = univs; SS.lbdef = def }])} }] ->
       Some (univs, def)
     | _ -> None in
 

@@ -326,7 +326,7 @@ let is_constr_fv (fvar : fv) : bool =
 
 let is_constr (q : qninfo) : bool =
   match q with
-  | Some (Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
+  | Some (Inr ({ sigel = Sig_datacon _ }, _), _) -> true
   | _ -> false
 
 let translate_univ (cfg:config) (bs:list t) (u:universe) : universe =
@@ -906,7 +906,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
          if is_qninfo_visible
          then begin
            match qninfo with
-           | Some (Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
+           | Some (Inr ({ sigel = Sig_let {lbs=(is_rec, lbs); lids=names} }, _us_opt), _rng) ->
              debug (fun () -> BU.print1 "(1) Decided to unfold %s\n" (P.fv_to_string fvar));
              let lbm = find_let lbs fvar in
              begin match lbm with

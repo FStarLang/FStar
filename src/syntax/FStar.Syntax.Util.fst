@@ -866,15 +866,15 @@ let destruct typ lid =
     | _ -> None
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
-  | Sig_let(_, lids)
-  | Sig_splice(_, lids, _)
-  | Sig_bundle(_, lids) -> lids
-  | Sig_inductive_typ (lid, _, _, _, _, _, _)
-  | Sig_effect_abbrev(lid, _, _,  _, _)
-  | Sig_datacon (lid, _, _, _, _, _)
-  | Sig_declare_typ (lid, _, _)
-  | Sig_assume (lid, _, _) -> [lid]
-  | Sig_new_effect(n) -> [n.mname]
+  | Sig_let {lids}
+  | Sig_splice {lids}
+  | Sig_bundle {lids} -> lids
+  | Sig_inductive_typ {lid}
+  | Sig_effect_abbrev {lid}
+  | Sig_datacon {lid}
+  | Sig_declare_typ {lid}
+  | Sig_assume {lid} -> [lid]
+  | Sig_new_effect d -> [d.mname]
   | Sig_sub_effect _
   | Sig_pragma _
   | Sig_fail _
@@ -958,8 +958,8 @@ let mk_field_projector_name lid (x:bv) i =
 
 let ses_of_sigbundle (se:sigelt) :list sigelt =
   match se.sigel with
-  | Sig_bundle (ses, _) -> ses
-  | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
+  | Sig_bundle {ses} -> ses
+  | _                -> failwith "ses_of_sigbundle: not a Sig_bundle"
 
 let set_uvar uv t =
   match Unionfind.find uv with
@@ -1709,7 +1709,7 @@ let action_as_lb eff_lid a pos =
       []
       pos
   in
-  { sigel = Sig_let((false, [lb]), [a.action_name]);
+  { sigel = Sig_let {lbs=(false, [lb]); lids=[a.action_name]};
     sigrng = a.action_defn.pos;
     sigquals = [Visible_default ; Action eff_lid];
     sigmeta = default_sigmeta;

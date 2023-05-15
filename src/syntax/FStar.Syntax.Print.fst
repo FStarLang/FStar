@@ -726,34 +726,34 @@ let rec sigelt_to_string (x: sigelt) =
    let basic =
       match x.sigel with
       | Sig_pragma p -> pragma_to_string p
-      | Sig_inductive_typ(lid, univs, tps, _, k, _, _) ->
+      | Sig_inductive_typ {lid; us=univs; params=tps; t=k} ->
         let quals_str = quals_to_string' x.sigquals in
         let binders_str = binders_to_string " " tps in
         let term_str = term_to_string k in
         if Options.print_universes () then U.format5 "%stype %s<%s> %s : %s" quals_str (string_of_lid lid) (univ_names_to_string univs) binders_str term_str
         else U.format4 "%stype %s %s : %s" quals_str (string_of_lid lid) binders_str term_str
-      | Sig_datacon(lid, univs, t, _, _, _) ->
+      | Sig_datacon {lid; us=univs; t} ->
         if (Options.print_universes())
         then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)
              U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) (string_of_lid lid) (term_to_string t)
         else U.format2 "datacon %s : %s" (string_of_lid lid) (term_to_string t)
-      | Sig_declare_typ(lid, univs, t) ->
+      | Sig_declare_typ {lid; us=univs; t} ->
         //let univs, t = Subst.open_univ_vars univs t in
         U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) (string_of_lid lid)
             (if (Options.print_universes())
              then U.format1 "<%s>" (univ_names_to_string univs)
              else "")
             (term_to_string t)
-      | Sig_assume(lid, us, f) ->
+      | Sig_assume {lid; us; phi=f} ->
         if Options.print_universes () then U.format3 "assume %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
         else U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
-      | Sig_let(lbs, _) ->
+      | Sig_let {lbs} ->
         (* FIXME: do not print the propagated qualifiers on top-level letbindings,
         vale fails when parsing them. *)
         let lbs = (fst lbs, List.map (fun lb -> { lb with lbattrs = [] }) (snd lbs)) in
         lbs_to_string x.sigquals lbs
-      | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
-      | Sig_fail (errs, lax, ses) ->
+      | Sig_bundle {ses} -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
+      | Sig_fail {errs; fail_in_lax=lax; ses} ->
         U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
             (string_of_bool lax)
             (FStar.Common.string_of_list string_of_int errs)
@@ -761,7 +761,7 @@ let rec sigelt_to_string (x: sigelt) =
 
       | Sig_new_effect(ed) -> eff_decl_to_string' (SU.is_dm4f ed) x.sigrng x.sigquals ed
       | Sig_sub_effect (se) -> sub_eff_to_string se
-      | Sig_effect_abbrev(l, univs, tps, c, flags) ->
+      | Sig_effect_abbrev {lid=l; us=univs; bs=tps; comp=c; cflags=flags} ->
         if (Options.print_universes())
         then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow {bs=tps; comp=c}) Range.dummyRange) in
              let tps, c = match (Subst.compress t).n with
@@ -769,12 +769,17 @@ let rec sigelt_to_string (x: sigelt) =
                 | _ -> failwith "impossible" in
              U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
-      | Sig_splice (is_typed, lids, t) ->
+      | Sig_splice {is_typed; lids; tac=t} ->
         U.format3 "splice%s[%s] (%s)"
           (if is_typed then "_t" else "")
           (String.concat "; " <| List.map Ident.string_of_lid lids)
           (term_to_string t)
-      | Sig_polymonadic_bind (m, n, p, t, ty, k) ->
+      | Sig_polymonadic_bind {m_lid=m;
+                              n_lid=n;
+                              p_lid=p;
+                              tm=t;
+                              typ=ty;
+                              kind=k} ->
         U.format6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
           (Ident.string_of_lid m)
           (Ident.string_of_lid n)
@@ -782,7 +787,11 @@ let rec sigelt_to_string (x: sigelt) =
           (tscheme_to_string t)
           (tscheme_to_string ty)
           (indexed_effect_combinator_kind_opt_to_string k)
-      | Sig_polymonadic_subcomp (m, n, t, ty, k) ->
+      | Sig_polymonadic_subcomp {m_lid=m;
+                                 n_lid=n;
+                                 tm=t;
+                                 typ=ty;
+                                 kind=k} ->
         U.format5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
           (Ident.string_of_lid m)
           (Ident.string_of_lid n)
@@ -807,33 +816,33 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_pragma p ->
     pragma_to_string p
 
-  | Sig_let((false, [{lbname=lb}]), _) ->
+  | Sig_let {lbs=(false, [{lbname=lb}])} ->
     U.format1 "let %s" (lbname_to_string lb)
 
-  | Sig_let((true, [{lbname=lb}]), _) ->
+  | Sig_let {lbs=(true, [{lbname=lb}])} ->
     U.format1 "let rec %s" (lbname_to_string lb)
 
-  | Sig_let((true, lbs), _) ->
+  | Sig_let {lbs=(true, lbs)} ->
     U.format1 "let rec %s" (String.concat " and " (List.map (fun lb -> lbname_to_string lb.lbname) lbs))
 
   | Sig_let _ ->
     failwith "Impossible: sigelt_to_string_short, ill-formed let"
 
-  | Sig_declare_typ(lid, _, t) ->
+  | Sig_declare_typ {lid} ->
     U.format1 "val %s" (string_of_lid lid)
 
-  | Sig_inductive_typ(lid, _, _, _, _, _, _) ->
+  | Sig_inductive_typ {lid} ->
     U.format1 "type %s" (string_of_lid lid)
 
-  | Sig_datacon(lid, _, _, t_lid, _, _) ->
+  | Sig_datacon {lid; ty_lid=t_lid} ->
     U.format2 "datacon %s for type %s" (string_of_lid lid) (string_of_lid t_lid)
 
-  | Sig_assume(lid, us, _) ->
+  | Sig_assume {lid} ->
     U.format1 "assume %s" (string_of_lid lid)
 
-  | Sig_bundle(ses, _) -> List.hd ses |> sigelt_to_string_short
+  | Sig_bundle {ses} -> List.hd ses |> sigelt_to_string_short
 
-  | Sig_fail (errs, lax, ses) ->
+  | Sig_fail {ses} ->
     U.format1 "[@@expect_failure] %s" (ses |> List.hd |> sigelt_to_string_short)
 
   | Sig_new_effect ed ->
@@ -847,20 +856,20 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_sub_effect se ->
     U.format2 "sub_effect %s ~> %s" (lid_to_string se.source) (lid_to_string se.target)
 
-  | Sig_effect_abbrev (l, univs, tps, c, flags) ->
+  | Sig_effect_abbrev {lid=l; bs=tps; comp=c} ->
     U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
 
-  | Sig_splice (is_typed, lids, t) ->
+  | Sig_splice {is_typed; lids} ->
     U.format3 "%splice%s[%s] (...)"
               "%s" // sigh, no escape for format
               (if is_typed then "_t" else "")
               (String.concat "; " <| List.map Ident.string_of_lid lids)
 
-  | Sig_polymonadic_bind (m, n, p, t, ty, _) ->
+  | Sig_polymonadic_bind {m_lid=m; n_lid=n; p_lid=p} ->
     U.format3 "polymonadic_bind (%s, %s) |> %s"
               (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
 
-  | Sig_polymonadic_subcomp (m, n, t, ty, _) ->
+  | Sig_polymonadic_subcomp {m_lid=m; n_lid=n} ->
     U.format2 "polymonadic_subcomp %s <: %s" (Ident.string_of_lid m) (Ident.string_of_lid n)
 
 let tag_of_sigelt (se:sigelt) : string =
