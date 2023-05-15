@@ -822,6 +822,18 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
     // env.splice will check the tactic
 
     let ses = env.splice env is_typed lids t se.sigrng in
+    let ses = 
+      if is_typed
+      then let sigquals = 
+              match se.sigquals with
+              | [] -> [ S.Visible_default ]
+              | qs -> qs
+           in
+            List.map 
+              (fun sp -> { sp with sigquals = sigquals; sigattrs = se.sigattrs})
+              ses
+      else ses
+    in
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
 

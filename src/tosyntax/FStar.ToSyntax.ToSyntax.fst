@@ -3556,7 +3556,10 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
     | _ -> []
   in
   let attrs = attrs @ val_attrs sigelts in
-  env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
+  env,
+  List.map 
+    (fun sigelt -> { sigelt with sigattrs = sigelt.sigattrs@attrs })
+    sigelts
 
 and desugar_decl env (d:decl) :(env_t * sigelts) =
   let env, ses = desugar_decl_aux env d in
@@ -4007,7 +4010,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
   | Splice (is_typed, ids, t) ->
     let t = desugar_term env t in
     let se = { sigel = Sig_splice(is_typed, List.map (qualify env) ids, t);
-               sigquals = [];
+               sigquals = List.map (trans_qual None) d.quals;
                sigrng = d.drange;
                sigmeta = default_sigmeta;
                sigattrs = [];
@@ -4035,7 +4038,9 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
           (Errors.Fatal_SyntaxError, error.message)
           error.range
       | Inr d' ->
-        desugar_decl_aux env { d with d=d' }
+        let quals = d'.quals @ d.quals in
+        let attrs = d'.attrs @ d.attrs in
+        desugar_decl_aux env { d' with quals; attrs; drange=d.drange }
 
 let desugar_decls env decls =
   let env, sigelts =

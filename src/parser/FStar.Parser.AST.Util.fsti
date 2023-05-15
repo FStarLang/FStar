@@ -41,7 +41,7 @@ type extension_parser =
    open_namespaces_and_abbreviations ->
    contents:string ->
    p:FStar.Compiler.Range.range ->
-   either error_message decl'
+   either error_message decl
 
 val register_extension_parser (extension_name:string) (parser:extension_parser) : unit
 val lookup_extension_parser (extension_name:string) : option extension_parser
