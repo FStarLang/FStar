@@ -35,7 +35,8 @@ RUN apt-get install -y --no-install-recommends \
       python3 \
       python-is-python3 \
       libicu70 \
-      opam
+      opam \
+      && apt-get clean -y
 
 # Create a new user and give them sudo rights
 # NOTE: we give them the name "opam" to keep compatibility with
@@ -80,10 +81,10 @@ ENV OPAMYES=1
 # F* dependencies. This is the only place where we read a file from
 # the F* repo.
 ADD fstar.opam $HOME/fstar.opam
-RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/fstar.opam
+RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/fstar.opam && opam clean
 
 # Some karamel dependencies
-RUN opam install --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm ulex
+RUN opam install --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm ulex && opam clean
 
 # Set up $HOME/bin. Note, binaries here take precedence over OPAM
 RUN mkdir $HOME/bin

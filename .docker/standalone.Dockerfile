@@ -10,7 +10,7 @@ WORKDIR $HOME/FStar
 
 # Make sure opam dependencies are installed, the base image
 # may be stale.
-RUN opam install --confirm-level=unsafe-yes --deps-only ./fstar.opam
+RUN opam install --confirm-level=unsafe-yes --deps-only ./fstar.opam && opam clean
 
 # Run CI proper
 ARG CI_TARGET=uregressions
