@@ -5,8 +5,14 @@ FROM fstar_ci_base
 # Copy repo into image.
 ADD --chown=opam:opam ./ $HOME/FStar/
 
-# Run CI proper
+# Go into repo
 WORKDIR $HOME/FStar
+
+# Make sure opam dependencies are installed, the base image
+# may be stale.
+RUN opam install --confirm-level=unsafe-yes --deps-only ./fstar.opam
+
+# Run CI proper
 ARG CI_TARGET=uregressions
 ARG CI_THREADS=24
 ARG CI_BRANCH=master
