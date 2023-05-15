@@ -131,7 +131,7 @@ let binders_to_names (bs:binders) : list term = bs |> List.map (fun b -> bv_to_n
 let mk_Tm_app (t1:typ) (args:list arg) p =
     match args with
     | [] -> t1
-    | _ -> mk (Tm_app (t1, args)) p
+    | _ -> mk (Tm_app {hd=t1; args}) p
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
   | Tm_fvar _ ->
@@ -142,10 +142,10 @@ let mk_Tm_uinst (t:term) (us:universes) =
   | _ -> failwith "Unexpected universe instantiation"
 
 let extend_app_n t args' r = match t.n with
-    | Tm_app(head, args) -> mk_Tm_app head (args@args') r
+    | Tm_app {hd; args} -> mk_Tm_app hd (args@args') r
     | _ -> mk_Tm_app t args' r
 let extend_app t arg r = extend_app_n t [arg] r
-let mk_Tm_delayed lr pos : term = mk (Tm_delayed lr) pos
+let mk_Tm_delayed lr pos : term = mk (Tm_delayed {tm=fst lr; substs=snd lr}) pos
 let mk_Total t = mk (Total t) t.pos
 let mk_GTotal t : comp = mk (GTotal t) t.pos
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) ct.result_typ.pos

@@ -255,7 +255,9 @@ let (is_smt_reifiable_function :
         let uu___1 = FStar_Syntax_Subst.compress t in
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
-      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
+      | FStar_Syntax_Syntax.Tm_arrow
+          { FStar_Syntax_Syntax.bs1 = uu___1; FStar_Syntax_Syntax.comp = c;_}
+          ->
           let uu___2 =
             FStar_Compiler_Effect.op_Bar_Greater c
               FStar_Syntax_Util.comp_effect_name in

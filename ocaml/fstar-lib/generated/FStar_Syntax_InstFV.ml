@@ -27,19 +27,32 @@ let rec (inst :
       | FStar_Syntax_Syntax.Tm_uinst uu___ -> t1
       | FStar_Syntax_Syntax.Tm_lazy uu___ -> t1
       | FStar_Syntax_Syntax.Tm_fvar fv -> s t1 fv
-      | FStar_Syntax_Syntax.Tm_abs (bs, body, lopt) ->
+      | FStar_Syntax_Syntax.Tm_abs
+          { FStar_Syntax_Syntax.bs = bs; FStar_Syntax_Syntax.body = body;
+            FStar_Syntax_Syntax.rc_opt = lopt;_}
+          ->
           let bs1 = inst_binders s bs in
           let body1 = inst s body in
           let uu___ =
             let uu___1 =
-              let uu___2 = inst_lcomp_opt s lopt in (bs1, body1, uu___2) in
+              let uu___2 = inst_lcomp_opt s lopt in
+              {
+                FStar_Syntax_Syntax.bs = bs1;
+                FStar_Syntax_Syntax.body = body1;
+                FStar_Syntax_Syntax.rc_opt = uu___2
+              } in
             FStar_Syntax_Syntax.Tm_abs uu___1 in
           mk1 uu___
-      | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+      | FStar_Syntax_Syntax.Tm_arrow
+          { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = c;_} ->
           let bs1 = inst_binders s bs in
           let c1 = inst_comp s c in
-          mk1 (FStar_Syntax_Syntax.Tm_arrow (bs1, c1))
-      | FStar_Syntax_Syntax.Tm_refine (bv, t2) ->
+          mk1
+            (FStar_Syntax_Syntax.Tm_arrow
+               { FStar_Syntax_Syntax.bs1 = bs1; FStar_Syntax_Syntax.comp = c1
+               })
+      | FStar_Syntax_Syntax.Tm_refine
+          { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = t2;_} ->
           let bv1 =
             let uu___ = inst s bv.FStar_Syntax_Syntax.sort in
             {
@@ -47,15 +60,29 @@ let rec (inst :
               FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu___
             } in
-          let t3 = inst s t2 in mk1 (FStar_Syntax_Syntax.Tm_refine (bv1, t3))
-      | FStar_Syntax_Syntax.Tm_app (t2, args) ->
+          let t3 = inst s t2 in
+          mk1
+            (FStar_Syntax_Syntax.Tm_refine
+               { FStar_Syntax_Syntax.b = bv1; FStar_Syntax_Syntax.phi = t3 })
+      | FStar_Syntax_Syntax.Tm_app
+          { FStar_Syntax_Syntax.hd = t2; FStar_Syntax_Syntax.args = args;_}
+          ->
           let uu___ =
             let uu___1 =
               let uu___2 = inst s t2 in
-              let uu___3 = inst_args s args in (uu___2, uu___3) in
+              let uu___3 = inst_args s args in
+              {
+                FStar_Syntax_Syntax.hd = uu___2;
+                FStar_Syntax_Syntax.args = uu___3
+              } in
             FStar_Syntax_Syntax.Tm_app uu___1 in
           mk1 uu___
-      | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, pats, lopt) ->
+      | FStar_Syntax_Syntax.Tm_match
+          { FStar_Syntax_Syntax.scrutinee = t2;
+            FStar_Syntax_Syntax.ret_opt = asc_opt;
+            FStar_Syntax_Syntax.brs = pats;
+            FStar_Syntax_Syntax.rc_opt1 = lopt;_}
+          ->
           let pats1 =
             FStar_Compiler_Effect.op_Bar_Greater pats
               (FStar_Compiler_List.map
@@ -82,17 +109,32 @@ let rec (inst :
             let uu___1 =
               let uu___2 = inst s t2 in
               let uu___3 = inst_lcomp_opt s lopt in
-              (uu___2, asc_opt1, pats1, uu___3) in
+              {
+                FStar_Syntax_Syntax.scrutinee = uu___2;
+                FStar_Syntax_Syntax.ret_opt = asc_opt1;
+                FStar_Syntax_Syntax.brs = pats1;
+                FStar_Syntax_Syntax.rc_opt1 = uu___3
+              } in
             FStar_Syntax_Syntax.Tm_match uu___1 in
           mk1 uu___
-      | FStar_Syntax_Syntax.Tm_ascribed (t11, asc, f) ->
+      | FStar_Syntax_Syntax.Tm_ascribed
+          { FStar_Syntax_Syntax.tm = t11; FStar_Syntax_Syntax.asc = asc;
+            FStar_Syntax_Syntax.eff_opt = f;_}
+          ->
           let uu___ =
             let uu___1 =
               let uu___2 = inst s t11 in
-              let uu___3 = inst_ascription s asc in (uu___2, uu___3, f) in
+              let uu___3 = inst_ascription s asc in
+              {
+                FStar_Syntax_Syntax.tm = uu___2;
+                FStar_Syntax_Syntax.asc = uu___3;
+                FStar_Syntax_Syntax.eff_opt = f
+              } in
             FStar_Syntax_Syntax.Tm_ascribed uu___1 in
           mk1 uu___
-      | FStar_Syntax_Syntax.Tm_let (lbs, t2) ->
+      | FStar_Syntax_Syntax.Tm_let
+          { FStar_Syntax_Syntax.lbs = lbs; FStar_Syntax_Syntax.body1 = t2;_}
+          ->
           let lbs1 =
             let uu___ =
               FStar_Compiler_Effect.op_Bar_Greater
@@ -117,11 +159,19 @@ let rec (inst :
                       })) in
             ((FStar_Pervasives_Native.fst lbs), uu___) in
           let uu___ =
-            let uu___1 = let uu___2 = inst s t2 in (lbs1, uu___2) in
+            let uu___1 =
+              let uu___2 = inst s t2 in
+              {
+                FStar_Syntax_Syntax.lbs = lbs1;
+                FStar_Syntax_Syntax.body1 = uu___2
+              } in
             FStar_Syntax_Syntax.Tm_let uu___1 in
           mk1 uu___
       | FStar_Syntax_Syntax.Tm_meta
-          (t2, FStar_Syntax_Syntax.Meta_pattern (bvs, args)) ->
+          { FStar_Syntax_Syntax.tm2 = t2;
+            FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_pattern
+              (bvs, args);_}
+          ->
           let uu___ =
             let uu___1 =
               let uu___2 = inst s t2 in
@@ -132,23 +182,39 @@ let rec (inst :
                       (FStar_Compiler_List.map (inst_args s)) in
                   (bvs, uu___5) in
                 FStar_Syntax_Syntax.Meta_pattern uu___4 in
-              (uu___2, uu___3) in
+              {
+                FStar_Syntax_Syntax.tm2 = uu___2;
+                FStar_Syntax_Syntax.meta = uu___3
+              } in
             FStar_Syntax_Syntax.Tm_meta uu___1 in
           mk1 uu___
       | FStar_Syntax_Syntax.Tm_meta
-          (t2, FStar_Syntax_Syntax.Meta_monadic (m, t')) ->
+          { FStar_Syntax_Syntax.tm2 = t2;
+            FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_monadic
+              (m, t');_}
+          ->
           let uu___ =
             let uu___1 =
               let uu___2 = inst s t2 in
               let uu___3 =
                 let uu___4 = let uu___5 = inst s t' in (m, uu___5) in
                 FStar_Syntax_Syntax.Meta_monadic uu___4 in
-              (uu___2, uu___3) in
+              {
+                FStar_Syntax_Syntax.tm2 = uu___2;
+                FStar_Syntax_Syntax.meta = uu___3
+              } in
             FStar_Syntax_Syntax.Tm_meta uu___1 in
           mk1 uu___
-      | FStar_Syntax_Syntax.Tm_meta (t2, tag) ->
+      | FStar_Syntax_Syntax.Tm_meta
+          { FStar_Syntax_Syntax.tm2 = t2; FStar_Syntax_Syntax.meta = tag;_}
+          ->
           let uu___ =
-            let uu___1 = let uu___2 = inst s t2 in (uu___2, tag) in
+            let uu___1 =
+              let uu___2 = inst s t2 in
+              {
+                FStar_Syntax_Syntax.tm2 = uu___2;
+                FStar_Syntax_Syntax.meta = tag
+              } in
             FStar_Syntax_Syntax.Tm_meta uu___1 in
           mk1 uu___
 and (inst_binder :

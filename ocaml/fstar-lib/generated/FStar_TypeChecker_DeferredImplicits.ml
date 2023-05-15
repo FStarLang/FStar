@@ -342,7 +342,10 @@ let solve_goals_with_tac :
             (fun uu___1 ->
                let resolve_tac =
                  match tac.FStar_Syntax_Syntax.sigel with
-                 | FStar_Syntax_Syntax.Sig_let (uu___2, lid::[]) ->
+                 | FStar_Syntax_Syntax.Sig_let
+                     { FStar_Syntax_Syntax.lbs1 = uu___2;
+                       FStar_Syntax_Syntax.lids1 = lid::[];_}
+                     ->
                      let qn = FStar_TypeChecker_Env.lookup_qname env lid in
                      let fv =
                        FStar_Syntax_Syntax.lid_as_fv lid

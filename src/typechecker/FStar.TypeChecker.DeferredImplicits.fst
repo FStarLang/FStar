@@ -212,7 +212,7 @@ let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
   Profiling.profile (fun () ->
     let resolve_tac =
       match tac.sigel with
-      | Sig_let (_, [lid]) ->
+      | Sig_let {lids=[lid]} ->
         let qn = Env.lookup_qname env lid in
         let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
         let dd =

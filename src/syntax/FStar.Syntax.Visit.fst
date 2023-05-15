@@ -136,53 +136,53 @@ let on_sub_term vfs (tm : term) : term =
   | Tm_type u ->
     mk (Tm_type ((f_univ vfs) u))
 
-  | Tm_app (hd, args) ->
+  | Tm_app {hd; args} ->
     let hd    = (f_term vfs) hd in
     let args  = map (f_arg vfs) args in
-    mk (Tm_app (hd, args))
+    mk (Tm_app {hd; args})
 
-  | Tm_abs (bs, t, rc_opt) ->
+  | Tm_abs {bs; body=t; rc_opt} ->
     let bs     = map (f_binder vfs) bs in
     let t      = (f_term vfs) t in
     let rc_opt = map_opt rc_opt (f_residual_comp vfs) in
-    mk (Tm_abs (bs, t, rc_opt))
+    mk (Tm_abs {bs; body=t; rc_opt})
 
-  | Tm_arrow (bs, c) ->
+  | Tm_arrow {bs; comp=c} ->
     let bs    = map (f_binder vfs) bs in
     let c     = (f_comp vfs) c in
-    mk (Tm_arrow (bs, c))
+    mk (Tm_arrow {bs; comp=c})
 
-  | Tm_refine (bv, phi) ->
+  | Tm_refine {b=bv; phi} ->
     let bv    = (f_binding_bv vfs) bv in
     let phi   = (f_term vfs) phi in
-    mk (Tm_refine (bv, phi))
+    mk (Tm_refine {b=bv; phi})
 
-  | Tm_match (sc, asc_opt, brs, rc_opt) ->
+  | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt} ->
     let sc      = (f_term vfs) sc in
     let asc_opt = map_opt asc_opt (fun (b, asc) -> ((f_binder vfs) b, on_sub_ascription vfs asc)) in
     let brs     = map (f_br vfs) brs in
     let rc_opt = map_opt rc_opt (f_residual_comp vfs) in
-    mk (Tm_match (sc, asc_opt, brs, rc_opt))
+    mk (Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt})
 
-  | Tm_ascribed (e, a, lopt) ->
+  | Tm_ascribed {tm=e; asc=a; eff_opt=lopt} ->
     let e = (f_term vfs) e in
     let a = on_sub_ascription vfs a in
-    mk (Tm_ascribed (e, a, lopt))
+    mk (Tm_ascribed {tm=e; asc=a; eff_opt=lopt})
 
-  | Tm_let ((is_rec, lbs), t) ->
+  | Tm_let {lbs=(is_rec, lbs); body=t} ->
     let lbs = map (on_sub_letbinding vfs) lbs in
     let t = (f_term vfs) t in
-    mk (Tm_let ((is_rec, lbs), t))
+    mk (Tm_let {lbs=(is_rec, lbs); body=t})
 
   | Tm_quoted (tm, qi) ->
     let tm = (f_term vfs) tm in
     let qi = Syntax.on_antiquoted (f_term vfs) qi in
     mk (Tm_quoted (tm, qi))
 
-  | Tm_meta (t, md) ->
+  | Tm_meta {tm=t; meta=md} ->
     let t   = (f_term vfs) t in
     let md  = on_sub_meta vfs md in
-    mk (Tm_meta (t, md))
+    mk (Tm_meta {tm=t; meta=md})
 
 let on_sub_binding_bv vfs (x : bv) : bv =
   { x with sort = (f_term vfs) x.sort }
@@ -325,23 +325,35 @@ let on_sub_action vfs (a : action) : action =
 
 let rec on_sub_sigelt' vfs (se : sigelt') : sigelt' =
   match se with
-  | Sig_inductive_typ (lid, unames, bs, num_uniform, typ, mutuals, ctors) ->
-    Sig_inductive_typ (lid, unames, map (f_binder vfs) bs, num_uniform, (f_term vfs) typ, mutuals, ctors)
+  | Sig_inductive_typ {lid;us=unames;params=bs;num_uniform_params=num_uniform;
+                       t=typ;mutuals;ds=ctors} ->
+    Sig_inductive_typ {lid;
+                       us=unames;
+                       params=map (f_binder vfs) bs;
+                       num_uniform_params=num_uniform;
+                       t=(f_term vfs) typ;
+                       mutuals;
+                       ds=ctors}
 
-  | Sig_bundle (ses, lids) ->
-    Sig_bundle (map (on_sub_sigelt vfs) ses, lids)
+  | Sig_bundle {ses; lids} ->
+    Sig_bundle {ses=map (on_sub_sigelt vfs) ses; lids}
 
-  | Sig_datacon (dlid, unames, typ, tlid, nparams, mutuals) ->
-    Sig_datacon (dlid, unames, (f_term vfs) typ, tlid, nparams, mutuals)
+  | Sig_datacon {lid=dlid;us=unames;t=typ;ty_lid=tlid;num_ty_params=nparams;mutuals} ->
+    Sig_datacon {lid=dlid;
+                 us=unames;
+                 t=(f_term vfs) typ;
+                 ty_lid=tlid;
+                 num_ty_params=nparams;
+                 mutuals}
 
-  | Sig_declare_typ (lid, unames, typ) ->
-    Sig_declare_typ (lid, unames, (f_term vfs) typ)
+  | Sig_declare_typ {lid; us=unames; t=typ} ->
+    Sig_declare_typ {lid; us=unames; t=(f_term vfs) typ}
 
-  | Sig_let ((is_rec, lbs), mutuals) ->
-    Sig_let ((is_rec, map (on_sub_letbinding vfs) lbs), mutuals)
+  | Sig_let {lbs=(is_rec, lbs); lids=mutuals} ->
+    Sig_let {lbs=(is_rec, map (on_sub_letbinding vfs) lbs); lids=mutuals}
 
-  | Sig_assume (lid, unames, phi) ->
-    Sig_assume (lid, unames, (f_term vfs) phi)
+  | Sig_assume {lid; us=unames; phi} ->
+    Sig_assume {lid; us=unames; phi=(f_term vfs) phi}
 
   | Sig_new_effect ed ->
     let ed = {
@@ -369,25 +381,43 @@ let rec on_sub_sigelt' vfs (se : sigelt') : sigelt' =
     in
     Sig_sub_effect se
 
-  | Sig_effect_abbrev (lid, univ_names, binders, comp, flags) ->
+  | Sig_effect_abbrev {lid; us=univ_names; bs=binders; comp; cflags=flags} ->
     let binders = map (f_binder vfs) binders in
     let comp    = f_comp vfs comp in
     let flags   = map (__on_decreases (f_term vfs)) flags in
     // ^ review: residual flags should not have terms
-    Sig_effect_abbrev (lid, univ_names, binders, comp, flags)
+    Sig_effect_abbrev {lid; us=univ_names; bs=binders; comp; cflags=flags}
 
   (* No content *)
   | Sig_pragma _ -> se
 
-  | Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k) ->
+  | Sig_polymonadic_bind {m_lid=m;
+                          n_lid=n;
+                          p_lid=p;
+                          tm=(us_t, t);
+                          typ=(us_ty, ty);
+                          kind=k} ->
     let t  = f_term vfs t in
     let ty = f_term vfs ty in
-    Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty), k)
+    Sig_polymonadic_bind {m_lid=m;
+                          n_lid=n;
+                          p_lid=p;
+                          tm=(us_t, t);
+                          typ=(us_ty, ty);
+                          kind=k}
 
-  | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k) ->
+  | Sig_polymonadic_subcomp {m_lid=m;
+                             n_lid=n;
+                             tm=(us_t, t);
+                             typ=(us_ty, ty);
+                             kind=k} ->
     let t  = f_term vfs t in
     let ty = f_term vfs ty in
-    Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty), k)
+    Sig_polymonadic_subcomp {m_lid=m;
+                             n_lid=n;
+                             tm=(us_t, t);
+                             typ=(us_ty, ty);
+                             kind=k}
 
   | Sig_fail _
   | Sig_splice _ ->

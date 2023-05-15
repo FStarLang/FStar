@@ -47,14 +47,20 @@ let (apply_constr_arrow :
             (uu___1, args) in
           match uu___ with
           | (uu___1, []) -> FStar_Syntax_Util.canon_arrow t
-          | (FStar_Syntax_Syntax.Tm_arrow (b::bs, c), a::args1) ->
+          | (FStar_Syntax_Syntax.Tm_arrow
+             { FStar_Syntax_Syntax.bs1 = b::bs;
+               FStar_Syntax_Syntax.comp = c;_},
+             a::args1) ->
               let tail =
                 match bs with
                 | [] -> FStar_Syntax_Util.comp_result c
                 | uu___1 ->
                     FStar_Syntax_Syntax.mk
-                      (FStar_Syntax_Syntax.Tm_arrow (bs, c))
-                      t.FStar_Syntax_Syntax.pos in
+                      (FStar_Syntax_Syntax.Tm_arrow
+                         {
+                           FStar_Syntax_Syntax.bs1 = bs;
+                           FStar_Syntax_Syntax.comp = c
+                         }) t.FStar_Syntax_Syntax.pos in
               let uu___1 = FStar_Syntax_Subst.open_term_1 b tail in
               (match uu___1 with
                | (b1, tail1) ->
@@ -108,8 +114,10 @@ let rec (term_as_fv_or_name :
              FStar_Pervasives_Native.Some (FStar_Pervasives.Inl (fv, us))
          | uu___2 ->
              failwith "term_as_fv_or_name: impossible non fvar in uinst")
-    | FStar_Syntax_Syntax.Tm_ascribed (t1, uu___1, uu___2) ->
-        term_as_fv_or_name t1
+    | FStar_Syntax_Syntax.Tm_ascribed
+        { FStar_Syntax_Syntax.tm = t1; FStar_Syntax_Syntax.asc = uu___1;
+          FStar_Syntax_Syntax.eff_opt = uu___2;_}
+        -> term_as_fv_or_name t1
     | uu___1 -> FStar_Pervasives_Native.None
 let (open_sig_inductive_typ :
   FStar_TypeChecker_Env.env ->
@@ -122,9 +130,15 @@ let (open_sig_inductive_typ :
     fun se ->
       match se.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_inductive_typ
-          (lid, ty_us, ty_params, _num_uniform, uu___, uu___1, uu___2) ->
-          let uu___3 = FStar_Syntax_Subst.univ_var_opening ty_us in
-          (match uu___3 with
+          { FStar_Syntax_Syntax.lid = lid; FStar_Syntax_Syntax.us = ty_us;
+            FStar_Syntax_Syntax.params = ty_params;
+            FStar_Syntax_Syntax.num_uniform_params = uu___;
+            FStar_Syntax_Syntax.t = uu___1;
+            FStar_Syntax_Syntax.mutuals = uu___2;
+            FStar_Syntax_Syntax.ds = uu___3;_}
+          ->
+          let uu___4 = FStar_Syntax_Subst.univ_var_opening ty_us in
+          (match uu___4 with
            | (ty_usubst, ty_us1) ->
                let env1 = FStar_TypeChecker_Env.push_univ_vars env ty_us1 in
                let ty_params1 =
@@ -226,7 +240,10 @@ let (max_uniformly_recursive_parameters :
                  | FStar_Syntax_Syntax.Tm_uinst uu___5 -> n_params
                  | FStar_Syntax_Syntax.Tm_type uu___5 -> n_params
                  | FStar_Syntax_Syntax.Tm_constant uu___5 -> n_params
-                 | FStar_Syntax_Syntax.Tm_refine (x, f) ->
+                 | FStar_Syntax_Syntax.Tm_refine
+                     { FStar_Syntax_Syntax.b = x;
+                       FStar_Syntax_Syntax.phi = f;_}
+                     ->
                      let uu___5 = aux x.FStar_Syntax_Syntax.sort in
                      let uu___6 =
                        let uu___7 =
@@ -300,7 +317,11 @@ let (max_uniformly_recursive_parameters :
                                    (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort) in
                           let uu___8 = aux r in Prims.min uu___7 uu___8)
                  | FStar_Syntax_Syntax.Tm_match
-                     (scrutinee, uu___5, branches, uu___6) ->
+                     { FStar_Syntax_Syntax.scrutinee = scrutinee;
+                       FStar_Syntax_Syntax.ret_opt = uu___5;
+                       FStar_Syntax_Syntax.brs = branches;
+                       FStar_Syntax_Syntax.rc_opt1 = uu___6;_}
+                     ->
                      let uu___7 = aux scrutinee in
                      let uu___8 =
                        min_l1 branches
@@ -315,9 +336,15 @@ let (max_uniformly_recursive_parameters :
                                   FStar_Syntax_Subst.open_term bs t in
                                 (match uu___11 with | (bs1, t1) -> aux t1)) in
                      Prims.min uu___7 uu___8
-                 | FStar_Syntax_Syntax.Tm_meta (t, uu___5) -> aux t
-                 | FStar_Syntax_Syntax.Tm_ascribed (t, uu___5, uu___6) ->
-                     aux t
+                 | FStar_Syntax_Syntax.Tm_meta
+                     { FStar_Syntax_Syntax.tm2 = t;
+                       FStar_Syntax_Syntax.meta = uu___5;_}
+                     -> aux t
+                 | FStar_Syntax_Syntax.Tm_ascribed
+                     { FStar_Syntax_Syntax.tm = t;
+                       FStar_Syntax_Syntax.asc = uu___5;
+                       FStar_Syntax_Syntax.eff_opt = uu___6;_}
+                     -> aux t
                  | uu___5 -> Prims.int_zero)) in
            let res = aux ty1 in
            debug_positivity env
@@ -338,46 +365,56 @@ let (mark_uniform_type_parameters :
         let uu___ = tc.FStar_Syntax_Syntax.sigel in
         match uu___ with
         | FStar_Syntax_Syntax.Sig_inductive_typ
-            (tc_lid, us, ty_param_binders, _num_uniform, t, mutuals,
-             data_lids)
+            { FStar_Syntax_Syntax.lid = tc_lid; FStar_Syntax_Syntax.us = us;
+              FStar_Syntax_Syntax.params = ty_param_binders;
+              FStar_Syntax_Syntax.num_uniform_params = uu___1;
+              FStar_Syntax_Syntax.t = t;
+              FStar_Syntax_Syntax.mutuals = mutuals;
+              FStar_Syntax_Syntax.ds = data_lids;_}
             ->
-            let uu___1 = open_sig_inductive_typ env tc in
-            (match uu___1 with
+            let uu___2 = open_sig_inductive_typ env tc in
+            (match uu___2 with
              | (env1, (tc_lid1, us1, ty_params)) ->
-                 let uu___2 = FStar_Syntax_Util.args_of_binders ty_params in
-                 (match uu___2 with
-                  | (uu___3, ty_param_args) ->
+                 let uu___3 = FStar_Syntax_Util.args_of_binders ty_params in
+                 (match uu___3 with
+                  | (uu___4, ty_param_args) ->
                       let datacon_fields =
                         FStar_Compiler_List.filter_map
                           (fun data ->
                              match data.FStar_Syntax_Syntax.sigel with
                              | FStar_Syntax_Syntax.Sig_datacon
-                                 (d_lid, d_us, dt, tc_lid', uu___4, uu___5)
+                                 { FStar_Syntax_Syntax.lid1 = d_lid;
+                                   FStar_Syntax_Syntax.us1 = d_us;
+                                   FStar_Syntax_Syntax.t1 = dt;
+                                   FStar_Syntax_Syntax.ty_lid = tc_lid';
+                                   FStar_Syntax_Syntax.num_ty_params = uu___5;
+                                   FStar_Syntax_Syntax.mutuals1 = uu___6;_}
                                  ->
-                                 let uu___6 =
+                                 let uu___7 =
                                    FStar_Ident.lid_equals tc_lid1 tc_lid' in
-                                 if uu___6
+                                 if uu___7
                                  then
                                    let dt1 =
-                                     let uu___7 =
-                                       let uu___8 =
-                                         FStar_Compiler_List.map
-                                           (fun uu___9 ->
-                                              FStar_Syntax_Syntax.U_name
-                                                uu___9) us1 in
-                                       FStar_TypeChecker_Env.mk_univ_subst
-                                         d_us uu___8 in
-                                     FStar_Syntax_Subst.subst uu___7 dt in
-                                   let uu___7 =
                                      let uu___8 =
                                        let uu___9 =
+                                         FStar_Compiler_List.map
+                                           (fun uu___10 ->
+                                              FStar_Syntax_Syntax.U_name
+                                                uu___10) us1 in
+                                       FStar_TypeChecker_Env.mk_univ_subst
+                                         d_us uu___9 in
+                                     FStar_Syntax_Subst.subst uu___8 dt in
+                                   let uu___8 =
+                                     let uu___9 =
+                                       let uu___10 =
                                          apply_constr_arrow d_lid dt1
                                            ty_param_args in
-                                       FStar_Syntax_Util.arrow_formals uu___9 in
-                                     FStar_Pervasives_Native.fst uu___8 in
-                                   FStar_Pervasives_Native.Some uu___7
+                                       FStar_Syntax_Util.arrow_formals
+                                         uu___10 in
+                                     FStar_Pervasives_Native.fst uu___9 in
+                                   FStar_Pervasives_Native.Some uu___8
                                  else FStar_Pervasives_Native.None
-                             | uu___4 -> FStar_Pervasives_Native.None) datas in
+                             | uu___5 -> FStar_Pervasives_Native.None) datas in
                       let ty_param_bvs =
                         FStar_Compiler_List.map
                           (fun b -> b.FStar_Syntax_Syntax.binder_bv)
@@ -394,11 +431,11 @@ let (mark_uniform_type_parameters :
                                     (field.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)) in
                       (if max_uniform_prefix < n_params
                        then
-                         (let uu___5 =
+                         (let uu___6 =
                             FStar_Compiler_List.splitAt max_uniform_prefix
                               ty_param_binders in
-                          match uu___5 with
-                          | (uu___6, non_uniform_params) ->
+                          match uu___6 with
+                          | (uu___7, non_uniform_params) ->
                               FStar_Compiler_List.iter
                                 (fun param ->
                                    if
@@ -407,27 +444,35 @@ let (mark_uniform_type_parameters :
                                        (FStar_Pervasives_Native.Some
                                           FStar_Syntax_Syntax.BinderStrictlyPositive)
                                    then
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 =
+                                     let uu___8 =
+                                       let uu___9 =
+                                         let uu___10 =
                                            FStar_Syntax_Print.binder_to_string
                                              param in
                                          FStar_Compiler_Util.format1
                                            "Binder %s is marked strictly positive, but it is not uniformly recursive"
-                                           uu___9 in
+                                           uu___10 in
                                        (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                         uu___8) in
-                                     let uu___8 =
+                                         uu___9) in
+                                     let uu___9 =
                                        FStar_Syntax_Syntax.range_of_bv
                                          param.FStar_Syntax_Syntax.binder_bv in
-                                     FStar_Errors.raise_error uu___7 uu___8
+                                     FStar_Errors.raise_error uu___8 uu___9
                                    else ()) non_uniform_params)
                        else ();
                        (let sigel =
                           FStar_Syntax_Syntax.Sig_inductive_typ
-                            (tc_lid1, us1, ty_param_binders,
-                              (FStar_Pervasives_Native.Some
-                                 max_uniform_prefix), t, mutuals, data_lids) in
+                            {
+                              FStar_Syntax_Syntax.lid = tc_lid1;
+                              FStar_Syntax_Syntax.us = us1;
+                              FStar_Syntax_Syntax.params = ty_param_binders;
+                              FStar_Syntax_Syntax.num_uniform_params =
+                                (FStar_Pervasives_Native.Some
+                                   max_uniform_prefix);
+                              FStar_Syntax_Syntax.t = t;
+                              FStar_Syntax_Syntax.mutuals = mutuals;
+                              FStar_Syntax_Syntax.ds = data_lids
+                            } in
                         {
                           FStar_Syntax_Syntax.sigel = sigel;
                           FStar_Syntax_Syntax.sigrng =
@@ -442,7 +487,9 @@ let (mark_uniform_type_parameters :
                             (tc.FStar_Syntax_Syntax.sigopts)
                         })))) in
       match sig1.FStar_Syntax_Syntax.sigel with
-      | FStar_Syntax_Syntax.Sig_bundle (ses, lids) ->
+      | FStar_Syntax_Syntax.Sig_bundle
+          { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = lids;_}
+          ->
           let uu___ =
             FStar_Compiler_List.partition
               (fun se ->
@@ -456,7 +503,11 @@ let (mark_uniform_type_parameters :
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_bundle
-                      ((FStar_List_Tot_Base.op_At tcs1 datas), lids));
+                      {
+                        FStar_Syntax_Syntax.ses =
+                          (FStar_List_Tot_Base.op_At tcs1 datas);
+                        FStar_Syntax_Syntax.lids = lids
+                      });
                  FStar_Syntax_Syntax.sigrng =
                    (sig1.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
@@ -545,9 +596,15 @@ let (may_be_an_arity :
         | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
             let uu___2 = FStar_Syntax_Util.arrow_formals t2 in
             (match uu___2 with | (uu___3, t3) -> aux t3)
-        | FStar_Syntax_Syntax.Tm_refine (x, uu___1) ->
-            aux x.FStar_Syntax_Syntax.sort
-        | FStar_Syntax_Syntax.Tm_match (uu___1, uu___2, branches, uu___3) ->
+        | FStar_Syntax_Syntax.Tm_refine
+            { FStar_Syntax_Syntax.b = x; FStar_Syntax_Syntax.phi = uu___1;_}
+            -> aux x.FStar_Syntax_Syntax.sort
+        | FStar_Syntax_Syntax.Tm_match
+            { FStar_Syntax_Syntax.scrutinee = uu___1;
+              FStar_Syntax_Syntax.ret_opt = uu___2;
+              FStar_Syntax_Syntax.brs = branches;
+              FStar_Syntax_Syntax.rc_opt1 = uu___3;_}
+            ->
             FStar_Compiler_List.existsML
               (fun uu___4 ->
                  match uu___4 with
@@ -558,8 +615,14 @@ let (may_be_an_arity :
                          uu___6 in
                      let uu___6 = FStar_Syntax_Subst.open_term bs t3 in
                      (match uu___6 with | (bs1, t4) -> aux t4)) branches
-        | FStar_Syntax_Syntax.Tm_meta (t3, uu___1) -> aux t3
-        | FStar_Syntax_Syntax.Tm_ascribed (t3, uu___1, uu___2) -> aux t3
+        | FStar_Syntax_Syntax.Tm_meta
+            { FStar_Syntax_Syntax.tm2 = t3;
+              FStar_Syntax_Syntax.meta = uu___1;_}
+            -> aux t3
+        | FStar_Syntax_Syntax.Tm_ascribed
+            { FStar_Syntax_Syntax.tm = t3; FStar_Syntax_Syntax.asc = uu___1;
+              FStar_Syntax_Syntax.eff_opt = uu___2;_}
+            -> aux t3
         | FStar_Syntax_Syntax.Tm_uvar uu___1 -> true
         | FStar_Syntax_Syntax.Tm_let uu___1 -> true
         | FStar_Syntax_Syntax.Tm_delayed uu___1 -> failwith "Impossible"
@@ -753,13 +816,21 @@ let (mutuals_unused_in_type :
            | FStar_Syntax_Syntax.Tm_type uu___3 -> true
            | FStar_Syntax_Syntax.Tm_fvar uu___3 -> false
            | FStar_Syntax_Syntax.Tm_uinst uu___3 -> false
-           | FStar_Syntax_Syntax.Tm_abs (bs, t2, uu___3) ->
-               (binders_ok bs) && (ok t2)
-           | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
-               (binders_ok bs) && (ok_comp c)
-           | FStar_Syntax_Syntax.Tm_refine (bv, t2) ->
-               (ok bv.FStar_Syntax_Syntax.sort) && (ok t2)
-           | FStar_Syntax_Syntax.Tm_app (head, args) ->
+           | FStar_Syntax_Syntax.Tm_abs
+               { FStar_Syntax_Syntax.bs = bs; FStar_Syntax_Syntax.body = t2;
+                 FStar_Syntax_Syntax.rc_opt = uu___3;_}
+               -> (binders_ok bs) && (ok t2)
+           | FStar_Syntax_Syntax.Tm_arrow
+               { FStar_Syntax_Syntax.bs1 = bs;
+                 FStar_Syntax_Syntax.comp = c;_}
+               -> (binders_ok bs) && (ok_comp c)
+           | FStar_Syntax_Syntax.Tm_refine
+               { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = t2;_}
+               -> (ok bv.FStar_Syntax_Syntax.sort) && (ok t2)
+           | FStar_Syntax_Syntax.Tm_app
+               { FStar_Syntax_Syntax.hd = head;
+                 FStar_Syntax_Syntax.args = args;_}
+               ->
                let uu___3 = mutuals_occur_in head in
                if uu___3
                then false
@@ -774,14 +845,25 @@ let (mutuals_unused_in_type :
                                FStar_Syntax_Util.contains_unused_attribute
                                  q.FStar_Syntax_Syntax.aqual_attributes)
                             || (ok a)) args
-           | FStar_Syntax_Syntax.Tm_match (t2, uu___3, branches, uu___4) ->
+           | FStar_Syntax_Syntax.Tm_match
+               { FStar_Syntax_Syntax.scrutinee = t2;
+                 FStar_Syntax_Syntax.ret_opt = uu___3;
+                 FStar_Syntax_Syntax.brs = branches;
+                 FStar_Syntax_Syntax.rc_opt1 = uu___4;_}
+               ->
                (ok t2) &&
                  (FStar_Compiler_List.for_all
                     (fun uu___5 ->
                        match uu___5 with | (uu___6, uu___7, br) -> ok br)
                     branches)
-           | FStar_Syntax_Syntax.Tm_ascribed (t2, asc, uu___3) -> ok t2
-           | FStar_Syntax_Syntax.Tm_let ((uu___3, lbs), t2) ->
+           | FStar_Syntax_Syntax.Tm_ascribed
+               { FStar_Syntax_Syntax.tm = t2; FStar_Syntax_Syntax.asc = asc;
+                 FStar_Syntax_Syntax.eff_opt = uu___3;_}
+               -> ok t2
+           | FStar_Syntax_Syntax.Tm_let
+               { FStar_Syntax_Syntax.lbs = (uu___3, lbs);
+                 FStar_Syntax_Syntax.body1 = t2;_}
+               ->
                (FStar_Compiler_List.for_all
                   (fun lb ->
                      (ok lb.FStar_Syntax_Syntax.lbtyp) &&
@@ -789,7 +871,10 @@ let (mutuals_unused_in_type :
                  && (ok t2)
            | FStar_Syntax_Syntax.Tm_uvar uu___3 -> false
            | FStar_Syntax_Syntax.Tm_delayed uu___3 -> false
-           | FStar_Syntax_Syntax.Tm_meta (t2, uu___3) -> ok t2
+           | FStar_Syntax_Syntax.Tm_meta
+               { FStar_Syntax_Syntax.tm2 = t2;
+                 FStar_Syntax_Syntax.meta = uu___3;_}
+               -> ok t2
            | uu___3 -> false)
       and binders_ok bs =
         FStar_Compiler_List.for_all
@@ -884,11 +969,19 @@ let rec (ty_strictly_positive_in_type :
                       (fun uu___7 ->
                          "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
                     true)
-               | FStar_Syntax_Syntax.Tm_ascribed (t, uu___5, uu___6) ->
-                   ty_strictly_positive_in_type env mutuals t unfolded
-               | FStar_Syntax_Syntax.Tm_meta (t, uu___5) ->
-                   ty_strictly_positive_in_type env mutuals t unfolded
-               | FStar_Syntax_Syntax.Tm_app (t, args) ->
+               | FStar_Syntax_Syntax.Tm_ascribed
+                   { FStar_Syntax_Syntax.tm = t;
+                     FStar_Syntax_Syntax.asc = uu___5;
+                     FStar_Syntax_Syntax.eff_opt = uu___6;_}
+                   -> ty_strictly_positive_in_type env mutuals t unfolded
+               | FStar_Syntax_Syntax.Tm_meta
+                   { FStar_Syntax_Syntax.tm2 = t;
+                     FStar_Syntax_Syntax.meta = uu___5;_}
+                   -> ty_strictly_positive_in_type env mutuals t unfolded
+               | FStar_Syntax_Syntax.Tm_app
+                   { FStar_Syntax_Syntax.hd = t;
+                     FStar_Syntax_Syntax.args = args;_}
+                   ->
                    let fv_or_name_opt = term_as_fv_or_name t in
                    (match fv_or_name_opt with
                     | FStar_Pervasives_Native.None ->
@@ -954,7 +1047,10 @@ let rec (ty_strictly_positive_in_type :
                              mutuals in_type1
                              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                              us args unfolded))
-               | FStar_Syntax_Syntax.Tm_arrow (uu___5, c) ->
+               | FStar_Syntax_Syntax.Tm_arrow
+                   { FStar_Syntax_Syntax.bs1 = uu___5;
+                     FStar_Syntax_Syntax.comp = c;_}
+                   ->
                    (debug_positivity env
                       (fun uu___7 -> "Checking strict positivity in Tm_arrow");
                     (let check_comp =
@@ -1008,7 +1104,10 @@ let rec (ty_strictly_positive_in_type :
                                ty_strictly_positive_in_type uu___10 mutuals
                                  return_type unfolded
                              else false))))
-               | FStar_Syntax_Syntax.Tm_refine (bv, f) ->
+               | FStar_Syntax_Syntax.Tm_refine
+                   { FStar_Syntax_Syntax.b = bv;
+                     FStar_Syntax_Syntax.phi = f;_}
+                   ->
                    (debug_positivity env
                       (fun uu___6 ->
                          "Checking strict positivity in an Tm_refine, recur in the bv sort)");
@@ -1031,7 +1130,11 @@ let rec (ty_strictly_positive_in_type :
                              unfolded
                          else false))
                | FStar_Syntax_Syntax.Tm_match
-                   (scrutinee, uu___5, branches, uu___6) ->
+                   { FStar_Syntax_Syntax.scrutinee = scrutinee;
+                     FStar_Syntax_Syntax.ret_opt = uu___5;
+                     FStar_Syntax_Syntax.brs = branches;
+                     FStar_Syntax_Syntax.rc_opt1 = uu___6;_}
+                   ->
                    (debug_positivity env
                       (fun uu___8 ->
                          "Checking strict positivity in an Tm_match, recur in the branches)");

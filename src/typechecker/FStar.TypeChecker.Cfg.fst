@@ -256,7 +256,7 @@ let built_in_primitive_steps : prim_step_set =
     let arg_as_bounded_int ((a, _) :arg) : option (fv * Z.t * option S.meta_source_info) =
         let (a, m) =
             (match (SS.compress a).n with
-             | Tm_meta(t, Meta_desugared m) -> (t, Some m)
+             | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
              | _ -> (a, None)) in
         let a = U.unmeta_safe a in
         let hd, args = U.head_and_args_full a in
@@ -569,7 +569,7 @@ let built_in_primitive_steps : prim_step_set =
     let with_meta_ds r t (m:option meta_source_info) =
       match m with
       | None -> t
-      | Some m -> S.mk (Tm_meta(t, Meta_desugared m)) r
+      | Some m -> S.mk (Tm_meta {tm=t; meta=Meta_desugared m}) r
     in
     let basic_ops
       //this type annotation has to be on a single line for it to parse

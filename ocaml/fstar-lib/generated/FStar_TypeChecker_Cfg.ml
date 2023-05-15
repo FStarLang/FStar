@@ -2037,8 +2037,10 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
             uu___4.FStar_Syntax_Syntax.n in
           match uu___3 with
           | FStar_Syntax_Syntax.Tm_meta
-              (t, FStar_Syntax_Syntax.Meta_desugared m) ->
-              (t, (FStar_Pervasives_Native.Some m))
+              { FStar_Syntax_Syntax.tm2 = t;
+                FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_desugared
+                  m;_}
+              -> (t, (FStar_Pervasives_Native.Some m))
           | uu___4 -> (a, FStar_Pervasives_Native.None) in
         (match uu___2 with
          | (a1, m) ->
@@ -2430,7 +2432,11 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     | FStar_Pervasives_Native.Some m1 ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_meta
-             (t, (FStar_Syntax_Syntax.Meta_desugared m1))) r in
+             {
+               FStar_Syntax_Syntax.tm2 = t;
+               FStar_Syntax_Syntax.meta =
+                 (FStar_Syntax_Syntax.Meta_desugared m1)
+             }) r in
   let basic_ops =
     let uu___ =
       let uu___1 =

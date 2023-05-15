@@ -368,7 +368,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
     || U.is_lemma t_norm
     || uninterpreted
     then let arg_sorts = match (SS.compress t_norm).n with
-            | Tm_arrow(binders, _) -> binders |> List.map (fun _ -> Term_sort)
+            | Tm_arrow {bs=binders} -> binders |> List.map (fun _ -> Term_sort)
             | _ -> [] in
          let arity = List.length arg_sorts in
          let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity in
@@ -430,7 +430,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                     | Tm_fvar fv ->
                       Syntax.fv_eq_lid fv FStar.Parser.Const.squash_lid
 
-                    | Tm_refine({sort={n=Tm_fvar fv}}, _) ->
+                    | Tm_refine {b={sort={n=Tm_fvar fv}}} ->
                       Syntax.fv_eq_lid fv FStar.Parser.Const.unit_lid
 
                     | _ -> false
@@ -624,7 +624,7 @@ let encode_top_level_let :
         //    but that flattens Tot effects quite aggressively
         let t = U.unascribe <| SS.compress t in
         match t.n with
-        | Tm_arrow (formals, comp) ->
+        | Tm_arrow {bs=formals; comp} ->
           SS.open_comp formals comp
 
         | Tm_refine _ ->
@@ -1061,7 +1061,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
               match ed.binders with
               | [] -> tm
-              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) tm.pos
+              | _ -> S.mk (Tm_abs {bs=ed.binders;
+                                   body=tm;
+                                   rc_opt=Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])}) tm.pos
             in
 
             let encode_action env (a:S.action) =
@@ -1100,12 +1102,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let env, decls2 = BU.fold_map encode_action env ed.actions in
             List.flatten decls2, env
 
-     | Sig_declare_typ(lid, _, _) when (lid_equals lid Const.precedes_lid) ->
+     | Sig_declare_typ {lid} when (lid_equals lid Const.precedes_lid) ->
         //precedes is added in the prelude, see FStar.SMTEncoding.Term.fs
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 in
         [], env
 
-     | Sig_declare_typ(lid, _, t) ->
+     | Sig_declare_typ {lid; t} ->
         let quals = se.sigquals in
         let will_encode_definition = not (quals |> BU.for_some (function
             | Assumption | Projector _ | Discriminator _ | Irreducible -> true
@@ -1123,7 +1125,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              @ (primitive_type_axioms env.tcenv lid tname tsym |> mk_decls_trivial),
              env
 
-     | Sig_assume(l, us, f) ->
+     | Sig_assume {lid=l; us; phi=f} ->
         let uvs, f = SS.open_univ_vars us f in
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
         let f = norm_before_encoding env f in
@@ -1134,14 +1136,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      (* Irreducible and opaque lets. Replace the definitions by a dummy val decl (if none
         exists) and re-run. *)
-     | Sig_let(lbs, _)
+     | Sig_let {lbs}
         when se.sigquals |> List.contains S.Irreducible
           || se.sigattrs |> BU.for_some is_opaque_to_smt ->
        let attrs = se.sigattrs in
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (BU.right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
-        then let val_decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp);
+        then let val_decl = { se with sigel = Sig_declare_typ {lid; us=lb.lbunivs; t=lb.lbtyp};
                                       sigquals = S.Irreducible :: se.sigquals } in
              let decls, env = encode_sigelt' env val_decl in
              env, decls
@@ -1149,7 +1151,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        List.flatten decls, env
 
      (* Special encoding for b2t *)
-     | Sig_let((_, [{lbname=Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
+     | Sig_let {lbs=(_, [{lbname=Inr b2t}])} when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 in
        let xx = mk_fv ("x", Term_sort) in
        let x = mkFreeV xx in
@@ -1169,14 +1171,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        decls |> mk_decls_trivial, env
 
     (* Discriminators *)
-    | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
+    | Sig_let _ when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
         BU.print1 "Not encoding discriminator '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
     (* `unfold let` definitions in prims do not get encoded. *)
-    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
+    | Sig_let {lids} when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
@@ -1184,7 +1186,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       [], env
 
     (* Projectors *)
-    | Sig_let((false, [lb]), _)
+    | Sig_let {lbs=(false, [lb])}
          when (se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
@@ -1194,12 +1196,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Some _ ->
           [], env //already encoded
         | None ->
-          let se = {se with sigel = Sig_declare_typ(l, lb.lbunivs, lb.lbtyp); sigrng = Ident.range_of_lid l } in
+          let se = {se with sigel = Sig_declare_typ {lid=l; us=lb.lbunivs; t=lb.lbtyp}; sigrng = Ident.range_of_lid l } in
           encode_sigelt env se
      end
 
     (* A normal let, perhaps recursive. *)
-    | Sig_let((is_rec, bindings), _) ->
+    | Sig_let {lbs=(is_rec, bindings)} ->
       let bindings =
         List.map
           (fun lb ->
@@ -1210,7 +1212,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       in
       encode_top_level_let env (is_rec, bindings) se.sigquals
 
-    | Sig_bundle(ses, _) ->
+    | Sig_bundle {ses} ->
        let g, env = encode_sigelts env ses in
        let g', inversions = List.fold_left (fun (g', inversions) elt ->
          let elt_g', elt_inversions = elt.decls |> List.partition (function
@@ -1228,7 +1230,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        ) ([], [], []) g' in
        (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
-     | Sig_inductive_typ(t, universe_names, tps, _num_uniform, k, _, datas) ->
+     | Sig_inductive_typ {lid=t;
+                          us=universe_names;
+                          params=tps;
+                          t=k;
+                          ds=datas} ->
          let tcenv = env.tcenv in
          let is_injective  =
              let usubst, uvs = SS.univ_var_opening universe_names in
@@ -1329,7 +1335,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let k =
             match tps with
             | [] -> k
-            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) k.pos
+            | _ -> S.mk (Tm_arrow {bs=tps; comp=S.mk_Total k}) k.pos
           in
           let k = norm_before_encoding env k in
           U.arrow_formals k
@@ -1392,7 +1398,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @aux in
         g, env
 
-    | Sig_datacon(d, _, t, _, n_tps, mutuals) ->
+    | Sig_datacon {lid=d; t; num_ty_params=n_tps; mutuals} ->
         let quals = se.sigquals in
         let t = norm_before_encoding env t in
         let formals, t_res = U.arrow_formals t in
