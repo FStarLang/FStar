@@ -1497,18 +1497,48 @@ let (lids_of_sigelt :
   FStar_Syntax_Syntax.sigelt -> FStar_Ident.lident Prims.list) =
   fun se ->
     match se.FStar_Syntax_Syntax.sigel with
-    | FStar_Syntax_Syntax.Sig_let (uu___, lids) -> lids
-    | FStar_Syntax_Syntax.Sig_splice (uu___, lids, uu___1) -> lids
-    | FStar_Syntax_Syntax.Sig_bundle (uu___, lids) -> lids
+    | FStar_Syntax_Syntax.Sig_let
+        { FStar_Syntax_Syntax.lbs1 = uu___;
+          FStar_Syntax_Syntax.lids1 = lids;_}
+        -> lids
+    | FStar_Syntax_Syntax.Sig_splice
+        { FStar_Syntax_Syntax.is_typed = uu___;
+          FStar_Syntax_Syntax.lids2 = lids;
+          FStar_Syntax_Syntax.tac = uu___1;_}
+        -> lids
+    | FStar_Syntax_Syntax.Sig_bundle
+        { FStar_Syntax_Syntax.ses = uu___; FStar_Syntax_Syntax.lids = lids;_}
+        -> lids
     | FStar_Syntax_Syntax.Sig_inductive_typ
-        (lid, uu___, uu___1, uu___2, uu___3, uu___4, uu___5) -> [lid]
+        { FStar_Syntax_Syntax.lid = lid; FStar_Syntax_Syntax.us = uu___;
+          FStar_Syntax_Syntax.params = uu___1;
+          FStar_Syntax_Syntax.num_uniform_params = uu___2;
+          FStar_Syntax_Syntax.t = uu___3;
+          FStar_Syntax_Syntax.mutuals = uu___4;
+          FStar_Syntax_Syntax.ds = uu___5;_}
+        -> [lid]
     | FStar_Syntax_Syntax.Sig_effect_abbrev
-        (lid, uu___, uu___1, uu___2, uu___3) -> [lid]
+        { FStar_Syntax_Syntax.lid4 = lid; FStar_Syntax_Syntax.us4 = uu___;
+          FStar_Syntax_Syntax.bs2 = uu___1;
+          FStar_Syntax_Syntax.comp1 = uu___2;
+          FStar_Syntax_Syntax.cflags = uu___3;_}
+        -> [lid]
     | FStar_Syntax_Syntax.Sig_datacon
-        (lid, uu___, uu___1, uu___2, uu___3, uu___4) -> [lid]
-    | FStar_Syntax_Syntax.Sig_declare_typ (lid, uu___, uu___1) -> [lid]
-    | FStar_Syntax_Syntax.Sig_assume (lid, uu___, uu___1) -> [lid]
-    | FStar_Syntax_Syntax.Sig_new_effect n -> [n.FStar_Syntax_Syntax.mname]
+        { FStar_Syntax_Syntax.lid1 = lid; FStar_Syntax_Syntax.us1 = uu___;
+          FStar_Syntax_Syntax.t1 = uu___1;
+          FStar_Syntax_Syntax.ty_lid = uu___2;
+          FStar_Syntax_Syntax.num_ty_params = uu___3;
+          FStar_Syntax_Syntax.mutuals1 = uu___4;_}
+        -> [lid]
+    | FStar_Syntax_Syntax.Sig_declare_typ
+        { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = uu___;
+          FStar_Syntax_Syntax.t2 = uu___1;_}
+        -> [lid]
+    | FStar_Syntax_Syntax.Sig_assume
+        { FStar_Syntax_Syntax.lid3 = lid; FStar_Syntax_Syntax.us3 = uu___;
+          FStar_Syntax_Syntax.phi1 = uu___1;_}
+        -> [lid]
+    | FStar_Syntax_Syntax.Sig_new_effect d -> [d.FStar_Syntax_Syntax.mname]
     | FStar_Syntax_Syntax.Sig_sub_effect uu___ -> []
     | FStar_Syntax_Syntax.Sig_pragma uu___ -> []
     | FStar_Syntax_Syntax.Sig_fail uu___ -> []
@@ -1631,7 +1661,9 @@ let (ses_of_sigbundle :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt Prims.list) =
   fun se ->
     match se.FStar_Syntax_Syntax.sigel with
-    | FStar_Syntax_Syntax.Sig_bundle (ses, uu___) -> ses
+    | FStar_Syntax_Syntax.Sig_bundle
+        { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = uu___;_}
+        -> ses
     | uu___ -> failwith "ses_of_sigbundle: not a Sig_bundle"
 let (set_uvar : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit)
   =
@@ -3611,7 +3643,11 @@ let (action_as_lb :
         {
           FStar_Syntax_Syntax.sigel =
             (FStar_Syntax_Syntax.Sig_let
-               ((false, [lb]), [a.FStar_Syntax_Syntax.action_name]));
+               {
+                 FStar_Syntax_Syntax.lbs1 = (false, [lb]);
+                 FStar_Syntax_Syntax.lids1 =
+                   [a.FStar_Syntax_Syntax.action_name]
+               });
           FStar_Syntax_Syntax.sigrng =
             ((a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos);
           FStar_Syntax_Syntax.sigquals =

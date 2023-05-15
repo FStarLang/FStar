@@ -620,36 +620,91 @@ let rec (on_sub_sigelt' :
     fun se ->
       match se with
       | FStar_Syntax_Syntax.Sig_inductive_typ
-          (lid, unames, bs, num_uniform, typ, mutuals, ctors) ->
+          { FStar_Syntax_Syntax.lid = lid; FStar_Syntax_Syntax.us = unames;
+            FStar_Syntax_Syntax.params = bs;
+            FStar_Syntax_Syntax.num_uniform_params = num_uniform;
+            FStar_Syntax_Syntax.t = typ;
+            FStar_Syntax_Syntax.mutuals = mutuals;
+            FStar_Syntax_Syntax.ds = ctors;_}
+          ->
           let uu___ =
             let uu___1 = FStar_Compiler_List.map (f_binder vfs) bs in
             let uu___2 = f_term vfs typ in
-            (lid, unames, uu___1, num_uniform, uu___2, mutuals, ctors) in
+            {
+              FStar_Syntax_Syntax.lid = lid;
+              FStar_Syntax_Syntax.us = unames;
+              FStar_Syntax_Syntax.params = uu___1;
+              FStar_Syntax_Syntax.num_uniform_params = num_uniform;
+              FStar_Syntax_Syntax.t = uu___2;
+              FStar_Syntax_Syntax.mutuals = mutuals;
+              FStar_Syntax_Syntax.ds = ctors
+            } in
           FStar_Syntax_Syntax.Sig_inductive_typ uu___
-      | FStar_Syntax_Syntax.Sig_bundle (ses, lids) ->
+      | FStar_Syntax_Syntax.Sig_bundle
+          { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = lids;_}
+          ->
           let uu___ =
             let uu___1 = FStar_Compiler_List.map (on_sub_sigelt vfs) ses in
-            (uu___1, lids) in
+            {
+              FStar_Syntax_Syntax.ses = uu___1;
+              FStar_Syntax_Syntax.lids = lids
+            } in
           FStar_Syntax_Syntax.Sig_bundle uu___
       | FStar_Syntax_Syntax.Sig_datacon
-          (dlid, unames, typ, tlid, nparams, mutuals) ->
+          { FStar_Syntax_Syntax.lid1 = dlid;
+            FStar_Syntax_Syntax.us1 = unames; FStar_Syntax_Syntax.t1 = typ;
+            FStar_Syntax_Syntax.ty_lid = tlid;
+            FStar_Syntax_Syntax.num_ty_params = nparams;
+            FStar_Syntax_Syntax.mutuals1 = mutuals;_}
+          ->
           let uu___ =
             let uu___1 = f_term vfs typ in
-            (dlid, unames, uu___1, tlid, nparams, mutuals) in
+            {
+              FStar_Syntax_Syntax.lid1 = dlid;
+              FStar_Syntax_Syntax.us1 = unames;
+              FStar_Syntax_Syntax.t1 = uu___1;
+              FStar_Syntax_Syntax.ty_lid = tlid;
+              FStar_Syntax_Syntax.num_ty_params = nparams;
+              FStar_Syntax_Syntax.mutuals1 = mutuals
+            } in
           FStar_Syntax_Syntax.Sig_datacon uu___
-      | FStar_Syntax_Syntax.Sig_declare_typ (lid, unames, typ) ->
-          let uu___ = let uu___1 = f_term vfs typ in (lid, unames, uu___1) in
+      | FStar_Syntax_Syntax.Sig_declare_typ
+          { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = unames;
+            FStar_Syntax_Syntax.t2 = typ;_}
+          ->
+          let uu___ =
+            let uu___1 = f_term vfs typ in
+            {
+              FStar_Syntax_Syntax.lid2 = lid;
+              FStar_Syntax_Syntax.us2 = unames;
+              FStar_Syntax_Syntax.t2 = uu___1
+            } in
           FStar_Syntax_Syntax.Sig_declare_typ uu___
-      | FStar_Syntax_Syntax.Sig_let ((is_rec, lbs), mutuals) ->
+      | FStar_Syntax_Syntax.Sig_let
+          { FStar_Syntax_Syntax.lbs1 = (is_rec, lbs);
+            FStar_Syntax_Syntax.lids1 = mutuals;_}
+          ->
           let uu___ =
             let uu___1 =
               let uu___2 =
                 FStar_Compiler_List.map (on_sub_letbinding vfs) lbs in
               (is_rec, uu___2) in
-            (uu___1, mutuals) in
+            {
+              FStar_Syntax_Syntax.lbs1 = uu___1;
+              FStar_Syntax_Syntax.lids1 = mutuals
+            } in
           FStar_Syntax_Syntax.Sig_let uu___
-      | FStar_Syntax_Syntax.Sig_assume (lid, unames, phi) ->
-          let uu___ = let uu___1 = f_term vfs phi in (lid, unames, uu___1) in
+      | FStar_Syntax_Syntax.Sig_assume
+          { FStar_Syntax_Syntax.lid3 = lid; FStar_Syntax_Syntax.us3 = unames;
+            FStar_Syntax_Syntax.phi1 = phi;_}
+          ->
+          let uu___ =
+            let uu___1 = f_term vfs phi in
+            {
+              FStar_Syntax_Syntax.lid3 = lid;
+              FStar_Syntax_Syntax.us3 = unames;
+              FStar_Syntax_Syntax.phi1 = uu___1
+            } in
           FStar_Syntax_Syntax.Sig_assume uu___
       | FStar_Syntax_Syntax.Sig_new_effect ed ->
           let ed1 =
@@ -697,27 +752,60 @@ let rec (on_sub_sigelt' :
             } in
           FStar_Syntax_Syntax.Sig_sub_effect se2
       | FStar_Syntax_Syntax.Sig_effect_abbrev
-          (lid, univ_names, binders, comp, flags) ->
+          { FStar_Syntax_Syntax.lid4 = lid;
+            FStar_Syntax_Syntax.us4 = univ_names;
+            FStar_Syntax_Syntax.bs2 = binders;
+            FStar_Syntax_Syntax.comp1 = comp;
+            FStar_Syntax_Syntax.cflags = flags;_}
+          ->
           let binders1 = FStar_Compiler_List.map (f_binder vfs) binders in
           let comp1 = f_comp vfs comp in
           let flags1 =
             let uu___ = __on_decreases (f_term vfs) in
             FStar_Compiler_List.map uu___ flags in
           FStar_Syntax_Syntax.Sig_effect_abbrev
-            (lid, univ_names, binders1, comp1, flags1)
+            {
+              FStar_Syntax_Syntax.lid4 = lid;
+              FStar_Syntax_Syntax.us4 = univ_names;
+              FStar_Syntax_Syntax.bs2 = binders1;
+              FStar_Syntax_Syntax.comp1 = comp1;
+              FStar_Syntax_Syntax.cflags = flags1
+            }
       | FStar_Syntax_Syntax.Sig_pragma uu___ -> se
       | FStar_Syntax_Syntax.Sig_polymonadic_bind
-          (m, n, p, (us_t, t), (us_ty, ty), k) ->
+          { FStar_Syntax_Syntax.m_lid = m; FStar_Syntax_Syntax.n_lid = n;
+            FStar_Syntax_Syntax.p_lid = p;
+            FStar_Syntax_Syntax.tm3 = (us_t, t);
+            FStar_Syntax_Syntax.typ = (us_ty, ty);
+            FStar_Syntax_Syntax.kind1 = k;_}
+          ->
           let t1 = f_term vfs t in
           let ty1 = f_term vfs ty in
           FStar_Syntax_Syntax.Sig_polymonadic_bind
-            (m, n, p, (us_t, t1), (us_ty, ty1), k)
+            {
+              FStar_Syntax_Syntax.m_lid = m;
+              FStar_Syntax_Syntax.n_lid = n;
+              FStar_Syntax_Syntax.p_lid = p;
+              FStar_Syntax_Syntax.tm3 = (us_t, t1);
+              FStar_Syntax_Syntax.typ = (us_ty, ty1);
+              FStar_Syntax_Syntax.kind1 = k
+            }
       | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
-          (m, n, (us_t, t), (us_ty, ty), k) ->
+          { FStar_Syntax_Syntax.m_lid1 = m; FStar_Syntax_Syntax.n_lid1 = n;
+            FStar_Syntax_Syntax.tm4 = (us_t, t);
+            FStar_Syntax_Syntax.typ1 = (us_ty, ty);
+            FStar_Syntax_Syntax.kind2 = k;_}
+          ->
           let t1 = f_term vfs t in
           let ty1 = f_term vfs ty in
           FStar_Syntax_Syntax.Sig_polymonadic_subcomp
-            (m, n, (us_t, t1), (us_ty, ty1), k)
+            {
+              FStar_Syntax_Syntax.m_lid1 = m;
+              FStar_Syntax_Syntax.n_lid1 = n;
+              FStar_Syntax_Syntax.tm4 = (us_t, t1);
+              FStar_Syntax_Syntax.typ1 = (us_ty, ty1);
+              FStar_Syntax_Syntax.kind2 = k
+            }
       | FStar_Syntax_Syntax.Sig_fail uu___ ->
           failwith "Sig_fail and Sig_splice not supported in visit"
       | FStar_Syntax_Syntax.Sig_splice uu___ ->

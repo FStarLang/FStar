@@ -7,8 +7,8 @@ let __proj__Mkwithinfo_t__item__v : 'a . 'a withinfo_t -> 'a =
 let __proj__Mkwithinfo_t__item__p :
   'a . 'a withinfo_t -> FStar_Compiler_Range_Type.range =
   fun projectee -> match projectee with | { v; p;_} -> p
-type var = FStar_Ident.lident withinfo_t[@@deriving yojson,show]
-type sconst = FStar_Const.sconst[@@deriving yojson,show]
+type var = FStar_Ident.lident withinfo_t[@@deriving yojson,show,yojson,show]
+type sconst = FStar_Const.sconst[@@deriving yojson,show,yojson,show]
 type pragma =
   | SetOptions of Prims.string 
   | ResetOptions of Prims.string FStar_Pervasives_Native.option 
@@ -41,14 +41,8 @@ let (uu___is_RestartSolver : pragma -> Prims.bool) =
 let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | PrintEffectsGraph -> true | uu___ -> false
-type 'a memo =
-  (('a FStar_Pervasives_Native.option FStar_Compiler_Effect.ref)[@printer
-                                                                  fun fmt ->
-                                                                    fun _ ->
-                                                                    Format.pp_print_string
-                                                                    fmt
-                                                                    "None"])
-[@@deriving yojson,show]
+type 'a memo = 'a FStar_Pervasives_Native.option FStar_Compiler_Effect.ref
+[@@deriving yojson,show,yojson,show]
 type emb_typ =
   | ET_abstract 
   | ET_fun of (emb_typ * emb_typ) 
@@ -108,13 +102,13 @@ let (__proj__U_unif__item___0 :
   = fun projectee -> match projectee with | U_unif _0 -> _0
 let (uu___is_U_unknown : universe -> Prims.bool) =
   fun projectee -> match projectee with | U_unknown -> true | uu___ -> false
-type univ_name = FStar_Ident.ident[@@deriving yojson,show]
+type univ_name = FStar_Ident.ident[@@deriving yojson,show,yojson,show]
 type universe_uvar =
   (universe FStar_Pervasives_Native.option FStar_Unionfind.p_uvar * version *
-    FStar_Compiler_Range_Type.range)[@@deriving yojson,show]
-type univ_names = univ_name Prims.list[@@deriving yojson,show]
-type universes = universe Prims.list[@@deriving yojson,show]
-type monad_name = FStar_Ident.lident[@@deriving yojson,show]
+    FStar_Compiler_Range_Type.range)[@@deriving yojson,show,yojson,show]
+type univ_names = univ_name Prims.list[@@deriving yojson,show,yojson,show]
+type universes = universe Prims.list[@@deriving yojson,show,yojson,show]
+type monad_name = FStar_Ident.lident[@@deriving yojson,show,yojson,show]
 type quote_kind =
   | Quote_static 
   | Quote_dynamic [@@deriving yojson,show]
@@ -1637,29 +1631,88 @@ let (__proj__Mksig_metadata__item__sigmeta_admit :
     match projectee with
     | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;_} ->
         sigmeta_admit
-type sigelt' =
-  | Sig_inductive_typ of (FStar_Ident.lident * univ_names * binders *
-  Prims.int FStar_Pervasives_Native.option * typ * FStar_Ident.lident
-  Prims.list * FStar_Ident.lident Prims.list) 
-  | Sig_bundle of (sigelt Prims.list * FStar_Ident.lident Prims.list) 
-  | Sig_datacon of (FStar_Ident.lident * univ_names * typ *
-  FStar_Ident.lident * Prims.int * FStar_Ident.lident Prims.list) 
-  | Sig_declare_typ of (FStar_Ident.lident * univ_names * typ) 
-  | Sig_let of (letbindings * FStar_Ident.lident Prims.list) 
-  | Sig_assume of (FStar_Ident.lident * univ_names * formula) 
+type sigelt'__Sig_inductive_typ__payload =
+  {
+  lid: FStar_Ident.lident ;
+  us: univ_names ;
+  params: binders ;
+  num_uniform_params: Prims.int FStar_Pervasives_Native.option ;
+  t: typ ;
+  mutuals: FStar_Ident.lident Prims.list ;
+  ds: FStar_Ident.lident Prims.list }
+and sigelt'__Sig_bundle__payload =
+  {
+  ses: sigelt Prims.list ;
+  lids: FStar_Ident.lident Prims.list }
+and sigelt'__Sig_datacon__payload =
+  {
+  lid1: FStar_Ident.lident ;
+  us1: univ_names ;
+  t1: typ ;
+  ty_lid: FStar_Ident.lident ;
+  num_ty_params: Prims.int ;
+  mutuals1: FStar_Ident.lident Prims.list }
+and sigelt'__Sig_declare_typ__payload =
+  {
+  lid2: FStar_Ident.lident ;
+  us2: univ_names ;
+  t2: typ }
+and sigelt'__Sig_let__payload =
+  {
+  lbs1: letbindings ;
+  lids1: FStar_Ident.lident Prims.list }
+and sigelt'__Sig_assume__payload =
+  {
+  lid3: FStar_Ident.lident ;
+  us3: univ_names ;
+  phi1: formula }
+and sigelt'__Sig_effect_abbrev__payload =
+  {
+  lid4: FStar_Ident.lident ;
+  us4: univ_names ;
+  bs2: binders ;
+  comp1: comp ;
+  cflags: cflag Prims.list }
+and sigelt'__Sig_splice__payload =
+  {
+  is_typed: Prims.bool ;
+  lids2: FStar_Ident.lident Prims.list ;
+  tac: term }
+and sigelt'__Sig_polymonadic_bind__payload =
+  {
+  m_lid: FStar_Ident.lident ;
+  n_lid: FStar_Ident.lident ;
+  p_lid: FStar_Ident.lident ;
+  tm3: tscheme ;
+  typ: tscheme ;
+  kind1: indexed_effect_combinator_kind FStar_Pervasives_Native.option }
+and sigelt'__Sig_polymonadic_subcomp__payload =
+  {
+  m_lid1: FStar_Ident.lident ;
+  n_lid1: FStar_Ident.lident ;
+  tm4: tscheme ;
+  typ1: tscheme ;
+  kind2: indexed_effect_combinator_kind FStar_Pervasives_Native.option }
+and sigelt'__Sig_fail__payload =
+  {
+  errs: Prims.int Prims.list ;
+  fail_in_lax: Prims.bool ;
+  ses1: sigelt Prims.list }
+and sigelt' =
+  | Sig_inductive_typ of sigelt'__Sig_inductive_typ__payload 
+  | Sig_bundle of sigelt'__Sig_bundle__payload 
+  | Sig_datacon of sigelt'__Sig_datacon__payload 
+  | Sig_declare_typ of sigelt'__Sig_declare_typ__payload 
+  | Sig_let of sigelt'__Sig_let__payload 
+  | Sig_assume of sigelt'__Sig_assume__payload 
   | Sig_new_effect of eff_decl 
   | Sig_sub_effect of sub_eff 
-  | Sig_effect_abbrev of (FStar_Ident.lident * univ_names * binders * comp *
-  cflag Prims.list) 
+  | Sig_effect_abbrev of sigelt'__Sig_effect_abbrev__payload 
   | Sig_pragma of pragma 
-  | Sig_splice of (Prims.bool * FStar_Ident.lident Prims.list * term) 
-  | Sig_polymonadic_bind of (FStar_Ident.lident * FStar_Ident.lident *
-  FStar_Ident.lident * tscheme * tscheme * indexed_effect_combinator_kind
-  FStar_Pervasives_Native.option) 
-  | Sig_polymonadic_subcomp of (FStar_Ident.lident * FStar_Ident.lident *
-  tscheme * tscheme * indexed_effect_combinator_kind
-  FStar_Pervasives_Native.option) 
-  | Sig_fail of (Prims.int Prims.list * Prims.bool * sigelt Prims.list) 
+  | Sig_splice of sigelt'__Sig_splice__payload 
+  | Sig_polymonadic_bind of sigelt'__Sig_polymonadic_bind__payload 
+  | Sig_polymonadic_subcomp of sigelt'__Sig_polymonadic_subcomp__payload 
+  | Sig_fail of sigelt'__Sig_fail__payload 
 and sigelt =
   {
   sigel: sigelt' ;
@@ -1668,46 +1721,263 @@ and sigelt =
   sigmeta: sig_metadata ;
   sigattrs: attribute Prims.list ;
   sigopts: FStar_VConfig.vconfig FStar_Pervasives_Native.option }
+let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__lid :
+  sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> lid
+let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__us :
+  sigelt'__Sig_inductive_typ__payload -> univ_names) =
+  fun projectee ->
+    match projectee with
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> us
+let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__params :
+  sigelt'__Sig_inductive_typ__payload -> binders) =
+  fun projectee ->
+    match projectee with
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> params
+let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__num_uniform_params
+  :
+  sigelt'__Sig_inductive_typ__payload ->
+    Prims.int FStar_Pervasives_Native.option)
+  =
+  fun projectee ->
+    match projectee with
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} ->
+        num_uniform_params
+let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__t :
+  sigelt'__Sig_inductive_typ__payload -> typ) =
+  fun projectee ->
+    match projectee with
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> t
+let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__mutuals :
+  sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> mutuals
+let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__ds :
+  sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> ds
+let (__proj__Mksigelt'__Sig_bundle__payload__item__ses :
+  sigelt'__Sig_bundle__payload -> sigelt Prims.list) =
+  fun projectee -> match projectee with | { ses; lids;_} -> ses
+let (__proj__Mksigelt'__Sig_bundle__payload__item__lids :
+  sigelt'__Sig_bundle__payload -> FStar_Ident.lident Prims.list) =
+  fun projectee -> match projectee with | { ses; lids;_} -> lids
+let (__proj__Mksigelt'__Sig_datacon__payload__item__lid :
+  sigelt'__Sig_datacon__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
+        mutuals1 = mutuals;_} -> lid
+let (__proj__Mksigelt'__Sig_datacon__payload__item__us :
+  sigelt'__Sig_datacon__payload -> univ_names) =
+  fun projectee ->
+    match projectee with
+    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
+        mutuals1 = mutuals;_} -> us
+let (__proj__Mksigelt'__Sig_datacon__payload__item__t :
+  sigelt'__Sig_datacon__payload -> typ) =
+  fun projectee ->
+    match projectee with
+    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
+        mutuals1 = mutuals;_} -> t
+let (__proj__Mksigelt'__Sig_datacon__payload__item__ty_lid :
+  sigelt'__Sig_datacon__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
+        mutuals1 = mutuals;_} -> ty_lid
+let (__proj__Mksigelt'__Sig_datacon__payload__item__num_ty_params :
+  sigelt'__Sig_datacon__payload -> Prims.int) =
+  fun projectee ->
+    match projectee with
+    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
+        mutuals1 = mutuals;_} -> num_ty_params
+let (__proj__Mksigelt'__Sig_datacon__payload__item__mutuals :
+  sigelt'__Sig_datacon__payload -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
+        mutuals1 = mutuals;_} -> mutuals
+let (__proj__Mksigelt'__Sig_declare_typ__payload__item__lid :
+  sigelt'__Sig_declare_typ__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with | { lid2 = lid; us2 = us; t2 = t;_} -> lid
+let (__proj__Mksigelt'__Sig_declare_typ__payload__item__us :
+  sigelt'__Sig_declare_typ__payload -> univ_names) =
+  fun projectee ->
+    match projectee with | { lid2 = lid; us2 = us; t2 = t;_} -> us
+let (__proj__Mksigelt'__Sig_declare_typ__payload__item__t :
+  sigelt'__Sig_declare_typ__payload -> typ) =
+  fun projectee ->
+    match projectee with | { lid2 = lid; us2 = us; t2 = t;_} -> t
+let (__proj__Mksigelt'__Sig_let__payload__item__lbs :
+  sigelt'__Sig_let__payload -> letbindings) =
+  fun projectee ->
+    match projectee with | { lbs1 = lbs; lids1 = lids;_} -> lbs
+let (__proj__Mksigelt'__Sig_let__payload__item__lids :
+  sigelt'__Sig_let__payload -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with | { lbs1 = lbs; lids1 = lids;_} -> lids
+let (__proj__Mksigelt'__Sig_assume__payload__item__lid :
+  sigelt'__Sig_assume__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with | { lid3 = lid; us3 = us; phi1 = phi;_} -> lid
+let (__proj__Mksigelt'__Sig_assume__payload__item__us :
+  sigelt'__Sig_assume__payload -> univ_names) =
+  fun projectee ->
+    match projectee with | { lid3 = lid; us3 = us; phi1 = phi;_} -> us
+let (__proj__Mksigelt'__Sig_assume__payload__item__phi :
+  sigelt'__Sig_assume__payload -> formula) =
+  fun projectee ->
+    match projectee with | { lid3 = lid; us3 = us; phi1 = phi;_} -> phi
+let (__proj__Mksigelt'__Sig_effect_abbrev__payload__item__lid :
+  sigelt'__Sig_effect_abbrev__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> lid
+let (__proj__Mksigelt'__Sig_effect_abbrev__payload__item__us :
+  sigelt'__Sig_effect_abbrev__payload -> univ_names) =
+  fun projectee ->
+    match projectee with
+    | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> us
+let (__proj__Mksigelt'__Sig_effect_abbrev__payload__item__bs :
+  sigelt'__Sig_effect_abbrev__payload -> binders) =
+  fun projectee ->
+    match projectee with
+    | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> bs
+let (__proj__Mksigelt'__Sig_effect_abbrev__payload__item__comp :
+  sigelt'__Sig_effect_abbrev__payload -> comp) =
+  fun projectee ->
+    match projectee with
+    | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> comp1
+let (__proj__Mksigelt'__Sig_effect_abbrev__payload__item__cflags :
+  sigelt'__Sig_effect_abbrev__payload -> cflag Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> cflags
+let (__proj__Mksigelt'__Sig_splice__payload__item__is_typed :
+  sigelt'__Sig_splice__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { is_typed; lids2 = lids; tac;_} -> is_typed
+let (__proj__Mksigelt'__Sig_splice__payload__item__lids :
+  sigelt'__Sig_splice__payload -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with | { is_typed; lids2 = lids; tac;_} -> lids
+let (__proj__Mksigelt'__Sig_splice__payload__item__tac :
+  sigelt'__Sig_splice__payload -> term) =
+  fun projectee ->
+    match projectee with | { is_typed; lids2 = lids; tac;_} -> tac
+let (__proj__Mksigelt'__Sig_polymonadic_bind__payload__item__m_lid :
+  sigelt'__Sig_polymonadic_bind__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { m_lid; n_lid; p_lid; tm3 = tm; typ = typ1; kind1 = kind;_} -> m_lid
+let (__proj__Mksigelt'__Sig_polymonadic_bind__payload__item__n_lid :
+  sigelt'__Sig_polymonadic_bind__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { m_lid; n_lid; p_lid; tm3 = tm; typ = typ1; kind1 = kind;_} -> n_lid
+let (__proj__Mksigelt'__Sig_polymonadic_bind__payload__item__p_lid :
+  sigelt'__Sig_polymonadic_bind__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { m_lid; n_lid; p_lid; tm3 = tm; typ = typ1; kind1 = kind;_} -> p_lid
+let (__proj__Mksigelt'__Sig_polymonadic_bind__payload__item__tm :
+  sigelt'__Sig_polymonadic_bind__payload -> tscheme) =
+  fun projectee ->
+    match projectee with
+    | { m_lid; n_lid; p_lid; tm3 = tm; typ = typ1; kind1 = kind;_} -> tm
+let (__proj__Mksigelt'__Sig_polymonadic_bind__payload__item__typ :
+  sigelt'__Sig_polymonadic_bind__payload -> tscheme) =
+  fun projectee ->
+    match projectee with
+    | { m_lid; n_lid; p_lid; tm3 = tm; typ = typ1; kind1 = kind;_} -> typ1
+let (__proj__Mksigelt'__Sig_polymonadic_bind__payload__item__kind :
+  sigelt'__Sig_polymonadic_bind__payload ->
+    indexed_effect_combinator_kind FStar_Pervasives_Native.option)
+  =
+  fun projectee ->
+    match projectee with
+    | { m_lid; n_lid; p_lid; tm3 = tm; typ = typ1; kind1 = kind;_} -> kind
+let (__proj__Mksigelt'__Sig_polymonadic_subcomp__payload__item__m_lid :
+  sigelt'__Sig_polymonadic_subcomp__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { m_lid1 = m_lid; n_lid1 = n_lid; tm4 = tm; typ1; kind2 = kind;_} ->
+        m_lid
+let (__proj__Mksigelt'__Sig_polymonadic_subcomp__payload__item__n_lid :
+  sigelt'__Sig_polymonadic_subcomp__payload -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { m_lid1 = m_lid; n_lid1 = n_lid; tm4 = tm; typ1; kind2 = kind;_} ->
+        n_lid
+let (__proj__Mksigelt'__Sig_polymonadic_subcomp__payload__item__tm :
+  sigelt'__Sig_polymonadic_subcomp__payload -> tscheme) =
+  fun projectee ->
+    match projectee with
+    | { m_lid1 = m_lid; n_lid1 = n_lid; tm4 = tm; typ1; kind2 = kind;_} -> tm
+let (__proj__Mksigelt'__Sig_polymonadic_subcomp__payload__item__typ :
+  sigelt'__Sig_polymonadic_subcomp__payload -> tscheme) =
+  fun projectee ->
+    match projectee with
+    | { m_lid1 = m_lid; n_lid1 = n_lid; tm4 = tm; typ1; kind2 = kind;_} ->
+        typ1
+let (__proj__Mksigelt'__Sig_polymonadic_subcomp__payload__item__kind :
+  sigelt'__Sig_polymonadic_subcomp__payload ->
+    indexed_effect_combinator_kind FStar_Pervasives_Native.option)
+  =
+  fun projectee ->
+    match projectee with
+    | { m_lid1 = m_lid; n_lid1 = n_lid; tm4 = tm; typ1; kind2 = kind;_} ->
+        kind
+let (__proj__Mksigelt'__Sig_fail__payload__item__errs :
+  sigelt'__Sig_fail__payload -> Prims.int Prims.list) =
+  fun projectee ->
+    match projectee with | { errs; fail_in_lax; ses1 = ses;_} -> errs
+let (__proj__Mksigelt'__Sig_fail__payload__item__fail_in_lax :
+  sigelt'__Sig_fail__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { errs; fail_in_lax; ses1 = ses;_} -> fail_in_lax
+let (__proj__Mksigelt'__Sig_fail__payload__item__ses :
+  sigelt'__Sig_fail__payload -> sigelt Prims.list) =
+  fun projectee ->
+    match projectee with | { errs; fail_in_lax; ses1 = ses;_} -> ses
 let (uu___is_Sig_inductive_typ : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_inductive_typ _0 -> true | uu___ -> false
 let (__proj__Sig_inductive_typ__item___0 :
-  sigelt' ->
-    (FStar_Ident.lident * univ_names * binders * Prims.int
-      FStar_Pervasives_Native.option * typ * FStar_Ident.lident Prims.list *
-      FStar_Ident.lident Prims.list))
-  = fun projectee -> match projectee with | Sig_inductive_typ _0 -> _0
+  sigelt' -> sigelt'__Sig_inductive_typ__payload) =
+  fun projectee -> match projectee with | Sig_inductive_typ _0 -> _0
 let (uu___is_Sig_bundle : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_bundle _0 -> true | uu___ -> false
-let (__proj__Sig_bundle__item___0 :
-  sigelt' -> (sigelt Prims.list * FStar_Ident.lident Prims.list)) =
-  fun projectee -> match projectee with | Sig_bundle _0 -> _0
+let (__proj__Sig_bundle__item___0 : sigelt' -> sigelt'__Sig_bundle__payload)
+  = fun projectee -> match projectee with | Sig_bundle _0 -> _0
 let (uu___is_Sig_datacon : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_datacon _0 -> true | uu___ -> false
 let (__proj__Sig_datacon__item___0 :
-  sigelt' ->
-    (FStar_Ident.lident * univ_names * typ * FStar_Ident.lident * Prims.int *
-      FStar_Ident.lident Prims.list))
-  = fun projectee -> match projectee with | Sig_datacon _0 -> _0
+  sigelt' -> sigelt'__Sig_datacon__payload) =
+  fun projectee -> match projectee with | Sig_datacon _0 -> _0
 let (uu___is_Sig_declare_typ : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_declare_typ _0 -> true | uu___ -> false
 let (__proj__Sig_declare_typ__item___0 :
-  sigelt' -> (FStar_Ident.lident * univ_names * typ)) =
+  sigelt' -> sigelt'__Sig_declare_typ__payload) =
   fun projectee -> match projectee with | Sig_declare_typ _0 -> _0
 let (uu___is_Sig_let : sigelt' -> Prims.bool) =
   fun projectee -> match projectee with | Sig_let _0 -> true | uu___ -> false
-let (__proj__Sig_let__item___0 :
-  sigelt' -> (letbindings * FStar_Ident.lident Prims.list)) =
+let (__proj__Sig_let__item___0 : sigelt' -> sigelt'__Sig_let__payload) =
   fun projectee -> match projectee with | Sig_let _0 -> _0
 let (uu___is_Sig_assume : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_assume _0 -> true | uu___ -> false
-let (__proj__Sig_assume__item___0 :
-  sigelt' -> (FStar_Ident.lident * univ_names * formula)) =
-  fun projectee -> match projectee with | Sig_assume _0 -> _0
+let (__proj__Sig_assume__item___0 : sigelt' -> sigelt'__Sig_assume__payload)
+  = fun projectee -> match projectee with | Sig_assume _0 -> _0
 let (uu___is_Sig_new_effect : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_new_effect _0 -> true | uu___ -> false
@@ -1722,9 +1992,8 @@ let (uu___is_Sig_effect_abbrev : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_effect_abbrev _0 -> true | uu___ -> false
 let (__proj__Sig_effect_abbrev__item___0 :
-  sigelt' ->
-    (FStar_Ident.lident * univ_names * binders * comp * cflag Prims.list))
-  = fun projectee -> match projectee with | Sig_effect_abbrev _0 -> _0
+  sigelt' -> sigelt'__Sig_effect_abbrev__payload) =
+  fun projectee -> match projectee with | Sig_effect_abbrev _0 -> _0
 let (uu___is_Sig_pragma : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_pragma _0 -> true | uu___ -> false
@@ -1733,33 +2002,26 @@ let (__proj__Sig_pragma__item___0 : sigelt' -> pragma) =
 let (uu___is_Sig_splice : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_splice _0 -> true | uu___ -> false
-let (__proj__Sig_splice__item___0 :
-  sigelt' -> (Prims.bool * FStar_Ident.lident Prims.list * term)) =
-  fun projectee -> match projectee with | Sig_splice _0 -> _0
+let (__proj__Sig_splice__item___0 : sigelt' -> sigelt'__Sig_splice__payload)
+  = fun projectee -> match projectee with | Sig_splice _0 -> _0
 let (uu___is_Sig_polymonadic_bind : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_polymonadic_bind _0 -> true | uu___ -> false
 let (__proj__Sig_polymonadic_bind__item___0 :
-  sigelt' ->
-    (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident * tscheme *
-      tscheme * indexed_effect_combinator_kind
-      FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | Sig_polymonadic_bind _0 -> _0
+  sigelt' -> sigelt'__Sig_polymonadic_bind__payload) =
+  fun projectee -> match projectee with | Sig_polymonadic_bind _0 -> _0
 let (uu___is_Sig_polymonadic_subcomp : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with
     | Sig_polymonadic_subcomp _0 -> true
     | uu___ -> false
 let (__proj__Sig_polymonadic_subcomp__item___0 :
-  sigelt' ->
-    (FStar_Ident.lident * FStar_Ident.lident * tscheme * tscheme *
-      indexed_effect_combinator_kind FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | Sig_polymonadic_subcomp _0 -> _0
+  sigelt' -> sigelt'__Sig_polymonadic_subcomp__payload) =
+  fun projectee -> match projectee with | Sig_polymonadic_subcomp _0 -> _0
 let (uu___is_Sig_fail : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_fail _0 -> true | uu___ -> false
-let (__proj__Sig_fail__item___0 :
-  sigelt' -> (Prims.int Prims.list * Prims.bool * sigelt Prims.list)) =
+let (__proj__Sig_fail__item___0 : sigelt' -> sigelt'__Sig_fail__payload) =
   fun projectee -> match projectee with | Sig_fail _0 -> _0
 let (__proj__Mksigelt__item__sigel : sigelt -> sigelt') =
   fun projectee ->

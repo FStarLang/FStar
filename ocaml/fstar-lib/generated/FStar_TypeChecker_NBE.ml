@@ -465,15 +465,14 @@ let (is_constr : FStar_TypeChecker_Env.qninfo -> Prims.bool) =
     | FStar_Pervasives_Native.Some
         (FStar_Pervasives.Inr
          ({
-            FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-              (uu___, uu___1, uu___2, uu___3, uu___4, uu___5);
-            FStar_Syntax_Syntax.sigrng = uu___6;
-            FStar_Syntax_Syntax.sigquals = uu___7;
-            FStar_Syntax_Syntax.sigmeta = uu___8;
-            FStar_Syntax_Syntax.sigattrs = uu___9;
-            FStar_Syntax_Syntax.sigopts = uu___10;_},
-          uu___11),
-         uu___12)
+            FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon uu___;
+            FStar_Syntax_Syntax.sigrng = uu___1;
+            FStar_Syntax_Syntax.sigquals = uu___2;
+            FStar_Syntax_Syntax.sigmeta = uu___3;
+            FStar_Syntax_Syntax.sigattrs = uu___4;
+            FStar_Syntax_Syntax.sigopts = uu___5;_},
+          uu___6),
+         uu___7)
         -> true
     | uu___ -> false
 let (translate_univ :
@@ -1867,7 +1866,8 @@ and (translate_fv :
                         ({
                            FStar_Syntax_Syntax.sigel =
                              FStar_Syntax_Syntax.Sig_let
-                             ((is_rec, lbs), names);
+                             { FStar_Syntax_Syntax.lbs1 = (is_rec, lbs);
+                               FStar_Syntax_Syntax.lids1 = names;_};
                            FStar_Syntax_Syntax.sigrng = uu___3;
                            FStar_Syntax_Syntax.sigquals = uu___4;
                            FStar_Syntax_Syntax.sigmeta = uu___5;
@@ -1936,7 +1936,8 @@ and (translate_fv :
                         ({
                            FStar_Syntax_Syntax.sigel =
                              FStar_Syntax_Syntax.Sig_let
-                             ((is_rec, lbs), names);
+                             { FStar_Syntax_Syntax.lbs1 = (is_rec, lbs);
+                               FStar_Syntax_Syntax.lids1 = names;_};
                            FStar_Syntax_Syntax.sigrng = uu___3;
                            FStar_Syntax_Syntax.sigquals = uu___4;
                            FStar_Syntax_Syntax.sigmeta = uu___5;

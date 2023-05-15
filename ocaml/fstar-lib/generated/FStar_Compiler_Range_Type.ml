@@ -1,5 +1,5 @@
 open Prims
-type file_name = Prims.string[@@deriving yojson,show]
+type file_name = Prims.string[@@deriving yojson,show,yojson,show]
 type pos = {
   line: Prims.int ;
   col: Prims.int }[@@deriving yojson,show,yojson,show]

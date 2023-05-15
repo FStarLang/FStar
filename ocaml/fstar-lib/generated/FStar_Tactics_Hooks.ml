@@ -1671,7 +1671,10 @@ let (handle_smt_goal :
            | FStar_Pervasives_Native.Some tac ->
                let tau =
                  match tac.FStar_Syntax_Syntax.sigel with
-                 | FStar_Syntax_Syntax.Sig_let (uu___2, lid::[]) ->
+                 | FStar_Syntax_Syntax.Sig_let
+                     { FStar_Syntax_Syntax.lbs1 = uu___2;
+                       FStar_Syntax_Syntax.lids1 = lid::[];_}
+                     ->
                      let qn = FStar_TypeChecker_Env.lookup_qname env lid in
                      let fv =
                        FStar_Syntax_Syntax.lid_as_fv lid
@@ -1924,7 +1927,12 @@ let (splice :
                                      [{
                                         FStar_Syntax_Syntax.sigel =
                                           (FStar_Syntax_Syntax.Sig_let
-                                             ((false, [lb]), lids));
+                                             {
+                                               FStar_Syntax_Syntax.lbs1 =
+                                                 (false, [lb]);
+                                               FStar_Syntax_Syntax.lids1 =
+                                                 lids
+                                             });
                                         FStar_Syntax_Syntax.sigrng = rng;
                                         FStar_Syntax_Syntax.sigquals =
                                           [FStar_Syntax_Syntax.Visible_default];

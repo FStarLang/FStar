@@ -6656,7 +6656,11 @@ let (mk_toplevel_definition :
                 [] FStar_Compiler_Range_Type.dummyRange]) in
          let sig_ctx =
            FStar_Syntax_Syntax.mk_sigelt
-             (FStar_Syntax_Syntax.Sig_let (lb, [lident])) in
+             (FStar_Syntax_Syntax.Sig_let
+                {
+                  FStar_Syntax_Syntax.lbs1 = lb;
+                  FStar_Syntax_Syntax.lids1 = [lident]
+                }) in
          let uu___1 =
            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
              FStar_Compiler_Range_Type.dummyRange in
@@ -6892,7 +6896,10 @@ let (check_sigelt_quals :
                else ()
            | FStar_Syntax_Syntax.Sig_declare_typ uu___2 -> ()
            | FStar_Syntax_Syntax.Sig_fail uu___2 -> ()
-           | FStar_Syntax_Syntax.Sig_let ((false, lb::[]), uu___2) ->
+           | FStar_Syntax_Syntax.Sig_let
+               { FStar_Syntax_Syntax.lbs1 = (false, lb::[]);
+                 FStar_Syntax_Syntax.lids1 = uu___2;_}
+               ->
                let uu___3 =
                  FStar_Syntax_Util.abs_formals lb.FStar_Syntax_Syntax.lbdef in
                (match uu___3 with
@@ -7005,7 +7012,10 @@ let (check_sigelt_quals :
            if uu___4 then err "ill-formed combination" else ());
           check_erasable quals se r;
           (match se.FStar_Syntax_Syntax.sigel with
-           | FStar_Syntax_Syntax.Sig_let ((is_rec, uu___5), uu___6) ->
+           | FStar_Syntax_Syntax.Sig_let
+               { FStar_Syntax_Syntax.lbs1 = (is_rec, uu___5);
+                 FStar_Syntax_Syntax.lids1 = uu___6;_}
+               ->
                ((let uu___8 =
                    is_rec &&
                      (FStar_Compiler_Effect.op_Bar_Greater quals
@@ -8204,7 +8214,12 @@ let (try_lookup_record_type :
                          {
                            FStar_Syntax_Syntax.sigel =
                              FStar_Syntax_Syntax.Sig_datacon
-                             (uu___3, uu___4, t, uu___5, nparms, uu___6);
+                             { FStar_Syntax_Syntax.lid1 = uu___3;
+                               FStar_Syntax_Syntax.us1 = uu___4;
+                               FStar_Syntax_Syntax.t1 = t;
+                               FStar_Syntax_Syntax.ty_lid = uu___5;
+                               FStar_Syntax_Syntax.num_ty_params = nparms;
+                               FStar_Syntax_Syntax.mutuals1 = uu___6;_};
                            FStar_Syntax_Syntax.sigrng = uu___7;
                            FStar_Syntax_Syntax.sigquals = uu___8;
                            FStar_Syntax_Syntax.sigmeta = uu___9;

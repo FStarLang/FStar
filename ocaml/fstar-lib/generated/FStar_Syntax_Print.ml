@@ -1475,7 +1475,13 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
          match x.FStar_Syntax_Syntax.sigel with
          | FStar_Syntax_Syntax.Sig_pragma p -> pragma_to_string p
          | FStar_Syntax_Syntax.Sig_inductive_typ
-             (lid, univs, tps, uu___2, k, uu___3, uu___4) ->
+             { FStar_Syntax_Syntax.lid = lid; FStar_Syntax_Syntax.us = univs;
+               FStar_Syntax_Syntax.params = tps;
+               FStar_Syntax_Syntax.num_uniform_params = uu___2;
+               FStar_Syntax_Syntax.t = k;
+               FStar_Syntax_Syntax.mutuals = uu___3;
+               FStar_Syntax_Syntax.ds = uu___4;_}
+             ->
              let quals_str = quals_to_string' x.FStar_Syntax_Syntax.sigquals in
              let binders_str = binders_to_string " " tps in
              let term_str = term_to_string k in
@@ -1491,7 +1497,12 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                 FStar_Compiler_Util.format4 "%stype %s %s : %s" quals_str
                   uu___7 binders_str term_str)
          | FStar_Syntax_Syntax.Sig_datacon
-             (lid, univs, t, uu___2, uu___3, uu___4) ->
+             { FStar_Syntax_Syntax.lid1 = lid;
+               FStar_Syntax_Syntax.us1 = univs; FStar_Syntax_Syntax.t1 = t;
+               FStar_Syntax_Syntax.ty_lid = uu___2;
+               FStar_Syntax_Syntax.num_ty_params = uu___3;
+               FStar_Syntax_Syntax.mutuals1 = uu___4;_}
+             ->
              let uu___5 = FStar_Options.print_universes () in
              if uu___5
              then
@@ -1504,7 +1515,10 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                (let uu___7 = FStar_Ident.string_of_lid lid in
                 let uu___8 = term_to_string t in
                 FStar_Compiler_Util.format2 "datacon %s : %s" uu___7 uu___8)
-         | FStar_Syntax_Syntax.Sig_declare_typ (lid, univs, t) ->
+         | FStar_Syntax_Syntax.Sig_declare_typ
+             { FStar_Syntax_Syntax.lid2 = lid;
+               FStar_Syntax_Syntax.us2 = univs; FStar_Syntax_Syntax.t2 = t;_}
+             ->
              let uu___2 = quals_to_string' x.FStar_Syntax_Syntax.sigquals in
              let uu___3 = FStar_Ident.string_of_lid lid in
              let uu___4 =
@@ -1517,7 +1531,10 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
              let uu___5 = term_to_string t in
              FStar_Compiler_Util.format4 "%sval %s %s : %s" uu___2 uu___3
                uu___4 uu___5
-         | FStar_Syntax_Syntax.Sig_assume (lid, us, f) ->
+         | FStar_Syntax_Syntax.Sig_assume
+             { FStar_Syntax_Syntax.lid3 = lid; FStar_Syntax_Syntax.us3 = us;
+               FStar_Syntax_Syntax.phi1 = f;_}
+             ->
              let uu___2 = FStar_Options.print_universes () in
              if uu___2
              then
@@ -1530,7 +1547,10 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                (let uu___4 = FStar_Ident.string_of_lid lid in
                 let uu___5 = term_to_string f in
                 FStar_Compiler_Util.format2 "assume %s : %s" uu___4 uu___5)
-         | FStar_Syntax_Syntax.Sig_let (lbs, uu___2) ->
+         | FStar_Syntax_Syntax.Sig_let
+             { FStar_Syntax_Syntax.lbs1 = lbs;
+               FStar_Syntax_Syntax.lids1 = uu___2;_}
+             ->
              let lbs1 =
                let uu___3 =
                  FStar_Compiler_List.map
@@ -1552,13 +1572,20 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                       }) (FStar_Pervasives_Native.snd lbs) in
                ((FStar_Pervasives_Native.fst lbs), uu___3) in
              lbs_to_string x.FStar_Syntax_Syntax.sigquals lbs1
-         | FStar_Syntax_Syntax.Sig_bundle (ses, uu___2) ->
+         | FStar_Syntax_Syntax.Sig_bundle
+             { FStar_Syntax_Syntax.ses = ses;
+               FStar_Syntax_Syntax.lids = uu___2;_}
+             ->
              let uu___3 =
                let uu___4 = FStar_Compiler_List.map sigelt_to_string ses in
                FStar_Compiler_Effect.op_Bar_Greater uu___4
                  (FStar_String.concat "\n") in
              Prims.op_Hat "(* Sig_bundle *)" uu___3
-         | FStar_Syntax_Syntax.Sig_fail (errs, lax, ses) ->
+         | FStar_Syntax_Syntax.Sig_fail
+             { FStar_Syntax_Syntax.errs = errs;
+               FStar_Syntax_Syntax.fail_in_lax = lax;
+               FStar_Syntax_Syntax.ses1 = ses;_}
+             ->
              let uu___2 = FStar_Compiler_Util.string_of_bool lax in
              let uu___3 =
                (FStar_Common.string_of_list ())
@@ -1575,7 +1602,11 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
              eff_decl_to_string' uu___2 x.FStar_Syntax_Syntax.sigrng
                x.FStar_Syntax_Syntax.sigquals ed
          | FStar_Syntax_Syntax.Sig_sub_effect se -> sub_eff_to_string se
-         | FStar_Syntax_Syntax.Sig_effect_abbrev (l, univs, tps, c, flags) ->
+         | FStar_Syntax_Syntax.Sig_effect_abbrev
+             { FStar_Syntax_Syntax.lid4 = l; FStar_Syntax_Syntax.us4 = univs;
+               FStar_Syntax_Syntax.bs2 = tps; FStar_Syntax_Syntax.comp1 = c;
+               FStar_Syntax_Syntax.cflags = flags;_}
+             ->
              let uu___2 = FStar_Options.print_universes () in
              if uu___2
              then
@@ -1614,7 +1645,11 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                 let uu___6 = comp_to_string c in
                 FStar_Compiler_Util.format3 "effect %s %s = %s" uu___4 uu___5
                   uu___6)
-         | FStar_Syntax_Syntax.Sig_splice (is_typed, lids, t) ->
+         | FStar_Syntax_Syntax.Sig_splice
+             { FStar_Syntax_Syntax.is_typed = is_typed;
+               FStar_Syntax_Syntax.lids2 = lids;
+               FStar_Syntax_Syntax.tac = t;_}
+             ->
              let uu___2 =
                let uu___3 =
                  FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
@@ -1623,7 +1658,11 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
              let uu___3 = term_to_string t in
              FStar_Compiler_Util.format3 "splice%s[%s] (%s)"
                (if is_typed then "_t" else "") uu___2 uu___3
-         | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty, k) ->
+         | FStar_Syntax_Syntax.Sig_polymonadic_bind
+             { FStar_Syntax_Syntax.m_lid = m; FStar_Syntax_Syntax.n_lid = n;
+               FStar_Syntax_Syntax.p_lid = p; FStar_Syntax_Syntax.tm3 = t;
+               FStar_Syntax_Syntax.typ = ty; FStar_Syntax_Syntax.kind1 = k;_}
+             ->
              let uu___2 = FStar_Ident.string_of_lid m in
              let uu___3 = FStar_Ident.string_of_lid n in
              let uu___4 = FStar_Ident.string_of_lid p in
@@ -1633,7 +1672,12 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
              FStar_Compiler_Util.format6
                "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>" uu___2 uu___3
                uu___4 uu___5 uu___6 uu___7
-         | FStar_Syntax_Syntax.Sig_polymonadic_subcomp (m, n, t, ty, k) ->
+         | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
+             { FStar_Syntax_Syntax.m_lid1 = m;
+               FStar_Syntax_Syntax.n_lid1 = n; FStar_Syntax_Syntax.tm4 = t;
+               FStar_Syntax_Syntax.typ1 = ty;
+               FStar_Syntax_Syntax.kind2 = k;_}
+             ->
              let uu___2 = FStar_Ident.string_of_lid m in
              let uu___3 = FStar_Ident.string_of_lid n in
              let uu___4 = tscheme_to_string t in
@@ -1661,32 +1705,39 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
     match x.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_pragma p -> pragma_to_string p
     | FStar_Syntax_Syntax.Sig_let
-        ((false,
-          { FStar_Syntax_Syntax.lbname = lb;
-            FStar_Syntax_Syntax.lbunivs = uu___;
-            FStar_Syntax_Syntax.lbtyp = uu___1;
-            FStar_Syntax_Syntax.lbeff = uu___2;
-            FStar_Syntax_Syntax.lbdef = uu___3;
-            FStar_Syntax_Syntax.lbattrs = uu___4;
-            FStar_Syntax_Syntax.lbpos = uu___5;_}::[]),
-         uu___6)
+        {
+          FStar_Syntax_Syntax.lbs1 =
+            (false,
+             { FStar_Syntax_Syntax.lbname = lb;
+               FStar_Syntax_Syntax.lbunivs = uu___;
+               FStar_Syntax_Syntax.lbtyp = uu___1;
+               FStar_Syntax_Syntax.lbeff = uu___2;
+               FStar_Syntax_Syntax.lbdef = uu___3;
+               FStar_Syntax_Syntax.lbattrs = uu___4;
+               FStar_Syntax_Syntax.lbpos = uu___5;_}::[]);
+          FStar_Syntax_Syntax.lids1 = uu___6;_}
         ->
         let uu___7 = lbname_to_string lb in
         FStar_Compiler_Util.format1 "let %s" uu___7
     | FStar_Syntax_Syntax.Sig_let
-        ((true,
-          { FStar_Syntax_Syntax.lbname = lb;
-            FStar_Syntax_Syntax.lbunivs = uu___;
-            FStar_Syntax_Syntax.lbtyp = uu___1;
-            FStar_Syntax_Syntax.lbeff = uu___2;
-            FStar_Syntax_Syntax.lbdef = uu___3;
-            FStar_Syntax_Syntax.lbattrs = uu___4;
-            FStar_Syntax_Syntax.lbpos = uu___5;_}::[]),
-         uu___6)
+        {
+          FStar_Syntax_Syntax.lbs1 =
+            (true,
+             { FStar_Syntax_Syntax.lbname = lb;
+               FStar_Syntax_Syntax.lbunivs = uu___;
+               FStar_Syntax_Syntax.lbtyp = uu___1;
+               FStar_Syntax_Syntax.lbeff = uu___2;
+               FStar_Syntax_Syntax.lbdef = uu___3;
+               FStar_Syntax_Syntax.lbattrs = uu___4;
+               FStar_Syntax_Syntax.lbpos = uu___5;_}::[]);
+          FStar_Syntax_Syntax.lids1 = uu___6;_}
         ->
         let uu___7 = lbname_to_string lb in
         FStar_Compiler_Util.format1 "let rec %s" uu___7
-    | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___) ->
+    | FStar_Syntax_Syntax.Sig_let
+        { FStar_Syntax_Syntax.lbs1 = (true, lbs);
+          FStar_Syntax_Syntax.lids1 = uu___;_}
+        ->
         let uu___1 =
           let uu___2 =
             FStar_Compiler_List.map
@@ -1695,30 +1746,53 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         FStar_Compiler_Util.format1 "let rec %s" uu___1
     | FStar_Syntax_Syntax.Sig_let uu___ ->
         failwith "Impossible: sigelt_to_string_short, ill-formed let"
-    | FStar_Syntax_Syntax.Sig_declare_typ (lid, uu___, t) ->
-        let uu___1 = FStar_Ident.string_of_lid lid in
-        FStar_Compiler_Util.format1 "val %s" uu___1
+    | FStar_Syntax_Syntax.Sig_declare_typ
+        { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = uu___;
+          FStar_Syntax_Syntax.t2 = uu___1;_}
+        ->
+        let uu___2 = FStar_Ident.string_of_lid lid in
+        FStar_Compiler_Util.format1 "val %s" uu___2
     | FStar_Syntax_Syntax.Sig_inductive_typ
-        (lid, uu___, uu___1, uu___2, uu___3, uu___4, uu___5) ->
+        { FStar_Syntax_Syntax.lid = lid; FStar_Syntax_Syntax.us = uu___;
+          FStar_Syntax_Syntax.params = uu___1;
+          FStar_Syntax_Syntax.num_uniform_params = uu___2;
+          FStar_Syntax_Syntax.t = uu___3;
+          FStar_Syntax_Syntax.mutuals = uu___4;
+          FStar_Syntax_Syntax.ds = uu___5;_}
+        ->
         let uu___6 = FStar_Ident.string_of_lid lid in
         FStar_Compiler_Util.format1 "type %s" uu___6
     | FStar_Syntax_Syntax.Sig_datacon
-        (lid, uu___, uu___1, t_lid, uu___2, uu___3) ->
+        { FStar_Syntax_Syntax.lid1 = lid; FStar_Syntax_Syntax.us1 = uu___;
+          FStar_Syntax_Syntax.t1 = uu___1;
+          FStar_Syntax_Syntax.ty_lid = t_lid;
+          FStar_Syntax_Syntax.num_ty_params = uu___2;
+          FStar_Syntax_Syntax.mutuals1 = uu___3;_}
+        ->
         let uu___4 = FStar_Ident.string_of_lid lid in
         let uu___5 = FStar_Ident.string_of_lid t_lid in
         FStar_Compiler_Util.format2 "datacon %s for type %s" uu___4 uu___5
-    | FStar_Syntax_Syntax.Sig_assume (lid, us, uu___) ->
-        let uu___1 = FStar_Ident.string_of_lid lid in
-        FStar_Compiler_Util.format1 "assume %s" uu___1
-    | FStar_Syntax_Syntax.Sig_bundle (ses, uu___) ->
+    | FStar_Syntax_Syntax.Sig_assume
+        { FStar_Syntax_Syntax.lid3 = lid; FStar_Syntax_Syntax.us3 = uu___;
+          FStar_Syntax_Syntax.phi1 = uu___1;_}
+        ->
+        let uu___2 = FStar_Ident.string_of_lid lid in
+        FStar_Compiler_Util.format1 "assume %s" uu___2
+    | FStar_Syntax_Syntax.Sig_bundle
+        { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = uu___;_}
+        ->
         let uu___1 = FStar_Compiler_List.hd ses in
         FStar_Compiler_Effect.op_Bar_Greater uu___1 sigelt_to_string_short
-    | FStar_Syntax_Syntax.Sig_fail (errs, lax, ses) ->
-        let uu___ =
-          let uu___1 =
+    | FStar_Syntax_Syntax.Sig_fail
+        { FStar_Syntax_Syntax.errs = uu___;
+          FStar_Syntax_Syntax.fail_in_lax = uu___1;
+          FStar_Syntax_Syntax.ses1 = ses;_}
+        ->
+        let uu___2 =
+          let uu___3 =
             FStar_Compiler_Effect.op_Bar_Greater ses FStar_Compiler_List.hd in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1 sigelt_to_string_short in
-        FStar_Compiler_Util.format1 "[@@expect_failure] %s" uu___
+          FStar_Compiler_Effect.op_Bar_Greater uu___3 sigelt_to_string_short in
+        FStar_Compiler_Util.format1 "[@@expect_failure] %s" uu___2
     | FStar_Syntax_Syntax.Sig_new_effect ed ->
         let kw =
           let uu___ = FStar_Syntax_Util.is_layered ed in
@@ -1733,28 +1807,45 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         let uu___ = lid_to_string se.FStar_Syntax_Syntax.source in
         let uu___1 = lid_to_string se.FStar_Syntax_Syntax.target in
         FStar_Compiler_Util.format2 "sub_effect %s ~> %s" uu___ uu___1
-    | FStar_Syntax_Syntax.Sig_effect_abbrev (l, univs, tps, c, flags) ->
-        let uu___ = sli l in
-        let uu___1 = binders_to_string " " tps in
-        let uu___2 = comp_to_string c in
-        FStar_Compiler_Util.format3 "effect %s %s = %s" uu___ uu___1 uu___2
-    | FStar_Syntax_Syntax.Sig_splice (is_typed, lids, t) ->
-        let uu___ =
-          let uu___1 = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
-          FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ") uu___1 in
+    | FStar_Syntax_Syntax.Sig_effect_abbrev
+        { FStar_Syntax_Syntax.lid4 = l; FStar_Syntax_Syntax.us4 = uu___;
+          FStar_Syntax_Syntax.bs2 = tps; FStar_Syntax_Syntax.comp1 = c;
+          FStar_Syntax_Syntax.cflags = uu___1;_}
+        ->
+        let uu___2 = sli l in
+        let uu___3 = binders_to_string " " tps in
+        let uu___4 = comp_to_string c in
+        FStar_Compiler_Util.format3 "effect %s %s = %s" uu___2 uu___3 uu___4
+    | FStar_Syntax_Syntax.Sig_splice
+        { FStar_Syntax_Syntax.is_typed = is_typed;
+          FStar_Syntax_Syntax.lids2 = lids;
+          FStar_Syntax_Syntax.tac = uu___;_}
+        ->
+        let uu___1 =
+          let uu___2 = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
+          FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ") uu___2 in
         FStar_Compiler_Util.format3 "%splice%s[%s] (...)" "%s"
-          (if is_typed then "_t" else "") uu___
-    | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty, uu___) ->
-        let uu___1 = FStar_Ident.string_of_lid m in
-        let uu___2 = FStar_Ident.string_of_lid n in
-        let uu___3 = FStar_Ident.string_of_lid p in
-        FStar_Compiler_Util.format3 "polymonadic_bind (%s, %s) |> %s" uu___1
-          uu___2 uu___3
-    | FStar_Syntax_Syntax.Sig_polymonadic_subcomp (m, n, t, ty, uu___) ->
-        let uu___1 = FStar_Ident.string_of_lid m in
-        let uu___2 = FStar_Ident.string_of_lid n in
-        FStar_Compiler_Util.format2 "polymonadic_subcomp %s <: %s" uu___1
-          uu___2
+          (if is_typed then "_t" else "") uu___1
+    | FStar_Syntax_Syntax.Sig_polymonadic_bind
+        { FStar_Syntax_Syntax.m_lid = m; FStar_Syntax_Syntax.n_lid = n;
+          FStar_Syntax_Syntax.p_lid = p; FStar_Syntax_Syntax.tm3 = uu___;
+          FStar_Syntax_Syntax.typ = uu___1;
+          FStar_Syntax_Syntax.kind1 = uu___2;_}
+        ->
+        let uu___3 = FStar_Ident.string_of_lid m in
+        let uu___4 = FStar_Ident.string_of_lid n in
+        let uu___5 = FStar_Ident.string_of_lid p in
+        FStar_Compiler_Util.format3 "polymonadic_bind (%s, %s) |> %s" uu___3
+          uu___4 uu___5
+    | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
+        { FStar_Syntax_Syntax.m_lid1 = m; FStar_Syntax_Syntax.n_lid1 = n;
+          FStar_Syntax_Syntax.tm4 = uu___; FStar_Syntax_Syntax.typ1 = uu___1;
+          FStar_Syntax_Syntax.kind2 = uu___2;_}
+        ->
+        let uu___3 = FStar_Ident.string_of_lid m in
+        let uu___4 = FStar_Ident.string_of_lid n in
+        FStar_Compiler_Util.format2 "polymonadic_subcomp %s <: %s" uu___3
+          uu___4
 let (tag_of_sigelt : FStar_Syntax_Syntax.sigelt -> Prims.string) =
   fun se ->
     match se.FStar_Syntax_Syntax.sigel with
