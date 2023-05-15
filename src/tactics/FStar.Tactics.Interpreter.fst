@@ -112,9 +112,9 @@ let rec t_head_of (t : term) : term =
       | Tm_constant _ -> t
       | _ -> t_head_of h
       end
-    | Tm_match (t, _, _, _)
-    | Tm_ascribed (t, _, _)
-    | Tm_meta (t, _) -> t_head_of t
+    | Tm_match {scrutinee=t}
+    | Tm_ascribed {tm=t}
+    | Tm_meta {tm=t} -> t_head_of t
     | _ -> t
 
 let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b =

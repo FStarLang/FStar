@@ -551,7 +551,10 @@ let (gen :
                                             uu___8.FStar_Syntax_Syntax.n in
                                           match uu___7 with
                                           | FStar_Syntax_Syntax.Tm_arrow
-                                              (bs, cod) ->
+                                              { FStar_Syntax_Syntax.bs1 = bs;
+                                                FStar_Syntax_Syntax.comp =
+                                                  cod;_}
+                                              ->
                                               let uu___8 =
                                                 FStar_Syntax_Subst.open_comp
                                                   bs cod in

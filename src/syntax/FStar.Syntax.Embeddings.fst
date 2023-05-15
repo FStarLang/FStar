@@ -174,20 +174,20 @@ let mk_emb_full em un typ printer emb_typ = {
 let rec unmeta_div_results t =
   let open FStar.Ident in
   match (SS.compress t).n with
-  | Tm_meta (t', Meta_monadic_lift (src, dst, _)) ->
+  | Tm_meta {tm=t'; meta=Meta_monadic_lift (src, dst, _)} ->
     if lid_equals src PC.effect_PURE_lid &&
        lid_equals dst PC.effect_DIV_lid
     then unmeta_div_results t'
     else t
 
-  | Tm_meta (t', Meta_monadic (m, _)) ->
+  | Tm_meta {tm=t'; meta=Meta_monadic (m, _)} ->
     if lid_equals m PC.effect_DIV_lid
     then unmeta_div_results t'
     else t
 
-  | Tm_meta (t', _) -> unmeta_div_results t'
+  | Tm_meta {tm=t'} -> unmeta_div_results t'
 
-  | Tm_ascribed (t', _, _) -> unmeta_div_results t'
+  | Tm_ascribed {tm=t'} -> unmeta_div_results t'
   
   | _ -> t
 
@@ -1031,8 +1031,8 @@ let or_else (f: option 'a) (g:unit -> 'a) =
 
 let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
     let typ =
-        S.mk (Tm_arrow([S.mk_binder (S.null_bv ea.typ)],
-                        S.mk_Total eb.typ))
+        S.mk (Tm_arrow {bs=[S.mk_binder (S.null_bv ea.typ)];
+                        comp=S.mk_Total eb.typ})
               Range.dummyRange
     in
     let emb_t_arr_a_b = ET_fun(ea.emb_typ, eb.emb_typ) in

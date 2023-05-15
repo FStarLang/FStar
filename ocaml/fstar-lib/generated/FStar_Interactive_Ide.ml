@@ -2160,15 +2160,17 @@ let run_with_parsed_and_tc_term :
               match ses with
               | {
                   FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
-                    ((uu___,
-                      { FStar_Syntax_Syntax.lbname = uu___1;
-                        FStar_Syntax_Syntax.lbunivs = univs;
-                        FStar_Syntax_Syntax.lbtyp = uu___2;
-                        FStar_Syntax_Syntax.lbeff = uu___3;
-                        FStar_Syntax_Syntax.lbdef = def;
-                        FStar_Syntax_Syntax.lbattrs = uu___4;
-                        FStar_Syntax_Syntax.lbpos = uu___5;_}::[]),
-                     uu___6);
+                    {
+                      FStar_Syntax_Syntax.lbs1 =
+                        (uu___,
+                         { FStar_Syntax_Syntax.lbname = uu___1;
+                           FStar_Syntax_Syntax.lbunivs = univs;
+                           FStar_Syntax_Syntax.lbtyp = uu___2;
+                           FStar_Syntax_Syntax.lbeff = uu___3;
+                           FStar_Syntax_Syntax.lbdef = def;
+                           FStar_Syntax_Syntax.lbattrs = uu___4;
+                           FStar_Syntax_Syntax.lbpos = uu___5;_}::[]);
+                      FStar_Syntax_Syntax.lids1 = uu___6;_};
                   FStar_Syntax_Syntax.sigrng = uu___7;
                   FStar_Syntax_Syntax.sigquals = uu___8;
                   FStar_Syntax_Syntax.sigmeta = uu___9;

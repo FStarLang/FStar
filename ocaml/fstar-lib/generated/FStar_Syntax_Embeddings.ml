@@ -188,19 +188,29 @@ let rec (unmeta_div_results :
       uu___1.FStar_Syntax_Syntax.n in
     match uu___ with
     | FStar_Syntax_Syntax.Tm_meta
-        (t', FStar_Syntax_Syntax.Meta_monadic_lift (src, dst, uu___1)) ->
+        { FStar_Syntax_Syntax.tm2 = t';
+          FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_monadic_lift
+            (src, dst, uu___1);_}
+        ->
         let uu___2 =
           (FStar_Ident.lid_equals src FStar_Parser_Const.effect_PURE_lid) &&
             (FStar_Ident.lid_equals dst FStar_Parser_Const.effect_DIV_lid) in
         if uu___2 then unmeta_div_results t' else t
     | FStar_Syntax_Syntax.Tm_meta
-        (t', FStar_Syntax_Syntax.Meta_monadic (m, uu___1)) ->
+        { FStar_Syntax_Syntax.tm2 = t';
+          FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_monadic
+            (m, uu___1);_}
+        ->
         let uu___2 =
           FStar_Ident.lid_equals m FStar_Parser_Const.effect_DIV_lid in
         if uu___2 then unmeta_div_results t' else t
-    | FStar_Syntax_Syntax.Tm_meta (t', uu___1) -> unmeta_div_results t'
-    | FStar_Syntax_Syntax.Tm_ascribed (t', uu___1, uu___2) ->
-        unmeta_div_results t'
+    | FStar_Syntax_Syntax.Tm_meta
+        { FStar_Syntax_Syntax.tm2 = t'; FStar_Syntax_Syntax.meta = uu___1;_}
+        -> unmeta_div_results t'
+    | FStar_Syntax_Syntax.Tm_ascribed
+        { FStar_Syntax_Syntax.tm = t'; FStar_Syntax_Syntax.asc = uu___1;
+          FStar_Syntax_Syntax.eff_opt = uu___2;_}
+        -> unmeta_div_results t'
     | uu___1 -> t
 let embed : 'a . 'a embedding -> 'a -> embed_t = fun e -> fun x -> e.em x
 let unembed : 'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
@@ -2316,7 +2326,10 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                 FStar_Syntax_Syntax.mk_binder uu___4 in
               [uu___3] in
             let uu___3 = FStar_Syntax_Syntax.mk_Total eb.typ in
-            (uu___2, uu___3) in
+            {
+              FStar_Syntax_Syntax.bs1 = uu___2;
+              FStar_Syntax_Syntax.comp = uu___3
+            } in
           FStar_Syntax_Syntax.Tm_arrow uu___1 in
         FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange in
       let emb_t_arr_a_b =

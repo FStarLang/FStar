@@ -185,7 +185,7 @@ let rec inspect_ln (t:term) : term_view =
     //
     let t = t |> SS.compress_subst in
     match t.n with
-    | Tm_meta (t, _) ->
+    | Tm_meta {tm=t} ->
         inspect_ln t
 
     | Tm_name bv ->
@@ -202,37 +202,37 @@ let rec inspect_ln (t:term) : term_view =
        | Tm_fvar fv -> Tv_UInst (fv, us)
        | _ -> failwith "Reflection::inspect_ln: uinst for a non-fvar node")
 
-    | Tm_ascribed (t, (Inl ty, tacopt, eq), _elid) ->
+    | Tm_ascribed {tm=t; asc=(Inl ty, tacopt, eq)} ->
         Tv_AscribedT (t, ty, tacopt, eq)
 
-    | Tm_ascribed (t, (Inr cty, tacopt, eq), elid) ->
+    | Tm_ascribed {tm=t; asc=(Inr cty, tacopt, eq)} ->
         Tv_AscribedC (t, cty, tacopt, eq)
 
-    | Tm_app (hd, []) ->
+    | Tm_app {args=[]} ->
         failwith "inspect_ln: empty arguments on Tm_app"
 
-    | Tm_app (hd, args) ->
+    | Tm_app {hd; args} ->
         // We split at the last argument, since the term_view does not
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
         let q' = inspect_aqual q in
         Tv_App (U.mk_app hd (init args), (a, q'))
 
-    | Tm_abs ([], _, _) ->
+    | Tm_abs {bs=[]} ->
         failwith "inspect_ln: empty arguments on Tm_abs"
 
-    | Tm_abs (b::bs, t, k) ->
+    | Tm_abs {bs=b::bs; body=t; rc_opt=k} ->
         let body =
             match bs with
             | [] -> t
-            | bs -> S.mk (Tm_abs (bs, t, k)) t.pos
+            | bs -> S.mk (Tm_abs {bs; body=t; rc_opt=k}) t.pos
         in
         Tv_Abs (b, body)
 
     | Tm_type u ->
         Tv_Type u
 
-    | Tm_arrow ([], k) ->
+    | Tm_arrow {bs=[]} ->
         failwith "inspect_ln: empty binders on arrow"
 
     | Tm_arrow _ ->
@@ -241,7 +241,7 @@ let rec inspect_ln (t:term) : term_view =
         | None -> failwith "impossible"
         end
 
-    | Tm_refine (bv, t) ->
+    | Tm_refine {b=bv; phi=t} ->
         Tv_Refine (bv, bv.sort, t)
 
     | Tm_constant c ->
@@ -254,7 +254,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head),
                 (ctx_u, s))
 
-    | Tm_let ((false, [lb]), t2) ->
+    | Tm_let {lbs=(false, [lb]); body=t2} ->
         if lb.lbunivs <> [] then Tv_Unsupp else
         begin match lb.lbname with
         | Inr _ -> Tv_Unsupp // no top level lets
@@ -263,14 +263,14 @@ let rec inspect_ln (t:term) : term_view =
             Tv_Let (false, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
         end
 
-    | Tm_let ((true, [lb]), t2) ->
+    | Tm_let {lbs=(true, [lb]); body=t2} ->
         if lb.lbunivs <> [] then Tv_Unsupp else
         begin match lb.lbname with
         | Inr _  -> Tv_Unsupp // no top level lets
         | Inl bv -> Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
         end
 
-    | Tm_match (t, ret_opt, brs, _) ->
+    | Tm_match {scrutinee=t; ret_opt; brs} ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -392,16 +392,16 @@ let pack_ln (tv:term_view) : term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        mk (Tm_abs ([b], t, None)) t.pos // TODO: effect?
+        mk (Tm_abs {bs=[b]; body=t; rc_opt=None}) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        mk (Tm_arrow ([b], c)) c.pos
+        mk (Tm_arrow {bs=[b]; comp=c}) c.pos
 
     | Tv_Type u ->
         mk (Tm_type u) Range.dummyRange
 
     | Tv_Refine (bv, sort, t) ->
-        mk (Tm_refine ({bv with sort=sort}, t)) t.pos
+        mk (Tm_refine {b={bv with sort=sort}; phi=t}) t.pos
 
     | Tv_Const c ->
         S.mk (Tm_constant (pack_const c)) Range.dummyRange
@@ -412,12 +412,12 @@ let pack_ln (tv:term_view) : term =
     | Tv_Let (false, attrs, bv, ty, t1, t2) ->
         let bv = { bv with sort=ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((false, [lb]), t2)) Range.dummyRange
+        S.mk (Tm_let {lbs=(false, [lb]); body=t2}) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, ty, t1, t2) ->
         let bv = { bv with sort=ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((true, [lb]), t2)) Range.dummyRange
+        S.mk (Tm_let {lbs=(true, [lb]); body=t2}) Range.dummyRange
 
     | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -429,13 +429,13 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
+        S.mk (Tm_match {scrutinee=t; ret_opt; brs; rc_opt=None}) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt, use_eq) ->
-        S.mk (Tm_ascribed(e, (Inl t, tacopt, use_eq), None)) Range.dummyRange
+        S.mk (Tm_ascribed {tm=e; asc=(Inl t, tacopt, use_eq); eff_opt=None}) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt, use_eq) ->
-        S.mk (Tm_ascribed(e, (Inr c, tacopt, use_eq), None)) Range.dummyRange
+        S.mk (Tm_ascribed {tm=e; asc=(Inr c, tacopt, use_eq); eff_opt=None}) Range.dummyRange
 
     | Tv_Unknown ->
         S.mk Tm_unknown Range.dummyRange
@@ -549,7 +549,7 @@ let embed_vconfig (vcfg : vconfig) : term =
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
-    | Sig_let ((r, lbs), _) ->
+    | Sig_let {lbs=(r, lbs)} ->
         let inspect_letbinding (lb:letbinding) =
             let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos} = lb in
             let s, us = SS.univ_var_opening us in
@@ -559,7 +559,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         in
         Sg_Let (r, List.map inspect_letbinding lbs)
 
-    | Sig_inductive_typ (lid, us, param_bs, _num_uniform, ty, _mutual, c_lids) ->
+    | Sig_inductive_typ {lid; us; params=param_bs; t=ty; ds=c_lids} ->
         let nm = Ident.path_of_lid lid in
         let s, us = SS.univ_var_opening us in
         let param_bs = SS.subst_binders s param_bs in
@@ -569,7 +569,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
         let inspect_ctor (c_lid:Ident.lid) : ctor =
           match Env.lookup_sigelt (get_env ()) c_lid with
-          | Some ({sigel = Sig_datacon (lid, us, cty, _ty_lid_, nparam, _mutual)}) ->
+          | Some ({sigel = Sig_datacon {lid; us; t=cty; num_ty_params=nparam}}) ->
             let cty = SS.subst s cty in // open universes from above
 
             let param_ctor_bs, c = N.get_n_binders (get_env ()) nparam cty in
@@ -597,7 +597,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         in
         Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
 
-    | Sig_declare_typ (lid, us, ty) ->
+    | Sig_declare_typ {lid; us; t=ty} ->
         let nm = Ident.path_of_lid lid in
         let us, ty = SS.open_univ_vars us ty in
         Sg_Val (nm, us, ty)
@@ -631,7 +631,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 	let packed = List.map pack_letbinding lbs in
 	let lbs = List.map snd packed in
 	let lids = List.map fst packed in
-        mk_sigelt <| Sig_let ((r, lbs), lids)
+        mk_sigelt <| Sig_let {lbs=(r, lbs); lids}
 
     | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
@@ -643,7 +643,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         let lid = Ident.lid_of_path nm Range.dummyRange in
         let ty = U.arrow param_bs (S.mk_Total ty) in
         let ty = SS.subst s ty in (* close univs *)
-        mk_sigelt <| Sig_datacon (lid, us_names, ty, ind_lid, nparam, [])
+        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in
@@ -658,16 +658,22 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         let ty = SS.subst s ty in
         //We can't trust the assignment of num uniform binders from the reflection API
         //So, set it to None; it has to be checked and recomputed
-        mk_sigelt <| Sig_inductive_typ (ind_lid, us_names, param_bs, None, ty, [], c_lids)
+        mk_sigelt <| Sig_inductive_typ {lid=ind_lid;
+                                        us=us_names;
+                                        params=param_bs;
+                                        num_uniform_params=None;
+                                        t=ty;
+                                        mutuals=[];
+                                        ds=c_lids}
       in
-      let se = mk_sigelt <| Sig_bundle (ind_se::ctor_ses, ind_lid::c_lids) in
+      let se = mk_sigelt <| Sig_bundle {ses=ind_se::ctor_ses; lids=ind_lid::c_lids} in
       { se with sigquals = Noeq::se.sigquals }
 
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
         check_lid val_lid;
         let typ = SS.close_univ_vars us_names ty in
-        mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
+        mk_sigelt <| Sig_declare_typ {lid=val_lid; us=us_names; t=typ}
 
     | Unk ->
         failwith "packing Unk, sorry"

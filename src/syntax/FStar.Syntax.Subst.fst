@@ -75,7 +75,7 @@ let compose_subst s1 s2 =
 //composing it with any other delayed substitution that may already be there
 let delay t s =
  match t.n with
- | Tm_delayed (t', s') ->
+ | Tm_delayed {tm=t'; substs=s'} ->
     //s' is the subsitution already associated with this node;
     //s is the new subsitution to add to it
     //compose substitutions by concatenating them
@@ -205,7 +205,7 @@ let rec subst' (s:subst_ts) (t:term) : term =
     | Tm_constant _                      //a constant cannot be substituted
     | Tm_fvar _ -> tag_with_range t0 s   //fvars are never subject to substitution
 
-    | Tm_delayed (t', s') ->
+    | Tm_delayed {tm=t';substs=s'} ->
         //s' is the subsitution already associated with this node;
         //s is the new subsitution to add to it
         //compose substitutions by concatenating them
@@ -421,26 +421,26 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
         let us = List.map (subst_univ (fst s)) us in
         tag_with_range (mk (Tm_uinst (t', us))) s
 
-    | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
+    | Tm_app {hd=t0; args} -> mk (Tm_app {hd=subst' s t0; args=subst_args' s args})
 
-    | Tm_ascribed(t0, asc, lopt) ->
-      mk (Tm_ascribed(subst' s t0, subst_ascription' s asc, lopt))
+    | Tm_ascribed {tm=t0; asc; eff_opt=lopt} ->
+      mk (Tm_ascribed {tm=subst' s t0; asc=subst_ascription' s asc; eff_opt=lopt})
 
-    | Tm_abs(bs, body, lopt) ->
+    | Tm_abs {bs; body; rc_opt=lopt} ->
         let n = List.length bs in
         let s' = shift_subst' n s in
-        mk (Tm_abs(subst_binders' s bs, subst' s' body, push_subst_lcomp s' lopt))
+        mk (Tm_abs {bs=subst_binders' s bs; body=subst' s' body; rc_opt=push_subst_lcomp s' lopt})
 
-    | Tm_arrow(bs, comp) ->
+    | Tm_arrow {bs; comp} ->
         let n = List.length bs in
-        mk (Tm_arrow(subst_binders' s bs, subst_comp' (shift_subst' n s) comp))
+        mk (Tm_arrow {bs=subst_binders' s bs;comp=subst_comp' (shift_subst' n s) comp})
 
-    | Tm_refine(x, phi) ->
+    | Tm_refine {b=x; phi} ->
         let x = {x with sort=subst' s x.sort} in
         let phi = subst' (shift_subst' 1 s) phi in
-        mk (Tm_refine(x, phi))
+        mk (Tm_refine {b=x; phi})
 
-    | Tm_match(t0, asc_opt, pats, lopt) ->
+    | Tm_match {scrutinee=t0; ret_opt=asc_opt; brs=pats; rc_opt=lopt} ->
         let t0 = subst' s t0 in
         let pats = pats |> List.map (fun (pat, wopt, branch) ->
           let pat, n = subst_pat' s pat in
@@ -457,9 +457,9 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
             let b = subst_binder' s b in
             let asc = subst_ascription' (shift_subst' 1 s) asc in
             Some (b, asc) in
-        mk (Tm_match(t0, asc_opt, pats, push_subst_lcomp s lopt))
+        mk (Tm_match {scrutinee=t0; ret_opt=asc_opt; brs=pats; rc_opt=push_subst_lcomp s lopt})
 
-    | Tm_let((is_rec, lbs), body) ->
+    | Tm_let {lbs=(is_rec, lbs); body} ->
         let n = List.length lbs in
         let sn = shift_subst' n s in
         let body = subst' sn body in
@@ -474,16 +474,16 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
           in
           let lbattrs = List.map (subst' s) lb.lbattrs in
           {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd; lbattrs=lbattrs}) in
-        mk (Tm_let((is_rec, lbs), body))
+        mk (Tm_let {lbs=(is_rec, lbs); body})
 
-    | Tm_meta(t0, Meta_pattern (bs, ps)) ->
-        mk (Tm_meta(subst' s t0, Meta_pattern (List.map (subst' s) bs, ps |> List.map (subst_args' s))))
+    | Tm_meta {tm=t0; meta=Meta_pattern (bs, ps)} ->
+        mk (Tm_meta {tm=subst' s t0; meta=Meta_pattern (List.map (subst' s) bs, ps |> List.map (subst_args' s))})
 
-    | Tm_meta(t0, Meta_monadic (m, t)) ->
-        mk (Tm_meta(subst' s t0, Meta_monadic(m, subst' s t)))
+    | Tm_meta {tm=t0; meta=Meta_monadic (m, t)} ->
+        mk (Tm_meta {tm=subst' s t0; meta=Meta_monadic(m, subst' s t)})
 
-    | Tm_meta(t0, Meta_monadic_lift (m1, m2, t)) ->
-        mk (Tm_meta(subst' s t0, Meta_monadic_lift (m1, m2, subst' s t)))
+    | Tm_meta {tm=t0; meta=Meta_monadic_lift (m1, m2, t)} ->
+        mk (Tm_meta {tm=subst' s t0; meta=Meta_monadic_lift (m1, m2, subst' s t)})
 
     | Tm_quoted (tm, qi) ->
         begin match qi.qkind with
@@ -493,8 +493,8 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
             mk (Tm_quoted (tm, qi))
         end
 
-    | Tm_meta(t, m) ->
-        mk (Tm_meta(subst' s t,  m))
+    | Tm_meta {tm=t; meta=m} ->
+        mk (Tm_meta {tm=subst' s t; meta=m})
 
 let push_subst s t = push_subst_aux true s t
 
@@ -504,7 +504,7 @@ let push_subst s t = push_subst_aux true s t
 //
 let compress_subst t =
   match t.n with
-  | Tm_delayed (t, s) ->
+  | Tm_delayed {tm=t; substs=s} ->
     let resolve_uvars = false in
     push_subst_aux resolve_uvars s t
   | _ -> t
@@ -539,13 +539,13 @@ let compress_subst t =
 let rec compress_slow (t:term) =
     let t = force_uvar t in
     match t.n with
-    | Tm_delayed (t', s) ->
+    | Tm_delayed {tm=t'; substs=s} ->
         compress (push_subst s t')
     | _ ->
         t
 and compress (t:term) =
   match t.n with
-    | Tm_delayed (_, _) | Tm_uvar(_, _) ->
+    | Tm_delayed _ | Tm_uvar _ ->
         let r = compress_slow t in
         (* begin match r.n with *)
         (* | Tm_delayed _ -> failwith "compress attempting to return a Tm_delayed" *)

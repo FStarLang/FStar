@@ -386,7 +386,7 @@ let validate_indexed_effect_bind_shape (env:env)
   // rest_bs are opened and have their a and b substituted with a_b and b_b
   let rest_bs =
     match (SS.compress bind_t).n with
-    | Tm_arrow (bs, _) when List.length bs >= 4 ->
+    | Tm_arrow {bs} when List.length bs >= 4 ->
       // peel off a and b from bs
       let ({binder_bv=a})::({binder_bv=b})::bs = SS.open_binders bs in
       // peel off f and g from the end of bs
@@ -660,7 +660,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
 
   let rest_bs =
     match (SS.compress subcomp_t).n with
-    | Tm_arrow (bs, _) when List.length bs >= 2 ->
+    | Tm_arrow {bs} when List.length bs >= 2 ->
       // peel off a:Type
       let ({binder_bv=a})::bs = SS.open_binders bs in
       // peel off f:repr from the end
@@ -881,7 +881,7 @@ let validate_indexed_effect_ite_shape (env:env)
 
   let rest_bs =
     match (SS.compress ite_ty).n with
-    | Tm_arrow (bs, _) when List.length bs >= 4 ->
+    | Tm_arrow {bs} when List.length bs >= 4 ->
       // peel off a:Type
       let (({binder_bv=a})::bs) = SS.open_binders bs in
       // peel off f:repr, g:repr, p:bool from the end
@@ -1049,7 +1049,7 @@ let validate_indexed_effect_lift_shape (env:env)
 
   let rest_bs, lift_eff =
     match (SS.compress lift_t).n with
-    | Tm_arrow (bs, c) when List.length bs >= 2 ->
+    | Tm_arrow {bs; comp=c} when List.length bs >= 2 ->
       // peel off a:Type
       let (({binder_bv=a})::bs) = SS.open_binders bs in
       // peel off f:repr from the end
@@ -1270,7 +1270,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let x_a = fresh_x_a "x" a in
     let rest_bs =
       match (SS.compress ty).n with
-      | Tm_arrow (bs, _) when List.length bs >= 2 ->
+      | Tm_arrow {bs} when List.length bs >= 2 ->
         let (({binder_bv=a'})::({binder_bv=x'})::bs) = SS.open_binders bs in
         bs |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
            |> SS.subst_binders [NT (x', bv_to_name x_a.binder_bv)]
@@ -1343,13 +1343,14 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let signature_ts = let (us, t, _) = signature in (us, t) in
         let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
         (match (SS.compress signature_t).n with
-         | Tm_arrow (bs, _) ->
+         | Tm_arrow {bs} ->
            let bs = SS.open_binders bs in
            let repr_t =
              let repr_ts = let (us, t, _) = repr in (us, t) in
              Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
            let repr_t_applied = mk
-             (Tm_app (repr_t, bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg))
+             (Tm_app {hd=repr_t;
+                      args=bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg})
              (Ident.range_of_lid ed.mname) in
            let f_b = S.null_binder repr_t_applied in
            [], {U.abs (bs@[f_b]) (f_b.binder_bv |> S.bv_to_name) None
@@ -1398,13 +1399,14 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let signature_ts = let (us, t, _) = signature in (us, t) in
         let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
         (match (SS.compress signature_t).n with
-         | Tm_arrow (bs, _) ->
+         | Tm_arrow {bs} ->
            let bs = SS.open_binders bs in
            let repr_t =
              let repr_ts = let (us, t, _) = repr in (us, t) in
              Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
            let repr_t_applied = mk
-             (Tm_app (repr_t, bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg))
+             (Tm_app {hd=repr_t;
+                      args=bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg})
              (Ident.range_of_lid ed.mname) in
            let f_b = S.null_binder repr_t_applied in
            let g_b = S.null_binder repr_t_applied in
@@ -1500,7 +1502,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let us, ite_t = SS.open_univ_vars ite_us ite_t in
     let env, ite_t_applied, a_b, f_b, g_b, p_t =
       match (SS.compress ite_t).n with
-      | Tm_abs (bs, _, _) ->
+      | Tm_abs {bs} ->
         let bs = SS.open_binders bs in
         let f_b, g_b, p_b =
           bs
@@ -1519,7 +1521,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       let _, _, subcomp_ty = stronger_repr in
       let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
       match (SS.compress subcomp_ty).n with
-      | Tm_arrow (bs, c) ->
+      | Tm_arrow {bs; comp=c} ->
         let bs, c = SS.open_comp bs c in
         let a_b, rest_bs = List.hd bs, List.tl bs in
         let rest_bs, f_b =
@@ -1629,7 +1631,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     
     let act_typ =
       match (SS.compress act.action_typ).n with
-      | Tm_arrow (bs, c) ->
+      | Tm_arrow {bs; comp=c} ->
         let ct = Env.comp_to_comp_typ env c in
         if lid_equals ct.effect_name ed.mname
         then
@@ -1656,7 +1658,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let k, g_k =
       let act_typ = N.normalize [Beta] env act_typ in
       match (SS.compress act_typ).n with
-      | Tm_arrow (bs, _) ->
+      | Tm_arrow {bs} ->
         let bs = SS.open_binders bs in
         let env = Env.push_binders env bs in
         let t, u = U.type_u () in
@@ -1684,7 +1686,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string t) in
       let repr_args t : universes * term * args =
         match (SS.compress t).n with
-        | Tm_app (head, a::is) ->
+        | Tm_app {hd=head;args=a::is} ->
           (match (SS.compress head).n with
            | Tm_uinst (_, us) -> us, fst a, is
            | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg t) r)
@@ -1692,7 +1694,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
       let k = N.normalize [Beta] env k in
       match (SS.compress k).n with
-      | Tm_arrow (bs, c) ->
+      | Tm_arrow {bs; comp=c} ->
         let bs, c = SS.open_comp bs c in
         let us, a, is = repr_args (U.comp_result c) in
         let ct = {
@@ -1745,7 +1747,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let us, a_b, rest_bs =
           let us, t = let us, t, _ = signature in us, t in
           match (SS.compress t).n with
-          | Tm_arrow (bs, _) ->
+          | Tm_arrow {bs} ->
             let a_b::rest_bs = SS.open_binders bs in
             us, a_b, rest_bs
           | _ -> failwith "Impossible!"  // there are multiple places above where we have relied on sig being an arrow
@@ -1904,7 +1906,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
     //instantiate with fresh universes
     let _, signature = Env.inst_tscheme signature in
     match (SS.compress signature).n with
-    | Tm_arrow (bs, _) ->
+    | Tm_arrow {bs} ->
       let bs = SS.open_binders bs in
       (match bs with
        | [({binder_bv=a}); ({binder_bv=wp})] -> a, wp.sort
@@ -2004,11 +2006,11 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
       let mk_repr' t wp =
         let _, repr = Env.inst_tscheme repr in
         let repr = N.normalize [EraseUniverses; AllowUnboundUniverses] env repr in
-        mk (Tm_app (repr, [t |> as_arg; wp |> as_arg])) Range.dummyRange in
+        mk (Tm_app {hd=repr;args=[t |> as_arg; wp |> as_arg]}) Range.dummyRange in
       let mk_repr a wp = mk_repr' (S.bv_to_name a) wp in
       let destruct_repr t =
         match (SS.compress t).n with
-        | Tm_app(_, [(t, _); (wp, _)]) -> t, wp
+        | Tm_app {args=[(t, _); (wp, _)]} -> t, wp
         | _ -> failwith "Unexpected repr type" in
 
       let return_repr =
@@ -2088,7 +2090,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           //    perhaps should open/close binders properly
           let act_typ =
             match (SS.compress act.action_typ).n with
-            | Tm_arrow (bs, c) ->
+            | Tm_arrow {bs; comp=c} ->
               let c = Env.comp_to_comp_typ env c in
               if lid_equals c.effect_name ed.mname
               then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args))))
@@ -2118,7 +2120,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           let expected_k, g_k =
             let act_typ = SS.compress act_typ in
             match act_typ.n with
-            | Tm_arrow(bs, c) ->
+            | Tm_arrow {bs; comp=c} ->
               let bs, _ = SS.open_comp bs c in
               let res = mk_repr' S.tun S.tun in
               let k = U.arrow bs (S.mk_Total res) in
@@ -2144,7 +2146,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           // 4) Do a bunch of plumbing to assign a type in the new monad to
           //    the action
           let act_typ = match (SS.compress expected_k).n with
-              | Tm_arrow(bs, c) ->
+              | Tm_arrow {bs; comp=c} ->
                 let bs, c = SS.open_comp bs c in
                 let a, wp = destruct_repr (U.comp_result c) in
                 let c = {
@@ -2231,7 +2233,7 @@ let monad_signature env m s =
  let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in
  let s = SS.compress s in
  match s.n with
-  | Tm_arrow(bs, c) ->
+  | Tm_arrow {bs; comp=c} ->
     let bs = SS.open_binders bs in
     begin match bs with
         | [({binder_bv=a});({binder_bv=wp})] -> a, wp.sort
@@ -2318,7 +2320,7 @@ let tc_lift env sub r =
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
         let repr = Env.inst_effect_fun_with [U_unknown] env ed (ed |> U.get_eff_repr |> must) in
-        mk (Tm_app(repr, [as_arg a; as_arg wp])) (Env.get_range env)
+        mk (Tm_app {hd=repr; args=[as_arg a; as_arg wp]}) (Env.get_range env)
     in
     let lift, lift_wp =
       match sub.lift, sub.lift_wp with
@@ -2374,7 +2376,7 @@ let tc_lift env sub r =
       let repr_f = repr_type sub.source a_typ wp_a_typ in
       let repr_result =
         let lift_wp = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env (snd lift_wp) in
-        let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) (Env.get_range env) in
+        let lift_wp_a = mk (Tm_app {hd=lift_wp;args=[as_arg a_typ; as_arg wp_a_typ]}) (Env.get_range env) in
         repr_type sub.target a_typ lift_wp_a in
       let expected_k =
         U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
@@ -2451,10 +2453,10 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   in
   let tps = SS.close_binders tps in
   let c = SS.close_comp tps c in
-  let uvs, t = Gen.generalize_universes env0 (mk (Tm_arrow(tps, c)) r) in
+  let uvs, t = Gen.generalize_universes env0 (mk (Tm_arrow {bs=tps; comp=c}) r) in
   let tps, c = match tps, (SS.compress t).n with
-    | [], Tm_arrow(_, c) -> [], c
-    | _,  Tm_arrow(tps, c) -> tps, c
+    | [], Tm_arrow {comp=c} -> [], c
+    | _,  Tm_arrow {bs=tps; comp=c} -> tps, c
     | _ -> failwith "Impossible (t is an arrow)" in
   if List.length uvs <> 1
   then begin

@@ -764,7 +764,7 @@ let intro_rec () : tac (binder * binder) =
              let lb = U.mk_letbinding (Inl bv) [] (goal_type goal) PC.effect_Tot_lid (U.abs [b] u None) [] Range.dummyRange in
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
-             let tm = mk (Tm_let ((true, lbs), body)) (goal_witness goal).pos in
+             let tm = mk (Tm_let {lbs=(true, lbs); body}) (goal_witness goal).pos in
              set_solution goal tm ;!
              bnorm_and_replace { goal with goal_ctx_uvar=ctx_uvar_u} ;!
              ret (S.mk_binder bv, b)
@@ -1758,7 +1758,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
     | None -> fail "type not found in environment"
     | Some se ->
       match se.sigel with
-      | Sig_inductive_typ (_lid, t_us, t_ps, _num_uniform, t_ty, mut, c_lids) ->
+      | Sig_inductive_typ {us=t_us; params=t_ps; t=t_ty; mutuals=mut; ds=c_lids} ->
       (* High-level idea of this huge function:
        * For  Gamma |- w : phi  and  | C : ps -> bs -> t,  we generate a new goal
        *   Gamma |- w' : bs -> phi
@@ -1788,7 +1788,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                     | None -> fail "ctor not found?"
                     | Some se ->
                     match se.sigel with
-                    | Sig_datacon (_c_lid, c_us, c_ty, _t_lid, nparam, mut) ->
+                    | Sig_datacon {us=c_us; t=c_ty; num_ty_params=nparam; mutuals=mut} ->
                         (* BU.print2 "ty of %s = %s\n" (Ident.string_of_lid c_lid) *)
                         (*                             (Print.term_to_string c_ty); *)
                         let fv = S.lid_as_fv c_lid S.delta_constant (Some Data_ctor) in
@@ -1866,7 +1866,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                  c_lids
       in
       let goals, brs, infos = List.unzip3 goal_brs in
-      let w = mk (Tm_match (s_tm, None, brs, None)) s_tm.pos in
+      let w = mk (Tm_match {scrutinee=s_tm;ret_opt=None;brs;rc_opt=None}) s_tm.pos in
       solve' g w ;!
       //we constructed a well-typed term to solve g; no need to recheck it
       mark_goal_implicit_already_checked g;
@@ -1914,7 +1914,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     let t = U.unlazy_emb t in
     let t = SS.compress t in
     match t.n with
-    | Tm_meta (t, _) ->
+    | Tm_meta {tm=t} ->
         inspect t
 
     | Tm_name bv ->
@@ -1931,26 +1931,26 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
        | Tm_fvar fv -> ret <| Tv_UInst (fv, us)
        | _ -> failwith "Tac::inspect: Tm_uinst head not an fvar")
 
-    | Tm_ascribed (t, (Inl ty, tacopt, eq), _elid) ->
+    | Tm_ascribed {tm=t; asc=(Inl ty, tacopt, eq)} ->
         ret <| Tv_AscribedT (t, ty, tacopt, eq)
 
-    | Tm_ascribed (t, (Inr cty, tacopt, eq), elid) ->
+    | Tm_ascribed {tm=t; asc=(Inr cty, tacopt, eq)} ->
         ret <| Tv_AscribedC (t, cty, tacopt, eq)
 
-    | Tm_app (hd, []) ->
+    | Tm_app {args=[]} ->
         failwith "empty arguments on Tm_app"
 
-    | Tm_app (hd, args) ->
+    | Tm_app {hd; args} ->
         // We split at the last argument, since the term_view does not
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
         let q' = inspect_aqual q in
         ret <| Tv_App (S.mk_Tm_app hd (init args) t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
 
-    | Tm_abs ([], _, _) ->
+    | Tm_abs {bs=[]} ->
         failwith "empty arguments on Tm_abs"
 
-    | Tm_abs (bs, t, k) ->
+    | Tm_abs {bs; body=t; rc_opt=k} ->
         let bs, t = SS.open_term bs t in
         // `let b::bs = bs` gives a coverage warning, avoid it
         begin match bs with
@@ -1961,7 +1961,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     | Tm_type u ->
         ret <| Tv_Type u
 
-    | Tm_arrow ([], k) ->
+    | Tm_arrow {bs=[]} ->
         failwith "empty binders on arrow"
 
     | Tm_arrow _ ->
@@ -1970,7 +1970,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         | None -> failwith "impossible"
         end
 
-    | Tm_refine (bv, t) ->
+    | Tm_refine {b=bv; phi=t} ->
         let b = S.mk_binder bv in
         let b', t = SS.open_term [b] t in
         // `let [b] = b'` gives a coverage warning, avoid it
@@ -1985,7 +1985,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     | Tm_uvar (ctx_u, s) ->
         ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head), (ctx_u, s))
 
-    | Tm_let ((false, [lb]), t2) ->
+    | Tm_let {lbs=(false, [lb]); body=t2} ->
         if lb.lbunivs <> [] then ret <| Tv_Unsupp else
         begin match lb.lbname with
         | Inr _ -> ret <| Tv_Unsupp // no top level lets
@@ -2000,7 +2000,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
             ret <| Tv_Let (false, lb.lbattrs, b.binder_bv, bv.sort, lb.lbdef, t2)
         end
 
-    | Tm_let ((true, [lb]), t2) ->
+    | Tm_let {lbs=(true, [lb]); body=t2} ->
         if lb.lbunivs <> [] then ret <| Tv_Unsupp else
         begin match lb.lbname with
         | Inr _ -> ret <| Tv_Unsupp // no top level lets
@@ -2014,7 +2014,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
-    | Tm_match (t, ret_opt, brs, _) ->
+    | Tm_match {scrutinee=t; ret_opt; brs} ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -2076,13 +2076,13 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
     | Tv_Let (false, attrs, bv, ty, t1, t2) ->
         let bv = { bv with sort = ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) Range.dummyRange
+        ret <| S.mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder bv] t2}) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, ty, t1, t2) ->
         let bv = { bv with sort = ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
-        ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange
+        ret <| S.mk (Tm_let {lbs=(true, lbs); body}) Range.dummyRange
 
     | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -2095,13 +2095,13 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
-        ret <| S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
+        ret <| S.mk (Tm_match {scrutinee=t; ret_opt; brs; rc_opt=None}) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt, use_eq) ->
-        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt, use_eq), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed {tm=e;asc=(Inl t, tacopt, use_eq);eff_opt=None}) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt, use_eq) ->
-        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt, use_eq), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed {tm=e;asc=(Inr c, tacopt, use_eq);eff_opt=None}) Range.dummyRange
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
@@ -2136,7 +2136,7 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
   | Some (l, r) -> begin
     let lh, las = U.head_and_args_full l in
     match (SS.compress (U.unascribe lh)).n with
-    | Tm_match (e, asc_opt, brs, lopt) ->
+    | Tm_match {scrutinee=e;ret_opt=asc_opt;brs;rc_opt=lopt} ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
       //
       // If residual comp is set, apply arguments to it
@@ -2148,7 +2148,7 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
           let ss = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs las in
           let c = SS.subst_comp ss c in
           U.comp_result c)}) in
-      let l' = mk (Tm_match (e, asc_opt, brs', lopt')) l.pos in
+      let l' = mk (Tm_match {scrutinee=e;ret_opt=asc_opt;brs=brs';rc_opt=lopt'}) l.pos in
       let must_tot = true in
       match! do_unify_maybe_guards false must_tot (goal_env g) l' r with
       | None -> fail "discharging the equality failed"
