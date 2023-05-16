@@ -466,7 +466,7 @@ val equiv_token (g:env) (t0 t1:typ) : Type0
 
 val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
 
-let issues = FStar.Issue.issue
+let issues = list FStar.Issue.issue
 
 val check_subtyping (g:env) (t0 t1:typ)
   : Tac (option (subtyping_token g t0 t1) & issues)
