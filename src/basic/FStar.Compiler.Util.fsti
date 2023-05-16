@@ -135,6 +135,10 @@ val colorize_cyan: string -> string
 
 
 type out_channel
+
+val open_file_out_channel : string -> out_channel
+val close_out_channel : out_channel -> unit
+
 val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list string -> unit

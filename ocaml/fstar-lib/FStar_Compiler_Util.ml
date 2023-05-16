@@ -71,6 +71,12 @@ let with_sigint_handler handler f =
     (fun () -> set_sigint_handler handler; f ())
     ()
 
+(* Re export this type, it's mentioned in the interface for this module. *)
+type out_channel = Stdlib.out_channel
+
+let open_file_out_channel (fn : string) = Stdlib.open_out_bin fn
+let close_out_channel (c : out_channel) = Stdlib.close_out c
+
 type proc =
     {pid: int;
      inc : in_channel; (* in == where we read from, so the process's stdout *)
