@@ -466,39 +466,41 @@ val equiv_token (g:env) (t0 t1:typ) : Type0
 
 val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
 
+let issues = FStar.Issue.issue
+
 val check_subtyping (g:env) (t0 t1:typ)
-  : Tac (option (subtyping_token g t0 t1))
+  : Tac (option (subtyping_token g t0 t1) & issues)
 
 val check_equiv (g:env) (t0 t1:typ)
-  : Tac (option (equiv_token g t0 t1))
+  : Tac (option (equiv_token g t0 t1) & issues)
 
 val core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost)
-  : Tac (option (t:typ{typing_token g e (eff, t)}))
+  : Tac (option (t:typ{typing_token g e (eff, t)}) & issues)
 
 val core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
-  : Tac (option (typing_token g e (eff, t)))
+  : Tac (option (typing_token g e (eff, t)) & issues)
 
 val tc_term (g:env) (e:term) (eff:tot_or_ghost)
-  : Tac (option (r:(term & typ){typing_token g (fst r) (eff, snd r)}))
+  : Tac (option (r:(term & typ){typing_token g (fst r) (eff, snd r)}) & issues)
 
 val universe_of (g:env) (e:term)
-  : Tac (option (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}))
+  : Tac (option (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}) & issues)
 
 type prop_validity_token (g:env) (t:term) =
   e:term{typing_token g t (E_Total, pack_ln (Tv_FVar (pack_fv prop_qn))) /\
          typing_token g e (E_Total, t)}
 
 val check_prop_validity (g:env) (t:term)
-  : Tac (option (prop_validity_token g t))
+  : Tac (option (prop_validity_token g t) & issues)
 
 val instantiate_implicits (g:env) (t:term)
-  : Tac (option (term & typ))
+  : Tac (option (term & typ) & issues)
 
 val maybe_relate_after_unfolding (g:env) (t1 t2:term)
-  : Tac (option unfold_side)
+  : Tac (option unfold_side & issues)
 
 val maybe_unfold_head (g:env) (t0:term)
-  : Tac (option (t1:term{equiv_token g t0 t1}))
+  : Tac (option (t1:term{equiv_token g t0 t1}) & issues)
 
 val push_open_namespace (g:env) (ns:name)
   : Tac env

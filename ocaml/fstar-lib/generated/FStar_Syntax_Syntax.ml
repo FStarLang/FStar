@@ -368,6 +368,7 @@ and lazy_kind =
   | Lazy_embedding of (emb_typ * term' syntax FStar_Thunk.t) 
   | Lazy_universe 
   | Lazy_universe_uvar 
+  | Lazy_issue 
 and binding =
   | Binding_var of bv 
   | Binding_lid of (FStar_Ident.lident * (univ_names * term' syntax)) 
@@ -946,6 +947,8 @@ let (uu___is_Lazy_universe : lazy_kind -> Prims.bool) =
 let (uu___is_Lazy_universe_uvar : lazy_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Lazy_universe_uvar -> true | uu___ -> false
+let (uu___is_Lazy_issue : lazy_kind -> Prims.bool) =
+  fun projectee -> match projectee with | Lazy_issue -> true | uu___ -> false
 let (uu___is_Binding_var : binding -> Prims.bool) =
   fun projectee ->
     match projectee with | Binding_var _0 -> true | uu___ -> false

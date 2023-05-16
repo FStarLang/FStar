@@ -60,6 +60,8 @@ type error_handler = {
     eh_clear: unit -> unit
 }
 
+val string_of_issue_level : issue_level -> string
+val issue_level_of_string : string -> issue_level
 val issue_message : issue -> string
 val format_issue : issue -> string
 val error_number : error_setting -> int

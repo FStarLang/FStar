@@ -185,7 +185,7 @@ type ('env, 't0, 't1) subtyping_token = unit
 type ('env, 't0, 't1) equiv_token = unit
 type ('env, 'e, 't) typing_token = unit
 type ('env, 't) prop_validity_token = unit
-
+type issues = FStar_Issue.issue list
 let check_subtyping              = from_tac_3 B.refl_check_subtyping
 let check_equiv                  = from_tac_3 B.refl_check_equiv
 let core_compute_term_type       = from_tac_3 B.refl_core_compute_term_type

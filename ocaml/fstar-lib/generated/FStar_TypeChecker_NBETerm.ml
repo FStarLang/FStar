@@ -819,63 +819,71 @@ let lazy_embed : 'a . FStar_Syntax_Syntax.emb_typ -> 'a -> (unit -> t) -> t =
             FStar_Compiler_Effect.op_Less_Bar mk_t
               (Lazy ((FStar_Pervasives.Inr li), thunk))))
 let lazy_unembed :
-  'uuuuu 'a .
-    'uuuuu ->
-      FStar_Syntax_Syntax.emb_typ ->
-        t ->
-          (t -> 'a FStar_Pervasives_Native.option) ->
-            'a FStar_Pervasives_Native.option
+  'a .
+    FStar_Syntax_Syntax.emb_typ ->
+      t ->
+        (t -> 'a FStar_Pervasives_Native.option) ->
+          'a FStar_Pervasives_Native.option
   =
-  fun cb ->
-    fun et ->
-      fun x ->
-        fun f ->
-          match x.nbe_t with
-          | Lazy (FStar_Pervasives.Inl li, thunk) ->
-              let uu___ = FStar_Thunk.force thunk in f uu___
-          | Lazy (FStar_Pervasives.Inr (b, et'), thunk) ->
-              let uu___ =
-                (et <> et') ||
-                  (FStar_Compiler_Effect.op_Bang
-                     FStar_Options.eager_embedding) in
-              if uu___
-              then
-                let res = let uu___1 = FStar_Thunk.force thunk in f uu___1 in
-                ((let uu___2 =
-                    FStar_Compiler_Effect.op_Bang
-                      FStar_Options.debug_embedding in
-                  if uu___2
-                  then
-                    let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
-                    let uu___4 = FStar_Syntax_Print.emb_typ_to_string et' in
-                    FStar_Compiler_Util.print2
-                      "Unembed cancellation failed\n\t%s <> %s\n" uu___3
-                      uu___4
-                  else ());
-                 res)
-              else
-                (let a1 = FStar_Compiler_Dyn.undyn b in
-                 (let uu___3 =
-                    FStar_Compiler_Effect.op_Bang
-                      FStar_Options.debug_embedding in
-                  if uu___3
-                  then
-                    let uu___4 = FStar_Syntax_Print.emb_typ_to_string et in
-                    FStar_Compiler_Util.print1 "Unembed cancelled for %s\n"
-                      uu___4
-                  else ());
-                 FStar_Pervasives_Native.Some a1)
-          | uu___ ->
-              let aopt = f x in
+  fun et ->
+    fun x ->
+      fun f ->
+        match x.nbe_t with
+        | Lazy (FStar_Pervasives.Inl li, thunk) ->
+            let uu___ = FStar_Thunk.force thunk in f uu___
+        | Lazy (FStar_Pervasives.Inr (b, et'), thunk) ->
+            let uu___ =
+              (et <> et') ||
+                (FStar_Compiler_Effect.op_Bang FStar_Options.eager_embedding) in
+            if uu___
+            then
+              let res = let uu___1 = FStar_Thunk.force thunk in f uu___1 in
               ((let uu___2 =
                   FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
                 if uu___2
                 then
                   let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
-                  FStar_Compiler_Util.print1 "Unembedding:\n\temb_typ=%s\n"
-                    uu___3
+                  let uu___4 = FStar_Syntax_Print.emb_typ_to_string et' in
+                  FStar_Compiler_Util.print2
+                    "Unembed cancellation failed\n\t%s <> %s\n" uu___3 uu___4
                 else ());
-               aopt)
+               res)
+            else
+              (let a1 = FStar_Compiler_Dyn.undyn b in
+               (let uu___3 =
+                  FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
+                if uu___3
+                then
+                  let uu___4 = FStar_Syntax_Print.emb_typ_to_string et in
+                  FStar_Compiler_Util.print1 "Unembed cancelled for %s\n"
+                    uu___4
+                else ());
+               FStar_Pervasives_Native.Some a1)
+        | uu___ ->
+            let aopt = f x in
+            ((let uu___2 =
+                FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
+              if uu___2
+              then
+                let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
+                FStar_Compiler_Util.print1 "Unembedding:\n\temb_typ=%s\n"
+                  uu___3
+              else ());
+             aopt)
+let lazy_unembed_lazy_kind :
+  'a .
+    FStar_Syntax_Syntax.lazy_kind -> t -> 'a FStar_Pervasives_Native.option
+  =
+  fun k ->
+    fun x ->
+      match x.nbe_t with
+      | Lazy (FStar_Pervasives.Inl li, uu___) ->
+          if li.FStar_Syntax_Syntax.lkind = k
+          then
+            let uu___1 = FStar_Compiler_Dyn.undyn li.FStar_Syntax_Syntax.blob in
+            FStar_Pervasives_Native.Some uu___1
+          else FStar_Pervasives_Native.None
+      | uu___ -> FStar_Pervasives_Native.None
 let (mk_any_emb : t -> t embedding) =
   fun ty ->
     let em _cb a = a in
@@ -963,7 +971,7 @@ let e_option :
                lid_as_constr FStar_Parser_Const.some_lid
                  [FStar_Syntax_Syntax.U_zero] uu___1) in
     let un cb trm =
-      lazy_unembed cb etyp trm
+      lazy_unembed etyp trm
         (fun trm1 ->
            match trm1.nbe_t with
            | Construct (fvar, us, args1) when
@@ -1017,7 +1025,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero]
                uu___1) in
       let un cb trm =
-        lazy_unembed cb etyp trm
+        lazy_unembed etyp trm
           (fun trm1 ->
              match trm1.nbe_t with
              | Construct
@@ -1090,7 +1098,7 @@ let e_tuple3 :
                      FStar_Syntax_Syntax.U_zero;
                      FStar_Syntax_Syntax.U_zero] uu___2) in
         let un cb trm =
-          lazy_unembed cb etyp trm
+          lazy_unembed etyp trm
             (fun trm1 ->
                match trm1.nbe_t with
                | Construct
@@ -1171,7 +1179,7 @@ let e_either :
                    [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero]
                    uu___1) in
       let un cb trm =
-        lazy_unembed cb etyp trm
+        lazy_unembed etyp trm
           (fun trm1 ->
              match trm1.nbe_t with
              | Construct (fvar, us, (a1, uu___)::uu___1::uu___2::[]) when
@@ -1210,6 +1218,43 @@ let (e_range : FStar_Compiler_Range_Type.range embedding) =
   let uu___1 =
     FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_range in
   mk_emb' em un uu___ uu___1
+let (e_issue : FStar_Errors.issue embedding) =
+  let t_issue =
+    FStar_Syntax_Embeddings.type_of FStar_Syntax_Embeddings.e_issue in
+  let li blob rng =
+    let uu___ = FStar_Compiler_Dyn.mkdyn blob in
+    {
+      FStar_Syntax_Syntax.blob = uu___;
+      FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_issue;
+      FStar_Syntax_Syntax.ltyp = t_issue;
+      FStar_Syntax_Syntax.rng = rng
+    } in
+  let em cb iss =
+    let uu___ =
+      let uu___1 =
+        let uu___2 = li iss FStar_Compiler_Range_Type.dummyRange in
+        FStar_Pervasives.Inl uu___2 in
+      let uu___2 =
+        FStar_Thunk.mk (fun uu___3 -> failwith "Cannot unembed issue") in
+      (uu___1, uu___2) in
+    Lazy uu___ in
+  let un cb t1 =
+    match t1 with
+    | Lazy
+        (FStar_Pervasives.Inl
+         { FStar_Syntax_Syntax.blob = blob;
+           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_issue;
+           FStar_Syntax_Syntax.ltyp = uu___;
+           FStar_Syntax_Syntax.rng = uu___1;_},
+         uu___2)
+        ->
+        let uu___3 = FStar_Compiler_Dyn.undyn blob in
+        FStar_Pervasives_Native.Some uu___3
+    | uu___ -> FStar_Pervasives_Native.None in
+  let uu___ = lid_as_typ FStar_Parser_Const.issue_lid [] [] in
+  let uu___1 =
+    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_issue in
+  mk_emb' em un uu___ uu___1
 let (e_vconfig : FStar_VConfig.vconfig embedding) =
   let em cb r = failwith "e_vconfig NBE" in
   let un cb t1 = failwith "e_vconfig NBE" in
@@ -1244,7 +1289,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                [FStar_Syntax_Syntax.U_zero] uu___1 in
            FStar_Compiler_List.fold_right cons l nil) in
     let rec un cb trm =
-      lazy_unembed cb etyp trm
+      lazy_unembed etyp trm
         (fun trm1 ->
            match trm1.nbe_t with
            | Construct (fv, uu___, uu___1) when
@@ -1333,7 +1378,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                | FStar_Pervasives_Native.Some y -> y
                | FStar_Pervasives_Native.None ->
                    failwith "cannot unembed function result") in
-        lazy_unembed cb etyp lam k in
+        lazy_unembed etyp lam k in
       let uu___ =
         let uu___1 = type_of ea in
         let uu___2 = let uu___3 = type_of eb in as_iarg uu___3 in
@@ -1567,7 +1612,7 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
            lid_as_constr FStar_Parser_Const.seal_lid
              [FStar_Syntax_Syntax.U_zero] uu___1) in
     let un cb trm =
-      lazy_unembed cb etyp trm
+      lazy_unembed etyp trm
         (fun trm1 ->
            match trm1.nbe_t with
            | Construct (fvar, us, (a1, uu___)::uu___1::[]) when

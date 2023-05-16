@@ -2268,13 +2268,14 @@ let dbg_refl (g:env) (msg:unit -> string) =
   if Env.debug g <| Options.Other "ReflTc"
   then BU.print_string (msg ())
 
-let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a) =
+let issues = list Errors.issue
+let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a & issues) =
   let tx = UF.new_transaction () in
   let errs, r = Errors.catch_errors_and_ignore_rest f in
   UF.rollback tx;
   if List.length errs > 0
-  then ret None
-  else ret r
+  then ret (None, errs)
+  else ret (r, errs)
 
 let no_uvars_in_term (t:term) : bool =
   t |> Free.uvars |> BU.set_is_empty &&
@@ -2289,8 +2290,19 @@ type relation =
   | Subtyping
   | Equality
 
+let unexpected_uvars_issue r = 
+  let open FStar.Errors in
+  let i = {
+    issue_level = EError;
+    issue_range = Some r;
+    issue_msg = "Cannot check relation with uvars";
+    issue_number = Some (errno Error_UnexpectedUnresolvedUvar);
+    issue_ctx = []
+  } in
+  i
+
 let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
-  : tac (option unit) =
+  : tac (option unit * issues) =
 
   if no_uvars_in_g g &&
      no_uvars_in_term t0 &&
@@ -2315,12 +2327,14 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err)) Range.dummyRange)
-  else ret None
+  else (
+    ret (None, [unexpected_uvars_issue (Env.get_range g)])
+  )
 
-let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
+let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit & issues) =
   refl_check_relation g t0 t1 Subtyping
 
-let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =
+let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit & issues) =
   refl_check_relation g t0 t1 Equality
 
 let to_must_tot (eff:tot_or_ghost) : bool =
@@ -2328,7 +2342,7 @@ let to_must_tot (eff:tot_or_ghost) : bool =
   | E_Total -> true
   | E_Ghost -> false
 
-let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ) =
+let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2349,10 +2363,10 @@ let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (optio
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
-  : tac (option unit) =
+  : tac (option unit & issues) =
 
   if no_uvars_in_g g &&
      no_uvars_in_term e &&
@@ -2373,9 +2387,9 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_check_term failed: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ)) =
+let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2426,9 +2440,9 @@ let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ))
     | Errors.Error (Errors.Error_UnexpectedUnresolvedUvar, _, _, _) ->
       Errors.raise_error (Errors.Fatal_IllTyped, "UVars remaing in term after tc_term callback") e.pos)
   else
-    ret None
+    ret (None, [unexpected_uvars_issue (Env.get_range g)])
       
-let refl_universe_of (g:env) (e:term) : tac (option universe) =
+let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
   let check_univ_var_resolved u =
     match SS.compress_univ u with
     | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "Unresolved variable in universe_of callback") Range.dummyRange
@@ -2449,9 +2463,9 @@ let refl_universe_of (g:env) (e:term) : tac (option universe) =
            let msg = BU.format1 "refl_universe_of failed: %s\n" (Core.print_error err) in
            dbg_refl g (fun _ -> msg);
            Errors.raise_error (Errors.Fatal_IllTyped, "universe_of failed: " ^ Core.print_error err) Range.dummyRange)
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =
+let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2472,9 +2486,9 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =
          in
          Rel.force_trivial_guard g
            {Env.trivial_guard with guard_f=NonTrivial e})
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
+let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2492,10 +2506,10 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
         (Print.term_to_string e)
         (Print.term_to_string t));
     (e, t))
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
-  : tac (option Core.side) =
+  : tac (option Core.side & issues) =
 
   if no_uvars_in_g g &&
      no_uvars_in_term t0 &&
@@ -2510,9 +2524,9 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
            BU.format1 "} returning side: %s\n"
              (Core.side_to_string s));
          s)
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_maybe_unfold_head (g:env) (e:term) : tac (option term) =
+let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2530,7 +2544,7 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term) =
                                "Could not unfold head: %s\n"
                                (Print.term_to_string e)) e.pos
     else eopt |> must)
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let push_open_namespace (e:env) (ns:list string) =
   let lid = Ident.lid_of_path ns Range.dummyRange in
