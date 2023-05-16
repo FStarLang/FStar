@@ -1,3 +1,11 @@
+# Steel's `Makefile`s rely on recent GNU Make's "shortest stem" rule,
+# so we need to rule out older `make`s.
+
+ifeq (3.81,$(MAKE_VERSION))
+  $(error You seem to be using the OSX antiquated Make version. Hint: brew \
+    install make, then invoke gmake instead of make)
+endif
+
 all: lib verify
 
 # Find fstar.exe and the fstar.lib OCaml package
