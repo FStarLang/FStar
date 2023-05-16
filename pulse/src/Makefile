@@ -47,6 +47,7 @@ boot:
 .PHONY: clean-snapshot
 clean-snapshot:
 	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
+	rm -f ocaml/plugin/FStar_Parser_Parse.mly
 
 .PHONY: full-boot
 full-boot:
