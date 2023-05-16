@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       force:
-        description: Update the base image even if running F* CI fails
+        description: Update the base image even if running F* CI fails, and even if this branch is not master
         required: true
         type: boolean
 jobs:
@@ -42,7 +42,7 @@ jobs:
           $ci_docker_status
 
       - name: Tag base image
-        if: ${{ success () || inputs.force }}
+        if: ${{ (success () && github.ref_name == 'master') || inputs.force }}
         run: |
           docker tag ${TEMP_IMAGE_NAME} fstar_ci_base
 
