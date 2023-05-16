@@ -19,7 +19,7 @@ jobs:
       - name: Build Steel and its dependencies
         run: |
           ci_docker_image_tag=steel:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
-          docker buildx build -t $ci_docker_image_tag -f src/ci/ci.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg STEEL_NIGHTLY_CI=1 .
+          docker build -t $ci_docker_image_tag -f src/ci/ci.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg STEEL_NIGHTLY_CI=1 .
       - name: Compute elapsed time
         if: ${{ always() }}
         run: |
