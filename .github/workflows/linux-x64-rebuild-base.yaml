@@ -46,12 +46,6 @@ jobs:
         run: |
           docker tag ${TEMP_IMAGE_NAME} fstar_ci_base
 
-      - name: Remove intermediate images
-        if: ${{ always() }}
-        run: |
-          docker rmi -f ${TEMP_IMAGE_NAME} || true
-          docker rmi -f ${ci_docker_image_tag} || true
-
       - name: Compute elapsed time and status message
         if: ${{ always() }}
         run: |
@@ -85,6 +79,12 @@ jobs:
             CI_IMAGEBUILD_MSG=" (base image rebuilt in ${HH}h ${MM}m ${SS}s)"
             echo "CI_IMAGEBUILD_MSG='$CI_IMAGEBUILD_MSG'" >> $GITHUB_ENV
           fi
+
+      - name: Remove intermediate images
+        if: ${{ always() }}
+        run: |
+          docker rmi -f ${TEMP_IMAGE_NAME} || true
+          docker rmi -f ${ci_docker_image_tag} || true
 
       - name: Output build log error summary
         if: ${{ always () }}
