@@ -204,7 +204,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ env.CI_STATUS }}>${{ env.ERRORS_MSG}}"
+                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ env.CI_STATUS }}>${{env.ERRORS_MSG}}"
                   }
                 },
                 {

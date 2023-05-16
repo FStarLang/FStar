@@ -91,10 +91,13 @@ jobs:
         run: |
           # Just outputs to the github snippet. Could be part of slack message.
           # This command never triggers a failure
-          grep -C10 -Ew ' \*\*\* |\(Error' BUILDLOG || true
+          grep -C10 -Ew ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS || true
+          ERRORS_URL=$(.scripts/sprang BUILDLOG_ERRORS)
+          ERRORS_MSG=" <$ERRORS_URL|(Error summary)>"
+          echo "ERRORS_MSG=$ERRORS_MSG" >> $GITHUB_ENV
 
       - name: Post to the Slack channel
-        if: ${{ always() && (github.event_name != 'workflow_dispatch') }}
+        if: ${{ always() }}
         id: slack
         uses: slackapi/slack-github-action@v1.23.0
         with:
@@ -120,7 +123,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ env.CI_STATUS }}>"
+                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ env.CI_STATUS }}>${{env.ERRORS_MSG}}"
                   }
                 },
                 {
