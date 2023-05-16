@@ -104,7 +104,7 @@ jobs:
       - name: Pushed the generated hints
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_refresh_hints }}
         run: |
-          docker run $ci_docker_image_tag export bash -c "env DZOMO_GITHUB_TOKEN=$DZOMO_GITHUB_TOKEN .scripts/advance.sh refresh_fstar_hints"
+          docker run $ci_docker_image_tag bash -c "env DZOMO_GITHUB_TOKEN=$DZOMO_GITHUB_TOKEN .scripts/advance.sh refresh_fstar_hints"
         env:
           DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
 
