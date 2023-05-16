@@ -3841,9 +3841,9 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     let mk_lid l = FStar_Parser_Const.p2l ["FStar"; "Issue"; l] in
     let arg_as_issue x =
       let uu___ =
-        FStar_Syntax_Util.unlazy_as_t FStar_Syntax_Syntax.Lazy_issue
+        FStar_Syntax_Embeddings.unembed FStar_Syntax_Embeddings.e_issue
           (FStar_Pervasives_Native.fst x) in
-      FStar_Pervasives_Native.Some uu___ in
+      uu___ false FStar_Syntax_Embeddings.id_norm_cb in
     let option_int_as_option_z oi =
       match oi with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
@@ -3857,8 +3857,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
           let uu___ = FStar_BigInt.to_int_fs i in
           FStar_Pervasives_Native.Some uu___ in
     let nbe_arg_as_issue x =
-      FStar_TypeChecker_NBETerm.lazy_unembed_lazy_kind
-        FStar_Syntax_Syntax.Lazy_issue (FStar_Pervasives_Native.fst x) in
+      FStar_TypeChecker_NBETerm.unembed FStar_TypeChecker_NBETerm.e_issue
+        bogus_cbs (FStar_Pervasives_Native.fst x) in
     let nbe_str s =
       FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_string
         bogus_cbs s in

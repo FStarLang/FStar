@@ -1188,7 +1188,7 @@ let built_in_primitive_steps : prim_step_set =
     let issue_ops =
         let mk_lid l = PC.p2l ["FStar"; "Issue"; l] in
         let arg_as_issue (x:arg) : option issue =
-            Some (U.unlazy_as_t Lazy_issue (fst x))
+            EMB.(unembed e_issue (fst x) false id_norm_cb)
         in
         let option_int_as_option_z oi = 
           match oi with
@@ -1201,7 +1201,7 @@ let built_in_primitive_steps : prim_step_set =
           | Some i -> (Some (Z.to_int_fs i))
         in
         let nbe_arg_as_issue (x:NBETerm.arg) : option issue =
-          NBETerm.lazy_unembed_lazy_kind Lazy_issue (fst x)
+          FStar.TypeChecker.NBETerm.(unembed e_issue bogus_cbs (fst x))
         in
         let nbe_str s = FStar.TypeChecker.NBETerm.(embed e_string bogus_cbs s) in
         let nbe_int s = FStar.TypeChecker.NBETerm.(embed e_int bogus_cbs s) in
