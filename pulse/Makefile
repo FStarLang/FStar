@@ -33,12 +33,9 @@ else
 endif
 
 .PHONY: ocaml
-ocaml: src/ocaml/plugin/FStar_Parser_Parse.mly
+ocaml:
 	cd src/ocaml && dune build
 	cd src/ocaml && dune install --prefix=$(STEEL_HOME)
-
-src/ocaml/plugin/FStar_Parser_Parse.mly: $(_fstar_home)/ocaml/fstar-lib/FStar_Parser_Parse.mly
-	cp $^ $@
 
 .PHONY: lib
 lib:
