@@ -22,10 +22,6 @@ open FStar_Const
 open FStar_Ident
 open FStar_String
 
-let lhs _ = FStar_Compiler_Range.dummyRange
-let rhs _ i = FStar_Compiler_Range.dummyRange
-let rhs2 _ i j = FStar_Compiler_Range.dummyRange
-
 let mk_meta_tac m = Meta m
 
 let old_attribute_syntax_warning =
