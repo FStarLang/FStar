@@ -10,19 +10,10 @@ on:
         description: Refresh hints and advance version number
         required: true
         type: boolean
-      ci_test_min_opam_deps:
-        description: Test minimal opam package dependency versions
-        required: true
-        type: boolean
       ci_no_karamel:
         description: Disable Karamel extraction tests
         required: true
         type: boolean
-      ci_ocaml_version:
-        description: OCaml version
-        required: true
-        type: string
-        default: 4.12.0
       ci_skip_image_tag:
         description: Do not tag image
         required: true
@@ -52,19 +43,10 @@ jobs:
         run: |
           # NOTE: this causes the build to record hints
           echo "CI_TARGET=uregressions-ulong" >> $GITHUB_ENV
-      - name: Populate test min opam deps arg
-        if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_test_min_opam_deps }}
-        run: |
-          echo "CI_DO_TEST_MIN_OPAM_DEPS=--build-arg CI_TEST_MIN_OPAM_DEPS=1" >> $GITHUB_ENV
       - name: Populate no karamel arg
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_no_karamel }}
         run: |
           echo "CI_DO_NO_KARAMEL=--build-arg CI_NO_KARAMEL=1" >> $GITHUB_ENV
-      - name: Populate ocaml version arg
-        if: ${{ (github.event_name == 'workflow_dispatch') }}
-        run: |
-          echo "${{inputs.ci_ocaml_version}}" | grep '^[0-9]*\(\.[0-9]*\)\+$'
-          echo "CI_DO_OCAML_VERSION=--build-arg OCAML_VERSION=${{inputs.ci_ocaml_version}}" >> $GITHUB_ENV
       - name: Populate skip image tag arg
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_skip_image_tag }}
         run: |
@@ -91,7 +73,7 @@ jobs:
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
           if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg RESOURCEMONITOR=$RESOURCEMONITOR $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL . |& tee BUILDLOG
+          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg RESOURCEMONITOR=$RESOURCEMONITOR $CI_DO_NO_KARAMEL . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
