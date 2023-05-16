@@ -34,7 +34,7 @@ $(OUTPUT_DIRECTORY)/%.fs:
 .depend.extract.fsharp:
 	$(call msg, "DEPEND")
 	true $(shell rm -f .depend.extract.fsharp.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.fsharp.rsp))
-	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.fsharp.rsp > .depend.extract.fsharp
+	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.fsharp.rsp --output_deps_to .depend.extract.fsharp
 
 depend.extract.fsharp: .depend.extract.fsharp
 
