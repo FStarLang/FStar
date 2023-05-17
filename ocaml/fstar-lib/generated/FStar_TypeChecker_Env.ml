@@ -3502,6 +3502,62 @@ let (delta_depth_of_qninfo_lid :
                FStar_Pervasives_Native.None
            | FStar_Syntax_Syntax.Sig_polymonadic_subcomp uu___2 ->
                FStar_Pervasives_Native.None)
+let (prims_dd_lids : FStar_Ident.lident Prims.list) =
+  [FStar_Parser_Const.and_lid;
+  FStar_Parser_Const.or_lid;
+  FStar_Parser_Const.imp_lid;
+  FStar_Parser_Const.iff_lid;
+  FStar_Parser_Const.true_lid;
+  FStar_Parser_Const.false_lid;
+  FStar_Parser_Const.not_lid;
+  FStar_Parser_Const.b2t_lid;
+  FStar_Parser_Const.eq2_lid;
+  FStar_Parser_Const.eq3_lid;
+  FStar_Parser_Const.op_Eq;
+  FStar_Parser_Const.op_LT;
+  FStar_Parser_Const.op_LTE;
+  FStar_Parser_Const.op_GT;
+  FStar_Parser_Const.op_GTE;
+  FStar_Parser_Const.forall_lid;
+  FStar_Parser_Const.exists_lid;
+  FStar_Parser_Const.haseq_lid;
+  FStar_Parser_Const.op_And;
+  FStar_Parser_Const.op_Or;
+  FStar_Parser_Const.op_Negation]
+let (is_prims_dd_lid : FStar_Ident.lident -> Prims.bool) =
+  fun l ->
+    FStar_Compiler_List.existsb (fun l0 -> FStar_Ident.lid_equals l l0)
+      prims_dd_lids
+let (prims_delta_depths :
+  FStar_Syntax_Syntax.delta_depth FStar_Compiler_Util.smap) =
+  let m = FStar_Compiler_Util.smap_create (Prims.of_int (20)) in
+  let d0 = FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero in
+  let d1 = FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one in
+  let d2 = FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)) in
+  let deq0 = FStar_Syntax_Syntax.Delta_equational_at_level Prims.int_zero in
+  let l =
+    [("l_and", d0);
+    ("l_Forall", d1);
+    ("l_imp", d1);
+    ("l_iff", d2);
+    ("l_not", d2);
+    ("b2t", d1);
+    ("l_True", d0);
+    ("l_Exists", d1);
+    ("l_or", d1);
+    ("eq2", d0);
+    ("op_Equality", deq0);
+    ("op_Addition", deq0);
+    ("op_LessThanOrEqual", deq0);
+    ("pow2", deq0);
+    ("precedes", d0);
+    ("op_LessThan", deq0);
+    ("op_disEquality", deq0);
+    ("op_Division", deq0)] in
+  FStar_Compiler_List.iter
+    (fun uu___1 ->
+       match uu___1 with | (s, d) -> FStar_Compiler_Util.smap_add m s d) l;
+  m
 let (delta_depth_of_qninfo :
   FStar_Syntax_Syntax.fv ->
     qninfo -> FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
@@ -3509,7 +3565,7 @@ let (delta_depth_of_qninfo :
   fun fv ->
     fun qn ->
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-      let uu___ = let uu___1 = FStar_Ident.nsstr lid in uu___1 = "Prims" in
+      let uu___ = is_prims_dd_lid lid in
       if uu___
       then FStar_Pervasives_Native.Some (fv.FStar_Syntax_Syntax.fv_delta)
       else delta_depth_of_qninfo_lid lid qn
@@ -3518,7 +3574,7 @@ let (delta_depth_of_fv :
   fun env1 ->
     fun fv ->
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-      let uu___ = let uu___1 = FStar_Ident.nsstr lid in uu___1 = "Prims" in
+      let uu___ = is_prims_dd_lid lid in
       if uu___
       then fv.FStar_Syntax_Syntax.fv_delta
       else
