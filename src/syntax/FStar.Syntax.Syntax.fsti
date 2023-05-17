@@ -202,13 +202,13 @@ and pat' =
   | Pat_dot_term of option term                                  (* dot patterns: determined by other elements in the pattern *)
                                                                  (* the option term is the optionally resolved pat dot term *)
 and letbinding = {  //let f : forall u1..un. M t = e
-    lbname :lbname;          //f
-    lbunivs:list univ_name; //u1..un
-    lbtyp  :typ;             //t
-    lbeff  :lident;          //M
-    lbdef  :term;            //e
-    lbattrs:list attribute; //attrs
-    lbpos  :range;           //original position of 'e'
+    lbname :lbname;          // f
+    lbunivs:list univ_name;  // u1..un
+    lbtyp  :typ;             // t
+    lbeff  :lident;          // M
+    lbdef  :term;            // e
+    lbattrs:list attribute;  // attrs
+    lbpos  :range;           // original position of 'e'
 }
 and antiquotations = int * list term
 and quoteinfo = {
@@ -363,7 +363,7 @@ and bv = {
 }
 and fv = {
     fv_name :var;
-    fv_delta:delta_depth;
+    fv_delta:option delta_depth;
     fv_qual :option fv_qual
 }
 and free_vars = {
@@ -811,6 +811,7 @@ val gen_bv':        ident -> option Range.range -> typ -> bv
 val new_bv:         option range -> typ -> bv
 val new_univ_name:  option range -> univ_name
 val lid_as_fv:      lident -> delta_depth -> option fv_qual -> fv
+val lid_as_fv':     lident -> option fv_qual -> fv
 val fv_to_tm:       fv -> term
 val fvar:           lident -> delta_depth -> option fv_qual -> term
 val fv_eq:          fv -> fv -> bool
