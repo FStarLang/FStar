@@ -648,6 +648,10 @@ let () =
       mk_tac_step_2 0 "resolve_name"
         resolve_name RE.e_env (e_list e_string) (e_option (e_either RE.e_bv RE.e_fv))
         resolve_name NRE.e_env (NBET.e_list NBET.e_string) (NBET.e_option (NBET.e_either NRE.e_bv NRE.e_fv));
+      
+      mk_tac_step_1 0 "log_issues"
+        (fun is -> ret (FStar.Errors.add_issues is)) (e_list e_issue) e_unit
+        (fun is -> ret (FStar.Errors.add_issues is)) NBET.(e_list e_issue) NBET.e_unit
 
     ]
 

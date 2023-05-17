@@ -510,3 +510,6 @@ val push_module_abbrev (g:env) (n:string) (m:name)
 
 val resolve_name (g:env) (n:name)
   : Tac (option (either bv fv))
+
+val log_issues (issues:list FStar.Issue.issue)
+  : Tac unit

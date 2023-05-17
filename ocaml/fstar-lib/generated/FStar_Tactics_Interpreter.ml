@@ -2295,7 +2295,41 @@ let (uu___199 : unit) =
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     uu___197
                                                                     uu___200 in
-                                                                    [uu___194] in
+                                                                    let uu___195
+                                                                    =
+                                                                    let uu___196
+                                                                    =
+                                                                    let uu___197
+                                                                    =
+                                                                    FStar_Syntax_Embeddings.e_list
+                                                                    FStar_Syntax_Embeddings.e_issue in
+                                                                    let uu___200
+                                                                    =
+                                                                    FStar_TypeChecker_NBETerm.e_list
+                                                                    FStar_TypeChecker_NBETerm.e_issue in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_1
+                                                                    Prims.int_zero
+                                                                    "log_issues"
+                                                                    (fun is
+                                                                    ->
+                                                                    FStar_Errors.add_issues
+                                                                    is;
+                                                                    FStar_Tactics_Monad.ret
+                                                                    ())
+                                                                    uu___197
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                    (fun is
+                                                                    ->
+                                                                    FStar_Errors.add_issues
+                                                                    is;
+                                                                    FStar_Tactics_Monad.ret
+                                                                    ())
+                                                                    uu___200
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    [uu___196] in
+                                                                    uu___194
+                                                                    ::
+                                                                    uu___195 in
                                                                     uu___192
                                                                     ::
                                                                     uu___193 in

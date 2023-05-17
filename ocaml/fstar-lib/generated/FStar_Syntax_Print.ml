@@ -24,7 +24,14 @@ let (sli : FStar_Ident.lident -> Prims.string) =
 let (lid_to_string : FStar_Ident.lid -> Prims.string) = fun l -> sli l
 let (fv_to_string : FStar_Syntax_Syntax.fv -> Prims.string) =
   fun fv ->
-    lid_to_string (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+    let uu___ =
+      lid_to_string (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+    let uu___1 =
+      let uu___2 =
+        let uu___3 = delta_depth_to_string fv.FStar_Syntax_Syntax.fv_delta in
+        Prims.op_Hat uu___3 ")" in
+      Prims.op_Hat "(@@" uu___2 in
+    Prims.op_Hat uu___ uu___1
 let (bv_to_string : FStar_Syntax_Syntax.bv -> Prims.string) =
   fun bv ->
     let uu___ = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in

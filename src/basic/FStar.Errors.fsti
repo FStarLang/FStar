@@ -98,6 +98,10 @@ val stop_if_err : unit -> unit
 use this for any CFatal error. *)
 val log_issue   : Range.range -> raw_error & string -> unit
 
+(* Log an issue directly, rather than converting it from a raw_error etc.
+   This does not raise an exception. Do not use this for any CFatal error. *)
+val add_issues : list issue -> unit
+
 (* Raise an error. This raises an exception and does not return. *)
 val raise_error : (raw_error & string) -> Range.range -> 'a
 val raise_err   : (raw_error & string) -> 'a

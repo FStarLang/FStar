@@ -226,6 +226,8 @@ let add_one issue =
 let add_many issues =
     atomically (fun () -> List.iter (wrapped_eh_add_one (!current_handler)) issues)
 
+let add_issues issues = add_many issues
+
 let report_all () =
     (!current_handler).eh_report ()
 
