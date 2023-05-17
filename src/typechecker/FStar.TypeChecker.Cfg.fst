@@ -380,7 +380,7 @@ let built_in_primitive_steps : prim_step_set =
                  | _ -> None
     in
     let list_of_string' rng (s:string) : term =
-        let name l = mk (Tm_fvar (lid_as_fv' l None)) rng in
+        let name l = mk (Tm_fvar (lid_as_fv l None)) rng in
         let char_t = name PC.char_lid in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
@@ -649,7 +649,7 @@ let built_in_primitive_steps : prim_step_set =
          (let u32_int_to_t =
             ["FStar"; "UInt32"; "uint_to_t"]
             |> PC.p2l
-            |> (fun l -> S.lid_as_fv' l None) in
+            |> (fun l -> S.lid_as_fv l None) in
           PC.char_u32_of_char,
              1,
              0,
@@ -1126,7 +1126,7 @@ let built_in_primitive_steps : prim_step_set =
                NBETerm.mk_t <|
                NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of e_any)),
                              Thunk.mk (fun _ ->
-                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv' PC.immutable_array_of_list_lid None,
+                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.immutable_array_of_list_lid None,
                                                           universes,
                                                           [NBETerm.as_arg l]))))
              (fun  universes elt_t (l, lst) ->

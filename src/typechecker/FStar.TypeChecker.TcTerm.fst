@@ -1178,7 +1178,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let projname = mk_field_projector_name_from_ident constrname i in
           let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
           let choice =
-            S.lid_as_fv'
+            S.lid_as_fv
               (Ident.set_lid_range projname (Ident.range_of_lid field_name))
               qual
           in

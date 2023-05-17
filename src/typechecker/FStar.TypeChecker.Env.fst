@@ -901,7 +901,7 @@ let is_erasable_effect env l =
   l
   |> norm_eff_name env
   |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
-           S.lid_as_fv' l None
+           S.lid_as_fv l None
            |> fv_has_erasable_attr env)
 
 let rec non_informative env t =

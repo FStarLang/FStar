@@ -69,7 +69,7 @@ let always_fail lid t =
             U.abs bs (fail_exp lid t) None
     in
     let lb = {
-        lbname=Inr (S.lid_as_fv lid delta_constant None);
+        lbname=Inr (S.lid_as_fv lid None);
         lbunivs=[];
         lbtyp=t;
         lbeff=PC.effect_ML_lid();
@@ -207,7 +207,7 @@ let bundle_as_inductive_families env ses quals
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
                 let metadata = extract_metadata se.sigattrs @ List.choose flag_of_qual quals in
-                let fv = S.lid_as_fv l delta_constant None in
+                let fv = S.lid_as_fv l None in
                 let _, env = UEnv.extend_type_name env fv in
                 env, [{   ifv = fv
                         ; iname=l
@@ -434,7 +434,7 @@ let extract_bundle_iface env se
                     (Util.udelta_unfold env_iparams)
                     (Term.term_as_mlty env_iparams ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in
-        let fvv = lid_as_fv ctor.dname delta_constant None in
+        let fvv = lid_as_fv ctor.dname None in
         let env, _, b = extend_fv env fvv tys false in
         env, (fvv, b)
     in
@@ -488,7 +488,7 @@ let extract_type_declaration (g:uenv) is_interface_val lid quals attrs univs t
       then let g = UEnv.extend_with_tydef_declaration g lid in
            g, empty_iface, []
       else let bs, _ = U.arrow_formals t in
-           let fv = S.lid_as_fv lid delta_constant None in
+           let fv = S.lid_as_fv lid None in
            let lb = {
                lbname = Inr fv;
                lbunivs = univs;
@@ -513,7 +513,7 @@ let extract_reifiable_effect g ed
     * iface
     * list mlmodule1 =
     let extend_iface lid mlp exp exp_binding =
-        let fv = (S.lid_as_fv lid delta_equational None) in
+        let fv = (S.lid_as_fv lid None) in
         let lb = {
             mllb_name=snd mlp;
             mllb_tysc=None;
@@ -718,7 +718,7 @@ let karamel_fixup_qual (se:sigelt) : sigelt =
 let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
   debug g (fun u -> BU.print1 ">>>> NOT extracting %s \n" (Print.sigelt_to_string_short se));
   // Cheating with delta levels and qualifiers below, but we don't ever use them.
-  List.fold_right (fun lid g -> extend_erased_fv g (S.lid_as_fv lid delta_constant None))
+  List.fold_right (fun lid g -> extend_erased_fv g (S.lid_as_fv lid None))
                   (U.lids_of_sigelt se) g
 
 (*  The top-level extraction of a sigelt to an interface *)
@@ -866,7 +866,7 @@ let extract_bundle env se =
               []
         in
         let tys = (ml_tyvars, mlt) in
-        let fvv = lid_as_fv ctor.dname delta_constant None in
+        let fvv = lid_as_fv ctor.dname None in
         let env, mls, _ = extend_fv env fvv tys false in
         env,
         (mls, List.zip names (argTypes mlt)) in

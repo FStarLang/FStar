@@ -1274,9 +1274,9 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-    mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid
-                           delta_constant
-                           None))
+    mk (Tm_fvar (lid_and_dd_as_fv PC.attr_substitute_lid
+                                  delta_constant
+                                  None))
        Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) dummyRange
@@ -1701,7 +1701,7 @@ let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-      (Inr (lid_as_fv a.action_name delta_equational None))
+      (Inr (lid_and_dd_as_fv a.action_name delta_equational None))
       a.action_univs
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
@@ -1775,7 +1775,7 @@ let dm4f_lid ed name : lident =
     lid_of_path p' Range.dummyRange
 
 let mk_list (typ:term) (rng:range) (l:list term) : term =
-    let ctor l = mk (Tm_fvar (lid_as_fv l delta_constant (Some Data_ctor))) rng in
+    let ctor l = mk (Tm_fvar (lid_and_dd_as_fv l delta_constant (Some Data_ctor))) rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.cons_lid) [U_zero]) args pos in
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
@@ -2532,12 +2532,12 @@ let encode_positivity_attributes (pqual:option positivity_qualifier) (attrs:list
   | Some BinderStrictlyPositive ->
     if contains_strictly_positive_attribute attrs
     then attrs
-    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_strictly_positive_attr (Delta_constant_at_level 0) None)
+    else FStar.Syntax.Syntax.fv_to_tm (lid_and_dd_as_fv PC.binder_strictly_positive_attr (Delta_constant_at_level 0) None)
          :: attrs
   | Some BinderUnused ->
     if contains_unused_attribute attrs
     then attrs
-    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_unused_attr (Delta_constant_at_level 0) None)
+    else FStar.Syntax.Syntax.fv_to_tm (lid_and_dd_as_fv PC.binder_unused_attr (Delta_constant_at_level 0) None)
          :: attrs
 
 let is_binder_strictly_positive (b:binder) =

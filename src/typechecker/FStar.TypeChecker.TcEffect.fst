@@ -1591,7 +1591,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
     let _check_else =
       let not_p = S.mk_Tm_app
-        (S.lid_as_fv' PC.not_lid None |> S.fv_to_tm)
+        (S.lid_as_fv PC.not_lid None |> S.fv_to_tm)
         [p_t |> U.b2t |> S.as_arg]
         r in
       let env = Env.push_bv env (S.new_bv None not_p) in

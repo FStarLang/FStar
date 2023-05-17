@@ -2217,7 +2217,7 @@ and norm_cb cfg : EMB.norm_cb = function
             FStar.Syntax.DsEnv.try_lookup_lid cfg.tcenv.dsenv l
         with
         | Some t -> t
-        | None -> S.fv_to_tm (S.lid_as_fv' l None)
+        | None -> S.fv_to_tm (S.lid_as_fv l None)
 
 
 (*******************************************************************)

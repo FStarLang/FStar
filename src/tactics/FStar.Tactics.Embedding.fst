@@ -50,7 +50,7 @@ open FStar.Reflection.Data
 type name = bv
 
 let fstar_tactics_lid' s = PC.fstar_tactics_lid' s
-let lid_as_tm l = S.lid_as_fv' l None |> S.fv_to_tm
+let lid_as_tm l = S.lid_as_fv l None |> S.fv_to_tm
 let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
 
 
@@ -60,7 +60,7 @@ type tac_constant = {
   t   : term;
 }
 
-let lid_as_data_fv l = S.lid_as_fv' l (Some Data_ctor)
+let lid_as_data_fv l = S.lid_as_fv l (Some Data_ctor)
 let lid_as_data_tm l = S.fv_to_tm (lid_as_data_fv l)
 
 let fstar_tactics_data ns =

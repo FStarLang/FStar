@@ -767,12 +767,12 @@ let try_lookup_datacon env (lid:lident) =
       match se with
       | ({ sigel = Sig_declare_typ _; sigquals = quals }, _) ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
-        then Some (lid_as_fv lid delta_constant None)
+        then Some (lid_and_dd_as_fv lid delta_constant None)
         else None
       | ({ sigel = Sig_splice _ }, _) (* A spliced datacon *)
       | ({ sigel = Sig_datacon _ }, _) ->
          let qual = fv_qual_of_se (fst se) in
-         Some (lid_as_fv lid delta_constant qual)
+         Some (lid_and_dd_as_fv lid delta_constant qual)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
@@ -1372,4 +1372,4 @@ let resolve_name (e:env) (name:lident)
     )
     | Some (Eff_name(se, l)) ->
       let _ =  delta_depth_of_declaration in
-      Some (Inr (S.lid_as_fv l delta_constant None))
+      Some (Inr (S.lid_and_dd_as_fv l delta_constant None))

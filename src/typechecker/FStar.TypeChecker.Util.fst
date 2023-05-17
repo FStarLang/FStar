@@ -1231,7 +1231,7 @@ let strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) fl
           * its type is p:Type -> pure_wp unit
           *  and it is not universe polymorphic
           *)
-         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv' C.pure_assert_wp_lid None) in
+         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid None) in
 
          (* apply it to f, after decorating f with the reason *)
          let pure_assert_wp = mk_Tm_app
@@ -1294,7 +1294,7 @@ let weaken_comp env (c:comp) (formula:term) : comp * guard_t =
         * its type is p:Type -> pure_wp unit
         *  and it is not universe polymorphic
         *)
-       let pure_assume_wp = S.fv_to_tm (S.lid_as_fv' C.pure_assume_wp_lid None) in
+       let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid None) in
 
        (* apply it to f, after decorating f with the reason *)
        let pure_assume_wp = mk_Tm_app
@@ -2990,7 +2990,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
     BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
   end;
   // Allocate a new top-level name.
-  let fv = S.lid_as_fv lident (U.incr_delta_qualifier def) None in
+  let fv = S.lid_and_dd_as_fv lident (U.incr_delta_qualifier def) None in
   let lbname: lbname = Inr fv in
   let lb: letbindings =
     // the effect label will be recomputed correctly
@@ -3661,7 +3661,7 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
             then (Some (Record_ctor(rdc.typename, rdc.fields |> List.map fst)))
           else None
         in
-        S.lid_as_fv' constrname qual
+        S.lid_as_fv constrname qual
     in
     rdc, constrname, constructor
 

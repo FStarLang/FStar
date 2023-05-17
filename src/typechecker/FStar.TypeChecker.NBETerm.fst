@@ -234,10 +234,10 @@ let embed_as (ea:embedding 'a)
           ea.emb_typ
 
 let lid_as_constr (l:lident) (us:list universe) (args:args) : t =
-    mkConstruct (lid_as_fv' l (Some Data_ctor)) us args
+    mkConstruct (lid_as_fv l (Some Data_ctor)) us args
 
 let lid_as_typ (l:lident) (us:list universe) (args:args) : t =
-    mkFV (lid_as_fv' l None) us args
+    mkFV (lid_as_fv l None) us args
 
 let as_iarg (a:t) : arg = (a, S.as_aqual_implicit true)
 let as_arg (a:t) : arg = (a, None)
@@ -523,32 +523,32 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
 let e_norm_step =
     let em cb (n:SE.norm_step) : t =
         match n with
-        | SE.Simpl   -> mkFV (lid_as_fv' PC.steps_simpl     None) [] []
-        | SE.Weak    -> mkFV (lid_as_fv' PC.steps_weak      None) [] []
-        | SE.HNF     -> mkFV (lid_as_fv' PC.steps_hnf       None) [] []
-        | SE.Primops -> mkFV (lid_as_fv' PC.steps_primops   None) [] []
-        | SE.Delta   -> mkFV (lid_as_fv' PC.steps_delta     None) [] []
-        | SE.Zeta    -> mkFV (lid_as_fv' PC.steps_zeta      None) [] []
-        | SE.Iota    -> mkFV (lid_as_fv' PC.steps_iota      None) [] []
-        | SE.Reify   -> mkFV (lid_as_fv' PC.steps_reify     None) [] []
-        | SE.NBE     -> mkFV (lid_as_fv' PC.steps_nbe       None) [] []
+        | SE.Simpl   -> mkFV (lid_as_fv PC.steps_simpl     None) [] []
+        | SE.Weak    -> mkFV (lid_as_fv PC.steps_weak      None) [] []
+        | SE.HNF     -> mkFV (lid_as_fv PC.steps_hnf       None) [] []
+        | SE.Primops -> mkFV (lid_as_fv PC.steps_primops   None) [] []
+        | SE.Delta   -> mkFV (lid_as_fv PC.steps_delta     None) [] []
+        | SE.Zeta    -> mkFV (lid_as_fv PC.steps_zeta      None) [] []
+        | SE.Iota    -> mkFV (lid_as_fv PC.steps_iota      None) [] []
+        | SE.Reify   -> mkFV (lid_as_fv PC.steps_reify     None) [] []
+        | SE.NBE     -> mkFV (lid_as_fv PC.steps_nbe       None) [] []
         | SE.UnfoldOnly l ->
-                     mkFV (lid_as_fv' PC.steps_unfoldonly None)
+                     mkFV (lid_as_fv PC.steps_unfoldonly None)
                           [] [as_arg (embed (e_list e_string) cb l)]
         | SE.UnfoldFully l ->
-                     mkFV (lid_as_fv' PC.steps_unfoldfully None)
+                     mkFV (lid_as_fv PC.steps_unfoldfully None)
                           [] [as_arg (embed (e_list e_string) cb l)]
         | SE.UnfoldAttr l ->
-                     mkFV (lid_as_fv' PC.steps_unfoldattr None)
+                     mkFV (lid_as_fv PC.steps_unfoldattr None)
                           [] [as_arg (embed (e_list e_string) cb l)]
         | SE.UnfoldQual l ->
-                     mkFV (lid_as_fv' PC.steps_unfoldqual None)
+                     mkFV (lid_as_fv PC.steps_unfoldqual None)
                           [] [as_arg (embed (e_list e_string) cb l)]
         | SE.UnfoldNamespace l ->
-                     mkFV (lid_as_fv' PC.steps_unfoldnamespace None)
+                     mkFV (lid_as_fv PC.steps_unfoldnamespace None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | SE.ZetaFull -> mkFV (lid_as_fv' PC.steps_zeta_full None) [] []
-        | SE.Unascribe -> mkFV (lid_as_fv' PC.steps_unascribe None) [] []
+        | SE.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full None) [] []
+        | SE.Unascribe -> mkFV (lid_as_fv PC.steps_unascribe None) [] []
     in
     let un cb (t0:t) : option SE.norm_step =
         match t0.nbe_t with
@@ -593,7 +593,7 @@ let e_norm_step =
             Errors.log_issue Range.dummyRange (Errors.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0)));
             None
     in
-    mk_emb em un (mkFV (lid_as_fv' PC.norm_step_lid None) [] []) (SE.emb_typ_of SE.e_norm_step)
+    mk_emb em un (mkFV (lid_as_fv PC.norm_step_lid None) [] []) (SE.emb_typ_of SE.e_norm_step)
 
 // Embedding a sealed term. This just calls the embedding for a but also
 // adds a `seal` marker to the result. The unembedding removes it.

@@ -1120,7 +1120,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             | _ -> false)) in
         if will_encode_definition
         then [], env //nothing to do at the declaration; wait to encode the definition
-        else let fv = S.lid_as_fv lid delta_constant None in
+        else let fv = S.lid_as_fv lid None in
              let decls, env =
                encode_top_level_val
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
@@ -1755,7 +1755,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t * env_t
 
         | S.Binding_lid(x, (_, t)) ->
             let t_norm = norm_before_encoding env t in
-            let fv = S.lid_as_fv x delta_constant None in
+            let fv = S.lid_as_fv x None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var false env fv t t_norm [] in
             i+1, decls@g, env'

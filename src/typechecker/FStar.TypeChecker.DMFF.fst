@@ -1,5 +1,5 @@
 (*
-11;rgb:ffff/ffff/ffffCopyright 2008-2014 Nikhil Swamy and Microsoft Research
+  Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -414,7 +414,7 @@ let gen_wps_for_free
         match U.destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body =
             mk (Tm_meta {tm=body; meta=Meta_pattern(binders_to_names binders, [[as_arg pat]])}) in
@@ -1511,7 +1511,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     match (SS.compress bind_wp).n with
     | Tm_abs {bs=binders; body; rc_opt=what} ->
         // TODO: figure out how to deal with ranges
-        //let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
+        //let r = S.lid_and_dd_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
         U.abs binders body what
     | _ ->
         raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
@@ -1538,7 +1538,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
       if Options.debug_any () then
           BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
       // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_as_fv l' delta_equational None)
+      fv_to_tm (lid_and_dd_as_fv l' delta_equational None)
       end
     | None ->
       let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in

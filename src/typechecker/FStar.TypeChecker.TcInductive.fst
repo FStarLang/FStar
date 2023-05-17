@@ -95,7 +95,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          let tps, k = SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
-         let fv_tc = S.lid_as_fv tc delta_constant None in
+         let fv_tc = S.lid_and_dd_as_fv tc delta_constant None in
          let (uvs, t_tc) = SS.open_univ_vars uvs t_tc in
          Env.push_let_binding env0 (Inr fv_tc) (uvs, t_tc),
          { s with sigel = Sig_inductive_typ {lid=tc;
@@ -888,7 +888,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let inst_univs = List.map (fun u -> U_name u) uvs in
     let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
     let arg_typ =
-        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv' tc None), inst_univs)) p in
+        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc None), inst_univs)) p in
         let args = tps@indices |> List.map U.arg_of_non_null_binder in
         S.mk_Tm_app inst_tc args p
     in
@@ -967,7 +967,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                             then pos (Pat_dot_term None), b
                             else pos (Pat_var (S.gen_bv (string_of_id x.ppname) None tun)), b)
                         in
-                        let pat_true = pos (S.Pat_cons (S.lid_as_fv' lid (Some fvq), None, arg_pats)), None, U.exp_true_bool in
+                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid (Some fvq), None, arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_var (S.new_bv None tun)), None, U.exp_false_bool in
                         let arg_exp = S.bv_to_name unrefined_arg_binder.binder_bv in
                         mk (Tm_match {scrutinee=arg_exp;
@@ -979,7 +979,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 let imp = U.abs binders body None in
                 let lbtyp = if no_decl then t else tun in
                 let lb = U.mk_letbinding
-                            (Inr (S.lid_as_fv discriminator_name dd None))
+                            (Inr (S.lid_and_dd_as_fv discriminator_name dd None))
                             uvs
                             lbtyp
                             C.effect_Tot_lid
@@ -1007,7 +1007,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let subst = fields |> List.mapi (fun i ({binder_bv=a}) ->
             let field_name = U.mk_field_projector_name lid a i in
-            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv' field_name None)) inst_univs in
+            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name None)) inst_univs in
             let proj = mk_Tm_app field_proj_tm [arg] p in
             NT(a, proj))
     in
@@ -1063,7 +1063,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   then pos (Pat_dot_term None), b
                   else pos (Pat_var (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
-              let pat = pos (S.Pat_cons (S.lid_as_fv' lid (Some fvq), None, arg_pats)), None, S.bv_to_name projection in
+              let pat = pos (S.Pat_cons (S.lid_as_fv lid (Some fvq), None, arg_pats)), None, S.bv_to_name projection in
               let body =
                 let return_bv = S.gen_bv "proj_ret" (Some p) S.tun in
                 let result_typ = result_comp
@@ -1082,7 +1082,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               let dd = Delta_equational_at_level 1 in
               let lbtyp = if no_decl then t else tun in
               let lb = {
-                  lbname=Inr (S.lid_as_fv field_name dd None);
+                  lbname=Inr (S.lid_and_dd_as_fv field_name dd None);
                   lbunivs=uvs;
                   lbtyp=lbtyp;
                   lbeff=C.effect_Tot_lid;

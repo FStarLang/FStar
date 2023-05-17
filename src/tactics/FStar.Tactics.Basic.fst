@@ -1791,7 +1791,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                     | Sig_datacon {us=c_us; t=c_ty; num_ty_params=nparam; mutuals=mut} ->
                         (* BU.print2 "ty of %s = %s\n" (Ident.string_of_lid c_lid) *)
                         (*                             (Print.term_to_string c_ty); *)
-                        let fv = S.lid_as_fv' c_lid (Some Data_ctor) in
+                        let fv = S.lid_as_fv c_lid (Some Data_ctor) in
 
 
                         failwhen (List.length a_us <> List.length c_us) "t_us don't match?" ;!

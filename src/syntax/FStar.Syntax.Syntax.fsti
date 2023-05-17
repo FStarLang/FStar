@@ -804,21 +804,21 @@ val as_aqual_implicit:    bool -> aqual
 val is_top_level:   list letbinding -> bool
 
 (* gensym *)
-val freshen_bv:     bv -> bv
-val freshen_binder:  binder -> binder
-val gen_bv:         string -> option Range.range -> typ -> bv
-val gen_bv':        ident -> option Range.range -> typ -> bv
-val new_bv:         option range -> typ -> bv
-val new_univ_name:  option range -> univ_name
-val lid_as_fv:      lident -> delta_depth -> option fv_qual -> fv
-val lid_as_fv':     lident -> option fv_qual -> fv
-val fv_to_tm:       fv -> term
-val fvar:           lident -> delta_depth -> option fv_qual -> term
-val fv_eq:          fv -> fv -> bool
-val fv_eq_lid:      fv -> lident -> bool
-val range_of_fv:    fv -> range
-val lid_of_fv:      fv -> lid
-val set_range_of_fv:fv -> range -> fv
+val freshen_bv       : bv -> bv
+val freshen_binder   : binder -> binder
+val gen_bv           : string -> option Range.range -> typ -> bv
+val gen_bv'          : ident -> option Range.range -> typ -> bv
+val new_bv           : option range -> typ -> bv
+val new_univ_name    : option range -> univ_name
+val lid_and_dd_as_fv : lident -> delta_depth -> option fv_qual -> fv
+val lid_as_fv        : lident -> option fv_qual -> fv
+val fv_to_tm         : fv -> term
+val fvar             : lident -> delta_depth -> option fv_qual -> term
+val fv_eq            : fv -> fv -> bool
+val fv_eq_lid        : fv -> lident -> bool
+val range_of_fv      : fv -> range
+val lid_of_fv        : fv -> lid
+val set_range_of_fv  : fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list term -> string -> bool
