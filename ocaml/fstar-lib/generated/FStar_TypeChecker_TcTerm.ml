@@ -3332,8 +3332,8 @@ and (tc_maybe_toplevel_term :
                                               field_name in
                                           FStar_Ident.set_lid_range projname
                                             uu___17 in
-                                        FStar_Syntax_Syntax.lid_as_fv'
-                                          uu___16 qual in
+                                        FStar_Syntax_Syntax.lid_as_fv uu___16
+                                          qual in
                                       proceed_with
                                         (FStar_Pervasives_Native.Some choice)))
                         | uu___14 -> proceed_with candidate))))

@@ -2464,7 +2464,7 @@ let (set_bv_range : bv -> FStar_Compiler_Range_Type.range -> bv) =
     fun r ->
       let uu___ = FStar_Ident.set_id_range r bv1.ppname in
       { ppname = uu___; index = (bv1.index); sort = (bv1.sort) }
-let (lid_as_fv :
+let (lid_and_dd_as_fv :
   FStar_Ident.lident ->
     delta_depth -> fv_qual FStar_Pervasives_Native.option -> fv)
   =
@@ -2478,7 +2478,7 @@ let (lid_as_fv :
           fv_delta = (FStar_Pervasives_Native.Some dd);
           fv_qual = dq
         }
-let (lid_as_fv' :
+let (lid_as_fv :
   FStar_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> fv) =
   fun l ->
     fun dq ->
@@ -2498,7 +2498,8 @@ let (fvar :
     delta_depth -> fv_qual FStar_Pervasives_Native.option -> term)
   =
   fun l ->
-    fun dd -> fun dq -> let uu___ = lid_as_fv l dd dq in fv_to_tm uu___
+    fun dd ->
+      fun dq -> let uu___ = lid_and_dd_as_fv l dd dq in fv_to_tm uu___
 let (lid_of_fv : fv -> FStar_Ident.lid) = fun fv1 -> (fv1.fv_name).v
 let (range_of_fv : fv -> FStar_Compiler_Range_Type.range) =
   fun fv1 -> let uu___ = lid_of_fv fv1 in FStar_Ident.range_of_lid uu___
@@ -2556,7 +2557,7 @@ let (delta_constant : delta_depth) = Delta_constant_at_level Prims.int_zero
 let (delta_equational : delta_depth) =
   Delta_equational_at_level Prims.int_zero
 let (fvconst : FStar_Ident.lident -> fv) =
-  fun l -> lid_as_fv l delta_constant FStar_Pervasives_Native.None
+  fun l -> lid_and_dd_as_fv l delta_constant FStar_Pervasives_Native.None
 let (tconst : FStar_Ident.lident -> term) =
   fun l ->
     let uu___ = let uu___1 = fvconst l in Tm_fvar uu___1 in
@@ -2565,14 +2566,15 @@ let (tabbrev : FStar_Ident.lident -> term) =
   fun l ->
     let uu___ =
       let uu___1 =
-        lid_as_fv l (Delta_constant_at_level Prims.int_one)
+        lid_and_dd_as_fv l (Delta_constant_at_level Prims.int_one)
           FStar_Pervasives_Native.None in
       Tm_fvar uu___1 in
     mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (tdataconstr : FStar_Ident.lident -> term) =
   fun l ->
     let uu___ =
-      lid_as_fv l delta_constant (FStar_Pervasives_Native.Some Data_ctor) in
+      lid_and_dd_as_fv l delta_constant
+        (FStar_Pervasives_Native.Some Data_ctor) in
     fv_to_tm uu___
 let (t_unit : term) = tconst FStar_Parser_Const.unit_lid
 let (t_bool : term) = tconst FStar_Parser_Const.bool_lid

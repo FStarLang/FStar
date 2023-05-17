@@ -5516,7 +5516,7 @@ let (t_destruct :
                                                                     = mut1;_}
                                                                     ->
                                                                     let fv1 =
-                                                                    FStar_Syntax_Syntax.lid_as_fv'
+                                                                    FStar_Syntax_Syntax.lid_as_fv
                                                                     c_lid
                                                                     (FStar_Pervasives_Native.Some
                                                                     FStar_Syntax_Syntax.Data_ctor) in

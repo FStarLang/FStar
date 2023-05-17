@@ -4,7 +4,7 @@ let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   fun s -> FStar_Parser_Const.fstar_tactics_lid' s
 let (lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l ->
-    let uu___ = FStar_Syntax_Syntax.lid_as_fv' l FStar_Pervasives_Native.None in
+    let uu___ = FStar_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
     FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Syntax_Syntax.fv_to_tm
 let (mk_tactic_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s -> let uu___ = fstar_tactics_lid' ["Effect"; s] in lid_as_tm uu___
@@ -23,7 +23,7 @@ let (__proj__Mktac_constant__item__t :
   fun projectee -> match projectee with | { lid; fv; t;_} -> t
 let (lid_as_data_fv : FStar_Ident.lident -> FStar_Syntax_Syntax.fv) =
   fun l ->
-    FStar_Syntax_Syntax.lid_as_fv' l
+    FStar_Syntax_Syntax.lid_as_fv l
       (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
 let (lid_as_data_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l -> let uu___ = lid_as_data_fv l in FStar_Syntax_Syntax.fv_to_tm uu___

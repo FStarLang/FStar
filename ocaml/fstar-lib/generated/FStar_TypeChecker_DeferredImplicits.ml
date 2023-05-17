@@ -348,7 +348,7 @@ let solve_goals_with_tac :
                      ->
                      let qn = FStar_TypeChecker_Env.lookup_qname env lid in
                      let fv =
-                       FStar_Syntax_Syntax.lid_as_fv' lid
+                       FStar_Syntax_Syntax.lid_as_fv lid
                          FStar_Pervasives_Native.None in
                      let dd =
                        let uu___3 =
@@ -359,7 +359,7 @@ let solve_goals_with_tac :
                            failwith "Expected a dd" in
                      let term =
                        let uu___3 =
-                         FStar_Syntax_Syntax.lid_as_fv' lid
+                         FStar_Syntax_Syntax.lid_as_fv lid
                            FStar_Pervasives_Native.None in
                        FStar_Syntax_Syntax.fv_to_tm uu___3 in
                      term

@@ -5902,8 +5902,7 @@ and (norm_cb : FStar_TypeChecker_Cfg.cfg -> FStar_Syntax_Embeddings.norm_cb)
            | FStar_Pervasives_Native.Some t -> t
            | FStar_Pervasives_Native.None ->
                let uu___2 =
-                 FStar_Syntax_Syntax.lid_as_fv' l
-                   FStar_Pervasives_Native.None in
+                 FStar_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
                FStar_Syntax_Syntax.fv_to_tm uu___2)
 and (maybe_simplify_aux :
   FStar_TypeChecker_Cfg.cfg ->

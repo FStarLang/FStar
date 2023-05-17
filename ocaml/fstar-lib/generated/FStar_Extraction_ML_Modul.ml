@@ -64,8 +64,7 @@ let (always_fail :
       let lb =
         let uu___ =
           let uu___1 =
-            FStar_Syntax_Syntax.lid_as_fv lid
-              FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+            FStar_Syntax_Syntax.lid_as_fv lid FStar_Pervasives_Native.None in
           FStar_Pervasives.Inr uu___1 in
         let uu___1 = FStar_Parser_Const.effect_ML_lid () in
         {
@@ -467,7 +466,6 @@ let (bundle_as_inductive_families :
                                  FStar_Compiler_List.op_At uu___5 uu___6 in
                                let fv =
                                  FStar_Syntax_Syntax.lid_as_fv l
-                                   FStar_Syntax_Syntax.delta_constant
                                    FStar_Pervasives_Native.None in
                                let uu___5 =
                                  FStar_Extraction_ML_UEnv.extend_type_name
@@ -922,7 +920,7 @@ let (extract_bundle_iface :
         let tys = (ml_tyvars, mlt) in
         let fvv =
           FStar_Syntax_Syntax.lid_as_fv ctor.dname
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+            FStar_Pervasives_Native.None in
         let uu___ = FStar_Extraction_ML_UEnv.extend_fv env1 fvv tys false in
         match uu___ with | (env2, uu___1, b) -> (env2, (fvv, b)) in
       let extract_one_family env1 ind =
@@ -1050,7 +1048,6 @@ let (extract_type_declaration :
                    | (bs, uu___3) ->
                        let fv =
                          FStar_Syntax_Syntax.lid_as_fv lid
-                           FStar_Syntax_Syntax.delta_constant
                            FStar_Pervasives_Native.None in
                        let lb =
                          let uu___4 =
@@ -1104,8 +1101,7 @@ let (extract_reifiable_effect :
     fun ed ->
       let extend_iface lid mlp exp exp_binding =
         let fv =
-          FStar_Syntax_Syntax.lid_as_fv lid
-            FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv lid FStar_Pervasives_Native.None in
         let lb =
           {
             FStar_Extraction_ML_Syntax.mllb_name =
@@ -1583,9 +1579,7 @@ let (mark_sigelt_erased :
         (fun lid ->
            fun g1 ->
              let uu___1 =
-               FStar_Syntax_Syntax.lid_as_fv lid
-                 FStar_Syntax_Syntax.delta_constant
-                 FStar_Pervasives_Native.None in
+               FStar_Syntax_Syntax.lid_as_fv lid FStar_Pervasives_Native.None in
              FStar_Extraction_ML_UEnv.extend_erased_fv g1 uu___1)
         (FStar_Syntax_Util.lids_of_sigelt se) g
 let rec (extract_sigelt_iface :
@@ -1873,7 +1867,7 @@ let (extract_bundle :
         let tys = (ml_tyvars, mlt) in
         let fvv =
           FStar_Syntax_Syntax.lid_as_fv ctor.dname
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+            FStar_Pervasives_Native.None in
         let uu___ = FStar_Extraction_ML_UEnv.extend_fv env1 fvv tys false in
         match uu___ with
         | (env2, mls, uu___1) ->

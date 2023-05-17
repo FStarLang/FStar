@@ -4141,7 +4141,6 @@ and (encode_sigelt' :
            else
              (let fv =
                 FStar_Syntax_Syntax.lid_as_fv lid
-                  FStar_Syntax_Syntax.delta_constant
                   FStar_Pervasives_Native.None in
               let uu___3 =
                 let uu___4 =
@@ -7098,7 +7097,6 @@ let (encode_env_bindings :
                  let t_norm = norm_before_encoding env1 t in
                  let fv =
                    FStar_Syntax_Syntax.lid_as_fv x
-                     FStar_Syntax_Syntax.delta_constant
                      FStar_Pervasives_Native.None in
                  let uu___2 = encode_free_var false env1 fv t t_norm [] in
                  (match uu___2 with

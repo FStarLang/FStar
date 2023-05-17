@@ -1141,7 +1141,7 @@ let (gen_wps_for_free :
                                 FStar_Syntax_Util.mk_app k_tm uu___5 in
                               let guard_free =
                                 let uu___5 =
-                                  FStar_Syntax_Syntax.lid_as_fv
+                                  FStar_Syntax_Syntax.lid_and_dd_as_fv
                                     FStar_Parser_Const.guard_free
                                     FStar_Syntax_Syntax.delta_constant
                                     FStar_Pervasives_Native.None in
@@ -4394,7 +4394,7 @@ let (cps_and_elaborate :
                                                      uu___17
                                                  else ());
                                                 (let uu___16 =
-                                                   FStar_Syntax_Syntax.lid_as_fv
+                                                   FStar_Syntax_Syntax.lid_and_dd_as_fv
                                                      l'
                                                      FStar_Syntax_Syntax.delta_equational
                                                      FStar_Pervasives_Native.None in

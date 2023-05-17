@@ -1868,7 +1868,7 @@ let (try_lookup_datacon :
             if uu___6
             then
               let uu___7 =
-                FStar_Syntax_Syntax.lid_as_fv lid1
+                FStar_Syntax_Syntax.lid_and_dd_as_fv lid1
                   FStar_Syntax_Syntax.delta_constant
                   FStar_Pervasives_Native.None in
               FStar_Pervasives_Native.Some uu___7
@@ -1883,7 +1883,7 @@ let (try_lookup_datacon :
            uu___6) ->
             let qual1 = fv_qual_of_se (FStar_Pervasives_Native.fst se) in
             let uu___7 =
-              FStar_Syntax_Syntax.lid_as_fv lid1
+              FStar_Syntax_Syntax.lid_and_dd_as_fv lid1
                 FStar_Syntax_Syntax.delta_constant qual1 in
             FStar_Pervasives_Native.Some uu___7
         | ({
@@ -1897,7 +1897,7 @@ let (try_lookup_datacon :
            uu___6) ->
             let qual1 = fv_qual_of_se (FStar_Pervasives_Native.fst se) in
             let uu___7 =
-              FStar_Syntax_Syntax.lid_as_fv lid1
+              FStar_Syntax_Syntax.lid_and_dd_as_fv lid1
                 FStar_Syntax_Syntax.delta_constant qual1 in
             FStar_Pervasives_Native.Some uu___7
         | uu___ -> FStar_Pervasives_Native.None in
@@ -3550,7 +3550,7 @@ let (resolve_name :
           let uu___1 = delta_depth_of_declaration in
           let uu___2 =
             let uu___3 =
-              FStar_Syntax_Syntax.lid_as_fv l
+              FStar_Syntax_Syntax.lid_and_dd_as_fv l
                 FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None in
             FStar_Pervasives.Inr uu___3 in

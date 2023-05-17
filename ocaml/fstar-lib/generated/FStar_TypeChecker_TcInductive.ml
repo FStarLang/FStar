@@ -179,7 +179,7 @@ let (tc_tycon :
                                           match uu___7 with
                                           | (tps5, k5) ->
                                               let fv_tc =
-                                                FStar_Syntax_Syntax.lid_as_fv
+                                                FStar_Syntax_Syntax.lid_and_dd_as_fv
                                                   tc
                                                   FStar_Syntax_Syntax.delta_constant
                                                   FStar_Pervasives_Native.None in
@@ -2344,7 +2344,7 @@ let (mk_discriminator_and_indexed_projectors :
                                 let uu___1 =
                                   let uu___2 =
                                     let uu___3 =
-                                      FStar_Syntax_Syntax.lid_as_fv' tc
+                                      FStar_Syntax_Syntax.lid_as_fv tc
                                         FStar_Pervasives_Native.None in
                                     FStar_Syntax_Syntax.fv_to_tm uu___3 in
                                   (uu___2, inst_univs) in
@@ -2581,7 +2581,7 @@ let (mk_discriminator_and_indexed_projectors :
                                            let uu___5 =
                                              let uu___6 =
                                                let uu___7 =
-                                                 FStar_Syntax_Syntax.lid_as_fv'
+                                                 FStar_Syntax_Syntax.lid_as_fv
                                                    lid
                                                    (FStar_Pervasives_Native.Some
                                                       fvq) in
@@ -2646,7 +2646,7 @@ let (mk_discriminator_and_indexed_projectors :
                                   let lb =
                                     let uu___3 =
                                       let uu___4 =
-                                        FStar_Syntax_Syntax.lid_as_fv
+                                        FStar_Syntax_Syntax.lid_and_dd_as_fv
                                           discriminator_name dd
                                           FStar_Pervasives_Native.None in
                                       FStar_Pervasives.Inr uu___4 in
@@ -2730,7 +2730,7 @@ let (mk_discriminator_and_indexed_projectors :
                                           let field_proj_tm =
                                             let uu___4 =
                                               let uu___5 =
-                                                FStar_Syntax_Syntax.lid_as_fv'
+                                                FStar_Syntax_Syntax.lid_as_fv
                                                   field_name
                                                   FStar_Pervasives_Native.None in
                                               FStar_Syntax_Syntax.fv_to_tm
@@ -2942,7 +2942,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                     let uu___8 =
                                                       let uu___9 =
                                                         let uu___10 =
-                                                          FStar_Syntax_Syntax.lid_as_fv'
+                                                          FStar_Syntax_Syntax.lid_as_fv
                                                             lid
                                                             (FStar_Pervasives_Native.Some
                                                                fvq) in
@@ -3054,7 +3054,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                 let lb =
                                                   let uu___7 =
                                                     let uu___8 =
-                                                      FStar_Syntax_Syntax.lid_as_fv
+                                                      FStar_Syntax_Syntax.lid_and_dd_as_fv
                                                         field_name dd
                                                         FStar_Pervasives_Native.None in
                                                     FStar_Pervasives.Inr

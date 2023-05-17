@@ -3526,36 +3526,6 @@ let (is_prims_dd_lid : FStar_Ident.lident -> Prims.bool) =
   fun l ->
     FStar_Compiler_List.existsb (fun l0 -> FStar_Ident.lid_equals l l0)
       prims_dd_lids
-let (prims_delta_depths :
-  FStar_Syntax_Syntax.delta_depth FStar_Compiler_Util.smap) =
-  let m = FStar_Compiler_Util.smap_create (Prims.of_int (20)) in
-  let d0 = FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero in
-  let d1 = FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one in
-  let d2 = FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)) in
-  let deq0 = FStar_Syntax_Syntax.Delta_equational_at_level Prims.int_zero in
-  let l =
-    [("l_and", d0);
-    ("l_Forall", d1);
-    ("l_imp", d1);
-    ("l_iff", d2);
-    ("l_not", d2);
-    ("b2t", d1);
-    ("l_True", d0);
-    ("l_Exists", d1);
-    ("l_or", d1);
-    ("eq2", d0);
-    ("op_Equality", deq0);
-    ("op_Addition", deq0);
-    ("op_LessThanOrEqual", deq0);
-    ("pow2", deq0);
-    ("precedes", d0);
-    ("op_LessThan", deq0);
-    ("op_disEquality", deq0);
-    ("op_Division", deq0)] in
-  FStar_Compiler_List.iter
-    (fun uu___1 ->
-       match uu___1 with | (s, d) -> FStar_Compiler_Util.smap_add m s d) l;
-  m
 let (delta_depth_of_qninfo :
   FStar_Syntax_Syntax.fv ->
     qninfo -> FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
@@ -3581,8 +3551,8 @@ let (delta_depth_of_fv :
              fv.FStar_Syntax_Syntax.fv_delta) in
       if uu___
       then
-        FStar_Pervasives_Native.__proj__Some__item__v
-          fv.FStar_Syntax_Syntax.fv_delta
+        FStar_Compiler_Effect.op_Bar_Greater fv.FStar_Syntax_Syntax.fv_delta
+          FStar_Compiler_Util.must
       else
         (let uu___2 =
            let uu___3 = FStar_Ident.string_of_lid lid in
@@ -3932,8 +3902,7 @@ let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
         (fun l1 ->
            (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
              (let uu___1 =
-                FStar_Syntax_Syntax.lid_as_fv' l1
-                  FStar_Pervasives_Native.None in
+                FStar_Syntax_Syntax.lid_as_fv l1 FStar_Pervasives_Native.None in
               FStar_Compiler_Effect.op_Bar_Greater uu___1
                 (fv_has_erasable_attr env1)))
 let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
