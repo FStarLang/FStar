@@ -1999,8 +1999,10 @@ let (should_unfold :
               (fun uu___2 ->
                  let uu___3 = FStar_Syntax_Print.fv_to_string fv in
                  let uu___4 =
-                   FStar_Syntax_Print.delta_depth_to_string
-                     fv.FStar_Syntax_Syntax.fv_delta in
+                   let uu___5 =
+                     FStar_TypeChecker_Env.delta_depth_of_fv
+                       cfg.FStar_TypeChecker_Cfg.tcenv fv in
+                   FStar_Syntax_Print.delta_depth_to_string uu___5 in
                  let uu___5 =
                    (FStar_Common.string_of_list ())
                      FStar_TypeChecker_Env.string_of_delta_level
@@ -5900,8 +5902,7 @@ and (norm_cb : FStar_TypeChecker_Cfg.cfg -> FStar_Syntax_Embeddings.norm_cb)
            | FStar_Pervasives_Native.Some t -> t
            | FStar_Pervasives_Native.None ->
                let uu___2 =
-                 FStar_Syntax_Syntax.lid_as_fv l
-                   FStar_Syntax_Syntax.delta_constant
+                 FStar_Syntax_Syntax.lid_as_fv' l
                    FStar_Pervasives_Native.None in
                FStar_Syntax_Syntax.fv_to_tm uu___2)
 and (maybe_simplify_aux :

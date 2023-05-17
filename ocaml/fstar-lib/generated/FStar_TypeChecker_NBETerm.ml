@@ -776,7 +776,7 @@ let (lid_as_constr :
     fun us ->
       fun args1 ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.delta_constant
+          FStar_Syntax_Syntax.lid_as_fv' l
             (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
         mkConstruct uu___ us args1
 let (lid_as_typ :
@@ -786,8 +786,7 @@ let (lid_as_typ :
     fun us ->
       fun args1 ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.delta_constant
-            FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' l FStar_Pervasives_Native.None in
         mkFV uu___ us args1
 let (as_iarg : t -> arg) =
   fun a ->
@@ -1344,53 +1343,53 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
     match n with
     | FStar_Syntax_Embeddings.Simpl ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_simpl
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_simpl
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.Weak ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_weak
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_weak
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.HNF ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_hnf
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_hnf
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.Primops ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_primops
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_primops
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.Delta ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_delta
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_delta
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.Zeta ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_zeta
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_zeta
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.Iota ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_iota
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_iota
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.Reify ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_reify
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_reify
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.NBE ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_nbe
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_nbe
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.UnfoldOnly l ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_unfoldonly
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_unfoldonly
+            FStar_Pervasives_Native.None in
         let uu___1 =
           let uu___2 =
             let uu___3 = let uu___4 = e_list e_string in embed uu___4 cb l in
@@ -1399,8 +1398,8 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         mkFV uu___ [] uu___1
     | FStar_Syntax_Embeddings.UnfoldFully l ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_unfoldfully
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_unfoldfully
+            FStar_Pervasives_Native.None in
         let uu___1 =
           let uu___2 =
             let uu___3 = let uu___4 = e_list e_string in embed uu___4 cb l in
@@ -1409,8 +1408,8 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         mkFV uu___ [] uu___1
     | FStar_Syntax_Embeddings.UnfoldAttr l ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_unfoldattr
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_unfoldattr
+            FStar_Pervasives_Native.None in
         let uu___1 =
           let uu___2 =
             let uu___3 = let uu___4 = e_list e_string in embed uu___4 cb l in
@@ -1419,8 +1418,8 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         mkFV uu___ [] uu___1
     | FStar_Syntax_Embeddings.UnfoldQual l ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_unfoldqual
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_unfoldqual
+            FStar_Pervasives_Native.None in
         let uu___1 =
           let uu___2 =
             let uu___3 = let uu___4 = e_list e_string in embed uu___4 cb l in
@@ -1429,9 +1428,9 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         mkFV uu___ [] uu___1
     | FStar_Syntax_Embeddings.UnfoldNamespace l ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv
+          FStar_Syntax_Syntax.lid_as_fv'
             FStar_Parser_Const.steps_unfoldnamespace
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+            FStar_Pervasives_Native.None in
         let uu___1 =
           let uu___2 =
             let uu___3 = let uu___4 = e_list e_string in embed uu___4 cb l in
@@ -1440,13 +1439,13 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         mkFV uu___ [] uu___1
     | FStar_Syntax_Embeddings.ZetaFull ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_zeta_full
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_zeta_full
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] []
     | FStar_Syntax_Embeddings.Unascribe ->
         let uu___ =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_unascribe
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.steps_unascribe
+            FStar_Pervasives_Native.None in
         mkFV uu___ [] [] in
   let un cb t0 =
     match t0.nbe_t with
@@ -1540,8 +1539,8 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
          FStar_Pervasives_Native.None) in
   let uu___ =
     let uu___1 =
-      FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.norm_step_lid
-        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+      FStar_Syntax_Syntax.lid_as_fv' FStar_Parser_Const.norm_step_lid
+        FStar_Pervasives_Native.None in
     mkFV uu___1 [] [] in
   let uu___1 =
     FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_norm_step in

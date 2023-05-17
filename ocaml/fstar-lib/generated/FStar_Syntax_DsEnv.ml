@@ -1284,8 +1284,11 @@ let (try_lookup_name :
                      let uu___4 =
                        let uu___5 =
                          let uu___6 =
-                           FStar_Syntax_Syntax.fvar source_lid
-                             fv.FStar_Syntax_Syntax.fv_delta
+                           let uu___7 =
+                             FStar_Compiler_Effect.op_Bar_Greater
+                               fv.FStar_Syntax_Syntax.fv_delta
+                               FStar_Compiler_Util.must in
+                           FStar_Syntax_Syntax.fvar source_lid uu___7
                              fv.FStar_Syntax_Syntax.fv_qual in
                          (uu___6, (se.FStar_Syntax_Syntax.sigattrs)) in
                        Term_name uu___5 in
@@ -1618,7 +1621,10 @@ let (try_lookup_let :
            uu___8) ->
             let fv = lb_fv lbs lid1 in
             let uu___9 =
-              FStar_Syntax_Syntax.fvar lid1 fv.FStar_Syntax_Syntax.fv_delta
+              let uu___10 =
+                FStar_Compiler_Effect.op_Bar_Greater
+                  fv.FStar_Syntax_Syntax.fv_delta FStar_Compiler_Util.must in
+              FStar_Syntax_Syntax.fvar lid1 uu___10
                 fv.FStar_Syntax_Syntax.fv_qual in
             FStar_Pervasives_Native.Some uu___9
         | uu___1 -> FStar_Pervasives_Native.None in

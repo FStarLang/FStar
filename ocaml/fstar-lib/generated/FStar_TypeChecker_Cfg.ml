@@ -2178,8 +2178,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     let name l =
       let uu___ =
         let uu___1 =
-          FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.delta_constant
-            FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv' l FStar_Pervasives_Native.None in
         FStar_Syntax_Syntax.Tm_fvar uu___1 in
       FStar_Syntax_Syntax.mk uu___ rng in
     let char_t = name FStar_Parser_Const.char_lid in
@@ -2581,9 +2580,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                   FStar_Compiler_Effect.op_Bar_Greater
                                     uu___24
                                     (fun l ->
-                                       FStar_Syntax_Syntax.lid_as_fv l
-                                         (FStar_Syntax_Syntax.Delta_constant_at_level
-                                            Prims.int_zero)
+                                       FStar_Syntax_Syntax.lid_as_fv' l
                                          FStar_Pervasives_Native.None) in
                                 let uu___24 =
                                   FStar_TypeChecker_NBETerm.unary_op
@@ -3734,9 +3731,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                              let uu___6 =
                                let uu___7 =
                                  let uu___8 =
-                                   FStar_Syntax_Syntax.lid_as_fv
+                                   FStar_Syntax_Syntax.lid_as_fv'
                                      FStar_Parser_Const.immutable_array_of_list_lid
-                                     FStar_Syntax_Syntax.delta_constant
                                      FStar_Pervasives_Native.None in
                                  let uu___9 =
                                    let uu___10 =

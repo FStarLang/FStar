@@ -2344,8 +2344,7 @@ let (mk_discriminator_and_indexed_projectors :
                                 let uu___1 =
                                   let uu___2 =
                                     let uu___3 =
-                                      FStar_Syntax_Syntax.lid_as_fv tc
-                                        FStar_Syntax_Syntax.delta_constant
+                                      FStar_Syntax_Syntax.lid_as_fv' tc
                                         FStar_Pervasives_Native.None in
                                     FStar_Syntax_Syntax.fv_to_tm uu___3 in
                                   (uu___2, inst_univs) in
@@ -2582,9 +2581,8 @@ let (mk_discriminator_and_indexed_projectors :
                                            let uu___5 =
                                              let uu___6 =
                                                let uu___7 =
-                                                 FStar_Syntax_Syntax.lid_as_fv
+                                                 FStar_Syntax_Syntax.lid_as_fv'
                                                    lid
-                                                   FStar_Syntax_Syntax.delta_constant
                                                    (FStar_Pervasives_Native.Some
                                                       fvq) in
                                                (uu___7,
@@ -2732,10 +2730,8 @@ let (mk_discriminator_and_indexed_projectors :
                                           let field_proj_tm =
                                             let uu___4 =
                                               let uu___5 =
-                                                FStar_Syntax_Syntax.lid_as_fv
+                                                FStar_Syntax_Syntax.lid_as_fv'
                                                   field_name
-                                                  (FStar_Syntax_Syntax.Delta_equational_at_level
-                                                     Prims.int_one)
                                                   FStar_Pervasives_Native.None in
                                               FStar_Syntax_Syntax.fv_to_tm
                                                 uu___5 in
@@ -2946,9 +2942,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                     let uu___8 =
                                                       let uu___9 =
                                                         let uu___10 =
-                                                          FStar_Syntax_Syntax.lid_as_fv
+                                                          FStar_Syntax_Syntax.lid_as_fv'
                                                             lid
-                                                            FStar_Syntax_Syntax.delta_constant
                                                             (FStar_Pervasives_Native.Some
                                                                fvq) in
                                                         (uu___10,

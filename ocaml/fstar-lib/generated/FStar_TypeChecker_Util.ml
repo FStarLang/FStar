@@ -2605,10 +2605,9 @@ let (strengthen_comp :
               (let r = FStar_TypeChecker_Env.get_range env in
                let pure_assert_wp =
                  let uu___2 =
-                   FStar_Syntax_Syntax.lid_as_fv
+                   FStar_Syntax_Syntax.lid_as_fv'
                      FStar_Parser_Const.pure_assert_wp_lid
-                     (FStar_Syntax_Syntax.Delta_constant_at_level
-                        Prims.int_one) FStar_Pervasives_Native.None in
+                     FStar_Pervasives_Native.None in
                  FStar_Syntax_Syntax.fv_to_tm uu___2 in
                let pure_assert_wp1 =
                  let uu___2 =
@@ -2722,9 +2721,8 @@ let (weaken_comp :
           (let ct = FStar_TypeChecker_Env.unfold_effect_abbrev env c in
            let pure_assume_wp =
              let uu___2 =
-               FStar_Syntax_Syntax.lid_as_fv
+               FStar_Syntax_Syntax.lid_as_fv'
                  FStar_Parser_Const.pure_assume_wp_lid
-                 (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
                  FStar_Pervasives_Native.None in
              FStar_Syntax_Syntax.fv_to_tm uu___2 in
            let pure_assume_wp1 =
@@ -8381,8 +8379,7 @@ let (find_record_or_dc_from_typ :
                   FStar_Syntax_Syntax.Record_ctor uu___1 in
                 FStar_Pervasives_Native.Some uu___
               else FStar_Pervasives_Native.None in
-            FStar_Syntax_Syntax.lid_as_fv constrname
-              FStar_Syntax_Syntax.delta_constant qual in
+            FStar_Syntax_Syntax.lid_as_fv' constrname qual in
           (rdc, constrname, constructor)
 let (field_name_matches :
   FStar_Ident.lident ->

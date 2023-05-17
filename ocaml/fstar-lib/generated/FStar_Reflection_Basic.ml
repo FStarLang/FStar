@@ -73,9 +73,7 @@ let (pack_fv : Prims.string Prims.list -> FStar_Syntax_Syntax.fv) =
                    FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor
                  else FStar_Pervasives_Native.None))) in
       let uu___1 = FStar_Parser_Const.p2l ns in
-      FStar_Syntax_Syntax.lid_as_fv uu___1
-        (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (999)))
-        quals in
+      FStar_Syntax_Syntax.lid_as_fv' uu___1 quals in
     let uu___ =
       FStar_Compiler_Effect.op_Bang
         FStar_TypeChecker_Normalize.reflection_env_hook in
@@ -88,9 +86,7 @@ let (pack_fv : Prims.string Prims.list -> FStar_Syntax_Syntax.fv) =
              (FStar_Pervasives.Inr (se, _us), _rng) ->
              let quals = FStar_Syntax_DsEnv.fv_qual_of_se se in
              let uu___1 = FStar_Parser_Const.p2l ns in
-             FStar_Syntax_Syntax.lid_as_fv uu___1
-               (FStar_Syntax_Syntax.Delta_constant_at_level
-                  (Prims.of_int (999))) quals
+             FStar_Syntax_Syntax.lid_as_fv' uu___1 quals
          | uu___1 -> fallback ())
 let rec last : 'a . 'a Prims.list -> 'a =
   fun l ->
@@ -644,9 +640,8 @@ let (lookup_attr :
                | FStar_Pervasives_Native.None -> []
                | FStar_Pervasives_Native.Some l ->
                    let uu___2 =
-                     FStar_Syntax_Syntax.lid_as_fv l
-                       (FStar_Syntax_Syntax.Delta_constant_at_level
-                          (Prims.of_int (999))) FStar_Pervasives_Native.None in
+                     FStar_Syntax_Syntax.lid_as_fv' l
+                       FStar_Pervasives_Native.None in
                    [uu___2]) ses
       | uu___1 -> []
 let (all_defs_in_env :
@@ -654,10 +649,8 @@ let (all_defs_in_env :
   fun env ->
     let uu___ = FStar_TypeChecker_Env.lidents env in
     FStar_Compiler_List.map
-      (fun l ->
-         FStar_Syntax_Syntax.lid_as_fv l
-           (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (999)))
-           FStar_Pervasives_Native.None) uu___
+      (fun l -> FStar_Syntax_Syntax.lid_as_fv' l FStar_Pervasives_Native.None)
+      uu___
 let (defs_in_module :
   FStar_TypeChecker_Env.env ->
     FStar_Reflection_Data.name -> FStar_Syntax_Syntax.fv Prims.list)
@@ -676,9 +669,7 @@ let (defs_in_module :
            if ns = modul
            then
              let uu___1 =
-               FStar_Syntax_Syntax.lid_as_fv l
-                 (FStar_Syntax_Syntax.Delta_constant_at_level
-                    (Prims.of_int (999))) FStar_Pervasives_Native.None in
+               FStar_Syntax_Syntax.lid_as_fv' l FStar_Pervasives_Native.None in
              [uu___1]
            else []) uu___
 let (lookup_typ :

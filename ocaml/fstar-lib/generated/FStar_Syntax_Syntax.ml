@@ -372,7 +372,7 @@ and bv = {
 and fv =
   {
   fv_name: var ;
-  fv_delta: delta_depth ;
+  fv_delta: delta_depth FStar_Pervasives_Native.option ;
   fv_qual: fv_qual FStar_Pervasives_Native.option }
 and free_vars =
   {
@@ -956,7 +956,8 @@ let (__proj__Mkfv__item__fv_name : fv -> var) =
   fun projectee ->
     match projectee with
     | { fv_name; fv_delta; fv_qual = fv_qual1;_} -> fv_name
-let (__proj__Mkfv__item__fv_delta : fv -> delta_depth) =
+let (__proj__Mkfv__item__fv_delta :
+  fv -> delta_depth FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { fv_name; fv_delta; fv_qual = fv_qual1;_} -> fv_delta
@@ -2472,7 +2473,22 @@ let (lid_as_fv :
       fun dq ->
         let uu___ =
           let uu___1 = FStar_Ident.range_of_lid l in withinfo l uu___1 in
-        { fv_name = uu___; fv_delta = dd; fv_qual = dq }
+        {
+          fv_name = uu___;
+          fv_delta = (FStar_Pervasives_Native.Some dd);
+          fv_qual = dq
+        }
+let (lid_as_fv' :
+  FStar_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> fv) =
+  fun l ->
+    fun dq ->
+      let uu___ =
+        let uu___1 = FStar_Ident.range_of_lid l in withinfo l uu___1 in
+      {
+        fv_name = uu___;
+        fv_delta = FStar_Pervasives_Native.None;
+        fv_qual = dq
+      }
 let (fv_to_tm : fv -> term) =
   fun fv1 ->
     let uu___ = FStar_Ident.range_of_lid (fv1.fv_name).v in

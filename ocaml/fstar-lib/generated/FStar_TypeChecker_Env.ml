@@ -3480,9 +3480,7 @@ let (delta_depth_of_qninfo_lid :
                       FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
                     let uu___4 = FStar_Syntax_Syntax.fv_eq_lid fv lid in
                     if uu___4
-                    then
-                      FStar_Pervasives_Native.Some
-                        (fv.FStar_Syntax_Syntax.fv_delta)
+                    then fv.FStar_Syntax_Syntax.fv_delta
                     else FStar_Pervasives_Native.None)
            | FStar_Syntax_Syntax.Sig_fail uu___2 ->
                failwith "impossible: delta_depth_of_qninfo"
@@ -3565,18 +3563,26 @@ let (delta_depth_of_qninfo :
   fun fv ->
     fun qn ->
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-      let uu___ = is_prims_dd_lid lid in
+      let uu___ =
+        (is_prims_dd_lid lid) &&
+          (FStar_Pervasives_Native.uu___is_Some
+             fv.FStar_Syntax_Syntax.fv_delta) in
       if uu___
-      then FStar_Pervasives_Native.Some (fv.FStar_Syntax_Syntax.fv_delta)
+      then fv.FStar_Syntax_Syntax.fv_delta
       else delta_depth_of_qninfo_lid lid qn
 let (delta_depth_of_fv :
   env -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.delta_depth) =
   fun env1 ->
     fun fv ->
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-      let uu___ = is_prims_dd_lid lid in
+      let uu___ =
+        (is_prims_dd_lid lid) &&
+          (FStar_Pervasives_Native.uu___is_Some
+             fv.FStar_Syntax_Syntax.fv_delta) in
       if uu___
-      then fv.FStar_Syntax_Syntax.fv_delta
+      then
+        FStar_Pervasives_Native.__proj__Some__item__v
+          fv.FStar_Syntax_Syntax.fv_delta
       else
         (let uu___2 =
            let uu___3 = FStar_Ident.string_of_lid lid in
@@ -3606,14 +3612,20 @@ let (delta_depth_of_fv :
                      failwith uu___6
                  | FStar_Pervasives_Native.Some d ->
                      ((let uu___7 =
-                         (d <> fv.FStar_Syntax_Syntax.fv_delta) &&
-                           (FStar_Options.debug_any ()) in
+                         ((FStar_Pervasives_Native.uu___is_Some
+                             fv.FStar_Syntax_Syntax.fv_delta)
+                            &&
+                            (d <>
+                               (FStar_Pervasives_Native.__proj__Some__item__v
+                                  fv.FStar_Syntax_Syntax.fv_delta)))
+                           && (FStar_Options.debug_any ()) in
                        if uu___7
                        then
                          let uu___8 = FStar_Syntax_Print.fv_to_string fv in
                          let uu___9 =
                            FStar_Syntax_Print.delta_depth_to_string
-                             fv.FStar_Syntax_Syntax.fv_delta in
+                             (FStar_Pervasives_Native.__proj__Some__item__v
+                                fv.FStar_Syntax_Syntax.fv_delta) in
                          let uu___10 =
                            FStar_Syntax_Print.delta_depth_to_string d in
                          FStar_Compiler_Util.print3
@@ -3920,8 +3932,7 @@ let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
         (fun l1 ->
            (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
              (let uu___1 =
-                FStar_Syntax_Syntax.lid_as_fv l1
-                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+                FStar_Syntax_Syntax.lid_as_fv' l1
                   FStar_Pervasives_Native.None in
               FStar_Compiler_Effect.op_Bar_Greater uu___1
                 (fv_has_erasable_attr env1)))
@@ -4149,13 +4160,15 @@ let (is_interpreted : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_fvar fv ->
-          (match fv.FStar_Syntax_Syntax.fv_delta with
-           | FStar_Syntax_Syntax.Delta_equational_at_level uu___1 -> true
-           | uu___1 -> false) ||
-            (FStar_Compiler_Util.for_some
-               (FStar_Ident.lid_equals
-                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
-               interpreted_symbols)
+          (FStar_Compiler_Util.for_some
+             (FStar_Ident.lid_equals
+                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
+             interpreted_symbols)
+            ||
+            (let uu___1 = delta_depth_of_fv env1 fv in
+             (match uu___1 with
+              | FStar_Syntax_Syntax.Delta_equational_at_level uu___2 -> true
+              | uu___2 -> false))
       | uu___1 -> false
 let (is_irreducible : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->

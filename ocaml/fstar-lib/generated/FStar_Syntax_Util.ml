@@ -3706,7 +3706,10 @@ let rec (delta_qualifier :
     | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
     | FStar_Syntax_Syntax.Tm_lazy i ->
         let uu___ = unfold_lazy i in delta_qualifier uu___
-    | FStar_Syntax_Syntax.Tm_fvar fv -> fv.FStar_Syntax_Syntax.fv_delta
+    | FStar_Syntax_Syntax.Tm_fvar fv ->
+        (match fv.FStar_Syntax_Syntax.fv_delta with
+         | FStar_Pervasives_Native.Some d -> d
+         | FStar_Pervasives_Native.None -> FStar_Syntax_Syntax.delta_constant)
     | FStar_Syntax_Syntax.Tm_bvar uu___ ->
         FStar_Syntax_Syntax.delta_equational
     | FStar_Syntax_Syntax.Tm_name uu___ ->

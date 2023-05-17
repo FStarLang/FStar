@@ -2331,7 +2331,8 @@ and (desugar_machine_integer :
                            let private_fv =
                              let uu___3 =
                                FStar_Syntax_Util.incr_delta_depth
-                                 fv.FStar_Syntax_Syntax.fv_delta in
+                                 (FStar_Pervasives_Native.__proj__Some__item__v
+                                    fv.FStar_Syntax_Syntax.fv_delta) in
                              FStar_Syntax_Syntax.lid_as_fv private_lid uu___3
                                fv.FStar_Syntax_Syntax.fv_qual in
                            {
