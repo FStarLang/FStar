@@ -1733,7 +1733,9 @@ let rec delta_qualifier t =
     match t.n with
         | Tm_delayed _ -> failwith "Impossible"
         | Tm_lazy i -> delta_qualifier (unfold_lazy i)
-        | Tm_fvar fv -> fv.fv_delta
+        | Tm_fvar fv -> (match fv.fv_delta with
+                         | Some d -> d
+                         | None -> delta_constant)
         | Tm_bvar _
         | Tm_name _
         | Tm_match _

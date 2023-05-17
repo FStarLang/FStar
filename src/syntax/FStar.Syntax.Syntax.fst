@@ -257,7 +257,12 @@ let set_bv_range bv r = {bv with ppname = set_id_range r bv.ppname}
 
 let lid_as_fv l dd dq : fv = {
     fv_name=withinfo l (range_of_lid l);
-    fv_delta=dd;
+    fv_delta=Some dd;
+    fv_qual =dq;
+}
+let lid_as_fv' l dq : fv = {
+    fv_name=withinfo l (range_of_lid l);
+    fv_delta=None;
     fv_qual =dq;
 }
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name.v)

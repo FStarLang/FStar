@@ -532,7 +532,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
           | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid delta_constant (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
           | Sig_let {lbs=(_, lbs)} ->
             let fv = lb_fv lbs source_lid in
-            Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, se.sigattrs))
+            Some (Term_name(S.fvar source_lid (fv.fv_delta |> must) fv.fv_qual, se.sigattrs))
           | Sig_declare_typ {lid} ->
             let quals = se.sigquals in
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
@@ -638,7 +638,7 @@ let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
       | ({ sigel = Sig_let {lbs=(_, lbs)} }, _) ->
         let fv = lb_fv lbs lid in
-        Some (fvar lid fv.fv_delta fv.fv_qual) //NS delta: ok
+        Some (fvar lid (fv.fv_delta |> must) fv.fv_qual) //NS delta: ok
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
