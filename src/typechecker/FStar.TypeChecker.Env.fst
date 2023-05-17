@@ -690,7 +690,7 @@ let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
-              then Some fv.fv_delta
+              then fv.fv_delta
               else None)
 
       | Sig_fail _
@@ -706,6 +706,13 @@ let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
       | Sig_polymonadic_subcomp _ -> None
 
 
+//
+// For the following prims symbols,
+//   delta depth is handled specially
+// Instead of looking it up in the env,
+//   we  return as is set in the input fv.fv_delta
+// No principled reason, for backward compatibility
+//
 let prims_dd_lids = [
   Const.and_lid;
   Const.or_lid;
@@ -733,61 +740,16 @@ let prims_dd_lids = [
 let is_prims_dd_lid (l:lident) =
   List.existsb (fun l0 -> lid_equals l l0) prims_dd_lids
 
-let prims_delta_depths : BU.smap delta_depth =
-  let m = BU.smap_create 20 in
-  let d0 = Delta_constant_at_level 0 in
-  let d1 = Delta_constant_at_level 1 in
-  let d2 = Delta_constant_at_level 2 in
-  let deq0 = Delta_equational_at_level 0 in
-  let l = [
-    ("l_and", d0);
-    ("l_Forall", d1);
-    ("l_imp", d1);
-    ("l_iff", d2);
-    ("l_not", d2);
-    ("b2t", d1);
-    ("l_True", d0);
-    ("l_Exists", d1);
-    ("l_or", d1);
-    ("eq2", d0);
-    ("op_Equality", deq0);
-    ("op_Addition", deq0);
-    ("op_LessThanOrEqual", deq0);
-    ("pow2", deq0);
-    ("precedes", d0);
-    ("op_LessThan", deq0);
-    ("op_disEquality", deq0);
-    ("op_Division", deq0);
-
-  ] in
-  List.iter (fun (s, d) -> BU.smap_add m s d) l;
-  m
-
 let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option delta_depth =
-    let lid = fv.fv_name.v in
-    if is_prims_dd_lid lid then Some fv.fv_delta //NS delta: too many special cases in existing code
-    else delta_depth_of_qninfo_lid lid qn
+  let lid = fv.fv_name.v in
+  if is_prims_dd_lid lid && Some? fv.fv_delta
+  then fv.fv_delta //NS delta: too many special cases in existing code
+  else delta_depth_of_qninfo_lid lid qn
 
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
-  // let res =
-  //   (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
-  //     if d_opt |> is_some then d_opt |> must
-  //     else match delta_depth_of_qninfo_lid fv.fv_name.v (lookup_qname env fv.fv_name.v) with
-  //          | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
-  //          | Some d -> d) in
-  if is_prims_dd_lid lid then begin
-    // if res <> fv.fv_delta &&
-    //    ((lid |> ident_of_lid |> string_of_id) |> BU.smap_try_find prims_delta_depths |> (fun d_opt ->
-    //       match d_opt with
-    //       | None -> BU.print1 "%s not in map!\n" (string_of_lid lid); true
-    //       | Some dm -> dm <> fv.fv_delta))
-    // then BU.print3 "\n\nWARNING: fv %s, fv.fv_delta %s, env delta %s\n\n"
-    //        (Print.fv_to_string fv)
-    //        (Print.delta_depth_to_string fv.fv_delta)
-    //        (Print.delta_depth_to_string res);
-    fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
-  end
+  if is_prims_dd_lid lid && Some? fv.fv_delta
+  then fv.fv_delta |> must
   else
     //try cache
     (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
@@ -796,11 +758,11 @@ let delta_depth_of_fv env fv =
         match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
         | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
         | Some d ->
-          if d <> fv.fv_delta
+          if Some? fv.fv_delta && d <> Some?.v fv.fv_delta
           && Options.debug_any()
           then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
                          (Print.fv_to_string fv)
-                         (Print.delta_depth_to_string fv.fv_delta)
+                         (Print.delta_depth_to_string (Some?.v fv.fv_delta))
                          (Print.delta_depth_to_string d);
           BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
           d)
@@ -939,7 +901,7 @@ let is_erasable_effect env l =
   l
   |> norm_eff_name env
   |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
-           S.lid_as_fv l (Delta_constant_at_level 0) None
+           S.lid_as_fv' l None
            |> fv_has_erasable_attr env)
 
 let rec non_informative env t =
@@ -1032,10 +994,10 @@ let is_interpreted =
     fun (env:env) head ->
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-            (match fv.fv_delta with
+          BU.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols ||
+            (match delta_depth_of_fv env fv with
              | Delta_equational_at_level _ -> true
-             | _ -> false) ||
-            BU.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
+             | _ -> false)
         | _ -> false
 
 let is_irreducible env l =
