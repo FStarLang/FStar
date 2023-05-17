@@ -28,6 +28,8 @@ jobs:
           CI_IMAGEBUILD_INITIAL_TIMESTAMP=$(date '+%s')
           docker build --pull --no-cache -f .docker/base.Dockerfile -t ${TEMP_IMAGE_NAME} .
           CI_IMAGEBUILD_FINAL_TIMESTAMP=$(date '+%s')
+          echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP='$CI_IMAGEBUILD_INITIAL_TIMESTAMP'" >> $GITHUB_ENV
+          echo "CI_IMAGEBUILD_FINAL_TIMESTAMP='$CI_IMAGEBUILD_FINAL_TIMESTAMP'" >> $GITHUB_ENV
           echo "TEMP_IMAGE_NAME=$TEMP_IMAGE_NAME" >> $GITHUB_ENV
 
       - name: Check that F* CI passes
@@ -69,15 +71,15 @@ jobs:
             echo "CI_EMOJI=❌" >> $GITHUB_ENV
             ;;
           esac
-          echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
+          echo "CI_COMMIT=$(echo ${{  github.event.head_commit.id || github.event.pull_request.head.sha || github.head_commit.id }} | grep -o '^........')" >> $GITHUB_ENV
           echo 'CI_STATUS='"$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
           if [ -n "$CI_IMAGEBUILD_INITIALTIMESTAMP" ]; then
             DIFF=$(( $CI_IMAGEBUILD_FINAL_TIMESTAMP - $CI_IMAGEBUILD_INITIAL_TIMESTAMP ))
             SS=$(( $DIFF % 60 ))
             MM=$(( ($DIFF / 60) % 60 ))
             HH=$(( $DIFF / 3600 ))
-            CI_IMAGEBUILD_MSG=" (base image rebuilt in ${HH}h ${MM}m ${SS}s)"
-            echo "CI_IMAGEBUILD_MSG='$CI_IMAGEBUILD_MSG'" >> $GITHUB_ENV
+            CI_IMAGEBUILD_TIME="${HH}h ${MM}min ${SS}s"
+            echo "CI_IMAGEBUILD_TIME='$CI_IMAGEBUILD_TIME'" >> $GITHUB_ENV
           fi
 
       - name: Remove intermediate images
@@ -87,7 +89,7 @@ jobs:
           docker rmi -f ${ci_docker_image_tag} || true
 
       - name: Output build log error summary
-        if: ${{ always () }}
+        if: ${{ failure() }}
         run: |
           # Just outputs to the github snippet. Could be part of slack message.
           # This command never triggers a failure
@@ -109,14 +111,14 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Update F* base CI image\n<${{ github.event.head_commit.url || github.event.pull_request.html_url }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ github.event.head_commit.author.username || github.event.pull_request.user.login }}"
+                    "text": "Update F* base CI image\n<${{ github.event.head_commit.url || github.event.pull_request.html_url || github.head_commit.url }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ github.triggering_actor }}"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "plain_text",
-                    "text": ${{ toJSON(github.event.head_commit.message || github.event.pull_request.title) }}
+                    "text": ${{ toJSON(github.event.head_commit.message || github.event.pull_request.title || github.head_commit.message || '<unknown>') }}
                   }
                 },
                 {
@@ -130,7 +132,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "plain_text",
-                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s${{env.CI_IMAGEBUILD_MSG}}"
+                    "text": "Duration (image build): ${{ env.CI_IMAGEBUILD_TIME }}\nDuration (FStar CI): ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s"
                   }
                 }
               ]
