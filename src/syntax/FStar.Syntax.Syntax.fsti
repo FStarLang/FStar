@@ -813,7 +813,8 @@ val new_univ_name    : option range -> univ_name
 val lid_and_dd_as_fv : lident -> delta_depth -> option fv_qual -> fv
 val lid_as_fv        : lident -> option fv_qual -> fv
 val fv_to_tm         : fv -> term
-val fvar             : lident -> delta_depth -> option fv_qual -> term
+val fvar_with_dd     : lident -> delta_depth -> option fv_qual -> term
+val fvar             : lident -> option fv_qual -> term
 val fv_eq            : fv -> fv -> bool
 val fv_eq_lid        : fv -> lident -> bool
 val range_of_fv      : fv -> range

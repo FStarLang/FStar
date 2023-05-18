@@ -276,7 +276,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar PC.ite_lid (S.Delta_constant_at_level 2) None in
+      let l_ite = fvar_with_dd PC.ite_lid (S.Delta_constant_at_level 2) None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -377,7 +377,7 @@ let gen_wps_for_free
         | Tm_app {hd=head; args} when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
+            let projector = S.fvar_with_dd (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =

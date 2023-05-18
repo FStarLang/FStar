@@ -1726,7 +1726,7 @@ let maybe_return_e2_and_bind
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
-let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) delta_constant None
+let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
 
 //
 // Apply substitutive ite combinator for indexed effects
@@ -2232,7 +2232,7 @@ let coerce_with (env:Env.env)
             BU.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
         let lc2 = TcComm.lcomp_of_comp <| mkcomp ty in
         let lc_res = bind e.pos env (Some e) lc (None, lc2) in
-        let coercion = S.fvar (Ident.set_lid_range f e.pos) (Delta_constant_at_level 1) None in
+        let coercion = S.fvar (Ident.set_lid_range f e.pos) None in
         let coercion = S.mk_Tm_uinst coercion us in
 
         //
@@ -2581,8 +2581,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let us_r, _ = fst <| Env.lookup_lid env C.as_requires in
                               let us_e, _ = fst <| Env.lookup_lid env C.as_ensures in
                               let r = ct.result_typ.pos in
-                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
-                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
+                              let as_req = S.mk_Tm_uinst (S.fvar_with_dd (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
+                              let as_ens = S.mk_Tm_uinst (S.fvar_with_dd (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
                               let req = mk_Tm_app as_req [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
                               let ens = mk_Tm_app as_ens [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)

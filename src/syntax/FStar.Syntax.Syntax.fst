@@ -266,7 +266,8 @@ let lid_as_fv l dq : fv = {
     fv_qual =dq;
 }
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name.v)
-let fvar l dd dq =  fv_to_tm (lid_and_dd_as_fv l dd dq)
+let fvar_with_dd l dd dq =  fv_to_tm (lid_and_dd_as_fv l dd dq)
+let fvar l dq = fv_to_tm (lid_as_fv l dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
 let set_range_of_fv (fv:fv) (r:Range.range) =

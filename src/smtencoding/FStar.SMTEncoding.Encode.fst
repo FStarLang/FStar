@@ -1250,7 +1250,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                TcTerm.level_of_type
                  env_tps
                  (S.mk_Tm_app
-                   (S.fvar t (Delta_constant_at_level 0) None)
+                   (S.fvar t None)
                    (snd (U.args_of_binders tps))
                    (Ident.range_of_lid t))
                  k
