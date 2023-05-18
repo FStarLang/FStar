@@ -71,7 +71,14 @@ jobs:
             echo "CI_EMOJI=❌" >> $GITHUB_ENV
             ;;
           esac
-          echo "CI_COMMIT=$(echo ${{  github.event.head_commit.id || github.event.pull_request.head.sha || github.head_commit.id }} | grep -o '^........')" >> $GITHUB_ENV
+          echo "CI_COMMIT=$(echo ${{ github.sha }} | grep -o '^........')" >> $GITHUB_ENV
+          echo "CI_COMMIT_URL=https://github.com/FStarLang/FStar/commit/${{ github.sha }}" >> $GITHUB_ENV
+          if [[ '${{github.event_name}}' == 'schedule' ]]; then
+            CI_TRIGGER='schedule'
+          else
+            CI_TRIGGER='${{github.triggering_actor}}'
+          fi
+          echo "CI_TRIGGER=$CI_TRIGGER" >> $GITHUB_ENV
           echo 'CI_STATUS='"$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
           if [ -n "$CI_IMAGEBUILD_INITIAL_TIMESTAMP" ]; then
             DIFF=$(( $CI_IMAGEBUILD_FINAL_TIMESTAMP - $CI_IMAGEBUILD_INITIAL_TIMESTAMP ))
@@ -111,14 +118,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Update F* base CI image\n<${{ github.event.head_commit.url || github.event.pull_request.html_url || github.head_commit.url }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ github.triggering_actor }}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "plain_text",
-                    "text": ${{ toJSON(github.event.head_commit.message || github.event.pull_request.title || github.head_commit.message || '<unknown>') }}
+                    "text": "Update F* base CI image\n<${{ env.CI_COMMIT_URL }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ env.CI_TRIGGER }}"
                   }
                 },
                 {
