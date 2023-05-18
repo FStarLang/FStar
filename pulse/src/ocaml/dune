@@ -1,0 +1,11 @@
+(include_subdirs unqualified)
+(library
+ (name steel)
+ (public_name steel)
+ (libraries
+    fstar.lib
+ )
+ (modes native)
+ (wrapped false)
+ (flags (:standard -w -A))
+)

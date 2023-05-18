@@ -1,0 +1,8 @@
+(lang dune 3.2)
+(name steel)
+(generate_opam_files false)
+
+(package
+  (name steel)
+  (synopsis "The Steel separation logic library for F*")
+)

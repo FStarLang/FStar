@@ -1,0 +1,35 @@
+[
+  "\u0016¦êÏAðÄßèyb\u0001n,Žø",
+  [
+    [
+      "Selectors.PtrLList.v_ptrlist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_199584b56b28cac81327d72bb4d89b4d"
+      ],
+      0,
+      "6ce2d201d36e42da1e7b95794b3b4f13"
+    ],
+    [
+      "Selectors.PtrLList.intro_llist_cons",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "06a3489d3631f87a344e0f5327a88da6"
+    ],
+    [
+      "Selectors.PtrLList.elim_llist_cons",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ae2d052321f9d7e932366c98c5985753"
+    ]
+  ]
+]

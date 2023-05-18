@@ -1,0 +1,38 @@
+[
+  "èærÅÈ∏SR1¯-£&\u001dz\u001d",
+  [
+    [
+      "Selectors.LList.v_llist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_06409d29d5fabf8dbbdeb433bc9da3bc"
+      ],
+      0,
+      "369ab7b4592cca3ea9550173cad8ec64"
+    ],
+    [
+      "Selectors.LList.tail",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e039035ff0ab198216398f2616b5077c"
+    ],
+    [
+      "Selectors.LList.v_ind_llist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_698991e353b74d3d15d981aa8acb041c"
+      ],
+      0,
+      "6fe92fd5e56e85ce07ecdaa822375041"
+    ]
+  ]
+]

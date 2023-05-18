@@ -1,0 +1,26 @@
+[
+  "\u0015›\u0013*è)ïÇÆ≠h÷\u0015ßWò",
+  [
+    [
+      "Selectors.LList2.v_llist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f739d7585f85f9216ab76894ab82188b"
+      ],
+      0,
+      "bf7543da4517fe412e2e770dd8761233"
+    ],
+    [
+      "Selectors.LList2.tail",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7e7f984908dd4e533be537558522c387"
+    ]
+  ]
+]

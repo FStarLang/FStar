@@ -1,0 +1,30 @@
+[
+  "hý \u001cm¯úðÅÌY'\u0000ý*=",
+  [
+    [
+      "Queue.dequeue_post_success",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "proj_equation_Queue.Def.Mkcell_next",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "f22f612ab40f6f169c7fe4527a06f469"
+    ],
+    [
+      "Queue.dequeue_post",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
+      ],
+      0,
+      "70deb2302d849af2d8e322704d4160f5"
+    ]
+  ]
+]

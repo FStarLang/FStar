@@ -1,0 +1,17 @@
+[
+  "H'|! tπÅ\u000e8\u001bÈ\u0003$Å^",
+  [
+    [
+      "NewCanon.swap2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_0384ec095b850a18864324063aca63b2"
+      ],
+      0,
+      "506502b51401d0dd0bcfc0826546d6e0"
+    ]
+  ]
+]

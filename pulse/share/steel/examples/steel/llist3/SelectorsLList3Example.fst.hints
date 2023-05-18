@@ -1,0 +1,59 @@
+[
+  "‘•‚ÍM\u0006\u0019»yj\u0012meæò¯",
+  [
+    [
+      "SelectorsLList3Example.mk_cell",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_SelectorsLList3Example.data",
+        "equation_SelectorsLList3Example.next"
+      ],
+      0,
+      "2609918eebc6b385cae1cdd7796e4d8f"
+    ],
+    [
+      "SelectorsLList3Example.is_null",
+      1,
+      2,
+      1,
+      [ "@query", "equation_SelectorsLList3Example.null_llist" ],
+      0,
+      "f253e586387fbc52e8522a4e9b708f0d"
+    ],
+    [
+      "SelectorsLList3Example.is_nil",
+      1,
+      2,
+      1,
+      [ "@query", "equation_SelectorsLList3Example.null_llist" ],
+      0,
+      "81d4da706de78fee86651dbd71ece22c"
+    ],
+    [
+      "SelectorsLList3Example.intro_llist_cons",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_SelectorsLList3Example.data",
+        "equation_SelectorsLList3Example.next"
+      ],
+      0,
+      "694fe9354a9fa780a73bc12f9ef1878c"
+    ],
+    [
+      "SelectorsLList3Example.tail",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_SelectorsLList3Example.mk_cell",
+        "equation_SelectorsLList3Example.null_llist"
+      ],
+      0,
+      "ae7712a68d26c3d8736a6038a883a623"
+    ]
+  ]
+]
