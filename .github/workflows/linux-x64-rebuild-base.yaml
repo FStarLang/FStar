@@ -28,8 +28,8 @@ jobs:
           CI_IMAGEBUILD_INITIAL_TIMESTAMP=$(date '+%s')
           docker build --pull --no-cache -f .docker/base.Dockerfile -t ${TEMP_IMAGE_NAME} .
           CI_IMAGEBUILD_FINAL_TIMESTAMP=$(date '+%s')
-          echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP='$CI_IMAGEBUILD_INITIAL_TIMESTAMP'" >> $GITHUB_ENV
-          echo "CI_IMAGEBUILD_FINAL_TIMESTAMP='$CI_IMAGEBUILD_FINAL_TIMESTAMP'" >> $GITHUB_ENV
+          echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP=$CI_IMAGEBUILD_INITIAL_TIMESTAMP" >> $GITHUB_ENV
+          echo "CI_IMAGEBUILD_FINAL_TIMESTAMP=$CI_IMAGEBUILD_FINAL_TIMESTAMP" >> $GITHUB_ENV
           echo "TEMP_IMAGE_NAME=$TEMP_IMAGE_NAME" >> $GITHUB_ENV
 
       - name: Check that F* CI passes
@@ -39,7 +39,7 @@ jobs:
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
 
           CI_TARGET=uregressions
-          docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_TARGET="$CI_TARGET" . |& tee BUILDLOG
+          docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg FSTAR_CI_BASE=$TEMP_IMAGE_NAME --build-arg CI_TARGET="$CI_TARGET" . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           $ci_docker_status
 
@@ -79,7 +79,7 @@ jobs:
             MM=$(( ($DIFF / 60) % 60 ))
             HH=$(( $DIFF / 3600 ))
             CI_IMAGEBUILD_TIME="${HH}h ${MM}min ${SS}s"
-            echo "CI_IMAGEBUILD_TIME='$CI_IMAGEBUILD_TIME'" >> $GITHUB_ENV
+            echo "CI_IMAGEBUILD_TIME=$CI_IMAGEBUILD_TIME" >> $GITHUB_ENV
           fi
 
       - name: Remove intermediate images
