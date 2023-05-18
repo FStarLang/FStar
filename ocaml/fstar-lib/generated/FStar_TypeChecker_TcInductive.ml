@@ -179,9 +179,8 @@ let (tc_tycon :
                                           match uu___7 with
                                           | (tps5, k5) ->
                                               let fv_tc =
-                                                FStar_Syntax_Syntax.lid_and_dd_as_fv
+                                                FStar_Syntax_Syntax.lid_as_fv
                                                   tc
-                                                  FStar_Syntax_Syntax.delta_constant
                                                   FStar_Pervasives_Native.None in
                                               let uu___8 =
                                                 FStar_Syntax_Subst.open_univ_vars

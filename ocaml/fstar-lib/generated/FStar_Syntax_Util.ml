@@ -2384,9 +2384,8 @@ let (attr_substitute : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   let uu___ =
     let uu___1 =
-      FStar_Syntax_Syntax.lid_and_dd_as_fv
-        FStar_Parser_Const.attr_substitute_lid
-        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+      FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.attr_substitute_lid
+        FStar_Pervasives_Native.None in
     FStar_Syntax_Syntax.Tm_fvar uu___1 in
   FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (exp_true_bool : FStar_Syntax_Syntax.term) =
@@ -3803,8 +3802,7 @@ let (mk_list :
         let ctor l1 =
           let uu___ =
             let uu___1 =
-              FStar_Syntax_Syntax.lid_and_dd_as_fv l1
-                FStar_Syntax_Syntax.delta_constant
+              FStar_Syntax_Syntax.lid_as_fv l1
                 (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
             FStar_Syntax_Syntax.Tm_fvar uu___1 in
           FStar_Syntax_Syntax.mk uu___ rng in
@@ -5247,10 +5245,9 @@ let (encode_positivity_attributes :
           else
             (let uu___2 =
                let uu___3 =
-                 FStar_Syntax_Syntax.lid_and_dd_as_fv
+                 FStar_Syntax_Syntax.lid_as_fv
                    FStar_Parser_Const.binder_strictly_positive_attr
-                   (FStar_Syntax_Syntax.Delta_constant_at_level
-                      Prims.int_zero) FStar_Pervasives_Native.None in
+                   FStar_Pervasives_Native.None in
                FStar_Syntax_Syntax.fv_to_tm uu___3 in
              uu___2 :: attrs)
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.BinderUnused) ->
@@ -5260,10 +5257,9 @@ let (encode_positivity_attributes :
           else
             (let uu___2 =
                let uu___3 =
-                 FStar_Syntax_Syntax.lid_and_dd_as_fv
+                 FStar_Syntax_Syntax.lid_as_fv
                    FStar_Parser_Const.binder_unused_attr
-                   (FStar_Syntax_Syntax.Delta_constant_at_level
-                      Prims.int_zero) FStar_Pervasives_Native.None in
+                   FStar_Pervasives_Native.None in
                FStar_Syntax_Syntax.fv_to_tm uu___3 in
              uu___2 :: attrs)
 let (is_binder_strictly_positive : FStar_Syntax_Syntax.binder -> Prims.bool)
