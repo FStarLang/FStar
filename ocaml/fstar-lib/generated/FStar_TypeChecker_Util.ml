@@ -3663,8 +3663,7 @@ let (fvar_const :
       let uu___ =
         let uu___1 = FStar_TypeChecker_Env.get_range env in
         FStar_Ident.set_lid_range lid uu___1 in
-      FStar_Syntax_Syntax.fvar uu___ FStar_Syntax_Syntax.delta_constant
-        FStar_Pervasives_Native.None
+      FStar_Syntax_Syntax.fvar uu___ FStar_Pervasives_Native.None
 let (substitutive_indexed_ite_substs :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.indexed_effect_combinator_kind ->
@@ -4890,8 +4889,7 @@ let (coerce_with :
                             FStar_Ident.set_lid_range f
                               e.FStar_Syntax_Syntax.pos in
                           FStar_Syntax_Syntax.fvar uu___3
-                            (FStar_Syntax_Syntax.Delta_constant_at_level
-                               Prims.int_one) FStar_Pervasives_Native.None in
+                            FStar_Pervasives_Native.None in
                         let coercion1 =
                           FStar_Syntax_Syntax.mk_Tm_uinst coercion us in
                         let e1 =
@@ -5781,7 +5779,7 @@ let (pure_or_ghost_pre_and_post :
                                   let uu___11 =
                                     FStar_Ident.set_lid_range
                                       FStar_Parser_Const.as_requires r in
-                                  FStar_Syntax_Syntax.fvar uu___11
+                                  FStar_Syntax_Syntax.fvar_with_dd uu___11
                                     FStar_Syntax_Syntax.delta_equational
                                     FStar_Pervasives_Native.None in
                                 FStar_Syntax_Syntax.mk_Tm_uinst uu___10 us_r in
@@ -5790,7 +5788,7 @@ let (pure_or_ghost_pre_and_post :
                                   let uu___11 =
                                     FStar_Ident.set_lid_range
                                       FStar_Parser_Const.as_ensures r in
-                                  FStar_Syntax_Syntax.fvar uu___11
+                                  FStar_Syntax_Syntax.fvar_with_dd uu___11
                                     FStar_Syntax_Syntax.delta_equational
                                     FStar_Pervasives_Native.None in
                                 FStar_Syntax_Syntax.mk_Tm_uinst uu___10 us_e in

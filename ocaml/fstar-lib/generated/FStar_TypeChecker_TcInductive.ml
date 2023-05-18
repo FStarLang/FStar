@@ -1136,7 +1136,6 @@ let (get_optimized_haseq_axiom :
                    let ind =
                      let uu___2 =
                        FStar_Syntax_Syntax.fvar lid
-                         FStar_Syntax_Syntax.delta_constant
                          FStar_Pervasives_Native.None in
                      let uu___3 =
                        FStar_Compiler_List.map
@@ -1683,7 +1682,6 @@ let (unoptimized_haseq_ty :
                        let ind =
                          let uu___2 =
                            FStar_Syntax_Syntax.fvar lid
-                             FStar_Syntax_Syntax.delta_constant
                              FStar_Pervasives_Native.None in
                          let uu___3 =
                            FStar_Compiler_List.map
@@ -2372,7 +2370,7 @@ let (mk_discriminator_and_indexed_projectors :
                                  let disc_fvar =
                                    let uu___1 =
                                      FStar_Ident.set_lid_range disc_name p in
-                                   FStar_Syntax_Syntax.fvar uu___1
+                                   FStar_Syntax_Syntax.fvar_with_dd uu___1
                                      (FStar_Syntax_Syntax.Delta_equational_at_level
                                         Prims.int_one)
                                      FStar_Pervasives_Native.None in

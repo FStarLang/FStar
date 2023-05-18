@@ -6949,7 +6949,7 @@ let (fvar_of_nonqual_lid :
         | FStar_Pervasives_Native.None ->
             failwith "Unexpected no delta_depth"
         | FStar_Pervasives_Native.Some dd1 -> dd1 in
-      FStar_Syntax_Syntax.fvar lid dd FStar_Pervasives_Native.None
+      FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
 let (split_smt_query :
   env ->
     FStar_Syntax_Syntax.term ->

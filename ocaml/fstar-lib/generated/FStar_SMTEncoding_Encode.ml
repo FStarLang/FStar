@@ -4638,8 +4638,6 @@ and (encode_sigelt' :
                                        let uu___10 =
                                          let uu___11 =
                                            FStar_Syntax_Syntax.fvar t
-                                             (FStar_Syntax_Syntax.Delta_constant_at_level
-                                                Prims.int_zero)
                                              FStar_Pervasives_Native.None in
                                          let uu___12 =
                                            let uu___13 =

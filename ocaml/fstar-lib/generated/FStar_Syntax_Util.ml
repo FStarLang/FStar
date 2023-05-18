@@ -2420,16 +2420,16 @@ let (exp_string : Prims.string -> FStar_Syntax_Syntax.term) =
       FStar_Compiler_Range_Type.dummyRange
 let (fvar_const : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l ->
-    FStar_Syntax_Syntax.fvar l FStar_Syntax_Syntax.delta_constant
+    FStar_Syntax_Syntax.fvar_with_dd l FStar_Syntax_Syntax.delta_constant
       FStar_Pervasives_Native.None
 let (tand : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.and_lid
 let (tor : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.or_lid
 let (timp : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.imp_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.imp_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (tiff : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.iff_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.iff_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)))
     FStar_Pervasives_Native.None
 let (t_bool : FStar_Syntax_Syntax.term) =
@@ -2457,7 +2457,6 @@ let (t_universe_uvar : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.universe_uvar_lid
 let (t_dsl_tac_typ : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.dsl_tac_typ_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (mk_conj_opt :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
@@ -2537,7 +2536,7 @@ let (mk_conj_l :
   fun phi ->
     match phi with
     | [] ->
-        FStar_Syntax_Syntax.fvar FStar_Parser_Const.true_lid
+        FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.true_lid
           FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
     | hd::tl -> FStar_Compiler_List.fold_right mk_conj tl hd
 let (mk_disj :
@@ -2742,15 +2741,15 @@ let (mk_has_type :
           FStar_Syntax_Syntax.Tm_app uu___1 in
         FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (tforall : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.forall_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.forall_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (texists : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.exists_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.exists_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (t_haseq : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.haseq_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.haseq_lid
     FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
 let (decidable_eq : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.op_Eq
@@ -3032,7 +3031,7 @@ let (mk_squash :
   fun u ->
     fun p ->
       let sq =
-        FStar_Syntax_Syntax.fvar FStar_Parser_Const.squash_lid
+        FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.squash_lid
           (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
           FStar_Pervasives_Native.None in
       let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst sq [u] in
@@ -3046,7 +3045,7 @@ let (mk_auto_squash :
   fun u ->
     fun p ->
       let sq =
-        FStar_Syntax_Syntax.fvar FStar_Parser_Const.auto_squash_lid
+        FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.auto_squash_lid
           (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)))
           FStar_Pervasives_Native.None in
       let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst sq [u] in
@@ -5120,9 +5119,7 @@ let (apply_reveal :
           let uu___ =
             FStar_Ident.set_lid_range FStar_Parser_Const.reveal
               v.FStar_Syntax_Syntax.pos in
-          FStar_Syntax_Syntax.fvar uu___
-            (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
-            FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.fvar uu___ FStar_Pervasives_Native.None in
         let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst head [u] in
         let uu___1 =
           let uu___2 = FStar_Syntax_Syntax.iarg ty in

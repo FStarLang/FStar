@@ -11,8 +11,7 @@ let (fail_exp :
         let uu___1 =
           let uu___2 =
             let uu___3 = FStar_Parser_Const.failwith_lid () in
-            FStar_Syntax_Syntax.fvar uu___3
-              FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+            FStar_Syntax_Syntax.fvar uu___3 FStar_Pervasives_Native.None in
           let uu___3 =
             let uu___4 = FStar_Syntax_Syntax.iarg t in
             let uu___5 =

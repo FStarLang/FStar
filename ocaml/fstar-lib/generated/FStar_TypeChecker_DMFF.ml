@@ -605,7 +605,8 @@ let (gen_wps_for_free :
                       FStar_Compiler_List.op_At binders uu___4 in
                     let uu___4 =
                       let l_ite =
-                        FStar_Syntax_Syntax.fvar FStar_Parser_Const.ite_lid
+                        FStar_Syntax_Syntax.fvar_with_dd
+                          FStar_Parser_Const.ite_lid
                           (FStar_Syntax_Syntax.Delta_constant_at_level
                              (Prims.of_int (2))) FStar_Pervasives_Native.None in
                       let uu___5 =
@@ -982,7 +983,7 @@ let (gen_wps_for_free :
                                     FStar_Compiler_Range_Type.dummyRange in
                                 FStar_TypeChecker_Env.lookup_projector env2
                                   uu___5 i in
-                              FStar_Syntax_Syntax.fvar uu___4
+                              FStar_Syntax_Syntax.fvar_with_dd uu___4
                                 (FStar_Syntax_Syntax.Delta_constant_at_level
                                    Prims.int_one)
                                 FStar_Pervasives_Native.None in

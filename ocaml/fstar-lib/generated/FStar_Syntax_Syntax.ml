@@ -2499,13 +2499,16 @@ let (fv_to_tm : fv -> term) =
   fun fv1 ->
     let uu___ = FStar_Ident.range_of_lid (fv1.fv_name).v in
     mk (Tm_fvar fv1) uu___
-let (fvar :
+let (fvar_with_dd :
   FStar_Ident.lident ->
     delta_depth -> fv_qual FStar_Pervasives_Native.option -> term)
   =
   fun l ->
     fun dd ->
       fun dq -> let uu___ = lid_and_dd_as_fv l dd dq in fv_to_tm uu___
+let (fvar :
+  FStar_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> term) =
+  fun l -> fun dq -> let uu___ = lid_as_fv l dq in fv_to_tm uu___
 let (lid_of_fv : fv -> FStar_Ident.lid) = fun fv1 -> (fv1.fv_name).v
 let (range_of_fv : fv -> FStar_Compiler_Range_Type.range) =
   fun fv1 -> let uu___ = lid_of_fv fv1 in FStar_Ident.range_of_lid uu___
