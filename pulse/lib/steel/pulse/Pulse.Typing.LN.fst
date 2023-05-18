@@ -730,14 +730,14 @@ let close_comp_ln (c:comp) (v:var)
 
 #push-options "--ifuel 2 --z3rlimit_factor 4 --z3cliopt 'smt.qi.eager_threshold=100'"
 
-let lift_comp_ln #f #g #c1 #c2 (d:lift_comp f g c1 c2)
+let lift_comp_ln #g #c1 #c2 (d:lift_comp g c1 c2)
   : Lemma
     (requires ln_c c1)
     (ensures ln_c c2)    
   = ()
 
-let tot_typing_ln (#f:_) (#g:_) (#e:_) (#t:_)
-                  (d:tot_typing f g e t)
+let tot_typing_ln (#g:_) (#e:_) (#t:_)
+                  (d:tot_typing g e t)
   : Lemma 
     (ensures ln e /\ ln t)
   = let E dt = d in
@@ -745,7 +745,7 @@ let tot_typing_ln (#f:_) (#g:_) (#e:_) (#t:_)
     elab_ln_inverse e;
     elab_ln_inverse t
   
-let rec vprop_equiv_ln (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
+let rec vprop_equiv_ln (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
   : Lemma (ensures ln t0 <==> ln t1)
           (decreases v)
   = match v with
@@ -762,11 +762,11 @@ let rec vprop_equiv_ln (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
     | VE_Comm g t0 t1 -> ()
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
-      let d0, d1 = vprop_eq_typing_inversion _ _ _ _ token in
+      let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
       tot_typing_ln d0;
       tot_typing_ln d1
 
-let st_equiv_ln #f #g #c1 #c2 (d:st_equiv f g c1 c2)
+let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
   : Lemma 
     (requires ln_c c1)
     (ensures ln_c c2)
@@ -776,13 +776,13 @@ let st_equiv_ln #f #g #c1 #c2 (d:st_equiv f g c1 c2)
     vprop_equiv_ln eq_post;
     open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
 
-let bind_comp_ln #f #g #x #c1 #c2 #c (d:bind_comp f g x c1 c2 c)
+let bind_comp_ln #g #x #c1 #c2 #c (d:bind_comp g x c1 c2 c)
   : Lemma 
     (requires ln_c c1 /\ ln_c c2)
     (ensures ln_c c)
   = ()
 
-let st_comp_typing_ln (#f:_) (#g:_) (#st:_) (d:st_comp_typing f g st)
+let st_comp_typing_ln (#g:_) (#st:_) (d:st_comp_typing g st)
   : Lemma (ensures ln_st_comp st (-1)) =
   
   let STC _ {post} x res_typing pre_typing post_typing = d in
@@ -791,7 +791,7 @@ let st_comp_typing_ln (#f:_) (#g:_) (#st:_) (d:st_comp_typing f g st)
   tot_typing_ln post_typing;
   open_term_ln' post (null_var x) 0
 
-let comp_typing_ln (#f:_) (#g:_) (#c:_) (#u:_) (d:comp_typing f g c u)
+let comp_typing_ln (#g:_) (#c:_) (#u:_) (d:comp_typing g c u)
   : Lemma (ensures ln_c c) =
 
   match d with
@@ -802,13 +802,12 @@ let comp_typing_ln (#f:_) (#g:_) (#c:_) (#u:_) (d:comp_typing f g c u)
     tot_typing_ln inames_typing;
     st_comp_typing_ln st_typing
 
-let st_typing_ln_tot_bind #f #g #t #c (d:st_typing f g t c{T_TotBind? d})
+let st_typing_ln_tot_bind #g #t #c (d:st_typing g t c{T_TotBind? d})
   (typing_ln:
-     (#f:RT.fstar_top_env ->
-      #g:env ->
+     (#g:env ->
       #e:st_term ->
       #c:comp ->
-      d':st_typing f g e c{d' << d} ->
+      d':st_typing g e c{d' << d} ->
       Lemma (ensures ln_st e /\ ln_c c)))
   : Lemma (ensures ln_st t /\ ln_c c) =
 
@@ -820,8 +819,8 @@ let st_typing_ln_tot_bind #f #g #t #c (d:st_typing f g t c{T_TotBind? d})
   open_comp_ln_inv' (close_comp c2 x) e1 0
 
 #push-options "--query_stats --z3rlimit_factor 30 --fuel 8 --ifuel 8"
-let rec st_typing_ln (#f:_) (#g:_) (#t:_) (#c:_)
-                     (d:st_typing f g t c)
+let rec st_typing_ln (#g:_) (#t:_) (#c:_)
+                     (d:st_typing g t c)
   : Lemma 
     (ensures ln_st t /\ ln_c c)
     (decreases d)

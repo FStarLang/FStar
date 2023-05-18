@@ -27,11 +27,11 @@ let abs_and_app0 (ty:R.term) (b:R.term) =
 
 
 // x:ty -> vprop_equiv p q ~ x:ty -> vprop_equiv ((fun y -> p) x) ((fun y -> q) x)
-let stt_vprop_equiv_abstract (#f:stt_env) (#g:env) (#post0 #post1:term) (#pf:_) (#ty:_)
-                             (d:RT.tot_typing (extend_env_l f g) pf 
+let stt_vprop_equiv_abstract (#g:stt_env) (#post0 #post1:term) (#pf:_) (#ty:_)
+                             (d:RT.tot_typing (elab_env g) pf 
                                   (mk_arrow (ty, R.Q_Explicit)
                                      (stt_vprop_equiv (elab_term post0) (elab_term post1))))
-  : GTot (RT.tot_typing (extend_env_l f g) pf
+  : GTot (RT.tot_typing (elab_env g) pf
             (mk_arrow (ty, R.Q_Explicit)
                       (stt_vprop_equiv (abs_and_app0 ty (elab_term post0))
                                        (abs_and_app0 ty (elab_term post1)))))
@@ -77,13 +77,12 @@ let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
 let vprop_arrow (t:term) : term = Tm_Arrow (null_binder t) None (C_Tot Tm_VProp)
 
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --query_stats"
-let st_equiv_soundness (f:stt_env)
-                       (g:env)
+let st_equiv_soundness (g:stt_env)
                        (c0 c1:ln_comp) 
-                       (d:st_equiv f g c0 c1)
+                       (d:st_equiv g c0 c1)
                        (r:R.term)
-                       (d_r:RT.tot_typing (extend_env_l f g) r (elab_comp c0)) 
-  : GTot (RT.tot_typing (extend_env_l f g) (elab_sub c0 c1 r) (elab_comp c1))
+                       (d_r:RT.tot_typing (elab_env g) r (elab_comp c0)) 
+  : GTot (RT.tot_typing (elab_env g) (elab_sub c0 c1 r) (elab_comp c1))
   = if C_ST? c0 && C_ST? c1 then
     let ST_VPropEquiv _ _ _ x pre_typing res_typing post_typing eq_pre eq_post = d in
     // assert (None? (lookup_ty g x));
@@ -97,11 +96,11 @@ let st_equiv_soundness (f:stt_env)
         = RT.open_term_spec e x
     in
     let pre_equiv = VPropEquiv.vprop_equiv_unit_soundness pre_typing eq_pre in
-    let g' = ((x, Inl (comp_res c0))::g) in
+    let g' = extend x (Inl (comp_res c0)) g in
     elab_open_commute (comp_post c0) x;
     elab_open_commute (comp_post c1) x;      
     let post_equiv
-      : RT.tot_typing (RT.extend_env (extend_env_l f g) x (elab_term (comp_res c0)))
+      : RT.tot_typing (RT.extend_env (elab_env g) x (elab_term (comp_res c0)))
                   (`())
                   (stt_vprop_equiv 
                     (RT.open_term (elab_term (comp_post c0)) x)
@@ -113,7 +112,7 @@ let st_equiv_soundness (f:stt_env)
     RT.close_open_inverse (elab_term (comp_post c0)) x;
     RT.close_open_inverse (elab_term (comp_post c1)) x;
     let d 
-      : RT.tot_typing (extend_env_l f g) _ 
+      : RT.tot_typing (elab_env g) _ 
                   (mk_arrow (t0, R.Q_Explicit)
                             (stt_vprop_equiv (elab_term (comp_post c0))
                                              (elab_term (comp_post c1))))
@@ -128,16 +127,16 @@ let st_equiv_soundness (f:stt_env)
     in
     let d = stt_vprop_equiv_abstract d in
     let abs_post0_typing
-      : RT.tot_typing (extend_env_l f g)
+      : RT.tot_typing (elab_env g)
                       (elab_comp_post c0) // mk_abs t0 (elab_pure (comp_post c0)))
                       (elab_term (vprop_arrow (comp_res c0)))
-      = mk_t_abs_tot _ _ _ res_typing post_typing
+      = mk_t_abs_tot _ _ res_typing post_typing
     in
     let abs_post1_typing
-      : RT.tot_typing (extend_env_l f g)
+      : RT.tot_typing (elab_env g)
                       (elab_comp_post c1) //mk_abs t0 (elab_pure (comp_post c1)))
                       (elab_term (vprop_arrow (comp_res c0)))
-      = mk_t_abs_tot _ _ _ res_typing (fst (vprop_equiv_typing _ _ _ _ eq_post) post_typing)
+      = mk_t_abs_tot _ _ res_typing (fst (vprop_equiv_typing eq_post) post_typing)
     in
     let (| pf, d |) =
       inst_intro_vprop_post_equiv r_res_typing abs_post0_typing abs_post1_typing d in
@@ -149,7 +148,7 @@ let st_equiv_soundness (f:stt_env)
     in
     inst_sub_stt r_res_typing 
                  (tot_typing_soundness pre_typing)
-                 (tot_typing_soundness (fst (vprop_equiv_typing _ _ _ _ eq_pre) pre_typing))
+                 (tot_typing_soundness (fst (vprop_equiv_typing eq_pre) pre_typing))
                  abs_post0_typing
                  abs_post1_typing
                  pre_equiv

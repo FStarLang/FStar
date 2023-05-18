@@ -102,22 +102,21 @@ let inst_bind_g #u1 #u2 #g #head #t1 #t2 #pre #post1 #post2
 #pop-options
 
 #push-options "--z3rlimit_factor 8"
-let elab_bind_typing (f:stt_env)
-                     (g:env)
+let elab_bind_typing (g:stt_env)
                      (c1 c2 c:ln_comp)
                      (x:var { ~ (x `Set.mem` freevars_comp c1) })
                      (r1:R.term)
-                     (r1_typing: RT.tot_typing (extend_env_l f g) r1 (elab_comp c1))
+                     (r1_typing: RT.tot_typing (elab_env g) r1 (elab_comp c1))
                      (r2:R.term)
-                     (r2_typing: RT.tot_typing (extend_env_l f g) r2 
+                     (r2_typing: RT.tot_typing (elab_env g) r2 
                                                (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
-                     (bc:bind_comp f g x c1 c2 c)
-                     (t2_typing : RT.tot_typing (extend_env_l f g) (elab_term (comp_res c2)) (RT.tm_type (elab_universe (comp_u c2))))
-                     (post2_typing: RT.tot_typing (extend_env_l f g) 
+                     (bc:bind_comp g x c1 c2 c)
+                     (t2_typing : RT.tot_typing (elab_env g) (elab_term (comp_res c2)) (RT.tm_type (elab_universe (comp_u c2))))
+                     (post2_typing: RT.tot_typing (elab_env g) 
                                                   (elab_comp_post c2)
                                                   (post2_type_bind (elab_term (comp_res c2))))
   = assume (C_ST? c1 /\ C_ST? c2);
-    let rg = extend_env_l f g in
+    let rg = elab_env g in
     let u1 = elab_universe (comp_u c1) in
     let u2 = elab_universe (comp_u c2) in
     let bind_lid = mk_steel_wrapper_lid "bind_stt" in
@@ -126,7 +125,7 @@ let elab_bind_typing (f:stt_env)
     assume (RT.lookup_fvar_uinst rg bind_fv [u1; u2] == Some (bind_type u1 u2));
     let head_typing : RT.tot_typing _ _ (bind_type u1 u2) = RT.T_UInst rg bind_fv [u1;u2] in
     let (| _, c1_typing |) = RT.type_correctness _ _ _ r1_typing in
-    let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c1_typing in
+    let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ c1_typing in
     let t1 = (elab_term (comp_res c1)) in
     let t2 = (elab_term (comp_res c2)) in
     let t1_typing : RT.tot_typing rg t1 (RT.tm_type u1) = t1_typing in
@@ -175,28 +174,28 @@ let elab_bind_typing (f:stt_env)
     d
 #pop-options
 
-let elab_bind_ghost_l_typing f g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
+let elab_bind_ghost_l_typing g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
   reveal_a reveal_a_typing =
   admit ()
 
-let elab_bind_ghost_r_typing f g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
+let elab_bind_ghost_r_typing g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
   reveal_b reveal_b_typing =
   admit ()
 
-let tot_bind_typing #f #g #t #c d soundness =
+let tot_bind_typing #g #t #c d soundness =
   let T_TotBind _ e1 e2 t1 c2 x e1_typing e2_typing = d in
 
-  let g_x = (x, Inl t1)::g in
+  let g_x = extend x (Inl t1) g in
 
   let re1 = elab_term e1 in
   let rt1 = elab_term t1 in
   let re2 = elab_st_typing e2_typing in
 
-  let re1_typing : RT.tot_typing (extend_env_l f g) re1 rt1 =
+  let re1_typing : RT.tot_typing (elab_env g) re1 rt1 =
     tot_typing_soundness e1_typing in
   
-  let re2_typing : RT.tot_typing (extend_env_l f g_x) re2 (elab_comp c2) =
-    soundness f g_x (open_st_term_nv e2 (v_as_nv x)) c2 e2_typing in
+  let re2_typing : RT.tot_typing (elab_env g_x) re2 (elab_comp c2) =
+    soundness g_x (open_st_term_nv e2 (v_as_nv x)) c2 e2_typing in
 
   RT.well_typed_terms_are_ln _ _ _ re2_typing;
   calc (==) {

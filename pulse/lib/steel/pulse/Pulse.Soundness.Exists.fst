@@ -18,12 +18,11 @@ module FV = Pulse.Typing.FV
 
 #push-options "--fuel 4 --ifuel 1"
 let intro_exists_erased_soundness
-  (#f:stt_env)
-  (#g:env)
+  (#g:stt_env)
   (#t:st_term)
   (#c:comp)
-  (d:st_typing f g t c{T_IntroExistsErased? d})
-  : GTot (RT.tot_typing (extend_env_l f g)
+  (d:st_typing g t c{T_IntroExistsErased? d})
+  : GTot (RT.tot_typing (elab_env g)
                         (elab_st_typing d)
                         (elab_comp c)) =
   let t0 = t in
@@ -61,12 +60,11 @@ let intro_exists_erased_soundness
              (RT.EQ_Beta _ rt R.Q_Explicit rp reveal_re) (RT.EQ_Refl _ _))))
 
 let intro_exists_soundness
-  (#f:stt_env)
-  (#g:env)
+  (#g:stt_env)
   (#t:st_term)
   (#c:comp)
-  (d:st_typing f g t c{T_IntroExists? d })
-  : GTot (RT.tot_typing (extend_env_l f g)
+  (d:st_typing g t c{T_IntroExists? d })
+  : GTot (RT.tot_typing (elab_env g)
                         (elab_st_typing d)
                         (elab_comp c)) =
 
@@ -104,12 +102,11 @@ let intro_exists_soundness
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
 let elim_exists_soundness
-  (#f:stt_env)
-  (#g:env)
+  (#g:stt_env)
   (#t:st_term)
   (#c:comp)
-  (d:st_typing f g t c{T_ElimExists? d})
-  : GTot (RT.tot_typing (extend_env_l f g)
+  (d:st_typing g t c{T_ElimExists? d})
+  : GTot (RT.tot_typing (elab_env g)
                         (elab_st_typing d)
                         (elab_comp c)) =
 
@@ -119,7 +116,7 @@ let elim_exists_soundness
   let rp = elab_term p in
   let rt_typing = tot_typing_soundness t_typing in
   let rp_typing
-    : RT.tot_typing (extend_env_l f g)
+    : RT.tot_typing (elab_env g)
                     (mk_exists ru (elab_term t)
                        (mk_abs (elab_term t) R.Q_Explicit (elab_term p)))
                 vprop_tm
@@ -143,9 +140,9 @@ let elim_exists_soundness
     assume (RT.ln' rp 0);
     assume (RT.ln rreveal_x);
     RT.equiv_abs_close (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
-      (RT.EQ_Beta (RT.extend_env (extend_env_l f g) _ _) rt R.Q_Explicit rp rreveal_x)  in
+      (RT.EQ_Beta (RT.extend_env (elab_env g) _ _) rt R.Q_Explicit rp rreveal_x)  in
 
-  let comp_equiv = elab_stghost_equiv (extend_env_l f g) c _ _ (RT.EQ_Refl _ _) post_eq in
+  let comp_equiv = elab_stghost_equiv (elab_env g) c _ _ (RT.EQ_Refl _ _) post_eq in
   let d = WT.elim_exists_typing x rt_typing rp_typing in
   RT.T_Sub _ _ _ _ d
     (RT.Relc_typ _ _ _ _ _

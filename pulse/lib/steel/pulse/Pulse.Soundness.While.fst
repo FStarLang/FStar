@@ -16,13 +16,12 @@ module LN = Pulse.Typing.LN
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
 let while_soundness
-  (#f:stt_env)
-  (#g:env)
+  (#g:stt_env)
   (#t:st_term)
   (#c:comp)
-  (d:st_typing f g t c{T_While? d})
+  (d:st_typing g t c{T_While? d})
   (soundness: soundness_t d)
-  : GTot (RT.tot_typing (extend_env_l f g)
+  : GTot (RT.tot_typing (elab_env g)
                         (elab_st_typing d)
                         (elab_comp c)) =
 
@@ -41,7 +40,7 @@ let while_soundness
   let rcond_typing
     : RT.tot_typing _ (elab_st_typing cond_typing)
         (mk_stt_comp uzero bool_tm (mk_exists uzero bool_tm rinv) rinv) =
-    soundness f g cond (comp_while_cond inv) cond_typing in
+    soundness g cond (comp_while_cond inv) cond_typing in
 
   elab_open_commute' inv tm_true 0;
 
@@ -51,8 +50,8 @@ let while_soundness
            (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
            (mk_abs unit_tm R.Q_Explicit (mk_exists uzero bool_tm rinv))) =
     
-    let d = soundness f g body (comp_while_body inv) body_typing in
-    let pre_eq : RT.equiv (extend_env_l f g)
+    let d = soundness g body (comp_while_body inv) body_typing in
+    let pre_eq : RT.equiv (elab_env g)
                           (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
                           (RT.open_or_close_term' (elab_term inv) (RT.OpenWith true_tm) 0)
       = assume (RT.ln' (elab_term inv) 0);
@@ -66,7 +65,7 @@ let while_soundness
 
   elab_open_commute' inv tm_false 0;
 
-  let post_eq : RT.equiv (extend_env_l f g)
+  let post_eq : RT.equiv (elab_env g)
     (RT.mk_abs unit_tm R.Q_Explicit
        (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_term inv)) (false_tm, R.Q_Explicit))))
     (RT.mk_abs unit_tm R.Q_Explicit
@@ -80,4 +79,3 @@ let while_soundness
           (elab_stt_equiv _ _ _ _ (RT.EQ_Refl _ _) post_eq)))
     
 #pop-options
-

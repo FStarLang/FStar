@@ -12,18 +12,17 @@ open Pulse.Soundness.Common
 module STT = Pulse.Soundness.STT
 
 let stc_soundness
-  (#f:stt_env)
-  (#g:env)
+  (#g:stt_env)
   (#st:st_comp)
-  (d_st:st_comp_typing f g st)
+  (d_st:st_comp_typing g st)
   
-  : GTot (RT.tot_typing (extend_env_l f g)
+  : GTot (RT.tot_typing (elab_env g)
                         (elab_term st.res)
                         (RT.tm_type (elab_universe st.u)) &
-          RT.tot_typing (extend_env_l f g)
+          RT.tot_typing (elab_env g)
                         (elab_term st.pre)
                         vprop_tm &
-          RT.tot_typing (extend_env_l f g)
+          RT.tot_typing (elab_env g)
                         (mk_abs (elab_term st.res) R.Q_Explicit
                            (elab_term st.post))
                         (post1_type_bind (elab_term st.res))) =
@@ -41,16 +40,15 @@ let stc_soundness
             }
     elab_term st.post;
   };
-  let post_typing  = mk_t_abs_tot f g RT.pp_name_default dres dpost in
+  let post_typing  = mk_t_abs_tot g RT.pp_name_default dres dpost in
   res_typing, pre_typing, post_typing
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
-let comp_typing_soundness (f:stt_env)
-                          (g:env)
+let comp_typing_soundness (g:stt_env)
                           (c:comp)
                           (uc:universe)
-                          (d:comp_typing f g c uc)
-  : GTot (RT.tot_typing (extend_env_l f g)
+                          (d:comp_typing g c uc)
+  : GTot (RT.tot_typing (elab_env g)
                         (elab_comp c)
                         (RT.tm_type (elab_universe uc)))
          (decreases d)

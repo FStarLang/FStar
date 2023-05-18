@@ -24,19 +24,27 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:env_bindings) (fv:R.fv) (us:R.uni
     | hd::tl -> extend_env_l_lookup_fvar g tl fv us
 
 
+let elab_binding_opt (b:option binding) =
+  match b with
+  | Some b -> Some (elab_binding b)
+  | None -> None
+
 let rec extend_env_l_lookup_bvar (g:R.env) (sg:env_bindings) (x:var)
   : Lemma 
     (requires (forall x. RT.lookup_bvar g x == None))
-    (ensures (
-      match lookup_binding sg x with
-      | Some b -> RT.lookup_bvar (extend_env_l g sg) x == Some (elab_binding b)
-      | None -> RT.lookup_bvar (extend_env_l g sg) x == None))
+    (ensures (RT.lookup_bvar (extend_env_l g sg) x == elab_binding_opt (lookup_binding sg x)))
     (decreases sg)
     [SMTPat (RT.lookup_bvar (extend_env_l g sg) x)]
   = match sg with
     | [] -> ()
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
+let lookup_elab_env (g:env) (x:var)
+  : Lemma 
+    (ensures (RT.lookup_bvar (elab_env g) x == elab_binding_opt (lookup g x)))
+    [SMTPat (RT.lookup_bvar (elab_env g) x)]
+  = ()
+  
 let tot_typing_soundness (#g:env)
                          (#e:term)
                          (#t:term)

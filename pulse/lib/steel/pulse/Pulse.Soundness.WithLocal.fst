@@ -17,12 +17,11 @@ module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 
 #push-options "--z3rlimit_factor 20 --fuel 10"
-
-let withlocal_soundness #f #g #t #c d soundness =
+let withlocal_soundness #g #t #c d soundness =
   let T_WithLocal _ init body init_t c x init_typing init_t_typing c_typing body_typing = d in
   let CT_ST _ st st_typing = c_typing in
   
-  let rg = extend_env_l f g in
+  let rg =  elab_env g in
   let ru = elab_universe (comp_u c) in
   let ra = elab_term init_t in
   let rinit = elab_term init in
@@ -50,16 +49,16 @@ let withlocal_soundness #f #g #t #c d soundness =
   let elab_body_comp = elab_comp (comp_withlocal_body x init_t init c) in
 
   let rbody_typing
-    : RT.tot_typing (extend_env_l f ((x, Inl (mk_ref init_t))::g))
+    : RT.tot_typing (elab_env (extend x (Inl (mk_ref init_t)) g))
                     (elab_st_typing body_typing)
                     elab_body_comp =
-    soundness _ _ _ _ body_typing in
+    soundness _ _ _ body_typing in
 
-  let ref_init_t_typing : typing f g (mk_ref init_t) (Tm_Type U_zero) =
+  let ref_init_t_typing : typing g (mk_ref init_t) (Tm_Type U_zero) =
     magic () in
 
   let rref_init_t_typing
-    : RT.tot_typing (extend_env_l f g)
+    : RT.tot_typing ( elab_env g)
                     (elab_term (mk_ref init_t))
                     (elab_comp (C_Tot (Tm_Type U_zero))) = magic () in
 
@@ -68,11 +67,11 @@ let withlocal_soundness #f #g #t #c d soundness =
           RT.close_term (elab_st_typing body_typing) x);
 
   let rbody_typing
-    : RT.tot_typing (extend_env_l f g)
+    : RT.tot_typing (elab_env g)
                     rbody
                     (mk_arrow (PReflUtil.mk_ref ra, R.Q_Explicit)
                               (elab_comp (close_comp (comp_withlocal_body x init_t init c) x))) =
-    mk_t_abs _ _ #_ #_ #_ #ref_init_t_typing RT.pp_name_default rref_init_t_typing rbody_typing in
+    mk_t_abs _ #_ #_ #_ #ref_init_t_typing RT.pp_name_default rref_init_t_typing rbody_typing in
 
   // We now have this rbody typing,
   //   need to match it to what is expected by wrapper withlocal typing
@@ -116,7 +115,7 @@ let withlocal_soundness #f #g #t #c d soundness =
   assert (c1_pre == mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit));
 
   let rbody_typing
-    : RT.tot_typing (extend_env_l f g)
+    : RT.tot_typing (elab_env g)
                     rbody
                     (mk_arrow
                        (PReflUtil.mk_ref ra, R.Q_Explicit)
@@ -137,7 +136,7 @@ let withlocal_soundness #f #g #t #c d soundness =
                (RT.CloseVar x) 0));
 
   let y = fresh g in
-  let g_y = RT.extend_env (extend_env_l f g) y (PReflUtil.mk_ref ra) in
+  let g_y = RT.extend_env (elab_env g) y (PReflUtil.mk_ref ra) in
 
   // pre equiv is easy, refl
   let pre_equiv
@@ -147,7 +146,7 @@ let withlocal_soundness #f #g #t #c d soundness =
            (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
            (RT.open_with_var y) 0) = RT.EQ_Refl _ _ in
 
-  let z = fresh ((y, Inl (mk_ref init_t))::g) in
+  let z = fresh (extend y (Inl (mk_ref init_t)) g) in
   let g_z = RT.extend_env g_y z (RT.open_or_close_term' rret_t (RT.open_with_var y) 0) in
   assume (None? (RT.lookup_bvar g_y z));
 
@@ -262,7 +261,7 @@ let withlocal_soundness #f #g #t #c d soundness =
       pre_equiv post_equiv in
 
   let arrow_equiv
-    : RT.equiv (extend_env_l f g)
+    : RT.equiv (elab_env g)
         (mk_arrow
            (PReflUtil.mk_ref ra, R.Q_Explicit)
            (mk_stt_comp ru rret_t c1_pre c1_post))
@@ -275,7 +274,7 @@ let withlocal_soundness #f #g #t #c d soundness =
 
   let rbody_typing
     : RT.tot_typing
-        (extend_env_l f g)
+        ( elab_env g)
         rbody
         (mk_arrow
            (PReflUtil.mk_ref ra, R.Q_Explicit)

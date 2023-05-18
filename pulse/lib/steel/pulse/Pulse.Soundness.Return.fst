@@ -17,12 +17,11 @@ module LN = Pulse.Typing.LN
 
 #push-options "--z3rlimit_factor 4 --fuel 8 --ifuel 2"
 let return_soundess
-  (#f:stt_env)
-  (#g:env)
+  (#g:stt_env)
   (#t:st_term)
   (#c:comp)
-  (d:st_typing f g t c{T_Return? d})
-  : GTot (RT.tot_typing (extend_env_l f g)
+  (d:st_typing g t c{T_Return? d})
+  : GTot (RT.tot_typing (elab_env g)
                         (elab_st_typing d)
                         (elab_comp c)) =
 
@@ -39,30 +38,30 @@ let return_soundess
   let rpost_abs_typing
     : RT.tot_typing _ rpost_abs
                       (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
-    mk_t_abs_tot f g RT.pp_name_default t_typing post_typing in
+    mk_t_abs_tot g RT.pp_name_default t_typing post_typing in
   
   let rx_tm = RT.var_as_term x in
   let elab_c_pre = RT.open_or_close_term' rpost (RT.OpenWith re) 0 in
   let pre_eq
-    : RT.equiv (extend_env_l f g)
+    : RT.equiv (elab_env g)
                (R.pack_ln (R.Tv_App rpost_abs (re, R.Q_Explicit)))
                elab_c_pre
     = assume (RT.ln' rpost 0);
       assume (RT.ln re);
-      RT.EQ_Beta (extend_env_l f g) rt R.Q_Explicit rpost re in  
+      RT.EQ_Beta (elab_env g) rt R.Q_Explicit rpost re in  
   
   let comp_equiv_noeq (_:unit{use_eq == false})
     : (match ctag with
-       | STT -> RT.equiv (extend_env_l f g)
+       | STT -> RT.equiv (elab_env g)
                          (WT.return_stt_noeq_comp ru rt re rpost_abs)
                          (elab_comp c)
        | STT_Atomic ->
-         RT.equiv (extend_env_l f g)
+         RT.equiv (elab_env g)
                   (WT.return_stt_atomic_noeq_comp ru rt re rpost_abs)
                   (elab_comp c)
 
        | STT_Ghost ->
-         RT.equiv (extend_env_l f g)
+         RT.equiv (elab_env g)
                   (WT.return_stt_ghost_noeq_comp ru rt re rpost_abs)
                   (elab_comp c)) =
 
@@ -74,15 +73,15 @@ let return_soundess
 
   let comp_equiv_eq (_:unit{use_eq == true})
     : (match ctag with
-       | STT -> RT.equiv (extend_env_l f g)
+       | STT -> RT.equiv (elab_env g)
                          (WT.return_stt_comp ru rt re rpost_abs x)
                          (elab_comp c)
        | STT_Atomic ->
-          RT.equiv (extend_env_l f g)
+          RT.equiv (elab_env g)
                    (WT.return_stt_atomic_comp ru rt re rpost_abs x)
                    (elab_comp c)
        | STT_Ghost ->
-          RT.equiv (extend_env_l f g)
+          RT.equiv (elab_env g)
                    (WT.return_stt_ghost_comp ru rt re rpost_abs x)
                    (elab_comp c)) =
     
@@ -99,7 +98,7 @@ let return_soundess
               (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re))) (RT.CloseVar x) 0) in
 
     let post_body_eq
-      : RT.equiv (RT.extend_env (extend_env_l f g) x _)
+      : RT.equiv (RT.extend_env (elab_env g) x _)
                  (mk_star
                     (R.pack_ln (R.Tv_App rpost_abs (rx_tm, R.Q_Explicit)))
                     (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re)))
@@ -109,7 +108,7 @@ let return_soundess
       = mk_star_equiv _ _ _ _ _ (RT.EQ_Beta _ rt _ _ _) (RT.EQ_Refl _ _) in
 
     let post_eq
-      : RT.equiv (extend_env_l f g)
+      : RT.equiv (elab_env g)
                  (WT.return_post_with_eq ru rt re rpost_abs x)
                  elab_c_post
       = RT.equiv_abs_close rt R.Q_Explicit x post_body_eq in

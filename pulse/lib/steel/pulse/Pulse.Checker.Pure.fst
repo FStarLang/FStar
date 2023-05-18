@@ -87,8 +87,8 @@ let print_issue (i:FStar.Issue.issue) : T.Tac string =
 
 let print_issues (i:list FStar.Issue.issue) = String.concat "\n" (T.map print_issue i)
 
-let instantiate_term_implicits (f:RT.fstar_top_env) (g:env) (t:term) =
-  let f = extend_env_l f g in
+let instantiate_term_implicits (g:env) (t:term) =
+  let f = elab_env g in
   let rt = elab_term t in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits f rt) in
   match topt with
@@ -104,9 +104,9 @@ let instantiate_term_implicits (f:RT.fstar_top_env) (g:env) (t:term) =
     | Some t, Some ty -> t, ty
     | _ -> T.fail "instantiate_implicits: could not readback the resulting term/typ"
 
-let check_universe (f0:RT.fstar_top_env) (g:env) (t:term)
-  : T.Tac (u:universe & universe_of f0 g t u)
-  = let f = extend_env_l f0 g in
+let check_universe (g:env) (t:term)
+  : T.Tac (u:universe & universe_of g t u)
+  = let f = elab_env g in
     let rt = elab_term t in
     let ru_opt, issues = catch_all (fun _ -> rtb_universe_of f rt) in
     match ru_opt with
@@ -138,11 +138,11 @@ let tc_meta_callback (f:R.env) (e:R.term)
     in
     res
 
-let check_term (f:RT.fstar_top_env) (g:env) (t:term)
+let check_term (g:env) (t:term)
   : T.Tac (t:term &
            ty:term &
-           typing f g t ty)
-  = let fg = extend_env_l f g in
+           typing g t ty)
+  = let fg = elab_env g in
     let rt = elab_term t in
     debug (fun _ ->
             Printf.sprintf "check_tot : called on %s elaborated to %s"
@@ -164,13 +164,13 @@ let check_term (f:RT.fstar_top_env) (g:env) (t:term)
         (| t, ty, tok |)
 
 
-let check_term_and_type (f:RT.fstar_top_env) (g:env) (t:term)
+let check_term_and_type (g:env) (t:term)
   : T.Tac (t:term &
            u:universe &
            ty:term &
-           universe_of f g ty u &
-           typing f g t ty)
-  = let fg = extend_env_l f g in
+           universe_of g ty u &
+           typing g t ty)
+  = let fg = elab_env g in
     let rt = elab_term t in
     match tc_meta_callback fg rt with
     | None, issues -> 
@@ -184,16 +184,16 @@ let check_term_and_type (f:RT.fstar_top_env) (g:env) (t:term)
       | None, _
       | _, None -> T.fail "Inexpressible type/term"
       | Some t, Some ty -> 
-        let (| u, uty |) = check_universe f g ty in
+        let (| u, uty |) = check_universe g ty in
         (| t, u, ty, uty, tok |)
 
 
-let check_term_with_expected_type (f:RT.fstar_top_env) (g:env) (e:term) (t:term)
-  : T.Tac (e:term & typing f g e t) =
+let check_term_with_expected_type (g:env) (e:term) (t:term)
+  : T.Tac (e:term & typing g e t) =
 
-  let e, _ = instantiate_term_implicits f g e in 
+  let e, _ = instantiate_term_implicits g e in 
   
-  let fg = extend_env_l f g in
+  let fg = elab_env g in
   let re = elab_term e in
   let rt = elab_term t in
 
@@ -213,10 +213,10 @@ let tc_with_core (f:R.env) (e:R.term)
     | Some (t) ->
       Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), issues
 
-let core_check_term (f:RT.fstar_top_env) (g:env) (t:term)
+let core_check_term (g:env) (t:term)
   : T.Tac (ty:term &
-           typing f g t ty)
-  = let fg = extend_env_l f g in
+           typing g t ty)
+  = let fg = elab_env g in
     let rt = elab_term t in
     match tc_with_core fg rt with
     | None, issues -> 
@@ -233,8 +233,8 @@ let core_check_term (f:RT.fstar_top_env) (g:env) (t:term)
         | Some ty -> 
           (| ty, tok |)
 
-let core_check_term_with_expected_type f g e t =
-  let fg = extend_env_l f g in
+let core_check_term_with_expected_type g e t =
+  let fg = elab_env g in
   let re = elab_term e in
   let rt = elab_term t in
   let topt, issues = catch_all (fun _ -> rtb_core_check_term_at_type fg re rt) in
@@ -245,25 +245,23 @@ let core_check_term_with_expected_type f g e t =
                       (print_issues issues))
   | Some tok -> RT.T_Token _ _ _ (FStar.Squash.return_squash tok)
 
-let check_vprop (f:RT.fstar_top_env)
-                (g:env)
+let check_vprop (g:env)
                 (t:term)
-  : T.Tac (t:term & tot_typing f g t Tm_VProp) =
+  : T.Tac (t:term & tot_typing g t Tm_VProp) =
 
-  let (| t, t_typing |) = check_term_with_expected_type f g t Tm_VProp in
+  let (| t, t_typing |) = check_term_with_expected_type g t Tm_VProp in
   (| t, E t_typing |)
 
 
-let check_vprop_with_core (f:RT.fstar_top_env)
-                          (g:env)
+let check_vprop_with_core (g:env)
                           (t:term)
-  : T.Tac (tot_typing f g t Tm_VProp) =
+  : T.Tac (tot_typing g t Tm_VProp) =
 
-  let t_typing = core_check_term_with_expected_type f g t Tm_VProp in
+  let t_typing = core_check_term_with_expected_type g t Tm_VProp in
   E t_typing
   
-let get_non_informative_witness f g u t
-  : T.Tac (non_informative_t f g u t)
+let get_non_informative_witness g u t
+  : T.Tac (non_informative_t g u t)
   = let err () =
         T.fail (Printf.sprintf "non_informative_witness not supported for %s"        
                                (P.term_to_string t)) in
@@ -286,5 +284,5 @@ let get_non_informative_witness f g u t
     match eopt with
     | None -> err ()
     | Some e ->
-      let (| x, y |) = check_term_with_expected_type f g e (non_informative_witness_t u t) in
+      let (| x, y |) = check_term_with_expected_type g e (non_informative_witness_t u t) in
       (|x, E y|)

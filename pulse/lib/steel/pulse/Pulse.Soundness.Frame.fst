@@ -65,29 +65,28 @@ let equiv_frame_post (g:R.env)
   = admit()
 
 #push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 4"
-let elab_frame_typing (f:stt_env)
-                      (g:env)
+let elab_frame_typing (g:stt_env)
                       (e:R.term)
                       (c:ln_comp)
                       (frame:term)
-                      (frame_typing: tot_typing f g frame Tm_VProp)
-                      (e_typing: RT.tot_typing (extend_env_l f g) e (elab_comp c))
-  : GTot (RT.tot_typing (extend_env_l f g)
+                      (frame_typing: tot_typing g frame Tm_VProp)
+                      (e_typing: RT.tot_typing (elab_env g) e (elab_comp c))
+  : GTot (RT.tot_typing (elab_env g)
                         (elab_frame c frame e)
                         (elab_comp (add_frame c frame)))
   = if C_ST? c then
     let frame_typing = tot_typing_soundness frame_typing in
-    let rg = extend_env_l f g in
+    let rg = elab_env g in
     let u = elab_universe (comp_u c) in
     let frame_fv = R.pack_fv (mk_steel_wrapper_lid "frame_stt") in
     let head = R.pack_ln (R.Tv_UInst frame_fv [u]) in
     assume (RT.lookup_fvar_uinst rg frame_fv [u] == Some (frame_type u));
     let head_typing : RT.tot_typing _ _ (frame_type u) = RT.T_UInst rg frame_fv [u] in
     let (| _, c_typing |) = RT.type_correctness _ _ _ e_typing in
-    let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ _ c_typing in
+    let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ c_typing in
     let t = elab_term (comp_res c) in
     let t_typing : RT.tot_typing rg t (RT.tm_type u) = t_typing in
-    let d : RT.tot_typing (extend_env_l f g)
+    let d : RT.tot_typing (elab_env g)
                           (elab_frame c frame e)
                           (frame_res u t (elab_term (comp_pre c))
                                          (elab_comp_post c)
