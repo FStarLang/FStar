@@ -10,6 +10,10 @@ open Pulse.Typing
 open Pulse.Readback
 module RTB = FStar.Tactics.Builtins
 
+val print_issue (i:FStar.Issue.issue) : T.Tac string
+
+val print_issues (i:list FStar.Issue.issue) : T.Tac string
+
 val instantiate_term_implicits (f:RT.fstar_top_env) (g:env) (t:term)
   : T.Tac (term & term)
 

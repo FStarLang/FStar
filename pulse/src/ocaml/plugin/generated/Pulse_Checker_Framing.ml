@@ -113,7 +113,7 @@ let (check_one_vprop :
                                                            (Prims.of_int (128))
                                                            (Prims.of_int (6))
                                                            (Prims.of_int (130))
-                                                           (Prims.of_int (20)))
+                                                           (Prims.of_int (23)))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___1 ->
                                                               Pulse_Elaborate_Pure.elab_term
@@ -133,7 +133,7 @@ let (check_one_vprop :
                                                                     (Prims.of_int (128))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (130))
-                                                                    (Prims.of_int (20)))
+                                                                    (Prims.of_int (23)))
                                                                    (Obj.magic
                                                                     (FStar_Tactics_Builtins.check_equiv
                                                                     (Pulse_Typing.extend_env_l
@@ -147,12 +147,15 @@ let (check_one_vprop :
                                                                     match uu___1
                                                                     with
                                                                     | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    token ->
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    token,
+                                                                    uu___3)
+                                                                    ->
                                                                     FStar_Pervasives_Native.Some
                                                                     ()
                                                                     | 
-                                                                    FStar_Pervasives_Native.None
+                                                                    (FStar_Pervasives_Native.None,
+                                                                    uu___3)
                                                                     ->
                                                                     FStar_Pervasives_Native.None))))
                                                              uu___1))) uu___1)))

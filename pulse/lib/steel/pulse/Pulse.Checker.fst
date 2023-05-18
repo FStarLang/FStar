@@ -1213,8 +1213,10 @@ let check_rewrite
 		  if eq_tm p q
 				then VE_Refl g p
 				else match T.check_equiv (extend_env_l f g) (elab_term p) (elab_term q) with
-				    | None -> T.fail "rewrite: p and q elabs are not equiv"
-								| Some token -> VE_Ext g p q token in
+             | None, issues -> 
+               T.fail (Printf.sprintf "rewrite: p and q elabs are not equiv\n%s" 
+                          (Pulse.Checker.Pure.print_issues issues))
+             | Some token, _ -> VE_Ext g p q token in
 		let d = T_Rewrite _ p q p_typing equiv_p_q in
 		repack (try_frame_pre pre_typing d) post_hint true
 

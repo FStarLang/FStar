@@ -321,10 +321,10 @@ let (null_bvar : index -> term) =
 let (gen_uvar : term -> (term, unit) FStar_Tactics_Effect.tac_repr) =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (213))
-         (Prims.of_int (10)) (Prims.of_int (213)) (Prims.of_int (22)))
-      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (213))
-         (Prims.of_int (2)) (Prims.of_int (213)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (214))
+         (Prims.of_int (10)) (Prims.of_int (214)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.fsti" (Prims.of_int (214))
+         (Prims.of_int (2)) (Prims.of_int (214)) (Prims.of_int (22)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> Tm_UVar uu___))

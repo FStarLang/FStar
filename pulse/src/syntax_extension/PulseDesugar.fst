@@ -73,7 +73,7 @@ let stt_ghost_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt_ghost"]
 let stt_atomic_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt_atomic"] r_
 let stapp_assignment (lhs rhs:S.term) (r:_)
   : SW.st_term
-  = let head_fv = S.lid_as_fv assign_lid S.delta_equational None in
+  = let head_fv = S.lid_as_fv assign_lid None in
     let head = S.fv_to_tm head_fv in
     let app = S.mk_Tm_app head [(lhs, None)] lhs.pos in
     SW.(tm_st_app (tm_expr app) None (as_term rhs) r)

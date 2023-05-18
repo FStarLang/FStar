@@ -88,6 +88,15 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
 let eqn = term & term & term
 let binding = either term eqn
 let env = list (var & binding)
+let context = FStar.Sealed.Inhabited.sealed #(list string) []
+noeq
+type env_t = {
+  f: RT.fstar_top_env;
+  g: env;
+  ctxt: context
+}
+
+
 
 //
 // THIS IS BROKEN:
