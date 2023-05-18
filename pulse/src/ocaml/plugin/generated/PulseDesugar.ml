@@ -275,7 +275,7 @@ let (stapp_assignment :
       fun r ->
         let head_fv =
           FStar_Syntax_Syntax.lid_as_fv assign_lid
-            FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None in
+            FStar_Pervasives_Native.None in
         let head = FStar_Syntax_Syntax.fv_to_tm head_fv in
         let app =
           FStar_Syntax_Syntax.mk_Tm_app head
