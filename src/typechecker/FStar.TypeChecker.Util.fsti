@@ -137,8 +137,7 @@ val label_guard: Range.range -> string -> guard_t -> guard_t
 val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
-val fvar_const: env -> lident -> term
-val mk_toplevel_definition: env -> lident -> term -> sigelt * term
+val fvar_env: env -> lident -> term
 val norm_reify: env -> steps -> term -> term
 val remove_reify: term -> term
 

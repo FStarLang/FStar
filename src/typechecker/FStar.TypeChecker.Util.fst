@@ -1726,7 +1726,7 @@ let maybe_return_e2_and_bind
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
-let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
+let fvar_env env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
 
 //
 // Apply substitutive ite combinator for indexed effects
@@ -1959,7 +1959,7 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
   let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
   let post   = S.new_bv None post_k in
   let wp     = U.abs [S.mk_binder post]
-               (fvar_const env C.false_lid)
+               (fvar_env env C.false_lid)
                (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
   let md     = Env.get_effect_decl env C.effect_PURE_lid in
   mk_comp md u t wp []
@@ -2362,7 +2362,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
 
     let mk_erased u t =
       U.mk_app
-        (S.mk_Tm_uinst (fvar_const env C.erased_lid) [u])
+        (S.mk_Tm_uinst (fvar_env env C.erased_lid) [u])
         [S.as_arg t]
     in
     match (U.un_uinst head).n, args with
@@ -2581,8 +2581,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let us_r, _ = fst <| Env.lookup_lid env C.as_requires in
                               let us_e, _ = fst <| Env.lookup_lid env C.as_ensures in
                               let r = ct.result_typ.pos in
-                              let as_req = S.mk_Tm_uinst (S.fvar_with_dd (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
-                              let as_ens = S.mk_Tm_uinst (S.fvar_with_dd (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
+                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) None) us_r in
+                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) None) us_e in
                               let req = mk_Tm_app as_req [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
                               let ens = mk_Tm_app as_ens [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
@@ -2978,28 +2978,6 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
 
                     | _ -> bs
 
-
-let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
-
-// Takes care of creating the [fv], generating the top-level let-binding, and
-// return a term that's a suitable reference (a [Tm_fv]) to the definition
-let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
-  // Debug
-  if Env.debug env (Options.Other "ED") then begin
-    d (string_of_lid lident);
-    BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
-  end;
-  // Allocate a new top-level name.
-  let fv = S.lid_and_dd_as_fv lident (U.incr_delta_qualifier def) None in
-  let lbname: lbname = Inr fv in
-  let lb: letbindings =
-    // the effect label will be recomputed correctly
-    false, [U.mk_letbinding lbname [] S.tun C.effect_Tot_lid def [] Range.dummyRange]
-  in
-  // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
-  let sig_ctx = mk_sigelt (Sig_let {lbs=lb; lids=[ lident ]}) in
-  {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
-  mk (Tm_fvar fv) Range.dummyRange
 
 /////////////////////////////////////////////////////////////////////////////
 //Checks that the qualifiers on this sigelt are legal for it

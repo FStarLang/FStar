@@ -689,7 +689,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     if env.nosynth
-    then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
+    then mk_Tm_app (TcUtil.fvar_env env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
@@ -854,19 +854,17 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
           sigattrs = [];
           sigopts = None}]
       end
-      else
-        let gs, sigelts = run_tactic_on_ps tau.pos tau.pos false
-          e_unit ()
-          (e_list RE.e_sigelt) tau tactic_already_typed ps in
-        gs, sigelts
-      in
+      else run_tactic_on_ps tau.pos tau.pos false
+             e_unit ()
+             (e_list RE.e_sigelt) tau tactic_already_typed ps in
 
+      // set delta depths in the sigelts fvs
+      let sigelts =
         let set_lb_dd lb =
           let {lbname=Inr fv; lbdef} = lb in
           {lb with lbname=Inr {fv with fv_delta=U.incr_delta_qualifier lbdef
-                                                |> Some}}
-        in
-        let sigelts = List.map (fun se ->
+                                                |> Some}} in
+        List.map (fun se ->
           match se.sigel with
           | Sig_let {lbs=(is_rec, lbs); lids} ->
             {se with sigel=Sig_let {lbs=(is_rec, List.map set_lb_dd lbs); lids}}
