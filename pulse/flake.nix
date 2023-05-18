@@ -29,6 +29,7 @@
             ocamlPackages.batteries
             ocamlPackages.zarith
           ];
+          buildFlags = [ "lib" "verify-steel" ];
           installPhase = ''
             mkdir -p $out
             PREFIX=$out make install
