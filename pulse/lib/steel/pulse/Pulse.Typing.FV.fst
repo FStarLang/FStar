@@ -226,8 +226,8 @@ val freevars_open_comp (c:comp) (x:term) (i:index)
     [SMTPat (freevars_comp (open_comp' c x i))]
 
 #push-options "--fuel 2 --ifuel 2"
-let tot_typing_freevars (#f:_) (#g:_) (#t:_) (#ty:_)
-                        (d:tot_typing f g t ty)
+let tot_typing_freevars (#g:_) (#t:_) (#ty:_)
+                        (d:tot_typing g t ty)
   : Lemma 
     (ensures freevars t `Set.subset` vars_of_env g /\
              freevars ty `Set.subset` vars_of_env g)
@@ -235,10 +235,10 @@ let tot_typing_freevars (#f:_) (#g:_) (#t:_) (#ty:_)
     elab_freevars ty;      
     let E d = d in
     refl_typing_freevars d;
-    assert (vars_of_env_r (extend_env_l f g) `Set.equal` (vars_of_env g))
+    assert (vars_of_env_r (elab_env g) `Set.equal` (vars_of_env g))
 
-let bind_comp_freevars (#f:_) (#g:_) (#x:_) (#c1 #c2 #c:_)
-                       (d:bind_comp f g x c1 c2 c)
+let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
+                       (d:bind_comp g x c1 c2 c)
   : Lemma 
     (requires freevars_comp c1 `Set.subset` vars_of_env g /\
               freevars_comp c2 `Set.subset` (Set.union (vars_of_env g) (Set.singleton x)))
@@ -248,7 +248,7 @@ let bind_comp_freevars (#f:_) (#g:_) (#x:_) (#c1 #c2 #c:_)
     | Bind_comp_ghost_l _ _ _ _ _ dt _ _ 
     | Bind_comp_ghost_r _ _ _ _ _ dt _ _  -> tot_typing_freevars dt
 
-let rec vprop_equiv_freevars (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
+let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
                    (freevars t1 `Set.subset` vars_of_env g))
           (decreases v)
@@ -266,12 +266,12 @@ let rec vprop_equiv_freevars (#f:_) (#g:_) (#t0 #t1:_) (v:vprop_equiv f g t0 t1)
     | VE_Comm g t0 t1 -> ()
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
-      let d0, d1 = vprop_eq_typing_inversion _ _ _ _ token in
+      let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
       tot_typing_freevars d0;
       tot_typing_freevars d1
 
-let st_equiv_freevars #f #g (#c1 #c2:_)
-                      (d:st_equiv f g c1 c2)
+let st_equiv_freevars #g (#c1 #c2:_)
+                      (d:st_equiv g c1 c2)
   : Lemma
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
@@ -283,12 +283,12 @@ let st_equiv_freevars #f #g (#c1 #c2:_)
 
 
 let src_typing_freevars_t (d':'a) = 
-    (#f:_) -> (#g:_) -> (#t:_) -> (#c:_) -> (d:st_typing f g t c { d << d' }) ->
+    (#g:_) -> (#t:_) -> (#c:_) -> (d:st_typing g t c { d << d' }) ->
     Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
              freevars_comp c `Set.subset` vars_of_env g)
 
-let st_comp_typing_freevars #f #g #st (d:st_comp_typing f g st)
+let st_comp_typing_freevars #g #st (d:st_comp_typing g st)
   : Lemma
     (ensures freevars_st_comp st `Set.subset` vars_of_env g)
     (decreases d)
@@ -297,8 +297,8 @@ let st_comp_typing_freevars #f #g #st (d:st_comp_typing f g st)
     tot_typing_freevars pre;
     tot_typing_freevars post
 
-let comp_typing_freevars  (#f:_) (#g:_) (#c:_) (#u:_)
-                          (d:comp_typing f g c u)
+let comp_typing_freevars  (#g:_) (#c:_) (#u:_)
+                          (d:comp_typing g c u)
   : Lemma 
     (ensures freevars_comp c `Set.subset` vars_of_env g)
     (decreases d)
@@ -333,8 +333,8 @@ let freevars_open_st_term_inv (e:st_term)
 #pop-options
 
 #push-options "--retry 5 --fuel 10 --ifuel 10 --z3rlimit_factor 30 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats --split_queries always"
-let rec st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
-                           (d:st_typing f g t c)
+let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
+                           (d:st_typing g t c)
   : Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
              freevars_comp c `Set.subset` vars_of_env g)

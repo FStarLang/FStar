@@ -39,8 +39,8 @@ let elab_sub (c1 c2:comp_st) (e:R.term) =
             mk_sub_stt_ghost u ty opened pre1 pre2 post1 post2 e
 
 
-let elab_bind #f #g #x #c1 #c2 #c
-              (bc:bind_comp f g x c1 c2 c)
+let elab_bind #g #x #c1 #c2 #c
+              (bc:bind_comp g x c1 c2 c)
               (e1 e2:R.term)
   : R.term
   = let t1 = elab_term (comp_res c1) in
@@ -92,7 +92,7 @@ let elab_bind #f #g #x #c1 #c2 #c
         e1 e2
         (elab_term reveal_b)
 
-let elab_lift #f #g #c1 #c2 (d:lift_comp f g c1 c2) (e:R.term)
+let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
   : Tot R.term
   = match d with
     | Lift_STAtomic_ST _ _ ->
@@ -115,11 +115,10 @@ let elab_lift #f #g #c1 #c2 (d:lift_comp f g c1 c2) (e:R.term)
         e
         (elab_term reveal_a)
 
-let rec elab_st_typing (#f:RT.fstar_top_env)
-                       (#g:env)
+let rec elab_st_typing (#g:env)
                        (#t:st_term)
                        (#c:comp)
-                       (d:st_typing f g t c)
+                       (d:st_typing g t c)
   : Tot R.term (decreases d)
   = match d with
     // | T_Tot _ t _ _ -> elab_term t

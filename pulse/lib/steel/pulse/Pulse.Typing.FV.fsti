@@ -31,26 +31,26 @@ val freevars_close_st_term (e:st_term) (x:var) (i:index)
              freevars_st e `set_minus` x)
     [SMTPat (freevars_st (close_st_term' e x i))]
 
-val tot_typing_freevars (#f:_) (#g:_) (#t:_) (#ty:_)
-                        (d:tot_typing f g t ty)
+val tot_typing_freevars (#g:_) (#t:_) (#ty:_)
+                        (d:tot_typing g t ty)
   : Lemma 
       (ensures freevars t `Set.subset` vars_of_env g /\
                freevars ty `Set.subset` vars_of_env g)
 
-val comp_typing_freevars  (#f:_) (#g:_) (#c:_) (#u:_)
-                          (d:comp_typing f g c u)
+val comp_typing_freevars  (#g:_) (#c:_) (#u:_)
+                          (d:comp_typing g c u)
   : Lemma 
       (ensures freevars_comp c `Set.subset` vars_of_env g)
 
-val st_typing_freevars (#f:_) (#g:_) (#t:_) (#c:_)
-                       (d:st_typing f g t c)
+val st_typing_freevars (#g:_) (#t:_) (#c:_)
+                       (d:st_typing g t c)
   : Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
              freevars_comp c `Set.subset` vars_of_env g)
 
 
-let st_typing_freevars_inv (#f:_) (#g:_) (#t:_) (#c:_)
-                           (d:st_typing f g t c)
+let st_typing_freevars_inv (#g:_) (#t:_) (#c:_)
+                           (d:st_typing g t c)
                            (x:var)
   : Lemma 
     (requires None? (lookup g x))
