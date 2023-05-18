@@ -23,6 +23,7 @@
             ocamlPackages.sedlex
             ocamlPackages.process
             ocamlPackages.pprint
+            ocamlPackages.menhir
             ocamlPackages.menhirLib
             ocamlPackages.stdint
             ocamlPackages.batteries
