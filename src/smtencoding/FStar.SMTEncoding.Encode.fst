@@ -435,24 +435,11 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
 
                     | _ -> false
                 in
-                let is_arrow t =
-                  match (U.unrefine (N.unfold_whnf' [EraseUniverses] env.tcenv t)).n with
-                  | Tm_arrow _ -> true
-                  | _ -> false
-                in
                 //Do not thunk ...
                 nsstr lid <> "Prims"  //things in prims
                 && not (quals |> List.contains Logic) //logic qualified terms
                 && not (is_squash t_norm) //ambient squashed properties
                 && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
-                && not (is_arrow t_norm)
-                  (* Functions, also cheap. While we check below for
-                  an empty set of formal binders, this set may be empty if t_norm is an
-                  abbreviation of a function type. This can cause a crash if we saw
-                  a `val` with an abbreviation, and decide to thunk, and then
-                  check the `let` for it with explicit binders, and decide
-                  not to thunk, which will crash the encoding. So we unfold to check
-                  for arrows. See #2894. *)
               in
               let thunked, vars =
                  match vars with
@@ -707,7 +694,14 @@ let encode_top_level_let :
           bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
             (* some, but not all are lemmas; impossible *)
             if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
-            let t_norm = norm_before_encoding env lb.lbtyp in
+            (* #2894: If this is a recursive definition, make sure to unfold the type
+            until the arrow structure is evident (we use whnf for it). Otherwise
+            there will be thunking inconsistencies in the encoding. *)
+            let t_norm =
+              if is_rec
+              then N.unfold_whnf' [Env.AllowUnboundUniverses] env.tcenv lb.lbtyp
+              else norm_before_encoding env lb.lbtyp
+            in
             (* We are declaring the top_level_let with t_norm which might contain *)
             (* non-reified reifiable computation type. *)
             (* TODO : clear this mess, the declaration should have a type corresponding to *)

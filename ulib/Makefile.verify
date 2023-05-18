@@ -1,6 +1,9 @@
 .PHONY: verify-core verify-extra
 
 # List the files that should be verified by verify-extra and verify-all
+# NOTE: Only use files that are extracted+linked into the library,
+# or they will anyway be verified when extracting it. Currently, legacy/
+# is the only subdirectory that does not go into fstar.lib.
 EXTRA=legacy/FStar.Pointer.Base.fst
 
 # List the files that should NOT be verified at all

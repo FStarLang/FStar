@@ -81,11 +81,15 @@ function fstar_default_build () {
     fi &
 
     # Build F*, along with fstarlib
-    if ! make -j $threads ci-utest-prelude; then
+    if ! make -j $threads ci-pre; then
         echo Warm-up failed
         echo Failure >$result_file
         return 1
     fi
+
+    # Clean temporary build files, not needed and saves
+    # several hundred MB
+    make clean-buildfiles || true
 
     export_home FSTAR "$(pwd)"
 
@@ -118,11 +122,6 @@ function fstar_default_build () {
     if ! git diff --exit-code ocaml/*/generated ; then
         echo " *** GIT DIFF: the files in the list above have a git diff"
         echo false >$status_file
-    fi
-
-    # We should not generate hints when building on Windows
-    if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
-        .scripts/advance.sh refresh_fstar_hints || echo false >$status_file
     fi
 }
 

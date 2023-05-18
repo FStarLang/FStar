@@ -3594,10 +3594,7 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
     | _ -> []
   in
   let attrs = attrs @ val_attrs sigelts in
-  env,
-  List.map 
-    (fun sigelt -> { sigelt with sigattrs = sigelt.sigattrs@attrs })
-    sigelts
+  env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl env (d:decl) :(env_t * sigelts) =
   let env, ses = desugar_decl_aux env d in
