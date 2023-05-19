@@ -1,3 +1,11 @@
+# Steel's `Makefile`s rely on recent GNU Make's "shortest stem" rule,
+# so we need to rule out older `make`s.
+
+ifeq (3.81,$(MAKE_VERSION))
+  $(error You seem to be using the OSX antiquated Make version. Hint: brew \
+    install make, then invoke gmake instead of make)
+endif
+
 all: lib verify
 
 # Find fstar.exe and the fstar.lib OCaml package
@@ -33,12 +41,9 @@ else
 endif
 
 .PHONY: ocaml
-ocaml: src/ocaml/plugin/FStar_Parser_Parse.mly
+ocaml:
 	cd src/ocaml && dune build
 	cd src/ocaml && dune install --prefix=$(STEEL_HOME)
-
-src/ocaml/plugin/FStar_Parser_Parse.mly: $(_fstar_home)/ocaml/fstar-lib/FStar_Parser_Parse.mly
-	cp $^ $@
 
 .PHONY: lib
 lib:

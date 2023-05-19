@@ -39,6 +39,9 @@ $(OUTPUT_DIRECTORY)/%.ml:
 
 include .depend
 
-extract: $(ALL_ML_FILES)
+FStar_Parser_Parse.mly: $(FSTAR_HOME)/ocaml/fstar-lib/FStar_Parser_Parse.mly
+	cp $^ $@
+
+extract: $(ALL_ML_FILES) FStar_Parser_Parse.mly
 
 .PHONY: all extract
