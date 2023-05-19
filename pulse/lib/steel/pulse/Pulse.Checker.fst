@@ -16,7 +16,11 @@ open Pulse.Checker.Bind
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module FV = Pulse.Typing.FV
+module RU = Pulse.RuntimeUtils
 
+let push_context (ctx:string) (g:env) : (g':env { g == g' })
+  = {g with ctxt = RU.extend_context ctx g.ctxt}
+  
 let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
@@ -677,27 +681,39 @@ let check_while
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
-
+  let g = push_context "while loop" g in
   let Tm_While { invariant=inv; condition=cond; body } = t.term in
   let (| inv, inv_typing |) =
-    check_vprop g (Tm_ExistsSL U_zero tm_bool inv should_elim_true) in
+    check_vprop (push_context "invariant" g) (Tm_ExistsSL U_zero tm_bool inv should_elim_true) in
   match inv with
   | Tm_ExistsSL U_zero (Tm_FVar {fv_name=["Prims"; "bool"]}) inv _ ->
     // Should get from inv_typing
     let cond_pre_typing =
       check_vprop_with_core g (comp_pre (comp_while_cond inv)) in
     let (| cond, cond_comp, cond_typing |) =
-      // T.print "Check: While condition";
-      check' allow_inst g cond (comp_pre (comp_while_cond inv))
-        cond_pre_typing (Some (comp_post (comp_while_cond inv))) in
+      check' allow_inst
+            (push_context "while condition" g)
+             cond
+            (comp_pre (comp_while_cond inv))
+            cond_pre_typing
+            (Some (comp_post (comp_while_cond inv)))
+    in
     if eq_comp cond_comp (comp_while_cond inv)
     then begin
       let body_pre_typing =
-        check_vprop_with_core g (comp_pre (comp_while_body inv)) in
+        check_vprop_with_core 
+          (push_context "invariant for body" g)
+          (comp_pre (comp_while_body inv))
+      in
       let (| body, body_comp, body_typing |) =
           // T.print "Check: While body";
-          check' allow_inst g body (comp_pre (comp_while_body inv))
-          body_pre_typing (Some (comp_post (comp_while_body inv))) in
+          check' allow_inst
+                 (push_context "while body" g)
+                 body
+                 (comp_pre (comp_while_body inv))
+                 body_pre_typing
+                 (Some (comp_post (comp_while_body inv)))
+      in
       if eq_comp body_comp (comp_while_body inv)
       then let d = T_While g inv cond body inv_typing cond_typing   body_typing in
           //  T.print (Printf.sprintf
@@ -705,9 +721,22 @@ let check_while
           //               (P.term_to_string (comp_pre (comp_while inv)))
           //               (P.term_to_string pre));
            repack (try_frame_pre pre_typing d) post_hint true
-      else T.fail "Cannot typecheck while loop body"
+      else 
+        T.fail
+           (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
+                            Inferred type = %s\n\
+                            Annotated type = %s\n"
+                            (P.comp_to_string body_comp)
+                            (P.comp_to_string (comp_while_body inv)))
+
+
     end
-    else T.fail "Cannot typecheck while loop condition"
+    else T.fail 
+           (Printf.sprintf "Could not prove that the inferred type of the while condition matches the annotation\n\
+                            Inferred type = %s\n\
+                            Annotated type = %s\n"
+                            (P.comp_to_string cond_comp)
+                            (P.comp_to_string (comp_while_cond inv)))
   | _ -> T.fail "Typechecked invariant is not an exists"
 
 let range_of_head (t:st_term) : option (term & range) =
@@ -782,6 +811,7 @@ let check_stapp
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
+  let g = push_context "check_stapp" g in
   // maybe_log t;
   let range = t.range in
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
@@ -879,7 +909,7 @@ let check_return
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
-
+  let g = push_context "check_return" g in
   let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = t.term in
   let (| t, u, ty, uty, d |) = check_term_and_type g t in
   let x = fresh g in
@@ -1093,7 +1123,7 @@ let check_par
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
-
+  let g = push_context "check_par" g in
   let Tm_Par {pre1=preL; body1=eL; post1=postL;
               pre2=preR; body2=eR; post2=postR} = t.term in
   let (| preL, preL_typing |) =
@@ -1133,6 +1163,7 @@ let check_withlocal
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
+  let g = push_context "check_withlocal" g in
   let wr t0 = { term = t0; range = t.range } in
   let Tm_WithLocal {initializer=init; body} = t.term in
   let (| init, init_u, init_t, init_t_typing, init_typing |) =
@@ -1186,7 +1217,7 @@ let check_rewrite
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
-		
+		let g = push_context "check_rewrite" g in
 		let Tm_Rewrite {t1=p; t2=q} = t.term in
 		let (| p, p_typing |) = check_vprop g p in
 		let (| q, q_typing |) = check_vprop g q in
