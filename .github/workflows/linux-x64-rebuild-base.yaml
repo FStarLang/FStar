@@ -100,7 +100,7 @@ jobs:
         run: |
           # Just outputs to the github snippet. Could be part of slack message.
           # This command never triggers a failure
-          grep -C10 -Ew ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS || true
+          grep -C10 -E ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS || true
           ERRORS_URL=$(.scripts/sprang BUILDLOG_ERRORS)
           ERRORS_MSG=" <$ERRORS_URL|(Error summary)>"
           echo "ERRORS_MSG=$ERRORS_MSG" >> $GITHUB_ENV
