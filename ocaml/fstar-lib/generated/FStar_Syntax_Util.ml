@@ -917,7 +917,26 @@ let (eq_lazy_kind :
          FStar_Syntax_Syntax.Lazy_letbinding) -> true
       | (FStar_Syntax_Syntax.Lazy_uvar, FStar_Syntax_Syntax.Lazy_uvar) ->
           true
+      | (FStar_Syntax_Syntax.Lazy_issue, FStar_Syntax_Syntax.Lazy_issue) ->
+          true
       | uu___ -> false
+let (lazy_kind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
+  fun k ->
+    match k with
+    | FStar_Syntax_Syntax.BadLazy -> "BadLazy"
+    | FStar_Syntax_Syntax.Lazy_bv -> "Lazy_bv"
+    | FStar_Syntax_Syntax.Lazy_binder -> "Lazy_binder"
+    | FStar_Syntax_Syntax.Lazy_optionstate -> "Lazy_optionstate"
+    | FStar_Syntax_Syntax.Lazy_fvar -> "Lazy_fvar"
+    | FStar_Syntax_Syntax.Lazy_comp -> "Lazy_comp"
+    | FStar_Syntax_Syntax.Lazy_env -> "Lazy_env"
+    | FStar_Syntax_Syntax.Lazy_proofstate -> "Lazy_proofstate"
+    | FStar_Syntax_Syntax.Lazy_goal -> "Lazy_goal"
+    | FStar_Syntax_Syntax.Lazy_sigelt -> "Lazy_sigelt"
+    | FStar_Syntax_Syntax.Lazy_letbinding -> "Lazy_letbinding"
+    | FStar_Syntax_Syntax.Lazy_uvar -> "Lazy_uvar"
+    | FStar_Syntax_Syntax.Lazy_issue -> "Lazy_issue"
+    | uu___ -> "Unknown"
 let unlazy_as_t :
   'uuuuu .
     FStar_Syntax_Syntax.lazy_kind -> FStar_Syntax_Syntax.term -> 'uuuuu
@@ -932,7 +951,15 @@ let unlazy_as_t :
           { FStar_Syntax_Syntax.blob = v; FStar_Syntax_Syntax.lkind = k';
             FStar_Syntax_Syntax.ltyp = uu___1;
             FStar_Syntax_Syntax.rng = uu___2;_}
-          when eq_lazy_kind k k' -> FStar_Compiler_Dyn.undyn v
+          ->
+          if eq_lazy_kind k k'
+          then FStar_Compiler_Dyn.undyn v
+          else
+            (let uu___4 =
+               FStar_Compiler_Util.format2
+                 "Expected Tm_lazy of kind %s, got %s"
+                 (lazy_kind_to_string k) (lazy_kind_to_string k') in
+             failwith uu___4)
       | uu___1 -> failwith "Not a Tm_lazy of the expected kind"
 let mk_lazy :
   'a .

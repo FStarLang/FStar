@@ -482,13 +482,33 @@ let eq_lazy_kind k k' =
      | Lazy_sigelt, Lazy_sigelt
      | Lazy_letbinding, Lazy_letbinding
      | Lazy_uvar, Lazy_uvar -> true
+     | Lazy_issue, Lazy_issue -> true
      | _ -> false
+
+let lazy_kind_to_string k = 
+    match k with
+    | BadLazy -> "BadLazy"
+    | Lazy_bv -> "Lazy_bv"
+    | Lazy_binder -> "Lazy_binder"
+    | Lazy_optionstate -> "Lazy_optionstate"
+    | Lazy_fvar -> "Lazy_fvar"
+    | Lazy_comp -> "Lazy_comp"
+    | Lazy_env -> "Lazy_env"
+    | Lazy_proofstate -> "Lazy_proofstate"
+    | Lazy_goal -> "Lazy_goal"
+    | Lazy_sigelt -> "Lazy_sigelt"
+    | Lazy_letbinding -> "Lazy_letbinding"
+    | Lazy_uvar -> "Lazy_uvar"
+    | Lazy_issue -> "Lazy_issue"
+    | _ -> "Unknown"
 
 let unlazy_as_t k t =
     match (compress t).n with
-    | Tm_lazy ({lkind=k'; blob=v})
-        when eq_lazy_kind k k' ->
-      FStar.Compiler.Dyn.undyn v
+    | Tm_lazy ({lkind=k'; blob=v}) ->
+      if eq_lazy_kind k k'
+      then FStar.Compiler.Dyn.undyn v
+      else failwith (U.format2 "Expected Tm_lazy of kind %s, got %s"
+                       (lazy_kind_to_string k) (lazy_kind_to_string k'))
     | _ ->
       failwith "Not a Tm_lazy of the expected kind"
 

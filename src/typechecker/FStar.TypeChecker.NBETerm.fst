@@ -255,7 +255,7 @@ let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
          let li = FStar.Compiler.Dyn.mkdyn x, et in
          mk_t <| Lazy (Inr li, thunk)
 
-let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
+let lazy_unembed (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
     match x.nbe_t with
     | Lazy (Inl li, thunk) ->
       f (Thunk.force thunk)
@@ -283,6 +283,13 @@ let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
                                (P.emb_typ_to_string et) in
       aopt
 
+let lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a =
+  match x.nbe_t with
+  | Lazy (Inl li, _) ->
+    if li.lkind = k
+    then Some (FStar.Compiler.Dyn.undyn li.blob)
+    else None
+  | _ -> None
 
 // Emdebbing for polymorphic types
 let mk_any_emb (ty:t) : embedding t =
@@ -357,7 +364,7 @@ let e_option (ea : embedding 'a) =
                                               as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option (option 'a) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid ->
           Some None
@@ -383,7 +390,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                        as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option ('a * 'b) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -409,7 +416,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                        as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option ('a * 'b * 'c) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -441,7 +448,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                        as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option (either 'a 'b) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _; _]) when S.fv_eq_lid fvar PC.inl_lid ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -463,7 +470,18 @@ let e_range : embedding Range.range =
         None
     in
     mk_emb' em un (lid_as_typ PC.range_lid [] []) (SE.emb_typ_of SE.e_range)
-  
+
+let e_issue : embedding FStar.Errors.issue =
+    let t_issue = SE.type_of SE.e_issue in
+    let li blob rng = { blob=Dyn.mkdyn blob; lkind = Lazy_issue; ltyp = t_issue; rng } in
+    let em cb iss = Lazy (Inl (li iss Range.dummyRange), (Thunk.mk (fun _ -> failwith "Cannot unembed issue"))) in
+    let un cb t =
+    match t with
+    | Lazy (Inl { lkind=Lazy_issue; blob }, _) -> Some (Dyn.undyn blob)
+    | _ -> None
+    in
+    mk_emb' em un (lid_as_typ PC.issue_lid [] []) (SE.emb_typ_of SE.e_issue)  
+
 // vconfig, NYI
 let e_vconfig : embedding vconfig =
     let em cb r = failwith "e_vconfig NBE" in
@@ -483,7 +501,7 @@ let e_list (ea:embedding 'a) =
         List.fold_right cons l nil)
     in
     let rec un cb (trm:t) : option (list 'a) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fv, _, _) when S.fv_eq_lid fv PC.nil_lid -> Some []
         | Construct (fv, _, [(tl, None); (hd, None); (_, Some ({ aqual_implicit = true }))])
@@ -516,7 +534,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
                                 | Some y -> y
                                 | None -> failwith "cannot unembed function result")
         in
-        lazy_unembed cb etyp lam k
+        lazy_unembed etyp lam k
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb))) etyp
 
@@ -607,7 +625,7 @@ let e_sealed (ea : embedding 'a) =
                                           as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option 'a =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
           unembed ea cb a
@@ -754,7 +772,7 @@ let string_concat' args : option t =
             end
         | _ -> None
         end
-    | _ -> None
+    | _ -> None             
 
 let string_of_int (i:Z.t) : t =
     embed e_string bogus_cbs (Z.string_of_big_int i)
