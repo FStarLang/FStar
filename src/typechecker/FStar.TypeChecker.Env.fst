@@ -1985,7 +1985,7 @@ let fvar_of_nonqual_lid env lid =
         | None -> failwith "Unexpected no delta_depth"
         | Some dd -> dd
     in
-    fvar lid dd None
+    fvar lid None
 
 let split_smt_query (e:env) (q:term) 
   : option (list (env & term))

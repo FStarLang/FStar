@@ -1226,10 +1226,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Name lid when string_of_lid lid = "Effect" ->
         mk (Tm_constant Const_effect), noaqs
     | Name lid when string_of_lid lid = "True"   ->
-        S.fvar (Ident.set_lid_range Const.true_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
+        S.fvar_with_dd (Ident.set_lid_range Const.true_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
                              noaqs
     | Name lid when string_of_lid lid = "False"   ->
-        S.fvar (Ident.set_lid_range Const.false_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
+        S.fvar_with_dd (Ident.set_lid_range Const.false_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
                               noaqs
     | Projector (eff_name, id)
       when is_special_effect_combinator (string_of_id id) && Env.is_effect_name env eff_name ->
@@ -1239,7 +1239,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       begin match try_lookup_effect_defn env eff_name with
         | Some ed ->
           let lid = U.dm4f_lid ed txt in
-          S.fvar lid (Delta_constant_at_level 1) None, noaqs
+          S.fvar_with_dd lid (Delta_constant_at_level 1) None, noaqs
         | None ->
           failwith (BU.format2 "Member %s of effect %s is not accessible \
                                 (using an effect abbreviation instead of the original effect ?)"
@@ -1830,7 +1830,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       in
       let head =
           let lid = lid_of_path ["__dummy__"] top.range in
-          S.fvar lid
+          S.fvar_with_dd lid
                  delta_constant
                  (Some (Unresolved_constructor uc))
       in
@@ -1866,7 +1866,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let head =
         match try_lookup_dc_by_field_name env f with
         | None ->
-          S.fvar f (Delta_equational_at_level 1) (Some (Unresolved_projector None))
+          S.fvar_with_dd f (Delta_equational_at_level 1) (Some (Unresolved_projector None))
 
         | Some (constrname, is_rec) ->
           let projname = mk_field_projector_name_from_ident constrname (ident_of_lid f) in
@@ -1874,7 +1874,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           let candidate_projector = S.lid_and_dd_as_fv (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
           let qual = Unresolved_projector (Some candidate_projector) in
           let f = List.hd (qualify_field_names constrname [f]) in
-          S.fvar f (Delta_equational_at_level 1) (Some qual)
+          S.fvar_with_dd f (Delta_equational_at_level 1) (Some qual)
       in
       //The fvar at the head of the term just records the fieldname that the user wrote
       //and in TcTerm, we use that field name combined with type info to disambiguate
@@ -2540,7 +2540,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
               | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
                 let nil = S.mk_Tm_uinst pat [U_zero] in
                 let pattern =
-                  S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) delta_constant None //NS delta: incorrect, should be Delta_abstract (Delta_constant_at_level 1)?
+                  S.fvar_with_dd (Ident.set_lid_range Const.pattern_lid pat.pos) delta_constant None //NS delta: incorrect, should be Delta_abstract (Delta_constant_at_level 1)?
                 in
                 S.mk_Tm_app nil [(pattern, S.as_aqual_implicit true)] pat.pos
               | _ -> pat
@@ -2586,7 +2586,7 @@ and desugar_formula env (f:term) : S.term =
         let body = desugar_formula env body in
         let body = with_pats env pats body in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app {hd=S.fvar (set_lid_range q b.brange) (Delta_constant_at_level 1) None;  //NS delta: wrong?  Delta_constant_at_level 2?
+        mk <| Tm_app {hd=S.fvar_with_dd (set_lid_range q b.brange) (Delta_constant_at_level 1) None;  //NS delta: wrong?  Delta_constant_at_level 2?
                       args=[as_arg body]}
 
       | _ -> failwith "impossible" in
@@ -3594,10 +3594,7 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
     | _ -> []
   in
   let attrs = attrs @ val_attrs sigelts in
-  env,
-  List.map 
-    (fun sigelt -> { sigelt with sigattrs = sigelt.sigattrs@attrs })
-    sigelts
+  env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl env (d:decl) :(env_t * sigelts) =
   let env, ses = desugar_decl_aux env d in
@@ -3741,7 +3738,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
                  { se with sigel = Sig_bundle {ses; lids} }
 
                | Sig_inductive_typ _ ->
-                 { se with sigattrs = S.fvar FStar.Parser.Const.tcclass_lid S.delta_constant None :: se.sigattrs }
+                 { se with sigattrs = S.fvar_with_dd FStar.Parser.Const.tcclass_lid S.delta_constant None :: se.sigattrs }
 
                | _ -> se
              in

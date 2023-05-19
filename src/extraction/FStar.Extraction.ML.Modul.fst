@@ -50,7 +50,7 @@ type env_t = UEnv.uenv
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app {hd=S.fvar (PC.failwith_lid()) delta_constant None; //NS delta: wrong
+    mk (Tm_app {hd=S.fvar (PC.failwith_lid()) None;
                 args=[ S.iarg t
                      ; S.as_arg <|
                        mk (Tm_constant

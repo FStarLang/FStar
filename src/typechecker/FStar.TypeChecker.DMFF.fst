@@ -41,6 +41,27 @@ module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PC = FStar.Parser.Const
 
+let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
+
+// Takes care of creating the [fv], generating the top-level let-binding, and
+// return a term that's a suitable reference (a [Tm_fv]) to the definition
+let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
+  // Debug
+  if Env.debug env (Options.Other "ED") then begin
+    d (string_of_lid lident);
+    BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
+  end;
+  // Allocate a new top-level name.
+  let fv = S.lid_and_dd_as_fv lident (U.incr_delta_qualifier def) None in
+  let lbname: lbname = Inr fv in
+  let lb: letbindings =
+    // the effect label will be recomputed correctly
+    false, [U.mk_letbinding lbname [] S.tun PC.effect_Tot_lid def [] Range.dummyRange]
+  in
+  // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
+  let sig_ctx = mk_sigelt (Sig_let {lbs=lb; lids=[ lident ]}) in
+  {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
+  mk (Tm_fvar fv) Range.dummyRange
 
 let empty env tc_const = {
   tcenv = env;
@@ -108,7 +129,7 @@ let gen_wps_for_free
   // generated in the course of producing WP combinators
   let sigelts = BU.mk_ref [] in
   let register env lident def =
-    let sigelt, fv = TcUtil.mk_toplevel_definition env lident def in
+    let sigelt, fv = mk_toplevel_definition env lident def in
     let sigelt = { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}} in
     sigelts := sigelt :: !sigelts;
     fv
@@ -276,7 +297,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar PC.ite_lid (S.Delta_constant_at_level 2) None in
+      let l_ite = fvar_with_dd PC.ite_lid (S.Delta_constant_at_level 2) None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -377,7 +398,7 @@ let gen_wps_for_free
         | Tm_app {hd=head; args} when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
+            let projector = S.fvar_with_dd (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -1541,7 +1562,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
       fv_to_tm (lid_and_dd_as_fv l' delta_equational None)
       end
     | None ->
-      let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
+      let sigelt, fv = mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
       let sigelt =
         if maybe_admit 
         then { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}}

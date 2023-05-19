@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Check out repo        
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Package and release FStar
       run: |
           ci_docker_image_tag=fstar-release:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
@@ -33,11 +33,11 @@ jobs:
 
     steps:
     - name: Checkout FStar
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: FStar
     - name: Checkout everest
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: project-everest/everest
         path: FStar/.github/everest
@@ -62,7 +62,7 @@ jobs:
 
     steps:
     - name: Check out repo        
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       
     - name: Package and release FStar
       shell: C:\cygwin64\bin\bash.exe --login '{0}'

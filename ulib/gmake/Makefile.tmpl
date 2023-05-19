@@ -75,7 +75,8 @@ basic_clean:
 
 .depend: $(FSTAR_FILES)
 	@true $(shell rm -f .depend.rsp) $(foreach f,--dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES),$(shell echo $(f) >> .depend.rsp))
-	$(MY_FSTAR) @.depend.rsp > .depend
+	$(MY_FSTAR) @.depend.rsp > ._depend
+	mv ._depend .depend
 
 depend: .depend
 

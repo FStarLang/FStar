@@ -1492,7 +1492,7 @@ let (synthesize :
              if env.FStar_TypeChecker_Env.nosynth
              then
                let uu___1 =
-                 FStar_TypeChecker_Util.fvar_const env
+                 FStar_TypeChecker_Util.fvar_env env
                    FStar_Parser_Const.magic_lid in
                let uu___2 =
                  let uu___3 =
@@ -1941,67 +1941,64 @@ let (splice :
                                       }])
                              else
                                (let uu___8 =
-                                  let uu___9 =
-                                    FStar_Syntax_Embeddings.e_list
-                                      FStar_Reflection_Embeddings.e_sigelt in
-                                  FStar_Tactics_Interpreter.run_tactic_on_ps
-                                    tau1.FStar_Syntax_Syntax.pos
-                                    tau1.FStar_Syntax_Syntax.pos false
-                                    FStar_Syntax_Embeddings.e_unit () uu___9
-                                    tau1 tactic_already_typed ps in
-                                match uu___8 with
-                                | (gs, sigelts) -> (gs, sigelts)) in
+                                  FStar_Syntax_Embeddings.e_list
+                                    FStar_Reflection_Embeddings.e_sigelt in
+                                FStar_Tactics_Interpreter.run_tactic_on_ps
+                                  tau1.FStar_Syntax_Syntax.pos
+                                  tau1.FStar_Syntax_Syntax.pos false
+                                  FStar_Syntax_Embeddings.e_unit () uu___8
+                                  tau1 tactic_already_typed ps) in
                            match uu___6 with
                            | (gs, sigelts) ->
-                               let set_lb_dd lb =
-                                 let uu___7 = lb in
-                                 match uu___7 with
-                                 | {
-                                     FStar_Syntax_Syntax.lbname =
-                                       FStar_Pervasives.Inr fv;
-                                     FStar_Syntax_Syntax.lbunivs = uu___8;
-                                     FStar_Syntax_Syntax.lbtyp = uu___9;
-                                     FStar_Syntax_Syntax.lbeff = uu___10;
-                                     FStar_Syntax_Syntax.lbdef = lbdef;
-                                     FStar_Syntax_Syntax.lbattrs = uu___11;
-                                     FStar_Syntax_Syntax.lbpos = uu___12;_}
-                                     ->
-                                     let uu___13 =
-                                       let uu___14 =
-                                         let uu___15 =
-                                           let uu___16 =
-                                             FStar_Syntax_Util.incr_delta_qualifier
-                                               lbdef in
-                                           FStar_Compiler_Effect.op_Bar_Greater
-                                             uu___16
-                                             (fun uu___17 ->
-                                                FStar_Pervasives_Native.Some
-                                                  uu___17) in
-                                         {
-                                           FStar_Syntax_Syntax.fv_name =
-                                             (fv.FStar_Syntax_Syntax.fv_name);
-                                           FStar_Syntax_Syntax.fv_delta =
-                                             uu___15;
-                                           FStar_Syntax_Syntax.fv_qual =
-                                             (fv.FStar_Syntax_Syntax.fv_qual)
-                                         } in
-                                       FStar_Pervasives.Inr uu___14 in
-                                     {
-                                       FStar_Syntax_Syntax.lbname = uu___13;
-                                       FStar_Syntax_Syntax.lbunivs =
-                                         (lb.FStar_Syntax_Syntax.lbunivs);
-                                       FStar_Syntax_Syntax.lbtyp =
-                                         (lb.FStar_Syntax_Syntax.lbtyp);
-                                       FStar_Syntax_Syntax.lbeff =
-                                         (lb.FStar_Syntax_Syntax.lbeff);
-                                       FStar_Syntax_Syntax.lbdef =
-                                         (lb.FStar_Syntax_Syntax.lbdef);
-                                       FStar_Syntax_Syntax.lbattrs =
-                                         (lb.FStar_Syntax_Syntax.lbattrs);
-                                       FStar_Syntax_Syntax.lbpos =
-                                         (lb.FStar_Syntax_Syntax.lbpos)
-                                     } in
                                let sigelts1 =
+                                 let set_lb_dd lb =
+                                   let uu___7 = lb in
+                                   match uu___7 with
+                                   | {
+                                       FStar_Syntax_Syntax.lbname =
+                                         FStar_Pervasives.Inr fv;
+                                       FStar_Syntax_Syntax.lbunivs = uu___8;
+                                       FStar_Syntax_Syntax.lbtyp = uu___9;
+                                       FStar_Syntax_Syntax.lbeff = uu___10;
+                                       FStar_Syntax_Syntax.lbdef = lbdef;
+                                       FStar_Syntax_Syntax.lbattrs = uu___11;
+                                       FStar_Syntax_Syntax.lbpos = uu___12;_}
+                                       ->
+                                       let uu___13 =
+                                         let uu___14 =
+                                           let uu___15 =
+                                             let uu___16 =
+                                               FStar_Syntax_Util.incr_delta_qualifier
+                                                 lbdef in
+                                             FStar_Compiler_Effect.op_Bar_Greater
+                                               uu___16
+                                               (fun uu___17 ->
+                                                  FStar_Pervasives_Native.Some
+                                                    uu___17) in
+                                           {
+                                             FStar_Syntax_Syntax.fv_name =
+                                               (fv.FStar_Syntax_Syntax.fv_name);
+                                             FStar_Syntax_Syntax.fv_delta =
+                                               uu___15;
+                                             FStar_Syntax_Syntax.fv_qual =
+                                               (fv.FStar_Syntax_Syntax.fv_qual)
+                                           } in
+                                         FStar_Pervasives.Inr uu___14 in
+                                       {
+                                         FStar_Syntax_Syntax.lbname = uu___13;
+                                         FStar_Syntax_Syntax.lbunivs =
+                                           (lb.FStar_Syntax_Syntax.lbunivs);
+                                         FStar_Syntax_Syntax.lbtyp =
+                                           (lb.FStar_Syntax_Syntax.lbtyp);
+                                         FStar_Syntax_Syntax.lbeff =
+                                           (lb.FStar_Syntax_Syntax.lbeff);
+                                         FStar_Syntax_Syntax.lbdef =
+                                           (lb.FStar_Syntax_Syntax.lbdef);
+                                         FStar_Syntax_Syntax.lbattrs =
+                                           (lb.FStar_Syntax_Syntax.lbattrs);
+                                         FStar_Syntax_Syntax.lbpos =
+                                           (lb.FStar_Syntax_Syntax.lbpos)
+                                       } in
                                  FStar_Compiler_List.map
                                    (fun se ->
                                       match se.FStar_Syntax_Syntax.sigel with

@@ -15,6 +15,59 @@ let (__proj__Mkenv__item__tc_const :
   env -> FStar_Const.sconst -> FStar_Syntax_Syntax.typ) =
   fun projectee ->
     match projectee with | { tcenv; subst; tc_const;_} -> tc_const
+let (d : Prims.string -> unit) =
+  fun s -> FStar_Compiler_Util.print1 "\027[01;36m%s\027[00m\n" s
+let (mk_toplevel_definition :
+  FStar_TypeChecker_Env.env_t ->
+    FStar_Ident.lident ->
+      FStar_Syntax_Syntax.term ->
+        (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.term))
+  =
+  fun env1 ->
+    fun lident ->
+      fun def ->
+        (let uu___1 =
+           FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "ED") in
+         if uu___1
+         then
+           ((let uu___3 = FStar_Ident.string_of_lid lident in d uu___3);
+            (let uu___3 = FStar_Ident.string_of_lid lident in
+             let uu___4 = FStar_Syntax_Print.term_to_string def in
+             FStar_Compiler_Util.print2
+               "Registering top-level definition: %s\n%s\n" uu___3 uu___4))
+         else ());
+        (let fv =
+           let uu___1 = FStar_Syntax_Util.incr_delta_qualifier def in
+           FStar_Syntax_Syntax.lid_and_dd_as_fv lident uu___1
+             FStar_Pervasives_Native.None in
+         let lbname = FStar_Pervasives.Inr fv in
+         let lb =
+           (false,
+             [FStar_Syntax_Util.mk_letbinding lbname []
+                FStar_Syntax_Syntax.tun FStar_Parser_Const.effect_Tot_lid def
+                [] FStar_Compiler_Range_Type.dummyRange]) in
+         let sig_ctx =
+           FStar_Syntax_Syntax.mk_sigelt
+             (FStar_Syntax_Syntax.Sig_let
+                {
+                  FStar_Syntax_Syntax.lbs1 = lb;
+                  FStar_Syntax_Syntax.lids1 = [lident]
+                }) in
+         let uu___1 =
+           FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
+             FStar_Compiler_Range_Type.dummyRange in
+         ({
+            FStar_Syntax_Syntax.sigel = (sig_ctx.FStar_Syntax_Syntax.sigel);
+            FStar_Syntax_Syntax.sigrng = (sig_ctx.FStar_Syntax_Syntax.sigrng);
+            FStar_Syntax_Syntax.sigquals =
+              [FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen];
+            FStar_Syntax_Syntax.sigmeta =
+              (sig_ctx.FStar_Syntax_Syntax.sigmeta);
+            FStar_Syntax_Syntax.sigattrs =
+              (sig_ctx.FStar_Syntax_Syntax.sigattrs);
+            FStar_Syntax_Syntax.sigopts =
+              (sig_ctx.FStar_Syntax_Syntax.sigopts)
+          }, uu___1))
 let (empty :
   FStar_TypeChecker_Env.env ->
     (FStar_Const.sconst -> FStar_Syntax_Syntax.typ) -> env)
@@ -46,12 +99,12 @@ let (gen_wps_for_free :
                 FStar_Syntax_Syntax.index = (a.FStar_Syntax_Syntax.index);
                 FStar_Syntax_Syntax.sort = uu___
               } in
-            let d s = FStar_Compiler_Util.print1 "\027[01;36m%s\027[00m\n" s in
+            let d1 s = FStar_Compiler_Util.print1 "\027[01;36m%s\027[00m\n" s in
             (let uu___1 =
                FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "ED") in
              if uu___1
              then
-               (d "Elaborating extra WP combinators";
+               (d1 "Elaborating extra WP combinators";
                 (let uu___3 = FStar_Syntax_Print.term_to_string wp_a1 in
                  FStar_Compiler_Util.print1 "wp_a is: %s\n" uu___3))
              else ());
@@ -103,16 +156,14 @@ let (gen_wps_for_free :
                   let uu___4 =
                     FStar_Syntax_Print.binders_to_string ", " gamma in
                   FStar_Compiler_Util.format1 "Gamma is %s\n" uu___4 in
-                d uu___3
+                d1 uu___3
               else ());
              (let unknown = FStar_Syntax_Syntax.tun in
               let mk x =
                 FStar_Syntax_Syntax.mk x FStar_Compiler_Range_Type.dummyRange in
               let sigelts = FStar_Compiler_Util.mk_ref [] in
               let register env2 lident def =
-                let uu___2 =
-                  FStar_TypeChecker_Util.mk_toplevel_definition env2 lident
-                    def in
+                let uu___2 = mk_toplevel_definition env2 lident def in
                 match uu___2 with
                 | (sigelt, fv) ->
                     let sigelt1 =
@@ -605,7 +656,8 @@ let (gen_wps_for_free :
                       FStar_Compiler_List.op_At binders uu___4 in
                     let uu___4 =
                       let l_ite =
-                        FStar_Syntax_Syntax.fvar FStar_Parser_Const.ite_lid
+                        FStar_Syntax_Syntax.fvar_with_dd
+                          FStar_Parser_Const.ite_lid
                           (FStar_Syntax_Syntax.Delta_constant_at_level
                              (Prims.of_int (2))) FStar_Pervasives_Native.None in
                       let uu___5 =
@@ -982,7 +1034,7 @@ let (gen_wps_for_free :
                                     FStar_Compiler_Range_Type.dummyRange in
                                 FStar_TypeChecker_Env.lookup_projector env2
                                   uu___5 i in
-                              FStar_Syntax_Syntax.fvar uu___4
+                              FStar_Syntax_Syntax.fvar_with_dd uu___4
                                 (FStar_Syntax_Syntax.Delta_constant_at_level
                                    Prims.int_one)
                                 FStar_Pervasives_Native.None in
@@ -1279,7 +1331,7 @@ let (gen_wps_for_free :
                   ((let uu___4 =
                       FStar_TypeChecker_Env.debug env2
                         (FStar_Options.Other "ED") in
-                    if uu___4 then d "End Dijkstra monads for free" else ());
+                    if uu___4 then d1 "End Dijkstra monads for free" else ());
                    (let c = FStar_Syntax_Subst.close binders in
                     let ed_combs =
                       match ed.FStar_Syntax_Syntax.combinators with
@@ -4407,8 +4459,8 @@ let (cps_and_elaborate :
                                                    FStar_Syntax_Util.abs
                                                      effect_binders1 item
                                                      FStar_Pervasives_Native.None in
-                                                 FStar_TypeChecker_Util.mk_toplevel_definition
-                                                   env2 uu___16 uu___17 in
+                                                 mk_toplevel_definition env2
+                                                   uu___16 uu___17 in
                                                (match uu___15 with
                                                 | (sigelt, fv) ->
                                                     let sigelt1 =

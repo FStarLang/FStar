@@ -95,7 +95,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          let tps, k = SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
-         let fv_tc = S.lid_and_dd_as_fv tc delta_constant None in
+         let fv_tc = S.lid_as_fv tc None in
          let (uvs, t_tc) = SS.open_univ_vars uvs t_tc in
          Env.push_let_binding env0 (Inr fv_tc) (uvs, t_tc),
          { s with sigel = Sig_inductive_typ {lid=tc;
@@ -357,7 +357,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:u
   //open the ibs binders
   let ibs = SS.open_binders ibs in
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
-  let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
+  let ind = mk_Tm_uinst (S.fvar lid None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
   let ind = mk_Tm_app ind (List.map U.arg_of_non_null_binder bs) Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
@@ -586,7 +586,7 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list sigelt) (mutuals:list lid
   //open the ibs binders
   let ibs = SS.open_binders ibs in
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
-  let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
+  let ind = mk_Tm_uinst (S.fvar lid None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
   let ind = mk_Tm_app ind (List.map U.arg_of_non_null_binder bs) Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
@@ -899,7 +899,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
         else let disc_name = U.mk_discriminator lid in
              let x = S.new_bv (Some p) arg_typ in
              let sort =
-                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) (Delta_equational_at_level 1) None in
+                 let disc_fvar = S.fvar_with_dd (Ident.set_lid_range disc_name p) (Delta_equational_at_level 1) None in
                  U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] p))
              in
              S.mk_binder ({projectee arg_typ with sort = sort})

@@ -1798,36 +1798,19 @@ let (encode_free_var :
                                                  fv1
                                                  FStar_Parser_Const.unit_lid
                                            | uu___12 -> false) in
-                                    let is_arrow t =
-                                      let uu___9 =
-                                        let uu___10 =
-                                          let uu___11 =
-                                            FStar_TypeChecker_Normalize.unfold_whnf'
-                                              [FStar_TypeChecker_Env.EraseUniverses]
-                                              env.FStar_SMTEncoding_Env.tcenv
-                                              t in
-                                          FStar_Syntax_Util.unrefine uu___11 in
-                                        uu___10.FStar_Syntax_Syntax.n in
-                                      match uu___9 with
-                                      | FStar_Syntax_Syntax.Tm_arrow uu___10
-                                          -> true
-                                      | uu___10 -> false in
-                                    ((((let uu___9 = FStar_Ident.nsstr lid in
-                                        uu___9 <> "Prims") &&
-                                         (let uu___9 =
-                                            FStar_Compiler_Effect.op_Bar_Greater
-                                              quals
-                                              (FStar_Compiler_List.contains
-                                                 FStar_Syntax_Syntax.Logic) in
-                                          Prims.op_Negation uu___9))
-                                        &&
-                                        (let uu___9 = is_squash t_norm in
+                                    (((let uu___9 = FStar_Ident.nsstr lid in
+                                       uu___9 <> "Prims") &&
+                                        (let uu___9 =
+                                           FStar_Compiler_Effect.op_Bar_Greater
+                                             quals
+                                             (FStar_Compiler_List.contains
+                                                FStar_Syntax_Syntax.Logic) in
                                          Prims.op_Negation uu___9))
                                        &&
-                                       (let uu___9 = is_type t_norm in
+                                       (let uu___9 = is_squash t_norm in
                                         Prims.op_Negation uu___9))
                                       &&
-                                      (let uu___9 = is_arrow t_norm in
+                                      (let uu___9 = is_type t_norm in
                                        Prims.op_Negation uu___9) in
                                   let uu___8 =
                                     match vars with
@@ -2642,8 +2625,15 @@ let (encode_top_level_let :
                                                Let_rec_unencodeable
                                            else ());
                                           (let t_norm =
-                                             norm_before_encoding env1
-                                               lb.FStar_Syntax_Syntax.lbtyp in
+                                             if is_rec
+                                             then
+                                               FStar_TypeChecker_Normalize.unfold_whnf'
+                                                 [FStar_TypeChecker_Env.AllowUnboundUniverses]
+                                                 env1.FStar_SMTEncoding_Env.tcenv
+                                                 lb.FStar_Syntax_Syntax.lbtyp
+                                             else
+                                               norm_before_encoding env1
+                                                 lb.FStar_Syntax_Syntax.lbtyp in
                                            let uu___7 =
                                              let uu___8 =
                                                FStar_Compiler_Util.right
@@ -4648,8 +4638,6 @@ and (encode_sigelt' :
                                        let uu___10 =
                                          let uu___11 =
                                            FStar_Syntax_Syntax.fvar t
-                                             (FStar_Syntax_Syntax.Delta_constant_at_level
-                                                Prims.int_zero)
                                              FStar_Pervasives_Native.None in
                                          let uu___12 =
                                            let uu___13 =

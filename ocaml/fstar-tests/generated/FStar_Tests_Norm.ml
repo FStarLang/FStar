@@ -78,13 +78,11 @@ let (lid : Prims.string -> FStar_Ident.lident) =
     FStar_Ident.lid_of_path ["Test"; x] FStar_Compiler_Range_Type.dummyRange
 let (znat_l : FStar_Syntax_Syntax.fv) =
   let uu___ = lid "Z" in
-  FStar_Syntax_Syntax.lid_and_dd_as_fv uu___
-    FStar_Syntax_Syntax.delta_constant
+  FStar_Syntax_Syntax.lid_as_fv uu___
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
 let (snat_l : FStar_Syntax_Syntax.fv) =
   let uu___ = lid "S" in
-  FStar_Syntax_Syntax.lid_and_dd_as_fv uu___
-    FStar_Syntax_Syntax.delta_constant
+  FStar_Syntax_Syntax.lid_as_fv uu___
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
 let (tm_fv :
   FStar_Syntax_Syntax.fv ->
@@ -113,8 +111,7 @@ let pat : 'uuuuu . 'uuuuu -> 'uuuuu FStar_Syntax_Syntax.withinfo_t =
 let (snat_type : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) =
   let uu___ =
     let uu___1 = lid "snat" in
-    FStar_Syntax_Syntax.lid_and_dd_as_fv uu___1
-      FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+    FStar_Syntax_Syntax.lid_as_fv uu___1 FStar_Pervasives_Native.None in
   tm_fv uu___
 let (mk_match :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->

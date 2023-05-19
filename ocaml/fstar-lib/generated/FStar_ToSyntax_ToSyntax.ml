@@ -2661,7 +2661,7 @@ and (desugar_term_maybe_top :
               let uu___2 =
                 FStar_Ident.set_lid_range FStar_Parser_Const.true_lid
                   top.FStar_Parser_AST.range in
-              FStar_Syntax_Syntax.fvar uu___2
+              FStar_Syntax_Syntax.fvar_with_dd uu___2
                 FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None in
             (uu___1, noaqs)
@@ -2671,7 +2671,7 @@ and (desugar_term_maybe_top :
               let uu___2 =
                 FStar_Ident.set_lid_range FStar_Parser_Const.false_lid
                   top.FStar_Parser_AST.range in
-              FStar_Syntax_Syntax.fvar uu___2
+              FStar_Syntax_Syntax.fvar_with_dd uu___2
                 FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None in
             (uu___1, noaqs)
@@ -2687,7 +2687,7 @@ and (desugar_term_maybe_top :
              | FStar_Pervasives_Native.Some ed ->
                  let lid = FStar_Syntax_Util.dm4f_lid ed txt in
                  let uu___2 =
-                   FStar_Syntax_Syntax.fvar lid
+                   FStar_Syntax_Syntax.fvar_with_dd lid
                      (FStar_Syntax_Syntax.Delta_constant_at_level
                         Prims.int_one) FStar_Pervasives_Native.None in
                  (uu___2, noaqs)
@@ -4168,7 +4168,7 @@ and (desugar_term_maybe_top :
                         let lid =
                           FStar_Ident.lid_of_path ["__dummy__"]
                             top.FStar_Parser_AST.range in
-                        FStar_Syntax_Syntax.fvar lid
+                        FStar_Syntax_Syntax.fvar_with_dd lid
                           FStar_Syntax_Syntax.delta_constant
                           (FStar_Pervasives_Native.Some
                              (FStar_Syntax_Syntax.Unresolved_constructor uc)) in
@@ -4244,7 +4244,7 @@ and (desugar_term_maybe_top :
                      FStar_Syntax_DsEnv.try_lookup_dc_by_field_name env f in
                    match uu___2 with
                    | FStar_Pervasives_Native.None ->
-                       FStar_Syntax_Syntax.fvar f
+                       FStar_Syntax_Syntax.fvar_with_dd f
                          (FStar_Syntax_Syntax.Delta_equational_at_level
                             Prims.int_one)
                          (FStar_Pervasives_Native.Some
@@ -4278,7 +4278,7 @@ and (desugar_term_maybe_top :
                        let f1 =
                          let uu___3 = qualify_field_names constrname [f] in
                          FStar_Compiler_List.hd uu___3 in
-                       FStar_Syntax_Syntax.fvar f1
+                       FStar_Syntax_Syntax.fvar_with_dd f1
                          (FStar_Syntax_Syntax.Delta_equational_at_level
                             Prims.int_one)
                          (FStar_Pervasives_Native.Some qual1) in
@@ -5660,7 +5660,7 @@ and (desugar_comp :
                                                       FStar_Ident.set_lid_range
                                                         FStar_Parser_Const.pattern_lid
                                                         pat.FStar_Syntax_Syntax.pos in
-                                                    FStar_Syntax_Syntax.fvar
+                                                    FStar_Syntax_Syntax.fvar_with_dd
                                                       uu___10
                                                       FStar_Syntax_Syntax.delta_constant
                                                       FStar_Pervasives_Native.None in
@@ -5804,7 +5804,7 @@ and (desugar_formula :
                        let uu___5 =
                          FStar_Ident.set_lid_range q
                            b.FStar_Parser_AST.brange in
-                       FStar_Syntax_Syntax.fvar uu___5
+                       FStar_Syntax_Syntax.fvar_with_dd uu___5
                          (FStar_Syntax_Syntax.Delta_constant_at_level
                             Prims.int_one) FStar_Pervasives_Native.None in
                      let uu___5 =
@@ -8611,9 +8611,7 @@ and (desugar_decl_aux :
                      (sigelt.FStar_Syntax_Syntax.sigquals);
                    FStar_Syntax_Syntax.sigmeta =
                      (sigelt.FStar_Syntax_Syntax.sigmeta);
-                   FStar_Syntax_Syntax.sigattrs =
-                     (FStar_Compiler_List.op_At
-                        sigelt.FStar_Syntax_Syntax.sigattrs attrs1);
+                   FStar_Syntax_Syntax.sigattrs = attrs1;
                    FStar_Syntax_Syntax.sigopts =
                      (sigelt.FStar_Syntax_Syntax.sigopts)
                  }) sigelts in
@@ -8918,7 +8916,7 @@ and (desugar_decl_noattrs :
                        | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
                            let uu___3 =
                              let uu___4 =
-                               FStar_Syntax_Syntax.fvar
+                               FStar_Syntax_Syntax.fvar_with_dd
                                  FStar_Parser_Const.tcclass_lid
                                  FStar_Syntax_Syntax.delta_constant
                                  FStar_Pervasives_Native.None in

@@ -3655,7 +3655,7 @@ let (maybe_return_e2_and_bind :
                                 uu___5 e2 lc21
                             else lc21) in
                        bind r env e1opt lc11 (x, lc22))
-let (fvar_const :
+let (fvar_env :
   FStar_TypeChecker_Env.env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term)
   =
   fun env ->
@@ -3663,8 +3663,7 @@ let (fvar_const :
       let uu___ =
         let uu___1 = FStar_TypeChecker_Env.get_range env in
         FStar_Ident.set_lid_range lid uu___1 in
-      FStar_Syntax_Syntax.fvar uu___ FStar_Syntax_Syntax.delta_constant
-        FStar_Pervasives_Native.None
+      FStar_Syntax_Syntax.fvar uu___ FStar_Pervasives_Native.None
 let (substitutive_indexed_ite_substs :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.indexed_effect_combinator_kind ->
@@ -4275,7 +4274,7 @@ let (comp_pure_wp_false :
         let wp =
           let uu___ =
             let uu___1 = FStar_Syntax_Syntax.mk_binder post in [uu___1] in
-          let uu___1 = fvar_const env FStar_Parser_Const.false_lid in
+          let uu___1 = fvar_env env FStar_Parser_Const.false_lid in
           FStar_Syntax_Util.abs uu___ uu___1
             (FStar_Pervasives_Native.Some
                (FStar_Syntax_Util.mk_residual_comp
@@ -4890,8 +4889,7 @@ let (coerce_with :
                             FStar_Ident.set_lid_range f
                               e.FStar_Syntax_Syntax.pos in
                           FStar_Syntax_Syntax.fvar uu___3
-                            (FStar_Syntax_Syntax.Delta_constant_at_level
-                               Prims.int_one) FStar_Pervasives_Native.None in
+                            FStar_Pervasives_Native.None in
                         let coercion1 =
                           FStar_Syntax_Syntax.mk_Tm_uinst coercion us in
                         let e1 =
@@ -5132,7 +5130,7 @@ let (maybe_coerce_lc :
                   (let mk_erased u t =
                      let uu___3 =
                        let uu___4 =
-                         fvar_const env FStar_Parser_Const.erased_lid in
+                         fvar_env env FStar_Parser_Const.erased_lid in
                        FStar_Syntax_Syntax.mk_Tm_uinst uu___4 [u] in
                      let uu___4 =
                        let uu___5 = FStar_Syntax_Syntax.as_arg t in [uu___5] in
@@ -5782,7 +5780,6 @@ let (pure_or_ghost_pre_and_post :
                                     FStar_Ident.set_lid_range
                                       FStar_Parser_Const.as_requires r in
                                   FStar_Syntax_Syntax.fvar uu___11
-                                    FStar_Syntax_Syntax.delta_equational
                                     FStar_Pervasives_Native.None in
                                 FStar_Syntax_Syntax.mk_Tm_uinst uu___10 us_r in
                               let as_ens =
@@ -5791,7 +5788,6 @@ let (pure_or_ghost_pre_and_post :
                                     FStar_Ident.set_lid_range
                                       FStar_Parser_Const.as_ensures r in
                                   FStar_Syntax_Syntax.fvar uu___11
-                                    FStar_Syntax_Syntax.delta_equational
                                     FStar_Pervasives_Native.None in
                                 FStar_Syntax_Syntax.mk_Tm_uinst uu___10 us_e in
                               let req =
@@ -6621,59 +6617,6 @@ let (maybe_add_implicit_binders :
                                    })) in
                          FStar_Compiler_List.op_At imps1 bs)
                 | uu___4 -> bs))
-let (d : Prims.string -> unit) =
-  fun s -> FStar_Compiler_Util.print1 "\027[01;36m%s\027[00m\n" s
-let (mk_toplevel_definition :
-  FStar_TypeChecker_Env.env ->
-    FStar_Ident.lident ->
-      FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.term))
-  =
-  fun env ->
-    fun lident ->
-      fun def ->
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env (FStar_Options.Other "ED") in
-         if uu___1
-         then
-           ((let uu___3 = FStar_Ident.string_of_lid lident in d uu___3);
-            (let uu___3 = FStar_Ident.string_of_lid lident in
-             let uu___4 = FStar_Syntax_Print.term_to_string def in
-             FStar_Compiler_Util.print2
-               "Registering top-level definition: %s\n%s\n" uu___3 uu___4))
-         else ());
-        (let fv =
-           let uu___1 = FStar_Syntax_Util.incr_delta_qualifier def in
-           FStar_Syntax_Syntax.lid_and_dd_as_fv lident uu___1
-             FStar_Pervasives_Native.None in
-         let lbname = FStar_Pervasives.Inr fv in
-         let lb =
-           (false,
-             [FStar_Syntax_Util.mk_letbinding lbname []
-                FStar_Syntax_Syntax.tun FStar_Parser_Const.effect_Tot_lid def
-                [] FStar_Compiler_Range_Type.dummyRange]) in
-         let sig_ctx =
-           FStar_Syntax_Syntax.mk_sigelt
-             (FStar_Syntax_Syntax.Sig_let
-                {
-                  FStar_Syntax_Syntax.lbs1 = lb;
-                  FStar_Syntax_Syntax.lids1 = [lident]
-                }) in
-         let uu___1 =
-           FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
-             FStar_Compiler_Range_Type.dummyRange in
-         ({
-            FStar_Syntax_Syntax.sigel = (sig_ctx.FStar_Syntax_Syntax.sigel);
-            FStar_Syntax_Syntax.sigrng = (sig_ctx.FStar_Syntax_Syntax.sigrng);
-            FStar_Syntax_Syntax.sigquals =
-              [FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen];
-            FStar_Syntax_Syntax.sigmeta =
-              (sig_ctx.FStar_Syntax_Syntax.sigmeta);
-            FStar_Syntax_Syntax.sigattrs =
-              (sig_ctx.FStar_Syntax_Syntax.sigattrs);
-            FStar_Syntax_Syntax.sigopts =
-              (sig_ctx.FStar_Syntax_Syntax.sigopts)
-          }, uu___1))
 let (check_sigelt_quals :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun env ->

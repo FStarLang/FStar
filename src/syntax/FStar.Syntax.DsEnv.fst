@@ -178,7 +178,7 @@ let unmangleMap = [("op_ColonColon", "Cons", delta_constant, Some Data_ctor);
 let unmangleOpName (id:ident) : option term =
   find_map unmangleMap (fun (x,y,dd,dq) ->
     if string_of_id id = x
-    then Some (S.fvar (lid_of_path ["Prims"; y] (range_of_id id)) dd dq) //NS delta ok
+    then Some (S.fvar_with_dd (lid_of_path ["Prims"; y] (range_of_id id)) dd dq) //NS delta ok
     else None)
 
 type cont_t 'a =
@@ -528,11 +528,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
       | (_, true) when exclude_interf -> None
       | (se, _) ->
         begin match se.sigel with
-          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid delta_constant None, se.sigattrs)) //NS delta: ok
-          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid delta_constant (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
+          | Sig_inductive_typ _ ->   Some (Term_name (S.fvar_with_dd source_lid delta_constant None, se.sigattrs)) //NS delta: ok
+          | Sig_datacon _ ->         Some (Term_name (S.fvar_with_dd source_lid delta_constant (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
           | Sig_let {lbs=(_, lbs)} ->
             let fv = lb_fv lbs source_lid in
-            Some (Term_name(S.fvar source_lid (fv.fv_delta |> must) fv.fv_qual, se.sigattrs))
+            Some (Term_name (S.fvar_with_dd source_lid (fv.fv_delta |> must) fv.fv_qual, se.sigattrs))
           | Sig_declare_typ {lid} ->
             let quals = se.sigquals in
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
@@ -544,14 +544,14 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) occurrence_range in
                         Some (Term_name (refl_const, se.sigattrs))
                  | _ ->
-                   Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
+                   Some (Term_name(fvar_with_dd lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
                  end
             else None
           | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
           | Sig_splice {lids; tac=t} ->
                 // TODO: This depth is probably wrong
-                Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, [])) //NS delta: wrong
+                Some (Term_name (S.fvar_with_dd source_lid (Delta_constant_at_level 1) None, [])) //NS delta: wrong
           | _ -> None
         end in
 
@@ -560,7 +560,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
 
   let k_rec_binding (id, l, dd, used_marker) =
     used_marker := true;
-    Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, [])) //NS delta: ok
+    Some (Term_name(S.fvar_with_dd (set_lid_range l (range_of_lid lid)) dd None, [])) //NS delta: ok
   in
 
   let found_unmangled = match ns_of_lid lid with
@@ -638,7 +638,7 @@ let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
       | ({ sigel = Sig_let {lbs=(_, lbs)} }, _) ->
         let fv = lb_fv lbs lid in
-        Some (fvar lid (fv.fv_delta |> must) fv.fv_qual) //NS delta: ok
+        Some (fvar_with_dd lid (fv.fv_delta |> must) fv.fv_qual) //NS delta: ok
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 

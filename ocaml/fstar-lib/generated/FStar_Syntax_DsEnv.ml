@@ -650,7 +650,7 @@ let (unmangleOpName :
                  let uu___3 =
                    let uu___4 = FStar_Ident.range_of_id id in
                    FStar_Ident.lid_of_path ["Prims"; y] uu___4 in
-                 FStar_Syntax_Syntax.fvar uu___3 dd dq in
+                 FStar_Syntax_Syntax.fvar_with_dd uu___3 dd dq in
                FStar_Pervasives_Native.Some uu___2
              else FStar_Pervasives_Native.None)
 type 'a cont_t =
@@ -1260,7 +1260,7 @@ let (try_lookup_name :
                      let uu___3 =
                        let uu___4 =
                          let uu___5 =
-                           FStar_Syntax_Syntax.fvar source_lid
+                           FStar_Syntax_Syntax.fvar_with_dd source_lid
                              FStar_Syntax_Syntax.delta_constant
                              FStar_Pervasives_Native.None in
                          (uu___5, (se.FStar_Syntax_Syntax.sigattrs)) in
@@ -1271,7 +1271,7 @@ let (try_lookup_name :
                        let uu___4 =
                          let uu___5 =
                            let uu___6 = fv_qual_of_se se in
-                           FStar_Syntax_Syntax.fvar source_lid
+                           FStar_Syntax_Syntax.fvar_with_dd source_lid
                              FStar_Syntax_Syntax.delta_constant uu___6 in
                          (uu___5, (se.FStar_Syntax_Syntax.sigattrs)) in
                        Term_name uu___4 in
@@ -1288,7 +1288,7 @@ let (try_lookup_name :
                              FStar_Compiler_Effect.op_Bar_Greater
                                fv.FStar_Syntax_Syntax.fv_delta
                                FStar_Compiler_Util.must in
-                           FStar_Syntax_Syntax.fvar source_lid uu___7
+                           FStar_Syntax_Syntax.fvar_with_dd source_lid uu___7
                              fv.FStar_Syntax_Syntax.fv_qual in
                          (uu___6, (se.FStar_Syntax_Syntax.sigattrs)) in
                        Term_name uu___5 in
@@ -1336,7 +1336,8 @@ let (try_lookup_name :
                               let uu___8 =
                                 let uu___9 =
                                   let uu___10 = fv_qual_of_se se in
-                                  FStar_Syntax_Syntax.fvar lid2 dd uu___10 in
+                                  FStar_Syntax_Syntax.fvar_with_dd lid2 dd
+                                    uu___10 in
                                 (uu___9, (se.FStar_Syntax_Syntax.sigattrs)) in
                               Term_name uu___8 in
                             FStar_Pervasives_Native.Some uu___7)
@@ -1361,7 +1362,7 @@ let (try_lookup_name :
                      let uu___3 =
                        let uu___4 =
                          let uu___5 =
-                           FStar_Syntax_Syntax.fvar source_lid
+                           FStar_Syntax_Syntax.fvar_with_dd source_lid
                              (FStar_Syntax_Syntax.Delta_constant_at_level
                                 Prims.int_one) FStar_Pervasives_Native.None in
                          (uu___5, []) in
@@ -1383,7 +1384,7 @@ let (try_lookup_name :
                         let uu___5 =
                           let uu___6 = FStar_Ident.range_of_lid lid in
                           FStar_Ident.set_lid_range l uu___6 in
-                        FStar_Syntax_Syntax.fvar uu___5 dd
+                        FStar_Syntax_Syntax.fvar_with_dd uu___5 dd
                           FStar_Pervasives_Native.None in
                       (uu___4, []) in
                     Term_name uu___3 in
@@ -1624,7 +1625,7 @@ let (try_lookup_let :
               let uu___10 =
                 FStar_Compiler_Effect.op_Bar_Greater
                   fv.FStar_Syntax_Syntax.fv_delta FStar_Compiler_Util.must in
-              FStar_Syntax_Syntax.fvar lid1 uu___10
+              FStar_Syntax_Syntax.fvar_with_dd lid1 uu___10
                 fv.FStar_Syntax_Syntax.fv_qual in
             FStar_Pervasives_Native.Some uu___9
         | uu___1 -> FStar_Pervasives_Native.None in
