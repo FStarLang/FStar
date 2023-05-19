@@ -1791,7 +1791,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                     | Sig_datacon {us=c_us; t=c_ty; num_ty_params=nparam; mutuals=mut} ->
                         (* BU.print2 "ty of %s = %s\n" (Ident.string_of_lid c_lid) *)
                         (*                             (Print.term_to_string c_ty); *)
-                        let fv = S.lid_as_fv c_lid S.delta_constant (Some Data_ctor) in
+                        let fv = S.lid_as_fv c_lid (Some Data_ctor) in
 
 
                         failwhen (List.length a_us <> List.length c_us) "t_us don't match?" ;!
@@ -2328,6 +2328,9 @@ let to_must_tot (eff:tot_or_ghost) : bool =
   | E_Total -> true
   | E_Ghost -> false
 
+let refl_norm_type (g:env) (t:typ) : typ =
+  N.normalize [Env.Beta; Env.Exclude Zeta] g t
+
 let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
@@ -2341,6 +2344,7 @@ let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (optio
            true in
          match Core.compute_term_type_handle_guards g e must_tot gh with
          | Inl t ->
+           let t = refl_norm_type g t in
            dbg_refl g (fun _ ->
              BU.format2 "refl_core_compute_term_type for %s computed type %s\n"
                (Print.term_to_string e)
@@ -2413,6 +2417,7 @@ let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ))
         true in
      match Core.compute_term_type_handle_guards g e must_tot gh with
      | Inl t ->
+        let t = refl_norm_type g t in
         dbg_refl g (fun _ ->
           BU.format2 "refl_tc_term for %s computed type %s\n"
             (Print.term_to_string e)
@@ -2486,7 +2491,7 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     Rel.force_trivial_guard g guard;
     let e = SC.deep_compress false e in
-    let t = SC.deep_compress false t in
+    let t = t |> refl_norm_type g |> SC.deep_compress false in
     dbg_refl g (fun _ ->
       BU.format2 "} finished tc with e = %s and t = %s\n"
         (Print.term_to_string e)

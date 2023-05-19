@@ -493,7 +493,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
                 | _ -> bs |> filter_types_and_functions |> Decreases_lex
       in
 
-      let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
+      let precedes_t = TcUtil.fvar_env env Const.precedes_lid in
       let rec mk_precedes_lex env l l_prev : term =
         (*
          * AR: aux assumes that l and l_prev have the same lengths
@@ -1114,7 +1114,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let mk_field_projector i x =
         let projname = mk_field_projector_name_from_ident constrname i in
         let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
-        let candidate = S.fvar (Ident.set_lid_range projname x.pos) (Delta_equational_at_level 1) qual in
+        let candidate = S.fvar (Ident.set_lid_range projname x.pos) qual in
         S.mk_Tm_app candidate [(x, None)] x.pos
     in
     let fields =
@@ -1180,7 +1180,6 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let choice =
             S.lid_as_fv
               (Ident.set_lid_range projname (Ident.range_of_lid field_name))
-              (Delta_equational_at_level 1)
               qual
           in
           proceed_with (Some choice)
@@ -1833,7 +1832,7 @@ and tc_comp env c : comp                                      (* checked version
       mk_GTotal t, u, g
 
     | Comp c ->
-      let head = S.fvar c.effect_name delta_constant None in
+      let head = S.fvar c.effect_name None in
       let head = match c.comp_univs with
          | [] -> head
          | us -> S.mk (Tm_uinst(head, us)) c0.pos in
@@ -3098,7 +3097,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         then BU.print2 "Checking pattern %s at type %s\n" (Print.pat_to_string p) (Print.term_to_string t);
 
         let id t = mk_Tm_app
-          (S.fvar Const.id_lid (S.Delta_constant_at_level 1) None)
+          (S.fvar Const.id_lid None)
           [S.iarg t]
           t.pos
         in
@@ -3291,7 +3290,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                 let g' = Env.close_guard env (bvs |> List.map S.mk_binder) g' in
                 let tms_p =
                   let disc_tm = TcUtil.get_field_projector_name env (S.lid_of_fv fv) i in
-                  tms_p |> List.map (mk_disc_t (S.fvar disc_tm (S.Delta_constant_at_level 1) None)) in
+                  tms_p |> List.map (mk_disc_t (S.fvar disc_tm None)) in
                 bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', erasable || erasable_p, i+1)
               ([], [], [], [], Env.conj_guard g0 g1, erasable, 0)
               sub_pats
@@ -3480,7 +3479,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
                     match Env.try_lookup_lid env discriminator with
                         | None -> []  // We don't use the discriminator if we are typechecking it
                         | _ ->
-                            let disc = S.fvar discriminator (Delta_equational_at_level 1) None in
+                            let disc = S.fvar discriminator None in
                             [mk_Tm_app disc [as_arg scrutinee_tm] scrutinee_tm.pos]
                 else []
             in
@@ -3547,7 +3546,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
                                 | None ->
                                   None //no projector, e.g., because we are actually typechecking the projector itself
                                 | _ ->
-                                  let proj = S.fvar (Ident.set_lid_range projector f.p) (Delta_equational_at_level 1) None in
+                                  let proj = S.fvar (Ident.set_lid_range projector f.p) None in
                                   Some (mk_Tm_app proj [as_arg (force_scrutinee())] f.p)
                             in
                             build_branch_guard scrutinee_tm pi ei) |>

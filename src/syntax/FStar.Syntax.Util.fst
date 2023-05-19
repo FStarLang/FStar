@@ -1274,10 +1274,7 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-    mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid
-                           delta_constant
-                           None))
-       Range.dummyRange
+  mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid None)) Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) dummyRange
@@ -1287,11 +1284,11 @@ let exp_int s : term = mk (Tm_constant (Const_int (s,None))) dummyRange
 let exp_char c : term = mk (Tm_constant (Const_char c)) dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) dummyRange
 
-let fvar_const l = fvar l delta_constant None
+let fvar_const l = fvar_with_dd l delta_constant None
 let tand    = fvar_const PC.and_lid
 let tor     = fvar_const PC.or_lid
-let timp    = fvar PC.imp_lid (Delta_constant_at_level 1) None //NS delta: wrong? level 2
-let tiff    = fvar PC.iff_lid (Delta_constant_at_level 2) None //NS delta: wrong? level 3
+let timp    = fvar_with_dd PC.imp_lid (Delta_constant_at_level 1) None //NS delta: wrong? level 2
+let tiff    = fvar_with_dd PC.iff_lid (Delta_constant_at_level 2) None //NS delta: wrong? level 3
 let t_bool  = fvar_const PC.bool_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
@@ -1307,7 +1304,7 @@ let rename_let_attr = fvar_const PC.rename_let_attr
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 let t_universe_uvar     = fvar_const PC.universe_uvar_lid
 
-let t_dsl_tac_typ = fvar PC.dsl_tac_typ_lid (Delta_constant_at_level 1) None
+let t_dsl_tac_typ = fvar PC.dsl_tac_typ_lid None
 
 
 let mk_conj_opt phi1 phi2 = match phi1 with
@@ -1317,7 +1314,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app {hd=op_t; args=[as_arg phi1; as_arg phi
 let mk_neg phi = mk (Tm_app {hd=t_not; args=[as_arg phi]}) phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar PC.true_lid delta_constant None //NS delta: wrong, see a t_true
+    | [] -> fvar_with_dd PC.true_lid delta_constant None //NS delta: wrong, see a t_true
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -1362,9 +1359,9 @@ let mk_has_type t x t' =
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
     mk (Tm_app {hd=t_has_type; args=[iarg t; as_arg x; as_arg t']}) dummyRange
 
-let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
-let texists  = fvar PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
-let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
+let tforall  = fvar_with_dd PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
+let texists  = fvar_with_dd PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
+let t_haseq   = fvar_with_dd PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 
 let decidable_eq = fvar_const PC.op_Eq
 let mk_decidable_eq t e1 e2 =
@@ -1438,11 +1435,11 @@ let if_then_else b t1 t2 =
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
 let mk_squash u p =
-    let sq = fvar PC.squash_lid (Delta_constant_at_level 1) None in //NS delta: ok
+    let sq = fvar_with_dd PC.squash_lid (Delta_constant_at_level 1) None in //NS delta: ok
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let mk_auto_squash u p =
-    let sq = fvar PC.auto_squash_lid (Delta_constant_at_level 2) None in //NS delta: ok
+    let sq = fvar_with_dd PC.auto_squash_lid (Delta_constant_at_level 2) None in //NS delta: ok
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
@@ -1700,8 +1697,7 @@ let destruct_typ_as_formula f : option connective =
 let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
-      (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-      (Inr (lid_as_fv a.action_name delta_equational None))
+      (Inr (lid_and_dd_as_fv a.action_name delta_equational None))
       a.action_univs
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
@@ -1733,7 +1729,9 @@ let rec delta_qualifier t =
     match t.n with
         | Tm_delayed _ -> failwith "Impossible"
         | Tm_lazy i -> delta_qualifier (unfold_lazy i)
-        | Tm_fvar fv -> fv.fv_delta
+        | Tm_fvar fv -> (match fv.fv_delta with
+                         | Some d -> d
+                         | None -> delta_constant)
         | Tm_bvar _
         | Tm_name _
         | Tm_match _
@@ -1773,7 +1771,7 @@ let dm4f_lid ed name : lident =
     lid_of_path p' Range.dummyRange
 
 let mk_list (typ:term) (rng:range) (l:list term) : term =
-    let ctor l = mk (Tm_fvar (lid_as_fv l delta_constant (Some Data_ctor))) rng in
+    let ctor l = mk (Tm_fvar (lid_as_fv l (Some Data_ctor))) rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.cons_lid) [U_zero]) args pos in
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
@@ -2451,9 +2449,7 @@ let is_erased_head (t:term) : option (universe & term) =
     None
 
 let apply_reveal (u:universe) (ty:term) (v:term) =
-  let head = fvar (Ident.set_lid_range PC.reveal v.pos)
-                  (Delta_constant_at_level 1)
-                   None in
+  let head = fvar (Ident.set_lid_range PC.reveal v.pos) None in
   mk_Tm_app (mk_Tm_uinst head [u])
             [iarg ty; as_arg v]
             v.pos
@@ -2530,12 +2526,12 @@ let encode_positivity_attributes (pqual:option positivity_qualifier) (attrs:list
   | Some BinderStrictlyPositive ->
     if contains_strictly_positive_attribute attrs
     then attrs
-    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_strictly_positive_attr (Delta_constant_at_level 0) None)
+    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_strictly_positive_attr None)
          :: attrs
   | Some BinderUnused ->
     if contains_unused_attribute attrs
     then attrs
-    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_unused_attr (Delta_constant_at_level 0) None)
+    else FStar.Syntax.Syntax.fv_to_tm (lid_as_fv PC.binder_unused_attr None)
          :: attrs
 
 let is_binder_strictly_positive (b:binder) =

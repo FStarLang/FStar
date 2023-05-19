@@ -690,7 +690,7 @@ let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
-              then Some fv.fv_delta
+              then fv.fv_delta
               else None)
 
       | Sig_fail _
@@ -706,14 +706,50 @@ let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
       | Sig_polymonadic_subcomp _ -> None
 
 
+//
+// For the following prims symbols,
+//   delta depth is handled specially
+// Instead of looking it up in the env,
+//   we  return as is set in the input fv.fv_delta
+// No principled reason, for backward compatibility
+//
+let prims_dd_lids = [
+  Const.and_lid;
+  Const.or_lid;
+  Const.imp_lid;
+  Const.iff_lid;
+  Const.true_lid;
+  Const.false_lid;
+  Const.not_lid;
+  Const.b2t_lid;
+  Const.eq2_lid;
+  Const.eq3_lid;
+  Const.op_Eq;
+  Const.op_LT;
+  Const.op_LTE;
+  Const.op_GT;
+  Const.op_GTE;
+  Const.forall_lid;
+  Const.exists_lid;
+  Const.haseq_lid;
+  Const.op_And;
+  Const.op_Or;
+  Const.op_Negation;
+]
+
+let is_prims_dd_lid (l:lident) =
+  List.existsb (fun l0 -> lid_equals l l0) prims_dd_lids
+
 let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option delta_depth =
-    let lid = fv.fv_name.v in
-    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
-    else delta_depth_of_qninfo_lid lid qn
+  let lid = fv.fv_name.v in
+  if is_prims_dd_lid lid && Some? fv.fv_delta
+  then fv.fv_delta //NS delta: too many special cases in existing code
+  else delta_depth_of_qninfo_lid lid qn
 
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
-  if nsstr lid = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
+  if is_prims_dd_lid lid && Some? fv.fv_delta
+  then fv.fv_delta |> must
   else
     //try cache
     (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
@@ -722,11 +758,11 @@ let delta_depth_of_fv env fv =
         match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
         | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
         | Some d ->
-          if d <> fv.fv_delta
+          if Some? fv.fv_delta && d <> Some?.v fv.fv_delta
           && Options.debug_any()
           then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
                          (Print.fv_to_string fv)
-                         (Print.delta_depth_to_string fv.fv_delta)
+                         (Print.delta_depth_to_string (Some?.v fv.fv_delta))
                          (Print.delta_depth_to_string d);
           BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
           d)
@@ -865,7 +901,7 @@ let is_erasable_effect env l =
   l
   |> norm_eff_name env
   |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
-           S.lid_as_fv l (Delta_constant_at_level 0) None
+           S.lid_as_fv l None
            |> fv_has_erasable_attr env)
 
 let rec non_informative env t =
@@ -958,10 +994,10 @@ let is_interpreted =
     fun (env:env) head ->
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-            (match fv.fv_delta with
+          BU.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols ||
+            (match delta_depth_of_fv env fv with
              | Delta_equational_at_level _ -> true
-             | _ -> false) ||
-            BU.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
+             | _ -> false)
         | _ -> false
 
 let is_irreducible env l =
@@ -1949,7 +1985,7 @@ let fvar_of_nonqual_lid env lid =
         | None -> failwith "Unexpected no delta_depth"
         | Some dd -> dd
     in
-    fvar lid dd None
+    fvar lid None
 
 let split_smt_query (e:env) (q:term) 
   : option (list (env & term))

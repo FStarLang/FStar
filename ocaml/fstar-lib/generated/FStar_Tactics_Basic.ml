@@ -5518,7 +5518,6 @@ let (t_destruct :
                                                                     let fv1 =
                                                                     FStar_Syntax_Syntax.lid_as_fv
                                                                     c_lid
-                                                                    FStar_Syntax_Syntax.delta_constant
                                                                     (FStar_Pervasives_Native.Some
                                                                     FStar_Syntax_Syntax.Data_ctor) in
                                                                     let uu___20
@@ -7281,6 +7280,13 @@ let (to_must_tot : FStar_Tactics_Types.tot_or_ghost -> Prims.bool) =
     match eff with
     | FStar_Tactics_Types.E_Total -> true
     | FStar_Tactics_Types.E_Ghost -> false
+let (refl_norm_type :
+  env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
+  fun g ->
+    fun t ->
+      FStar_TypeChecker_Normalize.normalize
+        [FStar_TypeChecker_Env.Beta;
+        FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] g t
 let (refl_core_compute_term_type :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -7322,14 +7328,15 @@ let (refl_core_compute_term_type :
                     must_tot gh in
                 match uu___3 with
                 | FStar_Pervasives.Inl t ->
+                    let t1 = refl_norm_type g t in
                     (dbg_refl g
                        (fun uu___5 ->
                           let uu___6 = FStar_Syntax_Print.term_to_string e in
-                          let uu___7 = FStar_Syntax_Print.term_to_string t in
+                          let uu___7 = FStar_Syntax_Print.term_to_string t1 in
                           FStar_Compiler_Util.format2
                             "refl_core_compute_term_type for %s computed type %s\n"
                             uu___6 uu___7);
-                     t)
+                     t1)
                 | FStar_Pervasives.Inr err ->
                     (dbg_refl g
                        (fun uu___5 ->
@@ -7685,16 +7692,17 @@ let (refl_tc_term :
                                g1 e2 must_tot gh in
                            match uu___6 with
                            | FStar_Pervasives.Inl t ->
+                               let t1 = refl_norm_type g1 t in
                                (dbg_refl g1
                                   (fun uu___8 ->
                                      let uu___9 =
                                        FStar_Syntax_Print.term_to_string e2 in
                                      let uu___10 =
-                                       FStar_Syntax_Print.term_to_string t in
+                                       FStar_Syntax_Print.term_to_string t1 in
                                      FStar_Compiler_Util.format2
                                        "refl_tc_term for %s computed type %s\n"
                                        uu___9 uu___10);
-                                (e2, t))
+                                (e2, t1))
                            | FStar_Pervasives.Inr err ->
                                (dbg_refl g1
                                   (fun uu___8 ->
@@ -7973,7 +7981,12 @@ let (refl_instantiate_implicits :
               | (e1, t, guard) ->
                   (FStar_TypeChecker_Rel.force_trivial_guard g1 guard;
                    (let e2 = FStar_Syntax_Compress.deep_compress false e1 in
-                    let t1 = FStar_Syntax_Compress.deep_compress false t in
+                    let t1 =
+                      let uu___6 =
+                        FStar_Compiler_Effect.op_Bar_Greater t
+                          (refl_norm_type g1) in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___6
+                        (FStar_Syntax_Compress.deep_compress false) in
                     dbg_refl g1
                       (fun uu___7 ->
                          let uu___8 = FStar_Syntax_Print.term_to_string e2 in

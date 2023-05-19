@@ -255,13 +255,19 @@ let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
 
 let set_bv_range bv r = {bv with ppname = set_id_range r bv.ppname}
 
-let lid_as_fv l dd dq : fv = {
+let lid_and_dd_as_fv l dd dq : fv = {
     fv_name=withinfo l (range_of_lid l);
-    fv_delta=dd;
+    fv_delta=Some dd;
+    fv_qual =dq;
+}
+let lid_as_fv l dq : fv = {
+    fv_name=withinfo l (range_of_lid l);
+    fv_delta=None;
     fv_qual =dq;
 }
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name.v)
-let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
+let fvar_with_dd l dd dq =  fv_to_tm (lid_and_dd_as_fv l dd dq)
+let fvar l dq = fv_to_tm (lid_as_fv l dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
 let set_range_of_fv (fv:fv) (r:Range.range) =
@@ -297,10 +303,10 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 let delta_constant = Delta_constant_at_level 0
 let delta_equational = Delta_equational_at_level 0
-let fvconst l = lid_as_fv l delta_constant None
+let fvconst l = lid_and_dd_as_fv l delta_constant None
 let tconst l = mk (Tm_fvar (fvconst l)) Range.dummyRange
-let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) Range.dummyRange
-let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
+let tabbrev l = mk (Tm_fvar(lid_and_dd_as_fv l (Delta_constant_at_level 1) None)) Range.dummyRange
+let tdataconstr l = fv_to_tm (lid_and_dd_as_fv l delta_constant (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid

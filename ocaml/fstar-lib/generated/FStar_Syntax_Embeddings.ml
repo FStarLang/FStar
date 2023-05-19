@@ -85,8 +85,7 @@ let (id_norm_cb : norm_cb) =
     | FStar_Pervasives.Inr x -> x
     | FStar_Pervasives.Inl l ->
         let uu___1 =
-          FStar_Syntax_Syntax.lid_as_fv l
-            FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
         FStar_Syntax_Syntax.fv_to_tm uu___1
 exception Embedding_failure 
 let (uu___is_Embedding_failure : Prims.exn -> Prims.bool) =
@@ -629,7 +628,6 @@ let e_option :
                       let some_v_tm =
                         let uu___1 =
                           FStar_Syntax_Syntax.lid_as_fv some_v
-                            FStar_Syntax_Syntax.delta_equational
                             FStar_Pervasives_Native.None in
                         FStar_Syntax_Syntax.fv_to_tm uu___1 in
                       let uu___1 =
@@ -737,7 +735,6 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                let proj_1_tm =
                  let uu___1 =
                    FStar_Syntax_Syntax.lid_as_fv proj_1
-                     FStar_Syntax_Syntax.delta_equational
                      FStar_Pervasives_Native.None in
                  FStar_Syntax_Syntax.fv_to_tm uu___1 in
                let uu___1 =
@@ -871,7 +868,6 @@ let e_tuple3 :
                      let proj_i_tm =
                        let uu___2 =
                          FStar_Syntax_Syntax.lid_as_fv proj_i
-                           FStar_Syntax_Syntax.delta_equational
                            FStar_Pervasives_Native.None in
                        FStar_Syntax_Syntax.fv_to_tm uu___2 in
                      let uu___2 =
@@ -1035,7 +1031,6 @@ let e_either :
                          let some_v_tm =
                            let uu___1 =
                              FStar_Syntax_Syntax.lid_as_fv some_v
-                               FStar_Syntax_Syntax.delta_equational
                                FStar_Pervasives_Native.None in
                            FStar_Syntax_Syntax.fv_to_tm uu___1 in
                          let uu___1 =
@@ -1092,7 +1087,6 @@ let e_either :
                          let some_v_tm =
                            let uu___1 =
                              FStar_Syntax_Syntax.lid_as_fv some_v
-                               FStar_Syntax_Syntax.delta_equational
                                FStar_Pervasives_Native.None in
                            FStar_Syntax_Syntax.fv_to_tm uu___1 in
                          let uu___1 =
@@ -1232,7 +1226,6 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                  let proj_tm =
                    let uu___1 =
                      FStar_Syntax_Syntax.lid_as_fv proj1
-                       FStar_Syntax_Syntax.delta_equational
                        FStar_Pervasives_Native.None in
                    FStar_Syntax_Syntax.fv_to_tm uu___1 in
                  let uu___1 =

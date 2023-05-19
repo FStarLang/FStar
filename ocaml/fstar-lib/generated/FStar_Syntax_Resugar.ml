@@ -2815,7 +2815,6 @@ let (resugar_sigelt' :
                          [uu___6] in
                        FStar_Ident.lid_of_ids uu___5 in
                      FStar_Syntax_Syntax.lid_as_fv uu___4
-                       FStar_Syntax_Syntax.delta_constant
                        FStar_Pervasives_Native.None in
                    let lbs2 =
                      FStar_Compiler_List.map

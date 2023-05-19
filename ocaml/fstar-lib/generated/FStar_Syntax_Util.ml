@@ -2385,7 +2385,7 @@ let (attr_substitute : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   let uu___ =
     let uu___1 =
       FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.attr_substitute_lid
-        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+        FStar_Pervasives_Native.None in
     FStar_Syntax_Syntax.Tm_fvar uu___1 in
   FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (exp_true_bool : FStar_Syntax_Syntax.term) =
@@ -2419,16 +2419,16 @@ let (exp_string : Prims.string -> FStar_Syntax_Syntax.term) =
       FStar_Compiler_Range_Type.dummyRange
 let (fvar_const : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l ->
-    FStar_Syntax_Syntax.fvar l FStar_Syntax_Syntax.delta_constant
+    FStar_Syntax_Syntax.fvar_with_dd l FStar_Syntax_Syntax.delta_constant
       FStar_Pervasives_Native.None
 let (tand : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.and_lid
 let (tor : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.or_lid
 let (timp : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.imp_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.imp_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (tiff : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.iff_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.iff_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)))
     FStar_Pervasives_Native.None
 let (t_bool : FStar_Syntax_Syntax.term) =
@@ -2456,7 +2456,6 @@ let (t_universe_uvar : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.universe_uvar_lid
 let (t_dsl_tac_typ : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.dsl_tac_typ_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (mk_conj_opt :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
@@ -2536,7 +2535,7 @@ let (mk_conj_l :
   fun phi ->
     match phi with
     | [] ->
-        FStar_Syntax_Syntax.fvar FStar_Parser_Const.true_lid
+        FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.true_lid
           FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
     | hd::tl -> FStar_Compiler_List.fold_right mk_conj tl hd
 let (mk_disj :
@@ -2741,15 +2740,15 @@ let (mk_has_type :
           FStar_Syntax_Syntax.Tm_app uu___1 in
         FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (tforall : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.forall_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.forall_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (texists : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.exists_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.exists_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (t_haseq : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.fvar FStar_Parser_Const.haseq_lid
+  FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.haseq_lid
     FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
 let (decidable_eq : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.op_Eq
@@ -3031,7 +3030,7 @@ let (mk_squash :
   fun u ->
     fun p ->
       let sq =
-        FStar_Syntax_Syntax.fvar FStar_Parser_Const.squash_lid
+        FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.squash_lid
           (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
           FStar_Pervasives_Native.None in
       let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst sq [u] in
@@ -3045,7 +3044,7 @@ let (mk_auto_squash :
   fun u ->
     fun p ->
       let sq =
-        FStar_Syntax_Syntax.fvar FStar_Parser_Const.auto_squash_lid
+        FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.auto_squash_lid
           (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)))
           FStar_Pervasives_Native.None in
       let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst sq [u] in
@@ -3626,7 +3625,8 @@ let (action_as_lb :
         let lb =
           let uu___ =
             let uu___1 =
-              FStar_Syntax_Syntax.lid_as_fv a.FStar_Syntax_Syntax.action_name
+              FStar_Syntax_Syntax.lid_and_dd_as_fv
+                a.FStar_Syntax_Syntax.action_name
                 FStar_Syntax_Syntax.delta_equational
                 FStar_Pervasives_Native.None in
             FStar_Pervasives.Inr uu___1 in
@@ -3706,7 +3706,10 @@ let rec (delta_qualifier :
     | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
     | FStar_Syntax_Syntax.Tm_lazy i ->
         let uu___ = unfold_lazy i in delta_qualifier uu___
-    | FStar_Syntax_Syntax.Tm_fvar fv -> fv.FStar_Syntax_Syntax.fv_delta
+    | FStar_Syntax_Syntax.Tm_fvar fv ->
+        (match fv.FStar_Syntax_Syntax.fv_delta with
+         | FStar_Pervasives_Native.Some d -> d
+         | FStar_Pervasives_Native.None -> FStar_Syntax_Syntax.delta_constant)
     | FStar_Syntax_Syntax.Tm_bvar uu___ ->
         FStar_Syntax_Syntax.delta_equational
     | FStar_Syntax_Syntax.Tm_name uu___ ->
@@ -3800,7 +3803,6 @@ let (mk_list :
           let uu___ =
             let uu___1 =
               FStar_Syntax_Syntax.lid_as_fv l1
-                FStar_Syntax_Syntax.delta_constant
                 (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
             FStar_Syntax_Syntax.Tm_fvar uu___1 in
           FStar_Syntax_Syntax.mk uu___ rng in
@@ -5115,9 +5117,7 @@ let (apply_reveal :
           let uu___ =
             FStar_Ident.set_lid_range FStar_Parser_Const.reveal
               v.FStar_Syntax_Syntax.pos in
-          FStar_Syntax_Syntax.fvar uu___
-            (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
-            FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.fvar uu___ FStar_Pervasives_Native.None in
         let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst head [u] in
         let uu___1 =
           let uu___2 = FStar_Syntax_Syntax.iarg ty in
@@ -5247,8 +5247,7 @@ let (encode_positivity_attributes :
                let uu___3 =
                  FStar_Syntax_Syntax.lid_as_fv
                    FStar_Parser_Const.binder_strictly_positive_attr
-                   (FStar_Syntax_Syntax.Delta_constant_at_level
-                      Prims.int_zero) FStar_Pervasives_Native.None in
+                   FStar_Pervasives_Native.None in
                FStar_Syntax_Syntax.fv_to_tm uu___3 in
              uu___2 :: attrs)
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.BinderUnused) ->
@@ -5260,8 +5259,7 @@ let (encode_positivity_attributes :
                let uu___3 =
                  FStar_Syntax_Syntax.lid_as_fv
                    FStar_Parser_Const.binder_unused_attr
-                   (FStar_Syntax_Syntax.Delta_constant_at_level
-                      Prims.int_zero) FStar_Pervasives_Native.None in
+                   FStar_Pervasives_Native.None in
                FStar_Syntax_Syntax.fv_to_tm uu___3 in
              uu___2 :: attrs)
 let (is_binder_strictly_positive : FStar_Syntax_Syntax.binder -> Prims.bool)

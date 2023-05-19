@@ -112,7 +112,7 @@ otherwise since reduction is blocked.)
 
 let id_norm_cb : norm_cb = function
     | Inr x -> x
-    | Inl l -> S.fv_to_tm (S.lid_as_fv l delta_equational None)
+    | Inl l -> S.fv_to_tm (S.lid_as_fv l None)
 exception Embedding_failure
 exception Unembedding_failure
 
@@ -418,7 +418,7 @@ let e_option (ea : embedding 'a) =
                   let shadow_a = map_shadow shadow (fun t ->
                     let v = Ident.mk_ident ("v", rng) in
                     let some_v = U.mk_field_projector_name_from_ident PC.some_lid v in
-                    let some_v_tm = S.fv_to_tm (lid_as_fv some_v delta_equational None) in
+                    let some_v_tm = S.fv_to_tm (lid_as_fv some_v None) in
                     S.mk_Tm_app (S.mk_Tm_uinst some_v_tm [U_zero])
                                 [S.iarg (type_of ea); S.as_arg t]
                                 rng)
@@ -470,7 +470,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
             (fun () ->
                 let proj i ab =
                     let proj_1 = U.mk_field_projector_name (PC.mk_tuple_data_lid 2 rng) (S.null_bv S.tun) i in
-                    let proj_1_tm = S.fv_to_tm (lid_as_fv proj_1 delta_equational None) in
+                    let proj_1_tm = S.fv_to_tm (lid_as_fv proj_1 None) in
                     S.mk_Tm_app (S.mk_Tm_uinst proj_1_tm [U_zero])
                                 [S.iarg (type_of ea);
                                  S.iarg (type_of eb);
@@ -530,7 +530,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
             (fun () ->
                 let proj i abc =
                     let proj_i = U.mk_field_projector_name (PC.mk_tuple_data_lid 3 rng) (S.null_bv S.tun) i in
-                    let proj_i_tm = S.fv_to_tm (lid_as_fv proj_i delta_equational None) in
+                    let proj_i_tm = S.fv_to_tm (lid_as_fv proj_i None) in
                     S.mk_Tm_app (S.mk_Tm_uinst proj_i_tm [U_zero])
                                 [S.iarg (type_of ea);
                                  S.iarg (type_of eb);
@@ -601,7 +601,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                 let shadow_a = map_shadow shadow (fun t ->
                   let v = Ident.mk_ident ("v", rng) in
                   let some_v = U.mk_field_projector_name_from_ident PC.inl_lid v in
-                  let some_v_tm = S.fv_to_tm (lid_as_fv some_v delta_equational None) in
+                  let some_v_tm = S.fv_to_tm (lid_as_fv some_v None) in
                   S.mk_Tm_app (S.mk_Tm_uinst some_v_tm [U_zero])
                               [S.iarg (type_of ea); S.iarg (type_of eb); S.as_arg t]
                               rng)
@@ -616,7 +616,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                 let shadow_b = map_shadow shadow (fun t ->
                   let v = Ident.mk_ident ("v", rng) in
                   let some_v = U.mk_field_projector_name_from_ident PC.inr_lid v in
-                  let some_v_tm = S.fv_to_tm (lid_as_fv some_v delta_equational None) in
+                  let some_v_tm = S.fv_to_tm (lid_as_fv some_v None) in
                   S.mk_Tm_app (S.mk_Tm_uinst some_v_tm [U_zero])
                               [S.iarg (type_of ea); S.iarg (type_of eb); S.as_arg t]
                               rng)
@@ -685,7 +685,7 @@ let e_list (ea:embedding 'a) =
                   let proj f cons_tm =
                     let fid = Ident.mk_ident (f, rng) in
                     let proj = U.mk_field_projector_name_from_ident PC.cons_lid fid in
-                    let proj_tm = S.fv_to_tm (lid_as_fv proj delta_equational None) in
+                    let proj_tm = S.fv_to_tm (lid_as_fv proj None) in
                     S.mk_Tm_app (S.mk_Tm_uinst proj_tm [U_zero])
                                 [S.iarg (type_of ea);
                                  S.as_arg cons_tm]

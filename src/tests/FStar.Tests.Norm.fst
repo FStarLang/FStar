@@ -61,13 +61,13 @@ let mk_let x e e' : term =
                            dummyRange
 
 let lid x = lid_of_path ["Test"; x] dummyRange
-let znat_l = S.lid_as_fv (lid "Z") delta_constant (Some Data_ctor)
-let snat_l = S.lid_as_fv (lid "S") delta_constant (Some Data_ctor)
+let znat_l = S.lid_as_fv (lid "Z") (Some Data_ctor)
+let snat_l = S.lid_as_fv (lid "S") (Some Data_ctor)
 let tm_fv fv = mk (Tm_fvar fv) dummyRange
 let znat : term = tm_fv znat_l
 let snat s      = mk (Tm_app {hd=tm_fv snat_l; args=[as_arg s]}) dummyRange
 let pat p = withinfo p dummyRange
-let snat_type = tm_fv (S.lid_as_fv (lid "snat") delta_constant None)
+let snat_type = tm_fv (S.lid_as_fv (lid "snat") None)
 open FStar.Syntax.Subst
 module SS=FStar.Syntax.Subst
 let mk_match h branches =

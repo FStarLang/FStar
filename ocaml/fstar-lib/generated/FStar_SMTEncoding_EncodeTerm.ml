@@ -220,7 +220,7 @@ let (trivial_post : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     let uu___ = let uu___1 = FStar_Syntax_Syntax.null_binder t in [uu___1] in
     let uu___1 =
       FStar_Syntax_Syntax.fvar FStar_Parser_Const.true_lid
-        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+        FStar_Pervasives_Native.None in
     FStar_Syntax_Util.abs uu___ uu___1 FStar_Pervasives_Native.None
 let (mk_Apply :
   FStar_SMTEncoding_Term.term ->
