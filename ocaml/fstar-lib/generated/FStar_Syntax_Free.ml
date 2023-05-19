@@ -180,7 +180,10 @@ let rec (free_names_and_uvs' :
           FStar_Compiler_List.fold_left
             (fun out -> fun u -> let uu___ = free_univs u in union out uu___)
             f us
-      | FStar_Syntax_Syntax.Tm_abs (bs, t1, ropt) ->
+      | FStar_Syntax_Syntax.Tm_abs
+          { FStar_Syntax_Syntax.bs = bs; FStar_Syntax_Syntax.body = t1;
+            FStar_Syntax_Syntax.rc_opt = ropt;_}
+          ->
           let uu___ =
             let uu___1 = free_names_and_uvars t1 use_cache in
             aux_binders bs uu___1 in
@@ -194,18 +197,27 @@ let rec (free_names_and_uvs' :
                 -> free_names_and_uvars t2 use_cache
             | uu___2 -> no_free_vars in
           union uu___ uu___1
-      | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+      | FStar_Syntax_Syntax.Tm_arrow
+          { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = c;_} ->
           let uu___ = free_names_and_uvars_comp c use_cache in
           aux_binders bs uu___
-      | FStar_Syntax_Syntax.Tm_refine (bv, t1) ->
+      | FStar_Syntax_Syntax.Tm_refine
+          { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = t1;_} ->
           let uu___ =
             let uu___1 = FStar_Syntax_Syntax.mk_binder bv in [uu___1] in
           let uu___1 = free_names_and_uvars t1 use_cache in
           aux_binders uu___ uu___1
-      | FStar_Syntax_Syntax.Tm_app (t1, args) ->
+      | FStar_Syntax_Syntax.Tm_app
+          { FStar_Syntax_Syntax.hd = t1; FStar_Syntax_Syntax.args = args;_}
+          ->
           let uu___ = free_names_and_uvars t1 use_cache in
           free_names_and_uvars_args args uu___ use_cache
-      | FStar_Syntax_Syntax.Tm_match (t1, asc_opt, pats, uu___) ->
+      | FStar_Syntax_Syntax.Tm_match
+          { FStar_Syntax_Syntax.scrutinee = t1;
+            FStar_Syntax_Syntax.ret_opt = asc_opt;
+            FStar_Syntax_Syntax.brs = pats;
+            FStar_Syntax_Syntax.rc_opt1 = uu___;_}
+          ->
           let uu___1 =
             let uu___2 =
               let uu___3 = free_names_and_uvars t1 use_cache in
@@ -241,11 +253,16 @@ let rec (free_names_and_uvs' :
                                    union n4 uu___5) n) in
                        let uu___4 = union n1 n2 in union n3 uu___4) uu___2 in
           FStar_Compiler_Effect.op_Bar_Greater pats uu___1
-      | FStar_Syntax_Syntax.Tm_ascribed (t1, asc, uu___) ->
+      | FStar_Syntax_Syntax.Tm_ascribed
+          { FStar_Syntax_Syntax.tm = t1; FStar_Syntax_Syntax.asc = asc;
+            FStar_Syntax_Syntax.eff_opt = uu___;_}
+          ->
           let uu___1 = free_names_and_uvars t1 use_cache in
           let uu___2 = free_names_and_uvars_ascription asc use_cache in
           union uu___1 uu___2
-      | FStar_Syntax_Syntax.Tm_let (lbs, t1) ->
+      | FStar_Syntax_Syntax.Tm_let
+          { FStar_Syntax_Syntax.lbs = lbs; FStar_Syntax_Syntax.body1 = t1;_}
+          ->
           let uu___ =
             let uu___1 = free_names_and_uvars t1 use_cache in
             FStar_Compiler_List.fold_left
@@ -274,7 +291,8 @@ let rec (free_names_and_uvs' :
                     qi.FStar_Syntax_Syntax.antiquotations)
            | FStar_Syntax_Syntax.Quote_dynamic ->
                free_names_and_uvars tm1 use_cache)
-      | FStar_Syntax_Syntax.Tm_meta (t1, m) ->
+      | FStar_Syntax_Syntax.Tm_meta
+          { FStar_Syntax_Syntax.tm2 = t1; FStar_Syntax_Syntax.meta = m;_} ->
           let u1 = free_names_and_uvars t1 use_cache in
           (match m with
            | FStar_Syntax_Syntax.Meta_pattern (uu___, args) ->

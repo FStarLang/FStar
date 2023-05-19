@@ -474,12 +474,21 @@ val check_subtyping (g:env) (t0 t1:typ)
 val check_equiv (g:env) (t0 t1:typ)
   : Tac (option (equiv_token g t0 t1) & issues)
 
+//
+// Compute the type of e using the core typechecker
+//
 val core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost)
   : Tac (option (t:typ{typing_token g e (eff, t)}) & issues)
 
+//
+// Check that e:t using the core typechecker
+//
 val core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
   : Tac (option (typing_token g e (eff, t)) & issues)
 
+//
+// Instantiate the implicits in e and compute its type
+//
 val tc_term (g:env) (e:term) (eff:tot_or_ghost)
   : Tac (option (r:(term & typ){typing_token g (fst r) (eff, snd r)}) & issues)
 
@@ -493,6 +502,15 @@ type prop_validity_token (g:env) (t:term) =
 val check_prop_validity (g:env) (t:term)
   : Tac (option (prop_validity_token g t) & issues)
 
+//
+// Instantiate implicits in t
+//
+// When the return value is Some (t', ty),
+//   t' is the elaborated t, and ty is its type
+//
+// This API does not return a proof for typing of t'
+//   The client may follow it up with another call to core_check_term get the proof
+//
 val instantiate_implicits (g:env) (t:term)
   : Tac (option (term & typ) & issues)
 

@@ -303,18 +303,18 @@ and on_subterms
       let tm = SS.compress tm in
       match tm.n with
       (* Run on hd and args in parallel *)
-      | Tm_app (hd, args) ->
+      | Tm_app {hd; args} ->
         let! ((hd, args), flag) = par_ctac rr (ctac_args rr) (hd, args) in
-        ret (Tm_app (hd, args), flag)
+        ret (Tm_app {hd; args}, flag)
 
       (* Open, descend, rebuild *)
-      | Tm_abs (bs, t, k) ->
+      | Tm_abs {bs; body=t; rc_opt=k} ->
         let bs_orig, t, subst = SS.open_term' bs t in
         let k = k |> BU.map_option (SS.subst_residual_comp subst) in
         descend_binders tm [] [] Continue env bs_orig t k
-                        (fun bs t k -> Tm_abs(bs, t, k))
+                        (fun bs t k -> Tm_abs {bs; body=t; rc_opt=k})
 
-      | Tm_refine (x, phi) -> 
+      | Tm_refine {b=x; phi} -> 
         let bs, phi = SS.open_term [S.mk_binder x] phi in
         descend_binders tm [] [] Continue env bs phi None  //no residual comp
                         (fun bs phi _ ->
@@ -323,17 +323,17 @@ and on_subterms
                             | [x] -> x.binder_bv
                             | _ -> failwith "Impossible"
                           in
-                          Tm_refine (x, phi))
+                          Tm_refine {b=x; phi})
       
       (* Do nothing (FIXME) *)
-      | Tm_arrow (bs, k) ->
+      | Tm_arrow _ ->
         ret (tm.n, Continue)
 
       (* Descend on head and branches in parallel. Branches
        * are opened with their contexts extended. Ignore the when clause,
        * and do not go into patterns.
        * also ignoring the return annotations *)
-      | Tm_match (hd, asc_opt, brs, lopt) ->
+      | Tm_match {scrutinee=hd; ret_opt=asc_opt; brs; rc_opt=lopt} ->
         let c_branch (br:S.branch) : tac (S.branch * ctrl_flag) =
           let (pat, w, e) = SS.open_branch br in
           let bvs = S.pat_bvs pat in
@@ -342,14 +342,14 @@ and on_subterms
           ret (br, flag)
         in
         let! ((hd, brs), flag) = par_ctac rr (map_ctac c_branch) (hd, brs) in
-        ret (Tm_match (hd, asc_opt, brs, lopt), flag)
+        ret (Tm_match {scrutinee=hd; ret_opt=asc_opt; brs; rc_opt=lopt}, flag)
 
       (* Descend, in parallel, in the definiens and the body, where
        * the body is extended with the bv. Do not go into the type. *)
-      | Tm_let ((false, [{ lbname = Inl bv; lbdef = def }]), e) ->
+      | Tm_let {lbs=(false, [{ lbname = Inl bv; lbdef = def }]); body=e} ->
         (* ugh *)
         let lb = match (SS.compress tm).n with
-                 | Tm_let ((false, [lb]), _) -> lb
+                 | Tm_let {lbs=(false, [lb])} -> lb
                  | _ -> failwith "impossible"
         in
         let bv, e = SS.open_term_bv bv e in
@@ -358,11 +358,11 @@ and on_subterms
         in
         let lb = { lb with lbdef = lbdef } in
         let e = SS.close [S.mk_binder bv] e in
-        ret (Tm_let ((false, [lb]), e), flag)
+        ret (Tm_let {lbs=(false, [lb]); body=e}, flag)
 
       (* Descend, in parallel, in *every* definiens and the body.
        * Again body is properly opened, and we don't go into types. *)
-     | Tm_let ((true, lbs), e) ->
+     | Tm_let {lbs=(true, lbs); body=e} ->
        let c_lb (lb:S.letbinding) : tac (S.letbinding * ctrl_flag) =
          let! (def, flag) = rr lb.lbdef in
          ret ({lb with lbdef = def }, flag)
@@ -371,17 +371,17 @@ and on_subterms
        (* TODO: the `rr` has to be wrong, we need more binders *)
        let! ((lbs, e), flag) = par_ctac (map_ctac c_lb) rr (lbs, e) in
        let lbs, e = SS.close_let_rec lbs e in
-       ret (Tm_let ((true, lbs), e), flag)
+       ret (Tm_let {lbs=(true, lbs); body=e}, flag)
 
      (* Descend into the ascripted term, ignore all else *)
-     | Tm_ascribed (t, asc, eff) ->
+     | Tm_ascribed {tm=t; asc; eff_opt=eff} ->
        let! t, flag = rr t in
-       ret (Tm_ascribed (t, asc, eff), flag)
+       ret (Tm_ascribed {tm=t; asc; eff_opt=eff}, flag)
 
      (* Ditto *)
-     | Tm_meta (t, m) ->
+     | Tm_meta {tm=t; meta=m} ->
        let! (t, flag) = rr t in
-       ret (Tm_meta (t, m), flag)
+       ret (Tm_meta {tm=t; meta=m}, flag)
 
      | _ ->
        (* BU.print1 "GG ignoring %s\n" (Print.tag_of_term tm); *)

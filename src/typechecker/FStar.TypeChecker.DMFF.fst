@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+  Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ let gen_wps_for_free
   let rec collect_binders (t : term) =
     let t = U.unascribe t in
     match (compress t).n with
-    | Tm_arrow (bs, comp) ->
+    | Tm_arrow {bs; comp} ->
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
           | Total t -> t
@@ -139,10 +139,10 @@ let gen_wps_for_free
 
     let mk_app fv t =
       // The [mk_ctx] and [mk_gctx] helpers therefore do not use implicits either
-      mk (Tm_app (fv,
-        List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv, S.as_aqual_implicit false) binders @
+      mk (Tm_app {hd=fv;
+                  args=List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv, S.as_aqual_implicit false) binders @
         [ S.bv_to_name a, S.as_aqual_implicit false;
-          t, S.as_aqual_implicit false ]))
+          t, S.as_aqual_implicit false ]})
     in
 
     env, mk_app ctx_fv, mk_app gctx_fv
@@ -263,7 +263,7 @@ let gen_wps_for_free
   let ret_tot_wp_a = Some (U.residual_tot wp_a) in
   let mk_generic_app c =
     if List.length binders > 0 then
-      mk (Tm_app (c, args_of_binders binders))
+      mk (Tm_app {hd=c; args=args_of_binders binders})
     else
       c
   in
@@ -308,7 +308,7 @@ let gen_wps_for_free
   let ret_tot_type = Some (U.residual_tot U.ktype) in
   let ret_gtot_type = Some (TcComm.residual_comp_of_lcomp (TcComm.lcomp_of_comp <| S.mk_GTotal U.ktype)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
-    S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)])) Range.dummyRange
+    S.mk (Tm_app {hd=U.tforall; args=[ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)]}) Range.dummyRange
   in
 
   (* For each (target) type t, we define a binary relation in t called ≤_t.
@@ -321,12 +321,12 @@ let gen_wps_for_free
   (* Invariant: [x] and [y] have type [t] *)
   let rec is_discrete t = match (SS.compress t).n with
     | Tm_type _ -> false
-    | Tm_arrow (bs, c) -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_discrete (U.comp_result c)
+    | Tm_arrow {bs; comp=c} -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_discrete (U.comp_result c)
     | _ -> true
   in
   let rec is_monotonic t = match (SS.compress t).n with
     | Tm_type _ -> true
-    | Tm_arrow (bs, c) -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_monotonic (U.comp_result c)
+    | Tm_arrow {bs; comp=c} -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_monotonic (U.comp_result c)
     | _ -> is_discrete t
   in
   let rec mk_rel rel t x y =
@@ -336,8 +336,8 @@ let gen_wps_for_free
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         rel x y
-    | Tm_arrow ([ binder ], { n = GTotal b })
-    | Tm_arrow ([ binder ], { n = Total b }) ->
+    | Tm_arrow {bs=[ binder ]; comp={ n = GTotal b }}
+    | Tm_arrow {bs=[ binder ]; comp={ n = Total b }} ->
         let a = binder.binder_bv.sort in
         if is_monotonic a  || is_monotonic b //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
@@ -356,11 +356,11 @@ let gen_wps_for_free
                 (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
             in
             mk_forall a1 (mk_forall a2 body)
-    | Tm_arrow (binder :: binders, comp) ->
+    | Tm_arrow {bs=binder :: binders; comp} ->
         (* split away the first binder and recurse, so we fall in the case above *)
-        let t = { t with n = Tm_arrow ([ binder ], S.mk_Total (U.arrow binders comp)) } in
+        let t = { t with n = Tm_arrow {bs=[ binder ]; comp=S.mk_Total (U.arrow binders comp)} } in
         mk_rel t x y
-    | Tm_arrow ([], _) ->
+    | Tm_arrow {bs=[]} ->
         failwith "impossible: arrow with empty binders"
     | _ ->
         (* TODO: assert that this is a base type. *)
@@ -374,7 +374,7 @@ let gen_wps_for_free
         let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
         match (SS.compress t).n with
         | Tm_type _ -> U.mk_imp x y
-        | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
+        | Tm_app {hd=head; args} when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
             let projector = S.fvar (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
@@ -386,8 +386,8 @@ let gen_wps_for_free
                   | rel0 :: rels -> rel0, rels
           in
           List.fold_left U.mk_conj rel0 rels
-        | Tm_arrow (binders, { n = GTotal b })
-        | Tm_arrow (binders, { n = Total b }) ->
+        | Tm_arrow {bs=binders; comp={ n = GTotal b }}
+        | Tm_arrow {bs=binders; comp={ n = Total b }} ->
           let bvs = List.mapi (fun i ({binder_bv=bv;binder_qual=q}) -> S.gen_bv ("a" ^ string_of_int i) None bv.sort) binders in
           let args = List.map (fun ai -> S.as_arg (S.bv_to_name ai)) bvs in
           let body = mk_stronger b (U.mk_app x args) (U.mk_app y args) in
@@ -414,10 +414,10 @@ let gen_wps_for_free
         match U.destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body =
-            mk (Tm_meta (body, Meta_pattern(binders_to_names binders, [[as_arg pat]]))) in
+            mk (Tm_meta {tm=body; meta=Meta_pattern(binders_to_names binders, [[as_arg pat]])}) in
           U.close_forall_no_univs binders pattern_guarded_body
         | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in
@@ -498,7 +498,7 @@ let string_of_nm = function
 
 let is_monadic_arrow n =
   match n with
-  | Tm_arrow (_, c) ->
+  | Tm_arrow {comp=c} ->
       nm_of_comp c
   | _ ->
       failwith "unexpected_argument: [is_monadic_arrow]"
@@ -518,10 +518,8 @@ let double_star typ =
     star_once <| typ |> star_once
 
 let rec mk_star_to_type mk env a =
-  mk (Tm_arrow (
-    [S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_bqual_implicit false) None []],
-    mk_Total U.ktype0
-  ))
+  mk (Tm_arrow {bs=[S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_bqual_implicit false) None []];
+                comp=mk_Total U.ktype0})
 
 // The *-transformation for types, purely syntactic. Has been enriched with the
 // [Tm_abs] case to account for parameterized types
@@ -532,7 +530,7 @@ and star_type' env t =
   //BU.print1 "[debug]: star_type' %s\n" (Print.term_to_string t);
   let t = SS.compress t in
   match t.n with
-  | Tm_arrow (binders, _) ->
+  | Tm_arrow {bs=binders} ->
       // TODO: check that this is not a dependent arrow.
       let binders = List.map (fun b ->
         {b with binder_bv={b.binder_bv with sort = star_type' env b.binder_bv.sort}}
@@ -540,24 +538,24 @@ and star_type' env t =
       (* Catch the GTotal case early; it seems relatively innocuous to allow
        * GTotal to appear. TODO fix this as a clean, single pattern-matching. *)
       begin match t.n with
-      | Tm_arrow (_, { n = GTotal hn }) ->
-          mk (Tm_arrow (binders, mk_GTotal (star_type' env hn)))
+      | Tm_arrow {comp={ n = GTotal hn }} ->
+          mk (Tm_arrow {bs=binders; comp=mk_GTotal (star_type' env hn)})
       | _ ->
           match is_monadic_arrow t.n with
           | N hn ->
               // Simple case:
               //   (H_0  -> ... -> H_n)* = H_0* -> ... -> H_n*
-              mk (Tm_arrow (binders, mk_Total (star_type' env hn)))
+              mk (Tm_arrow {bs=binders; comp=mk_Total (star_type' env hn)})
           | M a ->
               // F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
               //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
-              mk (Tm_arrow (
-                binders @ [ S.mk_binder_with_attrs (S.null_bv (mk_star_to_type env a))
-                              (S.as_bqual_implicit false) None []],
-                mk_Total U.ktype0))
+              mk (Tm_arrow {
+                bs=binders @ [ S.mk_binder_with_attrs (S.null_bv (mk_star_to_type env a))
+                              (S.as_bqual_implicit false) None []];
+                comp=mk_Total U.ktype0})
       end
 
-  | Tm_app (head, args) ->
+  | Tm_app {hd=head; args} ->
       // Sums and products. TODO: re-use the cache in [env] to not recompute
       // (st a)* every time.
       let debug t s =
@@ -580,7 +578,7 @@ and star_type' env t =
       in
       let rec is_non_dependent_arrow ty n =
         match (SS.compress ty).n with
-        | Tm_arrow (binders, c) -> begin
+        | Tm_arrow {bs=binders; comp=c} -> begin
                 if not (U.is_tot_or_gtot_comp c)
                 then false
                 else
@@ -637,7 +635,7 @@ and star_type' env t =
             false
       in
       if is_valid_application head then
-        mk (Tm_app (head, List.map (fun (t, qual) -> star_type' env t, qual) args))
+        mk (Tm_app {hd=head; args=List.map (fun (t, qual) -> star_type' env t, qual) args})
       else
         raise_err (Errors.Fatal_WrongTerm, (BU.format1 "For now, only [either], [option] and [eq2] are \
           supported in the definition language (got: %s)"
@@ -649,7 +647,7 @@ and star_type' env t =
   | Tm_fvar _ ->
       t
 
-  | Tm_abs (binders, repr, something) ->
+  | Tm_abs {bs=binders; body=repr; rc_opt=something} ->
       // For parameterized data types... TODO: check that this only appears at
       // top-level
       let binders, repr = SS.open_term binders repr in
@@ -657,7 +655,7 @@ and star_type' env t =
       let repr = star_type' env repr in
       U.abs binders repr something
 
-  | Tm_refine (x, t) when false ->
+  | Tm_refine {b=x; phi=t} when false ->
       let x = freshen_bv x in
       let sort = star_type' env x.sort in
       let subst = [DB(0, x)] in
@@ -665,20 +663,22 @@ and star_type' env t =
       let t = star_type' env t in
       let subst = [NM(x, 0)] in
       let t = SS.subst subst t in
-      mk (Tm_refine ({ x with sort = sort }, t))
+      mk (Tm_refine {b={ x with sort = sort }; phi=t})
 
-  | Tm_meta (t, m) ->
-      mk (Tm_meta (star_type' env t, m))
+  | Tm_meta {tm=t; meta=m} ->
+      mk (Tm_meta {tm=star_type' env t; meta=m})
 
-  | Tm_ascribed (e, (Inl t, None, use_eq), something) ->
-      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env t), None, use_eq), something))
+  | Tm_ascribed {tm=e; asc=(Inl t, None, use_eq); eff_opt=something} ->
+      mk (Tm_ascribed {tm=star_type' env e; asc=(Inl (star_type' env t), None, use_eq); eff_opt=something})
 
-  | Tm_ascribed (e, (Inr c, None, use_eq), something) ->
-      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env (U.comp_result c)), None, use_eq), something))  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
+  | Tm_ascribed {tm=e; asc=(Inr c, None, use_eq); eff_opt=something} ->
+      mk (Tm_ascribed {tm=star_type' env e;
+                       asc=(Inl (star_type' env (U.comp_result c)), None, use_eq);
+                       eff_opt=something})  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
       (*raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
               (Print.term_to_string t)))*)
 
- | Tm_ascribed (_, (_, Some _, _), _) ->
+ | Tm_ascribed {asc=(_, Some _, _)} ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Ascriptions with tactics are outside of the definition language: %s"
         (Print.term_to_string t)))
 
@@ -728,7 +728,7 @@ let is_monadic = function
 let rec is_C (t: typ): bool =
   match (SS.compress t).n with
   // TODO: deal with more than tuples?
-  | Tm_app (head, args) when U.is_tuple_constructor head ->
+  | Tm_app {hd=head; args} when U.is_tuple_constructor head ->
       let r = is_C (fst (List.hd args)) in
       if r then begin
         if not (List.for_all (fun (h, _) -> is_C h) args) then
@@ -743,7 +743,7 @@ let rec is_C (t: typ): bool =
                       t.pos;
         false
       end
-  | Tm_arrow (binders, comp) ->
+  | Tm_arrow {bs=binders; comp} ->
       begin match nm_of_comp comp with
       | M t ->
           if (is_C t) then
@@ -755,9 +755,9 @@ let rec is_C (t: typ): bool =
           // assert (List.exists is_C binders) ==> is_C comp
           is_C t
       end
-  | Tm_meta (t, _)
+  | Tm_meta {tm=t}
   | Tm_uinst (t, _)
-  | Tm_ascribed (t, _, _) ->
+  | Tm_ascribed {tm=t} ->
       is_C t
   | _ ->
       false
@@ -769,7 +769,7 @@ let mk_return env (t: typ) (e: term) =
   let mk x = mk x e.pos in
   let p_type = mk_star_to_type mk env t in
   let p = S.gen_bv "p'" None p_type in
-  let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_aqual_implicit false ])) in
+  let body = mk (Tm_app {hd=S.bv_to_name p; args=[ e, S.as_aqual_implicit false ]}) in
   U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0))
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
@@ -835,7 +835,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   | Tm_lazy i ->
     check env (U.unfold_lazy i) context_nm
 
-  | Tm_let ((false, [ binding ]), e2) ->
+  | Tm_let {lbs=(false, [ binding ]); body=e2} ->
       mk_let env binding e2
         // Body of the let is pure: just defer the check to the continuation
         (fun env e2 -> check env e2 context_nm)
@@ -843,15 +843,15 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
         // the check on the continuation to ensure it is a monadic computation
         ensure_m
 
-  | Tm_match (e0, _, branches, _) ->
+  | Tm_match {scrutinee=e0; brs=branches} ->
       // This is similar to the [let] case above. The [match] checks that the
       // types of the branches work; it also demands that the scrutinee be a
       // non-monadic computation.
       mk_match env e0 branches (fun env body -> check env body context_nm)
 
-  | Tm_meta (e, _)
+  | Tm_meta {tm=e}
   | Tm_uinst (e, _)
-  | Tm_ascribed (e, _, _) ->
+  | Tm_ascribed {tm=e} ->
       (* TODO : reinstall the type annotation *)
       check env e context_nm
 
@@ -885,7 +885,7 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_lazy i ->
       infer env (U.unfold_lazy i)
 
-  | Tm_abs (binders, body, rc_opt) ->
+  | Tm_abs {bs=binders;body;rc_opt} ->
       let subst_rc_opt subst rc_opt =
         match rc_opt with
         | Some {residual_typ=None}
@@ -972,11 +972,11 @@ and infer (env: env) (e: term): nm * term * term =
 
       let s_body = close s_binders s_body in
       let s_binders = close_binders s_binders in
-      let s_term = mk (Tm_abs (s_binders, s_body, subst_rc_opt (Subst.closing_of_binders s_binders) s_rc_opt)) in
+      let s_term = mk (Tm_abs {bs=s_binders; body=s_body; rc_opt=subst_rc_opt (Subst.closing_of_binders s_binders) s_rc_opt}) in
 
       let u_body = close u_binders u_body in
       let u_binders = close_binders u_binders in
-      let u_term = mk (Tm_abs (u_binders, u_body, subst_rc_opt (Subst.closing_of_binders u_binders) u_rc_opt)) in
+      let u_term = mk (Tm_abs {bs=u_binders; body=u_body; rc_opt=subst_rc_opt (Subst.closing_of_binders u_binders) u_rc_opt}) in
 
       N t, s_term, u_term
 
@@ -986,50 +986,50 @@ and infer (env: env) (e: term): nm * term * term =
       N (normalize t), e, e
 
   (* Unary operators. Explicitly curry extra arguments *)
-  | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest) ->
+  | Tm_app {hd={n=Tm_constant Const_range_of}; args=a::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args e in
-    let head = mk (Tm_app(unary_op, [a])) in
-    let t = mk (Tm_app(head, rest)) in
+    let head = mk (Tm_app {hd=unary_op; args=[a]}) in
+    let t = mk (Tm_app {hd=head; args=rest}) in
     infer env t
 
   (* Binary operators *)
-  | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::hd::rest) ->
+  | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=a1::a2::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args e in
-    let head = mk (Tm_app(unary_op, [a1; a2])) in
-    let t = mk (Tm_app(head, rest)) in
+    let head = mk (Tm_app {hd=unary_op; args=[a1; a2]}) in
+    let t = mk (Tm_app {hd=head; args=rest}) in
     infer env t
 
-  | Tm_app({n=Tm_constant Const_range_of}, [(a, None)]) ->
+  | Tm_app {hd={n=Tm_constant Const_range_of}; args=[(a, None)]} ->
     let t, s, u = infer env a in
     let head,_ = U.head_and_args e in
     N (tabbrev PC.range_lid),
-        mk (Tm_app (head, [S.as_arg s])),
-        mk (Tm_app (head, [S.as_arg u]))
+        mk (Tm_app {hd=head; args=[S.as_arg s]}),
+        mk (Tm_app {hd=head; args=[S.as_arg u]})
 
-  | Tm_app({n=Tm_constant Const_set_range_of}, (a1, _)::a2::[]) ->
+  | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=(a1, _)::a2::[]} ->
     let t, s, u = infer env a1 in
     let head,_ = U.head_and_args e in
     t,
-        mk (Tm_app (head, [S.as_arg s; a2])),
-        mk (Tm_app (head, [S.as_arg u; a2]))
+        mk (Tm_app {hd=head; args=[S.as_arg s; a2]}),
+        mk (Tm_app {hd=head; args=[S.as_arg u; a2]})
 
-  | Tm_app({n=Tm_constant Const_range_of}, _)
-  | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
+  | Tm_app {hd={n=Tm_constant Const_range_of}}
+  | Tm_app {hd={n=Tm_constant Const_set_range_of}} ->
     raise_error (Errors.Fatal_IllAppliedConstant, BU.format1 "DMFF: Ill-applied constant %s" (Print.term_to_string e)) e.pos
 
-  | Tm_app (head, args) ->
+  | Tm_app {hd=head; args} ->
       let t_head, s_head, u_head = check_n env head in
       let is_arrow t = match (SS.compress t).n with | Tm_arrow _ -> true | _ -> false in
       // TODO: replace with BU.arrow_formals_comp
       let rec flatten t = match (SS.compress t).n with
-        | Tm_arrow (binders, { n = Total t }) when is_arrow t ->
+        | Tm_arrow {bs=binders; comp={ n = Total t }} when is_arrow t ->
             let binders', comp = flatten t in
             binders @ binders', comp
-        | Tm_arrow (binders, comp) ->
+        | Tm_arrow {bs=binders; comp} ->
             binders, comp
-        | Tm_ascribed (e, _, _) ->
+        | Tm_ascribed {tm=e} ->
             flatten e
         | _ ->
             raise_err (Errors.Fatal_NotFunctionType, (BU.format1 "%s: not a function type" (Print.term_to_string t_head)))
@@ -1055,8 +1055,8 @@ and infer (env: env) (e: term): nm * term * term =
         | [], [] ->
             nm_of_comp (SS.subst_comp subst comp)
         | binders, [] ->
-            begin match (SS.compress (SS.subst subst (mk (Tm_arrow (binders, comp))))).n with
-            | Tm_arrow (binders, comp) -> N (mk (Tm_arrow (binders, close_comp binders comp)))
+            begin match (SS.compress (SS.subst subst (mk (Tm_arrow {bs=binders; comp})))).n with
+            | Tm_arrow {bs=binders; comp} -> N (mk (Tm_arrow {bs=binders; comp=close_comp binders comp}))
             | _ -> failwith "wat?"
             end
         | [], _ :: _ ->
@@ -1087,17 +1087,17 @@ and infer (env: env) (e: term): nm * term * term =
       ) binders args) in
       let u_args = List.flatten u_args in
 
-      final_type, mk (Tm_app (s_head, s_args)), mk (Tm_app (u_head, u_args))
+      final_type, mk (Tm_app {hd=s_head; args=s_args}), mk (Tm_app {hd=u_head; args=u_args})
 
-  | Tm_let ((false, [ binding ]), e2) ->
+  | Tm_let {lbs=(false, [ binding ]); body=e2} ->
       mk_let env binding e2 infer check_m
 
-  | Tm_match (e0, _, branches, _) ->
+  | Tm_match {scrutinee=e0; brs=branches} ->
       mk_match env e0 branches infer
 
   | Tm_uinst (e, _)
-  | Tm_meta (e, _)
-  | Tm_ascribed (e, _, _) ->
+  | Tm_meta {tm=e}
+  | Tm_ascribed {tm=e} ->
       infer env e
 
   | Tm_constant c ->
@@ -1161,27 +1161,27 @@ and mk_match env e0 branches f =
     let p_type = mk_star_to_type mk env t1 in
     let p = S.gen_bv "p''" None p_type in
     let s_branches = List.map (fun (pat, guard, s_body) ->
-      let s_body = mk (Tm_app (s_body, [ S.bv_to_name p, S.as_aqual_implicit false ])) in
+      let s_body = mk (Tm_app {hd=s_body; args=[ S.bv_to_name p, S.as_aqual_implicit false ]}) in
         (pat, guard, s_body)
       ) s_branches in
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
     let s_e =
       U.abs [ S.mk_binder p ]
-            (mk (Tm_match (s_e0, None, s_branches, None)))
+            (mk (Tm_match {scrutinee=s_e0; ret_opt=None; brs= s_branches; rc_opt=None}))
             (Some (U.residual_tot U.ktype0))
     in
     let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
     M t1,
-    mk (Tm_ascribed (s_e, (Inl t1_star, None, false), None)) ,
-    mk (Tm_match (u_e0, None, u_branches, None))
+    mk (Tm_ascribed {tm=s_e; asc=(Inl t1_star, None, false); eff_opt=None}) ,
+    mk (Tm_match {scrutinee=u_e0; ret_opt=None; brs=u_branches; rc_opt=None})
   end else begin
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
     let t1_star = t1 in
     N t1,
-    mk (Tm_ascribed (mk (Tm_match (s_e0, None, s_branches, None)), (Inl t1_star, None, false), None)),
-    mk (Tm_match (u_e0, None, u_branches, None))
+    mk (Tm_ascribed {tm=mk (Tm_match {scrutinee=s_e0; ret_opt=None; brs=s_branches; rc_opt=None}); asc=(Inl t1_star, None, false); eff_opt=None}),
+    mk (Tm_match {scrutinee=u_e0; ret_opt=None; brs=u_branches; rc_opt=None})
   end
 
 and mk_let (env: env_) (binding: letbinding) (e2: term)
@@ -1208,8 +1208,8 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let nm_rec, s_e2, u_e2 = proceed env e2 in
       let s_binding = { binding with lbtyp = star_type' env binding.lbtyp } in
       nm_rec,
-      mk (Tm_let ((false, [ { s_binding with lbdef = s_e1 } ]), SS.close x_binders s_e2)),
-      mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
+      mk (Tm_let {lbs=(false, [ { s_binding with lbdef = s_e1 } ]); body=SS.close x_binders s_e2}),
+      mk (Tm_let {lbs=(false, [ { u_binding with lbdef = u_e1 } ]); body=SS.close x_binders u_e2})
 
   | M t1, s_e1, u_e1 ->
       // BU.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
@@ -1221,14 +1221,14 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let p_type = mk_star_to_type mk env t2 in
       let p = S.gen_bv "p''" None p_type in
       // e2* p
-      let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_aqual_implicit false ])) in
+      let s_e2 = mk (Tm_app {hd=s_e2; args=[ S.bv_to_name p, S.as_aqual_implicit false ]}) in
       // fun x -> s_e2* p; this takes care of closing [x].
       let s_e2 = U.abs x_binders s_e2 (Some (U.residual_tot U.ktype0)) in
       // e1* (fun x -> e2* p)
-      let body = mk (Tm_app (s_e1, [ s_e2, S.as_aqual_implicit false ])) in
+      let body = mk (Tm_app {hd=s_e1; args=[ s_e2, S.as_aqual_implicit false ]}) in
       M t2,
       U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0)),
-      mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
+      mk (Tm_let {lbs=(false, [ { u_binding with lbdef = u_e1 } ]); body=SS.close x_binders u_e2})
   end
 
 
@@ -1266,13 +1266,13 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
     raise_error (Error_UnexpectedDM4FType, BU.format1 "Not a DM4F C-type: %s" (Print.term_to_string c)) c.pos;
   let mk x = mk x c.pos in
   match (SS.compress c).n with
-  | Tm_app (head, args) ->
+  | Tm_app {hd=head; args} ->
       // It's a product, the only form of [Tm_app] allowed.
       let wp_head, wp_args = head_and_args wp in
       if not (List.length wp_args = List.length args) ||
          not (is_constructor wp_head (PC.mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
         failwith "mismatch";
-      mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
+      mk (Tm_app {hd=head; args=List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_aqual_implicit q then "implicit" else "explicit" in
         if eq_aqual q q' <> Equal
         then Errors.log_issue
@@ -1282,8 +1282,8 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
                                 (print_implicit q)
                                 (print_implicit q')) ;
         trans_F_ env arg wp_arg, q)
-      args wp_args))
-  | Tm_arrow (binders, comp) ->
+      args wp_args})
+  | Tm_arrow {bs=binders; comp} ->
       let binders = U.name_binders binders in
       let binders_orig, comp = open_comp binders comp in
       let bvs, binders = List.split (List.map (fun b ->
@@ -1298,10 +1298,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       ) binders_orig) in
       let binders = List.flatten binders in
       let comp = SS.subst_comp (U.rename_binders binders_orig (S.binders_of_list bvs)) comp in
-      let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_aqual_implicit false) bvs)) in
+      let app = mk (Tm_app {hd=wp;args=List.map (fun bv -> S.bv_to_name bv, S.as_aqual_implicit false) bvs}) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
       U.arrow binders comp
-  | Tm_ascribed(e, _, _) ->
+  | Tm_ascribed {tm=e} ->
       (* TODO : find a way to recompute the corrected ascription *)
       trans_F_ env e wp
   | _ ->
@@ -1372,7 +1372,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let a, effect_marker =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature_un).n with
-    | Tm_arrow ([({binder_bv=a})], effect_marker) ->
+    | Tm_arrow {bs=[({binder_bv=a})]; comp=effect_marker} ->
         a, effect_marker
     | _ ->
         raise_error (Errors.Fatal_BadSignatureShape, "bad shape for effect-for-free signature")
@@ -1404,14 +1404,14 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let dmff_env = empty env (TcTerm.tc_constant env Range.dummyRange) in
   let wp_type = star_type dmff_env repr in
   let _ = recheck_debug "*" env wp_type in
-  let wp_a = N.normalize [ Env.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_aqual_implicit false) ]))) in
+  let wp_a = N.normalize [ Env.Beta ] env (mk (Tm_app {hd=wp_type; args=[ (S.bv_to_name a, S.as_aqual_implicit false) ]})) in
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
     let binders = [ S.mk_binder_with_attrs a (S.as_bqual_implicit false) None [];
                     S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
     let binders = close_binders binders in
-    mk (Tm_arrow (binders, effect_marker))
+    mk (Tm_arrow {bs=binders; comp=effect_marker})
   in
   let _ = recheck_debug "turned into the effect signature" env effect_signature in
 
@@ -1447,7 +1447,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
   let lift_from_pure_wp =
       match (SS.compress return_wp).n with
-      | Tm_abs (b1 :: b2 :: bs, body, what) ->
+      | Tm_abs {bs=b1 :: b2 :: bs; body; rc_opt=what} ->
         let b1,b2, body =
           match SS.open_term [b1 ; b2] (U.abs bs body None) with
           | [b1 ; b2], body -> b1, b2, body
@@ -1457,7 +1457,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         (* invariant but we need them for normalization *)
         let env0 = push_binders (get_env dmff_env) [b1 ; b2] in
         let wp_b1 =
-          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name b1.binder_bv, S.as_aqual_implicit false) ])) in
+          let raw_wp_b1 = mk (Tm_app {hd=wp_type; args=[ (S.bv_to_name b1.binder_bv, S.as_aqual_implicit false) ]}) in
           N.normalize [ Env.Beta ] env0 raw_wp_b1
         in
         let bs, body, what' = U.abs_formals <| N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
@@ -1502,16 +1502,16 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let return_wp =
     // TODO: fix [tc_eff_decl] to deal with currying
     match (SS.compress return_wp).n with
-    | Tm_abs (b1 :: b2 :: bs, body, what) ->
+    | Tm_abs {bs=b1 :: b2 :: bs; body; rc_opt=what} ->
         U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
     | _ ->
         raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
   in
   let bind_wp =
     match (SS.compress bind_wp).n with
-    | Tm_abs (binders, body, what) ->
+    | Tm_abs {bs=binders; body; rc_opt=what} ->
         // TODO: figure out how to deal with ranges
-        //let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
+        //let r = S.lid_and_dd_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
         U.abs binders body what
     | _ ->
         raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
@@ -1521,7 +1521,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     if List.length effect_binders = 0 then
       t
     else
-      close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
+      close effect_binders (mk (Tm_app {hd=t; args=snd (U.args_of_binders effect_binders)}))
   in
   let rec apply_last f l = match l with
     | [] -> failwith "impossible: empty path.."
@@ -1538,7 +1538,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
       if Options.debug_any () then
           BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
       // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_as_fv l' delta_equational None)
+      fv_to_tm (lid_and_dd_as_fv l' delta_equational None)
       end
     | None ->
       let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
@@ -1608,7 +1608,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let repr =
     let wp = S.gen_bv "wp_a" None wp_a in
     let binders = [ S.mk_binder a; S.mk_binder wp ] in
-    U.abs binders (trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_aqual_implicit false ]))) (S.bv_to_name wp)) None
+    U.abs binders (trans_F dmff_env (mk (Tm_app {hd=repr; args=[ S.bv_to_name a, S.as_aqual_implicit false ]})) (S.bv_to_name wp)) None
   in
   let _ = recheck_debug "FC" env repr in
   let repr = register "repr" repr in
@@ -1619,14 +1619,14 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   (* as type of postconditons, the rest as type of preconditions *)
   let pre, post =
     match (unascribe <| SS.compress wp_type).n with
-    | Tm_abs (type_param :: effect_param, arrow, _) ->
+    | Tm_abs {bs=type_param :: effect_param; body=arrow} ->
         let type_param , effect_param, arrow =
             match SS.open_term (type_param :: effect_param) arrow with
                 | (b :: bs), body -> b, bs, body
                 | _ -> failwith "Impossible : open_term nt preserving binders arity"
         in
         begin match (unascribe <| SS.compress arrow).n with
-        | Tm_arrow (wp_binders, c) ->
+        | Tm_arrow {bs=wp_binders; comp=c} ->
             let wp_binders, c = SS.open_comp wp_binders c in
             let pre_args, post_args =
                 List.partition (fun ({binder_bv=bv}) ->

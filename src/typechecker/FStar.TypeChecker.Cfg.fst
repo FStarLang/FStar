@@ -256,7 +256,7 @@ let built_in_primitive_steps : prim_step_set =
     let arg_as_bounded_int ((a, _) :arg) : option (fv * Z.t * option S.meta_source_info) =
         let (a, m) =
             (match (SS.compress a).n with
-             | Tm_meta(t, Meta_desugared m) -> (t, Some m)
+             | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
              | _ -> (a, None)) in
         let a = U.unmeta_safe a in
         let hd, args = U.head_and_args_full a in
@@ -380,7 +380,7 @@ let built_in_primitive_steps : prim_step_set =
                  | _ -> None
     in
     let list_of_string' rng (s:string) : term =
-        let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
+        let name l = mk (Tm_fvar (lid_as_fv l None)) rng in
         let char_t = name PC.char_lid in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
@@ -569,7 +569,7 @@ let built_in_primitive_steps : prim_step_set =
     let with_meta_ds r t (m:option meta_source_info) =
       match m with
       | None -> t
-      | Some m -> S.mk (Tm_meta(t, Meta_desugared m)) r
+      | Some m -> S.mk (Tm_meta {tm=t; meta=Meta_desugared m}) r
     in
     let basic_ops
       //because our support for F# style type-applications is very limited
@@ -650,7 +650,7 @@ let built_in_primitive_steps : prim_step_set =
          (let u32_int_to_t =
             ["FStar"; "UInt32"; "uint_to_t"]
             |> PC.p2l
-            |> (fun l -> S.lid_as_fv l (S.Delta_constant_at_level 0) None) in
+            |> (fun l -> S.lid_as_fv l None) in
           PC.char_u32_of_char,
              1,
              0,
@@ -1127,7 +1127,7 @@ let built_in_primitive_steps : prim_step_set =
                NBETerm.mk_t <|
                NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of e_any)),
                              Thunk.mk (fun _ ->
-                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.immutable_array_of_list_lid S.delta_constant None,
+                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.immutable_array_of_list_lid None,
                                                           universes,
                                                           [NBETerm.as_arg l]))))
              (fun  universes elt_t (l, lst) ->

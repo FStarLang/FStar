@@ -539,22 +539,22 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
              when BU.for_some (find_env_entry bv) env ->
           mk_any_embedding l <| snd (BU.must (BU.find_opt (find_env_entry bv) env))
 
-        | Tm_refine (x, _) ->
+        | Tm_refine {b=x} ->
           (* Refinements are irrelevant to generate embeddings. *)
           mk_embedding l env x.sort
 
-        | Tm_ascribed (t, _, _) ->
+        | Tm_ascribed {tm=t} ->
           mk_embedding l env t
 
-        | Tm_arrow ([b], c) when U.is_pure_comp c ->
+        | Tm_arrow {bs=[b]; comp=c} when U.is_pure_comp c ->
           let bs, c = FStar.Syntax.Subst.open_comp [b] c in
           let t0 = (List.hd bs).binder_bv.sort in
           let t1 = U.comp_result c in
           emb_arrow l (mk_embedding l env t0) (mk_embedding l env t1)
 
-        | Tm_arrow(b::more::bs, c) ->
-          let tail = S.mk (Tm_arrow(more::bs, c)) t.pos in
-          let t = S.mk (Tm_arrow([b], S.mk_Total tail)) t.pos in
+        | Tm_arrow {bs=b::more::bs; comp=c} ->
+          let tail = S.mk (Tm_arrow {bs=more::bs; comp=c}) t.pos in
+          let t = S.mk (Tm_arrow {bs=[b]; comp=S.mk_Total tail}) t.pos in
           mk_embedding l env t
 
         | Tm_fvar _

@@ -112,7 +112,7 @@ otherwise since reduction is blocked.)
 
 let id_norm_cb : norm_cb = function
     | Inr x -> x
-    | Inl l -> S.fv_to_tm (S.lid_as_fv l delta_equational None)
+    | Inl l -> S.fv_to_tm (S.lid_and_dd_as_fv l delta_equational None)
 exception Embedding_failure
 exception Unembedding_failure
 
@@ -174,20 +174,20 @@ let mk_emb_full em un typ printer emb_typ = {
 let rec unmeta_div_results t =
   let open FStar.Ident in
   match (SS.compress t).n with
-  | Tm_meta (t', Meta_monadic_lift (src, dst, _)) ->
+  | Tm_meta {tm=t'; meta=Meta_monadic_lift (src, dst, _)} ->
     if lid_equals src PC.effect_PURE_lid &&
        lid_equals dst PC.effect_DIV_lid
     then unmeta_div_results t'
     else t
 
-  | Tm_meta (t', Meta_monadic (m, _)) ->
+  | Tm_meta {tm=t'; meta=Meta_monadic (m, _)} ->
     if lid_equals m PC.effect_DIV_lid
     then unmeta_div_results t'
     else t
 
-  | Tm_meta (t', _) -> unmeta_div_results t'
+  | Tm_meta {tm=t'} -> unmeta_div_results t'
 
-  | Tm_ascribed (t', _, _) -> unmeta_div_results t'
+  | Tm_ascribed {tm=t'} -> unmeta_div_results t'
   
   | _ -> t
 
@@ -418,7 +418,7 @@ let e_option (ea : embedding 'a) =
                   let shadow_a = map_shadow shadow (fun t ->
                     let v = Ident.mk_ident ("v", rng) in
                     let some_v = U.mk_field_projector_name_from_ident PC.some_lid v in
-                    let some_v_tm = S.fv_to_tm (lid_as_fv some_v delta_equational None) in
+                    let some_v_tm = S.fv_to_tm (lid_and_dd_as_fv some_v delta_equational None) in
                     S.mk_Tm_app (S.mk_Tm_uinst some_v_tm [U_zero])
                                 [S.iarg (type_of ea); S.as_arg t]
                                 rng)
@@ -470,7 +470,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
             (fun () ->
                 let proj i ab =
                     let proj_1 = U.mk_field_projector_name (PC.mk_tuple_data_lid 2 rng) (S.null_bv S.tun) i in
-                    let proj_1_tm = S.fv_to_tm (lid_as_fv proj_1 delta_equational None) in
+                    let proj_1_tm = S.fv_to_tm (lid_and_dd_as_fv proj_1 delta_equational None) in
                     S.mk_Tm_app (S.mk_Tm_uinst proj_1_tm [U_zero])
                                 [S.iarg (type_of ea);
                                  S.iarg (type_of eb);
@@ -530,7 +530,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
             (fun () ->
                 let proj i abc =
                     let proj_i = U.mk_field_projector_name (PC.mk_tuple_data_lid 3 rng) (S.null_bv S.tun) i in
-                    let proj_i_tm = S.fv_to_tm (lid_as_fv proj_i delta_equational None) in
+                    let proj_i_tm = S.fv_to_tm (lid_and_dd_as_fv proj_i delta_equational None) in
                     S.mk_Tm_app (S.mk_Tm_uinst proj_i_tm [U_zero])
                                 [S.iarg (type_of ea);
                                  S.iarg (type_of eb);
@@ -601,7 +601,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                 let shadow_a = map_shadow shadow (fun t ->
                   let v = Ident.mk_ident ("v", rng) in
                   let some_v = U.mk_field_projector_name_from_ident PC.inl_lid v in
-                  let some_v_tm = S.fv_to_tm (lid_as_fv some_v delta_equational None) in
+                  let some_v_tm = S.fv_to_tm (lid_and_dd_as_fv some_v delta_equational None) in
                   S.mk_Tm_app (S.mk_Tm_uinst some_v_tm [U_zero])
                               [S.iarg (type_of ea); S.iarg (type_of eb); S.as_arg t]
                               rng)
@@ -616,7 +616,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                 let shadow_b = map_shadow shadow (fun t ->
                   let v = Ident.mk_ident ("v", rng) in
                   let some_v = U.mk_field_projector_name_from_ident PC.inr_lid v in
-                  let some_v_tm = S.fv_to_tm (lid_as_fv some_v delta_equational None) in
+                  let some_v_tm = S.fv_to_tm (lid_and_dd_as_fv some_v delta_equational None) in
                   S.mk_Tm_app (S.mk_Tm_uinst some_v_tm [U_zero])
                               [S.iarg (type_of ea); S.iarg (type_of eb); S.as_arg t]
                               rng)
@@ -685,7 +685,7 @@ let e_list (ea:embedding 'a) =
                   let proj f cons_tm =
                     let fid = Ident.mk_ident (f, rng) in
                     let proj = U.mk_field_projector_name_from_ident PC.cons_lid fid in
-                    let proj_tm = S.fv_to_tm (lid_as_fv proj delta_equational None) in
+                    let proj_tm = S.fv_to_tm (lid_and_dd_as_fv proj delta_equational None) in
                     S.mk_Tm_app (S.mk_Tm_uinst proj_tm [U_zero])
                                 [S.iarg (type_of ea);
                                  S.as_arg cons_tm]
@@ -889,12 +889,7 @@ let e_range =
         (ET_app (PC.range_lid |> Ident.string_of_lid, []))
 
 let e_issue =
-    let t_issue = 
-            S.fv_to_tm 
-                    (S.lid_as_fv PC.issue_lid
-                                 S.delta_constant
-                                 None)
-    in              
+    let t_issue = S.fv_to_tm (S.lid_as_fv PC.issue_lid None) in
     let em (i:FStar.Errors.issue) (rng:range) _shadow _norm : term = 
         U.mk_lazy i t_issue Lazy_issue (Some rng)
     in
@@ -1057,8 +1052,8 @@ let or_else (f: option 'a) (g:unit -> 'a) =
 
 let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
     let typ =
-        S.mk (Tm_arrow([S.mk_binder (S.null_bv ea.typ)],
-                        S.mk_Total eb.typ))
+        S.mk (Tm_arrow {bs=[S.mk_binder (S.null_bv ea.typ)];
+                        comp=S.mk_Total eb.typ})
               Range.dummyRange
     in
     let emb_t_arr_a_b = ET_fun(ea.emb_typ, eb.emb_typ) in

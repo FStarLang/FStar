@@ -105,23 +105,23 @@ and hash_term' (t:term)
                                                (hash_list hash_universe us))
     | Tm_constant sc -> mix (of_int 13) (hash_constant sc)
     | Tm_type u -> mix (of_int 17) (hash_universe u)
-    | Tm_abs(bs, t, rcopt) -> mix (of_int 19)
+    | Tm_abs {bs; body=t; rc_opt=rcopt} -> mix (of_int 19)
                                         (mix (hash_list hash_binder bs)
                                                     (mix (hash_term t)
                                                                 (hash_option hash_rc rcopt)))
-    | Tm_arrow(bs, c) -> mix (of_int 23) (mix (hash_list hash_binder bs) (hash_comp c))
-    | Tm_refine(b, t) -> mix (of_int 29) (mix (hash_bv b) (hash_term t))
-    | Tm_app (t, args) -> mix (of_int 31) (mix (hash_term t) (hash_list hash_arg args))
-    | Tm_match (t, asc_opt, branches, rcopt) ->
+    | Tm_arrow {bs; comp=c} -> mix (of_int 23) (mix (hash_list hash_binder bs) (hash_comp c))
+    | Tm_refine {b; phi=t} -> mix (of_int 29) (mix (hash_bv b) (hash_term t))
+    | Tm_app {hd=t; args} -> mix (of_int 31) (mix (hash_term t) (hash_list hash_arg args))
+    | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=branches; rc_opt=rcopt} ->
       mix (of_int 37)
             (mix (hash_option hash_match_returns asc_opt)
                    (mix (mix (hash_term t) (hash_list hash_branch branches))
                           (hash_option hash_rc rcopt)))
-    | Tm_ascribed(t, a, lopt) -> mix (of_int 43) (mix (hash_term t) (mix (hash_ascription a) (hash_option hash_lid lopt)))
-    | Tm_let((false, [lb]), t) -> mix (of_int 47) (mix (hash_lb lb) (hash_term t))
-    | Tm_let((_, lbs), t) -> mix (of_int 51) (mix (hash_list hash_lb lbs) (hash_term t))
+    | Tm_ascribed {tm=t; asc=a; eff_opt=lopt} -> mix (of_int 43) (mix (hash_term t) (mix (hash_ascription a) (hash_option hash_lid lopt)))
+    | Tm_let {lbs=(false, [lb]); body=t} -> mix (of_int 47) (mix (hash_lb lb) (hash_term t))
+    | Tm_let {lbs=(_, lbs); body=t} -> mix (of_int 51) (mix (hash_list hash_lb lbs) (hash_term t))
     | Tm_uvar uv -> mix (of_int 53) (hash_uvar uv)
-    | Tm_meta(t, m) -> mix (of_int 61) (mix (hash_term t) (hash_meta m))
+    | Tm_meta {tm=t; meta=m} -> mix (of_int 61) (mix (hash_term t) (hash_meta m))
     | Tm_lazy li -> mix (of_int 67) (hash_lazyinfo li)
     | Tm_quoted (t, qi) -> mix (of_int 71) (mix (hash_term t) (hash_quoteinfo qi))
     | Tm_unknown -> of_int 73
@@ -365,35 +365,37 @@ let rec equal_term (t1 t2:term)
       equal_list equal_universe u1 u2
     | Tm_constant c1, Tm_constant c2 -> equal_constant c1 c2
     | Tm_type u1, Tm_type u2 -> equal_universe u1 u2
-    | Tm_abs(bs1, t1, rc1), Tm_abs(bs2, t2, rc2) ->
+    | Tm_abs {bs=bs1; body=t1; rc_opt=rc1}, Tm_abs {bs=bs2; body=t2; rc_opt=rc2} ->
       equal_list equal_binder bs1 bs2 &&
       equal_term t1 t2 &&
       equal_opt equal_rc rc1 rc2
-    | Tm_arrow(bs1, c1), Tm_arrow(bs2, c2) ->
+    | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
       equal_list equal_binder bs1 bs2 &&
       equal_comp c1 c2
-    | Tm_refine(b1, t1), Tm_refine(b2, t2) ->
+    | Tm_refine {b=b1; phi=t1}, Tm_refine {b=b2; phi=t2} ->
       equal_bv b1 b2 &&
       equal_term t1 t2
-    | Tm_app(t1, as1), Tm_app(t2, as2) ->
+    | Tm_app {hd=t1; args=as1}, Tm_app {hd=t2; args=as2} ->
       equal_term t1 t2 &&
       equal_list equal_arg as1 as2
-    | Tm_match(t1, asc_opt1, bs1, ropt1), Tm_match(t2, asc_opt2, bs2, ropt2) ->
+    | Tm_match {scrutinee=t1; ret_opt=asc_opt1; brs=bs1; rc_opt=ropt1},
+      Tm_match {scrutinee=t2; ret_opt=asc_opt2; brs=bs2; rc_opt=ropt2} ->
       equal_term t1 t2 &&
       equal_opt equal_match_returns asc_opt1 asc_opt2 &&
       equal_list equal_branch bs1 bs2 &&
       equal_opt equal_rc ropt1 ropt2
-    | Tm_ascribed(t1, a1, l1), Tm_ascribed(t2, a2, l2) ->
+    | Tm_ascribed {tm=t1; asc=a1; eff_opt=l1},
+      Tm_ascribed {tm=t2; asc=a2; eff_opt=l2} ->
       equal_term t1 t2 &&
       equal_ascription a1 a2 &&
       equal_opt Ident.lid_equals l1 l2
-    | Tm_let((r1, lbs1), t1), Tm_let((r2, lbs2), t2) ->
+    | Tm_let {lbs=(r1, lbs1); body=t1}, Tm_let {lbs=(r2, lbs2); body=t2} ->
       r1 = r2 &&
       equal_list equal_letbinding lbs1 lbs2 &&
       equal_term t1 t2
     | Tm_uvar u1, Tm_uvar u2 ->
       equal_uvar u1 u2
-    | Tm_meta(t1, m1), Tm_meta(t2, m2) ->
+    | Tm_meta {tm=t1; meta=m1}, Tm_meta {tm=t2; meta=m2} ->
       equal_term t1 t2 &&
       equal_meta m1 m2
     | Tm_lazy l1, Tm_lazy l2 ->

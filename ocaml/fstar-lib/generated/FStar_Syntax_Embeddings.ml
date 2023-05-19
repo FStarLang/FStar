@@ -85,7 +85,7 @@ let (id_norm_cb : norm_cb) =
     | FStar_Pervasives.Inr x -> x
     | FStar_Pervasives.Inl l ->
         let uu___1 =
-          FStar_Syntax_Syntax.lid_as_fv l
+          FStar_Syntax_Syntax.lid_and_dd_as_fv l
             FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None in
         FStar_Syntax_Syntax.fv_to_tm uu___1
 exception Embedding_failure 
@@ -188,19 +188,29 @@ let rec (unmeta_div_results :
       uu___1.FStar_Syntax_Syntax.n in
     match uu___ with
     | FStar_Syntax_Syntax.Tm_meta
-        (t', FStar_Syntax_Syntax.Meta_monadic_lift (src, dst, uu___1)) ->
+        { FStar_Syntax_Syntax.tm2 = t';
+          FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_monadic_lift
+            (src, dst, uu___1);_}
+        ->
         let uu___2 =
           (FStar_Ident.lid_equals src FStar_Parser_Const.effect_PURE_lid) &&
             (FStar_Ident.lid_equals dst FStar_Parser_Const.effect_DIV_lid) in
         if uu___2 then unmeta_div_results t' else t
     | FStar_Syntax_Syntax.Tm_meta
-        (t', FStar_Syntax_Syntax.Meta_monadic (m, uu___1)) ->
+        { FStar_Syntax_Syntax.tm2 = t';
+          FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_monadic
+            (m, uu___1);_}
+        ->
         let uu___2 =
           FStar_Ident.lid_equals m FStar_Parser_Const.effect_DIV_lid in
         if uu___2 then unmeta_div_results t' else t
-    | FStar_Syntax_Syntax.Tm_meta (t', uu___1) -> unmeta_div_results t'
-    | FStar_Syntax_Syntax.Tm_ascribed (t', uu___1, uu___2) ->
-        unmeta_div_results t'
+    | FStar_Syntax_Syntax.Tm_meta
+        { FStar_Syntax_Syntax.tm2 = t'; FStar_Syntax_Syntax.meta = uu___1;_}
+        -> unmeta_div_results t'
+    | FStar_Syntax_Syntax.Tm_ascribed
+        { FStar_Syntax_Syntax.tm = t'; FStar_Syntax_Syntax.asc = uu___1;
+          FStar_Syntax_Syntax.eff_opt = uu___2;_}
+        -> unmeta_div_results t'
     | uu___1 -> t
 let embed : 'a . 'a embedding -> 'a -> embed_t = fun e -> fun x -> e.em x
 let unembed : 'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
@@ -618,7 +628,7 @@ let e_option :
                           FStar_Parser_Const.some_lid v in
                       let some_v_tm =
                         let uu___1 =
-                          FStar_Syntax_Syntax.lid_as_fv some_v
+                          FStar_Syntax_Syntax.lid_and_dd_as_fv some_v
                             FStar_Syntax_Syntax.delta_equational
                             FStar_Pervasives_Native.None in
                         FStar_Syntax_Syntax.fv_to_tm uu___1 in
@@ -726,7 +736,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                  FStar_Syntax_Util.mk_field_projector_name uu___1 uu___2 i in
                let proj_1_tm =
                  let uu___1 =
-                   FStar_Syntax_Syntax.lid_as_fv proj_1
+                   FStar_Syntax_Syntax.lid_and_dd_as_fv proj_1
                      FStar_Syntax_Syntax.delta_equational
                      FStar_Pervasives_Native.None in
                  FStar_Syntax_Syntax.fv_to_tm uu___1 in
@@ -860,7 +870,7 @@ let e_tuple3 :
                          uu___3 i in
                      let proj_i_tm =
                        let uu___2 =
-                         FStar_Syntax_Syntax.lid_as_fv proj_i
+                         FStar_Syntax_Syntax.lid_and_dd_as_fv proj_i
                            FStar_Syntax_Syntax.delta_equational
                            FStar_Pervasives_Native.None in
                        FStar_Syntax_Syntax.fv_to_tm uu___2 in
@@ -1024,7 +1034,7 @@ let e_either :
                              FStar_Parser_Const.inl_lid v in
                          let some_v_tm =
                            let uu___1 =
-                             FStar_Syntax_Syntax.lid_as_fv some_v
+                             FStar_Syntax_Syntax.lid_and_dd_as_fv some_v
                                FStar_Syntax_Syntax.delta_equational
                                FStar_Pervasives_Native.None in
                            FStar_Syntax_Syntax.fv_to_tm uu___1 in
@@ -1081,7 +1091,7 @@ let e_either :
                              FStar_Parser_Const.inr_lid v in
                          let some_v_tm =
                            let uu___1 =
-                             FStar_Syntax_Syntax.lid_as_fv some_v
+                             FStar_Syntax_Syntax.lid_and_dd_as_fv some_v
                                FStar_Syntax_Syntax.delta_equational
                                FStar_Pervasives_Native.None in
                            FStar_Syntax_Syntax.fv_to_tm uu___1 in
@@ -1221,7 +1231,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                      FStar_Parser_Const.cons_lid fid in
                  let proj_tm =
                    let uu___1 =
-                     FStar_Syntax_Syntax.lid_as_fv proj1
+                     FStar_Syntax_Syntax.lid_and_dd_as_fv proj1
                        FStar_Syntax_Syntax.delta_equational
                        FStar_Pervasives_Native.None in
                    FStar_Syntax_Syntax.fv_to_tm uu___1 in
@@ -1600,7 +1610,7 @@ let (e_issue : FStar_Errors.issue embedding) =
   let t_issue =
     let uu___ =
       FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.issue_lid
-        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+        FStar_Pervasives_Native.None in
     FStar_Syntax_Syntax.fv_to_tm uu___ in
   let em i rng _shadow _norm =
     FStar_Syntax_Util.mk_lazy i t_issue FStar_Syntax_Syntax.Lazy_issue
@@ -2359,7 +2369,10 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                 FStar_Syntax_Syntax.mk_binder uu___4 in
               [uu___3] in
             let uu___3 = FStar_Syntax_Syntax.mk_Total eb.typ in
-            (uu___2, uu___3) in
+            {
+              FStar_Syntax_Syntax.bs1 = uu___2;
+              FStar_Syntax_Syntax.comp = uu___3
+            } in
           FStar_Syntax_Syntax.Tm_arrow uu___1 in
         FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange in
       let emb_t_arr_a_b =

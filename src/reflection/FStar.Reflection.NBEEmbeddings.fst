@@ -342,14 +342,14 @@ let e_ident : embedding I.ident =
         | Some (rng, s) -> Some (I.mk_ident (s, rng))
         | None -> None
     in
-    let range_fv = (lid_as_fv PC.range_lid  delta_constant None) in
-    let string_fv = (lid_as_fv PC.string_lid delta_constant None) in
+    let range_fv = (lid_as_fv PC.range_lid  None) in
+    let string_fv = (lid_as_fv PC.string_lid None) in
     let et =
       ET_app (FStar.Ident.string_of_lid PC.lid_tuple2,
               [fv_as_emb_typ range_fv;
                fv_as_emb_typ string_fv])
     in
-    mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 delta_constant None)
+    mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 None)
                                            [U_zero;U_zero]
                                            [as_arg (mkFV range_fv [] []);
                                             as_arg (mkFV string_fv [] [])]) et
@@ -697,7 +697,7 @@ let e_order =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded order: %s" (t_to_string t)));
             None
     in
-    mk_emb' embed_order unembed_order (lid_as_fv PC.order_lid delta_constant None)
+    mk_emb' embed_order unembed_order (lid_as_fv PC.order_lid None)
 
 let e_sigelt =
     let embed_sigelt cb (se:sigelt) : t =
@@ -957,4 +957,4 @@ let e_vconfig =
     let unemb cb (t:t) : option order =
       failwith "unemb vconfig NBE"
     in
-    mk_emb' emb unemb (lid_as_fv PC.vconfig_lid delta_constant None)
+    mk_emb' emb unemb (lid_as_fv PC.vconfig_lid None)

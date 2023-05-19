@@ -326,7 +326,7 @@ let is_constr_fv (fvar : fv) : bool =
 
 let is_constr (q : qninfo) : bool =
   match q with
-  | Some (Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
+  | Some (Inr ({ sigel = Sig_datacon _ }, _), _) -> true
   | _ -> false
 
 let translate_univ (cfg:config) (bs:list t) (u:universe) : universe =
@@ -387,7 +387,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
 //    debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
     match (SS.compress e).n with
-    | Tm_delayed (_, _) ->
+    | Tm_delayed _ ->
       failwith "Tm_delayed: Impossible"
 
     | Tm_unknown ->
@@ -415,7 +415,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
     | Tm_type u ->
       mk_t <| Type_t (translate_univ cfg bs u)
 
-    | Tm_arrow (xs, c) ->
+    | Tm_arrow {bs=xs; comp=c} ->
       let norm () =
         let ctx, binders_rev =
           List.fold_left
@@ -433,14 +433,14 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
       in
       mk_t <| Arrow (Inl (Thunk.mk norm))
 
-    | Tm_refine (bv, tm) ->
+    | Tm_refine {b=bv; phi=tm} ->
       if cfg.core_cfg.steps.for_extraction
       ||  cfg.core_cfg.steps.unrefine
       then translate cfg bs bv.sort //if we're only extracting, then drop the refinement
       else mk_t <| Refinement ((fun (y:t) -> translate cfg (y::bs) tm),
                               (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
 
-    | Tm_ascribed (t, _, _) ->
+    | Tm_ascribed {tm=t} ->
       translate cfg bs t
 
     | Tm_uvar (u, (subst, set_use_range)) ->
@@ -464,9 +464,9 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
     | Tm_name x ->
       mkAccuVar x
 
-    | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
+    | Tm_abs {bs=[]} -> failwith "Impossible: abstraction with no binders"
 
-    | Tm_abs (xs, body, resc) ->
+    | Tm_abs {bs=xs; body; rc_opt=resc} ->
       mk_t <| Lam ((fun ys -> translate cfg (List.append (List.map fst ys) bs) body),
                   Inl (bs, xs, resc),
                   List.length xs)
@@ -478,35 +478,35 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
       | _ -> translate_fv cfg bs (S.set_range_of_fv fvar e.pos)
       end
 
-    | Tm_app({n=Tm_constant (FC.Const_reify _)},   arg::more::args)
-    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, arg::more::args) ->
+    | Tm_app {hd={n=Tm_constant (FC.Const_reify _)}; args=arg::more::args}
+    | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=arg::more::args} ->
       let head, _ = U.head_and_args e in
       let head = S.mk_Tm_app head [arg] e.pos in
       translate cfg bs (S.mk_Tm_app head (more::args) e.pos)
 
-    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) when cfg.core_cfg.reifying ->
+    | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=[arg]} when cfg.core_cfg.reifying ->
       let cfg = reifying_false cfg in
       translate cfg bs (fst arg)
 
-    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) ->
+    | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=[arg]} ->
       mk_t <| Reflect (translate cfg bs (fst arg))
 
-    | Tm_app({n=Tm_constant (FC.Const_reify _)}, [arg])
+    | Tm_app {hd={n=Tm_constant (FC.Const_reify _)}; args=[arg]}
         when cfg.core_cfg.steps.reify_ ->
       assert (not cfg.core_cfg.reifying);
       let cfg = reifying_true cfg in
       translate cfg bs (fst arg)
 
-    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) ->
+    | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=[arg]} ->
       mk_t <| Reflect (translate cfg bs (fst arg))
 
-    | Tm_app({n=Tm_fvar fv}, [_])
+    | Tm_app {hd={n=Tm_fvar fv}; args=[_]}
          when S.fv_eq_lid fv PC.assert_lid ||
               S.fv_eq_lid fv PC.assert_norm_lid ->
       debug (fun () -> BU.print_string "Eliminated assertion\n");
       mk_t (Constant Unit)
 
-    | Tm_app(head, args)
+    | Tm_app {hd=head; args}
          when (Cfg.cfg_env cfg.core_cfg).erase_erasable_args
             || cfg.core_cfg.steps.for_extraction
             || cfg.core_cfg.debug.erase_erasable_args (* for debugging *) ->
@@ -521,11 +521,11 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
                    else translate cfg bs (fst x), snd x)
                  args)
 
-    | Tm_app(head, args) ->
+    | Tm_app {hd=head; args} ->
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
       iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
-    | Tm_match(scrut, ret_opt, branches, rc) ->
+    | Tm_match {scrutinee=scrut; ret_opt; brs=branches; rc_opt=rc} ->
       (* Thunked computation to reconstrct the returns annotation *)
       let make_returns () : option match_returns_ascription =
         match ret_opt with
@@ -621,15 +621,15 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
           mkAccuMatch scrut make_returns make_branches make_rc
       end
 
-    | Tm_meta (e, Meta_monadic(m, t))
+    | Tm_meta {tm=e; meta=Meta_monadic(m, t)}
         when cfg.core_cfg.reifying ->
       translate_monadic (m, t) cfg bs e
 
-    | Tm_meta (e, Meta_monadic_lift(m, m', t))
+    | Tm_meta {tm=e; meta=Meta_monadic_lift(m, m', t)}
         when cfg.core_cfg.reifying ->
       translate_monadic_lift (m, m', t) cfg bs e
 
-    | Tm_meta (e, meta) ->
+    | Tm_meta {tm=e; meta} ->
       let norm_meta () =
         let norm t = readback cfg (translate cfg bs t) in
         match meta with
@@ -646,7 +646,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
       in
       mk_t <| Meta(translate cfg bs e, Thunk.mk norm_meta)
 
-    | Tm_let((false, [lb]), body) -> // non-recursive let
+    | Tm_let {lbs=(false, [lb]); body} -> // non-recursive let
       if Cfg.should_reduce_local_let cfg.core_cfg lb
       then if cfg.core_cfg.steps.for_extraction
            && U.is_unit lb.lbtyp
@@ -668,7 +668,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
            let body () = translate cfg bs body in
            mk_t <| Accu(UnreducedLet(name, Thunk.mk typ, Thunk.mk def, Thunk.mk body, lb), [])
 
-    | Tm_let((_rec, lbs), body) -> //recursive let
+    | Tm_let {lbs=(_rec, lbs); body} -> //recursive let
       if not cfg.core_cfg.steps.zeta &&
          cfg.core_cfg.steps.pure_subterms_within_computations
       then //can't reduce this let rec
@@ -775,7 +775,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
     if n_args_rev >= arity
     then let bs, body =
            match (U.unascribe lb.lbdef).n with
-           | Tm_abs(bs, body, _) -> bs, body
+           | Tm_abs {bs; body} -> bs, body
            | _ -> [], lb.lbdef
          in
          if n_univs + List.length bs = arity
@@ -906,7 +906,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
          if is_qninfo_visible
          then begin
            match qninfo with
-           | Some (Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
+           | Some (Inr ({ sigel = Sig_let {lbs=(is_rec, lbs); lids=names} }, _us_opt), _rng) ->
              debug (fun () -> BU.print1 "(1) Decided to unfold %s\n" (P.fv_to_string fvar));
              let lbm = find_let lbs fvar in
              begin match lbm with
@@ -1043,7 +1043,7 @@ and readback_flag cfg (f : cflag) : S.cflag =
 and translate_monadic (m, ty) cfg bs e : t =
    let e = U.unascribe e in
    match e.n with
-   | Tm_let((false, [lb]), body) -> //elaborate this to M.bind
+   | Tm_let {lbs=(false, [lb]); body} -> //elaborate this to M.bind
      begin
      match Env.effect_decl_opt cfg.core_cfg.tcenv (Env.norm_eff_name cfg.core_cfg.tcenv m) with
      | None ->
@@ -1057,7 +1057,7 @@ and translate_monadic (m, ty) cfg bs e : t =
                 S.residual_flags=[];
                 S.residual_typ=Some ty
             } in
-           S.mk (Tm_abs([S.mk_binder (BU.left lb.lbname)], body, Some body_rc)) body.pos
+           S.mk (Tm_abs {bs=[S.mk_binder (BU.left lb.lbname)]; body; rc_opt=Some body_rc}) body.pos
        in
        let maybe_range_arg =
            if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
@@ -1087,17 +1087,17 @@ and translate_monadic (m, ty) cfg bs e : t =
 
       end
 
-   | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [(e, _)]) ->
+   | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=[(e, _)]} ->
      translate (reifying_false cfg) bs e
 
-   | Tm_app (head, args) ->
+   | Tm_app {hd=head; args} ->
      debug cfg (fun () -> BU.print2 "translate_monadic app (%s) @ (%s)\n" (P.term_to_string head)
                                                                           (P.args_to_string args));
      let fallback1 () =
          translate cfg bs e
      in
      let fallback2 () =
-         translate (reifying_false cfg) bs (S.mk (Tm_meta (e, Meta_monadic (m, ty))) e.pos)
+         translate (reifying_false cfg) bs (S.mk (Tm_meta {tm=e; meta=Meta_monadic (m, ty)}) e.pos)
      in
      begin match (U.un_uinst head).n with
      | Tm_fvar fv ->
@@ -1122,16 +1122,16 @@ and translate_monadic (m, ty) cfg bs e : t =
         fallback1 ()
      end
 
-   | Tm_match (sc, asc_opt, branches, lopt) ->
+   | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs=branches; rc_opt=lopt} ->
      (* Commutation of reify with match. See the comment in the normalizer about it. *)
      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm (Some m)) in
-     let tm = S.mk (Tm_match(sc, asc_opt, branches, lopt)) e.pos in
+     let tm = S.mk (Tm_match {scrutinee=sc; ret_opt=asc_opt; brs=branches; rc_opt=lopt}) e.pos in
      translate (reifying_false cfg) bs tm
 
-   | Tm_meta (t, Meta_monadic _) ->
+   | Tm_meta {tm=t; meta=Meta_monadic _} ->
      translate_monadic (m, ty) cfg bs e
 
-   | Tm_meta (t, Meta_monadic_lift (msrc, mtgt, ty')) ->
+   | Tm_meta {tm=t; meta=Meta_monadic_lift (msrc, mtgt, ty')} ->
      translate_monadic_lift (msrc, mtgt, ty') cfg bs e
 
    | _ -> failwith (BU.format1 "Unexpected case in translate_monadic: %s" (P.tag_of_term e))
@@ -1218,7 +1218,7 @@ and readback (cfg:config) (x:t) : term =
     | Constant (SConst c) -> mk (S.Tm_constant c)
 
     | Meta(t, m) ->
-      mk (S.Tm_meta (readback cfg t, Thunk.force m))
+      mk (S.Tm_meta {tm=readback cfg t; meta=Thunk.force m})
 
     | Type_t u ->
       mk (Tm_type u)
@@ -1334,7 +1334,10 @@ and readback (cfg:config) (x:t) : term =
         let returns_new = make_returns () in
         let branches_new = make_branches () in
         let rc_new = make_rc () in
-        S.mk (Tm_match (scrut_new, returns_new, branches_new, rc_new)) scrut.nbe_r
+        S.mk (Tm_match {scrutinee=scrut_new;
+                        ret_opt=returns_new;
+                        brs=branches_new;
+                        rc_opt=rc_new}) scrut.nbe_r
       in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.
@@ -1372,7 +1375,7 @@ and readback (cfg:config) (x:t) : term =
       let body = SS.close [S.mk_binder var] (readback cfg (Thunk.force body)) in
       let lbname = Inl ({ BU.left lb.lbname with sort = typ }) in
       let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
-      let hd = S.mk (Tm_let((false, [lb]), body)) Range.dummyRange in
+      let hd = S.mk (Tm_let {lbs=(false, [lb]); body}) Range.dummyRange in
       let args = readback_args cfg args in
       with_range (U.mk_app hd args)
 
@@ -1391,7 +1394,7 @@ and readback (cfg:config) (x:t) : term =
       in
       let body = readback cfg body in
       let lbs, body = SS.close_let_rec lbs body in
-      let hd = S.mk (Tm_let((true, lbs), body)) Range.dummyRange in
+      let hd = S.mk (Tm_let {lbs=(true, lbs); body}) Range.dummyRange in
       let args = readback_args cfg args in
       with_range (U.mk_app hd args)
 
@@ -1460,7 +1463,7 @@ and readback (cfg:config) (x:t) : term =
       //5. close everything to switch back to locally nameless
       let lbs, body = FStar.Syntax.Subst.close_let_rec lbs body in
       //6. Build the head term
-      let head = S.mk (Tm_let ((true, lbs), body)) Range.dummyRange in
+      let head = S.mk (Tm_let {lbs=(true, lbs); body}) Range.dummyRange in
       //7. Readback the arguments and apply it to the head
       let args = List.map (fun (x, q) -> readback cfg x, q) args in
       with_range (U.mk_app head args)

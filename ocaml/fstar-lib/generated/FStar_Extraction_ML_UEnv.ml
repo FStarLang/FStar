@@ -983,9 +983,7 @@ let (extend_with_monad_op_name :
               ed.FStar_Syntax_Syntax.mname uu___ in
           let uu___ =
             let uu___1 =
-              FStar_Syntax_Syntax.lid_as_fv lid
-                FStar_Syntax_Syntax.delta_constant
-                FStar_Pervasives_Native.None in
+              FStar_Syntax_Syntax.lid_as_fv lid FStar_Pervasives_Native.None in
             extend_fv g uu___1 ts false in
           match uu___ with
           | (g1, mlid, exp_b) ->
@@ -1016,9 +1014,7 @@ let (extend_with_action_name :
             FStar_Ident.lid_of_ids uu___ in
           let uu___ =
             let uu___1 =
-              FStar_Syntax_Syntax.lid_as_fv lid
-                FStar_Syntax_Syntax.delta_constant
-                FStar_Pervasives_Native.None in
+              FStar_Syntax_Syntax.lid_as_fv lid FStar_Pervasives_Native.None in
             extend_fv g uu___1 ts false in
           match uu___ with
           | (g1, mlid, exp_b) ->
@@ -1124,8 +1120,7 @@ let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
       let uu___1 =
         let uu___2 =
           let uu___3 = FStar_Parser_Const.failwith_lid () in
-          FStar_Syntax_Syntax.lid_as_fv uu___3
-            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+          FStar_Syntax_Syntax.lid_as_fv uu___3 FStar_Pervasives_Native.None in
         FStar_Pervasives.Inr uu___2 in
       extend_lb env uu___1 FStar_Syntax_Syntax.tun failwith_ty false in
     match uu___ with | (g, uu___1, uu___2) -> g
