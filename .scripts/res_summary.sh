@@ -37,16 +37,23 @@ if $printAll; then
 	done
 fi
 
+echo "NOTE: CPU time seems to be wildly exaggerated by runlim"
+echo "for multithreaded builds. Do not trust it for now, or run"
+echo "a build without parallelism to get a decent result"
+echo
+
 # Print the top 20 in memory and CPU time.
 echo "Top 20 memory:"
 for fp in "${!mem[@]}"; do
 	printf " %-80s %12s\n" "$fp" "${mem[$fp]} MB"
 done | sort -k2 -n -r  | head -n 20
+echo
 
 echo "Top 20 CPU time:"
 for fp in "${!cpu[@]}"; do
 	printf " %-80s %12s\n" "$fp" "${cpu[$fp]} s"
 done | sort -k2 -n -r  | head -n 20
+echo
 
 TOTMEM=0
 TOTCPU=0
