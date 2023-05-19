@@ -161,7 +161,7 @@ let rec (canon_point :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (158)) (Prims.of_int (32))
-                                   (Prims.of_int (159)) (Prims.of_int (41)))
+                                   (Prims.of_int (161)) (Prims.of_int (30)))
                                 (Obj.magic
                                    (step_lemma
                                       (FStar_Reflection_Builtins.pack_ln
@@ -185,8 +185,8 @@ let rec (canon_point :
                                               "FStar.Tactics.Canon.fst"
                                               (Prims.of_int (159))
                                               (Prims.of_int (41))
-                                              (Prims.of_int (160))
-                                              (Prims.of_int (41)))
+                                              (Prims.of_int (161))
+                                              (Prims.of_int (30)))
                                            (Obj.magic
                                               (canon_point
                                                  (FStar_Reflection_Arith.Mult
@@ -246,7 +246,7 @@ let rec (canon_point :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (165)) (Prims.of_int (32))
-                                   (Prims.of_int (166)) (Prims.of_int (41)))
+                                   (Prims.of_int (168)) (Prims.of_int (30)))
                                 (Obj.magic
                                    (step_lemma
                                       (FStar_Reflection_Builtins.pack_ln
@@ -270,8 +270,8 @@ let rec (canon_point :
                                               "FStar.Tactics.Canon.fst"
                                               (Prims.of_int (166))
                                               (Prims.of_int (41))
-                                              (Prims.of_int (167))
-                                              (Prims.of_int (41)))
+                                              (Prims.of_int (168))
+                                              (Prims.of_int (30)))
                                            (Obj.magic
                                               (canon_point
                                                  (FStar_Reflection_Arith.Mult
@@ -334,7 +334,7 @@ let rec (canon_point :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (173)) (Prims.of_int (32))
-                                   (Prims.of_int (174)) (Prims.of_int (41)))
+                                   (Prims.of_int (176)) (Prims.of_int (30)))
                                 (Obj.magic
                                    (step_lemma
                                       (FStar_Reflection_Builtins.pack_ln
@@ -358,8 +358,8 @@ let rec (canon_point :
                                               "FStar.Tactics.Canon.fst"
                                               (Prims.of_int (174))
                                               (Prims.of_int (41))
-                                              (Prims.of_int (175))
-                                              (Prims.of_int (32)))
+                                              (Prims.of_int (176))
+                                              (Prims.of_int (30)))
                                            (Obj.magic
                                               (canon_point
                                                  (FStar_Reflection_Arith.Mult
@@ -420,7 +420,7 @@ let rec (canon_point :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Canon.fst"
                                    (Prims.of_int (180)) (Prims.of_int (32))
-                                   (Prims.of_int (181)) (Prims.of_int (41)))
+                                   (Prims.of_int (183)) (Prims.of_int (30)))
                                 (Obj.magic
                                    (step_lemma
                                       (FStar_Reflection_Builtins.pack_ln
@@ -444,8 +444,8 @@ let rec (canon_point :
                                               "FStar.Tactics.Canon.fst"
                                               (Prims.of_int (181))
                                               (Prims.of_int (41))
-                                              (Prims.of_int (182))
-                                              (Prims.of_int (32)))
+                                              (Prims.of_int (183))
+                                              (Prims.of_int (30)))
                                            (Obj.magic
                                               (canon_point
                                                  (FStar_Reflection_Arith.Plus
@@ -508,7 +508,7 @@ let rec (canon_point :
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Canon.fst"
                                      (Prims.of_int (189)) (Prims.of_int (37))
-                                     (Prims.of_int (190)) (Prims.of_int (45)))
+                                     (Prims.of_int (192)) (Prims.of_int (20)))
                                   (Obj.magic
                                      (FStar_Tactics_Derived.apply_lemma
                                         (FStar_Reflection_Builtins.pack_ln
@@ -596,7 +596,7 @@ let rec (canon_point :
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.Canon.fst"
                                      (Prims.of_int (200)) (Prims.of_int (37))
-                                     (Prims.of_int (201)) (Prims.of_int (45)))
+                                     (Prims.of_int (203)) (Prims.of_int (20)))
                                   (Obj.magic
                                      (FStar_Tactics_Derived.apply_lemma
                                         (FStar_Reflection_Builtins.pack_ln
@@ -889,8 +889,8 @@ let rec (canon_point :
                                               "FStar.Tactics.Canon.fst"
                                               (Prims.of_int (245))
                                               (Prims.of_int (17))
-                                              (Prims.of_int (246))
-                                              (Prims.of_int (38)))
+                                              (Prims.of_int (247))
+                                              (Prims.of_int (30)))
                                            (Obj.magic
                                               (FStar_Tactics_Derived.trefl ()))
                                            (fun uu___2 ->
@@ -929,7 +929,7 @@ let (canon_point_entry : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
       (FStar_Range.mk_range "FStar.Tactics.Canon.fst" (Prims.of_int (264))
          (Prims.of_int (4)) (Prims.of_int (264)) (Prims.of_int (11)))
       (FStar_Range.mk_range "FStar.Tactics.Canon.fst" (Prims.of_int (264))
-         (Prims.of_int (12)) (Prims.of_int (265)) (Prims.of_int (26)))
+         (Prims.of_int (12)) (Prims.of_int (273)) (Prims.of_int (48)))
       (Obj.magic (FStar_Tactics_Builtins.norm []))
       (fun uu___1 ->
          (fun uu___1 ->
