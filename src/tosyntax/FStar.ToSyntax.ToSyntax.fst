@@ -3213,7 +3213,7 @@ let lookup_effect_lid env (l:lident) r : S.eff_decl =
       r
   | Some l -> l
 
-let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls attrs =
+let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
     // qualified with effect name
     let monad_env = Env.enter_monad_scope env eff_name in
@@ -3412,7 +3412,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       signature = eff_sig;
       combinators = combinators;
       actions = actions;
-      eff_attrs = List.map (desugar_term env) attrs;
+      eff_attrs = d_attrs;
       extraction_mode
     }) in
 
@@ -3421,7 +3421,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       sigquals = qualifiers;
       sigrng = d.drange;
       sigmeta = default_sigmeta  ;
-      sigattrs = [];
+      sigattrs = d_attrs;
       sigopts = None;
     }) in
 
@@ -3949,13 +3949,11 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
 
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    let attrs = d.attrs in
-    desugar_effect env d quals false eff_name eff_binders eff_typ eff_decls attrs
+    desugar_effect env d d_attrs quals false eff_name eff_binders eff_typ eff_decls
 
   | LayeredEffect (DefineEffect (eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    let attrs = d.attrs in
-    desugar_effect env d quals true eff_name eff_binders eff_typ eff_decls attrs
+    desugar_effect env d d_attrs quals true eff_name eff_binders eff_typ eff_decls
 
   | LayeredEffect (RedefineEffect _) ->
     failwith "Impossible: LayeredEffect (RedefineEffect _) (should not be parseable)"

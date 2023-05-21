@@ -7564,25 +7564,25 @@ let (lookup_effect_lid :
 let rec (desugar_effect :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.decl ->
-      FStar_Parser_AST.qualifiers ->
-        Prims.bool ->
-          FStar_Ident.ident ->
-            FStar_Parser_AST.binder Prims.list ->
-              FStar_Parser_AST.term ->
-                FStar_Parser_AST.decl Prims.list ->
-                  FStar_Parser_AST.term Prims.list ->
+      FStar_Syntax_Syntax.term Prims.list ->
+        FStar_Parser_AST.qualifiers ->
+          Prims.bool ->
+            FStar_Ident.ident ->
+              FStar_Parser_AST.binder Prims.list ->
+                FStar_Parser_AST.term ->
+                  FStar_Parser_AST.decl Prims.list ->
                     (FStar_Syntax_DsEnv.env * FStar_Syntax_Syntax.sigelt
                       Prims.list))
   =
   fun env ->
     fun d ->
-      fun quals ->
-        fun is_layered ->
-          fun eff_name ->
-            fun eff_binders ->
-              fun eff_typ ->
-                fun eff_decls ->
-                  fun attrs ->
+      fun d_attrs ->
+        fun quals ->
+          fun is_layered ->
+            fun eff_name ->
+              fun eff_binders ->
+                fun eff_typ ->
+                  fun eff_decls ->
                     let env0 = env in
                     let monad_env =
                       FStar_Syntax_DsEnv.enter_monad_scope env eff_name in
@@ -8134,10 +8134,7 @@ let rec (desugar_effect :
                                             else
                                               FStar_Syntax_Syntax.Extract_primitive in
                                         let sigel =
-                                          let uu___5 =
-                                            let uu___6 =
-                                              FStar_Compiler_List.map
-                                                (desugar_term env2) attrs in
+                                          FStar_Syntax_Syntax.Sig_new_effect
                                             {
                                               FStar_Syntax_Syntax.mname =
                                                 mname;
@@ -8153,12 +8150,10 @@ let rec (desugar_effect :
                                               FStar_Syntax_Syntax.actions =
                                                 actions1;
                                               FStar_Syntax_Syntax.eff_attrs =
-                                                uu___6;
+                                                d_attrs;
                                               FStar_Syntax_Syntax.extraction_mode
                                                 = extraction_mode
                                             } in
-                                          FStar_Syntax_Syntax.Sig_new_effect
-                                            uu___5 in
                                         let se =
                                           {
                                             FStar_Syntax_Syntax.sigel = sigel;
@@ -8168,7 +8163,8 @@ let rec (desugar_effect :
                                               qualifiers;
                                             FStar_Syntax_Syntax.sigmeta =
                                               FStar_Syntax_Syntax.default_sigmeta;
-                                            FStar_Syntax_Syntax.sigattrs = [];
+                                            FStar_Syntax_Syntax.sigattrs =
+                                              d_attrs;
                                             FStar_Syntax_Syntax.sigopts =
                                               FStar_Pervasives_Native.None
                                           } in
@@ -9317,15 +9313,13 @@ and (desugar_decl_core :
         | FStar_Parser_AST.NewEffect (FStar_Parser_AST.DefineEffect
             (eff_name, eff_binders, eff_typ, eff_decls)) ->
             let quals = d.FStar_Parser_AST.quals in
-            let attrs = d.FStar_Parser_AST.attrs in
-            desugar_effect env d quals false eff_name eff_binders eff_typ
-              eff_decls attrs
+            desugar_effect env d d_attrs quals false eff_name eff_binders
+              eff_typ eff_decls
         | FStar_Parser_AST.LayeredEffect (FStar_Parser_AST.DefineEffect
             (eff_name, eff_binders, eff_typ, eff_decls)) ->
             let quals = d.FStar_Parser_AST.quals in
-            let attrs = d.FStar_Parser_AST.attrs in
-            desugar_effect env d quals true eff_name eff_binders eff_typ
-              eff_decls attrs
+            desugar_effect env d d_attrs quals true eff_name eff_binders
+              eff_typ eff_decls
         | FStar_Parser_AST.LayeredEffect (FStar_Parser_AST.RedefineEffect
             uu___) ->
             failwith
