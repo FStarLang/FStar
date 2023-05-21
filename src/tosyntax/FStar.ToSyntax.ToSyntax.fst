@@ -3521,30 +3521,27 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     env, [se]
 
 
-and desugar_decl_aux env (d: decl): (env_t * sigelts) =
+and desugar_decl_maybe_fail_attr env (d: decl): (env_t * sigelts) =
   let no_fail_attrs (ats : list S.term) : list S.term =
       List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
   in
 
-  // Rather than carrying the attributes down the maze of recursive calls, we
-  // let each desugar_foo function provide an empty list, then override it here.
-  // However, we still pass `attrs` to desguar_decl_noattrs so that a Sig_let
-  // can propagate them to individual bindings. Also the `fail` attribute behaves
+  // The `fail` attribute behaves
   // differentrly! We only keep that one on the first new decl.
   let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
                                          * will shadow a previous val *)
-  let attrs = List.map (desugar_term env) d.attrs in
 
   (* If this is an expect_failure, check to see if it fails.
    * If it does, check that the errors match as we normally do.
    * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
   let env, sigelts =
+    let attrs = List.map (desugar_term env) d.attrs in
     match get_fail_attr false attrs with
     | Some (expected_errs, lax) ->
       let d = { d with attrs = [] } in
       let errs, r = Errors.catch_errors (fun () ->
                       Options.with_saved_options (fun () ->
-                        desugar_decl_noattrs attrs env d)) in
+                        desugar_decl_core env attrs d)) in
       begin match errs, r with
       | [], Some (env, ses) ->
         (* Succeeded desugaring, carry on, but make a Sig_fail *)
@@ -3580,28 +3577,17 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
         end
       end
     | None ->
-      desugar_decl_noattrs attrs env d
+      desugar_decl_core env attrs d
   in
-
-  let rec val_attrs (ses:list sigelt) : list S.term =
-    match ses with
-    | [{ sigel = Sig_let _}]
-    |  { sigel = Sig_inductive_typ _ } :: _ ->
-      lids_of_sigelt (List.hd sigelts) |>
-      List.collect (fun nm -> snd (Env.lookup_letbinding_quals_and_attrs env0 nm))
-    | [{ sigel = Sig_fail {ses} }] ->
-      List.collect (fun se -> val_attrs [se]) ses
-    | _ -> []
-  in
-  let attrs = attrs @ val_attrs sigelts in
-  env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
+  env, sigelts
 
 and desugar_decl env (d:decl) :(env_t * sigelts) =
-  let env, ses = desugar_decl_aux env d in
+  let env, ses = desugar_decl_maybe_fail_attr env d in
   env, ses |> List.map generalize_annotated_univs
 
-and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
+and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
+  let desugar_attrs d = d_attrs in
   match d.d with
   | Pragma p ->
     let p = trans_pragma p in
@@ -3609,8 +3595,8 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
     let se = { sigel = Sig_pragma p;
                sigquals = [];
                sigrng = d.drange;
-               sigmeta = default_sigmeta  ;
-               sigattrs = [];
+               sigmeta = default_sigmeta;
+               sigattrs = desugar_attrs d;
                sigopts = None; } in
     env, [se]
 
@@ -3742,7 +3728,8 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
 
                | _ -> se
              in
-             List.map add_class_attr ses, List.concatMap (splice_decl meths) ses
+             List.map add_class_attr ses,
+             List.concatMap (splice_decl meths) ses
         else ses, []
     in
     let env = List.fold_left push_sigelt env extra in
@@ -3782,6 +3769,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
           in
           (* Propagate top-level attrs to each lb. The lb.lbattrs field should be empty,
            * but just being safe here. *)
+          let top_attrs = desugar_attrs d in
           let lbs =
             let (isrec, lbs0) = lbs in
             let lbs0 = lbs0 |> List.map (fun lb -> { lb with lbattrs = lb.lbattrs @ val_attrs @ top_attrs }) in
@@ -3905,7 +3893,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
             sigquals = [S.Assumption];
             sigrng = d.drange;
             sigmeta = default_sigmeta  ;
-            sigattrs = [];
+            sigattrs = desugar_attrs d;
             sigopts = None; }]
 
   | Val(id, t) ->
@@ -3917,12 +3905,11 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
         then Assumption::quals
         else quals in
     let lid = qualify env id in
-    let attrs = List.map (desugar_term env) d.attrs in
     let se = { sigel = Sig_declare_typ {lid; us=[]; t};
                sigquals = List.map (trans_qual None) quals;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = attrs;
+               sigattrs = desugar_attrs d ;
                sigopts = None; } in
     let env = push_sigelt env se in
     env, [se]
@@ -3937,17 +3924,18 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
     in
     let l = qualify env id in
     let qual = [ExceptionConstructor] in
+    let top_attrs = desugar_attrs d in
     let se = { sigel = Sig_datacon {lid=l;us=[];t;ty_lid=C.exn_lid;num_ty_params=0;mutuals=[C.exn_lid]};
                sigquals = qual;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = [];
+               sigattrs = top_attrs;
                sigopts = None; } in
     let se' = { sigel = Sig_bundle {ses=[se]; lids=[l]};
                 sigquals = qual;
                 sigrng = d.drange;
                 sigmeta = default_sigmeta  ;
-                sigattrs = [];
+                sigattrs = top_attrs;
                 sigopts = None; } in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projector_names [] env se in
@@ -3975,6 +3963,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
   | SubEffect l ->
     let src_ed = lookup_effect_lid env l.msource d.drange in
     let dst_ed = lookup_effect_lid env l.mdest d.drange in
+    let top_attrs = desugar_attrs d in
     if not (U.is_layered src_ed || U.is_layered dst_ed)
     then let lift_wp, lift = match l.lift_op with
            | NonReifiableLift t -> Some ([],desugar_term env t), None
@@ -3989,7 +3978,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
                     sigquals = [];
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = [];
+                    sigattrs = top_attrs;
                     sigopts = None} in
          env, [se]
     else
@@ -4007,7 +3996,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
            sigquals = [];
            sigrng = d.drange;
            sigmeta = default_sigmeta;
-           sigattrs = [];
+           sigattrs = top_attrs;
            sigopts = None}]
        | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
 
@@ -4015,6 +4004,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
     let m = lookup_effect_lid env m_eff d.drange in
     let n = lookup_effect_lid env n_eff d.drange in
     let p = lookup_effect_lid env p_eff d.drange in
+    let top_attrs = desugar_attrs d in
     env, [{
       sigel = Sig_polymonadic_bind {
         m_lid=m.mname;
@@ -4026,12 +4016,13 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
       sigquals = [];
       sigrng = d.drange;
       sigmeta = default_sigmeta;
-      sigattrs = [];
+      sigattrs = top_attrs;
       sigopts = None }]
 
   | Polymonadic_subcomp (m_eff, n_eff, subcomp) ->
     let m = lookup_effect_lid env m_eff d.drange in
     let n = lookup_effect_lid env n_eff d.drange in
+    let top_attrs = desugar_attrs d in    
     env, [{
       sigel = Sig_polymonadic_subcomp {
         m_lid=m.mname;
@@ -4042,16 +4033,17 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
       sigquals = [];
       sigrng = d.drange;
       sigmeta = default_sigmeta;
-      sigattrs = [];
+      sigattrs = top_attrs;
       sigopts = None }]
 
   | Splice (is_typed, ids, t) ->
     let t = desugar_term env t in
+    let top_attrs = desugar_attrs d in    
     let se = { sigel = Sig_splice {is_typed; lids=List.map (qualify env) ids; tac=t};
                sigquals = List.map (trans_qual None) d.quals;
                sigrng = d.drange;
                sigmeta = default_sigmeta;
-               sigattrs = [];
+               sigattrs = top_attrs;
                sigopts = None; } in
     let env = push_sigelt env se in
     env, [se]
@@ -4078,7 +4070,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
       | Inr d' ->
         let quals = d'.quals @ d.quals in
         let attrs = d'.attrs @ d.attrs in
-        desugar_decl_aux env { d' with quals; attrs; drange=d.drange }
+        desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange }
 
 let desugar_decls env decls =
   let env, sigelts =
