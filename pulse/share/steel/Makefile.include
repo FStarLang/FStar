@@ -10,7 +10,7 @@ endif
 
 FSTAR_FILES:=$(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
 
-FSTAR_OPTIONS += $(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel' --include $(STEEL_HOME)/lib/steel --load_cmxs steel
+FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel' --include $(STEEL_HOME)/lib/steel --load_cmxs steel
 
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 
@@ -20,6 +20,7 @@ MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 	$(call msg, "CHECK", $(basename $(notdir $@)))
 	@# You can debug with --debug $(basename $(notdir $<))
 	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
+	touch -c $@
 
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND")
@@ -31,7 +32,15 @@ include .depend
 
 verify: $(ALL_CHECKED_FILES)
 
-clean:
-	rm -f *.checked .depend*
+%.krml:
+	$(MY_FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
+	  --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	touch -c $@
 
-.PHONY: all verify clean
+clean::
+	rm -f *.checked .depend* *.krml
+
+.PHONY: all verify clean %.fst-in %.fsti-in
+
+%.fst-in %.fsti-in:
+	@echo $(FSTAR_OPTIONS)

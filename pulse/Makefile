@@ -1,40 +1,5 @@
 all: lib verify
 
-# Regeneration rules
-
-.PHONY: extract-ocaml
-extract-ocaml: extract-tactics extract-extraction
-
-.PHONY: extract-tactics
-extract-tactics:
-	+$(MAKE) -C src/ocaml -f extract-tactics.Makefile
-
-.PHONY: extract-extraction
-extract-extraction:
-	+$(MAKE) -C src/extraction
-
-.PHONY: extract-c
-extract-c: verify
-	+$(MAKE) verify
-	+$(MAKE) -C src/c extract
-
-.PHONY: extract
-extract:
-	+$(MAKE) extract-ocaml
-	+$(MAKE) extract-c
-
-.PHONY: boot
-boot:
-	+$(MAKE) extract
-	+$(MAKE) all
-
-.PHONY: full-boot
-full-boot:
-	rm -rf src/ocaml/generated include/steel/Steel_SpinLock.h
-	+$(MAKE) boot
-
-# End user rules
-
 ifneq (,$(FSTAR_HOME))
   ifeq ($(OS),Windows_NT)
     OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
@@ -59,9 +24,16 @@ ocaml:
 lib:
 	+$(MAKE) -C src/c
 
+.PHONY: verify-steel
+verify-steel: ocaml
+	+$(MAKE) -C lib/steel steel
+
+.PHONY: verify-pulse
+verify-pulse: verify-steel
+	+$(MAKE) -C lib/steel pulse
+
 .PHONY: verify
-verify: ocaml
-	+$(MAKE) -C lib/steel
+verify: verify-steel verify-pulse
 
 clean:
 	+$(MAKE) -C lib/steel clean ; true
@@ -70,3 +42,34 @@ clean:
 .PHONY: test
 test: all
 	+$(MAKE) -C share/steel
+
+ifeq ($(OS),Windows_NT)
+  STEEL_INSTALL_PREFIX=$(shell cygpath -m $(PREFIX))
+else
+  STEEL_INSTALL_PREFIX=$(PREFIX)
+endif
+export STEEL_INSTALL_PREFIX
+
+INSTALL := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
+ifdef INSTALL
+   INSTALL := ginstall
+else
+   INSTALL := install
+endif
+export INSTALL
+
+.PHONY: install install-ocaml install-lib install-include install-share
+
+install-ocaml:
+	cd src/ocaml && dune install --prefix=$(STEEL_INSTALL_PREFIX)
+
+install-lib:
+	+$(MAKE) -C lib/steel install
+
+install-include:
+	+$(MAKE) -C include/steel install
+
+install-share:
+	+$(MAKE) -C share/steel install
+
+install: install-ocaml install-lib install-include install-share

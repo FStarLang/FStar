@@ -9,7 +9,7 @@ include $(FSTAR_HOME)/ulib/gmake/z3.mk    # This pins $(Z3) ...
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk # and $(FSTAR) for all sub-make calls
 include $(FSTAR_HOME)/src/Makefile.boot.common
 
-OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/generated
+OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
 
 EXTRACT_FILES=ExtractSteel.ml
