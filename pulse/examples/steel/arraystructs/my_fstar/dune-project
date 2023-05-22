@@ -1,8 +1,0 @@
-(lang dune 3.2)
-(name steel_c)
-(generate_opam_files false)
-
-(package
-  (name steel_c)
-  (synopsis "The F* programming language and proof assistant with extraction of Steel files to C")
-)
