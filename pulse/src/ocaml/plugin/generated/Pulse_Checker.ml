@@ -7693,13 +7693,13 @@ let (check_rewrite :
                                                                     (Prims.of_int (1229))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (1230))
-                                                                    (Prims.of_int (67)))
+                                                                    (Prims.of_int (69)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
                                                                     (Prims.of_int (1229))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (1230))
-                                                                    (Prims.of_int (67)))
+                                                                    (Prims.of_int (69)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -7707,7 +7707,7 @@ let (check_rewrite :
                                                                     (Prims.of_int (1230))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (1230))
-                                                                    (Prims.of_int (66)))
+                                                                    (Prims.of_int (68)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
@@ -7716,7 +7716,7 @@ let (check_rewrite :
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.print_issues
-                                                                    issues))
+                                                                    g1 issues))
                                                                     (fun
                                                                     uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
