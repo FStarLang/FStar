@@ -51,24 +51,22 @@ let rec (elab_term : Pulse_Syntax.term -> FStar_Reflection_Types.term) =
         let bv1 =
           FStar_Reflection_Builtins.pack_bv
             (FStar_Reflection_Typing.make_bv_with_name
-               bv.Pulse_Syntax.bv_ppname bv.Pulse_Syntax.bv_index
-               Pulse_Reflection_Util.tun) in
+               bv.Pulse_Syntax.bv_ppname bv.Pulse_Syntax.bv_index) in
         FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_BVar bv1)
     | Pulse_Syntax.Tm_Var nm ->
         let bv =
           FStar_Reflection_Builtins.pack_bv
             (FStar_Reflection_Typing.make_bv_with_name
-               nm.Pulse_Syntax.nm_ppname nm.Pulse_Syntax.nm_index
-               Pulse_Reflection_Util.tun) in
+               nm.Pulse_Syntax.nm_ppname nm.Pulse_Syntax.nm_index) in
         FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Var bv)
     | Pulse_Syntax.Tm_FVar l ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv l))
+             (FStar_Reflection_Builtins.pack_fv l.Pulse_Syntax.fv_name))
     | Pulse_Syntax.Tm_UInst (l, us) ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_UInst
-             ((FStar_Reflection_Builtins.pack_fv l),
+             ((FStar_Reflection_Builtins.pack_fv l.Pulse_Syntax.fv_name),
                (FStar_List_Tot_Base.map elab_universe us)))
     | Pulse_Syntax.Tm_Constant c ->
         FStar_Reflection_Builtins.pack_ln
@@ -80,7 +78,7 @@ let rec (elab_term : Pulse_Syntax.term -> FStar_Reflection_Types.term) =
           (FStar_Reflection_Data.Tv_Refine
              ((FStar_Reflection_Builtins.pack_bv
                  (FStar_Reflection_Typing.make_bv_with_name
-                    b.Pulse_Syntax.binder_ppname Prims.int_zero ty)), phi1))
+                    b.Pulse_Syntax.binder_ppname Prims.int_zero)), ty, phi1))
     | Pulse_Syntax.Tm_PureApp (e1, q, e2) ->
         let e11 = elab_term e1 in
         let e21 = elab_term e2 in
@@ -96,9 +94,9 @@ let rec (elab_term : Pulse_Syntax.term -> FStar_Reflection_Types.term) =
         let e21 = elab_term e2 in
         let bv =
           FStar_Reflection_Builtins.pack_bv
-            (FStar_Reflection_Typing.make_bv Prims.int_zero t1) in
+            (FStar_Reflection_Typing.make_bv Prims.int_zero) in
         FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_Let (false, [], bv, e11, e21))
+          (FStar_Reflection_Data.Tv_Let (false, [], bv, t1, e11, e21))
     | Pulse_Syntax.Tm_Type u ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_Type (elab_universe u))
@@ -160,6 +158,7 @@ let rec (elab_term : Pulse_Syntax.term -> FStar_Reflection_Types.term) =
         FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
     | Pulse_Syntax.Tm_Unknown ->
         FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
+    | Pulse_Syntax.Tm_FStar t -> t
 and (elab_comp : Pulse_Syntax.comp -> FStar_Reflection_Types.term) =
   fun c ->
     match c with

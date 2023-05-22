@@ -14,7 +14,7 @@ endif
 
 FSTAR_FILES:=$(wildcard $(LIB_PULSE)/*.fst $(LIB_PULSE)/*.fsti)
 
-MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --include $(LIB_STEEL) --include $(LIB_PULSE) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --warn_error @241 --already_cached '*,-Pulse' --load_cmxs steel
+MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --include $(LIB_STEEL) --include $(LIB_PULSE) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --warn_error @241 --already_cached '*,' --load_cmxs steel
 EXTRACT_MODULES=--extract '+Pulse,-Pulse.Steel'
 
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
@@ -29,6 +29,7 @@ COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	chmod -x $@
 
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND")
@@ -38,6 +39,9 @@ $(OUTPUT_DIRECTORY)/%.ml:
 
 include .depend
 
-extract: $(ALL_ML_FILES)
+FStar_Parser_Parse.mly: $(FSTAR_HOME)/ocaml/fstar-lib/FStar_Parser_Parse.mly
+	cp $^ $@
+
+extract: $(ALL_ML_FILES) FStar_Parser_Parse.mly
 
 .PHONY: all extract

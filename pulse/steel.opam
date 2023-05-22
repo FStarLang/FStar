@@ -1,0 +1,19 @@
+opam-version: "2.0"
+version: "2023.04.15~dev"
+maintainer: "taramana@microsoft.com"
+authors: "Aymeric Fromherz <aymeric.fromherz@inria.fr>,Tahina Ramananandro <taramana@microsoft.com>,Aseem Rastogi <aseemr@microsoft.com>,Nik Swamy <nswamy@microsoft.com>"
+homepage: "http://fstar-lang.org"
+license: "Apache-2.0"
+depends: [
+  "ocaml"
+  "fstar" {>= "2023.04.15~dev"}
+]
+build: [
+  [make "PREFIX=%{prefix}%" "-j" jobs]
+]
+install: [
+  [make "PREFIX=%{prefix}%" "install"]
+]
+dev-repo: "git://github.com/FStarLang/steel"
+bug-reports: "https://github.com/FStarLang/steel/issues"
+synopsis: "The Steel separation logic framework for F*"

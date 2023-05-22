@@ -12,7 +12,7 @@ include $(FSTAR_HOME)/src/Makefile.boot.common
 OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
 
-EXTRACT_FILES=ExtractSteel.ml
+EXTRACT_FILES=ExtractSteel.ml ExtractSteelC.ml
 extract: $(addprefix $(OUTPUT_DIRECTORY)/,$(EXTRACT_FILES))
 
 # And then, in a separate invocation, from each .checked.lax we
@@ -24,3 +24,4 @@ $(OUTPUT_DIRECTORY)/%.ml: %.fst
 		   --odir "$(OUTPUT_DIRECTORY)" \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $<))
+	chmod -x $@

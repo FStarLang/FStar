@@ -155,7 +155,7 @@ let mk_total t = R.C_Total t
 let binder_of_t_q t q = RT.binder_of_t_q t q
 let binder_of_t_q_s t q s = RT.mk_binder s 0 t q
 let bound_var i : R.term = RT.bound_var i
-let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i tun))) 
+let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv i)))
 
 let arrow_dom = (R.term & R.aqualv)
 let mk_arrow (f:arrow_dom) (out:R.term) : R.term =
@@ -245,7 +245,7 @@ let stt_vprop_equiv (t1 t2:R.term) =
 		pack_ln (Tv_App t (t2, Q_Explicit))
 
 let return_stt_lid = mk_steel_wrapper_lid "return_stt"
-let return_stt_noeq_lid = mk_steel_wrapper_lid "return_stt_noeq"
+let return_stt_noeq_lid = mk_steel_wrapper_lid "return"
 let return_stt_atomic_lid = mk_steel_wrapper_lid "return_stt_atomic"
 let return_stt_atomic_noeq_lid = mk_steel_wrapper_lid "return_stt_atomic_noeq"
 let return_stt_ghost_lid = mk_steel_wrapper_lid "return_stt_ghost"
@@ -516,13 +516,22 @@ let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
 
 let mk_rewrite (p q:R.term) =
   let open R in
-		let t = pack_ln (Tv_FVar (pack_fv (mk_steel_wrapper_lid "rewrite"))) in
-		let t = pack_ln (Tv_App t (p, Q_Explicit)) in
-		let t = pack_ln (Tv_App t (q, Q_Explicit)) in
-		pack_ln (Tv_App t (`(), Q_Explicit))
+  let t = pack_ln (Tv_FVar (pack_fv (mk_steel_wrapper_lid "rewrite"))) in
+  let t = pack_ln (Tv_App t (p, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (q, Q_Explicit)) in
+  pack_ln (Tv_App t (`(), Q_Explicit))
 
 
-
+let mk_withlocal (ret_u:R.universe) (a init pre ret_t post body:R.term) =
+  let open R in
+  let lid = mk_steel_wrapper_lid "with_local" in
+  let t = pack_ln (Tv_UInst (R.pack_fv lid) [ret_u]) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (init, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (pre, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (ret_t, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (post, Q_Implicit)) in
+  pack_ln (Tv_App t (body, Q_Explicit))
 
 ///// Utils to derive equiv for common constructs /////
 let mk_star_equiv (g:R.env) (t1 t2 t3 t4:R.term)
@@ -552,3 +561,25 @@ let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2
   : RT.equiv g (mk_stt_ghost_comp u res inames pre1 post1)
                (mk_stt_ghost_comp u res inames pre2 post2)
   = admit ()
+
+let ref_lid = ["Steel"; "ST"; "Reference"; "ref"]
+let pts_to_lid = ["Steel"; "ST"; "Reference"; "pts_to"]
+let full_perm_lid = ["Steel"; "FractionalPermission"; "full_perm"]
+
+let mk_ref (a:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv ref_lid)) in
+  pack_ln (Tv_App t (a, Q_Explicit))
+
+let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv pts_to_lid)) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (r, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (perm, Q_Explicit)) in
+  pack_ln (Tv_App t (v, Q_Explicit))
+
+let full_perm_tm : R.term =
+  let open R in
+  pack_ln (Tv_FVar (pack_fv full_perm_lid))
+

@@ -10,7 +10,7 @@ val try_inst_uvs_in_goal (ctxt:term)
                          (goal:vprop)
   : T.Tac (list (term & term))
 
-val infer (head:term) (t_head:term) (ctxt_pre:term)
+val infer (head:term) (t_head:term) (ctxt_pre:term) (r:range)
   : T.Tac st_term
 
 val apply_solution (sol:list (term & term)) (t:term)

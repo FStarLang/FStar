@@ -63,7 +63,7 @@ let try_readback_st_comp
   : T.Tac (option (c:comp{elab_comp c == t})) =
 
   let open R in
-  let hd, args = collect_app t in
+  let hd, args = T.collect_app t in
   match inspect_ln hd with
   | Tv_UInst fv [u] ->
     let fv_lid = inspect_fv fv in
@@ -72,7 +72,7 @@ let try_readback_st_comp
          | [res; pre; post] ->
            (match inspect_ln (fst post) with
             | Tv_Abs b body ->
-              let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs } =
+              let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs; binder_sort=sort } =
                   inspect_binder b
               in    
               let bv_view = inspect_bv bv in
@@ -81,7 +81,7 @@ let try_readback_st_comp
                       attrs == []                /\
                       // bv_view.bv_ppname == "_"   /\
                       bv_view.bv_index == 0      /\
-                      bv_view.bv_sort == fst res /\
+                      sort == fst res /\
                       snd res == Q_Explicit      /\
                       snd pre == Q_Explicit      /\
                       snd post == Q_Explicit);
@@ -144,7 +144,7 @@ let rec readback_ty (t:R.term)
   | Tv_Var bv ->
     let bv_view = inspect_bv bv in
     assume (bv_view.bv_index >= 0);
-    let r = Tm_Var {nm_index=bv_view.bv_index;nm_ppname=bv_view.bv_ppname} in
+    let r = Tm_Var {nm_index=bv_view.bv_index;nm_ppname=bv_view.bv_ppname;nm_range=range_of_term t} in
     // Needs some tweaks to how names are designed in the DSL,
     //   e.g. may need to expose ppname, what happens to tun bv sort?
     assume (elab_term r == t);
@@ -153,7 +153,7 @@ let rec readback_ty (t:R.term)
   | Tv_BVar bv ->
     let bv_view = inspect_bv bv in
     assume (bv_view.bv_index >= 0);
-    let r = Tm_BVar {bv_index=bv_view.bv_index;bv_ppname=bv_view.bv_ppname} in
+    let r = Tm_BVar {bv_index=bv_view.bv_index;bv_ppname=bv_view.bv_ppname; bv_range=range_of_term t} in
     // Similar to the name case
     assume (elab_term r == t);
     Some r
@@ -168,10 +168,10 @@ let rec readback_ty (t:R.term)
     then Some Tm_Inames
     else if fv_lid = emp_inames_lid
     then Some Tm_EmpInames
-    else Some (Tm_FVar (inspect_fv fv))
+    else Some (Tm_FVar {fv_name=inspect_fv fv; fv_range=range_of_term t})
 
   | Tv_UInst fv us -> (
-    let fv = inspect_fv fv in
+    let fv = {fv_name=inspect_fv fv; fv_range=range_of_term t} in
     match readback_universes us with
     | None -> None
     | Some us' -> Some (Tm_UInst fv us')
@@ -187,7 +187,7 @@ let rec readback_ty (t:R.term)
         let? arg' = readback_ty a in
         Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:term {elab_term ty == t})
     in
-    let head, args = R.collect_app t in
+    let head, args = T.collect_app t in
     begin
     match inspect_ln head, args with
     | Tv_FVar fv, [(a1,_); (a2,_)] -> 
@@ -238,9 +238,9 @@ let rec readback_ty (t:R.term)
     | _ -> aux ()
     end
   
-  | Tv_Refine bv phi ->
+  | Tv_Refine bv sort phi ->
     let bv_view = inspect_bv bv in
-    let? ty = readback_ty bv_view.bv_sort in
+    let? ty = readback_ty sort in
     let? phi = readback_ty phi in
     let r = Tm_Refine {binder_ty=ty;binder_ppname=bv_view.bv_ppname} phi in
     assume (elab_term r == t);
@@ -249,7 +249,7 @@ let rec readback_ty (t:R.term)
   | Tv_Abs _ _ -> None  //T.fail "readback_ty: unexpected Tv_Abs"
 
   | Tv_Arrow b c -> (
-    let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs } =
+    let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs; binder_sort=sort } =
         inspect_binder b
     in
     assume (attrs == []);
@@ -263,7 +263,7 @@ let rec readback_ty (t:R.term)
       let c_view = inspect_comp c in
       (match c_view with
        | C_Total c_t ->
-         let? b_ty' = readback_ty bv_view.bv_sort in
+         let? b_ty' = readback_ty sort in
          let? c' = readback_comp c_t in
          Some (Tm_Arrow {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname} q c' <: ty:term{ elab_term ty == t})
       | _ -> None)
@@ -285,27 +285,41 @@ let rec readback_ty (t:R.term)
 
   | Tv_Uvar _ _ -> T.fail "readback_ty: unexpected Tv_Uvar"
 
-  | Tv_Let recf attrs bv def body ->
+  | Tv_Let recf attrs bv ty def body ->
     if recf
     then T.fail "readback_ty: unexpected recursive Tv_Let"
     else begin
       assume (attrs == []);
       let bv_view = inspect_bv bv in
       assume (bv_view.bv_index == 0);
-      let? bv_t' = readback_ty bv_view.bv_sort in
+      let? bv_t' = readback_ty ty in
       let? def' = readback_ty def in
       let? body' = readback_ty body in
       FStar.Sealed.sealed_singl bv_view.bv_ppname RT.pp_name_default;
       Some (Tm_Let bv_t' def' body' <: ty:term { elab_term ty == t })
     end
 
-  | Tv_Match _ _ _ -> T.fail "readbackty: Tv_Match not yet implemented"
+  | Tv_Match _ _ _ -> Some (Tm_FStar t)
 
-  | Tv_AscribedT _ _ _ _
-  | Tv_AscribedC _ _ _ _ -> T.fail "readbackty: ascription nodes not supported"
+  //
+  // The following is dropping the ascription, which is not ideal
+  // However, if we don't, then ascriptions start to come in the way of
+  //   R.term_eq used to decide equality of Tm_FStar terms,
+  //   which then results in framing failures
+  //
+  // At least in the examples it came up, the ascription was a redundant
+  //   ascription on F* Tm_Match
+  //   I tried an F* patch that did not add the ascription, if it was already
+  //   ascribed, but that failed a couple of proofs in HACL* : (
+  //
+  | Tv_AscribedT t _ _ _
+  | Tv_AscribedC t _ _ _ -> admit (); Some (Tm_FStar t)
 
-  | Tv_Unknown -> Some (Tm_Unknown)
-  
+  | Tv_Unknown ->
+    Some Tm_Unknown
+
+  | Tv_Unsupp ->
+    None
   
 and readback_comp (t:R.term)
   : T.Tac (option (c:comp{ elab_comp c == t})) =

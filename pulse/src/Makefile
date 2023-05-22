@@ -6,37 +6,76 @@
 all: boot
 .PHONY: all
 
+.PHONY: build
+build:
+	+$(MAKE) -C .. all
+
+# Extraction rules assume that a snapshot has already been compiled.
+
 .PHONY: extract-ocaml
-extract-ocaml: extract-steel-plugin extract-extraction extract-pulse-plugin
+extract-ocaml: extract-steel-plugin extract-extraction extract-syntax-extension extract-pulse-plugin
 
 .PHONY: extract-steel-plugin
 extract-steel-plugin:
 	+$(MAKE) -C ocaml/plugin -f extract-steel.Makefile
 
 .PHONY: extract-pulse-plugin
-extract-pulse-plugin: verify-steel
+extract-pulse-plugin:
 	+$(MAKE) -C ocaml/plugin -f extract-pulse.Makefile
 
 .PHONY: extract-extraction
 extract-extraction:
 	+$(MAKE) -C extraction
 
-.PHONY: verify-steel
-verify-steel: extract-steel-plugin
-	+$(MAKE) -C .. verify-steel
+
+.PHONY: extract-syntax-extension
+extract-syntax-extension:
+	+$(MAKE) -C syntax_extension
 
 .PHONY: extract-c
-extract-c: verify-steel
+extract-c:
 	+$(MAKE) -C c extract
 
 .PHONY: extract
 extract: extract-ocaml extract-c
 
 .PHONY: boot
-boot: extract
-	+$(MAKE) -C .. all
+boot:
+	+$(MAKE) extract
+	+$(MAKE) build
+
+.PHONY: clean-snapshot
+clean-snapshot:
+	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
+	rm -f ocaml/plugin/FStar_Parser_Parse.mly
 
 .PHONY: full-boot
 full-boot:
-	rm -rf ocaml/*/generated include/steel/Steel_SpinLock.h
+	+$(MAKE) build
+	+$(MAKE) clean-snapshot
 	+$(MAKE) boot
+
+.PHONY: proofs
+proofs:
+	+$(MAKE) -C $@
+
+.PHONY: share
+share:
+	+$(MAKE) -C ../share/steel
+
+.PHONY: test
+test: proofs share
+
+.PHONY: check-for-changes
+check-for-changes:
+	# Test if no new files appeared
+	git status ..
+	test "" = "$$(git ls-files --others --exclude-standard -- ..)"
+	# Test if nothing has changed
+	if ! git diff-index --exit-code HEAD .. ; then git diff .. ; false ; fi
+
+.PHONY: ci
+ci:
+	+$(MAKE) full-boot
+	+$(MAKE) check-for-changes
+	+$(MAKE) test

@@ -1,7 +1,7 @@
 (lang dune 3.2)
 (name steel)
 (generate_opam_files false)
-
+(using menhir 2.1)
 (package
   (name steel)
   (synopsis "The Steel separation logic library for F*")

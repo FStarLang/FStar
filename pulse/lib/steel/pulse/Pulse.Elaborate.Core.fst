@@ -39,8 +39,8 @@ let elab_sub (c1 c2:comp_st) (e:R.term) =
             mk_sub_stt_ghost u ty opened pre1 pre2 post1 post2 e
 
 
-let elab_bind #f #g #x #c1 #c2 #c
-              (bc:bind_comp f g x c1 c2 c)
+let elab_bind #g #x #c1 #c2 #c
+              (bc:bind_comp g x c1 c2 c)
               (e1 e2:R.term)
   : R.term
   = let t1 = elab_term (comp_res c1) in
@@ -92,7 +92,7 @@ let elab_bind #f #g #x #c1 #c2 #c
         e1 e2
         (elab_term reveal_b)
 
-let elab_lift #f #g #c1 #c2 (d:lift_comp f g c1 c2) (e:R.term)
+let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
   : Tot R.term
   = match d with
     | Lift_STAtomic_ST _ _ ->
@@ -115,20 +115,20 @@ let elab_lift #f #g #c1 #c2 (d:lift_comp f g c1 c2) (e:R.term)
         e
         (elab_term reveal_a)
 
-let rec elab_st_typing (#f:RT.fstar_top_env)
-                       (#g:env)
+let rec elab_st_typing (#g:env)
                        (#t:st_term)
                        (#c:comp)
-                       (d:st_typing f g t c)
+                       (d:st_typing g t c)
   : Tot R.term (decreases d)
   = match d with
     // | T_Tot _ t _ _ -> elab_term t
 
-    | T_Abs _ x qual ty_pulse _u body _c ty_typing body_typing ->
-      let ty = elab_term ty_pulse in
+    | T_Abs _ x qual b _u body _c ty_typing body_typing ->
+      let ty = elab_term b.binder_ty in
+      let ppname = b.binder_ppname in
       let body = elab_st_typing body_typing in
-      let ppname = (as_binder ty_pulse).binder_ppname in
       mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
+
 
     | T_STApp _ head  _formal qual _res arg head_typing arg_typing ->
       let head = elab_term head in
@@ -149,12 +149,18 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
        | STT_Ghost, true -> mk_stt_ghost_return ru rty rt rp
        | STT_Ghost, false -> mk_stt_ghost_return_noeq ru rty rt rp)
 
-    | T_Bind _ e1 e2 c1 c2 x c e1_typing t_typing e2_typing bc ->
+    | T_Bind _ e1 e2 c1 c2 b x c e1_typing t_typing e2_typing bc ->
       let e1 = elab_st_typing e1_typing in
       let e2 = elab_st_typing e2_typing in
       let ty1 = elab_term (comp_res c1) in
-      elab_bind bc e1 (mk_abs ty1 R.Q_Explicit (RT.close_term e2 x))
-      
+      elab_bind bc e1 (mk_abs_with_name b.binder_ppname ty1 R.Q_Explicit (RT.close_term e2 x))
+
+    | T_TotBind _ e1 e2 t1 _ x _ e2_typing ->
+      let re1 = elab_term e1 in
+      let rt1 = elab_term t1 in
+      let re2 = elab_st_typing e2_typing in
+      RT.mk_let RT.pp_name_default re1 rt1 (RT.close_term re2 x)
+
     | T_Frame _ _ c frame _frame_typing e_typing ->
       let e = elab_st_typing e_typing in
       elab_frame c frame e
@@ -222,6 +228,18 @@ let rec elab_st_typing (#f:RT.fstar_top_env)
 				  let rp = elab_term p in
 						let rq = elab_term q in
 						mk_rewrite rp rq
+
+    | T_WithLocal _ init _ init_t c x _ _ _ body_typing ->
+      let rret_u = elab_universe (comp_u c) in
+      let ra = elab_term init_t in
+      let rinit = elab_term init in
+      let rret_t = elab_term (comp_res c) in
+      let rpre = elab_term (comp_pre c) in
+      let rpost = mk_abs rret_t R.Q_Explicit (elab_term (comp_post c)) in
+      let rbody = elab_st_typing body_typing in
+      let rbody = RT.close_term rbody x in
+      let rbody = mk_abs (mk_ref ra) R.Q_Explicit rbody in
+      mk_withlocal rret_u ra rinit rpre rret_t rpost rbody
 
     | T_Admit _ {u;res;pre;post} c _ ->
       let ru = elab_universe u in

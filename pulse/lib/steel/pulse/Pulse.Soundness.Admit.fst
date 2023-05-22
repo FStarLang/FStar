@@ -15,14 +15,13 @@ module WT = Pulse.Steel.Wrapper.Typing
 module Comp = Pulse.Soundness.Comp
 
 let admit_soundess
-  (#f:stt_env)
-  (#g:env)
+  (#g:stt_env)
   (#t:st_term)
   (#c:comp)
-  (d:st_typing f g t c{T_Admit? d})
-  : GTot (RT.typing (extend_env_l f g)
-                    (elab_st_typing d)
-                    (elab_comp c)) =
+  (d:st_typing g t c{T_Admit? d})
+  : GTot (RT.tot_typing (elab_env g)
+                        (elab_st_typing d)
+                        (elab_comp c)) =
 
   let T_Admit _ s c st_typing = d in
 

@@ -37,19 +37,19 @@ let rec elab_term (top:term)
   = let open R in
     match top with
     | Tm_BVar bv ->
-      let bv = pack_bv (RT.make_bv_with_name bv.bv_ppname bv.bv_index tun) in
+      let bv = pack_bv (RT.make_bv_with_name bv.bv_ppname bv.bv_index) in
       pack_ln (Tv_BVar bv)
       
     | Tm_Var nm ->
       // tun because type does not matter at a use site
-      let bv = pack_bv (RT.make_bv_with_name nm.nm_ppname nm.nm_index tun) in
+      let bv = pack_bv (RT.make_bv_with_name nm.nm_ppname nm.nm_index) in
       pack_ln (Tv_Var bv)
 
     | Tm_FVar l ->
-      pack_ln (Tv_FVar (pack_fv l))
+      pack_ln (Tv_FVar (pack_fv l.fv_name))
 
     | Tm_UInst l us ->
-      pack_ln (Tv_UInst (pack_fv l) (List.Tot.map elab_universe us))
+      pack_ln (Tv_UInst (pack_fv l.fv_name) (List.Tot.map elab_universe us))
 
     | Tm_Constant c ->
       pack_ln (Tv_Const (elab_const c))
@@ -57,7 +57,7 @@ let rec elab_term (top:term)
     | Tm_Refine b phi ->
       let ty = elab_term b.binder_ty in
       let phi = elab_term phi in
-      pack_ln (Tv_Refine (pack_bv (RT.make_bv_with_name b.binder_ppname 0 ty)) phi)
+      pack_ln (Tv_Refine (pack_bv (RT.make_bv_with_name b.binder_ppname 0)) ty phi)
 
     | Tm_PureApp e1 q e2 ->
       let e1 = elab_term e1 in
@@ -73,8 +73,8 @@ let rec elab_term (top:term)
       let t = elab_term t in
       let e1 = elab_term e1 in
       let e2 = elab_term e2 in
-      let bv = pack_bv (RT.make_bv 0 t) in
-      R.pack_ln (R.Tv_Let false [] bv e1 e2)
+      let bv = pack_bv (RT.make_bv 0) in
+      R.pack_ln (R.Tv_Let false [] bv t e1 e2)
 
     | Tm_Type u ->
       R.pack_ln (R.Tv_Type (elab_universe u))
@@ -113,6 +113,9 @@ let rec elab_term (top:term)
     | Tm_UVar _
     | Tm_Unknown ->
       pack_ln R.Tv_Unknown
+
+    | Tm_FStar t ->
+      t
     
 and elab_comp (c:comp) 
   : R.term

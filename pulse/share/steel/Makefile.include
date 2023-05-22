@@ -8,11 +8,41 @@ else
   FSTAR=fstar.exe
 endif
 
-FSTAR_FILES:=$(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
+# Add Steel to the OCaml (ocamlfind) search path
+ifeq ($(OS),Windows_NT)
+  OCAMLPATH := $(shell cygpath -m $(STEEL_HOME)/lib);$(OCAMLPATH)
+else
+  OCAMLPATH := $(STEEL_HOME)/lib:$(OCAMLPATH)
+endif
 
-FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel' --include $(STEEL_HOME)/lib/steel --load_cmxs steel
+# Find fstar.exe and the fstar.lib OCaml package
+ifeq (,$(FSTAR_HOME))
+  _check_fstar := $(shell which fstar.exe)
+  ifeq ($(.SHELLSTATUS),0)
+    _fstar_home := $(realpath $(dir $(_check_fstar))/..)
+    ifeq ($(OS),Windows_NT)
+      OCAMLPATH := $(shell cygpath -m $(_fstar_home)/lib);$(OCAMLPATH)
+    else
+      OCAMLPATH := $(_fstar_home)/lib:$(OCAMLPATH)
+    endif
+  endif
+else
+  ifeq ($(OS),Windows_NT)
+    OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
+  else
+    OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
+  endif
+endif
+export OCAMLPATH
+
+FSTAR_FILES += $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
+
+FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel,C' --include $(STEEL_HOME)/lib/steel --load_cmxs steel
 
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
+
+# Used only for OCaml extraction, not krml extraction
+FSTAR_ML_CODEGEN ?= OCaml
 
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 
@@ -25,14 +55,18 @@ MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND")
 	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
-	$(Q)$(MY_FSTAR) --dep full @$@.rsp > $@.tmp
+	$(Q)$(MY_FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp > $@.tmp
 	mv $@.tmp $@
 
 include .depend
 
 verify: $(ALL_CHECKED_FILES)
 
-%.krml:
+$(ALL_ML_FILES): %.ml:
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
+	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(FSTAR_ML_CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+
+$(ALL_KRML_FILES): %.krml:
 	$(MY_FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
 	  --extract_module $(basename $(notdir $(subst .checked,,$<)))
 	touch -c $@

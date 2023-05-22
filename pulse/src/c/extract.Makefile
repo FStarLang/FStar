@@ -18,7 +18,7 @@ FSTAR = $(RUNLIM) $(FSTAR_EXE) --cache_checked_modules \
   --load_cmxs steel \
   --warn_error @241 \
   --cmi \
-  --already_cached '*'
+  --already_cached '*,'
 
 ROOTS = $(LIB_STEEL)/Steel.SpinLock.fsti
 
@@ -47,6 +47,7 @@ $(INCLUDE_STEEL)/Steel_SpinLock.h: $(ALL_KRML_FILES)
 	  -tmpdir $(dir $@) \
 	  -skip-makefiles \
 	  -extract-uints \
-	  $(addprefix -add-include ,'<inttypes.h>' '"krmllib.h"' '"krml/internal/compat.h"' '"krml/internal/target.h"' '"steel_types.h"') \
+	  $(addprefix -add-include ,'<stdbool.h>' '"steel_types.h"') \
 	  -bundle Steel.SpinLock=Steel.*,Prims,FStar.*,LowStar.* \
 	  $^
+	chmod -x $@

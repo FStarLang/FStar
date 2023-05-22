@@ -4,6 +4,8 @@
 *.cm*
 lib/steel/*.a
 lib/steel/*.ml
+lib/steel/*.mli
+lib/steel/generated
 lib/steel/runtime
 lib/steel/META
 lib/steel/dune-package

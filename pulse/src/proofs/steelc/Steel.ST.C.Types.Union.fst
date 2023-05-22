@@ -1,5 +1,5 @@
 module Steel.ST.C.Types.Union
-open Steel.ST.GenElim
+open Steel.ST.GenElim1
 friend Steel.ST.C.Types.Base
 open Steel.ST.C.Types.Fields
 open Steel.ST.C.Types.Scalar

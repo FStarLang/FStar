@@ -5,12 +5,25 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
+open Pulse.Syntax.Naming
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
 
-#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 5 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
-
+// let rec elab_term_bv_sort (t:term)
+//   : Lemma
+//     (ensures 
+//       (R.Tv_Var? (R.inspect_ln (elab_term t)) \/
+//        R.Tv_BVar? (R.inspect_ln (elab_term t))) ==>
+//       (match R.inspect_ln (elab_term t) with
+//        | R.Tv_Var bv
+//        | R.Tv_BVar bv ->
+//          let vv = R.inspect_bv bv in
+//          vv.bv_sort == RT.tun))
+//   = admit()
+      
+              
+#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 20 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"          
 let rec elab_open_commute' (e:term)
                            (v:term)
                            (n:index)
@@ -19,6 +32,7 @@ let rec elab_open_commute' (e:term)
               elab_term (open_term' e v n))
           (decreases e)
   = match e with
+    | Tm_BVar _
     | Tm_UVar _
     | Tm_Var _
     | Tm_FVar _
@@ -29,7 +43,6 @@ let rec elab_open_commute' (e:term)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_VProp
-    | Tm_BVar _
     | Tm_Unknown -> ()
     | Tm_Refine b phi ->
       elab_open_commute' b.binder_ty v n;
@@ -53,6 +66,7 @@ let rec elab_open_commute' (e:term)
     | Tm_Arrow b _ body ->
       elab_open_commute' b.binder_ty v n;
       elab_comp_open_commute' body v (n + 1)
+    | Tm_FStar t -> ()
 
 and elab_comp_open_commute' (c:comp) (v:term) (n:index)
   : Lemma (ensures
@@ -114,7 +128,8 @@ let rec elab_close_commute' (e:term)
     | Tm_Arrow b _ body ->
       elab_close_commute' b.binder_ty v n;
       elab_comp_close_commute' body v (n + 1)
-
+    | Tm_FStar _ -> ()
+    
 and elab_comp_close_commute' (c:comp) (v:var) (n:index)
   : Lemma (ensures
               RT.open_or_close_term' (elab_comp c) (RT.CloseVar v) n ==
@@ -132,7 +147,6 @@ and elab_comp_close_commute' (c:comp) (v:var) (n:index)
       elab_close_commute' s.res v n;
       elab_close_commute' s.pre v n;
       elab_close_commute' s.post v (n + 1)
-#pop-options
 
 let elab_open_commute (t:term) (x:var)
   : Lemma (elab_term (open_term t x) == RT.open_term (elab_term t) x)
@@ -183,7 +197,8 @@ let rec elab_ln t i =
   | Tm_Inames
   | Tm_EmpInames
   | Tm_UVar _
-  | Tm_Unknown -> ()
+  | Tm_Unknown
+  | Tm_FStar _ -> ()
 
 and elab_ln_comp (c:comp) (i:int)
   : Lemma (requires ln_c' c i)
@@ -202,7 +217,6 @@ and elab_ln_comp (c:comp) (i:int)
     elab_ln st.pre i;
     elab_ln st.post (i + 1)
 
-#push-options "--z3rlimit_factor 8"
 let rec elab_freevars_eq (e:term)
   : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) =
   match e with
@@ -238,7 +252,8 @@ let rec elab_freevars_eq (e:term)
   | Tm_Inames
   | Tm_EmpInames
   | Tm_UVar _
-  | Tm_Unknown -> ()
+  | Tm_Unknown
+  | Tm_FStar _ -> ()
 
 and elab_freevars_comp_eq (c:comp)
   : Lemma (Set.equal (freevars_comp c) (RT.freevars (elab_comp c))) =

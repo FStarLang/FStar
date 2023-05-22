@@ -72,13 +72,14 @@ val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type 
 
 let eq2_prop (#a:Type) (x y:a) : prop = x == y
 let iff_prop (p q:Type0) : prop = p <==> q
+let and_prop (p q:Type0) : prop = p /\ q
 
 inline_for_extraction
 val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt a (p x) (fun r -> p r `star` pure (eq2_prop r x))
 
 inline_for_extraction
-val return_stt_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+val return (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt a (p x) p
 
 // Return in ghost?
@@ -228,13 +229,20 @@ open FStar.Ghost
 val read (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
   : stt a
         (R.pts_to r p n)
-        (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
+        (fun x -> R.pts_to r p x `star` pure (eq2_prop (reveal n) x))
 
+let ( ! ) (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
+  : stt a (R.pts_to r p n) (fun x -> R.pts_to r p x `star` pure (eq2_prop (reveal n) x)) =
+  read #a r #n #p
 
 val write (#a:Type) (r:R.ref a) (x:a) (#n:erased a)
   : stt unit
         (R.pts_to r full_perm n) 
         (fun _ -> R.pts_to r full_perm (hide x))
+
+let ( := ) (#a:Type) (r:R.ref a) (x:a) (#n:erased a)
+  : stt unit (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm (hide x)) =
+  write #a r x #n
 
 val read_atomic (r:R.ref U32.t) (#n:erased U32.t) (#p:perm)
   : stt_atomic U32.t emp_inames
@@ -347,3 +355,13 @@ val stt_par
   : stt (aL & aR)
         (preL `star` preR)
         (fun x -> postL (fst x) `star` postR (snd x))
+
+val with_local
+  (#a:Type0)
+  (init:a)
+  (#pre:vprop)
+  (#ret_t:Type)
+  (#post:ret_t -> vprop)
+  (body:(r:R.ref a) -> stt ret_t (pre `star` R.pts_to r full_perm init)
+                                 (fun v -> post v `star` exists_ (R.pts_to r full_perm)))
+  : stt ret_t pre post

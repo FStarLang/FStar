@@ -1,0 +1,7 @@
+{
+    "RepoVersions" : {
+        "fstar": "master",
+        "karamel" : "master"
+    },
+    "NotificationChannel" : "#steel-build"
+}

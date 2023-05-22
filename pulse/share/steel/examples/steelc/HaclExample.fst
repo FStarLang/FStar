@@ -1,26 +1,13 @@
 module HaclExample
-
-open Steel.C.Model.PCM
-open Steel.C.Opt
-open Steel.C.Model.Connection
-open Steel.C.StructLiteral
-open Steel.C.Typedef
-open FStar.FunctionalExtensionality
-open Steel.Effect
-open Steel.Effect.Atomic
-open Steel.C.Fields
-open Steel.C.Opt
-open Steel.C.Model.Ref
-open Steel.C.Reference
-open Steel.C.TypedefNorm
-open Steel.C.Array
-
-open FStar.FSet
+open Steel.ST.GenElim
+open Steel.ST.C.Types
 open Steel.C.Typenat
 open Steel.C.Typestring
+open Steel.ST.C.Types.Struct.Aux
+open Steel.ST.C.Types.UserStruct // hides Struct
 
+module SZ = FStar.SizeT
 module U64 = FStar.UInt64
-module I = Steel.C.StdInt
 
 (** In this file we demonstrate how Steel could be used to manipulate the following data type used in Hacl*:
       https://github.com/project-everest/hacl-star/blob/master/code/poly1305/Hacl.Impl.Poly1305.fsti#L18
@@ -31,55 +18,38 @@ module I = Steel.C.StdInt
     See PointStruct.fst for more detailed explanations of the various definitions needed below.
 *)
 
-module T = FStar.Tactics
+noextract inline_for_extraction let five = normalize (nat_t_of_nat 5)
+noextract inline_for_extraction let twenty = normalize (nat_t_of_nat 20)
+noextract inline_for_extraction let comp_name = normalize (mk_string_t "HaclExample2.comp")
+
+noeq
+type comp_t = {
+  limbs: base_array_t (scalar_t U64.t)  five 5sz;
+  precomp: base_array_t (scalar_t U64.t)  twenty 20sz;
+}
+
+noextract
+inline_for_extraction
+[@@ norm_field_attr]
+let comp_struct_def : struct_def comp_t =
+  let fields = FStar.Set.add "limbs" (FStar.Set.singleton "precomp") in
+  let fd_type (n: field_t fields) : Tot Type0 = match n with "limbs" -> base_array_t (scalar_t U64.t)  five 5sz | "precomp" -> base_array_t (scalar_t U64.t) twenty 20sz in
+  let field_desc : field_description_gen_t (field_t fields) = {
+    fd_nonempty = nonempty_set_nonempty_type "limbs" fields;
+    fd_type = fd_type;
+    fd_typedef = (fun (n: field_t fields) -> match n returns typedef (fd_type n) with "limbs" -> base_array0 five (scalar U64.t) 5sz | "precomp" -> base_array0 twenty (scalar U64.t) 20sz);
+  }
+  in {
+    fields = fields;
+    field_desc = field_desc;
+    mk = (fun f -> Mkcomp_t (f "limbs") (f "precomp"));
+    get = (fun x f -> match f with "limbs" -> x.limbs | "precomp" -> x.precomp);
+    get_mk = (fun _ _ -> ());
+    extensionality = (fun s1 s2 phi -> phi "limbs"; phi "precomp");
+  }
 
 noextract inline_for_extraction
-//[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
-//     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
-let comp_tag = normalize (mk_string_t "HaclExample.comp")
-
-module U32 = FStar.UInt32
-
-#push-options "--z3rlimit 30 --fuel 30"
-noextract inline_for_extraction let five' = normalize (nat_t_of_nat 5)
-noextract inline_for_extraction let five: size_t_of five' = mk_size_t (U32.uint_to_t 5)
-noextract inline_for_extraction let twenty' = normalize (nat_t_of_nat 20)
-noextract inline_for_extraction let twenty: size_t_of twenty' = mk_size_t (U32.uint_to_t 20)
-#pop-options
-
-(** uint64_t[5] *)
-[@@c_struct]
-noextract inline_for_extraction
-let five_u64s: typedef = array_typedef_sized U64.t five' five
-
-(** uint64_t[20] *)
-[@@c_struct]
-noextract inline_for_extraction
-let twenty_u64s: typedef = array_typedef_sized U64.t twenty' twenty
-
-(** struct comp { uint64_t limbs[5]; uint64_t precomp[20]; }; *)
-
-[@@c_struct]//;c_typedef]
-noextract inline_for_extraction
-let comp_fields: c_fields =
-  fields_cons "limbs" five_u64s (
-  fields_cons "precomp" twenty_u64s (
-  fields_nil))
-
-noextract inline_for_extraction
-let comp = struct comp_tag comp_fields
-
-noextract inline_for_extraction
-let comp_view = struct_view comp_tag comp_fields
-
-noextract inline_for_extraction
-let comp_pcm = struct_pcm comp_tag comp_fields
-
-[@@c_typedef]
-noextract inline_for_extraction
-let c_comp: typedef = typedef_struct comp_tag comp_fields
-
-let _ = norm norm_c_typedef (mk_c_struct comp_tag comp_fields)
+let comp = struct_typedef comp_struct_def
 
 (** To demonstrate how our model could be used, we write a simple
     function that takes pointers to the limbs and precomp fields and
@@ -87,59 +57,90 @@ let _ = norm norm_c_typedef (mk_c_struct comp_tag comp_fields)
     element of the corresponding array to zero) *)
 
 let do_something_with_limbs
-  (a: array 'a U64.t)
-: Steel unit
-    (varray a)
-    (fun _ -> varray a)
-    (requires fun _ -> length a == 5)
-    (ensures fun _ _ _ -> True)
-= upd a (mk_size_t (U32.uint_to_t 2)) (U64.uint_to_t 0);
-  return ()
+  (#v: Ghost.erased (Seq.seq (scalar_t U64.t)))
+  (a: array (scalar U64.t))
+: ST (Ghost.erased (Seq.seq (scalar_t U64.t)))
+    (array_pts_to a v)
+    (fun v' -> array_pts_to a v')
+    (requires
+      array_length a == 5 /\
+      full_seq (scalar U64.t) v
+    )
+    (ensures (fun v' ->
+      full_seq (scalar U64.t) v'
+    ))
+= let p = array_cell a 2sz in
+  write p 0uL;
+  unarray_cell _ _ _;
+  drop (has_array_cell _ _ _); 
+  return _
 
 let do_something_with_precomp
-  (a: array 'a U64.t)
-: Steel (array_or_null 'a U64.t)
-    (varray a)
-    (fun _ -> varray a)
-    (requires fun _ -> length a == 20)
-    (ensures fun _ _ _ -> True)
-= upd a (mk_size_t (U32.uint_to_t 19)) (U64.uint_to_t 0);
-  return (null _ _)
+  (#v: Ghost.erased (Seq.seq (scalar_t U64.t)))
+  (a: array (scalar U64.t))
+: ST (ptr (scalar U64.t))
+    (array_pts_to a v)
+    (fun _ -> exists_ (fun (v': Seq.seq (scalar_t U64.t)) ->
+      array_pts_to a v' `star`
+      pure (full_seq (scalar U64.t) v')
+    ))
+    (requires
+      array_length a == 20 /\
+      full_seq (scalar U64.t) v
+    )
+    (ensures fun _ -> True)
+= let p = array_cell a 19sz in
+  write p 0uL;
+  unarray_cell _ _ _;
+  drop (has_array_cell _ _ _);
+  noop ();
+  return (null _)
 
 let test_alloc_free
   ()
-: SteelT unit
+: STT unit
     emp
     (fun _ -> emp)
 =
-  let a = malloc true (mk_size_t 42ul) in
-  if Steel.C.Array.is_null a
+  let a = array_alloc (scalar bool) 42sz in
+  let _ = gen_elim () in
+  if array_is_null a
   then begin
-    Steel.C.Array.elim_varray_or_null_none a
+    rewrite (array_pts_to_or_null _ _) emp;
+    rewrite (freeable_or_null_array _) emp;
+    noop ()
   end else begin
-    Steel.C.Array.elim_varray_or_null_some a;
-    free a
-  end;
-  return ()
+    let s = vpattern_replace (array_pts_to_or_null _) in
+    rewrite (array_pts_to_or_null _ _) (array_pts_to a s);
+    rewrite (freeable_or_null_array _) (freeable_array a);
+    array_free a
+  end
 
-#push-options "--fuel 0 --print_universes --print_implicits --z3rlimit 30"
+#push-options "--z3rlimit 16"
+#restart-solver
 
 let test
-  (p: ref 'a comp comp_pcm)
-: SteelT unit
-    (p `pts_to_view` comp_view emptyset)
-    (fun _ -> p `pts_to_view` comp_view emptyset)
-= let q = addr_of_struct_field "limbs" p in
-  let a = intro_varray q () in
-  let r = addr_of_struct_field "precomp" p in
-  let b = intro_varray r () in
-  do_something_with_limbs a;
+  (#v: Ghost.erased (typeof comp))
+  (p: ref comp)
+: ST (Ghost.erased (typeof comp))
+    (p `pts_to` v)
+    (fun v' -> p `pts_to` v')
+    (full comp v)
+    (fun v' -> full comp v')
+= let q = p `struct_field` "limbs" in
+  let a = array_of_base q in
+  let r = p `struct_field` "precomp" in
+  let _ = vpattern_replace_erased (pts_to p) in // FIXME: WHY WHY WHY?
+  let b = array_of_base r in
+  let _ = do_something_with_limbs a in
   let _ = do_something_with_precomp b in
-  elim_varray q a ();
-  elim_varray r b ();
-  unaddr_of_struct_field "precomp" p r;
-  unaddr_of_struct_field "limbs" p q;
-  change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
-  return ()
+  let _ = gen_elim () in
+  let _ = unarray_of_base q a in
+  let _ = unarray_of_base r b in
+  let _ = unstruct_field p "precomp" r in
+  let _ = unstruct_field p "limbs" q in
+  drop (has_struct_field p "limbs" q);
+  drop (has_struct_field p "precomp" r);
+  return _
 
 #pop-options

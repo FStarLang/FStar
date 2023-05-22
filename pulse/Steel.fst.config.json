@@ -1,0 +1,3 @@
+{ "fstar_exe":"fstar.exe",
+  "options":[],
+  "include_dirs":["lib/steel", "lib/steel/pulse", "share/steel/examples/pulse"] }

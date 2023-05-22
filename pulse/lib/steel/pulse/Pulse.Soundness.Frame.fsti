@@ -10,11 +10,12 @@ open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-val elab_frame_typing (f:stt_env)
-                      (g:env)
+val elab_frame_typing (g:stt_env)
                       (e:R.term)
                       (c:ln_comp)
                       (frame:term)
-                      (frame_typing: tot_typing f g frame Tm_VProp)
-                      (e_typing: RT.typing (extend_env_l f g) e (elab_comp c))
-  : GTot (RT.typing (extend_env_l f g) (elab_frame c frame e) (elab_comp (add_frame c frame)))
+                      (frame_typing: tot_typing g frame Tm_VProp)
+                      (e_typing: RT.tot_typing (elab_env g) e (elab_comp c))
+  : GTot (RT.tot_typing (elab_env g)
+                        (elab_frame c frame e)
+                        (elab_comp (add_frame c frame)))

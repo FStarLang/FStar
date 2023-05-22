@@ -13,8 +13,8 @@ endif
 
 FSTAR_FILES:=$(wildcard $(LIB_STEEL)/*.fst $(LIB_STEEL)/*.fsti)
 
-MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --include $(LIB_STEEL) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --warn_error @241 --already_cached '*,-Steel'
-EXTRACT_MODULES=--extract '+Steel.Effect.Common +Steel.ST.GenElim.Base'
+MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --include $(LIB_STEEL) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --warn_error @241 --already_cached '*,'
+EXTRACT_MODULES=--extract '+Steel.Effect.Common +Steel.ST.GenElim.Base +Steel.ST.GenElim1.Base'
 
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 
@@ -28,6 +28,7 @@ COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	chmod -x $@
 
 .depend-steel: $(FSTAR_FILES)
 	$(call msg, "DEPEND")
