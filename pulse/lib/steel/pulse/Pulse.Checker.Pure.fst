@@ -68,7 +68,7 @@ let catch_all (f:unit -> Tac (option 'a & issues))
       None, [exn_as_issue exn]
     | Inr v -> v
 
-let print_issue (i:FStar.Issue.issue) : T.Tac string = 
+let print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string = 
     let open FStar.Issue in
     let range_opt_to_string = function
       | None -> "Unknown range"
@@ -83,9 +83,11 @@ let print_issue (i:FStar.Issue.issue) : T.Tac string =
        (range_opt_to_string (range_of_issue i))
        (level_of_issue i)
        (message_of_issue i)
-       (ctx_to_string (context_of_issue i))
+       (ctx_to_string (T.unseal g.ctxt @ (context_of_issue i)))
 
-let print_issues (i:list FStar.Issue.issue) = String.concat "\n" (T.map print_issue i)
+let print_issues (g:env)
+                 (i:list FStar.Issue.issue)
+   = String.concat "\n" (T.map (print_issue g) i)
 
 let instantiate_term_implicits (g:env) (t:term) =
   let f = elab_env g in
@@ -96,7 +98,7 @@ let instantiate_term_implicits (g:env) (t:term) =
     T.fail (Printf.sprintf "%s elaborated to %s; Could not instantiate implicits\n%s\n"
                        (P.term_to_string t)
                        (T.term_to_string rt)
-                       (print_issues issues))
+                       (print_issues g issues))
   | Some (t, ty) ->
     let topt = readback_ty t in
     let tyopt = readback_ty ty in
@@ -114,7 +116,7 @@ let check_universe (g:env) (t:term)
       T.fail (Printf.sprintf "%s elaborated to %s; Not typable as a universe\n%s\n"
                          (P.term_to_string t)
                          (T.term_to_string rt)
-                         (print_issues issues))
+                         (print_issues g issues))
     | Some ru ->
       let uopt = readback_universe ru in
       let proof : squash (RTB.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
@@ -154,7 +156,7 @@ let check_term (g:env) (t:term)
           (Printf.sprintf "check_tot : %s elaborated to %s Not typeable\n%s\n"
             (P.term_to_string t)
             (T.term_to_string rt)
-            (print_issues issues))
+            (print_issues g issues))
     | Some (| rt, ty', tok |), issues ->
       match readback_ty rt, readback_ty ty' with
       | None, _
@@ -178,7 +180,7 @@ let check_term_and_type (g:env) (t:term)
           (Printf.sprintf "check_tot_univ: %s elaborated to %s Not typeable\n%s\n"
                           (P.term_to_string t)
                           (T.term_to_string rt)
-                          (print_issues issues))
+                          (print_issues g issues))
     | Some (| rt, ty', tok |), _ ->
       match readback_ty rt, readback_ty ty' with
       | None, _
@@ -202,7 +204,7 @@ let check_term_with_expected_type (g:env) (e:term) (t:term)
   | None -> T.fail (Printf.sprintf "check_tot_with_expected_typ: %s not typeable at %s\n%s\n" 
                       (Pulse.Syntax.Printer.term_to_string e)
                       (Pulse.Syntax.Printer.term_to_string t)
-                      (print_issues issues))
+                      (print_issues g issues))
   | Some tok -> (| e, RT.T_Token _ _ _ (FStar.Squash.return_squash tok) |)
 
 let tc_with_core (f:R.env) (e:R.term) 
@@ -224,7 +226,7 @@ let core_check_term (g:env) (t:term)
           (Printf.sprintf "check_tot: %s elaborated to %s Not typeable\n%s\n"
             (P.term_to_string t)
             (T.term_to_string rt)
-            (print_issues issues))
+            (print_issues g issues))
     | Some (| ty', tok |), _ ->
         match readback_ty ty' with
         | None -> T.fail (Printf.sprintf "Inexpressible type %s for term %s"
@@ -242,7 +244,7 @@ let core_check_term_with_expected_type g e t =
   | None -> T.fail (Printf.sprintf "core_check_term_with_expected_typ: %s not typeable at %s\n%s\n" 
                       (Pulse.Syntax.Printer.term_to_string e)
                       (Pulse.Syntax.Printer.term_to_string t)
-                      (print_issues issues))
+                      (print_issues g issues))
   | Some tok -> RT.T_Token _ _ _ (FStar.Squash.return_squash tok)
 
 let check_vprop (g:env)

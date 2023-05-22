@@ -39,7 +39,7 @@ FSTAR_FILES += $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
 
 FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel,C' --include $(STEEL_HOME)/lib/steel --load_cmxs steel
 
-COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
+COMPAT_INDEXED_EFFECTS?=--compat_pre_typed_indexed_effects
 
 # Used only for OCaml extraction, not krml extraction
 FSTAR_ML_CODEGEN ?= OCaml

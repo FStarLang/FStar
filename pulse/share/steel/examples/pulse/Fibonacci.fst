@@ -8,12 +8,13 @@ open FStar.Ghost
 module U32 = FStar.UInt32
 open Pulse.Steel.Wrapper
 
-let rec fib (n:nat) : nat =
-  if n <= 1 then 1
-  else fib (n - 1) + fib (n - 2)
+assume
+val fib (n:nat) : nat
+  // if n <= 1 then 1
+  // else fib (n - 1) + fib (n - 2)
+
 
 #push-options "--print_implicits"
-[@@expect_failure]
 ```pulse
 fn fibo (n:nat)
   requires emp
