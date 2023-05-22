@@ -888,8 +888,8 @@ noSeqTerm:
     LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
       {
         let lbs = (attrs, lb)::lbs in
-        let lbs = focusAttrLetBindings lbs (rr2 $loc($2) $loc(q)) in
-        mk_term (Let(q, lbs, e)) (rr2 $loc(attrs) $loc($6)) Expr
+        let lbs = focusAttrLetBindings lbs (rr2 $loc(q) $loc(lb)) in
+        mk_term (Let(q, lbs, e)) (rr $loc) Expr
       }
   | op=let_op b=letoperatorbinding lbs=list(op=and_op b=letoperatorbinding {(op, b)}) IN e=term
     { let lbs = (op, b)::lbs in
