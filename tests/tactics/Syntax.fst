@@ -66,6 +66,7 @@ let rec blah (t : term) : Tac term =
              | Tv_AscribedT e t tac use_eq -> Tv_AscribedT e t tac use_eq
              | Tv_AscribedC e c tac use_eq -> Tv_AscribedC e c tac use_eq
              | Tv_Unknown -> Tv_Unknown
+             | Tv_Unsupp -> Tv_Unsupp
     in pack tv
 
 let _ = assert True

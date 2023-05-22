@@ -141,6 +141,9 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Unknown, Tv_Unknown ->
         Eq
 
+    | Tv_Unsupp, Tv_Unsupp ->
+        Eq
+
     // From here onward, they must have different constructors. Order them arbitrarily as in the definition.
     | Tv_Var _, _      -> Lt   | _, Tv_Var _      -> Gt
     | Tv_BVar _, _     -> Lt   | _, Tv_BVar _     -> Gt
@@ -158,6 +161,7 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_AscribedT _ _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _ _ -> Gt
     | Tv_AscribedC _ _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _ _ -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
+    | Tv_Unsupp, _    -> Lt   | _, Tv_Unsupp    -> Gt
 and compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
   match l1, l2 with
   | [], [] -> Eq

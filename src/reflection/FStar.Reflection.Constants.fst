@@ -53,7 +53,7 @@ let fstar_refl_data_lid      s = fstar_refl_lid ["Data";      s]
 let fstar_refl_data_const s =
     let lid = fstar_refl_data_lid s in
     { lid = lid
-    ; fv  = lid_as_fv lid delta_constant (Some Data_ctor)
+    ; fv  = lid_as_fv lid (Some Data_ctor)
     ; t   = tdataconstr lid
     }
 
@@ -67,8 +67,8 @@ let mk_refl_data_lid_as_fv     (s:string) = fvconst (fstar_refl_data_lid s)
 let mk_inspect_pack_pair s =
     let inspect_lid = fstar_refl_builtins_lid ("inspect" ^ s) in
     let pack_lid    = fstar_refl_builtins_lid ("pack" ^ s) in
-    let inspect_fv  = lid_as_fv inspect_lid (Delta_constant_at_level 1) None in
-    let pack_fv     = lid_as_fv pack_lid    (Delta_constant_at_level 1) None in
+    let inspect_fv  = lid_as_fv inspect_lid None in
+    let pack_fv     = lid_as_fv pack_lid    None in
     let inspect     = { lid = inspect_lid ; fv = inspect_fv ; t = fv_to_tm inspect_fv } in
     let pack        = { lid = pack_lid    ; fv = pack_fv    ; t = fv_to_tm pack_fv } in
     (inspect, pack)
@@ -143,7 +143,7 @@ let ref_Mk_bv =
     let attr = Record_ctor (fstar_refl_data_lid "bv_view", [
                                 Ident.mk_ident ("bv_ppname", Range.dummyRange);
                                 Ident.mk_ident ("bv_index" , Range.dummyRange)]) in
-    let fv = lid_as_fv lid delta_constant (Some attr) in
+    let fv = lid_as_fv lid (Some attr) in
     { lid = lid
     ; fv  = fv
     ; t   = fv_to_tm fv
@@ -156,7 +156,7 @@ let ref_Mk_binder =
                             Ident.mk_ident ("binder_qual", Range.dummyRange);
                             Ident.mk_ident ("binder_attrs", Range.dummyRange);
                             Ident.mk_ident ("binder_sort"  , Range.dummyRange)]) in
-  let fv = lid_as_fv lid delta_constant (Some attr) in
+  let fv = lid_as_fv lid (Some attr) in
   { lid = lid;
     fv = fv;
     t = fv_to_tm fv }
@@ -169,7 +169,7 @@ let ref_Mk_lb =
                                 Ident.mk_ident ("lb_typ" , Range.dummyRange);
                                 Ident.mk_ident ("lb_def" , Range.dummyRange)
                                 ]) in
-    let fv = lid_as_fv lid delta_constant (Some attr) in
+    let fv = lid_as_fv lid (Some attr) in
     { lid = lid
     ; fv  = fv
     ; t   = fv_to_tm fv
@@ -194,7 +194,6 @@ let ref_C_Reflect   = fstar_refl_data_const "C_Reflect"
 let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"
 let ref_Pat_Cons     = fstar_refl_data_const "Pat_Cons"
 let ref_Pat_Var      = fstar_refl_data_const "Pat_Var"
-let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
 let ref_Pat_Dot_Term = fstar_refl_data_const "Pat_Dot_Term"
 
 (* universe_view *)
@@ -223,6 +222,7 @@ let ref_Tv_Match   = fstar_refl_data_const "Tv_Match"
 let ref_Tv_AscT    = fstar_refl_data_const "Tv_AscribedT"
 let ref_Tv_AscC    = fstar_refl_data_const "Tv_AscribedC"
 let ref_Tv_Unknown = fstar_refl_data_const "Tv_Unknown"
+let ref_Tv_Unsupp  = fstar_refl_data_const "Tv_Unsupp"
 
 (* comp_view *)
 let ref_C_Total   = fstar_refl_data_const "C_Total"
@@ -275,6 +275,6 @@ let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange
 let ord_Lt = tdataconstr ord_Lt_lid
 let ord_Eq = tdataconstr ord_Eq_lid
 let ord_Gt = tdataconstr ord_Gt_lid
-let ord_Lt_fv = lid_as_fv ord_Lt_lid delta_constant (Some Data_ctor)
-let ord_Eq_fv = lid_as_fv ord_Eq_lid delta_constant (Some Data_ctor)
-let ord_Gt_fv = lid_as_fv ord_Gt_lid delta_constant (Some Data_ctor)
+let ord_Lt_fv = lid_as_fv ord_Lt_lid (Some Data_ctor)
+let ord_Eq_fv = lid_as_fv ord_Eq_lid (Some Data_ctor)
+let ord_Gt_fv = lid_as_fv ord_Gt_lid (Some Data_ctor)

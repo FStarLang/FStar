@@ -60,6 +60,8 @@ type error_handler = {
     eh_clear: unit -> unit
 }
 
+val string_of_issue_level : issue_level -> string
+val issue_level_of_string : string -> issue_level
 val issue_message : issue -> string
 val format_issue : issue -> string
 val error_number : error_setting -> int
@@ -95,6 +97,10 @@ val stop_if_err : unit -> unit
 (* Log an error/warning/etc. This does not raise an exception. Do not
 use this for any CFatal error. *)
 val log_issue   : Range.range -> raw_error & string -> unit
+
+(* Log an issue directly, rather than converting it from a raw_error etc.
+   This does not raise an exception. Do not use this for any CFatal error. *)
+val add_issues : list issue -> unit
 
 (* Raise an error. This raises an exception and does not return. *)
 val raise_error : (raw_error & string) -> Range.range -> 'a

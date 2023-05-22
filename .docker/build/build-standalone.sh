@@ -16,3 +16,13 @@ result_file="result.txt"
 status_file="status.txt"
 ORANGE_FILE="orange_file.txt"
 build_fstar $target
+
+# If RESOURCEMONITOR is defined, then make an rmon/ directory with
+# resource usage information
+echo "Saving runlim files into rmon/"
+if [ -n "$RESOURCEMONITOR" ]; then
+	mkdir -p rmon
+	.scripts/res_summary.sh > rmon/res_summary.txt
+	# Copy all .runlim files into a tar archive
+	find . -name '*.runlim' | tar czf rmon/rmon.tgz -T -
+fi

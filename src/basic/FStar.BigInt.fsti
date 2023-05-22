@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.BigInt
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
 
 type bigint
 type t = bigint

@@ -138,7 +138,7 @@ This function is stateful: it uses ``push_repl`` and ``pop_repl``.
 let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
                              (progress_callback: repl_task -> unit) =
   let debug verb task =
-    if Options.debug_any () then
+    if Options.debug_at_level_no_module (Options.Other "IDE") then
       Util.print2 "%s %s" verb (string_of_repl_task task) in
 
   (* Run as many ``pop_repl`` as there are entries in the input stack.
@@ -691,7 +691,7 @@ let run_push_without_deps st query
   ((status, json_errors), Inl st)
 
 let run_push_with_deps st query =
-  if Options.debug_any () then
+  if Options.debug_at_level_no_module (Options.Other "IDE") then
     Util.print_string "Reloading dependencies";
   TcEnv.toggle_id_info st.repl_env false;
   match load_deps st with
@@ -844,7 +844,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [{ SS.lbunivs = univs; SS.lbdef = def }]), _) }] ->
+    | [{ SS.sigel = SS.Sig_let {lbs=(_, [{ SS.lbunivs = univs; SS.lbdef = def }])} }] ->
       Some (univs, def)
     | _ -> None in
 
@@ -1022,7 +1022,7 @@ let run_query_result = (query_status * list json) * either repl_state int
 
 let maybe_cancel_queries st l = 
   let log_cancellation l = 
-      if Options.debug_any()
+      if Options.debug_at_level_no_module (Options.Other "IDE")
       then List.iter (fun q -> BU.print1 "Cancelling query: %s\n" (query_to_string q)) l
   in
   match st.repl_buffered_input_queries with
@@ -1119,7 +1119,7 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
 and validate_and_run_query st query =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;
-  if Options.debug_any ()
+  if Options.debug_at_level_no_module (Options.Other "IDE")
   then BU.print2 "Running query %s: %s\n" query.qid (query_to_string query);
   run_query st query
 

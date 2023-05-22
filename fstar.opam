@@ -12,6 +12,7 @@ depends: [
   "yojson"
   "dune" {build & >= "3.2.0"}
   "menhirLib"
+  "menhir" {build & >= "2.1"}
   "pprint"
   "sedlex"
   "ppxlib" {>= "0.27.0"}

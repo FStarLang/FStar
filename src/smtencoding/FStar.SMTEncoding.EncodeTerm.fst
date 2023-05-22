@@ -82,12 +82,12 @@ let head_normal env t =
     | Tm_abs _
     | Tm_constant _ -> true
     | Tm_fvar fv
-    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isNone
+    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isNone
     | _ -> false
 
 let head_redex env t =
     match (U.un_uinst t).n with
-    | Tm_abs(_, _, Some rc) ->
+    | Tm_abs {rc_opt=Some rc} ->
       Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
       || Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
       || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
@@ -134,7 +134,7 @@ let maybe_whnf env t =
 
 let trivial_post t : Syntax.term =
     U.abs [null_binder t]
-             (Syntax.fvar Const.true_lid delta_constant None)
+             (Syntax.fvar Const.true_lid None)
              None
 
 let mk_Apply e (vars:fvs) =
@@ -275,8 +275,8 @@ let as_function_typ env t0 =
 let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
-  | Tm_arrow(bs, c)  -> Subst.open_comp bs c
-  | Tm_refine(bv, _) ->
+  | Tm_arrow {bs; comp=c}  -> Subst.open_comp bs c
+  | Tm_refine {b=bv} ->
     let args, res = curried_arrow_formals_comp bv.sort in
     begin
     match args with
@@ -602,7 +602,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_bvar x ->
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
-      | Tm_ascribed(t, (k,_,_), _) ->
+      | Tm_ascribed {tm=t; asc=(k,_,_)} ->
         if (match k with Inl t -> U.is_unit t | _ -> false)
         then Term.mk_Term_unit, []
         else encode_term t env
@@ -620,10 +620,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
 
-      | Tm_meta(t, Meta_pattern _) ->
+      | Tm_meta {tm=t; meta=Meta_pattern _} ->
         encode_term t ({env with encoding_quantifier=false})
 
-      | Tm_meta(t, _) ->
+      | Tm_meta {tm=t} ->
         encode_term t env
 
       | Tm_name x ->
@@ -668,7 +668,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_constant c ->
         encode_const c env
 
-      | Tm_arrow(binders, c) ->
+      | Tm_arrow {bs=binders; comp=c} ->
         let module_name = env.current_module_name in
         let binders, res = SS.open_comp binders c in
         if  (env.encode_non_total_function_typ
@@ -822,7 +822,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             Env.EraseUniverses
           ] in
           match normalize_refinement steps env.tcenv t0 with
-          | {n=Tm_refine(x, f)} ->
+          | {n=Tm_refine {b=x; phi=f}} ->
             let b, f = SS.open_term [S.mk_binder x] f in
             (List.hd b).binder_bv, f
           | _ -> failwith "impossible"
@@ -1079,8 +1079,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
-                | Tm_ascribed(_, (Inl t, _, _), _) -> Some t
-                | Tm_ascribed(_, (Inr c, _, _), _) -> Some (U.comp_result c)
+                | Tm_ascribed {asc=(Inl t, _, _)} -> Some t
+                | Tm_ascribed {asc=(Inr c, _, _)} -> Some (U.comp_result c)
                 | _ -> None
             in
 
@@ -1120,7 +1120,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         end
 
-      | Tm_abs(bs, body, lopt) ->
+      | Tm_abs {bs; body; rc_opt=lopt} ->
           let bs, body, opening = SS.open_term' bs body in
           let fallback () =
             let f = varops.fresh env.current_module_name "Tm_abs" in
@@ -1242,23 +1242,23 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 f, decls@decls'@decls''@(mk_decls fsym tkey_hash f_decls (decls@decls'@decls''))
           end
 
-      | Tm_let((_, {lbname=Inr _}::_), _) ->
+      | Tm_let {lbs=(_, {lbname=Inr _}::_)} ->
         failwith "Impossible: already handled by encoding of Sig_let"
 
-      | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+      | Tm_let {lbs=(false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]); body=e2} ->
         encode_let x t1 e1 e2 env encode_term
 
-      | Tm_let((false, _::_), _) ->
+      | Tm_let {lbs=(false, _::_)} ->
         failwith "Impossible: non-recursive let with multiple bindings"
 
-      | Tm_let ((_, lbs), _) ->
+      | Tm_let {lbs=(_, lbs)} ->
         let names = lbs |> List.map (fun lb ->
                                         let {lbname = lbname} = lb in
                                         let x = BU.left lbname in (* has to be Inl *)
                                         (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
-      | Tm_match(e, _, pats, _) ->
+      | Tm_match {scrutinee=e; brs=pats} ->
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
@@ -1311,7 +1311,6 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
     let rec mk_guard pat (scrutinee:term) : term =
         match pat.v with
         | Pat_var _
-        | Pat_wild _
         | Pat_dot_term _ -> mkTrue
         | Pat_constant c ->
             let tm, decls = encode_const c env in
@@ -1333,8 +1332,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
         | Pat_dot_term _ -> []
-        | Pat_var x
-        | Pat_wild x -> [x, scrutinee]
+        | Pat_var x -> [x, scrutinee]
 
         | Pat_constant _ -> []
 
@@ -1470,22 +1468,22 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     ] in
 
     let rec fallback phi =  match phi.n with
-        | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
+        | Tm_meta {tm=phi'; meta=Meta_labeled(msg, r, b)} ->
           let phi, decls = encode_formula phi' env in
           mk (Term.Labeled(phi, msg, r)) r, decls
 
         | Tm_meta _ ->
           encode_formula (U.unmeta phi) env
 
-        | Tm_match(e, _, pats, _) ->
+        | Tm_match {scrutinee=e;brs=pats} ->
            let t, decls = encode_match e pats mkUnreachable env encode_formula in
            t, decls
 
-        | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+        | Tm_let {lbs=(false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]); body=e2} ->
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, decls
 
-        | Tm_app(head, args) ->
+        | Tm_app {hd=head; args} ->
           let head = U.un_uinst head in
           begin match head.n, args with
             | Tm_fvar fv, [_; (x, _); (t, _)] when S.fv_eq_lid fv Const.has_type_lid -> //interpret Prims.has_type as HasType
@@ -1507,12 +1505,12 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               begin match SE.unembed SE.e_range r false SE.id_norm_cb,
                           SE.unembed SE.e_string msg false SE.id_norm_cb with
               | Some r, Some s ->
-                let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) r in
+                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, r, false)}) r in
                 fallback phi
 
               (* If we could not unembed the position, still use the string *)
               | None, Some s ->
-                let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, phi.pos, false))) phi.pos in
+                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, phi.pos, false)}) phi.pos in
                 fallback phi
 
               | _ ->

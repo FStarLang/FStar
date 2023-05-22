@@ -156,7 +156,9 @@ let (run_repl_ld_transactions :
     fun tasks ->
       fun progress_callback ->
         let debug verb task =
-          let uu___ = FStar_Options.debug_any () in
+          let uu___ =
+            FStar_Options.debug_at_level_no_module
+              (FStar_Options.Other "IDE") in
           if uu___
           then
             let uu___1 = FStar_Interactive_Ide_Types.string_of_repl_task task in
@@ -1703,7 +1705,8 @@ let (run_push_with_deps :
   =
   fun st ->
     fun query ->
-      (let uu___1 = FStar_Options.debug_any () in
+      (let uu___1 =
+         FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
        if uu___1
        then FStar_Compiler_Util.print_string "Reloading dependencies"
        else ());
@@ -2157,15 +2160,17 @@ let run_with_parsed_and_tc_term :
               match ses with
               | {
                   FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
-                    ((uu___,
-                      { FStar_Syntax_Syntax.lbname = uu___1;
-                        FStar_Syntax_Syntax.lbunivs = univs;
-                        FStar_Syntax_Syntax.lbtyp = uu___2;
-                        FStar_Syntax_Syntax.lbeff = uu___3;
-                        FStar_Syntax_Syntax.lbdef = def;
-                        FStar_Syntax_Syntax.lbattrs = uu___4;
-                        FStar_Syntax_Syntax.lbpos = uu___5;_}::[]),
-                     uu___6);
+                    {
+                      FStar_Syntax_Syntax.lbs1 =
+                        (uu___,
+                         { FStar_Syntax_Syntax.lbname = uu___1;
+                           FStar_Syntax_Syntax.lbunivs = univs;
+                           FStar_Syntax_Syntax.lbtyp = uu___2;
+                           FStar_Syntax_Syntax.lbeff = uu___3;
+                           FStar_Syntax_Syntax.lbdef = def;
+                           FStar_Syntax_Syntax.lbattrs = uu___4;
+                           FStar_Syntax_Syntax.lbpos = uu___5;_}::[]);
+                      FStar_Syntax_Syntax.lids1 = uu___6;_};
                   FStar_Syntax_Syntax.sigrng = uu___7;
                   FStar_Syntax_Syntax.sigquals = uu___8;
                   FStar_Syntax_Syntax.sigmeta = uu___9;
@@ -2568,7 +2573,8 @@ let (maybe_cancel_queries :
   fun st ->
     fun l ->
       let log_cancellation l1 =
-        let uu___ = FStar_Options.debug_any () in
+        let uu___ =
+          FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
         if uu___
         then
           FStar_Compiler_List.iter
@@ -2761,7 +2767,8 @@ and (validate_and_run_query :
       FStar_Compiler_Effect.op_Colon_Equals repl_current_qid
         (FStar_Pervasives_Native.Some
            (query1.FStar_Interactive_Ide_Types.qid));
-      (let uu___2 = FStar_Options.debug_any () in
+      (let uu___2 =
+         FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
        if uu___2
        then
          let uu___3 = FStar_Interactive_Ide_Types.query_to_string query1 in

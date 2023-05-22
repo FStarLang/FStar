@@ -114,15 +114,22 @@ let ctx_string (ctx : list string) : string =
 let issue_message (i:issue) : string =
   i.issue_msg ^ ctx_string i.issue_ctx
 
+let string_of_issue_level il =
+    match il with
+    | EInfo -> "Info"
+    | EWarning -> "Warning"
+    | EError -> "Error"
+    | ENotImplemented -> "Feature not yet implemented: "
+let issue_level_of_string =
+  function
+  | "Info" -> EInfo
+  | "Warning" -> EWarning
+  | "Error" -> EError
+  | _ -> ENotImplemented
+
 (* No newline at the end *)
 let format_issue issue =
-  let level_header =
-      match issue.issue_level with
-      | EInfo -> "Info"
-      | EWarning -> "Warning"
-      | EError -> "Error"
-      | ENotImplemented -> "Feature not yet implemented: "
-  in
+  let level_header = string_of_issue_level issue.issue_level in
   let range_str, see_also_str =
       match issue.issue_range with
       | None -> "", ""
@@ -218,6 +225,8 @@ let add_one issue =
 
 let add_many issues =
     atomically (fun () -> List.iter (wrapped_eh_add_one (!current_handler)) issues)
+
+let add_issues issues = add_many issues
 
 let report_all () =
     (!current_handler).eh_report ()

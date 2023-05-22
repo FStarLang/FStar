@@ -102,19 +102,23 @@ let rec (elaborate_pat :
                                 | FStar_Syntax_Syntax.Pat_dot_term uu___5 ->
                                     let uu___6 = aux formals' pats' in
                                     (p1, true) :: uu___6
-                                | FStar_Syntax_Syntax.Pat_wild uu___5 ->
+                                | FStar_Syntax_Syntax.Pat_var v when
+                                    let uu___5 =
+                                      FStar_Ident.string_of_id
+                                        v.FStar_Syntax_Syntax.ppname in
+                                    uu___5 = FStar_Ident.reserved_prefix ->
                                     let a =
                                       FStar_Syntax_Syntax.new_bv
                                         (FStar_Pervasives_Native.Some
                                            (p1.FStar_Syntax_Syntax.p))
                                         FStar_Syntax_Syntax.tun in
                                     let p2 =
-                                      let uu___6 =
+                                      let uu___5 =
                                         FStar_Ident.range_of_lid
                                           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                                      maybe_dot inaccessible a uu___6 in
-                                    let uu___6 = aux formals' pats' in
-                                    (p2, true) :: uu___6
+                                      maybe_dot inaccessible a uu___5 in
+                                    let uu___5 = aux formals' pats' in
+                                    (p2, true) :: uu___5
                                 | uu___5 ->
                                     let uu___6 =
                                       let uu___7 =
@@ -196,11 +200,6 @@ let (raw_pat_as_exp :
                  FStar_Compiler_Effect.raise Raw_pat_cannot_be_translated
              | FStar_Pervasives_Native.Some e ->
                  let uu___ = FStar_Syntax_Subst.compress e in (uu___, bs))
-        | FStar_Syntax_Syntax.Pat_wild x ->
-            let uu___ =
-              FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
-                p1.FStar_Syntax_Syntax.p in
-            (uu___, (x :: bs))
         | FStar_Syntax_Syntax.Pat_var x ->
             let uu___ =
               FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
@@ -355,15 +354,6 @@ let (pat_as_exp :
                  | FStar_Pervasives_Native.Some e ->
                      ([], [], [], env1, e,
                        FStar_TypeChecker_Env.trivial_guard, p1))
-            | FStar_Syntax_Syntax.Pat_wild x ->
-                let uu___ = intro_bv env1 x in
-                (match uu___ with
-                 | (x1, g, env2) ->
-                     let e =
-                       FStar_Syntax_Syntax.mk
-                         (FStar_Syntax_Syntax.Tm_name x1)
-                         p1.FStar_Syntax_Syntax.p in
-                     ([x1], [], [x1], env2, e, g, p1))
             | FStar_Syntax_Syntax.Pat_var x ->
                 let uu___ = intro_bv env1 x in
                 (match uu___ with

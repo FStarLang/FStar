@@ -59,7 +59,10 @@ let (primitive_projector_by_pos :
               let uu___3 = FStar_Syntax_Subst.compress t in
               uu___3.FStar_Syntax_Syntax.n in
             (match uu___2 with
-             | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+             | FStar_Syntax_Syntax.Tm_arrow
+                 { FStar_Syntax_Syntax.bs1 = bs;
+                   FStar_Syntax_Syntax.comp = c;_}
+                 ->
                  let uu___3 = FStar_Syntax_Subst.open_comp bs c in
                  (match uu___3 with
                   | (binders, uu___4) ->
@@ -321,9 +324,10 @@ let (fvb_to_string : fvar_binding -> Prims.string) =
     let uu___1 = term_opt_to_string fvb.smt_token in
     let uu___2 = term_pair_opt_to_string fvb.smt_fuel_partial_app in
     let uu___3 = FStar_Compiler_Util.string_of_bool fvb.fvb_thunked in
-    FStar_Compiler_Util.format5
-      "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
-      uu___ fvb.smt_id uu___1 uu___2 uu___3
+    FStar_Compiler_Util.format6
+      "{ lid = %s;\n  smt_arity = %s;\n  smt_id = %s;\n  smt_token = %s;\n  smt_fuel_partial_app = %s;\n  fvb_thunked = %s }"
+      uu___ (Prims.string_of_int fvb.smt_arity) fvb.smt_id uu___1 uu___2
+      uu___3
 let (check_valid_fvb : fvar_binding -> unit) =
   fun fvb ->
     if

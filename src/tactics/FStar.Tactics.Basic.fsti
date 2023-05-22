@@ -125,16 +125,17 @@ val free_uvars             : term -> tac (list Z.t)
 
 
 (***** Callbacks for the meta DSL framework *****)
-
-val refl_check_subtyping              : env -> typ -> typ -> tac (option unit)
-val refl_check_equiv                  : env -> typ -> typ -> tac (option unit)
-val refl_core_check_term              : env -> term -> tac (option typ)
-val refl_tc_term                      : env -> term -> tac (option (term & typ))
-val refl_universe_of                  : env -> term -> tac (option universe)
-val refl_check_prop_validity          : env -> term -> tac (option unit)
-val refl_instantiate_implicits        : env -> term -> tac (option (term & typ))
-val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side)
-val refl_maybe_unfold_head            : env -> term -> tac (option term)
+let issues = list FStar.Errors.issue
+val refl_check_subtyping              : env -> typ -> typ -> tac (option unit & issues)
+val refl_check_equiv                  : env -> typ -> typ -> tac (option unit & issues)
+val refl_core_compute_term_type       : env -> term -> tot_or_ghost -> tac (option typ & issues)
+val refl_core_check_term              : env -> term -> typ -> tot_or_ghost -> tac (option unit & issues)
+val refl_tc_term                      : env -> term -> tot_or_ghost -> tac (option (term & typ) & issues)
+val refl_universe_of                  : env -> term -> tac (option universe & issues)
+val refl_check_prop_validity          : env -> term -> tac (option unit & issues)
+val refl_instantiate_implicits        : env -> term -> tac (option (term & typ) & issues)
+val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side & issues)
+val refl_maybe_unfold_head            : env -> term -> tac (option term & issues)
 
 val push_open_namespace               : env -> list string -> tac env
 val push_module_abbrev                : env -> string -> list string -> tac env

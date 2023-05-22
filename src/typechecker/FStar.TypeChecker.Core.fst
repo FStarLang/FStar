@@ -84,12 +84,6 @@ let open_pat (g:env) (p:pat)
           let sub = DB(0, bx'.binder_bv)::Subst.shift_subst 1 sub in
           g, {p with v=Pat_var bx'.binder_bv}, sub
 
-        | Pat_wild x ->
-          let bx = S.mk_binder {x with sort = Subst.subst sub x.sort} in
-          let g, bx' = fresh_binder g bx in
-          let sub = DB(0, bx'.binder_bv)::Subst.shift_subst 1 sub in
-          g, {p with v=Pat_wild bx'.binder_bv}, sub        
-
         | Pat_dot_term eopt ->
           let eopt = BU.map_option (Subst.subst sub) eopt in
           g, {p with v=Pat_dot_term eopt}, sub
@@ -314,7 +308,7 @@ let rec is_arrow (g:env) (t:term)
   : result (binder & effect_label & typ)
   = let rec aux t =
         match (Subst.compress t).n with
-        | Tm_arrow ([x], c) ->
+        | Tm_arrow {bs=[x]; comp=c} ->
           if U.is_tot_or_gtot_comp c
           then
             let g, x, c = open_comp g x c in
@@ -358,16 +352,16 @@ let rec is_arrow (g:env) (t:term)
               return (x, e_tag, res_typ)
           )
 
-        | Tm_arrow (x::xs, c) ->
-          let t = S.mk (Tm_arrow(xs, c)) t.pos in
+        | Tm_arrow {bs=x::xs; comp=c} ->
+          let t = S.mk (Tm_arrow {bs=xs; comp=c}) t.pos in
           let g, x, t = open_term g x t in
           return (x, E_TOTAL, t)
 
-        | Tm_refine(x, _) ->
+        | Tm_refine {b=x} ->
           is_arrow g x.sort
 
-        | Tm_meta(t, _)
-        | Tm_ascribed(t, _, _) ->
+        | Tm_meta {tm=t}
+        | Tm_ascribed {tm=t} ->
           aux t
 
         | _ ->
@@ -526,12 +520,12 @@ let equatable g t =
 let apply_predicate x p = fun e -> Subst.subst [NT(x.binder_bv, e)] p
 
 let curry_arrow (x:binder) (xs:binders) (c:comp) =
-  let tail = S.mk (Tm_arrow (xs, c)) R.dummyRange in
-  S.mk (Tm_arrow([x], S.mk_Total tail)) R.dummyRange
+  let tail = S.mk (Tm_arrow {bs=xs; comp=c}) R.dummyRange in
+  S.mk (Tm_arrow {bs=[x]; comp=S.mk_Total tail}) R.dummyRange
 
 let curry_abs (b0:binder) (b1:binder) (bs:binders) (body:term) (ropt: option residual_comp) =
-  let tail = S.mk (Tm_abs(b1::bs, body, ropt)) body.pos in
-  S.mk (Tm_abs([b0], tail, None)) body.pos
+  let tail = S.mk (Tm_abs {bs=b1::bs; body; rc_opt=ropt}) body.pos in
+  S.mk (Tm_abs {bs=[b0]; body=tail; rc_opt=None}) body.pos
 
 let is_gtot_comp c = U.is_tot_or_gtot_comp c && not (U.is_total_comp c)
 
@@ -560,8 +554,8 @@ let rec context_included (g0 g1: list binding) =
   | _ -> false
 
 let curry_application hd arg args p =
-    let head = S.mk (Tm_app(hd, [arg])) p in
-    let t = S.mk (Tm_app(head, args)) p in
+    let head = S.mk (Tm_app {hd; args=[arg]}) p in
+    let t = S.mk (Tm_app {hd=head; args}) p in
     t
 
 
@@ -729,7 +723,7 @@ let maybe_relate_after_unfolding (g:Env.env) t0 t1 : side =
     let head = U.leftmost_head t in
     match (U.un_uinst head).n with
     | Tm_fvar fv -> Some (Env.delta_depth_of_fv g fv)
-    | Tm_match (t, _, _, _) -> delta_depth_of_head t
+    | Tm_match {scrutinee=t} -> delta_depth_of_head t
     | _ -> None in
   
   let dd0 = delta_depth_of_head t0 in
@@ -884,18 +878,18 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         then return ()
         else err ()
 
-      | Tm_meta (t0, Meta_pattern _), _
-      | Tm_meta (t0, Meta_named _), _
-      | Tm_meta (t0, Meta_labeled _), _
-      | Tm_meta (t0, Meta_desugared _), _      
-      | Tm_ascribed (t0, _, _), _ ->
+      | Tm_meta {tm=t0; meta=Meta_pattern _}, _
+      | Tm_meta {tm=t0; meta=Meta_named _}, _
+      | Tm_meta {tm=t0; meta=Meta_labeled _}, _
+      | Tm_meta {tm=t0; meta=Meta_desugared _}, _
+      | Tm_ascribed {tm=t0}, _ ->
         check_relation g rel t0 t1
 
-      | _, Tm_meta (t1, Meta_pattern _)
-      | _, Tm_meta (t1, Meta_named _)
-      | _, Tm_meta (t1, Meta_labeled _)
-      | _, Tm_meta (t1, Meta_desugared _)
-      | _, Tm_ascribed(t1, _, _) ->
+      | _, Tm_meta {tm=t1; meta=Meta_pattern _}
+      | _, Tm_meta {tm=t1; meta=Meta_named _}
+      | _, Tm_meta {tm=t1; meta=Meta_labeled _}
+      | _, Tm_meta {tm=t1; meta=Meta_desugared _}
+      | _, Tm_ascribed {tm=t1} ->
         check_relation g rel t0 t1
 
       | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
@@ -911,7 +905,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         maybe_unfold_and_retry t0 t1
       
 
-      | Tm_refine (x0, f0), Tm_refine (x1, f1) ->
+      | Tm_refine {b=x0; phi=f0}, Tm_refine {b=x1; phi=f1} ->
         if head_matches x0.sort x1.sort
         then (
           check_relation g EQUALITY x0.sort x1.sort ;!
@@ -941,24 +935,24 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           match maybe_unfold x0.sort x1.sort with
           | None -> fallback t0 t1
           | Some (t0, t1) ->
-            let lhs = S.mk (Tm_refine({x0 with sort = t0}, f0)) t0.pos in
-            let rhs = S.mk (Tm_refine({x1 with sort = t1}, f1)) t1.pos in            
+            let lhs = S.mk (Tm_refine {b={x0 with sort = t0}; phi=f0}) t0.pos in
+            let rhs = S.mk (Tm_refine {b={x1 with sort = t1}; phi=f1}) t1.pos in            
             check_relation g rel (U.flatten_refinement lhs) (U.flatten_refinement rhs)
         )
 
-      | Tm_refine (x0, f0), _ ->
+      | Tm_refine {b=x0; phi=f0}, _ ->
         if head_matches x0.sort t1
         then check_relation g rel x0.sort t1
         else (
           match maybe_unfold x0.sort t1 with
           | None -> fallback t0 t1         
           | Some (t0, t1) ->
-            let lhs = S.mk (Tm_refine({x0 with sort = t0}, f0)) t0.pos in
+            let lhs = S.mk (Tm_refine {b={x0 with sort = t0}; phi=f0}) t0.pos in
             check_relation g rel (U.flatten_refinement lhs) t1
         )
 
 
-      | _, Tm_refine (x1, f1) ->
+      | _, Tm_refine {b=x1; phi=f1} ->
         if head_matches t0 x1.sort
         then (
           let! u1 = universe_of g x1.sort in
@@ -987,7 +981,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           match maybe_unfold t0 x1.sort with
           | None -> fallback t0 t1         
           | Some (t0, t1) ->
-            let rhs = S.mk (Tm_refine({x1 with sort = t1}, f1)) t1.pos in          
+            let rhs = S.mk (Tm_refine {b={x1 with sort = t1}; phi=f1}) t1.pos in          
             check_relation g rel t0 (U.flatten_refinement rhs)
         )               
       
@@ -1009,15 +1003,15 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
             (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
         )
 
-      | Tm_abs(b0::b1::bs, body, ropt), _ ->
+      | Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt}, _ ->
         let t0 = curry_abs b0 b1 bs body ropt in
         check_relation g rel t0 t1
 
-      | _, Tm_abs(b0::b1::bs, body, ropt) ->
+      | _, Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt} ->
         let t1 = curry_abs b0 b1 bs body ropt in
         check_relation g rel t0 t1
 
-      | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
+      | Tm_abs {bs=[b0]; body=body0}, Tm_abs {bs=[b1]; body=body1} ->
         check_relation g EQUALITY b0.binder_bv.sort b1.binder_bv.sort;!
         check_bqual b0.binder_qual b1.binder_qual;!
         check_positivity_qual EQUALITY b0.binder_positivity b1.binder_positivity;!
@@ -1027,13 +1021,13 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         with_binders [b0] [u]
           (check_relation g EQUALITY body0 body1)
       
-      | Tm_arrow (x0::x1::xs, c0), _ ->
+      | Tm_arrow {bs=x0::x1::xs; comp=c0}, _ ->
         check_relation g rel (curry_arrow x0 (x1::xs) c0) t1
 
-      | _, Tm_arrow(x0::x1::xs, c1) ->
+      | _, Tm_arrow {bs=x0::x1::xs; comp=c1} ->
         check_relation g rel t0 (curry_arrow x0 (x1::xs) c1)
 
-      | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
+      | Tm_arrow {bs=[x0]; comp=c0}, Tm_arrow {bs=[x1]; comp=c1} ->
         with_context "subtype arrow" None (fun _ ->
           let! _ = check_bqual x0.binder_qual x1.binder_qual in
           check_positivity_qual rel x0.binder_positivity x1.binder_positivity;!
@@ -1062,7 +1056,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           )
         )
 
-      | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
+      | Tm_match {scrutinee=e0;brs=brs0}, Tm_match {scrutinee=e1;brs=brs1} ->
         let relate_branch br0 br1 (_:unit)
           : result unit
           = match br0, br1 with
@@ -1211,7 +1205,7 @@ and check' (g:env) (e:term)
   | Tm_lazy i ->
     return (E_TOTAL, i.ltyp)
 
-  | Tm_meta(t, _) ->
+  | Tm_meta {tm=t} ->
     memo_check g t
 
   | Tm_uvar (uv, s) ->
@@ -1264,7 +1258,7 @@ and check' (g:env) (e:term)
   | Tm_type u ->
     return (E_TOTAL, mk_type (U_succ u))
 
-  | Tm_refine(x, phi) ->
+  | Tm_refine {b=x; phi} ->
     let! _, t = check "refinement head" g x.sort in
     let! u = is_type g t in
     let g', x, phi = open_term g (S.mk_binder x) phi in
@@ -1274,7 +1268,7 @@ and check' (g:env) (e:term)
       return (E_TOTAL, t)
     )
 
-  | Tm_abs(xs, body, _) ->
+  | Tm_abs {bs=xs; body} ->
     let g', xs, body = open_term_binders g xs body in
     let! us = with_context "abs binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
@@ -1282,7 +1276,7 @@ and check' (g:env) (e:term)
       return (E_TOTAL, U.arrow xs (as_comp g t))
     )
 
-  | Tm_arrow(xs, c) ->
+  | Tm_arrow {bs=xs; comp=c} ->
     let g', xs, c = open_comp_binders g xs c in
     let! us = with_context "arrow binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
@@ -1290,7 +1284,7 @@ and check' (g:env) (e:term)
       return (E_TOTAL, mk_type (S.U_max (u::us)))
     )
 
-  | Tm_app (hd, [(t1, None); (t2, None)])
+  | Tm_app {hd; args=[(t1, None); (t2, None)]}
     when TcUtil.short_circuit_head hd ->
     let! eff_hd, t_hd = check "app head" g hd in
     let! x, eff_arr1, s1 = is_arrow g t_hd in    
@@ -1309,7 +1303,7 @@ and check' (g:env) (e:term)
     return (join_eff_l [eff_hd; eff_arr1; eff_arr2; eff_arg1; eff_arg2],
             Subst.subst [NT(y.binder_bv, t2)] s2)
 
-  | Tm_app (hd, [(arg, arg_qual)]) ->
+  | Tm_app {hd; args=[(arg, arg_qual)]} ->
     let! eff_hd, t = check "app head" g hd in
     let! x, eff_arr, t' = is_arrow g t in
     let! eff_arg, t_arg = check "app arg" g arg in
@@ -1317,19 +1311,19 @@ and check' (g:env) (e:term)
     with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
     return (join_eff eff_hd (join_eff eff_arr eff_arg), Subst.subst [NT(x.binder_bv, arg)] t')
 
-  | Tm_app(hd, arg::args) ->
-    let head = S.mk (Tm_app(hd, [arg])) e.pos in
-    let t = S.mk (Tm_app(head, args)) e.pos in
+  | Tm_app {hd; args=arg::args} ->
+    let head = S.mk (Tm_app {hd; args=[arg]}) e.pos in
+    let t = S.mk (Tm_app {hd=head; args}) e.pos in
     memo_check g t
 
-  | Tm_ascribed (e, (Inl t, _, eq), _) ->
+  | Tm_ascribed {tm=e; asc=(Inl t, _, eq)} ->
     let! eff, te = check "ascription head" g e in
     let! _, t' = check "ascription type" g t in
     is_type g t';!
     with_context "ascription subtyping" None (fun _ -> check_subtype g (Some e) te t);!
     return (eff, t)
 
-  | Tm_ascribed (e, (Inr c, _, _), _) ->
+  | Tm_ascribed {tm=e; asc=(Inr c, _, _)} ->
     if U.is_tot_or_gtot_comp c
     then (
       let! eff, te = check "ascription head" g e in
@@ -1341,7 +1335,7 @@ and check' (g:env) (e:term)
     )
     else fail (BU.format1 "Effect ascriptions are not fully handled yet: %s" (P.comp_to_string c))
 
-  | Tm_let((false, [lb]), body) ->
+  | Tm_let {lbs=(false, [lb]); body} ->
     let Inl x = lb.lbname in
     let g', x, body = open_term g (S.mk_binder x) body in
     if I.lid_equals lb.lbeff PC.effect_Tot_lid
@@ -1360,7 +1354,7 @@ and check' (g:env) (e:term)
       fail "Let binding is effectful"
     )
 
-  | Tm_match(sc, None, branches, rc_opt) ->
+  | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
     let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
     let rec check_branches path_condition
@@ -1409,8 +1403,7 @@ and check' (g:env) (e:term)
                       (fun _ -> check_subtype g' (Some b) tbr expect_tbr) ;!
                     return (join_eff eff_br acc_eff, expect_tbr))) in
           match p.v with
-          | Pat_var _
-          | Pat_wild _ ->
+          | Pat_var _ ->
             //trivially exhaustive
             (match rest with
              | _ :: _ -> fail "Redundant branches after wildcard"
@@ -1440,7 +1433,7 @@ and check' (g:env) (e:term)
     in
     return (join_eff eff_sc eff_br, t_br)
 
-  | Tm_match(sc, Some (as_x, (Inl returns_ty, None, eq)), branches, rc_opt) ->
+  | Tm_match {scrutinee=sc; ret_opt=Some (as_x, (Inl returns_ty, None, eq)); brs=branches; rc_opt} ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
     let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
     let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
@@ -1487,8 +1480,7 @@ and check' (g:env) (e:term)
                   check_relation g' rel tbr expect_tbr;!
                   return (join_eff eff_br acc_eff, expect_tbr))) in
           match p.v with
-          | Pat_var _
-          | Pat_wild _ ->
+          | Pat_var _ ->
             //trivially exhaustive
             (match rest with
              | _ :: _ -> fail "Redundant branches after wildcard"
@@ -1540,7 +1532,7 @@ and check_comp (g:env) (c:comp)
       then fail "Unexpected/missing universe instantitation in comp"
       else let u = List.hd ct.comp_univs in
            let effect_app_tm =
-             let head = S.mk_Tm_uinst (S.fvar ct.effect_name delta_constant None) [u] in
+             let head = S.mk_Tm_uinst (S.fvar ct.effect_name None) [u] in
              S.mk_Tm_app head ((as_arg ct.result_typ)::ct.effect_args) ct.result_typ.pos in
            let! _, t = check "effectful comp" g effect_app_tm in
            with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!
@@ -1580,8 +1572,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
     let! _ = check_subtype g (Some e) t_const (unrefine_tsc t_sc) in
     return ([], [])
 
-  | Pat_var bv
-  | Pat_wild bv ->
+  | Pat_var bv ->
     let b = S.mk_binder {bv with sort=t_sc} in
     let! [u] = with_context "check_pat_binder" None (fun _ -> check_binders g [b]) in
     return ([b], [u])
@@ -1684,8 +1675,7 @@ and pattern_branch_condition (g:env)
                              (pat:pat)
   : result (option term)
   = match pat.v with
-    | Pat_var _
-    | Pat_wild _ -> 
+    | Pat_var _ -> 
       return None
     | Pat_constant c -> 
       let const_exp = 
@@ -1697,12 +1687,12 @@ and pattern_branch_condition (g:env)
       return (Some (U.mk_decidable_eq t_const scrutinee const_exp))
 
     | Pat_cons(fv, us_opt, sub_pats) ->
-      let wild_pat pos = S.withinfo (Pat_wild (S.new_bv None S.tun)) pos in
+      let wild_pat pos = S.withinfo (Pat_var (S.new_bv None S.tun)) pos in
       let mk_head_discriminator () =
         let pat = S.withinfo (Pat_cons(fv, us_opt, List.map (fun (s, b) -> wild_pat s.p, b) sub_pats)) pat.p in
         let branch1 = (pat, None, U.exp_true_bool) in
-        let branch2 = (S.withinfo (Pat_wild (S.new_bv None S.tun)) pat.p, None, U.exp_false_bool) in
-        S.mk (Tm_match(scrutinee, None, [branch1; branch2], None)) scrutinee.pos
+        let branch2 = (S.withinfo (Pat_var (S.new_bv None S.tun)) pat.p, None, U.exp_false_bool) in
+        S.mk (Tm_match {scrutinee; ret_opt=None; brs=[branch1; branch2]; rc_opt=None}) scrutinee.pos
       in
       let mk_ith_projector i =
         let ith_pat_var, ith_pat =
@@ -1713,7 +1703,7 @@ and pattern_branch_condition (g:env)
         let pat = S.withinfo (Pat_cons(fv, us_opt, sub_pats)) pat.p in
         let branch = S.bv_to_name ith_pat_var in
         let eqn = Subst.close_branch (pat, None, branch) in
-        S.mk (Tm_match(scrutinee, None, [eqn], None)) scrutinee.pos
+        S.mk (Tm_match {scrutinee; ret_opt=None; brs=[eqn]; rc_opt=None}) scrutinee.pos
       in
       let discrimination =
         let is_induc, datacons = Env.datacons_of_typ g.tcenv (Env.typ_of_datacon g.tcenv fv.fv_name.v) in
@@ -1733,8 +1723,7 @@ and pattern_branch_condition (g:env)
           (fun i (pi, _) ->
             match pi.v with
             | Pat_dot_term _
-            | Pat_var _
-            | Pat_wild _ -> 
+            | Pat_var _ -> 
               return None
             | _ ->
               let scrutinee_sub_term = mk_ith_projector i in

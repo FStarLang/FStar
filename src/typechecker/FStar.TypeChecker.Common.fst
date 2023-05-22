@@ -390,7 +390,7 @@ let simplify (debug:bool) (tm:term) : term =
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False
          * we need to open the terms *)
-        | Tm_match (_, _, br::brs, _) ->
+        | Tm_match {brs=br::brs} ->
             let (_, _, e) = br in
             let r = begin match simp_t e with
             | None -> None
@@ -426,7 +426,7 @@ let simplify (debug:bool) (tm:term) : term =
     let rec clearly_inhabited (ty : typ) : bool =
         match (U.unmeta ty).n with
         | Tm_uinst (t, _) -> clearly_inhabited t
-        | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
+        | Tm_arrow {comp=c} -> clearly_inhabited (U.comp_result c)
         | Tm_fvar fv ->
             let l = S.lid_of_fv fv in
                (Ident.lid_equals l PC.int_lid)
@@ -437,8 +437,8 @@ let simplify (debug:bool) (tm:term) : term =
     in
     let simplify arg = (simp_t (fst arg), arg) in
     match (SS.compress tm).n with
-    | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
-    | Tm_app({n=Tm_fvar fv}, args) ->
+    | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv}, _)}; args}
+    | Tm_app {hd={n=Tm_fvar fv}; args} ->
       if S.fv_eq_lid fv PC.and_lid
       then match args |> List.map simplify with
            | [(Some true, _); (_, (arg, _))]
@@ -488,7 +488,7 @@ let simplify (debug:bool) (tm:term) : term =
            (* Simplify ∀x. True to True *)
            | [(t, _)] ->
              begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
+                   | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
                      | Some true -> w U.t_true
                      | _ -> tm)
@@ -497,7 +497,7 @@ let simplify (debug:bool) (tm:term) : term =
            (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
            | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
+                   | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
                      | Some true -> w U.t_true
                      | Some false when clearly_inhabited ty -> w U.t_false
@@ -510,7 +510,7 @@ let simplify (debug:bool) (tm:term) : term =
            (* Simplify ∃x. False to False *)
            | [(t, _)] ->
              begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
+                   | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
                      | Some false -> w U.t_false
                      | _ -> tm)
@@ -519,7 +519,7 @@ let simplify (debug:bool) (tm:term) : term =
            (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
            | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
+                   | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
                      | Some false -> w U.t_false
                      | Some true when clearly_inhabited ty -> w U.t_true
@@ -559,7 +559,7 @@ let simplify (debug:bool) (tm:term) : term =
                 //get the hasEq term itself
                 let haseq_tm =
                   match (SS.compress tm).n with
-                  | Tm_app (hd, _) -> hd
+                  | Tm_app {hd} -> hd
                   | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
                 in
                 //and apply it to the unrefined type
@@ -585,7 +585,7 @@ let simplify (debug:bool) (tm:term) : term =
         | _ ->
              tm
       end
-    | Tm_refine (bv, t) ->
+    | Tm_refine {b=bv; phi=t} ->
         begin match simp_t t with
         | Some true -> bv.sort
         | Some false -> tm

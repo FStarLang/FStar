@@ -2628,7 +2628,9 @@ let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
                         | (uu___4,
                            {
                              FStar_Syntax_Syntax.sigel =
-                               FStar_Syntax_Syntax.Sig_bundle (ses, uu___5);
+                               FStar_Syntax_Syntax.Sig_bundle
+                               { FStar_Syntax_Syntax.ses = ses;
+                                 FStar_Syntax_Syntax.lids = uu___5;_};
                              FStar_Syntax_Syntax.sigrng = uu___6;
                              FStar_Syntax_Syntax.sigquals = uu___7;
                              FStar_Syntax_Syntax.sigmeta = uu___8;
@@ -2724,7 +2726,10 @@ let rec (add_sigelt : env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun env1 ->
     fun se ->
       match se.FStar_Syntax_Syntax.sigel with
-      | FStar_Syntax_Syntax.Sig_bundle (ses, uu___) -> add_sigelts env1 ses
+      | FStar_Syntax_Syntax.Sig_bundle
+          { FStar_Syntax_Syntax.ses = ses;
+            FStar_Syntax_Syntax.lids = uu___;_}
+          -> add_sigelts env1 ses
       | uu___ ->
           let lids = FStar_Syntax_Util.lids_of_sigelt se in
           (FStar_Compiler_List.iter
@@ -2771,7 +2776,10 @@ let (lookup_type_of_let :
           | FStar_Pervasives_Native.None -> inst_tscheme ts
           | FStar_Pervasives_Native.Some us -> inst_tscheme_with ts us in
         match se.FStar_Syntax_Syntax.sigel with
-        | FStar_Syntax_Syntax.Sig_let ((uu___, lb::[]), uu___1) ->
+        | FStar_Syntax_Syntax.Sig_let
+            { FStar_Syntax_Syntax.lbs1 = (uu___, lb::[]);
+              FStar_Syntax_Syntax.lids1 = uu___1;_}
+            ->
             let uu___2 =
               let uu___3 =
                 inst_tscheme1
@@ -2782,7 +2790,10 @@ let (lookup_type_of_let :
                   lb.FStar_Syntax_Syntax.lbname in
               (uu___3, uu___4) in
             FStar_Pervasives_Native.Some uu___2
-        | FStar_Syntax_Syntax.Sig_let ((uu___, lbs), uu___1) ->
+        | FStar_Syntax_Syntax.Sig_let
+            { FStar_Syntax_Syntax.lbs1 = (uu___, lbs);
+              FStar_Syntax_Syntax.lids1 = uu___1;_}
+            ->
             FStar_Compiler_Util.find_map lbs
               (fun lb ->
                  match lb.FStar_Syntax_Syntax.lbname with
@@ -2858,7 +2869,11 @@ let (effect_signature :
                 (uu___3, (se.FStar_Syntax_Syntax.sigrng)) in
               FStar_Pervasives_Native.Some uu___2))
         | FStar_Syntax_Syntax.Sig_effect_abbrev
-            (lid, us, binders, uu___, uu___1) ->
+            { FStar_Syntax_Syntax.lid4 = lid; FStar_Syntax_Syntax.us4 = us;
+              FStar_Syntax_Syntax.bs2 = binders;
+              FStar_Syntax_Syntax.comp1 = uu___;
+              FStar_Syntax_Syntax.cflags = uu___1;_}
+            ->
             let uu___2 =
               let uu___3 =
                 let uu___4 =
@@ -2896,7 +2911,12 @@ let (try_lookup_lid_aux :
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_datacon
-                        (uu___1, uvs, t, uu___2, uu___3, uu___4);
+                        { FStar_Syntax_Syntax.lid1 = uu___1;
+                          FStar_Syntax_Syntax.us1 = uvs;
+                          FStar_Syntax_Syntax.t1 = t;
+                          FStar_Syntax_Syntax.ty_lid = uu___2;
+                          FStar_Syntax_Syntax.num_ty_params = uu___3;
+                          FStar_Syntax_Syntax.mutuals1 = uu___4;_};
                       FStar_Syntax_Syntax.sigrng = uu___5;
                       FStar_Syntax_Syntax.sigquals = uu___6;
                       FStar_Syntax_Syntax.sigmeta = uu___7;
@@ -2910,7 +2930,10 @@ let (try_lookup_lid_aux :
                | FStar_Pervasives.Inr
                    ({
                       FStar_Syntax_Syntax.sigel =
-                        FStar_Syntax_Syntax.Sig_declare_typ (l, uvs, t);
+                        FStar_Syntax_Syntax.Sig_declare_typ
+                        { FStar_Syntax_Syntax.lid2 = l;
+                          FStar_Syntax_Syntax.us2 = uvs;
+                          FStar_Syntax_Syntax.t2 = t;_};
                       FStar_Syntax_Syntax.sigrng = uu___1;
                       FStar_Syntax_Syntax.sigquals = qs;
                       FStar_Syntax_Syntax.sigmeta = uu___2;
@@ -2942,7 +2965,13 @@ let (try_lookup_lid_aux :
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_inductive_typ
-                        (lid1, uvs, tps, uu___1, k, uu___2, uu___3);
+                        { FStar_Syntax_Syntax.lid = lid1;
+                          FStar_Syntax_Syntax.us = uvs;
+                          FStar_Syntax_Syntax.params = tps;
+                          FStar_Syntax_Syntax.num_uniform_params = uu___1;
+                          FStar_Syntax_Syntax.t = k;
+                          FStar_Syntax_Syntax.mutuals = uu___2;
+                          FStar_Syntax_Syntax.ds = uu___3;_};
                       FStar_Syntax_Syntax.sigrng = uu___4;
                       FStar_Syntax_Syntax.sigquals = uu___5;
                       FStar_Syntax_Syntax.sigmeta = uu___6;
@@ -2971,7 +3000,13 @@ let (try_lookup_lid_aux :
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_inductive_typ
-                        (lid1, uvs, tps, uu___1, k, uu___2, uu___3);
+                        { FStar_Syntax_Syntax.lid = lid1;
+                          FStar_Syntax_Syntax.us = uvs;
+                          FStar_Syntax_Syntax.params = tps;
+                          FStar_Syntax_Syntax.num_uniform_params = uu___1;
+                          FStar_Syntax_Syntax.t = k;
+                          FStar_Syntax_Syntax.mutuals = uu___2;
+                          FStar_Syntax_Syntax.ds = uu___3;_};
                       FStar_Syntax_Syntax.sigrng = uu___4;
                       FStar_Syntax_Syntax.sigquals = uu___5;
                       FStar_Syntax_Syntax.sigmeta = uu___6;
@@ -3149,7 +3184,9 @@ let (try_lookup_val_decl :
           (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
-                (uu___1, uvs, t);
+                { FStar_Syntax_Syntax.lid2 = uu___1;
+                  FStar_Syntax_Syntax.us2 = uvs;
+                  FStar_Syntax_Syntax.t2 = t;_};
               FStar_Syntax_Syntax.sigrng = uu___2;
               FStar_Syntax_Syntax.sigquals = q;
               FStar_Syntax_Syntax.sigmeta = uu___3;
@@ -3180,7 +3217,9 @@ let (lookup_val_decl :
           (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
-                (uu___1, uvs, t);
+                { FStar_Syntax_Syntax.lid2 = uu___1;
+                  FStar_Syntax_Syntax.us2 = uvs;
+                  FStar_Syntax_Syntax.t2 = t;_};
               FStar_Syntax_Syntax.sigrng = uu___2;
               FStar_Syntax_Syntax.sigquals = uu___3;
               FStar_Syntax_Syntax.sigmeta = uu___4;
@@ -3208,7 +3247,11 @@ let (lookup_datacon :
           (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                (uu___1, uvs, t, uu___2, uu___3, uu___4);
+                { FStar_Syntax_Syntax.lid1 = uu___1;
+                  FStar_Syntax_Syntax.us1 = uvs; FStar_Syntax_Syntax.t1 = t;
+                  FStar_Syntax_Syntax.ty_lid = uu___2;
+                  FStar_Syntax_Syntax.num_ty_params = uu___3;
+                  FStar_Syntax_Syntax.mutuals1 = uu___4;_};
               FStar_Syntax_Syntax.sigrng = uu___5;
               FStar_Syntax_Syntax.sigquals = uu___6;
               FStar_Syntax_Syntax.sigmeta = uu___7;
@@ -3237,7 +3280,12 @@ let (lookup_and_inst_datacon :
             (FStar_Pervasives.Inr
              ({
                 FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                  (uu___1, uvs, t, uu___2, uu___3, uu___4);
+                  { FStar_Syntax_Syntax.lid1 = uu___1;
+                    FStar_Syntax_Syntax.us1 = uvs;
+                    FStar_Syntax_Syntax.t1 = t;
+                    FStar_Syntax_Syntax.ty_lid = uu___2;
+                    FStar_Syntax_Syntax.num_ty_params = uu___3;
+                    FStar_Syntax_Syntax.mutuals1 = uu___4;_};
                 FStar_Syntax_Syntax.sigrng = uu___5;
                 FStar_Syntax_Syntax.sigquals = uu___6;
                 FStar_Syntax_Syntax.sigmeta = uu___7;
@@ -3265,7 +3313,13 @@ let (datacons_of_typ :
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
-                (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6, dcs);
+                { FStar_Syntax_Syntax.lid = uu___1;
+                  FStar_Syntax_Syntax.us = uu___2;
+                  FStar_Syntax_Syntax.params = uu___3;
+                  FStar_Syntax_Syntax.num_uniform_params = uu___4;
+                  FStar_Syntax_Syntax.t = uu___5;
+                  FStar_Syntax_Syntax.mutuals = uu___6;
+                  FStar_Syntax_Syntax.ds = dcs;_};
               FStar_Syntax_Syntax.sigrng = uu___7;
               FStar_Syntax_Syntax.sigquals = uu___8;
               FStar_Syntax_Syntax.sigmeta = uu___9;
@@ -3284,7 +3338,12 @@ let (typ_of_datacon : env -> FStar_Ident.lident -> FStar_Ident.lident) =
           (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                (uu___1, uu___2, uu___3, l, uu___4, uu___5);
+                { FStar_Syntax_Syntax.lid1 = uu___1;
+                  FStar_Syntax_Syntax.us1 = uu___2;
+                  FStar_Syntax_Syntax.t1 = uu___3;
+                  FStar_Syntax_Syntax.ty_lid = l;
+                  FStar_Syntax_Syntax.num_ty_params = uu___4;
+                  FStar_Syntax_Syntax.mutuals1 = uu___5;_};
               FStar_Syntax_Syntax.sigrng = uu___6;
               FStar_Syntax_Syntax.sigquals = uu___7;
               FStar_Syntax_Syntax.sigmeta = uu___8;
@@ -3323,7 +3382,10 @@ let (lookup_definition_qninfo_aux :
                uu___)
               ->
               (match se.FStar_Syntax_Syntax.sigel with
-               | FStar_Syntax_Syntax.Sig_let ((is_rec, lbs), uu___1) when
+               | FStar_Syntax_Syntax.Sig_let
+                   { FStar_Syntax_Syntax.lbs1 = (is_rec, lbs);
+                     FStar_Syntax_Syntax.lids1 = uu___1;_}
+                   when
                    (visible se.FStar_Syntax_Syntax.sigquals) &&
                      ((Prims.op_Negation is_rec) || rec_ok)
                    ->
@@ -3408,16 +3470,17 @@ let (delta_depth_of_qninfo_lid :
                  FStar_Syntax_DsEnv.delta_depth_of_declaration lid
                    se.FStar_Syntax_Syntax.sigquals in
                FStar_Pervasives_Native.Some uu___3
-           | FStar_Syntax_Syntax.Sig_let ((uu___2, lbs), uu___3) ->
+           | FStar_Syntax_Syntax.Sig_let
+               { FStar_Syntax_Syntax.lbs1 = (uu___2, lbs);
+                 FStar_Syntax_Syntax.lids1 = uu___3;_}
+               ->
                FStar_Compiler_Util.find_map lbs
                  (fun lb ->
                     let fv =
                       FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
                     let uu___4 = FStar_Syntax_Syntax.fv_eq_lid fv lid in
                     if uu___4
-                    then
-                      FStar_Pervasives_Native.Some
-                        (fv.FStar_Syntax_Syntax.fv_delta)
+                    then fv.FStar_Syntax_Syntax.fv_delta
                     else FStar_Pervasives_Native.None)
            | FStar_Syntax_Syntax.Sig_fail uu___2 ->
                failwith "impossible: delta_depth_of_qninfo"
@@ -3437,6 +3500,32 @@ let (delta_depth_of_qninfo_lid :
                FStar_Pervasives_Native.None
            | FStar_Syntax_Syntax.Sig_polymonadic_subcomp uu___2 ->
                FStar_Pervasives_Native.None)
+let (prims_dd_lids : FStar_Ident.lident Prims.list) =
+  [FStar_Parser_Const.and_lid;
+  FStar_Parser_Const.or_lid;
+  FStar_Parser_Const.imp_lid;
+  FStar_Parser_Const.iff_lid;
+  FStar_Parser_Const.true_lid;
+  FStar_Parser_Const.false_lid;
+  FStar_Parser_Const.not_lid;
+  FStar_Parser_Const.b2t_lid;
+  FStar_Parser_Const.eq2_lid;
+  FStar_Parser_Const.eq3_lid;
+  FStar_Parser_Const.op_Eq;
+  FStar_Parser_Const.op_LT;
+  FStar_Parser_Const.op_LTE;
+  FStar_Parser_Const.op_GT;
+  FStar_Parser_Const.op_GTE;
+  FStar_Parser_Const.forall_lid;
+  FStar_Parser_Const.exists_lid;
+  FStar_Parser_Const.haseq_lid;
+  FStar_Parser_Const.op_And;
+  FStar_Parser_Const.op_Or;
+  FStar_Parser_Const.op_Negation]
+let (is_prims_dd_lid : FStar_Ident.lident -> Prims.bool) =
+  fun l ->
+    FStar_Compiler_List.existsb (fun l0 -> FStar_Ident.lid_equals l l0)
+      prims_dd_lids
 let (delta_depth_of_qninfo :
   FStar_Syntax_Syntax.fv ->
     qninfo -> FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
@@ -3444,18 +3533,26 @@ let (delta_depth_of_qninfo :
   fun fv ->
     fun qn ->
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-      let uu___ = let uu___1 = FStar_Ident.nsstr lid in uu___1 = "Prims" in
+      let uu___ =
+        (is_prims_dd_lid lid) &&
+          (FStar_Pervasives_Native.uu___is_Some
+             fv.FStar_Syntax_Syntax.fv_delta) in
       if uu___
-      then FStar_Pervasives_Native.Some (fv.FStar_Syntax_Syntax.fv_delta)
+      then fv.FStar_Syntax_Syntax.fv_delta
       else delta_depth_of_qninfo_lid lid qn
 let (delta_depth_of_fv :
   env -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.delta_depth) =
   fun env1 ->
     fun fv ->
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-      let uu___ = let uu___1 = FStar_Ident.nsstr lid in uu___1 = "Prims" in
+      let uu___ =
+        (is_prims_dd_lid lid) &&
+          (FStar_Pervasives_Native.uu___is_Some
+             fv.FStar_Syntax_Syntax.fv_delta) in
       if uu___
-      then fv.FStar_Syntax_Syntax.fv_delta
+      then
+        FStar_Compiler_Effect.op_Bar_Greater fv.FStar_Syntax_Syntax.fv_delta
+          FStar_Compiler_Util.must
       else
         (let uu___2 =
            let uu___3 = FStar_Ident.string_of_lid lid in
@@ -3485,14 +3582,20 @@ let (delta_depth_of_fv :
                      failwith uu___6
                  | FStar_Pervasives_Native.Some d ->
                      ((let uu___7 =
-                         (d <> fv.FStar_Syntax_Syntax.fv_delta) &&
-                           (FStar_Options.debug_any ()) in
+                         ((FStar_Pervasives_Native.uu___is_Some
+                             fv.FStar_Syntax_Syntax.fv_delta)
+                            &&
+                            (d <>
+                               (FStar_Pervasives_Native.__proj__Some__item__v
+                                  fv.FStar_Syntax_Syntax.fv_delta)))
+                           && (FStar_Options.debug_any ()) in
                        if uu___7
                        then
                          let uu___8 = FStar_Syntax_Print.fv_to_string fv in
                          let uu___9 =
                            FStar_Syntax_Print.delta_depth_to_string
-                             fv.FStar_Syntax_Syntax.fv_delta in
+                             (FStar_Pervasives_Native.__proj__Some__item__v
+                                fv.FStar_Syntax_Syntax.fv_delta) in
                          let uu___10 =
                            FStar_Syntax_Print.delta_depth_to_string d in
                          FStar_Compiler_Util.print3
@@ -3672,7 +3775,11 @@ let (lookup_effect_abbrev :
              ({
                 FStar_Syntax_Syntax.sigel =
                   FStar_Syntax_Syntax.Sig_effect_abbrev
-                  (lid, univs, binders, c, uu___1);
+                  { FStar_Syntax_Syntax.lid4 = lid;
+                    FStar_Syntax_Syntax.us4 = univs;
+                    FStar_Syntax_Syntax.bs2 = binders;
+                    FStar_Syntax_Syntax.comp1 = c;
+                    FStar_Syntax_Syntax.cflags = uu___1;_};
                 FStar_Syntax_Syntax.sigrng = uu___2;
                 FStar_Syntax_Syntax.sigquals = quals;
                 FStar_Syntax_Syntax.sigmeta = uu___3;
@@ -3748,8 +3855,10 @@ let (lookup_effect_abbrev :
                           let uu___13 = FStar_Syntax_Subst.compress t1 in
                           uu___13.FStar_Syntax_Syntax.n in
                         (match uu___12 with
-                         | FStar_Syntax_Syntax.Tm_arrow (binders1, c1) ->
-                             FStar_Pervasives_Native.Some (binders1, c1)
+                         | FStar_Syntax_Syntax.Tm_arrow
+                             { FStar_Syntax_Syntax.bs1 = binders1;
+                               FStar_Syntax_Syntax.comp = c1;_}
+                             -> FStar_Pervasives_Native.Some (binders1, c1)
                          | uu___13 -> failwith "Impossible")))
         | uu___1 -> FStar_Pervasives_Native.None
 let (norm_eff_name : env -> FStar_Ident.lident -> FStar_Ident.lident) =
@@ -3793,9 +3902,7 @@ let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
         (fun l1 ->
            (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
              (let uu___1 =
-                FStar_Syntax_Syntax.lid_as_fv l1
-                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
-                  FStar_Pervasives_Native.None in
+                FStar_Syntax_Syntax.lid_as_fv l1 FStar_Pervasives_Native.None in
               FStar_Compiler_Effect.op_Bar_Greater uu___1
                 (fv_has_erasable_attr env1)))
 let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
@@ -3812,10 +3919,14 @@ let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
              ||
              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
             || (fv_has_erasable_attr env1 fv)
-      | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
-          non_informative env1 head
+      | FStar_Syntax_Syntax.Tm_app
+          { FStar_Syntax_Syntax.hd = head;
+            FStar_Syntax_Syntax.args = uu___1;_}
+          -> non_informative env1 head
       | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
-      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
+      | FStar_Syntax_Syntax.Tm_arrow
+          { FStar_Syntax_Syntax.bs1 = uu___1; FStar_Syntax_Syntax.comp = c;_}
+          ->
           ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
              (non_informative env1 (FStar_Syntax_Util.comp_result c)))
             ||
@@ -3834,8 +3945,10 @@ let (num_effect_indices :
           FStar_Compiler_Effect.op_Bar_Greater uu___
             FStar_Syntax_Subst.compress in
         match sig_t.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Tm_arrow (_a::bs, uu___) ->
-            FStar_Compiler_List.length bs
+        | FStar_Syntax_Syntax.Tm_arrow
+            { FStar_Syntax_Syntax.bs1 = _a::bs;
+              FStar_Syntax_Syntax.comp = uu___;_}
+            -> FStar_Compiler_List.length bs
         | uu___ ->
             let uu___1 =
               let uu___2 =
@@ -3886,7 +3999,10 @@ let (lookup_projector :
               let uu___3 = FStar_Syntax_Subst.compress t in
               uu___3.FStar_Syntax_Syntax.n in
             (match uu___2 with
-             | FStar_Syntax_Syntax.Tm_arrow (binders, uu___3) ->
+             | FStar_Syntax_Syntax.Tm_arrow
+                 { FStar_Syntax_Syntax.bs1 = binders;
+                   FStar_Syntax_Syntax.comp = uu___3;_}
+                 ->
                  if
                    (i < Prims.int_zero) ||
                      (i >= (FStar_Compiler_List.length binders))
@@ -3905,20 +4021,20 @@ let (is_projector : env -> FStar_Ident.lident -> Prims.bool) =
           (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
-                (uu___1, uu___2, uu___3);
-              FStar_Syntax_Syntax.sigrng = uu___4;
+                uu___1;
+              FStar_Syntax_Syntax.sigrng = uu___2;
               FStar_Syntax_Syntax.sigquals = quals;
-              FStar_Syntax_Syntax.sigmeta = uu___5;
-              FStar_Syntax_Syntax.sigattrs = uu___6;
-              FStar_Syntax_Syntax.sigopts = uu___7;_},
-            uu___8),
-           uu___9)
+              FStar_Syntax_Syntax.sigmeta = uu___3;
+              FStar_Syntax_Syntax.sigattrs = uu___4;
+              FStar_Syntax_Syntax.sigopts = uu___5;_},
+            uu___6),
+           uu___7)
           ->
           FStar_Compiler_Util.for_some
-            (fun uu___10 ->
-               match uu___10 with
-               | FStar_Syntax_Syntax.Projector uu___11 -> true
-               | uu___11 -> false) quals
+            (fun uu___8 ->
+               match uu___8 with
+               | FStar_Syntax_Syntax.Projector uu___9 -> true
+               | uu___9 -> false) quals
       | uu___1 -> false
 let (is_datacon : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
@@ -3929,14 +4045,14 @@ let (is_datacon : env -> FStar_Ident.lident -> Prims.bool) =
           (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6);
-              FStar_Syntax_Syntax.sigrng = uu___7;
-              FStar_Syntax_Syntax.sigquals = uu___8;
-              FStar_Syntax_Syntax.sigmeta = uu___9;
-              FStar_Syntax_Syntax.sigattrs = uu___10;
-              FStar_Syntax_Syntax.sigopts = uu___11;_},
-            uu___12),
-           uu___13)
+                uu___1;
+              FStar_Syntax_Syntax.sigrng = uu___2;
+              FStar_Syntax_Syntax.sigquals = uu___3;
+              FStar_Syntax_Syntax.sigmeta = uu___4;
+              FStar_Syntax_Syntax.sigattrs = uu___5;
+              FStar_Syntax_Syntax.sigopts = uu___6;_},
+            uu___7),
+           uu___8)
           -> true
       | uu___1 -> false
 let (is_record : env -> FStar_Ident.lident -> Prims.bool) =
@@ -3969,22 +4085,20 @@ let (qninfo_is_action : qninfo -> Prims.bool) =
     match qninfo1 with
     | FStar_Pervasives_Native.Some
         (FStar_Pervasives.Inr
-         ({
-            FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
-              (uu___, uu___1);
-            FStar_Syntax_Syntax.sigrng = uu___2;
+         ({ FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let uu___;
+            FStar_Syntax_Syntax.sigrng = uu___1;
             FStar_Syntax_Syntax.sigquals = quals;
-            FStar_Syntax_Syntax.sigmeta = uu___3;
-            FStar_Syntax_Syntax.sigattrs = uu___4;
-            FStar_Syntax_Syntax.sigopts = uu___5;_},
-          uu___6),
-         uu___7)
+            FStar_Syntax_Syntax.sigmeta = uu___2;
+            FStar_Syntax_Syntax.sigattrs = uu___3;
+            FStar_Syntax_Syntax.sigopts = uu___4;_},
+          uu___5),
+         uu___6)
         ->
         FStar_Compiler_Util.for_some
-          (fun uu___8 ->
-             match uu___8 with
-             | FStar_Syntax_Syntax.Action uu___9 -> true
-             | uu___9 -> false) quals
+          (fun uu___7 ->
+             match uu___7 with
+             | FStar_Syntax_Syntax.Action uu___8 -> true
+             | uu___8 -> false) quals
     | uu___ -> false
 let (is_action : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
@@ -4015,13 +4129,15 @@ let (is_interpreted : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_fvar fv ->
-          (match fv.FStar_Syntax_Syntax.fv_delta with
-           | FStar_Syntax_Syntax.Delta_equational_at_level uu___1 -> true
-           | uu___1 -> false) ||
-            (FStar_Compiler_Util.for_some
-               (FStar_Ident.lid_equals
-                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
-               interpreted_symbols)
+          (FStar_Compiler_Util.for_some
+             (FStar_Ident.lid_equals
+                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
+             interpreted_symbols)
+            ||
+            (let uu___1 = delta_depth_of_fv env1 fv in
+             (match uu___1 with
+              | FStar_Syntax_Syntax.Delta_equational_at_level uu___2 -> true
+              | uu___2 -> false))
       | uu___1 -> false
 let (is_irreducible : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
@@ -4068,7 +4184,13 @@ let (num_inductive_ty_params :
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
-                (uu___1, uu___2, tps, uu___3, uu___4, uu___5, uu___6);
+                { FStar_Syntax_Syntax.lid = uu___1;
+                  FStar_Syntax_Syntax.us = uu___2;
+                  FStar_Syntax_Syntax.params = tps;
+                  FStar_Syntax_Syntax.num_uniform_params = uu___3;
+                  FStar_Syntax_Syntax.t = uu___4;
+                  FStar_Syntax_Syntax.mutuals = uu___5;
+                  FStar_Syntax_Syntax.ds = uu___6;_};
               FStar_Syntax_Syntax.sigrng = uu___7;
               FStar_Syntax_Syntax.sigquals = uu___8;
               FStar_Syntax_Syntax.sigmeta = uu___9;
@@ -4089,7 +4211,13 @@ let (num_inductive_uniform_ty_params :
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
-                (uu___1, uu___2, uu___3, num_uniform, uu___4, uu___5, uu___6);
+                { FStar_Syntax_Syntax.lid = uu___1;
+                  FStar_Syntax_Syntax.us = uu___2;
+                  FStar_Syntax_Syntax.params = uu___3;
+                  FStar_Syntax_Syntax.num_uniform_params = num_uniform;
+                  FStar_Syntax_Syntax.t = uu___4;
+                  FStar_Syntax_Syntax.mutuals = uu___5;
+                  FStar_Syntax_Syntax.ds = uu___6;_};
               FStar_Syntax_Syntax.sigrng = uu___7;
               FStar_Syntax_Syntax.sigquals = uu___8;
               FStar_Syntax_Syntax.sigmeta = uu___9;
@@ -4350,7 +4478,10 @@ let wp_sig_aux :
                (match ((md.FStar_Syntax_Syntax.binders),
                         (s1.FStar_Syntax_Syntax.n))
                 with
-                | ([], FStar_Syntax_Syntax.Tm_arrow (b::wp_b::[], c)) when
+                | ([], FStar_Syntax_Syntax.Tm_arrow
+                   { FStar_Syntax_Syntax.bs1 = b::wp_b::[];
+                     FStar_Syntax_Syntax.comp = c;_})
+                    when
                     FStar_Syntax_Syntax.is_teff
                       (FStar_Syntax_Util.comp_result c)
                     ->
@@ -4756,7 +4887,10 @@ let effect_repr_aux :
                                FStar_Compiler_Effect.op_Bar_Greater res_typ
                                  FStar_Syntax_Syntax.as_arg in
                              uu___8 :: (c1.FStar_Syntax_Syntax.effect_args) in
-                           (repr, uu___7) in
+                           {
+                             FStar_Syntax_Syntax.hd = repr;
+                             FStar_Syntax_Syntax.args = uu___7
+                           } in
                          FStar_Syntax_Syntax.Tm_app uu___6 in
                        let uu___6 = get_range env1 in
                        FStar_Syntax_Syntax.mk uu___5 uu___6 in
@@ -4814,7 +4948,9 @@ let (is_reifiable_function : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
         let uu___1 = FStar_Syntax_Subst.compress t in
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
-      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) -> is_reifiable_comp env1 c
+      | FStar_Syntax_Syntax.Tm_arrow
+          { FStar_Syntax_Syntax.bs1 = uu___1; FStar_Syntax_Syntax.comp = c;_}
+          -> is_reifiable_comp env1 c
       | uu___1 -> false
 let (reify_comp :
   env ->
@@ -6375,7 +6511,10 @@ let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
                 let uu___3 =
                   let uu___4 =
                     let uu___5 = FStar_Syntax_Syntax.as_arg e in [uu___5] in
-                  (f, uu___4) in
+                  {
+                    FStar_Syntax_Syntax.hd = f;
+                    FStar_Syntax_Syntax.args = uu___4
+                  } in
                 FStar_Syntax_Syntax.Tm_app uu___3 in
               FStar_Syntax_Syntax.mk uu___2 f.FStar_Syntax_Syntax.pos in
             FStar_Compiler_Effect.op_Less_Bar
@@ -6810,7 +6949,7 @@ let (fvar_of_nonqual_lid :
         | FStar_Pervasives_Native.None ->
             failwith "Unexpected no delta_depth"
         | FStar_Pervasives_Native.Some dd1 -> dd1 in
-      FStar_Syntax_Syntax.fvar lid dd FStar_Pervasives_Native.None
+      FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
 let (split_smt_query :
   env ->
     FStar_Syntax_Syntax.term ->

@@ -1,7 +1,7 @@
 open Prims
 let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
   fun argv ->
-    FStar_Compiler_Util.print_string "Initializing ...\n";
+    FStar_Compiler_Util.print_string "Initializing tests...\n";
     (try
        (fun uu___1 ->
           match () with
@@ -56,4 +56,9 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
          FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___2 ->
          (FStar_Compiler_Util.print2 "%s : [%s]\n" s
             (FStar_String.concat "; " ls);
+          FStar_Compiler_Effect.exit Prims.int_one)
+     | e ->
+         ((let uu___3 = FStar_Compiler_Util.message_of_exn e in
+           let uu___4 = FStar_Compiler_Util.trace_of_exn e in
+           FStar_Compiler_Util.print2_error "Error\n%s\n%s\n" uu___3 uu___4);
           FStar_Compiler_Effect.exit Prims.int_one))

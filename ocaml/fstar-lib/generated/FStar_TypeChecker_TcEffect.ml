@@ -1403,7 +1403,9 @@ let (validate_indexed_effect_bind_shape :
                                         uu___2.FStar_Syntax_Syntax.n in
                                       match uu___1 with
                                       | FStar_Syntax_Syntax.Tm_arrow
-                                          (bs, uu___2) when
+                                          { FStar_Syntax_Syntax.bs1 = bs;
+                                            FStar_Syntax_Syntax.comp = uu___2;_}
+                                          when
                                           (FStar_Compiler_List.length bs) >=
                                             (Prims.of_int (4))
                                           ->
@@ -2477,7 +2479,10 @@ let (validate_indexed_effect_subcomp_shape :
                               FStar_Syntax_Subst.compress subcomp_t in
                             uu___1.FStar_Syntax_Syntax.n in
                           match uu___ with
-                          | FStar_Syntax_Syntax.Tm_arrow (bs, uu___1) when
+                          | FStar_Syntax_Syntax.Tm_arrow
+                              { FStar_Syntax_Syntax.bs1 = bs;
+                                FStar_Syntax_Syntax.comp = uu___1;_}
+                              when
                               (FStar_Compiler_List.length bs) >=
                                 (Prims.of_int (2))
                               ->
@@ -3225,7 +3230,10 @@ let (validate_indexed_effect_ite_shape :
                         let uu___1 = FStar_Syntax_Subst.compress ite_ty in
                         uu___1.FStar_Syntax_Syntax.n in
                       match uu___ with
-                      | FStar_Syntax_Syntax.Tm_arrow (bs, uu___1) when
+                      | FStar_Syntax_Syntax.Tm_arrow
+                          { FStar_Syntax_Syntax.bs1 = bs;
+                            FStar_Syntax_Syntax.comp = uu___1;_}
+                          when
                           (FStar_Compiler_List.length bs) >=
                             (Prims.of_int (4))
                           ->
@@ -3658,7 +3666,10 @@ let (validate_indexed_effect_lift_shape :
                       let uu___3 = FStar_Syntax_Subst.compress lift_t in
                       uu___3.FStar_Syntax_Syntax.n in
                     match uu___2 with
-                    | FStar_Syntax_Syntax.Tm_arrow (bs, c) when
+                    | FStar_Syntax_Syntax.Tm_arrow
+                        { FStar_Syntax_Syntax.bs1 = bs;
+                          FStar_Syntax_Syntax.comp = c;_}
+                        when
                         (FStar_Compiler_List.length bs) >= (Prims.of_int (2))
                         ->
                         let uu___3 = FStar_Syntax_Subst.open_binders bs in
@@ -4161,7 +4172,10 @@ let (tc_layered_eff_decl :
                                            uu___11.FStar_Syntax_Syntax.n in
                                          match uu___10 with
                                          | FStar_Syntax_Syntax.Tm_arrow
-                                             (bs, uu___11) when
+                                             { FStar_Syntax_Syntax.bs1 = bs;
+                                               FStar_Syntax_Syntax.comp =
+                                                 uu___11;_}
+                                             when
                                              (FStar_Compiler_List.length bs)
                                                >= (Prims.of_int (2))
                                              ->
@@ -4351,7 +4365,12 @@ let (tc_layered_eff_decl :
                                              uu___15.FStar_Syntax_Syntax.n in
                                            (match uu___14 with
                                             | FStar_Syntax_Syntax.Tm_arrow
-                                                (bs, uu___15) ->
+                                                {
+                                                  FStar_Syntax_Syntax.bs1 =
+                                                    bs;
+                                                  FStar_Syntax_Syntax.comp =
+                                                    uu___15;_}
+                                                ->
                                                 let bs1 =
                                                   FStar_Syntax_Subst.open_binders
                                                     bs in
@@ -4387,7 +4406,12 @@ let (tc_layered_eff_decl :
                                                           uu___19
                                                           (FStar_Compiler_List.map
                                                              FStar_Syntax_Syntax.as_arg) in
-                                                      (repr_t, uu___18) in
+                                                      {
+                                                        FStar_Syntax_Syntax.hd
+                                                          = repr_t;
+                                                        FStar_Syntax_Syntax.args
+                                                          = uu___18
+                                                      } in
                                                     FStar_Syntax_Syntax.Tm_app
                                                       uu___17 in
                                                   let uu___17 =
@@ -4538,7 +4562,12 @@ let (tc_layered_eff_decl :
                                                    uu___17.FStar_Syntax_Syntax.n in
                                                  (match uu___16 with
                                                   | FStar_Syntax_Syntax.Tm_arrow
-                                                      (bs, uu___17) ->
+                                                      {
+                                                        FStar_Syntax_Syntax.bs1
+                                                          = bs;
+                                                        FStar_Syntax_Syntax.comp
+                                                          = uu___17;_}
+                                                      ->
                                                       let bs1 =
                                                         FStar_Syntax_Subst.open_binders
                                                           bs in
@@ -4575,7 +4604,12 @@ let (tc_layered_eff_decl :
                                                                 uu___21
                                                                 (FStar_Compiler_List.map
                                                                    FStar_Syntax_Syntax.as_arg) in
-                                                            (repr_t, uu___20) in
+                                                            {
+                                                              FStar_Syntax_Syntax.hd
+                                                                = repr_t;
+                                                              FStar_Syntax_Syntax.args
+                                                                = uu___20
+                                                            } in
                                                           FStar_Syntax_Syntax.Tm_app
                                                             uu___19 in
                                                         let uu___19 =
@@ -4719,8 +4753,13 @@ let (tc_layered_eff_decl :
                                                            uu___20.FStar_Syntax_Syntax.n in
                                                          match uu___19 with
                                                          | FStar_Syntax_Syntax.Tm_abs
-                                                             (bs, uu___20,
-                                                              uu___21)
+                                                             {
+                                                               FStar_Syntax_Syntax.bs
+                                                                 = bs;
+                                                               FStar_Syntax_Syntax.body
+                                                                 = uu___20;
+                                                               FStar_Syntax_Syntax.rc_opt
+                                                                 = uu___21;_}
                                                              ->
                                                              let bs1 =
                                                                FStar_Syntax_Subst.open_binders
@@ -4842,8 +4881,11 @@ let (tc_layered_eff_decl :
                                                                     with
                                                                     | 
                                                                     FStar_Syntax_Syntax.Tm_arrow
-                                                                    (bs, c)
-                                                                    ->
+                                                                    {
+                                                                    FStar_Syntax_Syntax.bs1
+                                                                    = bs;
+                                                                    FStar_Syntax_Syntax.comp
+                                                                    = c;_} ->
                                                                     let uu___26
                                                                     =
                                                                     FStar_Syntax_Subst.open_comp
@@ -5176,7 +5218,6 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     FStar_Syntax_Syntax.lid_as_fv
                                                                     FStar_Parser_Const.not_lid
-                                                                    FStar_Syntax_Syntax.delta_constant
                                                                     FStar_Pervasives_Native.None in
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___21
@@ -5285,7 +5326,12 @@ let (tc_layered_eff_decl :
                                                      uu___17.FStar_Syntax_Syntax.n in
                                                    match uu___16 with
                                                    | FStar_Syntax_Syntax.Tm_arrow
-                                                       (bs, c) ->
+                                                       {
+                                                         FStar_Syntax_Syntax.bs1
+                                                           = bs;
+                                                         FStar_Syntax_Syntax.comp
+                                                           = c;_}
+                                                       ->
                                                        let ct =
                                                          FStar_TypeChecker_Env.comp_to_comp_typ
                                                            env1 c in
@@ -5528,8 +5574,11 @@ let (tc_layered_eff_decl :
                                                                match uu___22
                                                                with
                                                                | FStar_Syntax_Syntax.Tm_arrow
-                                                                   (bs,
-                                                                    uu___23)
+                                                                   {
+                                                                    FStar_Syntax_Syntax.bs1
+                                                                    = bs;
+                                                                    FStar_Syntax_Syntax.comp
+                                                                    = uu___23;_}
                                                                    ->
                                                                    let bs1 =
                                                                     FStar_Syntax_Subst.open_binders
@@ -5705,8 +5754,12 @@ let (tc_layered_eff_decl :
                                                                     with
                                                                     | 
                                                                     FStar_Syntax_Syntax.Tm_app
-                                                                    (head,
-                                                                    a::is) ->
+                                                                    {
+                                                                    FStar_Syntax_Syntax.hd
+                                                                    = head;
+                                                                    FStar_Syntax_Syntax.args
+                                                                    = a::is;_}
+                                                                    ->
                                                                     let uu___26
                                                                     =
                                                                     let uu___27
@@ -5762,8 +5815,11 @@ let (tc_layered_eff_decl :
                                                                     with
                                                                     | 
                                                                     FStar_Syntax_Syntax.Tm_arrow
-                                                                    (bs, c)
-                                                                    ->
+                                                                    {
+                                                                    FStar_Syntax_Syntax.bs1
+                                                                    = bs;
+                                                                    FStar_Syntax_Syntax.comp
+                                                                    = c;_} ->
                                                                     let uu___26
                                                                     =
                                                                     FStar_Syntax_Subst.open_comp
@@ -6004,7 +6060,12 @@ let (tc_layered_eff_decl :
                                                          uu___19.FStar_Syntax_Syntax.n in
                                                        (match uu___18 with
                                                         | FStar_Syntax_Syntax.Tm_arrow
-                                                            (bs, uu___19) ->
+                                                            {
+                                                              FStar_Syntax_Syntax.bs1
+                                                                = bs;
+                                                              FStar_Syntax_Syntax.comp
+                                                                = uu___19;_}
+                                                            ->
                                                             let uu___20 =
                                                               FStar_Syntax_Subst.open_binders
                                                                 bs in
@@ -6554,7 +6615,10 @@ let (tc_non_layered_eff_decl :
                                          uu___12.FStar_Syntax_Syntax.n in
                                        (match uu___11 with
                                         | FStar_Syntax_Syntax.Tm_arrow
-                                            (bs1, uu___12) ->
+                                            { FStar_Syntax_Syntax.bs1 = bs1;
+                                              FStar_Syntax_Syntax.comp =
+                                                uu___12;_}
+                                            ->
                                             let bs2 =
                                               FStar_Syntax_Subst.open_binders
                                                 bs1 in
@@ -7017,7 +7081,12 @@ let (tc_non_layered_eff_decl :
                                                                  FStar_Syntax_Syntax.as_arg in
                                                              [uu___25] in
                                                            uu___23 :: uu___24 in
-                                                         (repr2, uu___22) in
+                                                         {
+                                                           FStar_Syntax_Syntax.hd
+                                                             = repr2;
+                                                           FStar_Syntax_Syntax.args
+                                                             = uu___22
+                                                         } in
                                                        FStar_Syntax_Syntax.Tm_app
                                                          uu___21 in
                                                      FStar_Syntax_Syntax.mk
@@ -7036,9 +7105,13 @@ let (tc_non_layered_eff_decl :
                                                    uu___19.FStar_Syntax_Syntax.n in
                                                  match uu___18 with
                                                  | FStar_Syntax_Syntax.Tm_app
-                                                     (uu___19,
-                                                      (t1, uu___20)::
-                                                      (wp, uu___21)::[])
+                                                     {
+                                                       FStar_Syntax_Syntax.hd
+                                                         = uu___19;
+                                                       FStar_Syntax_Syntax.args
+                                                         =
+                                                         (t1, uu___20)::
+                                                         (wp, uu___21)::[];_}
                                                      -> (t1, wp)
                                                  | uu___19 ->
                                                      failwith
@@ -7612,7 +7685,12 @@ let (tc_non_layered_eff_decl :
                                                             match uu___22
                                                             with
                                                             | FStar_Syntax_Syntax.Tm_arrow
-                                                                (bs1, c) ->
+                                                                {
+                                                                  FStar_Syntax_Syntax.bs1
+                                                                    = bs1;
+                                                                  FStar_Syntax_Syntax.comp
+                                                                    = c;_}
+                                                                ->
                                                                 let c1 =
                                                                   FStar_TypeChecker_Env.comp_to_comp_typ
                                                                     env1 c in
@@ -7884,8 +7962,11 @@ let (tc_non_layered_eff_decl :
                                                                     with
                                                                     | 
                                                                     FStar_Syntax_Syntax.Tm_arrow
-                                                                    (bs1, c)
-                                                                    ->
+                                                                    {
+                                                                    FStar_Syntax_Syntax.bs1
+                                                                    = bs1;
+                                                                    FStar_Syntax_Syntax.comp
+                                                                    = c;_} ->
                                                                     let uu___29
                                                                     =
                                                                     FStar_Syntax_Subst.open_comp
@@ -8152,8 +8233,11 @@ let (tc_non_layered_eff_decl :
                                                                     with
                                                                     | 
                                                                     FStar_Syntax_Syntax.Tm_arrow
-                                                                    (bs1, c)
-                                                                    ->
+                                                                    {
+                                                                    FStar_Syntax_Syntax.bs1
+                                                                    = bs1;
+                                                                    FStar_Syntax_Syntax.comp
+                                                                    = c;_} ->
                                                                     let uu___31
                                                                     =
                                                                     FStar_Syntax_Subst.open_comp
@@ -8450,7 +8534,9 @@ let (monad_signature :
           FStar_Errors.raise_error uu___1 uu___2 in
         let s1 = FStar_Syntax_Subst.compress s in
         match s1.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+        | FStar_Syntax_Syntax.Tm_arrow
+            { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = c;_}
+            ->
             let bs1 = FStar_Syntax_Subst.open_binders bs in
             (match bs1 with
              | { FStar_Syntax_Syntax.binder_bv = a;
@@ -8712,7 +8798,10 @@ let (tc_lift :
                                        FStar_Syntax_Syntax.as_arg wp in
                                      [uu___13] in
                                    uu___11 :: uu___12 in
-                                 (repr, uu___10) in
+                                 {
+                                   FStar_Syntax_Syntax.hd = repr;
+                                   FStar_Syntax_Syntax.args = uu___10
+                                 } in
                                FStar_Syntax_Syntax.Tm_app uu___9 in
                              let uu___9 = FStar_TypeChecker_Env.get_range env in
                              FStar_Syntax_Syntax.mk uu___8 uu___9) in
@@ -9010,7 +9099,12 @@ let (tc_lift :
                                                            wp_a_typ in
                                                        [uu___14] in
                                                      uu___12 :: uu___13 in
-                                                   (lift_wp1, uu___11) in
+                                                   {
+                                                     FStar_Syntax_Syntax.hd =
+                                                       lift_wp1;
+                                                     FStar_Syntax_Syntax.args
+                                                       = uu___11
+                                                   } in
                                                  FStar_Syntax_Syntax.Tm_app
                                                    uu___10 in
                                                let uu___10 =
@@ -9290,7 +9384,10 @@ let (tc_effect_abbrev :
                                     let uu___8 =
                                       FStar_Syntax_Syntax.mk
                                         (FStar_Syntax_Syntax.Tm_arrow
-                                           (tps4, c4)) r in
+                                           {
+                                             FStar_Syntax_Syntax.bs1 = tps4;
+                                             FStar_Syntax_Syntax.comp = c4
+                                           }) r in
                                     FStar_TypeChecker_Generalize.generalize_universes
                                       env0 uu___8 in
                                   match uu___7 with
@@ -9304,10 +9401,16 @@ let (tc_effect_abbrev :
                                           (tps4, uu___10) in
                                         match uu___9 with
                                         | ([], FStar_Syntax_Syntax.Tm_arrow
-                                           (uu___10, c5)) -> ([], c5)
+                                           {
+                                             FStar_Syntax_Syntax.bs1 =
+                                               uu___10;
+                                             FStar_Syntax_Syntax.comp = c5;_})
+                                            -> ([], c5)
                                         | (uu___10,
                                            FStar_Syntax_Syntax.Tm_arrow
-                                           (tps5, c5)) -> (tps5, c5)
+                                           { FStar_Syntax_Syntax.bs1 = tps5;
+                                             FStar_Syntax_Syntax.comp = c5;_})
+                                            -> (tps5, c5)
                                         | uu___10 ->
                                             failwith
                                               "Impossible (t is an arrow)" in

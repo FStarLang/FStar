@@ -764,7 +764,7 @@ let intro_rec () : tac (binder * binder) =
              let lb = U.mk_letbinding (Inl bv) [] (goal_type goal) PC.effect_Tot_lid (U.abs [b] u None) [] Range.dummyRange in
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
-             let tm = mk (Tm_let ((true, lbs), body)) (goal_witness goal).pos in
+             let tm = mk (Tm_let {lbs=(true, lbs); body}) (goal_witness goal).pos in
              set_solution goal tm ;!
              bnorm_and_replace { goal with goal_ctx_uvar=ctx_uvar_u} ;!
              ret (S.mk_binder bv, b)
@@ -1758,7 +1758,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
     | None -> fail "type not found in environment"
     | Some se ->
       match se.sigel with
-      | Sig_inductive_typ (_lid, t_us, t_ps, _num_uniform, t_ty, mut, c_lids) ->
+      | Sig_inductive_typ {us=t_us; params=t_ps; t=t_ty; mutuals=mut; ds=c_lids} ->
       (* High-level idea of this huge function:
        * For  Gamma |- w : phi  and  | C : ps -> bs -> t,  we generate a new goal
        *   Gamma |- w' : bs -> phi
@@ -1788,10 +1788,10 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                     | None -> fail "ctor not found?"
                     | Some se ->
                     match se.sigel with
-                    | Sig_datacon (_c_lid, c_us, c_ty, _t_lid, nparam, mut) ->
+                    | Sig_datacon {us=c_us; t=c_ty; num_ty_params=nparam; mutuals=mut} ->
                         (* BU.print2 "ty of %s = %s\n" (Ident.string_of_lid c_lid) *)
                         (*                             (Print.term_to_string c_ty); *)
-                        let fv = S.lid_as_fv c_lid S.delta_constant (Some Data_ctor) in
+                        let fv = S.lid_as_fv c_lid (Some Data_ctor) in
 
 
                         failwhen (List.length a_us <> List.length c_us) "t_us don't match?" ;!
@@ -1866,7 +1866,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                  c_lids
       in
       let goals, brs, infos = List.unzip3 goal_brs in
-      let w = mk (Tm_match (s_tm, None, brs, None)) s_tm.pos in
+      let w = mk (Tm_match {scrutinee=s_tm;ret_opt=None;brs;rc_opt=None}) s_tm.pos in
       solve' g w ;!
       //we constructed a well-typed term to solve g; no need to recheck it
       mark_goal_implicit_already_checked g;
@@ -1914,7 +1914,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     let t = U.unlazy_emb t in
     let t = SS.compress t in
     match t.n with
-    | Tm_meta (t, _) ->
+    | Tm_meta {tm=t} ->
         inspect t
 
     | Tm_name bv ->
@@ -1931,26 +1931,26 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
        | Tm_fvar fv -> ret <| Tv_UInst (fv, us)
        | _ -> failwith "Tac::inspect: Tm_uinst head not an fvar")
 
-    | Tm_ascribed (t, (Inl ty, tacopt, eq), _elid) ->
+    | Tm_ascribed {tm=t; asc=(Inl ty, tacopt, eq)} ->
         ret <| Tv_AscribedT (t, ty, tacopt, eq)
 
-    | Tm_ascribed (t, (Inr cty, tacopt, eq), elid) ->
+    | Tm_ascribed {tm=t; asc=(Inr cty, tacopt, eq)} ->
         ret <| Tv_AscribedC (t, cty, tacopt, eq)
 
-    | Tm_app (hd, []) ->
+    | Tm_app {args=[]} ->
         failwith "empty arguments on Tm_app"
 
-    | Tm_app (hd, args) ->
+    | Tm_app {hd; args} ->
         // We split at the last argument, since the term_view does not
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
         let q' = inspect_aqual q in
         ret <| Tv_App (S.mk_Tm_app hd (init args) t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
 
-    | Tm_abs ([], _, _) ->
+    | Tm_abs {bs=[]} ->
         failwith "empty arguments on Tm_abs"
 
-    | Tm_abs (bs, t, k) ->
+    | Tm_abs {bs; body=t; rc_opt=k} ->
         let bs, t = SS.open_term bs t in
         // `let b::bs = bs` gives a coverage warning, avoid it
         begin match bs with
@@ -1961,7 +1961,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     | Tm_type u ->
         ret <| Tv_Type u
 
-    | Tm_arrow ([], k) ->
+    | Tm_arrow {bs=[]} ->
         failwith "empty binders on arrow"
 
     | Tm_arrow _ ->
@@ -1970,7 +1970,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         | None -> failwith "impossible"
         end
 
-    | Tm_refine (bv, t) ->
+    | Tm_refine {b=bv; phi=t} ->
         let b = S.mk_binder bv in
         let b', t = SS.open_term [b] t in
         // `let [b] = b'` gives a coverage warning, avoid it
@@ -1985,10 +1985,10 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     | Tm_uvar (ctx_u, s) ->
         ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head), (ctx_u, s))
 
-    | Tm_let ((false, [lb]), t2) ->
-        if lb.lbunivs <> [] then ret <| Tv_Unknown else
+    | Tm_let {lbs=(false, [lb]); body=t2} ->
+        if lb.lbunivs <> [] then ret <| Tv_Unsupp else
         begin match lb.lbname with
-        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inr _ -> ret <| Tv_Unsupp // no top level lets
         | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             let b = S.mk_binder bv in
@@ -2000,27 +2000,26 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
             ret <| Tv_Let (false, lb.lbattrs, b.binder_bv, bv.sort, lb.lbdef, t2)
         end
 
-    | Tm_let ((true, [lb]), t2) ->
-        if lb.lbunivs <> [] then ret <| Tv_Unknown else
+    | Tm_let {lbs=(true, [lb]); body=t2} ->
+        if lb.lbunivs <> [] then ret <| Tv_Unsupp else
         begin match lb.lbname with
-        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inr _ -> ret <| Tv_Unsupp // no top level lets
         | Inl bv ->
             let lbs, t2 = SS.open_let_rec [lb] t2 in
             match lbs with
             | [lb] ->
                 (match lb.lbname with
-                 | Inr _ -> ret Tv_Unknown
+                 | Inr _ -> ret Tv_Unsupp
                  | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
-    | Tm_match (t, ret_opt, brs, _) ->
+    | Tm_match {scrutinee=t; ret_opt; brs} ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
-            | Pat_var bv -> Pat_Var bv
-            | Pat_wild bv -> Pat_Wild bv
+            | Pat_var bv -> Pat_Var (bv, bv.sort)
             | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map SS.open_branch brs in
@@ -2032,7 +2031,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
-        ret <| Tv_Unknown
+        ret <| Tv_Unsupp
     )
 
 (* This function could actually be pure, it doesn't need freshness
@@ -2077,13 +2076,13 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
     | Tv_Let (false, attrs, bv, ty, t1, t2) ->
         let bv = { bv with sort = ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) Range.dummyRange
+        ret <| S.mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder bv] t2}) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, ty, t1, t2) ->
         let bv = { bv with sort = ty } in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
-        ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange
+        ret <| S.mk (Tm_let {lbs=(true, lbs); body}) Range.dummyRange
 
     | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -2091,22 +2090,24 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
             | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
-            | Pat_Var  bv -> wrap <| Pat_var bv
-            | Pat_Wild bv -> wrap <| Pat_wild bv
+            | Pat_Var  (bv, _sort) -> wrap <| Pat_var bv
             | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
-        ret <| S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
+        ret <| S.mk (Tm_match {scrutinee=t; ret_opt; brs; rc_opt=None}) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt, use_eq) ->
-        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt, use_eq), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed {tm=e;asc=(Inl t, tacopt, use_eq);eff_opt=None}) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt, use_eq) ->
-        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt, use_eq), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed {tm=e;asc=(Inr c, tacopt, use_eq);eff_opt=None}) Range.dummyRange
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
+
+    | Tv_Unsupp ->
+        fail "cannot pack Tv_Unsupp"
 
 let pack (tv:term_view) : tac term = pack' tv false
 let pack_curried (tv:term_view) : tac term = pack' tv true
@@ -2135,7 +2136,7 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
   | Some (l, r) -> begin
     let lh, las = U.head_and_args_full l in
     match (SS.compress (U.unascribe lh)).n with
-    | Tm_match (e, asc_opt, brs, lopt) ->
+    | Tm_match {scrutinee=e;ret_opt=asc_opt;brs;rc_opt=lopt} ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
       //
       // If residual comp is set, apply arguments to it
@@ -2147,7 +2148,7 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
           let ss = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs las in
           let c = SS.subst_comp ss c in
           U.comp_result c)}) in
-      let l' = mk (Tm_match (e, asc_opt, brs', lopt')) l.pos in
+      let l' = mk (Tm_match {scrutinee=e;ret_opt=asc_opt;brs=brs';rc_opt=lopt'}) l.pos in
       let must_tot = true in
       match! do_unify_maybe_guards false must_tot (goal_env g) l' r with
       | None -> fail "discharging the equality failed"
@@ -2267,13 +2268,14 @@ let dbg_refl (g:env) (msg:unit -> string) =
   if Env.debug g <| Options.Other "ReflTc"
   then BU.print_string (msg ())
 
-let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a) =
+let issues = list Errors.issue
+let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a & issues) =
   let tx = UF.new_transaction () in
   let errs, r = Errors.catch_errors_and_ignore_rest f in
   UF.rollback tx;
   if List.length errs > 0
-  then ret None
-  else ret r
+  then ret (None, errs)
+  else ret (r, errs)
 
 let no_uvars_in_term (t:term) : bool =
   t |> Free.uvars |> BU.set_is_empty &&
@@ -2288,8 +2290,19 @@ type relation =
   | Subtyping
   | Equality
 
+let unexpected_uvars_issue r = 
+  let open FStar.Errors in
+  let i = {
+    issue_level = EError;
+    issue_range = Some r;
+    issue_msg = "Cannot check relation with uvars";
+    issue_number = Some (errno Error_UnexpectedUnresolvedUvar);
+    issue_ctx = []
+  } in
+  i
+
 let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
-  : tac (option unit) =
+  : tac (option unit * issues) =
 
   if no_uvars_in_g g &&
      no_uvars_in_term t0 &&
@@ -2314,45 +2327,80 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err)) Range.dummyRange)
-  else ret None
+  else (
+    ret (None, [unexpected_uvars_issue (Env.get_range g)])
+  )
 
-let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit) =
+let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit & issues) =
   refl_check_relation g t0 t1 Subtyping
 
-let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit) =
+let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit & issues) =
   refl_check_relation g t0 t1 Equality
 
-let refl_core_check_term (g:env) (e:term) : tac (option typ) =
+let to_must_tot (eff:tot_or_ghost) : bool =
+  match eff with
+  | E_Total -> true
+  | E_Ghost -> false
+
+let refl_norm_type (g:env) (t:typ) : typ =
+  N.normalize [Env.Beta; Env.Exclude Zeta] g t
+
+let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
          dbg_refl g (fun _ ->
-           BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
-         let must_tot = true in
+           BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
+         let must_tot = to_must_tot eff in
          let gh = fun g guard ->
            Rel.force_trivial_guard g
              {Env.trivial_guard with guard_f = NonTrivial guard};
            true in
          match Core.compute_term_type_handle_guards g e must_tot gh with
          | Inl t ->
+           let t = refl_norm_type g t in
            dbg_refl g (fun _ ->
-             BU.format2 "refl_tc_term for %s computed type %s\n"
+             BU.format2 "refl_core_compute_term_type for %s computed type %s\n"
                (Print.term_to_string e)
                (Print.term_to_string t));
            t
          | Inr err ->
-           dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "core_check_term callback failed: " ^(Core.print_error err)) Range.dummyRange)
-  else ret None
+           dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
+let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
+  : tac (option unit & issues) =
+
+  if no_uvars_in_g g &&
+     no_uvars_in_term e &&
+     no_uvars_in_term t
+  then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format2 "refl_core_check_term: term: %s, type: %s\n"
+             (Print.term_to_string e) (Print.term_to_string t));
+         let must_tot = to_must_tot eff in
+         match Core.check_term g e t must_tot with
+         | Inl None ->
+           dbg_refl g (fun _ -> "refl_core_check_term: succeeded with no guard\n");
+           ret ()
+         | Inl (Some guard) ->
+           dbg_refl g (fun _ -> "refl_core_check_term: succeeded with guard\n");
+           Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard};
+           ret ()
+         | Inr err ->
+           dbg_refl g (fun _ -> BU.format1 "refl_core_check_term failed: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
+
+let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
     dbg_refl g (fun _ ->
       BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
-    let must_tot = true in
+    let must_tot = to_must_tot eff in
     //
     // we don't instantiate implicits at the end of e
     // it is unlikely that we will be able to resolve them,
@@ -2383,6 +2431,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
         true in
      match Core.compute_term_type_handle_guards g e must_tot gh with
      | Inl t ->
+        let t = refl_norm_type g t in
         dbg_refl g (fun _ ->
           BU.format2 "refl_tc_term for %s computed type %s\n"
             (Print.term_to_string e)
@@ -2396,9 +2445,9 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & typ)) =
     | Errors.Error (Errors.Error_UnexpectedUnresolvedUvar, _, _, _) ->
       Errors.raise_error (Errors.Fatal_IllTyped, "UVars remaing in term after tc_term callback") e.pos)
   else
-    ret None
+    ret (None, [unexpected_uvars_issue (Env.get_range g)])
       
-let refl_universe_of (g:env) (e:term) : tac (option universe) =
+let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
   let check_univ_var_resolved u =
     match SS.compress_univ u with
     | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "Unresolved variable in universe_of callback") Range.dummyRange
@@ -2419,9 +2468,9 @@ let refl_universe_of (g:env) (e:term) : tac (option universe) =
            let msg = BU.format1 "refl_universe_of failed: %s\n" (Core.print_error err) in
            dbg_refl g (fun _ -> msg);
            Errors.raise_error (Errors.Fatal_IllTyped, "universe_of failed: " ^ Core.print_error err) Range.dummyRange)
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =
+let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2442,9 +2491,9 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit) =
          in
          Rel.force_trivial_guard g
            {Env.trivial_guard with guard_f=NonTrivial e})
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
+let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2456,16 +2505,16 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ)) =
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     Rel.force_trivial_guard g guard;
     let e = SC.deep_compress false e in
-    let t = SC.deep_compress false t in
+    let t = t |> refl_norm_type g |> SC.deep_compress false in
     dbg_refl g (fun _ ->
       BU.format2 "} finished tc with e = %s and t = %s\n"
         (Print.term_to_string e)
         (Print.term_to_string t));
     (e, t))
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
-  : tac (option Core.side) =
+  : tac (option Core.side & issues) =
 
   if no_uvars_in_g g &&
      no_uvars_in_term t0 &&
@@ -2480,9 +2529,9 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
            BU.format1 "} returning side: %s\n"
              (Core.side_to_string s));
          s)
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_maybe_unfold_head (g:env) (e:term) : tac (option term) =
+let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2500,7 +2549,7 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term) =
                                "Could not unfold head: %s\n"
                                (Print.term_to_string e)) e.pos
     else eopt |> must)
-  else ret None
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let push_open_namespace (e:env) (ns:list string) =
   let lid = Ident.lid_of_path ns Range.dummyRange in

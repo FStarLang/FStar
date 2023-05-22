@@ -113,22 +113,22 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
         let f = free_names_and_uvars t use_cache in
         List.fold_left (fun out u -> union out (free_univs u)) f us
 
-      | Tm_abs(bs, t, ropt) ->
+      | Tm_abs {bs; body=t; rc_opt=ropt} ->
         union (aux_binders bs (free_names_and_uvars t use_cache))
               (match ropt with
                 | Some { residual_typ = Some t } ->  free_names_and_uvars t use_cache
                 | _ -> no_free_vars)
 
-      | Tm_arrow (bs, c) ->
+      | Tm_arrow {bs; comp=c} ->
         aux_binders bs (free_names_and_uvars_comp c use_cache)
 
-      | Tm_refine(bv, t) ->
+      | Tm_refine {b=bv; phi=t} ->
         aux_binders [mk_binder bv] (free_names_and_uvars t use_cache)
 
-      | Tm_app(t, args) ->
+      | Tm_app {hd=t; args} ->
         free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
 
-      | Tm_match(t, asc_opt, pats, _) ->
+      | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats} ->
         pats |> List.fold_left (fun n (p, wopt, t) ->
             let n1 = match wopt with
                 | None ->   no_free_vars
@@ -147,11 +147,11 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
                         (free_names_and_uvars_binders [b] use_cache)
                         (free_names_and_uvars_ascription asc use_cache)))
 
-      | Tm_ascribed(t1, asc, _) ->
+      | Tm_ascribed {tm=t1; asc} ->
         union (free_names_and_uvars t1 use_cache)
               (free_names_and_uvars_ascription asc use_cache)
 
-      | Tm_let(lbs, t) ->
+      | Tm_let {lbs; body=t} ->
         snd lbs |> List.fold_left (fun n lb ->
           union n (union (free_names_and_uvars lb.lbtyp use_cache) (free_names_and_uvars lb.lbdef use_cache)))
           (free_names_and_uvars t use_cache)
@@ -162,7 +162,7 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
         | Quote_dynamic -> free_names_and_uvars tm use_cache
         end
 
-      | Tm_meta(t, m) ->
+      | Tm_meta {tm=t; meta=m} ->
         let u1 = free_names_and_uvars t use_cache in
         begin match m with
         | Meta_pattern (_, args) ->

@@ -32,7 +32,7 @@ let (fstar_refl_data_const : Prims.string -> refl_constant) =
   fun s ->
     let lid = fstar_refl_data_lid s in
     let uu___ =
-      FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.delta_constant
+      FStar_Syntax_Syntax.lid_as_fv lid
         (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
     let uu___1 = FStar_Syntax_Syntax.tdataconstr lid in
     { lid; fv = uu___; t = uu___1 }
@@ -60,13 +60,9 @@ let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
     let inspect_lid = fstar_refl_builtins_lid (Prims.op_Hat "inspect" s) in
     let pack_lid = fstar_refl_builtins_lid (Prims.op_Hat "pack" s) in
     let inspect_fv =
-      FStar_Syntax_Syntax.lid_as_fv inspect_lid
-        (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
-        FStar_Pervasives_Native.None in
+      FStar_Syntax_Syntax.lid_as_fv inspect_lid FStar_Pervasives_Native.None in
     let pack_fv =
-      FStar_Syntax_Syntax.lid_as_fv pack_lid
-        (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
-        FStar_Pervasives_Native.None in
+      FStar_Syntax_Syntax.lid_as_fv pack_lid FStar_Pervasives_Native.None in
     let inspect =
       let uu___ = FStar_Syntax_Syntax.fv_to_tm inspect_fv in
       { lid = inspect_lid; fv = inspect_fv; t = uu___ } in
@@ -260,8 +256,7 @@ let (ref_Mk_bv : refl_constant) =
       (uu___1, uu___2) in
     FStar_Syntax_Syntax.Record_ctor uu___ in
   let fv =
-    FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.delta_constant
-      (FStar_Pervasives_Native.Some attr) in
+    FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
   let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
 let (ref_Mk_binder : refl_constant) =
   let lid = fstar_refl_data_lid "Mkbinder_view" in
@@ -291,8 +286,7 @@ let (ref_Mk_binder : refl_constant) =
       (uu___1, uu___2) in
     FStar_Syntax_Syntax.Record_ctor uu___ in
   let fv =
-    FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.delta_constant
-      (FStar_Pervasives_Native.Some attr) in
+    FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
   let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
 let (ref_Mk_lb : refl_constant) =
   let lid = fstar_refl_data_lid "Mklb_view" in
@@ -322,8 +316,7 @@ let (ref_Mk_lb : refl_constant) =
       (uu___1, uu___2) in
     FStar_Syntax_Syntax.Record_ctor uu___ in
   let fv =
-    FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.delta_constant
-      (FStar_Pervasives_Native.Some attr) in
+    FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
   let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
 let (ref_Q_Explicit : refl_constant) = fstar_refl_data_const "Q_Explicit"
 let (ref_Q_Implicit : refl_constant) = fstar_refl_data_const "Q_Implicit"
@@ -339,7 +332,6 @@ let (ref_C_Reflect : refl_constant) = fstar_refl_data_const "C_Reflect"
 let (ref_Pat_Constant : refl_constant) = fstar_refl_data_const "Pat_Constant"
 let (ref_Pat_Cons : refl_constant) = fstar_refl_data_const "Pat_Cons"
 let (ref_Pat_Var : refl_constant) = fstar_refl_data_const "Pat_Var"
-let (ref_Pat_Wild : refl_constant) = fstar_refl_data_const "Pat_Wild"
 let (ref_Pat_Dot_Term : refl_constant) = fstar_refl_data_const "Pat_Dot_Term"
 let (ref_Uv_Zero : refl_constant) = fstar_refl_data_const "Uv_Zero"
 let (ref_Uv_Succ : refl_constant) = fstar_refl_data_const "Uv_Succ"
@@ -364,6 +356,7 @@ let (ref_Tv_Match : refl_constant) = fstar_refl_data_const "Tv_Match"
 let (ref_Tv_AscT : refl_constant) = fstar_refl_data_const "Tv_AscribedT"
 let (ref_Tv_AscC : refl_constant) = fstar_refl_data_const "Tv_AscribedC"
 let (ref_Tv_Unknown : refl_constant) = fstar_refl_data_const "Tv_Unknown"
+let (ref_Tv_Unsupp : refl_constant) = fstar_refl_data_const "Tv_Unsupp"
 let (ref_C_Total : refl_constant) = fstar_refl_data_const "C_Total"
 let (ref_C_GTotal : refl_constant) = fstar_refl_data_const "C_GTotal"
 let (ref_C_Lemma : refl_constant) = fstar_refl_data_const "C_Lemma"
@@ -433,11 +426,11 @@ let (ord_Eq : FStar_Syntax_Syntax.term) =
 let (ord_Gt : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr ord_Gt_lid
 let (ord_Lt_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Lt_lid FStar_Syntax_Syntax.delta_constant
+  FStar_Syntax_Syntax.lid_as_fv ord_Lt_lid
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
 let (ord_Eq_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Eq_lid FStar_Syntax_Syntax.delta_constant
+  FStar_Syntax_Syntax.lid_as_fv ord_Eq_lid
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
 let (ord_Gt_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid FStar_Syntax_Syntax.delta_constant
+  FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)

@@ -18,9 +18,6 @@ open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Json
-
-module List = FStar.Compiler.List
-
 open FStar.BaseTypes
 
 exception Impos

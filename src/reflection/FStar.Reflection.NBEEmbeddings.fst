@@ -277,10 +277,8 @@ let rec e_pattern_aq aq =
               [as_arg (embed e_fv cb fv);
                as_arg (embed (e_option (e_list e_universe)) cb us_opt);
                as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps)]
-        | Pat_Var bv ->
-            mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
-        | Pat_Wild bv ->
-            mkConstruct ref_Pat_Wild.fv [] [as_arg (embed e_bv cb bv)]
+        | Pat_Var (bv, sort) ->
+            mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_sealed e_term) cb sort)]
         | Pat_Dot_Term eopt ->
             mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed (e_option e_term) cb eopt)]
     in
@@ -296,13 +294,10 @@ let rec e_pattern_aq aq =
             BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps) (fun ps ->
             Some <| Pat_Cons (f, us, ps))))
 
-        | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
+        | Construct (fv, [], [(sort, _); (bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
             BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-            Some <| Pat_Var bv)
-
-        | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Wild.lid ->
-            BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-            Some <| Pat_Wild bv)
+            BU.bind_opt (unembed (e_sealed e_term) cb sort) (fun sort ->
+            Some <| Pat_Var (bv, sort)))
 
         | Construct (fv, [], [(eopt, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
             BU.bind_opt (unembed (e_option e_term) cb eopt) (fun eopt ->
@@ -347,14 +342,14 @@ let e_ident : embedding I.ident =
         | Some (rng, s) -> Some (I.mk_ident (s, rng))
         | None -> None
     in
-    let range_fv = (lid_as_fv PC.range_lid  delta_constant None) in
-    let string_fv = (lid_as_fv PC.string_lid delta_constant None) in
+    let range_fv = (lid_as_fv PC.range_lid  None) in
+    let string_fv = (lid_as_fv PC.string_lid None) in
     let et =
       ET_app (FStar.Ident.string_of_lid PC.lid_tuple2,
               [fv_as_emb_typ range_fv;
                fv_as_emb_typ string_fv])
     in
-    mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 delta_constant None)
+    mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 None)
                                            [U_zero;U_zero]
                                            [as_arg (mkFV range_fv [] []);
                                             as_arg (mkFV string_fv [] [])]) et
@@ -485,8 +480,9 @@ let e_term_view_aq aq =
                          as_arg (embed (e_option (e_term_aq aq)) cb tacopt);
                          as_arg (embed e_bool cb use_eq)]
 
-        | Tv_Unknown ->
-            mkConstruct ref_Tv_Unknown.fv [] []
+        | Tv_Unknown -> mkConstruct ref_Tv_Unknown.fv [] []
+
+        | Tv_Unsupp -> mkConstruct ref_Tv_Unsupp.fv [] []
     in
     let unembed_term_view cb (t:t) : option term_view =
         match t.nbe_t with
@@ -573,6 +569,9 @@ let e_term_view_aq aq =
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
             Some <| Tv_Unknown
 
+        | Construct (fv, _, []) when S.fv_eq_lid fv ref_Tv_Unsupp.lid ->
+            Some <| Tv_Unsupp
+
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term_view: %s" (t_to_string t)));
             None
@@ -583,13 +582,13 @@ let e_term_view = e_term_view_aq (0, [])
 
 let e_bv_view =
     let embed_bv_view cb (bvv:bv_view) : t =
-        mkConstruct ref_Mk_bv.fv [] [as_arg (embed e_string cb bvv.bv_ppname);
+        mkConstruct ref_Mk_bv.fv [] [as_arg (embed (e_sealed e_string) cb bvv.bv_ppname);
                               as_arg (embed e_int    cb bvv.bv_index)]
     in
     let unembed_bv_view cb (t : t) : option bv_view =
         match t.nbe_t with
         | Construct (fv, _, [(idx, _); (nm, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
-            BU.bind_opt (unembed e_string cb nm) (fun nm ->
+            BU.bind_opt (unembed (e_sealed e_string) cb nm) (fun nm ->
             BU.bind_opt (unembed e_int cb idx) (fun idx ->
             Some <| { bv_ppname = nm ; bv_index = idx }))
 
@@ -698,7 +697,7 @@ let e_order =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded order: %s" (t_to_string t)));
             None
     in
-    mk_emb' embed_order unembed_order (lid_as_fv PC.order_lid delta_constant None)
+    mk_emb' embed_order unembed_order (lid_as_fv PC.order_lid None)
 
 let e_sigelt =
     let embed_sigelt cb (se:sigelt) : t =
@@ -958,4 +957,4 @@ let e_vconfig =
     let unemb cb (t:t) : option order =
       failwith "unemb vconfig NBE"
     in
-    mk_emb' emb unemb (lid_as_fv PC.vconfig_lid delta_constant None)
+    mk_emb' emb unemb (lid_as_fv PC.vconfig_lid None)

@@ -125,18 +125,48 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        of binders*term*option residual_comp          (* fun (xi:ti) -> t : (M t' wp | N) *)
-  | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
-  | Tm_refine     of bv * term                                   (* x:t{phi} *)
-  | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * option match_returns_ascription * list branch * option residual_comp
-                                                                 (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
-  | Tm_ascribed   of term * ascription * option lident          (* an effect label is the third arg, filled in by the type-checker *)
-  | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
-                                                                   and a delayed substitution of only NM or NT elements *)
-  | Tm_delayed    of term * subst_ts                             (* A delayed substitution --- always force it; never inspect it directly *)
-  | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_abs        {  (* fun (xi:ti) -> t : (M t' wp | N) *)
+      bs:binders;
+      body:term;
+      rc_opt:option residual_comp
+    }
+  | Tm_arrow      {  (* (xi:ti) -> M t' wp *)
+      bs:binders;
+      comp:comp
+    }
+  | Tm_refine     {  (* x:t{phi} *)
+      b:bv;
+      phi:term
+    }
+  | Tm_app        {  (* h tau_1 ... tau_n, args in order from left to right *)
+      hd:term;
+      args:args
+    }
+  | Tm_match      {  (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
+      scrutinee:term;
+      ret_opt:option match_returns_ascription;
+      brs:list branch;
+      rc_opt:option residual_comp
+    }
+  | Tm_ascribed   {  (* an effect label is the third arg, filled in by the type-checker *)
+      tm:term;
+      asc:ascription;
+      eff_opt:option lident
+    }
+  | Tm_let        {  (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
+      lbs:letbindings;
+      body:term
+    }
+  | Tm_uvar       of ctx_uvar_and_subst  (* A unification variable ?u (aka meta-variable)
+                                            and a delayed substitution of only NM or NT elements *)
+  | Tm_delayed    {  (* A delayed substitution --- always force it; never inspect it directly *)
+      tm:term;
+      substs:subst_ts
+    }
+  | Tm_meta       {  (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+      tm:term;
+      meta:metadata
+    }
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
@@ -169,17 +199,16 @@ and pat' =
   | Pat_constant of sconst
   | Pat_cons     of fv * option universes * list (pat * bool)    (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
-  | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
   | Pat_dot_term of option term                                  (* dot patterns: determined by other elements in the pattern *)
                                                                  (* the option term is the optionally resolved pat dot term *)
 and letbinding = {  //let f : forall u1..un. M t = e
-    lbname :lbname;          //f
-    lbunivs:list univ_name; //u1..un
-    lbtyp  :typ;             //t
-    lbeff  :lident;          //M
-    lbdef  :term;            //e
-    lbattrs:list attribute; //attrs
-    lbpos  :range;           //original position of 'e'
+    lbname :lbname;          // f
+    lbunivs:list univ_name;  // u1..un
+    lbtyp  :typ;             // t
+    lbeff  :lident;          // M
+    lbdef  :term;            // e
+    lbattrs:list attribute;  // attrs
+    lbpos  :range;           // original position of 'e'
 }
 and antiquotations = int * list term
 and quoteinfo = {
@@ -334,7 +363,7 @@ and bv = {
 }
 and fv = {
     fv_name :var;
-    fv_delta:delta_depth;
+    fv_delta:option delta_depth;
     fv_qual :option fv_qual
 }
 and free_vars = {
@@ -379,6 +408,7 @@ and lazy_kind =
   | Lazy_embedding of emb_typ * Thunk.t term
   | Lazy_universe
   | Lazy_universe_uvar
+  | Lazy_issue
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)
@@ -474,12 +504,6 @@ type sub_eff = {
   kind:option indexed_effect_combinator_kind
  }
 
-(*
-  new_effect {
-    STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
-    with return ....
-  }
-*)
 type action = {
     action_name:lident;
     action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
@@ -556,6 +580,12 @@ type eff_extraction_mode =
   | Extract_reify           // Effect can be extracted with reification
   | Extract_primitive       // Effect is primitive
 
+(*
+  new_effect {
+    STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
+    with return ....
+  }
+*)
 type eff_decl = {
   mname           : lident;      // STATE_h
 
@@ -583,68 +613,88 @@ type sig_metadata = {
                         //Used in DM4Free
 }
 
-
-// JP/NS:
-//    the n-tuples hinder readability, make it difficult to maintain code (see
-//    lids_of_sigelt in syntax/util.fs) and do not help being familiar with the
-//    code.
-//    In particular, because of tuples, everytime one needs to extend a Sig_*,
-//    one needs to modify > 30 different places in the code that pattern-match
-//    on a fixed-length tuple.
-//    Using a record for the arguments of Sig_datacons etc. would help a bit.
-//    But, given F*'s poor syntax for record arguments, this would require writing
-//    (Sig_inductive_typ ({...})) which is also painful, particularly since omitting
-//    the extra parentheses would not be caught by the F# parser during development.
-
 (*
  * AR: we no longer have Sig_new_effect_for_free
  *     Sig_new_effect, with an eff_decl that has DM4F_eff combinators, with dummy wps plays its part
  *)
 type sigelt' =
-  | Sig_inductive_typ       of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
-                            * univ_names                //u1..un
-                            * binders                   //(x1:t1) ... (xn:tn)
-                            * option int                  //number of recursively uniform type parameters
-                            * typ                       //t
-                            * list lident              //mutually defined types
-                            * list lident              //data constructors for this type
+  | Sig_inductive_typ  {  //type l forall u1..un. (x1:t1) ... (xn:tn) : t
+      lid:lident;
+      us:univ_names;                    //u1..un
+      params:binders;                   //(x1:t1) ... (xn:tn)
+      num_uniform_params:option int;    //number of recursively uniform type parameters
+      t:typ;                            //t
+      mutuals:list lident;              //mutually defined types
+      ds:list lident;                   //data constructors for this type
+    }
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list list sigelt,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
-  | Sig_bundle              of list sigelt              //the set of mutually defined type and data constructors
-                          * list lident               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon           of lident                    //name of the datacon
-                          * univ_names                 //universe variables of the inductive type it belongs to
-                          * typ                        //the constructor's type as an arrow (including parameters)
-                          * lident                     //the inductive type of the value this constructs
-                          * int                        //and the number of parameters of the inductive
-                          * list lident               //mutually defined types
-  | Sig_declare_typ       of lident
-                          * univ_names
-                          * typ
-  | Sig_let               of letbindings
-                          * list lident               //mutually defined
-  | Sig_assume            of lident
-                          * univ_names
-                          * formula
-  | Sig_new_effect        of eff_decl
-  | Sig_sub_effect        of sub_eff
-  | Sig_effect_abbrev     of lident
-                          * univ_names
-                          * binders
-                          * comp
-                          * list cflag
-  | Sig_pragma            of pragma
-  | Sig_splice            of bool * list lident * term  (* bool true indicates a typed splice that does not re-typecheck the generated sigelt *)
-                                                        (* it is an experimental feature added as part of the meta DSL framework *)
+  | Sig_bundle  {
+      ses:list sigelt;    //the set of mutually defined type and data constructors
+      lids:list lident;    //all the inductive types and data constructor names in this bundle
+    }
+  | Sig_datacon        {
+      lid:lident;             //name of the datacon
+      us:univ_names;          //universe variables of the inductive type it belongs to
+      t:typ;                  //the constructor's type as an arrow (including parameters)
+      ty_lid:lident;          //the inductive type of the value this constructs
+      num_ty_params:int;        //and the number of parameters of the inductive
+      mutuals:list lident;    //mutually defined types
+    }      
+  | Sig_declare_typ     {
+      lid:lident;
+      us:univ_names;
+      t:typ
+    }
+  | Sig_let             {
+      lbs:letbindings;
+      lids:list lident;    //mutually defined
+    }
+  | Sig_assume          {
+      lid:lident;
+      us:univ_names;
+      phi:formula;
+    }
+  | Sig_new_effect      of eff_decl
+  | Sig_sub_effect      of sub_eff
+  | Sig_effect_abbrev   {
+      lid:lident;
+      us:univ_names;
+      bs:binders;
+      comp:comp;
+      cflags:list cflag;
+    }
+  | Sig_pragma          of pragma
+  | Sig_splice          {
+      is_typed:bool;  // true indicates a typed splice that does not re-typecheck the generated sigelt
+                      // it is an experimental feature added as part of the meta DSL framework
+      lids:list lident;
+      tac:term;
+    }
 
-  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //(m, n) |> p, the polymonadic term, and its type
-  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme * option indexed_effect_combinator_kind  //m <: n, the polymonadic subcomp term, and its type
-  | Sig_fail              of list int         (* Expected errors (empty for 'any') *)
-                          * bool               (* true if should fail in --lax *)
-                          * list sigelt       (* The sigelts to be checked *)
+  | Sig_polymonadic_bind     {  //(m, n) |> p, the polymonadic term, and its type
+      m_lid:lident;
+      n_lid:lident;
+      p_lid:lident;
+      tm:tscheme;
+      typ:tscheme;
+      kind:option indexed_effect_combinator_kind;
+    }
+  | Sig_polymonadic_subcomp  {  //m <: n, the polymonadic subcomp term, and its type
+      m_lid:lident;
+      n_lid:lident;
+      tm:tscheme;
+      typ:tscheme;
+      kind:option indexed_effect_combinator_kind;
+    }
+  | Sig_fail                 {
+      errs:list int;      // Expected errors (empty for 'any')
+      fail_in_lax:bool;   // true if should fail in --lax
+      ses:list sigelt;    // The sigelts to be checked
+  }
 
 and sigelt = {
     sigel:    sigelt';
@@ -755,20 +805,22 @@ val as_aqual_implicit:    bool -> aqual
 val is_top_level:   list letbinding -> bool
 
 (* gensym *)
-val freshen_bv:     bv -> bv
-val freshen_binder:  binder -> binder
-val gen_bv:         string -> option Range.range -> typ -> bv
-val gen_bv':        ident -> option Range.range -> typ -> bv
-val new_bv:         option range -> typ -> bv
-val new_univ_name:  option range -> univ_name
-val lid_as_fv:      lident -> delta_depth -> option fv_qual -> fv
-val fv_to_tm:       fv -> term
-val fvar:           lident -> delta_depth -> option fv_qual -> term
-val fv_eq:          fv -> fv -> bool
-val fv_eq_lid:      fv -> lident -> bool
-val range_of_fv:    fv -> range
-val lid_of_fv:      fv -> lid
-val set_range_of_fv:fv -> range -> fv
+val freshen_bv       : bv -> bv
+val freshen_binder   : binder -> binder
+val gen_bv           : string -> option Range.range -> typ -> bv
+val gen_bv'          : ident -> option Range.range -> typ -> bv
+val new_bv           : option range -> typ -> bv
+val new_univ_name    : option range -> univ_name
+val lid_and_dd_as_fv : lident -> delta_depth -> option fv_qual -> fv
+val lid_as_fv        : lident -> option fv_qual -> fv
+val fv_to_tm         : fv -> term
+val fvar_with_dd     : lident -> delta_depth -> option fv_qual -> term
+val fvar             : lident -> option fv_qual -> term
+val fv_eq            : fv -> fv -> bool
+val fv_eq_lid        : fv -> lident -> bool
+val range_of_fv      : fv -> range
+val lid_of_fv        : fv -> lid
+val set_range_of_fv  : fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list term -> string -> bool

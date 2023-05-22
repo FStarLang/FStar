@@ -19,6 +19,9 @@
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
 )
 
+(menhir
+ (modules FStar_Parser_Parse))
+
 (rule
   (target FStar_Version.ml)
   (deps (:script make_fstar_version.sh)

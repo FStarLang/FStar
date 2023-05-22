@@ -51,7 +51,7 @@ let (collect_arr_bs :
          (Prims.of_int (25)) (Prims.of_int (18)) (Prims.of_int (25))
          (Prims.of_int (57)))
       (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
-         (Prims.of_int (25)) (Prims.of_int (4)) (Prims.of_int (26))
+         (Prims.of_int (24)) (Prims.of_int (22)) (Prims.of_int (26))
          (Prims.of_int (29)))
       (Obj.magic
          (collect_arr' []
@@ -72,7 +72,7 @@ let (collect_arr :
          (Prims.of_int (30)) (Prims.of_int (18)) (Prims.of_int (30))
          (Prims.of_int (57)))
       (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
-         (Prims.of_int (30)) (Prims.of_int (4)) (Prims.of_int (32))
+         (Prims.of_int (29)) (Prims.of_int (19)) (Prims.of_int (32))
          (Prims.of_int (29)))
       (Obj.magic
          (collect_arr' []
@@ -124,7 +124,7 @@ let (collect_abs :
          (Prims.of_int (43)) (Prims.of_int (19)) (Prims.of_int (43))
          (Prims.of_int (36)))
       (FStar_Range.mk_range "FStar.Tactics.SyntaxHelpers.fst"
-         (Prims.of_int (43)) (Prims.of_int (4)) (Prims.of_int (44))
+         (Prims.of_int (42)) (Prims.of_int (19)) (Prims.of_int (44))
          (Prims.of_int (30))) (Obj.magic (collect_abs' [] t))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac

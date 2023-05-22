@@ -1070,12 +1070,19 @@ let (interpret_plugin_as_term_fun :
                     FStar_Pervasives_Native.snd uu___2 in
                   FStar_Compiler_Effect.op_Less_Bar (mk_any_embedding l)
                     uu___1
-              | FStar_Syntax_Syntax.Tm_refine (x, uu___1) ->
-                  mk_embedding l env1 x.FStar_Syntax_Syntax.sort
-              | FStar_Syntax_Syntax.Tm_ascribed (t4, uu___1, uu___2) ->
-                  mk_embedding l env1 t4
-              | FStar_Syntax_Syntax.Tm_arrow (b::[], c) when
-                  FStar_Syntax_Util.is_pure_comp c ->
+              | FStar_Syntax_Syntax.Tm_refine
+                  { FStar_Syntax_Syntax.b = x;
+                    FStar_Syntax_Syntax.phi = uu___1;_}
+                  -> mk_embedding l env1 x.FStar_Syntax_Syntax.sort
+              | FStar_Syntax_Syntax.Tm_ascribed
+                  { FStar_Syntax_Syntax.tm = t4;
+                    FStar_Syntax_Syntax.asc = uu___1;
+                    FStar_Syntax_Syntax.eff_opt = uu___2;_}
+                  -> mk_embedding l env1 t4
+              | FStar_Syntax_Syntax.Tm_arrow
+                  { FStar_Syntax_Syntax.bs1 = b::[];
+                    FStar_Syntax_Syntax.comp = c;_}
+                  when FStar_Syntax_Util.is_pure_comp c ->
                   let uu___1 = FStar_Syntax_Subst.open_comp [b] c in
                   (match uu___1 with
                    | (bs, c1) ->
@@ -1088,16 +1095,25 @@ let (interpret_plugin_as_term_fun :
                        let uu___2 = mk_embedding l env1 t0 in
                        let uu___3 = mk_embedding l env1 t11 in
                        emb_arrow l uu___2 uu___3)
-              | FStar_Syntax_Syntax.Tm_arrow (b::more::bs, c) ->
+              | FStar_Syntax_Syntax.Tm_arrow
+                  { FStar_Syntax_Syntax.bs1 = b::more::bs;
+                    FStar_Syntax_Syntax.comp = c;_}
+                  ->
                   let tail =
                     FStar_Syntax_Syntax.mk
-                      (FStar_Syntax_Syntax.Tm_arrow ((more :: bs), c))
-                      t3.FStar_Syntax_Syntax.pos in
+                      (FStar_Syntax_Syntax.Tm_arrow
+                         {
+                           FStar_Syntax_Syntax.bs1 = (more :: bs);
+                           FStar_Syntax_Syntax.comp = c
+                         }) t3.FStar_Syntax_Syntax.pos in
                   let t4 =
                     let uu___1 =
                       let uu___2 =
                         let uu___3 = FStar_Syntax_Syntax.mk_Total tail in
-                        ([b], uu___3) in
+                        {
+                          FStar_Syntax_Syntax.bs1 = [b];
+                          FStar_Syntax_Syntax.comp = uu___3
+                        } in
                       FStar_Syntax_Syntax.Tm_arrow uu___2 in
                     FStar_Syntax_Syntax.mk uu___1 t3.FStar_Syntax_Syntax.pos in
                   mk_embedding l env1 t4

@@ -81,11 +81,15 @@ function fstar_default_build () {
     fi &
 
     # Build F*, along with fstarlib
-    if ! make -j $threads ci-utest-prelude; then
+    if ! make -j $threads ci-pre; then
         echo Warm-up failed
         echo Failure >$result_file
         return 1
     fi
+
+    # Clean temporary build files, not needed and saves
+    # several hundred MB
+    make clean-buildfiles || true
 
     export_home FSTAR "$(pwd)"
 
@@ -103,17 +107,21 @@ function fstar_default_build () {
     $gnutime make -j $threads -k ci-$localTarget && echo true >$status_file
     echo Done building FStar
 
-    # Make it a hard failure if there's a git diff. Note: FStar_Version.ml is in the
-    # .gitignore.
+    # Make it a hard failure if there's a git diff in the snapshot. First check for
+    # extraneous files, then for a diff.
     echo "Searching for a diff in ocaml/*/generated"
-    if ! git diff --exit-code ocaml/*/generated ; then
-        echo " *** GIT DIFF: the files in the list above have a git diff"
+    git status ocaml/*/generated # Print status for log
+
+    # If there's any output, i.e. any file not in HEAD, fail
+    if git ls-files --others --exclude-standard -- ocaml/*/generated | grep -q . ; then
+        echo " *** GIT DIFF: there are extraneous files in the snapshot"
         echo false >$status_file
     fi
 
-    # We should not generate hints when building on Windows
-    if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
-        .scripts/advance.sh refresh_fstar_hints || echo false >$status_file
+    # If there's a diff in existing files, fail
+    if ! git diff --exit-code ocaml/*/generated ; then
+        echo " *** GIT DIFF: the files in the list above have a git diff"
+        echo false >$status_file
     fi
 }
 

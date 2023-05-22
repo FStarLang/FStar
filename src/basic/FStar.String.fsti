@@ -14,9 +14,8 @@
    limitations under the License.
 *)
 module FStar.String
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open Prims
+
+open FStar.Compiler.Effect
 open FStar.Char
 open FStar.BigInt
 

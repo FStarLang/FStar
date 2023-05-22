@@ -47,8 +47,7 @@ type universes = list universe
 type pattern =
     | Pat_Constant of vconst
     | Pat_Cons     of fv * option (list universe) * list (pattern * bool)
-    | Pat_Var      of bv
-    | Pat_Wild     of bv
+    | Pat_Var      of bv * typ
     | Pat_Dot_Term of option term
 
 type branch = pattern * term
@@ -101,6 +100,7 @@ type term_view =
                                                          //see also Syntax
     | Tv_AscribedC of term * comp * option term * bool  //bool is similar to Tv_AscribedT
     | Tv_Unknown
+    | Tv_Unsupp
 
 val notAscription (t:term_view) : Tot bool
 

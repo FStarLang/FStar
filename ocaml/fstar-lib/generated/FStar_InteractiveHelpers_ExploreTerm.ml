@@ -249,7 +249,7 @@ let (get_type_info_from_type :
                         (Prims.of_int (100)) (Prims.of_int (43)))
                      (FStar_Range.mk_range
                         "FStar.InteractiveHelpers.ExploreTerm.fst"
-                        (Prims.of_int (101)) (Prims.of_int (4))
+                        (Prims.of_int (100)) (Prims.of_int (47))
                         (Prims.of_int (104)) (Prims.of_int (38)))
                      (Obj.magic
                         (FStar_InteractiveHelpers_Base.prettify_term false
@@ -264,7 +264,7 @@ let (get_type_info_from_type :
                                    (Prims.of_int (101)) (Prims.of_int (38)))
                                 (FStar_Range.mk_range
                                    "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                   (Prims.of_int (102)) (Prims.of_int (4))
+                                   (Prims.of_int (101)) (Prims.of_int (41))
                                    (Prims.of_int (104)) (Prims.of_int (38)))
                                 (FStar_Tactics_Effect.lift_div_tac
                                    (fun uu___1 ->
@@ -282,8 +282,8 @@ let (get_type_info_from_type :
                                               (Prims.of_int (41)))
                                            (FStar_Range.mk_range
                                               "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                              (Prims.of_int (103))
-                                              (Prims.of_int (4))
+                                              (Prims.of_int (102))
+                                              (Prims.of_int (44))
                                               (Prims.of_int (104))
                                               (Prims.of_int (38)))
                                            (Obj.magic
@@ -942,7 +942,7 @@ let rec (unfold_until_arrow :
                            (Prims.of_int (211)) (Prims.of_int (35)))
                         (FStar_Range.mk_range
                            "FStar.InteractiveHelpers.ExploreTerm.fst"
-                           (Prims.of_int (213)) (Prims.of_int (4))
+                           (Prims.of_int (211)) (Prims.of_int (38))
                            (Prims.of_int (250)) (Prims.of_int (75)))
                         (Obj.magic
                            (FStar_Tactics_Builtins.norm_term_env e [] ty0))
@@ -952,7 +952,8 @@ let rec (unfold_until_arrow :
                                 (FStar_Tactics_Effect.tac_bind
                                    (FStar_Range.mk_range
                                       "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                      (Prims.of_int (214)) (Prims.of_int (6))
+                                      (Prims.of_int (213))
+                                      (Prims.of_int (40))
                                       (Prims.of_int (224)) (Prims.of_int (9)))
                                    (FStar_Range.mk_range
                                       "FStar.InteractiveHelpers.ExploreTerm.fst"
@@ -971,8 +972,8 @@ let rec (unfold_until_arrow :
                                                 (Prims.of_int (32)))
                                              (FStar_Range.mk_range
                                                 "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                (Prims.of_int (215))
-                                                (Prims.of_int (6))
+                                                (Prims.of_int (214))
+                                                (Prims.of_int (35))
                                                 (Prims.of_int (224))
                                                 (Prims.of_int (9)))
                                              (Obj.magic
@@ -991,8 +992,8 @@ let rec (unfold_until_arrow :
                                                            (Prims.of_int (44)))
                                                         (FStar_Range.mk_range
                                                            "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                           (Prims.of_int (217))
-                                                           (Prims.of_int (6))
+                                                           (Prims.of_int (215))
+                                                           (Prims.of_int (47))
                                                            (Prims.of_int (224))
                                                            (Prims.of_int (9)))
                                                         (FStar_Tactics_Effect.lift_div_tac
@@ -1195,8 +1196,8 @@ let rec (unfold_until_arrow :
                                                                    (Prims.of_int (35)))
                                                                 (FStar_Range.mk_range
                                                                    "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                   (Prims.of_int (235))
-                                                                   (Prims.of_int (6))
+                                                                   (Prims.of_int (233))
+                                                                   (Prims.of_int (19))
                                                                    (Prims.of_int (242))
                                                                    (Prims.of_int (9)))
                                                                 (Obj.magic
@@ -1247,8 +1248,8 @@ let rec (unfold_until_arrow :
                                                                     (Prims.of_int (30)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (239))
-                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (238))
+                                                                    (Prims.of_int (33))
                                                                     (Prims.of_int (240))
                                                                     (Prims.of_int (32)))
                                                                     (Obj.magic
@@ -1424,7 +1425,7 @@ let (inst_comp_once :
              (Prims.of_int (256)) (Prims.of_int (11)) (Prims.of_int (256))
              (Prims.of_int (30)))
           (FStar_Range.mk_range "FStar.InteractiveHelpers.ExploreTerm.fst"
-             (Prims.of_int (257)) (Prims.of_int (2)) (Prims.of_int (263))
+             (Prims.of_int (256)) (Prims.of_int (33)) (Prims.of_int (263))
              (Prims.of_int (5)))
           (FStar_Tactics_Effect.lift_div_tac
              (fun uu___ -> get_comp_ret_type c))
@@ -1772,8 +1773,8 @@ let rec (_flush_typ_or_comp_comp :
             FStar_Tactics_Effect.tac_bind
               (FStar_Range.mk_range
                  "FStar.InteractiveHelpers.ExploreTerm.fst"
-                 (Prims.of_int (339)) (Prims.of_int (4)) (Prims.of_int (340))
-                 (Prims.of_int (32)))
+                 (Prims.of_int (338)) (Prims.of_int (20))
+                 (Prims.of_int (340)) (Prims.of_int (32)))
               (FStar_Range.mk_range
                  "FStar.InteractiveHelpers.ExploreTerm.fst"
                  (Prims.of_int (342)) (Prims.of_int (2)) (Prims.of_int (359))
@@ -1811,7 +1812,7 @@ let rec (_flush_typ_or_comp_comp :
                                 (Prims.of_int (348)) (Prims.of_int (32)))
                              (FStar_Range.mk_range
                                 "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                (Prims.of_int (349)) (Prims.of_int (4))
+                                (Prims.of_int (348)) (Prims.of_int (35))
                                 (Prims.of_int (359)) (Prims.of_int (86)))
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___ -> get_comp_ret_type c))
@@ -1827,8 +1828,8 @@ let rec (_flush_typ_or_comp_comp :
                                            (Prims.of_int (47)))
                                         (FStar_Range.mk_range
                                            "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                           (Prims.of_int (349))
-                                           (Prims.of_int (4))
+                                           (Prims.of_int (348))
+                                           (Prims.of_int (35))
                                            (Prims.of_int (359))
                                            (Prims.of_int (86)))
                                         (Obj.magic
@@ -2220,7 +2221,7 @@ let (flush_typ_or_comp :
       fun tyc ->
         FStar_Tactics_Effect.tac_bind
           (FStar_Range.mk_range "FStar.InteractiveHelpers.ExploreTerm.fst"
-             (Prims.of_int (363)) (Prims.of_int (4)) (Prims.of_int (366))
+             (Prims.of_int (362)) (Prims.of_int (88)) (Prims.of_int (366))
              (Prims.of_int (18)))
           (FStar_Range.mk_range "FStar.InteractiveHelpers.ExploreTerm.fst"
              (Prims.of_int (368)) (Prims.of_int (2)) (Prims.of_int (376))
@@ -2237,7 +2238,7 @@ let (flush_typ_or_comp :
                            (Prims.of_int (363)) (Prims.of_int (38)))
                         (FStar_Range.mk_range
                            "FStar.InteractiveHelpers.ExploreTerm.fst"
-                           (Prims.of_int (363)) (Prims.of_int (4))
+                           (Prims.of_int (362)) (Prims.of_int (88))
                            (Prims.of_int (366)) (Prims.of_int (18)))
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___1 -> FStar_List_Tot_Base.splitAt n pl))
@@ -2255,8 +2256,8 @@ let (flush_typ_or_comp :
                                           (Prims.of_int (26)))
                                        (FStar_Range.mk_range
                                           "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                          (Prims.of_int (365))
-                                          (Prims.of_int (4))
+                                          (Prims.of_int (364))
+                                          (Prims.of_int (29))
                                           (Prims.of_int (366))
                                           (Prims.of_int (18)))
                                        (FStar_Tactics_Effect.lift_div_tac
@@ -2470,8 +2471,8 @@ let (safe_arg_typ_or_comp :
                                           (Prims.of_int (51)))
                                        (FStar_Range.mk_range
                                           "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                          (Prims.of_int (388))
-                                          (Prims.of_int (4))
+                                          (Prims.of_int (387))
+                                          (Prims.of_int (52))
                                           (Prims.of_int (404))
                                           (Prims.of_int (15)))
                                        (Obj.magic
@@ -2608,8 +2609,8 @@ let (safe_arg_typ_or_comp :
                                                                     (Prims.of_int (47)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (397))
-                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (396))
+                                                                    (Prims.of_int (48))
                                                                     (Prims.of_int (399))
                                                                     (Prims.of_int (10)))
                                                                     (Obj.magic
@@ -2788,7 +2789,7 @@ let bind_expl :
              (Prims.of_int (435)) (Prims.of_int (18)) (Prims.of_int (435))
              (Prims.of_int (22)))
           (FStar_Range.mk_range "FStar.InteractiveHelpers.ExploreTerm.fst"
-             (Prims.of_int (435)) (Prims.of_int (2)) (Prims.of_int (438))
+             (Prims.of_int (434)) (Prims.of_int (92)) (Prims.of_int (438))
              (Prims.of_int (34))) (Obj.magic (f1 x))
           (fun uu___ ->
              (fun uu___ ->
@@ -2832,7 +2833,7 @@ let rec (explore_term :
                          (Prims.of_int (467)) (Prims.of_int (85)))
                       (FStar_Range.mk_range
                          "FStar.InteractiveHelpers.ExploreTerm.fst"
-                         (Prims.of_int (468)) (Prims.of_int (2))
+                         (Prims.of_int (467)) (Prims.of_int (86))
                          (Prims.of_int (547)) (Prims.of_int (33)))
                       (Obj.magic
                          (FStar_Tactics_Effect.tac_bind
@@ -2934,7 +2935,7 @@ let rec (explore_term :
                                     (Prims.of_int (468)) (Prims.of_int (22)))
                                  (FStar_Range.mk_range
                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                    (Prims.of_int (469)) (Prims.of_int (2))
+                                    (Prims.of_int (468)) (Prims.of_int (25))
                                     (Prims.of_int (547)) (Prims.of_int (33)))
                                  (Obj.magic
                                     (FStar_Tactics_Builtins.inspect t0))
@@ -2950,8 +2951,8 @@ let rec (explore_term :
                                                (Prims.of_int (35)))
                                             (FStar_Range.mk_range
                                                "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                               (Prims.of_int (469))
-                                               (Prims.of_int (2))
+                                               (Prims.of_int (468))
+                                               (Prims.of_int (25))
                                                (Prims.of_int (547))
                                                (Prims.of_int (33)))
                                             (Obj.magic (f x ge0 pl0 c0 tv0))
@@ -2964,9 +2965,9 @@ let rec (explore_term :
                                                            (FStar_Range.mk_range
                                                               "FStar.InteractiveHelpers.ExploreTerm.fst"
                                                               (Prims.of_int (470))
-                                                              (Prims.of_int (23))
+                                                              (Prims.of_int (12))
                                                               (Prims.of_int (470))
-                                                              (Prims.of_int (25)))
+                                                              (Prims.of_int (29)))
                                                            (FStar_Range.mk_range
                                                               "FStar.InteractiveHelpers.ExploreTerm.fst"
                                                               (Prims.of_int (471))
@@ -3052,8 +3053,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (64)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (481))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (480))
+                                                                    (Prims.of_int (65))
                                                                     (Prims.of_int (486))
                                                                     (Prims.of_int (38)))
                                                                     (Obj.magic
@@ -3119,8 +3120,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (61)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (481))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (480))
+                                                                    (Prims.of_int (65))
                                                                     (Prims.of_int (486))
                                                                     (Prims.of_int (38)))
                                                                     (Obj.magic
@@ -3176,8 +3177,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (50)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (489))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (488))
+                                                                    (Prims.of_int (53))
                                                                     (Prims.of_int (490))
                                                                     (Prims.of_int (47)))
                                                                     (Obj.magic
@@ -3253,8 +3254,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (29)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (495))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (494))
+                                                                    (Prims.of_int (32))
                                                                     (Prims.of_int (499))
                                                                     (Prims.of_int (38)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3276,8 +3277,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (65)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (495))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (494))
+                                                                    (Prims.of_int (32))
                                                                     (Prims.of_int (499))
                                                                     (Prims.of_int (38)))
                                                                     (Obj.magic
@@ -3381,8 +3382,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (39)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (507))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (506))
+                                                                    (Prims.of_int (42))
                                                                     (Prims.of_int (513))
                                                                     (Prims.of_int (30)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3406,8 +3407,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (68)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (509))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (507))
+                                                                    (Prims.of_int (71))
                                                                     (Prims.of_int (513))
                                                                     (Prims.of_int (30)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3434,8 +3435,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (55)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (510))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (509))
+                                                                    (Prims.of_int (58))
                                                                     (Prims.of_int (513))
                                                                     (Prims.of_int (30)))
                                                                     (Obj.magic
@@ -3458,8 +3459,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (67)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (512))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (510))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (513))
                                                                     (Prims.of_int (30)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3486,8 +3487,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (93)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (512))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (510))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (513))
                                                                     (Prims.of_int (30)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3528,14 +3529,14 @@ let rec (explore_term :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (517))
-                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (516))
+                                                                    (Prims.of_int (86))
                                                                     (Prims.of_int (527))
                                                                     (Prims.of_int (21)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (530))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (528))
+                                                                    (Prims.of_int (8))
                                                                     (Prims.of_int (533))
                                                                     (Prims.of_int (42)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3553,8 +3554,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (29)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (517))
-                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (516))
+                                                                    (Prims.of_int (86))
                                                                     (Prims.of_int (527))
                                                                     (Prims.of_int (21)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3585,8 +3586,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (35)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (519))
-                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (518))
+                                                                    (Prims.of_int (31))
                                                                     (Prims.of_int (525))
                                                                     (Prims.of_int (42)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3613,8 +3614,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (70)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (521))
-                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (519))
+                                                                    (Prims.of_int (38))
                                                                     (Prims.of_int (525))
                                                                     (Prims.of_int (42)))
                                                                     (Obj.magic
@@ -3679,8 +3680,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (58)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (531))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (530))
+                                                                    (Prims.of_int (61))
                                                                     (Prims.of_int (533))
                                                                     (Prims.of_int (42)))
                                                                     (Obj.magic
@@ -3742,8 +3743,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (36)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (536))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (535))
+                                                                    (Prims.of_int (39))
                                                                     (Prims.of_int (539))
                                                                     (Prims.of_int (37)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -3767,8 +3768,8 @@ let rec (explore_term :
                                                                     (Prims.of_int (65)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                    (Prims.of_int (536))
-                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (535))
+                                                                    (Prims.of_int (39))
                                                                     (Prims.of_int (539))
                                                                     (Prims.of_int (37)))
                                                                     (Obj.magic
@@ -3891,8 +3892,8 @@ and (explore_pattern :
                                  (FStar_Tactics_Effect.tac_bind
                                     (FStar_Range.mk_range
                                        "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                       (Prims.of_int (555))
-                                       (Prims.of_int (6))
+                                       (Prims.of_int (554))
+                                       (Prims.of_int (35))
                                        (Prims.of_int (561))
                                        (Prims.of_int (20)))
                                     (FStar_Range.mk_range
@@ -3914,8 +3915,8 @@ and (explore_pattern :
                                                    (Prims.of_int (34)))
                                                 (FStar_Range.mk_range
                                                    "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                   (Prims.of_int (555))
-                                                   (Prims.of_int (6))
+                                                   (Prims.of_int (554))
+                                                   (Prims.of_int (35))
                                                    (Prims.of_int (561))
                                                    (Prims.of_int (20)))
                                                 (FStar_Tactics_Effect.lift_div_tac
@@ -3934,8 +3935,8 @@ and (explore_pattern :
                                                                   (Prims.of_int (23)))
                                                                (FStar_Range.mk_range
                                                                   "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                                                  (Prims.of_int (556))
-                                                                  (Prims.of_int (6))
+                                                                  (Prims.of_int (555))
+                                                                  (Prims.of_int (37))
                                                                   (Prims.of_int (561))
                                                                   (Prims.of_int (20)))
                                                                (FStar_Tactics_Effect.lift_div_tac
@@ -3979,7 +3980,7 @@ and (explore_pattern :
                                                (ge0, x,
                                                  FStar_Tactics_Types.Continue)
                                                patterns)) uu___1)))
-                        | FStar_Reflection_Data.Pat_Var bv ->
+                        | FStar_Reflection_Data.Pat_Var (bv, st) ->
                             Obj.magic
                               (Obj.repr
                                  (FStar_Tactics_Effect.tac_bind
@@ -3988,7 +3989,7 @@ and (explore_pattern :
                                        (Prims.of_int (565))
                                        (Prims.of_int (14))
                                        (Prims.of_int (565))
-                                       (Prims.of_int (65)))
+                                       (Prims.of_int (56)))
                                     (FStar_Range.mk_range
                                        "FStar.InteractiveHelpers.ExploreTerm.fst"
                                        (Prims.of_int (566))
@@ -3996,38 +3997,29 @@ and (explore_pattern :
                                        (Prims.of_int (566))
                                        (Prims.of_int (20)))
                                     (Obj.magic
-                                       (FStar_InteractiveHelpers_Base.genv_push_bv
-                                          ge0 bv
-                                          (FStar_Reflection_Builtins.pack_ln
-                                             FStar_Reflection_Data.Tv_Unknown)
-                                          false FStar_Pervasives_Native.None))
-                                    (fun ge1 ->
-                                       FStar_Tactics_Effect.lift_div_tac
-                                         (fun uu___1 ->
-                                            (ge1, x,
-                                              FStar_Tactics_Types.Continue)))))
-                        | FStar_Reflection_Data.Pat_Wild bv ->
-                            Obj.magic
-                              (Obj.repr
-                                 (FStar_Tactics_Effect.tac_bind
-                                    (FStar_Range.mk_range
-                                       "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                       (Prims.of_int (565))
-                                       (Prims.of_int (14))
-                                       (Prims.of_int (565))
-                                       (Prims.of_int (65)))
-                                    (FStar_Range.mk_range
-                                       "FStar.InteractiveHelpers.ExploreTerm.fst"
-                                       (Prims.of_int (566))
-                                       (Prims.of_int (4))
-                                       (Prims.of_int (566))
-                                       (Prims.of_int (20)))
-                                    (Obj.magic
-                                       (FStar_InteractiveHelpers_Base.genv_push_bv
-                                          ge0 bv
-                                          (FStar_Reflection_Builtins.pack_ln
-                                             FStar_Reflection_Data.Tv_Unknown)
-                                          false FStar_Pervasives_Native.None))
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (FStar_Range.mk_range
+                                             "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                             (Prims.of_int (565))
+                                             (Prims.of_int (34))
+                                             (Prims.of_int (565))
+                                             (Prims.of_int (45)))
+                                          (FStar_Range.mk_range
+                                             "FStar.InteractiveHelpers.ExploreTerm.fst"
+                                             (Prims.of_int (565))
+                                             (Prims.of_int (14))
+                                             (Prims.of_int (565))
+                                             (Prims.of_int (56)))
+                                          (Obj.magic
+                                             (FStar_Tactics_Builtins.unseal
+                                                st))
+                                          (fun uu___1 ->
+                                             (fun uu___1 ->
+                                                Obj.magic
+                                                  (FStar_InteractiveHelpers_Base.genv_push_bv
+                                                     ge0 bv uu___1 false
+                                                     FStar_Pervasives_Native.None))
+                                               uu___1)))
                                     (fun ge1 ->
                                        FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___1 ->
@@ -4051,7 +4043,7 @@ let (free_in :
          (Prims.of_int (574)) (Prims.of_int (4)) (Prims.of_int (574))
          (Prims.of_int (35)))
       (FStar_Range.mk_range "FStar.InteractiveHelpers.ExploreTerm.fst"
-         (Prims.of_int (576)) (Prims.of_int (2)) (Prims.of_int (593))
+         (Prims.of_int (575)) (Prims.of_int (4)) (Prims.of_int (593))
          (Prims.of_int (75)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ ->
@@ -4094,7 +4086,7 @@ let (free_in :
                     (Prims.of_int (589)) (Prims.of_int (23)))
                  (FStar_Range.mk_range
                     "FStar.InteractiveHelpers.ExploreTerm.fst"
-                    (Prims.of_int (591)) (Prims.of_int (2))
+                    (Prims.of_int (590)) (Prims.of_int (4))
                     (Prims.of_int (593)) (Prims.of_int (75)))
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___5 ->
@@ -4342,7 +4334,7 @@ let (free_in :
                                (Prims.of_int (591)) (Prims.of_int (20)))
                             (FStar_Range.mk_range
                                "FStar.InteractiveHelpers.ExploreTerm.fst"
-                               (Prims.of_int (592)) (Prims.of_int (2))
+                               (Prims.of_int (591)) (Prims.of_int (23))
                                (Prims.of_int (593)) (Prims.of_int (75)))
                             (Obj.magic (FStar_Tactics_Builtins.top_env ()))
                             (fun uu___ ->
@@ -4428,7 +4420,7 @@ let (abs_free_in :
            (Prims.of_int (599)) (Prims.of_int (12)) (Prims.of_int (599))
            (Prims.of_int (21)))
         (FStar_Range.mk_range "FStar.InteractiveHelpers.ExploreTerm.fst"
-           (Prims.of_int (600)) (Prims.of_int (2)) (Prims.of_int (607))
+           (Prims.of_int (599)) (Prims.of_int (24)) (Prims.of_int (607))
            (Prims.of_int (9))) (Obj.magic (free_in t))
         (fun fvl ->
            FStar_Tactics_Effect.lift_div_tac

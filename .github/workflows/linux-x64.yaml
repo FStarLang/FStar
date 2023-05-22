@@ -10,19 +10,10 @@ on:
         description: Refresh hints and advance version number
         required: true
         type: boolean
-      ci_test_min_opam_deps:
-        description: Test minimal opam package dependency versions
-        required: true
-        type: boolean
       ci_no_karamel:
         description: Disable Karamel extraction tests
         required: true
         type: boolean
-      ci_ocaml_version:
-        description: OCaml version
-        required: true
-        type: string
-        default: 4.12.0
       ci_skip_image_tag:
         description: Do not tag image
         required: true
@@ -30,44 +21,58 @@ on:
 jobs:
   build:
     runs-on: [self-hosted, linux, X64]
+    defaults:
+      run:
+        # Setting the default shell to bash. This is not only more standard,
+        # but also makes sure that we run with -o pipefail, so we can safely
+        # pipe data (such as | tee LOG) without missing out on failures
+        # and getting false positives. If you want to change the default shell,
+        # keep in mind you need a way to handle this.
+        shell: bash
     steps:
       - name: Record initial timestamp
         run: |
           echo "CI_INITIAL_TIMESTAMP=$(date '+%s')" >> $GITHUB_ENV
       - name: Check out repo        
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Identify the notification channel
         run: |
           echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' .docker/build/config.json)" >> $GITHUB_ENV
       - name: Set the refresh hints flag
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_refresh_hints }}
         run: |
+          # NOTE: this causes the build to record hints
           echo "CI_TARGET=uregressions-ulong" >> $GITHUB_ENV
-      - name: Populate test min opam deps arg
-        if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_test_min_opam_deps }}
-        run: |
-          echo "CI_DO_TEST_MIN_OPAM_DEPS=--build-arg CI_TEST_MIN_OPAM_DEPS=1" >> $GITHUB_ENV
       - name: Populate no karamel arg
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_no_karamel }}
         run: |
           echo "CI_DO_NO_KARAMEL=--build-arg CI_NO_KARAMEL=1" >> $GITHUB_ENV
-      - name: Populate ocaml version arg
-        if: ${{ (github.event_name == 'workflow_dispatch') }}
-        run: |
-          echo "${{inputs.ci_ocaml_version}}" | grep '^[0-9]*\(\.[0-9]*\)\+$'
-          echo "CI_DO_OCAML_VERSION=--build-arg OCAML_VERSION=${{inputs.ci_ocaml_version}}" >> $GITHUB_ENV
       - name: Populate skip image tag arg
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_skip_image_tag }}
         run: |
           echo "CI_SKIP_IMAGE_TAG=1" >> $GITHUB_ENV
+      - name: Enable resource monitoring
+        if: ${{ vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
+        run: |
+          echo "RESOURCEMONITOR=1" >> $GITHUB_ENV
+
+      - name: Make sure base image is present, or build it
+        run: |
+          if ! docker images | grep '^fstar_ci_base '; then
+            echo '*** REBUILDING fstar_ci_base image'
+            CI_IMAGEBUILD_INITIAL_TIMESTAMP=$(date '+%s')
+            docker build -f .docker/base.Dockerfile -t fstar_ci_base .
+            CI_IMAGEBUILD_FINAL_TIMESTAMP=$(date '+%s')
+            echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP='$CI_IMAGEBUILD_INITIAL_TIMESTAMP'" >> $GITHUB_ENV
+            echo "CI_IMAGEBUILD_FINAL_TIMESTAMP='$CI_IMAGEBUILD_FINAL_TIMESTAMP'" >> $GITHUB_ENV
+          fi
+
       - name: Build FStar and its dependencies
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
-          ci_docker_builder=builder_fstar_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}
-          echo "ci_docker_builder=$ci_docker_builder" >> $GITHUB_ENV
-          docker buildx create --name $ci_docker_builder --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000
+          echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
           if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker buildx build --builder $ci_docker_builder --pull --load --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" $CI_DO_TEST_MIN_OPAM_DEPS $CI_DO_OCAML_VERSION $CI_DO_NO_KARAMEL .
+          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg RESOURCEMONITOR=$RESOURCEMONITOR $CI_DO_NO_KARAMEL . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
@@ -76,12 +81,57 @@ jobs:
             docker tag $ci_docker_image_tag fstar:local-commit-$GITHUB_SHA
           fi
           $ci_docker_status
+
+      - name: Push the generated hints
+        if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_refresh_hints }}
+        run: |
+          FSTAR_HOME=$(docker run $ci_docker_image_tag /bin/bash -c 'echo $FSTAR_HOME')
+          docker run $ci_docker_image_tag bash -c "env DZOMO_GITHUB_TOKEN=$DZOMO_GITHUB_TOKEN $FSTAR_HOME/.scripts/advance.sh refresh_fstar_hints"
         env:
           DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
-      - name: Clean up temporary container
-        if: ${{ always() }}
+
+      - name: Collect resource monitoring files and summary
+        if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
+        continue-on-error: true
         run: |
-          docker buildx rm $ci_docker_builder
+          # docker cp needs absolute path, obtain FSTAR_HOME
+          FSTAR_HOME=$(docker run $ci_docker_image_tag /bin/bash -c 'echo $FSTAR_HOME')
+          # We briefly kick up a container from the generated image, so
+          # we can extract files from it. No need to start it though.
+          temp_container=$(docker create $ci_docker_image_tag)
+          docker cp $temp_container:${FSTAR_HOME}/rmon/ rmon
+          docker rm -f $temp_container
+
+          # Also, read these bottom-line values into the environment so they
+          # can go into the Slack message.
+          FSTAR_CI_MEASURE_CPU=$(awk -F':' '/Total CPU/ { print $2 }' rmon/res_summary.txt)
+          FSTAR_CI_MEASURE_MEM=$(awk -F':' '/Total memory/ { print $2 }' rmon/res_summary.txt)
+          echo "FSTAR_CI_MEASURE_CPU=$FSTAR_CI_MEASURE_CPU" >> $GITHUB_ENV
+          echo "FSTAR_CI_MEASURE_MEM=$FSTAR_CI_MEASURE_MEM" >> $GITHUB_ENV
+
+          # Final goodie: upload the summary to sprunge.us and add a link in
+          # the Slack message for a 1-click report.
+          RMON_URL=$(.scripts/sprang rmon/res_summary.txt)
+          echo "RMON_URL=$RMON_URL" >> $GITHUB_ENV
+
+      - name: Save resource monitor summary as artifact
+        if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v3
+        with:
+          name: Resource usage information (summary)
+          path: |
+            rmon/res_summary.txt
+
+      - name: Save resource monitor files as artifact
+        if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v3
+        with:
+          name: Resource usage information (individual)
+          path: |
+            rmon/rmon.tgz
+
       - name: Compute elapsed time and status message
         if: ${{ always() }}
         run: |
@@ -92,7 +142,7 @@ jobs:
           echo "CI_TIME_DIFF_H=$(( $CI_TIME_DIFF / 3600 ))" >> $GITHUB_ENV
           case ${{ job.status }} in
           (success)
-            if orange_contents="$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/orange_file.txt')" && [[ $orange_contents = '' ]] ; then
+            if orange_contents="$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/orange_file.txt')" && [[ $orange_contents = '' ]] ; then
               echo "CI_EMOJI=✅" >> $GITHUB_ENV
             else
               echo "CI_EMOJI=⚠" >> $GITHUB_ENV
@@ -105,12 +155,31 @@ jobs:
             echo "CI_EMOJI=❌" >> $GITHUB_ENV
             ;;
           esac
-          echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
-          echo 'CI_STATUS='"$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
+          echo "CI_COMMIT=$(echo ${{  github.event.head_commit.id || github.event.pull_request.head.sha || github.head_commit.id }} | grep -o '^........')" >> $GITHUB_ENV
+          echo 'CI_STATUS='"$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
+          if [ -n "$CI_IMAGEBUILD_INITIAL_TIMESTAMP" ]; then
+            DIFF=$(( $CI_IMAGEBUILD_FINAL_TIMESTAMP - $CI_IMAGEBUILD_INITIAL_TIMESTAMP ))
+            SS=$(( $DIFF % 60 ))
+            MM=$(( ($DIFF / 60) % 60 ))
+            HH=$(( $DIFF / 3600 ))
+            CI_IMAGEBUILD_MSG=" (base image rebuilt in ${HH}h ${MM}m ${SS}s)"
+            echo "CI_IMAGEBUILD_MSG='$CI_IMAGEBUILD_MSG'" >> $GITHUB_ENV
+          fi
+
+      - name: Output build log error summary
+        if: ${{ failure () }}
+        run: |
+          # Just outputs to the github snippet. Could be part of slack message.
+          # This command never triggers a failure
+          grep -C10 -E ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS || true
+          ERRORS_URL=$(.scripts/sprang BUILDLOG_ERRORS)
+          ERRORS_MSG=" <$ERRORS_URL|(Error summary)>"
+          echo "ERRORS_MSG=$ERRORS_MSG" >> $GITHUB_ENV
+
       - name: Post to the Slack channel
-        if: ${{ always() && (github.event_name != 'workflow_dispatch') }}
+        if: ${{ always() }}
         id: slack
-        uses: slackapi/slack-github-action@v1.16.0
+        uses: slackapi/slack-github-action@v1.23.0
         with:
           channel-id: ${{ env.CI_SLACK_CHANNEL }}
           payload: |
@@ -120,28 +189,35 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "<${{ github.event.head_commit.url || github.event.pull_request.html_url }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ github.event.head_commit.author.username || github.event.pull_request.user.login }}"
+                    "text": "<${{ github.event.head_commit.url || github.event.pull_request.html_url }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ github.event.head_commit.author.username || github.event.pull_request.user.login || github.head_commit.author.username }}"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "plain_text",
-                    "text": ${{ toJSON(github.event.head_commit.message || github.event.pull_request.title) }}
+                    "text": ${{ toJSON(github.event.head_commit.message || github.event.pull_request.title || github.head_commit.message || '<unknown>') }}
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ env.CI_STATUS }}>"
+                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ env.CI_STATUS }}>${{env.ERRORS_MSG}}"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "plain_text",
-                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s"
+                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }}h ${{ env.CI_TIME_DIFF_M }}min ${{ env.CI_TIME_DIFF_S }}s${{env.CI_IMAGEBUILD_MSG}}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{env.RMON_URL}}|Resource summary>\nTotal CPU usage: ${{ env.FSTAR_CI_MEASURE_CPU }}\nTotal memory usage: ${{ env.FSTAR_CI_MEASURE_MEM }}"
                   }
                 }
               ]
