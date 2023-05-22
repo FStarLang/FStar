@@ -1,0 +1,11 @@
+*~
+*.checked
+.depend*
+*.cm*
+lib/steel/*.a
+lib/steel/*.ml
+lib/steel/runtime
+lib/steel/META
+lib/steel/dune-package
+*.krml
+*.o

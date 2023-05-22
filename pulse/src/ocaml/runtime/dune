@@ -1,0 +1,11 @@
+(include_subdirs unqualified)
+(library
+ (name steel_runtime)
+ (public_name steel.runtime)
+ (libraries
+    fstar.lib
+ )
+ (modes native)
+ (wrapped false)
+ (flags (:standard -w -A))
+)
