@@ -136,12 +136,18 @@ val colorize_cyan: string -> string
 
 type out_channel
 
-val open_file_out_channel : string -> out_channel
-val close_out_channel : out_channel -> unit
-
 val stderr: out_channel
 val stdout: out_channel
+
+val open_file_for_writing : string -> out_channel
+val close_out_channel : out_channel -> unit
+
+val flush: out_channel -> unit
+
 val fprint: out_channel -> string -> list string -> unit
+
+(* Adds a newline and flushes *)
+val append_to_file: out_channel -> string -> unit
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -160,13 +166,8 @@ val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list string -> string
 
-type file_handle
-val open_file_for_writing: string -> file_handle
-val append_to_file: file_handle -> string -> unit
-val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val copy_file: string -> string -> unit
-val flush_file: file_handle -> unit
 val delete_file: string -> unit
 val file_get_contents: string -> string
 val file_get_lines: string -> list string
