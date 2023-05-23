@@ -17,7 +17,7 @@ let with_file_outchannel :
     fun uu___ ->
       (fun fn ->
          fun k ->
-           let outc = FStar_Compiler_Util.open_file_out_channel fn in
+           let outc = FStar_Compiler_Util.open_file_for_writing fn in
            Obj.magic
              (try (fun uu___1 -> match () with | () -> k outc) ()
               with

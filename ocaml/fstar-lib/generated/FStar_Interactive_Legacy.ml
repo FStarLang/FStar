@@ -239,7 +239,7 @@ type interactive_state =
     ;
   buffer: input_chunks Prims.list FStar_Compiler_Effect.ref ;
   log:
-    FStar_Compiler_Util.file_handle FStar_Pervasives_Native.option
+    FStar_Compiler_Util.out_channel FStar_Pervasives_Native.option
       FStar_Compiler_Effect.ref
     }
 let (__proj__Mkinteractive_state__item__chunk :
@@ -259,7 +259,7 @@ let (__proj__Mkinteractive_state__item__buffer :
     match projectee with | { chunk; stdin; buffer; log;_} -> buffer
 let (__proj__Mkinteractive_state__item__log :
   interactive_state ->
-    FStar_Compiler_Util.file_handle FStar_Pervasives_Native.option
+    FStar_Compiler_Util.out_channel FStar_Pervasives_Native.option
       FStar_Compiler_Effect.ref)
   =
   fun projectee ->
@@ -289,7 +289,7 @@ let rec (read_chunk : unit -> input_chunks) =
                transcript1) in
         fun line ->
           (FStar_Compiler_Util.append_to_file transcript line;
-           FStar_Compiler_Util.flush_file transcript)
+           FStar_Compiler_Util.flush transcript)
       else (fun uu___3 -> ()) in
     let stdin =
       let uu___1 = FStar_Compiler_Effect.op_Bang s.stdin in
