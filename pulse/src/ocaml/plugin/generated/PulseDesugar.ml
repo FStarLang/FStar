@@ -1,5 +1,11 @@
 open Prims
 type error = (Prims.string * FStar_Compiler_Range_Type.range)
+let (as_string :
+  (Prims.string, Prims.string) FStar_Pervasives.either -> Prims.string) =
+  fun s ->
+    match s with
+    | FStar_Pervasives.Inl s1 -> s1
+    | FStar_Pervasives.Inr s1 -> Prims.op_Hat "to_string failed: " s1
 type 'a err = ('a, error) FStar_Pervasives.either
 let op_let_Question :
   'a 'b . 'a err -> ('a -> 'b err) -> ('b, error) FStar_Pervasives.either =
@@ -413,7 +419,7 @@ let (stapp_or_return :
                                        uu___9 r)
                               else ret s)))
            | uu___1 -> ret s)
-let (tosyntax :
+let (tosyntax' :
   env_t -> FStar_Parser_AST.term -> FStar_Syntax_Syntax.term err) =
   fun env ->
     fun t ->
@@ -438,13 +444,24 @@ let (tosyntax :
             FStar_Compiler_Util.format2
               "tosyntax failed on embedded term: %s\n msg %s\n" uu___2 msg in
           fail uu___1 t.FStar_Parser_AST.range
+let (tosyntax :
+  env_t -> FStar_Parser_AST.term -> FStar_Syntax_Syntax.term err) =
+  fun env ->
+    fun t ->
+      let uu___ = tosyntax' env t in
+      op_let_Question uu___
+        (fun s ->
+           (let uu___2 = FStar_Parser_AST.term_to_string t in
+            let uu___3 = FStar_Syntax_Print.term_to_string s in
+            FStar_Compiler_Util.print2 "Desugared %s to %s\n" uu___2 uu___3);
+           return s)
 let (desugar_term :
   env_t -> FStar_Parser_AST.term -> PulseSyntaxWrapper.term err) =
   fun env ->
     fun t ->
       let uu___ = tosyntax env t in
       op_let_Question uu___
-        (fun t1 -> let uu___1 = as_term t1 in return uu___1)
+        (fun s -> let uu___1 = as_term s in return uu___1)
 let (desugar_term_opt :
   env_t ->
     FStar_Parser_AST.term FStar_Pervasives_Native.option ->
@@ -470,7 +487,16 @@ let rec (interpret_vprop_constructors :
                PulseSyntaxWrapper.tm_star uu___3 uu___4
            | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
                FStar_Syntax_Syntax.fv_eq_lid fv pure_lid ->
-               let uu___2 = as_term l in PulseSyntaxWrapper.tm_pure uu___2
+               let res =
+                 let uu___2 = as_term l in PulseSyntaxWrapper.tm_pure uu___2 in
+               ((let uu___3 = FStar_Syntax_Print.term_to_string v in
+                 let uu___4 =
+                   let uu___5 =
+                     PulseSyntaxWrapper.term_to_string env.tcenv res in
+                   as_string uu___5 in
+                 FStar_Compiler_Util.print2 "Interpreting %s as %s\n" uu___3
+                   uu___4);
+                res)
            | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                FStar_Syntax_Syntax.fv_eq_lid fv emp_lid ->
                PulseSyntaxWrapper.tm_emp
@@ -620,10 +646,17 @@ let rec (desugar_stmt :
                      let uu___3 = desugar_vprop env1 invariant in
                      op_let_Question uu___3
                        (fun inv ->
-                          let uu___4 =
-                            PulseSyntaxWrapper.close_term inv
-                              bv.FStar_Syntax_Syntax.index in
-                          return uu___4) in
+                          (let uu___5 =
+                             let uu___6 =
+                               PulseSyntaxWrapper.term_to_string env1.tcenv
+                                 inv in
+                             as_string uu___6 in
+                           FStar_Compiler_Util.print1
+                             "Desugared while invariant to: %s\n" uu___5);
+                          (let uu___5 =
+                             PulseSyntaxWrapper.close_term inv
+                               bv.FStar_Syntax_Syntax.index in
+                           return uu___5)) in
                op_let_Question uu___1
                  (fun invariant1 ->
                     let uu___2 = desugar_stmt env body in
@@ -884,12 +917,6 @@ let (desugar_computation_type :
                                     PulseSyntaxWrapper.ghost_comp inames1 pre
                                       uu___6 post1 in
                                   return uu___5))))
-let (as_string :
-  (Prims.string, Prims.string) FStar_Pervasives.either -> Prims.string) =
-  fun s ->
-    match s with
-    | FStar_Pervasives.Inl s1 -> s1
-    | FStar_Pervasives.Inr s1 -> Prims.op_Hat "to_string failed: " s1
 let (desugar_decl :
   env_t -> PulseSugar.decl -> PulseSyntaxWrapper.st_term err) =
   fun env ->

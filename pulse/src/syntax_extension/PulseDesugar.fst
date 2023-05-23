@@ -13,7 +13,13 @@ module TcEnv = FStar.TypeChecker.Env
 module SS = FStar.Syntax.Subst
 module R = FStar.Compiler.Range
 module BU = FStar.Compiler.Util
+module P =  FStar.Syntax.Print
 type error = string & R.range
+
+let as_string (s:either string string) : string =
+   match s with
+   | Inl s -> s
+   | Inr s -> "to_string failed: " ^ s
 
 let err a = either a error
 
@@ -164,7 +170,7 @@ let stapp_or_return (env:env_t) (s:S.term)
     | _ -> ret s
 
 
-let tosyntax (env:env_t) (t:A.term)
+let tosyntax' (env:env_t) (t:A.term)
   : err S.term
   = try 
       return (ToSyntax.desugar_term env.tcenv.dsenv t)
@@ -180,10 +186,18 @@ let tosyntax (env:env_t) (t:A.term)
                          msg)
              t.range
 
+let tosyntax (env:env_t) (t:A.term)
+  : err S.term
+  = let? s = tosyntax' env t in
+    BU.print2 "Desugared %s to %s\n"
+              (A.term_to_string t)
+              (P.term_to_string s);
+    return s
+
 let desugar_term (env:env_t) (t:A.term)
   : err SW.term 
-  = let? t = tosyntax env t in
-    return (as_term t)
+  = let? s = tosyntax env t in
+    return (as_term s)
   
 let desugar_term_opt (env:env_t) (t:option A.term)
   : err SW.term
@@ -202,7 +216,12 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
 
     | S.Tm_fvar fv, [(l, _)]
       when S.fv_eq_lid fv pure_lid ->
-      SW.tm_pure (as_term l)
+      let res = SW.tm_pure (as_term l) in
+      BU.print2 "Interpreting %s as %s\n"
+        (P.term_to_string v)
+        (as_string (SW.term_to_string env.tcenv res));
+      res
+      
 
     | S.Tm_fvar fv, []
       when S.fv_eq_lid fv emp_lid ->
@@ -292,6 +311,8 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? invariant = 
         let env, bv = push_bv env id in
         let? inv = desugar_vprop env invariant in
+        BU.print1 "Desugared while invariant to: %s\n"
+                  (as_string (SW.term_to_string env.tcenv inv));
         return (SW.close_term inv bv.index)
       in
       let? body = desugar_stmt env body in
@@ -400,10 +421,6 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
       let? inames = desugar_term env inames in
       return SW.(ghost_comp inames pre (mk_binder c.return_name ret) post)      
 
-let as_string (s:either string string) : string =
-   match s with
-   | Inl s -> s
-   | Inr s -> "to_string failed: " ^ s
 
 let desugar_decl (env:env_t)
                  (p:Sugar.decl)

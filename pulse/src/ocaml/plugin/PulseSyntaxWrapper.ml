@@ -146,7 +146,10 @@ let tac_to_string (env:Env.env) f =
     match f ps with
     | FStar_Tactics_Result.Success (x, _) -> Inl x
     | FStar_Tactics_Result.Failed (exn, _) -> Inr (print_exn exn)
-  
+
+let term_to_string (env:Env.env) (t:term)
+  : (string, string) either
+  = tac_to_string env (Pulse_Syntax_Printer.term_to_string t)
 let st_term_to_string (env:Env.env) (t:st_term)
   : (string, string) either
   = tac_to_string env (Pulse_Syntax_Printer.st_term_to_string t)
