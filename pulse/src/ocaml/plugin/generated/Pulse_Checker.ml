@@ -1503,7 +1503,7 @@ let (check_if :
                                                       Pulse_Typing.extend hyp
                                                         (FStar_Pervasives.Inl
                                                            (Pulse_Typing.mk_eq2
-                                                              Pulse_Typing.u0
+                                                              Pulse_Elaborate_Pure.u0
                                                               Pulse_Typing.tm_bool
                                                               b1 eq_v)) g))
                                               (fun uu___1 ->
@@ -3613,7 +3613,7 @@ let (check_while :
                                                   (push_context "invariant"
                                                      g1)
                                                   (Pulse_Syntax_Base.Tm_ExistsSL
-                                                     (Pulse_Typing.u0,
+                                                     (Pulse_Elaborate_Pure.u0,
                                                        Pulse_Typing.tm_bool,
                                                        inv,
                                                        Pulse_Syntax_Base.should_elim_true))))
@@ -3638,7 +3638,7 @@ let (check_while :
                                                                     (Prims.op_Negation
                                                                     (Pulse_Syntax_Base.eq_univ
                                                                     u
-                                                                    Pulse_Typing.u0))
+                                                                    Pulse_Elaborate_Pure.u0))
                                                                  then
                                                                    Obj.repr
                                                                     (FStar_Tactics_Derived.fail
@@ -7282,7 +7282,7 @@ let (check_withlocal :
                                                                  if
                                                                    Pulse_Syntax_Base.eq_univ
                                                                     init_u
-                                                                    Pulse_Typing.u0
+                                                                    Pulse_Elaborate_Pure.u0
                                                                  then
                                                                    Obj.magic
                                                                     (Obj.repr

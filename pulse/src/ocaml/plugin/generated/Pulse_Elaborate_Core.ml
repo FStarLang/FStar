@@ -320,14 +320,14 @@ let rec (elab_st_typing :
                 elab_st_typing
                   (Pulse_Typing.extend uu___5
                      (FStar_Pervasives.Inl
-                        (Pulse_Typing.mk_eq2 Pulse_Typing.u0
+                        (Pulse_Typing.mk_eq2 Pulse_Elaborate_Pure.u0
                            Pulse_Typing.tm_bool b Pulse_Typing.tm_true))
                      uu___) uu___1 uu___3 e1_typing in
               let re2 =
                 elab_st_typing
                   (Pulse_Typing.extend uu___5
                      (FStar_Pervasives.Inl
-                        (Pulse_Typing.mk_eq2 Pulse_Typing.u0
+                        (Pulse_Typing.mk_eq2 Pulse_Elaborate_Pure.u0
                            Pulse_Typing.tm_bool b Pulse_Typing.tm_false))
                      uu___) uu___2 uu___3 e2_typing in
               FStar_Reflection_Typing.mk_if rb re1 re2
