@@ -2532,6 +2532,19 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
             | _ -> tm
         else tm
       end
+      else if S.fv_eq_lid fv PC.subtype_of_lid
+      then begin
+        let is_unit ty = 
+          match (SS.compress ty).n with
+          | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
+          | _ -> false
+        in
+        match args with
+        | [(t, _); (ty, _)]
+          when is_unit ty && U.is_sub_singleton t ->
+          w U.t_true
+        | _ -> tm
+      end
       else begin
            match U.is_auto_squash tm with
            | Some (U_zero, t)
