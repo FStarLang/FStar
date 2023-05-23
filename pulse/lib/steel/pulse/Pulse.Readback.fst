@@ -1,7 +1,6 @@
 module Pulse.Readback
 module R = FStar.Reflection
 module L = FStar.List.Tot
-// module T = FStar.Tactics
 module RT = FStar.Reflection.Typing
 open Pulse.Syntax.Base
 open Pulse.Reflection.Util
@@ -12,49 +11,7 @@ let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
   | None -> None
   | Some x -> g x
 
-// let rec readback_universe (u:R.universe)
-//   : o:option universe{ Some? o ==> elab_universe (Some?.v o) == u } =
-//   match R.inspect_universe u with
-//   | R.Uv_Zero ->
-//     Some U_zero
 
-//   | R.Uv_Succ u' -> (
-//     match readback_universe u' with
-//     | None -> None
-//     | Some u' -> 
-//       Some (U_succ u')
-//     )
-
-//   | R.Uv_Name (s, r) ->
-//     assume (r == FStar.Reflection.Typing.Builtins.dummy_range);
-//     Some (U_var s)
-
-//   | R.Uv_Max [u1; u2] -> (
-//     assume (u2 << u);     //??
-//     let u1' = readback_universe u1 in
-//     let u2' = readback_universe u2 in
-//     match u1', u2' with
-//     | Some u1', Some u2' ->
-//       Some (U_max u1' u2')
-//     | _ -> None
-//     )
-
-//   | _ -> None
-
-// let rec readback_universes (us:list R.universe)
-//   : o:option (list universe) { 
-//           Some? o ==> List.Tot.map elab_universe (Some?.v o) == us 
-//     }
-//   = match us with
-//     | [] -> Some []
-//     | hd::tl -> 
-//       match readback_universe hd with
-//       | None -> None
-//       | Some hd -> 
-//         match readback_universes tl with
-//         | None -> None
-//         | Some tl -> Some (hd::tl)
-    
 #push-options "--z3rlimit_factor 20"
 // TODO: FIXME: may be mark as opaque_to_smt
 let try_readback_st_comp
@@ -177,12 +134,9 @@ let rec readback_ty (t:R.term)
 
   | Tv_App hd (a, q) -> 
     let aux () = 
-      // let? hd' = readback_ty hd in
       match q with
       | R.Q_Meta _ -> None
       | _ -> Some (Tm_FStar t FStar.Range.range_0)
-        // let? arg' = readback_ty a in
-        // Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:term {elab_term ty == t})
     in
     let head, args = collect_app_refined t in
     begin
@@ -245,26 +199,6 @@ let rec readback_ty (t:R.term)
 
   | Tv_Arrow _ _ ->
     Some (Tm_FStar t (range_of_term t))
-  // (
-  //   let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs; binder_sort=sort } =
-  //       inspect_binder b
-  //   in
-  //   assume (attrs == []);
-  //   match aq with
-  //   | R.Q_Meta _ -> None
-  //   | _ -> 
-  //     let q = readback_qual aq in
-  //     RT.pack_inspect_binder b;  // This does not have SMTPat
-  //     let bv_view = inspect_bv bv in
-  //     assume (bv_view.bv_index == 0);
-  //     let c_view = inspect_comp c in
-  //     (match c_view with
-  //      | C_Total c_t ->
-  //        let? b_ty' = readback_ty sort in
-  //        let? c' = readback_comp c_t in
-  //        Some (tm_arrow {binder_ty=b_ty';binder_ppname=bv_view.bv_ppname} q c' <: ty:term{ elab_term ty == t})
-  //     | _ -> None)
-  //   )
 
   | Tv_Type _ -> Some (Tm_FStar t (range_of_term t))
 
@@ -274,18 +208,6 @@ let rec readback_ty (t:R.term)
 
   | Tv_Let _ _ _ _ _ _ ->
     Some (Tm_FStar t (range_of_term t))
-    // if recf
-    // then None // TODO: FIXME: T.fail "readback_ty: unexpected recursive Tv_Let"
-    // else begin
-    //   assume (attrs == []);
-    //   let bv_view = inspect_bv bv in
-    //   assume (bv_view.bv_index == 0);
-    //   let? bv_t' = readback_ty ty in
-    //   let? def' = readback_ty def in
-    //   let? body' = readback_ty body in
-    //   FStar.Sealed.sealed_singl bv_view.bv_ppname RT.pp_name_default;
-    //   Some (Tm_Let bv_t' def' body' <: ty:term { elab_term ty == t })
-    // end
 
   | Tv_Match _ _ _ -> Some (Tm_FStar t (range_of_term t))
 

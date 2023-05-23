@@ -58,26 +58,10 @@ let unexpected_term msg t =
                             msg
                             (T.term_to_string t))
 
-// let readback_universe (u:R.universe) : T.Tac (err universe) =
-//   try match Readback.readback_universe u with
-//       | None -> 
-//         error (Printf.sprintf "Unexpected universe : %s"
-//                               (T.universe_to_ast_string u))
-//       | Some u -> Inl u
-//   with
-//       | TacticFailure msg ->
-//         error (Printf.sprintf "Unexpected universe (%s) : %s"
-//                               msg
-//                               (T.universe_to_ast_string u))
-//       | _ ->
-//         error (Printf.sprintf "Unexpected universe : %s"
-//                               (T.universe_to_ast_string u))
-
 let readback_maybe_unknown_ty t =
   match Readback.readback_ty t with
   | Some t -> t
   | None -> Tm_Unknown
-
 
 let readback_ty (g:R.env) (t:R.term)
   : T.Tac (err term)
@@ -279,25 +263,6 @@ let rec shift_bvs_in_tm_fstar (t:host_term) (n:nat) : Tac host_term =
 //
 let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   match t with
-  // | Tm_BVar bv ->
-  //   if n < bv.bv_index
-  //   then tm_bvar {bv with bv_index = bv.bv_index - 1}
-  //   else t
-  // | Tm_var _
-  // | Tm_fvar _
-  // | Tm_uinst _ _
-  // | Tm_constant _ -> t
-  // | Tm_refine b t ->
-  //   Tm_refine {b with binder_ty=shift_bvs_in_else b.binder_ty n}
-  //             (shift_bvs_in_else t (n + 1))
-  // | Tm_PureApp head q arg ->
-  //   Tm_PureApp (shift_bvs_in_else head n)
-  //              q
-  //              (shift_bvs_in_else arg n)
-  // | Tm_Let t e1 e2 ->
-  //   Tm_Let (shift_bvs_in_else t n)
-  //          (shift_bvs_in_else e1 n)
-  //          (shift_bvs_in_else e2 (n + 1))
   | Tm_Emp -> t
   | Tm_Pure p -> Tm_Pure (shift_bvs_in_else p n)
   | Tm_Star l r ->

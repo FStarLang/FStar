@@ -24,11 +24,6 @@ let rec elab_term (top:term)
   : R.term
   = let open R in
     match top with
-    // | Tm_PureApp e1 q e2 ->
-    //   let e1 = elab_term e1 in
-    //   let e2 = elab_term e2 in
-    //   R.mk_app e1 [(e2, elab_qual q)]
-
     | Tm_VProp ->
       pack_ln (Tv_FVar (pack_fv vprop_lid))
 
@@ -176,26 +171,10 @@ let tm_fvar (l:fv) : term =
   Tm_FStar (R.pack_ln (R.Tv_FVar (R.pack_fv l.fv_name)))
            l.fv_range
 
-// let is_tm_fvar (t:term) : option fv =
-//   match t with
-//   | Tm_FStar host_term fv_range ->
-//     (match R.inspect_ln host_term with
-//      | R.Tv_FVar fv -> Some {fv_name=R.inspect_fv fv; fv_range}
-//      | _ -> None)
-//   | _ -> None
-
 let tm_uinst (l:fv) (us:list universe) : term =
   Tm_FStar (R.pack_ln (R.Tv_UInst (R.pack_fv l.fv_name) us))
            l.fv_range
 
-// let is_tm_uinst (t:term) : option (fv & list universe) =
-//   match t with
-//   | Tm_FStar host_term fv_range ->
-//     (match R.inspect_ln host_term with
-//      | R.Tv_UInst fv us -> Some ({fv_name=R.inspect_fv fv; fv_range}, us)
-//      | _ -> None)
-//   | _ -> None
-  
 let tm_constant (c:constant) : term =
   Tm_FStar (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
 

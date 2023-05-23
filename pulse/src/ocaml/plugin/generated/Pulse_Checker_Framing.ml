@@ -37,232 +37,135 @@ let (check_one_vprop :
         (unit FStar_Pervasives_Native.option, unit)
           FStar_Tactics_Effect.tac_repr)
   =
-  fun g ->
-    fun p ->
-      fun q ->
-        FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-             (Prims.of_int (111)) (Prims.of_int (2)) (Prims.of_int (113))
-             (Prims.of_int (53)))
-          (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-             (Prims.of_int (114)) (Prims.of_int (2)) (Prims.of_int (134))
-             (Prims.of_int (13)))
-          (Obj.magic
-             (FStar_Tactics_Effect.tac_bind
-                (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                   (Prims.of_int (111)) (Prims.of_int (10))
-                   (Prims.of_int (113)) (Prims.of_int (53)))
-                (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                   (Prims.of_int (111)) (Prims.of_int (2))
-                   (Prims.of_int (113)) (Prims.of_int (53)))
-                (Obj.magic
-                   (FStar_Tactics_Effect.tac_bind
-                      (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                         (Prims.of_int (113)) (Prims.of_int (13))
-                         (Prims.of_int (113)) (Prims.of_int (52)))
-                      (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                         (Prims.of_int (111)) (Prims.of_int (10))
-                         (Prims.of_int (113)) (Prims.of_int (53)))
-                      (Obj.magic (Pulse_Syntax_Printer.term_to_string q))
-                      (fun uu___ ->
-                         (fun uu___ ->
-                            Obj.magic
-                              (FStar_Tactics_Effect.tac_bind
-                                 (FStar_Range.mk_range
-                                    "Pulse.Checker.Framing.fst"
-                                    (Prims.of_int (111)) (Prims.of_int (10))
-                                    (Prims.of_int (113)) (Prims.of_int (53)))
-                                 (FStar_Range.mk_range
-                                    "Pulse.Checker.Framing.fst"
-                                    (Prims.of_int (111)) (Prims.of_int (10))
-                                    (Prims.of_int (113)) (Prims.of_int (53)))
-                                 (Obj.magic
-                                    (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "Pulse.Checker.Framing.fst"
-                                          (Prims.of_int (112))
-                                          (Prims.of_int (13))
-                                          (Prims.of_int (112))
-                                          (Prims.of_int (52)))
-                                       (FStar_Range.mk_range
-                                          "FStar.Printf.fst"
-                                          (Prims.of_int (121))
-                                          (Prims.of_int (8))
-                                          (Prims.of_int (123))
-                                          (Prims.of_int (44)))
-                                       (Obj.magic
-                                          (Pulse_Syntax_Printer.term_to_string
-                                             p))
-                                       (fun uu___1 ->
-                                          FStar_Tactics_Effect.lift_div_tac
-                                            (fun uu___2 ->
-                                               fun x ->
-                                                 Prims.strcat
-                                                   (Prims.strcat
-                                                      "Framing.check_one_vprop, p: "
-                                                      (Prims.strcat uu___1
-                                                         " and q: "))
-                                                   (Prims.strcat x "\n")))))
-                                 (fun uu___1 ->
-                                    FStar_Tactics_Effect.lift_div_tac
-                                      (fun uu___2 -> uu___1 uu___)))) uu___)))
-                (fun uu___ ->
-                   (fun uu___ ->
-                      Obj.magic (FStar_Tactics_Builtins.print uu___)) uu___)))
-          (fun uu___ ->
-             (fun uu___ ->
-                if Pulse_Syntax_Base.eq_tm p q
-                then
-                  Obj.magic
-                    (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                          (Prims.of_int (115)) (Prims.of_int (15))
-                          (Prims.of_int (115)) (Prims.of_int (45)))
-                       (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                          (Prims.of_int (115)) (Prims.of_int (49))
-                          (Prims.of_int (115)) (Prims.of_int (67)))
-                       (Obj.magic
-                          (FStar_Tactics_Builtins.print
-                             "eq_tm returns true\n"))
-                       (fun uu___1 ->
-                          FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___2 -> FStar_Pervasives_Native.Some ())))
-                else
-                  Obj.magic
-                    (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                          (Prims.of_int (117)) (Prims.of_int (12))
-                          (Prims.of_int (117)) (Prims.of_int (80)))
-                       (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                          (Prims.of_int (117)) (Prims.of_int (83))
-                          (Prims.of_int (134)) (Prims.of_int (13)))
-                       (Obj.magic
-                          (FStar_Tactics_Builtins.print
-                             "Framing.check_one_vprop: checking extensional equality\n"))
-                       (fun uu___2 ->
-                          (fun uu___2 ->
-                             Obj.magic
-                               (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range
-                                     "Pulse.Checker.Framing.fst"
-                                     (Prims.of_int (119)) (Prims.of_int (6))
-                                     (Prims.of_int (125)) (Prims.of_int (23)))
-                                  (FStar_Range.mk_range
-                                     "Pulse.Checker.Framing.fst"
-                                     (Prims.of_int (127)) (Prims.of_int (4))
-                                     (Prims.of_int (134)) (Prims.of_int (13)))
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___3 ->
-                                        match (p, q) with
-                                        | (Pulse_Syntax_Base.Tm_FStar
-                                           (uu___4, uu___5), uu___6) -> true
-                                        | (uu___4, Pulse_Syntax_Base.Tm_FStar
-                                           (uu___5, uu___6)) -> true
-                                        | (uu___4, uu___5) ->
-                                            (match ((Pulse_Syntax_Util.is_pure_app
-                                                       p),
-                                                     (Pulse_Syntax_Util.is_pure_app
-                                                        q))
-                                             with
-                                             | (FStar_Pervasives_Native.Some
-                                                (hd_p, uu___6, uu___7),
-                                                FStar_Pervasives_Native.Some
-                                                (hd_q, uu___8, uu___9)) ->
-                                                 Pulse_Syntax_Base.eq_tm hd_p
-                                                   hd_q
-                                             | (uu___6, uu___7) -> false)))
-                                  (fun uu___3 ->
-                                     (fun check_extensional_equality ->
-                                        if check_extensional_equality
-                                        then
-                                          Obj.magic
-                                            (Obj.repr
-                                               (FStar_Tactics_Effect.tac_bind
-                                                  (FStar_Range.mk_range
-                                                     "Pulse.Checker.Framing.fst"
-                                                     (Prims.of_int (129))
-                                                     (Prims.of_int (15))
-                                                     (Prims.of_int (129))
-                                                     (Prims.of_int (26)))
-                                                  (FStar_Range.mk_range
-                                                     "Pulse.Checker.Framing.fst"
-                                                     (Prims.of_int (129))
-                                                     (Prims.of_int (29))
-                                                     (Prims.of_int (133))
-                                                     (Prims.of_int (23)))
-                                                  (FStar_Tactics_Effect.lift_div_tac
-                                                     (fun uu___3 ->
-                                                        Pulse_Elaborate_Pure.elab_term
-                                                          p))
-                                                  (fun uu___3 ->
-                                                     (fun v0 ->
-                                                        Obj.magic
-                                                          (FStar_Tactics_Effect.tac_bind
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Checker.Framing.fst"
-                                                                (Prims.of_int (130))
-                                                                (Prims.of_int (15))
-                                                                (Prims.of_int (130))
-                                                                (Prims.of_int (26)))
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Checker.Framing.fst"
-                                                                (Prims.of_int (131))
-                                                                (Prims.of_int (6))
-                                                                (Prims.of_int (133))
-                                                                (Prims.of_int (23)))
-                                                             (FStar_Tactics_Effect.lift_div_tac
-                                                                (fun uu___3
-                                                                   ->
-                                                                   Pulse_Elaborate_Pure.elab_term
-                                                                    q))
-                                                             (fun uu___3 ->
-                                                                (fun v1 ->
-                                                                   Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (131))
-                                                                    (Prims.of_int (12))
-                                                                    (Prims.of_int (131))
-                                                                    (Prims.of_int (44)))
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (131))
-                                                                    (Prims.of_int (6))
-                                                                    (Prims.of_int (133))
-                                                                    (Prims.of_int (23)))
-                                                                    (Obj.magic
-                                                                    (FStar_Tactics_Builtins.check_equiv
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun g ->
+           fun p ->
+             fun q ->
+               if Pulse_Syntax_Base.eq_tm p q
+               then
+                 Obj.magic
+                   (Obj.repr
+                      (FStar_Tactics_Effect.lift_div_tac
+                         (fun uu___ -> FStar_Pervasives_Native.Some ())))
+               else
+                 Obj.magic
+                   (Obj.repr
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
+                            (Prims.of_int (119)) (Prims.of_int (6))
+                            (Prims.of_int (125)) (Prims.of_int (23)))
+                         (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
+                            (Prims.of_int (127)) (Prims.of_int (4))
+                            (Prims.of_int (134)) (Prims.of_int (13)))
+                         (FStar_Tactics_Effect.lift_div_tac
+                            (fun uu___1 ->
+                               match (p, q) with
+                               | (Pulse_Syntax_Base.Tm_FStar
+                                  (uu___2, uu___3), uu___4) -> true
+                               | (uu___2, Pulse_Syntax_Base.Tm_FStar
+                                  (uu___3, uu___4)) -> true
+                               | (uu___2, uu___3) ->
+                                   (match ((Pulse_Syntax_Util.is_pure_app p),
+                                            (Pulse_Syntax_Util.is_pure_app q))
+                                    with
+                                    | (FStar_Pervasives_Native.Some
+                                       (hd_p, uu___4, uu___5),
+                                       FStar_Pervasives_Native.Some
+                                       (hd_q, uu___6, uu___7)) ->
+                                        Pulse_Syntax_Base.eq_tm hd_p hd_q
+                                    | (uu___4, uu___5) -> false)))
+                         (fun uu___1 ->
+                            (fun check_extensional_equality ->
+                               if check_extensional_equality
+                               then
+                                 Obj.magic
+                                   (Obj.repr
+                                      (FStar_Tactics_Effect.tac_bind
+                                         (FStar_Range.mk_range
+                                            "Pulse.Checker.Framing.fst"
+                                            (Prims.of_int (129))
+                                            (Prims.of_int (15))
+                                            (Prims.of_int (129))
+                                            (Prims.of_int (26)))
+                                         (FStar_Range.mk_range
+                                            "Pulse.Checker.Framing.fst"
+                                            (Prims.of_int (129))
+                                            (Prims.of_int (29))
+                                            (Prims.of_int (133))
+                                            (Prims.of_int (23)))
+                                         (FStar_Tactics_Effect.lift_div_tac
+                                            (fun uu___1 ->
+                                               Pulse_Elaborate_Pure.elab_term
+                                                 p))
+                                         (fun uu___1 ->
+                                            (fun v0 ->
+                                               Obj.magic
+                                                 (FStar_Tactics_Effect.tac_bind
+                                                    (FStar_Range.mk_range
+                                                       "Pulse.Checker.Framing.fst"
+                                                       (Prims.of_int (130))
+                                                       (Prims.of_int (15))
+                                                       (Prims.of_int (130))
+                                                       (Prims.of_int (26)))
+                                                    (FStar_Range.mk_range
+                                                       "Pulse.Checker.Framing.fst"
+                                                       (Prims.of_int (131))
+                                                       (Prims.of_int (6))
+                                                       (Prims.of_int (133))
+                                                       (Prims.of_int (23)))
+                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                       (fun uu___1 ->
+                                                          Pulse_Elaborate_Pure.elab_term
+                                                            q))
+                                                    (fun uu___1 ->
+                                                       (fun v1 ->
+                                                          Obj.magic
+                                                            (FStar_Tactics_Effect.tac_bind
+                                                               (FStar_Range.mk_range
+                                                                  "Pulse.Checker.Framing.fst"
+                                                                  (Prims.of_int (131))
+                                                                  (Prims.of_int (12))
+                                                                  (Prims.of_int (131))
+                                                                  (Prims.of_int (44)))
+                                                               (FStar_Range.mk_range
+                                                                  "Pulse.Checker.Framing.fst"
+                                                                  (Prims.of_int (131))
+                                                                  (Prims.of_int (6))
+                                                                  (Prims.of_int (133))
+                                                                  (Prims.of_int (23)))
+                                                               (Obj.magic
+                                                                  (FStar_Tactics_Builtins.check_equiv
                                                                     (Pulse_Typing.elab_env
                                                                     g) v0 v1))
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    match uu___3
+                                                               (fun uu___1 ->
+                                                                  FStar_Tactics_Effect.lift_div_tac
+                                                                    (
+                                                                    fun
+                                                                    uu___2 ->
+                                                                    match uu___1
                                                                     with
                                                                     | 
                                                                     (FStar_Pervasives_Native.Some
                                                                     token,
-                                                                    uu___5)
+                                                                    uu___3)
                                                                     ->
                                                                     FStar_Pervasives_Native.Some
                                                                     ()
                                                                     | 
                                                                     (FStar_Pervasives_Native.None,
-                                                                    uu___5)
+                                                                    uu___3)
                                                                     ->
                                                                     FStar_Pervasives_Native.None))))
-                                                                  uu___3)))
-                                                       uu___3)))
-                                        else
-                                          Obj.magic
-                                            (Obj.repr
-                                               (FStar_Tactics_Effect.lift_div_tac
-                                                  (fun uu___4 ->
-                                                     FStar_Pervasives_Native.None))))
-                                       uu___3))) uu___2))) uu___)
+                                                         uu___1))) uu___1)))
+                               else
+                                 Obj.magic
+                                   (Obj.repr
+                                      (FStar_Tactics_Effect.lift_div_tac
+                                         (fun uu___2 ->
+                                            FStar_Pervasives_Native.None))))
+                              uu___1)))) uu___2 uu___1 uu___
 type ('g, 'p, 'qs) split_one_vprop_res =
   (Pulse_Syntax_Base.term Prims.list, Pulse_Syntax_Base.term, unit,
     Pulse_Syntax_Base.term Prims.list) FStar_Pervasives.dtuple4
@@ -405,11 +308,11 @@ let rec (try_split_vprop :
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                              (Prims.of_int (260)) (Prims.of_int (12))
-                              (Prims.of_int (260)) (Prims.of_int (43)))
+                              (Prims.of_int (207)) (Prims.of_int (12))
+                              (Prims.of_int (207)) (Prims.of_int (43)))
                            (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                              (Prims.of_int (260)) (Prims.of_int (6))
-                              (Prims.of_int (283)) (Prims.of_int (30)))
+                              (Prims.of_int (207)) (Prims.of_int (6))
+                              (Prims.of_int (230)) (Prims.of_int (30)))
                            (Obj.magic (maybe_split_one_vprop g hd ctxt))
                            (fun uu___ ->
                               (fun uu___ ->
@@ -419,15 +322,15 @@ let rec (try_split_vprop :
                                        (FStar_Tactics_Effect.tac_bind
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Framing.fst"
-                                             (Prims.of_int (261))
+                                             (Prims.of_int (208))
                                              (Prims.of_int (38))
-                                             (Prims.of_int (261))
+                                             (Prims.of_int (208))
                                              (Prims.of_int (65)))
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Framing.fst"
-                                             (Prims.of_int (261))
+                                             (Prims.of_int (208))
                                              (Prims.of_int (16))
-                                             (Prims.of_int (261))
+                                             (Prims.of_int (208))
                                              (Prims.of_int (65)))
                                           (Obj.magic
                                              (try_split_vprop g tl ctxt))
@@ -443,15 +346,15 @@ let rec (try_split_vprop :
                                        (FStar_Tactics_Effect.tac_bind
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Framing.fst"
-                                             (Prims.of_int (267))
+                                             (Prims.of_int (214))
                                              (Prims.of_int (12))
-                                             (Prims.of_int (267))
+                                             (Prims.of_int (214))
                                              (Prims.of_int (47)))
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Framing.fst"
-                                             (Prims.of_int (269))
+                                             (Prims.of_int (216))
                                              (Prims.of_int (8))
-                                             (Prims.of_int (283))
+                                             (Prims.of_int (230))
                                              (Prims.of_int (30)))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___1 -> ()))
@@ -461,15 +364,15 @@ let rec (try_split_vprop :
                                                   (FStar_Tactics_Effect.tac_bind
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Framing.fst"
-                                                        (Prims.of_int (269))
+                                                        (Prims.of_int (216))
                                                         (Prims.of_int (14))
-                                                        (Prims.of_int (269))
+                                                        (Prims.of_int (216))
                                                         (Prims.of_int (42)))
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Framing.fst"
-                                                        (Prims.of_int (269))
+                                                        (Prims.of_int (216))
                                                         (Prims.of_int (8))
-                                                        (Prims.of_int (283))
+                                                        (Prims.of_int (230))
                                                         (Prims.of_int (30)))
                                                      (Obj.magic
                                                         (try_split_vprop g tl
@@ -509,10 +412,10 @@ let (split_vprop :
         fun req ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-               (Prims.of_int (293)) (Prims.of_int (18)) (Prims.of_int (293))
+               (Prims.of_int (240)) (Prims.of_int (18)) (Prims.of_int (240))
                (Prims.of_int (36)))
             (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-               (Prims.of_int (293)) (Prims.of_int (39)) (Prims.of_int (321))
+               (Prims.of_int (240)) (Prims.of_int (39)) (Prims.of_int (268))
                (Prims.of_int (47)))
             (FStar_Tactics_Effect.lift_div_tac
                (fun uu___ -> vprop_as_list ctxt))
@@ -521,11 +424,11 @@ let (split_vprop :
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                          (Prims.of_int (294)) (Prims.of_int (17))
-                          (Prims.of_int (294)) (Prims.of_int (34)))
+                          (Prims.of_int (241)) (Prims.of_int (17))
+                          (Prims.of_int (241)) (Prims.of_int (34)))
                        (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                          (Prims.of_int (295)) (Prims.of_int (5))
-                          (Prims.of_int (321)) (Prims.of_int (47)))
+                          (Prims.of_int (242)) (Prims.of_int (5))
+                          (Prims.of_int (268)) (Prims.of_int (47)))
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ -> vprop_as_list req))
                        (fun uu___ ->
@@ -534,12 +437,12 @@ let (split_vprop :
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "Pulse.Checker.Framing.fst"
-                                     (Prims.of_int (295)) (Prims.of_int (11))
-                                     (Prims.of_int (295)) (Prims.of_int (41)))
+                                     (Prims.of_int (242)) (Prims.of_int (11))
+                                     (Prims.of_int (242)) (Prims.of_int (41)))
                                   (FStar_Range.mk_range
                                      "Pulse.Checker.Framing.fst"
-                                     (Prims.of_int (295)) (Prims.of_int (5))
-                                     (Prims.of_int (321)) (Prims.of_int (47)))
+                                     (Prims.of_int (242)) (Prims.of_int (5))
+                                     (Prims.of_int (268)) (Prims.of_int (47)))
                                   (Obj.magic (try_split_vprop g req_l ctxt_l))
                                   (fun uu___ ->
                                      FStar_Tactics_Effect.lift_div_tac
@@ -581,10 +484,10 @@ let (check_vprop_equiv :
         fun vp1_typing ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-               (Prims.of_int (346)) (Prims.of_int (8)) (Prims.of_int (346))
+               (Prims.of_int (293)) (Prims.of_int (8)) (Prims.of_int (293))
                (Prims.of_int (40)))
             (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-               (Prims.of_int (346)) (Prims.of_int (2)) (Prims.of_int (372))
+               (Prims.of_int (293)) (Prims.of_int (2)) (Prims.of_int (319))
                (Prims.of_int (54))) (Obj.magic (split_vprop g vp1 () vp2))
             (fun uu___ ->
                (fun uu___ ->
@@ -595,39 +498,39 @@ let (check_vprop_equiv :
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Range.mk_range
                                  "Pulse.Checker.Framing.fst"
-                                 (Prims.of_int (348)) (Prims.of_int (11))
-                                 (Prims.of_int (352)) (Prims.of_int (94)))
+                                 (Prims.of_int (295)) (Prims.of_int (11))
+                                 (Prims.of_int (299)) (Prims.of_int (94)))
                               (FStar_Range.mk_range
                                  "Pulse.Checker.Framing.fst"
-                                 (Prims.of_int (348)) (Prims.of_int (4))
-                                 (Prims.of_int (352)) (Prims.of_int (94)))
+                                 (Prims.of_int (295)) (Prims.of_int (4))
+                                 (Prims.of_int (299)) (Prims.of_int (94)))
                               (Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (FStar_Range.mk_range
                                        "Pulse.Checker.Framing.fst"
-                                       (Prims.of_int (352))
+                                       (Prims.of_int (299))
                                        (Prims.of_int (16))
-                                       (Prims.of_int (352))
+                                       (Prims.of_int (299))
                                        (Prims.of_int (93)))
                                     (FStar_Range.mk_range
                                        "Pulse.Checker.Framing.fst"
-                                       (Prims.of_int (348))
+                                       (Prims.of_int (295))
                                        (Prims.of_int (11))
-                                       (Prims.of_int (352))
+                                       (Prims.of_int (299))
                                        (Prims.of_int (94)))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Framing.fst"
-                                             (Prims.of_int (352))
+                                             (Prims.of_int (299))
                                              (Prims.of_int (36))
-                                             (Prims.of_int (352))
+                                             (Prims.of_int (299))
                                              (Prims.of_int (92)))
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Framing.fst"
-                                             (Prims.of_int (352))
+                                             (Prims.of_int (299))
                                              (Prims.of_int (16))
-                                             (Prims.of_int (352))
+                                             (Prims.of_int (299))
                                              (Prims.of_int (93)))
                                           (Obj.magic
                                              (FStar_Tactics_Util.map
@@ -644,29 +547,29 @@ let (check_vprop_equiv :
                                             (FStar_Tactics_Effect.tac_bind
                                                (FStar_Range.mk_range
                                                   "Pulse.Checker.Framing.fst"
-                                                  (Prims.of_int (348))
+                                                  (Prims.of_int (295))
                                                   (Prims.of_int (11))
-                                                  (Prims.of_int (352))
+                                                  (Prims.of_int (299))
                                                   (Prims.of_int (94)))
                                                (FStar_Range.mk_range
                                                   "Pulse.Checker.Framing.fst"
-                                                  (Prims.of_int (348))
+                                                  (Prims.of_int (295))
                                                   (Prims.of_int (11))
-                                                  (Prims.of_int (352))
+                                                  (Prims.of_int (299))
                                                   (Prims.of_int (94)))
                                                (Obj.magic
                                                   (FStar_Tactics_Effect.tac_bind
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Framing.fst"
-                                                        (Prims.of_int (351))
+                                                        (Prims.of_int (298))
                                                         (Prims.of_int (16))
-                                                        (Prims.of_int (351))
+                                                        (Prims.of_int (298))
                                                         (Prims.of_int (38)))
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Framing.fst"
-                                                        (Prims.of_int (348))
+                                                        (Prims.of_int (295))
                                                         (Prims.of_int (11))
-                                                        (Prims.of_int (352))
+                                                        (Prims.of_int (299))
                                                         (Prims.of_int (94)))
                                                      (Obj.magic
                                                         (Pulse_Syntax_Printer.term_to_string
@@ -677,23 +580,23 @@ let (check_vprop_equiv :
                                                              (FStar_Tactics_Effect.tac_bind
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Checker.Framing.fst"
-                                                                   (Prims.of_int (348))
+                                                                   (Prims.of_int (295))
                                                                    (Prims.of_int (11))
-                                                                   (Prims.of_int (352))
+                                                                   (Prims.of_int (299))
                                                                    (Prims.of_int (94)))
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Checker.Framing.fst"
-                                                                   (Prims.of_int (348))
+                                                                   (Prims.of_int (295))
                                                                    (Prims.of_int (11))
-                                                                   (Prims.of_int (352))
+                                                                   (Prims.of_int (299))
                                                                    (Prims.of_int (94)))
                                                                 (Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (350))
+                                                                    (Prims.of_int (297))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (350))
+                                                                    (Prims.of_int (297))
                                                                     (Prims.of_int (38)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Printf.fst"
@@ -753,29 +656,29 @@ let (check_vprop_equiv :
                                   (FStar_Tactics_Effect.tac_bind
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Framing.fst"
-                                        (Prims.of_int (369))
+                                        (Prims.of_int (316))
                                         (Prims.of_int (13))
-                                        (Prims.of_int (372))
+                                        (Prims.of_int (319))
                                         (Prims.of_int (54)))
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Framing.fst"
-                                        (Prims.of_int (369))
+                                        (Prims.of_int (316))
                                         (Prims.of_int (6))
-                                        (Prims.of_int (372))
+                                        (Prims.of_int (319))
                                         (Prims.of_int (54)))
                                      (Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
                                            (FStar_Range.mk_range
                                               "Pulse.Checker.Framing.fst"
-                                              (Prims.of_int (372))
+                                              (Prims.of_int (319))
                                               (Prims.of_int (29))
-                                              (Prims.of_int (372))
+                                              (Prims.of_int (319))
                                               (Prims.of_int (53)))
                                            (FStar_Range.mk_range
                                               "Pulse.Checker.Framing.fst"
-                                              (Prims.of_int (369))
+                                              (Prims.of_int (316))
                                               (Prims.of_int (13))
-                                              (Prims.of_int (372))
+                                              (Prims.of_int (319))
                                               (Prims.of_int (54)))
                                            (Obj.magic
                                               (Pulse_Syntax_Printer.term_to_string
@@ -786,29 +689,29 @@ let (check_vprop_equiv :
                                                    (FStar_Tactics_Effect.tac_bind
                                                       (FStar_Range.mk_range
                                                          "Pulse.Checker.Framing.fst"
-                                                         (Prims.of_int (369))
+                                                         (Prims.of_int (316))
                                                          (Prims.of_int (13))
-                                                         (Prims.of_int (372))
+                                                         (Prims.of_int (319))
                                                          (Prims.of_int (54)))
                                                       (FStar_Range.mk_range
                                                          "Pulse.Checker.Framing.fst"
-                                                         (Prims.of_int (369))
+                                                         (Prims.of_int (316))
                                                          (Prims.of_int (13))
-                                                         (Prims.of_int (372))
+                                                         (Prims.of_int (319))
                                                          (Prims.of_int (54)))
                                                       (Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
                                                             (FStar_Range.mk_range
                                                                "Pulse.Checker.Framing.fst"
-                                                               (Prims.of_int (371))
+                                                               (Prims.of_int (318))
                                                                (Prims.of_int (29))
-                                                               (Prims.of_int (371))
+                                                               (Prims.of_int (318))
                                                                (Prims.of_int (51)))
                                                             (FStar_Range.mk_range
                                                                "Pulse.Checker.Framing.fst"
-                                                               (Prims.of_int (369))
+                                                               (Prims.of_int (316))
                                                                (Prims.of_int (13))
-                                                               (Prims.of_int (372))
+                                                               (Prims.of_int (319))
                                                                (Prims.of_int (54)))
                                                             (Obj.magic
                                                                (Pulse_Syntax_Printer.term_to_string
@@ -820,23 +723,23 @@ let (check_vprop_equiv :
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (369))
+                                                                    (Prims.of_int (316))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (372))
+                                                                    (Prims.of_int (319))
                                                                     (Prims.of_int (54)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (369))
+                                                                    (Prims.of_int (316))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (372))
+                                                                    (Prims.of_int (319))
                                                                     (Prims.of_int (54)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (370))
+                                                                    (Prims.of_int (317))
                                                                     (Prims.of_int (29))
-                                                                    (Prims.of_int (370))
+                                                                    (Prims.of_int (317))
                                                                     (Prims.of_int (51)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Printf.fst"
@@ -902,11 +805,11 @@ let (try_frame_pre :
             fun t_typing ->
               FStar_Tactics_Effect.tac_bind
                 (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                   (Prims.of_int (390)) (Prims.of_int (12))
-                   (Prims.of_int (390)) (Prims.of_int (29)))
+                   (Prims.of_int (337)) (Prims.of_int (12))
+                   (Prims.of_int (337)) (Prims.of_int (29)))
                 (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                   (Prims.of_int (391)) (Prims.of_int (4))
-                   (Prims.of_int (427)) (Prims.of_int (7)))
+                   (Prims.of_int (338)) (Prims.of_int (4))
+                   (Prims.of_int (374)) (Prims.of_int (7)))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ -> Pulse_Syntax_Base.st_comp_of_comp c))
                 (fun uu___ ->
@@ -914,11 +817,11 @@ let (try_frame_pre :
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                              (Prims.of_int (391)) (Prims.of_int (10))
-                              (Prims.of_int (391)) (Prims.of_int (44)))
+                              (Prims.of_int (338)) (Prims.of_int (10))
+                              (Prims.of_int (338)) (Prims.of_int (44)))
                            (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                              (Prims.of_int (391)) (Prims.of_int (4))
-                              (Prims.of_int (427)) (Prims.of_int (7)))
+                              (Prims.of_int (338)) (Prims.of_int (4))
+                              (Prims.of_int (374)) (Prims.of_int (7)))
                            (Obj.magic
                               (split_vprop g pre () s.Pulse_Syntax_Base.pre))
                            (fun uu___ ->
@@ -938,15 +841,15 @@ let (try_frame_pre :
                                           (FStar_Tactics_Effect.tac_bind
                                              (FStar_Range.mk_range
                                                 "Pulse.Checker.Framing.fst"
-                                                (Prims.of_int (396))
+                                                (Prims.of_int (343))
                                                 (Prims.of_int (10))
-                                                (Prims.of_int (396))
+                                                (Prims.of_int (343))
                                                 (Prims.of_int (51)))
                                              (FStar_Range.mk_range
                                                 "Pulse.Checker.Framing.fst"
-                                                (Prims.of_int (396))
+                                                (Prims.of_int (343))
                                                 (Prims.of_int (54))
-                                                (Prims.of_int (427))
+                                                (Prims.of_int (374))
                                                 (Prims.of_int (7)))
                                              (FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___1 ->
@@ -959,15 +862,15 @@ let (try_frame_pre :
                                                      (FStar_Tactics_Effect.tac_bind
                                                         (FStar_Range.mk_range
                                                            "Pulse.Checker.Framing.fst"
-                                                           (Prims.of_int (397))
+                                                           (Prims.of_int (344))
                                                            (Prims.of_int (14))
-                                                           (Prims.of_int (397))
+                                                           (Prims.of_int (344))
                                                            (Prims.of_int (21)))
                                                         (FStar_Range.mk_range
                                                            "Pulse.Checker.Framing.fst"
-                                                           (Prims.of_int (397))
+                                                           (Prims.of_int (344))
                                                            (Prims.of_int (24))
-                                                           (Prims.of_int (427))
+                                                           (Prims.of_int (374))
                                                            (Prims.of_int (7)))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___1 ->
@@ -979,15 +882,15 @@ let (try_frame_pre :
                                                                 (FStar_Tactics_Effect.tac_bind
                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (398))
+                                                                    (Prims.of_int (345))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (398))
+                                                                    (Prims.of_int (345))
                                                                     (Prims.of_int (24)))
                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (398))
+                                                                    (Prims.of_int (345))
                                                                     (Prims.of_int (27))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                    (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1002,15 +905,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (399))
+                                                                    (Prims.of_int (346))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (399))
+                                                                    (Prims.of_int (346))
                                                                     (Prims.of_int (32)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (404))
+                                                                    (Prims.of_int (351))
                                                                     (Prims.of_int (55))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1025,15 +928,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (405))
+                                                                    (Prims.of_int (352))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (405))
+                                                                    (Prims.of_int (352))
                                                                     (Prims.of_int (33)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (405))
+                                                                    (Prims.of_int (352))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1048,15 +951,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (406))
+                                                                    (Prims.of_int (353))
                                                                     (Prims.of_int (41))
-                                                                    (Prims.of_int (406))
+                                                                    (Prims.of_int (353))
                                                                     (Prims.of_int (43)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (406))
+                                                                    (Prims.of_int (353))
                                                                     (Prims.of_int (46))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1070,15 +973,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (407))
+                                                                    (Prims.of_int (354))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (407))
+                                                                    (Prims.of_int (354))
                                                                     (Prims.of_int (35)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (407))
+                                                                    (Prims.of_int (354))
                                                                     (Prims.of_int (40))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1104,15 +1007,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (408))
+                                                                    (Prims.of_int (355))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (408))
+                                                                    (Prims.of_int (355))
                                                                     (Prims.of_int (37)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (409))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1127,15 +1030,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (410))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (410))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (45)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (410))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1153,15 +1056,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (411))
+                                                                    (Prims.of_int (358))
                                                                     (Prims.of_int (59))
-                                                                    (Prims.of_int (411))
+                                                                    (Prims.of_int (358))
                                                                     (Prims.of_int (61)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (411))
+                                                                    (Prims.of_int (358))
                                                                     (Prims.of_int (64))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1175,15 +1078,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (416))
+                                                                    (Prims.of_int (363))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (416))
+                                                                    (Prims.of_int (363))
                                                                     (Prims.of_int (21)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (417))
+                                                                    (Prims.of_int (364))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1197,15 +1100,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (418))
+                                                                    (Prims.of_int (365))
                                                                     (Prims.of_int (23))
-                                                                    (Prims.of_int (418))
+                                                                    (Prims.of_int (365))
                                                                     (Prims.of_int (60)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (418))
+                                                                    (Prims.of_int (365))
                                                                     (Prims.of_int (63))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_vprop_with_core
@@ -1221,15 +1124,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (419))
+                                                                    (Prims.of_int (366))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (419))
+                                                                    (Prims.of_int (366))
                                                                     (Prims.of_int (81)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (419))
+                                                                    (Prims.of_int (366))
                                                                     (Prims.of_int (84))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_vprop_with_core
@@ -1246,15 +1149,15 @@ let (try_frame_pre :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (420))
+                                                                    (Prims.of_int (367))
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (420))
+                                                                    (Prims.of_int (367))
                                                                     (Prims.of_int (62)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (419))
+                                                                    (Prims.of_int (366))
                                                                     (Prims.of_int (84))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (7)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_universe
@@ -1337,11 +1240,11 @@ let (frame_empty :
                   fun d ->
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                         (Prims.of_int (440)) (Prims.of_int (12))
-                         (Prims.of_int (440)) (Prims.of_int (43)))
+                         (Prims.of_int (387)) (Prims.of_int (12))
+                         (Prims.of_int (387)) (Prims.of_int (43)))
                       (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                         (Prims.of_int (440)) (Prims.of_int (46))
-                         (Prims.of_int (480)) (Prims.of_int (5)))
+                         (Prims.of_int (387)) (Prims.of_int (46))
+                         (Prims.of_int (427)) (Prims.of_int (5)))
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             Pulse_Typing.T_Frame (g, t, c0, pre, (), d)))
@@ -1351,12 +1254,12 @@ let (frame_empty :
                               (FStar_Tactics_Effect.tac_bind
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Framing.fst"
-                                    (Prims.of_int (441)) (Prims.of_int (12))
-                                    (Prims.of_int (441)) (Prims.of_int (28)))
+                                    (Prims.of_int (388)) (Prims.of_int (12))
+                                    (Prims.of_int (388)) (Prims.of_int (28)))
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Framing.fst"
-                                    (Prims.of_int (441)) (Prims.of_int (31))
-                                    (Prims.of_int (480)) (Prims.of_int (5)))
+                                    (Prims.of_int (388)) (Prims.of_int (31))
+                                    (Prims.of_int (427)) (Prims.of_int (5)))
                                  (FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___ ->
                                        Pulse_Typing.add_frame c0 pre))
@@ -1366,15 +1269,15 @@ let (frame_empty :
                                          (FStar_Tactics_Effect.tac_bind
                                             (FStar_Range.mk_range
                                                "Pulse.Checker.Framing.fst"
-                                               (Prims.of_int (442))
+                                               (Prims.of_int (389))
                                                (Prims.of_int (12))
-                                               (Prims.of_int (442))
+                                               (Prims.of_int (389))
                                                (Prims.of_int (29)))
                                             (FStar_Range.mk_range
                                                "Pulse.Checker.Framing.fst"
-                                               (Prims.of_int (442))
+                                               (Prims.of_int (389))
                                                (Prims.of_int (32))
-                                               (Prims.of_int (480))
+                                               (Prims.of_int (427))
                                                (Prims.of_int (5)))
                                             (FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___ ->
@@ -1386,15 +1289,15 @@ let (frame_empty :
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Framing.fst"
-                                                          (Prims.of_int (443))
+                                                          (Prims.of_int (390))
                                                           (Prims.of_int (30))
-                                                          (Prims.of_int (443))
+                                                          (Prims.of_int (390))
                                                           (Prims.of_int (31)))
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Framing.fst"
-                                                          (Prims.of_int (443))
+                                                          (Prims.of_int (390))
                                                           (Prims.of_int (34))
-                                                          (Prims.of_int (480))
+                                                          (Prims.of_int (427))
                                                           (Prims.of_int (5)))
                                                        (FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___ -> d1))
@@ -1404,15 +1307,15 @@ let (frame_empty :
                                                                (FStar_Tactics_Effect.tac_bind
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (31)))
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (480))
+                                                                    (Prims.of_int (427))
                                                                     (Prims.of_int (5)))
                                                                   (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1438,15 +1341,15 @@ let (frame_empty :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (445))
+                                                                    (Prims.of_int (392))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (445))
+                                                                    (Prims.of_int (392))
                                                                     (Prims.of_int (32)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (446))
+                                                                    (Prims.of_int (393))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (480))
+                                                                    (Prims.of_int (427))
                                                                     (Prims.of_int (5)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1461,15 +1364,15 @@ let (frame_empty :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (447))
+                                                                    (Prims.of_int (394))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (447))
+                                                                    (Prims.of_int (394))
                                                                     (Prims.of_int (19)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (447))
+                                                                    (Prims.of_int (394))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (480))
+                                                                    (Prims.of_int (427))
                                                                     (Prims.of_int (5)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1483,15 +1386,15 @@ let (frame_empty :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (395))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (395))
                                                                     (Prims.of_int (22)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (395))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (480))
+                                                                    (Prims.of_int (427))
                                                                     (Prims.of_int (5)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1506,15 +1409,15 @@ let (frame_empty :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (451))
+                                                                    (Prims.of_int (398))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (451))
+                                                                    (Prims.of_int (398))
                                                                     (Prims.of_int (44)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (452))
+                                                                    (Prims.of_int (399))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (480))
+                                                                    (Prims.of_int (427))
                                                                     (Prims.of_int (5)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_vprop_with_core
@@ -1530,15 +1433,15 @@ let (frame_empty :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (453))
+                                                                    (Prims.of_int (400))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (453))
+                                                                    (Prims.of_int (400))
                                                                     (Prims.of_int (59)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (452))
+                                                                    (Prims.of_int (399))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (480))
+                                                                    (Prims.of_int (427))
                                                                     (Prims.of_int (5)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_universe
@@ -1573,15 +1476,15 @@ let (frame_empty :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (459))
+                                                                    (Prims.of_int (406))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (459))
+                                                                    (Prims.of_int (406))
                                                                     (Prims.of_int (20)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (460))
+                                                                    (Prims.of_int (407))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (479))
+                                                                    (Prims.of_int (426))
                                                                     (Prims.of_int (36)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1596,15 +1499,15 @@ let (frame_empty :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (465))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (466))
+                                                                    (Prims.of_int (413))
                                                                     (Prims.of_int (63)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Framing.fst"
-                                                                    (Prims.of_int (479))
+                                                                    (Prims.of_int (426))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (479))
+                                                                    (Prims.of_int (426))
                                                                     (Prims.of_int (36)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_vprop_with_core

@@ -263,10 +263,10 @@ let (mk_binder : Prims.string -> term -> binder) =
 let (gen_uvar : unit -> (term, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "Pulse.Syntax.Base.fsti" (Prims.of_int (194))
-         (Prims.of_int (10)) (Prims.of_int (194)) (Prims.of_int (22)))
-      (FStar_Range.mk_range "Pulse.Syntax.Base.fsti" (Prims.of_int (194))
-         (Prims.of_int (2)) (Prims.of_int (194)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.Base.fsti" (Prims.of_int (193))
+         (Prims.of_int (10)) (Prims.of_int (193)) (Prims.of_int (22)))
+      (FStar_Range.mk_range "Pulse.Syntax.Base.fsti" (Prims.of_int (193))
+         (Prims.of_int (2)) (Prims.of_int (193)) (Prims.of_int (22)))
       (Obj.magic (FStar_Tactics_Builtins.fresh ()))
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> Tm_UVar uu___1))
