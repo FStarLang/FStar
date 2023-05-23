@@ -52,7 +52,6 @@ let (as_fv : FStar_Reflection_Types.name -> fv) =
 type 't not_tv_unknown = unit
 type host_term = FStar_Reflection_Types.term
 type term =
-  | Tm_PureApp of term * qualifier FStar_Pervasives_Native.option * term 
   | Tm_Emp 
   | Tm_Pure of term 
   | Tm_Star of term * term 
@@ -64,8 +63,6 @@ type term =
   | Tm_UVar of Prims.nat 
   | Tm_FStar of host_term * range 
   | Tm_Unknown 
-let uu___is_Tm_PureApp uu___ =
-  match uu___ with | Tm_PureApp _ -> true | _ -> false
 let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
 let uu___is_Tm_Pure uu___ = match uu___ with | Tm_Pure _ -> true | _ -> false
 let uu___is_Tm_Star uu___ = match uu___ with | Tm_Star _ -> true | _ -> false
@@ -288,8 +285,6 @@ let rec (eq_tm : term -> term -> Prims.bool) =
       | (Tm_Inames, Tm_Inames) -> true
       | (Tm_EmpInames, Tm_EmpInames) -> true
       | (Tm_Unknown, Tm_Unknown) -> true
-      | (Tm_PureApp (h1, o1, t11), Tm_PureApp (h2, o2, t21)) ->
-          ((eq_tm h1 h2) && (o1 = o2)) && (eq_tm t11 t21)
       | (Tm_Star (l1, r1), Tm_Star (l2, r2)) ->
           (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Pure p1, Tm_Pure p2) -> eq_tm p1 p2
@@ -396,17 +391,6 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_Protect { t = t11;_}, Tm_Protect { t = t21;_}) ->
           eq_st_term t11 t21
       | uu___ -> false
-let rec (leftmost_head_and_args :
-  term ->
-    (term * (qualifier FStar_Pervasives_Native.option * term) Prims.list))
-  =
-  fun t ->
-    match t with
-    | Tm_PureApp (hd, q, arg) ->
-        let uu___ = leftmost_head_and_args hd in
-        (match uu___ with
-         | (hd1, args) -> (hd1, (FStar_List_Tot_Base.op_At args [(q, arg)])))
-    | uu___ -> (t, [])
 let (comp_res : comp -> term) =
   fun c ->
     match c with

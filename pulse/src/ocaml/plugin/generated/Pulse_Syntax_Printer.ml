@@ -44,75 +44,6 @@ let rec (term_to_string :
   fun uu___ ->
     (fun t ->
        match t with
-       | Pulse_Syntax_Base.Tm_PureApp (head, q, arg) ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                      (Prims.of_int (60)) (Prims.of_int (8))
-                      (Prims.of_int (60)) (Prims.of_int (28)))
-                   (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                      (Prims.of_int (57)) (Prims.of_int (6))
-                      (Prims.of_int (60)) (Prims.of_int (28)))
-                   (Obj.magic (term_to_string arg))
-                   (fun uu___ ->
-                      (fun uu___ ->
-                         Obj.magic
-                           (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "Pulse.Syntax.Printer.fst"
-                                 (Prims.of_int (57)) (Prims.of_int (6))
-                                 (Prims.of_int (60)) (Prims.of_int (28)))
-                              (FStar_Range.mk_range
-                                 "Pulse.Syntax.Printer.fst"
-                                 (Prims.of_int (57)) (Prims.of_int (6))
-                                 (Prims.of_int (60)) (Prims.of_int (28)))
-                              (Obj.magic
-                                 (FStar_Tactics_Effect.tac_bind
-                                    (FStar_Range.mk_range
-                                       "Pulse.Syntax.Printer.fst"
-                                       (Prims.of_int (57)) (Prims.of_int (6))
-                                       (Prims.of_int (60))
-                                       (Prims.of_int (28)))
-                                    (FStar_Range.mk_range
-                                       "Pulse.Syntax.Printer.fst"
-                                       (Prims.of_int (57)) (Prims.of_int (6))
-                                       (Prims.of_int (60))
-                                       (Prims.of_int (28)))
-                                    (Obj.magic
-                                       (FStar_Tactics_Effect.tac_bind
-                                          (FStar_Range.mk_range
-                                             "Pulse.Syntax.Printer.fst"
-                                             (Prims.of_int (58))
-                                             (Prims.of_int (8))
-                                             (Prims.of_int (58))
-                                             (Prims.of_int (29)))
-                                          (FStar_Range.mk_range
-                                             "FStar.Printf.fst"
-                                             (Prims.of_int (121))
-                                             (Prims.of_int (8))
-                                             (Prims.of_int (123))
-                                             (Prims.of_int (44)))
-                                          (Obj.magic (term_to_string head))
-                                          (fun uu___1 ->
-                                             FStar_Tactics_Effect.lift_div_tac
-                                               (fun uu___2 ->
-                                                  fun x ->
-                                                    fun x1 ->
-                                                      Prims.strcat
-                                                        (Prims.strcat
-                                                           (Prims.strcat "("
-                                                              (Prims.strcat
-                                                                 uu___1 " "))
-                                                           (Prims.strcat x ""))
-                                                        (Prims.strcat x1 ")")))))
-                                    (fun uu___1 ->
-                                       FStar_Tactics_Effect.lift_div_tac
-                                         (fun uu___2 ->
-                                            uu___1 (qual_to_string q)))))
-                              (fun uu___1 ->
-                                 FStar_Tactics_Effect.lift_div_tac
-                                   (fun uu___2 -> uu___1 uu___)))) uu___)))
        | Pulse_Syntax_Base.Tm_Emp ->
            Obj.magic
              (Obj.repr
@@ -313,8 +244,8 @@ let rec (term_to_string :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                      (Prims.of_int (107)) (Prims.of_int (32))
-                      (Prims.of_int (107)) (Prims.of_int (52)))
+                      (Prims.of_int (107)) (Prims.of_int (34))
+                      (Prims.of_int (107)) (Prims.of_int (54)))
                    (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
                       (Prims.of_int (19)) (Prims.of_int (590))
                       (Prims.of_int (31)))
@@ -322,8 +253,8 @@ let rec (term_to_string :
                    (fun uu___1 ->
                       FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 ->
-                           Prims.strcat "(tm_fstar) ("
-                             (Prims.strcat uu___1 ")")))))) uu___
+                           Prims.strcat "((tm_fstar) ("
+                             (Prims.strcat uu___1 "))")))))) uu___
 let (binder_to_string :
   Pulse_Syntax_Base.binder ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)

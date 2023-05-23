@@ -222,17 +222,12 @@ let rec (readback_ty :
         FStar_Pervasives_Native.Some (Pulse_Elaborate_Pure.tm_uinst fv1 us)
     | FStar_Reflection_Data.Tv_App (hd, (a, q)) ->
         let aux uu___ =
-          op_let_Question (readback_ty hd)
-            (fun hd' ->
-               match q with
-               | FStar_Reflection_Data.Q_Meta uu___1 ->
-                   FStar_Pervasives_Native.None
-               | uu___1 ->
-                   op_let_Question (readback_ty a)
-                     (fun arg' ->
-                        FStar_Pervasives_Native.Some
-                          (Pulse_Syntax_Base.Tm_PureApp
-                             (hd', (readback_qual q), arg')))) in
+          match q with
+          | FStar_Reflection_Data.Q_Meta uu___1 ->
+              FStar_Pervasives_Native.None
+          | uu___1 ->
+              FStar_Pervasives_Native.Some
+                (Pulse_Syntax_Base.Tm_FStar (t, FStar_Range.range_0)) in
         let uu___ = collect_app_refined t in
         (match uu___ with
          | (head, args) ->

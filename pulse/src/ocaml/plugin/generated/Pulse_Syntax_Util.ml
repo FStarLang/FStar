@@ -47,6 +47,47 @@ let (is_fvar :
                ((FStar_Reflection_Builtins.inspect_fv fv), us)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
+let (is_pure_app :
+  Pulse_Syntax_Base.term ->
+    (Pulse_Syntax_Base.term * Pulse_Syntax_Base.qualifier
+      FStar_Pervasives_Native.option * Pulse_Syntax_Base.term)
+      FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    match t with
+    | Pulse_Syntax_Base.Tm_FStar (host_term, uu___) ->
+        (match FStar_Reflection_Builtins.inspect_ln host_term with
+         | FStar_Reflection_Data.Tv_App (hd, (arg, q)) ->
+             op_let_Question
+               (match Pulse_Readback.readback_ty hd with
+                | FStar_Pervasives_Native.Some hd1 ->
+                    FStar_Pervasives_Native.Some hd1
+                | uu___1 -> FStar_Pervasives_Native.None)
+               (fun hd1 ->
+                  let q1 = Pulse_Readback.readback_qual q in
+                  op_let_Question
+                    (match Pulse_Readback.readback_ty arg with
+                     | FStar_Pervasives_Native.Some arg1 ->
+                         FStar_Pervasives_Native.Some arg1
+                     | uu___1 -> FStar_Pervasives_Native.None)
+                    (fun arg1 -> FStar_Pervasives_Native.Some (hd1, q1, arg1)))
+         | uu___1 -> FStar_Pervasives_Native.None)
+    | uu___ -> FStar_Pervasives_Native.None
+let (leftmost_head :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    match t with
+    | Pulse_Syntax_Base.Tm_FStar (host_term, uu___) ->
+        let uu___1 = FStar_Reflection_Derived.collect_app_ln host_term in
+        (match uu___1 with
+         | (hd, uu___2) ->
+             (match Pulse_Readback.readback_ty hd with
+              | FStar_Pervasives_Native.Some t1 ->
+                  FStar_Pervasives_Native.Some t1
+              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None))
+    | uu___ -> FStar_Pervasives_Native.None
 let (is_fvar_app :
   Pulse_Syntax_Base.term ->
     (FStar_Reflection_Types.name * Pulse_Syntax_Base.universe Prims.list *
@@ -60,8 +101,8 @@ let (is_fvar_app :
         FStar_Pervasives_Native.Some
           (l, us, FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
     | FStar_Pervasives_Native.None ->
-        (match t with
-         | Pulse_Syntax_Base.Tm_PureApp (head, q, arg) ->
+        (match is_pure_app t with
+         | FStar_Pervasives_Native.Some (head, q, arg) ->
              (match is_fvar head with
               | FStar_Pervasives_Native.Some (l, us) ->
                   FStar_Pervasives_Native.Some
@@ -128,4 +169,51 @@ let (is_embedded_uvar :
                FStar_Pervasives_Native.Some n
            | uu___ -> FStar_Pervasives_Native.None)
         else FStar_Pervasives_Native.None
+    | uu___ -> FStar_Pervasives_Native.None
+let (is_eq2 :
+  Pulse_Syntax_Base.term ->
+    (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term)
+      FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    match is_pure_app t with
+    | FStar_Pervasives_Native.Some (head, FStar_Pervasives_Native.None, a2)
+        ->
+        (match is_pure_app head with
+         | FStar_Pervasives_Native.Some
+             (head1, FStar_Pervasives_Native.None, a1) ->
+             (match is_pure_app head1 with
+              | FStar_Pervasives_Native.Some
+                  (head2, FStar_Pervasives_Native.Some
+                   (Pulse_Syntax_Base.Implicit), uu___)
+                  ->
+                  (match is_fvar head2 with
+                   | FStar_Pervasives_Native.Some (l, uu___1) ->
+                       if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"]
+                       then FStar_Pervasives_Native.Some (a1, a2)
+                       else FStar_Pervasives_Native.None
+                   | uu___1 -> FStar_Pervasives_Native.None)
+              | uu___ -> FStar_Pervasives_Native.None)
+         | uu___ -> FStar_Pervasives_Native.None)
+    | uu___ -> FStar_Pervasives_Native.None
+let (unreveal :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    match is_pure_app t with
+    | FStar_Pervasives_Native.Some (head, FStar_Pervasives_Native.None, arg)
+        ->
+        (match is_pure_app head with
+         | FStar_Pervasives_Native.Some
+             (head1, FStar_Pervasives_Native.Some
+              (Pulse_Syntax_Base.Implicit), uu___)
+             ->
+             (match is_fvar head1 with
+              | FStar_Pervasives_Native.Some (l, []) ->
+                  if l = ["FStar"; "Ghost"; "reveal"]
+                  then FStar_Pervasives_Native.Some arg
+                  else FStar_Pervasives_Native.None
+              | uu___1 -> FStar_Pervasives_Native.None)
+         | uu___ -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None

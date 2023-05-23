@@ -31,10 +31,6 @@ let (embed_uvar : Prims.nat -> FStar_Reflection_Types.term) =
 let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
   fun top ->
     match top with
-    | Pulse_Syntax_Base.Tm_PureApp (e1, q, e2) ->
-        let e11 = elab_term e1 in
-        let e21 = elab_term e2 in
-        FStar_Reflection_Derived.mk_app e11 [(e21, (elab_qual q))]
     | Pulse_Syntax_Base.Tm_VProp ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_FVar
@@ -306,6 +302,17 @@ let (tm_let :
                       (FStar_Reflection_Typing.make_bv Prims.int_zero)),
                    (elab_term t), (elab_term e1), (elab_term e2)))),
             FStar_Range.range_0)
+let (tm_pureapp :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
+      Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun head ->
+    fun q ->
+      fun arg ->
+        Pulse_Syntax_Base.Tm_FStar
+          ((FStar_Reflection_Derived.mk_app (elab_term head)
+              [((elab_term arg), (elab_qual q))]), FStar_Range.range_0)
 let (tm_arrow :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->

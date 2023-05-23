@@ -2608,15 +2608,14 @@ let (get_non_informative_witness :
                                           arg_opt)
                                    then
                                      FStar_Pervasives_Native.Some
-                                       (Pulse_Syntax_Base.Tm_PureApp
-                                          ((Pulse_Elaborate_Pure.tm_uinst
-                                              (Pulse_Syntax_Base.as_fv
-                                                 (Pulse_Reflection_Util.mk_steel_wrapper_lid
-                                                    "squash_non_informative"))
-                                              us),
-                                            FStar_Pervasives_Native.None,
-                                            (FStar_Pervasives_Native.__proj__Some__item__v
-                                               arg_opt)))
+                                       (Pulse_Elaborate_Pure.tm_pureapp
+                                          (Pulse_Elaborate_Pure.tm_uinst
+                                             (Pulse_Syntax_Base.as_fv
+                                                (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                                   "squash_non_informative"))
+                                             us) FStar_Pervasives_Native.None
+                                          (FStar_Pervasives_Native.__proj__Some__item__v
+                                             arg_opt))
                                    else
                                      if
                                        (l = Pulse_Reflection_Util.erased_lid)
@@ -2625,15 +2624,15 @@ let (get_non_informative_witness :
                                             arg_opt)
                                      then
                                        FStar_Pervasives_Native.Some
-                                         (Pulse_Syntax_Base.Tm_PureApp
-                                            ((Pulse_Elaborate_Pure.tm_uinst
-                                                (Pulse_Syntax_Base.as_fv
-                                                   (Pulse_Reflection_Util.mk_steel_wrapper_lid
-                                                      "erased_non_informative"))
-                                                us),
-                                              FStar_Pervasives_Native.None,
-                                              (FStar_Pervasives_Native.__proj__Some__item__v
-                                                 arg_opt)))
+                                         (Pulse_Elaborate_Pure.tm_pureapp
+                                            (Pulse_Elaborate_Pure.tm_uinst
+                                               (Pulse_Syntax_Base.as_fv
+                                                  (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                                     "erased_non_informative"))
+                                               us)
+                                            FStar_Pervasives_Native.None
+                                            (FStar_Pervasives_Native.__proj__Some__item__v
+                                               arg_opt))
                                      else FStar_Pervasives_Native.None
                            | uu___1 -> FStar_Pervasives_Native.None))
                      (fun uu___ ->
