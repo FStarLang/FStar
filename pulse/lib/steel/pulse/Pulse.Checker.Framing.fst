@@ -106,6 +106,14 @@ let rec vprop_list_equiv (g:env)
 
 module L = FStar.List.Tot.Base
 
+let equational (t:term) : bool =
+  match t with
+  | Tm_FStar host_term _ ->
+    (match R.inspect_ln host_term with
+     | R.Tv_Match _ _ _ -> true
+     | _ -> false)
+  | _ -> false
+
 #push-options "--z3rlimit_factor 4"
 let check_one_vprop g (p q:term) : T.Tac (option (vprop_equiv g p q)) =
   // T.print (Printf.sprintf "Framing.check_one_vprop, p: %s and q: %s\n"
@@ -116,13 +124,9 @@ let check_one_vprop g (p q:term) : T.Tac (option (vprop_equiv g p q)) =
   else
     // let _ = T.print ("Framing.check_one_vprop: checking extensional equality\n") in
     let check_extensional_equality =
-      match p, q with
-      | Tm_FStar _ _, _
-      | _, Tm_FStar _ _ -> true
-      | _, _ ->
-        match is_pure_app p, is_pure_app q with
-        | Some (hd_p, _, _), Some (hd_q, _, _) -> eq_tm hd_p hd_q
-        | _, _ -> false
+      match is_pure_app p, is_pure_app q with
+      | Some (hd_p, _, _), Some (hd_q, _, _) -> eq_tm hd_p hd_q
+      | _, _ -> equational p || equational q
     in
     if check_extensional_equality
     then
