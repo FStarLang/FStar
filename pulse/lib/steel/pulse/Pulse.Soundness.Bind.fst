@@ -5,8 +5,6 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
-open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -109,16 +107,16 @@ let elab_bind_typing (g:stt_env)
                      (r1_typing: RT.tot_typing (elab_env g) r1 (elab_comp c1))
                      (r2:R.term)
                      (r2_typing: RT.tot_typing (elab_env g) r2 
-                                               (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
+                                               (elab_term (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
                      (bc:bind_comp g x c1 c2 c)
-                     (t2_typing : RT.tot_typing (elab_env g) (elab_term (comp_res c2)) (RT.tm_type (elab_universe (comp_u c2))))
+                     (t2_typing : RT.tot_typing (elab_env g) (elab_term (comp_res c2)) (RT.tm_type (comp_u c2)))
                      (post2_typing: RT.tot_typing (elab_env g) 
                                                   (elab_comp_post c2)
                                                   (post2_type_bind (elab_term (comp_res c2))))
   = assume (C_ST? c1 /\ C_ST? c2);
     let rg = elab_env g in
-    let u1 = elab_universe (comp_u c1) in
-    let u2 = elab_universe (comp_u c2) in
+    let u1 = comp_u c1 in
+    let u2 = comp_u c2 in
     let bind_lid = mk_steel_wrapper_lid "bind_stt" in
     let bind_fv = R.pack_fv bind_lid in
     let head = R.pack_ln (R.Tv_UInst bind_fv [u1;u2]) in

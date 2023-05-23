@@ -1,10 +1,8 @@
 module Pulse.Soundness.Return
 
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
 open Pulse.Typing
-open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -26,7 +24,7 @@ let return_soundess
                         (elab_comp c)) =
 
   let T_Return _ ctag use_eq u t e post x t_typing e_typing post_typing = d in
-  let ru = elab_universe u in
+  let ru = u in
   let rt = elab_term t in
   let re = elab_term e in
   let rpost = elab_term post in

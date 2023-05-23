@@ -8,7 +8,6 @@ open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Typing
 open Pulse.Checker
-open Pulse.Elaborate.Pure
 open Pulse.Elaborate
 open Pulse.Soundness
 
@@ -59,20 +58,20 @@ let unexpected_term msg t =
                             msg
                             (T.term_to_string t))
 
-let readback_universe (u:R.universe) : T.Tac (err universe) =
-  try match Readback.readback_universe u with
-      | None -> 
-        error (Printf.sprintf "Unexpected universe : %s"
-                              (T.universe_to_ast_string u))
-      | Some u -> Inl u
-  with
-      | TacticFailure msg ->
-        error (Printf.sprintf "Unexpected universe (%s) : %s"
-                              msg
-                              (T.universe_to_ast_string u))
-      | _ ->
-        error (Printf.sprintf "Unexpected universe : %s"
-                              (T.universe_to_ast_string u))
+// let readback_universe (u:R.universe) : T.Tac (err universe) =
+//   try match Readback.readback_universe u with
+//       | None -> 
+//         error (Printf.sprintf "Unexpected universe : %s"
+//                               (T.universe_to_ast_string u))
+//       | Some u -> Inl u
+//   with
+//       | TacticFailure msg ->
+//         error (Printf.sprintf "Unexpected universe (%s) : %s"
+//                               msg
+//                               (T.universe_to_ast_string u))
+//       | _ ->
+//         error (Printf.sprintf "Unexpected universe : %s"
+//                               (T.universe_to_ast_string u))
 
 let readback_maybe_unknown_ty t =
   match Readback.readback_ty t with
@@ -138,7 +137,7 @@ and translate_exists_sl_body (g:R.env) (t:R.term)
   = match inspect_ln t with
     | Tv_Abs b body ->
       let sort = (inspect_binder b).binder_sort in
-      let u = U_unknown in
+      let u = R.pack_universe R.Uv_Unk in
       let t = readback_maybe_unknown_ty sort in
       let? body = translate_vprop g body in
       Inl (Tm_ExistsSL u t body should_elim_true)
@@ -155,7 +154,7 @@ and translate_exists_formula (g:R.env) (t:R.term)
       let bv = inspect_bv bv in
       let t = readback_maybe_unknown_ty sort in
       let? body = translate_vprop g body in
-      Inl (Tm_ExistsSL U_unknown t body should_elim_true)
+      Inl (Tm_ExistsSL (R.pack_universe R.Uv_Unk) t body should_elim_true)
     | _ -> 
       let hd, args = collect_app t in
       match inspect_ln hd, args with
@@ -250,6 +249,16 @@ let rewrite_fv = mk_tests_lid "rewrite"
 let local_fv = mk_tests_lid "local"
 let tot_fv = mk_tests_lid "tot"
 
+let shift_bvs_in_tm_fstar (t:R.term) (n:nat) : R.term =
+  let open R in
+  match inspect_ln t with
+  | Tv_BVar bv ->
+    let bvv = inspect_bv bv in
+    if n < bvv.bv_index
+    then pack_ln (Tv_BVar (pack_bv {bvv with bv_index=bvv.bv_index - 1}))
+    else t
+  | _ -> t
+
 //
 // shift bvs > n by -1
 //
@@ -260,25 +269,25 @@ let tot_fv = mk_tests_lid "tot"
 //
 let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   match t with
-  | Tm_BVar bv ->
-    if n < bv.bv_index
-    then Tm_BVar {bv with bv_index = bv.bv_index - 1}
-    else t
-  | Tm_Var _
-  | Tm_FVar _
-  | Tm_UInst _ _
-  | Tm_Constant _ -> t
-  | Tm_Refine b t ->
-    Tm_Refine {b with binder_ty=shift_bvs_in_else b.binder_ty n}
-              (shift_bvs_in_else t (n + 1))
+  // | Tm_BVar bv ->
+  //   if n < bv.bv_index
+  //   then tm_bvar {bv with bv_index = bv.bv_index - 1}
+  //   else t
+  // | Tm_var _
+  // | Tm_fvar _
+  // | Tm_uinst _ _
+  // | Tm_constant _ -> t
+  // | Tm_refine b t ->
+  //   Tm_refine {b with binder_ty=shift_bvs_in_else b.binder_ty n}
+  //             (shift_bvs_in_else t (n + 1))
   | Tm_PureApp head q arg ->
     Tm_PureApp (shift_bvs_in_else head n)
                q
                (shift_bvs_in_else arg n)
-  | Tm_Let t e1 e2 ->
-    Tm_Let (shift_bvs_in_else t n)
-           (shift_bvs_in_else e1 n)
-           (shift_bvs_in_else e2 (n + 1))
+  // | Tm_Let t e1 e2 ->
+  //   Tm_Let (shift_bvs_in_else t n)
+  //          (shift_bvs_in_else e1 n)
+  //          (shift_bvs_in_else e2 (n + 1))
   | Tm_Emp -> t
   | Tm_Pure p -> Tm_Pure (shift_bvs_in_else p n)
   | Tm_Star l r ->
@@ -291,11 +300,12 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_ForallSL u t body ->
     Tm_ForallSL u (shift_bvs_in_else t n)
                   (shift_bvs_in_else body (n + 1))
-  | Tm_Arrow _ _ _ ->
-    T.fail "Unexpected Tm_Arrow in shift_bvs_in_else"
-  | Tm_FStar _ ->
-    T.fail "Embedded host terms are not fully handled in shift_bvs_in_else"
-  | Tm_Type _
+  // | Tm_arrow _ _ _ ->
+  //   T.fail "Unexpected tm_arrow in shift_bvs_in_else"
+  | Tm_FStar t r ->
+    Tm_FStar (shift_bvs_in_tm_fstar t n) r
+    // T.fail "Embedded host terms are not fully handled in shift_bvs_in_else"
+  // | Tm_type _
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
@@ -455,7 +465,7 @@ let translate_admit (g:RT.fstar_top_env) (t:R.term)
     | Tv_UInst v _, [(t, _)]
     | Tv_FVar v, [(t, _)] ->  
       let? t = readback_ty g t in
-      let u = U_unknown in
+      let u = R.pack_universe R.Uv_Unk in
       let l = inspect_fv v in
       if l = stt_admit_lid
       then Inl (wr (Tm_Admit {ctag = STT; u; typ=t; post=None}))
@@ -477,8 +487,8 @@ let translate_st_app_or_return (g:R.env) (t:R.term)
     let? t = readback_ty g t in
     match t with
     | Tm_PureApp head q arg ->
-      (match head with
-       | Tm_FVar {fv_name=l} ->
+      (match is_fvar head with
+       | Some (l, _) ->
          if l = return_stt_lid
          then Inl (tm_Return STT true arg)
          else if l = return_stt_noeq_lid

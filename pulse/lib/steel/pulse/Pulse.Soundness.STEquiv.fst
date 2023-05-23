@@ -74,7 +74,7 @@ let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
   : GTot (RT.tot_typing g (mk_sub_stt u a pre1 pre2 post1 post2 r) (mk_stt_comp u a pre2 post2))
   = admit()
 
-let vprop_arrow (t:term) : term = Tm_Arrow (null_binder t) None (C_Tot Tm_VProp)
+let vprop_arrow (t:term) : term = tm_arrow (null_binder t) None (C_Tot Tm_VProp)
 
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --query_stats"
 let st_equiv_soundness (g:stt_env)

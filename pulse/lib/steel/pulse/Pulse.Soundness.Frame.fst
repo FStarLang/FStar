@@ -6,7 +6,6 @@ module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
-open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -77,7 +76,7 @@ let elab_frame_typing (g:stt_env)
   = if C_ST? c then
     let frame_typing = tot_typing_soundness frame_typing in
     let rg = elab_env g in
-    let u = elab_universe (comp_u c) in
+    let u = comp_u c in
     let frame_fv = R.pack_fv (mk_steel_wrapper_lid "frame_stt") in
     let head = R.pack_ln (R.Tv_UInst frame_fv [u]) in
     assume (RT.lookup_fvar_uinst rg frame_fv [u] == Some (frame_type u));

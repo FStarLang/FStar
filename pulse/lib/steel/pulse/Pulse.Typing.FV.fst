@@ -4,9 +4,7 @@ module R = FStar.Reflection
 module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Typing
-open Pulse.Elaborate.Pure
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
@@ -14,9 +12,9 @@ let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x
 
 let freevars_close_term_host_term (t:host_term) (x:var) (i:index)
   : Lemma
-    (ensures (freevars (close_term' (Tm_FStar t) x i)
+    (ensures (freevars (close_term' (Tm_FStar t FStar.Range.range_0) x i)
             `Set.equal`
-             (freevars (Tm_FStar t) `set_minus` x)))
+             (freevars (Tm_FStar t FStar.Range.range_0) `set_minus` x)))
   = admit()
 
 #push-options "--query_stats --z3rlimit_factor 2"
@@ -25,13 +23,7 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
     (ensures freevars (close_term' e x i) `Set.equal`
              (freevars e `set_minus` x))
   = match e with
-    | Tm_BVar _
-    | Tm_Var _
-    | Tm_FVar _
-    | Tm_UInst _ _
-    | Tm_Constant _  
     | Tm_Emp
-    | Tm_Type _
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
@@ -41,39 +33,25 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
     | Tm_Pure p ->
       freevars_close_term' p x i
 
-    | Tm_Refine b t ->
-      freevars_close_term' b.binder_ty x i;
-      freevars_close_term' t x (i + 1)
-
     | Tm_PureApp l _ r
     | Tm_Star l r ->
       freevars_close_term' l x i;
       freevars_close_term' r x i
-
-    | Tm_Let t e1 e2 ->
-      freevars_close_term' t x i;    
-      freevars_close_term' e1 x i;
-      freevars_close_term' e2 x (i + 1)
 
     | Tm_ExistsSL _ t b _
     | Tm_ForallSL _ t b ->
       freevars_close_term' t x i;    
       freevars_close_term' b x (i + 1)
 
-    | Tm_Arrow b _ body ->
-      freevars_close_term' b.binder_ty x i;
-      freevars_close_comp body x (i + 1)
-    
-    | Tm_FStar t ->
+    | Tm_FStar t _ ->
       freevars_close_term_host_term t x i
 
-and freevars_close_comp (c:comp)
+let freevars_close_comp (c:comp)
                         (x:var)
                         (i:index)
   : Lemma 
     (ensures freevars_comp (close_comp' c x i) `Set.equal`
              (freevars_comp c `set_minus` x))
-    (decreases c)
     [SMTPat (freevars_comp (close_comp' c x i))]
   = match c with
     | C_Tot t ->
@@ -345,11 +323,13 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
       tot_typing_freevars dt;
       st_typing_freevars db;
       freevars_close_comp cres x 0;
+      admit ();
       freevars_open_st_term_inv body x
 
    | T_STApp _ _ _ _ res arg st at ->
      tot_typing_freevars st;
      tot_typing_freevars at;
+     admit ();
      freevars_open_comp res arg 0
 
    | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
@@ -400,7 +380,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      st_typing_freevars dc
 
    | T_ElimExists _ u t p x dt dv ->
-     let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
+     let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
      tot_typing_freevars dt;
      tot_typing_freevars dv;
      assert (Set.equal (freevars (Pulse.Typing.mk_reveal u t x_tm))

@@ -5,11 +5,8 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
-open Pulse.Elaborate.Pure
 open Pulse.Typing
-open Pulse.Readback
 open Pulse.Checker.Pure
 open Pulse.Checker.Framing
 open Pulse.Checker.Bind
@@ -53,9 +50,9 @@ let replace_equiv_post
 
   let pre_c_typing : tot_typing g pre_c Tm_VProp =
     check_vprop_with_core g pre_c in
-  let res_c_typing : tot_typing g res_c (Tm_Type u_c) =
+  let res_c_typing : tot_typing g res_c (tm_type u_c) =
     let (| u, ty |) = check_universe g res_c in
-    if u = u_c
+    if eq_univ u u_c
     then ty
     else T.fail "T_Abs: re-typechecking the return type returned different universe" in
   let post_c_opened = open_term_nv post_c px in
@@ -124,7 +121,7 @@ let check_abs
         match post_hint with
         | None -> None
         | Some post ->
-          let post = open_term' post (Tm_Var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=Range.range_0}) 1 in
+          let post = open_term' post (tm_var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=Range.range_0}) 1 in
           Some post
       in
       let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened (E pre_typing) post in
@@ -133,7 +130,7 @@ let check_abs
       assume (open_st_term body_closed x == body');
       let b = {binder_ty=t;binder_ppname=ppname} in
       let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
-      let tres = Tm_Arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
+      let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
       (| _,
          C_Tot tres,
          tt |)
@@ -161,7 +158,7 @@ let maybe_add_elim_pure (pre:list term) (t:st_term) : T.Tac (bool & st_term) =
     L.fold_left 
       (fun t (p:term) ->
         let elim_pure_tm =
-          Tm_STApp { head = Tm_FVar (as_fv elim_pure_explicit_lid);
+          Tm_STApp { head = tm_fvar (as_fv elim_pure_explicit_lid);
                      arg_qual = None;
                      arg = p }
         in
@@ -247,7 +244,7 @@ let check_comp (g:env)
                                     comp_post c == st.post } )
       : T.Tac (st_comp_typing g st)
       = let (| u, t_u |) = check_universe g st.res in 
-        if u <> comp_u c
+        if not (eq_univ u (comp_u c))
         then T.fail "Unexpected universe"
         else (
           let x = fresh g in
@@ -294,7 +291,7 @@ let check_if (g:env)
       check_term_with_expected_type g b tm_bool in
     let hyp = fresh g in
     let g_with_eq (eq_v:term) =
-        extend hyp (Inl (mk_eq2 U_zero tm_bool b eq_v)) g
+        extend hyp (Inl (mk_eq2 u0 tm_bool b eq_v)) g
     in
     let check_branch (eq_v:term) (br:st_term)
       : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
@@ -379,7 +376,7 @@ let check_elim_exists
 
     // Could this come from inversion of t_typing?
     let (| u', ty_typing |) = check_universe g ty in
-    if u = u'
+    if eq_univ u u'
     then let x = fresh g in
          let d = T_ElimExists g u ty p x ty_typing t_typing in
          repack (try_frame_pre pre_typing d) post_hint true
@@ -422,7 +419,7 @@ let check_intro_exists_erased
   | Tm_ExistsSL u ty p _ ->
     // Could this come from inversion of t_typing?
     let (| u', ty_typing |) = check_universe g ty in
-    if u = u'
+    if eq_univ u u'
     then (
       let (| e, e_typing |) = 
           check_term_with_expected_type g e (mk_erased u ty) in
@@ -454,7 +451,7 @@ let check_intro_exists
   | Tm_ExistsSL u ty p _ ->
     // Could this come from inversion of t_typing?
     let (| u', ty_typing |) = check_universe g ty in
-    if u = u'
+    if eq_univ u u'
     then (
       let (| e, e_typing |) = 
           check_term_with_expected_type g e ty in
@@ -486,7 +483,7 @@ let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop 
   = match witnesses, goal_vprop with
     | [], Tm_ExistsSL u ty p _ ->  
       let next_goal_vprop, inst =
-          let t = gen_uvar ty in
+          let t = gen_uvar () in
           open_term' p t 0, Inr t
       in
       prepare_instantiations ((goal_vprop, inst)::out) next_goal_vprop []
@@ -498,7 +495,7 @@ let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop 
       let next_goal_vprop, inst =
           match t with
           | Tm_Unknown ->
-            let t = gen_uvar ty in
+            let t = gen_uvar () in
             open_term' p t 0, Inr t
           | _ ->
             open_term' p t 0, Inl t
@@ -528,6 +525,10 @@ let maybe_infer_intro_exists
         rest, pure
     in
     let is_eq2 t =
+      let is_eq2_fv t =
+        match is_fvar t with
+        | Some (l, _) -> l = mk_steel_wrapper_lid "eq2_prop"
+        | _ -> false in
       match t with
       | Tm_PureApp
           (Tm_PureApp
@@ -536,14 +537,10 @@ let maybe_infer_intro_exists
             l)
           None
           r -> (
-        match hd with
-        | Tm_FVar fv
-        | Tm_UInst fv _ ->
-          if fv.fv_name = mk_steel_wrapper_lid "eq2_prop"
-          then Some (l, r)
-          else None
-        | _ -> None
-      )
+            if is_eq2_fv hd
+            then Some (l, r)
+            else None
+          )
       | _ -> None
     in
     (* Weird: defining this here causes extraction to crash with
@@ -589,15 +586,18 @@ let maybe_infer_intro_exists
     let solutions = T.fold_left maybe_solve_pure solutions pure_conjuncts in
     let un_reveal t = 
         match t with
-        | Tm_PureApp (Tm_PureApp (Tm_UInst l [_]) (Some Implicit) _)
+        | Tm_PureApp (Tm_PureApp hd (Some Implicit) _)
                      None arg ->
-          if l.fv_name = reveal_lid
-          then Some arg
-          else None
+          (match is_fvar hd with
+           | Some (l, []) ->
+             if l = reveal_lid
+             then Some arg
+             else None
+           | _ -> None)
         | _ -> None
     in
     let mk_hide (e:term) : term =
-        let hd = Tm_FVar (as_fv hide_lid) in
+        let hd = tm_fvar (as_fv hide_lid) in
         Tm_PureApp hd None e
     in    
     let solutions = 
@@ -669,7 +669,6 @@ let maybe_infer_intro_exists
 
     // | _ -> T.fail "Not yet handling variadic intro exists"
     
-
 let check_while
   (allow_inst:bool)
   (g:env)
@@ -684,9 +683,13 @@ let check_while
   let g = push_context "while loop" g in
   let Tm_While { invariant=inv; condition=cond; body } = t.term in
   let (| inv, inv_typing |) =
-    check_vprop (push_context "invariant" g) (Tm_ExistsSL U_zero tm_bool inv should_elim_true) in
+    check_vprop (push_context "invariant" g) (Tm_ExistsSL u0 tm_bool inv should_elim_true) in
   match inv with
-  | Tm_ExistsSL U_zero (Tm_FVar {fv_name=["Prims"; "bool"]}) inv _ ->
+  | Tm_ExistsSL u ty inv _ ->
+    if not (eq_tm ty tm_bool) ||
+       not (eq_univ u u0)
+    then T.fail "While loop invariant is exists but its witness type is not bool"
+    else begin
     // Should get from inv_typing
     let cond_pre_typing =
       check_vprop_with_core g (comp_pre (comp_while_cond inv)) in
@@ -715,7 +718,7 @@ let check_while
                  (Some (comp_post (comp_while_body inv)))
       in
       if eq_comp body_comp (comp_while_body inv)
-      then let d = T_While g inv cond body inv_typing cond_typing   body_typing in
+      then let d = T_While g inv cond body inv_typing cond_typing body_typing in
           //  T.print (Printf.sprintf
           //               "Check: Framing while\ninferred pre=%s\n required pre=%s\n"
           //               (P.term_to_string (comp_pre (comp_while inv)))
@@ -737,6 +740,7 @@ let check_while
                             Annotated type = %s\n"
                             (P.comp_to_string cond_comp)
                             (P.comp_to_string (comp_while_cond inv)))
+    end
   | _ -> T.fail "Typechecked invariant is not an exists"
 
 let range_of_head (t:st_term) : option (term & range) =
@@ -744,9 +748,11 @@ let range_of_head (t:st_term) : option (term & range) =
   | Tm_STApp { head } ->
     let rec aux (t:term) : (term & range) =
       match t with
-      | Tm_FVar fv -> (t, fv.fv_range)
-      | Tm_UInst fv _ -> (t, fv.fv_range)
-      | Tm_Var nm -> (t, nm.nm_range)
+      | Tm_FStar _ r ->
+        t, r
+      // | tm_fvar fv -> (t, fv.fv_range)
+      // | tm_uinst fv _ -> (t, fv.fv_range)
+      // | tm_var nm -> (t, nm.nm_range)
       | Tm_PureApp hd _ _ -> aux hd
       | _ -> t, Range.range_0
     in
@@ -755,27 +761,18 @@ let range_of_head (t:st_term) : option (term & range) =
 
 let tag_of_term (t:term) =
   match t with
-  | Tm_FVar fv -> "Tm_FVar"
-  | Tm_UInst fv _ -> "Tm_UInst"
-  | Tm_Var nm -> "Tm_Var"
   | Tm_PureApp hd _ _ -> "Tm_PureApp"
-  | Tm_Constant _ -> "Tm_Constant"
-  | Tm_Type _ -> "Tm_Type"
-  | Tm_Refine _ _ -> "Tm_Refine"
-  | Tm_Let _ _ _ -> "Tm_Let"
   | Tm_Emp -> "Tm_Emp"
   | Tm_Pure _ -> "Tm_Pure"
   | Tm_Star _ _ -> "Tm_Star"
   | Tm_ExistsSL _ _ _ _ -> "Tm_ExistsSL"
   | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
-  | Tm_Arrow _ _ _ -> "Tm_Arrow"
   | Tm_VProp -> "Tm_VProp"
   | Tm_Inames -> "Tm_Inames"
   | Tm_EmpInames -> "Tm_EmpInames"
   | Tm_Unknown -> "Tm_Unknown"
   | Tm_UVar _ -> "Tm_UVar"
-  | Tm_BVar _ -> "Tm_BVar"
-  | Tm_FStar _ -> "Tm_FStar"
+  | Tm_FStar _ _ -> "Tm_FStar"  // TODO: FIXME: ADD MORE CASES HERE
 
 let maybe_log t =
   let _ =
@@ -788,16 +785,23 @@ let maybe_log t =
     | None -> ()
   in
   match t.term with
-  | Tm_STApp { head = Tm_FVar l; arg_qual=None; arg=p } ->
-    if l.fv_name = elim_pure_explicit_lid
-    then T.print (Printf.sprintf "LOG ELIM PURE: %s\n"
-                    (P.term_to_string p))
+  | Tm_STApp { head; arg_qual=None; arg=p } ->
+    begin match is_fvar head with
+          | Some (l, _) ->
+            if l = elim_pure_explicit_lid
+            then T.print (Printf.sprintf "LOG ELIM PURE: %s\n"
+                         (P.term_to_string p))
+          | _ -> ()
+    end
                     
-  | Tm_STApp { head=Tm_PureApp (Tm_FVar l) None p; arg_qual=None } ->
-    if l.fv_name = mk_steel_wrapper_lid "intro_pure"
-    then T.print (Printf.sprintf "LOG INTRO PURE: %s\n"
-                    (P.term_to_string p))  
-                    
+  | Tm_STApp { head=Tm_PureApp head None p; arg_qual=None } ->
+    begin match is_fvar head with
+          | Some (l, _) ->
+            if l = mk_steel_wrapper_lid "intro_pure"
+             then T.print (Printf.sprintf "LOG INTRO PURE: %s\n"
+                          (P.term_to_string p))
+          | _ -> ()
+    end             
   | _ -> ()
     
 let check_stapp
@@ -824,11 +828,20 @@ let check_stapp
     (c:comp{C_Tot? c}) : T.Tac _ =
 
     match c with
-    | C_Tot (Tm_Arrow _  (Some implicit) _) -> 
-      let C_Tot ty = c in
-      //Some implicits to follow
-      let t = Pulse.Checker.Inference.infer t ty pre range in
-      check' false g t pre pre_typing post_hint
+    | C_Tot ty ->
+      begin match is_arrow ty with
+            | Some (_, Some Implicit, _) -> 
+              //Some implicits to follow
+              let t = Pulse.Checker.Inference.infer t ty pre range in
+              check' false g t pre pre_typing post_hint
+            | _ ->
+              T.fail
+                (Printf.sprintf
+                   "Unexpected c in infer_logical_implicits_and_check (head: %s, comp_typ: %s, and arg: %s)"
+                   (P.term_to_string head)
+                   (P.comp_to_string c)
+                   (P.term_to_string arg))
+      end
 
     | _ ->
       T.fail
@@ -844,8 +857,11 @@ let check_stapp
            infer_logical_implicits_and_check t (C_Tot ty))
     (fun _ ->
      let (| head, ty_head, dhead |) = check_term g head in
-     match ty_head with
-     | Tm_Arrow {binder_ty=formal;binder_ppname=ppname} bqual comp_typ ->
+     match is_arrow ty_head with
+     | Some ({binder_ty=formal;binder_ppname=ppname}, bqual, comp_typ) ->
+       // TODO: FIX ME
+       assume (ty_head ==
+               tm_arrow ({binder_ty=formal;binder_ppname=ppname}) bqual comp_typ);
        if qual = bqual
        then
          let (| arg, darg |) = check_term_with_expected_type g arg formal in
@@ -948,11 +964,11 @@ let handle_framing_failure
           Tm_Protect
             { t = wr (Tm_STApp 
                         { head = Tm_PureApp 
-                                  (Tm_FVar (as_fv (mk_steel_wrapper_lid "intro_pure")))
+                                  (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
                                   None
                                   p;
                           arg_qual = None;
-                          arg = Tm_Constant Unit }) }
+                          arg = tm_unit }) }
         )
       in
       wr (
@@ -1032,7 +1048,7 @@ let rec maybe_add_elims
       maybe_add_elims g rest (wr t)
     | Tm_Pure p :: rest ->
       let elim_pure_tm = 
-        wr (Tm_STApp { head = Tm_FVar (as_fv elim_pure_explicit_lid);
+        wr (Tm_STApp { head = tm_fvar (as_fv elim_pure_explicit_lid);
                        arg_qual = None;
                        arg = p })
       in
@@ -1088,8 +1104,8 @@ let rec print_st_head (t:st_term)
   | Tm_ElimExists _ -> "ElimExists"  
 and print_head (t:term) =
   match t with
-  | Tm_FVar fv
-  | Tm_UInst fv _ -> String.concat "." fv.fv_name
+  // | Tm_FVar fv
+  // | Tm_UInst fv _ -> String.concat "." fv.fv_name
   | Tm_PureApp head _ _ -> print_head head
   | _ -> "<pure term>"
 
@@ -1142,7 +1158,7 @@ let check_par
     let (| eR, cR, eR_typing |) =
       check' allow_inst g eR preR (E preR_typing) (Some postR) in
 
-    if C_ST? cR && comp_u cL = comp_u cR
+    if C_ST? cR && eq_univ (comp_u cL) (comp_u cR)
     then
       let cR_typing = check_comp g cR (E preR_typing) in
       let x = fresh g in
@@ -1168,7 +1184,7 @@ let check_withlocal
   let Tm_WithLocal {initializer=init; body} = t.term in
   let (| init, init_u, init_t, init_t_typing, init_typing |) =
     check_term_and_type g init in
-  if init_u = U_zero
+  if eq_univ init_u u0
   then let x = fresh g in
        let px = v_as_nv x in
        if x `Set.mem` freevars_st body
@@ -1253,7 +1269,7 @@ let rec check' : bool -> check_t =
     match t.term with
     | Tm_Protect _ -> T.fail "Protect should have been removed"
 
-    | Tm_Return {term = Tm_BVar _} -> T.fail "not locally nameless"
+    // | Tm_Return {term = Tm_Bvar _} -> T.fail "not locally nameless"
     | Tm_Return _ ->
       check_return allow_inst g t pre pre_typing post_hint
   

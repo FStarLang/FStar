@@ -11,7 +11,7 @@ open Pulse.Typing
 open Pulse.Reflection.Util
 
 let elab_frame (c:comp_st) (frame:term) (e:R.term) =
-  let u = elab_universe (comp_u c) in
+  let u = comp_u c in
   let ty = elab_term (comp_res c) in
   let pre = elab_term (comp_pre c) in
   let post = elab_term (comp_post c) in
@@ -25,7 +25,7 @@ let elab_frame (c:comp_st) (frame:term) (e:R.term) =
 
 let elab_sub (c1 c2:comp_st) (e:R.term) =
   let ty = elab_term (comp_res c1) in
-  let u = elab_universe (comp_u c1) in
+  let u = comp_u c1 in
   let pre1 = elab_term (comp_pre c1) in
   let pre2 = elab_term (comp_pre c2) in
   let post1 = mk_abs ty R.Q_Explicit (elab_term (comp_post c1)) in
@@ -50,8 +50,8 @@ let elab_bind #g #x #c1 #c2 #c
       if C_ST? c1
       then
         mk_bind_stt
-          (elab_universe (comp_u c1))
-          (elab_universe (comp_u c2))
+          (comp_u c1)
+          (comp_u c2)
           t1 t2
           (elab_term (comp_pre c1))
           (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
@@ -59,8 +59,8 @@ let elab_bind #g #x #c1 #c2 #c
           e1 e2
       else 
         mk_bind_ghost
-          (elab_universe (comp_u c1))
-          (elab_universe (comp_u c2))
+          (comp_u c1)
+          (comp_u c2)
           t1 t2
           (elab_term (comp_inames c1))
           (elab_term (comp_pre c1))
@@ -70,8 +70,8 @@ let elab_bind #g #x #c1 #c2 #c
   
     | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) _ _ _ ->
       mk_bind_ghost_atomic
-        (elab_universe (comp_u c1))
-        (elab_universe (comp_u c2))
+        (comp_u c1)
+        (comp_u c2)
         t1 t2
         (elab_term (comp_inames c1))
         (elab_term (comp_pre c1))
@@ -82,8 +82,8 @@ let elab_bind #g #x #c1 #c2 #c
 
     | Bind_comp_ghost_r _ _ _ _ (| reveal_b, reveal_b_typing |) _ _ _ ->
       mk_bind_atomic_ghost
-        (elab_universe (comp_u c1))
-        (elab_universe (comp_u c2))
+        (comp_u c1)
+        (comp_u c2)
         t1 t2
         (elab_term (comp_inames c1))
         (elab_term (comp_pre c1))
@@ -98,7 +98,7 @@ let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
     | Lift_STAtomic_ST _ _ ->
       let t = elab_term (comp_res c1) in
       mk_lift_atomic_stt
-        (elab_universe (comp_u c1))
+        (comp_u c1)
         (elab_term (comp_res c1))
         t
         (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
@@ -107,7 +107,7 @@ let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
     | Lift_STGhost_STAtomic _ _ (| reveal_a, reveal_a_typing |) ->
       let t = elab_term (comp_res c1) in
       mk_lift_ghost_atomic
-        (elab_universe (comp_u c1))
+        (comp_u c1)
         t
         (elab_term (comp_inames c1))
         (elab_term (comp_pre c1))
@@ -136,7 +136,7 @@ let rec elab_st_typing (#g:env)
       R.mk_app head [(arg, elab_qual qual)]
 
     | T_Return _ c use_eq u ty t post _ _ _ _ ->
-      let ru = elab_universe u in
+      let ru = u in
       let rty = elab_term ty in
       let rt = elab_term t in
       let rp = elab_term post in
@@ -180,20 +180,20 @@ let rec elab_st_typing (#g:env)
       RT.mk_if rb re1 re2
 
     | T_ElimExists _ u t p _ d_t d_exists ->
-      let ru = elab_universe u in
+      let ru = u in
       let rt = elab_term t in
       let rp = elab_term p in
       mk_elim_exists ru rt (mk_abs rt R.Q_Explicit rp)
 
     | T_IntroExists _ u t p e _ _ _ ->
-      let ru = elab_universe u in
+      let ru = u in
       let rt = elab_term t in
       let rp = elab_term p in
       let re = elab_term e in
       mk_intro_exists ru rt (mk_abs rt R.Q_Explicit rp) re
 
     | T_IntroExistsErased _ u t p e _ _ _ ->
-      let ru = elab_universe u in
+      let ru = u in
       let rt = elab_term t in
       let rp = elab_term p in
       let re = elab_term e in
@@ -206,7 +206,7 @@ let rec elab_st_typing (#g:env)
       mk_while (mk_abs bool_tm R.Q_Explicit inv) cond body
 
     | T_Par _ eL cL eR cR _ _ _ eL_typing eR_typing ->
-      let ru = elab_universe (comp_u cL) in
+      let ru = comp_u cL in
       let raL = elab_term (comp_res cL) in
       let raR = elab_term (comp_res cR) in
       let rpreL = elab_term (comp_pre cL) in
@@ -230,7 +230,7 @@ let rec elab_st_typing (#g:env)
 						mk_rewrite rp rq
 
     | T_WithLocal _ init _ init_t c x _ _ _ body_typing ->
-      let rret_u = elab_universe (comp_u c) in
+      let rret_u = comp_u c in
       let ra = elab_term init_t in
       let rinit = elab_term init in
       let rret_t = elab_term (comp_res c) in
@@ -242,7 +242,7 @@ let rec elab_st_typing (#g:env)
       mk_withlocal rret_u ra rinit rpre rret_t rpost rbody
 
     | T_Admit _ {u;res;pre;post} c _ ->
-      let ru = elab_universe u in
+      let ru = u in
       let rres = elab_term res in
       let rpre = elab_term pre in
       let rpost = elab_term post in

@@ -5,8 +5,6 @@ open Pulse.Reflection.Util
 module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Elaborate.Pure
-open Pulse.Syntax.Naming
 module FTB = FStar.Tactics
 
 // let fstar_env =
@@ -17,22 +15,22 @@ module FTB = FStar.Tactics
 //     ///\ star etc
 //   }
 
-let tm_unit = Tm_FVar (as_fv unit_lid)
-let tm_bool = Tm_FVar (as_fv bool_lid)
-let tm_true = Tm_Constant (Bool true)
-let tm_false = Tm_Constant (Bool false)
+let tm_unit = tm_fvar (as_fv unit_lid)
+let tm_bool = tm_fvar (as_fv bool_lid)
+let tm_true = tm_constant R.C_True
+let tm_false = tm_constant R.C_False
 
 let mk_erased (u:universe) (t:term) : term =
-  let hd = Tm_UInst (as_fv erased_lid) [u] in
+  let hd = tm_uinst (as_fv erased_lid) [u] in
   Tm_PureApp hd None t
 
 let mk_reveal (u:universe) (t:term) (e:term) : term =
-  let hd = Tm_UInst (as_fv reveal_lid) [u] in
+  let hd = tm_uinst (as_fv reveal_lid) [u] in
   let hd = Tm_PureApp hd (Some Implicit) t in
   Tm_PureApp hd None e
 
 let mk_hide (u:universe) (t:term) (e:term) : term =
-  let hd = Tm_UInst (as_fv hide_lid) [u] in
+  let hd = tm_uinst (as_fv hide_lid) [u] in
   let hd = Tm_PureApp hd (Some Implicit) t in
   Tm_PureApp hd None e
 
@@ -41,28 +39,30 @@ let mk_eq2 (u:universe)
            (e0 e1:term) 
   : term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv R.eq2_qn) [u]) (Some Implicit) t)
+         (Tm_PureApp (Tm_PureApp (tm_uinst (as_fv R.eq2_qn) [u]) (Some Implicit) t)
                      None e0) None e1
 
-let mk_eq2_prop (u:universe)
-           (t:term)
-           (e0 e1:term) 
+let mk_eq2_prop (u:universe) (t:term) (e0 e1:term)
   : term
   = Tm_PureApp
-         (Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv (mk_steel_wrapper_lid "eq2_prop")) [u]) (Some Implicit) t)
+         (Tm_PureApp (Tm_PureApp (tm_uinst (as_fv (mk_steel_wrapper_lid "eq2_prop")) [u]) (Some Implicit) t)
                      None e0) None e1
 
 
-let mk_vprop_eq (e0 e1:term) : term =
-  mk_eq2 (U_succ (U_succ U_zero)) Tm_VProp e0 e1
+let u0 : universe = R.pack_universe R.Uv_Zero
+let u1 : universe = R.pack_universe (R.Uv_Succ u0)
+let u2 : universe = R.pack_universe (R.Uv_Succ u1)
 
-let mk_ref (t:term) : term = Tm_PureApp (Tm_FVar (as_fv ref_lid)) None t
+let mk_vprop_eq (e0 e1:term) : term =
+  mk_eq2 u2 Tm_VProp e0 e1
+
+let mk_ref (t:term) : term = Tm_PureApp (tm_fvar (as_fv ref_lid)) None t
 
 let mk_pts_to (ty:term) (r:term) (v:term) : term =
-  let t = Tm_FVar (as_fv pts_to_lid) in
+  let t = tm_fvar (as_fv pts_to_lid) in
   let t = Tm_PureApp t (Some Implicit) ty in
   let t = Tm_PureApp t None r in
-  let t = Tm_PureApp t None (Tm_FVar (as_fv full_perm_lid)) in
+  let t = Tm_PureApp t None (tm_fvar (as_fv full_perm_lid)) in
   Tm_PureApp t None v
 
 let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term) (x:var)
@@ -356,7 +356,7 @@ let st_equiv_pre (c1 c2:comp_st)
 
 let non_informative_witness_t (u:universe) (t:term)
   : term
-  = Tm_PureApp (Tm_UInst (as_fv non_informative_witness_lid) [u])
+  = Tm_PureApp (tm_uinst (as_fv non_informative_witness_lid) [u])
                None
                t
 
@@ -380,7 +380,7 @@ let comp_intro_exists (u:universe) (t:term) (p:term) (e:term)
   : comp
   = C_STGhost Tm_EmpInames
               {
-                u=U_zero;
+                u=u0;
                 res=tm_unit;
                 pre=open_term' p e 0;
                 post=Tm_ExistsSL u t p should_elim_false
@@ -390,7 +390,7 @@ let comp_intro_exists_erased (u:universe) (t:term) (p:term) (e:term)
   : comp
   = C_STGhost Tm_EmpInames
               {
-                u=U_zero;
+                u=u0;
                 res=tm_unit;
                 pre=open_term' p (mk_reveal u t e) 0;
                 post=Tm_ExistsSL u t p should_elim_false
@@ -399,44 +399,44 @@ let comp_intro_exists_erased (u:universe) (t:term) (p:term) (e:term)
 let comp_while_cond (inv:term)
   : comp
   = C_ST {
-           u=U_zero;
+           u=u0;
            res=tm_bool;
-           pre=Tm_ExistsSL U_zero tm_bool inv should_elim_false;
+           pre=Tm_ExistsSL u0 tm_bool inv should_elim_false;
            post=inv
          }
 
 let comp_while_body (inv:term)
   : comp
   = C_ST {
-           u=U_zero;
+           u=u0;
            res=tm_unit;
            pre=open_term' inv tm_true 0;
-           post=Tm_ExistsSL U_zero tm_bool inv should_elim_true
+           post=Tm_ExistsSL u0 tm_bool inv should_elim_true
          }
 
 let comp_while (inv:term)
   : comp
   = C_ST {
-           u=U_zero;
+           u=u0;
            res=tm_unit;
-           pre=Tm_ExistsSL U_zero tm_bool inv should_elim_true;
+           pre=Tm_ExistsSL u0 tm_bool inv should_elim_true;
            post=open_term' inv tm_false 0
          }
 
 let mk_tuple2 (u1 u2:universe) (t1 t2:term) : term =
-  Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv tuple2_lid) [u1; u2])
+  Tm_PureApp (Tm_PureApp (tm_uinst (as_fv tuple2_lid) [u1; u2])
                          None
                          t1)
              None t2
 
 let mk_fst (u1 u2:universe) (a1 a2 e:term) : term =
-  Tm_PureApp (Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv fst_lid) [u1; u2]) (Some Implicit) a1)
+  Tm_PureApp (Tm_PureApp (Tm_PureApp (tm_uinst (as_fv fst_lid) [u1; u2]) (Some Implicit) a1)
                          (Some Implicit) a2)
              None
              e
 
 let mk_snd (u1 u2:universe) (a1 a2 e:term) : term =
-  Tm_PureApp (Tm_PureApp (Tm_PureApp (Tm_UInst (as_fv snd_lid) [u1; u2]) (Some Implicit) a1)
+  Tm_PureApp (Tm_PureApp (Tm_PureApp (tm_uinst (as_fv snd_lid) [u1; u2]) (Some Implicit) a1)
                          (Some Implicit) a2)
              None
              e
@@ -468,7 +468,7 @@ let comp_withlocal_body_pre (pre:vprop) (init_t:term) (r:term) (init:term) : vpr
   Tm_Star pre (mk_pts_to init_t r init)
 
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
-  Tm_Star post (Tm_ExistsSL U_zero init_t (mk_pts_to init_t r (null_bvar 0)) should_elim_false)  
+  Tm_Star post (Tm_ExistsSL u0 init_t (mk_pts_to init_t r (null_bvar 0)) should_elim_false)  
 
 let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in
@@ -481,7 +481,7 @@ let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : co
 
 let comp_rewrite (p q:vprop) : comp =
   C_STGhost Tm_EmpInames {
-			u = U_zero;
+			u = u0;
 			res = tm_unit;
 			pre = p;
 			post = q;
@@ -505,7 +505,7 @@ let tot_typing (g:env) (e:term) (t:term) =
     my_erased (typing g e t)
 
 let universe_of (g:env) (t:term) (u:universe) =
-    tot_typing g t (Tm_Type u)
+    tot_typing g t (tm_type u)
 
 let non_informative_t (g:env) (u:universe) (t:term) =
     w:term & tot_typing g w (non_informative_witness_t u t)
@@ -524,7 +524,7 @@ type st_equiv : env -> comp -> comp -> Type =
       c2:comp_st { st_equiv_pre c1 c2 } -> 
       x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars (comp_post c1)) /\ ~(x `Set.mem` freevars (comp_post c2)) } ->
       tot_typing g (comp_pre c1) Tm_VProp ->
-      tot_typing g (comp_res c1) (Tm_Type (comp_u c1)) ->
+      tot_typing g (comp_res c1) (tm_type (comp_u c1)) ->
       tot_typing (extend x (Inl (comp_res c1)) g) (open_term (comp_post c1) x) Tm_VProp ->
       vprop_equiv g (comp_pre c1) (comp_pre c2) ->
       vprop_equiv (extend x (Inl (comp_res c1)) g) 
@@ -598,7 +598,9 @@ type st_comp_typing : env -> st_comp -> Type =
       tot_typing (extend x (Inl st.res) g) (open_term st.post x) Tm_VProp ->
       st_comp_typing g st
 
-and comp_typing : env -> comp -> universe -> Type =
+[@@ no_auto_projectors]
+noeq
+type comp_typing : env -> comp -> universe -> Type =
   | CT_Tot :
       g:env ->
       t:term ->
@@ -628,7 +630,9 @@ and comp_typing : env -> comp -> universe -> Type =
       st_comp_typing g st ->
       comp_typing g (C_STGhost inames st) st.u
 
-and st_typing : env -> st_term -> comp -> Type =
+[@@ no_auto_projectors]
+noeq
+type st_typing : env -> st_term -> comp -> Type =
   | T_Abs: 
       g:env ->
       x:var { None? (lookup g x) } ->
@@ -637,10 +641,10 @@ and st_typing : env -> st_term -> comp -> Type =
       u:universe ->
       body:st_term {~ (x `Set.mem` freevars_st body) } ->
       c:comp ->
-      tot_typing g b.binder_ty (Tm_Type u) ->
+      tot_typing g b.binder_ty (tm_type u) ->
       st_typing (extend x (Inl b.binder_ty) g) (open_st_term_nv body (b.binder_ppname, x)) c ->
       st_typing g (wr (Tm_Abs { b; q; pre=None; body; post=None }))
-                  (C_Tot (Tm_Arrow b q (close_comp c x)))
+                  (C_Tot (tm_arrow b q (close_comp c x)))
   | T_STApp :
       g:env ->
       head:term ->
@@ -648,7 +652,7 @@ and st_typing : env -> st_term -> comp -> Type =
       q:option qualifier ->
       res:comp_st ->
       arg:term ->
-      tot_typing g head (Tm_Arrow (as_binder ty) q res) ->
+      tot_typing g head (tm_arrow (as_binder ty) q res) ->
       tot_typing g arg ty ->
       st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
@@ -687,7 +691,7 @@ and st_typing : env -> st_term -> comp -> Type =
       x:var { None? (lookup g x)  /\ ~(x `Set.mem` freevars_st e2) } ->
       c:comp ->
       st_typing g e1 c1 ->
-      tot_typing g (comp_res c1) (Tm_Type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
+      tot_typing g (comp_res c1) (tm_type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
       st_typing (extend x (Inl (comp_res c1)) g) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       bind_comp g x c1 c2 c ->
       st_typing g (wr (Tm_Bind { binder=b; head=e1; body=e2 })) c
@@ -720,8 +724,8 @@ and st_typing : env -> st_term -> comp -> Type =
                ~(hyp `Set.mem` (freevars_st e1 `Set.union` freevars_st e2))
               } ->
       tot_typing g b tm_bool ->
-      st_typing (extend hyp (Inl (mk_eq2 U_zero tm_bool b tm_true)) g) e1 c ->
-      st_typing (extend hyp (Inl (mk_eq2 U_zero tm_bool b tm_false)) g) e2 c ->
+      st_typing (extend hyp (Inl (mk_eq2 u0 tm_bool b tm_true)) g) e1 c ->
+      st_typing (extend hyp (Inl (mk_eq2 u0 tm_bool b tm_false)) g) e2 c ->
       my_erased (comp_typing g c uc) ->
       st_typing g (wr (Tm_If { b; then_=e1; else_=e2; post=None })) c
 
@@ -749,7 +753,7 @@ and st_typing : env -> st_term -> comp -> Type =
       t:term ->
       p:term ->
       x:var { None? (lookup g x) } ->
-      tot_typing g t (Tm_Type u) ->
+      tot_typing g t (tm_type u) ->
       tot_typing g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
       st_typing g (wr (Tm_ElimExists { p = Tm_ExistsSL u t p should_elim_false }))
                     (comp_elim_exists u t p x)
@@ -760,7 +764,7 @@ and st_typing : env -> st_term -> comp -> Type =
       t:term ->
       p:term ->
       e:term ->
-      tot_typing g t (Tm_Type u) ->
+      tot_typing g t (tm_type u) ->
       tot_typing g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
       tot_typing g e t ->
       st_typing g (wr (Tm_IntroExists { erased = false;
@@ -774,7 +778,7 @@ and st_typing : env -> st_term -> comp -> Type =
       t:term ->
       p:term ->
       e:term ->
-      tot_typing g t (Tm_Type u) ->
+      tot_typing g t (tm_type u) ->
       tot_typing g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
       tot_typing g e (mk_erased u t)  ->
       st_typing g (wr (Tm_IntroExists { erased = true;
@@ -787,7 +791,7 @@ and st_typing : env -> st_term -> comp -> Type =
       inv:term ->
       cond:st_term ->
       body:st_term ->
-      tot_typing g (Tm_ExistsSL U_zero tm_bool inv should_elim_false) Tm_VProp ->
+      tot_typing g (Tm_ExistsSL u0 tm_bool inv should_elim_false) Tm_VProp ->
       st_typing g cond (comp_while_cond inv) ->
       st_typing g body (comp_while_body inv) ->
       st_typing g (wr (Tm_While { invariant = inv;
@@ -819,7 +823,7 @@ and st_typing : env -> st_term -> comp -> Type =
       c:comp { C_ST? c } ->
       x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
       tot_typing g init init_t ->
-      universe_of g init_t U_zero ->
+      universe_of g init_t u0 ->
       comp_typing g c (comp_u c) ->
       st_typing (extend x (Inl (mk_ref init_t)) g)
                 (open_st_term_nv body (v_as_nv x))

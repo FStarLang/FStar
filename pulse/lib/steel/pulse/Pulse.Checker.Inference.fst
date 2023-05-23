@@ -4,8 +4,6 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
-open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Checker.Framing
 module P = Pulse.Syntax.Printer
@@ -14,9 +12,10 @@ module RT = FStar.Reflection.Typing
 module RUtil = Pulse.Reflection.Util
 
 let rec gen_uvars (t_head:term) : T.Tac (list term & comp) =
-  match t_head with
-  | Tm_Arrow {binder_ty=t} (Some Implicit) c_rest -> (
-    let uv = gen_uvar t in
+  let ropt = is_arrow t_head in
+  match ropt with
+  | Some (_, Some Implicit, c_rest) -> (
+    let uv = gen_uvar () in
     let c_rest = open_comp_with c_rest uv in
     match c_rest with
     | C_ST c
@@ -44,16 +43,19 @@ let rec check_valid_solution (t1 t2:term) (uv_sols:list (term & term))
 
 let is_reveal_uvar (t:term) : option (universe & term & term) =
   match t with
-  | Tm_PureApp (Tm_PureApp (Tm_UInst l [u]) (Some Implicit) ty) None (Tm_UVar n) ->
-    if l.fv_name = RUtil.reveal_lid
-    then Some (u, ty, Tm_UVar n)
-    else None
+  | Tm_PureApp (Tm_PureApp hd (Some Implicit) ty) None (Tm_UVar n) ->
+    (match is_fvar hd with
+     | Some (l, [u]) ->
+       if l = RUtil.reveal_lid
+       then Some (u, ty, Tm_UVar n)
+       else None
+     | _ -> None)
   | _ -> None
 
 let is_reveal (t:term) : bool =
   let hd, _ = leftmost_head_and_args t in
-  match hd with
-  | Tm_UInst l [_] -> l.fv_name = RUtil.reveal_lid
+  match is_fvar hd with
+  | Some (l, [_]) -> l = RUtil.reveal_lid
   | _ -> false
 
 let rec match_typ (t1 t2:term) (uv_sols:list (term & term))
@@ -216,16 +218,10 @@ let find_solution (sol:list (term * term)) (uv:int)
 let rec apply_solution (sol:list (term * term)) (t:term)
   : term
   = match t with
-    | Tm_BVar _
-    | Tm_Var _
-    | Tm_FVar _
-    | Tm_UInst _ _
-    | Tm_Constant _
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_Type _ 
     | Tm_Unknown -> t
     | Tm_UVar uv -> (
       match find_solution sol uv with
@@ -233,19 +229,10 @@ let rec apply_solution (sol:list (term * term)) (t:term)
       | Some t -> t
     )
       
-    | Tm_Refine b t ->
-      Tm_Refine (apply_solution_binder sol b)
-                (apply_solution sol t)
-
     | Tm_PureApp head q arg ->
       Tm_PureApp (apply_solution sol head)
                  q
                  (apply_solution sol arg)
-
-    | Tm_Let t e1 e2 ->
-      Tm_Let (apply_solution sol t)
-             (apply_solution sol e1)
-             (apply_solution sol e2)
 
     | Tm_Pure p ->
       Tm_Pure (apply_solution sol p)
@@ -262,57 +249,37 @@ let rec apply_solution (sol:list (term * term)) (t:term)
       Tm_ForallSL u (apply_solution sol t)
                     (apply_solution sol body)
                     
-    | Tm_Arrow b q body ->
-      Tm_Arrow (apply_solution_binder sol b)
-               q
-               (apply_solution_comp sol body)
-
-    | Tm_FStar t ->
+    | Tm_FStar t r ->
       //TODO: What does inference mean for terms that contain embedded F* terms?
-      Tm_FStar t
+      Tm_FStar t r
 
-and apply_solution_binder (sol:list (term & term))
-                          (b:binder)
-  : binder
-  = { b with binder_ty = apply_solution sol b.binder_ty }
+// let apply_solution_binder (sol:list (term & term))
+//                           (b:binder)
+//   : binder
+//   = { b with binder_ty = apply_solution sol b.binder_ty }
 
-and apply_solution_comp (sol:list (term & term))
-                        (c:comp)
-  : comp
-  = match c with
-    | C_Tot t ->
-      C_Tot (apply_solution sol t)
-    | _ -> c //TODO?
+// let apply_solution_comp (sol:list (term & term))
+//                         (c:comp)
+//   : comp
+//   = match c with
+//     | C_Tot t ->
+//       C_Tot (apply_solution sol t)
+//     | _ -> c //TODO?
 
 
 let rec contains_uvar (t:term)
   : bool
   = match t with
-    | Tm_BVar _
-    | Tm_Var _
-    | Tm_FVar _
-    | Tm_UInst _ _
-    | Tm_Constant _
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_Type _ 
     | Tm_Unknown -> false
     | Tm_UVar _ -> true
       
-    | Tm_Refine b t ->
-      contains_uvar_binder b ||
-      contains_uvar t
-
     | Tm_PureApp head q arg ->
       contains_uvar head ||
       contains_uvar arg
-
-    | Tm_Let t e1 e2 ->
-      (contains_uvar t) ||
-      (contains_uvar e1) ||
-      (contains_uvar e2)
 
     | Tm_Pure p ->
       (contains_uvar p)
@@ -329,23 +296,19 @@ let rec contains_uvar (t:term)
       (contains_uvar t) ||
       (contains_uvar body)
                     
-    | Tm_Arrow b q body ->
-      (contains_uvar_binder b) ||
-      (contains_uvar_comp body)
-
-    | Tm_FStar t ->
+    | Tm_FStar _ _ ->
       // TODO: should embedded F* terms be allowed to contain Pulse uvars?
       false
 
-and contains_uvar_binder  (b:binder)
-  : bool
-  = contains_uvar b.binder_ty
+// let contains_uvar_binder  (b:binder)
+//   : bool
+//   = contains_uvar b.binder_ty
 
-and contains_uvar_comp  (c:comp)
-  : bool
-  = match c with
-    | C_Tot t ->
-      (contains_uvar t)
-    | _ -> true
+// let contains_uvar_comp  (c:comp)
+//   : bool
+//   = match c with
+//     | C_Tot t ->
+//       (contains_uvar t)
+//     | _ -> true
 
 let try_unify (l r:term) = match_typ l r []

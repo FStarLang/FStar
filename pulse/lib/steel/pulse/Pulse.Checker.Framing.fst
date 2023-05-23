@@ -5,9 +5,7 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
-open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
@@ -117,8 +115,8 @@ let check_one_vprop g (p q:term) : T.Tac (option (vprop_equiv g p q)) =
       match p, q with
       | Tm_PureApp hd_p _ _, Tm_PureApp hd_q _ _ ->
         eq_tm hd_p hd_q
-      | Tm_FStar _, _
-      | _, Tm_FStar _ -> true
+      | Tm_FStar _ _, _
+      | _, Tm_FStar _ _ -> true
       | _, _ -> false in
     if check_extensional_equality
     then
@@ -414,7 +412,7 @@ let try_frame_pre (#g:env)
       let pre_typing = check_vprop_with_core g (comp_pre c') in
       let post_typing = check_vprop_with_core g' (open_term_nv (comp_post c') px) in
       let (| u, res_typing |) = check_universe g (comp_res c') in
-      if u <> comp_u c' 
+      if not (eq_univ u (comp_u c'))
       then T.fail "Unexpected universe"
       else (
         let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing ve ve' in
@@ -447,11 +445,11 @@ let frame_empty (#g:env)
       = check_vprop_with_core g (comp_pre c)
     in
     let (| u, res_typing |) = check_universe g (comp_res c) in
-    if u <> comp_u c
+    if not (eq_univ u (comp_u c))
     then T.fail "Unexpected universe"
     else (
       let res_typing 
-        : tot_typing g (comp_res c) (Tm_Type (comp_u c))
+        : tot_typing g (comp_res c) (tm_type (comp_u c))
         = res_typing 
       in
       let post_typing

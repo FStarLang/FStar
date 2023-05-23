@@ -1,4 +1,4 @@
-module Pulse.Syntax
+module Pulse.Syntax.Base
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection
@@ -6,20 +6,12 @@ open FStar.List.Tot
 
 module T = FStar.Tactics
 
-type constant =
-  | Unit
-  | Bool of bool
-  | Int of int
+type constant = R.vconst
 
 let var = nat
 let index = nat
 
-type universe = 
-  | U_zero
-  | U_succ of universe
-  | U_var of string
-  | U_max : universe -> universe -> universe
-  | U_unknown
+type universe = R.universe
 
 (* locally nameless. *)
 let ppname = RT.pp_name_t
@@ -66,48 +58,42 @@ let host_term = t:R.term { not_tv_unknown t }
 [@@ no_auto_projectors]
 noeq
 type term =
-  | Tm_BVar       : bv -> term
-  | Tm_Var        : nm -> term
-  | Tm_FVar       : l:fv -> term
-  | Tm_UInst      : l:fv -> us:list universe -> term
-  | Tm_Constant   : c:constant -> term
-  | Tm_Refine     : b:binder -> term -> term
   | Tm_PureApp    : head:term -> arg_qual:option qualifier -> arg:term -> term
-  | Tm_Let        : t:term -> e1:term -> e2:term -> term  
   | Tm_Emp        : term
   | Tm_Pure       : p:term -> term
   | Tm_Star       : l:vprop -> r:vprop -> term
   | Tm_ExistsSL   : u:universe -> t:term -> body:vprop -> should_elim:should_elim_t -> term
   | Tm_ForallSL   : u:universe -> t:term -> body:vprop -> term
-  | Tm_Arrow      : b:binder -> q:option qualifier -> body:comp -> term 
-  | Tm_Type       : universe -> term
   | Tm_VProp      : term
   | Tm_Inames     : term  // type inames
   | Tm_EmpInames  : term
   | Tm_UVar       : int -> term
-  | Tm_FStar      : host_term -> term
+  | Tm_FStar      : host_term -> range -> term
   | Tm_Unknown    : term
 
+and vprop = term
 
-and binder = {
+noeq
+type binder = {
   binder_ty     : term;
   binder_ppname : ppname;
 }
 
-and comp =
-  | C_Tot      : term -> comp
-  | C_ST       : st_comp -> comp
-  | C_STAtomic : term -> st_comp -> comp  // inames
-  | C_STGhost  : term -> st_comp -> comp  // inames
-
-and st_comp = { (* ST pre (x:res) post ... x is free in post *)
+noeq
+type st_comp = { (* ST pre (x:res) post ... x is free in post *)
   u:universe;
   res:term;
   pre:vprop;
   post:vprop
 }
 
-and vprop = term
+noeq
+type comp =
+  | C_Tot      : term -> comp
+  | C_ST       : st_comp -> comp
+  | C_STAtomic : term -> st_comp -> comp  // inames
+  | C_STGhost  : term -> st_comp -> comp  // inames
+
 
 let comp_st = c:comp {not (C_Tot? c) }
 
@@ -203,24 +189,20 @@ let null_binder (t:term) : binder =
 let mk_binder (s:string) (t:term) : binder =
   {binder_ty=t;binder_ppname=RT.seal_pp_name s}
 
-let mk_bvar (s:string) (r:Range.range) (i:index) : term =
-  Tm_BVar {bv_index=i;bv_ppname=RT.seal_pp_name s;bv_range=r}
-
-let null_var (v:var) : term = Tm_Var {nm_index=v;nm_ppname=RT.pp_name_default;nm_range=Range.range_0}
-
-let null_bvar (i:index) : term = Tm_BVar {bv_index=i;bv_ppname=RT.pp_name_default;bv_range=Range.range_0}
-
-let gen_uvar (t:term) : T.Tac term =
+let gen_uvar () : T.Tac term =
   Tm_UVar (T.fresh ())
+
+val eq_univ (u1 u2:universe)
+  : b:bool { b <==> (u1 == u2) }
 
 val eq_tm (t1 t2:term) 
   : b:bool { b <==> (t1 == t2) }
 
-val eq_comp (c1 c2:comp) 
-  : b:bool { b <==> (c1 == c2) }
-
 val eq_st_comp (s1 s2:st_comp)  
   : b:bool { b <==> (s1 == s2) }
+
+val eq_comp (c1 c2:comp) 
+  : b:bool { b <==> (c1 == c2) }
 
 val eq_tm_opt (t1 t2:option term)
   : b:bool { b <==> (t1 == t2) }
@@ -286,5 +268,3 @@ let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
 
 let nvar = ppname & var 
 let v_as_nv x = RT.pp_name_default, x
-let term_of_nvar (x:nvar) = Tm_Var { nm_ppname=fst x; nm_index=snd x; nm_range=FStar.Range.range_0}
-let term_of_no_name_var (x:var) = term_of_nvar (v_as_nv x)
