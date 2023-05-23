@@ -25,7 +25,6 @@ buildDunePackage {
 
   buildInputs = [
     batteries
-    menhir
     menhirLib
     pprint
     ppx_deriving
