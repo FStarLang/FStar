@@ -1262,7 +1262,7 @@ let rec check' : bool -> check_t =
     then auto_elims g pre t
     else t
   in
-  T.print (Printf.sprintf "At %s: precondition is %s\n"
+  T.print (Printf.sprintf "At %s: context is %s\n"
                           (T.range_to_string t.range)
                           (Pulse.Syntax.Printer.term_to_string pre));
   try 

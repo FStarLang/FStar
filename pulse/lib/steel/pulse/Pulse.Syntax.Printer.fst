@@ -66,7 +66,7 @@ let rec term_to_string (t:term)
     //     (term_to_string e2)        
       
     | Tm_Emp -> "emp"
-    | Tm_Pure p -> sprintf "pure %s" (term_to_string p)
+    | Tm_Pure p -> sprintf "tm_pure %s" (term_to_string p)
     | Tm_Star p1 p2 ->
       sprintf "(%s * %s)" (term_to_string p1)
                           (term_to_string p2)

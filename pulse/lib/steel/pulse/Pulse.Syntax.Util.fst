@@ -7,14 +7,6 @@ open Pulse.Syntax.Naming
 open Pulse.Elaborate.Pure
 open Pulse.Readback
 
-// let is_fvar (t:term) (nm:R.name) : bool =
-//   match t with
-//   | Tm_FStar host_term _ ->
-//     (match R.inspect_ln host_term with
-//      | R.Tv_FVar fv -> R.inspect_fv fv = nm
-//      | _ -> false)
-//   | _ -> false
-
 let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
   match f with
   | None -> None
@@ -91,4 +83,15 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
           
           | _ -> None
     end
+  | _ -> None
+
+let is_embedded_uvar (t:term) : option nat =
+  match is_fvar t with
+  | Some (l, [u]) ->
+    if l = embedded_uvar_lid
+    then begin match R.inspect_universe u with
+               | R.Uv_BVar n -> Some n
+               | _ -> None
+         end
+    else None
   | _ -> None
