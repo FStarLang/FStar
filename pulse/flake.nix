@@ -11,7 +11,7 @@
         pkgs = import nixpkgs { inherit system; };
         fstarPkgs = fstar.packages.${system};
         ocamlPackages = fstarPkgs.ocamlPackages;
-        steel = pkgs.stdenv.mkDerivation {
+        default = pkgs.stdenv.mkDerivation {
           name = "steel";
           src = ./.;
           nativeBuildInputs = [
@@ -29,18 +29,18 @@
             ocamlPackages.batteries
             ocamlPackages.zarith
           ];
-          buildFlags = [ "lib" "verify-steel" ];
           installPhase = ''
             mkdir -p $out
             PREFIX=$out make install
           '';
           enableParallelBuilding = true;
         };
+        steel =
+          default.overrideAttrs (_: { buildFlags = [ "lib" "verify-steel" ]; });
       in {
         packages = {
-          inherit steel;
-          default = steel;
+          inherit default steel;
         };
-        hydraJobs = { inherit steel; };
+        hydraJobs = { inherit default steel; };
       });
 }
