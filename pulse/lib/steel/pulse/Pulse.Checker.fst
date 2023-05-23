@@ -730,7 +730,6 @@ let range_of_head (t:st_term) : option (term & range) =
 
 let tag_of_term (t:term) =
   match t with
-  // | Tm_PureApp hd _ _ -> "Tm_PureApp"
   | Tm_Emp -> "Tm_Emp"
   | Tm_Pure _ -> "Tm_Pure"
   | Tm_Star _ _ -> "Tm_Star"
@@ -741,7 +740,7 @@ let tag_of_term (t:term) =
   | Tm_EmpInames -> "Tm_EmpInames"
   | Tm_Unknown -> "Tm_Unknown"
   | Tm_UVar _ -> "Tm_UVar"
-  | Tm_FStar _ _ -> "Tm_FStar"  // TODO: FIXME: ADD MORE CASES HERE
+  | Tm_FStar _ _ -> "Tm_FStar"
 
 let maybe_log t =
   let _ =
