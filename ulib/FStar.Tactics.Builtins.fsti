@@ -103,30 +103,30 @@ environment, turning [Gamma |- ?u : x:a -> b] into [Gamma, x:a |- ?u' : b].
 Note that this does not work for logical implications/forall. See
 FStar.Tactics.Logic for that.
 *)
-val intro : unit -> Tac binder
+val intro : unit -> Tac namedv
 
 (** Similar to intros, but allows to build a recursive function.
 Currently broken (c.f. issue #1103)
 *)
-val intro_rec  : unit -> Tac (binder * binder)
+val intro_rec  : unit -> Tac (namedv * namedv)
 
 (** [rename_to b nm] will rename the binder [b] to [nm] in
 the environment, goal, and witness in a safe manner. The only use of this
 is to make goals and terms more user readable. The primitive returns
 the new binder, since the old one disappears from the context. *)
-val rename_to  : binder -> string -> Tac binder
+val rename_to  : namedv -> string -> Tac namedv
 
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].
 *)
 val revert  : unit -> Tac unit
 
-(** [binder_retype] changes the type of a binder in the context. After calling it
+(** [var_retype] changes the type of a variable in the context. After calling it
 with a binder of type `t`, the user is presented with a goal of the form `t == ?u`
 to be filled. The original goal (following that one) has the type of `b` in the
 context replaced by `?u`.
 *)
-val binder_retype  : binder -> Tac unit
+val var_retype  : namedv -> Tac unit
 
 (** [clear_top] will drop the outermost binder from the environment.
 Can only be used if the goal does not at all depend on it.
@@ -136,12 +136,12 @@ val clear_top : unit -> Tac unit
 (** [clear] will drop the given binder from the context, is
 nothing depends on it.
 *)
-val clear : binder -> Tac unit
+val clear : namedv -> Tac unit
 
 (** If [b] is a binder of type [v == r], [rewrite b] will rewrite
 the variable [v] for [r] everywhere in the current goal type and witness/
 *)
-val rewrite : binder -> Tac unit
+val rewrite : namedv -> Tac unit
 
 (** First boolean is whether to attempt to introduce a refinement
 before solving. In that case, a goal for the refinement formula will be
@@ -367,6 +367,9 @@ val pack    : term_view -> Tac term
 (** Similar to [pack] above, but does not flatten arrows, it leaves
     then in a curried form instead *)
 val pack_curried : term_view -> Tac term
+
+(** A hack, explain *)
+val binder_bv : binder -> Tac bv
 
 (** Join the first two goals, which must be irrelevant, in a single
 one by finding a maximal prefix of their environment and reverting

@@ -5,6 +5,9 @@ open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Tactics.Derived
 
+(* FIXME *)
+let namedv_to_string x = "namedv_to_string IOU"
+
 private
 let paren (s:string) : string = "(" ^ s ^ ")"
 
@@ -35,7 +38,7 @@ let universes_to_ast_string (us:universes) : Tac string =
 
 let rec term_to_ast_string (t:term) : Tac string =
   match inspect t with
-  | Tv_Var bv -> "Tv_Var " ^ bv_to_string bv
+  | Tv_Var bv -> "Tv_Var " ^ namedv_to_string bv
   | Tv_BVar bv -> "Tv_BVar " ^ bv_to_string bv
   | Tv_FVar fv -> "Tv_FVar " ^ fv_to_string fv
   | Tv_UInst fv us ->

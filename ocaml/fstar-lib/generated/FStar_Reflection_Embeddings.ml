@@ -1,4 +1,5 @@
 open Prims
+type namedv = FStar_Syntax_Syntax.bv
 let (noaqs : FStar_Syntax_Syntax.antiquotations) = (Prims.int_zero, [])
 let mk_emb :
   'uuuuu .
@@ -67,6 +68,7 @@ let (e_bv : FStar_Syntax_Syntax.bv FStar_Syntax_Embeddings.embedding) =
          else ();
          FStar_Pervasives_Native.None) in
   mk_emb embed_bv unembed_bv FStar_Reflection_Constants.fstar_refl_bv
+let (e_namedv : namedv FStar_Syntax_Embeddings.embedding) = e_bv
 let (e_binder : FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings.embedding)
   =
   let embed_binder rng b =
@@ -1577,7 +1579,10 @@ let (e_binder_view :
   let embed_binder_view rng bview =
     let uu___ =
       let uu___1 =
-        let uu___2 = embed e_bv rng bview.FStar_Reflection_Data.binder_bv in
+        let uu___2 =
+          let uu___3 =
+            FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_string in
+          embed uu___3 rng bview.FStar_Reflection_Data.binder_ppname in
         FStar_Syntax_Syntax.as_arg uu___2 in
       let uu___2 =
         let uu___3 =
@@ -1613,14 +1618,18 @@ let (e_binder_view :
           (uu___2, args) in
         (match uu___1 with
          | (FStar_Syntax_Syntax.Tm_fvar fv,
-            (bv, uu___2)::(q, uu___3)::(attrs, uu___4)::(sort, uu___5)::[])
+            (ppname, uu___2)::(q, uu___3)::(attrs, uu___4)::(sort, uu___5)::[])
              when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Constants.ref_Mk_binder.FStar_Reflection_Constants.lid
              ->
-             let uu___6 = unembed' w e_bv bv in
+             let uu___6 =
+               let uu___7 =
+                 FStar_Syntax_Embeddings.e_sealed
+                   FStar_Syntax_Embeddings.e_string in
+               unembed' w uu___7 ppname in
              FStar_Compiler_Util.bind_opt uu___6
-               (fun bv1 ->
+               (fun ppname1 ->
                   let uu___7 = unembed' w e_aqualv q in
                   FStar_Compiler_Util.bind_opt uu___7
                     (fun q1 ->
@@ -1634,7 +1643,8 @@ let (e_binder_view :
                                    (fun uu___10 ->
                                       FStar_Pervasives_Native.Some uu___10)
                                    {
-                                     FStar_Reflection_Data.binder_bv = bv1;
+                                     FStar_Reflection_Data.binder_ppname =
+                                       ppname1;
                                      FStar_Reflection_Data.binder_qual = q1;
                                      FStar_Reflection_Data.binder_attrs =
                                        attrs1;

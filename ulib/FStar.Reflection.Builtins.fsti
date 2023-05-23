@@ -56,6 +56,9 @@ val pack_sigelt    : sigelt_view -> sigelt
 val inspect_fv     : fv -> name
 val pack_fv        : name -> fv
 
+val inspect_namedv : v:namedv -> nv:namedv_view {nv << v}
+val pack_namedv    : namedv_view -> namedv
+
 val inspect_bv     : v:bv -> bvv:bv_view {bvv << v}
 val pack_bv        : bv_view -> bv
 
@@ -74,6 +77,9 @@ val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
 val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
 val inspect_pack_comp_inv : (cv:comp_view) -> Lemma (inspect_comp (pack_comp cv) == cv)
+
+val inspect_pack_namedv (xv:namedv_view) : Lemma (inspect_namedv (pack_namedv xv) == xv)
+val pack_inspect_namedv (x:namedv) : Lemma (pack_namedv (inspect_namedv x) == x)
 
 val inspect_pack_bv (xv:bv_view) : Lemma (inspect_bv (pack_bv xv) == xv)
 val pack_inspect_bv (x:bv) : Lemma (pack_bv (inspect_bv x) == x)
@@ -98,7 +104,9 @@ val compare_string : s1:string -> s2:string -> x:int{x == 0 <==> s1 == s2}
 (** Primitives & helpers *)
 val lookup_typ            : env -> name -> option sigelt
 val compare_bv            : bv -> bv -> order
+val compare_namedv        : namedv -> namedv -> order
 val binders_of_env        : env -> binders
+val vars_of_env           : env -> list namedv
 val moduleof              : env -> name
 val lookup_attr           : term -> env -> list fv
 val all_defs_in_env       : env -> list fv

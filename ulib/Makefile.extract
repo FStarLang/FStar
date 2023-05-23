@@ -37,10 +37,10 @@ $(DEPENDRSP):
 $(DEPEND): $(DEPENDRSP)
 	$(call msg, "DEPEND")
 	$(Q)mkdir -p .cache
-	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP) --output_deps_to $@
+	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP) > $@
 
 dep.graph: $(DEPENDRSP)
-	$(Q)$(MY_FSTAR) --dep graph $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP) --output_deps_to $@
+	$(Q)$(MY_FSTAR) --dep graph $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP)
 
 depgraph.pdf: dep.graph
 	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph

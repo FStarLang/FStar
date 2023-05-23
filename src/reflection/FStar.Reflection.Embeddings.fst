@@ -77,6 +77,8 @@ let e_bv =
     in
     mk_emb embed_bv unembed_bv fstar_refl_bv
 
+let e_namedv = e_bv
+
 let e_binder =
     let embed_binder (rng:Range.range) (b:binder) : term =
         U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
@@ -658,7 +660,7 @@ let e_attributes = e_list e_attribute
 
 let e_binder_view =
   let embed_binder_view (rng:Range.range) (bview:binder_view) : term =
-    S.mk_Tm_app ref_Mk_binder.t [S.as_arg (embed e_bv rng bview.binder_bv);
+    S.mk_Tm_app ref_Mk_binder.t [S.as_arg (embed (e_sealed e_string) rng bview.binder_ppname);
                                  S.as_arg (embed e_aqualv rng bview.binder_qual);
                                  S.as_arg (embed e_attributes rng bview.binder_attrs);
                                  S.as_arg (embed e_term rng bview.binder_sort)]
@@ -668,13 +670,13 @@ let e_binder_view =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(bv, _); (q, _); (attrs, _); (sort, _)]
+    | Tm_fvar fv, [(ppname, _); (q, _); (attrs, _); (sort, _)]
       when S.fv_eq_lid fv ref_Mk_binder.lid ->
-      BU.bind_opt (unembed' w e_bv bv) (fun bv ->
+      BU.bind_opt (unembed' w (e_sealed e_string) ppname) (fun ppname ->
       BU.bind_opt (unembed' w e_aqualv q) (fun q ->
       BU.bind_opt (unembed' w e_attributes attrs) (fun attrs ->
       BU.bind_opt (unembed' w e_term sort) (fun sort ->
-      Some <| RD.({ binder_bv=bv;binder_qual=q; binder_attrs=attrs; binder_sort = sort})))))
+      Some <| RD.({ binder_ppname=ppname; binder_qual=q; binder_attrs=attrs; binder_sort = sort})))))
 
     | _ ->
       if w then

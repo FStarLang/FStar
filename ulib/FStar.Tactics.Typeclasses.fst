@@ -147,7 +147,7 @@ let mk_class (nm:string) : Tac decls =
                   let dbv = fresh_bv_named "d" in
                   let tcr = (`tcresolve) in
                   let tcdict = pack_binder {
-                    binder_bv=dbv;
+                    binder_ppname = seal "dict";
                     binder_qual=Q_Meta tcr;
                     binder_attrs=[];
                     binder_sort=cod;
@@ -173,9 +173,8 @@ let mk_class (nm:string) : Tac decls =
                     match bs with
                     | [] -> fail "mk_class: impossible, no binders"
                     | b1::bs' ->
-                        let bv = (inspect_binder b1).binder_bv in
                         let b1 = pack_binder {
-                          binder_bv=bv;
+                          binder_ppname=(inspect_binder b1).binder_ppname;
                           binder_qual=Q_Meta tcr;
                           binder_attrs=[];
                           binder_sort=(inspect_binder b1).binder_sort;

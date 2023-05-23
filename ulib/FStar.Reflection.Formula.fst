@@ -26,7 +26,12 @@ open FStar.Reflection.Data
 ///// Cannot open FStar.Tactics.Derived here /////
 private let bv_to_string (bv : bv) : Tac string =
     let bvv = inspect_bv bv in
-    unseal (bvv.bv_ppname)
+    unseal bvv.bv_ppname
+
+private let namedv_to_string (namedv : namedv) : Tac string =
+    let namedvv = inspect_namedv namedv in
+    unseal namedvv.namedv_ppname
+
 private let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
   match inspect t with
   | Tv_AscribedT t _ _ _
@@ -59,18 +64,20 @@ noeq type formula =
   | Forall : bv -> typ -> term -> formula
   | Exists : bv -> typ -> term -> formula
   | App    : term -> term -> formula
-  | Name   : bv -> formula
+  | Name   : namedv -> formula
   | FV     : fv -> formula
   | IntLit : int -> formula
   | F_Unknown : formula // Also a baked-in "None"
 
 let mk_Forall (typ : term) (pred : term) : Tac formula =
     let b = pack_bv ({ bv_ppname = as_ppname "x";
+                       bv_sort = seal typ;
                        bv_index = 0; }) in
     Forall b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let mk_Exists (typ : term) (pred : term) : Tac formula =
     let b = pack_bv ({ bv_ppname = as_ppname "x";
+                       bv_sort = seal typ;
                        bv_index = 0; }) in
     Exists b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
@@ -224,7 +231,7 @@ let formula_to_string (f:formula) : Tac string =
     | Forall bs _sort t -> "Forall <bs> (" ^ term_to_string t ^ ")"
     | Exists bs _sort t -> "Exists <bs> (" ^ term_to_string t ^ ")"
     | App p q ->  "App (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
-    | Name bv ->  "Name (" ^ bv_to_string bv ^ ")"
+    | Name bv ->  "Name (" ^ namedv_to_string bv ^ ")"
     | FV fv -> "FV (" ^ flatten_name (inspect_fv fv) ^ ")"
     | IntLit i -> "Int " ^ string_of_int i
     | F_Unknown -> "?"

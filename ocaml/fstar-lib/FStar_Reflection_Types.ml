@@ -2,6 +2,7 @@ open FStar_All
 
 type binder  = FStar_Syntax_Syntax.binder
 type bv      = FStar_Syntax_Syntax.bv
+type namedv  = bv
 type term    = FStar_Syntax_Syntax.term
 type env     = FStar_TypeChecker_Env.env
 type fv      = FStar_Syntax_Syntax.fv

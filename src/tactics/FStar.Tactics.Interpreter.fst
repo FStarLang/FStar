@@ -475,6 +475,10 @@ let () =
         pack_curried    RE.e_term_view RE.e_term
         pack_curried    NRE.e_term_view NRE.e_term;
 
+      mk_tac_step_1 0 "binder_bv"
+        binder_bv RE.e_binder RE.e_bv
+        binder_bv NRE.e_binder NRE.e_bv;
+
       mk_tac_step_1 0 "fresh"
         fresh       e_unit e_int
         fresh       NBET.e_unit NBET.e_int;

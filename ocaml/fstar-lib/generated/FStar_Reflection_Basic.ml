@@ -1153,10 +1153,13 @@ let (inspect_binder :
       FStar_Syntax_Util.encode_positivity_attributes
         b.FStar_Syntax_Syntax.binder_positivity
         b.FStar_Syntax_Syntax.binder_attrs in
-    let uu___ = inspect_bqual b.FStar_Syntax_Syntax.binder_qual in
+    let uu___ =
+      FStar_Ident.string_of_id
+        (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname in
+    let uu___1 = inspect_bqual b.FStar_Syntax_Syntax.binder_qual in
     {
-      FStar_Reflection_Data.binder_bv = (b.FStar_Syntax_Syntax.binder_bv);
-      FStar_Reflection_Data.binder_qual = uu___;
+      FStar_Reflection_Data.binder_ppname = uu___;
+      FStar_Reflection_Data.binder_qual = uu___1;
       FStar_Reflection_Data.binder_attrs = attrs;
       FStar_Reflection_Data.binder_sort =
         ((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)
@@ -1169,18 +1172,21 @@ let (pack_binder :
         bview.FStar_Reflection_Data.binder_attrs in
     match uu___ with
     | (pqual, attrs) ->
-        let uu___1 = pack_bqual bview.FStar_Reflection_Data.binder_qual in
+        let uu___1 =
+          let uu___2 =
+            FStar_Ident.mk_ident
+              ((bview.FStar_Reflection_Data.binder_ppname),
+                FStar_Compiler_Range_Type.dummyRange) in
+          {
+            FStar_Syntax_Syntax.ppname = uu___2;
+            FStar_Syntax_Syntax.index = Prims.int_zero;
+            FStar_Syntax_Syntax.sort =
+              (bview.FStar_Reflection_Data.binder_sort)
+          } in
+        let uu___2 = pack_bqual bview.FStar_Reflection_Data.binder_qual in
         {
-          FStar_Syntax_Syntax.binder_bv =
-            (let uu___2 = bview.FStar_Reflection_Data.binder_bv in
-             {
-               FStar_Syntax_Syntax.ppname =
-                 (uu___2.FStar_Syntax_Syntax.ppname);
-               FStar_Syntax_Syntax.index = (uu___2.FStar_Syntax_Syntax.index);
-               FStar_Syntax_Syntax.sort =
-                 (bview.FStar_Reflection_Data.binder_sort)
-             });
-          FStar_Syntax_Syntax.binder_qual = uu___1;
+          FStar_Syntax_Syntax.binder_bv = uu___1;
+          FStar_Syntax_Syntax.binder_qual = uu___2;
           FStar_Syntax_Syntax.binder_positivity = pqual;
           FStar_Syntax_Syntax.binder_attrs = attrs
         }
@@ -1305,8 +1311,8 @@ and (binder_eq :
     fun b2 ->
       let bview1 = inspect_binder b1 in
       let bview2 = inspect_binder b2 in
-      ((binding_bv_eq bview1.FStar_Reflection_Data.binder_bv
-          bview2.FStar_Reflection_Data.binder_bv)
+      ((term_eq bview1.FStar_Reflection_Data.binder_sort
+          bview2.FStar_Reflection_Data.binder_sort)
          &&
          (aqual_eq bview1.FStar_Reflection_Data.binder_qual
             bview2.FStar_Reflection_Data.binder_qual))
@@ -1414,6 +1420,14 @@ let (push_binder :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binder -> FStar_TypeChecker_Env.env)
   = fun e -> fun b -> FStar_TypeChecker_Env.push_binders e [b]
+let (push_namedv :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.bv -> FStar_TypeChecker_Env.env)
+  =
+  fun e ->
+    fun b ->
+      let uu___ = let uu___1 = FStar_Syntax_Syntax.mk_binder b in [uu___1] in
+      FStar_TypeChecker_Env.push_binders e uu___
 let (subst :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.term ->

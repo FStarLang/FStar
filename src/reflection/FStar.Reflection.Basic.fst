@@ -721,7 +721,7 @@ let pack_bv (bvv:bv_view) : bv =
 let inspect_binder (b:binder) : binder_view = 
   let attrs = U.encode_positivity_attributes b.binder_positivity b.binder_attrs in
   {
-    binder_bv = b.binder_bv;
+    binder_ppname = Ident.string_of_id b.binder_bv.ppname;
     binder_qual = inspect_bqual (b.binder_qual);
     binder_attrs = attrs;
     binder_sort = b.binder_bv.sort;
@@ -730,7 +730,10 @@ let inspect_binder (b:binder) : binder_view =
 let pack_binder (bview:binder_view) : binder = 
   let pqual, attrs = U.parse_positivity_attributes bview.binder_attrs in
   {
-    binder_bv= { bview.binder_bv with sort = bview.binder_sort };
+    binder_bv= { ppname = Ident.mk_ident (bview.binder_ppname, Range.dummyRange)
+               ; sort = bview.binder_sort
+               ; index = 0 (* irrelevant, this is a binder *)
+               };
     binder_qual=pack_bqual (bview.binder_qual);
     binder_positivity=pqual;
     binder_attrs=attrs
@@ -863,7 +866,7 @@ and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : bool =
 and binder_eq (b1 : binder) (b2 : binder) : bool =
   let bview1 = inspect_binder b1 in
   let bview2 = inspect_binder b2 in
-  binding_bv_eq bview1.binder_bv bview2.binder_bv &&
+  term_eq bview1.binder_sort bview2.binder_sort &&
     aqual_eq bview1.binder_qual bview2.binder_qual &&
     eqlist term_eq bview1.binder_attrs bview2.binder_attrs
 
@@ -932,6 +935,7 @@ and pattern_eq (p1 : pattern) (p2 : pattern) : bool =
 
   | Pat_Var (bv1, _), Pat_Var (bv2, _) ->
     binding_bv_eq bv1 bv2
+    // Should this just be true? Sorts are sealed.
 
   | Pat_Dot_Term topt1, Pat_Dot_Term topt2 ->
     eqopt term_eq topt1 topt2
@@ -952,6 +956,7 @@ let explode_qn s = String.split ['.'] s
 let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
 
 let push_binder e b = Env.push_binders e [b]
+let push_namedv e b = Env.push_binders e [S.mk_binder b]
 
 let subst (x:bv) (n:term) (m:term) : term =
   SS.subst [NT(x,n)] m

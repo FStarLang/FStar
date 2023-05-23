@@ -6677,6 +6677,13 @@ let (pack_curried :
   FStar_Reflection_Data.term_view ->
     FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
   = fun tv -> pack' tv true
+let (binder_bv :
+  FStar_Syntax_Syntax.binder ->
+    FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac)
+  =
+  fun b ->
+    FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
+      b.FStar_Syntax_Syntax.binder_bv
 let (lget :
   FStar_Syntax_Syntax.typ ->
     Prims.string -> FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)

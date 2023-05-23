@@ -24,8 +24,12 @@ open FStar.Reflection.Data
 module O = FStar.Options
 module RD = FStar.Reflection.Data
 
+(* FIXME: create a Reflection.Types module internally? *)
+type namedv = bv
+
 (* Embeddings *)
 val e_bv            : embedding bv
+val e_namedv        : embedding namedv
 val e_binder        : embedding binder
 val e_binder_view   : embedding binder_view
 val e_binders       : embedding binders

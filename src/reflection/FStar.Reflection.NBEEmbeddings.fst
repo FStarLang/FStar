@@ -603,20 +603,20 @@ let e_attributes = e_list e_attribute
 
 let e_binder_view =
   let embed_binder_view cb (bview:binder_view) : t =
-    mkConstruct ref_Mk_binder.fv [] [as_arg (embed e_bv cb bview.binder_bv);
+    mkConstruct ref_Mk_binder.fv [] [as_arg (embed (e_sealed e_string) cb bview.binder_ppname);
                                      as_arg (embed e_aqualv cb bview.binder_qual);
                                      as_arg (embed e_attributes cb bview.binder_attrs);
                                      as_arg (embed e_term cb bview.binder_sort)] in
 
   let unembed_binder_view cb (t:t) : option binder_view =
     match t.nbe_t with
-    | Construct (fv, _, [(sort, _); (attrs, _); (q, _); (bv, _)])
+    | Construct (fv, _, [(sort, _); (attrs, _); (q, _); (ppname, _)])
       when S.fv_eq_lid fv ref_Mk_binder.lid ->
-      BU.bind_opt (unembed e_bv cb bv) (fun bv ->
+      BU.bind_opt (unembed (e_sealed e_string) cb ppname) (fun ppname ->
       BU.bind_opt (unembed e_aqualv cb q) (fun q ->
       BU.bind_opt (unembed e_attributes cb attrs) (fun attrs ->
       BU.bind_opt (unembed e_term cb sort) (fun sort ->
-      Some <| RD.({binder_bv=bv;binder_qual=q;binder_attrs=attrs;binder_sort=sort})))))
+      Some <| RD.({binder_ppname=ppname;binder_qual=q;binder_attrs=attrs;binder_sort=sort})))))
 
     | _ ->
       Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder_view: %s" (t_to_string t)));

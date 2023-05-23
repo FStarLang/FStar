@@ -94,28 +94,32 @@ let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
     match projectee with | { bv_ppname; bv_index;_} -> bv_index
 type binder_view =
   {
-  binder_bv: FStar_Syntax_Syntax.bv ;
+  binder_ppname: Prims.string ;
   binder_qual: aqualv ;
   binder_attrs: FStar_Syntax_Syntax.term Prims.list ;
   binder_sort: typ }
-let (__proj__Mkbinder_view__item__binder_bv :
-  binder_view -> FStar_Syntax_Syntax.bv) =
+let (__proj__Mkbinder_view__item__binder_ppname :
+  binder_view -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_attrs; binder_sort;_} -> binder_bv
+    | { binder_ppname; binder_qual; binder_attrs; binder_sort;_} ->
+        binder_ppname
 let (__proj__Mkbinder_view__item__binder_qual : binder_view -> aqualv) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_attrs; binder_sort;_} -> binder_qual
+    | { binder_ppname; binder_qual; binder_attrs; binder_sort;_} ->
+        binder_qual
 let (__proj__Mkbinder_view__item__binder_attrs :
   binder_view -> FStar_Syntax_Syntax.term Prims.list) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_attrs; binder_sort;_} -> binder_attrs
+    | { binder_ppname; binder_qual; binder_attrs; binder_sort;_} ->
+        binder_attrs
 let (__proj__Mkbinder_view__item__binder_sort : binder_view -> typ) =
   fun projectee ->
     match projectee with
-    | { binder_bv; binder_qual; binder_attrs; binder_sort;_} -> binder_sort
+    | { binder_ppname; binder_qual; binder_attrs; binder_sort;_} ->
+        binder_sort
 type universe_view =
   | Uv_Zero 
   | Uv_Succ of FStar_Syntax_Syntax.universe 

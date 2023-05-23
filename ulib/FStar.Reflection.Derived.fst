@@ -21,8 +21,6 @@ open FStar.Reflection.Data
 open FStar.Reflection.Const
 open FStar.Order
 
-let bv_of_binder (b : binder) : bv = (inspect_binder b).binder_bv
-
 let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv} =
     match inspect_ln t with
     | Tv_AscribedT t' _ _ _
@@ -32,20 +30,20 @@ let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv
 (*
  * AR: add versions that take attributes as arguments?
  *)
-let mk_binder (bv : bv) (sort : typ) : binder =
+let mk_binder (nm : string) (sort : typ) : binder =
   pack_binder {
-    binder_bv=bv;
-    binder_qual=Q_Explicit;
-    binder_attrs=[];
-    binder_sort = sort;
+    binder_ppname = seal nm;
+    binder_qual   = Q_Explicit;
+    binder_attrs  = [];
+    binder_sort   = sort;
   }
 
-let mk_implicit_binder (bv : bv) (sort : typ) : binder =
+let mk_implicit_binder (nm : string) (sort : typ) : binder =
   pack_binder {
-    binder_bv=bv;
-    binder_qual=Q_Implicit;
-    binder_attrs=[];
-    binder_sort = sort;
+    binder_ppname = seal nm;
+    binder_qual   = Q_Implicit;
+    binder_attrs  = [];
+    binder_sort   = sort;
   }
 
 let type_of_binder (b : binder) : typ =

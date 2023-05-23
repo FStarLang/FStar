@@ -140,18 +140,18 @@ let implies_intro' () : Tac unit =
 let repeat' #a (f: unit -> Tac a) : Tac unit =
   let _ = repeat f in ()
 
-let and_elim' (h: binder) : Tac unit =
-  and_elim (pack (Tv_Var (bv_of_binder h)));
+let and_elim' (h: namedv) : Tac unit =
+  and_elim (pack (Tv_Var h));
   clear h
 
 (** Use a hypothesis at type a to satisfy a goal at type squash a *)
-let exact_hyp (a: Type0) (h: binder) : Tac unit =
+let exact_hyp (a: Type0) (h: namedv) : Tac unit =
   let hd = quote (FStar.Squash.return_squash #a) in
-  exact (mk_app hd [((pack (Tv_Var (bv_of_binder h))), Q_Explicit)])
+  exact (mk_app hd [((pack (Tv_Var h)), Q_Explicit)])
 
 (** Use a hypothesis h (of type a) to satisfy a goal at type a *)
-let exact_hyp' (h: binder): Tac unit =
-  exact (pack (Tv_Var (bv_of_binder h)))
+let exact_hyp' (h: namedv): Tac unit =
+  exact (pack (Tv_Var h))
 
 /// Pattern types
 /// =============
@@ -502,12 +502,15 @@ let solve_mp #a (problem: matching_problem)
 /// variables are holes, free variables are constants, and applications are
 /// application patterns.
 
+(* FIXME: MOVE *)
+let name_of_namedv (x:namedv) : Tac string =
+  unseal (inspect_namedv x).namedv_ppname
 
 (** Compile a term `tm` into a pattern. **)
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   match inspect tm with
   | Tv_Var bv ->
-    return (PVar (name_of_bv bv))
+    return (PVar (name_of_namedv bv))
   | Tv_FVar fv
   | Tv_UInst fv _ ->
     let qn = fv_to_string fv in
@@ -812,16 +815,16 @@ let fetch_eq_side' #a : Tac (term * term) =
   gpm (fun (left right: a) (g: pm_goal (squash (left == right))) ->
          (quote left, quote right)) ()
 
-let _ =
-  assert_by_tactic (1 + 1 == 2)
-    (fun () -> let l, r = fetch_eq_side' #int in
-               print (term_to_string l ^ " / " ^ term_to_string r))
+(* let _ = *)
+(*   assert_by_tactic (1 + 1 == 2) *)
+(*     (fun () -> let l, r = fetch_eq_side' #int in *)
+(*                print (term_to_string l ^ " / " ^ term_to_string r)) *)
 
-let _ =
-  assert_by_tactic (1 + 1 == 2)
-    (gpm (fun (left right: int) (g: pm_goal (squash (left == right))) ->
-            let l, r = quote left, quote right in
-            print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit))
+(* let _ = *)
+(*   assert_by_tactic (1 + 1 == 2) *)
+(*     (gpm (fun (left right: int) (g: pm_goal (squash (left == right))) -> *)
+(*             let l, r = quote left, quote right in *)
+(*             print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit)) *)
 
 /// Commenting out the following example and comparing ``pm`` and ``gpm`` can be
 /// instructive:
@@ -844,20 +847,20 @@ let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
 /// tried in succession, until one succeeds.  The whole process is repeated as
 /// long as at least one tactic succeeds.
 
-let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
-  assert_by_tactic (a /\ b ==> c == b ==> c)
-    (fun () -> repeat' (fun () ->
-                 gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
-                              clear h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (g: pm_goal (squash (a ==> b))) ->
-                              implies_intro' () <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
-                              and_elim' h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: pm_goal (squash a)) ->
-                              rewrite h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: pm_goal (squash a)) ->
-                              exact_hyp a h <: Tac unit) ())))));
-               qed ())
+(* let example (#a:Type0) (#b:Type0) (#c:Type0) :unit = *)
+(*   assert_by_tactic (a /\ b ==> c == b ==> c) *)
+(*     (fun () -> repeat' (fun () -> *)
+(*                  gpm #unit (fun (a: Type) (h: hyp (squash a)) -> *)
+(*                               clear h <: Tac unit) `or_else` *)
+(*                  (fun () -> gpm #unit (fun (a b: Type0) (g: pm_goal (squash (a ==> b))) -> *)
+(*                               implies_intro' () <: Tac unit) `or_else` *)
+(*                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) -> *)
+(*                               and_elim' h <: Tac unit) `or_else` *)
+(*                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: pm_goal (squash a)) -> *)
+(*                               rewrite h <: Tac unit) `or_else` *)
+(*                  (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: pm_goal (squash a)) -> *)
+(*                               exact_hyp a h <: Tac unit) ()))))); *)
+(*                qed ()) *)
 
 /// Possible extensions
 /// ===================

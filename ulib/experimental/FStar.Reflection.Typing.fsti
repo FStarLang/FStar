@@ -95,11 +95,10 @@ let seal_pp_name x : pp_name_t = FStar.Sealed.Inhabited.seal x
 
 let mk_binder (pp_name:pp_name_t) (x:var) (ty:term) (q:aqualv)
   = pack_binder
-      { binder_bv=pack_bv ({bv_ppname=pp_name;
-                            bv_index=x});
-        binder_qual=q;
-        binder_attrs=[];
-        binder_sort=ty}
+      { binder_ppname = pp_name;
+        binder_qual   = q;
+        binder_attrs  = [];
+        binder_sort   = ty}
 
 let extend_env (e:env) (x:var) (ty:term) : env =
   R.push_binder e (mk_binder (seal_pp_name "x") x ty Q_Explicit)

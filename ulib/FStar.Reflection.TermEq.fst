@@ -103,6 +103,14 @@ let bv_cmp x1 x2 =
   pack_inspect_bv x2;
   if v1.bv_index = v2.bv_index then Eq else Neq
 
+val namedv_cmp : comparator_for namedv
+let namedv_cmp x1 x2 =
+  let v1 = inspect_namedv x1 in
+  let v2 = inspect_namedv x2 in
+  pack_inspect_namedv x1;
+  pack_inspect_namedv x2;
+  if v1.namedv_uniq = v2.namedv_uniq then Eq else Neq
+
 val fv_cmp : comparator_for fv
 let fv_cmp f1 f2 =
     pack_inspect_fv f1;
@@ -234,7 +242,7 @@ let rec term_cmp t1 t2 =
   match tv1, tv2 with
   | Tv_Unsupp, _
   | _, Tv_Unsupp -> Unknown
-  | Tv_Var v1, Tv_Var v2 -> bv_cmp v1 v2
+  | Tv_Var v1, Tv_Var v2 -> namedv_cmp v1 v2
   | Tv_BVar v1, Tv_BVar v2 -> bv_cmp v1 v2
   | Tv_FVar f1, Tv_FVar f2 -> fv_cmp f1 f2
   | Tv_UInst f1 u1, Tv_UInst f2 u2 ->
@@ -328,8 +336,7 @@ and binder_cmp b1 b2 =
   let bv2 = inspect_binder b2 in
   pack_inspect_binder b1;
   pack_inspect_binder b2;
-  binding_bv_cmp bv1.binder_bv bv2.binder_bv
-   &&& term_cmp bv1.binder_sort bv2.binder_sort
+  term_cmp bv1.binder_sort bv2.binder_sort
    &&& aqual_cmp bv1.binder_qual bv2.binder_qual
    &&& list_dec_cmp b1 b2 term_cmp bv1.binder_attrs bv2.binder_attrs
 
@@ -746,8 +753,7 @@ and faithful_lemma_binder (b1 b2 : binder) : Lemma (requires faithful_binder b1 
   faithful_lemma bv1.binder_sort bv2.binder_sort;
   faithful_lemma_attrs_dec b1 b2 bv1.binder_attrs bv2.binder_attrs;
   assert_norm (
-      (binding_bv_cmp bv1.binder_bv bv2.binder_bv
-       &&& term_cmp bv1.binder_sort bv2.binder_sort
+      (term_cmp bv1.binder_sort bv2.binder_sort
        &&& aqual_cmp bv1.binder_qual bv2.binder_qual
        &&& list_dec_cmp b1 b2 term_cmp bv1.binder_attrs bv2.binder_attrs) == binder_cmp b1 b2);
   ()

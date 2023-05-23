@@ -36,11 +36,16 @@ let bv_to_string (bv : bv) : Tac string =
     (* Could also print type...? *)
     name_of_bv bv
 
+let bv_of_binder = binder_bv
+
 let name_of_binder (b : binder) : Tac string =
-    name_of_bv (bv_of_binder b)
+    name_of_bv (binder_bv b)
 
 let binder_to_string (b : binder) : Tac string =
-    bv_to_string (bv_of_binder b) //TODO: print aqual, attributes
+    bv_to_string (binder_bv b) //TODO: print aqual, attributes
+
+let type_of_var (x : namedv) : Tac typ =
+  unseal ((inspect_namedv x).namedv_sort)
 
 exception Goal_not_trivial
 
@@ -79,9 +84,13 @@ let cur_goal_safe () : TacH goal (requires (fun ps -> ~(goals_of ps == [])))
  = match goals_of (get ()) with
    | g :: _ -> g
 
-(** [cur_binders] returns the list of binders in the current goal. *)
+(** [cur_binders] returns the list of binders in the current goal.
+FIXME: This makes no sense in new view. *)
 let cur_binders () : Tac binders =
     binders_of_env (cur_env ())
+
+let cur_vars () : Tac (list namedv) =
+    vars_of_env (cur_env ())
 
 (** Set the guard policy only locally, without affecting calling code *)
 let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
@@ -382,21 +391,17 @@ let fresh_bv () : Tac bv =
     let i = fresh () in
     fresh_bv_named ("x" ^ string_of_int i)
 
-let fresh_binder_named nm t : Tac binder =
-    mk_binder (fresh_bv_named nm) t
-
 let fresh_binder t : Tac binder =
-    (* See comment in fresh_bv *)
+    (* Freshness only important for the name. Binders do not
+    need a unique id *)
     let i = fresh () in
-    fresh_binder_named ("x" ^ string_of_int i) t
-
-let fresh_implicit_binder_named nm t : Tac binder =
-    mk_implicit_binder (fresh_bv_named nm) t
+    mk_binder ("x" ^ string_of_int i) t
 
 let fresh_implicit_binder t : Tac binder =
-    (* See comment in fresh_bv *)
+    (* Freshness only important for the name. Binders do not
+    need a unique id *)
     let i = fresh () in
-    fresh_implicit_binder_named ("x" ^ string_of_int i) t
+    mk_implicit_binder ("x" ^ string_of_int i) t
 
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
@@ -494,7 +499,7 @@ let simpl   () : Tac unit = norm [simplify; primops]
 let whnf    () : Tac unit = norm [weak; hnf; primops; delta]
 let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
-let intros () : Tac (list binder) = repeat intro
+let intros () : Tac (list namedv) = repeat intro
 
 let intros' () : Tac unit = let _ = intros () in ()
 let destruct tm : Tac unit = let _ = t_destruct tm in ()
@@ -503,23 +508,23 @@ let destruct_intros tm : Tac unit = seq (fun () -> let _ = t_destruct tm in ()) 
 private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
-let tcut (t:term) : Tac binder =
+let tcut (t:term) : Tac namedv =
     let g = cur_goal () in
     let tt = mk_e_app (`__cut) [t; g] in
     apply tt;
     intro ()
 
-let pose (t:term) : Tac binder =
+let pose (t:term) : Tac namedv =
     apply (`__cut);
     flip ();
     exact t;
     intro ()
 
-let intro_as (s:string) : Tac binder =
+let intro_as (s:string) : Tac namedv =
     let b = intro () in
     rename_to b s
 
-let pose_as (s:string) (t:term) : Tac binder =
+let pose_as (s:string) (t:term) : Tac namedv =
     let b = pose t in
     rename_to b s
 
@@ -532,29 +537,27 @@ let rec revert_all (bs:binders) : Tac unit =
     | _::tl -> revert ();
                revert_all tl
 
-(* Some syntax utility functions *)
-let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
-let binder_to_term (b : binder) : Tac term =
-  let bview = inspect_binder b in
-  bv_to_term bview.binder_bv
+let namedv_to_term (x : namedv) : Tac term =
+  pack_ln (Tv_Var x)
+
 let binder_sort (b : binder) : Tac typ =
   (inspect_binder b).binder_sort
 
 // Cannot define this inside `assumption` due to #1091
 private
-let rec __assumption_aux (bs : binders) : Tac unit =
-    match bs with
+let rec __assumption_aux (xs : list namedv) : Tac unit =
+    match xs with
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = binder_to_term b in
+        let t = namedv_to_term b in
         try exact t with | _ ->
         try (apply (`FStar.Squash.return_squash);
              exact t) with | _ ->
         __assumption_aux bs
 
 let assumption () : Tac unit =
-    __assumption_aux (cur_binders ())
+    __assumption_aux (cur_vars ())
 
 let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
     match term_as_formula t with
@@ -571,19 +574,19 @@ let __eq_sym #t (a b : t) : Lemma ((a == b) == (b == a)) =
   FStar.PropositionalExtensionality.apply (a==b) (b==a)
 
 (** Like [rewrite], but works with equalities [v == e] and [e == v] *)
-let rewrite' (b:binder) : Tac unit =
-    ((fun () -> rewrite b)
-     <|> (fun () -> binder_retype b;
+let rewrite' (x:namedv) : Tac unit =
+    ((fun () -> rewrite x)
+     <|> (fun () -> var_retype x;
                     apply_lemma (`__eq_sym);
-                    rewrite b)
+                    rewrite x)
      <|> (fun () -> fail "rewrite' failed"))
     ()
 
-let rec try_rewrite_equality (x:term) (bs:binders) : Tac unit =
+let rec try_rewrite_equality (x:term) (bs:list namedv) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs ->
-        begin match term_as_formula (type_of_binder x_t) with
+        begin match term_as_formula (type_of_var x_t) with
         | Comp (Eq _) y _ ->
             if term_eq x y
             then rewrite x_t
@@ -592,7 +595,7 @@ let rec try_rewrite_equality (x:term) (bs:binders) : Tac unit =
             try_rewrite_equality x bs
         end
 
-let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
+let rec rewrite_all_context_equalities (bs:list namedv) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs -> begin
@@ -601,10 +604,10 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     end
 
 let rewrite_eqs_from_context () : Tac unit =
-    rewrite_all_context_equalities (cur_binders ())
+    rewrite_all_context_equalities (cur_vars ())
 
 let rewrite_equality (t:term) : Tac unit =
-    try_rewrite_equality t (cur_binders ())
+    try_rewrite_equality t (cur_vars ())
 
 let unfold_def (t:term) : Tac unit =
     match inspect t with
@@ -636,7 +639,7 @@ let mk_sq_eq (t1 t2 : term) : term =
 Creates a new goal for [t1 == t2]. *)
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    let e = pack_ln (Tv_Var (bv_of_binder e)) in
+    let e = pack_ln (Tv_Var e) in
     pointwise (fun () ->
       (* If the LHS is a uvar, do nothing, so we do not instantiate it. *)
       let is_uvar =
@@ -655,17 +658,17 @@ private
 let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()
 
 (** A wrapper to [grewrite] which takes a binder of an equality type *)
-let grewrite_eq (b:binder) : Tac unit =
-  match term_as_formula (type_of_binder b) with
+let grewrite_eq (b:namedv) : Tac unit =
+  match term_as_formula (type_of_var b) with
   | Comp (Eq _) l r ->
     grewrite l r;
-    iseq [idtac; (fun () -> exact (binder_to_term b))]
+    iseq [idtac; (fun () -> exact (namedv_to_term b))]
   | _ ->
-    begin match term_as_formula' (type_of_binder b) with
+    begin match term_as_formula' (type_of_var b) with
     | Comp (Eq _) l r ->
       grewrite l r;
       iseq [idtac; (fun () -> apply_lemma (`__un_sq_eq);
-                              exact (binder_to_term b))]
+                              exact (namedv_to_term b))]
     | _ ->
       fail "grewrite_eq: binder type is not an equality"
     end

@@ -1561,8 +1561,11 @@ let (e_binder_view :
     let uu___ =
       let uu___1 =
         let uu___2 =
-          FStar_TypeChecker_NBETerm.embed e_bv cb
-            bview.FStar_Reflection_Data.binder_bv in
+          let uu___3 =
+            FStar_TypeChecker_NBETerm.e_sealed
+              FStar_TypeChecker_NBETerm.e_string in
+          FStar_TypeChecker_NBETerm.embed uu___3 cb
+            bview.FStar_Reflection_Data.binder_ppname in
         FStar_TypeChecker_NBETerm.as_arg uu___2 in
       let uu___2 =
         let uu___3 =
@@ -1593,14 +1596,18 @@ let (e_binder_view :
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Construct
         (fv, uu___,
-         (sort, uu___1)::(attrs, uu___2)::(q, uu___3)::(bv, uu___4)::[])
+         (sort, uu___1)::(attrs, uu___2)::(q, uu___3)::(ppname, uu___4)::[])
         when
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Constants.ref_Mk_binder.FStar_Reflection_Constants.lid
         ->
-        let uu___5 = FStar_TypeChecker_NBETerm.unembed e_bv cb bv in
+        let uu___5 =
+          let uu___6 =
+            FStar_TypeChecker_NBETerm.e_sealed
+              FStar_TypeChecker_NBETerm.e_string in
+          FStar_TypeChecker_NBETerm.unembed uu___6 cb ppname in
         FStar_Compiler_Util.bind_opt uu___5
-          (fun bv1 ->
+          (fun ppname1 ->
              let uu___6 = FStar_TypeChecker_NBETerm.unembed e_aqualv cb q in
              FStar_Compiler_Util.bind_opt uu___6
                (fun q1 ->
@@ -1616,7 +1623,7 @@ let (e_binder_view :
                               (fun uu___9 ->
                                  FStar_Pervasives_Native.Some uu___9)
                               {
-                                FStar_Reflection_Data.binder_bv = bv1;
+                                FStar_Reflection_Data.binder_ppname = ppname1;
                                 FStar_Reflection_Data.binder_qual = q1;
                                 FStar_Reflection_Data.binder_attrs = attrs1;
                                 FStar_Reflection_Data.binder_sort = sort1

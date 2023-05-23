@@ -67,10 +67,10 @@ type bv_view = {
 }
 
 type binder_view = {
-  binder_bv : bv;
-  binder_qual : aqualv;
-  binder_attrs : list term;
-  binder_sort : typ;
+  binder_ppname : string;
+  binder_qual   : aqualv;
+  binder_attrs  : list term;
+  binder_sort   : typ;
 }
 
 type universe_view =

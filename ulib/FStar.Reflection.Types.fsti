@@ -20,7 +20,8 @@ include FStar.VConfig
 include FStar.Sealed
 
 assume new type binder
-assume new type bv
+assume new type bv     // db variable
+assume new type namedv // named fresh variable
 assume new type term
 assume new type env
 assume new type fv

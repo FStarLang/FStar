@@ -132,6 +132,7 @@ let e_term            : dualemb term               = (RE.e_term, NRE.e_term)
 let e_term_view       : dualemb RD.term_view       = (RE.e_term_view, NRE.e_term_view)
 let e_fv              : dualemb fv                 = (RE.e_fv, NRE.e_fv)
 let e_bv              : dualemb bv                 = (RE.e_bv, NRE.e_bv)
+let e_namedv          : dualemb RE.namedv          = e_bv
 let e_bv_view         : dualemb RD.bv_view         = (RE.e_bv_view, NRE.e_bv_view)
 let e_comp            : dualemb comp               = (RE.e_comp, NRE.e_comp)
 let e_comp_view       : dualemb RD.comp_view       = (RE.e_comp_view, NRE.e_comp_view)
@@ -400,6 +401,12 @@ let reflection_primops : list Cfg.primitive_step = [
     RB.push_binder
     e_env
     e_binder
+    e_env;
+
+  mk2 "push_namedv"
+    RB.push_namedv
+    e_env
+    e_namedv
     e_env;
 
   mk1 "range_of_term"

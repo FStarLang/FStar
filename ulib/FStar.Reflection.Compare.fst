@@ -46,11 +46,6 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Reify, _ -> Lt       | _, C_Reify -> Gt
     | C_Reflect _, _ -> Lt   | _, C_Reflect _ -> Gt
 
-let compare_binder (b1 b2 : binder) : order =
-    let bview1 = inspect_binder b1 in
-    let bview2 = inspect_binder b2 in
-    compare_bv bview1.binder_bv bview2.binder_bv
-
 let compare_ident (i1 i2:ident) : order =
   order_from_int (compare_string (fst i1) (fst i2))
 
@@ -78,7 +73,7 @@ let compare_universes (us1 us2:universes) : order =
 let rec compare_term (s t : term) : Tot order (decreases s) =
     match inspect_ln s, inspect_ln t with
     | Tv_Var sv, Tv_Var tv ->
-        compare_bv sv tv
+        compare_namedv sv tv
 
     | Tv_BVar sv, Tv_BVar tv ->
         compare_bv sv tv
@@ -204,3 +199,8 @@ and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
     | C_GTotal _, _  -> Lt    | _, C_GTotal _ -> Gt
     | C_Lemma _ _ _, _  -> Lt   | _, C_Lemma _ _ _ -> Gt
     | C_Eff _ _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ _ -> Gt
+
+and compare_binder (b1 b2 : binder) : order =
+    let bview1 = inspect_binder b1 in
+    let bview2 = inspect_binder b2 in
+    compare_term bview1.binder_sort bview2.binder_sort

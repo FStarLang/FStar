@@ -36,7 +36,7 @@ let l_revert () : Tac unit =
     apply (`revert_squash)
 
 (** Repeated [l_revert]. *)
-let rec l_revert_all (bs:binders) : Tac unit =
+let rec l_revert_all (bs:list namedv) : Tac unit =
     match bs with
     | []    -> ()
     | _::tl -> begin l_revert (); l_revert_all tl end
@@ -46,17 +46,17 @@ private let fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Le
     ((fun x -> FStar.IndefiniteDescription.elim_squash (f x)) <: (x:a -> GTot (p x)))
 
 (** Introduce a forall. *)
-let forall_intro () : Tac binder =
+let forall_intro () : Tac namedv =
     apply_lemma (`fa_intro_lem);
     intro ()
 
 (** Introduce a forall, with some given name. *)
-let forall_intro_as (s:string) : Tac binder =
+let forall_intro_as (s:string) : Tac namedv =
     apply_lemma (`fa_intro_lem);
     intro_as s
 
 (** Repeated [forall_intro]. *)
-let forall_intros () : Tac binders = repeat1 forall_intro
+let forall_intros () : Tac (list namedv) = repeat1 forall_intro
 
 private val split_lem : (#a:Type) -> (#b:Type) ->
                         squash a -> squash b -> Lemma (a /\ b)
@@ -74,16 +74,16 @@ let imp_intro_lem #a #b f =
   FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (fun (x:squash a) -> FStar.Squash.bind_squash x f))
 
 (** Introduce an implication. *)
-let implies_intro () : Tac binder =
+let implies_intro () : Tac namedv =
     apply_lemma (`imp_intro_lem);
     intro ()
 
-let implies_intro_as (s:string) : Tac binder =
+let implies_intro_as (s:string) : Tac namedv =
     apply_lemma (`imp_intro_lem);
     intro_as s
 
 (** Repeated [implies_intro]. *)
-let implies_intros () : Tac binders = repeat1 implies_intro
+let implies_intros () : Tac (list namedv) = repeat1 implies_intro
 
 (** "Logical" intro: introduce a forall or an implication. *)
 let l_intro () = forall_intro `or_else` implies_intro
@@ -98,13 +98,13 @@ let l_exact (t:term) =
     try exact t with
     | _ -> (squash_intro (); exact t)
 
-let hyp (b:binder) : Tac unit = l_exact (binder_to_term b)
+let hyp (x:namedv) : Tac unit = l_exact (namedv_to_term x)
 
 private
 let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
   h ()
 
-let pose_lemma (t : term) : Tac binder =
+let pose_lemma (t : term) : Tac namedv =
   let c = tcc (cur_env ()) t in
   let pre, post =
     match inspect_comp c with
@@ -120,7 +120,7 @@ let pose_lemma (t : term) : Tac binder =
   | _ ->
     let reqb = tcut (`squash (`#pre)) in
 
-    let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(binder_to_term reqb)) (fun () -> (`#t)))) in
+    let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(namedv_to_term reqb)) (fun () -> (`#t)))) in
     flip ();
     ignore (trytac trivial);
     b
@@ -192,7 +192,7 @@ let unsquash (t:term) : Tac term =
     let v = `vbind in
     apply_lemma (mk_e_app v [t]);
     let b = intro () in
-    pack_ln (Tv_Var (bv_of_binder b))
+    pack_ln (Tv_Var b)
 
 private val or_ind : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                      (p \/ q) ->
@@ -244,7 +244,7 @@ let and_elim (t : term) : Tac unit =
      with | _ -> apply_lemma (`(__and_elim' (`#t)))
     end
 
-let destruct_and (t : term) : Tac (binder * binder) =
+let destruct_and (t : term) : Tac (namedv * namedv) =
     and_elim t;
     (implies_intro (), implies_intro ())
 
@@ -261,7 +261,7 @@ let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. pred x))
   FStar.Squash.bind_squash #(x:t & pred x) h (fun (|x, pf|) -> k x pf)
 
 (* returns witness and proof as binders *)
-let elim_exists (t : term) : Tac (binder & binder) =
+let elim_exists (t : term) : Tac (namedv & namedv) =
   apply_lemma (`(__elim_exists' (`#(t))));
   let x = intro () in
   let pf = intro () in
@@ -276,12 +276,12 @@ private
 let __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
     FStar.Squash.bind_squash h (fun (f : (forall x. pred x)) -> __forall_inst f x)
 
-let instantiate (fa : term) (x : term) : Tac binder =
+let instantiate (fa : term) (x : term) : Tac namedv =
     try pose (`__forall_inst_sq (`#fa) (`#x)) with | _ ->
     try pose (`__forall_inst (`#fa) (`#x)) with | _ ->
     fail "could not instantiate"
 
-let instantiate_as (fa : term) (x : term) (s : string) : Tac binder =
+let instantiate_as (fa : term) (x : term) (s : string) : Tac namedv =
     let b = instantiate fa x in
     rename_to b s
 
@@ -291,10 +291,10 @@ let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
         (ensures phi) = ()
 
 private
-let rec sk_binder' (acc:binders) (b:binder) : Tac (binders * binder) =
+let rec sk_binder' (acc:list namedv) (b:namedv) : Tac (list namedv & namedv) =
   focus (fun () ->
     try
-      apply_lemma (`(sklem0 (`#(binder_to_term b))));
+      apply_lemma (`(sklem0 (`#(namedv_to_term b))));
       if ngoals () <> 1 then fail "no";
       clear b;
       let bx = forall_intro () in
@@ -308,7 +308,7 @@ let rec sk_binder' (acc:binders) (b:binder) : Tac (binders * binder) =
 let sk_binder b = sk_binder' [] b
 
 let skolem () =
-  let bs = binders_of_env (cur_env ()) in
+  let bs = vars_of_env (cur_env ()) in
   map sk_binder bs
 
 private
@@ -357,8 +357,8 @@ let lem3_fa #a #b #c #pre #post
 Only works for lemmas with up to 3 arguments for now. It is expected
 that `t` is a top-level name, this has not been battle-tested for other
 kinds of terms. *)
-let using_lemma (t : term) : Tac binder =
+let using_lemma (t : term) : Tac namedv =
   try pose_lemma (`(lem1_fa (`#t))) with | _ ->
   try pose_lemma (`(lem2_fa (`#t))) with | _ ->
   try pose_lemma (`(lem3_fa (`#t))) with | _ ->
-  fail #binder "using_lemma: failed to instantiate"
+  fail "using_lemma: failed to instantiate"

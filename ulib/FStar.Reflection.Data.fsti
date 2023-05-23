@@ -59,16 +59,26 @@ let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
 
 noeq
 type bv_view = {
-    bv_ppname : ppname_t;
-    bv_index : nat;
+  bv_index      : nat;
+  (* Meta: *)
+  bv_ppname     : ppname_t;
+  bv_sort       : sealed typ;
+}
+
+noeq
+type namedv_view = {
+  namedv_uniq   : nat;
+  (* Meta: *)
+  namedv_ppname : ppname_t;
+  namedv_sort   : sealed typ;
 }
 
 noeq
 type binder_view = {
-  binder_bv : bv;
-  binder_qual : aqualv;
-  binder_attrs : list term;
-  binder_sort : typ;
+  binder_ppname : ppname_t;
+  binder_qual   : aqualv;
+  binder_attrs  : list term;
+  binder_sort   : typ;
 }
 
 noeq
@@ -83,7 +93,7 @@ type universe_view =
 
 noeq
 type term_view =
-  | Tv_Var    : v:bv -> term_view
+  | Tv_Var    : v:namedv -> term_view
   | Tv_BVar   : v:bv -> term_view
   | Tv_FVar   : v:fv -> term_view
   | Tv_UInst  : v:fv -> us:universes -> term_view
