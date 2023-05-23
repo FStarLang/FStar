@@ -483,7 +483,7 @@ let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop 
   = match witnesses, goal_vprop with
     | [], Tm_ExistsSL u ty p _ ->  
       let next_goal_vprop, inst =
-          let t = gen_uvar () in
+          let t : term = gen_uvar () in
           open_term' p t 0, Inr t
       in
       prepare_instantiations ((goal_vprop, inst)::out) next_goal_vprop []
@@ -495,7 +495,7 @@ let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop 
       let next_goal_vprop, inst =
           match t with
           | Tm_Unknown ->
-            let t = gen_uvar () in
+            let t : term = gen_uvar () in
             open_term' p t 0, Inr t
           | _ ->
             open_term' p t 0, Inl t
@@ -523,25 +523,6 @@ let maybe_infer_intro_exists
           | t -> t
         in
         rest, pure
-    in
-    let is_eq2 t =
-      let is_eq2_fv t =
-        match is_fvar t with
-        | Some (l, _) -> l = mk_steel_wrapper_lid "eq2_prop"
-        | _ -> false in
-      match t with
-      | Tm_PureApp
-          (Tm_PureApp
-            (Tm_PureApp hd (Some Implicit) _)
-            None
-            l)
-          None
-          r -> (
-            if is_eq2_fv hd
-            then Some (l, r)
-            else None
-          )
-      | _ -> None
     in
     (* Weird: defining this here causes extraction to crash with
        Failure("This should not happen (should have been handled at Tm_abs level)")
@@ -584,27 +565,15 @@ let maybe_infer_intro_exists
       | _ -> solutions
     in
     let solutions = T.fold_left maybe_solve_pure solutions pure_conjuncts in
-    let un_reveal t = 
-        match t with
-        | Tm_PureApp (Tm_PureApp hd (Some Implicit) _)
-                     None arg ->
-          (match is_fvar hd with
-           | Some (l, []) ->
-             if l = reveal_lid
-             then Some arg
-             else None
-           | _ -> None)
-        | _ -> None
-    in
     let mk_hide (e:term) : term =
         let hd = tm_fvar (as_fv hide_lid) in
-        Tm_PureApp hd None e
+        tm_pureapp hd None e
     in    
     let solutions = 
       List.Tot.map
         (fun (u, v) -> 
           let sol = Pulse.Checker.Inference.apply_solution solutions v in
-          match un_reveal sol with
+          match unreveal sol with
           | Some _ -> u, sol
           | _ -> u, mk_hide sol)
         solutions
@@ -620,7 +589,7 @@ let maybe_infer_intro_exists
 
           | Inr inferred ->
             let sol = Pulse.Checker.Inference.apply_solution solutions inferred in
-            match un_reveal sol with
+            match unreveal sol with
             | Some sol ->
               wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]})
             | _ ->
@@ -753,7 +722,7 @@ let range_of_head (t:st_term) : option (term & range) =
       // | tm_fvar fv -> (t, fv.fv_range)
       // | tm_uinst fv _ -> (t, fv.fv_range)
       // | tm_var nm -> (t, nm.nm_range)
-      | Tm_PureApp hd _ _ -> aux hd
+      // | Tm_PureApp hd _ _ -> aux hd
       | _ -> t, Range.range_0
     in
     Some (aux head)
@@ -761,7 +730,7 @@ let range_of_head (t:st_term) : option (term & range) =
 
 let tag_of_term (t:term) =
   match t with
-  | Tm_PureApp hd _ _ -> "Tm_PureApp"
+  // | Tm_PureApp hd _ _ -> "Tm_PureApp"
   | Tm_Emp -> "Tm_Emp"
   | Tm_Pure _ -> "Tm_Pure"
   | Tm_Star _ _ -> "Tm_Star"
@@ -794,14 +763,18 @@ let maybe_log t =
           | _ -> ()
     end
                     
-  | Tm_STApp { head=Tm_PureApp head None p; arg_qual=None } ->
-    begin match is_fvar head with
-          | Some (l, _) ->
-            if l = mk_steel_wrapper_lid "intro_pure"
-             then T.print (Printf.sprintf "LOG INTRO PURE: %s\n"
-                          (P.term_to_string p))
+  | Tm_STApp { head; arg_qual=None } ->
+    begin match is_pure_app head with
+          | Some (head, None, p) ->
+            begin match is_fvar head with
+                  | Some (l, _) ->
+                    if l = mk_steel_wrapper_lid "intro_pure"
+                    then T.print (Printf.sprintf "LOG INTRO PURE: %s\n"
+                                 (P.term_to_string p))
+                  | _ -> ()
+            end
           | _ -> ()
-    end             
+    end
   | _ -> ()
     
 let check_stapp
@@ -852,9 +825,9 @@ let check_stapp
            (P.term_to_string arg)) in
 
   T.or_else
-    (fun _ -> let pure_app = Tm_PureApp head qual arg in
-           let t, ty = instantiate_term_implicits g pure_app in
-           infer_logical_implicits_and_check t (C_Tot ty))
+    (fun _ -> let pure_app = tm_pureapp head qual arg in
+              let t, ty = instantiate_term_implicits g pure_app in
+              infer_logical_implicits_and_check t (C_Tot ty))
     (fun _ ->
      let (| head, ty_head, dhead |) = check_term g head in
      match is_arrow ty_head with
@@ -876,7 +849,7 @@ let check_stapp
                       (Pulse.Syntax.Printer.term_to_string (comp_pre (open_comp_with comp_typ arg))));
            repack (try_frame_pre pre_typing d) post_hint true
          | _ ->
-           let t = Tm_PureApp head qual arg in
+           let t = tm_pureapp head qual arg in
            let comp_typ = open_comp_with comp_typ arg in
            infer_logical_implicits_and_check t comp_typ
        else T.fail "Unexpected qualifier"
@@ -966,12 +939,12 @@ let handle_framing_failure
         wr (
           Tm_Protect
             { t = wr (Tm_STApp 
-                        { head = Tm_PureApp 
+                        { head = tm_pureapp 
                                   (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
                                   None
                                   p;
                           arg_qual = None;
-                          arg = tm_unit }) }
+                          arg = tm_constant R.C_Unit }) }
         )
       in
       wr (
@@ -1109,7 +1082,7 @@ and print_head (t:term) =
   match t with
   // | Tm_FVar fv
   // | Tm_UInst fv _ -> String.concat "." fv.fv_name
-  | Tm_PureApp head _ _ -> print_head head
+  // | Tm_PureApp head _ _ -> print_head head
   | _ -> "<pure term>"
 
 

@@ -33,7 +33,7 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
     | Tm_Pure p ->
       freevars_close_term' p x i
 
-    | Tm_PureApp l _ r
+    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       freevars_close_term' l x i;
       freevars_close_term' r x i

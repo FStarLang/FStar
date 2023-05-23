@@ -36,9 +36,9 @@ let rec elab_open_commute' (e:term)
     | Tm_EmpInames
     | Tm_VProp
     | Tm_Unknown -> ()
-    | Tm_PureApp e1 _ e2 ->
-      elab_open_commute' e1 v n;
-      elab_open_commute' e2 v n
+    // | Tm_PureApp e1 _ e2 ->
+    //   elab_open_commute' e1 v n;
+    //   elab_open_commute' e2 v n
     | Tm_Pure p ->
       elab_open_commute' p v n
     | Tm_Star e1 e2 ->
@@ -81,9 +81,9 @@ let rec elab_close_commute' (e:term)
     | Tm_EmpInames
     | Tm_VProp
     | Tm_Unknown -> ()
-    | Tm_PureApp e1 _ e2 ->
-      elab_close_commute' e1 v n;
-      elab_close_commute' e2 v n
+    // | Tm_PureApp e1 _ e2 ->
+    //   elab_close_commute' e1 v n;
+    //   elab_close_commute' e2 v n
     | Tm_Pure p ->
       elab_close_commute' p v n
     | Tm_Star e1 e2 ->
@@ -130,9 +130,9 @@ let elab_comp_open_commute (c:comp) (x:term)
 
 let rec elab_ln t i =
   match t with
-  | Tm_PureApp head _ arg ->
-    elab_ln head i;
-    elab_ln arg i
+  // | Tm_PureApp head _ arg ->
+  //   elab_ln head i;
+  //   elab_ln arg i
   | Tm_Emp -> ()
   | Tm_Pure t -> elab_ln t i
   | Tm_Star l r ->
@@ -169,9 +169,9 @@ let elab_ln_comp (c:comp) (i:int)
 let rec elab_freevars_eq (e:term)
   : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) =
   match e with
-  | Tm_PureApp head _ arg ->
-    elab_freevars_eq head;
-    elab_freevars_eq arg
+  // | Tm_PureApp head _ arg ->
+  //   elab_freevars_eq head;
+  //   elab_freevars_eq arg
   | Tm_Emp -> ()
   | Tm_Pure t -> elab_freevars_eq t
   | Tm_Star l r ->

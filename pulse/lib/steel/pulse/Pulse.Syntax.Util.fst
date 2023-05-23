@@ -38,6 +38,34 @@ let is_fvar (t:term) : option (R.name & list universe) =
     end
   | _ -> None
 
+let is_pure_app (t:term) : option (term & option qualifier & term) =
+  match t with
+  | Tm_FStar host_term _ ->
+    begin match R.inspect_ln host_term with
+          | R.Tv_App hd (arg, q) ->
+            let? hd =
+              match readback_ty hd with
+              | Some hd -> Some hd <: option term
+              | _ -> None in
+            let q = readback_qual q in
+            let? arg =
+              match readback_ty arg with
+              | Some arg -> Some arg <: option term
+              | _ -> None in
+            Some (hd, q, arg)
+          | _ -> None
+    end
+  | _ -> None
+
+let leftmost_head (t:term) : option term =
+  match t with
+  | Tm_FStar host_term _ ->
+    let hd, _ = R.collect_app_ln host_term in
+    (match readback_ty hd with
+     | Some t -> Some t
+     | None -> None)
+  | _ -> None
+
 let is_fvar_app (t:term) : option (R.name &
                                    list universe &
                                    option qualifier &
@@ -45,13 +73,19 @@ let is_fvar_app (t:term) : option (R.name &
   match is_fvar t with
   | Some (l, us) -> Some (l, us, None, None)
   | None ->
-    match t with
-    | Tm_PureApp head q arg ->
-      begin match is_fvar head with
-            | Some (l, us) -> Some (l, us, q, Some arg)
-            | None -> None
-      end
+    match is_pure_app t with
+    | Some (head, q, arg) ->
+      (match is_fvar head with
+       | Some (l, us) -> Some (l, us, q, Some arg)
+       | None -> None)
     | _ -> None
+
+    // | Tm_PureApp head q arg ->
+    //   begin match is_fvar head with
+    //         | Some (l, us) -> Some (l, us, q, Some arg)
+    //         | None -> None
+    //   end
+    // | _ -> None
 
 let is_arrow (t:term) : option (binder & option qualifier & comp) =
   match t with
@@ -94,4 +128,36 @@ let is_embedded_uvar (t:term) : option nat =
                | _ -> None
          end
     else None
+  | _ -> None
+
+// TODO: write it better, with pattern matching on reflection syntax
+let is_eq2 (t:term) : option (term & term) =
+  match is_pure_app t with
+  | Some (head, None, a2) ->
+    (match is_pure_app head with
+     | Some (head, None, a1) ->
+       (match is_pure_app head with
+        | Some (head, Some Implicit, _) ->
+          (match is_fvar head with
+           | Some (l, _) ->
+             if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"]
+             then Some (a1, a2)
+             else None
+           | _ -> None)
+        | _ -> None)
+     | _ -> None)
+  | _ -> None
+
+let unreveal (t:term) : option term =
+  match is_pure_app t with
+  | Some (head, None, arg) ->
+    (match is_pure_app head with
+     | Some (head, Some Implicit, _) ->
+       (match is_fvar head with
+        | Some (l, []) ->
+          if l = ["FStar"; "Ghost"; "reveal"]
+          then Some arg
+          else None
+        | _ -> None)
+     | _ -> None)
   | _ -> None

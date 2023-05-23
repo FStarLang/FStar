@@ -58,7 +58,7 @@ let host_term = t:R.term { not_tv_unknown t }
 [@@ no_auto_projectors]
 noeq
 type term =
-  | Tm_PureApp    : head:term -> arg_qual:option qualifier -> arg:term -> term
+  // | Tm_PureApp    : head:term -> arg_qual:option qualifier -> arg:term -> term
   | Tm_Emp        : term
   | Tm_Pure       : p:term -> term
   | Tm_Star       : l:vprop -> r:vprop -> term
@@ -214,12 +214,12 @@ val eq_tm_list (t1 t2:list term)
 val eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
 
-let rec leftmost_head_and_args (t:term) : term & list (option qualifier & term) =
-  match t with
-  | Tm_PureApp hd q arg ->
-    let hd, args = leftmost_head_and_args hd in
-    hd, args@[q, arg]
-  | _ -> t, []
+// let rec leftmost_head_and_args (t:term) : term & list (option qualifier & term) =
+//   match t with
+//   | Tm_PureApp hd q arg ->
+//     let hd, args = leftmost_head_and_args hd in
+//     hd, args@[q, arg]
+//   | _ -> t, []
 
 
 let comp_res (c:comp) : term =

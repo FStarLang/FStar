@@ -53,11 +53,11 @@ let rec term_to_string (t:term)
     //           (term_to_string b.binder_ty)
     //           (term_to_string phi)
 
-    | Tm_PureApp head q arg ->
-      sprintf "(%s %s%s)" 
-        (term_to_string head)
-        (qual_to_string q)
-        (term_to_string arg)
+    // | Tm_PureApp head q arg ->
+    //   sprintf "(%s %s%s)" 
+    //     (term_to_string head)
+    //     (qual_to_string q)
+    //     (term_to_string arg)
       
     // | Tm_Let t e1 e2 ->
     //   sprintf "let _ : %s = %s in %s"
@@ -104,7 +104,7 @@ let rec term_to_string (t:term)
     | Tm_Unknown -> "_"
     
     | Tm_FStar t _ ->
-      sprintf "(tm_fstar) (%s)" (T.term_to_string t)
+      sprintf "((tm_fstar) (%s))" (T.term_to_string t)
       
 let binder_to_string (b:binder)
   : T.Tac string

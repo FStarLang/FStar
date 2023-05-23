@@ -15,7 +15,7 @@ let rec freevars (t:term)
     | Tm_EmpInames
     | Tm_UVar _
     | Tm_Unknown -> Set.empty
-    | Tm_PureApp t1 _ t2
+    // | Tm_PureApp t1 _ t2
     | Tm_Star  t1 t2
     | Tm_ExistsSL _ t1 t2 _
     | Tm_ForallSL _ t1 t2 ->
@@ -108,7 +108,7 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   | Tm_UVar _
   | Tm_Unknown -> true
 
-  | Tm_PureApp t1 _ t2
+  // | Tm_PureApp t1 _ t2
   | Tm_Star t1 t2 ->
     ln' t1 i &&
     ln' t2 i
@@ -234,9 +234,9 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_UVar _
     | Tm_Unknown -> t
 
-    | Tm_PureApp head q arg ->
-      Tm_PureApp (open_term' head v i) q
-                 (open_term' arg v i)
+    // | Tm_PureApp head q arg ->
+    //   Tm_PureApp (open_term' head v i) q
+    //              (open_term' arg v i)
                  
     | Tm_Pure p ->
       Tm_Pure (open_term' p v i)
@@ -398,9 +398,9 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_UVar _
     | Tm_Unknown -> t
 
-    | Tm_PureApp head q arg ->
-      Tm_PureApp (close_term' head v i) q
-                 (close_term' arg v i)
+    // | Tm_PureApp head q arg ->
+    //   Tm_PureApp (close_term' head v i) q
+    //              (close_term' arg v i)
                  
     | Tm_Pure p ->
       Tm_Pure (close_term' p v i)

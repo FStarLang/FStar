@@ -24,10 +24,10 @@ let rec elab_term (top:term)
   : R.term
   = let open R in
     match top with
-    | Tm_PureApp e1 q e2 ->
-      let e1 = elab_term e1 in
-      let e2 = elab_term e2 in
-      R.mk_app e1 [(e2, elab_qual q)]
+    // | Tm_PureApp e1 q e2 ->
+    //   let e1 = elab_term e1 in
+    //   let e2 = elab_term e2 in
+    //   R.mk_app e1 [(e2, elab_qual q)]
 
     | Tm_VProp ->
       pack_ln (Tv_FVar (pack_fv vprop_lid))
@@ -212,6 +212,10 @@ let tm_let (t e1 e2:term) : term =
                                 (elab_term t)
                                 (elab_term e1)
                                 (elab_term e2)))
+           FStar.Range.range_0
+
+let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
+  Tm_FStar (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
            FStar.Range.range_0
 
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =

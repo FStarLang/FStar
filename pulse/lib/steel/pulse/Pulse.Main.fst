@@ -249,7 +249,7 @@ let rewrite_fv = mk_tests_lid "rewrite"
 let local_fv = mk_tests_lid "local"
 let tot_fv = mk_tests_lid "tot"
 
-let shift_bvs_in_tm_fstar (t:R.term) (n:nat) : R.term =
+let rec shift_bvs_in_tm_fstar (t:R.term) (n:nat) : Tac R.term =
   let open R in
   match inspect_ln t with
   | Tv_BVar bv ->
@@ -257,6 +257,10 @@ let shift_bvs_in_tm_fstar (t:R.term) (n:nat) : R.term =
     if n < bvv.bv_index
     then pack_ln (Tv_BVar (pack_bv {bvv with bv_index=bvv.bv_index - 1}))
     else t
+  | Tv_App head (arg, q) ->
+    let head = shift_bvs_in_tm_fstar head n in
+    let arg = shift_bvs_in_tm_fstar arg n in
+    pack_ln (Tv_App head (arg, q))
   | _ -> t
 
 //
@@ -280,10 +284,10 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   // | Tm_refine b t ->
   //   Tm_refine {b with binder_ty=shift_bvs_in_else b.binder_ty n}
   //             (shift_bvs_in_else t (n + 1))
-  | Tm_PureApp head q arg ->
-    Tm_PureApp (shift_bvs_in_else head n)
-               q
-               (shift_bvs_in_else arg n)
+  // | Tm_PureApp head q arg ->
+  //   Tm_PureApp (shift_bvs_in_else head n)
+  //              q
+  //              (shift_bvs_in_else arg n)
   // | Tm_Let t e1 e2 ->
   //   Tm_Let (shift_bvs_in_else t n)
   //          (shift_bvs_in_else e1 n)
@@ -485,8 +489,8 @@ let translate_st_app_or_return (g:R.env) (t:R.term)
     let tm_Return = tm_Return t in
     let tm_STApp = tm_STApp t in
     let? t = readback_ty g t in
-    match t with
-    | Tm_PureApp head q arg ->
+    match is_pure_app t with
+    | Some (head, q, arg) ->
       (match is_fvar head with
        | Some (l, _) ->
          if l = return_stt_lid

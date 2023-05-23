@@ -29,10 +29,10 @@ let rec eq_tm (t1 t2:term)
     | Tm_Inames, Tm_Inames
     | Tm_EmpInames, Tm_EmpInames
     | Tm_Unknown, Tm_Unknown -> true
-    | Tm_PureApp h1 o1 t1, Tm_PureApp h2 o2 t2 ->
-      eq_tm h1 h2 &&
-      o1=o2 &&
-      eq_tm t1 t2
+    // | Tm_PureApp h1 o1 t1, Tm_PureApp h2 o2 t2 ->
+    //   eq_tm h1 h2 &&
+    //   o1=o2 &&
+    //   eq_tm t1 t2
     | Tm_Star l1 r1, Tm_Star l2 r2 ->
       eq_tm l1 l2 &&
       eq_tm r1 r2

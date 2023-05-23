@@ -52,22 +52,40 @@ let uvar_index (t:term{is_uvar t}) : nat =
     | Tm_UVar n -> n
 
 let is_reveal_uvar (t:term) : option (universe & term & term) =
-  match t with
-  | Tm_PureApp (Tm_PureApp hd (Some Implicit) ty) None arg ->
-    if is_uvar arg
-    then match is_fvar hd with
-         | Some (l, [u]) ->
-           if l = RUtil.reveal_lid
-           then Some (u, ty, arg)
-           else None
-         | _ -> None
-    else None
+  match is_pure_app t with
+  | Some (hd, None, arg) ->
+    (match is_pure_app hd with
+     | Some (hd, Some Implicit, ty) ->
+       if is_uvar arg
+       then match is_fvar hd with
+           | Some (l, [u]) ->
+             if l = RUtil.reveal_lid
+             then Some (u, ty, arg)
+             else None
+           | _ -> None
+       else None
+     | _ -> None)
   | _ -> None
 
+
+  // match t with
+  // | Tm_PureApp (Tm_PureApp hd (Some Implicit) ty) None arg ->
+  //   if is_uvar arg
+  //   then match is_fvar hd with
+  //        | Some (l, [u]) ->
+  //          if l = RUtil.reveal_lid
+  //          then Some (u, ty, arg)
+  //          else None
+  //        | _ -> None
+  //   else None
+  // | _ -> None
+
 let is_reveal (t:term) : bool =
-  let hd, _ = leftmost_head_and_args t in
-  match is_fvar hd with
-  | Some (l, [_]) -> l = RUtil.reveal_lid
+  match leftmost_head t with
+  | Some hd ->
+    (match is_fvar hd with
+     | Some (l, [_]) -> l = RUtil.reveal_lid
+     | _ -> false)
   | _ -> false
 
 let rec match_typ (t1 t2:term) (uv_sols:list (nat & term))
@@ -82,38 +100,47 @@ let rec match_typ (t1 t2:term) (uv_sols:list (nat & term))
     else match t1, t2 with
          | _, Tm_UVar _ -> T.fail "match_typ: t2 is a uvar"
 
-         | Tm_PureApp head1 arg_qual1 arg1, Tm_PureApp head2 arg_qual2 arg2 ->
-           if arg_qual1 = arg_qual2
-           then let uv_sols = match_typ head1 head2 uv_sols in
-                match_typ arg1 arg2 uv_sols
-           else uv_sols
-
          | Tm_Pure t1, Tm_Pure t2 ->
            match_typ t1 t2 uv_sols
     
-         | _, _ -> uv_sols
+         | _, _ ->
+           match is_pure_app t1, is_pure_app t2 with
+           | Some (head1, arg_qual1, arg1), Some (head2, arg_qual2, arg2) ->
+             if arg_qual1 = arg_qual2
+             then let uv_sols = match_typ head1 head2 uv_sols in
+                  match_typ arg1 arg2 uv_sols
+             else uv_sols
+
+           | _, _ -> uv_sols
 
 let rec atomic_vprop_has_uvar (t:term) : bool =
   if is_uvar t then true
   else match t with
-       | Tm_PureApp head _ arg ->
-         atomic_vprop_has_uvar head || atomic_vprop_has_uvar arg
        | Tm_Pure arg -> atomic_vprop_has_uvar arg
        | Tm_Emp -> false
-       | _ -> false
+       | _ ->
+         match is_pure_app t with
+         | Some (head, _, arg) ->
+           assume (head << t /\ arg << t);
+           atomic_vprop_has_uvar head || atomic_vprop_has_uvar arg
+         | _ -> false
 
 let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
   if Some? (is_reveal_uvar t1) && not (is_reveal t2)
   then true
   else if is_uvar t1 then true
   else match t1, t2 with
-       | Tm_PureApp head1 q1 arg1, Tm_PureApp head2 q2 arg2 ->
-         atomic_vprops_may_match head1 head2 &&
-         q1 = q2 &&
-         atomic_vprops_may_match arg1 arg2
        | Tm_Pure x, Tm_Pure y ->
          atomic_vprops_may_match x y
-       | _, _ -> eq_tm t1 t2
+       | _, _ ->
+         match is_pure_app t1, is_pure_app t2 with
+         | Some (head1, q1, arg1), Some (head2, q2, arg2) ->
+           assume (head1 << t1 /\ arg1 << t1);
+           assume (head2 << t2 /\ arg2 << t2);
+           atomic_vprops_may_match head1 head2 &&
+           q1 = q2 &&
+           atomic_vprops_may_match arg1 arg2
+         | _, _ -> eq_tm t1 t2
 
 let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (nat & term))
   : T.Tac (list (nat & term)) =
@@ -155,7 +182,7 @@ let rec rebuild_head (head:term) (uvs:list nat) (uv_sols:list (nat & term)) (r:r
     | [] -> with_range (Tm_STApp { head; arg_qual= Some Implicit; arg=t2 })
                        r
     | _ ->
-      let app_node = Tm_PureApp head (Some Implicit) t2 in
+      let app_node = tm_pureapp head (Some Implicit) t2 in
       rebuild_head app_node tl uv_sols r
 
 let try_inst_uvs_in_goal (ctxt:term)
@@ -239,12 +266,19 @@ let rec apply_solution (sol:list (nat * term)) (t:term)
             match find_solution sol n with
             | None -> t
             | Some t -> t
-      else t
+      else (match is_pure_app t with
+            | Some (head, q, arg) ->
+              assume (head << t);
+              assume (arg << t);
+              tm_pureapp (apply_solution sol head)
+                         q
+                         (apply_solution sol arg)
+            | _ -> t)
       
-    | Tm_PureApp head q arg ->
-      Tm_PureApp (apply_solution sol head)
-                 q
-                 (apply_solution sol arg)
+    // | Tm_PureApp head q arg ->
+    //   Tm_PureApp (apply_solution sol head)
+    //              q
+    //              (apply_solution sol arg)
 
     | Tm_Pure p ->
       Tm_Pure (apply_solution sol p)
@@ -289,9 +323,9 @@ let rec contains_uvar (t:term)
     | Tm_Unknown -> false
     | Tm_UVar _ -> true
       
-    | Tm_PureApp head q arg ->
-      contains_uvar head ||
-      contains_uvar arg
+    // | Tm_PureApp head q arg ->
+    //   contains_uvar head ||
+    //   contains_uvar arg
 
     | Tm_Pure p ->
       (contains_uvar p)
@@ -310,7 +344,12 @@ let rec contains_uvar (t:term)
                     
     | Tm_FStar _ _ ->
       // TODO: should embedded F* terms be allowed to contain Pulse uvars?
-      Some? (is_embedded_uvar t)
+      Some? (is_embedded_uvar t) ||
+      (match is_pure_app t with
+       | Some (head, _, arg) ->
+         assume (head << t /\ arg << t);
+         contains_uvar head || contains_uvar arg
+       | _ -> false)
 
 // let contains_uvar_binder  (b:binder)
 //   : bool

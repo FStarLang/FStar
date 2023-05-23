@@ -177,12 +177,12 @@ let rec readback_ty (t:R.term)
 
   | Tv_App hd (a, q) -> 
     let aux () = 
-      let? hd' = readback_ty hd in
+      // let? hd' = readback_ty hd in
       match q with
       | R.Q_Meta _ -> None
-      | _ -> 
-        let? arg' = readback_ty a in
-        Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:term {elab_term ty == t})
+      | _ -> Some (Tm_FStar t FStar.Range.range_0)
+        // let? arg' = readback_ty a in
+        // Some (Tm_PureApp hd' (readback_qual q) arg' <: ty:term {elab_term ty == t})
     in
     let head, args = collect_app_refined t in
     begin

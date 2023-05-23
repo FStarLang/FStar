@@ -48,7 +48,7 @@ let rec open_term_ln' (e:term)
     | Tm_Pure p ->
       open_term_ln' p x i
 
-    | Tm_PureApp l _ r
+    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       open_term_ln' l x i;
       open_term_ln' r x i
@@ -211,7 +211,7 @@ let rec ln_weakening (e:term) (i j:int)
     | Tm_Pure p ->
       ln_weakening p i j
       
-    | Tm_PureApp l _ r
+    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       ln_weakening l i j;
       ln_weakening r i j
@@ -359,7 +359,7 @@ let rec open_term_ln_inv' (e:term)
     | Tm_Pure p ->
       open_term_ln_inv' p x i
 
-    | Tm_PureApp l _ r
+    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       open_term_ln_inv' l x i;
       open_term_ln_inv' r x i
@@ -516,7 +516,7 @@ let rec close_term_ln' (e:term)
     | Tm_Pure p ->
       close_term_ln' p x i
 
-    | Tm_PureApp l _ r
+    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       close_term_ln' l x i;
       close_term_ln' r x i

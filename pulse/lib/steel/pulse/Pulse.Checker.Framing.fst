@@ -117,11 +117,13 @@ let check_one_vprop g (p q:term) : T.Tac (option (vprop_equiv g p q)) =
     let _ = T.print ("Framing.check_one_vprop: checking extensional equality\n") in
     let check_extensional_equality =
       match p, q with
-      | Tm_PureApp hd_p _ _, Tm_PureApp hd_q _ _ ->
-        eq_tm hd_p hd_q
       | Tm_FStar _ _, _
       | _, Tm_FStar _ _ -> true
-      | _, _ -> false in
+      | _, _ ->
+        match is_pure_app p, is_pure_app q with
+        | Some (hd_p, _, _), Some (hd_q, _, _) -> eq_tm hd_p hd_q
+        | _, _ -> false
+    in
     if check_extensional_equality
     then
       let v0 = elab_term p in
