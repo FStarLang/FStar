@@ -533,7 +533,7 @@ let extend_with_monad_op_name g (ed:Syntax.eff_decl) nm ts =
     (* Extract bind and return of effects as (unqualified) projectors of that effect, *)
     (* same as for actions. However, extracted code should not make explicit use of them. *)
     let lid = U.mk_field_projector_name_from_ident ed.mname (id_of_text nm) in
-    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false in
+    let g, mlid, exp_b = extend_fv g (lid_as_fv lid None) ts false in
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
@@ -543,7 +543,7 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     let nm = string_of_id (ident_of_lid a.action_name) in
     let module_name = ns_of_lid ed.mname in
     let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
-    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false in
+    let g, mlid, exp_b = extend_fv g (lid_as_fv lid None) ts false in
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
@@ -617,6 +617,6 @@ let new_uenv (e:TypeChecker.Env.env)
     let a = "'a" in
     let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
     let g, _, _ =
-        extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) delta_constant None)) tun failwith_ty false
+        extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) None)) tun failwith_ty false
     in
     g

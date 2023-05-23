@@ -181,7 +181,6 @@ let (tc_tycon :
                                               let fv_tc =
                                                 FStar_Syntax_Syntax.lid_as_fv
                                                   tc
-                                                  FStar_Syntax_Syntax.delta_constant
                                                   FStar_Pervasives_Native.None in
                                               let uu___8 =
                                                 FStar_Syntax_Subst.open_univ_vars
@@ -1136,7 +1135,6 @@ let (get_optimized_haseq_axiom :
                    let ind =
                      let uu___2 =
                        FStar_Syntax_Syntax.fvar lid
-                         FStar_Syntax_Syntax.delta_constant
                          FStar_Pervasives_Native.None in
                      let uu___3 =
                        FStar_Compiler_List.map
@@ -1683,7 +1681,6 @@ let (unoptimized_haseq_ty :
                        let ind =
                          let uu___2 =
                            FStar_Syntax_Syntax.fvar lid
-                             FStar_Syntax_Syntax.delta_constant
                              FStar_Pervasives_Native.None in
                          let uu___3 =
                            FStar_Compiler_List.map
@@ -2345,7 +2342,6 @@ let (mk_discriminator_and_indexed_projectors :
                                   let uu___2 =
                                     let uu___3 =
                                       FStar_Syntax_Syntax.lid_as_fv tc
-                                        FStar_Syntax_Syntax.delta_constant
                                         FStar_Pervasives_Native.None in
                                     FStar_Syntax_Syntax.fv_to_tm uu___3 in
                                   (uu___2, inst_univs) in
@@ -2373,7 +2369,7 @@ let (mk_discriminator_and_indexed_projectors :
                                  let disc_fvar =
                                    let uu___1 =
                                      FStar_Ident.set_lid_range disc_name p in
-                                   FStar_Syntax_Syntax.fvar uu___1
+                                   FStar_Syntax_Syntax.fvar_with_dd uu___1
                                      (FStar_Syntax_Syntax.Delta_equational_at_level
                                         Prims.int_one)
                                      FStar_Pervasives_Native.None in
@@ -2584,7 +2580,6 @@ let (mk_discriminator_and_indexed_projectors :
                                                let uu___7 =
                                                  FStar_Syntax_Syntax.lid_as_fv
                                                    lid
-                                                   FStar_Syntax_Syntax.delta_constant
                                                    (FStar_Pervasives_Native.Some
                                                       fvq) in
                                                (uu___7,
@@ -2648,7 +2643,7 @@ let (mk_discriminator_and_indexed_projectors :
                                   let lb =
                                     let uu___3 =
                                       let uu___4 =
-                                        FStar_Syntax_Syntax.lid_as_fv
+                                        FStar_Syntax_Syntax.lid_and_dd_as_fv
                                           discriminator_name dd
                                           FStar_Pervasives_Native.None in
                                       FStar_Pervasives.Inr uu___4 in
@@ -2734,8 +2729,6 @@ let (mk_discriminator_and_indexed_projectors :
                                               let uu___5 =
                                                 FStar_Syntax_Syntax.lid_as_fv
                                                   field_name
-                                                  (FStar_Syntax_Syntax.Delta_equational_at_level
-                                                     Prims.int_one)
                                                   FStar_Pervasives_Native.None in
                                               FStar_Syntax_Syntax.fv_to_tm
                                                 uu___5 in
@@ -2948,7 +2941,6 @@ let (mk_discriminator_and_indexed_projectors :
                                                         let uu___10 =
                                                           FStar_Syntax_Syntax.lid_as_fv
                                                             lid
-                                                            FStar_Syntax_Syntax.delta_constant
                                                             (FStar_Pervasives_Native.Some
                                                                fvq) in
                                                         (uu___10,
@@ -3059,7 +3051,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                 let lb =
                                                   let uu___7 =
                                                     let uu___8 =
-                                                      FStar_Syntax_Syntax.lid_as_fv
+                                                      FStar_Syntax_Syntax.lid_and_dd_as_fv
                                                         field_name dd
                                                         FStar_Pervasives_Native.None in
                                                     FStar_Pervasives.Inr

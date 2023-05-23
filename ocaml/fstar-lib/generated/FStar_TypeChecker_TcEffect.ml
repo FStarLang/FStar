@@ -5218,7 +5218,6 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     FStar_Syntax_Syntax.lid_as_fv
                                                                     FStar_Parser_Const.not_lid
-                                                                    FStar_Syntax_Syntax.delta_constant
                                                                     FStar_Pervasives_Native.None in
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___21

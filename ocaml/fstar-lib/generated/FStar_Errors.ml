@@ -241,14 +241,23 @@ let (issue_message : issue -> Prims.string) =
   fun i ->
     let uu___ = ctx_string i.issue_ctx in
     FStar_String.op_Hat i.issue_msg uu___
+let (string_of_issue_level : issue_level -> Prims.string) =
+  fun il ->
+    match il with
+    | EInfo -> "Info"
+    | EWarning -> "Warning"
+    | EError -> "Error"
+    | ENotImplemented -> "Feature not yet implemented: "
+let (issue_level_of_string : Prims.string -> issue_level) =
+  fun uu___ ->
+    match uu___ with
+    | "Info" -> EInfo
+    | "Warning" -> EWarning
+    | "Error" -> EError
+    | uu___1 -> ENotImplemented
 let (format_issue : issue -> Prims.string) =
   fun issue1 ->
-    let level_header =
-      match issue1.issue_level with
-      | EInfo -> "Info"
-      | EWarning -> "Warning"
-      | EError -> "Error"
-      | ENotImplemented -> "Feature not yet implemented: " in
+    let level_header = string_of_issue_level issue1.issue_level in
     let uu___ =
       match issue1.issue_range with
       | FStar_Pervasives_Native.None -> ("", "")
@@ -422,6 +431,7 @@ let (add_many : issue Prims.list -> unit) =
            let uu___2 = FStar_Compiler_Effect.op_Bang current_handler in
            wrapped_eh_add_one uu___2 in
          FStar_Compiler_List.iter uu___1 issues)
+let (add_issues : issue Prims.list -> unit) = fun issues -> add_many issues
 let (report_all : unit -> issue Prims.list) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang current_handler in
@@ -519,7 +529,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___279 :
+let (uu___290 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -565,10 +575,10 @@ let (uu___279 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___279 with
+  match uu___290 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___279 with
+  match uu___290 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =

@@ -1205,7 +1205,7 @@ let (guard_letrecs :
                    FStar_Compiler_Effect.op_Bar_Greater uu___3
                      (fun uu___4 -> FStar_Syntax_Syntax.Decreases_lex uu___4)) in
             let precedes_t =
-              FStar_TypeChecker_Util.fvar_const env1
+              FStar_TypeChecker_Util.fvar_env env1
                 FStar_Parser_Const.precedes_lid in
             let rec mk_precedes_lex env2 l l_prev =
               let rec aux l1 l_prev1 =
@@ -3189,9 +3189,7 @@ and (tc_maybe_toplevel_term :
                           let uu___9 =
                             FStar_Ident.set_lid_range projname
                               x.FStar_Syntax_Syntax.pos in
-                          FStar_Syntax_Syntax.fvar uu___9
-                            (FStar_Syntax_Syntax.Delta_equational_at_level
-                               Prims.int_one) qual in
+                          FStar_Syntax_Syntax.fvar uu___9 qual in
                         FStar_Syntax_Syntax.mk_Tm_app candidate
                           [(x, FStar_Pervasives_Native.None)]
                           x.FStar_Syntax_Syntax.pos in
@@ -3333,8 +3331,7 @@ and (tc_maybe_toplevel_term :
                                           FStar_Ident.set_lid_range projname
                                             uu___17 in
                                         FStar_Syntax_Syntax.lid_as_fv uu___16
-                                          (FStar_Syntax_Syntax.Delta_equational_at_level
-                                             Prims.int_one) qual in
+                                          qual in
                                       proceed_with
                                         (FStar_Pervasives_Native.Some choice)))
                         | uu___14 -> proceed_with candidate))))
@@ -4874,7 +4871,7 @@ and (tc_comp :
       | FStar_Syntax_Syntax.Comp c1 ->
           let head =
             FStar_Syntax_Syntax.fvar c1.FStar_Syntax_Syntax.effect_name
-              FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+              FStar_Pervasives_Native.None in
           let head1 =
             match c1.FStar_Syntax_Syntax.comp_univs with
             | [] -> head
@@ -8527,7 +8524,6 @@ and (tc_pat :
           (let id t1 =
              let uu___1 =
                FStar_Syntax_Syntax.fvar FStar_Parser_Const.id_lid
-                 (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
                  FStar_Pervasives_Native.None in
              let uu___2 =
                let uu___3 = FStar_Syntax_Syntax.iarg t1 in [uu___3] in
@@ -8927,8 +8923,6 @@ and (tc_pat :
                                                     let uu___11 =
                                                       FStar_Syntax_Syntax.fvar
                                                         disc_tm
-                                                        (FStar_Syntax_Syntax.Delta_constant_at_level
-                                                           Prims.int_one)
                                                         FStar_Pervasives_Native.None in
                                                     mk_disc_t uu___11 in
                                                   FStar_Compiler_List.map
@@ -9274,8 +9268,6 @@ and (tc_eqn :
                                                               let disc =
                                                                 FStar_Syntax_Syntax.fvar
                                                                   discriminator
-                                                                  (FStar_Syntax_Syntax.Delta_equational_at_level
-                                                                    Prims.int_one)
                                                                   FStar_Pervasives_Native.None in
                                                               let uu___15 =
                                                                 let uu___16 =
@@ -9525,8 +9517,6 @@ and (tc_eqn :
                                                                     f.FStar_Syntax_Syntax.p in
                                                                     FStar_Syntax_Syntax.fvar
                                                                     uu___23
-                                                                    (FStar_Syntax_Syntax.Delta_equational_at_level
-                                                                    Prims.int_one)
                                                                     FStar_Pervasives_Native.None in
                                                                     let uu___23
                                                                     =

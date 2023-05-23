@@ -4678,6 +4678,8 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.Let uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.LetOperator uu___ ->
+        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.LetOpen uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.LetOpenRecord uu___ ->

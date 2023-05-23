@@ -251,16 +251,19 @@ let rec substitution_preserves_typing x #e #v #t_x #t #g h1 h2 =
                        context_invariance h1 g)
      else if y<x then context_invariance h2 g
      else             TyVar (y-1)
-  | TyLam t_y #e' h21 ->
-     (let h21' = typing_extensional h21 (extend_gen (x+1) t_x (extend t_y g)) in
-      typable_empty_closed h1;
-      subst_gen_elam x v t_y e';
-      TyLam t_y (substitution_preserves_typing (x+1) h1 h21'))
-  | TyApp h21 h22 ->
+  | TyLam #_ t_y #e' #t' h21 ->
+    let h21' = typing_extensional h21 (extend_gen (x+1) t_x (extend t_y g)) in
+    typable_empty_closed h1;
+    subst_gen_elam x v t_y e';
+    let h21' : (r:typing (extend_gen (x+1) t_x (extend t_y g)) e' t'{e' << e}) =
+      h21' in
+    TyLam t_y (substitution_preserves_typing (x+1) h1 h21')
+  | TyApp #_ #e1 #e2 #t11 #t12 h21 h22 ->
+    let h21 : (r:typing (extend_gen x t_x g) e1 (TArr t11 t12){e1 << e}) = h21 in
+    let h22 : (r:typing (extend_gen x t_x g) e2 t11{e2 << e}) = h22 in
     (TyApp (substitution_preserves_typing x h1 h21)
            (substitution_preserves_typing x h1 h22))
   | TyUnit -> TyUnit
-
 
 val extend_gen_0_aux : t:typ -> g:env -> y:var ->
                    Lemma (extend_gen 0 t g y = extend t g y)

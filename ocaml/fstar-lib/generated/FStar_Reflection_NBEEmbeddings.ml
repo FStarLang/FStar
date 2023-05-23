@@ -707,10 +707,10 @@ let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
     | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
   let range_fv =
     FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.range_lid
-      FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+      FStar_Pervasives_Native.None in
   let string_fv =
     FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.string_lid
-      FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+      FStar_Pervasives_Native.None in
   let et =
     let uu___ =
       let uu___1 = FStar_Ident.string_of_lid FStar_Parser_Const.lid_tuple2 in
@@ -723,7 +723,7 @@ let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
   let uu___ =
     let uu___1 =
       FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.lid_tuple2
-        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+        FStar_Pervasives_Native.None in
     let uu___2 =
       let uu___3 =
         let uu___4 = mkFV range_fv [] [] in
@@ -1834,7 +1834,7 @@ let (e_order : FStar_Order.order FStar_TypeChecker_NBETerm.embedding) =
          FStar_Pervasives_Native.None) in
   let uu___ =
     FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.order_lid
-      FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+      FStar_Pervasives_Native.None in
   mk_emb' embed_order unembed_order uu___
 let (e_sigelt :
   FStar_Syntax_Syntax.sigelt FStar_TypeChecker_NBETerm.embedding) =
@@ -2557,5 +2557,5 @@ let (e_vconfig : FStar_Order.order FStar_TypeChecker_NBETerm.embedding) =
   let unemb cb t = failwith "unemb vconfig NBE" in
   let uu___ =
     FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.vconfig_lid
-      FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+      FStar_Pervasives_Native.None in
   mk_emb' emb unemb uu___

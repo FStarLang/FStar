@@ -497,7 +497,7 @@ let check_sub_typing (f:RT.fstar_top_env)
     else let t0' = elab_ty t0 in
          let t1' = elab_ty t1 in
          let f' = extend_env_l f sg in
-         let token_opt = FTB.check_subtyping f' t0' t1' in
+         let token_opt, _issues = FTB.check_subtyping f' t0' t1' in
          match token_opt with
          | None -> T.fail "Not subtypes"
          | Some token ->

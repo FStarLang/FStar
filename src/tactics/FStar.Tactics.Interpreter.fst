@@ -243,6 +243,8 @@ let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embe
 (* Takes a `sealed a`, but that's just a userspace abstraction. *)
 let unseal (_typ:_) (x:'a) : tac 'a = ret x
 
+#push-options "--print_implicits"
+let _ = mk_tac_step_2
 (* Set the primitive steps ref *)
 let () =
     __primitive_steps_ref := Some <|
@@ -596,44 +598,44 @@ let () =
       // reflection typechecker callbacks (part of the DSL framework)
 
       mk_tac_step_3 0 "check_subtyping"
-        refl_check_subtyping RE.e_env RE.e_term RE.e_term (e_option e_unit)
-        refl_check_subtyping NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
+        refl_check_subtyping RE.e_env RE.e_term RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
+        refl_check_subtyping NRE.e_env NRE.e_term NRE.e_term NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));
 
       mk_tac_step_3 0 "check_equiv"
-        refl_check_equiv RE.e_env RE.e_term RE.e_term (e_option e_unit)
-        refl_check_equiv NRE.e_env NRE.e_term NRE.e_term (NBET.e_option NBET.e_unit);
+        refl_check_equiv RE.e_env RE.e_term RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
+        refl_check_equiv NRE.e_env NRE.e_term NRE.e_term NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));
 
       mk_tac_step_3 0 "core_compute_term_type"
-        refl_core_compute_term_type RE.e_env RE.e_term E.e_tot_or_ghost (e_option RE.e_term)
-        refl_core_compute_term_type NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option NRE.e_term);
+        refl_core_compute_term_type RE.e_env RE.e_term E.e_tot_or_ghost (e_tuple2 (e_option RE.e_term) (e_list e_issue))
+        refl_core_compute_term_type NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe NBET.(e_tuple2 (e_option NRE.e_term) (e_list e_issue));
 
       mk_tac_step_4 0 "core_check_term"
-        refl_core_check_term RE.e_env RE.e_term RE.e_term E.e_tot_or_ghost (e_option e_unit)
-        refl_core_check_term NRE.e_env NRE.e_term NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option NBET.e_unit);
+        refl_core_check_term RE.e_env RE.e_term RE.e_term E.e_tot_or_ghost (e_tuple2 (e_option e_unit) (e_list e_issue))
+        refl_core_check_term NRE.e_env NRE.e_term NRE.e_term E.e_tot_or_ghost_nbe NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));
 
       mk_tac_step_3 0 "tc_term"
-        refl_tc_term RE.e_env RE.e_term E.e_tot_or_ghost (e_option (e_tuple2 RE.e_term RE.e_term))
-        refl_tc_term NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
+        refl_tc_term RE.e_env RE.e_term E.e_tot_or_ghost (e_tuple2 (e_option (e_tuple2 RE.e_term RE.e_term)) (e_list e_issue))
+        refl_tc_term NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe NBET.(e_tuple2 (e_option (e_tuple2 NRE.e_term NRE.e_term)) (e_list e_issue));
 
       mk_tac_step_2 0 "universe_of"
-        refl_universe_of RE.e_env RE.e_term (e_option RE.e_universe)
-        refl_universe_of NRE.e_env NRE.e_term (NBET.e_option NRE.e_universe);
+        refl_universe_of RE.e_env RE.e_term (e_tuple2 (e_option RE.e_universe) (e_list e_issue))
+        refl_universe_of NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option NRE.e_universe) (e_list e_issue));
 
       mk_tac_step_2 0 "check_prop_validity"
-        refl_check_prop_validity RE.e_env RE.e_term (e_option e_unit)
-        refl_check_prop_validity NRE.e_env NRE.e_term (NBET.e_option NBET.e_unit);
+        refl_check_prop_validity RE.e_env RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
+        refl_check_prop_validity NRE.e_env NRE.e_term NBET.(e_tuple2 (NBET.e_option NBET.e_unit) (e_list e_issue));
 
       mk_tac_step_2 0 "instantiate_implicits"
-        refl_instantiate_implicits RE.e_env RE.e_term (e_option (e_tuple2 RE.e_term RE.e_term))
-        refl_instantiate_implicits NRE.e_env NRE.e_term (NBET.e_option (NBET.e_tuple2 NRE.e_term NRE.e_term));
+        refl_instantiate_implicits RE.e_env RE.e_term (e_tuple2 (e_option (e_tuple2 RE.e_term RE.e_term)) (e_list e_issue))
+        refl_instantiate_implicits NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option (NBET.e_tuple2 NRE.e_term NRE.e_term)) (e_list e_issue));
 
       mk_tac_step_3 0 "maybe_relate_after_unfolding"
-        refl_maybe_relate_after_unfolding RE.e_env RE.e_term RE.e_term (e_option E.e_unfold_side)
-        refl_maybe_relate_after_unfolding NRE.e_env NRE.e_term NRE.e_term (NBET.e_option E.e_unfold_side_nbe);
+        refl_maybe_relate_after_unfolding RE.e_env RE.e_term RE.e_term (e_tuple2 (e_option E.e_unfold_side) (e_list e_issue))
+        refl_maybe_relate_after_unfolding NRE.e_env NRE.e_term NRE.e_term NBET.(e_tuple2 (e_option E.e_unfold_side_nbe) (e_list e_issue));
 
       mk_tac_step_2 0 "maybe_unfold_head"
-        refl_maybe_unfold_head RE.e_env RE.e_term (e_option RE.e_term)
-        refl_maybe_unfold_head NRE.e_env NRE.e_term (NBET.e_option NRE.e_term);
+        refl_maybe_unfold_head RE.e_env RE.e_term (e_tuple2 (e_option RE.e_term) (e_list e_issue))
+        refl_maybe_unfold_head NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option NRE.e_term) (e_list e_issue));
 
       mk_tac_step_2 0 "push_open_namespace"
         push_open_namespace RE.e_env (e_list e_string) RE.e_env
@@ -646,6 +648,10 @@ let () =
       mk_tac_step_2 0 "resolve_name"
         resolve_name RE.e_env (e_list e_string) (e_option (e_either RE.e_bv RE.e_fv))
         resolve_name NRE.e_env (NBET.e_list NBET.e_string) (NBET.e_option (NBET.e_either NRE.e_bv NRE.e_fv));
+      
+      mk_tac_step_1 0 "log_issues"
+        (fun is -> ret (FStar.Errors.add_issues is)) (e_list e_issue) e_unit
+        (fun is -> ret (FStar.Errors.add_issues is)) NBET.(e_list e_issue) NBET.e_unit
 
     ]
 

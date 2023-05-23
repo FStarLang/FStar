@@ -118,8 +118,7 @@ let pack_fv (ns:list string) : fv =
             if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
             None
         in
-        // FIXME: Get a proper delta depth
-        lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
+        lid_as_fv (PC.p2l ns) quals
     in
     match !N.reflection_env_hook with
     | None -> fallback ()
@@ -128,8 +127,7 @@ let pack_fv (ns:list string) : fv =
      match qninfo with
      | Some (Inr (se, _us), _rng) ->
          let quals = DsEnv.fv_qual_of_se se in
-         // FIXME: Get a proper delta depth
-         lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
+         lid_as_fv (PC.p2l ns) quals
      | _ ->
          fallback ()
 
@@ -457,12 +455,11 @@ let lookup_attr (attr:term) (env:Env.env) : list fv =
         let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
         List.concatMap (fun se -> match U.lid_of_sigelt se with
                                   | None -> []
-                                  // FIXME: Get a proper delta depth
-                                  | Some l -> [S.lid_as_fv l (S.Delta_constant_at_level 999) None]) ses
+                                  | Some l -> [S.lid_as_fv l None]) ses
     | _ -> []
 
 let all_defs_in_env (env:Env.env) : list fv =
-    List.map (fun l -> S.lid_as_fv l (S.Delta_constant_at_level 999) None) (Env.lidents env) // |> take 10
+    List.map (fun l -> S.lid_as_fv l None) (Env.lidents env) // |> take 10
 
 let defs_in_module (env:Env.env) (modul:name) : list fv =
     List.concatMap
@@ -470,7 +467,7 @@ let defs_in_module (env:Env.env) (modul:name) : list fv =
                 (* must succeed, ids_of_lid always returns a non-empty list *)
                 let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_id in
                 if ns = modul
-                then [S.lid_as_fv l (S.Delta_constant_at_level 999) None]
+                then [S.lid_as_fv l None]
                 else [])
         (Env.lidents env)
 
