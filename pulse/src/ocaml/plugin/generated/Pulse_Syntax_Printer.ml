@@ -309,8 +309,21 @@ let rec (term_to_string :
            Obj.magic
              (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "_")))
        | Pulse_Syntax_Base.Tm_FStar (t1, uu___) ->
-           Obj.magic (Obj.repr (FStar_Tactics_Builtins.term_to_string t1)))
-      uu___
+           Obj.magic
+             (Obj.repr
+                (FStar_Tactics_Effect.tac_bind
+                   (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
+                      (Prims.of_int (107)) (Prims.of_int (32))
+                      (Prims.of_int (107)) (Prims.of_int (52)))
+                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                      (Prims.of_int (19)) (Prims.of_int (590))
+                      (Prims.of_int (31)))
+                   (Obj.magic (FStar_Tactics_Builtins.term_to_string t1))
+                   (fun uu___1 ->
+                      FStar_Tactics_Effect.lift_div_tac
+                        (fun uu___2 ->
+                           Prims.strcat "(tm_fstar) ("
+                             (Prims.strcat uu___1 ")")))))) uu___
 let (binder_to_string :
   Pulse_Syntax_Base.binder ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)

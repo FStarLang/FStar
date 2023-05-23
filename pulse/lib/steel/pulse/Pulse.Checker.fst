@@ -871,6 +871,9 @@ let check_stapp
          | C_STGhost _ res ->
            // This is a real ST application
            let d = T_STApp g head formal qual comp_typ arg (E dhead) (E darg) in
+           T.print (Printf.sprintf "ST application trying to frame, context: %s and pre: %s\n"
+                      (Pulse.Syntax.Printer.term_to_string pre)
+                      (Pulse.Syntax.Printer.term_to_string (comp_pre (open_comp_with comp_typ arg))));
            repack (try_frame_pre pre_typing d) post_hint true
          | _ ->
            let t = Tm_PureApp head qual arg in
@@ -1257,14 +1260,18 @@ let rec check' : bool -> check_t =
     (pre_typing: tot_typing g pre Tm_VProp)
     (post_hint:option term) ->
   let open T in
+  T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
+             (T.range_to_string t.range)
+             (string_of_bool allow_inst)
+             (Pulse.Syntax.Printer.term_to_string pre)
+             (Pulse.Syntax.Printer.st_term_to_string t));
   let t : st_term = //weird, remove the annotation and get a strange failure
     if allow_inst
     then auto_elims g pre t
     else t
   in
-  T.print (Printf.sprintf "At %s: context is %s\n"
-                          (T.range_to_string t.range)
-                          (Pulse.Syntax.Printer.term_to_string pre));
+  T.print (Printf.sprintf "After auto elims, t: %s\n"
+                          (Pulse.Syntax.Printer.st_term_to_string t));
   try 
     match t.term with
     | Tm_Protect _ -> T.fail "Protect should have been removed"

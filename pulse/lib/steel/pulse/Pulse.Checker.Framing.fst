@@ -108,9 +108,13 @@ module L = FStar.List.Tot.Base
 
 #push-options "--z3rlimit_factor 4"
 let check_one_vprop g (p q:term) : T.Tac (option (vprop_equiv g p q)) =
+  T.print (Printf.sprintf "Framing.check_one_vprop, p: %s and q: %s\n"
+             (Pulse.Syntax.Printer.term_to_string p)
+             (Pulse.Syntax.Printer.term_to_string q));
   if eq_tm p q
-  then Some (VE_Refl _ _)
+  then let _ = T.print "eq_tm returns true\n" in Some (VE_Refl _ _)
   else
+    let _ = T.print ("Framing.check_one_vprop: checking extensional equality\n") in
     let check_extensional_equality =
       match p, q with
       | Tm_PureApp hd_p _ _, Tm_PureApp hd_q _ _ ->

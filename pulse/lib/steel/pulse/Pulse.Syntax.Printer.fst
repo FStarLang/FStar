@@ -104,7 +104,7 @@ let rec term_to_string (t:term)
     | Tm_Unknown -> "_"
     
     | Tm_FStar t _ ->
-      T.term_to_string t
+      sprintf "(tm_fstar) (%s)" (T.term_to_string t)
       
 let binder_to_string (b:binder)
   : T.Tac string
