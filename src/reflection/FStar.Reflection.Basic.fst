@@ -201,10 +201,10 @@ let rec inspect_ln (t:term) : term_view =
        | _ -> failwith "Reflection::inspect_ln: uinst for a non-fvar node")
 
     | Tm_ascribed {tm=t; asc=(Inl ty, tacopt, eq)} ->
-        Tv_AscribedT (t, ty, tacopt, eq)
+        inspect_ln t
 
     | Tm_ascribed {tm=t; asc=(Inr cty, tacopt, eq)} ->
-        Tv_AscribedC (t, cty, tacopt, eq)
+        inspect_ln t
 
     | Tm_app {args=[]} ->
         failwith "inspect_ln: empty arguments on Tm_app"

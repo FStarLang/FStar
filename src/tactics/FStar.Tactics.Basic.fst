@@ -1932,10 +1932,10 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
        | _ -> failwith "Tac::inspect: Tm_uinst head not an fvar")
 
     | Tm_ascribed {tm=t; asc=(Inl ty, tacopt, eq)} ->
-        ret <| Tv_AscribedT (t, ty, tacopt, eq)
+        inspect t
 
     | Tm_ascribed {tm=t; asc=(Inr cty, tacopt, eq)} ->
-        ret <| Tv_AscribedC (t, cty, tacopt, eq)
+        inspect t
 
     | Tm_app {args=[]} ->
         failwith "empty arguments on Tm_app"
