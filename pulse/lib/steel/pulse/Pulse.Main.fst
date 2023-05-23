@@ -249,7 +249,7 @@ let rewrite_fv = mk_tests_lid "rewrite"
 let local_fv = mk_tests_lid "local"
 let tot_fv = mk_tests_lid "tot"
 
-let rec shift_bvs_in_tm_fstar (t:R.term) (n:nat) : Tac R.term =
+let rec shift_bvs_in_tm_fstar (t:host_term) (n:nat) : Tac host_term =
   let open R in
   match inspect_ln t with
   | Tv_BVar bv ->
@@ -258,9 +258,15 @@ let rec shift_bvs_in_tm_fstar (t:R.term) (n:nat) : Tac R.term =
     then pack_ln (Tv_BVar (pack_bv {bvv with bv_index=bvv.bv_index - 1}))
     else t
   | Tv_App head (arg, q) ->
-    let head = shift_bvs_in_tm_fstar head n in
-    let arg = shift_bvs_in_tm_fstar arg n in
-    pack_ln (Tv_App head (arg, q))
+    let unk = R.pack_ln R.Tv_Unknown in
+    if R.term_eq head unk || R.term_eq arg unk
+    then T.fail "Unknown in Tm_FStar"
+    else
+      let _ = assume (not_tv_unknown head) in
+      let _ = assume (not_tv_unknown arg) in
+      let head = shift_bvs_in_tm_fstar head n in
+      let arg = shift_bvs_in_tm_fstar arg n in
+      pack_ln (Tv_App head (arg, q))
   | _ -> t
 
 //

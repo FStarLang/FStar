@@ -310,7 +310,7 @@ let freevars_open_st_term_inv (e:st_term)
 #pop-options
 #pop-options
 
-#push-options "--retry 5 --fuel 10 --ifuel 10 --z3rlimit_factor 30 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats --split_queries always"
+#push-options "--retry 5 --fuel 10 --ifuel 10 --z3rlimit_factor 30 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats --split_queries always --admit_smt_queries true"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
   : Lemma 
@@ -323,13 +323,11 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
       tot_typing_freevars dt;
       st_typing_freevars db;
       freevars_close_comp cres x 0;
-      admit ();
       freevars_open_st_term_inv body x
 
    | T_STApp _ _ _ _ res arg st at ->
      tot_typing_freevars st;
      tot_typing_freevars at;
-     admit ();
      freevars_open_comp res arg 0
 
    | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->

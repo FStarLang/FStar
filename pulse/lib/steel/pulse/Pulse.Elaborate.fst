@@ -130,9 +130,6 @@ let elab_comp_open_commute (c:comp) (x:term)
 
 let rec elab_ln t i =
   match t with
-  // | Tm_PureApp head _ arg ->
-  //   elab_ln head i;
-  //   elab_ln arg i
   | Tm_Emp -> ()
   | Tm_Pure t -> elab_ln t i
   | Tm_Star l r ->

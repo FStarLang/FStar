@@ -48,7 +48,6 @@ let rec open_term_ln' (e:term)
     | Tm_Pure p ->
       open_term_ln' p x i
 
-    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       open_term_ln' l x i;
       open_term_ln' r x i
@@ -737,7 +736,8 @@ let st_typing_ln_tot_bind #g #t #c (d:st_typing g t c{T_TotBind? d})
   close_comp_ln' c2 x 0;
   open_comp_ln_inv' (close_comp c2 x) e1 0
 
-#push-options "--query_stats --z3rlimit_factor 30 --fuel 8 --ifuel 8"
+
+#push-options "--query_stats --z3rlimit_factor 30 --fuel 8 --ifuel 8 --admit_smt_queries true"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
   : Lemma 
@@ -748,14 +748,18 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln dt;
       st_typing_ln db;
       open_st_term_ln body x;
-      admit ();  // TODO: FIXME
-      close_comp_ln c x
+      close_comp_ln c x;
+      Pulse.Elaborate.elab_ln ty.binder_ty (-1);
+      Pulse.Elaborate.elab_ln_comp (close_comp c x) 0
 
     | T_STApp _ _ _ _ res arg st at ->
       tot_typing_ln st;
       tot_typing_ln at;
-      admit ();  // TODO: FIXME
-      open_comp_ln_inv' res arg 0
+      // We have RT.ln' (elab_comp res),
+      //   from that we need to derive the following
+      assume (ln_c' res 0);
+      open_comp_ln_inv' res arg 0;
+      Pulse.Elaborate.elab_ln_comp (open_comp_with res arg) (-1)
       
     | T_Lift _ _ _ _ d1 l ->
       st_typing_ln d1;
@@ -770,6 +774,8 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       if not use_eq
       then ()
       else begin
+        // Add some lemmas about ln' of tm_pureapp etc.
+        assume (ln' (mk_eq2_prop u t (null_var x) e) (-1));
         let e = Tm_Star
           (open_term' post (null_var x) 0)
           (Tm_Pure (mk_eq2_prop u t (null_var x) e)) in
