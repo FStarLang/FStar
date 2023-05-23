@@ -94,7 +94,8 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 		fstar/FStar.Main.fst		\
 		tests/FStar.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
-		$(EXTRACT)			> ._depend
+		$(EXTRACT)			\
+		--output_deps_to ._depend
 	@# We've generated deps for everything into fstar-lib/generated.
 	@# Here we fix up the .depend file to move tests out of the library.
 	$(Q)$(SED) 's,fstar-lib/generated/FStar_Test,fstar-tests/generated/FStar_Test,g' <._depend >.depend
@@ -107,7 +108,8 @@ dep.graph:
 		fstar/FStar.Main.fst		\
 		tests/FStar.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
-		$(EXTRACT)
+		$(EXTRACT)			\
+		--output_deps_to dep.graph
 
 depgraph.pdf: dep.graph
 	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph

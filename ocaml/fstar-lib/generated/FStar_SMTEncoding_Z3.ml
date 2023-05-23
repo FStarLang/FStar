@@ -259,15 +259,15 @@ let (query_logging : query_log) =
     let file_name = next_file_name () in
     FStar_Compiler_Effect.op_Colon_Equals current_file_name
       (FStar_Pervasives_Native.Some file_name);
-    (let fh = FStar_Compiler_Util.open_file_for_writing file_name in
+    (let c = FStar_Compiler_Util.open_file_for_writing file_name in
      FStar_Compiler_Effect.op_Colon_Equals log_file_opt
-       (FStar_Pervasives_Native.Some (fh, file_name));
-     (fh, file_name)) in
+       (FStar_Pervasives_Native.Some (c, file_name));
+     (c, file_name)) in
   let get_log_file uu___ =
     let uu___1 = FStar_Compiler_Effect.op_Bang log_file_opt in
     match uu___1 with
     | FStar_Pervasives_Native.None -> new_log_file ()
-    | FStar_Pervasives_Native.Some fh -> fh in
+    | FStar_Pervasives_Native.Some c -> c in
   let append_to_log str =
     let uu___ = get_log_file () in
     match uu___ with
@@ -281,8 +281,8 @@ let (query_logging : query_log) =
     let uu___1 = FStar_Compiler_Effect.op_Bang log_file_opt in
     match uu___1 with
     | FStar_Pervasives_Native.None -> ()
-    | FStar_Pervasives_Native.Some (fh, uu___2) ->
-        (FStar_Compiler_Util.close_file fh;
+    | FStar_Pervasives_Native.Some (c, uu___2) ->
+        (FStar_Compiler_Util.close_out_channel c;
          FStar_Compiler_Effect.op_Colon_Equals log_file_opt
            FStar_Pervasives_Native.None) in
   let log_file_name uu___ =
