@@ -1,7 +1,6 @@
 open Prims
 let (tm_unit : Pulse_Syntax_Base.term) =
-  Pulse_Elaborate_Pure.tm_fvar
-    (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.unit_lid)
+  Pulse_Elaborate_Pure.tm_constant FStar_Reflection_Data.C_Unit
 let (tm_bool : Pulse_Syntax_Base.term) =
   Pulse_Elaborate_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.bool_lid)

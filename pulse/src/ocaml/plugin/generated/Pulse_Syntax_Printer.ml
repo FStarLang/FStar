@@ -122,15 +122,15 @@ let rec (term_to_string :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                      (Prims.of_int (69)) (Prims.of_int (37))
-                      (Prims.of_int (69)) (Prims.of_int (55)))
+                      (Prims.of_int (69)) (Prims.of_int (40))
+                      (Prims.of_int (69)) (Prims.of_int (58)))
                    (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
                       (Prims.of_int (19)) (Prims.of_int (590))
                       (Prims.of_int (31))) (Obj.magic (term_to_string p))
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 ->
-                           Prims.strcat "pure " (Prims.strcat uu___ "")))))
+                           Prims.strcat "tm_pure " (Prims.strcat uu___ "")))))
        | Pulse_Syntax_Base.Tm_Star (p1, p2) ->
            Obj.magic
              (Obj.repr
