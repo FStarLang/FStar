@@ -1,34 +1,35 @@
 open Prims
 open FStar_Ident
-open Pulse_Syntax
+open Pulse_Syntax_Base
+module E = Pulse_Elaborate_Pure
 module S = FStar_Syntax_Syntax
-type universe = Pulse_Syntax.universe
+type universe = Pulse_Syntax_Base.universe
 type range = FStar_Compiler_Range.range
-let u_zero : universe = U_zero
-let u_succ (u:universe) : universe = U_succ u
-let u_var (s:string) : universe = U_var s
-let u_max (u0:universe) (u1:universe) : universe = U_max (u0, u1)
-let u_unknown : universe = U_unknown
+let u_zero : universe = E.u_zero
+let u_succ (u:universe) : universe = E.u_succ u
+let u_var (s:string) : universe = E.u_var s
+let u_max (u0:universe) (u1:universe) : universe = E.u_max u0 u1
+let u_unknown : universe = E.u_unknown
 
-type qualifier = Pulse_Syntax.qualifier
-let as_qual (imp:bool) = if imp then Some Pulse_Syntax.Implicit else None
-type bv = Pulse_Syntax.bv
+type qualifier = Pulse_Syntax_Base.qualifier
+let as_qual (imp:bool) = if imp then Some Pulse_Syntax_Base.Implicit else None
+type bv = Pulse_Syntax_Base.bv
 let mk_bv (i:index) (name:string) (r:range) : bv =
  { bv_index = i; bv_ppname=name; bv_range=r }
 
-type nm = Pulse_Syntax.nm
+type nm = Pulse_Syntax_Base.nm
 let mk_nm (i:index) (name:string) (r:range) : nm =
  { nm_index = i; nm_ppname=name; nm_range= r}
 
 
-type fv = Pulse_Syntax.fv
+type fv = Pulse_Syntax_Base.fv
 let mk_fv (nm:lident) (r:range) : fv = 
  { fv_name = FStar_Ident.path_of_lid nm;
    fv_range = r }
 
-type term = Pulse_Syntax.term
-type binder = Pulse_Syntax.binder
-type comp = Pulse_Syntax.comp
+type term = Pulse_Syntax_Base.term
+type binder = Pulse_Syntax_Base.binder
+type comp = Pulse_Syntax_Base.comp
 type vprop = term
 
 let mk_binder (x:ident) (t:term) : binder =
@@ -36,10 +37,10 @@ let mk_binder (x:ident) (t:term) : binder =
     binder_ppname=FStar_Ident.string_of_id x }
 
 
-let tm_bvar (bv:bv) : term = Tm_BVar bv
-let tm_var (x:nm) : term = Tm_Var x
-let tm_fvar (x:fv) : term = Tm_FVar x
-let tm_uinst (l:fv) (us:universe list) : term = Tm_UInst (l, us)
+let tm_bvar (bv:bv) : term = E.tm_bvar bv
+let tm_var (x:nm) : term = E.tm_var x
+let tm_fvar (x:fv) : term = E.tm_fvar x
+let tm_uinst (l:fv) (us:universe list) : term = E.tm_uinst l us
 let tm_emp : term = Tm_Emp
 let tm_pure (p:term) : term = Tm_Pure p
 let tm_star (p0:term) (p1:term) : term = Tm_Star (p0, p1)
@@ -49,8 +50,8 @@ let map_aqual (q:S.aqual) =
   | Some { S.aqual_implicit = true } -> Some Implicit
   | _ -> None
 let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
-  Tm_Arrow(b, map_aqual q, body)
-let tm_expr (t:S.term) : term = Tm_FStar t
+  E.tm_arrow b (map_aqual q) body
+let tm_expr (t:S.term) : term = Tm_FStar (t, t.pos)
 let tm_unknown : term = Tm_Unknown
 
 
@@ -71,7 +72,7 @@ let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, mk_st_comp pre ret post)
 
 module PSB = Pulse_Syntax_Builder
-type st_term = Pulse_Syntax.st_term
+type st_term = Pulse_Syntax_Base.st_term
 let tm_return (t:term) r : st_term = PSB.(with_range (tm_return STT false t) r)
 
 let tm_abs (b:binder)

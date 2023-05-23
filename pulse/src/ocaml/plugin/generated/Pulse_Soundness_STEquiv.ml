@@ -14,8 +14,8 @@ let (abs_and_app0 :
         (Pulse_Reflection_Util.mk_abs ty FStar_Reflection_Data.Q_Explicit b)
         [((Pulse_Reflection_Util.bound_var Prims.int_zero),
            FStar_Reflection_Data.Q_Explicit)]
-let (vprop_arrow : Pulse_Syntax.term -> Pulse_Syntax.term) =
+let (vprop_arrow : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
   fun t ->
-    Pulse_Syntax.Tm_Arrow
-      ((Pulse_Syntax.null_binder t), FStar_Pervasives_Native.None,
-        (Pulse_Syntax.C_Tot Pulse_Syntax.Tm_VProp))
+    Pulse_Elaborate_Pure.tm_arrow (Pulse_Syntax_Base.null_binder t)
+      FStar_Pervasives_Native.None
+      (Pulse_Syntax_Base.C_Tot Pulse_Syntax_Base.Tm_VProp)

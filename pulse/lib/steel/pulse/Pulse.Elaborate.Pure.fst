@@ -146,6 +146,19 @@ let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.ter
     (elab_term inames)
     _ _ _ _ eq_pre eq_post
 
+let u0 : universe = R.pack_universe R.Uv_Zero
+let u1 : universe = R.pack_universe (R.Uv_Succ u0)
+let u2 : universe = R.pack_universe (R.Uv_Succ u1)
+
+let u_zero = u0
+let u_succ (u:universe) : universe =
+  R.pack_universe (R.Uv_Succ u)
+let u_var (s:string) : universe =
+  R.pack_universe (R.Uv_Name (s, FStar.Range.range_0)) 
+let u_max (u0 u1:universe) : universe =
+  R.pack_universe (R.Uv_Max [u0; u1])
+let u_unknown : universe = R.pack_universe R.Uv_Unk
+
 let tm_bvar (bv:bv) : term =
   Tm_FStar (R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv_with_name bv.bv_ppname bv.bv_index))))
            bv.bv_range

@@ -48,11 +48,6 @@ let mk_eq2_prop (u:universe) (t:term) (e0 e1:term)
          (Tm_PureApp (Tm_PureApp (tm_uinst (as_fv (mk_steel_wrapper_lid "eq2_prop")) [u]) (Some Implicit) t)
                      None e0) None e1
 
-
-let u0 : universe = R.pack_universe R.Uv_Zero
-let u1 : universe = R.pack_universe (R.Uv_Succ u0)
-let u2 : universe = R.pack_universe (R.Uv_Succ u1)
-
 let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 u2 Tm_VProp e0 e1
 
