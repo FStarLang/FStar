@@ -5518,7 +5518,6 @@ let (t_destruct :
                                                                     let fv1 =
                                                                     FStar_Syntax_Syntax.lid_as_fv
                                                                     c_lid
-                                                                    FStar_Syntax_Syntax.delta_constant
                                                                     (FStar_Pervasives_Native.Some
                                                                     FStar_Syntax_Syntax.Data_ctor) in
                                                                     let uu___20
@@ -7156,9 +7155,11 @@ let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
       if uu___
       then let uu___1 = msg () in FStar_Compiler_Util.print_string uu___1
       else ()
+type issues = FStar_Errors.issue Prims.list
 let refl_typing_builtin_wrapper :
   'a .
-    (unit -> 'a) -> 'a FStar_Pervasives_Native.option FStar_Tactics_Monad.tac
+    (unit -> 'a) ->
+      ('a FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac
   =
   fun f ->
     let tx = FStar_Syntax_Unionfind.new_transaction () in
@@ -7167,8 +7168,8 @@ let refl_typing_builtin_wrapper :
     | (errs, r) ->
         (FStar_Syntax_Unionfind.rollback tx;
          if (FStar_Compiler_List.length errs) > Prims.int_zero
-         then FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
-         else FStar_Tactics_Monad.ret r)
+         then FStar_Tactics_Monad.ret (FStar_Pervasives_Native.None, errs)
+         else FStar_Tactics_Monad.ret (r, errs))
 let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     (let uu___ =
@@ -7196,12 +7197,30 @@ let (uu___is_Subtyping : relation -> Prims.bool) =
   fun projectee -> match projectee with | Subtyping -> true | uu___ -> false
 let (uu___is_Equality : relation -> Prims.bool) =
   fun projectee -> match projectee with | Equality -> true | uu___ -> false
+let (unexpected_uvars_issue :
+  FStar_Compiler_Range_Type.range -> FStar_Errors.issue) =
+  fun r ->
+    let i =
+      let uu___ =
+        let uu___1 =
+          FStar_Errors.errno
+            FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar in
+        FStar_Pervasives_Native.Some uu___1 in
+      {
+        FStar_Errors.issue_msg = "Cannot check relation with uvars";
+        FStar_Errors.issue_level = FStar_Errors.EError;
+        FStar_Errors.issue_range = (FStar_Pervasives_Native.Some r);
+        FStar_Errors.issue_number = uu___;
+        FStar_Errors.issue_ctx = []
+      } in
+    i
 let (refl_check_relation :
   env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.typ ->
         relation ->
-          unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+          (unit FStar_Pervasives_Native.option * issues)
+            FStar_Tactics_Monad.tac)
   =
   fun g ->
     fun t0 ->
@@ -7263,29 +7282,46 @@ let (refl_check_relation :
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                         FStar_Errors.raise_error uu___5
                           FStar_Compiler_Range_Type.dummyRange))))
-          else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+          else
+            (let uu___2 =
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 = FStar_TypeChecker_Env.get_range g in
+                   unexpected_uvars_issue uu___5 in
+                 [uu___4] in
+               (FStar_Pervasives_Native.None, uu___3) in
+             FStar_Tactics_Monad.ret uu___2)
 let (refl_check_subtyping :
   env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.typ ->
-        unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+        (unit FStar_Pervasives_Native.option * issues)
+          FStar_Tactics_Monad.tac)
   = fun g -> fun t0 -> fun t1 -> refl_check_relation g t0 t1 Subtyping
 let (refl_check_equiv :
   env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.typ ->
-        unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+        (unit FStar_Pervasives_Native.option * issues)
+          FStar_Tactics_Monad.tac)
   = fun g -> fun t0 -> fun t1 -> refl_check_relation g t0 t1 Equality
 let (to_must_tot : FStar_Tactics_Types.tot_or_ghost -> Prims.bool) =
   fun eff ->
     match eff with
     | FStar_Tactics_Types.E_Total -> true
     | FStar_Tactics_Types.E_Ghost -> false
+let (refl_norm_type :
+  env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
+  fun g ->
+    fun t ->
+      FStar_TypeChecker_Normalize.normalize
+        [FStar_TypeChecker_Env.Beta;
+        FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] g t
 let (refl_core_compute_term_type :
   env ->
     FStar_Syntax_Syntax.term ->
       FStar_Tactics_Types.tot_or_ghost ->
-        FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
+        (FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option * issues)
           FStar_Tactics_Monad.tac)
   =
   fun g ->
@@ -7322,14 +7358,15 @@ let (refl_core_compute_term_type :
                     must_tot gh in
                 match uu___3 with
                 | FStar_Pervasives.Inl t ->
+                    let t1 = refl_norm_type g t in
                     (dbg_refl g
                        (fun uu___5 ->
                           let uu___6 = FStar_Syntax_Print.term_to_string e in
-                          let uu___7 = FStar_Syntax_Print.term_to_string t in
+                          let uu___7 = FStar_Syntax_Print.term_to_string t1 in
                           FStar_Compiler_Util.format2
                             "refl_core_compute_term_type for %s computed type %s\n"
                             uu___6 uu___7);
-                     t)
+                     t1)
                 | FStar_Pervasives.Inr err ->
                     (dbg_refl g
                        (fun uu___5 ->
@@ -7344,13 +7381,22 @@ let (refl_core_compute_term_type :
                         (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                       FStar_Errors.raise_error uu___5
                         FStar_Compiler_Range_Type.dummyRange))))
-        else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+        else
+          (let uu___2 =
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 = FStar_TypeChecker_Env.get_range g in
+                 unexpected_uvars_issue uu___5 in
+               [uu___4] in
+             (FStar_Pervasives_Native.None, uu___3) in
+           FStar_Tactics_Monad.ret uu___2)
 let (refl_core_check_term :
   env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.typ ->
         FStar_Tactics_Types.tot_or_ghost ->
-          unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+          (unit FStar_Pervasives_Native.option * issues)
+            FStar_Tactics_Monad.tac)
   =
   fun g ->
     fun e ->
@@ -7421,13 +7467,20 @@ let (refl_core_check_term :
           else
             Obj.magic
               (Obj.repr
-                 (FStar_Tactics_Monad.ret FStar_Pervasives_Native.None))
+                 (let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 = FStar_TypeChecker_Env.get_range g in
+                        unexpected_uvars_issue uu___5 in
+                      [uu___4] in
+                    (FStar_Pervasives_Native.None, uu___3) in
+                  FStar_Tactics_Monad.ret uu___2))
 let (refl_tc_term :
   env ->
     FStar_Syntax_Syntax.term ->
       FStar_Tactics_Types.tot_or_ghost ->
-        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ)
-          FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+        ((FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ)
+          FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac)
   =
   fun g ->
     fun e ->
@@ -7685,16 +7738,17 @@ let (refl_tc_term :
                                g1 e2 must_tot gh in
                            match uu___6 with
                            | FStar_Pervasives.Inl t ->
+                               let t1 = refl_norm_type g1 t in
                                (dbg_refl g1
                                   (fun uu___8 ->
                                      let uu___9 =
                                        FStar_Syntax_Print.term_to_string e2 in
                                      let uu___10 =
-                                       FStar_Syntax_Print.term_to_string t in
+                                       FStar_Syntax_Print.term_to_string t1 in
                                      FStar_Compiler_Util.format2
                                        "refl_tc_term for %s computed type %s\n"
                                        uu___9 uu___10);
-                                (e2, t))
+                                (e2, t1))
                            | FStar_Pervasives.Inr err ->
                                (dbg_refl g1
                                   (fun uu___8 ->
@@ -7721,11 +7775,19 @@ let (refl_tc_term :
                       (FStar_Errors_Codes.Fatal_IllTyped,
                         "UVars remaing in term after tc_term callback")
                       e1.FStar_Syntax_Syntax.pos))
-        else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+        else
+          (let uu___2 =
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 = FStar_TypeChecker_Env.get_range g in
+                 unexpected_uvars_issue uu___5 in
+               [uu___4] in
+             (FStar_Pervasives_Native.None, uu___3) in
+           FStar_Tactics_Monad.ret uu___2)
 let (refl_universe_of :
   env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
+      (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option * issues)
         FStar_Tactics_Monad.tac)
   =
   fun g ->
@@ -7783,11 +7845,19 @@ let (refl_universe_of :
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                         FStar_Errors.raise_error uu___5
                           FStar_Compiler_Range_Type.dummyRange))))
-      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+      else
+        (let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               let uu___5 = FStar_TypeChecker_Env.get_range g in
+               unexpected_uvars_issue uu___5 in
+             [uu___4] in
+           (FStar_Pervasives_Native.None, uu___3) in
+         FStar_Tactics_Monad.ret uu___2)
 let (refl_check_prop_validity :
   env ->
     FStar_Syntax_Syntax.term ->
-      unit FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+      (unit FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac)
   =
   fun g ->
     fun e ->
@@ -7845,12 +7915,20 @@ let (refl_check_prop_validity :
                   FStar_TypeChecker_Common.implicits =
                     (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
                 }))
-      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+      else
+        (let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               let uu___5 = FStar_TypeChecker_Env.get_range g in
+               unexpected_uvars_issue uu___5 in
+             [uu___4] in
+           (FStar_Pervasives_Native.None, uu___3) in
+         FStar_Tactics_Monad.ret uu___2)
 let (refl_instantiate_implicits :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ)
-        FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+      ((FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ)
+        FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac)
   =
   fun g ->
     fun e ->
@@ -7973,7 +8051,12 @@ let (refl_instantiate_implicits :
               | (e1, t, guard) ->
                   (FStar_TypeChecker_Rel.force_trivial_guard g1 guard;
                    (let e2 = FStar_Syntax_Compress.deep_compress false e1 in
-                    let t1 = FStar_Syntax_Compress.deep_compress false t in
+                    let t1 =
+                      let uu___6 =
+                        FStar_Compiler_Effect.op_Bar_Greater t
+                          (refl_norm_type g1) in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___6
+                        (FStar_Syntax_Compress.deep_compress false) in
                     dbg_refl g1
                       (fun uu___7 ->
                          let uu___8 = FStar_Syntax_Print.term_to_string e2 in
@@ -7982,12 +8065,20 @@ let (refl_instantiate_implicits :
                            "} finished tc with e = %s and t = %s\n" uu___8
                            uu___9);
                     (e2, t1)))))
-      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+      else
+        (let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               let uu___5 = FStar_TypeChecker_Env.get_range g in
+               unexpected_uvars_issue uu___5 in
+             [uu___4] in
+           (FStar_Pervasives_Native.None, uu___3) in
+         FStar_Tactics_Monad.ret uu___2)
 let (refl_maybe_relate_after_unfolding :
   env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
-        FStar_TypeChecker_Core.side FStar_Pervasives_Native.option
+        (FStar_TypeChecker_Core.side FStar_Pervasives_Native.option * issues)
           FStar_Tactics_Monad.tac)
   =
   fun g ->
@@ -8015,11 +8106,19 @@ let (refl_maybe_relate_after_unfolding :
                      FStar_Compiler_Util.format1 "} returning side: %s\n"
                        uu___5);
                 s))
-        else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+        else
+          (let uu___2 =
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 = FStar_TypeChecker_Env.get_range g in
+                 unexpected_uvars_issue uu___5 in
+               [uu___4] in
+             (FStar_Pervasives_Native.None, uu___3) in
+           FStar_Tactics_Monad.ret uu___2)
 let (refl_maybe_unfold_head :
   env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+      (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * issues)
         FStar_Tactics_Monad.tac)
   =
   fun g ->
@@ -8055,7 +8154,15 @@ let (refl_maybe_unfold_head :
               else
                 FStar_Compiler_Effect.op_Bar_Greater eopt
                   FStar_Compiler_Util.must))
-      else FStar_Tactics_Monad.ret FStar_Pervasives_Native.None
+      else
+        (let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               let uu___5 = FStar_TypeChecker_Env.get_range g in
+               unexpected_uvars_issue uu___5 in
+             [uu___4] in
+           (FStar_Pervasives_Native.None, uu___3) in
+         FStar_Tactics_Monad.ret uu___2)
 let (push_open_namespace :
   env -> Prims.string Prims.list -> env FStar_Tactics_Monad.tac) =
   fun e ->

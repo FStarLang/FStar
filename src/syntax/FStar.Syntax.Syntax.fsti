@@ -202,13 +202,13 @@ and pat' =
   | Pat_dot_term of option term                                  (* dot patterns: determined by other elements in the pattern *)
                                                                  (* the option term is the optionally resolved pat dot term *)
 and letbinding = {  //let f : forall u1..un. M t = e
-    lbname :lbname;          //f
-    lbunivs:list univ_name; //u1..un
-    lbtyp  :typ;             //t
-    lbeff  :lident;          //M
-    lbdef  :term;            //e
-    lbattrs:list attribute; //attrs
-    lbpos  :range;           //original position of 'e'
+    lbname :lbname;          // f
+    lbunivs:list univ_name;  // u1..un
+    lbtyp  :typ;             // t
+    lbeff  :lident;          // M
+    lbdef  :term;            // e
+    lbattrs:list attribute;  // attrs
+    lbpos  :range;           // original position of 'e'
 }
 and antiquotations = int * list term
 and quoteinfo = {
@@ -363,7 +363,7 @@ and bv = {
 }
 and fv = {
     fv_name :var;
-    fv_delta:delta_depth;
+    fv_delta:option delta_depth;
     fv_qual :option fv_qual
 }
 and free_vars = {
@@ -408,6 +408,7 @@ and lazy_kind =
   | Lazy_embedding of emb_typ * Thunk.t term
   | Lazy_universe
   | Lazy_universe_uvar
+  | Lazy_issue
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)
@@ -804,20 +805,22 @@ val as_aqual_implicit:    bool -> aqual
 val is_top_level:   list letbinding -> bool
 
 (* gensym *)
-val freshen_bv:     bv -> bv
-val freshen_binder:  binder -> binder
-val gen_bv:         string -> option Range.range -> typ -> bv
-val gen_bv':        ident -> option Range.range -> typ -> bv
-val new_bv:         option range -> typ -> bv
-val new_univ_name:  option range -> univ_name
-val lid_as_fv:      lident -> delta_depth -> option fv_qual -> fv
-val fv_to_tm:       fv -> term
-val fvar:           lident -> delta_depth -> option fv_qual -> term
-val fv_eq:          fv -> fv -> bool
-val fv_eq_lid:      fv -> lident -> bool
-val range_of_fv:    fv -> range
-val lid_of_fv:      fv -> lid
-val set_range_of_fv:fv -> range -> fv
+val freshen_bv       : bv -> bv
+val freshen_binder   : binder -> binder
+val gen_bv           : string -> option Range.range -> typ -> bv
+val gen_bv'          : ident -> option Range.range -> typ -> bv
+val new_bv           : option range -> typ -> bv
+val new_univ_name    : option range -> univ_name
+val lid_and_dd_as_fv : lident -> delta_depth -> option fv_qual -> fv
+val lid_as_fv        : lident -> option fv_qual -> fv
+val fv_to_tm         : fv -> term
+val fvar_with_dd     : lident -> delta_depth -> option fv_qual -> term
+val fvar             : lident -> option fv_qual -> term
+val fv_eq            : fv -> fv -> bool
+val fv_eq_lid        : fv -> lident -> bool
+val range_of_fv      : fv -> range
+val lid_of_fv        : fv -> lid
+val set_range_of_fv  : fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list term -> string -> bool

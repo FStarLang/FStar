@@ -1492,7 +1492,7 @@ let (synthesize :
              if env.FStar_TypeChecker_Env.nosynth
              then
                let uu___1 =
-                 FStar_TypeChecker_Util.fvar_const env
+                 FStar_TypeChecker_Util.fvar_env env
                    FStar_Parser_Const.magic_lid in
                let uu___2 =
                  let uu___3 =
@@ -1678,8 +1678,7 @@ let (handle_smt_goal :
                      let qn = FStar_TypeChecker_Env.lookup_qname env lid in
                      let fv =
                        FStar_Syntax_Syntax.lid_as_fv lid
-                         (FStar_Syntax_Syntax.Delta_constant_at_level
-                            Prims.int_zero) FStar_Pervasives_Native.None in
+                         FStar_Pervasives_Native.None in
                      let dd =
                        let uu___3 =
                          FStar_TypeChecker_Env.delta_depth_of_qninfo fv qn in
@@ -1688,7 +1687,7 @@ let (handle_smt_goal :
                        | FStar_Pervasives_Native.None ->
                            failwith "Expected a dd" in
                      let uu___3 =
-                       FStar_Syntax_Syntax.lid_as_fv lid dd
+                       FStar_Syntax_Syntax.lid_as_fv lid
                          FStar_Pervasives_Native.None in
                      FStar_Syntax_Syntax.fv_to_tm uu___3
                  | uu___2 -> failwith "Resolve_tac not found" in
@@ -1916,8 +1915,6 @@ let (splice :
                                            FStar_Compiler_List.hd lids in
                                          FStar_Syntax_Syntax.lid_as_fv
                                            uu___10
-                                           (FStar_Syntax_Syntax.Delta_constant_at_level
-                                              Prims.int_one)
                                            FStar_Pervasives_Native.None in
                                        FStar_Pervasives.Inr uu___9 in
                                      FStar_Syntax_Util.mk_letbinding uu___8
@@ -1953,6 +1950,94 @@ let (splice :
                                   tau1 tactic_already_typed ps) in
                            match uu___6 with
                            | (gs, sigelts) ->
+                               let sigelts1 =
+                                 let set_lb_dd lb =
+                                   let uu___7 = lb in
+                                   match uu___7 with
+                                   | {
+                                       FStar_Syntax_Syntax.lbname =
+                                         FStar_Pervasives.Inr fv;
+                                       FStar_Syntax_Syntax.lbunivs = uu___8;
+                                       FStar_Syntax_Syntax.lbtyp = uu___9;
+                                       FStar_Syntax_Syntax.lbeff = uu___10;
+                                       FStar_Syntax_Syntax.lbdef = lbdef;
+                                       FStar_Syntax_Syntax.lbattrs = uu___11;
+                                       FStar_Syntax_Syntax.lbpos = uu___12;_}
+                                       ->
+                                       let uu___13 =
+                                         let uu___14 =
+                                           let uu___15 =
+                                             let uu___16 =
+                                               FStar_Syntax_Util.incr_delta_qualifier
+                                                 lbdef in
+                                             FStar_Compiler_Effect.op_Bar_Greater
+                                               uu___16
+                                               (fun uu___17 ->
+                                                  FStar_Pervasives_Native.Some
+                                                    uu___17) in
+                                           {
+                                             FStar_Syntax_Syntax.fv_name =
+                                               (fv.FStar_Syntax_Syntax.fv_name);
+                                             FStar_Syntax_Syntax.fv_delta =
+                                               uu___15;
+                                             FStar_Syntax_Syntax.fv_qual =
+                                               (fv.FStar_Syntax_Syntax.fv_qual)
+                                           } in
+                                         FStar_Pervasives.Inr uu___14 in
+                                       {
+                                         FStar_Syntax_Syntax.lbname = uu___13;
+                                         FStar_Syntax_Syntax.lbunivs =
+                                           (lb.FStar_Syntax_Syntax.lbunivs);
+                                         FStar_Syntax_Syntax.lbtyp =
+                                           (lb.FStar_Syntax_Syntax.lbtyp);
+                                         FStar_Syntax_Syntax.lbeff =
+                                           (lb.FStar_Syntax_Syntax.lbeff);
+                                         FStar_Syntax_Syntax.lbdef =
+                                           (lb.FStar_Syntax_Syntax.lbdef);
+                                         FStar_Syntax_Syntax.lbattrs =
+                                           (lb.FStar_Syntax_Syntax.lbattrs);
+                                         FStar_Syntax_Syntax.lbpos =
+                                           (lb.FStar_Syntax_Syntax.lbpos)
+                                       } in
+                                 FStar_Compiler_List.map
+                                   (fun se ->
+                                      match se.FStar_Syntax_Syntax.sigel with
+                                      | FStar_Syntax_Syntax.Sig_let
+                                          {
+                                            FStar_Syntax_Syntax.lbs1 =
+                                              (is_rec, lbs);
+                                            FStar_Syntax_Syntax.lids1 = lids1;_}
+                                          ->
+                                          let uu___7 =
+                                            let uu___8 =
+                                              let uu___9 =
+                                                let uu___10 =
+                                                  FStar_Compiler_List.map
+                                                    set_lb_dd lbs in
+                                                (is_rec, uu___10) in
+                                              {
+                                                FStar_Syntax_Syntax.lbs1 =
+                                                  uu___9;
+                                                FStar_Syntax_Syntax.lids1 =
+                                                  lids1
+                                              } in
+                                            FStar_Syntax_Syntax.Sig_let
+                                              uu___8 in
+                                          {
+                                            FStar_Syntax_Syntax.sigel =
+                                              uu___7;
+                                            FStar_Syntax_Syntax.sigrng =
+                                              (se.FStar_Syntax_Syntax.sigrng);
+                                            FStar_Syntax_Syntax.sigquals =
+                                              (se.FStar_Syntax_Syntax.sigquals);
+                                            FStar_Syntax_Syntax.sigmeta =
+                                              (se.FStar_Syntax_Syntax.sigmeta);
+                                            FStar_Syntax_Syntax.sigattrs =
+                                              (se.FStar_Syntax_Syntax.sigattrs);
+                                            FStar_Syntax_Syntax.sigopts =
+                                              (se.FStar_Syntax_Syntax.sigopts)
+                                          }
+                                      | uu___7 -> se) sigelts in
                                ((let uu___8 =
                                    FStar_Compiler_List.existsML
                                      (fun g1 ->
@@ -1975,7 +2060,8 @@ let (splice :
                                  else ());
                                 (let lids' =
                                    FStar_Compiler_List.collect
-                                     FStar_Syntax_Util.lids_of_sigelt sigelts in
+                                     FStar_Syntax_Util.lids_of_sigelt
+                                     sigelts1 in
                                  FStar_Compiler_List.iter
                                    (fun lid ->
                                       let uu___9 =
@@ -2014,14 +2100,14 @@ let (splice :
                                     let uu___11 =
                                       (FStar_Common.string_of_list ())
                                         FStar_Syntax_Print.sigelt_to_string
-                                        sigelts in
+                                        sigelts1 in
                                     FStar_Compiler_Util.print1
                                       "splice: got decls = {\n\n%s\n\n}\n"
                                       uu___11
                                   else ());
-                                 (let sigelts1 =
+                                 (let sigelts2 =
                                     FStar_Compiler_Effect.op_Bar_Greater
-                                      sigelts
+                                      sigelts1
                                       (FStar_Compiler_List.map
                                          (fun se ->
                                             (match se.FStar_Syntax_Syntax.sigel
@@ -2073,7 +2159,7 @@ let (splice :
                                   then ()
                                   else
                                     FStar_Compiler_Effect.op_Bar_Greater
-                                      sigelts1
+                                      sigelts2
                                       (FStar_Compiler_List.iter
                                          (fun se ->
                                             FStar_Compiler_Effect.op_Bar_Greater
@@ -2101,7 +2187,7 @@ let (splice :
                                                       FStar_Errors.raise_error
                                                         uu___13 rng
                                                     else ()))));
-                                  (match () with | () -> sigelts1)))))))))
+                                  (match () with | () -> sigelts2)))))))))
 let (mpreprocess :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

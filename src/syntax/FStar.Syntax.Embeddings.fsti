@@ -123,6 +123,7 @@ val e_string      : embedding string
 val e_norm_step   : embedding norm_step
 val e_range       : embedding Range.range
 val e_vconfig     : embedding vconfig
+val e_issue       : embedding FStar.Errors.issue
 
 val e_option      : embedding 'a -> embedding (option 'a)
 val e_list        : embedding 'a -> embedding (list 'a)

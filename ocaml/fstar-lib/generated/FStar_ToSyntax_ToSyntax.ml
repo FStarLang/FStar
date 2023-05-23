@@ -336,7 +336,7 @@ let (op_as_term :
               let uu___2 =
                 let uu___3 = FStar_Ident.range_of_id op in
                 FStar_Ident.set_lid_range l uu___3 in
-              FStar_Syntax_Syntax.lid_as_fv uu___2 dd
+              FStar_Syntax_Syntax.lid_and_dd_as_fv uu___2 dd
                 FStar_Pervasives_Native.None in
             FStar_Compiler_Effect.op_Bar_Greater uu___1
               FStar_Syntax_Syntax.fv_to_tm in
@@ -955,7 +955,7 @@ let (mk_ref_read :
       let uu___ =
         let uu___1 =
           let uu___2 =
-            FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.sread_lid
+            FStar_Syntax_Syntax.lid_and_dd_as_fv FStar_Parser_Const.sread_lid
               FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
           FStar_Syntax_Syntax.fv_to_tm uu___2 in
         let uu___2 =
@@ -976,7 +976,8 @@ let (mk_ref_alloc :
       let uu___ =
         let uu___1 =
           let uu___2 =
-            FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.salloc_lid
+            FStar_Syntax_Syntax.lid_and_dd_as_fv
+              FStar_Parser_Const.salloc_lid
               FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
           FStar_Syntax_Syntax.fv_to_tm uu___2 in
         let uu___2 =
@@ -1001,7 +1002,8 @@ let (mk_ref_assign :
           let uu___ =
             let uu___1 =
               let uu___2 =
-                FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.swrite_lid
+                FStar_Syntax_Syntax.lid_and_dd_as_fv
+                  FStar_Parser_Const.swrite_lid
                   FStar_Syntax_Syntax.delta_constant
                   FStar_Pervasives_Native.None in
               FStar_Syntax_Syntax.fv_to_tm uu___2 in
@@ -1932,7 +1934,7 @@ let rec (desugar_data_pat :
                        let uu___3 =
                          let uu___4 =
                            let uu___5 =
-                             FStar_Syntax_Syntax.lid_as_fv
+                             FStar_Syntax_Syntax.lid_and_dd_as_fv
                                FStar_Parser_Const.nil_lid
                                FStar_Syntax_Syntax.delta_constant
                                (FStar_Pervasives_Native.Some
@@ -1950,7 +1952,7 @@ let rec (desugar_data_pat :
                             let uu___2 =
                               let uu___3 =
                                 let uu___4 =
-                                  FStar_Syntax_Syntax.lid_as_fv
+                                  FStar_Syntax_Syntax.lid_and_dd_as_fv
                                     FStar_Parser_Const.cons_lid
                                     FStar_Syntax_Syntax.delta_constant
                                     (FStar_Pervasives_Native.Some
@@ -2044,7 +2046,7 @@ let rec (desugar_data_pat :
                                let lid =
                                  FStar_Ident.lid_of_path ["__dummy__"]
                                    p1.FStar_Parser_AST.prange in
-                               FStar_Syntax_Syntax.lid_as_fv lid
+                               FStar_Syntax_Syntax.lid_and_dd_as_fv lid
                                  FStar_Syntax_Syntax.delta_constant
                                  (FStar_Pervasives_Native.Some
                                     (FStar_Syntax_Syntax.Unresolved_constructor
@@ -2331,9 +2333,10 @@ and (desugar_machine_integer :
                            let private_fv =
                              let uu___3 =
                                FStar_Syntax_Util.incr_delta_depth
-                                 fv.FStar_Syntax_Syntax.fv_delta in
-                             FStar_Syntax_Syntax.lid_as_fv private_lid uu___3
-                               fv.FStar_Syntax_Syntax.fv_qual in
+                                 (FStar_Pervasives_Native.__proj__Some__item__v
+                                    fv.FStar_Syntax_Syntax.fv_delta) in
+                             FStar_Syntax_Syntax.lid_and_dd_as_fv private_lid
+                               uu___3 fv.FStar_Syntax_Syntax.fv_qual in
                            {
                              FStar_Syntax_Syntax.n =
                                (FStar_Syntax_Syntax.Tm_fvar private_fv);
@@ -2658,7 +2661,7 @@ and (desugar_term_maybe_top :
               let uu___2 =
                 FStar_Ident.set_lid_range FStar_Parser_Const.true_lid
                   top.FStar_Parser_AST.range in
-              FStar_Syntax_Syntax.fvar uu___2
+              FStar_Syntax_Syntax.fvar_with_dd uu___2
                 FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None in
             (uu___1, noaqs)
@@ -2668,7 +2671,7 @@ and (desugar_term_maybe_top :
               let uu___2 =
                 FStar_Ident.set_lid_range FStar_Parser_Const.false_lid
                   top.FStar_Parser_AST.range in
-              FStar_Syntax_Syntax.fvar uu___2
+              FStar_Syntax_Syntax.fvar_with_dd uu___2
                 FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None in
             (uu___1, noaqs)
@@ -2684,7 +2687,7 @@ and (desugar_term_maybe_top :
              | FStar_Pervasives_Native.Some ed ->
                  let lid = FStar_Syntax_Util.dm4f_lid ed txt in
                  let uu___2 =
-                   FStar_Syntax_Syntax.fvar lid
+                   FStar_Syntax_Syntax.fvar_with_dd lid
                      (FStar_Syntax_Syntax.Delta_constant_at_level
                         Prims.int_one) FStar_Pervasives_Native.None in
                  (uu___2, noaqs)
@@ -3151,7 +3154,7 @@ and (desugar_term_maybe_top :
                                                   FStar_Parser_Const.mk_tuple_data_lid
                                                     (Prims.of_int (2))
                                                     top.FStar_Parser_AST.range in
-                                                FStar_Syntax_Syntax.lid_as_fv
+                                                FStar_Syntax_Syntax.lid_and_dd_as_fv
                                                   uu___8
                                                   FStar_Syntax_Syntax.delta_constant
                                                   (FStar_Pervasives_Native.Some
@@ -3215,7 +3218,7 @@ and (desugar_term_maybe_top :
                                                        (FStar_Compiler_List.length
                                                           args))
                                                     top.FStar_Parser_AST.range in
-                                                FStar_Syntax_Syntax.lid_as_fv
+                                                FStar_Syntax_Syntax.lid_and_dd_as_fv
                                                   uu___9
                                                   FStar_Syntax_Syntax.delta_constant
                                                   (FStar_Pervasives_Native.Some
@@ -3666,8 +3669,8 @@ and (desugar_term_maybe_top :
                                      let uu___7 =
                                        FStar_Syntax_Util.incr_delta_qualifier
                                          body1 in
-                                     FStar_Syntax_Syntax.lid_as_fv l uu___7
-                                       FStar_Pervasives_Native.None in
+                                     FStar_Syntax_Syntax.lid_and_dd_as_fv l
+                                       uu___7 FStar_Pervasives_Native.None in
                                    FStar_Pervasives.Inr uu___6 in
                              let body2 =
                                if is_rec
@@ -3798,8 +3801,8 @@ and (desugar_term_maybe_top :
                                        let uu___7 =
                                          FStar_Syntax_Util.incr_delta_qualifier
                                            t11 in
-                                       FStar_Syntax_Syntax.lid_as_fv l uu___7
-                                         FStar_Pervasives_Native.None in
+                                       FStar_Syntax_Syntax.lid_and_dd_as_fv l
+                                         uu___7 FStar_Pervasives_Native.None in
                                      let uu___7 =
                                        let uu___8 =
                                          let uu___9 =
@@ -3933,7 +3936,8 @@ and (desugar_term_maybe_top :
             let t_bool =
               let uu___1 =
                 let uu___2 =
-                  FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.bool_lid
+                  FStar_Syntax_Syntax.lid_and_dd_as_fv
+                    FStar_Parser_Const.bool_lid
                     FStar_Syntax_Syntax.delta_constant
                     FStar_Pervasives_Native.None in
                 FStar_Syntax_Syntax.Tm_fvar uu___2 in
@@ -4164,7 +4168,7 @@ and (desugar_term_maybe_top :
                         let lid =
                           FStar_Ident.lid_of_path ["__dummy__"]
                             top.FStar_Parser_AST.range in
-                        FStar_Syntax_Syntax.fvar lid
+                        FStar_Syntax_Syntax.fvar_with_dd lid
                           FStar_Syntax_Syntax.delta_constant
                           (FStar_Pervasives_Native.Some
                              (FStar_Syntax_Syntax.Unresolved_constructor uc)) in
@@ -4240,7 +4244,7 @@ and (desugar_term_maybe_top :
                      FStar_Syntax_DsEnv.try_lookup_dc_by_field_name env f in
                    match uu___2 with
                    | FStar_Pervasives_Native.None ->
-                       FStar_Syntax_Syntax.fvar f
+                       FStar_Syntax_Syntax.fvar_with_dd f
                          (FStar_Syntax_Syntax.Delta_equational_at_level
                             Prims.int_one)
                          (FStar_Pervasives_Native.Some
@@ -4265,7 +4269,7 @@ and (desugar_term_maybe_top :
                          let uu___3 =
                            FStar_Ident.set_lid_range projname
                              top.FStar_Parser_AST.range in
-                         FStar_Syntax_Syntax.lid_as_fv uu___3
+                         FStar_Syntax_Syntax.lid_and_dd_as_fv uu___3
                            (FStar_Syntax_Syntax.Delta_equational_at_level
                               Prims.int_one) qual in
                        let qual1 =
@@ -4274,7 +4278,7 @@ and (desugar_term_maybe_top :
                        let f1 =
                          let uu___3 = qualify_field_names constrname [f] in
                          FStar_Compiler_List.hd uu___3 in
-                       FStar_Syntax_Syntax.fvar f1
+                       FStar_Syntax_Syntax.fvar_with_dd f1
                          (FStar_Syntax_Syntax.Delta_equational_at_level
                             Prims.int_one)
                          (FStar_Pervasives_Native.Some qual1) in
@@ -4552,7 +4556,7 @@ and (desugar_term_maybe_top :
                  let mk_forall_intro t p2 pf =
                    let head =
                      let uu___2 =
-                       FStar_Syntax_Syntax.lid_as_fv
+                       FStar_Syntax_Syntax.lid_and_dd_as_fv
                          FStar_Parser_Const.forall_intro_lid
                          FStar_Syntax_Syntax.delta_equational
                          FStar_Pervasives_Native.None in
@@ -4596,7 +4600,7 @@ and (desugar_term_maybe_top :
                  let mk_exists_intro t p2 v e2 =
                    let head =
                      let uu___2 =
-                       FStar_Syntax_Syntax.lid_as_fv
+                       FStar_Syntax_Syntax.lid_and_dd_as_fv
                          FStar_Parser_Const.exists_intro_lid
                          FStar_Syntax_Syntax.delta_equational
                          FStar_Pervasives_Native.None in
@@ -4651,7 +4655,7 @@ and (desugar_term_maybe_top :
                  let e1 = desugar_term env' e in
                  let head =
                    let uu___2 =
-                     FStar_Syntax_Syntax.lid_as_fv
+                     FStar_Syntax_Syntax.lid_and_dd_as_fv
                        FStar_Parser_Const.implies_intro_lid
                        FStar_Syntax_Syntax.delta_equational
                        FStar_Pervasives_Native.None in
@@ -4684,7 +4688,7 @@ and (desugar_term_maybe_top :
               else FStar_Parser_Const.or_intro_right_lid in
             let head =
               let uu___1 =
-                FStar_Syntax_Syntax.lid_as_fv lid
+                FStar_Syntax_Syntax.lid_and_dd_as_fv lid
                   FStar_Syntax_Syntax.delta_equational
                   FStar_Pervasives_Native.None in
               FStar_Syntax_Syntax.fv_to_tm uu___1 in
@@ -4711,7 +4715,7 @@ and (desugar_term_maybe_top :
             let e21 = desugar_term env e2 in
             let head =
               let uu___1 =
-                FStar_Syntax_Syntax.lid_as_fv
+                FStar_Syntax_Syntax.lid_and_dd_as_fv
                   FStar_Parser_Const.and_intro_lid
                   FStar_Syntax_Syntax.delta_equational
                   FStar_Pervasives_Native.None in
@@ -4746,7 +4750,7 @@ and (desugar_term_maybe_top :
                  let mk_forall_elim a p2 v t =
                    let head =
                      let uu___2 =
-                       FStar_Syntax_Syntax.lid_as_fv
+                       FStar_Syntax_Syntax.lid_and_dd_as_fv
                          FStar_Parser_Const.forall_elim_lid
                          FStar_Syntax_Syntax.delta_equational
                          FStar_Pervasives_Native.None in
@@ -4812,7 +4816,7 @@ and (desugar_term_maybe_top :
                             let x = b.FStar_Syntax_Syntax.binder_bv in
                             let head =
                               let uu___3 =
-                                FStar_Syntax_Syntax.lid_as_fv
+                                FStar_Syntax_Syntax.lid_and_dd_as_fv
                                   FStar_Parser_Const.exists_lid
                                   FStar_Syntax_Syntax.delta_equational
                                   FStar_Pervasives_Native.None in
@@ -4840,7 +4844,7 @@ and (desugar_term_maybe_top :
                       let mk_exists_elim t x_p s_ex_p f r =
                         let head =
                           let uu___3 =
-                            FStar_Syntax_Syntax.lid_as_fv
+                            FStar_Syntax_Syntax.lid_and_dd_as_fv
                               FStar_Parser_Const.exists_elim_lid
                               FStar_Syntax_Syntax.delta_equational
                               FStar_Pervasives_Native.None in
@@ -4920,7 +4924,7 @@ and (desugar_term_maybe_top :
             let e1 = desugar_term env e in
             let head =
               let uu___1 =
-                FStar_Syntax_Syntax.lid_as_fv
+                FStar_Syntax_Syntax.lid_and_dd_as_fv
                   FStar_Parser_Const.implies_elim_lid
                   FStar_Syntax_Syntax.delta_equational
                   FStar_Pervasives_Native.None in
@@ -4955,7 +4959,7 @@ and (desugar_term_maybe_top :
                       let e21 = desugar_term env_y e2 in
                       let head =
                         let uu___3 =
-                          FStar_Syntax_Syntax.lid_as_fv
+                          FStar_Syntax_Syntax.lid_and_dd_as_fv
                             FStar_Parser_Const.or_elim_lid
                             FStar_Syntax_Syntax.delta_equational
                             FStar_Pervasives_Native.None in
@@ -5007,7 +5011,7 @@ and (desugar_term_maybe_top :
                  let e1 = desugar_term env' e in
                  let head =
                    let uu___2 =
-                     FStar_Syntax_Syntax.lid_as_fv
+                     FStar_Syntax_Syntax.lid_and_dd_as_fv
                        FStar_Parser_Const.and_elim_lid
                        FStar_Syntax_Syntax.delta_equational
                        FStar_Pervasives_Native.None in
@@ -5656,7 +5660,7 @@ and (desugar_comp :
                                                       FStar_Ident.set_lid_range
                                                         FStar_Parser_Const.pattern_lid
                                                         pat.FStar_Syntax_Syntax.pos in
-                                                    FStar_Syntax_Syntax.fvar
+                                                    FStar_Syntax_Syntax.fvar_with_dd
                                                       uu___10
                                                       FStar_Syntax_Syntax.delta_constant
                                                       FStar_Pervasives_Native.None in
@@ -5800,7 +5804,7 @@ and (desugar_formula :
                        let uu___5 =
                          FStar_Ident.set_lid_range q
                            b.FStar_Parser_AST.brange in
-                       FStar_Syntax_Syntax.fvar uu___5
+                       FStar_Syntax_Syntax.fvar_with_dd uu___5
                          (FStar_Syntax_Syntax.Delta_constant_at_level
                             Prims.int_one) FStar_Pervasives_Native.None in
                      let uu___5 =
@@ -6211,8 +6215,9 @@ let (mk_indexed_projector_names :
                              let lb =
                                let uu___2 =
                                  let uu___3 =
-                                   FStar_Syntax_Syntax.lid_as_fv field_name
-                                     dd FStar_Pervasives_Native.None in
+                                   FStar_Syntax_Syntax.lid_and_dd_as_fv
+                                     field_name dd
+                                     FStar_Pervasives_Native.None in
                                  FStar_Pervasives.Inr uu___3 in
                                {
                                  FStar_Syntax_Syntax.lbname = uu___2;
@@ -6338,7 +6343,7 @@ let (mk_typ_abbrev :
                       let lb =
                         let uu___ =
                           let uu___1 =
-                            FStar_Syntax_Syntax.lid_as_fv lid dd
+                            FStar_Syntax_Syntax.lid_and_dd_as_fv lid dd
                               FStar_Pervasives_Native.None in
                           FStar_Pervasives.Inr uu___1 in
                         let uu___1 =
@@ -8911,7 +8916,7 @@ and (desugar_decl_noattrs :
                        | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
                            let uu___3 =
                              let uu___4 =
-                               FStar_Syntax_Syntax.fvar
+                               FStar_Syntax_Syntax.fvar_with_dd
                                  FStar_Parser_Const.tcclass_lid
                                  FStar_Syntax_Syntax.delta_constant
                                  FStar_Pervasives_Native.None in

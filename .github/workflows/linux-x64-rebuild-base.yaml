@@ -22,14 +22,17 @@ jobs:
         shell: bash
 
     steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
       - name: Rebuild base image from scratch
         run: |
           TEMP_IMAGE_NAME=fstar:update-base-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           CI_IMAGEBUILD_INITIAL_TIMESTAMP=$(date '+%s')
           docker build --pull --no-cache -f .docker/base.Dockerfile -t ${TEMP_IMAGE_NAME} .
           CI_IMAGEBUILD_FINAL_TIMESTAMP=$(date '+%s')
-          echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP='$CI_IMAGEBUILD_INITIAL_TIMESTAMP'" >> $GITHUB_ENV
-          echo "CI_IMAGEBUILD_FINAL_TIMESTAMP='$CI_IMAGEBUILD_FINAL_TIMESTAMP'" >> $GITHUB_ENV
+          echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP=$CI_IMAGEBUILD_INITIAL_TIMESTAMP" >> $GITHUB_ENV
+          echo "CI_IMAGEBUILD_FINAL_TIMESTAMP=$CI_IMAGEBUILD_FINAL_TIMESTAMP" >> $GITHUB_ENV
           echo "TEMP_IMAGE_NAME=$TEMP_IMAGE_NAME" >> $GITHUB_ENV
 
       - name: Check that F* CI passes
@@ -39,7 +42,7 @@ jobs:
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
 
           CI_TARGET=uregressions
-          docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_TARGET="$CI_TARGET" . |& tee BUILDLOG
+          docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg FSTAR_CI_BASE=$TEMP_IMAGE_NAME --build-arg CI_TARGET="$CI_TARGET" . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           $ci_docker_status
 
@@ -71,7 +74,14 @@ jobs:
             echo "CI_EMOJI=❌" >> $GITHUB_ENV
             ;;
           esac
-          echo "CI_COMMIT=$(echo ${{  github.event.head_commit.id || github.event.pull_request.head.sha || github.head_commit.id }} | grep -o '^........')" >> $GITHUB_ENV
+          echo "CI_COMMIT=$(echo ${{ github.sha }} | grep -o '^........')" >> $GITHUB_ENV
+          echo "CI_COMMIT_URL=https://github.com/FStarLang/FStar/commit/${{ github.sha }}" >> $GITHUB_ENV
+          if [[ '${{github.event_name}}' == 'schedule' ]]; then
+            CI_TRIGGER='schedule'
+          else
+            CI_TRIGGER='${{github.triggering_actor}}'
+          fi
+          echo "CI_TRIGGER=$CI_TRIGGER" >> $GITHUB_ENV
           echo 'CI_STATUS='"$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
           if [ -n "$CI_IMAGEBUILD_INITIAL_TIMESTAMP" ]; then
             DIFF=$(( $CI_IMAGEBUILD_FINAL_TIMESTAMP - $CI_IMAGEBUILD_INITIAL_TIMESTAMP ))
@@ -79,7 +89,7 @@ jobs:
             MM=$(( ($DIFF / 60) % 60 ))
             HH=$(( $DIFF / 3600 ))
             CI_IMAGEBUILD_TIME="${HH}h ${MM}min ${SS}s"
-            echo "CI_IMAGEBUILD_TIME='$CI_IMAGEBUILD_TIME'" >> $GITHUB_ENV
+            echo "CI_IMAGEBUILD_TIME=$CI_IMAGEBUILD_TIME" >> $GITHUB_ENV
           fi
 
       - name: Remove intermediate images
@@ -93,7 +103,7 @@ jobs:
         run: |
           # Just outputs to the github snippet. Could be part of slack message.
           # This command never triggers a failure
-          grep -C10 -Ew ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS || true
+          grep -C10 -E ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS || true
           ERRORS_URL=$(.scripts/sprang BUILDLOG_ERRORS)
           ERRORS_MSG=" <$ERRORS_URL|(Error summary)>"
           echo "ERRORS_MSG=$ERRORS_MSG" >> $GITHUB_ENV
@@ -111,14 +121,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Update F* base CI image\n<${{ github.event.head_commit.url || github.event.pull_request.html_url || github.head_commit.url }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ github.triggering_actor }}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "plain_text",
-                    "text": ${{ toJSON(github.event.head_commit.message || github.event.pull_request.title || github.head_commit.message || '<unknown>') }}
+                    "text": "Update F* base CI image\n<${{ env.CI_COMMIT_URL }}|${{ env.CI_COMMIT }}> on (${{ github.ref_name }}) by ${{ env.CI_TRIGGER }}"
                   }
                 },
                 {

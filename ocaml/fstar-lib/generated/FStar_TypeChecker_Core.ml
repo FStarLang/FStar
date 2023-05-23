@@ -3534,7 +3534,6 @@ and (check_comp :
                  let uu___1 =
                    FStar_Syntax_Syntax.fvar
                      ct.FStar_Syntax_Syntax.effect_name
-                     FStar_Syntax_Syntax.delta_constant
                      FStar_Pervasives_Native.None in
                  FStar_Syntax_Syntax.mk_Tm_uinst uu___1 [u] in
                let uu___1 =

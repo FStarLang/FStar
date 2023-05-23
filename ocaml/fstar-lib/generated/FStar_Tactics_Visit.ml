@@ -12,7 +12,7 @@ let (on_sort_binder :
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (26))
            (Prims.of_int (14)) (Prims.of_int (26)) (Prims.of_int (30)))
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (26))
-           (Prims.of_int (33)) (Prims.of_int (27)) (Prims.of_int (65)))
+           (Prims.of_int (33)) (Prims.of_int (28)) (Prims.of_int (19)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> FStar_Reflection_Builtins.inspect_binder b))
         (fun uu___ ->
@@ -65,7 +65,7 @@ let rec (visit_tm :
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (31))
            (Prims.of_int (11)) (Prims.of_int (31)) (Prims.of_int (23)))
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (31))
-           (Prims.of_int (26)) (Prims.of_int (85)) (Prims.of_int (4)))
+           (Prims.of_int (26)) (Prims.of_int (86)) (Prims.of_int (18)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> FStar_Reflection_Builtins.inspect_ln t))
         (fun uu___ ->
@@ -138,7 +138,7 @@ let rec (visit_tm :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (45)) (Prims.of_int (49))
-                                   (Prims.of_int (46)) (Prims.of_int (34)))
+                                   (Prims.of_int (47)) (Prims.of_int (20)))
                                 (Obj.magic (on_sort_binder (visit_tm ff) b))
                                 (fun uu___ ->
                                    (fun b1 ->
@@ -173,7 +173,7 @@ let rec (visit_tm :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (49)) (Prims.of_int (49))
-                                   (Prims.of_int (50)) (Prims.of_int (32)))
+                                   (Prims.of_int (51)) (Prims.of_int (18)))
                                 (Obj.magic (on_sort_binder (visit_tm ff) b))
                                 (fun uu___ ->
                                    (fun b1 ->
@@ -208,7 +208,7 @@ let rec (visit_tm :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (53)) (Prims.of_int (33))
-                                   (Prims.of_int (54)) (Prims.of_int (33)))
+                                   (Prims.of_int (55)) (Prims.of_int (24)))
                                 (Obj.magic (visit_tm ff l))
                                 (fun uu___ ->
                                    (fun l1 ->
@@ -243,7 +243,7 @@ let rec (visit_tm :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (57)) (Prims.of_int (38))
-                                   (Prims.of_int (58)) (Prims.of_int (32)))
+                                   (Prims.of_int (59)) (Prims.of_int (26)))
                                 (Obj.magic (visit_tm ff sort))
                                 (fun uu___ ->
                                    (fun sort1 ->
@@ -279,7 +279,7 @@ let rec (visit_tm :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (61)) (Prims.of_int (34))
-                                   (Prims.of_int (62)) (Prims.of_int (36)))
+                                   (Prims.of_int (64)) (Prims.of_int (33)))
                                 (Obj.magic (visit_tm ff ty))
                                 (fun uu___ ->
                                    (fun ty1 ->
@@ -295,8 +295,8 @@ let rec (visit_tm :
                                               "FStar.Tactics.Visit.fst"
                                               (Prims.of_int (62))
                                               (Prims.of_int (36))
-                                              (Prims.of_int (63))
-                                              (Prims.of_int (32)))
+                                              (Prims.of_int (64))
+                                              (Prims.of_int (33)))
                                            (Obj.magic (visit_tm ff def))
                                            (fun uu___ ->
                                               (fun def1 ->
@@ -335,7 +335,7 @@ let rec (visit_tm :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (66)) (Prims.of_int (34))
-                                   (Prims.of_int (75)) (Prims.of_int (28)))
+                                   (Prims.of_int (77)) (Prims.of_int (31)))
                                 (Obj.magic (visit_tm ff sc))
                                 (fun uu___ ->
                                    (fun sc1 ->
@@ -351,8 +351,8 @@ let rec (visit_tm :
                                               "FStar.Tactics.Visit.fst"
                                               (Prims.of_int (75))
                                               (Prims.of_int (28))
-                                              (Prims.of_int (76))
-                                              (Prims.of_int (42)))
+                                              (Prims.of_int (77))
+                                              (Prims.of_int (31)))
                                            (Obj.magic
                                               (FStar_Tactics_Util.map_opt
                                                  (fun uu___ ->
@@ -369,8 +369,8 @@ let rec (visit_tm :
                                                              "FStar.Tactics.Visit.fst"
                                                              (Prims.of_int (68))
                                                              (Prims.of_int (51))
-                                                             (Prims.of_int (74))
-                                                             (Prims.of_int (76)))
+                                                             (Prims.of_int (75))
+                                                             (Prims.of_int (16)))
                                                           (Obj.magic
                                                              (on_sort_binder
                                                                 (visit_tm ff)
@@ -593,7 +593,7 @@ let rec (visit_tm :
                                 (FStar_Range.mk_range
                                    "FStar.Tactics.Visit.fst"
                                    (Prims.of_int (79)) (Prims.of_int (32))
-                                   (Prims.of_int (80)) (Prims.of_int (32)))
+                                   (Prims.of_int (81)) (Prims.of_int (36)))
                                 (Obj.magic (visit_tm ff e))
                                 (fun uu___ ->
                                    (fun e1 ->
@@ -655,7 +655,7 @@ and (visit_br :
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (88))
            (Prims.of_int (15)) (Prims.of_int (88)) (Prims.of_int (16)))
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (87))
-           (Prims.of_int (62)) (Prims.of_int (88)) (Prims.of_int (19)))
+           (Prims.of_int (62)) (Prims.of_int (91)) (Prims.of_int (8)))
         (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> b))
         (fun uu___ ->
            (fun uu___ ->
@@ -668,7 +668,7 @@ and (visit_br :
                           (Prims.of_int (89)) (Prims.of_int (24)))
                        (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
                           (Prims.of_int (89)) (Prims.of_int (27))
-                          (Prims.of_int (90)) (Prims.of_int (26)))
+                          (Prims.of_int (91)) (Prims.of_int (8)))
                        (Obj.magic (visit_pat ff p))
                        (fun uu___1 ->
                           (fun p1 ->
@@ -774,7 +774,7 @@ and (visit_comp :
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (102))
            (Prims.of_int (11)) (Prims.of_int (102)) (Prims.of_int (25)))
         (FStar_Range.mk_range "FStar.Tactics.Visit.fst" (Prims.of_int (102))
-           (Prims.of_int (28)) (Prims.of_int (124)) (Prims.of_int (4)))
+           (Prims.of_int (28)) (Prims.of_int (125)) (Prims.of_int (15)))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> FStar_Reflection_Builtins.inspect_comp c))
         (fun uu___ ->
@@ -824,7 +824,7 @@ and (visit_comp :
                                 (Prims.of_int (114)) (Prims.of_int (33)))
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
                                 (Prims.of_int (114)) (Prims.of_int (36))
-                                (Prims.of_int (115)) (Prims.of_int (38)))
+                                (Prims.of_int (117)) (Prims.of_int (29)))
                              (Obj.magic (visit_tm ff pre))
                              (fun uu___ ->
                                 (fun pre1 ->
@@ -840,8 +840,8 @@ and (visit_comp :
                                            "FStar.Tactics.Visit.fst"
                                            (Prims.of_int (115))
                                            (Prims.of_int (38))
-                                           (Prims.of_int (116))
-                                           (Prims.of_int (38)))
+                                           (Prims.of_int (117))
+                                           (Prims.of_int (29)))
                                         (Obj.magic (visit_tm ff post))
                                         (fun uu___ ->
                                            (fun post1 ->
@@ -877,7 +877,7 @@ and (visit_comp :
                                 (Prims.of_int (120)) (Prims.of_int (33)))
                              (FStar_Range.mk_range "FStar.Tactics.Visit.fst"
                                 (Prims.of_int (120)) (Prims.of_int (36))
-                                (Prims.of_int (121)) (Prims.of_int (65)))
+                                (Prims.of_int (123)) (Prims.of_int (35)))
                              (Obj.magic (visit_tm ff res))
                              (fun uu___ ->
                                 (fun res1 ->
@@ -893,8 +893,8 @@ and (visit_comp :
                                            "FStar.Tactics.Visit.fst"
                                            (Prims.of_int (121))
                                            (Prims.of_int (65))
-                                           (Prims.of_int (122))
-                                           (Prims.of_int (46)))
+                                           (Prims.of_int (123))
+                                           (Prims.of_int (35)))
                                         (Obj.magic
                                            (FStar_Tactics_Util.map
                                               (fun uu___ ->

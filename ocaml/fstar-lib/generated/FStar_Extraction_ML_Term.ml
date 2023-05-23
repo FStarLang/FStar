@@ -2724,7 +2724,6 @@ and (term_as_mlexpr' :
              let uu___3 =
                let uu___4 = FStar_Parser_Const.failwith_lid () in
                FStar_Syntax_Syntax.lid_as_fv uu___4
-                 FStar_Syntax_Syntax.delta_constant
                  FStar_Pervasives_Native.None in
              FStar_Extraction_ML_UEnv.lookup_fv t.FStar_Syntax_Syntax.pos g
                uu___3 in
@@ -3065,7 +3064,6 @@ and (term_as_mlexpr' :
              let uu___7 =
                let uu___8 = FStar_Parser_Const.failwith_lid () in
                FStar_Syntax_Syntax.lid_as_fv uu___8
-                 FStar_Syntax_Syntax.delta_constant
                  FStar_Pervasives_Native.None in
              FStar_Extraction_ML_UEnv.lookup_fv t.FStar_Syntax_Syntax.pos g
                uu___7 in
@@ -4227,7 +4225,6 @@ and (term_as_mlexpr' :
                                      let uu___9 =
                                        FStar_Parser_Const.failwith_lid () in
                                      FStar_Syntax_Syntax.lid_as_fv uu___9
-                                       FStar_Syntax_Syntax.delta_constant
                                        FStar_Pervasives_Native.None in
                                    FStar_Extraction_ML_UEnv.lookup_fv
                                      t.FStar_Syntax_Syntax.pos g uu___8 in

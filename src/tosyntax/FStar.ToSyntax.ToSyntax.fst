@@ -218,7 +218,7 @@ let desugar_name mk setpos env resolve l =
 let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
 let op_as_term env arity op : option S.term =
-  let r l dd = Some (S.lid_as_fv (set_lid_range l (range_of_id op)) dd None |> S.fv_to_tm) in
+  let r l dd = Some (S.lid_and_dd_as_fv (set_lid_range l (range_of_id op)) dd None |> S.fv_to_tm) in
   let fallback () =
     match Ident.string_of_id op with
     | "=" ->
@@ -540,19 +540,19 @@ let no_annot_abs bs t = U.abs bs t None
 
 let mk_ref_read tm =
   let tm' = Tm_app ({
-    hd=S.fv_to_tm (S.lid_as_fv C.sread_lid delta_constant None);
+    hd=S.fv_to_tm (S.lid_and_dd_as_fv C.sread_lid delta_constant None);
     args=[ tm, S.as_aqual_implicit false ]}) in
   S.mk tm' tm.pos
 
 let mk_ref_alloc tm =
   let tm' = Tm_app ({
-    hd=S.fv_to_tm (S.lid_as_fv C.salloc_lid delta_constant None);
+    hd=S.fv_to_tm (S.lid_and_dd_as_fv C.salloc_lid delta_constant None);
     args=[ tm, S.as_aqual_implicit false ]}) in
   S.mk tm' tm.pos
 
 let mk_ref_assign t1 t2 pos =
   let tm = Tm_app ({
-    hd=S.fv_to_tm (S.lid_as_fv C.swrite_lid delta_constant None);
+    hd=S.fv_to_tm (S.lid_and_dd_as_fv C.swrite_lid delta_constant None);
     args=[ t1, S.as_aqual_implicit false; t2, S.as_aqual_implicit false ]}) in
   S.mk tm pos
 
@@ -925,8 +925,8 @@ let rec desugar_data_pat
           loc, aqs, env, ans@annots, pat::pats) pats (loc, aqs, env, [], []) in
         let pat = List.fold_right (fun hd tl ->
             let r = Range.union_ranges hd.p tl.p in
-            pos_r r <| Pat_cons(S.lid_as_fv C.cons_lid delta_constant (Some Data_ctor), None, [(hd, false);(tl, false)])) pats
-                        (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_as_fv C.nil_lid delta_constant (Some Data_ctor), None, [])) in
+            pos_r r <| Pat_cons(S.lid_and_dd_as_fv C.cons_lid delta_constant (Some Data_ctor), None, [(hd, false);(tl, false)])) pats
+                        (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_and_dd_as_fv C.nil_lid delta_constant (Some Data_ctor), None, [])) in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, aqs, env, LocalBinder(x, None, []), pat, annots
 
@@ -959,7 +959,7 @@ let rec desugar_data_pat
         (* Just build a candidate constructor, as we do for Record literals *)
         let candidate_constructor =
             let lid = lid_of_path ["__dummy__"] p.prange in
-            S.lid_as_fv
+            S.lid_and_dd_as_fv
               lid
               delta_constant
               (Some
@@ -1096,7 +1096,7 @@ and desugar_machine_integer env repr (signedness, width) range =
       begin match intro_term.n with
         | Tm_fvar fv ->
           let private_lid = lid_of_path (path_of_text private_intro_nm) range in
-          let private_fv = S.lid_as_fv private_lid (U.incr_delta_depth fv.fv_delta) fv.fv_qual in
+          let private_fv = S.lid_and_dd_as_fv private_lid (U.incr_delta_depth (Some?.v fv.fv_delta)) fv.fv_qual in
           {intro_term with n=Tm_fvar private_fv}
         | _ ->
           failwith ("Unexpected non-fvar for " ^ intro_nm)
@@ -1226,10 +1226,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Name lid when string_of_lid lid = "Effect" ->
         mk (Tm_constant Const_effect), noaqs
     | Name lid when string_of_lid lid = "True"   ->
-        S.fvar (Ident.set_lid_range Const.true_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
+        S.fvar_with_dd (Ident.set_lid_range Const.true_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
                              noaqs
     | Name lid when string_of_lid lid = "False"   ->
-        S.fvar (Ident.set_lid_range Const.false_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
+        S.fvar_with_dd (Ident.set_lid_range Const.false_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
                               noaqs
     | Projector (eff_name, id)
       when is_special_effect_combinator (string_of_id id) && Env.is_effect_name env eff_name ->
@@ -1239,7 +1239,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       begin match try_lookup_effect_defn env eff_name with
         | Some ed ->
           let lid = U.dm4f_lid ed txt in
-          S.fvar lid (Delta_constant_at_level 1) None, noaqs
+          S.fvar_with_dd lid (Delta_constant_at_level 1) None, noaqs
         | None ->
           failwith (BU.format2 "Member %s of effect %s is not accessible \
                                 (using an effect abbreviation instead of the original effect ?)"
@@ -1438,13 +1438,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                         | Some p, Some (sc, p') -> begin
                           match sc.n, p'.v with
                           | Tm_name _, _ ->
-                            let tup2 = S.lid_as_fv (C.mk_tuple_data_lid 2 top.range) delta_constant (Some Data_ctor) in
+                            let tup2 = S.lid_and_dd_as_fv (C.mk_tuple_data_lid 2 top.range) delta_constant (Some Data_ctor) in
                             let sc = S.mk (Tm_app {hd=mk (Tm_fvar tup2);
                                                    args=[as_arg sc; as_arg <| S.bv_to_name x]}) top.range in
                             let p = withinfo (Pat_cons(tup2, None, [(p', false);(p, false)])) (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
                           | Tm_app {args}, Pat_cons(_, _, pats) ->
-                            let tupn = S.lid_as_fv (C.mk_tuple_data_lid (1 + List.length args) top.range) delta_constant (Some Data_ctor) in
+                            let tupn = S.lid_and_dd_as_fv (C.mk_tuple_data_lid (1 + List.length args) top.range) delta_constant (Some Data_ctor) in
                             let sc = mk (Tm_app {hd=mk (Tm_fvar tupn);
                                                  args=args@[as_arg <| S.bv_to_name x]}) in
                             let p = withinfo (Pat_cons(tupn, None, pats@[(p, false)])) (Range.union_ranges p'.p p.p) in
@@ -1651,7 +1651,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             let body, aq = desugar_term_aq env def in
             let lbname = match lbname with
                 | Inl x -> Inl x
-                | Inr l -> Inr (S.lid_as_fv l (incr_delta_qualifier body) None) in
+                | Inr l -> Inr (S.lid_and_dd_as_fv l (incr_delta_qualifier body) None) in
             let body = if is_rec then Subst.close rec_bindings body else body in
             let attrs = match attrs_opt with
               | None -> []
@@ -1697,7 +1697,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                   "Tactic annotation with a value type is not supported yet, \
                     try annotating with a computation type; this tactic annotation will be ignored");
            let body, aq = desugar_term_aq env t2 in
-           let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
+           let fv = S.lid_and_dd_as_fv l (incr_delta_qualifier t1) None in
            mk <| Tm_let {lbs=(false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]); body}, aq
 
          | LocalBinder (x,_,_) ->
@@ -1736,7 +1736,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | If(t1, None, asc_opt, t2, t3) ->
       let x = Syntax.new_bv (Some t3.range) (tun_r t3.range) in
-      let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid delta_constant None)) in
+      let t_bool = mk (Tm_fvar(S.lid_and_dd_as_fv C.bool_lid delta_constant None)) in
       let t1', aq1 = desugar_term_aq env t1 in
       let t1' = U.ascribe t1' (Inl t_bool, None, false) in
       let asc_opt, aq0 = desugar_match_returns env t1' asc_opt in
@@ -1830,7 +1830,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       in
       let head =
           let lid = lid_of_path ["__dummy__"] top.range in
-          S.fvar lid
+          S.fvar_with_dd lid
                  delta_constant
                  (Some (Unresolved_constructor uc))
       in
@@ -1866,15 +1866,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let head =
         match try_lookup_dc_by_field_name env f with
         | None ->
-          S.fvar f (Delta_equational_at_level 1) (Some (Unresolved_projector None))
+          S.fvar_with_dd f (Delta_equational_at_level 1) (Some (Unresolved_projector None))
 
         | Some (constrname, is_rec) ->
           let projname = mk_field_projector_name_from_ident constrname (ident_of_lid f) in
           let qual = if is_rec then Some (Record_projector (constrname, ident_of_lid f)) else None in
-          let candidate_projector = S.lid_as_fv (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
+          let candidate_projector = S.lid_and_dd_as_fv (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
           let qual = Unresolved_projector (Some candidate_projector) in
           let f = List.hd (qualify_field_names constrname [f]) in
-          S.fvar f (Delta_equational_at_level 1) (Some qual)
+          S.fvar_with_dd f (Delta_equational_at_level 1) (Some qual)
       in
       //The fvar at the head of the term just records the fieldname that the user wrote
       //and in TcTerm, we use that field name combined with type info to disambiguate
@@ -2013,7 +2013,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
          forall_intro an (fun xn -> p) (fun xn -> e)))
        *)
       let mk_forall_intro t p pf =
-        let head = S.fv_to_tm (S.lid_as_fv C.forall_intro_lid S.delta_equational None) in
+        let head = S.fv_to_tm (S.lid_and_dd_as_fv C.forall_intro_lid S.delta_equational None) in
         let args = [(t, None);
                     (p, None);
                     (pf, None)] in
@@ -2048,7 +2048,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
       *)
       let mk_exists_intro t p v e =
-        let head = S.fv_to_tm (S.lid_as_fv C.exists_intro_lid S.delta_equational None) in
+        let head = S.fv_to_tm (S.lid_and_dd_as_fv C.exists_intro_lid S.delta_equational None) in
         let args = [(t, None);
                     (p, None);
                     (v, None);
@@ -2079,7 +2079,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let q = desugar_term env q in
       let env', [x] = desugar_binders env [x] in
       let e = desugar_term env' e in
-      let head = S.fv_to_tm (S.lid_as_fv C.implies_intro_lid S.delta_equational None) in
+      let head = S.fv_to_tm (S.lid_and_dd_as_fv C.implies_intro_lid S.delta_equational None) in
       let args = [(p, None);
                   (mk_thunk q, None);
                   (U.abs [x] e None, None)] in
@@ -2095,7 +2095,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         then C.or_intro_left_lid
         else C.or_intro_right_lid
       in
-      let head = S.fv_to_tm (S.lid_as_fv lid S.delta_equational None) in
+      let head = S.fv_to_tm (S.lid_and_dd_as_fv lid S.delta_equational None) in
       let args = [(p, None);
                   (mk_thunk q, None);
                   (mk_thunk e, None)] in
@@ -2106,7 +2106,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let q = desugar_term env q in
       let e1 = desugar_term env e1 in
       let e2 = desugar_term env e2 in
-      let head = S.fv_to_tm (S.lid_as_fv C.and_intro_lid S.delta_equational None) in
+      let head = S.fv_to_tm (S.lid_and_dd_as_fv C.and_intro_lid S.delta_equational None) in
       let args = [(p, None);
                   (mk_thunk q, None);
                   (mk_thunk e1, None);
@@ -2124,7 +2124,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           (forall_elim #a0 #(fun x0 -> forall xs. p) v0 ())))
       *)
       let mk_forall_elim a p v t =
-        let head = S.fv_to_tm (S.lid_as_fv C.forall_elim_lid S.delta_equational None) in
+        let head = S.fv_to_tm (S.lid_and_dd_as_fv C.forall_elim_lid S.delta_equational None) in
         let args = [(a, S.as_aqual_implicit true);
                     (p, S.as_aqual_implicit true);
                     (v, None);
@@ -2162,7 +2162,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | [] -> failwith "Impossible"
         | [b] ->
           let x = b.binder_bv in
-          let head = S.fv_to_tm (S.lid_as_fv C.exists_lid S.delta_equational None) in
+          let head = S.fv_to_tm (S.lid_and_dd_as_fv C.exists_lid S.delta_equational None) in
           let args = [(x.sort, S.as_aqual_implicit true);
                       (U.abs [List.hd bs] p None, None)] in
           S.mk_Tm_app head args p.pos
@@ -2171,7 +2171,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           mk_exists [b] body
       in
       let mk_exists_elim t x_p s_ex_p f r =
-        let head = S.fv_to_tm (S.lid_as_fv C.exists_elim_lid S.delta_equational None) in
+        let head = S.fv_to_tm (S.lid_and_dd_as_fv C.exists_elim_lid S.delta_equational None) in
         let args = [(t, S.as_aqual_implicit true);
                     (x_p, S.as_aqual_implicit true);
                     (s_ex_p, None);
@@ -2226,7 +2226,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let p = desugar_term env p in
       let q = desugar_term env q in
       let e = desugar_term env e in
-      let head = S.fv_to_tm (S.lid_as_fv C.implies_elim_lid S.delta_equational None) in
+      let head = S.fv_to_tm (S.lid_and_dd_as_fv C.implies_elim_lid S.delta_equational None) in
       let args = [(p, None);
                   (q, None);
                   (U.exp_unit, None);
@@ -2241,7 +2241,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e1 = desugar_term env_x e1 in
       let env_y, [y] = desugar_binders env [y] in
       let e2 = desugar_term env_y e2 in
-      let head = S.fv_to_tm (S.lid_as_fv C.or_elim_lid S.delta_equational None) in
+      let head = S.fv_to_tm (S.lid_and_dd_as_fv C.or_elim_lid S.delta_equational None) in
       let extra_binder = S.mk_binder (S.new_bv None S.tun) in
       let args = [(p, None);
                   (mk_thunk q, None);
@@ -2257,7 +2257,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let r = desugar_term env r in
       let env', [x;y] = desugar_binders env [x;y] in
       let e = desugar_term env' e in
-      let head = S.fv_to_tm (S.lid_as_fv C.and_elim_lid S.delta_equational None) in
+      let head = S.fv_to_tm (S.lid_and_dd_as_fv C.and_elim_lid S.delta_equational None) in
       let args = [(p, None);
                   (mk_thunk q, None);
                   (r, None);
@@ -2540,7 +2540,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
               | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
                 let nil = S.mk_Tm_uinst pat [U_zero] in
                 let pattern =
-                  S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) delta_constant None //NS delta: incorrect, should be Delta_abstract (Delta_constant_at_level 1)?
+                  S.fvar_with_dd (Ident.set_lid_range Const.pattern_lid pat.pos) delta_constant None //NS delta: incorrect, should be Delta_abstract (Delta_constant_at_level 1)?
                 in
                 S.mk_Tm_app nil [(pattern, S.as_aqual_implicit true)] pat.pos
               | _ -> pat
@@ -2586,7 +2586,7 @@ and desugar_formula env (f:term) : S.term =
         let body = desugar_formula env body in
         let body = with_pats env pats body in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app {hd=S.fvar (set_lid_range q b.brange) (Delta_constant_at_level 1) None;  //NS delta: wrong?  Delta_constant_at_level 2?
+        mk <| Tm_app {hd=S.fvar_with_dd (set_lid_range q b.brange) (Delta_constant_at_level 1) None;  //NS delta: wrong?  Delta_constant_at_level 2?
                       args=[as_arg body]}
 
       | _ -> failwith "impossible" in
@@ -2762,7 +2762,7 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
         else
             let dd = Delta_equational_at_level 1 in
             let lb = {
-                lbname=Inr (S.lid_as_fv field_name dd None);
+                lbname=Inr (S.lid_and_dd_as_fv field_name dd None);
                 lbunivs=[];
                 lbtyp=tun;
                 lbeff=C.effect_Tot_lid;
@@ -2809,7 +2809,7 @@ let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
     let val_attrs = Env.lookup_letbinding_quals_and_attrs env lid |> snd in
     let dd = incr_delta_qualifier t in
     let lb = {
-        lbname=Inr (S.lid_as_fv lid dd None);
+        lbname=Inr (S.lid_and_dd_as_fv lid dd None);
         lbunivs=uvs;
         lbdef=no_annot_abs typars t;
         lbtyp=if is_some kopt then U.arrow typars (S.mk_Total (kopt |> must)) else tun;
@@ -3738,7 +3738,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
                  { se with sigel = Sig_bundle {ses; lids} }
 
                | Sig_inductive_typ _ ->
-                 { se with sigattrs = S.fvar FStar.Parser.Const.tcclass_lid S.delta_constant None :: se.sigattrs }
+                 { se with sigattrs = S.fvar_with_dd FStar.Parser.Const.tcclass_lid S.delta_constant None :: se.sigattrs }
 
                | _ -> se
              in

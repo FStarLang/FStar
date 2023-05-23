@@ -1532,7 +1532,7 @@ and check_comp (g:env) (c:comp)
       then fail "Unexpected/missing universe instantitation in comp"
       else let u = List.hd ct.comp_univs in
            let effect_app_tm =
-             let head = S.mk_Tm_uinst (S.fvar ct.effect_name delta_constant None) [u] in
+             let head = S.mk_Tm_uinst (S.fvar ct.effect_name None) [u] in
              S.mk_Tm_app head ((as_arg ct.result_typ)::ct.effect_args) ct.result_typ.pos in
            let! _, t = check "effectful comp" g effect_app_tm in
            with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!

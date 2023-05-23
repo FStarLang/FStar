@@ -185,7 +185,7 @@ type ('env, 't0, 't1) subtyping_token = unit
 type ('env, 't0, 't1) equiv_token = unit
 type ('env, 'e, 't) typing_token = unit
 type ('env, 't) prop_validity_token = unit
-
+type issues = FStar_Issue.issue list
 let check_subtyping              = from_tac_3 B.refl_check_subtyping
 let check_equiv                  = from_tac_3 B.refl_check_equiv
 let core_compute_term_type       = from_tac_3 B.refl_core_compute_term_type
@@ -210,3 +210,10 @@ let ctrl_rewrite
     (t2 : unit -> unit __tac)
   : unit __tac
   = from_tac_3 CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
+
+let log_issues (i:FStar_Issue.issue list)
+  : unit __tac
+  = fun ps -> 
+       FStar_Errors.add_many i;
+       FStar_Tactics_Result.Success ((), ps)
+
