@@ -176,12 +176,12 @@ let rec (inspect_ln :
         { FStar_Syntax_Syntax.tm = t2;
           FStar_Syntax_Syntax.asc = (FStar_Pervasives.Inl ty, tacopt, eq);
           FStar_Syntax_Syntax.eff_opt = uu___;_}
-        -> FStar_Reflection_Data.Tv_AscribedT (t2, ty, tacopt, eq)
+        -> inspect_ln t2
     | FStar_Syntax_Syntax.Tm_ascribed
         { FStar_Syntax_Syntax.tm = t2;
           FStar_Syntax_Syntax.asc = (FStar_Pervasives.Inr cty, tacopt, eq);
           FStar_Syntax_Syntax.eff_opt = uu___;_}
-        -> FStar_Reflection_Data.Tv_AscribedC (t2, cty, tacopt, eq)
+        -> inspect_ln t2
     | FStar_Syntax_Syntax.Tm_app
         { FStar_Syntax_Syntax.hd = uu___; FStar_Syntax_Syntax.args = [];_} ->
         failwith "inspect_ln: empty arguments on Tm_app"

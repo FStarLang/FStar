@@ -6251,17 +6251,13 @@ let rec (inspect :
                  FStar_Syntax_Syntax.asc =
                    (FStar_Pervasives.Inl ty, tacopt, eq);
                  FStar_Syntax_Syntax.eff_opt = uu___2;_}
-               ->
-               FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
-                 (FStar_Reflection_Data.Tv_AscribedT (t3, ty, tacopt, eq))
+               -> inspect t3
            | FStar_Syntax_Syntax.Tm_ascribed
                { FStar_Syntax_Syntax.tm = t3;
                  FStar_Syntax_Syntax.asc =
                    (FStar_Pervasives.Inr cty, tacopt, eq);
                  FStar_Syntax_Syntax.eff_opt = uu___2;_}
-               ->
-               FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
-                 (FStar_Reflection_Data.Tv_AscribedC (t3, cty, tacopt, eq))
+               -> inspect t3
            | FStar_Syntax_Syntax.Tm_app
                { FStar_Syntax_Syntax.hd = uu___2;
                  FStar_Syntax_Syntax.args = [];_}
