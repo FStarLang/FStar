@@ -376,16 +376,17 @@ let zero : nat = 0
 
 )))
 
-// %splice_t[if_then_else_in_specs2] (check (`(
-//   fun (r:ref U32.t) (b:bool) ->
-//       (expects (pts_to r full_perm (if b then 0ul else 1ul)))
-//       (provides (fun _ -> pts_to r full_perm (if b then 1ul else 2ul)))
-//       (
-//         let x = !r in
-//         r := U32.add x 1ul
-//       )
+[@@ expect_failure]  // ascriptions on match come in the way
+%splice_t[if_then_else_in_specs2] (check (`(
+  fun (r:ref U32.t) (b:bool) ->
+      (expects (pts_to r full_perm (if b then 0ul else 1ul)))
+      (provides (fun _ -> pts_to r full_perm (if b then 1ul else 2ul)))
+      (
+        let x = !r in
+        r := U32.add x 1ul
+      )
 
-// )))
+)))
 
 %splice_t[test_tot_let] (check (`(
   fun (r:ref U32.t) ->
