@@ -5,7 +5,7 @@ module R = FStar.Reflection
 open FStar.List.Tot
 module E = Pulse.Elaborate.Pure
 open Pulse.Syntax.Base
-module U = Pulse.Syntax.Util
+module U = Pulse.Syntax.Pure
 
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
@@ -22,7 +22,6 @@ let rec close_open_inverse' (t:term)
     | Tm_Pure p ->
       close_open_inverse' p x i
 
-    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       close_open_inverse' l x i;
       close_open_inverse' r x i
@@ -168,9 +167,6 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
   | Tm_Inames
   | Tm_EmpInames
   | Tm_Unknown -> ()
-  // | Tm_PureApp e1 _ e2 ->
-  //   open_with_gt_ln e1 i t j;
-  //   open_with_gt_ln e2 i t j
   | Tm_Pure p -> open_with_gt_ln p i t j
   | Tm_Star e1 e2 ->
     open_with_gt_ln e1 i t j;
@@ -212,7 +208,6 @@ let rec close_with_non_freevar (e:term) (x:var) (i:nat)
   | Tm_Inames
   | Tm_EmpInames
   | Tm_Unknown -> ()
-  // | Tm_PureApp t1 _ t2
   | Tm_Star t1 t2 ->
     close_with_non_freevar t1 x i;
     close_with_non_freevar t2 x i

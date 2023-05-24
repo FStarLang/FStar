@@ -69,8 +69,8 @@ let (check_one_vprop :
                             (Prims.of_int (138)) (Prims.of_int (13)))
                          (FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 ->
-                               match ((Pulse_Syntax_Util.is_pure_app p),
-                                       (Pulse_Syntax_Util.is_pure_app q))
+                               match ((Pulse_Syntax_Pure.is_pure_app p),
+                                       (Pulse_Syntax_Pure.is_pure_app q))
                                with
                                | (FStar_Pervasives_Native.Some
                                   (hd_p, uu___2, uu___3),

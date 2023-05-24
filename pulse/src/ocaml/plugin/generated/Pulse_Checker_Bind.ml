@@ -1422,7 +1422,7 @@ let (check_tot_bind :
                                                  (Prims.of_int (63)))
                                               (FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___2 ->
-                                                    Pulse_Syntax_Util.tm_refine
+                                                    Pulse_Syntax_Pure.tm_refine
                                                       {
                                                         Pulse_Syntax_Base.binder_ty
                                                           = t1;
@@ -1432,7 +1432,7 @@ let (check_tot_bind :
                                                       }
                                                       (Pulse_Typing.mk_eq2 u1
                                                          t1
-                                                         (Pulse_Syntax_Util.null_bvar
+                                                         (Pulse_Syntax_Pure.null_bvar
                                                             Prims.int_zero)
                                                          e11)))
                                               (fun uu___2 ->

@@ -5,7 +5,7 @@ let (embedded_uvar_lid : Prims.string Prims.list) =
 let (is_uvar :
   Pulse_Syntax_Base.term -> uvar_id FStar_Pervasives_Native.option) =
   fun t ->
-    match Pulse_Syntax_Util.is_fvar t with
+    match Pulse_Syntax_Pure.is_fvar t with
     | FStar_Pervasives_Native.Some (l, u::[]) ->
         if l = embedded_uvar_lid
         then
@@ -49,7 +49,7 @@ let rec (gen_uvars :
       (FStar_Range.mk_range "Pulse.Checker.Inference.fst" (Prims.of_int (42))
          (Prims.of_int (2)) (Prims.of_int (57)) (Prims.of_int (60)))
       (FStar_Tactics_Effect.lift_div_tac
-         (fun uu___ -> Pulse_Syntax_Util.is_arrow t_head))
+         (fun uu___ -> Pulse_Syntax_Pure.is_arrow t_head))
       (fun uu___ ->
          (fun ropt ->
             match ropt with
@@ -223,16 +223,16 @@ let (is_reveal_uvar :
       Pulse_Syntax_Base.term) FStar_Pervasives_Native.option)
   =
   fun t ->
-    match Pulse_Syntax_Util.is_pure_app t with
+    match Pulse_Syntax_Pure.is_pure_app t with
     | FStar_Pervasives_Native.Some (hd, FStar_Pervasives_Native.None, arg) ->
-        (match Pulse_Syntax_Util.is_pure_app hd with
+        (match Pulse_Syntax_Pure.is_pure_app hd with
          | FStar_Pervasives_Native.Some
              (hd1, FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Implicit),
               ty)
              ->
              if FStar_Pervasives_Native.uu___is_Some (is_uvar arg)
              then
-               (match Pulse_Syntax_Util.is_fvar hd1 with
+               (match Pulse_Syntax_Pure.is_fvar hd1 with
                 | FStar_Pervasives_Native.Some (l, u::[]) ->
                     if l = Pulse_Reflection_Util.reveal_lid
                     then FStar_Pervasives_Native.Some (u, ty, arg)
@@ -243,9 +243,9 @@ let (is_reveal_uvar :
     | uu___ -> FStar_Pervasives_Native.None
 let (is_reveal : Pulse_Syntax_Base.term -> Prims.bool) =
   fun t ->
-    match Pulse_Syntax_Util.leftmost_head t with
+    match Pulse_Syntax_Pure.leftmost_head t with
     | FStar_Pervasives_Native.Some hd ->
-        (match Pulse_Syntax_Util.is_fvar hd with
+        (match Pulse_Syntax_Pure.is_fvar hd with
          | FStar_Pervasives_Native.Some (l, uu___::[]) ->
              l = Pulse_Reflection_Util.reveal_lid
          | uu___ -> false)
@@ -293,9 +293,9 @@ let rec (match_typ :
                                        Obj.repr (match_typ t11 t21 uv_sols)
                                    | (uu___3, uu___4) ->
                                        Obj.repr
-                                         (match ((Pulse_Syntax_Util.is_pure_app
+                                         (match ((Pulse_Syntax_Pure.is_pure_app
                                                     t1),
-                                                  (Pulse_Syntax_Util.is_pure_app
+                                                  (Pulse_Syntax_Pure.is_pure_app
                                                      t2))
                                           with
                                           | (FStar_Pervasives_Native.Some
@@ -348,7 +348,7 @@ let rec (atomic_vprop_has_uvar : Pulse_Syntax_Base.term -> Prims.bool) =
        | Pulse_Syntax_Base.Tm_Pure arg -> atomic_vprop_has_uvar arg
        | Pulse_Syntax_Base.Tm_Emp -> false
        | uu___1 ->
-           (match Pulse_Syntax_Util.is_pure_app t with
+           (match Pulse_Syntax_Pure.is_pure_app t with
             | FStar_Pervasives_Native.Some (head, uu___2, arg) ->
                 (atomic_vprop_has_uvar head) || (atomic_vprop_has_uvar arg)
             | uu___2 -> false))
@@ -368,8 +368,8 @@ let rec (atomic_vprops_may_match :
            | (Pulse_Syntax_Base.Tm_Pure x, Pulse_Syntax_Base.Tm_Pure y) ->
                atomic_vprops_may_match x y
            | (uu___2, uu___3) ->
-               (match ((Pulse_Syntax_Util.is_pure_app t1),
-                        (Pulse_Syntax_Util.is_pure_app t2))
+               (match ((Pulse_Syntax_Pure.is_pure_app t1),
+                        (Pulse_Syntax_Pure.is_pure_app t2))
                 with
                 | (FStar_Pervasives_Native.Some (head1, q1, arg1),
                    FStar_Pervasives_Native.Some (head2, q2, arg2)) ->
@@ -576,7 +576,7 @@ let rec (rebuild_head :
                                                        (Prims.of_int (40)))
                                                     (FStar_Tactics_Effect.lift_div_tac
                                                        (fun uu___3 ->
-                                                          Pulse_Syntax_Util.tm_pureapp
+                                                          Pulse_Syntax_Pure.tm_pureapp
                                                             head
                                                             (FStar_Pervasives_Native.Some
                                                                Pulse_Syntax_Base.Implicit)
@@ -821,9 +821,9 @@ let rec (apply_solution :
              | FStar_Pervasives_Native.None -> t
              | FStar_Pervasives_Native.Some t1 -> t1)
           else
-            (match Pulse_Syntax_Util.is_pure_app t with
+            (match Pulse_Syntax_Pure.is_pure_app t with
              | FStar_Pervasives_Native.Some (head, q, arg) ->
-                 Pulse_Syntax_Util.tm_pureapp (apply_solution sol head) q
+                 Pulse_Syntax_Pure.tm_pureapp (apply_solution sol head) q
                    (apply_solution sol arg)
              | uu___3 -> t)
       | Pulse_Syntax_Base.Tm_Pure p ->
@@ -854,7 +854,7 @@ let rec (contains_uvar : Pulse_Syntax_Base.term -> Prims.bool) =
         (contains_uvar t1) || (contains_uvar body)
     | Pulse_Syntax_Base.Tm_FStar (uu___, uu___1) ->
         (FStar_Pervasives_Native.uu___is_Some (is_uvar t)) ||
-          ((match Pulse_Syntax_Util.is_pure_app t with
+          ((match Pulse_Syntax_Pure.is_pure_app t with
             | FStar_Pervasives_Native.Some (head, uu___2, arg) ->
                 (contains_uvar head) || (contains_uvar arg)
             | uu___2 -> false))

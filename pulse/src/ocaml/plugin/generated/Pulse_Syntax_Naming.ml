@@ -524,14 +524,14 @@ let (open_term_nv :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.nvar -> Pulse_Syntax_Base.term)
   =
   fun t ->
-    fun nv -> open_term' t (Pulse_Syntax_Util.term_of_nvar nv) Prims.int_zero
+    fun nv -> open_term' t (Pulse_Syntax_Pure.term_of_nvar nv) Prims.int_zero
 let (open_st_term_nv :
   Pulse_Syntax_Base.st_term ->
     Pulse_Syntax_Base.nvar -> Pulse_Syntax_Base.st_term)
   =
   fun t ->
     fun nv ->
-      open_st_term' t (Pulse_Syntax_Util.term_of_nvar nv) Prims.int_zero
+      open_st_term' t (Pulse_Syntax_Pure.term_of_nvar nv) Prims.int_zero
 let (open_comp_with :
   Pulse_Syntax_Base.comp -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
   = fun c -> fun x -> open_comp' c x Prims.int_zero

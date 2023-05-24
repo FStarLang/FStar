@@ -1,4 +1,4 @@
-module Pulse.Syntax.Util
+module Pulse.Syntax.Pure
 
 module R = FStar.Reflection
 module T = FStar.Tactics

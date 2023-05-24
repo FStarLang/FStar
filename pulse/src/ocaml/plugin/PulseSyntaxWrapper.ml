@@ -1,7 +1,7 @@
 open Prims
 open FStar_Ident
 open Pulse_Syntax_Base
-module U = Pulse_Syntax_Util
+module U = Pulse_Syntax_Pure
 module S = FStar_Syntax_Syntax
 type universe = Pulse_Syntax_Base.universe
 type range = FStar_Compiler_Range.range

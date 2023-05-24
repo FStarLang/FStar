@@ -2989,14 +2989,14 @@ let (translate_st_app_or_return :
                                                             (FStar_Tactics_Effect.lift_div_tac
                                                                (fun uu___1 ->
                                                                   match 
-                                                                    Pulse_Syntax_Util.is_pure_app
+                                                                    Pulse_Syntax_Pure.is_pure_app
                                                                     t1
                                                                   with
                                                                   | FStar_Pervasives_Native.Some
                                                                     (head, q,
                                                                     arg) ->
                                                                     (match 
-                                                                    Pulse_Syntax_Util.is_fvar
+                                                                    Pulse_Syntax_Pure.is_fvar
                                                                     head
                                                                     with
                                                                     | 
