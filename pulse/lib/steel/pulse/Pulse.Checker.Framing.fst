@@ -13,6 +13,8 @@ open Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module FV = Pulse.Typing.FV
+module Metatheory = Pulse.Typing.Metatheory
+open Pulse.Checker.Common
 
 let rec vprop_as_list (vp:term)
   : list term
@@ -390,37 +392,19 @@ let try_frame_pre (#g:env)
       let t_typing
         : st_typing g t (add_frame c frame)
         = T_Frame g t c frame frame_typing t_typing in
-      let x = fresh g in
-      let px = v_as_nv x in
       let c' = add_frame c frame in
-      assert (None? (lookup g x));
-      FV.st_typing_freevars_inv t_typing x;
-      assert (~ (x `Set.mem` freevars_comp c'));
-      freevars_comp_post c';
-      assert (~ (x `Set.mem` freevars (comp_post c')));
+      let c'_typing = Metatheory.st_typing_correctness t_typing in
       let s' = st_comp_of_comp c' in
       let ve: vprop_equiv g s'.pre pre = ve in
       let s'' = { s' with pre = pre } in
       let c'' = c' `with_st_comp` s'' in
       assert (comp_post c' == comp_post c'');
-      let g' = extend x (Inl (comp_res c')) g in
       let ve: vprop_equiv g (comp_pre c') (comp_pre c'') = ve in    
-      let ve' 
-        : vprop_equiv g'
-                        (open_term (comp_post c') x)
-                        (open_term (comp_post c'') x)
-        = VE_Refl _ _
-      in
-      let pre_typing = check_vprop_with_core g (comp_pre c') in
-      let post_typing = check_vprop_with_core g' (open_term_nv (comp_post c') px) in
-      let (| u, res_typing |) = check_universe g (comp_res c') in
-      if u <> comp_u c' 
-      then T.fail "Unexpected universe"
-      else (
-        let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing ve ve' in
-        let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
-        Inl (| c'', t_typing |)
-      )
+      let st_typing = Metatheory.comp_typing_inversion c'_typing in
+      let (| res_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_typing in
+      let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing ve (VE_Refl _ _) in
+      let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
+      Inl (| c'', t_typing |)
 
 let frame_empty (#g:env)
                 (#pre:term)
@@ -440,38 +424,17 @@ let frame_empty (#g:env)
     let s' = { s with pre = pre } in
     let c' = c `with_st_comp` s' in
     assert (stateful_comp c');
-    let x = fresh g in
-    let px = v_as_nv x in
-    let pre_typing 
-      : tot_typing g (comp_pre c) Tm_VProp
-      = check_vprop_with_core g (comp_pre c)
-    in
-    let (| u, res_typing |) = check_universe g (comp_res c) in
-    if u <> comp_u c
-    then T.fail "Unexpected universe"
-    else (
-      let res_typing 
-        : tot_typing g (comp_res c) (Tm_Type (comp_u c))
-        = res_typing 
-      in
-      let post_typing
-        : tot_typing (extend x (Inl (comp_res c)) g)
-                     (open_term_nv (comp_post c) px)
-                     Tm_VProp
-        = check_vprop_with_core (extend x (Inl (comp_res c)) g) 
-                                (open_term_nv (comp_post c) px)
-      in
-      FV.st_typing_freevars_inv d x;
-      freevars_comp_post c;
-      let eq
-        : st_equiv g c c'
-        = ST_VPropEquiv g c c' x
+    let c_typing = Metatheory.st_typing_correctness d in
+    let st_typing = Metatheory.comp_typing_inversion c_typing in
+    let (| res_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_typing in 
+    let eq
+      : st_equiv g c c'
+      = ST_VPropEquiv g c c' x
                         pre_typing
                         res_typing
                         post_typing
                         (VE_Unit g pre)
                         (VE_Refl _ _)
-      in
-      (| c', T_Equiv _ _ _ _ d eq |)
-    )
+    in
+    (| c', T_Equiv _ _ _ _ d eq |)
 #pop-options
