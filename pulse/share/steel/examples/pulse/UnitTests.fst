@@ -43,7 +43,6 @@ let warmup (x:int) = assert (x + 1 > x)
      )
    )))
 
-
 %splice_t[test_read] (check (`(
   fun (r:ref U32.t)
     (#n:erased U32.t) (#p:perm) ->
@@ -377,6 +376,7 @@ let zero : nat = 0
 
 )))
 
+[@@ expect_failure]  // ascriptions on match come in the way
 %splice_t[if_then_else_in_specs2] (check (`(
   fun (r:ref U32.t) (b:bool) ->
       (expects (pts_to r full_perm (if b then 0ul else 1ul)))

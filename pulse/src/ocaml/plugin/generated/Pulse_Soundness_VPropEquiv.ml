@@ -2,7 +2,7 @@ open Prims
 let (vprop_equiv_refl_type : FStar_Reflection_Types.term) =
   let var = Prims.int_zero in
   let v = Pulse_Reflection_Util.mk_name var in
-  let v_typ = Pulse_Elaborate_Pure.elab_term Pulse_Syntax.Tm_VProp in
+  let v_typ = Pulse_Elaborate_Pure.elab_term Pulse_Syntax_Base.Tm_VProp in
   Pulse_Reflection_Util.mk_arrow (v_typ, FStar_Reflection_Data.Q_Explicit)
     (FStar_Reflection_Typing.close_term
        (Pulse_Reflection_Util.stt_vprop_equiv v v) var)
@@ -11,7 +11,7 @@ let (vprop_equiv_sym_type : FStar_Reflection_Types.term) =
   let v0 = Pulse_Reflection_Util.mk_name var0 in
   let var1 = Prims.int_one in
   let v1 = Pulse_Reflection_Util.mk_name var1 in
-  let v_typ = Pulse_Elaborate_Pure.elab_term Pulse_Syntax.Tm_VProp in
+  let v_typ = Pulse_Elaborate_Pure.elab_term Pulse_Syntax_Base.Tm_VProp in
   Pulse_Reflection_Util.mk_arrow (v_typ, FStar_Reflection_Data.Q_Implicit)
     (FStar_Reflection_Typing.close_term
        (Pulse_Reflection_Util.mk_arrow

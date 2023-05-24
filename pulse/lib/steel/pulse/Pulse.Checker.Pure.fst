@@ -7,9 +7,7 @@ open FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
-open Pulse.Elaborate.Pure
 open Pulse.Typing
-open Pulse.Readback
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module RU = Pulse.RuntimeUtils
@@ -116,14 +114,11 @@ let check_universe (g:env) (t:term)
                          (T.term_to_string rt)
                          (print_issues issues))
     | Some ru ->
-      let uopt = readback_universe ru in
       let proof : squash (RTB.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
           FStar.Squash.get_proof _
       in
       let proof : RT.typing f rt (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
-      match uopt with
-      | None -> T.fail "check_universe: failed to readback the universe"
-      | Some u -> (| u, E proof |)
+      (| ru, E proof |)
 
 
 let tc_meta_callback (f:R.env) (e:R.term) 
@@ -266,21 +261,25 @@ let get_non_informative_witness g u t
         T.fail (Printf.sprintf "non_informative_witness not supported for %s"        
                                (P.term_to_string t)) in
     let eopt =
-      match t with
-      | Tm_FVar {fv_name=l} ->
+      let ropt = is_fvar_app t in
+      match ropt with
+      | Some (l, us, _, arg_opt) ->
         if l = R.unit_lid
-        then Some (Tm_FVar (as_fv (mk_steel_wrapper_lid "unit_non_informative")))
+        then Some (tm_fvar (as_fv (mk_steel_wrapper_lid "unit_non_informative")))
         else if l = R.prop_qn
-        then Some (Tm_FVar (as_fv (mk_steel_wrapper_lid "prop_non_informative")))
+        then Some (tm_fvar (as_fv (mk_steel_wrapper_lid "prop_non_informative")))
+        else if l = R.squash_qn && Some? arg_opt
+        then Some (tm_pureapp
+                     (tm_uinst (as_fv (mk_steel_wrapper_lid "squash_non_informative")) us)
+                     None
+                     (Some?.v arg_opt))
+        else if l = erased_lid && Some? arg_opt
+        then Some (tm_pureapp
+                     (tm_uinst (as_fv (mk_steel_wrapper_lid "erased_non_informative")) us)
+                     None
+                     (Some?.v arg_opt))
         else None
-      | Tm_PureApp (Tm_UInst {fv_name=l} [u']) None arg ->
-        if l = R.squash_qn
-        then Some (Tm_PureApp (Tm_UInst (as_fv (mk_steel_wrapper_lid "squash_non_informative")) [u']) None arg)
-        else if l = erased_lid
-        then Some (Tm_PureApp (Tm_UInst (as_fv (mk_steel_wrapper_lid "erased_non_informative")) [u']) None arg)
-        else None
-      | _ -> None
-    in
+      | _ -> None in
     match eopt with
     | None -> err ()
     | Some e ->

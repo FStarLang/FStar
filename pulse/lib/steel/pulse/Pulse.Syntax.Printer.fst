@@ -8,22 +8,25 @@ let name_to_string (f:R.name) = String.concat "." f
 
 let dbg_printing : bool = true
 
-let constant_to_string = function
-  | Unit -> "()"
-  | Bool true -> "true"
-  | Bool false -> "false"
-  | Int i -> sprintf "%d" i
+// let constant_to_string = function
+//   | Unit -> "()"
+//   | Bool true -> "true"
+//   | Bool false -> "false"
+//   | Int i -> sprintf "%d" i
 
 let rec universe_to_string (n:nat) (u:universe) 
-  : Tot string (decreases u) = 
-  match u with
-  | U_unknown -> "_"
-  | U_zero -> sprintf "%d" n
-  | U_succ u -> universe_to_string (n + 1) u
-  | U_var x -> if n = 0 then x else sprintf "(%s + %d)" x n
-  | U_max u0 u1 -> 
-    let r = sprintf "(max %s %s)" (universe_to_string 0 u0) (universe_to_string 0 u1) in
+  : Tot string (decreases u) =
+  let open R in
+  match inspect_universe u with
+  | Uv_Unk -> "_"
+  | Uv_Zero -> sprintf "%d" n
+  | Uv_Succ u -> universe_to_string (n + 1) u
+  | Uv_BVar x -> if n = 0 then sprintf "%d" x else sprintf "(%d + %d)" x n
+  | Uv_Max us ->
+    let r = "(max _)" in
+    // sprintf "(max %s %s)" (universe_to_string 0 u0) (universe_to_string 0 u1) in
     if n = 0 then r else sprintf "%s + %d" r n
+  | _ -> sprintf "<univ>"
 
 let univ_to_string u = sprintf "u#%s" (universe_to_string 0 u)
 let qual_to_string = function
@@ -33,37 +36,37 @@ let qual_to_string = function
 let rec term_to_string (t:term)
   : T.Tac string
   = match t with
-    | Tm_BVar x ->
-      if dbg_printing
-      then sprintf "%s@%d" (T.unseal x.bv_ppname) x.bv_index
-      else T.unseal x.bv_ppname
-    | Tm_Var x ->
-      if dbg_printing
-      then sprintf "%s#%d" (T.unseal x.nm_ppname) x.nm_index
-      else T.unseal x.nm_ppname
-    | Tm_FVar f -> name_to_string f.fv_name
-    | Tm_UInst f us -> sprintf "%s %s" (name_to_string f.fv_name) (String.concat " " (List.Tot.map univ_to_string us))
-    | Tm_Constant c -> constant_to_string c
-    | Tm_Refine b phi ->
-      sprintf "%s:%s{%s}"
-              (T.unseal b.binder_ppname)
-              (term_to_string b.binder_ty)
-              (term_to_string phi)
+    // | tm_bvar x ->
+    //   if dbg_printing
+    //   then sprintf "%s@%d" (T.unseal x.bv_ppname) x.bv_index
+    //   else T.unseal x.bv_ppname
+    // | tm_var x ->
+    //   if dbg_printing
+    //   then sprintf "%s#%d" (T.unseal x.nm_ppname) x.nm_index
+    //   else T.unseal x.nm_ppname
+    // | tm_fvar f -> name_to_string f.fv_name
+    // | tm_uinst f us -> sprintf "%s %s" (name_to_string f.fv_name) (String.concat " " (List.Tot.map univ_to_string us))
+    // | tm_constant c -> constant_to_string c
+    // | tm_refine b phi ->
+    //   sprintf "%s:%s{%s}"
+    //           (T.unseal b.binder_ppname)
+    //           (term_to_string b.binder_ty)
+    //           (term_to_string phi)
 
-    | Tm_PureApp head q arg ->
-      sprintf "(%s %s%s)" 
-        (term_to_string head)
-        (qual_to_string q)
-        (term_to_string arg)
+    // | Tm_PureApp head q arg ->
+    //   sprintf "(%s %s%s)" 
+    //     (term_to_string head)
+    //     (qual_to_string q)
+    //     (term_to_string arg)
       
-    | Tm_Let t e1 e2 ->
-      sprintf "let _ : %s = %s in %s"
-        (term_to_string t)
-        (term_to_string e1)
-        (term_to_string e2)        
+    // | Tm_Let t e1 e2 ->
+    //   sprintf "let _ : %s = %s in %s"
+    //     (term_to_string t)
+    //     (term_to_string e1)
+    //     (term_to_string e2)        
       
     | Tm_Emp -> "emp"
-    | Tm_Pure p -> sprintf "pure %s" (term_to_string p)
+    | Tm_Pure p -> sprintf "tm_pure %s" (term_to_string p)
     | Tm_Star p1 p2 ->
       sprintf "(%s * %s)" (term_to_string p1)
                           (term_to_string p2)
@@ -80,14 +83,14 @@ let rec term_to_string (t:term)
               (term_to_string t)
               (term_to_string body)
                           
-    | Tm_Arrow b q c ->
-      sprintf "%s%s -> %s"
-        (qual_to_string q)
-        (binder_to_string b)
-        (comp_to_string c)
+    // | tm_arrow b q c ->
+    //   sprintf "%s%s -> %s"
+    //     (qual_to_string q)
+    //     (binder_to_string b)
+    //     (comp_to_string c)
         
-    | Tm_Type _ ->
-      "Type u#_"
+    // | tm_type _ ->
+    //   "Type u#_"
       
     | Tm_VProp ->
       "vprop"
@@ -96,20 +99,18 @@ let rec term_to_string (t:term)
 
     | Tm_EmpInames -> "emp_inames"
       
-    | Tm_UVar n -> sprintf "?u_%d" n
-
     | Tm_Unknown -> "_"
     
-    | Tm_FStar t ->
-      T.term_to_string t
+    | Tm_FStar t _ ->
+      sprintf "((tm_fstar) (%s))" (T.term_to_string t)
       
-and binder_to_string (b:binder)
+let binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s:%s" 
             (T.unseal b.binder_ppname)
             (term_to_string b.binder_ty)
 
-and comp_to_string (c:comp)
+let comp_to_string (c:comp)
   : T.Tac string
   = match c with
     | C_Tot t -> 

@@ -6,8 +6,6 @@ module T = FStar.Tactics
 module P = Pulse.Syntax.Printer
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
-open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Checker.Common
 open Pulse.Checker.Pure
@@ -26,7 +24,7 @@ let rec mk_bind (g:env)
                 (c2:comp_st)
                 (px:nvar)
                 (d_e1:st_typing g e1 c1)
-                (d_c1res:tot_typing g (comp_res c1) (Tm_Type (comp_u c1)))
+                (d_c1res:tot_typing g (comp_res c1) (tm_type (comp_u c1)))
                 (d_e2:st_typing (extend (snd px) (Inl (comp_res c1)) g) (open_st_term_nv e2 px) c2)
                 (res_typing:universe_of g (comp_res c2) (comp_u c2))
                 (post_typing:tot_typing (extend (snd px) (Inl (comp_res c2)) g) (open_term_nv (comp_post c2) px) Tm_VProp)
@@ -143,7 +141,7 @@ let check_bind
     let s1 = st_comp_of_comp c1 in
     let t = s1.res in
     let (| u, t_typing |) = check_universe g t in
-    if u <> s1.u then T.fail "incorrect universe"
+    if not (eq_univ u s1.u) then T.fail "incorrect universe"
     else (
         let x = fresh g in
         let px = b.binder_ppname, x in
@@ -170,7 +168,7 @@ let check_bind
           let d2 : st_typing g' (open_st_term e2_closed x) c2 = d2 in
           let s2 = st_comp_of_comp c2 in
           let (| u, res_typing |) = check_universe g s2.res in
-          if u <> s2.u
+          if not (eq_univ u s2.u)
           then T.fail "Unexpected universe for result type"
           else if x `Set.mem` freevars s2.post
           then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
@@ -190,7 +188,7 @@ let check_tot_bind g t pre pre_typing post_hint check =
   let t1 =
     let b = {binder_ty=t1;binder_ppname=RT.pp_name_default} in
     let eq_tm = mk_eq2 u1 t1 (null_bvar 0) e1 in
-    Tm_Refine b eq_tm in
+    tm_refine b eq_tm in
   let (| e1, e1_typing |) =
     check_term_with_expected_type g e1 t1 in
   let x = fresh g in

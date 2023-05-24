@@ -4,9 +4,7 @@ module R = FStar.Reflection
 module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Typing
-open Pulse.Elaborate.Pure
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
@@ -14,9 +12,9 @@ let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x
 
 let freevars_close_term_host_term (t:host_term) (x:var) (i:index)
   : Lemma
-    (ensures (freevars (close_term' (Tm_FStar t) x i)
+    (ensures (freevars (close_term' (Tm_FStar t FStar.Range.range_0) x i)
             `Set.equal`
-             (freevars (Tm_FStar t) `set_minus` x)))
+             (freevars (Tm_FStar t FStar.Range.range_0) `set_minus` x)))
   = admit()
 
 #push-options "--query_stats --z3rlimit_factor 2"
@@ -25,55 +23,34 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
     (ensures freevars (close_term' e x i) `Set.equal`
              (freevars e `set_minus` x))
   = match e with
-    | Tm_BVar _
-    | Tm_Var _
-    | Tm_FVar _
-    | Tm_UInst _ _
-    | Tm_Constant _  
     | Tm_Emp
-    | Tm_Type _
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> ()
 
     | Tm_Pure p ->
       freevars_close_term' p x i
 
-    | Tm_Refine b t ->
-      freevars_close_term' b.binder_ty x i;
-      freevars_close_term' t x (i + 1)
-
-    | Tm_PureApp l _ r
+    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       freevars_close_term' l x i;
       freevars_close_term' r x i
-
-    | Tm_Let t e1 e2 ->
-      freevars_close_term' t x i;    
-      freevars_close_term' e1 x i;
-      freevars_close_term' e2 x (i + 1)
 
     | Tm_ExistsSL _ t b _
     | Tm_ForallSL _ t b ->
       freevars_close_term' t x i;    
       freevars_close_term' b x (i + 1)
 
-    | Tm_Arrow b _ body ->
-      freevars_close_term' b.binder_ty x i;
-      freevars_close_comp body x (i + 1)
-    
-    | Tm_FStar t ->
+    | Tm_FStar t _ ->
       freevars_close_term_host_term t x i
 
-and freevars_close_comp (c:comp)
+let freevars_close_comp (c:comp)
                         (x:var)
                         (i:index)
   : Lemma 
     (ensures freevars_comp (close_comp' c x i) `Set.equal`
              (freevars_comp c `set_minus` x))
-    (decreases c)
     [SMTPat (freevars_comp (close_comp' c x i))]
   = match c with
     | C_Tot t ->
@@ -332,7 +309,56 @@ let freevars_open_st_term_inv (e:st_term)
 #pop-options
 #pop-options
 
-#push-options "--retry 5 --fuel 10 --ifuel 10 --z3rlimit_factor 30 --z3cliopt 'smt.qi.eager_threshold=100' --query_stats --split_queries always"
+let vars_of_env_extend (g:env) (x:var) (t:term)
+  : Lemma (requires True)
+          (ensures vars_of_env (extend x (Inl t) g) ==
+                   vars_of_env g `Set.union` (Set.singleton x))
+          [SMTPat [vars_of_env (extend x (Inl t) g)]] =
+  assert (Set.equal (vars_of_env (extend x (Inl t) g))
+                    (vars_of_env g `Set.union` (Set.singleton x)))
+
+let freevars_tm_arrow (b:binder) (q:option qualifier) (c:comp)
+  : Lemma (freevars (tm_arrow b q c) ==
+           Set.union (freevars b.binder_ty)
+                     (freevars_comp c)) =
+  admit ()
+
+let freevars_mk_eq2_prop (u:universe) (t e0 e1:term)
+  : Lemma (freevars (mk_eq2_prop u t e0 e1) ==
+           Set.union (freevars t)
+                     (Set.union (freevars e0)
+                                (freevars e1))) =
+  admit()
+
+let freevars_mk_reveal (u:universe) (t x_tm:term)
+  : Lemma (freevars (Pulse.Typing.mk_reveal u t x_tm) ==
+           Set.union (freevars t) (freevars x_tm)) =
+  admit ()
+
+let freevars_mk_erased (u:universe) (t:term)
+  : Lemma (freevars (mk_erased u t) == freevars t) =
+  admit ()
+
+let freevars_mk_fst (u:universe) (aL aR x_tm:term)
+  : Lemma (freevars (Pulse.Typing.mk_fst u u aL aR x_tm) ==
+           Set.union (freevars aL)
+                     (Set.union (freevars aR)
+                                (freevars x_tm))) =
+  admit ()
+
+let freevars_mk_snd (u:universe) (aL aR x_tm:term)
+  : Lemma (freevars (Pulse.Typing.mk_snd u u aL aR x_tm) ==
+           Set.union (freevars aL)
+                     (Set.union (freevars aR)
+                                (freevars x_tm))) =
+  admit ()
+
+let freevars_mk_tuple2 (u:universe) (aL aR:term)
+  : Lemma (freevars (mk_tuple2 u u aL aR) ==
+           Set.union (freevars aL) (freevars aR)) =
+  admit ()
+
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
   : Lemma 
@@ -341,26 +367,36 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     (decreases d)
 
  = match d with
-   | T_Abs _  x _ ty _ body cres dt db ->
-      tot_typing_freevars dt;
-      st_typing_freevars db;
-      freevars_close_comp cres x 0;
-      freevars_open_st_term_inv body x
+   | T_Abs _  x q ty _ body cres dt db ->
+     tot_typing_freevars dt;
+     st_typing_freevars db;
+     freevars_close_comp cres x 0;
+     freevars_open_st_term_inv body x;
+     freevars_tm_arrow ty q (close_comp cres x)
 
-   | T_STApp _ _ _ _ res arg st at ->
+   | T_STApp _ head ty q res arg st at ->
      tot_typing_freevars st;
      tot_typing_freevars at;
-     freevars_open_comp res arg 0
-
+     freevars_open_comp res arg 0;
+     freevars_tm_arrow (as_binder ty) q res
+   
    | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
      tot_typing_freevars t_typing;
      tot_typing_freevars e_typing;
      tot_typing_freevars post_typing;
-     freevars_open_term post (term_of_no_name_var x) 0;
-     let post =
-       if use_eq then Tm_Star post (Tm_Pure (mk_eq2 u t (null_bvar 0) e))
+     let post_maybe_eq =
+       if use_eq
+       then let post = open_term' post (null_var x) 0 in
+            let post = Tm_Star post (Tm_Pure (mk_eq2_prop u t (null_var x) e)) in
+            let post = close_term post x in
+            post
        else post in
-     freevars_open_term post e 0
+    freevars_open_term post (null_var x) 0;
+    freevars_mk_eq2_prop u t (null_var x) e;
+    freevars_close_term
+      (Tm_Star (open_term' post (null_var x) 0) (Tm_Pure (mk_eq2_prop u t (null_var x) e)))
+      x 0;
+    freevars_open_term post e 0
 
    | T_Lift _ _ _ _ d1 l ->
      st_typing_freevars d1
@@ -400,9 +436,10 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      st_typing_freevars dc
 
    | T_ElimExists _ u t p x dt dv ->
-     let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
+     let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
      tot_typing_freevars dt;
      tot_typing_freevars dv;
+     freevars_mk_reveal u t x_tm;
      assert (Set.equal (freevars (Pulse.Typing.mk_reveal u t x_tm))
                        (Set.union (freevars t) (Set.singleton x)));
      freevars_open_term p (Pulse.Typing.mk_reveal u t x_tm) 0;
@@ -417,7 +454,9 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                                   (freevars t)));
      assert (Set.subset
                (set_minus (freevars (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0)) x)
-               (vars_of_env g))
+               (vars_of_env g));
+     freevars_mk_erased u t
+
 
    | T_IntroExists _ u tt p w dt dv dw ->
      tot_typing_freevars dt;
@@ -448,6 +487,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      tot_typing_freevars dv;
      tot_typing_freevars dw;
      assert (freevars_st t `Set.subset` vars_of_env g);
+     freevars_mk_reveal u tt w;
      calc (Set.subset) {
         freevars_comp c;
       (Set.equal) {}
@@ -479,6 +519,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      freevars_open_term inv tm_false 0;
      assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 
+
    | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
      let x_tm = term_of_no_name_var x in
      let u = comp_u cL in
@@ -486,12 +527,19 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      let aR = comp_res cR in
      st_typing_freevars eL_typing;
      st_typing_freevars eR_typing;
+     freevars_mk_fst u aL aR x_tm;
+     freevars_mk_snd u aL aR x_tm;
      freevars_open_term (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
-     freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0
+     freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
+     freevars_close_term (Tm_Star (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0)
+                                  (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0)) x 0;
+     freevars_mk_tuple2 u aL aR
+
 
    | T_Rewrite _ _ _ p_typing equiv_p_q ->
      tot_typing_freevars p_typing;
      vprop_equiv_freevars equiv_p_q
+
 
    | T_WithLocal _ init body _ c x init_typing _ c_typing body_typing ->
      tot_typing_freevars init_typing;
@@ -504,4 +552,4 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      tot_typing_freevars pre_typing;
      tot_typing_freevars post_typing;
      freevars_open_term s.post (term_of_no_name_var x) 0
-#pop-options //takes about 60s
+#pop-options //takes about 12s

@@ -5,9 +5,7 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
-open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -21,9 +19,9 @@ val elab_bind_typing (g:stt_env)
                      (r1_typing: RT.tot_typing (elab_env g) r1 (elab_comp c1))
                      (r2:R.term)
                      (r2_typing: RT.tot_typing (elab_env g) r2 
-                                               (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
+                                               (elab_term (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
                      (bc:bind_comp g x c1 c2 c)
-                     (t2_typing : RT.tot_typing (elab_env g) (elab_term (comp_res c2)) (RT.tm_type (elab_universe (comp_u c2))))
+                     (t2_typing : RT.tot_typing (elab_env g) (elab_term (comp_res c2)) (RT.tm_type (comp_u c2)))
                      (post2_typing: RT.tot_typing (elab_env g) 
                                                   (elab_comp_post c2)
                                                   (post2_type_bind (elab_term (comp_res c2))))
@@ -40,15 +38,15 @@ val elab_bind_ghost_l_typing
   (r1_typing:RT.tot_typing (elab_env g) r1 (elab_comp c1))
   (r2:R.term)
   (r2_typing:RT.tot_typing (elab_env g) r2
-                           (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
+                           (elab_term (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
   (bc:bind_comp g x c1 c2 c)
   (t2_typing:RT.tot_typing (elab_env g) (elab_term (comp_res c2))
-                           (RT.tm_type (elab_universe (comp_u c2))))
+                           (RT.tm_type (comp_u c2)))
   (post2_typing:RT.tot_typing (elab_env g) (elab_comp_post c2)
                               (post2_type_bind (elab_term (comp_res c2))))
   (reveal_a:R.term)
   (reveal_a_typing:RT.tot_typing (elab_env g) reveal_a
-                                 (non_informative_witness_rt (elab_universe (comp_u c1))
+                                 (non_informative_witness_rt (comp_u c1)
                                                              (elab_term (comp_res c1))))
   : Ghost (RT.tot_typing (elab_env g) (elab_bind bc r1 r2) (elab_comp c))
           (requires Bind_comp_ghost_l? bc)
@@ -63,15 +61,15 @@ val elab_bind_ghost_r_typing
   (r1_typing:RT.tot_typing (elab_env g) r1 (elab_comp c1))
   (r2:R.term)
   (r2_typing:RT.tot_typing (elab_env g) r2
-                           (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
+                           (elab_term (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
   (bc:bind_comp g x c1 c2 c)
   (t2_typing:RT.tot_typing (elab_env g) (elab_term (comp_res c2))
-                           (RT.tm_type (elab_universe (comp_u c2))))
+                           (RT.tm_type (comp_u c2)))
   (post2_typing:RT.tot_typing (elab_env g) (elab_comp_post c2)
                               (post2_type_bind (elab_term (comp_res c2))))
   (reveal_b:R.term)
   (reveal_b_typing:RT.tot_typing (elab_env g) reveal_b
-                                 (non_informative_witness_rt (elab_universe (comp_u c2))
+                                 (non_informative_witness_rt (comp_u c2)
                                                              (elab_term (comp_res c2))))
   : Ghost (RT.tot_typing (elab_env g) (elab_bind bc r1 r2) (elab_comp c))
           (requires Bind_comp_ghost_r? bc)
