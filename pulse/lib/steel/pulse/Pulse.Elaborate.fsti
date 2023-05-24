@@ -9,7 +9,6 @@ open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Elaborate.Pure
 open Pulse.Typing
-open Pulse.Elaborate.Core
 
 val elab_open_commute' (e:term)
                        (v:term)

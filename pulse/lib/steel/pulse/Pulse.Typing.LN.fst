@@ -332,7 +332,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       
     | Tm_Protect { t } ->
       ln_weakening_st t i j
-      
+
 assume
 val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
   : Lemma 
@@ -515,7 +515,6 @@ let rec close_term_ln' (e:term)
     | Tm_Pure p ->
       close_term_ln' p x i
 
-    // | Tm_PureApp l _ r
     | Tm_Star l r ->
       close_term_ln' l x i;
       close_term_ln' r x i
@@ -735,9 +734,27 @@ let st_typing_ln_tot_bind #g #t #c (d:st_typing g t c{T_TotBind? d})
   open_st_term_ln e2 x;
   close_comp_ln' c2 x 0;
   open_comp_ln_inv' (close_comp c2 x) e1 0
+#pop-options
 
+let ln_mk_reveal (u:universe) (t:term) (e:term) (n:int)
+  : Lemma
+      (requires ln' t n /\ ln' e n)
+      (ensures ln' (mk_reveal u t e) n) =
+  admit ()
 
-#push-options "--query_stats --z3rlimit_factor 30 --fuel 8 --ifuel 8 --admit_smt_queries true"
+let ln_mk_fst (u:universe) (aL aR e:term) (n:int)
+  : Lemma
+      (requires ln' aL n /\ ln' aR n /\ ln' e n)
+      (ensures ln' (mk_fst u u aL aR e) n) =
+  admit ()
+
+let ln_mk_snd (u:universe) (aL aR e:term) (n:int)
+  : Lemma
+      (requires ln' aL n /\ ln' aR n /\ ln' e n)
+      (ensures ln' (mk_snd u u aL aR e) n) =
+  admit ()
+
+#push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 1"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
   : Lemma 
@@ -752,6 +769,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       Pulse.Elaborate.elab_ln ty.binder_ty (-1);
       Pulse.Elaborate.elab_ln_comp (close_comp c x) 0
 
+
     | T_STApp _ _ _ _ res arg st at ->
       tot_typing_ln st;
       tot_typing_ln at;
@@ -760,7 +778,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       assume (ln_c' res 0);
       open_comp_ln_inv' res arg 0;
       Pulse.Elaborate.elab_ln_comp (open_comp_with res arg) (-1)
-      
+
     | T_Lift _ _ _ _ d1 l ->
       st_typing_ln d1;
       lift_comp_ln l
@@ -789,13 +807,15 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       open_st_term_ln e2 x;
       bind_comp_ln bc
 
+
     | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing ->
       st_typing_ln_tot_bind d st_typing_ln
-      
+
     | T_If _ _ _ _ _ _ _ tb d1 d2 _ ->
       tot_typing_ln tb;
       st_typing_ln d1;
       st_typing_ln d2
+
 
     | T_Frame _ _ _ _ df dc ->
       tot_typing_ln df;
@@ -805,8 +825,10 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln dt;
       tot_typing_ln dv;
       let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
+      ln_mk_reveal u t x_tm (-1);
       open_term_ln_inv' p (Pulse.Typing.mk_reveal u t x_tm) 0;
       close_term_ln' (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0) x 0
+
 
     | T_IntroExists _ u t p e dt dv dw ->
       tot_typing_ln dt;
@@ -818,6 +840,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln dt;
       tot_typing_ln dv;
       tot_typing_ln dw;
+      ln_mk_reveal u t e (-1);
       open_term_ln_inv' p (Pulse.Typing.mk_reveal u t e) 0
 
     | T_Equiv _ _ _ _ d2 deq ->
@@ -837,6 +860,8 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       let aR = comp_res cR in
       st_typing_ln eL_typing;
       st_typing_ln eR_typing;
+      ln_mk_fst u aL aR x_tm (-1);
+      ln_mk_snd u aL aR x_tm (-1);
       open_term_ln_inv' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
       close_term_ln' (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0) x 0;
       open_term_ln_inv' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
