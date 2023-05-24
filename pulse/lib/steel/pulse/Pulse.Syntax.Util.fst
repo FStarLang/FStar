@@ -2,16 +2,90 @@ module Pulse.Syntax.Util
 
 module R = FStar.Reflection
 module T = FStar.Tactics
+module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax.Base
-open Pulse.Syntax.Naming
 open Pulse.Elaborate.Pure
 open Pulse.Readback
+open Pulse.Reflection.Util
 
 let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
   match f with
   | None -> None
   | Some x -> g x
+
+let u0 : universe = R.pack_universe R.Uv_Zero
+let u1 : universe = R.pack_universe (R.Uv_Succ u0)
+let u2 : universe = R.pack_universe (R.Uv_Succ u1)
+
+let u_zero = u0
+let u_succ (u:universe) : universe =
+  R.pack_universe (R.Uv_Succ u)
+let u_var (s:string) : universe =
+  R.pack_universe (R.Uv_Name (s, FStar.Range.range_0)) 
+let u_max (u0 u1:universe) : universe =
+  R.pack_universe (R.Uv_Max [u0; u1])
+let u_unknown : universe = R.pack_universe R.Uv_Unk
+
+let tm_bvar (bv:bv) : term =
+  Tm_FStar (R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv_with_name bv.bv_ppname bv.bv_index))))
+           bv.bv_range
+
+let tm_var (nm:nm) : term =
+  Tm_FStar (R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv_with_name nm.nm_ppname nm.nm_index))))
+           nm.nm_range
+
+let tm_fvar (l:fv) : term =
+  Tm_FStar (R.pack_ln (R.Tv_FVar (R.pack_fv l.fv_name)))
+           l.fv_range
+
+let tm_uinst (l:fv) (us:list universe) : term =
+  Tm_FStar (R.pack_ln (R.Tv_UInst (R.pack_fv l.fv_name) us))
+           l.fv_range
+
+let tm_constant (c:constant) : term =
+  Tm_FStar (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
+
+let tm_refine (b:binder) (t:term) : term =
+  Tm_FStar (R.pack_ln (R.Tv_Refine (R.pack_bv (RT.make_bv_with_name b.binder_ppname 0))
+                                   (elab_term b.binder_ty)
+                                   (elab_term t)))
+           FStar.Range.range_0
+
+let tm_let (t e1 e2:term) : term =
+  Tm_FStar (R.pack_ln (R.Tv_Let false
+                                []
+                                (R.pack_bv (RT.make_bv 0))
+                                (elab_term t)
+                                (elab_term e1)
+                                (elab_term e2)))
+           FStar.Range.range_0
+
+let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
+  Tm_FStar (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
+           FStar.Range.range_0
+
+let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
+  Tm_FStar (mk_arrow_with_name b.binder_ppname (elab_term b.binder_ty, elab_qual q)
+                                               (elab_comp c))
+           FStar.Range.range_0
+
+let tm_type (u:universe) : term =
+  Tm_FStar (R.pack_ln (R.Tv_Type u)) FStar.Range.range_0
+
+let mk_bvar (s:string) (r:Range.range) (i:index) : term =
+  tm_bvar {bv_index=i;bv_ppname=RT.seal_pp_name s;bv_range=r}
+
+let null_var (v:var) : term =
+  tm_var {nm_index=v;nm_ppname=RT.pp_name_default;nm_range=Range.range_0}
+
+let null_bvar (i:index) : term =
+  tm_bvar {bv_index=i;bv_ppname=RT.pp_name_default;bv_range=Range.range_0}
+
+let term_of_nvar (x:nvar) : term =
+  tm_var { nm_ppname=fst x; nm_index=snd x; nm_range=FStar.Range.range_0}
+let term_of_no_name_var (x:var) : term =
+  term_of_nvar (v_as_nv x)
 
 let is_var (t:term) : option nm =
   let open R in

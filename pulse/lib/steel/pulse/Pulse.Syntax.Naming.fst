@@ -5,11 +5,12 @@ module R = FStar.Reflection
 open FStar.List.Tot
 module E = Pulse.Elaborate.Pure
 open Pulse.Syntax.Base
+module U = Pulse.Syntax.Util
 
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
                             (i:index)
-  : Lemma (ensures close_term' (open_term' t (E.term_of_no_name_var x) i) x i == t)
+  : Lemma (ensures close_term' (open_term' t (U.term_of_no_name_var x) i) x i == t)
           (decreases t)
   = match t with
     | Tm_Emp
@@ -37,7 +38,7 @@ let rec close_open_inverse' (t:term)
 let close_open_inverse_comp' (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
                              (i:index)
-  : Lemma (ensures close_comp' (open_comp' c (E.term_of_no_name_var x) i) x i == c)
+  : Lemma (ensures close_comp' (open_comp' c (U.term_of_no_name_var x) i) x i == c)
   = match c with
     | C_Tot t ->
       close_open_inverse' t x i
@@ -57,7 +58,7 @@ let close_open_inverse_comp' (c:comp)
 let close_open_inverse_opt' (t:option term)
                             (x:var { ~(x `Set.mem` freevars_opt t) })
                             (i:index)
-  : Lemma (ensures close_term_opt' (open_term_opt' t (E.term_of_no_name_var x) i) x i == t)
+  : Lemma (ensures close_term_opt' (open_term_opt' t (U.term_of_no_name_var x) i) x i == t)
   = match t with
     | None -> ()
     | Some t -> close_open_inverse' t x i
@@ -66,7 +67,7 @@ let close_open_inverse_opt' (t:option term)
 let rec close_open_inverse_list' (t:list term)
                                  (x:var { ~(x `Set.mem` freevars_list t) })
                                  (i:index)
-  : Lemma (ensures close_term_list' (open_term_list' t (E.term_of_no_name_var x) i) x i == t)
+  : Lemma (ensures close_term_list' (open_term_list' t (U.term_of_no_name_var x) i) x i == t)
   = match t with
     | [] -> ()
     | hd::tl ->
@@ -77,7 +78,7 @@ let rec close_open_inverse_list' (t:list term)
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
                                 (i:index)
-  : Lemma (ensures close_st_term' (open_st_term' t (E.term_of_no_name_var x) i) x i == t)
+  : Lemma (ensures close_st_term' (open_st_term' t (U.term_of_no_name_var x) i) x i == t)
           (decreases t)
   = match t.term with
     | Tm_Return { term = t } ->

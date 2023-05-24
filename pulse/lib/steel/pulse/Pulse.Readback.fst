@@ -105,7 +105,7 @@ let rec readback_ty (t:R.term)
     then Some Tm_Inames
     else if fv_lid = emp_inames_lid
     then Some Tm_EmpInames
-    else Some (tm_fvar {fv_name=inspect_fv fv; fv_range=range_of_term t})
+    else Some (Tm_FStar t (range_of_term t))
 
   | Tv_App hd (a, q) -> 
     let aux () = 
