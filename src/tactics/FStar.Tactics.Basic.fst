@@ -1206,13 +1206,16 @@ let rewrite (h:binder) : tac unit = wrap_err "rewrite" <| (
       end
     )
 
+// FIXME: Add a coment here on why this makes sense, since it seems to remove
+// the variable from the middle of the environment, and may break dependency?
+// Or remove if broken.
 let rename_to (b : binder) (s : string) : tac binder = wrap_err "rename_to" <| (
     let! goal = cur_goal in
     let bv = b.binder_bv in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, (range_of_id bv.ppname)) }) in
     match! subst_goal bv bv' goal with
     | None -> fail "binder not found in environment"
-    | Some (bv',  goal) ->
+    | Some (bv', goal) ->
       replace_cur goal ;!
       ret {b with binder_bv=bv'}
     )

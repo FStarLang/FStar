@@ -34,13 +34,28 @@ type universes = list universe
 // This is shadowing `pattern` from Prims (for smt_pats)
 noeq
 type pattern =
-    | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> option universes -> list (pattern * bool) -> pattern
-                                                    // A fully applied constructor, each boolean marks
-                                                    // whether the argument was an explicitly-provided
-                                                    // implicit argument
-    | Pat_Var      : bv -> sealed typ -> pattern    // Pattern bound variable
-    | Pat_Dot_Term : option term -> pattern         // Dot pattern: resolved by other elements in the pattern and type
+ | Pat_Constant {
+     // A built-in constant
+     c : vconst
+   }
+ | Pat_Cons {
+     // A fully applied constructor, each boolean marks whether the
+     // argument was an explicitly-provided implicit argument
+     head    : fv;
+     univs   : option universes;
+     subpats : list (pattern * bool)
+   }
+ | Pat_Var {
+     // A pattern-bound variable. It has a sealed sort in it.
+     // This sort is ignored by the typechecker, but may be useful
+     // for metaprogram to look at heuristically.
+     v : bv;
+     sort : sealed typ;
+   }
+ | Pat_Dot_Term {
+     // Dot pattern: resolved by other elements in the pattern and type
+     t : option term;
+   }
 
 type branch = pattern * term  // | pattern -> term
 
@@ -62,7 +77,6 @@ type bv_view = {
   bv_index      : nat;
   (* Meta: *)
   bv_ppname     : ppname_t;
-  bv_sort       : sealed typ;
 }
 
 noeq
@@ -70,7 +84,6 @@ type namedv_view = {
   namedv_uniq   : nat;
   (* Meta: *)
   namedv_ppname : ppname_t;
-  namedv_sort   : sealed typ;
 }
 
 noeq
