@@ -178,13 +178,8 @@ let rec (readback_ty :
                 FStar_Pervasives_Native.Some Pulse_Syntax_Base.Tm_EmpInames
               else
                 FStar_Pervasives_Native.Some
-                  (Pulse_Elaborate_Pure.tm_fvar
-                     {
-                       Pulse_Syntax_Base.fv_name =
-                         (FStar_Reflection_Builtins.inspect_fv fv);
-                       Pulse_Syntax_Base.fv_range =
-                         (FStar_Reflection_Builtins.range_of_term t)
-                     })
+                  (Pulse_Syntax_Base.Tm_FStar
+                     (t, (FStar_Reflection_Builtins.range_of_term t)))
     | FStar_Reflection_Data.Tv_App (hd, (a, q)) ->
         let aux uu___ =
           match q with

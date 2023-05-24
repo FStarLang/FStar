@@ -576,7 +576,7 @@ let rec (rebuild_head :
                                                        (Prims.of_int (40)))
                                                     (FStar_Tactics_Effect.lift_div_tac
                                                        (fun uu___3 ->
-                                                          Pulse_Elaborate_Pure.tm_pureapp
+                                                          Pulse_Syntax_Util.tm_pureapp
                                                             head
                                                             (FStar_Pervasives_Native.Some
                                                                Pulse_Syntax_Base.Implicit)
@@ -823,7 +823,7 @@ let rec (apply_solution :
           else
             (match Pulse_Syntax_Util.is_pure_app t with
              | FStar_Pervasives_Native.Some (head, q, arg) ->
-                 Pulse_Elaborate_Pure.tm_pureapp (apply_solution sol head) q
+                 Pulse_Syntax_Util.tm_pureapp (apply_solution sol head) q
                    (apply_solution sol arg)
              | uu___3 -> t)
       | Pulse_Syntax_Base.Tm_Pure p ->

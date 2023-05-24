@@ -657,7 +657,7 @@ let (check_abs :
                                                                     FStar_Pervasives_Native.Some
                                                                     (Pulse_Syntax_Naming.open_term'
                                                                     post
-                                                                    (Pulse_Elaborate_Pure.tm_var
+                                                                    (Pulse_Syntax_Util.tm_var
                                                                     {
                                                                     Pulse_Syntax_Base.nm_index
                                                                     = x;
@@ -732,7 +732,7 @@ let (check_abs :
                                                                     FStar_Pervasives_Native.None
                                                                     })),
                                                                     (Pulse_Syntax_Base.C_Tot
-                                                                    (Pulse_Elaborate_Pure.tm_arrow
+                                                                    (Pulse_Syntax_Util.tm_arrow
                                                                     {
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
@@ -823,7 +823,7 @@ let (maybe_add_elim_pure :
                                                         {
                                                           Pulse_Syntax_Base.head
                                                             =
-                                                            (Pulse_Elaborate_Pure.tm_fvar
+                                                            (Pulse_Syntax_Util.tm_fvar
                                                                (Pulse_Syntax_Base.as_fv
                                                                   elim_pure_explicit_lid));
                                                           Pulse_Syntax_Base.arg_qual
@@ -1503,7 +1503,7 @@ let (check_if :
                                                       Pulse_Typing.extend hyp
                                                         (FStar_Pervasives.Inl
                                                            (Pulse_Typing.mk_eq2
-                                                              Pulse_Elaborate_Pure.u0
+                                                              Pulse_Syntax_Util.u0
                                                               Pulse_Typing.tm_bool
                                                               b1 eq_v)) g))
                                               (fun uu___1 ->
@@ -3116,8 +3116,8 @@ let (maybe_infer_intro_exists :
                                                                     (fun
                                                                     uu___4 ->
                                                                     fun e ->
-                                                                    Pulse_Elaborate_Pure.tm_pureapp
-                                                                    (Pulse_Elaborate_Pure.tm_fvar
+                                                                    Pulse_Syntax_Util.tm_pureapp
+                                                                    (Pulse_Syntax_Util.tm_fvar
                                                                     (Pulse_Syntax_Base.as_fv
                                                                     Pulse_Reflection_Util.hide_lid))
                                                                     FStar_Pervasives_Native.None
@@ -3554,7 +3554,7 @@ let (check_while :
                                                   (push_context "invariant"
                                                      g1)
                                                   (Pulse_Syntax_Base.Tm_ExistsSL
-                                                     (Pulse_Elaborate_Pure.u0,
+                                                     (Pulse_Syntax_Util.u0,
                                                        Pulse_Typing.tm_bool,
                                                        inv,
                                                        Pulse_Syntax_Base.should_elim_true))))
@@ -3579,7 +3579,7 @@ let (check_while :
                                                                     (Prims.op_Negation
                                                                     (Pulse_Syntax_Base.eq_univ
                                                                     u
-                                                                    Pulse_Elaborate_Pure.u0))
+                                                                    Pulse_Syntax_Util.u0))
                                                                  then
                                                                    Obj.repr
                                                                     (FStar_Tactics_Derived.fail
@@ -4719,7 +4719,7 @@ let (check_stapp :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    Pulse_Elaborate_Pure.tm_pureapp
+                                                                    Pulse_Syntax_Util.tm_pureapp
                                                                     head qual
                                                                     arg))
                                                                     (fun
@@ -5113,7 +5113,7 @@ let (check_stapp :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Elaborate_Pure.tm_pureapp
+                                                                    Pulse_Syntax_Util.tm_pureapp
                                                                     head1
                                                                     qual arg1))
                                                                     (fun
@@ -5887,8 +5887,8 @@ let (handle_framing_failure :
                                                                     {
                                                                     Pulse_Syntax_Base.head
                                                                     =
-                                                                    (Pulse_Elaborate_Pure.tm_pureapp
-                                                                    (Pulse_Elaborate_Pure.tm_fvar
+                                                                    (Pulse_Syntax_Util.tm_pureapp
+                                                                    (Pulse_Syntax_Util.tm_fvar
                                                                     (Pulse_Syntax_Base.as_fv
                                                                     (Pulse_Reflection_Util.mk_steel_wrapper_lid
                                                                     "intro_pure")))
@@ -5899,7 +5899,7 @@ let (handle_framing_failure :
                                                                     FStar_Pervasives_Native.None;
                                                                     Pulse_Syntax_Base.arg
                                                                     =
-                                                                    (Pulse_Elaborate_Pure.tm_constant
+                                                                    (Pulse_Syntax_Util.tm_constant
                                                                     FStar_Reflection_Data.C_Unit)
                                                                     }))
                                                                 }));
@@ -6444,7 +6444,7 @@ let rec (maybe_add_elims :
                                     (Pulse_Syntax_Base.Tm_STApp
                                        {
                                          Pulse_Syntax_Base.head =
-                                           (Pulse_Elaborate_Pure.tm_fvar
+                                           (Pulse_Syntax_Util.tm_fvar
                                               (Pulse_Syntax_Base.as_fv
                                                  elim_pure_explicit_lid));
                                          Pulse_Syntax_Base.arg_qual =
@@ -7226,7 +7226,7 @@ let (check_withlocal :
                                                                  if
                                                                    Pulse_Syntax_Base.eq_univ
                                                                     init_u
-                                                                    Pulse_Elaborate_Pure.u0
+                                                                    Pulse_Syntax_Util.u0
                                                                  then
                                                                    Obj.magic
                                                                     (Obj.repr
@@ -7303,7 +7303,7 @@ let (check_withlocal :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Elaborate_Pure.null_var
+                                                                    Pulse_Syntax_Util.null_var
                                                                     x))
                                                                     (fun
                                                                     uu___3 ->

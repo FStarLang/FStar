@@ -16,6 +16,6 @@ let (abs_and_app0 :
            FStar_Reflection_Data.Q_Explicit)]
 let (vprop_arrow : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
   fun t ->
-    Pulse_Elaborate_Pure.tm_arrow (Pulse_Syntax_Base.null_binder t)
+    Pulse_Syntax_Util.tm_arrow (Pulse_Syntax_Base.null_binder t)
       FStar_Pervasives_Native.None
       (Pulse_Syntax_Base.C_Tot Pulse_Syntax_Base.Tm_VProp)
