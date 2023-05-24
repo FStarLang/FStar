@@ -357,19 +357,10 @@ val lax_on : unit -> Tac bool
 Absolutely unsafe. Raises a warning. *)
 val tadmit_t : term -> Tac unit
 
-(** View a term in a fully-named representation *)
-val inspect : term -> Tac term_view
-
-(** Pack a term view on a fully-named representation back into a term.
-Note: calling this with Tv_Unsupp will raise an exception. *)
-val pack    : term_view -> Tac term
-
 (** Similar to [pack] above, but does not flatten arrows, it leaves
     then in a curried form instead *)
+    // FIXME: remove? implement?
 val pack_curried : term_view -> Tac term
-
-(** A hack, explain *)
-val binder_bv : binder -> Tac bv
 
 (** Join the first two goals, which must be irrelevant, in a single
 one by finding a maximal prefix of their environment and reverting
@@ -539,8 +530,8 @@ val log_issues (issues:list FStar.Issue.issue)
 (* TODO: make open/close return substitutions and make
 term and comp subtitutable. Typeclass? *)
 
-val open_term : binder -> term -> binding & term
-val open_comp : binder -> comp -> binding & comp
+val open_term : binder -> term -> Tac (binding & term)
+val open_comp : binder -> comp -> Tac (binding & comp)
 
-val close_term : binding -> term -> binder & term
-val close_comp : binding -> comp -> binder & comp
+val close_term : binding -> term -> simple_binder & term
+val close_comp : binding -> comp -> simple_binder & comp

@@ -79,8 +79,6 @@ type named_term_view =
   | Tv_Unknown  : named_term_view // An underscore: _
   | Tv_Unsupp : named_term_view // failed to inspect, not supported
 
-let term_view = named_term_view
-
 let binding_to_named_binder (bnd : binding) (b : binder) : named_binder =
   let bndv = inspect_binding bnd in
   {
@@ -91,8 +89,16 @@ let binding_to_named_binder (bnd : binding) (b : binder) : named_binder =
       attrs  = (inspect_binder b).attrs;
   }
 
-let inspect (t:term) : Tac named_term_view =
-  let tv = inspect_ln t in
+let named_binder_to_binding (b : named_binder) : binding =
+  let bview : binding_view = {
+      ppname = b.ppname;
+      uniq   = b.uniq;
+      sort   = b.sort;
+  }
+  in
+  pack_binding bview
+
+let open_view (tv:term_view) : Tac named_term_view =
   match tv with
   (* Nothing interesting *)
   | RD.Tv_Var v -> Tv_Var v
@@ -133,3 +139,56 @@ let inspect (t:term) : Tac named_term_view =
 
   (* FIXME *)
   | RD.Tv_Match scrutinee ret brs -> Tv_Match scrutinee ret brs
+
+let close_view (tv : named_term_view) : term_view =
+  match tv with
+  (* Nothing interesting *)
+  | Tv_Var v -> RD.Tv_Var v
+  | Tv_BVar v -> RD.Tv_BVar v
+  | Tv_FVar v -> RD.Tv_FVar v
+  | Tv_UInst v us -> RD.Tv_UInst v us
+  | Tv_App hd a -> RD.Tv_App hd a
+  | Tv_Type u -> RD.Tv_Type u
+  | Tv_Const c -> RD.Tv_Const c
+  | Tv_Uvar n ctx_uvar_and_subst -> RD.Tv_Uvar n ctx_uvar_and_subst
+  | Tv_AscribedT e t tac use_eq -> RD.Tv_AscribedT e t tac use_eq
+  | Tv_AscribedC e c tac use_eq -> RD.Tv_AscribedC e c tac use_eq
+  | Tv_Unknown -> RD.Tv_Unknown
+  | Tv_Unsupp -> RD.Tv_Unsupp
+  
+  (* Below are the nodes that actually involve a binder.
+  Open them and convert to named binders. *)
+  
+  | Tv_Abs nb body ->
+    let bnd = named_binder_to_binding nb in
+    let b, body = close_term bnd body in
+    RD.Tv_Abs b body
+  
+  | Tv_Arrow nb c ->
+    let bnd = named_binder_to_binding nb in
+    let b, c = close_comp bnd c in
+    RD.Tv_Arrow b c
+  
+  | Tv_Refine nb ref ->
+    let bnd = named_binder_to_binding nb in
+    let b, ref = close_term bnd ref in
+    RD.Tv_Refine b ref
+  
+  | Tv_Let recf attrs nb def body ->
+    let bnd = named_binder_to_binding nb in
+    let b, body = close_term bnd body in
+    RD.Tv_Let recf attrs b def body
+  
+  (* FIXME *)
+  | Tv_Match scrutinee ret brs -> RD.Tv_Match scrutinee ret brs
+
+let inspect (t:term) : Tac named_term_view =
+  let tv = inspect_ln t in
+  open_view tv
+
+let pack (tv:named_term_view) : Tot term =
+  let tv = close_view tv in
+  pack_ln tv
+
+(* Clients of this module use the named view. *)
+let term_view = named_term_view

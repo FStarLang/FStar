@@ -25,6 +25,7 @@ open FStar.Tactics.Result
 open FStar.Tactics.Util
 open FStar.Tactics.SyntaxHelpers
 open FStar.VConfig
+open FStar.Tactics.NamedView
 
 module L = FStar.List.Tot
 module V = FStar.Tactics.Visit
@@ -538,7 +539,7 @@ let rec revert_all (bs:binders) : Tac unit =
                revert_all tl
 
 let namedv_to_term (x : namedv) : Tac term =
-  pack_ln (Tv_Var x)
+  pack (Tv_Var x)
 
 let binder_sort (b : binder) : Tac typ =
   (inspect_binder b).sort
