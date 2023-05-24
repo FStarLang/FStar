@@ -1,4 +1,13 @@
 open Prims
+let (push_context : Prims.string -> Pulse_Typing.env -> Pulse_Typing.env) =
+  fun ctx ->
+    fun g ->
+      {
+        Pulse_Typing.f = (g.Pulse_Typing.f);
+        Pulse_Typing.g = (g.Pulse_Typing.g);
+        Pulse_Typing.ctxt =
+          (Pulse_RuntimeUtils.extend_context ctx g.Pulse_Typing.ctxt)
+      }
 type check_t =
   Pulse_Typing.env ->
     Pulse_Syntax_Base.st_term ->

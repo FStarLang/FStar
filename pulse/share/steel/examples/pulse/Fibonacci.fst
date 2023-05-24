@@ -8,13 +8,22 @@ open FStar.Ghost
 module U32 = FStar.UInt32
 open Pulse.Steel.Wrapper
 
+let rec fib' (n:nat) =
+  if n <= 1 then 1
+  else fib' (n - 1) + fib' (n - 2)
+
 assume
-val fib (n:nat) : nat
-  // if n <= 1 then 1
-  // else fib (n - 1) + fib (n - 2)
+val fib (n:nat) :  nat
+
+assume
+val fib_eq (n:nat)
+  : Lemma
+    (ensures fib n == fib' n)
+    [SMTPat (fib n)]
 
 
-#push-options "--print_implicits"
+//#push-options "--admit_smt_queries true"
+
 ```pulse
 fn fibo (n:nat)
   requires emp
@@ -34,9 +43,12 @@ fn fibo (n:nat)
            vj == fib vctr)
   )
   {
-     let tmp = !i;
-     i := !j;
-     j := !j + tmp;
+     let vc = !ctr;
+     let vi = !i;
+     let vj = !j;
+     i := vj;
+     j := vi + vj;
+     ctr := vc + 1;
   };
   ()
 }

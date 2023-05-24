@@ -7,13 +7,17 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
-
+module RU = Pulse.RuntimeUtils
 // val force_st (#f:_) (#g:_) (#t:_) (#pre:term)
 //              (pre_typing:tot_typing f g pre Tm_VProp)
 //              (_:(c:comp { stateful_comp c ==> comp_pre c == pre } & 
 //                  st_typing f g t c))
 //   : T.Tac (c:comp_st { comp_pre c == pre } &
 //            st_typing f g t c)
+
+
+let push_context (ctx:string) (g:env) : (g':env { g == g' })
+  = {g with ctxt = RU.extend_context ctx g.ctxt}
 
 type check_t =
   g:env ->

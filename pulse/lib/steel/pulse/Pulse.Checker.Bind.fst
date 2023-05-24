@@ -11,6 +11,7 @@ open Pulse.Checker.Common
 open Pulse.Checker.Pure
 module FV = Pulse.Typing.FV
 module LN = Pulse.Typing.LN
+module Metatheory = Pulse.Typing.Metatheory
 
 let nvar_as_binder (x:nvar) (t:term) : binder =
   {binder_ty=t;binder_ppname=fst x}
@@ -122,6 +123,7 @@ let rec mk_bind (g:env)
   | _, _ -> T.fail "bind either not implemented (e.g. ghost) or not possible"
 #pop-options
 
+
 #push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1 --query_stats"
 let check_bind
   (g:env)
@@ -138,12 +140,12 @@ let check_bind
   if C_Tot? c1
   then T.fail "Bind: c1 is not st"
   else
+    let c1_typing = Metatheory.st_typing_correctness d1 in
     let s1 = st_comp_of_comp c1 in
     let t = s1.res in
-    let (| u, t_typing |) = check_universe g t in
-    if not (eq_univ u s1.u) then T.fail "incorrect universe"
-    else (
-        let x = fresh g in
+    let s1_typing = Metatheory.comp_typing_inversion c1_typing in
+    let (| t_typing, _, x, next_pre_typing |) = Metatheory.st_comp_typing_inversion s1_typing in
+    (
         let px = b.binder_ppname, x in
         let next_pre = open_term_nv s1.post px in
         // T.print (Printf.sprintf "Bind::e1 %s \n\nx %s\n\ne2 %s\n\nnext_pre %s\n\n"
@@ -152,11 +154,6 @@ let check_bind
         //            (P.term_to_string (open_term e2 x))
         //            (P.term_to_string next_pre));
         let g' = extend x (Inl s1.res) g in
-        //would be nice to prove that this is typable as a lemma,
-        //without having to re-check it
-        let next_pre_typing : tot_typing g' next_pre Tm_VProp
-          = check_vprop_with_core g' next_pre
-        in
         let (| e2', c2, d2 |) = check g' (open_st_term_nv e2 px) next_pre next_pre_typing post_hint in
         FV.st_typing_freevars d2;
         if C_Tot? c2
@@ -167,13 +164,14 @@ let check_bind
           let d2 : st_typing g' e2' c2 = d2 in
           let d2 : st_typing g' (open_st_term e2_closed x) c2 = d2 in
           let s2 = st_comp_of_comp c2 in
-          let (| u, res_typing |) = check_universe g s2.res in
+          (* this next check is unavoidable, since we need to type the result in a smaller env g *)          
+          let (| u, res_typing |) = check_universe g s2.res in 
           if not (eq_univ u s2.u)
           then T.fail "Unexpected universe for result type"
           else if x `Set.mem` freevars s2.post
           then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
           else (
-            let y = fresh g in
+            let y = x in //fresh g in
             let s2_post_opened = open_term_nv s2.post (v_as_nv y) in
             let post_typing = check_vprop_with_core (extend y (Inl s2.res) g) s2_post_opened in
             //assume (~ (x `Set.mem` freevars_st e2_closed));
