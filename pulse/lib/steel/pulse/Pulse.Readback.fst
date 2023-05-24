@@ -155,7 +155,6 @@ let rec readback_ty (t:R.term)
     end
   
   | Tv_Refine _ _ _
-  | Tv_Abs _ _
   | Tv_Arrow _ _
   | Tv_Type _
   | Tv_Const _
@@ -164,6 +163,8 @@ let rec readback_ty (t:R.term)
   | Tv_BVar _
   | Tv_UInst _ _
   | Tv_Match _ _ _ -> Some (Tm_FStar t (range_of_term t))
+
+  | Tv_Abs _ _ -> None
 
   | Tv_Uvar _ _ -> None // TODO: FIXME: T.fail "readback_ty: unexpected Tv_Uvar"
 

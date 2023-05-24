@@ -251,10 +251,6 @@ let rec (readback_ty :
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Tm_FStar
              (t, (FStar_Reflection_Builtins.range_of_term t)))
-    | FStar_Reflection_Data.Tv_Abs (uu___, uu___1) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
     | FStar_Reflection_Data.Tv_Arrow (uu___, uu___1) ->
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Tm_FStar
@@ -288,6 +284,8 @@ let rec (readback_ty :
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Tm_FStar
              (t, (FStar_Reflection_Builtins.range_of_term t)))
+    | FStar_Reflection_Data.Tv_Abs (uu___, uu___1) ->
+        FStar_Pervasives_Native.None
     | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) ->
         FStar_Pervasives_Native.None
     | FStar_Reflection_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
