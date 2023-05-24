@@ -113,7 +113,7 @@ let status_string_and_errors s =
 
 let query_logging =
     let query_number = BU.mk_ref 0 in
-    let log_file_opt : ref (option (file_handle * string)) = BU.mk_ref None in
+    let log_file_opt : ref (option (out_channel * string)) = BU.mk_ref None in
     let used_file_names : ref (list (string * int)) = BU.mk_ref [] in
     let current_module_name : ref (option string) = BU.mk_ref None in
     let current_file_name : ref (option string) = BU.mk_ref None in
@@ -139,14 +139,14 @@ let query_logging =
     let new_log_file () =
         let file_name = next_file_name() in
         current_file_name := Some file_name;
-        let fh = BU.open_file_for_writing file_name in
-        log_file_opt := Some (fh, file_name);
-        fh, file_name
+        let c = BU.open_file_for_writing file_name in
+        log_file_opt := Some (c, file_name);
+        c, file_name
     in
     let get_log_file () =
         match !log_file_opt with
         | None -> new_log_file()
-        | Some fh -> fh
+        | Some c -> c
     in
     let append_to_log str =
         let f, nm = get_log_file () in
@@ -166,8 +166,8 @@ let query_logging =
     let close_log () =
         match !log_file_opt with
         | None -> ()
-        | Some (fh, _) ->
-          BU.close_file fh; log_file_opt := None
+        | Some (c, _) ->
+          BU.close_out_channel c; log_file_opt := None
     in
     let log_file_name () =
         match !current_file_name with

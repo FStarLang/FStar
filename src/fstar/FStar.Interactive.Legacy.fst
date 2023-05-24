@@ -110,7 +110,7 @@ type interactive_state = {
   stdin: ref (option stream_reader); // Initialized once.
   // A list of chunks read so far
   buffer: ref (list input_chunks);
-  log: ref (option file_handle);
+  log: ref (option out_channel);
 }
 
 
@@ -138,7 +138,7 @@ let rec read_chunk () =
       in
       fun line ->
         Util.append_to_file transcript line;
-        Util.flush_file transcript
+        Util.flush transcript
     else
       fun _ -> ()
   in

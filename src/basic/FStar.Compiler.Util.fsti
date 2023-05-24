@@ -52,7 +52,6 @@ val set_difference: set 'a -> set 'a -> set 'a
 val set_symmetric_difference: set 'a -> set 'a -> set 'a
 val set_eq: set 'a -> set 'a -> bool
 
-(* not relying on representation *)
 type smap 'value
 val smap_create: int -> smap 'value
 val smap_clear:smap 'value -> unit
@@ -78,7 +77,6 @@ val psmap_find_map: psmap 'value -> (string -> 'value -> option 'a) -> option 'a
 val psmap_modify: psmap 'value -> string -> (option 'value -> 'value) -> psmap 'value
 val psmap_merge: psmap 'value -> psmap 'value -> psmap 'value
 
-(* not relying on representation *)
 type imap 'value
 val imap_create: int -> imap 'value
 val imap_clear:imap 'value -> unit
@@ -136,11 +134,20 @@ val colorize_red: string -> string
 val colorize_cyan: string -> string
 
 
-(* Clients of this module should *NOT* rely on this representation *)
 type out_channel
+
 val stderr: out_channel
 val stdout: out_channel
+
+val open_file_for_writing : string -> out_channel
+val close_out_channel : out_channel -> unit
+
+val flush: out_channel -> unit
+
 val fprint: out_channel -> string -> list string -> unit
+
+(* Adds a newline and flushes *)
+val append_to_file: out_channel -> string -> unit
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -159,28 +166,20 @@ val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list string -> string
 
-(* not relying on representation *)
-type file_handle
-val open_file_for_writing: string -> file_handle
-val append_to_file: file_handle -> string -> unit
-val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val copy_file: string -> string -> unit
-val flush_file: file_handle -> unit
 val delete_file: string -> unit
 val file_get_contents: string -> string
 val file_get_lines: string -> list string
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
 val concat_dir_filename: string -> string -> string
 
-(* not relying on representation *)
 type stream_reader
 val open_stdin : unit -> stream_reader
 val read_line: stream_reader -> option string
 val nread : stream_reader -> int -> option string
 val poll_stdin : float -> bool
 
-(* not relying on representation *)
 type string_builder
 val new_string_builder: unit -> string_builder
 val clear_string_builder: string_builder -> unit
@@ -198,7 +197,6 @@ val sigint_raise: sigint_handler
 val set_sigint_handler: sigint_handler -> unit
 val with_sigint_handler: sigint_handler -> (unit -> 'a) -> 'a
 
-(* not relying on representation *)
 type proc
 val run_process : string -> string -> list string -> option string -> string
 val start_process: string -> string -> list string -> (string -> bool) -> proc
