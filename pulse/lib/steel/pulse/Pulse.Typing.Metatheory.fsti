@@ -15,7 +15,7 @@ val comp_typing_inversion (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
 let fresh_wrt (x:var) (g:env) (vars:_) = 
     None? (lookup g x) /\  ~(x `Set.mem` vars)
     
-val st_comp_typing_inversion_cofin (#g:env) (#st:_) (ct:st_comp_typing g st)
+val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
      tot_typing g st.pre Tm_VProp &
      (x:var{fresh_wrt x g (freevars st.post)} -> //this part is tricky, to get the quantification on x
