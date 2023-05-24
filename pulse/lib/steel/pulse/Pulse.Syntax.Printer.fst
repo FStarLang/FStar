@@ -99,8 +99,6 @@ let rec term_to_string (t:term)
 
     | Tm_EmpInames -> "emp_inames"
       
-    | Tm_UVar n -> sprintf "?u_%d" n
-
     | Tm_Unknown -> "_"
     
     | Tm_FStar t _ ->

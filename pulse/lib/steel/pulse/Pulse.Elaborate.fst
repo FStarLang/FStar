@@ -30,7 +30,6 @@ let rec elab_open_commute' (e:term)
               elab_term (open_term' e v n))
           (decreases e)
   = match e with
-    | Tm_UVar _
     | Tm_Emp 
     | Tm_Inames
     | Tm_EmpInames
@@ -75,15 +74,11 @@ let rec elab_close_commute' (e:term)
               elab_term (close_term' e v n)))
           (decreases e)
   = match e with
-    | Tm_UVar _
     | Tm_Emp 
     | Tm_Inames
     | Tm_EmpInames
     | Tm_VProp
     | Tm_Unknown -> ()
-    // | Tm_PureApp e1 _ e2 ->
-    //   elab_close_commute' e1 v n;
-    //   elab_close_commute' e2 v n
     | Tm_Pure p ->
       elab_close_commute' p v n
     | Tm_Star e1 e2 ->
@@ -142,7 +137,6 @@ let rec elab_ln t i =
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _
   | Tm_Unknown
   | Tm_FStar _ _ -> ()
 
@@ -166,9 +160,6 @@ let elab_ln_comp (c:comp) (i:int)
 let rec elab_freevars_eq (e:term)
   : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) =
   match e with
-  // | Tm_PureApp head _ arg ->
-  //   elab_freevars_eq head;
-  //   elab_freevars_eq arg
   | Tm_Emp -> ()
   | Tm_Pure t -> elab_freevars_eq t
   | Tm_Star l r ->
@@ -181,7 +172,6 @@ let rec elab_freevars_eq (e:term)
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _
   | Tm_Unknown
   | Tm_FStar _ _ -> ()
 

@@ -66,7 +66,6 @@ type term =
   | Tm_VProp      : term
   | Tm_Inames     : term  // type inames
   | Tm_EmpInames  : term
-  | Tm_UVar       : nat -> term
   | Tm_FStar      : host_term -> range -> term
   | Tm_Unknown    : term
 
@@ -187,10 +186,6 @@ let null_binder (t:term) : binder =
 
 let mk_binder (s:string) (t:term) : binder =
   {binder_ty=t;binder_ppname=RT.seal_pp_name s}
-
-let gen_uvar () : T.Tac (t:term{Tm_UVar? t}) =
-  admit ();  // TODO: FIXME: relying on the fact that fresh returns a nat
-  Tm_UVar (T.fresh ())
 
 val eq_univ (u1 u2:universe)
   : b:bool { b <==> (u1 == u2) }

@@ -11,12 +11,38 @@ module P = Pulse.Syntax.Printer
 module RT = FStar.Reflection.Typing
 module RUtil = Pulse.Reflection.Util
 
-let rec gen_uvars (t_head:term) : T.Tac (list nat & comp) =
+type uvar_id = nat
+
+let embedded_uvar_lid = ["__pulse_embedded_uvar__"]
+
+let is_uvar (t:term) : option uvar_id =
+  match is_fvar t with
+  | Some (l, [u]) ->
+    if l = embedded_uvar_lid
+    then begin match R.inspect_universe u with
+               | R.Uv_BVar n -> Some n
+               | _ -> None
+         end
+    else None
+  | _ -> None
+
+
+let wrap_nat_to_uvar (n:nat) : term =
+  Tm_FStar 
+    (R.pack_ln (R.Tv_UInst (R.pack_fv embedded_uvar_lid) [R.pack_universe (R.Uv_BVar n)]))
+    FStar.Range.range_0
+
+let gen_uvar () =
+  let n = T.fresh () in
+  assume (n >= 0);  // TODO: relying on the implementation of fresh in the typechecker
+  n, wrap_nat_to_uvar n
+
+let rec gen_uvars (t_head:term) : T.Tac (list uvar_id & comp) =
   let ropt = is_arrow t_head in
   match ropt with
   | Some (_, Some Implicit, c_rest) -> (
-    let Tm_UVar n = gen_uvar () in
-    let c_rest = open_comp_with c_rest (Tm_UVar n) in
+    let n, tm = gen_uvar () in
+    let c_rest = open_comp_with c_rest tm in
     match c_rest with
     | C_ST c
     | C_STAtomic _ c
@@ -30,8 +56,8 @@ let rec gen_uvars (t_head:term) : T.Tac (list nat & comp) =
    T.fail (FStar.Printf.sprintf "gen_uvars: unexpected t_head: %s"
                                   (P.term_to_string t_head))
 
-let rec check_valid_solution (n:nat) (t:term) (uv_sols:list (nat & term))
-  : T.Tac (list (nat & term)) =
+let rec check_valid_solution (n:uvar_id) (t:term) (uv_sols:list (uvar_id & term))
+  : T.Tac (list (uvar_id & term)) =
 
   match uv_sols with
   | [] -> [n, t]
@@ -41,22 +67,15 @@ let rec check_valid_solution (n:nat) (t:term) (uv_sols:list (nat & term))
          else T.fail "check_valid_solution failed"
     else (n', t')::(check_valid_solution n t tl)
 
-let is_uvar (t:term) : bool =
-  Some? (is_embedded_uvar t) || Tm_UVar? t
-
-let uvar_index (t:term{is_uvar t}) : nat =
-  match is_embedded_uvar t with
-  | Some n -> n
-  | _ ->
-    match t with
-    | Tm_UVar n -> n
+let uvar_index (t:term{Some? (is_uvar t)}) : uvar_id =
+  Some?.v (is_uvar t)
 
 let is_reveal_uvar (t:term) : option (universe & term & term) =
   match is_pure_app t with
   | Some (hd, None, arg) ->
     (match is_pure_app hd with
      | Some (hd, Some Implicit, ty) ->
-       if is_uvar arg
+       if Some? (is_uvar arg)
        then match is_fvar hd with
            | Some (l, [u]) ->
              if l = RUtil.reveal_lid
@@ -75,18 +94,18 @@ let is_reveal (t:term) : bool =
      | _ -> false)
   | _ -> false
 
-let rec match_typ (t1 t2:term) (uv_sols:list (nat & term))
-  : T.Tac (list (nat & term)) =
+let rec match_typ (t1 t2:term) (uv_sols:list (uvar_id & term))
+  : T.Tac (list (uvar_id & term)) =
 
   match is_reveal_uvar t1, is_reveal t2 with
   | Some (u, ty, t), false ->
     check_valid_solution (uvar_index t) (mk_hide u ty t2) uv_sols
   | _ ->
-    if is_uvar t1
+    if Some? (is_uvar t1)
     then check_valid_solution (uvar_index t1) t2 uv_sols
+    else if Some? (is_uvar t2)
+    then T.fail "match_typ: t2 is a uvar"
     else match t1, t2 with
-         | _, Tm_UVar _ -> T.fail "match_typ: t2 is a uvar"
-
          | Tm_Pure t1, Tm_Pure t2 ->
            match_typ t1 t2 uv_sols
     
@@ -101,7 +120,7 @@ let rec match_typ (t1 t2:term) (uv_sols:list (nat & term))
            | _, _ -> uv_sols
 
 let rec atomic_vprop_has_uvar (t:term) : bool =
-  if is_uvar t then true
+  if Some? (is_uvar t) then true
   else match t with
        | Tm_Pure arg -> atomic_vprop_has_uvar arg
        | Tm_Emp -> false
@@ -115,7 +134,7 @@ let rec atomic_vprop_has_uvar (t:term) : bool =
 let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
   if Some? (is_reveal_uvar t1) && not (is_reveal t2)
   then true
-  else if is_uvar t1 then true
+  else if Some? (is_uvar t1) then true
   else match t1, t2 with
        | Tm_Pure x, Tm_Pure y ->
          atomic_vprops_may_match x y
@@ -129,8 +148,8 @@ let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
            atomic_vprops_may_match arg1 arg2
          | _, _ -> eq_tm t1 t2
 
-let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (nat & term))
-  : T.Tac (list (nat & term)) =
+let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (uvar_id & term))
+  : T.Tac (list (uvar_id & term)) =
 
   if atomic_vprop_has_uvar t
   then
@@ -154,7 +173,7 @@ let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (nat & term))
 let union_ranges (r0 r1:range) : T.Tac range = r0
 let with_range (t:st_term') (r:range) : st_term = { term = t; range = r}
 
-let rec rebuild_head (head:term) (uvs:list nat) (uv_sols:list (nat & term)) (r:range)
+let rec rebuild_head (head:term) (uvs:list uvar_id) (uv_sols:list (uvar_id & term)) (r:range)
   : T.TacH st_term (requires fun _ -> List.Tot.length uvs > 0)
                    (ensures fun _ _ -> True) =
   let hd::tl = uvs in
@@ -174,7 +193,7 @@ let rec rebuild_head (head:term) (uvs:list nat) (uv_sols:list (nat & term)) (r:r
 
 let try_inst_uvs_in_goal (ctxt:term)
                          (goal:vprop)
-  : T.Tac (list (nat & term))
+  : T.Tac (list (uvar_id & term))
   = let uv_sols = [] in
     let goal_list = vprop_as_list goal in
     let ctxt_list = vprop_as_list ctxt in
@@ -187,10 +206,10 @@ let try_inst_uvs_in_goal (ctxt:term)
     in
     uv_sols
 
-let print_solutions (l:list (nat & term))
+let print_solutions (l:list (uvar_id & term))
   : T.Tac string
   = String.concat "\n"
-      (T.map #(nat & term) #string
+      (T.map #(uvar_id & term) #string
         (fun (u, t) ->
           Printf.sprintf "%d := %s" 
                        u
@@ -229,14 +248,14 @@ let infer
     head
   end
 
-let find_solution (sol:list (nat * term)) (t:nat)
+let find_solution (sol:list (uvar_id * term)) (t:uvar_id)
   : option term
   = let r = List.Tot.find (fun (u, _) -> u = t) sol in
     match r with
     | None -> None
     | Some (_, t) -> Some t
     
-let rec apply_solution (sol:list (nat * term)) (t:term)
+let rec apply_solution (sol:list (uvar_id * term)) (t:term)
   : term
   = match t with
     | Tm_Emp
@@ -245,9 +264,8 @@ let rec apply_solution (sol:list (nat * term)) (t:term)
     | Tm_EmpInames
     | Tm_Unknown -> t
 
-    | Tm_FStar _ _
-    | Tm_UVar _ ->
-      if is_uvar t
+    | Tm_FStar _ _ ->
+      if Some? (is_uvar t)
       then let n = uvar_index t in
             match find_solution sol n with
             | None -> t
@@ -284,7 +302,6 @@ let rec contains_uvar (t:term)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> false
-    | Tm_UVar _ -> true
       
     | Tm_Pure p ->
       (contains_uvar p)
@@ -303,7 +320,7 @@ let rec contains_uvar (t:term)
                     
     | Tm_FStar _ _ ->
       // TODO: should embedded F* terms be allowed to contain Pulse uvars?
-      Some? (is_embedded_uvar t) ||
+      Some? (is_uvar t) ||
       (match is_pure_app t with
        | Some (head, _, arg) ->
          assume (head << t /\ arg << t);

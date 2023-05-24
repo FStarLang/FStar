@@ -13,7 +13,6 @@ let rec freevars (t:term)
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> Set.empty
     // | Tm_PureApp t1 _ t2
     | Tm_Star  t1 t2
@@ -105,7 +104,6 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _
   | Tm_Unknown -> true
 
   // | Tm_PureApp t1 _ t2
@@ -231,7 +229,6 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_Emp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> t
 
     // | Tm_PureApp head q arg ->
@@ -395,7 +392,6 @@ let rec close_term' (t:term) (v:var) (i:index)
     | Tm_Emp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> t
 
     // | Tm_PureApp head q arg ->

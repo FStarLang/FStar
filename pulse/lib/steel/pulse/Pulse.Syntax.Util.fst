@@ -1,6 +1,7 @@
 module Pulse.Syntax.Util
 
 module R = FStar.Reflection
+module T = FStar.Tactics
 
 open Pulse.Syntax.Base
 open Pulse.Syntax.Naming
@@ -119,17 +120,6 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
     end
   | _ -> None
 
-let is_embedded_uvar (t:term) : option nat =
-  match is_fvar t with
-  | Some (l, [u]) ->
-    if l = embedded_uvar_lid
-    then begin match R.inspect_universe u with
-               | R.Uv_BVar n -> Some n
-               | _ -> None
-         end
-    else None
-  | _ -> None
-
 // TODO: write it better, with pattern matching on reflection syntax
 let is_eq2 (t:term) : option (term & term) =
   match is_pure_app t with
@@ -161,3 +151,10 @@ let unreveal (t:term) : option term =
         | _ -> None)
      | _ -> None)
   | _ -> None
+
+let is_arrow_tm_arrow (t:term)
+  : Lemma (requires Some? (is_arrow t))
+          (ensures (let Some (b, q, c) = is_arrow t in
+                    t == tm_arrow b q c)) =
+  admit ()
+

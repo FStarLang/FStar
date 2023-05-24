@@ -483,7 +483,7 @@ let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop 
   = match witnesses, goal_vprop with
     | [], Tm_ExistsSL u ty p _ ->  
       let next_goal_vprop, inst =
-          let t : term = gen_uvar () in
+          let t : term = snd (Pulse.Checker.Inference.gen_uvar ()) in
           open_term' p t 0, Inr t
       in
       prepare_instantiations ((goal_vprop, inst)::out) next_goal_vprop []
@@ -495,7 +495,7 @@ let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop 
       let next_goal_vprop, inst =
           match t with
           | Tm_Unknown ->
-            let t : term = gen_uvar () in
+            let t : term = snd (Pulse.Checker.Inference.gen_uvar ()) in
             open_term' p t 0, Inr t
           | _ ->
             open_term' p t 0, Inl t
@@ -739,7 +739,6 @@ let tag_of_term (t:term) =
   | Tm_Inames -> "Tm_Inames"
   | Tm_EmpInames -> "Tm_EmpInames"
   | Tm_Unknown -> "Tm_Unknown"
-  | Tm_UVar _ -> "Tm_UVar"
   | Tm_FStar _ _ -> "Tm_FStar"
 
 let maybe_log t =
@@ -831,8 +830,8 @@ let check_stapp
      let (| head, ty_head, dhead |) = check_term g head in
      match is_arrow ty_head with
      | Some ({binder_ty=formal;binder_ppname=ppname}, bqual, comp_typ) ->
-       // TODO: FIX ME
-       assume (ty_head ==
+       is_arrow_tm_arrow ty_head;
+       assert (ty_head ==
                tm_arrow ({binder_ty=formal;binder_ppname=ppname}) bqual comp_typ);
        if qual = bqual
        then

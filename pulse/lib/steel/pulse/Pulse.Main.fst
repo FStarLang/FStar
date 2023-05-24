@@ -284,7 +284,6 @@ let rec shift_bvs_in_else (t:term) (n:nat) : Tac term =
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _
   | Tm_Unknown -> t
 
 let shift_bvs_in_else_opt (t:option term) (n:nat) : Tac (option term) =

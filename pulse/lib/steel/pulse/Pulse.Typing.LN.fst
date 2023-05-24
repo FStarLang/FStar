@@ -42,7 +42,6 @@ let rec open_term_ln' (e:term)
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> ()
 
     | Tm_Pure p ->
@@ -205,7 +204,6 @@ let rec ln_weakening (e:term) (i j:int)
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> ()
     | Tm_Pure p ->
       ln_weakening p i j
@@ -351,7 +349,6 @@ let rec open_term_ln_inv' (e:term)
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown ->
       ln_weakening x (-1) (i - 1)
 
@@ -509,7 +506,6 @@ let rec close_term_ln' (e:term)
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> ()
 
     | Tm_Pure p ->

@@ -40,8 +40,6 @@ let rec eq_tm (t1 t2:term)
       eq_univ u1 u2 &&
       eq_tm t1 t2 &&
       eq_tm b1 b2
-    | Tm_UVar z1, Tm_UVar z2 ->
-      z1=z2
     | Tm_FStar t1 r, Tm_FStar t2 _ ->
       host_term_equality t1 t2;
       R.term_eq t1 t2

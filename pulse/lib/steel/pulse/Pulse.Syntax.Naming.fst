@@ -16,7 +16,6 @@ let rec close_open_inverse' (t:term)
     | Tm_VProp
     | Tm_Inames 
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> ()
     
     | Tm_Pure p ->
@@ -167,7 +166,6 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _
   | Tm_Unknown -> ()
   // | Tm_PureApp e1 _ e2 ->
   //   open_with_gt_ln e1 i t j;
@@ -212,7 +210,6 @@ let rec close_with_non_freevar (e:term) (x:var) (i:nat)
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _
   | Tm_Unknown -> ()
   // | Tm_PureApp t1 _ t2
   | Tm_Star t1 t2 ->

@@ -16,10 +16,6 @@ let elab_qual = function
   | None -> R.Q_Explicit
   | Some Implicit -> R.Q_Implicit
 
-let embedded_uvar_lid = ["__pulse_embedded_uvar__"]
-let embed_uvar (n:nat) : R.term =
-  R.pack_ln (R.Tv_UInst (R.pack_fv embedded_uvar_lid) [R.pack_universe (R.Uv_BVar n)])
-
 let rec elab_term (top:term)
   : R.term
   = let open R in
@@ -53,8 +49,6 @@ let rec elab_term (top:term)
 
     | Tm_EmpInames ->
       emp_inames_tm
-
-    | Tm_UVar n -> embed_uvar n
 
     | Tm_Unknown ->
       pack_ln R.Tv_Unknown

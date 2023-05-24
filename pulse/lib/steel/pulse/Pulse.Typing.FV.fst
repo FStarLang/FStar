@@ -27,7 +27,6 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> ()
 
     | Tm_Pure p ->
