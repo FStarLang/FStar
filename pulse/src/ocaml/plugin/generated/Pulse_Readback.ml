@@ -162,32 +162,6 @@ let rec (readback_ty :
   =
   fun t ->
     match FStar_Reflection_Builtins.inspect_ln t with
-    | FStar_Reflection_Data.Tv_Var bv ->
-        let bv_view = FStar_Reflection_Builtins.inspect_bv bv in
-        let r =
-          Pulse_Elaborate_Pure.tm_var
-            {
-              Pulse_Syntax_Base.nm_index =
-                (bv_view.FStar_Reflection_Data.bv_index);
-              Pulse_Syntax_Base.nm_ppname =
-                (bv_view.FStar_Reflection_Data.bv_ppname);
-              Pulse_Syntax_Base.nm_range =
-                (FStar_Reflection_Builtins.range_of_term t)
-            } in
-        FStar_Pervasives_Native.Some r
-    | FStar_Reflection_Data.Tv_BVar bv ->
-        let bv_view = FStar_Reflection_Builtins.inspect_bv bv in
-        let r =
-          Pulse_Elaborate_Pure.tm_bvar
-            {
-              Pulse_Syntax_Base.bv_index =
-                (bv_view.FStar_Reflection_Data.bv_index);
-              Pulse_Syntax_Base.bv_ppname =
-                (bv_view.FStar_Reflection_Data.bv_ppname);
-              Pulse_Syntax_Base.bv_range =
-                (FStar_Reflection_Builtins.range_of_term t)
-            } in
-        FStar_Pervasives_Native.Some r
     | FStar_Reflection_Data.Tv_FVar fv ->
         let fv_lid = FStar_Reflection_Builtins.inspect_fv fv in
         if fv_lid = Pulse_Reflection_Util.vprop_lid
@@ -211,15 +185,6 @@ let rec (readback_ty :
                        Pulse_Syntax_Base.fv_range =
                          (FStar_Reflection_Builtins.range_of_term t)
                      })
-    | FStar_Reflection_Data.Tv_UInst (fv, us) ->
-        let fv1 =
-          {
-            Pulse_Syntax_Base.fv_name =
-              (FStar_Reflection_Builtins.inspect_fv fv);
-            Pulse_Syntax_Base.fv_range =
-              (FStar_Reflection_Builtins.range_of_term t)
-          } in
-        FStar_Pervasives_Native.Some (Pulse_Elaborate_Pure.tm_uinst fv1 us)
     | FStar_Reflection_Data.Tv_App (hd, (a, q)) ->
         let aux uu___ =
           match q with
@@ -227,7 +192,8 @@ let rec (readback_ty :
               FStar_Pervasives_Native.None
           | uu___1 ->
               FStar_Pervasives_Native.Some
-                (Pulse_Syntax_Base.Tm_FStar (t, FStar_Range.range_0)) in
+                (Pulse_Syntax_Base.Tm_FStar
+                   (t, (FStar_Reflection_Builtins.range_of_term t))) in
         let uu___ = collect_app_refined t in
         (match uu___ with
          | (head, args) ->
@@ -286,22 +252,14 @@ let rec (readback_ty :
                            (Pulse_Syntax_Base.Tm_Pure t1))
                   else aux ()
               | uu___1 -> aux ()))
-    | FStar_Reflection_Data.Tv_Refine (bv, sort, phi) ->
-        let bv_view = FStar_Reflection_Builtins.inspect_bv bv in
-        op_let_Question (readback_ty sort)
-          (fun ty ->
-             op_let_Question (readback_ty phi)
-               (fun phi1 ->
-                  let r =
-                    Pulse_Elaborate_Pure.tm_refine
-                      {
-                        Pulse_Syntax_Base.binder_ty = ty;
-                        Pulse_Syntax_Base.binder_ppname =
-                          (bv_view.FStar_Reflection_Data.bv_ppname)
-                      } phi1 in
-                  FStar_Pervasives_Native.Some r))
+    | FStar_Reflection_Data.Tv_Refine (uu___, uu___1, uu___2) ->
+        FStar_Pervasives_Native.Some
+          (Pulse_Syntax_Base.Tm_FStar
+             (t, (FStar_Reflection_Builtins.range_of_term t)))
     | FStar_Reflection_Data.Tv_Abs (uu___, uu___1) ->
-        FStar_Pervasives_Native.None
+        FStar_Pervasives_Native.Some
+          (Pulse_Syntax_Base.Tm_FStar
+             (t, (FStar_Reflection_Builtins.range_of_term t)))
     | FStar_Reflection_Data.Tv_Arrow (uu___, uu___1) ->
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Tm_FStar
@@ -314,10 +272,20 @@ let rec (readback_ty :
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Tm_FStar
              (t, (FStar_Reflection_Builtins.range_of_term t)))
-    | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) ->
-        FStar_Pervasives_Native.None
     | FStar_Reflection_Data.Tv_Let
         (uu___, uu___1, uu___2, uu___3, uu___4, uu___5) ->
+        FStar_Pervasives_Native.Some
+          (Pulse_Syntax_Base.Tm_FStar
+             (t, (FStar_Reflection_Builtins.range_of_term t)))
+    | FStar_Reflection_Data.Tv_Var uu___ ->
+        FStar_Pervasives_Native.Some
+          (Pulse_Syntax_Base.Tm_FStar
+             (t, (FStar_Reflection_Builtins.range_of_term t)))
+    | FStar_Reflection_Data.Tv_BVar uu___ ->
+        FStar_Pervasives_Native.Some
+          (Pulse_Syntax_Base.Tm_FStar
+             (t, (FStar_Reflection_Builtins.range_of_term t)))
+    | FStar_Reflection_Data.Tv_UInst (uu___, uu___1) ->
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Tm_FStar
              (t, (FStar_Reflection_Builtins.range_of_term t)))
@@ -325,6 +293,8 @@ let rec (readback_ty :
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Tm_FStar
              (t, (FStar_Reflection_Builtins.range_of_term t)))
+    | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) ->
+        FStar_Pervasives_Native.None
     | FStar_Reflection_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Tm_FStar
