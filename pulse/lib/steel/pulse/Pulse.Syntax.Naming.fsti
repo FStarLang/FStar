@@ -3,51 +3,38 @@ module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection
 open FStar.List.Tot
-module T = FStar.Tactics
 module E = Pulse.Elaborate.Pure
-open Pulse.Syntax
-
+open Pulse.Syntax.Base
+module U = Pulse.Syntax.Pure
 
 let rec freevars (t:term) 
   : Set.set var
   = match t with
-    | Tm_BVar _
-    | Tm_FVar  _
-    | Tm_UInst _ _
-    | Tm_Constant _
     | Tm_Emp
-    | Tm_Type _
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> Set.empty
-    | Tm_Var nm -> Set.singleton nm.nm_index
-    | Tm_Refine b body ->
-      Set.union (freevars b.binder_ty) (freevars body)
-    | Tm_PureApp t1 _ t2
     | Tm_Star  t1 t2
     | Tm_ExistsSL _ t1 t2 _
     | Tm_ForallSL _ t1 t2 ->
       Set.union (freevars t1) (freevars t2)
-    | Tm_Let t e1 e2 ->
-      Set.union (Set.union (freevars t) (freevars e1)) (freevars e2)
     | Tm_Pure p -> freevars p
-    | Tm_FStar t -> RT.freevars t
-    | Tm_Arrow b _ body -> Set.union (freevars b.binder_ty) (freevars_comp body)
-  
-and freevars_comp (c:comp) : Set.set var =
+    | Tm_FStar t _ -> RT.freevars t
+
+let freevars_st_comp (s:st_comp) : Set.set var =
+  freevars s.res `Set.union`
+  freevars s.pre `Set.union`
+  freevars s.post
+
+
+let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
   match c with
   | C_Tot t -> freevars t
   | C_ST s -> freevars_st_comp s
   | C_STAtomic inames s
   | C_STGhost inames s ->
     freevars inames `Set.union` freevars_st_comp s
-
-and freevars_st_comp (s:st_comp) : Set.set var =
-  freevars s.res `Set.union`
-  freevars s.pre `Set.union`
-  freevars s.post
 
 let freevars_opt (t:option term) : Set.set var =
   match t with
@@ -113,33 +100,15 @@ let rec freevars_st (t:st_term)
 
 let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   match t with
-  | Tm_BVar {bv_index=j} -> j <= i
-  | Tm_Var _
-  | Tm_FVar _
-  | Tm_UInst _ _
-  | Tm_Constant _  
   | Tm_Emp
-  | Tm_Type _
   | Tm_VProp
   | Tm_Inames
   | Tm_EmpInames
-  | Tm_UVar _
   | Tm_Unknown -> true
 
-  | Tm_Refine b phi ->
-    ln' b.binder_ty i &&
-    ln' phi (i + 1)
-
-  | Tm_PureApp t1 _ t2
   | Tm_Star t1 t2 ->
     ln' t1 i &&
     ln' t2 i
-
-
-  | Tm_Let t e1 e2 ->
-    ln' t i &&
-    ln' e1 i &&
-    ln' e2 (i + 1)
 
   | Tm_Pure p ->
     ln' p i
@@ -149,15 +118,17 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
     ln' t i &&
     ln' body (i + 1)
     
-  | Tm_Arrow b _ c ->
-    ln' b.binder_ty i &&
-    ln_c' c (i + 1)
-    
-  | Tm_FStar t ->
+  | Tm_FStar t _ ->
     RT.ln' t i
 
-and ln_c' (c:comp) (i:int)
-  : Tot bool (decreases c)
+let ln_st_comp (s:st_comp) (i:int) : bool =
+  ln' s.res i &&
+  ln' s.pre i &&
+  ln' s.post (i + 1) (* post has 1 impliict abstraction *)
+
+
+let ln_c' (c:comp) (i:int)
+  : bool
   = match c with
     | C_Tot t -> ln' t i
     | C_ST s -> ln_st_comp s i
@@ -165,11 +136,6 @@ and ln_c' (c:comp) (i:int)
     | C_STGhost inames s ->
       ln' inames i &&
       ln_st_comp s i
-
-and ln_st_comp (s:st_comp) (i:int) : Tot bool (decreases s) =
-  ln' s.res i &&
-  ln' s.pre i &&
-  ln' s.post (i + 1) (* post has 1 impliict abstraction *)
 
 let ln_opt' (t:option term) (i:int) : bool =
   match t with
@@ -258,37 +224,12 @@ let open_or_close_host_term (t:host_term) (v:term) (i:index)
 let rec open_term' (t:term) (v:term) (i:index)
   : Tot term (decreases t)
   = match t with
-    | Tm_BVar bv ->
-      if i = bv.bv_index
-      then v
-      else t
-    | Tm_Var _
-    | Tm_FVar _
-    | Tm_UInst _ _
-    | Tm_Constant _
-    | Tm_Type _
     | Tm_VProp
     | Tm_Emp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> t
-
-    | Tm_Refine b phi ->
-      Tm_Refine {b with binder_ty=open_term' b.binder_ty v i}
-                (open_term' phi v (i + 1))
-
-
-    | Tm_PureApp head q arg ->
-      Tm_PureApp (open_term' head v i) q
-                 (open_term' arg v i)
                  
-    | Tm_Let t e1 e2 ->
-      Tm_Let (open_term' t v i)
-             (open_term' e1 v i)
-             (open_term' e2 v (i + 1))
-             
-
     | Tm_Pure p ->
       Tm_Pure (open_term' p v i)
       
@@ -305,16 +246,20 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_ForallSL u (open_term' t v i)
                     (open_term' body v (i + 1))
     
-    | Tm_Arrow b q c ->
-      Tm_Arrow {b with binder_ty=open_term' b.binder_ty v i} q
-               (open_comp' c v (i + 1))
-  
-    | Tm_FStar t ->
+    | Tm_FStar t r ->
       open_or_close_host_term t v i;
-      Tm_FStar (RT.open_or_close_term' t (RT.OpenWith (E.elab_term v)) i)
+      Tm_FStar (RT.open_or_close_term' t (RT.OpenWith (E.elab_term v)) i) r
 
-and open_comp' (c:comp) (v:term) (i:index)
-  : Tot comp (decreases c)
+let open_st_comp' (s:st_comp) (v:term) (i:index)
+  : st_comp =
+
+  { s with res = open_term' s.res v i;
+           pre = open_term' s.pre v i;
+           post = open_term' s.post v (i + 1) }
+
+
+let open_comp' (c:comp) (v:term) (i:index)
+  : comp
   = match c with
     | C_Tot t ->
       C_Tot (open_term' t v i)
@@ -328,13 +273,6 @@ and open_comp' (c:comp) (v:term) (i:index)
     | C_STGhost inames s ->
       C_STGhost (open_term' inames v i)
                 (open_st_comp' s v i)
-
-and open_st_comp' (s:st_comp) (v:term) (i:index)
-  : Tot st_comp (decreases s) =
-
-  { s with res = open_term' s.res v i;
-           pre = open_term' s.pre v i;
-           post = open_term' s.post v (i + 1) }
 
 let open_term_opt' (t:option term) (v:term) (i:index)
   : Tot (option term)
@@ -427,14 +365,14 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
     { t with term = t' }
 
 let open_term_nv t nv =
-    open_term' t (term_of_nvar nv) 0
+    open_term' t (U.term_of_nvar nv) 0
 
 // Can use this no-name version in specs only
 let open_term t v : GTot term =
     open_term_nv t (v_as_nv v)
 
 let open_st_term_nv t nv =
-    open_st_term' t (term_of_nvar nv) 0
+    open_st_term' t (U.term_of_nvar nv) 0
 
 // Can use this no-name version in specs only
 let open_st_term t v : GTot st_term =
@@ -445,35 +383,11 @@ let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 let rec close_term' (t:term) (v:var) (i:index)
   : Tot term (decreases t)
   = match t with
-    | Tm_Var nm ->
-      if nm.nm_index = v
-      then Tm_BVar {bv_index=i;bv_ppname=nm.nm_ppname;bv_range=nm.nm_range}
-      else t
-    
-    | Tm_BVar _
-    | Tm_FVar _
-    | Tm_UInst _ _
-    | Tm_Constant _
-    | Tm_Type _
     | Tm_VProp
     | Tm_Emp
     | Tm_Inames
     | Tm_EmpInames
-    | Tm_UVar _
     | Tm_Unknown -> t
-
-    | Tm_Refine b phi ->
-      Tm_Refine {b with binder_ty=close_term' b.binder_ty v i}
-                (close_term' phi v (i + 1))
-
-    | Tm_PureApp head q arg ->
-      Tm_PureApp (close_term' head v i) q
-                 (close_term' arg v i)
-                 
-    | Tm_Let t e1 e2 ->
-      Tm_Let (close_term' t v i)
-             (close_term' e1 v i)
-             (close_term' e2 v (i + 1))
 
     | Tm_Pure p ->
       Tm_Pure (close_term' p v i)
@@ -491,15 +405,18 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_ForallSL u (close_term' t v i)
                     (close_term' body v (i + 1))
     
-    | Tm_Arrow b q c ->
-      Tm_Arrow {b with binder_ty=close_term' b.binder_ty v i} q
-               (close_comp' c v (i + 1))
+    | Tm_FStar t r ->
+      Tm_FStar (RT.open_or_close_term' t (RT.CloseVar v) i) r
 
-    | Tm_FStar t ->
-      Tm_FStar (RT.open_or_close_term' t (RT.CloseVar v) i)
+let close_st_comp' (s:st_comp) (v:var) (i:index)
+  : st_comp =
 
-and close_comp' (c:comp) (v:var) (i:index)
-  : Tot comp (decreases c)
+  { s with res = close_term' s.res v i;
+           pre = close_term' s.pre v i;
+           post = close_term' s.post v (i + 1) }
+
+let close_comp' (c:comp) (v:var) (i:index)
+  : comp
   = match c with
     | C_Tot t ->
       C_Tot (close_term' t v i)
@@ -514,12 +431,6 @@ and close_comp' (c:comp) (v:var) (i:index)
       C_STGhost (close_term' inames v i)
                 (close_st_comp' s v i)
 
-and close_st_comp' (s:st_comp) (v:var) (i:index)
-  : Tot st_comp (decreases s) =
-
-  { s with res = close_term' s.res v i;
-           pre = close_term' s.pre v i;
-           post = close_term' s.post v (i + 1) }
 
 let close_term_opt' (t:option term) (v:var) (i:index)
   : Tot (option term)
@@ -618,27 +529,27 @@ let close_comp t v = close_comp' t v 0
 val close_open_inverse' (t:term) 
                         (x:var { ~(x `Set.mem` freevars t) } )
                         (i:index)
-  : Lemma (ensures close_term' (open_term' t (term_of_no_name_var x) i) x i == t)
+  : Lemma (ensures close_term' (open_term' t (U.term_of_no_name_var x) i) x i == t)
 
 val close_open_inverse_comp' (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
                              (i:index)
-  : Lemma (ensures close_comp' (open_comp' c (term_of_no_name_var x) i) x i == c)
+  : Lemma (ensures close_comp' (open_comp' c (U.term_of_no_name_var x) i) x i == c)
 
 val close_open_inverse_opt' (t:option term)
                             (x:var { ~(x `Set.mem` freevars_opt t) })
                             (i:index)
-  : Lemma (ensures close_term_opt' (open_term_opt' t (term_of_no_name_var x) i) x i == t)
+  : Lemma (ensures close_term_opt' (open_term_opt' t (U.term_of_no_name_var x) i) x i == t)
 
 val close_open_inverse_list' (t:list term)
                              (x:var { ~(x `Set.mem` freevars_list t) })
                              (i:index)
-  : Lemma (ensures close_term_list' (open_term_list' t (term_of_no_name_var x) i) x i == t)
+  : Lemma (ensures close_term_list' (open_term_list' t (U.term_of_no_name_var x) i) x i == t)
 
 val close_open_inverse_st' (t:st_term) 
                            (x:var { ~(x `Set.mem` freevars_st t) } )
                            (i:index)
-  : Lemma (ensures close_st_term' (open_st_term' t (term_of_no_name_var x) i) x i == t)
+  : Lemma (ensures close_st_term' (open_st_term' t (U.term_of_no_name_var x) i) x i == t)
 
 val close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
@@ -653,25 +564,25 @@ val open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
       (requires ln' e i /\ i < j)
       (ensures open_term' e t j == e)
 
-val open_with_gt_ln_comp (c:comp) (i:int) (t:term) (j:nat)
-  : Lemma (requires ln_c' c i /\ i < j)
-          (ensures open_comp' c t j == c)
-
 val open_with_gt_ln_st (s:st_comp) (i:int) (t:term) (j:nat)
   : Lemma (requires ln_st_comp s i /\ i < j)
           (ensures open_st_comp' s t j == s)
+
+val open_with_gt_ln_comp (c:comp) (i:int) (t:term) (j:nat)
+  : Lemma (requires ln_c' c i /\ i < j)
+          (ensures open_comp' c t j == c)
 
 val close_with_non_freevar (e:term) (x:var) (i:nat)
   : Lemma
       (requires ~ (x `Set.mem` freevars e))
       (ensures close_term' e x i == e)
 
-val close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
-  : Lemma
-    (requires ~ (x `Set.mem` freevars_comp c))
-    (ensures close_comp' c x i == c)
-
 val close_with_non_freevar_st (s:st_comp) (x:var) (i:nat)
   : Lemma
     (requires ~ (x `Set.mem` freevars_st_comp s))
     (ensures close_st_comp' s x i == s)
+
+val close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
+  : Lemma
+    (requires ~ (x `Set.mem` freevars_comp c))
+    (ensures close_comp' c x i == c)

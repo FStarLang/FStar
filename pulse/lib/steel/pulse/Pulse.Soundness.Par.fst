@@ -1,10 +1,8 @@
 module Pulse.Soundness.Par
 
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
 open Pulse.Typing
-open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -28,7 +26,7 @@ let par_soundness
 
   let T_Par _ eL cL eR cR x cL_typing cR_typing eL_typing eR_typing = d in
 
-  let ru = elab_universe (comp_u cL) in
+  let ru = comp_u cL in
   let raL = elab_term (comp_res cL) in
   let raR = elab_term (comp_res cR) in
   let rpreL = elab_term (comp_pre cL) in

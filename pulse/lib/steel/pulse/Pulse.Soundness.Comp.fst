@@ -1,10 +1,8 @@
 module Pulse.Soundness.Comp
 
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
 open Pulse.Typing
-open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -18,7 +16,7 @@ let stc_soundness
   
   : GTot (RT.tot_typing (elab_env g)
                         (elab_term st.res)
-                        (RT.tm_type (elab_universe st.u)) &
+                        (RT.tm_type st.u) &
           RT.tot_typing (elab_env g)
                         (elab_term st.pre)
                         vprop_tm &
@@ -50,7 +48,7 @@ let comp_typing_soundness (g:stt_env)
                           (d:comp_typing g c uc)
   : GTot (RT.tot_typing (elab_env g)
                         (elab_comp c)
-                        (RT.tm_type (elab_universe uc)))
+                        (RT.tm_type uc))
          (decreases d)
   = match d with
     | CT_Tot _ t _ dt ->

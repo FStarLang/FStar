@@ -4,10 +4,8 @@ module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
 open Pulse.Typing
-open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -27,7 +25,7 @@ let intro_exists_erased_soundness
                         (elab_comp c)) =
   let t0 = t in
   let T_IntroExistsErased _ u t p e t_typing p_typing e_typing = d in
-  let ru = elab_universe u in
+  let ru = u in
   let rt = elab_term t in
   let rp = elab_term p in
   let re = elab_term e in
@@ -70,7 +68,7 @@ let intro_exists_soundness
 
   let t0 = t in
   let T_IntroExists _ u t p e t_typing p_typing e_typing = d in
-  let ru = elab_universe u in
+  let ru = u in
   let rt = elab_term t in
   let rp = elab_term p in
   let re = elab_term e in
@@ -111,7 +109,7 @@ let elim_exists_soundness
                         (elab_comp c)) =
 
   let T_ElimExists _ u t p x t_typing p_typing = d in
-  let ru = elab_universe u in
+  let ru = u in
   let rt = elab_term t in
   let rp = elab_term p in
   let rt_typing = tot_typing_soundness t_typing in
@@ -127,7 +125,7 @@ let elim_exists_soundness
   assert (~ (Set.mem x (freevars t)));
   assert (~ (Set.mem x (freevars p)));
 
-  let x_tm = Tm_Var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
+  let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
   let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x))) in
 
   let rreveal_x = Pulse.Reflection.Util.mk_reveal ru rt rx_tm in

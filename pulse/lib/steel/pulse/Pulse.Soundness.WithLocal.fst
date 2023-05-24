@@ -1,10 +1,8 @@
 module Pulse.Soundness.WithLocal
 
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
 open Pulse.Typing
-open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -22,7 +20,7 @@ let withlocal_soundness #g #t #c d soundness =
   let CT_ST _ st st_typing = c_typing in
   
   let rg =  elab_env g in
-  let ru = elab_universe (comp_u c) in
+  let ru = comp_u c in
   let ra = elab_term init_t in
   let rinit = elab_term init in
   let rpre = elab_term (comp_pre c) in
@@ -54,13 +52,13 @@ let withlocal_soundness #g #t #c d soundness =
                     elab_body_comp =
     soundness _ _ _ body_typing in
 
-  let ref_init_t_typing : typing g (mk_ref init_t) (Tm_Type U_zero) =
+  let ref_init_t_typing : typing g (mk_ref init_t) (tm_type u0) =
     magic () in
 
   let rref_init_t_typing
     : RT.tot_typing ( elab_env g)
                     (elab_term (mk_ref init_t))
-                    (elab_comp (C_Tot (Tm_Type U_zero))) = magic () in
+                    (elab_comp (C_Tot (tm_type u0))) = magic () in
 
   RT.close_term_spec (elab_st_typing body_typing) x;
   assert (RT.open_or_close_term' (elab_st_typing body_typing) (RT.CloseVar x) 0 ==
@@ -108,7 +106,7 @@ let withlocal_soundness #g #t #c d soundness =
       (mk_star
          (elab_term (comp_post c))
          (elab_term
-            (Tm_ExistsSL U_zero init_t
+            (Tm_ExistsSL u0 init_t
                (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false))) in
 
   assert (c1 == mk_stt_comp ru rret_t c1_pre c1_post);
@@ -193,7 +191,7 @@ let withlocal_soundness #g #t #c d soundness =
     : RT.equiv g_z
         (RT.open_or_close_term'
            (RT.open_or_close_term'
-              (elab_term (Tm_ExistsSL U_zero init_t
+              (elab_term (Tm_ExistsSL u0 init_t
                            (mk_pts_to init_t (null_bvar 2) (null_bvar 0))
                            should_elim_false))
               (RT.open_with_var y) 1)
@@ -230,7 +228,7 @@ let withlocal_soundness #g #t #c d soundness =
                 (elab_term (comp_post c))
                 (RT.open_with_var y) 1)
              (RT.open_or_close_term'
-                (elab_term (Tm_ExistsSL U_zero init_t
+                (elab_term (Tm_ExistsSL u0 init_t
                               (mk_pts_to init_t (null_bvar 2) (null_bvar 0)) should_elim_false))
                 (RT.open_with_var y) 1)))
         (mk_abs (RT.open_or_close_term' rret_t (RT.open_with_var y) 0) R.Q_Explicit

@@ -9,7 +9,6 @@ open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Elaborate.Pure
 open Pulse.Typing
-open Pulse.Elaborate.Core
 
 val elab_open_commute' (e:term)
                        (v:term)
@@ -36,6 +35,9 @@ val elab_comp_open_commute (c:comp) (x:term)
 val elab_ln (t:term) (i:int)
   : Lemma (requires ln' t i)
           (ensures RT.ln' (elab_term t) i)
+
+val elab_ln_comp (c:comp) (i:int)
+  : Lemma (requires ln_c' c i) (ensures RT.ln' (elab_comp c) i)
 
 val elab_freevars (e:term)
   : Lemma (freevars e == RT.freevars (elab_term e))

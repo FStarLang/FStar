@@ -5,9 +5,7 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
-open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
@@ -37,14 +35,14 @@ let tabs_t (d:'a) =
     #ty:term ->
     q:option qualifier ->
     ppname:ppname ->
-    t_typing:tot_typing g ty (Tm_Type u) { t_typing << d } ->
+    t_typing:tot_typing g ty (tm_type u) { t_typing << d } ->
     #body:st_term ->
     #x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
     #c:comp ->
     body_typing:st_typing (extend x (Inl ty) g) (open_st_term body x) c { body_typing << d } ->
     GTot (RT.tot_typing (elab_env g)
             (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-            (elab_term (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
+            (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
 
 let lift_soundness
   (g:stt_env)
@@ -92,7 +90,7 @@ let stapp_soundness
   let r_arg = elab_term arg in
   let r_head_typing
     : RT.tot_typing _ r_head
-        (elab_term (Tm_Arrow {binder_ty=formal;binder_ppname=RT.pp_name_default} q res))
+        (elab_term (tm_arrow {binder_ty=formal;binder_ppname=RT.pp_name_default} q res))
     = tot_typing_soundness head_typing
   in
   let r_arg_typing = tot_typing_soundness arg_typing in
@@ -138,7 +136,7 @@ let bind_soundness
       = soundness _ _ _ e1_typing
     in
     let r2_typing
-      : RT.tot_typing _ _ (elab_term (Tm_Arrow (null_binder (comp_res c1)) None (close_comp c2 x)))
+      : RT.tot_typing _ _ (elab_term (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x)))
       = mk_t_abs None _ t_typing e2_typing
     in
     match bc with
@@ -174,7 +172,7 @@ let if_soundness
                   d':comp_typing g c uc{d' << d} ->
               GTot (RT.tot_typing (elab_env g)
                               (elab_comp c)
-                              (RT.tm_type (elab_universe uc)))))
+                              (RT.tm_type uc))))
   : GTot (RT.tot_typing (elab_env g)
                         (elab_st_typing d)
                         (elab_comp c)) =
@@ -184,7 +182,7 @@ let if_soundness
                                 (elab_term b)
                                 RT.bool_ty =
     tot_typing_soundness b_typing in
-  let g_then = extend hyp (Inl (mk_eq2 U_zero tm_bool b tm_true)) g in
+  let g_then = extend hyp (Inl (mk_eq2 u0 tm_bool b tm_true)) g in
   let re1_typing
 
     : RT.tot_typing (RT.extend_env (elab_env g)
@@ -196,7 +194,7 @@ let if_soundness
                 (elab_st_typing e1_typing)
                 (elab_comp c) =
     soundness g_then e1 c e1_typing in
-  let g_else = extend hyp (Inl (mk_eq2 U_zero tm_bool b tm_false)) g in
+  let g_else = extend hyp (Inl (mk_eq2 u0 tm_bool b tm_false)) g in
   let re2_typing
     : RT.tot_typing (RT.extend_env (elab_env g)
                                hyp
@@ -227,14 +225,14 @@ let rec soundness (g:stt_env)
                  (#ty:term)
                  (q:option qualifier)
                  (ppname:ppname)
-                 (t_typing:tot_typing g ty (Tm_Type u) { t_typing << d })
+                 (t_typing:tot_typing g ty (tm_type u) { t_typing << d })
                  (#body:st_term)
                  (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) })
                  (#c:comp)
                  (body_typing:st_typing (extend x (Inl ty) g) (open_st_term body x) c { body_typing << d })
       : GTot (RT.tot_typing (elab_env g)
                 (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-                (elab_term (Tm_Arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
+                (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
       = let E t_typing = t_typing in
         let r_t_typing = tot_typing_soundness (E t_typing) in
         let r_body_typing = soundness _ _ _ body_typing in

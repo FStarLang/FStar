@@ -1,11 +1,5 @@
 module Pulse.Checker.Common
 
-open Pulse.Syntax
-open Pulse.Elaborate.Pure
-open Pulse.Typing
-open Pulse.Checker.Pure
-open Pulse.Checker.Framing
-
 // let force_st #f #g #t #pre pre_typing x =
 //   let (| c, d_c |) = x in
 //   match c with
