@@ -30,7 +30,7 @@ module L = FStar.List.Tot
 module V = FStar.Tactics.Visit
 
 let name_of_bv (bv : bv) : Tac string =
-    unseal ((inspect_bv bv).bv_ppname)
+    unseal ((inspect_bv bv).ppname)
 
 let bv_to_string (bv : bv) : Tac string =
     (* Could also print type...? *)
@@ -45,7 +45,7 @@ let binder_to_string (b : binder) : Tac string =
     bv_to_string (binder_bv b) //TODO: print aqual, attributes
 
 let type_of_var (x : namedv) : Tac typ =
-  unseal ((inspect_namedv x).namedv_sort)
+  unseal ((inspect_namedv x).sort)
 
 exception Goal_not_trivial
 
@@ -541,7 +541,7 @@ let namedv_to_term (x : namedv) : Tac term =
   pack_ln (Tv_Var x)
 
 let binder_sort (b : binder) : Tac typ =
-  (inspect_binder b).binder_sort
+  (inspect_binder b).sort
 
 // Cannot define this inside `assumption` due to #1091
 private
@@ -936,19 +936,26 @@ let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
     let t' = mk_abs args' t in
     pack (Tv_Abs a t')
 
+let binder_from_namedv (nm : namedv) : binder =
+  let nmv = inspect_namedv nm in
+  pack_binder {
+    ppname = nmv.ppname;
+    qual   = Q_Explicit;
+    attrs  = [];
+  }
+
 (** [string_to_term_with_lb [(id1, t1); ...; (idn, tn)] e s] parses
 [s] as a term in environment [e] augmented with bindings
 [id1, t1], ..., [idn, tn]. *)
 let string_to_term_with_lb
   (letbindings: list (string * term))
   (e: env) (t: string): Tac term
-  = let unk = pack_ln Tv_Unknown in
-    let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->
+  = let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->
         let e, bv = push_bv_dsenv e i in
         e, (v,bv)::lb_bvs
       ) (e, []) letbindings in
     let t = string_to_term e t in
-    fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv unk i t)) t lb_bvs
+    fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv i t)) t lb_bvs
 
 private
 val lem_trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->

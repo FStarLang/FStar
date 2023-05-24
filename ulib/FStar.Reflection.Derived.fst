@@ -32,22 +32,22 @@ let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv
  *)
 let mk_binder (nm : string) (sort : typ) : binder =
   pack_binder {
-    binder_ppname = seal nm;
-    binder_qual   = Q_Explicit;
-    binder_attrs  = [];
-    binder_sort   = sort;
+    ppname = seal nm;
+    qual   = Q_Explicit;
+    attrs  = [];
+    sort   = sort;
   }
 
 let mk_implicit_binder (nm : string) (sort : typ) : binder =
   pack_binder {
-    binder_ppname = seal nm;
-    binder_qual   = Q_Implicit;
-    binder_attrs  = [];
-    binder_sort   = sort;
+    ppname = seal nm;
+    qual   = Q_Implicit;
+    attrs  = [];
+    sort   = sort;
   }
 
 let type_of_binder (b : binder) : typ =
-    (inspect_binder b).binder_sort
+    (inspect_binder b).sort
 
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
@@ -171,9 +171,9 @@ let mkpair (t1 t2 : term) : term =
 let rec head (t : term) : term =
     match inspect_ln t with
     | Tv_Match t _ _
-    | Tv_Let _ _ _ _ t _
+    | Tv_Let _ _ _ t _
     | Tv_Abs _ t
-    | Tv_Refine _ _ t
+    | Tv_Refine _ t
     | Tv_App t _
     | Tv_AscribedT t _ _ _
     | Tv_AscribedC t _ _ _ -> head t
@@ -211,7 +211,7 @@ let is_uvar (t : term) : bool =
 
 let binder_set_qual (q:aqualv) (b:binder) : Tot binder =
   let bview = inspect_binder b in
-  pack_binder {bview with binder_qual=q}
+  pack_binder { bview with qual=q }
 
 (** Set a vconfig for a sigelt *)
 val add_check_with : vconfig -> sigelt -> Tot sigelt

@@ -26,11 +26,11 @@ open FStar.Reflection.Data
 ///// Cannot open FStar.Tactics.Derived here /////
 private let bv_to_string (bv : bv) : Tac string =
     let bvv = inspect_bv bv in
-    unseal bvv.bv_ppname
+    unseal bvv.ppname
 
 private let namedv_to_string (namedv : namedv) : Tac string =
     let namedvv = inspect_namedv namedv in
-    unseal namedvv.namedv_ppname
+    unseal namedvv.ppname
 
 private let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
   match inspect t with
@@ -70,15 +70,15 @@ noeq type formula =
   | F_Unknown : formula // Also a baked-in "None"
 
 let mk_Forall (typ : term) (pred : term) : Tac formula =
-    let b = pack_bv ({ bv_ppname = as_ppname "x";
-                       bv_sort = seal typ;
-                       bv_index = 0; }) in
+    let b = pack_bv ({ ppname = as_ppname "x";
+                       sort = seal typ;
+                       index = 0; }) in
     Forall b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let mk_Exists (typ : term) (pred : term) : Tac formula =
-    let b = pack_bv ({ bv_ppname = as_ppname "x";
-                       bv_sort = seal typ;
-                       bv_index = 0; }) in
+    let b = pack_bv ({ ppname = as_ppname "x";
+                       sort = seal typ;
+                       index = 0; }) in
     Exists b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let term_as_formula' (t:term) : Tac formula =
@@ -138,7 +138,7 @@ let term_as_formula' (t:term) : Tac formula =
         IntLit i
 
     (* Not formulas. *)
-    | Tv_Let _ _ _ _ _ _
+    | Tv_Let _ _ _ _ _
     | Tv_Match _ _ _
     | Tv_Type _
     | Tv_Abs _ _
@@ -146,7 +146,7 @@ let term_as_formula' (t:term) : Tac formula =
     | Tv_Uvar _ _
     | Tv_Unknown
     | Tv_Unsupp
-    | Tv_Refine _ _ _ -> F_Unknown
+    | Tv_Refine _ _ -> F_Unknown
 
     (* Other constants? *)
     | Tv_Const _ -> F_Unknown

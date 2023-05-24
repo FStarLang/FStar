@@ -90,10 +90,9 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Abs b1 e1, Tv_Abs b2 e2 ->
         lex (compare_binder b1 b2) (fun () -> compare_term e1 e2)
 
-    | Tv_Refine bv1 sort1 e1, Tv_Refine bv2 sort2 e2 ->
-        lex (compare_bv bv1 bv2) (fun () ->
-        lex (compare_term sort1 sort2) (fun () ->
-             compare_term e1 e2))
+    | Tv_Refine b1 e1, Tv_Refine b2 e2 ->
+        lex (compare_binder b1 b2) (fun () ->
+             compare_term e1 e2)
 
     | Tv_Arrow b1 e1, Tv_Arrow b2 e2 ->
         lex (compare_binder b1 b2) (fun () -> compare_comp e1 e2)
@@ -106,11 +105,10 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Uvar u1 _, Tv_Uvar u2 _->
         compare_int u1 u2
 
-    | Tv_Let _r1 _attrs1 bv1 ty1 t1 t1', Tv_Let _r2 _attrs2 bv2 ty2 t2 t2' ->
-        lex (compare_bv bv1 bv2) (fun () ->
-        lex (compare_term ty1 ty2) (fun () ->
+    | Tv_Let _r1 _attrs1 b1 t1 t1', Tv_Let _r2 _attrs2 b2 t2 t2' ->
+        lex (compare_binder b1 b2) (fun () ->
         lex (compare_term t1 t2) (fun () ->
-             compare_term t1' t2')))
+             compare_term t1' t2'))
 
     | Tv_Match _ _ _, Tv_Match _ _ _ ->
         Eq // TODO
@@ -148,10 +146,10 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Abs _ _, _    -> Lt   | _, Tv_Abs _ _    -> Gt
     | Tv_Arrow _ _, _  -> Lt   | _, Tv_Arrow _ _  -> Gt
     | Tv_Type _, _    -> Lt    | _, Tv_Type _    -> Gt
-    | Tv_Refine _ _ _ , _ -> Lt | _, Tv_Refine _ _ _ -> Gt
+    | Tv_Refine _ _ , _ -> Lt  | _, Tv_Refine _ _ -> Gt
     | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
-    | Tv_Let _ _ _ _ _ _, _ -> Lt | _, Tv_Let _ _ _ _ _ _ -> Gt
+    | Tv_Let _ _ _ _ _, _ -> Lt | _, Tv_Let _ _ _ _ _ -> Gt
     | Tv_Match _ _ _, _  -> Lt | _, Tv_Match _ _ _  -> Gt
     | Tv_AscribedT _ _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _ _ -> Gt
     | Tv_AscribedC _ _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _ _ -> Gt
@@ -203,4 +201,4 @@ and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
 and compare_binder (b1 b2 : binder) : order =
     let bview1 = inspect_binder b1 in
     let bview2 = inspect_binder b2 in
-    compare_term bview1.binder_sort bview2.binder_sort
+    compare_term bview1.sort bview2.sort

@@ -406,7 +406,7 @@ val string_to_term : env -> string -> Tac term
 environment of [e] an environment. It returns a new environment that
 has the identifier [id] along with its corresponding bounded
 variable. *)
-val push_bv_dsenv : env -> string -> Tac (env * bv)
+val push_bv_dsenv : env -> string -> Tac (env * namedv)
 
 (** Print a term via the pretty printer. This is considered effectful
 since 1) setting options can change the behavior of this function, and
@@ -534,3 +534,13 @@ val resolve_name (g:env) (n:name)
 
 val log_issues (issues:list FStar.Issue.issue)
   : Tac unit
+
+
+(* TODO: make open/close return substitutions and make
+term and comp subtitutable. Typeclass? *)
+
+val open_term : binder -> term -> binding & term
+val open_comp : binder -> comp -> binding & comp
+
+val close_term : binding -> term -> binder & term
+val close_comp : binding -> comp -> binder & comp

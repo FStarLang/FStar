@@ -17,6 +17,11 @@ module FStar.Reflection.Data
 
 open FStar.Reflection.Types
 
+(* The type of a string observable only with a tactic.
+   All values of type ppname_t are provably equal *)
+let ppname_t = FStar.Sealed.Inhabited.sealed ""
+let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
+
 noeq
 type vconst =
   | C_Unit      : vconst
@@ -31,29 +36,33 @@ type vconst =
 
 type universes = list universe
 
-// This is shadowing `pattern` from Prims (for smt_pats)
 noeq
 type pattern =
+ // A built-in constant
  | Pat_Constant {
-     // A built-in constant
      c : vconst
    }
+
+ // A fully applied constructor, each boolean marks whether the
+ // argument was an explicitly-provided implicit argument
  | Pat_Cons {
-     // A fully applied constructor, each boolean marks whether the
-     // argument was an explicitly-provided implicit argument
      head    : fv;
      univs   : option universes;
      subpats : list (pattern * bool)
    }
+
+ // A pattern-bound variable. It has a sealed sort in it.
+ // This sort is ignored by the typechecker, but may be useful
+ // for metaprogram to look at heuristically. There is nothing
+ // else here but a ppname, the variable is referred to by its DB index.
+ // This means all Pat_Var are provably equal.
  | Pat_Var {
-     // A pattern-bound variable. It has a sealed sort in it.
-     // This sort is ignored by the typechecker, but may be useful
-     // for metaprogram to look at heuristically.
-     v : bv;
-     sort : sealed typ;
+     sort   : sealed term;
+     ppname : ppname_t;
    }
+
+ // Dot pattern: resolved by other elements in the pattern and type
  | Pat_Dot_Term {
-     // Dot pattern: resolved by other elements in the pattern and type
      t : option term;
    }
 
@@ -61,38 +70,53 @@ type branch = pattern * term  // | pattern -> term
 
 noeq
 type aqualv =
-    | Q_Implicit
-    | Q_Explicit
-    | Q_Meta of term
+  | Q_Implicit
+  | Q_Explicit
+  | Q_Meta of term
 
 type argv = term * aqualv
 
-(* The type of a string observable only with a tactic.
-   All values of type ppname_t are provably equal *)
-let ppname_t = FStar.Sealed.Inhabited.sealed ""
-let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
-
+(* FIXME: comment *)
 noeq
 type bv_view = {
-  bv_index      : nat;
-  (* Meta: *)
-  bv_ppname     : ppname_t;
+  index  : nat;
+  ppname : ppname_t;
+  sort   : sealed typ; // REMOVE?
 }
 
+(* FIXME: comment *)
 noeq
 type namedv_view = {
-  namedv_uniq   : nat;
-  (* Meta: *)
-  namedv_ppname : ppname_t;
+  uniq   : nat;
+  ppname : ppname_t;
+  sort   : sealed typ; // REMOVE?
 }
 
+(* FIXME: comment *)
 noeq
 type binder_view = {
-  binder_ppname : ppname_t;
-  binder_qual   : aqualv;
-  binder_attrs  : list term;
-  binder_sort   : typ;
+  sort   : typ;
+  qual   : aqualv;
+  attrs  : list term;
+  ppname : ppname_t;
 }
+
+(* FIXME: comment *)
+noeq
+type binding_view = {
+  uniq   : nat;
+  sort   : typ;
+  ppname : ppname_t;
+}
+
+(** We use the binder type for letbindings and refinements,
+but no qualifiers nor attributes can appear there. We call these
+binders simple. This module assumes an abstract predicate
+for them, which is later assumed to be equivalent to being a binder
+without qualifiers nor attributes (once inspect_binder is in scope). *)
+val binder_is_simple : binder -> bool
+
+type simple_binder = b:binder{binder_is_simple b}
 
 noeq
 type universe_view =
@@ -114,10 +138,10 @@ type term_view =
   | Tv_Abs    : bv:binder -> body:term -> term_view
   | Tv_Arrow  : bv:binder -> c:comp -> term_view
   | Tv_Type   : universe -> term_view
-  | Tv_Refine : bv:bv -> sort:typ -> ref:term -> term_view
+  | Tv_Refine : b:simple_binder -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : nat -> ctx_uvar_and_subst -> term_view
-  | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> ty:typ -> def:term -> body:term -> term_view
+  | Tv_Let    : recf:bool -> attrs:(list term) -> b:simple_binder -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> term_view

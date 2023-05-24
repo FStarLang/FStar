@@ -68,6 +68,9 @@ val pack_lb        : lb_view -> letbinding
 val inspect_binder : b:binder -> bv:binder_view {bv << b}
 val pack_binder    : binder_view -> binder
 
+val inspect_binding : b:binding -> bv:binding_view {bv << b}
+val pack_binding    : binding_view -> binding
+
 val inspect_universe : u:universe -> uv:universe_view{uv << u}
 val pack_universe    : universe_view -> universe
 
@@ -87,11 +90,19 @@ val pack_inspect_bv (x:bv) : Lemma (pack_bv (inspect_bv x) == x)
 val inspect_pack_binder (bview:binder_view) : Lemma (inspect_binder (pack_binder bview) == bview)
 val pack_inspect_binder (b:binder) : Lemma (pack_binder (inspect_binder b) == b)
 
+val inspect_pack_binding (bview:binding_view) : Lemma (inspect_binding (pack_binding bview) == bview)
+val pack_inspect_binding (b:binding) : Lemma (pack_binding (inspect_binding b) == b)
+
 val pack_inspect_fv (fv:fv) : Lemma (ensures pack_fv (inspect_fv fv) == fv)
 val inspect_pack_fv (nm:name) : Lemma (ensures inspect_fv (pack_fv nm) == nm)
 
 val pack_inspect_universe (u:universe) : Lemma (pack_universe (inspect_universe u) == u)
 val inspect_pack_universe (uv:universe_view) : Lemma (inspect_universe (pack_universe uv) == uv)
+
+val simple_binder_defn (b:binder) :
+  Lemma (binder_is_simple b <==> 
+          Q_Explicit? (inspect_binder b).qual /\ Nil? (inspect_binder b).attrs)
+        [SMTPat (binder_is_simple b)]
 
 (** These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
@@ -101,24 +112,52 @@ val implode_qn     : list string -> string
 val explode_qn     : string -> list string
 val compare_string : s1:string -> s2:string -> x:int{x == 0 <==> s1 == s2}
 
-(** Primitives & helpers *)
+(** FIXME *)
 val lookup_typ            : env -> name -> option sigelt
+
+(** FIXME *)
 val compare_bv            : bv -> bv -> order
+
+(** FIXME *)
 val compare_namedv        : namedv -> namedv -> order
+
+(** FIXME *)
 val binders_of_env        : env -> binders
+
+(** FIXME *)
 val vars_of_env           : env -> list namedv
+
+(** FIXME *)
 val moduleof              : env -> name
+
+(** FIXME *)
 val lookup_attr           : term -> env -> list fv
+
+(** FIXME *)
 val all_defs_in_env       : env -> list fv
+
+(** FIXME *)
 val defs_in_module        : env -> name -> list fv
+
+(** FIXME *)
 val term_eq               : term -> term -> bool
+
+(** FIXME *)
 val env_open_modules      : env -> list name
 
 (** [push_binder] extends the environment with a single binder.
     This is useful as one traverses the syntax of a term,
     pushing binders as one traverses a binder in a lambda,
-    match, etc. TODO: Should this really be push_bv? *)
+    match, etc. FIXME: Should be push_binding
+    TODO: Should this really be push_bv? *)
+[@@deprecated "Use push_binding instead"]
 val push_binder           : env -> binder -> env
+
+(** [push_binding] extends the environment with a single binding.
+This is useful as one traverses the syntax of a term,
+pushing bindings as one traverses (and opens) a binder in a lambda,
+match, etc. *)
+val push_binding          : env -> binding -> env
 
 (** Attributes are terms, not to be confused with Prims.attribute. *)
 val sigelt_attrs     : sigelt -> list term
