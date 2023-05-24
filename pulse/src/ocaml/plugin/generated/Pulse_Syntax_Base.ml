@@ -60,7 +60,6 @@ type term =
   | Tm_VProp 
   | Tm_Inames 
   | Tm_EmpInames 
-  | Tm_UVar of Prims.nat 
   | Tm_FStar of host_term * range 
   | Tm_Unknown 
 let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
@@ -76,7 +75,6 @@ let uu___is_Tm_Inames uu___ =
   match uu___ with | Tm_Inames _ -> true | _ -> false
 let uu___is_Tm_EmpInames uu___ =
   match uu___ with | Tm_EmpInames _ -> true | _ -> false
-let uu___is_Tm_UVar uu___ = match uu___ with | Tm_UVar _ -> true | _ -> false
 let uu___is_Tm_FStar uu___ =
   match uu___ with | Tm_FStar _ -> true | _ -> false
 let uu___is_Tm_Unknown uu___ =
@@ -260,16 +258,6 @@ let (mk_binder : Prims.string -> term -> binder) =
         binder_ty = t;
         binder_ppname = (FStar_Reflection_Typing.seal_pp_name s)
       }
-let (gen_uvar : unit -> (term, unit) FStar_Tactics_Effect.tac_repr) =
-  fun uu___ ->
-    FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "Pulse.Syntax.Base.fsti" (Prims.of_int (193))
-         (Prims.of_int (10)) (Prims.of_int (193)) (Prims.of_int (22)))
-      (FStar_Range.mk_range "Pulse.Syntax.Base.fsti" (Prims.of_int (193))
-         (Prims.of_int (2)) (Prims.of_int (193)) (Prims.of_int (22)))
-      (Obj.magic (FStar_Tactics_Builtins.fresh ()))
-      (fun uu___1 ->
-         FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> Tm_UVar uu___1))
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 ->
     fun u2 ->
@@ -292,7 +280,6 @@ let rec (eq_tm : term -> term -> Prims.bool) =
           -> ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
       | (Tm_ForallSL (u1, t11, b1), Tm_ForallSL (u2, t21, b2)) ->
           ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
-      | (Tm_UVar z1, Tm_UVar z2) -> z1 = z2
       | (Tm_FStar (t11, r), Tm_FStar (t21, uu___)) ->
           FStar_Reflection_Builtins.term_eq t11 t21
       | uu___ -> false

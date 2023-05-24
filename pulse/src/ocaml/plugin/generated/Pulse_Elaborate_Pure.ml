@@ -19,15 +19,6 @@ let (elab_qual :
     | FStar_Pervasives_Native.None -> FStar_Reflection_Data.Q_Explicit
     | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Implicit) ->
         FStar_Reflection_Data.Q_Implicit
-let (embedded_uvar_lid : Prims.string Prims.list) =
-  ["__pulse_embedded_uvar__"]
-let (embed_uvar : Prims.nat -> FStar_Reflection_Types.term) =
-  fun n ->
-    FStar_Reflection_Builtins.pack_ln
-      (FStar_Reflection_Data.Tv_UInst
-         ((FStar_Reflection_Builtins.pack_fv embedded_uvar_lid),
-           [FStar_Reflection_Builtins.pack_universe
-              (FStar_Reflection_Data.Uv_BVar n)]))
 let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
   fun top ->
     match top with
@@ -83,7 +74,6 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
              (FStar_Reflection_Builtins.pack_fv
                 Pulse_Reflection_Util.inames_lid))
     | Pulse_Syntax_Base.Tm_EmpInames -> Pulse_Reflection_Util.emp_inames_tm
-    | Pulse_Syntax_Base.Tm_UVar n -> embed_uvar n
     | Pulse_Syntax_Base.Tm_Unknown ->
         FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
     | Pulse_Syntax_Base.Tm_FStar (t, uu___) -> t

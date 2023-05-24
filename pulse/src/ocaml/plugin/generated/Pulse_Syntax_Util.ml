@@ -157,19 +157,6 @@ let (is_arrow :
                         | uu___4 -> FStar_Pervasives_Native.None)))
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
-let (is_embedded_uvar :
-  Pulse_Syntax_Base.term -> Prims.nat FStar_Pervasives_Native.option) =
-  fun t ->
-    match is_fvar t with
-    | FStar_Pervasives_Native.Some (l, u::[]) ->
-        if l = Pulse_Elaborate_Pure.embedded_uvar_lid
-        then
-          (match FStar_Reflection_Builtins.inspect_universe u with
-           | FStar_Reflection_Data.Uv_BVar n ->
-               FStar_Pervasives_Native.Some n
-           | uu___ -> FStar_Pervasives_Native.None)
-        else FStar_Pervasives_Native.None
-    | uu___ -> FStar_Pervasives_Native.None
 let (is_eq2 :
   Pulse_Syntax_Base.term ->
     (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term)

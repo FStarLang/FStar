@@ -7,7 +7,6 @@ let rec (freevars :
     | Pulse_Syntax_Base.Tm_VProp -> FStar_Set.empty ()
     | Pulse_Syntax_Base.Tm_Inames -> FStar_Set.empty ()
     | Pulse_Syntax_Base.Tm_EmpInames -> FStar_Set.empty ()
-    | Pulse_Syntax_Base.Tm_UVar uu___ -> FStar_Set.empty ()
     | Pulse_Syntax_Base.Tm_Unknown -> FStar_Set.empty ()
     | Pulse_Syntax_Base.Tm_Star (t1, t2) ->
         FStar_Set.union (freevars t1) (freevars t2)
@@ -131,7 +130,6 @@ let rec (ln' : Pulse_Syntax_Base.term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_VProp -> true
       | Pulse_Syntax_Base.Tm_Inames -> true
       | Pulse_Syntax_Base.Tm_EmpInames -> true
-      | Pulse_Syntax_Base.Tm_UVar uu___ -> true
       | Pulse_Syntax_Base.Tm_Unknown -> true
       | Pulse_Syntax_Base.Tm_Star (t1, t2) -> (ln' t1 i) && (ln' t2 i)
       | Pulse_Syntax_Base.Tm_Pure p -> ln' p i
@@ -265,7 +263,6 @@ let rec (open_term' :
         | Pulse_Syntax_Base.Tm_Emp -> t
         | Pulse_Syntax_Base.Tm_Inames -> t
         | Pulse_Syntax_Base.Tm_EmpInames -> t
-        | Pulse_Syntax_Base.Tm_UVar uu___ -> t
         | Pulse_Syntax_Base.Tm_Unknown -> t
         | Pulse_Syntax_Base.Tm_Pure p ->
             Pulse_Syntax_Base.Tm_Pure (open_term' p v i)
@@ -552,7 +549,6 @@ let rec (close_term' :
         | Pulse_Syntax_Base.Tm_Emp -> t
         | Pulse_Syntax_Base.Tm_Inames -> t
         | Pulse_Syntax_Base.Tm_EmpInames -> t
-        | Pulse_Syntax_Base.Tm_UVar uu___ -> t
         | Pulse_Syntax_Base.Tm_Unknown -> t
         | Pulse_Syntax_Base.Tm_Pure p ->
             Pulse_Syntax_Base.Tm_Pure (close_term' p v i)
