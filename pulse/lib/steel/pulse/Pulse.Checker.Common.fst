@@ -10,7 +10,7 @@ let post_hint_typing g p x = {
 
 let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { Metatheory.fresh_wrt x g (freevars t) })
                                (_:tot_typing (extend x (Inl ty) g) (open_term t x) Tm_VProp)
-  : RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty Tm_VProp)                                 
+  : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty Tm_VProp))                                 
   = admit()
 
 let intro_post_hint g ret_ty_opt post =

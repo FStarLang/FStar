@@ -5,6 +5,9 @@ open Pulse.Typing
 
 let comp_typing_u (g:env) (c:comp_st) = comp_typing g c (comp_u c)
 
+val admit_comp_typing (g:env) (c:comp_st)
+  : comp_typing_u g c
+  
 val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
                           (_:st_typing g t c)
   : comp_typing_u g c

@@ -22,7 +22,7 @@ type post_hint_t =
   u: Pulse_Syntax_Base.universe ;
   ty_typing: unit ;
   post: Pulse_Syntax_Base.term ;
-  post_typing: (unit, unit, unit) FStar_Reflection_Typing.tot_typing }
+  post_typing: unit }
 let (__proj__Mkpost_hint_t__item__g : post_hint_t -> Pulse_Typing.env) =
   fun projectee ->
     match projectee with
@@ -43,11 +43,6 @@ let (__proj__Mkpost_hint_t__item__post :
   fun projectee ->
     match projectee with
     | { g; ret_ty; u; ty_typing; post; post_typing;_} -> post
-let (__proj__Mkpost_hint_t__item__post_typing :
-  post_hint_t -> (unit, unit, unit) FStar_Reflection_Typing.tot_typing) =
-  fun projectee ->
-    match projectee with
-    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> post_typing
 type ('gu, 'g) env_extends = unit
 type ('g, 'p) post_hint_for_env_p = unit
 type 'g post_hint_for_env = post_hint_t
@@ -63,13 +58,6 @@ let (post_hint_typing :
     unit post_hint_for_env ->
       Pulse_Syntax_Base.var -> (unit, unit, unit) post_hint_typing_t)
   = fun g -> fun p -> fun x -> { ty_typing1 = (); post_typing1 = () }
-let (post_typing_as_abstraction :
-  Pulse_Typing.env ->
-    Pulse_Syntax_Base.var ->
-      Pulse_Syntax_Base.term ->
-        Pulse_Syntax_Base.term ->
-          unit -> (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
-  = fun g -> fun x -> fun ty -> fun t -> fun uu___ -> Prims.admit ()
 let (intro_post_hint :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
@@ -196,13 +184,7 @@ let (intro_post_hint :
                                                                     (Pulse_Syntax_Naming.close_term
                                                                     post1 x);
                                                                     post_typing
-                                                                    =
-                                                                    (post_typing_as_abstraction
-                                                                    g x
-                                                                    ret_ty1
-                                                                    (Pulse_Syntax_Naming.close_term
-                                                                    post1 x)
-                                                                    ())
+                                                                    = ()
                                                                     }))))
                                                     uu___2))) uu___))) uu___)))
                uu___)
@@ -230,11 +212,7 @@ let (post_hint_from_comp_typing :
                 u = (Pulse_Syntax_Base.comp_u c);
                 ty_typing = ();
                 post = (Pulse_Syntax_Base.comp_post c);
-                post_typing =
-                  (post_typing_as_abstraction g x
-                     (Pulse_Syntax_Base.st_comp_of_comp c).Pulse_Syntax_Base.res
-                     (Pulse_Syntax_Base.st_comp_of_comp c).Pulse_Syntax_Base.post
-                     ())
+                post_typing = ()
               } in
             p
 type check_t =

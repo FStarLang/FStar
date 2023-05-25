@@ -20,7 +20,7 @@ type post_hint_t = {
   u:universe;
   ty_typing:universe_of g ret_ty u;
   post:term;
-  post_typing:RT.tot_typing (elab_env g) (mk_abs ret_ty post) (mk_arrow ret_ty Tm_VProp)
+  post_typing:FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ret_ty post) (mk_arrow ret_ty Tm_VProp))
 }
 
 

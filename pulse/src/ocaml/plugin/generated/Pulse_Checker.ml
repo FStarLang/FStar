@@ -3747,7 +3747,12 @@ let (while_cond_comp_typing :
           unit -> (unit, unit) Pulse_Typing_Metatheory.comp_typing_u)
   =
   fun g ->
-    fun u -> fun ty -> fun inv_body -> fun inv_typing -> Prims.admit ()
+    fun u ->
+      fun ty ->
+        fun inv_body ->
+          fun inv_typing ->
+            Pulse_Typing_Metatheory.admit_comp_typing g
+              (Pulse_Typing.comp_while_cond inv_body)
 let (while_body_comp_typing :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.universe ->
@@ -3756,7 +3761,12 @@ let (while_body_comp_typing :
           unit -> (unit, unit) Pulse_Typing_Metatheory.comp_typing_u)
   =
   fun g ->
-    fun u -> fun ty -> fun inv_body -> fun inv_typing -> Prims.admit ()
+    fun u ->
+      fun ty ->
+        fun inv_body ->
+          fun inv_typing ->
+            Pulse_Typing_Metatheory.admit_comp_typing g
+              (Pulse_Typing.comp_while_body inv_body)
 let (check_while :
   Prims.bool ->
     Pulse_Typing.env ->
@@ -8060,7 +8070,7 @@ let (extend_post_hint_for_local :
               (Pulse_Typing.comp_withlocal_body_post
                  p.Pulse_Checker_Common.post init_t
                  (Pulse_Syntax_Pure.null_var x));
-            Pulse_Checker_Common.post_typing = (Prims.admit ())
+            Pulse_Checker_Common.post_typing = ()
           }
 
 let (check_withlocal :

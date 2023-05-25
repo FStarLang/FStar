@@ -657,12 +657,12 @@ let maybe_infer_intro_exists
 let while_cond_comp_typing (#g:env) (u:universe) (ty:term) (inv_body:term)
                            (inv_typing:tot_typing g (Tm_ExistsSL u ty inv_body should_elim_false) Tm_VProp)
   : Metatheory.comp_typing_u g (comp_while_cond inv_body)
-  = admit()
+  = Metatheory.admit_comp_typing g (comp_while_cond inv_body)
 
 let while_body_comp_typing (#g:env) (u:universe) (ty:term) (inv_body:term)
                            (inv_typing:tot_typing g (Tm_ExistsSL u ty inv_body should_elim_false) Tm_VProp)
   : Metatheory.comp_typing_u g (comp_while_body inv_body)
-  = admit()
+  = Metatheory.admit_comp_typing g (comp_while_body inv_body)
 
 #push-options "--ifuel 2"
 let check_while
