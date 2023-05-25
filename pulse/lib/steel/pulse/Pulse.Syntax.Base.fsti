@@ -114,6 +114,7 @@ type st_term' =
       q:option qualifier;
       pre:option vprop;
       body:st_term;
+      ret_ty:option term;
       post:option vprop;
     }
   | Tm_STApp {

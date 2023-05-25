@@ -1,14 +1,38 @@
 module Pulse.Checker.Common
+module T = FStar.Tactics
+module Metatheory = Pulse.Typing.Metatheory
 
-// let force_st #f #g #t #pre pre_typing x =
-//   let (| c, d_c |) = x in
-//   match c with
-//   | C_Tot ty ->
-//     let (| ures, ures_ty |) = check_universe f g ty in
-//     let c = return_comp_noeq ures ty in
-//     let d = T_ReturnNoEq _ _ _ _ d_c ures_ty in
-//     frame_empty pre_typing ures_ty _ c d        
+let post_hint_typing g p x = {
+  ty_typing=admit();
+  post_typing=admit()
+}
 
-//   | C_ST _
-//   | C_STAtomic _ _
-//   | C_STGhost _ _ -> (|c, d_c|)
+let intro_post_hint g ret_ty_opt post =
+  let x = fresh g in
+  if x `Set.mem` freevars post
+  then T.fail "Unexpected variable clash in intro_post_hint"
+  else (
+    let ret_ty = 
+      match ret_ty_opt with
+      | None -> Tm_FStar RT.unit_ty FStar.Range.range_0
+      | Some t -> t
+    in
+    admit()
+  )
+
+let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { Metatheory.fresh_wrt x g (freevars t) })
+                               (_:tot_typing (extend x (Inl ty) g) (open_term t x) Tm_VProp)
+  : RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty Tm_VProp)                                 
+  = admit()
+
+let post_hint_from_comp_typing #g #c ct = 
+  let st_comp_typing = Metatheory.comp_typing_inversion ct in
+  let (| ty_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_comp_typing in
+  let p : post_hint_t = 
+    { g; ret_ty = comp_res c; u=comp_u c; 
+      ty_typing=ty_typing;
+      post=comp_post c;
+      post_typing=post_typing_as_abstraction post_typing }
+  in
+  extends_env_refl g;
+  p

@@ -40,7 +40,7 @@ let replace_equiv_post
       (g:env)
       (c:comp{stateful_comp c /\ freevars_comp c `Set.subset` FV.vars_of_env g})
       (ct:Metatheory.comp_typing_u g c)
-      (post_hint:option term)
+      (post_hint:post_hint_opt g)
   : T.Tac (c1:comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c } & st_equiv g c c1)
   = let g = push_context "replace_equiv_post" g in
     let {u=u_c;res=res_c;pre=pre_c;post=post_c} = st_comp_of_comp c in
@@ -57,13 +57,17 @@ let replace_equiv_post
            (VE_Refl _ _)
            (VE_Refl _ _) |)
     | Some post ->
-      if (x `Set.mem` freevars post)
+      if (x `Set.mem` freevars post.post)
       then T.fail "Unexpected variable clash with annotated postcondition"
       else (
-        let post_opened = open_term_nv post px in
-        let (| post_opened, post_typing |) = check_vprop (push_context "post_opened" g_post) post_opened in
-        let post_c_post_eq : vprop_equiv g_post post_c_opened post_opened =
-                  check_vprop_equiv (push_context "check_vprop_equiv" g_post) post_c_opened post_opened post_c_typing in
+        let post_opened = open_term_nv post.post px in
+        let post_c_post_eq
+          : vprop_equiv g_post post_c_opened post_opened
+          = check_vprop_equiv (push_context "check_vprop_equiv" g_post)
+                              post_c_opened
+                              post_opened
+                              post_c_typing
+        in
         let st_comp_with_post : st_comp = {
           u=u_c;
           res=res_c;
@@ -71,7 +75,7 @@ let replace_equiv_post
           post=close_term post_opened x
         } in
         let c_with_post = c `with_st_comp` st_comp_with_post in
-       assume (open_term (close_term post_opened x) x == post_opened);
+        assume (open_term (close_term post_opened x) x == post_opened);
         (| c_with_post,
            ST_VPropEquiv
              g c c_with_post x pre_c_typing res_c_typing post_c_typing
@@ -86,13 +90,14 @@ let check_abs
   (t:st_term{Tm_Abs? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   (check:check_t)
   : T.Tac (t:st_term &
            c:comp { stateful_comp c ==> comp_pre c == pre } &
            st_typing g t c) =
   match t.term with  
-  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; pre=pre_hint; body; post=post_hint } ->  (* {pre}  (fun (x:t) -> body) : ? { pre } *)
+  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; pre=pre_hint; body; ret_ty; post=post_hint } ->
+    (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = check_term g t in //elaborate it first
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
@@ -110,7 +115,8 @@ let check_abs
         | None -> None
         | Some post ->
           let post = open_term' post (tm_var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=Range.range_0}) 1 in
-          Some post
+          let post_hint_typing : post_hint_t = Pulse.Checker.Common.intro_post_hint g' ret_ty post in
+          Some post_hint_typing
       in
       let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened (E pre_typing) post in
       FV.st_typing_freevars body_typing;
@@ -265,18 +271,50 @@ let check_comp (g:env)
       then T.fail "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc
 
+let intro_comp_typing (g:env) 
+                      (c:comp_st)
+                      (pre_typing:tot_typing g (comp_pre c) Tm_VProp)
+                      (res_typing:universe_of g (comp_res c) (comp_u c))
+                      (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
+                      (post_typing:tot_typing (extend x (Inl (comp_res c)) g) (open_term (comp_post c) x) Tm_VProp)
+  : T.Tac (comp_typing g c (comp_u c))
+  = let intro_st_comp_typing (st:st_comp { comp_u c == st.u /\
+                                           comp_pre c == st.pre /\
+                                           comp_res c == st.res /\
+                                           comp_post c == st.post } )
+      : T.Tac (st_comp_typing g st)
+      = STC g st x res_typing pre_typing post_typing
+    in
+    match c with
+    | C_ST st -> 
+      let stc = intro_st_comp_typing st in
+      CT_ST _ _ stc
+    | C_STAtomic i st -> 
+      let stc = intro_st_comp_typing st in
+      let (| ty, i_typing |) = core_check_term g i in
+      if not (eq_tm ty Tm_Inames)
+      then T.fail "Ill-typed inames"
+      else CT_STAtomic _ _ _ (E i_typing) stc
+    | C_STGhost i st -> 
+      let stc = intro_st_comp_typing st in
+      let (| ty, i_typing |) = core_check_term g i in
+      if not (eq_tm ty Tm_Inames)
+      then T.fail "Ill-typed inames"
+      else CT_STGhost _ _ _ (E i_typing) stc
+
 let check_if (g:env)
              (b:term)
              (e1 e2:st_term)
              (pre:term)
              (pre_typing: tot_typing g pre Tm_VProp)
-             (post:term) 
+             (post_hint:post_hint_for_env g)
              (check:check_t)
   : T.Tac (t:st_term &
            c:comp { stateful_comp c ==> comp_pre c == pre } &
            st_typing g t c)
   = let (| b, b_typing |) =
       check_term_with_expected_type g b tm_bool in
+    let post = post_hint.post in
     let hyp = fresh g in
     let g_with_eq (eq_v:term) =
         extend hyp (Inl (mk_eq2 u0 tm_bool b eq_v)) g
@@ -293,7 +331,7 @@ let check_if (g:env)
         //
         let pre_typing = check_vprop_with_core g_with_eq pre in
         let (| br, c, br_typing |) =
-            check g_with_eq br pre pre_typing (Some post)
+            check g_with_eq br pre pre_typing (Some post_hint)
         in
         if hyp `Set.mem` freevars_st br
         then T.fail "Illegal use of control-flow hypothesis in branch"
@@ -308,14 +346,28 @@ let check_if (g:env)
     let (| e2, c2, e2_typing |) = check_branch tm_false e2 in    
     let (| c, e1_typing, e2_typing |) =
       combine_if_branches _ _ _ e1_typing _ _ _ e2_typing in
-    let c_typing = check_comp _ c pre_typing in //Would be better to have post_typing already, rather than re-check here
+    let c_typing = 
+      let x = fresh g in
+      if x `Set.mem` freevars post //exclude this
+      then T.fail "Unexpected name clash"
+      else if not (eq_tm (comp_res c) post_hint.ret_ty &&
+                   eq_univ (comp_u c) post_hint.u &&
+                   eq_tm (comp_post c) post_hint.post) //exclude by check' strengthening
+      then (
+        T.fail "Unexpected result type in branches"
+      )
+      else (
+        let post_typing = Checker.Common.post_hint_typing g post_hint x in
+        intro_comp_typing g c pre_typing post_typing.ty_typing x post_typing.post_typing
+      )
+    in
     (| _, //Tm_If b e1 e2 None,
        c,
        T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |)
 
 let repack (#g:env) (#pre:term) (#t:st_term)
            (x:(c:comp_st { comp_pre c == pre } & st_typing g t c))
-           (post_hint:option term)
+           (post_hint:post_hint_opt g)
            (apply_post_hint:bool)
   : T.Tac (t:st_term &
            c:comp {stateful_comp c ==> comp_pre c == pre} &
@@ -338,7 +390,7 @@ let check_elim_exists
   (t:st_term{Tm_ElimExists? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
@@ -401,7 +453,7 @@ let check_intro_exists_erased
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) Tm_VProp))
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
@@ -410,28 +462,16 @@ let check_intro_exists_erased
   let (| t, t_typing |) = 
     match vprop_typing with
     | Some typing -> (| t, typing |)
-    | _ -> let t, _ = instantiate_term_implicits g t in
-           let typing : tot_typing g t Tm_VProp = magic () in
-           let x : t:term & tot_typing g t Tm_VProp = (| t, typing |) in
-           x
-//    in (| t, magic () |) // check_vprop g t
+    | _ -> check_vprop g t
   in
   match t with
   | Tm_ExistsSL u ty p _ ->
-    // Could this come from inversion of t_typing?
-    let (| u', ty_typing |) = check_universe g ty in
-    if eq_univ u u'
-    // // let (| u', ty_typing |) : u:universe & universe_of g ty u = (| u, magic () |) in //check_universe g ty in
-    // let u' = u in
-    // if u = u
-    then (
-      let ty_typing : universe_of g ty u = magic () in
-      let (| e, e_typing |) = 
-          check_term_with_expected_type g e (mk_erased u ty) in
-      let d = T_IntroExistsErased g u ty p e ty_typing t_typing (E e_typing) in
-      repack (try_frame_pre pre_typing d) post_hint true
-    )
-    else T.fail "Universe checking failed in intro_exists"
+    Pulse.Typing.FV.tot_typing_freevars t_typing;
+    let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #ty #p t_typing (fresh g) in
+    let (| e, e_typing |) = 
+        check_term_with_expected_type g e (mk_erased u ty) in
+    let d = T_IntroExistsErased g u ty p e ty_typing t_typing (E e_typing) in
+    repack (try_frame_pre pre_typing d) post_hint true
   | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
 
 
@@ -441,7 +481,7 @@ let check_intro_exists
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) Tm_VProp))
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
@@ -450,31 +490,16 @@ let check_intro_exists
   let (| t, t_typing |) =
     match vprop_typing with
     | Some typing -> (| t, typing |)
-    | _ -> let t, _ = instantiate_term_implicits g t in
-           let typing : tot_typing g t Tm_VProp = magic () in
-           let x : t:term & tot_typing g t Tm_VProp = (| t, typing |) in
-           x
-    
-    // | _ -> let t, _ = instantiate_term_implicits g t  in (| t, magic () |) // check_vprop g t    
+    | _ -> check_vprop g t    
   in
   match t with
   | Tm_ExistsSL u ty p _ ->
-    // Could this come from inversion of t_typing?
-    let (| u', ty_typing |) = check_universe g ty in
-    if eq_univ u u'
-    // // let (| u', ty_typing |) : u:universe & universe_of g ty u = (| u, magic () |) in //check_universe g ty in
-    // // if u = u'
-    // // then (
-    // let u' = u in
-    // if u = u
-    then (
-      let ty_typing : universe_of g ty u = magic () in
-      let (| e, e_typing |) = 
-          check_term_with_expected_type g e ty in
-      let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
-      repack (try_frame_pre pre_typing d) post_hint true
-    )
-    else T.fail "Universe checking failed in intro_exists"
+    Pulse.Typing.FV.tot_typing_freevars t_typing;
+    let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #ty #p t_typing (fresh g) in
+    let (| e, e_typing |) = 
+        check_term_with_expected_type g e ty in
+    let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
+    repack (try_frame_pre pre_typing d) post_hint true
   | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
 
 let check_intro_exists_either
@@ -483,7 +508,7 @@ let check_intro_exists_either
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) Tm_VProp))
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c)
@@ -620,104 +645,87 @@ let maybe_infer_intro_exists
                                               body = build_instantiations solutions tl }) })
     in
     build_instantiations solutions insts
-    
-    
-    // match t, e with
-    // | Tm_ExistsSL u ty p _, [Tm_Unknown] -> (
-    //   let uv = gen_uvar ty in
-    //   let goal_vprop = open_term' p uv 0 in
-    //   let goal_vprop = remove_pure_conjuncts goal_vprop in
-    //   let open T in
-    //   T.print
-    //       (Printf.sprintf "Calling witness inference with context = %s and goal=%s"
-    //                                (P.term_to_string pre)
-    //                                (P.term_to_string goal_vprop));
-    //     match Pulse.Checker.Inference.try_inst_uvs_in_goal [uv] pre goal_vprop with
-    //     | [_, sol] -> (
-    //       T.print
-    //         (Printf.sprintf "Inferred solution %s"
-    //                                (P.term_to_string sol));
-    //       match un_reveal sol with
-    //       | Some sol ->
-    //         T.print
-    //           (Printf.sprintf "Revealed sol to ... %s"
-    //                                (P.term_to_string sol));
-    //         check_intro_exists_erased g (Tm_IntroExists true t [sol]) (Some t_typing) pre pre_typing post_hint
-    //       | _ ->
-    //         check_intro_exists g (Tm_IntroExists false t [sol]) (Some t_typing) pre pre_typing post_hint
-    //     )
-    //     | _ ->
-    //       T.fail "Unable to infer solution"
-    //  )
 
-    // | _, [e] -> check_intro_exists_either g (Tm_IntroExists erased t [e]) (Some t_typing) pre pre_typing post_hint
+////////////////////////////////////////////////////
+// While loops
+///////////////////////////////////////////////////
 
-    // | _ -> T.fail "Not yet handling variadic intro exists"
-    
+let while_cond_comp_typing (#g:env) (u:universe) (ty:term) (inv_body:term)
+                           (inv_typing:tot_typing g (Tm_ExistsSL u ty inv_body should_elim_false) Tm_VProp)
+  : Metatheory.comp_typing_u g (comp_while_cond inv_body)
+  = admit()
+
+let while_body_comp_typing (#g:env) (u:universe) (ty:term) (inv_body:term)
+                           (inv_typing:tot_typing g (Tm_ExistsSL u ty inv_body should_elim_false) Tm_VProp)
+  : Metatheory.comp_typing_u g (comp_while_body inv_body)
+  = admit()
+
+#push-options "--ifuel 2"
 let check_while
   (allow_inst:bool)
   (g:env)
   (t:st_term{Tm_While? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
   let g = push_context "while loop" g in
   let Tm_While { invariant=inv; condition=cond; body } = t.term in
-  let (| inv, inv_typing |) =
+  let (| ex_inv, inv_typing |) =
     check_vprop (push_context "invariant" g) (Tm_ExistsSL u0 tm_bool inv should_elim_true) in
-  match inv with
+  match ex_inv with
   | Tm_ExistsSL u ty inv _ ->
     if not (eq_tm ty tm_bool) ||
        not (eq_univ u u0)
     then T.fail "While loop invariant is exists but its witness type is not bool"
     else begin
-    // Should get from inv_typing
-    let cond_pre_typing =
-      check_vprop_with_core g (comp_pre (comp_while_cond inv)) in
-    let (| cond, cond_comp, cond_typing |) =
-      check' allow_inst
-            (push_context "while condition" g)
-             cond
-            (comp_pre (comp_while_cond inv))
-            cond_pre_typing
-            (Some (comp_post (comp_while_cond inv)))
-    in
-    if eq_comp cond_comp (comp_while_cond inv)
-    then begin
-      let body_pre_typing =
-        check_vprop_with_core (* duplicate, recover it from inv_typing *)
-          (push_context "invariant for body" g)
-          (comp_pre (comp_while_body inv))
+      let while_cond_comp_typing = while_cond_comp_typing u ty inv inv_typing in
+      let (| res_typing, cond_pre_typing, x, post_typing |) =
+          Metatheory.(st_comp_typing_inversion (comp_typing_inversion while_cond_comp_typing))
       in
-      let (| body, body_comp, body_typing |) =
-          // T.print "Check: While body";
-          check' allow_inst
-                 (push_context "while body" g)
-                 body
-                 (comp_pre (comp_while_body inv))
-                 body_pre_typing
-                 (Some (comp_post (comp_while_body inv)))
+      let while_cond_hint
+        : post_hint_for_env g
+        = Checker.Common.post_hint_from_comp_typing while_cond_comp_typing
       in
-      if eq_comp body_comp (comp_while_body inv)
-      then let d = T_While g inv cond body inv_typing cond_typing body_typing in
-          //  T.print (Printf.sprintf
-          //               "Check: Framing while\ninferred pre=%s\n required pre=%s\n"
-          //               (P.term_to_string (comp_pre (comp_while inv)))
-          //               (P.term_to_string pre));
-           repack (try_frame_pre pre_typing d) post_hint true
-      else 
-        T.fail
-           (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
-                            Inferred type = %s\n\
-                            Annotated type = %s\n"
-                            (P.comp_to_string body_comp)
-                            (P.comp_to_string (comp_while_body inv)))
-
-
+      let (| cond, cond_comp, cond_typing |) =
+        check' allow_inst
+               (push_context "while condition" g)
+               cond
+               (comp_pre (comp_while_cond inv))
+               cond_pre_typing
+               (Some while_cond_hint)
+      in
+      if eq_comp cond_comp (comp_while_cond inv)
+      then begin
+        let while_body_comp_typing = while_body_comp_typing u ty inv inv_typing in
+        let (| res_typing, body_pre_typing, x, post_typing |) = 
+            Metatheory.(st_comp_typing_inversion (comp_typing_inversion while_body_comp_typing))
+        in
+        let while_post_hint
+          : post_hint_for_env g
+          = Checker.Common.post_hint_from_comp_typing while_body_comp_typing
+        in
+        let (| body, body_comp, body_typing |) =
+            check' allow_inst
+                   (push_context "while body" g)
+                   body
+                   (comp_pre (comp_while_body inv))
+                   body_pre_typing
+                   (Some while_post_hint)
+        in
+        if eq_comp body_comp (comp_while_body inv)
+        then let d = T_While g inv cond body inv_typing cond_typing body_typing in
+             repack (try_frame_pre pre_typing d) post_hint true
+        else 
+          T.fail
+            (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
+                                   Inferred type = %s\n\
+                                   Annotated type = %s\n"
+                                   (P.comp_to_string body_comp)
+                                   (P.comp_to_string (comp_while_body inv)))
     end
     else T.fail 
            (Printf.sprintf "Could not prove that the inferred type of the while condition matches the annotation\n\
@@ -735,10 +743,6 @@ let range_of_head (t:st_term) : option (term & range) =
       match t with
       | Tm_FStar _ r ->
         t, r
-      // | tm_fvar fv -> (t, fv.fv_range)
-      // | tm_uinst fv _ -> (t, fv.fv_range)
-      // | tm_var nm -> (t, nm.nm_range)
-      // | Tm_PureApp hd _ _ -> aux hd
       | _ -> t, Range.range_0
     in
     Some (aux head)
@@ -814,7 +818,7 @@ let check_stapp
   (t:st_term{Tm_STApp? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
@@ -899,64 +903,86 @@ let check_admit
   (t:st_term{Tm_Admit? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
 
   let Tm_Admit { ctag = c; typ=t; post } = t.term in
-  let (| u, t_typing |) = check_universe g t in
   let x = fresh g in
   let px = v_as_nv x in
-  let post =
-    match post, post_hint with
-    | None, None
-    | Some _, Some _ ->
-      T.fail "T_Admit: either no post or two posts"
-    | Some post, _
-    | _, Some post -> post in
+  let res
+    : (t:term & u:universe & universe_of g t u &
+       post:vprop & tot_typing (extend x (Inl t) g) post Tm_VProp)
+    = match post, post_hint with
+      | None, None
+      | Some _, Some _ ->
+        T.fail "T_Admit: either no post or two posts"
+      
+      | Some post, _ ->
+        let (| u, t_typing |) = check_universe g t in    
+        let post_opened = open_term_nv post px in      
+        let (| post, post_typing |) = 
+            check_term_with_expected_type (extend x (Inl t) g) post_opened Tm_VProp
+        in
+        (| t, u, t_typing, post, E post_typing |)
 
-  let post_opened = open_term_nv post px in
-  let (| post_opened, post_typing |) =
-    check_term_with_expected_type (extend x (Inl t) g) post_opened Tm_VProp in
-
+      | _, Some post ->
+        let post : post_hint_t = post in
+        if x `Set.mem` freevars post.post
+        then T.fail "Unexpected freevar clash in Tm_Admit"
+        else (
+          let post_typing_rec = Checker.Common.post_hint_typing g post x in
+          let post_opened = open_term_nv post.post px in              
+          (| post.ret_ty, post.u, post_typing_rec.ty_typing, post_opened, post_typing_rec.post_typing |)
+        )
+  in
+  let (| t, u, t_typing, post_opened, post_typing |) = res in
   let post = close_term post_opened x in
   let s : st_comp = {u;res=t;pre;post} in
   assume (open_term (close_term post_opened x) x == post_opened);
   (|
      _, //Tm_Admit c u t None,
      comp_admit c s,
-     T_Admit _ _ c (STC _ s x t_typing pre_typing (E post_typing))
+     T_Admit _ _ c (STC _ s x t_typing pre_typing post_typing)
   |)
 
 let check_return
   (allow_inst:bool)
   (g:env)
-  (t:st_term{Tm_Return? t.term})
+  (st:st_term{Tm_Return? st.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
   let g = push_context "check_return" g in
-  let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = t.term in
+  let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = st.term in
   let (| t, u, ty, uty, d |) = check_term_and_type g t in
   let x = fresh g in
   let px = v_as_nv x in
-  let (| post, post_typing |) =
-    let post =
+  let (| post_opened, post_typing |) : t:term & tot_typing (extend x (Inl ty) g)  t Tm_VProp =
       match post_hint with
-      | None -> Tm_Emp
-      | Some post -> post in
-    let post_opened = open_term_nv post px in
-    let (| post_opened, post_typing |) =
-      check_term_with_expected_type (extend x (Inl ty) g) post_opened Tm_VProp in
-    assume (open_term (close_term post_opened x) x == post_opened);
-    let post = close_term post_opened x in
-    let post_typing : tot_typing (extend x (Inl ty) g) (open_term post x) Tm_VProp = (E post_typing) in
-    (| post, post_typing |) in
-
+      | None -> 
+        let (| t, ty |) = check_term_with_expected_type (extend x (Inl ty) g) Tm_Emp Tm_VProp in
+        (| t, E ty |)
+        
+      | Some post ->
+        let post : post_hint_t = post in
+        if not (eq_tm post.ret_ty ty)
+        then T.fail (Printf.sprintf "(%s) Expected return type %s, got %s\n"
+                                    (T.range_to_string st.range)
+                                    (P.term_to_string post.ret_ty)
+                                    (P.term_to_string ty))
+        else if x `Set.mem` (freevars post.post)
+        then T.fail "Unexpected variable clash in return"
+        else 
+         let ty_rec = Checker.Common.post_hint_typing g post x in
+         (| open_term_nv post.post px, ty_rec.post_typing |)
+  in
+  assume (open_term (close_term post_opened x) x == post_opened);
+  let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
   repack (try_frame_pre pre_typing d) post_hint true
 
@@ -965,7 +991,7 @@ let handle_framing_failure
     (t0:st_term)
     (pre:term)
     (pre_typing: tot_typing g pre Tm_VProp)
-    (post_hint:option term)
+    (post_hint:post_hint_opt g)
     (failure:framing_failure)
     (check:check_t)
   : T.Tac (t:st_term &
@@ -1148,7 +1174,7 @@ let check_par
   (t:st_term{Tm_Par? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
@@ -1161,16 +1187,18 @@ let check_par
   let (| preR, preR_typing |) =
     check_term_with_expected_type g preR Tm_VProp in
 
+  let postL_hint = Checker.Common.intro_post_hint g None postL in
   let (| eL, cL, eL_typing |) =
-    check' allow_inst g eL preL (E preL_typing) (Some postL) in
+    check' allow_inst g eL preL (E preL_typing) (Some postL_hint) in
 
   // TODO: can we avoid checking cL and cR?
 
   if C_ST? cL
   then
     let cL_typing = check_comp g cL (E preL_typing) in
+    let postR_hint = Checker.Common.intro_post_hint g None postR in
     let (| eR, cR, eR_typing |) =
-      check' allow_inst g eR preR (E preR_typing) (Some postR) in
+      check' allow_inst g eR preR (E preR_typing) (Some postR_hint) in
 
     if C_ST? cR && eq_univ (comp_u cL) (comp_u cR)
     then
@@ -1182,13 +1210,28 @@ let check_par
   else T.fail "par: cL is not stt"
 
 #push-options "--z3rlimit_factor 4"
+let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
+                               (init_t:term) (x:var)
+  : post_hint_for_env (extend x (Inl init_t) g)
+  = { p with post = comp_withlocal_body_post p.post init_t (null_var x);
+             post_typing = admit() } //star typing intro
+
+let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre Tm_VProp)
+                          (init_t:term) (x:var) (i:term)
+  : tot_typing (extend x (Inl (mk_ref init_t)) g)
+               (comp_withlocal_body_pre pre init_t (null_var x) i)
+               Tm_VProp
+  = admit()
+
+
+  
 let check_withlocal
   (allow_inst:bool)
   (g:env)
   (t:st_term{Tm_WithLocal? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
@@ -1207,34 +1250,44 @@ let check_withlocal
          let x_tm = null_var x in
          let g_extended = extend x (Inl (mk_ref init_t)) g in
          let body_pre = comp_withlocal_body_pre pre init_t x_tm init in
-         let body_pre_typing = check_vprop_with_core g_extended body_pre in
+         let body_pre_typing = with_local_pre_typing pre_typing init_t x init in
          // elaborating this post here,
          //   so that later we can check the computed post to be equal to this one
-         let post =
-           let post =
+         let post : post_hint_for_env g =
+           // let post =
              match post_hint with
              | Some post -> post
-             | None -> T.fail "withlocal: no post_hint!" in
-           let (| post_opened, _ |) = check_vprop g_extended (open_term_nv post px) in
-            close_term post_opened x in
-         let body_post = comp_withlocal_body_post post init_t x_tm in
-         let (| opened_body, c_body, body_typing |) =
-           check' allow_inst g_extended (open_st_term_nv body px) body_pre body_pre_typing (Some body_post) in
-         //
-         // Checking post equality here to match the typing rule
-         // 
-         if not (C_ST? c_body && eq_tm (comp_post c_body) body_post)
-         then T.fail "withlocal: body is not stt or postcondition mismatch"
-         else let body = close_st_term opened_body x in
-              assume (open_st_term (close_st_term opened_body x) x == opened_body);
-              let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post} in
-              // This is for the typing rule, can we avoid checking it?
-              let c_typing = check_comp g c pre_typing in
-              let d = T_WithLocal g init body init_t c x
-                (E init_typing) init_t_typing c_typing body_typing in
-              (| _, //Tm_WithLocal init body,
-                 _, 
-                 d |)
+             | None -> T.fail "withlocal: no post_hint!"
+         in
+         if x `Set.mem` freevars post.post
+         then T.fail "Unexpected name clash in with_local"
+         else (
+           let body_post = extend_post_hint_for_local g post init_t x in
+           let (| opened_body, c_body, body_typing |) =
+             check' allow_inst g_extended (open_st_term_nv body px) body_pre body_pre_typing (Some body_post) in
+           //
+           // Checking post equality here to match the typing rule
+           // 
+           if not (C_ST? c_body && ///these next three checks should be excluded by a stronger type on check'
+                   eq_tm (comp_post c_body) body_post.post &&
+                   eq_tm (comp_res c_body) body_post.ret_ty &&
+                   eq_univ (comp_u c_body) body_post.u)
+           then T.fail "withlocal: body is not stt or postcondition mismatch"
+           else let body = close_st_term opened_body x in
+                assume (open_st_term (close_st_term opened_body x) x == opened_body);
+                let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
+                let c_typing =
+                    let post_typing_rec = Checker.Common.post_hint_typing g post x in
+                    intro_comp_typing g c pre_typing post_typing_rec.ty_typing x post_typing_rec.post_typing
+                in
+                let d = T_WithLocal g init body init_t c x
+                                    (E init_typing)
+                                    init_t_typing
+                                    c_typing
+                                    body_typing 
+                in
+                (| _, _, d |)
+         )
   else T.fail "withlocal: init type is not universe zero"
 #pop-options
 
@@ -1243,7 +1296,7 @@ let check_rewrite
   (t:st_term{Tm_Rewrite? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   : T.Tac (t:st_term &
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
@@ -1269,7 +1322,7 @@ let rec check' : bool -> check_t =
     (t:st_term)
     (pre:term)
     (pre_typing: tot_typing g pre Tm_VProp)
-    (post_hint:option term) ->
+    (post_hint:post_hint_opt g) ->
   let open T in
   // T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
   //            (T.range_to_string t.range)
@@ -1309,7 +1362,8 @@ let rec check' : bool -> check_t =
       let post =
         match post_if, post_hint with
         | None, Some p -> p
-        | Some p, None -> p
+        | Some p, None ->
+          Checker.Common.intro_post_hint g None p
         | _, _ -> T.fail "Either two annotations for if post or none"
       in
       check_if g b e1 e2 pre pre_typing post (check' true)
@@ -1350,7 +1404,7 @@ let rec check' : bool -> check_t =
     | Tm_WithLocal _ ->
       check_withlocal allow_inst g t pre pre_typing post_hint check'
 
-		| Tm_Rewrite _ ->
+    | Tm_Rewrite _ ->
       check_rewrite g t pre pre_typing post_hint
   with
   | Framing_failure failure ->

@@ -481,7 +481,7 @@ let translate_st_app_or_return (g:R.env) (t:R.term)
 
 let rec translate_term' (g:RT.fstar_top_env) (t:R.term)
   : T.Tac (err st_term)
-  = let tm_Abs b q pre body post = wr t (Tm_Abs {b; q; pre; body; post}) in
+  = let tm_Abs b q pre body post = wr t (Tm_Abs {b; q; pre; body; ret_ty=None; post}) in
     match R.inspect_ln t with
     | R.Tv_Abs x body -> (
       let? b, q = translate_binder g x in

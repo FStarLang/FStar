@@ -51,11 +51,12 @@ let rec freevars_st (t:st_term)
   = match t.term with
     | Tm_Return { term } ->
       freevars term
-    | Tm_Abs { b; pre; body; post } ->
+    | Tm_Abs { b; pre; body; ret_ty; post } ->
       Set.union (freevars b.binder_ty) 
                 (Set.union (freevars_st body)
                            (Set.union (freevars_opt pre)
-                                      (freevars_opt post)))
+                                      (Set.union (freevars_opt ret_ty)
+                                                 (freevars_opt post))))
     | Tm_STApp { head; arg } ->
       Set.union (freevars head) (freevars arg)
     | Tm_Bind { binder; head; body } ->
@@ -153,10 +154,11 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Return { term } ->
       ln' term i
       
-    | Tm_Abs { b; pre; body; post } ->
+    | Tm_Abs { b; pre; body; ret_ty; post } ->
       ln' b.binder_ty i &&
       ln_st' body (i + 1) &&
       ln_opt' pre (i + 1) &&
+      ln_opt' ret_ty (i + 1) &&
       ln_opt' post (i + 2)
   
     | Tm_STApp { head; arg } ->
@@ -297,11 +299,12 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
     | Tm_Return { ctag; insert_eq; term } ->
       Tm_Return { ctag; insert_eq; term=open_term' term v i }
 
-    | Tm_Abs { b; q; pre; body; post } ->
+    | Tm_Abs { b; q; pre; body; ret_ty; post } ->
       Tm_Abs { b=open_binder b v i;
                q;
                pre=open_term_opt' pre v (i + 1);
                body=open_st_term' body v (i + 1);
+               ret_ty=open_term_opt' ret_ty v (i + 1);               
                post=open_term_opt' post v (i + 2) }
 
     | Tm_STApp { head; arg_qual; arg } ->
@@ -455,11 +458,12 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
     | Tm_Return { ctag; insert_eq; term } ->
       Tm_Return { ctag; insert_eq; term=close_term' term v i }
 
-    | Tm_Abs { b; q; pre; body; post } ->
+    | Tm_Abs { b; q; pre; body; ret_ty; post } ->
       Tm_Abs { b = close_binder b v i;
                q;
                pre=close_term_opt' pre v (i + 1);
                body=close_st_term' body v (i + 1);
+               ret_ty=close_term_opt' ret_ty v (i + 1);
                post=close_term_opt' post v (i + 2) }
 
     | Tm_STApp { head; arg_qual; arg } ->

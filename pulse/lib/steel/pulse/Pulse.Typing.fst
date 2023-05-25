@@ -638,7 +638,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp ->
       tot_typing g b.binder_ty (tm_type u) ->
       st_typing (extend x (Inl b.binder_ty) g) (open_st_term_nv body (b.binder_ppname, x)) c ->
-      st_typing g (wr (Tm_Abs { b; q; pre=None; body; post=None }))
+      st_typing g (wr (Tm_Abs { b; q; pre=None; body; ret_ty=None; post=None }))
                   (C_Tot (tm_arrow b q (close_comp c x)))
   | T_STApp :
       g:env ->

@@ -91,12 +91,13 @@ let rec eq_st_term (t1 t2:st_term)
       b1 = b2 &&
       eq_tm t1 t2
 
-    | Tm_Abs { b=b1; q=o1; pre=p1; body=t1; post=q1},
-      Tm_Abs { b=b2; q=o2; pre=p2; body=t2; post=q2} ->
+    | Tm_Abs { b=b1; q=o1; pre=p1; body=t1; ret_ty=r1; post=q1},
+      Tm_Abs { b=b2; q=o2; pre=p2; body=t2; ret_ty=r2; post=q2} ->
       eq_tm b1.binder_ty b2.binder_ty &&
       o1=o2 &&
       eq_tm_opt p1 p2 &&
       eq_st_term t1 t2 &&
+      eq_tm_opt r1 r2 &&
       eq_tm_opt q1 q2
   
     | Tm_STApp { head=h1; arg_qual=o1; arg=t1},

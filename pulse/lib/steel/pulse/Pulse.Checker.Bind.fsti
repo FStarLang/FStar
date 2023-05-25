@@ -13,7 +13,7 @@ val check_bind (g:env)
                (t:st_term{Tm_Bind? t.term})
                (pre:term)
                (pre_typing:tot_typing g pre Tm_VProp)
-               (post_hint:option term)
+               (post_hint:post_hint_opt g)               
                (check:check_t)
   : T.Tac (t:st_term &
            c:comp { stateful_comp c ==> comp_pre c == pre } &
@@ -24,7 +24,7 @@ val check_tot_bind
   (t:st_term{Tm_TotBind? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
-  (post_hint:option term)
+  (post_hint:post_hint_opt g)
   (check:check_t)
   : T.Tac (t:st_term &
            c:comp { stateful_comp c ==> comp_pre c == pre } &
