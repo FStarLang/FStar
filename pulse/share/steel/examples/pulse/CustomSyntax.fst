@@ -334,8 +334,18 @@ fn if_then_else_in_specs (r:ref U32.t)
 }
 ```
 
+```pulse
+fn test_tot_let (r:ref U32.t)
+  requires (pts_to r full_perm 0ul)
+  ensures  (pts_to r full_perm 2ul)
+{
+  let x = 1ul;
+  let y = 1ul;
+  r := U32.add x y
+}
+```
 
-// Same issue as UnitTests, ascriptions coming in the way
+// Ascriptions coming in the way
 // ```pulse
 // fn if_then_else_in_specs2 (r:ref U32.t) (b:bool)
 //   requires (pts_to r full_perm (if b then 0ul else 1ul))
