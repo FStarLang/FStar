@@ -1338,9 +1338,12 @@ let rec check' : bool -> check_t =
     then auto_elims g pre t
     else t
   in
-  T.print (Printf.sprintf "At %s: precondition is %s\n"
+  if RU.debug_at_level g "proof_states"
+  then (
+    T.print (Printf.sprintf "At %s: precondition is %s\n"
                           (T.range_to_string t.range)
-                          (Pulse.Syntax.Printer.term_to_string pre));
+                          (Pulse.Syntax.Printer.term_to_string pre))
+  );
   let g = push_context (tag_of_st_term t) g in
   try 
     match t.term with

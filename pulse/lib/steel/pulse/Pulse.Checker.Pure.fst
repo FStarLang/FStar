@@ -51,6 +51,7 @@ let rtb_instantiate_implicits g f t =
   debug g (fun _ -> Printf.sprintf "Calling instantiate_implicits on %s"
                                        (T.term_to_string t));
   let res = RTB.instantiate_implicits f t in
+  debug g (fun _ -> "Returned from instantiate_implicits");
   res
 
 let rtb_core_check_term_at_type g f e t =
