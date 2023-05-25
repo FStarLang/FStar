@@ -10,10 +10,6 @@ open Pulse.Typing
 module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
 
-
-let push_context (ctx:string) (g:env) : (g':env { g == g' })
-  = {g with ctxt = RU.extend_context ctx g.ctxt}
-
 let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
 let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
 

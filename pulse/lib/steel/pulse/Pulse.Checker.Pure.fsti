@@ -9,6 +9,10 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Readback
 module RTB = FStar.Tactics.Builtins
+module RU = Pulse.RuntimeUtils
+
+let push_context (ctx:string) (g:env) : (g':env { g == g' })
+  = {g with ctxt = RU.extend_context ctx g.ctxt}
 
 val print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string
 
