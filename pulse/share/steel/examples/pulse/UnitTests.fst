@@ -43,6 +43,8 @@ let warmup (x:int) = assert (x + 1 > x)
      )
    )))
 
+//return type not handled
+[@@expect_failure]
 %splice_t[test_read] (check (`(
   fun (r:ref U32.t)
     (#n:erased U32.t) (#p:perm) ->

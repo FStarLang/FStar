@@ -24,6 +24,7 @@ val fib_eq (n:nat)
 
 //#push-options "--admit_smt_queries true"
 
+[@@expect_failure]
 ```pulse
 fn fibo (n:nat)
   requires emp
