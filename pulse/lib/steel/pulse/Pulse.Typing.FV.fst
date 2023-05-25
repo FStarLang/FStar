@@ -101,9 +101,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' head x i;
       freevars_close_term' arg x i
     
-    | Tm_Abs { b; pre; body; post } ->
+    | Tm_Abs { b; pre; body; ret_ty; post } ->
       freevars_close_term' b.binder_ty x i;
       freevars_close_term_opt' pre x (i + 1);
+      freevars_close_term_opt' ret_ty x (i + 1);      
       freevars_close_st_term' body x (i + 1);
       freevars_close_term_opt' post x (i + 2)
 

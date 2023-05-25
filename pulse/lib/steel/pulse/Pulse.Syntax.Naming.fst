@@ -86,10 +86,11 @@ let rec close_open_inverse_st'  (t:st_term)
     | Tm_ElimExists { p } ->
       close_open_inverse' p x i    
 
-    | Tm_Abs { b; pre; body; post } ->
+    | Tm_Abs { b; pre; body; ret_ty; post } ->
       close_open_inverse' b.binder_ty x i;
       close_open_inverse_st' body x (i + 1);
       close_open_inverse_opt' pre x (i + 1);
+      close_open_inverse_opt' ret_ty x (i + 1);      
       close_open_inverse_opt' post x (i + 2)
 
     | Tm_Bind { binder; head; body } ->

@@ -117,9 +117,10 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' l x i;
       open_term_ln' r x i
 
-    | Tm_Abs { b; pre; body; post } ->
+    | Tm_Abs { b; pre; body; ret_ty; post } ->
       open_term_ln' b.binder_ty x i;
       open_term_ln_opt' pre x (i + 1);
+      open_term_ln_opt' ret_ty x (i + 1);      
       open_st_term_ln' body x (i + 1);
       open_term_ln_opt' post x (i + 2)
       
@@ -302,9 +303,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening head i j;
       ln_weakening_st body (i + 1) (j + 1)
 
-    | Tm_Abs { b; pre; body; post } ->
+    | Tm_Abs { b; pre; body; ret_ty; post } ->
       ln_weakening b.binder_ty i j;
       ln_weakening_opt pre (i + 1) (j + 1);
+      ln_weakening_opt ret_ty (i + 1) (j + 1);      
       ln_weakening_st body (i + 1) (j + 1);
       ln_weakening_opt post (i + 2) (j + 2)
 
@@ -458,9 +460,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' head x i;
       open_term_ln_inv' arg x i
 
-    | Tm_Abs { b; pre; body; post } ->
+    | Tm_Abs { b; pre; body; ret_ty; post } ->
       open_term_ln_inv' b.binder_ty x i;
       open_term_ln_inv_opt' pre x (i + 1);
+      open_term_ln_inv_opt' ret_ty x (i + 1);      
       open_term_ln_inv_st' body x (i + 1);
       open_term_ln_inv_opt' post x (i + 2)
 
@@ -606,9 +609,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' head x i;
       close_term_ln' arg x i
 
-    | Tm_Abs { b; pre; body; post } ->
+    | Tm_Abs { b; pre; body; ret_ty; post } ->
       close_term_ln' b.binder_ty x i;
       close_term_ln_opt' pre x (i + 1);
+      close_term_ln_opt' ret_ty x (i + 1);      
       close_st_term_ln' body x (i + 1);
       close_term_ln_opt' post x (i + 2)
 
