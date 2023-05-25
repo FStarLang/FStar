@@ -107,18 +107,28 @@ let pulse_arrow_formals (t:S.term) =
     )
     else None
 
+let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
+
+type stapp_or_return_t =
+  | STApp  : SW.st_term -> stapp_or_return_t
+  | Return : S.term -> stapp_or_return_t
+
+let st_term_of_stapp_or_return (t:stapp_or_return_t) : SW.st_term =
+  match t with
+  | STApp t -> t
+  | Return t -> ret t
+
 let stapp_or_return (env:env_t) (s:S.term)
-  : SW.st_term
+  : stapp_or_return_t
   = let r = s.pos in
-    let ret s = SW.(tm_return (as_term s) r) in
     let head, args = U.head_and_args_full s in
     match head.n with
     | S.Tm_fvar fv -> (
       match TcEnv.try_lookup_lid env.tcenv fv.fv_name.v with
-      | None -> ret s
+      | None -> Return s
       | Some ((_, t), _) ->
         match pulse_arrow_formals t with
-        | None -> ret s
+        | None -> Return s
         | Some formals ->
           let is_binder_implicit (b:S.binder) =
             match b.binder_qual with
@@ -153,21 +163,21 @@ let stapp_or_return (env:env_t) (s:S.term)
           in
           match uninst_formals formals args with
           | None -> //likely ill-typed; leave as is
-            ret s
+            Return s
 
           | Some formals ->
             if L.for_all is_binder_implicit formals
             then ( //this is an st app
               let head = S.mk_Tm_app head (L.init args) s.pos in
               let last, q = L.last args in
-              SW.(tm_st_app (tm_expr head) q (as_term last) r)
+              STApp SW.(tm_st_app (tm_expr head) q (as_term last) r)
             )
             else (
               //partial app of a stateful function
-              ret s
+              Return s
             )
       )
-    | _ -> ret s
+    | _ -> Return s
 
 
 let tosyntax' (env:env_t) (t:A.term)
@@ -251,6 +261,9 @@ let rec desugar_vprop (env:env_t) (v:Sugar.vprop)
       in
       aux env binders
 
+let mk_totbind b s1 s2 r : SW.st_term =
+  SW.tm_totbind b s1 s2 r
+
 let mk_bind b s1 s2 r : SW.st_term = 
   if SW.is_tm_intro_exists s1
   then SW.tm_bind b (SW.tm_protect s1) (SW.tm_protect s2) r
@@ -264,7 +277,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     match s.s with
     | Expr { e } -> 
       let? tm = tosyntax env e in
-      return (stapp_or_return env tm)
+      return (st_term_of_stapp_or_return (stapp_or_return env tm))
 
     | Assignment { id; value } ->
       let? lhs = resolve_name env id in
@@ -363,9 +376,15 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
       match lb.qualifier with
       | None -> //just a regular bind
         let? s1 = tosyntax env e1 in
-        let s1 = stapp_or_return env s1 in
-        return (mk_bind (SW.mk_binder lb.id annot) s1 s2 r)
-      
+        let b = SW.mk_binder lb.id annot in
+        let t =
+          match stapp_or_return env s1 with
+          | STApp s1 ->
+            mk_bind b s1 s2 r
+          | Return s1 ->
+            mk_totbind b (as_term s1) s2 r
+        in
+        return t
       | Some MUT //these are handled the same for now
       | Some REF -> 
         let? e1 = desugar_term env e1 in 
