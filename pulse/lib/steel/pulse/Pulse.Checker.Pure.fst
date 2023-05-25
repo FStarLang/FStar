@@ -12,10 +12,6 @@ module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module RU = Pulse.RuntimeUtils
 
-
-let push_context (ctx:string) (g:env) : (g':env { g == g' })
-  = {g with ctxt = RU.extend_context ctx g.ctxt}
-
 let ctx_to_string c =
     match c with
     | [] -> ""
