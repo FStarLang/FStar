@@ -346,13 +346,31 @@ let (pulse_arrow_formals :
                     else FStar_Pervasives_Native.None
                 | uu___5 -> FStar_Pervasives_Native.None))
         else FStar_Pervasives_Native.None
+let (ret : FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.st_term) =
+  fun s ->
+    let uu___ = as_term s in
+    PulseSyntaxWrapper.tm_return uu___ s.FStar_Syntax_Syntax.pos
+type stapp_or_return_t =
+  | STApp of PulseSyntaxWrapper.st_term 
+  | Return of FStar_Syntax_Syntax.term 
+let (uu___is_STApp : stapp_or_return_t -> Prims.bool) =
+  fun projectee -> match projectee with | STApp _0 -> true | uu___ -> false
+let (__proj__STApp__item___0 :
+  stapp_or_return_t -> PulseSyntaxWrapper.st_term) =
+  fun projectee -> match projectee with | STApp _0 -> _0
+let (uu___is_Return : stapp_or_return_t -> Prims.bool) =
+  fun projectee -> match projectee with | Return _0 -> true | uu___ -> false
+let (__proj__Return__item___0 :
+  stapp_or_return_t -> FStar_Syntax_Syntax.term) =
+  fun projectee -> match projectee with | Return _0 -> _0
+let (st_term_of_stapp_or_return :
+  stapp_or_return_t -> PulseSyntaxWrapper.st_term) =
+  fun t -> match t with | STApp t1 -> t1 | Return t1 -> ret t1
 let (stapp_or_return :
-  env_t -> FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.st_term) =
+  env_t -> FStar_Syntax_Syntax.term -> stapp_or_return_t) =
   fun env ->
     fun s ->
       let r = s.FStar_Syntax_Syntax.pos in
-      let ret s1 =
-        let uu___ = as_term s1 in PulseSyntaxWrapper.tm_return uu___ r in
       let uu___ = FStar_Syntax_Util.head_and_args_full s in
       match uu___ with
       | (head, args) ->
@@ -362,11 +380,11 @@ let (stapp_or_return :
                  FStar_TypeChecker_Env.try_lookup_lid env.tcenv
                    (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                (match uu___1 with
-                | FStar_Pervasives_Native.None -> ret s
+                | FStar_Pervasives_Native.None -> Return s
                 | FStar_Pervasives_Native.Some ((uu___2, t), uu___3) ->
                     let uu___4 = pulse_arrow_formals t in
                     (match uu___4 with
-                     | FStar_Pervasives_Native.None -> ret s
+                     | FStar_Pervasives_Native.None -> Return s
                      | FStar_Pervasives_Native.Some formals ->
                          let is_binder_implicit b =
                            match b.FStar_Syntax_Syntax.binder_qual with
@@ -398,7 +416,7 @@ let (stapp_or_return :
                                  else uninst_formals formals2 args2 in
                          let uu___5 = uninst_formals formals args in
                          (match uu___5 with
-                          | FStar_Pervasives_Native.None -> ret s
+                          | FStar_Pervasives_Native.None -> Return s
                           | FStar_Pervasives_Native.Some formals1 ->
                               let uu___6 =
                                 FStar_Compiler_List.for_all
@@ -413,12 +431,14 @@ let (stapp_or_return :
                                 (match uu___7 with
                                  | (last, q) ->
                                      let uu___8 =
-                                       PulseSyntaxWrapper.tm_expr head1 in
-                                     let uu___9 = as_term last in
-                                     PulseSyntaxWrapper.tm_st_app uu___8 q
-                                       uu___9 r)
-                              else ret s)))
-           | uu___1 -> ret s)
+                                       let uu___9 =
+                                         PulseSyntaxWrapper.tm_expr head1 in
+                                       let uu___10 = as_term last in
+                                       PulseSyntaxWrapper.tm_st_app uu___9 q
+                                         uu___10 r in
+                                     STApp uu___8)
+                              else Return s)))
+           | uu___1 -> Return s)
 let (tosyntax' :
   env_t -> FStar_Parser_AST.term -> FStar_Syntax_Syntax.term err) =
   fun env ->
@@ -535,6 +555,14 @@ let rec (desugar_vprop :
                                 PulseSyntaxWrapper.tm_exists b body2 in
                               return uu___4)) in
           aux env binders
+let (mk_totbind :
+  PulseSyntaxWrapper.binder ->
+    PulseSyntaxWrapper.term ->
+      PulseSyntaxWrapper.st_term ->
+        PulseSyntaxWrapper.range -> PulseSyntaxWrapper.st_term)
+  =
+  fun b ->
+    fun s1 -> fun s2 -> fun r -> PulseSyntaxWrapper.tm_totbind b s1 s2 r
 let (mk_bind :
   PulseSyntaxWrapper.binder ->
     PulseSyntaxWrapper.st_term ->
@@ -560,7 +588,11 @@ let rec (desugar_stmt :
       | PulseSugar.Expr { PulseSugar.e = e;_} ->
           let uu___ = tosyntax env e in
           op_let_Question uu___
-            (fun tm -> let uu___1 = stapp_or_return env tm in return uu___1)
+            (fun tm ->
+               let uu___1 =
+                 let uu___2 = stapp_or_return env tm in
+                 st_term_of_stapp_or_return uu___2 in
+               return uu___1)
       | PulseSugar.Assignment
           { PulseSugar.id = id; PulseSugar.value = value;_} ->
           let uu___ = resolve_name env id in
@@ -759,13 +791,17 @@ and (desugar_bind :
                              let uu___2 = tosyntax env e1 in
                              op_let_Question uu___2
                                (fun s1 ->
-                                  let s11 = stapp_or_return env s1 in
-                                  let uu___3 =
-                                    let uu___4 =
-                                      PulseSyntaxWrapper.mk_binder
-                                        lb.PulseSugar.id1 annot in
-                                    mk_bind uu___4 s11 s21 r in
-                                  return uu___3)
+                                  let b =
+                                    PulseSyntaxWrapper.mk_binder
+                                      lb.PulseSugar.id1 annot in
+                                  let t =
+                                    let uu___3 = stapp_or_return env s1 in
+                                    match uu___3 with
+                                    | STApp s11 -> mk_bind b s11 s21 r
+                                    | Return s11 ->
+                                        let uu___4 = as_term s11 in
+                                        mk_totbind b uu___4 s21 r in
+                                  return t)
                          | FStar_Pervasives_Native.Some (PulseSugar.MUT) ->
                              let uu___2 = desugar_term env e1 in
                              op_let_Question uu___2
@@ -876,7 +912,7 @@ let (desugar_computation_type :
         (fun pre ->
            let uu___1 = desugar_term env c.PulseSugar.return_type in
            op_let_Question uu___1
-             (fun ret ->
+             (fun ret1 ->
                 let uu___2 = push_bv env c.PulseSugar.return_name in
                 match uu___2 with
                 | (env1, bv) ->
@@ -892,7 +928,7 @@ let (desugar_computation_type :
                              let uu___4 =
                                let uu___5 =
                                  PulseSyntaxWrapper.mk_binder
-                                   c.PulseSugar.return_name ret in
+                                   c.PulseSugar.return_name ret1 in
                                PulseSyntaxWrapper.mk_comp pre uu___5 post1 in
                              return uu___4
                          | PulseSugar.STAtomic inames ->
@@ -902,7 +938,7 @@ let (desugar_computation_type :
                                   let uu___5 =
                                     let uu___6 =
                                       PulseSyntaxWrapper.mk_binder
-                                        c.PulseSugar.return_name ret in
+                                        c.PulseSugar.return_name ret1 in
                                     PulseSyntaxWrapper.atomic_comp inames1
                                       pre uu___6 post1 in
                                   return uu___5)
@@ -913,7 +949,7 @@ let (desugar_computation_type :
                                   let uu___5 =
                                     let uu___6 =
                                       PulseSyntaxWrapper.mk_binder
-                                        c.PulseSugar.return_name ret in
+                                        c.PulseSugar.return_name ret1 in
                                     PulseSyntaxWrapper.ghost_comp inames1 pre
                                       uu___6 post1 in
                                   return uu___5))))

@@ -90,7 +90,10 @@ let tm_st_app (head:term) (q:S.aqual) (arg:term) r : st_term =
     
 let tm_bind (x:binder) (e1:st_term) (e2:st_term) r : st_term =
   PSB.(with_range (tm_bind x e1 e2) r)
-  
+
+let tm_totbind (x:binder) (e1:term) (e2:st_term) r : st_term =
+  PSB.(with_range (tm_totbind x e1 e2) r)
+
 let tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) r : st_term =
   PSB.(with_range (tm_with_local v k) r)
    

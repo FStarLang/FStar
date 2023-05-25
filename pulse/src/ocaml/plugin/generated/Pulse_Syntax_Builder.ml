@@ -64,14 +64,17 @@ let (tm_bind :
             Pulse_Syntax_Base.head1 = head;
             Pulse_Syntax_Base.body1 = body
           }
-let (tm_totbind :
-  Pulse_Syntax_Base.term ->
-    Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
+let tm_totbind :
+  'uuuuu .
+    'uuuuu ->
+      Pulse_Syntax_Base.term ->
+        Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term'
   =
-  fun head ->
-    fun body ->
-      Pulse_Syntax_Base.Tm_TotBind
-        { Pulse_Syntax_Base.head2 = head; Pulse_Syntax_Base.body2 = body }
+  fun _binder ->
+    fun head ->
+      fun body ->
+        Pulse_Syntax_Base.Tm_TotBind
+          { Pulse_Syntax_Base.head2 = head; Pulse_Syntax_Base.body2 = body }
 let (tm_if :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
