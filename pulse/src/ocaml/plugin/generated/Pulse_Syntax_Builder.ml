@@ -17,22 +17,25 @@ let (tm_abs :
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
       Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
         Pulse_Syntax_Base.st_term ->
-          Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
-            Pulse_Syntax_Base.st_term')
+          Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
+            Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
+              Pulse_Syntax_Base.st_term')
   =
   fun b ->
     fun q ->
       fun pre ->
         fun body ->
-          fun post ->
-            Pulse_Syntax_Base.Tm_Abs
-              {
-                Pulse_Syntax_Base.b = b;
-                Pulse_Syntax_Base.q = q;
-                Pulse_Syntax_Base.pre1 = pre;
-                Pulse_Syntax_Base.body = body;
-                Pulse_Syntax_Base.post1 = post
-              }
+          fun ret_ty ->
+            fun post ->
+              Pulse_Syntax_Base.Tm_Abs
+                {
+                  Pulse_Syntax_Base.b = b;
+                  Pulse_Syntax_Base.q = q;
+                  Pulse_Syntax_Base.pre1 = pre;
+                  Pulse_Syntax_Base.body = body;
+                  Pulse_Syntax_Base.ret_ty = ret_ty;
+                  Pulse_Syntax_Base.post1 = post
+                }
 let (tm_stapp :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->

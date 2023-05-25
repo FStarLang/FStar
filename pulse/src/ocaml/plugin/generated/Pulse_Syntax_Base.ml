@@ -151,6 +151,7 @@ and st_term'__Tm_Abs__payload =
   q: qualifier FStar_Pervasives_Native.option ;
   pre1: vprop FStar_Pervasives_Native.option ;
   body: st_term ;
+  ret_ty: term FStar_Pervasives_Native.option ;
   post1: vprop FStar_Pervasives_Native.option }
 and st_term'__Tm_STApp__payload =
   {
@@ -325,11 +326,15 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_Return { ctag = c1; insert_eq = b1; term = t11;_}, Tm_Return
          { ctag = c2; insert_eq = b2; term = t21;_}) ->
           ((c1 = c2) && (b1 = b2)) && (eq_tm t11 t21)
-      | (Tm_Abs { b = b1; q = o1; pre1 = p1; body = t11; post1 = q1;_},
-         Tm_Abs { b = b2; q = o2; pre1 = p2; body = t21; post1 = q2;_}) ->
-          ((((eq_tm b1.binder_ty b2.binder_ty) && (o1 = o2)) &&
-              (eq_tm_opt p1 p2))
-             && (eq_st_term t11 t21))
+      | (Tm_Abs
+         { b = b1; q = o1; pre1 = p1; body = t11; ret_ty = r1; post1 = q1;_},
+         Tm_Abs
+         { b = b2; q = o2; pre1 = p2; body = t21; ret_ty = r2; post1 = q2;_})
+          ->
+          (((((eq_tm b1.binder_ty b2.binder_ty) && (o1 = o2)) &&
+               (eq_tm_opt p1 p2))
+              && (eq_st_term t11 t21))
+             && (eq_tm_opt r1 r2))
             && (eq_tm_opt q1 q2)
       | (Tm_STApp { head = h1; arg_qual = o1; arg = t11;_}, Tm_STApp
          { head = h2; arg_qual = o2; arg = t21;_}) ->

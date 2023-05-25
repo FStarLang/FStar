@@ -329,7 +329,11 @@ let check_if (g:env)
         //       we have typing of pre in g
         //       weakening should give typing of pre in g_then
         //
-        let pre_typing = check_vprop_with_core g_with_eq pre in
+        let pre_typing = 
+            Metatheory.tot_typing_weakening hyp 
+                                            (Inl (mk_eq2 u0 tm_bool b eq_v))
+                                            pre_typing
+        in
         let (| br, c, br_typing |) =
             check g_with_eq br pre pre_typing (Some post_hint)
         in

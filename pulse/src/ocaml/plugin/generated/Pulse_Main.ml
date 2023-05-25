@@ -3084,7 +3084,7 @@ let rec (translate_term' :
     fun t ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "Pulse.Main.fst" (Prims.of_int (484))
-           (Prims.of_int (35)) (Prims.of_int (484)) (Prims.of_int (72)))
+           (Prims.of_int (35)) (Prims.of_int (484)) (Prims.of_int (85)))
         (FStar_Range.mk_range "Pulse.Main.fst" (Prims.of_int (485))
            (Prims.of_int (4)) (Prims.of_int (539)) (Prims.of_int (41)))
         (FStar_Tactics_Effect.lift_div_tac
@@ -3101,6 +3101,8 @@ let rec (translate_term' :
                                Pulse_Syntax_Base.q = q;
                                Pulse_Syntax_Base.pre1 = pre;
                                Pulse_Syntax_Base.body = body;
+                               Pulse_Syntax_Base.ret_ty =
+                                 FStar_Pervasives_Native.None;
                                Pulse_Syntax_Base.post1 = post
                              })))
         (fun uu___ ->

@@ -947,10 +947,14 @@ let (desugar_decl :
                                    PulseSyntaxWrapper.comp_pre comp1 in
                                  let uu___6 =
                                    let uu___7 =
-                                     PulseSyntaxWrapper.comp_post comp1 in
+                                     PulseSyntaxWrapper.comp_res comp1 in
                                    FStar_Pervasives_Native.Some uu___7 in
+                                 let uu___7 =
+                                   let uu___8 =
+                                     PulseSyntaxWrapper.comp_post comp1 in
+                                   FStar_Pervasives_Native.Some uu___8 in
                                  PulseSyntaxWrapper.tm_abs last q uu___5
-                                   body1 uu___6 p.PulseSugar.range2 in
+                                   body1 uu___6 uu___7 p.PulseSugar.range2 in
                                return uu___4
                            | ((q, b)::bs2, bv::bvs2) ->
                                let uu___4 = aux bs2 bvs2 in
@@ -962,6 +966,7 @@ let (desugar_decl :
                                     let uu___5 =
                                       PulseSyntaxWrapper.tm_abs b q
                                         PulseSyntaxWrapper.tm_emp body2
+                                        FStar_Pervasives_Native.None
                                         FStar_Pervasives_Native.None
                                         p.PulseSugar.range2 in
                                     return uu___5)

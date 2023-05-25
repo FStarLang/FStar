@@ -32,3 +32,9 @@ val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
     tot_typing (extend x (Inl ty) g) p Tm_VProp
+
+val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
+                         (x:var { fresh_wrt x g Set.empty })
+                         (b:binding)
+                         (_:tot_typing g t ty)
+   : tot_typing (extend x b g) t ty

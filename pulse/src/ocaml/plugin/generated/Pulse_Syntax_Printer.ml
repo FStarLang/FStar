@@ -896,7 +896,7 @@ let rec (st_term_to_string :
     | Pulse_Syntax_Base.Tm_Abs
         { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = q;
           Pulse_Syntax_Base.pre1 = pre; Pulse_Syntax_Base.body = body;
-          Pulse_Syntax_Base.post1 = post;_}
+          Pulse_Syntax_Base.ret_ty = uu___; Pulse_Syntax_Base.post1 = post;_}
         ->
         FStar_Tactics_Effect.tac_bind
           (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
@@ -905,8 +905,8 @@ let rec (st_term_to_string :
           (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
              (Prims.of_int (180)) (Prims.of_int (6)) (Prims.of_int (185))
              (Prims.of_int (38))) (Obj.magic (st_term_to_string body))
-          (fun uu___ ->
-             (fun uu___ ->
+          (fun uu___1 ->
+             (fun uu___1 ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
@@ -924,8 +924,8 @@ let rec (st_term_to_string :
                               (Prims.of_int (180)) (Prims.of_int (6))
                               (Prims.of_int (185)) (Prims.of_int (38)))
                            (Obj.magic (term_opt_to_string post))
-                           (fun uu___1 ->
-                              (fun uu___1 ->
+                           (fun uu___2 ->
+                              (fun uu___2 ->
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
                                       (FStar_Range.mk_range
@@ -956,8 +956,8 @@ let rec (st_term_to_string :
                                                (Prims.of_int (38)))
                                             (Obj.magic
                                                (term_opt_to_string pre))
-                                            (fun uu___2 ->
-                                               (fun uu___2 ->
+                                            (fun uu___3 ->
+                                               (fun uu___3 ->
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (FStar_Range.mk_range
@@ -989,9 +989,9 @@ let rec (st_term_to_string :
                                                              (Obj.magic
                                                                 (binder_to_string
                                                                    b))
-                                                             (fun uu___3 ->
+                                                             (fun uu___4 ->
                                                                 FStar_Tactics_Effect.lift_div_tac
-                                                                  (fun uu___4
+                                                                  (fun uu___5
                                                                     ->
                                                                     fun x ->
                                                                     fun x1 ->
@@ -1006,7 +1006,7 @@ let rec (st_term_to_string :
                                                                     (qual_to_string
                                                                     q) ""))
                                                                     (Prims.strcat
-                                                                    uu___3
+                                                                    uu___4
                                                                     ") {"))
                                                                     (Prims.strcat
                                                                     x "} {_."))
@@ -1015,18 +1015,18 @@ let rec (st_term_to_string :
                                                                     "} -> "))
                                                                     (Prims.strcat
                                                                     x2 ")")))))
-                                                       (fun uu___3 ->
+                                                       (fun uu___4 ->
                                                           FStar_Tactics_Effect.lift_div_tac
-                                                            (fun uu___4 ->
-                                                               uu___3 uu___2))))
-                                                 uu___2)))
-                                      (fun uu___2 ->
+                                                            (fun uu___5 ->
+                                                               uu___4 uu___3))))
+                                                 uu___3)))
+                                      (fun uu___3 ->
                                          FStar_Tactics_Effect.lift_div_tac
-                                           (fun uu___3 -> uu___2 uu___1))))
-                                uu___1)))
-                     (fun uu___1 ->
+                                           (fun uu___4 -> uu___3 uu___2))))
+                                uu___2)))
+                     (fun uu___2 ->
                         FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___2 -> uu___1 uu___)))) uu___)
+                          (fun uu___3 -> uu___2 uu___1)))) uu___1)
     | Pulse_Syntax_Base.Tm_If
         { Pulse_Syntax_Base.b1 = b; Pulse_Syntax_Base.then_ = then_;
           Pulse_Syntax_Base.else_ = else_; Pulse_Syntax_Base.post2 = uu___;_}

@@ -124,6 +124,36 @@ let rec mk_bind (g:env)
 #pop-options
 
 
+
+let bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { Metatheory.fresh_wrt x g (freevars s2.post) })
+                             (post_hint:post_hint_opt g)
+  : T.Tac (universe_of g s2.res s2.u &
+           tot_typing (extend x (Inl s2.res) g) (open_term_nv s2.post (v_as_nv x)) Tm_VProp)
+  = match post_hint with
+    | None -> 
+      (* We're inferring a post, so these checks are unavoidable *)
+      (* since we need to type the result in a smaller env g *)          
+      let (| u, res_typing |) = check_universe g s2.res in 
+      if not (eq_univ u s2.u)
+      then T.fail "Unexpected universe for result type"
+      else if x `Set.mem` freevars s2.post
+      then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
+      else (
+        let y = x in //fresh g in
+        let s2_post_opened = open_term_nv s2.post (v_as_nv y) in
+        let post_typing = check_vprop_with_core (extend y (Inl s2.res) g) s2_post_opened in
+        res_typing, post_typing
+      )
+    | Some post -> 
+      if not (eq_tm s2.post post.post &&
+              eq_tm s2.res post.ret_ty &&
+              eq_univ s2.u post.u)
+      then T.fail "Unexpected mismatched postcondition in bind" //exclude with a stronger type on check'
+      else (
+         let pr = Pulse.Checker.Common.post_hint_typing g post x in
+         pr.ty_typing, pr.post_typing
+      )
+
 #push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1 --query_stats"
 let check_bind
   (g:env)
@@ -147,36 +177,27 @@ let check_bind
     let (| t_typing, _, x, next_pre_typing |) = Metatheory.st_comp_typing_inversion s1_typing in
     let px = b.binder_ppname, x in
     let next_pre = open_term_nv s1.post px in
-        // T.print (Printf.sprintf "Bind::e1 %s \n\nx %s\n\ne2 %s\n\nnext_pre %s\n\n"
-        //            (P.term_to_string e1)
-        //            (string_of_int x)
-        //            (P.term_to_string (open_term e2 x))
-        //            (P.term_to_string next_pre));
     let g' = extend x (Inl s1.res) g in
     let (| e2', c2, d2 |) = check g' (open_st_term_nv e2 px) next_pre next_pre_typing post_hint in
     FV.st_typing_freevars d2;
-    if C_Tot? c2
-    then T.fail "Bind: c2 is not st"
-    else (
+    assume (not (C_Tot? c2));
+    // if C_Tot? c2
+    // then T.fail "Bind: c2 is not st"
+    // else
+    ( 
       let e2_closed = close_st_term e2' x in
       assume (open_st_term e2_closed x == e2');
       let d2 : st_typing g' e2' c2 = d2 in
       let d2 : st_typing g' (open_st_term e2_closed x) c2 = d2 in
       let s2 = st_comp_of_comp c2 in
-      (* this next check is unavoidable, since we need to type the result in a smaller env g *)          
-      let (| u, res_typing |) = check_universe g s2.res in 
-      if not (eq_univ u s2.u)
-      then T.fail "Unexpected universe for result type"
-      else if x `Set.mem` freevars s2.post
+      if x `Set.mem` freevars s2.post
       then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
       else (
-        let y = x in //fresh g in
-        let s2_post_opened = open_term_nv s2.post (v_as_nv y) in
-        let post_typing = check_vprop_with_core (extend y (Inl s2.res) g) s2_post_opened in
-        //assume (~ (x `Set.mem` freevars_st e2_closed));
+        let res_typing, post_typing = bind_res_and_post_typing g s2 x post_hint  in
         mk_bind g pre e1 e2_closed c1 c2 px d1 t_typing d2 res_typing post_typing
       )
     )
+
 #pop-options
 //F* takes a long time to compute a VC for the definition above^. Z3 finishes the proof quickly
 

@@ -436,12 +436,13 @@ let desugar_decl (env:env_t)
         return (SW.tm_abs last q
                           (SW.comp_pre comp)
                           body
+                          (Some (SW.comp_res comp))
                           (Some (SW.comp_post comp))
                           p.range)
       | (q, b)::bs, bv::bvs ->
         let? body = aux bs bvs in
         let body = SW.close_st_term body bv.index in
-        return (SW.tm_abs b q SW.tm_emp body None p.range)
+        return (SW.tm_abs b q SW.tm_emp body None None p.range)
       | _ -> fail "Unexpected empty binders in decl" r_
     in
     aux bs bvs

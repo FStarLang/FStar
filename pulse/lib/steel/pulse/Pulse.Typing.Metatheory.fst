@@ -48,4 +48,5 @@ let tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
     tot_typing (extend x (Inl ty) g) p Tm_VProp
   = admit(), admit()
 
+let tot_typing_weakening #g #t #ty x b d = admit()
 

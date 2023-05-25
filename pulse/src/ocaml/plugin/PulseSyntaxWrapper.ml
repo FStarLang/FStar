@@ -79,10 +79,11 @@ let tm_abs (b:binder)
            (q:qualifier option)
            (pre:term)
            (body:st_term)
+           (ret_ty:term option)
            (post:term option)
            r
   : st_term 
-  = PSB.(with_range (tm_abs b q (Some pre) body post) r)
+  = PSB.(with_range (tm_abs b q (Some pre) body ret_ty post) r)
 
 let tm_st_app (head:term) (q:S.aqual) (arg:term) r : st_term =
   PSB.(with_range (tm_stapp head (map_aqual q) arg) r)
@@ -124,6 +125,13 @@ let comp_pre c =
    | C_STAtomic (_, st)
    | C_STGhost (_, st) -> st.pre
    | _ -> tm_emp
+
+let comp_res c =
+  match c with
+   | C_ST st
+   | C_STAtomic (_, st)
+   | C_STGhost (_, st) -> st.res
+   | C_Tot t -> t
 
 let comp_post c =
   match c with

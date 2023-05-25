@@ -60,11 +60,13 @@ let rec (freevars_st :
     | Pulse_Syntax_Base.Tm_Abs
         { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = uu___;
           Pulse_Syntax_Base.pre1 = pre; Pulse_Syntax_Base.body = body;
+          Pulse_Syntax_Base.ret_ty = ret_ty;
           Pulse_Syntax_Base.post1 = post;_}
         ->
         FStar_Set.union (freevars b.Pulse_Syntax_Base.binder_ty)
           (FStar_Set.union (freevars_st body)
-             (FStar_Set.union (freevars_opt pre) (freevars_opt post)))
+             (FStar_Set.union (freevars_opt pre)
+                (FStar_Set.union (freevars_opt ret_ty) (freevars_opt post))))
     | Pulse_Syntax_Base.Tm_STApp
         { Pulse_Syntax_Base.head = head; Pulse_Syntax_Base.arg_qual = uu___;
           Pulse_Syntax_Base.arg = arg;_}
@@ -180,11 +182,13 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_Abs
           { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = uu___;
             Pulse_Syntax_Base.pre1 = pre; Pulse_Syntax_Base.body = body;
+            Pulse_Syntax_Base.ret_ty = ret_ty;
             Pulse_Syntax_Base.post1 = post;_}
           ->
-          (((ln' b.Pulse_Syntax_Base.binder_ty i) &&
-              (ln_st' body (i + Prims.int_one)))
-             && (ln_opt' pre (i + Prims.int_one)))
+          ((((ln' b.Pulse_Syntax_Base.binder_ty i) &&
+               (ln_st' body (i + Prims.int_one)))
+              && (ln_opt' pre (i + Prims.int_one)))
+             && (ln_opt' ret_ty (i + Prims.int_one)))
             && (ln_opt' post (i + (Prims.of_int (2))))
       | Pulse_Syntax_Base.Tm_STApp
           { Pulse_Syntax_Base.head = head;
@@ -378,6 +382,7 @@ let rec (open_st_term' :
           | Pulse_Syntax_Base.Tm_Abs
               { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = q;
                 Pulse_Syntax_Base.pre1 = pre; Pulse_Syntax_Base.body = body;
+                Pulse_Syntax_Base.ret_ty = ret_ty;
                 Pulse_Syntax_Base.post1 = post;_}
               ->
               Pulse_Syntax_Base.Tm_Abs
@@ -388,6 +393,8 @@ let rec (open_st_term' :
                     (open_term_opt' pre v (i + Prims.int_one));
                   Pulse_Syntax_Base.body =
                     (open_st_term' body v (i + Prims.int_one));
+                  Pulse_Syntax_Base.ret_ty =
+                    (open_term_opt' ret_ty v (i + Prims.int_one));
                   Pulse_Syntax_Base.post1 =
                     (open_term_opt' post v (i + (Prims.of_int (2))))
                 }
@@ -662,6 +669,7 @@ let rec (close_st_term' :
           | Pulse_Syntax_Base.Tm_Abs
               { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = q;
                 Pulse_Syntax_Base.pre1 = pre; Pulse_Syntax_Base.body = body;
+                Pulse_Syntax_Base.ret_ty = ret_ty;
                 Pulse_Syntax_Base.post1 = post;_}
               ->
               Pulse_Syntax_Base.Tm_Abs
@@ -672,6 +680,8 @@ let rec (close_st_term' :
                     (close_term_opt' pre v (i + Prims.int_one));
                   Pulse_Syntax_Base.body =
                     (close_st_term' body v (i + Prims.int_one));
+                  Pulse_Syntax_Base.ret_ty =
+                    (close_term_opt' ret_ty v (i + Prims.int_one));
                   Pulse_Syntax_Base.post1 =
                     (close_term_opt' post v (i + (Prims.of_int (2))))
                 }
