@@ -2150,7 +2150,7 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
           U.comp_result c)}) in
       let l' = mk (Tm_match {scrutinee=e;ret_opt=asc_opt;brs=brs';rc_opt=lopt'}) l.pos in
       let must_tot = true in
-      match! do_unify_maybe_guards false must_tot (goal_env g) l' r with
+      begin match! do_unify_maybe_guards false must_tot (goal_env g) l' r with
       | None -> fail "discharging the equality failed"
       | Some guard ->
         if Env.is_trivial_guard_formula guard
@@ -2160,6 +2160,7 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
           solve g U.exp_unit
         )
         else failwith "internal error: _t_refl: guard is not trivial"
+      end
     | _ ->
       fail "lhs is not a match"
     end
