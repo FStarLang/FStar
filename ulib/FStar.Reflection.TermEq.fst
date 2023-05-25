@@ -101,7 +101,8 @@ let bv_cmp x1 x2 =
   let v2 = inspect_bv x2 in
   pack_inspect_bv x1;
   pack_inspect_bv x2;
-  if v1.bv_index = v2.bv_index then Eq else Neq
+  sealed_singl v1.sort v2.sort;
+  if v1.index = v2.index then Eq else Neq
 
 val namedv_cmp : comparator_for namedv
 let namedv_cmp x1 x2 =
@@ -109,7 +110,8 @@ let namedv_cmp x1 x2 =
   let v2 = inspect_namedv x2 in
   pack_inspect_namedv x1;
   pack_inspect_namedv x2;
-  if v1.namedv_uniq = v2.namedv_uniq then Eq else Neq
+  sealed_singl v1.sort v2.sort;
+  if v1.uniq = v2.uniq then Eq else Neq
 
 val fv_cmp : comparator_for fv
 let fv_cmp f1 f2 =
@@ -227,7 +229,6 @@ val term_cmp         : comparator_for term
 val binder_cmp       : comparator_for binder
 val aqual_cmp        : comparator_for aqualv
 val arg_cmp          : comparator_for argv
-val binding_bv_cmp   : comparator_for bv
 val comp_cmp         : comparator_for comp
 val pat_cmp          : comparator_for pattern
 val pat_arg_cmp      : comparator_for (pattern & bool)
@@ -262,9 +263,8 @@ let rec term_cmp t1 t2 =
   | Tv_Type u1, Tv_Type u2 ->
     univ_cmp u1 u2
 
-  | Tv_Refine v1 sort1 r1, Tv_Refine v2 sort2 r2 ->
-    binding_bv_cmp v1 v2
-     &&& term_cmp sort1 sort2
+  | Tv_Refine sb1 r1, Tv_Refine sb2 r2 ->
+    binder_cmp sb1 sb2
      &&& term_cmp r1 r2
 
   | Tv_Const c1, Tv_Const c2 ->
@@ -273,11 +273,10 @@ let rec term_cmp t1 t2 =
   | Tv_Uvar n1 u1, Tv_Uvar n2 u2 ->
     eq_cmp n1 n2 &&& ctxu_cmp u1 u2
 
-  | Tv_Let r1 attrs1 bv1 ty1 e1 b1, Tv_Let r2 attrs2 bv2 ty2 e2 b2 ->
+  | Tv_Let r1 attrs1 sb1 e1 b1, Tv_Let r2 attrs2 sb2 e2 b2 ->
     eq_cmp r1 r2
      &&& list_dec_cmp t1 t2 term_cmp attrs1 attrs2
-     &&& binding_bv_cmp bv1 bv2
-     &&& term_cmp ty1 ty2
+     &&& binder_cmp sb1 sb2
      &&& term_cmp e1 e2
      &&& term_cmp b1 b2
 
@@ -312,17 +311,6 @@ and aqual_cmp a1 a2 =
   | Q_Meta m1, Q_Meta m2 -> term_cmp m1 m2
   | _ -> Neq
 
-(* FIXME: currently we need to compare the indices
-of binding bvs, but they should not matter at all. *)
-and binding_bv_cmp x1 x2 =
-  let v1 = inspect_bv x1 in
-  let v2 = inspect_bv x2 in
-  pack_inspect_bv x1;
-  pack_inspect_bv x2;
-  if v1.bv_index = v2.bv_index
-   then Eq
-   else Neq
-
 and match_returns_ascription_cmp asc1 asc2 =
   let (b1, (tc1, tacopt1, eq1)) = asc1 in
   let (b2, (tc2, tacopt2, eq2)) = asc2 in
@@ -336,9 +324,9 @@ and binder_cmp b1 b2 =
   let bv2 = inspect_binder b2 in
   pack_inspect_binder b1;
   pack_inspect_binder b2;
-  term_cmp bv1.binder_sort bv2.binder_sort
-   &&& aqual_cmp bv1.binder_qual bv2.binder_qual
-   &&& list_dec_cmp b1 b2 term_cmp bv1.binder_attrs bv2.binder_attrs
+  term_cmp bv1.sort bv2.sort
+   &&& aqual_cmp bv1.qual bv2.qual
+   &&& list_dec_cmp b1 b2 term_cmp bv1.attrs bv2.attrs
 
 and comp_cmp c1 c2 =
   let cv1 = inspect_comp c1 in
@@ -370,15 +358,15 @@ and br_cmp br1 br2 =
 
 and pat_cmp p1 p2 =
   match p1, p2 with
-  | Pat_Var v1 st1, Pat_Var v2 st2 ->
-    Sealed.sealed_singl st1 st2;
-    bv_cmp v1 v2
-  | Pat_Constant c1, Pat_Constant c2 -> const_cmp c1 c2
-  | Pat_Dot_Term t1, Pat_Dot_Term t2 -> opt_dec_cmp p1 p2 term_cmp t1 t2
-  | Pat_Cons f1 us1 args1, Pat_Cons f2 us2 args2 ->
-    fv_cmp f1 f2
-     &&& opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) us1 us2
-     &&& list_dec_cmp p1 p2 pat_arg_cmp args1 args2
+  | Pat_Var x1, Pat_Var x2 ->
+    sealed_singl x1.sort x2.sort;
+    Eq
+  | Pat_Constant x1, Pat_Constant x2 -> const_cmp x1.c x2.c
+  | Pat_Dot_Term x1, Pat_Dot_Term x2 -> opt_dec_cmp p1 p2 term_cmp x1.t x2.t
+  | Pat_Cons x1, Pat_Cons x2 ->
+    fv_cmp x1.head x2.head
+     &&& opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) x1.univs x2.univs
+     &&& list_dec_cmp p1 p2 pat_arg_cmp x1.subpats x2.subpats
 
   | _ -> Neq
 
@@ -480,14 +468,14 @@ let rec faithful t =
     faithful_binder b /\ faithful_comp c
   | Tv_Type u ->
     faithful_univ u
-  | Tv_Refine b sort phi ->
-    faithful sort
+  | Tv_Refine b phi ->
+    faithful_binder b
      /\ faithful phi
 
   | Tv_Uvar n u -> False
-  | Tv_Let r ats x ty e b ->
+  | Tv_Let r ats x e b ->
     faithful_attrs ats
-     /\ faithful ty
+     /\ faithful_binder x
      /\ faithful e
      /\ faithful b
 
@@ -517,7 +505,7 @@ and faithful_qual (q:aqualv) : Type0 =
 
 and faithful_binder (b:binder) : Type0 =
   match inspect_binder b with
-  | {binder_sort=sort; binder_qual=q; binder_attrs=attrs} ->
+  | {sort=sort; qual=q; attrs=attrs} ->
     faithful sort /\ faithful_qual q /\ faithful_attrs attrs
 
 and faithful_branch (b : branch) : Type0 =
@@ -527,13 +515,14 @@ and faithful_branch (b : branch) : Type0 =
 and faithful_pattern (p : pattern) : Type0 =
   match p with
   | Pat_Constant _ -> True
-  | Pat_Cons h usopt pats ->
-    optP p (allP p faithful_univ) usopt
-     /\ allP p faithful_pattern_arg pats
+  | Pat_Cons {head; univs; subpats} ->
+    optP p (allP p faithful_univ) univs
+     /\ allP p faithful_pattern_arg subpats
+
   (* non-binding bvs are always OK *)
-  | Pat_Var bv _ -> True
-  | Pat_Dot_Term None -> True
-  | Pat_Dot_Term (Some t) -> faithful t
+  | Pat_Var _ -> True
+  | Pat_Dot_Term {t=None} -> True
+  | Pat_Dot_Term {t=(Some t)} -> faithful t
 
 and faithful_pattern_arg (pb : pattern * bool) : Type0 =
   faithful_pattern (fst pb)
@@ -562,17 +551,17 @@ let faithful_Tv_UInst (t : term) (f : fv) (us : list universe)
           (ensures allP t faithful_univ us)
   = ()
 
-let faithful_Tv_Let (t : term) (recf : bool) (attrs : list term) (bv:bv) (ty:typ) (def body : term)
-  : Lemma (requires inspect_ln t == Tv_Let recf attrs bv ty def body
+let faithful_Tv_Let (t : term) (recf : bool) (attrs : list term) (b:simple_binder) (ty:typ) (def body : term)
+  : Lemma (requires inspect_ln t == Tv_Let recf attrs b def body
                   /\ faithful t)
           (ensures faithful_attrs attrs)
   = ()
 
-let term_eq_Tv_Let (t1 t2 : term) (recf1 recf2 : bool) (attrs1 attrs2 : list term) (bv1 bv2:bv) (ty1 ty2:typ) (def1 def2 body1 body2: term)
-  : Lemma (requires inspect_ln t1 == Tv_Let recf1 attrs1 bv1 ty1 def1 body1
-                  /\ inspect_ln t2 == Tv_Let recf2 attrs2 bv2 ty2 def2 body2)
-          (ensures term_cmp t1 t2 == (eq_cmp recf1 recf2 &&& list_dec_cmp t1 t2 term_cmp attrs1 attrs2 &&& binding_bv_cmp bv1 bv2 &&& term_cmp ty1 ty2 &&& term_cmp def1 def2 &&& term_cmp body1 body2))
-  = assume (term_cmp t1 t2 == (eq_cmp recf1 recf2 &&& list_dec_cmp t1 t2 term_cmp attrs1 attrs2 &&& binding_bv_cmp bv1 bv2 &&& term_cmp ty1 ty2 &&& term_cmp def1 def2 &&& term_cmp body1 body2)) // #2908, somehow assert_norm also does not work
+let term_eq_Tv_Let (t1 t2 : term) (recf1 recf2 : bool) (attrs1 attrs2 : list term) (b1 b2:simple_binder)  (def1 def2 body1 body2: term)
+  : Lemma (requires inspect_ln t1 == Tv_Let recf1 attrs1 b1 def1 body1
+                  /\ inspect_ln t2 == Tv_Let recf2 attrs2 b2 def2 body2)
+          (ensures term_cmp t1 t2 == (eq_cmp recf1 recf2 &&& list_dec_cmp t1 t2 term_cmp attrs1 attrs2 &&& binder_cmp b1 b2 &&& term_cmp def1 def2 &&& term_cmp body1 body2))
+  = assume (term_cmp t1 t2 == (eq_cmp recf1 recf2 &&& list_dec_cmp t1 t2 term_cmp attrs1 attrs2 &&& binder_cmp b1 b2 &&& term_cmp def1 def2 &&& term_cmp body1 body2)) // #2908, somehow assert_norm also does not work
 
 let faithful_Tv_Match (t : term) (sc : term) (o : option match_returns_ascription) (brs : list branch)
   : Lemma (requires inspect_ln t == Tv_Match sc o brs /\ faithful t)
@@ -589,13 +578,13 @@ let term_eq_Tv_Match (t1 t2 : term) (sc1 sc2 : term) (o1 o2 : option match_retur
                     &&& opt_dec_cmp t1 t2 match_returns_ascription_cmp o1 o2
                    &&& list_dec_cmp t1 t2 br_cmp brs1 brs2)) // #2908, somehow assert_norm also does not work
 
-let faithful_Pat_Cons (p : pattern) (f:fv) (ous : option universes) (args : list (pattern & bool))
-  : Lemma (requires p == Pat_Cons f ous args /\ faithful_pattern p)
-          (ensures allP p faithful_pattern_arg args)
-  = assert_norm (faithful_pattern p ==> allP p faithful_pattern_arg args) // #2908
+let faithful_Pat_Cons (p : pattern) (f:fv) (ous : option universes) (subpats : list (pattern & bool))
+  : Lemma (requires p == Pat_Cons {head=f;univs=ous;subpats=subpats} /\ faithful_pattern p)
+          (ensures allP p faithful_pattern_arg subpats)
+  = assert_norm (faithful_pattern p ==> allP p faithful_pattern_arg subpats) // #2908
 
 let pat_eq_Pat_Cons (p1 p2 : pattern) (f1 f2 : fv) (ous1 ous2 : option universes) (args1 args2 : list (pattern & bool))
-  : Lemma (requires p1 == Pat_Cons f1 ous1 args1 /\ p2 == Pat_Cons f2 ous2 args2)
+  : Lemma (requires p1 == Pat_Cons {head=f1;univs=ous1;subpats=args1} /\ p2 == Pat_Cons {head=f2; univs=ous2; subpats=args2})
           (ensures pat_cmp p1 p2 == (fv_cmp f1 f2
                                     &&& opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) ous1 ous2
                                     &&& list_dec_cmp p1 p2 pat_arg_cmp args1 args2))
@@ -640,16 +629,16 @@ let rec faithful_lemma (t1 t2 : term) =
     faithful_lemma_comp c1 c2
   | Tv_Type u1, Tv_Type u2 ->
     univ_faithful_lemma u1 u2
-  | Tv_Refine b1 sort1 t1, Tv_Refine b2 sort2 t2 ->
-    faithful_lemma sort1 sort2;
+  | Tv_Refine b1 t1, Tv_Refine b2 t2 ->
+    faithful_lemma_binder b1 b2;
     faithful_lemma t1 t2
 
-  | Tv_Let r1 ats1 x1 ty1 e1 b1, Tv_Let r2 ats2 x2 ty2 e2 b2 ->
+  | Tv_Let r1 ats1 x1 e1 b1, Tv_Let r2 ats2 x2 e2 b2 ->
     faithful_lemma_attrs_dec t1 t2 ats1 ats2;
-    faithful_lemma ty1 ty2;
+    faithful_lemma_binder x1 x2;
     faithful_lemma e1 e2;
     faithful_lemma b1 b2;
-    (***)term_eq_Tv_Let t1 t2 r1 r2 ats1 ats2 x1 x2 ty1 ty2 e1 e2 b1 b2;
+    (***)term_eq_Tv_Let t1 t2 r1 r2 ats1 ats2 x1 x2 e1 e2 b1 b2;
     ()
 
   | Tv_Match sc1 o1 brs1, Tv_Match sc2 o2 brs2 ->
@@ -678,20 +667,24 @@ let rec faithful_lemma (t1 t2 : term) =
 
 and faithful_lemma_pattern (p1 p2 : pattern) : Lemma (requires faithful_pattern p1 /\ faithful_pattern p2) (ensures defined (pat_cmp p1 p2)) =
   match p1, p2 with
-  | Pat_Var v1 _, Pat_Var v2 _ -> ()
+  | Pat_Var v1, Pat_Var v2 -> ()
   | Pat_Constant c1, Pat_Constant c2 -> ()
-  | Pat_Dot_Term (Some t1), Pat_Dot_Term (Some t2) -> faithful_lemma t1 t2
-  | Pat_Cons f1 uso1 args1, Pat_Cons f2 uso2 args2 ->
-    (***)faithful_Pat_Cons p1 f1 uso1 args1;
-    (***)faithful_Pat_Cons p2 f2 uso2 args2;
-    let aux : squash (defined (opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) uso1 uso2)) =
-      match uso1, uso2 with
+  | Pat_Dot_Term {t=(Some t1)}, Pat_Dot_Term {t=(Some t2)} ->
+    assume (t1 << p1); // FIXME, this is obvious. Is it just out of fuel?
+    assume (t2 << p2); // FIXME, this is obvious. Is it just out of fuel?
+    faithful_lemma t1 t2
+  | Pat_Cons x1, Pat_Cons x2 ->
+    (***)faithful_Pat_Cons p1 x1.head x1.univs x1.subpats;
+    (***)faithful_Pat_Cons p2 x2.head x2.univs x2.subpats;
+    let aux : squash (defined (opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) x1.univs x2.univs)) =
+      match x1.univs, x2.univs with
       | Some us1, Some us2 ->
         univ_faithful_lemma_list p1 p2 us1 us2
       | _ -> ()
     in
-    faithful_lemma_pattern_args p1 p2 args1 args2;
-    (***)pat_eq_Pat_Cons p1 p2 f1 f2 uso1 uso2 args1 args2
+    faithful_lemma_pattern_args p1 p2 x1.subpats x2.subpats;
+    (***)pat_eq_Pat_Cons p1 p2 x1.head x2.head x1.univs x2.univs x1.subpats x2.subpats;
+    ()
 
   | _ -> ()
 
@@ -749,13 +742,13 @@ and faithful_lemma_arg (a1 a2 : argv) : Lemma (requires faithful_arg a1 /\ faith
 and faithful_lemma_binder (b1 b2 : binder) : Lemma (requires faithful_binder b1 /\ faithful_binder b2) (ensures defined (binder_cmp b1 b2)) =
   let bv1 = inspect_binder b1 in
   let bv2 = inspect_binder b2 in
-  faithful_lemma_qual bv1.binder_qual bv2.binder_qual;
-  faithful_lemma bv1.binder_sort bv2.binder_sort;
-  faithful_lemma_attrs_dec b1 b2 bv1.binder_attrs bv2.binder_attrs;
+  faithful_lemma_qual bv1.qual bv2.qual;
+  faithful_lemma bv1.sort bv2.sort;
+  faithful_lemma_attrs_dec b1 b2 bv1.attrs bv2.attrs;
   assert_norm (
-      (term_cmp bv1.binder_sort bv2.binder_sort
-       &&& aqual_cmp bv1.binder_qual bv2.binder_qual
-       &&& list_dec_cmp b1 b2 term_cmp bv1.binder_attrs bv2.binder_attrs) == binder_cmp b1 b2);
+      (term_cmp bv1.sort bv2.sort
+       &&& aqual_cmp bv1.qual bv2.qual
+       &&& list_dec_cmp b1 b2 term_cmp bv1.attrs bv2.attrs) == binder_cmp b1 b2);
   ()
 
 and faithful_lemma_qual (q1 q2 : aqualv) : Lemma (requires faithful_qual q1 /\ faithful_qual q2) (ensures defined (aqual_cmp q1 q2)) =

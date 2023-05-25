@@ -73,6 +73,7 @@ type named_term_view =
   | Tv_Const  : vconst -> named_term_view
   | Tv_Uvar   : nat -> ctx_uvar_and_subst -> named_term_view
   | Tv_Let    : recf:bool -> attrs:(list term) -> b:simple_named_binder -> def:term -> body:term -> named_term_view
+  // TODO: returns ascription has a binder, open?
   | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> named_term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> named_term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> named_term_view
@@ -189,6 +190,10 @@ let inspect (t:term) : Tac named_term_view =
 let pack (tv:named_term_view) : Tot term =
   let tv = close_view tv in
   pack_ln tv
+
+// Repeat from FStar.Reflection.Data
+let notAscription (tv:named_term_view) : bool =
+  not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
 
 (* Clients of this module use the named view. *)
 let term_view = named_term_view

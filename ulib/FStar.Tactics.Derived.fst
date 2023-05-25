@@ -37,13 +37,12 @@ let bv_to_string (bv : bv) : Tac string =
     (* Could also print type...? *)
     name_of_bv bv
 
-let bv_of_binder = binder_bv
-
 let name_of_binder (b : binder) : Tac string =
-    name_of_bv (binder_bv b)
+  unseal (inspect_binder b).ppname
 
 let binder_to_string (b : binder) : Tac string =
-    bv_to_string (binder_bv b) //TODO: print aqual, attributes
+  // TODO: print aqual, attributes..? or no?
+  name_of_binder b
 
 let type_of_var (x : namedv) : Tac typ =
   unseal ((inspect_namedv x).sort)
@@ -629,24 +628,24 @@ let l_to_r (lems:list term) : Tac unit =
     pointwise first_or_trefl
 
 let mk_squash (t : term) : term =
-    let sq : term = pack_ln (Tv_FVar (pack_fv squash_qn)) in
+    let sq : term = pack (Tv_FVar (pack_fv squash_qn)) in
     mk_e_app sq [t]
 
 let mk_sq_eq (t1 t2 : term) : term =
-    let eq : term = pack_ln (Tv_FVar (pack_fv eq2_qn)) in
+    let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
     mk_squash (mk_e_app eq [t1; t2])
 
 (** Rewrites all appearances of a term [t1] in the goal into [t2].
 Creates a new goal for [t1 == t2]. *)
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    let e = pack_ln (Tv_Var e) in
+    let e = pack (Tv_Var e) in
     pointwise (fun () ->
       (* If the LHS is a uvar, do nothing, so we do not instantiate it. *)
       let is_uvar =
         match term_as_formula (cur_goal()) with
         | Comp (Eq _) lhs rhs ->
-          (match inspect_ln lhs with
+          (match inspect lhs with
            | Tv_Uvar _ _ -> true
            | _ -> false)
         | _ -> false
@@ -859,7 +858,7 @@ let bump_nth (n:pos) : Tac unit =
 
 let rec destruct_list (t : term) : Tac (list term) =
     let head, args = collect_app t in
-    match inspect_ln head, args with
+    match inspect head, args with
     | Tv_FVar fv, [(a1, Q_Explicit); (a2, Q_Explicit)]
     | Tv_FVar fv, [(_, Q_Implicit); (a1, Q_Explicit); (a2, Q_Explicit)] ->
       if inspect_fv fv = cons_qn
@@ -918,29 +917,31 @@ exception Appears
 appears in the term [t]. *)
 let name_appears_in (nm:name) (t:term) : Tac bool =
   let ff (t : term) : Tac term =
-    match t with
+    match inspect t with
     | Tv_FVar fv ->
       if inspect_fv fv = nm then
         raise Appears;
       t
-    | t -> t
+    | tv -> pack tv
   in
   try ignore (V.visit_tm ff t); false with
   | Appears -> true
   | e -> raise e
 
 (** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
-let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+let rec mk_abs (args : list named_binder) (t : term) : Tac term (decreases args) =
   match args with
   | [] -> t
   | a :: args' ->
     let t' = mk_abs args' t in
     pack (Tv_Abs a t')
 
-let binder_from_namedv (nm : namedv) : binder =
-  let nmv = inspect_namedv nm in
-  pack_binder {
-    ppname = nmv.ppname;
+let namedv_to_simple_named_binder (n : namedv) : Tac simple_named_binder =
+  let nv = inspect_namedv n in
+  {
+    ppname = nv.ppname;
+    uniq   = nv.uniq;
+    sort   = unseal nv.sort; (* GGG USINGSORT *)
     qual   = Q_Explicit;
     attrs  = [];
   }
@@ -956,7 +957,10 @@ let string_to_term_with_lb
         e, (v,bv)::lb_bvs
       ) (e, []) letbindings in
     let t = string_to_term e t in
-    fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv i t)) t lb_bvs
+    fold_left (fun t (i, bv) ->
+          let nb = namedv_to_simple_named_binder bv in
+          pack (Tv_Let false [] nb i t))
+        t lb_bvs
 
 private
 val lem_trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->

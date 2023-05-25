@@ -15,35 +15,27 @@
 *)
 module FStar.Reflection.Formula
 open FStar.List.Tot
-open FStar.Tactics.Effect
-open FStar.Tactics.Builtins
 open FStar.Reflection.Builtins
 open FStar.Reflection.Types
 open FStar.Reflection.Derived
 open FStar.Reflection.Const
 open FStar.Reflection.Data
 
-///// Cannot open FStar.Tactics.Derived here /////
-private let bv_to_string (bv : bv) : Tac string =
-    let bvv = inspect_bv bv in
-    unseal bvv.ppname
-
-private let namedv_to_string (namedv : namedv) : Tac string =
-    let namedvv = inspect_namedv namedv in
-    unseal namedvv.ppname
-
-private let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
-  match inspect t with
+///// Helpers (we cannot use the ones in Tactics.Derived, those are for named views /////
+private let rec inspect_unascribe (t:term) : Tot (tv:term_view{notAscription tv /\ tv << t}) =
+  match inspect_ln t with
   | Tv_AscribedT t _ _ _
   | Tv_AscribedC t _ _ _ ->
     inspect_unascribe t
   | tv -> tv
+
 private let rec collect_app' (args : list argv) (t : term)
-  : Tac (term * list argv) =
+  : Tot (term * list argv) (decreases t) =
     match inspect_unascribe t with
     | Tv_App l r ->
         collect_app' (r::args) l
     | _ -> (t, args)
+
 private let collect_app = collect_app' []
 /////
 
@@ -69,19 +61,19 @@ noeq type formula =
   | IntLit : int -> formula
   | F_Unknown : formula // Also a baked-in "None"
 
-let mk_Forall (typ : term) (pred : term) : Tac formula =
+let mk_Forall (typ : term) (pred : term) : Tot formula =
     let b = pack_bv ({ ppname = as_ppname "x";
                        sort = seal typ;
                        index = 0; }) in
     Forall b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
-let mk_Exists (typ : term) (pred : term) : Tac formula =
+let mk_Exists (typ : term) (pred : term) : Tot formula =
     let b = pack_bv ({ ppname = as_ppname "x";
                        sort = seal typ;
                        index = 0; }) in
     Exists b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
-let term_as_formula' (t:term) : Tac formula =
+let term_as_formula' (t:term) : Tot formula =
     match inspect_unascribe t with
     | Tv_Var n ->
         Name n
@@ -155,13 +147,15 @@ let term_as_formula' (t:term) : Tac formula =
     | Tv_BVar _ -> F_Unknown
 
 // Unsquashing
-let term_as_formula (t:term) : Tac formula =
+let term_as_formula (t:term) : Tot formula =
     match unsquash_term t with
     | None -> F_Unknown
     | Some t ->
         term_as_formula' t
 
-let term_as_formula_total (t:term) : Tac formula =
+// Badly named, this only means it always returns a formula even if not properly
+// squashed at the top-level.
+let term_as_formula_total (t:term) : Tot formula =
     term_as_formula' (maybe_unsquash_term t)
 
 let formula_as_term_view (f:formula) : Tot term_view =
@@ -204,6 +198,13 @@ let formula_as_term_view (f:formula) : Tot term_view =
 
 let formula_as_term (f:formula) : Tot term =
     pack_ln (formula_as_term_view f)
+
+open FStar.Tactics.Effect
+open FStar.Tactics.Builtins (* For unseal *)
+
+private let namedv_to_string (namedv : namedv) : Tac string =
+    let namedvv = inspect_namedv namedv in
+    unseal namedvv.ppname
 
 let formula_to_string (f:formula) : Tac string =
     match f with
