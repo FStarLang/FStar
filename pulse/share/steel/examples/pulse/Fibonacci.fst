@@ -23,17 +23,17 @@ fn fibo (n:pos)
   let mut i = 1;
   let mut j = 1;
   let mut ctr = 1;
-  introduce exists b vi vj vctr. (
-       pure (b == (vctr < n)) `star`
-       pts_to i full_perm vi `star`
-       pts_to j full_perm vj `star`
-       pts_to ctr full_perm vctr `star`     
-       pure (1 <= vctr /\
-             vctr <= n /\
-             vi == fib (vctr - 1) /\
-             vj == fib vctr)
-  )
-  with (1 < n);
+  // introduce exists b vi vj vctr. (
+  //      pure (b == (vctr < n)) `star`
+  //      pts_to i full_perm vi `star`
+  //      pts_to j full_perm vj `star`
+  //      pts_to ctr full_perm vctr `star`     
+  //      pure (1 <= vctr /\
+  //            vctr <= n /\
+  //            vi == fib (vctr - 1) /\
+  //            vj == fib vctr)
+  // )
+  // with (1 < n);
   while (let vctr = !ctr; (vctr < n))
   invariant b . exists vi vj vctr. (
      pure (b == (vctr < n)) `star`

@@ -788,6 +788,74 @@ let (check_vprop_equiv :
                                      (fun uu___2 ->
                                         FStar_Tactics_Derived.fail uu___2)))))
                  uu___)
+type ('g, 'ctxt, 'req) frame_for_req_in_ctxt =
+  (Pulse_Syntax_Base.term, unit, unit) FStar_Pervasives.dtuple3
+let (check_frameable :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.term ->
+      unit ->
+        Pulse_Syntax_Base.term ->
+          (((unit, unit, unit) frame_for_req_in_ctxt, framing_failure)
+             FStar_Pervasives.either,
+            unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun ctxt -> fun ctxt_typing -> fun req -> split_vprop g ctxt () req
+let (apply_frame :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.st_term ->
+      Pulse_Syntax_Base.term ->
+        unit ->
+          Pulse_Syntax_Base.comp ->
+            (unit, unit, unit) Pulse_Typing.st_typing ->
+              (unit, unit, unit) frame_for_req_in_ctxt ->
+                (Pulse_Syntax_Base.comp_st,
+                  (unit, unit, unit) Pulse_Typing.st_typing) Prims.dtuple2)
+  =
+  fun g ->
+    fun t ->
+      fun ctxt ->
+        fun ctxt_typing ->
+          fun c ->
+            fun t_typing ->
+              fun frame_t ->
+                let s = Pulse_Syntax_Base.st_comp_of_comp c in
+                let uu___ = frame_t in
+                match uu___ with
+                | FStar_Pervasives.Mkdtuple3 (frame, frame_typing, ve) ->
+                    let t_typing1 =
+                      Pulse_Typing.T_Frame (g, t, c, frame, (), t_typing) in
+                    let c' = Pulse_Typing.add_frame c frame in
+                    let c'_typing =
+                      Pulse_Typing_Metatheory.st_typing_correctness g t
+                        (Pulse_Typing.add_frame c frame) t_typing1 in
+                    let s' = Pulse_Syntax_Base.st_comp_of_comp c' in
+                    let s'' =
+                      {
+                        Pulse_Syntax_Base.u = (s'.Pulse_Syntax_Base.u);
+                        Pulse_Syntax_Base.res = (s'.Pulse_Syntax_Base.res);
+                        Pulse_Syntax_Base.pre = ctxt;
+                        Pulse_Syntax_Base.post = (s'.Pulse_Syntax_Base.post)
+                      } in
+                    let c'' = Pulse_Syntax_Base.with_st_comp c' s'' in
+                    let st_typing =
+                      Pulse_Typing_Metatheory.comp_typing_inversion g
+                        (Pulse_Typing.add_frame c frame) c'_typing in
+                    let uu___1 =
+                      Pulse_Typing_Metatheory.st_comp_typing_inversion g
+                        (Pulse_Syntax_Base.st_comp_of_comp
+                           (Pulse_Typing.add_frame c frame)) st_typing in
+                    (match uu___1 with
+                     | FStar_Pervasives.Mkdtuple4
+                         (res_typing, pre_typing, x, post_typing) ->
+                         let st_equiv =
+                           Pulse_Typing.ST_VPropEquiv
+                             (g, c', c'', x, (), (), (), (), ()) in
+                         let t_typing2 =
+                           Pulse_Typing.T_Equiv
+                             (g, t, (Pulse_Typing.add_frame c frame), c'',
+                               t_typing1, st_equiv) in
+                         Prims.Mkdtuple2 (c'', t_typing2))
 let (try_frame_pre :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.st_term ->
@@ -808,138 +876,22 @@ let (try_frame_pre :
             fun t_typing ->
               FStar_Tactics_Effect.tac_bind
                 (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                   (Prims.of_int (342)) (Prims.of_int (12))
-                   (Prims.of_int (342)) (Prims.of_int (29)))
+                   (Prims.of_int (385)) (Prims.of_int (10))
+                   (Prims.of_int (385)) (Prims.of_int (49)))
                 (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                   (Prims.of_int (343)) (Prims.of_int (4))
-                   (Prims.of_int (361)) (Prims.of_int (29)))
-                (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> Pulse_Syntax_Base.st_comp_of_comp c))
+                   (Prims.of_int (385)) (Prims.of_int (4))
+                   (Prims.of_int (387)) (Prims.of_int (66)))
+                (Obj.magic
+                   (check_frameable g pre () (Pulse_Syntax_Base.comp_pre c)))
                 (fun uu___ ->
-                   (fun s ->
-                      Obj.magic
-                        (FStar_Tactics_Effect.tac_bind
-                           (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                              (Prims.of_int (343)) (Prims.of_int (10))
-                              (Prims.of_int (343)) (Prims.of_int (44)))
-                           (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                              (Prims.of_int (343)) (Prims.of_int (4))
-                              (Prims.of_int (361)) (Prims.of_int (29)))
-                           (Obj.magic
-                              (split_vprop g pre () s.Pulse_Syntax_Base.pre))
-                           (fun uu___ ->
-                              FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___1 ->
-                                   match uu___ with
-                                   | FStar_Pervasives.Inr failure ->
-                                       FStar_Pervasives.Inr failure
-                                   | FStar_Pervasives.Inl
-                                       (FStar_Pervasives.Mkdtuple3
-                                       (frame, frame_typing, ve)) ->
-                                       (match Pulse_Typing_Metatheory.st_comp_typing_inversion
-                                                g
-                                                (Pulse_Syntax_Base.st_comp_of_comp
-                                                   (Pulse_Typing.add_frame c
-                                                      frame))
-                                                (Pulse_Typing_Metatheory.comp_typing_inversion
-                                                   g
-                                                   (Pulse_Typing.add_frame c
-                                                      frame)
-                                                   (Pulse_Typing_Metatheory.st_typing_correctness
-                                                      g t
-                                                      (Pulse_Typing.add_frame
-                                                         c frame)
-                                                      (Pulse_Typing.T_Frame
-                                                         (g, t, c, frame, (),
-                                                           t_typing))))
-                                        with
-                                        | FStar_Pervasives.Mkdtuple4
-                                            (res_typing, pre_typing1, x,
-                                             post_typing)
-                                            ->
-                                            FStar_Pervasives.Inl
-                                              (Prims.Mkdtuple2
-                                                 ((Pulse_Syntax_Base.with_st_comp
-                                                     (Pulse_Typing.add_frame
-                                                        c frame)
-                                                     {
-                                                       Pulse_Syntax_Base.u =
-                                                         ((Pulse_Syntax_Base.st_comp_of_comp
-                                                             (Pulse_Typing.add_frame
-                                                                c frame)).Pulse_Syntax_Base.u);
-                                                       Pulse_Syntax_Base.res
-                                                         =
-                                                         ((Pulse_Syntax_Base.st_comp_of_comp
-                                                             (Pulse_Typing.add_frame
-                                                                c frame)).Pulse_Syntax_Base.res);
-                                                       Pulse_Syntax_Base.pre
-                                                         = pre;
-                                                       Pulse_Syntax_Base.post
-                                                         =
-                                                         ((Pulse_Syntax_Base.st_comp_of_comp
-                                                             (Pulse_Typing.add_frame
-                                                                c frame)).Pulse_Syntax_Base.post)
-                                                     }),
-                                                   (Pulse_Typing.T_Equiv
-                                                      (g, t,
-                                                        (Pulse_Typing.add_frame
-                                                           c frame),
-                                                        (Pulse_Syntax_Base.with_st_comp
-                                                           (Pulse_Typing.add_frame
-                                                              c frame)
-                                                           {
-                                                             Pulse_Syntax_Base.u
-                                                               =
-                                                               ((Pulse_Syntax_Base.st_comp_of_comp
-                                                                   (Pulse_Typing.add_frame
-                                                                    c frame)).Pulse_Syntax_Base.u);
-                                                             Pulse_Syntax_Base.res
-                                                               =
-                                                               ((Pulse_Syntax_Base.st_comp_of_comp
-                                                                   (Pulse_Typing.add_frame
-                                                                    c frame)).Pulse_Syntax_Base.res);
-                                                             Pulse_Syntax_Base.pre
-                                                               = pre;
-                                                             Pulse_Syntax_Base.post
-                                                               =
-                                                               ((Pulse_Syntax_Base.st_comp_of_comp
-                                                                   (Pulse_Typing.add_frame
-                                                                    c frame)).Pulse_Syntax_Base.post)
-                                                           }),
-                                                        (Pulse_Typing.T_Frame
-                                                           (g, t, c, frame,
-                                                             (), t_typing)),
-                                                        (Pulse_Typing.ST_VPropEquiv
-                                                           (g,
-                                                             (Pulse_Typing.add_frame
-                                                                c frame),
-                                                             (Pulse_Syntax_Base.with_st_comp
-                                                                (Pulse_Typing.add_frame
-                                                                   c frame)
-                                                                {
-                                                                  Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (
-                                                                    (Pulse_Syntax_Base.st_comp_of_comp
-                                                                    (Pulse_Typing.add_frame
-                                                                    c frame)).Pulse_Syntax_Base.u);
-                                                                  Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (
-                                                                    (Pulse_Syntax_Base.st_comp_of_comp
-                                                                    (Pulse_Typing.add_frame
-                                                                    c frame)).Pulse_Syntax_Base.res);
-                                                                  Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                  Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (
-                                                                    (Pulse_Syntax_Base.st_comp_of_comp
-                                                                    (Pulse_Typing.add_frame
-                                                                    c frame)).Pulse_Syntax_Base.post)
-                                                                }), x, (),
-                                                             (), (), (), ())))))))))))
-                     uu___)
+                   FStar_Tactics_Effect.lift_div_tac
+                     (fun uu___1 ->
+                        match uu___ with
+                        | FStar_Pervasives.Inr failure ->
+                            FStar_Pervasives.Inr failure
+                        | FStar_Pervasives.Inl frame_t ->
+                            FStar_Pervasives.Inl
+                              (apply_frame g t pre () c t_typing frame_t)))
 let (frame_empty :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.term ->

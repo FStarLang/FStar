@@ -338,12 +338,12 @@ let handle_framing_failure
                                         body = t }) }
       )
     in
-    // T.print (Printf.sprintf
-    //                  "Handling framing failure in term:\n%s\n\
-    //                   with unmatched_pre={\n%s\n} and context={\n%s\n}"
-    //                  (P.st_term_to_string t0)
-    //                  (terms_to_string failure.unmatched_preconditions)
-    //                  (terms_to_string failure.remaining_context));
+    T.print (Printf.sprintf
+                     "Handling framing failure in term:\n%s\n\
+                      with unmatched_pre={\n%s\n} and context={\n%s\n}"
+                     (P.st_term_to_string t0)
+                     (terms_to_string failure.unmatched_preconditions)
+                     (terms_to_string failure.remaining_context));
     let pures, rest = 
       L.partition (function Tm_Pure _ -> true | _ -> false) failure.unmatched_preconditions
     in

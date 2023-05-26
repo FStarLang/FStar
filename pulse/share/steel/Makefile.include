@@ -52,11 +52,11 @@ MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
 	touch -c $@
 
-.depend: $(FSTAR_FILES)
-	$(call msg, "DEPEND")
-	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
-	$(Q)$(MY_FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp > $@.tmp
-	mv $@.tmp $@
+# .depend: $(FSTAR_FILES)
+# 	$(call msg, "DEPEND")
+# 	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
+# 	$(Q)$(MY_FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp > $@.tmp
+# 	mv $@.tmp $@
 
 include .depend
 

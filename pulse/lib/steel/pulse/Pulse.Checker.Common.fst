@@ -1,9 +1,10 @@
 module Pulse.Checker.Common
 module T = FStar.Tactics
 module Metatheory = Pulse.Typing.Metatheory
-module P = Pulse.Checker.Pure
-
+module CP = Pulse.Checker.Pure
+module RU = Pulse.RuntimeUtils
 module FV = Pulse.Typing.FV
+module P = Pulse.Syntax.Printer
 
 let post_hint_typing g p x = {
   ty_typing=admit();
@@ -22,9 +23,9 @@ let intro_post_hint g ret_ty_opt post =
       | None -> Tm_FStar RT.unit_ty FStar.Range.range_0
       | Some t -> t
   in
-  let ret_ty, _ = P.instantiate_term_implicits g ret_ty in
-  let (| u, ty_typing |) = P.check_universe g ret_ty in
-  let (| post, post_typing |) = P.check_vprop (extend x (Inl ret_ty) g) (open_term_nv post (v_as_nv x)) in 
+  let ret_ty, _ = CP.instantiate_term_implicits g ret_ty in
+  let (| u, ty_typing |) = CP.check_universe g ret_ty in
+  let (| post, post_typing |) = CP.check_vprop (extend x (Inl ret_ty) g) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
   assume (open_term post' x == post);
@@ -53,7 +54,13 @@ let try_frame_pre (#g:env)
                   (t_typing: st_typing g t c)
   : T.Tac (c':comp_st { comp_pre c' == pre } &
            st_typing g t c')
-  = let g = P.push_context "try_frame_pre" g in
+  = let g = CP.push_context "try_frame_pre" g in
+    if RU.debug_at_level g "try_frame"
+    then T.print (Printf.sprintf "(Try frame@%s) with %s\n\tcomp=%s,\n\tpre=%s\n"
+                                 (T.range_to_string t.range)
+                                 (Pulse.Checker.Pure.print_context g)
+                                 (P.comp_to_string c)
+                                 (P.term_to_string pre));
     match Pulse.Checker.Framing.try_frame_pre #g pre_typing t_typing with
     | Inl ok -> ok
     | Inr fail -> T.raise (Framing_failure fail)
@@ -65,7 +72,7 @@ let replace_equiv_post
       (ct:Metatheory.comp_typing_u g c)
       (post_hint:post_hint_opt g)
   : T.Tac (c1:comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c } & st_equiv g c c1)
-  = let g = P.push_context "replace_equiv_post" g in
+  = let g = CP.push_context "replace_equiv_post" g in
     let {u=u_c;res=res_c;pre=pre_c;post=post_c} = st_comp_of_comp c in
     let st_typing = Metatheory.comp_typing_inversion ct in
     let (| res_c_typing, pre_c_typing, x, post_c_typing |) = Metatheory.st_comp_typing_inversion st_typing in
@@ -87,7 +94,7 @@ let replace_equiv_post
         let post_c_post_eq
           : vprop_equiv g_post post_c_opened post_opened
           = Pulse.Checker.Framing.check_vprop_equiv
-              (P.push_context "check_vprop_equiv" g_post)
+              (CP.push_context "check_vprop_equiv" g_post)
               post_c_opened
               post_opened
               post_c_typing
@@ -144,13 +151,13 @@ let intro_comp_typing (g:env)
       CT_ST _ _ stc
     | C_STAtomic i st -> 
       let stc = intro_st_comp_typing st in
-      let (| ty, i_typing |) = P.core_check_term g i in
+      let (| ty, i_typing |) = CP.core_check_term g i in
       if not (eq_tm ty Tm_Inames)
       then T.fail "Ill-typed inames"
       else CT_STAtomic _ _ _ (E i_typing) stc
     | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
-      let (| ty, i_typing |) = P.core_check_term g i in
+      let (| ty, i_typing |) = CP.core_check_term g i in
       if not (eq_tm ty Tm_Inames)
       then T.fail "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc
