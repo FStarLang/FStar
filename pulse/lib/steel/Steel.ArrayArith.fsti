@@ -84,5 +84,5 @@ val within_bounds_elim (#a: Type)
     same_base_array arr1 p /\
     same_base_array arr2 p /\
     offset (ptr_of p) - offset (ptr_of arr1) >= 0 /\
-    offset (ptr_of arr2) - offset (ptr_of p) >= 0
+    offset (ptr_of arr2) - offset (ptr_of p) > 0
   )
