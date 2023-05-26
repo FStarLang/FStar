@@ -41,9 +41,9 @@ let rec term_to_string' (level:string) (t:term)
     | Tm_Emp -> "emp"
 
     | Tm_Pure p ->
-      sprintf "pure (\n%s\n%s)" 
+      sprintf "pure (\n%s%s)" 
+        (indent level)
         (term_to_string' (indent level) p)
-        level
       
     | Tm_Star p1 p2 ->
       sprintf "%s `star`\n%s%s" 
@@ -133,11 +133,18 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (term_to_string arg)
         
     | Tm_Bind { binder; head; body } ->
-      sprintf "let %s = %s;\n%s%s"
-        (binder_to_string binder)      
-        (st_term_to_string' level head)
-        level
-        (st_term_to_string' level body)
+      if T.unseal binder.binder_ppname = "_"
+      then sprintf "%s;\n%s%s" 
+                   (st_term_to_string' level head)
+                   level
+                   (st_term_to_string' level body)                   
+      else (
+        sprintf "let %s = %s;\n%s%s"
+          (binder_to_string binder)      
+          (st_term_to_string' level head)
+          level
+          (st_term_to_string' level body)
+      )
 
     | Tm_TotBind { head; body } ->
       sprintf "let tot _ = %s;\n%s%s"
@@ -173,13 +180,17 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (term_to_string p)
 
     | Tm_IntroExists { erased=false; p; witnesses } ->
-      sprintf "intro_exists %s %s"
-        (term_to_string p)
+      sprintf "introduce\n%s%s\n%swith %s"
+        (indent level)
+        (term_to_string' (indent level) p)
+        level
         (term_list_to_string " " witnesses)
 
     | Tm_IntroExists { erased=true; p; witnesses } ->
-      sprintf "intro_exists_erased %s %s"
-        (term_to_string p)
+      sprintf "introduce (erased)\n%s%s\n%swith %s"
+        (indent level)
+        (term_to_string' (indent level) p)
+        level
         (term_list_to_string " " witnesses)
 
     | Tm_While { invariant; condition; body } ->

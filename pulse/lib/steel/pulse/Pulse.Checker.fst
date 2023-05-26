@@ -490,7 +490,7 @@ let check_intro_exists
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c) =
 
-  let Tm_IntroExists { p=t; witnesses=[e] } = st.term in
+  let Tm_IntroExists { p=t; witnesses=[witness] } = st.term in
   let (| t, t_typing |) =
     match vprop_typing with
     | Some typing -> (| t, typing |)
@@ -500,9 +500,12 @@ let check_intro_exists
   | Tm_ExistsSL u ty p _ ->
     Pulse.Typing.FV.tot_typing_freevars t_typing;
     let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #ty #p t_typing (fresh g) in
-    let (| e, e_typing |) = 
-        check_term_with_expected_type g e ty in
-    let d = T_IntroExists g u ty p e ty_typing t_typing (E e_typing) in
+    let (| witness, witness_typing |) = 
+        check_term_with_expected_type g witness ty in
+    let d = T_IntroExists g u ty p witness ty_typing t_typing (E witness_typing) in
+    let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
+    T.print (Printf.sprintf "Intro exists with witness, got: %s\n"
+                     (P.comp_to_string c));
     repack (try_frame_pre pre_typing d) post_hint true
   | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
 
