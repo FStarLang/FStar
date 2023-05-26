@@ -1471,6 +1471,11 @@ let (e_attributes :
   FStar_Syntax_Syntax.attribute Prims.list
     FStar_TypeChecker_NBETerm.embedding)
   = FStar_TypeChecker_NBETerm.e_list e_attribute
+let (e_binding :
+  FStar_Reflection_Data.binding FStar_TypeChecker_NBETerm.embedding) =
+  let embed cb bview = failwith "IOU" in
+  let unembed cb t = failwith "IOU" in
+  mk_emb' embed unembed FStar_Reflection_Constants.fstar_refl_binding_fv
 let (e_binder_view :
   FStar_Reflection_Data.binder_view FStar_TypeChecker_NBETerm.embedding) =
   let embed_binder_view cb bview =
@@ -1506,7 +1511,7 @@ let (e_binder_view :
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     mkConstruct
-      FStar_Reflection_Constants.ref_Mk_binder.FStar_Reflection_Constants.fv
+      FStar_Reflection_Constants.ref_Mk_binder_view.FStar_Reflection_Constants.fv
       [] uu___ in
   let unembed_binder_view cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
@@ -1515,7 +1520,7 @@ let (e_binder_view :
          (ppname, uu___1)::(attrs, uu___2)::(q, uu___3)::(sort, uu___4)::[])
         when
         FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Reflection_Constants.ref_Mk_binder.FStar_Reflection_Constants.lid
+          FStar_Reflection_Constants.ref_Mk_binder_view.FStar_Reflection_Constants.lid
         ->
         let uu___5 = FStar_TypeChecker_NBETerm.unembed e_term cb sort in
         FStar_Compiler_Util.bind_opt uu___5

@@ -170,10 +170,10 @@ let (__proj__Mkbinder_view__item__ppname : binder_view -> Prims.string) =
     match projectee with
     | { sort3 = sort; qual; attrs; ppname3 = ppname;_} -> ppname
 type binding = {
-  uniq1: Prims.nat ;
+  uniq1: FStar_BigInt.t ;
   sort4: typ ;
   ppname4: Prims.string }
-let (__proj__Mkbinding__item__uniq : binding -> Prims.nat) =
+let (__proj__Mkbinding__item__uniq : binding -> FStar_BigInt.t) =
   fun projectee ->
     match projectee with
     | { uniq1 = uniq; sort4 = sort; ppname4 = ppname;_} -> uniq

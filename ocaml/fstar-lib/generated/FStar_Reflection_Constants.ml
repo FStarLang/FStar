@@ -154,6 +154,10 @@ let (fstar_refl_comp : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "comp"
 let (fstar_refl_comp_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_types_lid_as_fv "comp"
+let (fstar_refl_binding : FStar_Syntax_Syntax.term) =
+  mk_refl_types_lid_as_term "binding"
+let (fstar_refl_binding_fv : FStar_Syntax_Syntax.fv) =
+  mk_refl_types_lid_as_fv "binding"
 let (fstar_refl_binder : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "binder"
 let (fstar_refl_binder_fv : FStar_Syntax_Syntax.fv) =
@@ -291,14 +295,38 @@ let (ref_Mk_bv : refl_constant) =
   let fv =
     FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
   let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
-let (ref_Mk_binder : refl_constant) =
+let (ref_Mk_binding : refl_constant) =
+  let lid = fstar_refl_data_lid "Mkbinding" in
+  let attr =
+    let uu___ =
+      let uu___1 = fstar_refl_data_lid "binding" in
+      let uu___2 =
+        let uu___3 =
+          FStar_Ident.mk_ident ("uniq", FStar_Compiler_Range_Type.dummyRange) in
+        let uu___4 =
+          let uu___5 =
+            FStar_Ident.mk_ident
+              ("sort", FStar_Compiler_Range_Type.dummyRange) in
+          let uu___6 =
+            let uu___7 =
+              FStar_Ident.mk_ident
+                ("ppname", FStar_Compiler_Range_Type.dummyRange) in
+            [uu___7] in
+          uu___5 :: uu___6 in
+        uu___3 :: uu___4 in
+      (uu___1, uu___2) in
+    FStar_Syntax_Syntax.Record_ctor uu___ in
+  let fv =
+    FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
+  let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
+let (ref_Mk_binder_view : refl_constant) =
   let lid = fstar_refl_data_lid "Mkbinder_view" in
   let attr =
     let uu___ =
       let uu___1 = fstar_refl_data_lid "binder_view" in
       let uu___2 =
         let uu___3 =
-          FStar_Ident.mk_ident ("bv", FStar_Compiler_Range_Type.dummyRange) in
+          FStar_Ident.mk_ident ("sort", FStar_Compiler_Range_Type.dummyRange) in
         let uu___4 =
           let uu___5 =
             FStar_Ident.mk_ident
@@ -310,7 +338,7 @@ let (ref_Mk_binder : refl_constant) =
             let uu___8 =
               let uu___9 =
                 FStar_Ident.mk_ident
-                  ("sort", FStar_Compiler_Range_Type.dummyRange) in
+                  ("ppname", FStar_Compiler_Range_Type.dummyRange) in
               [uu___9] in
             uu___7 :: uu___8 in
           uu___5 :: uu___6 in

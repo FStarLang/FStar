@@ -1543,17 +1543,17 @@ let (e_namedv_view :
       let uu___2 =
         let uu___3 =
           let uu___4 =
-            let uu___5 =
-              FStar_Syntax_Embeddings.e_sealed
-                FStar_Syntax_Embeddings.e_string in
-            FStar_Reflection_ArgEmbedder.embed uu___5 rng
-              namedvv.FStar_Reflection_Data.ppname1 in
+            FStar_Reflection_ArgEmbedder.embed e_term rng
+              namedvv.FStar_Reflection_Data.sort1 in
           FStar_Syntax_Syntax.as_arg uu___4 in
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              FStar_Reflection_ArgEmbedder.embed e_term rng
-                namedvv.FStar_Reflection_Data.sort1 in
+              let uu___7 =
+                FStar_Syntax_Embeddings.e_sealed
+                  FStar_Syntax_Embeddings.e_string in
+              FStar_Reflection_ArgEmbedder.embed uu___7 rng
+                namedvv.FStar_Reflection_Data.ppname1 in
             FStar_Syntax_Syntax.as_arg uu___6 in
           [uu___5] in
         uu___3 :: uu___4 in
@@ -1573,7 +1573,7 @@ let (e_namedv_view :
           (uu___2, args) in
         (match uu___1 with
          | (FStar_Syntax_Syntax.Tm_fvar fv,
-            (uniq, uu___2)::(ppname, uu___3)::(sort, uu___4)::[]) when
+            (uniq, uu___2)::(sort, uu___3)::(ppname, uu___4)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Constants.ref_Mk_namedv.FStar_Reflection_Constants.lid
              ->
@@ -1583,16 +1583,17 @@ let (e_namedv_view :
              FStar_Compiler_Util.bind_opt uu___5
                (fun uniq1 ->
                   let uu___6 =
-                    let uu___7 =
-                      FStar_Syntax_Embeddings.e_sealed
-                        FStar_Syntax_Embeddings.e_string in
-                    FStar_Reflection_ArgEmbedder.unembed' w uu___7 ppname in
+                    FStar_Reflection_ArgEmbedder.unembed' w e_term sort in
                   FStar_Compiler_Util.bind_opt uu___6
-                    (fun ppname1 ->
+                    (fun sort1 ->
                        let uu___7 =
-                         FStar_Reflection_ArgEmbedder.unembed' w e_term sort in
+                         let uu___8 =
+                           FStar_Syntax_Embeddings.e_sealed
+                             FStar_Syntax_Embeddings.e_string in
+                         FStar_Reflection_ArgEmbedder.unembed' w uu___8
+                           ppname in
                        FStar_Compiler_Util.bind_opt uu___7
-                         (fun sort1 ->
+                         (fun ppname1 ->
                             let r =
                               {
                                 FStar_Reflection_Data.uniq = uniq1;
@@ -1626,17 +1627,17 @@ let (e_bv_view :
       let uu___2 =
         let uu___3 =
           let uu___4 =
-            let uu___5 =
-              FStar_Syntax_Embeddings.e_sealed
-                FStar_Syntax_Embeddings.e_string in
-            FStar_Reflection_ArgEmbedder.embed uu___5 rng
-              bvv.FStar_Reflection_Data.ppname2 in
+            FStar_Reflection_ArgEmbedder.embed e_term rng
+              bvv.FStar_Reflection_Data.sort2 in
           FStar_Syntax_Syntax.as_arg uu___4 in
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              FStar_Reflection_ArgEmbedder.embed e_term rng
-                bvv.FStar_Reflection_Data.sort2 in
+              let uu___7 =
+                FStar_Syntax_Embeddings.e_sealed
+                  FStar_Syntax_Embeddings.e_string in
+              FStar_Reflection_ArgEmbedder.embed uu___7 rng
+                bvv.FStar_Reflection_Data.ppname2 in
             FStar_Syntax_Syntax.as_arg uu___6 in
           [uu___5] in
         uu___3 :: uu___4 in
@@ -1645,6 +1646,90 @@ let (e_bv_view :
       FStar_Reflection_Constants.ref_Mk_bv.FStar_Reflection_Constants.t uu___
       rng in
   let unembed_bv_view w t =
+    (let uu___1 = FStar_Syntax_Print.term_to_string t in
+     FStar_Compiler_Util.print1 "GG trying to unembed bv_view (%s)\n" uu___1);
+    (let t1 = FStar_Syntax_Util.unascribe t in
+     let uu___1 = FStar_Syntax_Util.head_and_args t1 in
+     match uu___1 with
+     | (hd, args) ->
+         let uu___2 =
+           let uu___3 =
+             let uu___4 = FStar_Syntax_Util.un_uinst hd in
+             uu___4.FStar_Syntax_Syntax.n in
+           (uu___3, args) in
+         (match uu___2 with
+          | (FStar_Syntax_Syntax.Tm_fvar fv,
+             (idx, uu___3)::(sort, uu___4)::(ppname, uu___5)::[]) when
+              FStar_Syntax_Syntax.fv_eq_lid fv
+                FStar_Reflection_Constants.ref_Mk_bv.FStar_Reflection_Constants.lid
+              ->
+              let uu___6 =
+                FStar_Reflection_ArgEmbedder.unembed' w
+                  FStar_Syntax_Embeddings.e_int idx in
+              FStar_Compiler_Util.bind_opt uu___6
+                (fun idx1 ->
+                   let uu___7 =
+                     FStar_Reflection_ArgEmbedder.unembed' w e_term sort in
+                   FStar_Compiler_Util.bind_opt uu___7
+                     (fun sort1 ->
+                        let uu___8 =
+                          let uu___9 =
+                            FStar_Syntax_Embeddings.e_sealed
+                              FStar_Syntax_Embeddings.e_string in
+                          FStar_Reflection_ArgEmbedder.unembed' w uu___9
+                            ppname in
+                        FStar_Compiler_Util.bind_opt uu___8
+                          (fun ppname1 ->
+                             let r =
+                               {
+                                 FStar_Reflection_Data.index = idx1;
+                                 FStar_Reflection_Data.ppname2 = ppname1;
+                                 FStar_Reflection_Data.sort2 = sort1
+                               } in
+                             FStar_Pervasives_Native.Some r)))
+          | uu___3 ->
+              (if w
+               then
+                 (let uu___5 =
+                    let uu___6 =
+                      let uu___7 = FStar_Syntax_Print.term_to_string t1 in
+                      FStar_Compiler_Util.format1
+                        "Not an embedded bv_view: %s" uu___7 in
+                    (FStar_Errors_Codes.Warning_NotEmbedded, uu___6) in
+                  FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___5)
+               else ();
+               FStar_Pervasives_Native.None))) in
+  FStar_Reflection_ArgEmbedder.mk_emb embed_bv_view unembed_bv_view
+    FStar_Reflection_Constants.fstar_refl_bv_view
+let (e_binding :
+  FStar_Reflection_Data.binding FStar_Syntax_Embeddings.embedding) =
+  let embed rng bindingv =
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          FStar_Reflection_ArgEmbedder.embed FStar_Syntax_Embeddings.e_int
+            rng bindingv.FStar_Reflection_Data.uniq1 in
+        FStar_Syntax_Syntax.as_arg uu___2 in
+      let uu___2 =
+        let uu___3 =
+          let uu___4 =
+            FStar_Reflection_ArgEmbedder.embed e_term rng
+              bindingv.FStar_Reflection_Data.sort4 in
+          FStar_Syntax_Syntax.as_arg uu___4 in
+        let uu___4 =
+          let uu___5 =
+            let uu___6 =
+              FStar_Reflection_ArgEmbedder.embed
+                FStar_Syntax_Embeddings.e_string rng
+                bindingv.FStar_Reflection_Data.ppname4 in
+            FStar_Syntax_Syntax.as_arg uu___6 in
+          [uu___5] in
+        uu___3 :: uu___4 in
+      uu___1 :: uu___2 in
+    FStar_Syntax_Syntax.mk_Tm_app
+      FStar_Reflection_Constants.ref_Mk_binding.FStar_Reflection_Constants.t
+      uu___ rng in
+  let unembed w t =
     let t1 = FStar_Syntax_Util.unascribe t in
     let uu___ = FStar_Syntax_Util.head_and_args t1 in
     match uu___ with
@@ -1656,31 +1741,29 @@ let (e_bv_view :
           (uu___2, args) in
         (match uu___1 with
          | (FStar_Syntax_Syntax.Tm_fvar fv,
-            (idx, uu___2)::(ppname, uu___3)::(sort, uu___4)::[]) when
+            (uniq, uu___2)::(sort, uu___3)::(ppname, uu___4)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
-               FStar_Reflection_Constants.ref_Mk_bv.FStar_Reflection_Constants.lid
+               FStar_Reflection_Constants.ref_Mk_binding.FStar_Reflection_Constants.lid
              ->
              let uu___5 =
                FStar_Reflection_ArgEmbedder.unembed' w
-                 FStar_Syntax_Embeddings.e_int idx in
+                 FStar_Syntax_Embeddings.e_int uniq in
              FStar_Compiler_Util.bind_opt uu___5
-               (fun idx1 ->
+               (fun uniq1 ->
                   let uu___6 =
-                    let uu___7 =
-                      FStar_Syntax_Embeddings.e_sealed
-                        FStar_Syntax_Embeddings.e_string in
-                    FStar_Reflection_ArgEmbedder.unembed' w uu___7 ppname in
+                    FStar_Reflection_ArgEmbedder.unembed' w e_term sort in
                   FStar_Compiler_Util.bind_opt uu___6
-                    (fun ppname1 ->
+                    (fun sort1 ->
                        let uu___7 =
-                         FStar_Reflection_ArgEmbedder.unembed' w e_term sort in
+                         FStar_Reflection_ArgEmbedder.unembed' w
+                           FStar_Syntax_Embeddings.e_string ppname in
                        FStar_Compiler_Util.bind_opt uu___7
-                         (fun sort1 ->
+                         (fun ppname1 ->
                             let r =
                               {
-                                FStar_Reflection_Data.index = idx1;
-                                FStar_Reflection_Data.ppname2 = ppname1;
-                                FStar_Reflection_Data.sort2 = sort1
+                                FStar_Reflection_Data.uniq1 = uniq1;
+                                FStar_Reflection_Data.sort4 = sort1;
+                                FStar_Reflection_Data.ppname4 = ppname1
                               } in
                             FStar_Pervasives_Native.Some r)))
          | uu___2 ->
@@ -1690,13 +1773,13 @@ let (e_bv_view :
                    let uu___5 =
                      let uu___6 = FStar_Syntax_Print.term_to_string t1 in
                      FStar_Compiler_Util.format1
-                       "Not an embedded bv_view: %s" uu___6 in
+                       "Not an embedded binding: %s" uu___6 in
                    (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
                  FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___4)
               else ();
               FStar_Pervasives_Native.None)) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_bv_view unembed_bv_view
-    FStar_Reflection_Constants.fstar_refl_bv_view
+  FStar_Reflection_ArgEmbedder.mk_emb embed unembed
+    FStar_Reflection_Constants.fstar_refl_binding
 let (e_attribute :
   FStar_Syntax_Syntax.attribute FStar_Syntax_Embeddings.embedding) = e_term
 let (e_attributes :
@@ -1708,10 +1791,8 @@ let (e_binder_view :
     let uu___ =
       let uu___1 =
         let uu___2 =
-          let uu___3 =
-            FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_string in
-          FStar_Reflection_ArgEmbedder.embed uu___3 rng
-            bview.FStar_Reflection_Data.ppname3 in
+          FStar_Reflection_ArgEmbedder.embed e_term rng
+            bview.FStar_Reflection_Data.sort3 in
         FStar_Syntax_Syntax.as_arg uu___2 in
       let uu___2 =
         let uu___3 =
@@ -1728,74 +1809,77 @@ let (e_binder_view :
           let uu___6 =
             let uu___7 =
               let uu___8 =
-                FStar_Reflection_ArgEmbedder.embed e_term rng
-                  bview.FStar_Reflection_Data.sort3 in
+                let uu___9 =
+                  FStar_Syntax_Embeddings.e_sealed
+                    FStar_Syntax_Embeddings.e_string in
+                FStar_Reflection_ArgEmbedder.embed uu___9 rng
+                  bview.FStar_Reflection_Data.ppname3 in
               FStar_Syntax_Syntax.as_arg uu___8 in
             [uu___7] in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     FStar_Syntax_Syntax.mk_Tm_app
-      FStar_Reflection_Constants.ref_Mk_binder.FStar_Reflection_Constants.t
+      FStar_Reflection_Constants.ref_Mk_binder_view.FStar_Reflection_Constants.t
       uu___ rng in
   let unembed_binder_view w t =
-    let t1 = FStar_Syntax_Util.unascribe t in
-    let uu___ = FStar_Syntax_Util.head_and_args t1 in
-    match uu___ with
-    | (hd, args) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStar_Syntax_Util.un_uinst hd in
-            uu___3.FStar_Syntax_Syntax.n in
-          (uu___2, args) in
-        (match uu___1 with
-         | (FStar_Syntax_Syntax.Tm_fvar fv,
-            (ppname, uu___2)::(q, uu___3)::(attrs, uu___4)::(sort, uu___5)::[])
-             when
-             FStar_Syntax_Syntax.fv_eq_lid fv
-               FStar_Reflection_Constants.ref_Mk_binder.FStar_Reflection_Constants.lid
-             ->
-             let uu___6 =
-               let uu___7 =
-                 FStar_Syntax_Embeddings.e_sealed
-                   FStar_Syntax_Embeddings.e_string in
-               FStar_Reflection_ArgEmbedder.unembed' w uu___7 ppname in
-             FStar_Compiler_Util.bind_opt uu___6
-               (fun ppname1 ->
-                  let uu___7 =
-                    FStar_Reflection_ArgEmbedder.unembed' w e_aqualv q in
-                  FStar_Compiler_Util.bind_opt uu___7
-                    (fun q1 ->
-                       let uu___8 =
-                         FStar_Reflection_ArgEmbedder.unembed' w e_attributes
-                           attrs in
-                       FStar_Compiler_Util.bind_opt uu___8
-                         (fun attrs1 ->
-                            let uu___9 =
-                              FStar_Reflection_ArgEmbedder.unembed' w e_term
-                                sort in
-                            FStar_Compiler_Util.bind_opt uu___9
-                              (fun sort1 ->
-                                 let r =
-                                   {
-                                     FStar_Reflection_Data.sort3 = sort1;
-                                     FStar_Reflection_Data.qual = q1;
-                                     FStar_Reflection_Data.attrs = attrs1;
-                                     FStar_Reflection_Data.ppname3 = ppname1
-                                   } in
-                                 FStar_Pervasives_Native.Some r))))
-         | uu___2 ->
-             (if w
-              then
-                (let uu___4 =
-                   let uu___5 =
-                     let uu___6 = FStar_Syntax_Print.term_to_string t1 in
-                     FStar_Compiler_Util.format1
-                       "Not an embedded binder_view: %s" uu___6 in
-                   (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-                 FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___4)
-              else ();
-              FStar_Pervasives_Native.None)) in
+    (let uu___1 = FStar_Syntax_Print.term_to_string t in
+     FStar_Compiler_Util.print1 "GG trying to unembed binder_view (%s)\n"
+       uu___1);
+    (let t1 = FStar_Syntax_Util.unascribe t in
+     let uu___1 = FStar_Syntax_Util.head_and_args t1 in
+     match uu___1 with
+     | (hd, args) ->
+         let uu___2 =
+           let uu___3 =
+             let uu___4 = FStar_Syntax_Util.un_uinst hd in
+             uu___4.FStar_Syntax_Syntax.n in
+           (uu___3, args) in
+         (match uu___2 with
+          | (FStar_Syntax_Syntax.Tm_fvar fv,
+             (sort, uu___3)::(q, uu___4)::(attrs, uu___5)::(ppname, uu___6)::[])
+              when
+              FStar_Syntax_Syntax.fv_eq_lid fv
+                FStar_Reflection_Constants.ref_Mk_binder_view.FStar_Reflection_Constants.lid
+              ->
+              let uu___7 =
+                FStar_Reflection_ArgEmbedder.unembed' w e_term sort in
+              FStar_Compiler_Util.bind_opt uu___7
+                (fun sort1 ->
+                   let uu___8 =
+                     FStar_Reflection_ArgEmbedder.unembed' w e_aqualv q in
+                   FStar_Compiler_Util.bind_opt uu___8
+                     (fun q1 ->
+                        let uu___9 =
+                          FStar_Reflection_ArgEmbedder.unembed' w
+                            e_attributes attrs in
+                        FStar_Compiler_Util.bind_opt uu___9
+                          (fun attrs1 ->
+                             let uu___10 =
+                               let uu___11 =
+                                 FStar_Syntax_Embeddings.e_sealed
+                                   FStar_Syntax_Embeddings.e_string in
+                               FStar_Reflection_ArgEmbedder.unembed' w
+                                 uu___11 ppname in
+                             FStar_Compiler_Util.bind_opt uu___10
+                               (fun ppname1 ->
+                                  let r =
+                                    {
+                                      FStar_Reflection_Data.sort3 = sort1;
+                                      FStar_Reflection_Data.qual = q1;
+                                      FStar_Reflection_Data.attrs = attrs1;
+                                      FStar_Reflection_Data.ppname3 = ppname1
+                                    } in
+                                  FStar_Pervasives_Native.Some r))))
+          | uu___3 ->
+              ((let uu___5 =
+                  let uu___6 =
+                    let uu___7 = FStar_Syntax_Print.term_to_string t1 in
+                    FStar_Compiler_Util.format1
+                      "Not an embedded binder_view: %s" uu___7 in
+                  (FStar_Errors_Codes.Warning_NotEmbedded, uu___6) in
+                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___5);
+               FStar_Pervasives_Native.None))) in
   FStar_Reflection_ArgEmbedder.mk_emb embed_binder_view unembed_binder_view
     FStar_Reflection_Constants.fstar_refl_binder_view
 let (e_comp_view :
