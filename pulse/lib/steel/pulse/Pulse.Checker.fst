@@ -526,29 +526,34 @@ let check_intro_exists_either
     then check_intro_exists_erased g st vprop_typing pre pre_typing post_hint
     else check_intro_exists g st vprop_typing pre pre_typing post_hint
 
-let rec prepare_instantiations (out:list (vprop & either term term)) goal_vprop witnesses
-  : T.Tac (vprop & list (vprop & either term term))
+let rec prepare_instantiations
+  (out:list (vprop & either term term))
+  (out_uvars:list Pulse.Checker.Inference.uvar_id)
+  goal_vprop
+  witnesses
+  : T.Tac (vprop & list (vprop & either term term) & list Pulse.Checker.Inference.uvar_id)
   = match witnesses, goal_vprop with
     | [], Tm_ExistsSL u ty p _ ->  
-      let next_goal_vprop, inst =
-          let t : term = snd (Pulse.Checker.Inference.gen_uvar ()) in
-          open_term' p t 0, Inr t
+      let next_goal_vprop, inst, uv =
+          let uv, t = Pulse.Checker.Inference.gen_uvar () in
+          open_term' p t 0, Inr t, uv
       in
-      prepare_instantiations ((goal_vprop, inst)::out) next_goal_vprop []
+      prepare_instantiations ((goal_vprop, inst)::out) (uv::out_uvars) next_goal_vprop []
 
     | [], _ -> 
-      goal_vprop, out
-      
+      goal_vprop, out, out_uvars
+
     | t :: witnesses, Tm_ExistsSL u ty p _ ->
-      let next_goal_vprop, inst =
+      let next_goal_vprop, inst, uvs =
           match t with
           | Tm_Unknown ->
-            let t : term = snd (Pulse.Checker.Inference.gen_uvar ()) in
-            open_term' p t 0, Inr t
+            let uv, t = Pulse.Checker.Inference.gen_uvar () in
+            open_term' p t 0, Inr t, [uv]
           | _ ->
-            open_term' p t 0, Inl t
+            open_term' p t 0, Inl t, []
       in
-      prepare_instantiations ((goal_vprop, inst)::out) next_goal_vprop witnesses
+      prepare_instantiations ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses
+
     |  _ ->
        T.fail "Unexpected number of instantiations in intro"
 
@@ -593,9 +598,15 @@ let maybe_infer_intro_exists
     // in
     let Tm_IntroExists {erased; p=t; witnesses} = st.term in
     let (| t, t_typing |) = check_vprop g t in
-    let goal_vprop, insts = prepare_instantiations [] t witnesses in
+    let goal_vprop, insts, uvs = prepare_instantiations [] [] t witnesses in
     let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
     let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal pre goal_vprop in
+    // T.print
+    //   (Printf.sprintf
+    //      "maybe_infer_intro_exists: solutions after trying inst with pre: %s, goal: %s: %s\n"
+    //       (P.term_to_string pre)
+    //       (P.term_to_string goal_vprop)
+    //       (Pulse.Checker.Inference.solutions_to_string solutions));
     let maybe_solve_pure solutions p =
       let p = Pulse.Checker.Inference.apply_solution solutions p in
       match p with
@@ -605,14 +616,28 @@ let maybe_infer_intro_exists
             let open Pulse.Checker.Inference in
             if contains_uvar l
             ||  contains_uvar r
-            then let sols = try_unify l r in
-                 sols@solutions
+            then begin
+              // T.print (Printf.sprintf
+              //   "maybe_infer_intro_exists:maybe_solve_pure: trying to unify l: %s and r:%s\n"
+              //   (P.term_to_string l)
+              //   (P.term_to_string r));
+              let sols = try_unify l r in
+              // T.print (Printf.sprintf
+              //   "maybe_infer_intro_exists:maybe_solve_pure: solutions after unification: %s\n"
+              //   (Pulse.Checker.Inference.solutions_to_string sols));
+              sols@solutions
+            end
             else solutions
           | _ -> solutions
         )
       | _ -> solutions
     in
     let solutions = T.fold_left maybe_solve_pure solutions pure_conjuncts in
+    // T.print
+    //   (Printf.sprintf
+    //      "maybe_infer_intro_exists: solutions after solving pure conjuncts (%s): %s\n"
+    //       (P.term_to_string (list_as_vprop pure_conjuncts))
+    //       (Pulse.Checker.Inference.solutions_to_string solutions));
     let mk_hide (e:term) : term =
         let hd = tm_fvar (as_fv hide_lid) in
         tm_pureapp hd None e
@@ -625,6 +650,15 @@ let maybe_infer_intro_exists
           | Some _ -> u, sol
           | _ -> u, mk_hide sol)
         solutions
+    in
+    let _ =
+      match List.Tot.tryFind (fun u ->
+           None? ((List.Tot.tryFind (fun (u', _) -> u = u') solutions))
+         ) uvs with
+      | Some u ->
+        T.fail (Printf.sprintf "maybe_infer_intro_exists: unification failed for uvar %s\n"
+                  (Pulse.Checker.Inference.uvar_id_to_string u))
+      | None -> ()
     in
     let wr t = { term = t; range = st.range } in
     let rec build_instantiations solutions insts

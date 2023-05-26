@@ -13,6 +13,8 @@ module RUtil = Pulse.Reflection.Util
 
 type uvar_id = nat
 
+let uvar_id_to_string n = FStar.Printf.sprintf "?u_%d" n
+
 let embedded_uvar_lid = ["__pulse_embedded_uvar__"]
 
 let is_uvar (t:term) : option uvar_id =
@@ -254,7 +256,9 @@ let find_solution (sol:list (uvar_id * term)) (t:uvar_id)
     match r with
     | None -> None
     | Some (_, t) -> Some t
-    
+
+let solutions_to_string sol = print_solutions sol
+
 let rec apply_solution (sol:list (uvar_id * term)) (t:term)
   : term
   = match t with
