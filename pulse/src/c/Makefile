@@ -18,3 +18,12 @@ clean:
 .PHONY: extract
 extract:
 	+$(MAKE) -f extract.Makefile
+
+install: $(addsuffix .install,$(wildcard *.c))
+
+.PHONY: %.install
+
+%.install: %
+	$(INSTALL) -m 644 -D $< $(STEEL_INSTALL_PREFIX)/src/c/$<
+
+.PHONY: install
