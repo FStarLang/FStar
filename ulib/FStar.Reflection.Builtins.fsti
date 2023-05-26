@@ -68,9 +68,6 @@ val pack_lb        : lb_view -> letbinding
 val inspect_binder : b:binder -> bv:binder_view {bv << b}
 val pack_binder    : binder_view -> binder
 
-val inspect_binding : b:binding -> bv:binding_view {bv << b}
-val pack_binding    : binding_view -> binding
-
 val inspect_universe : u:universe -> uv:universe_view{uv << u}
 val pack_universe    : universe_view -> universe
 
@@ -89,9 +86,6 @@ val pack_inspect_bv (x:bv) : Lemma (pack_bv (inspect_bv x) == x)
 
 val inspect_pack_binder (bview:binder_view) : Lemma (inspect_binder (pack_binder bview) == bview)
 val pack_inspect_binder (b:binder) : Lemma (pack_binder (inspect_binder b) == b)
-
-val inspect_pack_binding (bview:binding_view) : Lemma (inspect_binding (pack_binding bview) == bview)
-val pack_inspect_binding (b:binding) : Lemma (pack_binding (inspect_binding b) == b)
 
 val pack_inspect_fv (fv:fv) : Lemma (ensures pack_fv (inspect_fv fv) == fv)
 val inspect_pack_fv (nm:name) : Lemma (ensures inspect_fv (pack_fv nm) == nm)
@@ -125,7 +119,7 @@ val compare_namedv        : namedv -> namedv -> order
 val binders_of_env        : env -> binders
 
 (** FIXME *)
-val vars_of_env           : env -> list namedv
+val vars_of_env           : env -> list binding
 
 (** FIXME *)
 val moduleof              : env -> name

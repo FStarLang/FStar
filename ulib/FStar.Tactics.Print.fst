@@ -24,9 +24,6 @@ private
 let print_list (f:'a -> Tac string) (l:list 'a) : Tac string =
    "[" ^ print_list_aux f l ^ "]"
 
-let named_binder_to_string (n : named_binder) : Tac string =
-  unseal n.ppname
-
 let rec universe_to_ast_string (u:universe) : Tac string =
   match inspect_universe u with
   | Uv_Zero -> "Uv_Zero"
@@ -48,15 +45,15 @@ let rec term_to_ast_string (t:term) : Tac string =
   | Tv_UInst fv us ->
     "Tv_UInst" ^ paren (fv_to_string fv ^ ", " ^ universes_to_ast_string us)
   | Tv_App hd (a, _) -> "Tv_App " ^ paren (term_to_ast_string hd ^ ", " ^ term_to_ast_string a)
-  | Tv_Abs x e -> "Tv_Abs " ^ paren (named_binder_to_string x ^ ", " ^ term_to_ast_string e)
-  | Tv_Arrow x c -> "Tv_Arrow " ^ paren (named_binder_to_string x ^ ", " ^ comp_to_ast_string c)
+  | Tv_Abs x e -> "Tv_Abs " ^ paren (binder_to_string x ^ ", " ^ term_to_ast_string e)
+  | Tv_Arrow x c -> "Tv_Arrow " ^ paren (binder_to_string x ^ ", " ^ comp_to_ast_string c)
   | Tv_Type u -> "Type" ^ paren (universe_to_ast_string u)
-  | Tv_Refine x e -> "Tv_Refine " ^ paren (named_binder_to_string x ^ ", " ^ term_to_ast_string e)
+  | Tv_Refine x e -> "Tv_Refine " ^ paren (binder_to_string x ^ ", " ^ term_to_ast_string e)
   | Tv_Const c -> const_to_ast_string c
   | Tv_Uvar i _ -> "Tv_Uvar " ^ string_of_int i
   | Tv_Let recf _ x e1 e2 ->
            "Tv_Let " ^ paren (string_of_bool recf ^ ", " ^
-                              named_binder_to_string x ^ ", " ^
+                              binder_to_string x ^ ", " ^
                               term_to_ast_string e1 ^ ", " ^
                               term_to_ast_string e2)
   | Tv_Match e ret_opt brs ->
@@ -80,8 +77,9 @@ and match_returns_to_string (ret_opt:option match_returns_ascription) : Tac stri
   match ret_opt with
   | None -> ""
   | Some (b, asc) ->
-    (binder_to_string b ^ " ")
-      ^
+     "GGG FIXME BINDER" ^
+//    (binder_to_string b ^ " ")
+//      ^
     (match asc with
      | Inl t, tacopt, _ -> (term_to_ast_string t) ^ (tacopt_to_string tacopt)
      | Inr c, tacopt, _ -> (comp_to_ast_string c) ^ (tacopt_to_string tacopt))

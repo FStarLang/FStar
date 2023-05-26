@@ -22,7 +22,6 @@ include FStar.Sealed
 assume new type namedv  // named fresh variable
 assume new type bv      // db variable
 assume new type binder
-assume new type binding // a named binding with type, e.g. in an environment
 
 assume new type term
 assume new type env

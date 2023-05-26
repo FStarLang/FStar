@@ -124,9 +124,8 @@ let fa_cong #a #p #q f =
     let do1 () : Tac unit =
       let _ = l_intros () in
       let t = quote f in
-      let x = nth_binder (-1) in
-      let bb = pose (mk_e_app t [binder_to_term x]) in
-      dump "a";
+      let x = nth_var (-1) in
+      let bb = pose (mk_e_app t [binding_to_term x]) in
       ()
     in
     iseq [do1; do1]
@@ -140,10 +139,9 @@ let ex_cong #a #p #q f =
     split();
     let do1 () : Tac unit =
       let [ex] = l_intros () in
-      let (b, pf) = elim_exists ex in
+      let (b, pf) = elim_exists (binding_to_term ex) in
       let t = quote f in
-      let bb = pose (mk_e_app t [binder_to_term b]) in
-      dump "a";
+      let bb = pose (mk_e_app t [binding_to_term b]) in
       ()
     in
     iseq [do1; do1]

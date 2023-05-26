@@ -38,14 +38,20 @@ let bv_to_string (bv : bv) : Tac string =
     name_of_bv bv
 
 let name_of_binder (b : binder) : Tac string =
-  unseal (inspect_binder b).ppname
+  unseal b.ppname
 
 let binder_to_string (b : binder) : Tac string =
   // TODO: print aqual, attributes..? or no?
   name_of_binder b
 
+let binding_to_string (b : binding) : Tac string =
+  unseal b.ppname
+
 let type_of_var (x : namedv) : Tac typ =
   unseal ((inspect_namedv x).sort)
+
+let type_of_binding (x : binding) : Tac typ =
+  x.sort
 
 exception Goal_not_trivial
 
@@ -84,12 +90,7 @@ let cur_goal_safe () : TacH goal (requires (fun ps -> ~(goals_of ps == [])))
  = match goals_of (get ()) with
    | g :: _ -> g
 
-(** [cur_binders] returns the list of binders in the current goal.
-FIXME: This makes no sense in new view. *)
-let cur_binders () : Tac binders =
-    binders_of_env (cur_env ())
-
-let cur_vars () : Tac (list namedv) =
+let cur_vars () : Tac (list binding) =
     vars_of_env (cur_env ())
 
 (** Set the guard policy only locally, without affecting calling code *)
@@ -382,26 +383,44 @@ let ngoals () : Tac int = List.Tot.Base.length (goals ())
 (** [ngoals_smt ()] returns the number of SMT goals *)
 let ngoals_smt () : Tac int = List.Tot.Base.length (smt_goals ())
 
+(* sigh GGG fix names!! *)
+let fresh_namedv_named (s:string) : Tac namedv =
+  let n = fresh () in
+  pack_namedv ({
+    ppname = seal s;
+    sort   = seal (pack Tv_Unknown);
+    uniq   = n;
+  })
+  
 (* Create a fresh bound variable (bv), using a generic name. See also
-[fresh_bv_named]. *)
-let fresh_bv () : Tac bv =
-    (* These bvs are fresh anyway through a separate counter,
-     * but adding the integer allows for more readability when
-     * generating code *)
-    let i = fresh () in
-    fresh_bv_named ("x" ^ string_of_int i)
+[fresh_namedv_named]. *)
+let fresh_namedv () : Tac namedv =
+  let n = fresh () in
+  pack_namedv ({
+    ppname = seal ("x" ^ string_of_int n);
+    sort   = seal (pack Tv_Unknown);
+    uniq   = n;
+  })
 
-let fresh_binder t : Tac binder =
-    (* Freshness only important for the name. Binders do not
-    need a unique id *)
-    let i = fresh () in
-    mk_binder ("x" ^ string_of_int i) t
+let fresh_binder (t : typ) : Tac binder =
+  let n = fresh () in
+  {
+    ppname = seal ("x" ^ string_of_int n);
+    sort   = pack Tv_Unknown;
+    uniq   = n;
+    qual   = Q_Explicit;
+    attrs  = [] ;
+  }
 
-let fresh_implicit_binder t : Tac binder =
-    (* Freshness only important for the name. Binders do not
-    need a unique id *)
-    let i = fresh () in
-    mk_implicit_binder ("x" ^ string_of_int i) t
+let fresh_implicit_binder (t : typ) : Tac binder =
+  let n = fresh () in
+  {
+    ppname = seal ("x" ^ string_of_int n);
+    sort   = pack Tv_Unknown;
+    uniq   = n;
+    qual   = Q_Implicit;
+    attrs  = [] ;
+  }
 
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
@@ -499,7 +518,7 @@ let simpl   () : Tac unit = norm [simplify; primops]
 let whnf    () : Tac unit = norm [weak; hnf; primops; delta]
 let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
-let intros () : Tac (list namedv) = repeat intro
+let intros () : Tac (list binding) = repeat intro
 
 let intros' () : Tac unit = let _ = intros () in ()
 let destruct tm : Tac unit = let _ = t_destruct tm in ()
@@ -508,49 +527,58 @@ let destruct_intros tm : Tac unit = seq (fun () -> let _ = t_destruct tm in ()) 
 private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
-let tcut (t:term) : Tac namedv =
+let tcut (t:term) : Tac binding =
     let g = cur_goal () in
     let tt = mk_e_app (`__cut) [t; g] in
     apply tt;
     intro ()
 
-let pose (t:term) : Tac namedv =
+let pose (t:term) : Tac binding =
     apply (`__cut);
     flip ();
     exact t;
     intro ()
 
-let intro_as (s:string) : Tac namedv =
+let intro_as (s:string) : Tac binding =
     let b = intro () in
     rename_to b s
 
-let pose_as (s:string) (t:term) : Tac namedv =
+let pose_as (s:string) (t:term) : Tac binding =
     let b = pose t in
     rename_to b s
 
-let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
-    map f (cur_binders ())
+let for_each_binding (f : binding -> Tac 'a) : Tac (list 'a) =
+    map f (cur_vars ())
 
-let rec revert_all (bs:binders) : Tac unit =
+let rec revert_all (bs:list binding) : Tac unit =
     match bs with
     | [] -> ()
     | _::tl -> revert ();
-               revert_all tl
+             revert_all tl
 
 let namedv_to_term (x : namedv) : Tac term =
   pack (Tv_Var x)
 
-let binder_sort (b : binder) : Tac typ =
-  (inspect_binder b).sort
+let binding_to_namedv (b : binding) : Tac namedv =
+  pack_namedv {
+    ppname = b.ppname;
+    sort   = seal b.sort;
+    uniq   = b.uniq
+  }
+
+let binding_to_term (x : binding) : Tac term =
+  namedv_to_term (binding_to_namedv x)
+
+let binder_sort (b : binder) : Tac typ = b.sort
 
 // Cannot define this inside `assumption` due to #1091
 private
-let rec __assumption_aux (xs : list namedv) : Tac unit =
+let rec __assumption_aux (xs : list binding) : Tac unit =
     match xs with
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = namedv_to_term b in
+        let t = binding_to_term b in
         try exact t with | _ ->
         try (apply (`FStar.Squash.return_squash);
              exact t) with | _ ->
@@ -574,7 +602,7 @@ let __eq_sym #t (a b : t) : Lemma ((a == b) == (b == a)) =
   FStar.PropositionalExtensionality.apply (a==b) (b==a)
 
 (** Like [rewrite], but works with equalities [v == e] and [e == v] *)
-let rewrite' (x:namedv) : Tac unit =
+let rewrite' (x:binding) : Tac unit =
     ((fun () -> rewrite x)
      <|> (fun () -> var_retype x;
                     apply_lemma (`__eq_sym);
@@ -582,11 +610,11 @@ let rewrite' (x:namedv) : Tac unit =
      <|> (fun () -> fail "rewrite' failed"))
     ()
 
-let rec try_rewrite_equality (x:term) (bs:list namedv) : Tac unit =
+let rec try_rewrite_equality (x:term) (bs:list binding) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs ->
-        begin match term_as_formula (type_of_var x_t) with
+        begin match term_as_formula (type_of_binding x_t) with
         | Comp (Eq _) y _ ->
             if term_eq x y
             then rewrite x_t
@@ -595,7 +623,7 @@ let rec try_rewrite_equality (x:term) (bs:list namedv) : Tac unit =
             try_rewrite_equality x bs
         end
 
-let rec rewrite_all_context_equalities (bs:list namedv) : Tac unit =
+let rec rewrite_all_context_equalities (bs:list binding) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs -> begin
@@ -639,7 +667,7 @@ let mk_sq_eq (t1 t2 : term) : term =
 Creates a new goal for [t1 == t2]. *)
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    let e = pack (Tv_Var e) in
+    let e = pack (Tv_Var (binding_to_namedv e)) in
     pointwise (fun () ->
       (* If the LHS is a uvar, do nothing, so we do not instantiate it. *)
       let is_uvar =
@@ -658,17 +686,17 @@ private
 let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()
 
 (** A wrapper to [grewrite] which takes a binder of an equality type *)
-let grewrite_eq (b:namedv) : Tac unit =
-  match term_as_formula (type_of_var b) with
+let grewrite_eq (b:binding) : Tac unit =
+  match term_as_formula (type_of_binding b) with
   | Comp (Eq _) l r ->
     grewrite l r;
-    iseq [idtac; (fun () -> exact (namedv_to_term b))]
+    iseq [idtac; (fun () -> exact (binding_to_term b))]
   | _ ->
-    begin match term_as_formula' (type_of_var b) with
+    begin match term_as_formula' (type_of_binding b) with
     | Comp (Eq _) l r ->
       grewrite l r;
       iseq [idtac; (fun () -> apply_lemma (`__un_sq_eq);
-                              exact (namedv_to_term b))]
+                              exact (binding_to_term b))]
     | _ ->
       fail "grewrite_eq: binder type is not an equality"
     end
@@ -903,8 +931,8 @@ binder in the current goal. When it is negative, it grabs the (-i-1)th
 binder counting from the end of the goal. That is, [nth_binder (-1)]
 will return the last binder, [nth_binder (-2)] the second to last, and
 so on. *)
-let nth_binder (i:int) : Tac binder =
-  let bs = cur_binders () in
+let nth_var (i:int) : Tac binding =
+  let bs = cur_vars () in
   let k : int = if i >= 0 then i else List.Tot.Base.length bs + i in
   let k : nat = if k < 0 then fail "not enough binders" else k in
   match List.Tot.Base.nth bs k with
@@ -929,19 +957,36 @@ let name_appears_in (nm:name) (t:term) : Tac bool =
   | e -> raise e
 
 (** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
-let rec mk_abs (args : list named_binder) (t : term) : Tac term (decreases args) =
+let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
   match args with
   | [] -> t
   | a :: args' ->
     let t' = mk_abs args' t in
     pack (Tv_Abs a t')
 
-let namedv_to_simple_named_binder (n : namedv) : Tac simple_named_binder =
+// GGG Needed? delete if not
+let namedv_to_simple_binder (n : namedv) : Tac simple_binder =
   let nv = inspect_namedv n in
   {
     ppname = nv.ppname;
     uniq   = nv.uniq;
     sort   = unseal nv.sort; (* GGG USINGSORT *)
+    qual   = Q_Explicit;
+    attrs  = [];
+  }
+
+let binder_to_namedv (b : binder) : Tot namedv =
+  pack_namedv {
+    ppname = b.ppname;
+    uniq   = b.uniq;
+    sort   = seal b.sort;
+  }
+  
+let binding_to_simple_binder (b : binding) : Tot simple_binder =
+  {
+    ppname = b.ppname;
+    uniq   = b.uniq;
+    sort   = b.sort;
     qual   = Q_Explicit;
     attrs  = [];
   }
@@ -958,7 +1003,7 @@ let string_to_term_with_lb
       ) (e, []) letbindings in
     let t = string_to_term e t in
     fold_left (fun t (i, bv) ->
-          let nb = namedv_to_simple_named_binder bv in
+          let nb = binding_to_simple_binder bv in
           pack (Tv_Let false [] nb i t))
         t lb_bvs
 

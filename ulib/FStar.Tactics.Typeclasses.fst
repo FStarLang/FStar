@@ -49,8 +49,8 @@ let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
     let seen = g :: seen in
     local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail ("could not solve constraint: " ^ term_to_string g)))
 and local (seen:list term) (fuel:int) () : Tac unit =
-    let bs = binders_of_env (cur_env ()) in
-    first (fun b -> trywith seen fuel (pack (Tv_Var (bv_of_binder b)))) bs
+    let bs = vars_of_env (cur_env ()) in
+    first (fun b -> trywith seen fuel (pack (Tv_Var (binding_to_namedv b)))) bs
 and global (seen:list term) (fuel:int) () : Tac unit =
     let cands = lookup_attr (`tcinstance) (cur_env ()) in
     first (fun fv -> trywith seen fuel (pack (Tv_FVar fv))) cands
@@ -61,7 +61,7 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
 let rec maybe_intros () : Tac unit =
   let g = cur_goal () in
   match inspect_ln g with
-  | Tv_Arrow _ _ ->
+  | Reflection.Tv_Arrow _ _ ->
     ignore (intro ());
     maybe_intros ()
   | _ -> ()
@@ -98,11 +98,11 @@ let filter_no_method_binders (bs:binders)
   : binders
   = let has_no_method_attr (b:binder)
       : bool
-      = let attrs = (inspect_binder b).binder_attrs in
+      = let attrs = b.attrs in
         let is_no_method (t:term)
           : bool
           = match inspect_ln t with
-            | Tv_FVar fv  ->
+            | Reflection.Tv_FVar fv  ->
               let n = flatten_name (inspect_fv fv) in
               n = `%no_method
             | _ -> false
@@ -110,6 +110,10 @@ let filter_no_method_binders (bs:binders)
         List.Tot.existsb is_no_method attrs
     in
     List.Tot.filter (fun b -> not (has_no_method_attr b)) bs
+
+(* GGG FIXME move *)
+let named_binder_to_term (nb : binder) : term =
+  pack (Tv_Var (binder_to_namedv nb))
 
 [@@plugin]
 let mk_class (nm:string) : Tac decls =
@@ -120,7 +124,7 @@ let mk_class (nm:string) : Tac decls =
     let to_propagate = List.Tot.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
-    let Sg_Inductive name us params ty ctors = sv in
+    let Sg_Inductive {nm=name;univs=us;params;typ=ty;ctors} = sv in
     (* dump ("got it, name = " ^ implode_qn name); *)
     (* dump ("got it, ty = " ^ term_to_string ty); *)
     let ctor_name = last name in
@@ -138,19 +142,20 @@ let mk_class (nm:string) : Tac decls =
     let base : string = "__proj__Mk" ^ ctor_name ^ "__item__" in
 
     (* Make a sigelt for each method *)
-    T.map (fun b ->
+    T.map (fun (b:binder) ->
                   (* dump ("b = " ^ term_to_string (type_of_binder b)); *)
                   let s = name_of_binder b in
                   (* dump ("b = " ^ s); *)
                   let ns = cur_module () in
                   let sfv = pack_fv (ns @ [s]) in
-                  let dbv = fresh_bv_named "d" in
+                  let dbv = fresh_namedv_named "d" in
                   let tcr = (`tcresolve) in
-                  let tcdict = pack_binder {
-                    binder_ppname = seal "dict";
-                    binder_qual=Q_Meta tcr;
-                    binder_attrs=[];
-                    binder_sort=cod;
+                  let tcdict = {
+                    ppname = seal "dict";
+                    sort   = cod;
+                    uniq   = fresh();
+                    qual   = Q_Meta tcr;
+                    attrs  = [];
                   } in
                   let proj_name = cur_module () @ [base ^ s] in
                   let proj = pack (Tv_FVar (pack_fv proj_name)) in
@@ -160,7 +165,7 @@ let mk_class (nm:string) : Tac decls =
                     | None -> fail "mk_class: proj not found?"
                     | Some se ->
                       match inspect_sigelt se with
-                      | Sg_Let _ lbs ->  begin
+                      | Sg_Let {lbs} ->  begin
                         let ({lb_fv=_;lb_us=_;lb_typ=typ;lb_def=_}) =
                           lookup_lb_view lbs proj_name in typ
                         end
@@ -173,19 +178,20 @@ let mk_class (nm:string) : Tac decls =
                     match bs with
                     | [] -> fail "mk_class: impossible, no binders"
                     | b1::bs' ->
-                        let b1 = pack_binder {
-                          binder_ppname=(inspect_binder b1).binder_ppname;
-                          binder_qual=Q_Meta tcr;
-                          binder_attrs=[];
-                          binder_sort=(inspect_binder b1).binder_sort;
+                        let b1 = {
+                          ppname = b1.ppname;
+                          sort   = b1.sort;
+                          uniq   = b1.uniq; (* this is fine.. *)
+                          qual   = Q_Meta tcr;
+                          attrs  = [];
                         } in
-                        mk_arr_curried (ps@(b1::bs')) cod
+                        mk_arr (ps@(b1::bs')) cod
                   in
 
                   let def : term =
-                    let bs = (map (fun b -> binder_set_qual Q_Implicit b) params)
+                    let bs = (map (fun b -> { binding_to_binder b with qual = Q_Implicit}) params)
                                     @ [tcdict] in
-                    mk_abs bs (mk_e_app proj [binder_to_term tcdict])
+                    mk_abs bs (mk_e_app proj [named_binder_to_term tcdict])
                   in
                   //dump ("def = " ^ term_to_string def);
                   //dump ("ty  = " ^ term_to_string ty);
@@ -196,10 +202,9 @@ let mk_class (nm:string) : Tac decls =
 
                   let lbv = {lb_fv=sfv;lb_us=us;lb_typ=ty;lb_def=def} in
                   let lb = pack_lb lbv in
-                  let se = pack_sigelt (Sg_Let false [lb]) in
+                  let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
                   let se = set_sigelt_quals to_propagate se in
-                  let attrs = (inspect_binder b).binder_attrs in
-                  let se = set_sigelt_attrs attrs se in
+                  let se = set_sigelt_attrs b.attrs se in
                   //dump ("trying to return : " ^ term_to_string (quote se));
                   se
     ) (filter_no_method_binders bs)

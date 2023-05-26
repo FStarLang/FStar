@@ -140,8 +140,8 @@ let implies_intro' () : Tac unit =
 let repeat' #a (f: unit -> Tac a) : Tac unit =
   let _ = repeat f in ()
 
-let and_elim' (h: namedv) : Tac unit =
-  and_elim (pack (Tv_Var h));
+let and_elim' (h: binding) : Tac unit =
+  and_elim (pack (Tv_Var (binding_to_namedv h)));
   clear h
 
 (** Use a hypothesis at type a to satisfy a goal at type squash a *)
@@ -209,10 +209,10 @@ let term_head t : Tac string =
   | Tv_Abs x t -> "Tv_Abs"
   | Tv_Arrow x t -> "Tv_Arrow"
   | Tv_Type _ -> "Tv_Type"
-  | Tv_Refine x _ t -> "Tv_Refine"
+  | Tv_Refine x t -> "Tv_Refine"
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
-  | Tv_Let r attrs b _ t1 t2 -> "Tv_Let"
+  | Tv_Let r attrs b t1 t2 -> "Tv_Let"
   | Tv_Match t _ branches -> "Tv_Match"
   | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
   | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
@@ -349,8 +349,8 @@ let debug msg : Tac unit = () // print msg
 /// Definitions
 /// -----------
 
-let absvar = binder
-type hypothesis = binder
+let absvar = binding
+type hypothesis = binding
 
 /// A matching problem is composed of holes (``mp_vars``), hypothesis patterns
 /// (``mp_hyps``), and a goal pattern (``mp_goal``).
@@ -388,8 +388,8 @@ let string_of_matching_solution ms =
         varname ^ ": " ^ (term_to_string tm)) ms.ms_vars) in
   let hyps =
     String.concat "\n        "
-      (map (fun (nm, binder) ->
-        nm ^ ": " ^ (binder_to_string binder)) ms.ms_hyps) in
+      (map (fun (nm, binding) ->
+        nm ^ ": " ^ (binding_to_string binding)) ms.ms_hyps) in
   "\n{ vars: " ^ vars ^ "\n" ^
   "  hyps: " ^ hyps ^ " }"
 
@@ -401,7 +401,7 @@ let assoc_varname_fail (#b: Type) (key: varname) (ls: list (varname * b))
   | Some x -> x
 
 let ms_locate_hyp (a: Type) (solution: matching_solution)
-                  (name: varname) : Tac binder =
+                  (name: varname) : Tac hypothesis =
   assoc_varname_fail name solution.ms_hyps
 
 let ms_locate_var (a: Type) (solution: matching_solution)
@@ -446,7 +446,7 @@ let rec solve_mp_for_single_hyp #a
   | h :: hs ->
     or_else // Must be in ``Tac`` here to run `body`
       (fun () ->
-         match interp_pattern_aux pat part_sol.ms_vars (type_of_binder h) with
+         match interp_pattern_aux pat part_sol.ms_vars (type_of_binding h) with
          | Failure ex ->
            fail ("Failed to match hyp: " ^ (string_of_match_exception ex))
          | Success bindings ->
@@ -475,7 +475,7 @@ let rec solve_mp_for_hyps #a
 The solution returned is constructed to ensure that the continuation ``body``
 succeeds: this implements the usual backtracking-match semantics. **)
 let solve_mp #a (problem: matching_problem)
-                (hypotheses: binders) (goal: term)
+                (hypotheses: list hypothesis) (goal: term)
                 (body: matching_solution -> Tac a)
     : Tac a =
   let goal_ps =
@@ -504,7 +504,7 @@ let solve_mp #a (problem: matching_problem)
 
 (* FIXME: MOVE *)
 let name_of_namedv (x:namedv) : Tac string =
-  unseal (inspect_namedv x).namedv_ppname
+  unseal (inspect_namedv x).ppname
 
 (** Compile a term `tm` into a pattern. **)
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
@@ -584,12 +584,15 @@ noeq type abspat_argspec =
 type abspat_continuation =
   list abspat_argspec * term
 
-let classify_abspat_binder binder : Tac (abspat_binder_kind * term) =
+let type_of_named_binder (nb : binder) : term =
+ nb.sort
+
+let classify_abspat_binder (b : binder): Tac (abspat_binder_kind * term) =
   let varname = "v" in
   let hyp_pat = PApp (PQn hyp_qn) (PVar varname) in
   let goal_pat = PApp (PQn goal_qn) (PVar varname) in
 
-  let typ = type_of_binder binder in
+  let typ = type_of_named_binder b in
   match interp_pattern hyp_pat typ with
   | Success [(_, hyp_typ)] -> ABKHyp, hyp_typ
   | Success _ -> fail "classifiy_abspat_binder: impossible (1)"
@@ -600,7 +603,7 @@ let classify_abspat_binder binder : Tac (abspat_binder_kind * term) =
     | Failure _ -> ABKVar typ, typ
 
 (** Split an abstraction `tm` into a list of binders and a body. **)
-let rec binders_and_body_of_abs tm : Tac (binders * term) =
+let rec binders_and_body_of_abs tm : Tac (list binder * term) =
   match inspect tm with
   | Tv_Abs binder tm ->
     let binders, body = binders_and_body_of_abs tm in
@@ -609,6 +612,10 @@ let rec binders_and_body_of_abs tm : Tac (binders * term) =
 
 let cleanup_abspat (t: term) : Tac term =
   norm_term [] t
+
+
+let name_of_named_binder (nb : binder) : Tac string =
+ unseal nb.ppname
 
 (** Parse a notation into a matching problem and a continuation.
 
@@ -629,13 +636,13 @@ let matching_problem_of_abs (tm: term)
 
   let binders, body = binders_and_body_of_abs (cleanup_abspat tm) in
   debug ("Got binders: " ^ (String.concat ", "
-         (map (fun b -> name_of_binder b <: Tac string) binders)));
+         (map (fun b -> name_of_named_binder b <: Tac string) binders)));
 
   let classified_binders =
     map (fun binder ->
-        let bv_name = name_of_binder binder in
+        let bv_name = name_of_named_binder binder in
         debug ("Got binder: " ^ bv_name ^ "; type is " ^
-               term_to_string (type_of_binder binder));
+               term_to_string (type_of_named_binder binder));
         let binder_kind, typ = classify_abspat_binder binder in
         (binder, bv_name, binder_kind, typ))
       binders in
@@ -643,7 +650,7 @@ let matching_problem_of_abs (tm: term)
   let problem =
     fold_left
       (fun problem (binder, bv_name, binder_kind, typ) ->
-         debug ("Compiling binder " ^ name_of_binder binder ^
+         debug ("Compiling binder " ^ name_of_named_binder binder ^
                 ", classified as " ^ string_of_abspat_binder_kind binder_kind ^
                 ", with type " ^ term_to_string typ);
          match binder_kind with
@@ -694,7 +701,7 @@ matching solution ``solution_term``. **)
 let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
     : Tac term =
   let loc_fn = locate_fn_of_binder_kind argspec.asa_kind in
-  let name_tm = pack (Tv_Const (C_String (name_of_binder argspec.asa_name))) in
+  let name_tm = pack (Tv_Const (C_String (name_of_named_binder argspec.asa_name))) in
   let locate_args = [(arg_type_of_binder_kind argspec.asa_kind, Q_Explicit);
                      (solution_term, Q_Explicit); (name_tm, Q_Explicit)] in
   mk_app loc_fn locate_args
@@ -709,8 +716,16 @@ let rec hoist_and_apply (head:term) (arg_terms:list term) (hoisted_args:list arg
   | [] -> mk_app head (List.rev hoisted_args)
   | arg_term::rest ->
     let n = List.Tot.length hoisted_args in
-    let bv = fresh_bv_named ("x" ^ (string_of_int n)) in
-    pack (Tv_Let false [] bv (pack Tv_Unknown) arg_term (hoist_and_apply head rest ((pack (Tv_Var bv), Q_Explicit)::hoisted_args)))
+    //let bv = fresh_bv_named ("x" ^ (string_of_int n)) in
+    let nb : binder = {
+      ppname = seal ("x" ^ string_of_int n);
+      sort = pack Tv_Unknown;
+      uniq = fresh ();
+      qual = Q_Explicit;
+      attrs = [] ;
+    }
+    in
+    pack (Tv_Let false [] nb arg_term (hoist_and_apply head rest ((pack (Tv_Var (namedv_of_named_binder nb)), Q_Explicit)::hoisted_args)))
   
 let specialize_abspat_continuation' (continuation: abspat_continuation)
                                     (solution_term:term)

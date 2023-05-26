@@ -48,8 +48,12 @@ type pattern =
      t : option term;
    }
 
+
+// TODO: Can we do the same in pure reflection? Do we need
+// access to the _actual_ binder type?
+
 noeq
-type named_binder = {
+type binder = {
   ppname : ppname_t;
   uniq   : nat;
   sort   : typ;
@@ -57,7 +61,9 @@ type named_binder = {
   attrs  : list term;
 }
 
-type simple_named_binder = b:named_binder{Q_Explicit? b.qual /\ Nil? b.attrs}
+type binders = list binder
+
+type simple_binder = b:binder{Q_Explicit? b.qual /\ Nil? b.attrs}
 
 noeq
 type named_term_view =
@@ -66,13 +72,13 @@ type named_term_view =
   | Tv_FVar   : v:fv -> named_term_view
   | Tv_UInst  : v:fv -> us:universes -> named_term_view
   | Tv_App    : hd:term -> a:argv -> named_term_view
-  | Tv_Abs    : bv:named_binder -> body:term -> named_term_view
-  | Tv_Arrow  : bv:named_binder -> c:comp -> named_term_view
+  | Tv_Abs    : bv:binder -> body:term -> named_term_view
+  | Tv_Arrow  : bv:binder -> c:comp -> named_term_view
   | Tv_Type   : universe -> named_term_view
-  | Tv_Refine : b:simple_named_binder -> ref:term -> named_term_view
+  | Tv_Refine : b:simple_binder -> ref:term -> named_term_view
   | Tv_Const  : vconst -> named_term_view
   | Tv_Uvar   : nat -> ctx_uvar_and_subst -> named_term_view
-  | Tv_Let    : recf:bool -> attrs:(list term) -> b:simple_named_binder -> def:term -> body:term -> named_term_view
+  | Tv_Let    : recf:bool -> attrs:(list term) -> b:simple_binder -> def:term -> body:term -> named_term_view
   // TODO: returns ascription has a binder, open?
   | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> named_term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> named_term_view
@@ -80,24 +86,31 @@ type named_term_view =
   | Tv_Unknown  : named_term_view // An underscore: _
   | Tv_Unsupp : named_term_view // failed to inspect, not supported
 
-let binding_to_named_binder (bnd : binding) (b : binder) : named_binder =
-  let bndv = inspect_binding bnd in
+private
+let __binding_to_binder (bnd : binding) (b : Reflection.binder) : binder =
   {
-      ppname = bndv.ppname;
-      uniq   = bndv.uniq;
-      sort   = bndv.sort;
+      ppname = bnd.ppname;
+      uniq   = bnd.uniq;
+      sort   = bnd.sort;
       qual   = (inspect_binder b).qual;
       attrs  = (inspect_binder b).attrs;
   }
 
-let named_binder_to_binding (b : named_binder) : binding =
-  let bview : binding_view = {
+let binding_to_binder (bnd : binding) : binder =
+  {
+      ppname = bnd.ppname;
+      uniq   = bnd.uniq;
+      sort   = bnd.sort;
+      qual   = Q_Explicit;
+      attrs  = []
+  }
+
+let binder_to_binding (b : binder) : binding =
+  {
       ppname = b.ppname;
       uniq   = b.uniq;
       sort   = b.sort;
   }
-  in
-  pack_binding bview
 
 let open_view (tv:term_view) : Tac named_term_view =
   match tv with
@@ -120,22 +133,22 @@ let open_view (tv:term_view) : Tac named_term_view =
 
   | RD.Tv_Abs b body ->
     let bnd, body = open_term b body in
-    let nb = binding_to_named_binder bnd b in
+    let nb = __binding_to_binder bnd b in
     Tv_Abs nb body
 
   | RD.Tv_Arrow b c ->
     let bnd, body = open_comp b c in
-    let nb = binding_to_named_binder bnd b in
+    let nb = __binding_to_binder bnd b in
     Tv_Arrow nb c
 
   | RD.Tv_Refine b ref ->
     let bnd, ref = open_term b ref in
-    let nb = binding_to_named_binder bnd b in
+    let nb = __binding_to_binder bnd b in
     Tv_Refine nb ref
 
   | RD.Tv_Let recf attrs b def body ->
     let bnd, body = open_term b body in
-    let nb = binding_to_named_binder bnd b in
+    let nb = __binding_to_binder bnd b in
     Tv_Let recf attrs nb def body
 
   (* FIXME *)
@@ -161,22 +174,22 @@ let close_view (tv : named_term_view) : term_view =
   Open them and convert to named binders. *)
   
   | Tv_Abs nb body ->
-    let bnd = named_binder_to_binding nb in
+    let bnd = binder_to_binding nb in
     let b, body = close_term bnd body in
     RD.Tv_Abs b body
   
   | Tv_Arrow nb c ->
-    let bnd = named_binder_to_binding nb in
+    let bnd = binder_to_binding nb in
     let b, c = close_comp bnd c in
     RD.Tv_Arrow b c
   
   | Tv_Refine nb ref ->
-    let bnd = named_binder_to_binding nb in
+    let bnd = binder_to_binding nb in
     let b, ref = close_term bnd ref in
     RD.Tv_Refine b ref
   
   | Tv_Let recf attrs nb def body ->
-    let bnd = named_binder_to_binding nb in
+    let bnd = binder_to_binding nb in
     let b, body = close_term bnd body in
     RD.Tv_Let recf attrs b def body
   
@@ -195,5 +208,45 @@ let pack (tv:named_term_view) : Tot term =
 let notAscription (tv:named_term_view) : bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
 
+noeq
+type named_sigelt_view =
+  | Sg_Let {
+      isrec : bool;
+      lbs   : list letbinding;
+    }
+
+  // Sg_Inductive basically coalesces the Sig_bundle used internally,
+  // where the type definition and its constructors are split.
+  // While that might be better for typechecking, this is probably better for metaprogrammers
+  // (no mutually defined types for now)
+  | Sg_Inductive {
+      nm     : name;             // name of the inductive type being defined
+      univs  : list univ_name;   // named universe variables
+      params : bindings;         // parameters
+      typ    : typ;              // the type annotation for the inductive, i.e., indices -> Type #u
+      ctors  : list ctor;        // the constructors, opened with univs and applied to params already
+    }
+
+  | Sg_Val {
+      nm    : name;
+      univs : list univ_name;
+      typ   : typ;
+    }
+
+  | Unk
+
+let open_sigelt_view (sv : sigelt_view) : named_sigelt_view = magic ()
+
+let close_sigelt_view (sv : named_sigelt_view) : sigelt_view = magic ()
+
+let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
+  let sv = Reflection.inspect_sigelt s in
+  open_sigelt_view sv
+
+let pack_sigelt (sv:named_sigelt_view) : Tot sigelt =
+  let sv = close_sigelt_view sv in
+  Reflection.pack_sigelt sv
+
 (* Clients of this module use the named view. *)
-let term_view = named_term_view
+let term_view        = named_term_view
+let sigelt_term_view = named_sigelt_view

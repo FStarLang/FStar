@@ -9,7 +9,7 @@ open FStar.Tactics.NamedView
 (* These are fully-named variants of functions found in FStar.Reflection *)
 
 private
-let rec collect_arr' (bs : list named_binder) (c : comp) : Tac (list named_binder * comp) =
+let rec collect_arr' (bs : list binder) (c : comp) : Tac (list binder * comp) =
     begin match inspect_comp c with
     | C_Total t ->
         begin match inspect t with
@@ -21,7 +21,7 @@ let rec collect_arr' (bs : list named_binder) (c : comp) : Tac (list named_binde
     | _ -> (bs, c)
     end
 
-val collect_arr_bs : typ -> Tac (list named_binder * comp)
+val collect_arr_bs : typ -> Tac (list binder * comp)
 let collect_arr_bs t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t)) in
     (List.Tot.Base.rev bs, c)
@@ -33,13 +33,13 @@ let collect_arr t =
     (List.Tot.Base.rev ts, c)
 
 private
-let rec collect_abs' (bs : list named_binder) (t : term) : Tac (list named_binder * term) (decreases t) =
+let rec collect_abs' (bs : list binder) (t : term) : Tac (list binder * term) (decreases t) =
     match inspect t with
     | Tv_Abs b t' ->
         collect_abs' (b::bs) t'
     | _ -> (bs, t)
 
-val collect_abs : term -> Tac (list named_binder * term)
+val collect_abs : term -> Tac (list binder * term)
 let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.Base.rev bs, t')
@@ -48,20 +48,20 @@ let collect_abs t =
 private
 let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
 
-let rec mk_arr (bs: list named_binder) (cod : comp) : Tac term =
+let rec mk_arr (bs: list binder) (cod : comp) : Tac term =
     match bs with
     | [] -> fail "mk_arr, empty binders"
     | [b] -> pack (Tv_Arrow b cod)
     | (b::bs) ->
       pack (Tv_Arrow b (pack_comp (C_Total (mk_arr bs cod))))
 
-///let rec mk_arr_curried (bs: list named_binder) (cod : comp) : Tac term =
+///let rec mk_arr_curried (bs: list binder) (cod : comp) : Tac term =
 ///    match bs with
 ///    | [] -> fail "mk_arr, empty binders"
 ///    | [b] -> pack_curried (Tv_Arrow b cod)
 ///    | (b::bs) -> pack_curried (Tv_Arrow b (pack_comp (C_Total (mk_arr_curried bs cod))))
 
-let rec mk_tot_arr (bs: list named_binder) (cod : term) : Tac term =
+let rec mk_tot_arr (bs: list binder) (cod : term) : Tac term =
     match bs with
     | [] -> cod
     | (b::bs) ->

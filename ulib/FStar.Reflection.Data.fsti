@@ -88,8 +88,8 @@ type bv_view = {
 noeq
 type namedv_view = {
   uniq   : nat;
-  ppname : ppname_t;
   sort   : sealed typ; // REMOVE?
+  ppname : ppname_t;
 }
 
 (* FIXME: comment *)
@@ -103,11 +103,12 @@ type binder_view = {
 
 (* FIXME: comment *)
 noeq
-type binding_view = {
+type binding = {
   uniq   : nat;
   sort   : typ;
   ppname : ppname_t;
 }
+type bindings = list binding
 
 (** We use the binder type for letbindings and refinements,
 but no qualifiers nor attributes can appear there. We call these
