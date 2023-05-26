@@ -204,7 +204,8 @@ let is_eq2 (t:term) : option (term & term) =
         | Some (head, Some Implicit, _) ->
           (match is_fvar head with
            | Some (l, _) ->
-             if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"]
+             if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"] ||
+                l = ["Prims"; "eq2"]
              then Some (a1, a2)
              else None
            | _ -> None)
