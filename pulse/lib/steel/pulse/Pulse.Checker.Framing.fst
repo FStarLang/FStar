@@ -12,7 +12,6 @@ module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module FV = Pulse.Typing.FV
 module Metatheory = Pulse.Typing.Metatheory
-open Pulse.Checker.Common
 
 let rec vprop_as_list (vp:term)
   : list term
