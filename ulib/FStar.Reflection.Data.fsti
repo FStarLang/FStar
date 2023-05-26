@@ -78,18 +78,18 @@ type argv = term * aqualv
 
 (* FIXME: comment *)
 noeq
-type bv_view = {
-  index  : nat;
-  ppname : ppname_t;
-  sort   : sealed typ; // REMOVE?
-}
-
-(* FIXME: comment *)
-noeq
 type namedv_view = {
   uniq   : nat;
   sort   : sealed typ; // REMOVE?
   ppname : ppname_t;
+}
+
+(* FIXME: comment *)
+noeq
+type bv_view = {
+  index  : nat;
+  ppname : ppname_t;
+  sort   : sealed typ; // REMOVE?
 }
 
 (* FIXME: comment *)

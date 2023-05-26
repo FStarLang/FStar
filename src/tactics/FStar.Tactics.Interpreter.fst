@@ -463,18 +463,6 @@ let () =
         top_env     e_unit RE.e_env
         top_env     NBET.e_unit NRE.e_env;
 
-      mk_tac_step_1 0 "inspect"
-        inspect RE.e_term      RE.e_term_view
-        inspect NRE.e_term     NRE.e_term_view;
-
-      mk_tac_step_1 0 "pack"
-        pack    RE.e_term_view RE.e_term
-        pack    NRE.e_term_view NRE.e_term;
-
-      mk_tac_step_1 0 "pack_curried"
-        pack_curried    RE.e_term_view RE.e_term
-        pack_curried    NRE.e_term_view NRE.e_term;
-
       mk_tac_step_1 0 "binder_bv"
         binder_bv RE.e_binder RE.e_bv
         binder_bv NRE.e_binder NRE.e_bv;

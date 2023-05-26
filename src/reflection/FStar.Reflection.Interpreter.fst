@@ -369,6 +369,11 @@ let reflection_primops : list Cfg.primitive_step = [
     e_env
     e_binders;
 
+  mk1 "vars_of_env"
+    RB.vars_of_env
+    e_env
+    (e_list e_bv);
+
   mk2 "lookup_typ"
     RB.lookup_typ
     e_env

@@ -240,7 +240,7 @@ let rec inspect_ln (t:term) : term_view =
         end
 
     | Tm_refine {b=bv; phi=t} ->
-        Tv_Refine (bv, bv.sort, t)
+        Tv_Refine (S.mk_binder bv, t)
 
     | Tm_constant c ->
         Tv_Const (inspect_const c)
@@ -258,23 +258,23 @@ let rec inspect_ln (t:term) : term_view =
         | Inr _ -> Tv_Unsupp // no top level lets
         | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
-            Tv_Let (false, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
+            Tv_Let (false, lb.lbattrs, S.mk_binder bv, lb.lbdef, t2)
         end
 
     | Tm_let {lbs=(true, [lb]); body=t2} ->
         if lb.lbunivs <> [] then Tv_Unsupp else
         begin match lb.lbname with
         | Inr _  -> Tv_Unsupp // no top level lets
-        | Inl bv -> Tv_Let (true, lb.lbattrs, bv, bv.sort, lb.lbdef, t2)
+        | Inl bv -> Tv_Let (true, lb.lbattrs, S.mk_binder bv, lb.lbdef, t2)
         end
 
     | Tm_match {scrutinee=t; ret_opt; brs} ->
         let rec inspect_pat p =
             match p.v with
-            | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
-            | Pat_var bv -> Pat_Var (bv, bv.sort)
-            | Pat_dot_term eopt -> Pat_Dot_Term eopt
+            | Pat_constant c -> Pat_Constant {c=inspect_const c}
+            | Pat_cons (fv, us_opt, ps) -> Pat_Cons {head=fv; univs=us_opt; subpats=List.map (fun (p, b) -> inspect_pat p, b) ps}
+            | Pat_var bv -> Pat_Var {sort=bv.sort; ppname=string_of_id bv.ppname}
+            | Pat_dot_term eopt -> Pat_Dot_Term {t=eopt}
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, ret_opt, brs)
@@ -398,8 +398,9 @@ let pack_ln (tv:term_view) : term =
     | Tv_Type u ->
         mk (Tm_type u) Range.dummyRange
 
-    | Tv_Refine (bv, sort, t) ->
-        mk (Tm_refine {b={bv with sort=sort}; phi=t}) t.pos
+    | Tv_Refine (b, t) ->
+        let bv : S.bv = b.binder_bv in
+        mk (Tm_refine {b=bv; phi=t}) t.pos
 
     | Tv_Const c ->
         S.mk (Tm_constant (pack_const c)) Range.dummyRange
@@ -407,13 +408,13 @@ let pack_ln (tv:term_view) : term =
     | Tv_Uvar (u, ctx_u_s) ->
       S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
-    | Tv_Let (false, attrs, bv, ty, t1, t2) ->
-        let bv = { bv with sort=ty } in
+    | Tv_Let (false, attrs, b, t1, t2) ->
+        let bv = b.binder_bv in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let {lbs=(false, [lb]); body=t2}) Range.dummyRange
 
-    | Tv_Let (true, attrs, bv, ty, t1, t2) ->
-        let bv = { bv with sort=ty } in
+    | Tv_Let (true, attrs, b, t1, t2) ->
+        let bv = b.binder_bv in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let {lbs=(true, [lb]); body=t2}) Range.dummyRange
 
@@ -421,10 +422,12 @@ let pack_ln (tv:term_view) : term =
         let wrap v = {v=v;p=Range.dummyRange} in
         let rec pack_pat p : S.pat =
             match p with
-            | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
-            | Pat_Var  (bv, _sort) -> wrap <| Pat_var bv
-            | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
+            | Pat_Constant {c} -> wrap <| Pat_constant (pack_const c)
+            | Pat_Cons {head; univs; subpats} -> wrap <| Pat_cons (head, univs, List.map (fun (p, b) -> pack_pat p, b) subpats)
+            | Pat_Var  {sort; ppname} ->
+              let bv = S.gen_bv ppname None sort in
+              wrap <| Pat_var bv
+            | Pat_Dot_Term {t=eopt} -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         S.mk (Tm_match {scrutinee=t; ret_opt; brs; rc_opt=None}) Range.dummyRange
@@ -692,6 +695,33 @@ let pack_lb (lbv:lb_view) : letbinding =
     let def = SS.subst s def in
     U.mk_letbinding (Inr fv) us typ PC.effect_Tot_lid def [] Range.dummyRange
 
+let inspect_namedv (v:bv) : namedv_view =
+    if v.index < 0 then (
+        Err.log_issue Range.dummyRange
+            (Err.Warning_CantInspect, BU.format3 "inspect_namedv: uniq is negative (%s : %s), uniq = %s"
+                                         (Ident.string_of_id v.ppname)
+                                         (Print.term_to_string v.sort)
+                                         (string_of_int v.index))
+    );
+    {
+      uniq   = Z.of_int_fs v.index;
+      ppname = Ident.string_of_id v.ppname;
+      sort   = v.sort
+    }
+
+let pack_namedv (vv:namedv_view) : namedv =
+    if Z.to_int_fs vv.uniq < 0 then (
+        Err.log_issue Range.dummyRange
+            (Err.Warning_CantInspect, BU.format2 "pack_namedv: uniq is negative (%s), uniq = %s"
+                                         vv.ppname
+                                         (string_of_int (Z.to_int_fs vv.uniq)))
+    );
+    {
+      index  = Z.to_int_fs vv.uniq;
+      ppname = Ident.mk_ident (vv.ppname, Range.dummyRange);
+      sort   = S.tun; // GGG Ignoring user provided sort!!
+    }
+
 let inspect_bv (bv:bv) : bv_view =
     if bv.index < 0 then (
         Err.log_issue Range.dummyRange
@@ -701,40 +731,41 @@ let inspect_bv (bv:bv) : bv_view =
                                          (string_of_int bv.index))
     );
     {
-      bv_ppname = Ident.string_of_id bv.ppname;
-      bv_index = Z.of_int_fs bv.index;
+      index  = Z.of_int_fs bv.index;
+      ppname = Ident.string_of_id bv.ppname;
+      sort   = bv.sort;
     }
 
 let pack_bv (bvv:bv_view) : bv =
-    if Z.to_int_fs bvv.bv_index < 0 then (
+    if Z.to_int_fs bvv.index < 0 then (
         Err.log_issue Range.dummyRange
             (Err.Warning_CantInspect, BU.format2 "pack_bv: index is negative (%s), index = %s"
-                                         bvv.bv_ppname
-                                         (string_of_int (Z.to_int_fs bvv.bv_index)))
+                                         bvv.ppname
+                                         (string_of_int (Z.to_int_fs bvv.index)))
     );
     {
-      ppname = Ident.mk_ident (bvv.bv_ppname, Range.dummyRange);
-      index = Z.to_int_fs bvv.bv_index; // Guaranteed to be a nat
+      index = Z.to_int_fs bvv.index;
+      ppname = Ident.mk_ident (bvv.ppname, Range.dummyRange);
       sort = S.tun;
     }
 
 let inspect_binder (b:binder) : binder_view = 
   let attrs = U.encode_positivity_attributes b.binder_positivity b.binder_attrs in
   {
-    binder_ppname = Ident.string_of_id b.binder_bv.ppname;
-    binder_qual = inspect_bqual (b.binder_qual);
-    binder_attrs = attrs;
-    binder_sort = b.binder_bv.sort;
+    ppname = Ident.string_of_id b.binder_bv.ppname;
+    qual   = inspect_bqual (b.binder_qual);
+    attrs  = attrs;
+    sort   = b.binder_bv.sort;
   }
 
 let pack_binder (bview:binder_view) : binder = 
-  let pqual, attrs = U.parse_positivity_attributes bview.binder_attrs in
+  let pqual, attrs = U.parse_positivity_attributes bview.attrs in
   {
-    binder_bv= { ppname = Ident.mk_ident (bview.binder_ppname, Range.dummyRange)
-               ; sort = bview.binder_sort
+    binder_bv= { ppname = Ident.mk_ident (bview.ppname, Range.dummyRange)
+               ; sort = bview.sort
                ; index = 0 (* irrelevant, this is a binder *)
                };
-    binder_qual=pack_bqual (bview.binder_qual);
+    binder_qual=pack_bqual (bview.qual);
     binder_positivity=pqual;
     binder_attrs=attrs
   }
@@ -748,6 +779,8 @@ let env_open_modules (e : Env.env) : list name =
              (DsEnv.open_modules e.dsenv)
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
+
+let vars_of_env e = FStar.TypeChecker.Env.all_binders e |> List.map (fun b -> b.binder_bv)
 
 (* Generic combinators, safe *)
 let eqopt  = Syntax.Util.eqopt
@@ -802,9 +835,9 @@ let rec term_eq (t1:term) (t2:term) : bool =
   | Tv_Type u1, Tv_Type u2 ->
     univ_eq u1 u2
 
-  | Tv_Refine (b1, sort1, t1), Tv_Refine (b2, sort2, t2) ->
+  | Tv_Refine (b1, t1), Tv_Refine (b2, t2) ->
     (* No need to compare bvs *)
-    term_eq sort1 sort2 && term_eq t1 t2
+    term_eq b1.binder_bv.sort b2.binder_bv.sort && term_eq t1 t2
 
   | Tv_Const c1, Tv_Const c2 ->
     const_eq c1 c2
@@ -823,11 +856,11 @@ let rec term_eq (t1:term) (t2:term) : bool =
      *)
     n1 = n2
 
-  | Tv_Let (r1, ats1, bv1, ty1, m1, n1), Tv_Let (r2, ats2, bv2, ty2, m2, n2) ->
+  | Tv_Let (r1, ats1, b1, m1, n1), Tv_Let (r2, ats2, b2, m2, n2) ->
     (* no need to compare bvs *)
     r1 = r2 &&
      eqlist term_eq ats1 ats2 &&
-     term_eq ty1 ty2 &&
+     binder_eq b1 b2 &&
      term_eq m1 m2 &&
      term_eq n1 n2
 
@@ -866,9 +899,9 @@ and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : bool =
 and binder_eq (b1 : binder) (b2 : binder) : bool =
   let bview1 = inspect_binder b1 in
   let bview2 = inspect_binder b2 in
-  term_eq bview1.binder_sort bview2.binder_sort &&
-    aqual_eq bview1.binder_qual bview2.binder_qual &&
-    eqlist term_eq bview1.binder_attrs bview2.binder_attrs
+  term_eq bview1.sort bview2.sort &&
+    aqual_eq bview1.qual bview2.qual &&
+    eqlist term_eq bview1.attrs bview2.attrs
 
 and binding_bv_eq (bv1 : bv) (bv2 : bv) : bool =
   (*
@@ -926,19 +959,20 @@ and branch_eq (c1 : Data.branch) (c2 : Data.branch) : bool =
 
 and pattern_eq (p1 : pattern) (p2 : pattern) : bool =
   match p1, p2 with
-  | Pat_Constant c1, Pat_Constant c2 ->
-    const_eq c1 c2
-  | Pat_Cons (fv1, us1, subpats1), Pat_Cons (fv2, us2, subpats2) ->
-    S.fv_eq fv1 fv2 &&
-      eqopt (eqlist univ_eq) us1 us2 &&
-      eqlist (eqprod pattern_eq (fun b1 b2 -> b1 = b2)) subpats1 subpats2
+  // GGG FIXME
+  (* | Pat_Constant {c=c1}, Pat_Constant {c=c2} -> *)
+  (*   const_eq c1 c2 *)
+  (* | Pat_Cons (fv1, us1, subpats1), Pat_Cons (fv2, us2, subpats2) -> *)
+  (*   S.fv_eq fv1 fv2 && *)
+  (*     eqopt (eqlist univ_eq) us1 us2 && *)
+  (*     eqlist (eqprod pattern_eq (fun b1 b2 -> b1 = b2)) subpats1 subpats2 *)
 
-  | Pat_Var (bv1, _), Pat_Var (bv2, _) ->
-    binding_bv_eq bv1 bv2
-    // Should this just be true? Sorts are sealed.
+  (* | Pat_Var (bv1, _), Pat_Var (bv2, _) -> *)
+  (*   binding_bv_eq bv1 bv2 *)
+  (*   // Should this just be true? Sorts are sealed. *)
 
-  | Pat_Dot_Term topt1, Pat_Dot_Term topt2 ->
-    eqopt term_eq topt1 topt2
+  (* | Pat_Dot_Term topt1, Pat_Dot_Term topt2 -> *)
+  (*   eqopt term_eq topt1 topt2 *)
 
   | _ -> false
 

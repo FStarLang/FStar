@@ -17,10 +17,9 @@ module FStar.Tactics.CanonCommMonoidSimple.Equiv
 
 open FStar.Algebra.CommMonoid.Equiv
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
+open FStar.Tactics
 
 let term_eq = FStar.Tactics.term_eq_old
 
@@ -286,8 +285,8 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (ts:list term) (am:amap term)
                         (mult unit t : term) : Tac (exp * list term * amap term) =
-  let hd, tl = collect_app_ref t in
-  match inspect hd, list_unref tl with
+  let hd, tl = collect_app t in
+  match inspect hd, tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
     if term_eq (pack (Tv_FVar fv)) mult
     then (let (e1, ts, am) = reification_aux ts am mult unit t1 in
@@ -318,7 +317,7 @@ let rec convert_map (m : list (atom * term)) : term =
   match m with
   | [] -> `[]
   | (a, t)::ps ->
-      let a = pack_ln (Tv_Const (C_Int a)) in
+      let a = pack (Tv_Const (C_Int a)) in
       (* let t = norm_term [delta] t in *)
       `((`#a, (`#t)) :: (`#(convert_map ps)))
 
@@ -334,7 +333,7 @@ let rec quote_exp (e:exp) : term =
     match e with
     | Unit -> (`Unit)
     | Mult e1 e2 -> (`Mult (`#(quote_exp e1)) (`#(quote_exp e2)))
-    | Atom n -> let nt = pack_ln (Tv_Const (C_Int n)) in
+    | Atom n -> let nt = pack (Tv_Const (C_Int n)) in
                 (`Atom (`#nt))
 
 let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
@@ -374,11 +373,11 @@ let canon_monoid (eq: term) (m: term) : Tac unit =
   norm [iota; zeta];
   let t = cur_goal () in
   // removing top-level squash application
-  let sq, rel_xy = collect_app_ref t in
+  let sq, rel_xy = collect_app t in
   // unpacking the application of the equivalence relation (lhs `EQ?.eq eq` rhs)
   (match rel_xy with
    | [(rel_xy,_)] -> (
-       let rel, xy = collect_app_ref rel_xy in
+       let rel, xy = collect_app rel_xy in
        if (length xy >= 2)
        then (
          match FStar.List.Tot.Base.index xy (length xy - 2) , FStar.List.Tot.index xy (length xy - 1) with

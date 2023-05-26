@@ -98,9 +98,6 @@ val get_guard_policy       : unit -> tac guard_policy
 val set_guard_policy       : guard_policy -> tac unit
 val lax_on                 : unit -> tac bool
 val tadmit_t               : term -> tac unit
-val inspect                : term -> tac term_view
-val pack                   : term_view -> tac term
-val pack_curried           : term_view -> tac term
 val binder_bv              : binder -> tac bv
 val join                   : unit -> tac unit
 val lget                   : typ -> string -> tac term

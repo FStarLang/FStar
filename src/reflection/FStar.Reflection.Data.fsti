@@ -32,6 +32,9 @@ type name = list string
 type typ  = term
 type binders = list binder
 
+(* No distinction internally between bvars and named vars *)
+type namedv = bv
+
 type vconst =
     | C_Unit
     | C_Int of Z.t
@@ -45,10 +48,33 @@ type vconst =
 type universes = list universe
 
 type pattern =
-    | Pat_Constant of vconst
-    | Pat_Cons     of fv * option (list universe) * list (pattern * bool)
-    | Pat_Var      of bv * typ
-    | Pat_Dot_Term of option term
+ // A built-in constant
+ | Pat_Constant {
+     c : vconst
+   }
+
+ // A fully applied constructor, each boolean marks whether the
+ // argument was an explicitly-provided implicit argument
+ | Pat_Cons {
+     head    : fv;
+     univs   : option universes;
+     subpats : list (pattern * bool)
+   }
+
+ // A pattern-bound variable. It has a sealed sort in it (in userland).
+ // This sort is ignored by the typechecker, but may be useful
+ // for metaprogram to look at heuristically. There is nothing
+ // else here but a ppname, the variable is referred to by its DB index.
+ // This means all Pat_Var are provably equal.
+ | Pat_Var {
+     sort   : term;
+     ppname : string;
+   }
+
+ // Dot pattern: resolved by other elements in the pattern and type
+ | Pat_Dot_Term {
+     t : option term;
+   }
 
 type branch = pattern * term
 
@@ -61,17 +87,31 @@ type argv = term * aqualv
 
 val as_ppname (s:string) : Tot string
 
+type namedv_view = {
+  uniq   : Z.t;
+  ppname : string;
+  sort   : typ;
+}
+
 type bv_view = {
-    bv_ppname : string;
-    bv_index : Z.t;
+  index  : Z.t;
+  ppname : string;
+  sort   : typ;
 }
 
 type binder_view = {
-  binder_ppname : string;
-  binder_qual   : aqualv;
-  binder_attrs  : list term;
-  binder_sort   : typ;
+  sort   : typ;
+  qual   : aqualv;
+  attrs  : list term;
+  ppname : string;
 }
+
+type binding = {
+  uniq   : nat;
+  sort   : typ;
+  ppname : string;
+}
+type bindings = list binding
 
 type universe_view =
   | Uv_Zero : universe_view
@@ -91,10 +131,10 @@ type term_view =
     | Tv_Abs       of binder * term
     | Tv_Arrow     of binder * comp
     | Tv_Type      of universe
-    | Tv_Refine    of bv * typ * term
+    | Tv_Refine    of binder * term
     | Tv_Const     of vconst
     | Tv_Uvar      of Z.t * ctx_uvar_and_subst
-    | Tv_Let       of bool * list term * bv * typ * term * term
+    | Tv_Let       of bool * list term * binder * term * term
     | Tv_Match     of term * option match_returns_ascription * list branch
     | Tv_AscribedT of term * term * option term * bool  //if the boolean flag is true, the ascription is an equality ascription
                                                          //see also Syntax

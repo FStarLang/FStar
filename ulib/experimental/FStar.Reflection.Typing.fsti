@@ -95,13 +95,17 @@ let seal_pp_name x : pp_name_t = FStar.Sealed.Inhabited.seal x
 
 let mk_binder (pp_name:pp_name_t) (x:var) (ty:term) (q:aqualv)
   = pack_binder
-      { binder_ppname = pp_name;
-        binder_qual   = q;
-        binder_attrs  = [];
-        binder_sort   = ty}
+      { ppname = pp_name;
+        qual   = q;
+        attrs  = [];
+        sort   = ty}
 
 let extend_env (e:env) (x:var) (ty:term) : env =
-  R.push_binder e (mk_binder (seal_pp_name "x") x ty Q_Explicit)
+  R.push_binding e ({
+    ppname = seal_pp_name "x";
+    uniq   = x;
+    sort   = ty;
+  })
   
 val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
   : Lemma 
@@ -121,13 +125,17 @@ let as_binder (x:var) (ty:term) =
 
 let bv_index (x:bv)
   : var
-  = (inspect_bv x).bv_index
+  = (inspect_bv x).index
+
+let namedv_uniq (x:namedv)
+  : var
+  = (inspect_namedv x).uniq
 
 let binder_sort (b:binder) =
-  (inspect_binder b).binder_sort
+  (inspect_binder b).sort
 
 let binder_qual (b:binder) =
-  let { binder_qual = q } = inspect_binder b in q
+  let { qual = q } = inspect_binder b in q
 
 noeq
 type open_or_close =
@@ -137,16 +145,28 @@ type open_or_close =
 
 let tun = pack_ln Tv_Unknown
 
-let make_bv (n:nat) = {
-  bv_ppname = pp_name_default;
-  bv_index = n;
+let make_bv (n:nat) : bv_view = {
+  ppname = pp_name_default;
+  index  = n;
+  sort   = seal tun;
 }
-let make_bv_with_name (s:pp_name_t) (n:nat) = {
-  bv_ppname = s;
-  bv_index = n;
+
+let make_bv_with_name (s:pp_name_t) (n:nat) : bv_view = {
+  ppname = s;
+  index  = n;
+  sort   = seal tun;
 }
-let var_as_bv (v:nat) = pack_bv (make_bv v)
-let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
+
+let var_as_bv (v:nat) : bv = pack_bv (make_bv v)
+
+let var_as_namedv (v:nat) : namedv =
+  pack_namedv {
+    uniq = v;
+    sort = seal tun;
+    ppname = pp_name_default;
+  }
+
+let var_as_term (v:var) = pack_ln (Tv_Var (var_as_namedv v))
 
 let binder_of_t_q t q = mk_binder pp_name_default 0 t q
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
@@ -157,14 +177,30 @@ let mk_arrow ty qual t : R.term =
 let mk_ghost_arrow ty qual t : R.term =
   R.pack_ln (R.Tv_Arrow (binder_of_t_q ty qual) (mk_ghost t))
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i)))
-let mk_let ppname (e1 t1 e2:R.term) =
-  R.pack_ln (R.Tv_Let false [] (R.pack_bv (make_bv_with_name ppname 0)) t1 e1 e2)
 
-let open_with_var (x:var) = OpenWith (pack_ln (Tv_Var (var_as_bv x)))
+let mk_simple_binder (t:typ) : simple_binder = 
+  pack_binder {
+    sort   = t;
+    ppname = pp_name_default;
+    qual   = Q_Explicit;
+    attrs  = []
+  }
+
+let mk_let ppname (e1 t1 e2:R.term) =
+  let b : simple_binder = pack_binder ({
+    ppname = ppname;
+    sort   = t1;
+    qual   = Q_Explicit;
+    attrs  = [];
+  })
+  in
+  R.pack_ln (R.Tv_Let false [] b e1 e2)
+
+let open_with_var (x:var) = OpenWith (pack_ln (Tv_Var (var_as_namedv x)))
   
 let maybe_index_of_term (x:term) =
   match inspect_ln x with
-  | Tv_Var bv -> Some (bv_index bv)
+  | Tv_Var v -> Some ((inspect_namedv v).uniq)
   | _ -> None
   
 val open_or_close_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (v:open_or_close) (i:nat) 
@@ -185,10 +221,10 @@ and binder_offset_pattern (p:pattern)
     | Pat_Constant _
     | Pat_Dot_Term _ -> 0
 
-    | Pat_Var _ _ -> 1
+    | Pat_Var _ -> 1
 
-    | Pat_Cons fv us pats -> 
-      binder_offset_patterns pats
+    | Pat_Cons {head=fv; univs=us; subpats} -> 
+      binder_offset_patterns subpats
 
 let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
   : Tot term (decreases t)
@@ -203,12 +239,12 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
       (match v with
        | OpenWith _ -> t
        | CloseVar y ->
-         if bv_index x = y 
-         then pack_ln (Tv_BVar (pack_bv { inspect_bv x with bv_index = i }))
+         if namedv_uniq x = y 
+         then pack_ln (Tv_BVar (pack_bv { index = i; sort = (inspect_namedv x).sort; ppname = (inspect_namedv x).ppname }))
          else t
        | Rename y z ->
-         if bv_index x = y
-         then pack_ln (Tv_Var (pack_bv { inspect_bv x with bv_index = z }))
+         if namedv_uniq x = y
+         then pack_ln (Tv_Var (pack_namedv { inspect_namedv x with uniq = z }))
          else t)
 
     | Tv_BVar j -> 
@@ -222,7 +258,7 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
            | None -> v
            | Some k ->
              //if we're substituting a name j for a name k, retain the pp_name of j
-             pack_ln (Tv_Var (pack_bv { inspect_bv j with bv_index = k }))
+             pack_ln (Tv_Var (pack_namedv { uniq = k; ppname = (inspect_bv j).ppname; sort = (inspect_bv j).sort }))
          )
          else t
       )
@@ -239,18 +275,20 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
       let b' = open_or_close_binder' b v i in
       pack_ln (Tv_Arrow b' (open_or_close_comp' c v (i + 1)))      
 
-    | Tv_Refine bv sort f ->
-      pack_ln (Tv_Refine bv (open_or_close_term' sort v i)
-                            (open_or_close_term' f v (i + 1)))
+    | Tv_Refine b f ->
+      let b = open_or_close_binder' b v i in
+      assume (binder_is_simple b);
+      pack_ln (Tv_Refine b (open_or_close_term' f v (i + 1)))
 
     | Tv_Uvar j c ->
       pack_ln (Tv_Uvar j (open_or_close_ctx_uvar_and_subst c v i))
       
-    | Tv_Let recf attrs bv ty def body ->
+    | Tv_Let recf attrs b def body ->
+      let b = open_or_close_binder' b v i in
+      assume (binder_is_simple b);
       pack_ln (Tv_Let recf 
                       (open_or_close_terms' attrs v i)
-                      bv
-                      (open_or_close_term' ty v i)
+                      b
                       (if recf 
                        then open_or_close_term' def v (i + 1)
                        else open_or_close_term' def v i)
@@ -282,10 +320,11 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
 and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
   : Tot binder (decreases b)
   = let bndr  = inspect_binder b in
-    pack_binder {binder_bv=bndr.binder_bv;
-                 binder_qual=bndr.binder_qual;
-                 binder_attrs=open_or_close_terms' bndr.binder_attrs v i;
-                 binder_sort=open_or_close_term' bndr.binder_sort v i}
+    pack_binder { ppname = bndr.ppname;
+                  qual = bndr.qual;
+                  attrs = open_or_close_terms' bndr.attrs v i;
+                  sort = open_or_close_term' bndr.sort v i;
+                }
 
 and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
   : Tot comp (decreases c)
@@ -336,17 +375,17 @@ and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat)
   = match p with
     | Pat_Constant _ -> p
 
-    | Pat_Cons fv us pats -> 
-      let pats = open_or_close_patterns' pats v i in
-      Pat_Cons fv us pats
+    | Pat_Cons {head; univs; subpats} -> 
+      let subpats = open_or_close_patterns' subpats v i in
+      Pat_Cons {head; univs; subpats}
 
-    | Pat_Var bv st ->
-      Pat_Var bv st
+    | Pat_Var bv ->
+      Pat_Var bv
 
-    | Pat_Dot_Term topt ->
-      Pat_Dot_Term (match topt with
+    | Pat_Dot_Term {t=topt} ->
+      Pat_Dot_Term {t=(match topt with
                     | None -> None
-                    | Some t -> Some (open_or_close_term' t v i))
+                    | Some t -> Some (open_or_close_term' t v i))}
 
     
 and open_or_close_branch' (br:branch) (v:open_or_close) (i:nat)
@@ -453,7 +492,7 @@ let rec freevars (e:term)
     | Tv_Unsupp
     | Tv_BVar _ -> Set.empty
 
-    | Tv_Var x -> Set.singleton (bv_index x)
+    | Tv_Var x -> Set.singleton (namedv_uniq x)
        
     | Tv_App e1 (e2, _) ->
       Set.union (freevars e1) (freevars e2)
@@ -464,13 +503,13 @@ let rec freevars (e:term)
     | Tv_Arrow b c ->
       Set.union (freevars_binder b) (freevars_comp c)
 
-    | Tv_Refine bv sort f ->
-       freevars sort `Set.union`
+    | Tv_Refine b f ->
+       freevars (binder_sort b) `Set.union`
        freevars f
       
-    | Tv_Let recf attrs bv ty def body ->
+    | Tv_Let recf attrs b def body ->
       freevars_terms attrs `Set.union`
-      freevars ty `Set.union`
+      freevars (binder_sort b) `Set.union`
       freevars def `Set.union`
       freevars body
 
@@ -531,9 +570,8 @@ and freevars_terms (ts:list term)
 and freevars_binder (b:binder)
   : Tot (Set.set var) (decreases b)
   = let bndr  = inspect_binder b in
-    freevars bndr.binder_sort `Set.union`
-    freevars_terms bndr.binder_attrs 
-    
+    freevars bndr.sort `Set.union`
+    freevars_terms bndr.attrs 
 
 and freevars_pattern (p:pattern) 
   : Tot (Set.set var) (decreases p)
@@ -541,12 +579,12 @@ and freevars_pattern (p:pattern)
     | Pat_Constant _ ->
       Set.empty
 
-    | Pat_Cons fv us pats -> 
-      freevars_patterns pats
+    | Pat_Cons {subpats} ->
+      freevars_patterns subpats
       
-    | Pat_Var bv _ -> Set.empty
+    | Pat_Var bv -> Set.empty
 
-    | Pat_Dot_Term topt ->
+    | Pat_Dot_Term {t=topt} ->
       freevars_opt topt freevars
 
 and freevars_patterns (ps:list (pattern & bool))
@@ -602,16 +640,16 @@ let rec ln' (e:term) (n:int)
       ln'_binder b n &&
       ln'_comp c (n + 1)
 
-    | Tv_Refine bv sort f ->
-      ln' sort n &&
+    | Tv_Refine b f ->
+      ln'_binder b n &&
       ln' f (n + 1)
 
     | Tv_Uvar _ _ ->
       false
       
-    | Tv_Let recf attrs bv ty def body ->
+    | Tv_Let recf attrs b def body ->
       ln'_terms attrs n &&
-      ln' ty n &&
+      ln'_binder b n &&
       (if recf then ln' def (n + 1) else ln' def n) &&
       ln' body (n + 1)
 
@@ -663,8 +701,8 @@ and ln'_args (ts:list argv) (i:int)
 and ln'_binder (b:binder) (n:int)
   : Tot bool (decreases b)
   = let bndr  = inspect_binder b in
-    ln' bndr.binder_sort n &&
-    ln'_terms bndr.binder_attrs n
+    ln' bndr.sort n &&
+    ln'_terms bndr.attrs n
 
 and ln'_terms (ts:list term) (n:int)
   : Tot bool (decreases ts)
@@ -689,12 +727,12 @@ and ln'_pattern (p:pattern) (i:int)
   = match p with
     | Pat_Constant _ -> true
 
-    | Pat_Cons fv us pats -> 
-      ln'_patterns pats i
+    | Pat_Cons {subpats} ->
+      ln'_patterns subpats i
       
-    | Pat_Var bv _ -> true
+    | Pat_Var bv -> true
 
-    | Pat_Dot_Term topt ->
+    | Pat_Dot_Term {t=topt} ->
       (match topt with
        | None -> true
        | Some t -> ln' t i)
@@ -858,8 +896,8 @@ and univ_leq : universe -> universe -> Type0 =
     univ_leq u (u_max u v)
 
 let mk_if (scrutinee then_ else_:R.term) : R.term =
-  pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
-                                    (Pat_Constant C_False, else_)])
+  pack_ln (Tv_Match scrutinee None [(Pat_Constant {c=C_True}, then_); 
+                                    (Pat_Constant {c=C_False}, else_)])
 
 
 // effect and type
@@ -950,8 +988,8 @@ type typing : env -> term -> comp_typ -> Type0 =
 
   | T_Var : 
      g:env ->
-     x:bv { Some? (lookup_bvar g (bv_index x)) } ->
-     typing g (pack_ln (Tv_Var x)) (T.E_Total, Some?.v (lookup_bvar g (bv_index x)))
+     x:namedv { Some? (lookup_bvar g (namedv_uniq x)) } ->
+     typing g (pack_ln (Tv_Var x)) (T.E_Total, Some?.v (lookup_bvar g (namedv_uniq x)))
 
   | T_FVar :
      g:env ->
@@ -1041,7 +1079,7 @@ type typing : env -> term -> comp_typ -> Type0 =
      e_eff:T.tot_or_ghost ->
      typing g t (t_eff, tm_type u1) ->
      typing (extend_env g x t) (open_term e x) (e_eff, tm_type u2) ->
-     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0)) t e)) (T.E_Total, tm_type u1)
+     typing g (pack_ln (Tv_Refine (mk_simple_binder t) e)) (T.E_Total, tm_type u1)
 
   | T_PropIrrelevance:
      g:env -> 

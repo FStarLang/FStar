@@ -25,6 +25,8 @@ let inspect_comp            = RB.inspect_comp
 let pack_comp               = RB.pack_comp
 let inspect_sigelt          = RB.inspect_sigelt
 let pack_sigelt             = RB.pack_sigelt
+let inspect_namedv          = RB.inspect_namedv
+let pack_namedv             = RB.pack_namedv
 let inspect_bv              = RB.inspect_bv
 let pack_bv                 = RB.pack_bv
 let inspect_binder          = RB.inspect_binder
@@ -40,12 +42,6 @@ let close_term              = RB.close_term
 
 let inspect_universe        = RB.inspect_universe
 let pack_universe           = RB.pack_universe
-
-
-(* GM: Not sure if theese are needed, we don't expose them
- * in the library. *)
-let inspect_aqual           = RB.inspect_aqual
-let pack_aqual              = RB.pack_aqual
 
 let range_of_term           = RB.range_of_term
 let range_of_sigelt         = RB.range_of_sigelt
