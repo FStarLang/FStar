@@ -8508,5 +8508,6 @@ let make_record_fields_in_order :
                                 uu___7 in
                             (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
                               uu___5) in
-                          FStar_Errors.raise_error uu___4 rng);
+                          let uu___5 = FStar_Ident.range_of_lid f in
+                          FStar_Errors.raise_error uu___4 uu___5);
                      FStar_Compiler_List.rev as_rev)
