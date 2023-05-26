@@ -636,8 +636,8 @@ let e_namedv_view =
     let embed_namedv_view (rng:Range.range) (namedvv:namedv_view) : term =
         S.mk_Tm_app ref_Mk_namedv.t [
           S.as_arg (embed e_int               rng namedvv.uniq);
-          S.as_arg (embed (e_sealed e_string) rng namedvv.ppname);
           S.as_arg (embed e_term              rng namedvv.sort);
+          S.as_arg (embed (e_sealed e_string) rng namedvv.ppname);
         ]
                     rng
     in
@@ -645,10 +645,10 @@ let e_namedv_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [(uniq, _); (ppname, _); (sort, _)] when S.fv_eq_lid fv ref_Mk_namedv.lid ->
+        | Tm_fvar fv, [(uniq, _); (sort, _); (ppname, _)] when S.fv_eq_lid fv ref_Mk_namedv.lid ->
             BU.bind_opt (unembed' w e_int uniq) (fun uniq ->
-            BU.bind_opt (unembed' w (e_sealed e_string) ppname) (fun ppname ->
             BU.bind_opt (unembed' w e_term sort) (fun sort ->
+            BU.bind_opt (unembed' w (e_sealed e_string) ppname) (fun ppname ->
             let r : namedv_view = { ppname = ppname; uniq = uniq; sort = sort } in
             Some r)))
 
@@ -665,19 +665,20 @@ let e_bv_view =
     let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
         S.mk_Tm_app ref_Mk_bv.t [
           S.as_arg (embed e_int               rng bvv.index);
-          S.as_arg (embed (e_sealed e_string) rng bvv.ppname);
           S.as_arg (embed e_term              rng bvv.sort);
+          S.as_arg (embed (e_sealed e_string) rng bvv.ppname);
         ]
                     rng
     in
     let unembed_bv_view w (t : term) : option bv_view =
+    BU.print1 "GG trying to unembed bv_view (%s)\n" (Print.term_to_string t);
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [(idx, _); (ppname, _); (sort, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
+        | Tm_fvar fv, [(idx, _); (sort, _); (ppname, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
             BU.bind_opt (unembed' w e_int idx) (fun idx ->
-            BU.bind_opt (unembed' w (e_sealed e_string) ppname) (fun ppname ->
             BU.bind_opt (unembed' w e_term sort) (fun sort ->
+            BU.bind_opt (unembed' w (e_sealed e_string) ppname) (fun ppname ->
             let r : bv_view = { ppname = ppname; index = idx; sort = sort } in
             Some r)))
 
@@ -688,33 +689,62 @@ let e_bv_view =
     in
     mk_emb embed_bv_view unembed_bv_view fstar_refl_bv_view
 
+let e_binding =
+    let embed (rng:Range.range) (bindingv:RD.binding) : term =
+        S.mk_Tm_app ref_Mk_binding.t [
+          S.as_arg (embed e_int    rng bindingv.uniq);
+          S.as_arg (embed e_term   rng bindingv.sort);
+          S.as_arg (embed e_string rng bindingv.ppname);
+        ]
+                    rng
+    in
+    let unembed w (t : term) : option RD.binding =
+        let t = U.unascribe t in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [(uniq, _); (sort, _); (ppname, _)] when S.fv_eq_lid fv ref_Mk_binding.lid ->
+            BU.bind_opt (unembed' w e_int uniq) (fun uniq ->
+            BU.bind_opt (unembed' w e_term sort) (fun sort ->
+            BU.bind_opt (unembed' w e_string ppname) (fun ppname ->
+            let r : RD.binding = { ppname = ppname; uniq = uniq; sort = sort } in
+            Some r)))
+
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binding: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed unembed fstar_refl_binding
 
 let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
 let e_binder_view =
   let embed_binder_view (rng:Range.range) (bview:binder_view) : term =
-    S.mk_Tm_app ref_Mk_binder.t [S.as_arg (embed (e_sealed e_string) rng bview.ppname);
-                                 S.as_arg (embed e_aqualv rng bview.qual);
-                                 S.as_arg (embed e_attributes rng bview.attrs);
-                                 S.as_arg (embed e_term rng bview.sort)]
+    S.mk_Tm_app ref_Mk_binder_view.t [
+      S.as_arg (embed e_term rng bview.sort);
+      S.as_arg (embed e_aqualv rng bview.qual);
+      S.as_arg (embed e_attributes rng bview.attrs);
+      S.as_arg (embed (e_sealed e_string) rng bview.ppname);
+    ]
                 rng in
 
   let unembed_binder_view w (t:term) : option binder_view =
+    BU.print1 "GG trying to unembed binder_view (%s)\n" (Print.term_to_string t);
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(ppname, _); (q, _); (attrs, _); (sort, _)]
-      when S.fv_eq_lid fv ref_Mk_binder.lid ->
-      BU.bind_opt (unembed' w (e_sealed e_string) ppname) (fun ppname ->
+    | Tm_fvar fv, [(sort, _); (q, _); (attrs, _); (ppname, _)]
+      when S.fv_eq_lid fv ref_Mk_binder_view.lid ->
+      BU.bind_opt (unembed' w e_term sort) (fun sort ->
       BU.bind_opt (unembed' w e_aqualv q) (fun q ->
       BU.bind_opt (unembed' w e_attributes attrs) (fun attrs ->
-      BU.bind_opt (unembed' w e_term sort) (fun sort ->
+      BU.bind_opt (unembed' w (e_sealed e_string) ppname) (fun ppname ->
       let r : binder_view = { ppname=ppname; qual=q; attrs=attrs; sort = sort} in
       Some r))))
 
     | _ ->
-      if w then
+      if true then
       Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder_view: %s" (Print.term_to_string t)));
       None in
 

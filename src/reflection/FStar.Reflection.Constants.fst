@@ -91,6 +91,8 @@ let fstar_refl_fv               = mk_refl_types_lid_as_term "fv"
 let fstar_refl_fv_fv            = mk_refl_types_lid_as_fv   "fv"
 let fstar_refl_comp             = mk_refl_types_lid_as_term "comp"
 let fstar_refl_comp_fv          = mk_refl_types_lid_as_fv   "comp"
+let fstar_refl_binding          = mk_refl_types_lid_as_term "binding"
+let fstar_refl_binding_fv       = mk_refl_types_lid_as_fv   "binding"
 let fstar_refl_binder           = mk_refl_types_lid_as_term "binder"
 let fstar_refl_binder_fv        = mk_refl_types_lid_as_fv   "binder"
 let fstar_refl_sigelt           = mk_refl_types_lid_as_term "sigelt"
@@ -166,13 +168,26 @@ let ref_Mk_bv =
     ; t   = fv_to_tm fv
     }
 
-let ref_Mk_binder =
+let ref_Mk_binding =
+  let lid = fstar_refl_data_lid "Mkbinding" in
+  let attr = Record_ctor (fstar_refl_data_lid "binding", [
+                            Ident.mk_ident ("uniq", Range.dummyRange);
+                            Ident.mk_ident ("sort", Range.dummyRange);
+                            Ident.mk_ident ("ppname"  , Range.dummyRange);
+                            ]) in
+  let fv = lid_as_fv lid (Some attr) in
+  { lid = lid;
+    fv = fv;
+    t = fv_to_tm fv }
+
+let ref_Mk_binder_view =
   let lid = fstar_refl_data_lid "Mkbinder_view" in
   let attr = Record_ctor (fstar_refl_data_lid "binder_view", [
-                            Ident.mk_ident ("bv", Range.dummyRange);
+                            Ident.mk_ident ("sort"  , Range.dummyRange);
                             Ident.mk_ident ("qual", Range.dummyRange);
                             Ident.mk_ident ("attrs", Range.dummyRange);
-                            Ident.mk_ident ("sort"  , Range.dummyRange)]) in
+                            Ident.mk_ident ("ppname", Range.dummyRange);
+                            ]) in
   let fv = lid_as_fv lid (Some attr) in
   { lid = lid;
     fv = fv;

@@ -62,14 +62,14 @@ val unquote                : typ -> term -> tac term
 val norm                   : list EMB.norm_step -> tac unit
 val norm_term_env          : env -> list EMB.norm_step -> term -> tac term
 val norm_binder_type       : list EMB.norm_step -> binder -> tac unit
-val intro                  : unit -> tac binder
-val intro_rec              : unit -> tac (binder * binder)
-val rename_to              : binder -> string -> tac binder
+val intro                  : unit -> tac binding
+val intro_rec              : unit -> tac (binding * binding)
+val rename_to              : binding -> string -> tac binding
 val revert                 : unit -> tac unit
-val binder_retype          : binder -> tac unit
+val var_retype             : binding -> tac unit
 val clear_top              : unit -> tac unit
-val clear                  : binder -> tac unit
-val rewrite                : binder -> tac unit
+val clear                  : binding -> tac unit
+val rewrite                : binding -> tac unit
 val t_exact                : bool -> bool -> term -> tac unit
 val t_apply                : bool -> bool -> bool -> term -> tac unit
 val t_apply_lemma          : bool -> bool -> term -> tac unit
@@ -108,7 +108,7 @@ val t_commute_applied_match : unit -> tac unit
 val goal_with_type : goal -> typ -> goal
 val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
-val push_bv_dsenv          : env -> string -> tac (env * bv)
+val push_bv_dsenv          : env -> string -> tac (env * binding)
 val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
 val range_to_string        : Range.range -> tac string

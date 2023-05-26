@@ -107,7 +107,7 @@ type binder_view = {
 }
 
 type binding = {
-  uniq   : nat;
+  uniq   : Z.t;
   sort   : typ;
   ppname : string;
 }

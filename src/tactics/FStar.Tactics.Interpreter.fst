@@ -347,9 +347,9 @@ let () =
         rename_to RE.e_binder e_string RE.e_binder
         rename_to NRE.e_binder NBET.e_string NRE.e_binder;
 
-      mk_tac_step_1 0 "binder_retype"
-        binder_retype RE.e_binder e_unit
-        binder_retype NRE.e_binder NBET.e_unit;
+      mk_tac_step_1 0 "var_retype"
+        var_retype RE.e_binding e_unit
+        var_retype NRE.e_binding NBET.e_unit;
 
       mk_tac_step_1 0 "revert"
         revert e_unit e_unit

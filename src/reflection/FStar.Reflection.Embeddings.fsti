@@ -30,6 +30,7 @@ type namedv = bv
 (* Embeddings *)
 val e_bv            : embedding bv
 val e_namedv        : embedding namedv
+val e_binding       : embedding RD.binding
 val e_binder        : embedding binder
 val e_binder_view   : embedding binder_view
 val e_binders       : embedding binders

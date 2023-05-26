@@ -627,9 +627,20 @@ let e_bv_view =
 let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
+let e_binding =
+  let embed cb (bview:RD.binding) : t =
+    failwith "IOU"
+  in
+
+  let unembed cb (t:t) : option RD.binding =
+    failwith "IOU"
+  in
+
+  mk_emb' embed unembed fstar_refl_binding_fv
+
 let e_binder_view =
   let embed_binder_view cb (bview:binder_view) : t =
-    mkConstruct ref_Mk_binder.fv [] [
+    mkConstruct ref_Mk_binder_view.fv [] [
       as_arg (embed e_term cb bview.sort);
       as_arg (embed e_aqualv cb bview.qual);
       as_arg (embed e_attributes cb bview.attrs);
@@ -639,7 +650,7 @@ let e_binder_view =
   let unembed_binder_view cb (t:t) : option binder_view =
     match t.nbe_t with
     | Construct (fv, _, [(ppname, _); (attrs, _); (q, _); (sort, _)])
-      when S.fv_eq_lid fv ref_Mk_binder.lid ->
+      when S.fv_eq_lid fv ref_Mk_binder_view.lid ->
       BU.bind_opt (unembed e_term cb sort) (fun sort ->
       BU.bind_opt (unembed e_aqualv cb q) (fun q ->
       BU.bind_opt (unembed e_attributes cb attrs) (fun attrs ->

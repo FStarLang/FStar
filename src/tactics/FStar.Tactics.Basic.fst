@@ -42,6 +42,7 @@ module N      = FStar.TypeChecker.Normalize
 module PC     = FStar.Parser.Const
 module Print  = FStar.Syntax.Print
 module Free   = FStar.Syntax.Free
+module RD     = FStar.Reflection.Data
 module Rel    = FStar.TypeChecker.Rel
 module SF     = FStar.Syntax.Free
 module S      = FStar.Syntax.Syntax
@@ -676,6 +677,12 @@ let goal_typedness_deps (g:goal) = U.ctx_uvar_typedness_deps g.goal_ctx_uvar
 
 let bnorm_and_replace g = replace_cur (bnorm_goal g)
 
+let binder_to_binding (b:binder) : RD.binding = {
+  uniq   = Z.of_int_fs (b.binder_bv.index);
+  sort   = b.binder_bv.sort;
+  ppname = string_of_id b.binder_bv.ppname;
+}
+
 let arrow_one (env:Env.env) (t:term) =
   match U.arrow_one_ln t with
   | None -> None
@@ -694,7 +701,7 @@ let arrow_one (env:Env.env) (t:term) =
 
   with `?u := (fun (x:t) -> ?v @ [NM(x, 0)])`
 *)
-let intro () : tac binder = wrap_err "intro" <| (
+let intro () : tac RD.binding = wrap_err "intro" <| (
     let! goal = cur_goal in
     match arrow_one (goal_env goal) (whnf (goal_env goal) (goal_type goal)) with
     | Some (env', b, c) ->
@@ -739,7 +746,7 @@ let intro () : tac binder = wrap_err "intro" <| (
              set_solution goal sol ;!
              let g = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
              bnorm_and_replace g ;!
-             ret b
+             ret (binder_to_binding b)
     | None ->
         fail1 "goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
     )
@@ -1220,9 +1227,15 @@ let rename_to (b : binder) (s : string) : tac binder = wrap_err "rename_to" <| (
       ret {b with binder_bv=bv'}
     )
 
-let binder_retype (b : binder) : tac unit = wrap_err "binder_retype" <| (
+let binding_to_bv (b : binding) : bv = {
+  sort   = b.sort;
+  ppname = b.ppname;
+  index  = b.uniq;
+}
+
+let var_retype (b : binding) : tac unit = wrap_err "binder_retype" <| (
     let! goal = cur_goal in
-    let bv = b.binder_bv in
+    let bv = binding_to_bv b in
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) ->

@@ -30,6 +30,7 @@ val e_bv            : embedding bv
 val e_binder        : embedding binder
 val e_binder_view   : embedding binder_view
 val e_binders       : embedding binders
+val e_binding       : embedding RD.binding
 val e_term          : embedding term
 val e_term_view     : embedding term_view
 val e_fv            : embedding fv
