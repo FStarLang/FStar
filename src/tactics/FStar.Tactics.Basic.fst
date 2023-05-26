@@ -683,6 +683,15 @@ let binder_to_binding (b:binder) : RD.binding = {
   ppname = string_of_id b.binder_bv.ppname;
 }
 
+let binding_to_binder (b:RD.binding) : RD.binder =
+  let bv = {
+    sort = b.sort;
+    ppname = mk_ident(b.ppname, Range.dummyRange);
+    index = b.uniq;
+  }
+  in
+  S.mk_binder bv
+
 let arrow_one (env:Env.env) (t:term) =
   match U.arrow_one_ln t with
   | None -> None
@@ -753,7 +762,7 @@ let intro () : tac RD.binding = wrap_err "intro" <| (
 
 
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
-let intro_rec () : tac (binder * binder) =
+let intro_rec () : tac (RD.binding & RD.binding) =
     let! goal = cur_goal in
     BU.print_string "WARNING (intro_rec): calling this is known to cause normalizer loops\n";
     BU.print_string "WARNING (intro_rec): proceed at your own risk...\n";
@@ -774,7 +783,7 @@ let intro_rec () : tac (binder * binder) =
              let tm = mk (Tm_let {lbs=(true, lbs); body}) (goal_witness goal).pos in
              set_solution goal tm ;!
              bnorm_and_replace { goal with goal_ctx_uvar=ctx_uvar_u} ;!
-             ret (S.mk_binder bv, b)
+             ret (binder_to_binding (S.mk_binder bv), binder_to_binding b)
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
 
@@ -1168,8 +1177,9 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
     | None ->
         ret None
 
-let rewrite (h:binder) : tac unit = wrap_err "rewrite" <| (
+let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
     let! goal = cur_goal in
+    let h = binding_to_binder hh in
     let bv = h.binder_bv in
     if_verbose (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) ;!
     match split_env bv (goal_env goal) with

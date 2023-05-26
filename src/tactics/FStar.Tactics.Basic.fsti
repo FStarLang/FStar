@@ -36,6 +36,7 @@ module Range  = FStar.Compiler.Range
 module Z      = FStar.BigInt
 module TcComm = FStar.TypeChecker.Common
 module Core   = FStar.TypeChecker.Core
+module RD     = FStar.Reflection.Data
 
 (* Internal utilities *)
 val goal_typedness_deps : goal -> list ctx_uvar
@@ -62,14 +63,14 @@ val unquote                : typ -> term -> tac term
 val norm                   : list EMB.norm_step -> tac unit
 val norm_term_env          : env -> list EMB.norm_step -> term -> tac term
 val norm_binder_type       : list EMB.norm_step -> binder -> tac unit
-val intro                  : unit -> tac binding
-val intro_rec              : unit -> tac (binding * binding)
-val rename_to              : binding -> string -> tac binding
+val intro                  : unit -> tac RD.binding
+val intro_rec              : unit -> tac (RD.binding * RD.binding)
+val rename_to              : RD.binding -> string -> tac RD.binding
 val revert                 : unit -> tac unit
-val var_retype             : binding -> tac unit
+val var_retype             : RD.binding -> tac unit
 val clear_top              : unit -> tac unit
-val clear                  : binding -> tac unit
-val rewrite                : binding -> tac unit
+val clear                  : RD.binding -> tac unit
+val rewrite                : RD.binding -> tac unit
 val t_exact                : bool -> bool -> term -> tac unit
 val t_apply                : bool -> bool -> bool -> term -> tac unit
 val t_apply_lemma          : bool -> bool -> term -> tac unit
@@ -108,7 +109,7 @@ val t_commute_applied_match : unit -> tac unit
 val goal_with_type : goal -> typ -> goal
 val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
-val push_bv_dsenv          : env -> string -> tac (env * binding)
+val push_bv_dsenv          : env -> string -> tac (env * RD.binding)
 val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
 val range_to_string        : Range.range -> tac string
