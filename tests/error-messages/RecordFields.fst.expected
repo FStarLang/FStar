@@ -1,0 +1,11 @@
+>> Got issues: [
+RecordFields.fst(8,29-8,30): (Error 118) Field d is redundant for type RecordFields.r
+>>]
+>> Got issues: [
+RecordFields.fst(11,14-11,22): (Error 118) Field c of record type RecordFields.r is missing
+>>]
+>> Got issues: [
+RecordFields.fst(14,14-14,27): (Error 118) Field c of record type RecordFields.r is missing
+>>]
+Verified module: RecordFields
+All verification conditions discharged successfully
