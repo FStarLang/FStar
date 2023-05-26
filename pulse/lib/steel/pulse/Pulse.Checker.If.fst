@@ -94,11 +94,6 @@ let check_if (g:env)
                c:comp { stateful_comp c /\ comp_pre c == pre } &
                st_typing (g_with_eq eq_v) br c)
       = let g_with_eq = g_with_eq eq_v in
-        //
-        // TODO: pre_typing is unnecessary
-        //       we have typing of pre in g
-        //       weakening should give typing of pre in g_then
-        //
         let pre_typing = 
             Metatheory.tot_typing_weakening hyp 
                                             (Inl (mk_eq2 u0 tm_bool b eq_v))
@@ -112,9 +107,6 @@ let check_if (g:env)
         else if C_Tot? c
         then T.fail "Branch computation type not st"
         else (| br, c, br_typing |)
-        //   let (| c, br_typing |) = force_st pre_typing (| c, br_typing |) in
-        //   (| br, c, br_typing |)
-        // )
     in
     let (| e1, c1, e1_typing |) = check_branch tm_true e1 in
     let (| e2, c2, e2_typing |) = check_branch tm_false e2 in    

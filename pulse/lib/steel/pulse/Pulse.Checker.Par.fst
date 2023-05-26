@@ -10,6 +10,7 @@ open Pulse.Checker.Common
 open Pulse.Checker.Comp
 
 module FV = Pulse.Typing.FV
+module MT = Pulse.Typing.Metatheory
 
 let check_par
   (allow_inst:bool)
@@ -34,18 +35,16 @@ let check_par
   let (| eL, cL, eL_typing |) =
     check' allow_inst g eL preL (E preL_typing) (Some postL_hint) in
 
-  // TODO: can we avoid checking cL and cR?
-
   if C_ST? cL
   then
-    let cL_typing = check_comp g cL (E preL_typing) in
+    let cL_typing = MT.st_typing_correctness eL_typing in
     let postR_hint = intro_post_hint g None postR in
     let (| eR, cR, eR_typing |) =
       check' allow_inst g eR preR (E preR_typing) (Some postR_hint) in
 
     if C_ST? cR && eq_univ (comp_u cL) (comp_u cR)
     then
-      let cR_typing = check_comp g cR (E preR_typing) in
+      let cR_typing = MT.st_typing_correctness eR_typing in
       let x = fresh g in
       let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
       repack (try_frame_pre pre_typing d) post_hint true
