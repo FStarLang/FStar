@@ -3758,6 +3758,6 @@ let make_record_fields_in_order env uc topt
             BU.format2 "Field %s is redundant for type %s"
                        (string_of_lid f)
                        (string_of_lid rdc.typename))
-          rng
+          (range_of_lid f)
     in
     List.rev as_rev
