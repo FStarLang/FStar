@@ -95,6 +95,9 @@ export INSTALL
 install-ocaml:
 	cd src/ocaml && dune install --prefix=$(STEEL_INSTALL_PREFIX)
 
+install-src-c:
+	+$(MAKE) -C src/c install
+
 install-lib:
 	+$(MAKE) -C lib/steel install
 
@@ -104,4 +107,4 @@ install-include:
 install-share:
 	+$(MAKE) -C share/steel install
 
-install: install-ocaml install-lib install-include install-share
+install: install-ocaml install-lib install-include install-share install-src-c
