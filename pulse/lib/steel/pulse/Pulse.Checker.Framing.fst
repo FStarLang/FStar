@@ -13,6 +13,15 @@ module RTB = FStar.Tactics.Builtins
 module FV = Pulse.Typing.FV
 module Metatheory = Pulse.Typing.Metatheory
 
+let print_vprop_l (vps:list term) : T.Tac string =
+  Printf.sprintf "[%s]"
+    (String.concat ";\n " (T.map P.term_to_string vps))
+
+let print_framing_failure ff = 
+  Printf.sprintf " { unmatched_preconditions = %s;\n remaining_context = %s\n}"
+    (print_vprop_l ff.unmatched_preconditions)
+    (print_vprop_l ff.remaining_context)
+
 let rec vprop_as_list (vp:term)
   : list term
   = match vp with
@@ -117,9 +126,6 @@ let equational (t:term) : bool =
 
 #push-options "--z3rlimit_factor 4"
 let check_one_vprop g (p q:term) : T.Tac (option (vprop_equiv g p q)) =
-  // T.print (Printf.sprintf "Framing.check_one_vprop, p: %s and q: %s\n"
-  //            (Pulse.Syntax.Printer.term_to_string p)
-  //            (Pulse.Syntax.Printer.term_to_string q));
   if eq_tm p q
   then Some (VE_Refl _ _)
   else
@@ -210,7 +216,8 @@ let rec try_split_vprop g (req:list term) (ctxt:list term)
     | [] -> Inl (| ctxt, VE_Refl g _ |)
     | hd::tl ->
       match maybe_split_one_vprop g hd ctxt with
-      | None -> mk_framing_failure hd (try_split_vprop g tl ctxt)
+      | None ->
+        mk_framing_failure hd (try_split_vprop g tl ctxt)
 
       | Some (| l, q, d, r |) -> 
         let d1
@@ -233,7 +240,8 @@ let rec try_split_vprop g (req:list term) (ctxt:list term)
           in
           let ddd = VE_Trans _ _ _ _ dd (VE_Sym _ _ _ d1) in
           Inl (| frame, ddd |)
-                       
+
+
 let split_vprop (g:env)
                 (ctxt:term)
                 (ctxt_typing: tot_typing g ctxt Tm_VProp)
@@ -245,7 +253,8 @@ let split_vprop (g:env)
    = let ctxt_l = vprop_as_list ctxt in
      let req_l = vprop_as_list req in
      match try_split_vprop g req_l ctxt_l with
-     | Inr failure -> Inr failure 
+     | Inr failure -> 
+       Inr failure 
      | Inl (| frame, veq |) ->
        let d1 
          : vprop_equiv _ (Tm_Star (canon_vprop req) (list_as_vprop frame))

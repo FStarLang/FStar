@@ -2352,3 +2352,93 @@ let (st_term_to_string :
   Pulse_Syntax_Base.st_term ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   = fun t -> st_term_to_string' "" t
+let (tag_of_term : Pulse_Syntax_Base.term -> Prims.string) =
+  fun t ->
+    match t with
+    | Pulse_Syntax_Base.Tm_Emp -> "Tm_Emp"
+    | Pulse_Syntax_Base.Tm_Pure uu___ -> "Tm_Pure"
+    | Pulse_Syntax_Base.Tm_Star (uu___, uu___1) -> "Tm_Star"
+    | Pulse_Syntax_Base.Tm_ExistsSL (uu___, uu___1, uu___2, uu___3) ->
+        "Tm_ExistsSL"
+    | Pulse_Syntax_Base.Tm_ForallSL (uu___, uu___1, uu___2) -> "Tm_ForallSL"
+    | Pulse_Syntax_Base.Tm_VProp -> "Tm_VProp"
+    | Pulse_Syntax_Base.Tm_Inames -> "Tm_Inames"
+    | Pulse_Syntax_Base.Tm_EmpInames -> "Tm_EmpInames"
+    | Pulse_Syntax_Base.Tm_Unknown -> "Tm_Unknown"
+    | Pulse_Syntax_Base.Tm_FStar (uu___, uu___1) -> "Tm_FStar"
+let (tag_of_st_term : Pulse_Syntax_Base.st_term -> Prims.string) =
+  fun t ->
+    match t.Pulse_Syntax_Base.term1 with
+    | Pulse_Syntax_Base.Tm_Return uu___ -> "Tm_Return"
+    | Pulse_Syntax_Base.Tm_Abs uu___ -> "Tm_Abs"
+    | Pulse_Syntax_Base.Tm_STApp uu___ -> "Tm_STApp"
+    | Pulse_Syntax_Base.Tm_Bind uu___ -> "Tm_Bind"
+    | Pulse_Syntax_Base.Tm_TotBind uu___ -> "Tm_TotBind"
+    | Pulse_Syntax_Base.Tm_If uu___ -> "Tm_If"
+    | Pulse_Syntax_Base.Tm_ElimExists uu___ -> "Tm_ElimExists"
+    | Pulse_Syntax_Base.Tm_IntroExists uu___ -> "Tm_IntroExists"
+    | Pulse_Syntax_Base.Tm_While uu___ -> "Tm_While"
+    | Pulse_Syntax_Base.Tm_Par uu___ -> "Tm_Par"
+    | Pulse_Syntax_Base.Tm_WithLocal uu___ -> "Tm_WithLocal"
+    | Pulse_Syntax_Base.Tm_Rewrite uu___ -> "Tm_Rewrite"
+    | Pulse_Syntax_Base.Tm_Admit uu___ -> "Tm_Admit"
+    | Pulse_Syntax_Base.Tm_Protect uu___ -> "Tm_Protect"
+let rec (print_st_head : Pulse_Syntax_Base.st_term -> Prims.string) =
+  fun t ->
+    match t.Pulse_Syntax_Base.term1 with
+    | Pulse_Syntax_Base.Tm_Abs uu___ -> "Abs"
+    | Pulse_Syntax_Base.Tm_Protect p -> print_st_head p.Pulse_Syntax_Base.t
+    | Pulse_Syntax_Base.Tm_Return p -> print_head p.Pulse_Syntax_Base.term
+    | Pulse_Syntax_Base.Tm_Bind uu___ -> "Bind"
+    | Pulse_Syntax_Base.Tm_TotBind uu___ -> "TotBind"
+    | Pulse_Syntax_Base.Tm_If uu___ -> "If"
+    | Pulse_Syntax_Base.Tm_While uu___ -> "While"
+    | Pulse_Syntax_Base.Tm_Admit uu___ -> "Admit"
+    | Pulse_Syntax_Base.Tm_Par uu___ -> "Par"
+    | Pulse_Syntax_Base.Tm_Rewrite uu___ -> "Rewrite"
+    | Pulse_Syntax_Base.Tm_WithLocal uu___ -> "WithLocal"
+    | Pulse_Syntax_Base.Tm_STApp
+        { Pulse_Syntax_Base.head = p; Pulse_Syntax_Base.arg_qual = uu___;
+          Pulse_Syntax_Base.arg = uu___1;_}
+        -> print_head p
+    | Pulse_Syntax_Base.Tm_IntroExists uu___ -> "IntroExists"
+    | Pulse_Syntax_Base.Tm_ElimExists uu___ -> "ElimExists"
+and (print_head : Pulse_Syntax_Base.term -> Prims.string) =
+  fun t -> "<pure term>"
+let rec (print_skel : Pulse_Syntax_Base.st_term -> Prims.string) =
+  fun t ->
+    match t.Pulse_Syntax_Base.term1 with
+    | Pulse_Syntax_Base.Tm_Abs
+        { Pulse_Syntax_Base.b = uu___; Pulse_Syntax_Base.q = uu___1;
+          Pulse_Syntax_Base.pre1 = uu___2; Pulse_Syntax_Base.body = body;
+          Pulse_Syntax_Base.ret_ty = uu___3;
+          Pulse_Syntax_Base.post1 = uu___4;_}
+        -> Prims.strcat "(fun _ -> " (Prims.strcat (print_skel body) ")")
+    | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = p;_} ->
+        Prims.strcat "(Protect " (Prims.strcat (print_skel p) ")")
+    | Pulse_Syntax_Base.Tm_Return
+        { Pulse_Syntax_Base.ctag = uu___;
+          Pulse_Syntax_Base.insert_eq = uu___1; Pulse_Syntax_Base.term = p;_}
+        -> print_head p
+    | Pulse_Syntax_Base.Tm_Bind
+        { Pulse_Syntax_Base.binder = uu___; Pulse_Syntax_Base.head1 = e1;
+          Pulse_Syntax_Base.body1 = e2;_}
+        ->
+        Prims.strcat
+          (Prims.strcat "(Bind " (Prims.strcat (print_skel e1) " "))
+          (Prims.strcat (print_skel e2) ")")
+    | Pulse_Syntax_Base.Tm_TotBind
+        { Pulse_Syntax_Base.head2 = uu___; Pulse_Syntax_Base.body2 = e2;_} ->
+        Prims.strcat "(TotBind _ " (Prims.strcat (print_skel e2) ")")
+    | Pulse_Syntax_Base.Tm_If uu___ -> "If"
+    | Pulse_Syntax_Base.Tm_While uu___ -> "While"
+    | Pulse_Syntax_Base.Tm_Admit uu___ -> "Admit"
+    | Pulse_Syntax_Base.Tm_Par uu___ -> "Par"
+    | Pulse_Syntax_Base.Tm_Rewrite uu___ -> "Rewrite"
+    | Pulse_Syntax_Base.Tm_WithLocal uu___ -> "WithLocal"
+    | Pulse_Syntax_Base.Tm_STApp
+        { Pulse_Syntax_Base.head = p; Pulse_Syntax_Base.arg_qual = uu___;
+          Pulse_Syntax_Base.arg = uu___1;_}
+        -> print_head p
+    | Pulse_Syntax_Base.Tm_IntroExists uu___ -> "IntroExists"
+    | Pulse_Syntax_Base.Tm_ElimExists uu___ -> "ElimExists"

@@ -17,15 +17,19 @@ let uvar_id_to_string n = FStar.Printf.sprintf "?u_%d" n
 
 let embedded_uvar_lid = ["__pulse_embedded_uvar__"]
 
+let is_uvar_r (t:R.term) : option uvar_id = 
+    match R.inspect_ln t with
+    | R.Tv_UInst fv [u] ->
+      if R.inspect_fv fv = embedded_uvar_lid
+      then match R.inspect_universe u with
+           | R.Uv_BVar n -> Some n
+            | _ -> None
+      else None
+    | _ -> None
+
 let is_uvar (t:term) : option uvar_id =
-  match is_fvar t with
-  | Some (l, [u]) ->
-    if l = embedded_uvar_lid
-    then begin match R.inspect_universe u with
-               | R.Uv_BVar n -> Some n
-               | _ -> None
-         end
-    else None
+  match t with
+  | Tm_FStar r _ -> is_uvar_r r
   | _ -> None
 
 
@@ -259,6 +263,22 @@ let find_solution (sol:list (uvar_id * term)) (t:uvar_id)
 
 let solutions_to_string sol = print_solutions sol
 
+let rec apply_sol (sol:solution) (t:R.term) =
+  match is_uvar_r t with
+  | None -> (
+    match R.inspect_ln t with
+    | R.Tv_App hd (arg, q) ->
+      let hd = apply_sol sol hd in
+      let arg = apply_sol sol arg in
+      R.pack_ln (R.Tv_App hd (arg, q))
+    | _ -> t
+  )
+  | Some n ->
+    match find_solution sol n with
+    | None -> t
+    | Some (Tm_FStar t _) -> t
+    | Some t -> Pulse.Elaborate.Pure.elab_term t
+    
 let rec apply_solution (sol:list (uvar_id * term)) (t:term)
   : term
   = match t with
@@ -298,6 +318,15 @@ let rec apply_solution (sol:list (uvar_id * term)) (t:term)
       Tm_ForallSL u (apply_solution sol t)
                     (apply_solution sol body)
 
+let rec contains_uvar_r (t:R.term) =
+    
+    Some? (is_uvar_r t) ||
+    (match R.inspect_ln t with
+     | R.Tv_App hd (arg, _) ->
+      contains_uvar_r hd || 
+      contains_uvar_r arg
+     | _ -> false)
+
 let rec contains_uvar (t:term)
   : bool
   = match t with
@@ -322,13 +351,33 @@ let rec contains_uvar (t:term)
       (contains_uvar t) ||
       (contains_uvar body)
                     
-    | Tm_FStar _ _ ->
-      // TODO: should embedded F* terms be allowed to contain Pulse uvars?
-      Some? (is_uvar t) ||
-      (match is_pure_app t with
-       | Some (head, _, arg) ->
-         assume (head << t /\ arg << t);
-         contains_uvar head || contains_uvar arg
-       | _ -> false)
+    | Tm_FStar t _ ->
+      contains_uvar_r t
 
 let try_unify (l r:term) = match_typ l r []
+
+module RF = FStar.Reflection.Formula
+
+
+let try_solve_pure_equalities (p:term) : T.Tac solution =
+  let rec aux (sol:solution) (t:R.term) : T.Tac solution =
+    let open RF in
+    let t = apply_sol sol t in
+    let f = RF.term_as_formula' t in
+    match f with
+    | Comp  (Eq _) t0 t1 ->
+      if contains_uvar_r t0
+      || contains_uvar_r t1
+      then (
+        assume (not_tv_unknown t0 /\ not_tv_unknown t1);
+        try_unify (Tm_FStar t0 FStar.Range.range_0) (Tm_FStar t1 FStar.Range.range_0) @ sol
+      )
+      else sol
+    | And t0 t1 ->
+      aux (aux sol t0) t1
+    | _ -> sol
+  in
+  match p with
+  | Tm_FStar t r -> aux [] t
+  | _ -> []
+

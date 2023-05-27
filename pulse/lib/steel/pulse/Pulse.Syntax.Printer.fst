@@ -239,3 +239,76 @@ let rec st_term_to_string' (level:string) (t:st_term)
       st_term_to_string' level t
 
 let st_term_to_string t = st_term_to_string' "" t
+
+
+let tag_of_term (t:term) =
+  match t with
+  | Tm_Emp -> "Tm_Emp"
+  | Tm_Pure _ -> "Tm_Pure"
+  | Tm_Star _ _ -> "Tm_Star"
+  | Tm_ExistsSL _ _ _ _ -> "Tm_ExistsSL"
+  | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
+  | Tm_VProp -> "Tm_VProp"
+  | Tm_Inames -> "Tm_Inames"
+  | Tm_EmpInames -> "Tm_EmpInames"
+  | Tm_Unknown -> "Tm_Unknown"
+  | Tm_FStar _ _ -> "Tm_FStar"
+
+let tag_of_st_term (t:st_term) =
+  match t.term with
+  | Tm_Return _ -> "Tm_Return"
+  | Tm_Abs _ -> "Tm_Abs"
+  | Tm_STApp _ -> "Tm_STApp"
+  | Tm_Bind _ -> "Tm_Bind"
+  | Tm_TotBind _ -> "Tm_TotBind"
+  | Tm_If _ -> "Tm_If"
+  | Tm_ElimExists _ -> "Tm_ElimExists"
+  | Tm_IntroExists _ -> "Tm_IntroExists"
+  | Tm_While _ -> "Tm_While"
+  | Tm_Par _ -> "Tm_Par"
+  | Tm_WithLocal _ -> "Tm_WithLocal"
+  | Tm_Rewrite _ -> "Tm_Rewrite"
+  | Tm_Admit _ -> "Tm_Admit"
+  | Tm_Protect _ -> "Tm_Protect"
+
+let rec print_st_head (t:st_term)
+  : Tot string (decreases t) =
+  match t.term with
+  | Tm_Abs _  -> "Abs"
+  | Tm_Protect p -> print_st_head p.t
+  | Tm_Return p -> print_head p.term
+  | Tm_Bind _ -> "Bind"
+  | Tm_TotBind _ -> "TotBind"
+  | Tm_If _ -> "If"
+  | Tm_While _ -> "While"
+  | Tm_Admit _ -> "Admit"
+  | Tm_Par _ -> "Par"
+  | Tm_Rewrite _ -> "Rewrite"
+  | Tm_WithLocal _ -> "WithLocal"
+  | Tm_STApp { head = p } -> print_head p
+  | Tm_IntroExists _ -> "IntroExists"
+  | Tm_ElimExists _ -> "ElimExists"  
+and print_head (t:term) =
+  match t with
+  // | Tm_FVar fv
+  // | Tm_UInst fv _ -> String.concat "." fv.fv_name
+  // | Tm_PureApp head _ _ -> print_head head
+  | _ -> "<pure term>"
+
+
+let rec print_skel (t:st_term) = 
+  match t.term with
+  | Tm_Abs { body }  -> Printf.sprintf "(fun _ -> %s)" (print_skel body)
+  | Tm_Protect { t=p } -> Printf.sprintf "(Protect %s)" (print_skel p)
+  | Tm_Return { term = p } -> print_head p
+  | Tm_Bind { head=e1; body=e2 } -> Printf.sprintf "(Bind %s %s)" (print_skel e1) (print_skel e2)
+  | Tm_TotBind { body=e2 } -> Printf.sprintf "(TotBind _ %s)" (print_skel e2)
+  | Tm_If _ -> "If"
+  | Tm_While _ -> "While"
+  | Tm_Admit _ -> "Admit"
+  | Tm_Par _ -> "Par"
+  | Tm_Rewrite _ -> "Rewrite"
+  | Tm_WithLocal _ -> "WithLocal"
+  | Tm_STApp { head = p } -> print_head p
+  | Tm_IntroExists _ -> "IntroExists"
+  | Tm_ElimExists _ -> "ElimExists"

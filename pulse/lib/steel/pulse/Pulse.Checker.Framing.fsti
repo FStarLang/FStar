@@ -9,16 +9,19 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 module P = Pulse.Syntax.Printer
 
-val vprop_as_list (vp:term)
-  : list term
-
-val list_as_vprop (vps:list term) : term
-
 noeq
 type framing_failure = {
   unmatched_preconditions : list term;
   remaining_context : list term;
 }
+
+val print_framing_failure (f:framing_failure) : T.Tac string
+
+val vprop_as_list (vp:term)
+  : list term
+
+val list_as_vprop (vps:list term) : term
+
 
 val check_vprop_equiv
   (g:env)
