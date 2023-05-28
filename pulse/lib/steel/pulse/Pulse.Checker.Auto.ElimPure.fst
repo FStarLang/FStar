@@ -10,20 +10,83 @@ open Pulse.Checker.Common
 open Pulse.Typing
 module Metatheory = Pulse.Typing.Metatheory
 module VP = Pulse.Checker.VPropEquiv
-
+open Pulse.Reflection.Util
 let k_elab_trans (#g0 #g1 #g2:env) (#ctxt0 #ctxt1 #ctxt2:term)
                  (k0:continuation_elaborator g0 ctxt0 g1 ctxt1)
-                 (k1:continuation_elaborator g1 ctxt1 g2 ctxt2)
+                 (k1:continuation_elaborator g1 ctxt1 g2 ctxt2 { g1 `env_extends` g0})
    : continuation_elaborator g0 ctxt0 g2 ctxt2
    = fun post_hint res -> k0 post_hint (k1 post_hint res)
 
+let elim_pure_head =
+    let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit" in
+    tm_fvar (as_fv elim_pure_explicit_lid)
+
+let elim_pure_head_ty = 
+    let open Pulse.Steel.Wrapper in
+    let open Steel.Effect.Common in
+    `(p:prop -> stt_ghost (squash p) emp_inames
+                          (pure p)
+                          (fun _ -> emp))
+
+let tm_fstar t = Tm_FStar t Range.range_0
+
+let elim_pure_head_typing (g:env)
+    : tot_typing g elim_pure_head (tm_fstar elim_pure_head_ty)
+    = admit()
+
+let mk_elim_pure (p:term)
+  : st_term
+  = let t = Tm_STApp { head = elim_pure_head;
+                       arg_qual = None;
+                       arg = p }
+    in
+    wr t
+
+
+let elim_pure_comp (p:host_term) =
+    let st : st_comp = {
+        u=u_zero;
+        res=tm_fstar (T.mk_squash p);
+        pre=Tm_Pure (tm_fstar p);
+        post=Tm_Emp
+    } in
+    C_STGhost Tm_EmpInames st
+    
+let elim_pure_typing (g:env) (p:host_term)
+                     (p_prop:tot_typing g (tm_fstar p) (tm_fstar RT.tm_prop))
+   : st_typing g (mk_elim_pure (tm_fstar p)) (elim_pure_comp p)
+   = admit();
+     T_STApp g elim_pure_head (tm_fstar (`(prop))) None (elim_pure_comp p) _ (elim_pure_head_typing g) p_prop
+
+let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
+   : tot_typing g p (tm_fstar RT.tm_prop)
+   = admit()
+
 let elim_one_pure (#g:env) (ctxt:term) (p:term)
-                  (ctxt_typing:tot_typing g (Tm_Star ctxt (Tm_Pure p)) Tm_VProp)
+                  (ctxt_p_typing:tot_typing g (Tm_Star ctxt (Tm_Pure p)) Tm_VProp)
    : T.Tac (g':env { env_extends g' g } &
             tot_typing g' ctxt Tm_VProp &
             continuation_elaborator g (Tm_Star ctxt (Tm_Pure p)) g' ctxt)
-   = admit()
-                  
+   = let ctxt_typing, pure_typing = star_typing_inversion ctxt_p_typing in
+     let p_prop = pure_typing_inversion pure_typing in
+     let v_eq = VE_Comm g ctxt (Tm_Pure p) in
+     let framing_token = 
+        (| ctxt, ctxt_typing, VE_Comm g ctxt (Tm_Pure p) |)
+     in
+     match p with
+     | Tm_FStar pp _ ->
+       let _ = Pulse.Checker.Framing.apply_frame ctxt_p_typing (elim_pure_typing g pp p_prop) in
+       let x = fresh g in
+       let b = (Inl (comp_res (elim_pure_comp pp))) in
+       let g' = extend x b g in
+       let k : continuation_elaborator g (Tm_Star ctxt (Tm_Pure p)) g' ctxt =
+           fun post_hint res -> admit()
+
+       in
+       Pulse.Checker.Common.extends_extends_env g x b;
+       (| g', Metatheory.tot_typing_weakening x b ctxt_typing, k |)
+     | _ -> T.fail "unexpected pure term"
+                 
 let rec elim_pure_right (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
    : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
@@ -112,6 +175,7 @@ let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
             continuation_elaborator g ctxt g' ctxt')
    = let (| ctxt', ctxt'_typing, k |) = canon_pure_right ctxt_typing in
      let (| g', ctxt'', ctxt''_typing, k' |) = elim_pure_right ctxt'_typing in
+     extends_env_refl g;
      (| g', ctxt'', ctxt''_typing, k_elab_trans k k' |)
      
 

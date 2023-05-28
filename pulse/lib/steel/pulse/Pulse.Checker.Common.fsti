@@ -133,7 +133,7 @@ let checker_result_t (g:env) (pre:term) (post_hint:option post_hint_t) =
 
 let continuation_elaborator (g:env) (ctxt:term)
                             (g':env) (ctxt':term) =
-    post_hint:option post_hint_t ->
+    post_hint:post_hint_opt g ->
     checker_result_t g' ctxt' post_hint ->
     T.Tac (checker_result_t g ctxt post_hint)
 
