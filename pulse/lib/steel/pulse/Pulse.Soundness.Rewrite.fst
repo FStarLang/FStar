@@ -6,6 +6,7 @@ open Pulse.Typing
 open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Soundness.Common
+open Pulse.Checker.VPropEquiv
 
 module RT = FStar.Reflection.Typing
 module WT = Pulse.Steel.Wrapper.Typing

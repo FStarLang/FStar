@@ -7,6 +7,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Common
+open Pulse.Checker.VPropEquiv
 
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
@@ -15,7 +16,7 @@ module Metatheory = Pulse.Typing.Metatheory
 
 let vprop_as_list_typing (#g:env) (#p:term)
   (t:tot_typing g p Tm_VProp)
-  (x:term { List.Tot.memP x (Pulse.Checker.Framing.vprop_as_list p) })
+  (x:term { List.Tot.memP x (vprop_as_list p) })
   : tot_typing g x Tm_VProp
   = assume false; t
 
@@ -37,7 +38,7 @@ let check_elim_exists
       match t with
       | Tm_Unknown -> (
         //There should be exactly one exists_ vprop in the context and we eliminate it      
-        let ts = Pulse.Checker.Framing.vprop_as_list pre in
+        let ts = vprop_as_list pre in
         let exist_tms = List.Tot.Base.filter (function | Tm_ExistsSL _ _ _ _ -> true | _ -> false) ts in
         match exist_tms with
         | [one] -> 

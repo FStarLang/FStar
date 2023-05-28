@@ -10,6 +10,7 @@ open Pulse.Checker.Common
 
 module FV = Pulse.Typing.FV
 
+#push-options "--z3rlimit_factor 2"
 let check_abs
   (g:env)
   (t:st_term{Tm_Abs? t.term})

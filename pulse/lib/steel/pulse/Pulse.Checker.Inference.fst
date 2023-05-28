@@ -6,6 +6,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Framing
+open Pulse.Checker.VPropEquiv
 module P = Pulse.Syntax.Printer
 
 module RT = FStar.Reflection.Typing

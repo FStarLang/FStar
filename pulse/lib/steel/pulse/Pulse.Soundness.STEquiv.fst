@@ -10,6 +10,7 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
+open Pulse.Checker.VPropEquiv
 
 
 let stt_vprop_equiv_closing (t0 t1:R.term) (x:var)

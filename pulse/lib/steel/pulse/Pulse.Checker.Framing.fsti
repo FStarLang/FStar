@@ -17,12 +17,6 @@ type framing_failure = {
 
 val print_framing_failure (f:framing_failure) : T.Tac string
 
-val vprop_as_list (vp:term)
-  : list term
-
-val list_as_vprop (vps:list term) : term
-
-
 val check_vprop_equiv
   (g:env)
   (vp1 vp2:term)
@@ -30,7 +24,11 @@ val check_vprop_equiv
   : T.Tac (vprop_equiv g vp1 vp2)
 
 
-val frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term) : Type0
+let frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term)
+   = (frame:term &
+      tot_typing g frame Tm_VProp &
+      vprop_equiv g (Tm_Star req frame) ctxt)
+
 
 val check_frameable (#g:env)
                     (#ctxt:term)

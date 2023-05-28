@@ -33,6 +33,8 @@ let extends_env_trans (g2 g1 g:env)
     (requires g2 `env_extends` g1 /\ 
               g1 `env_extends` g)
     (ensures g2 `env_extends` g)
+    [SMTPat (g2 `env_extends` g);
+     SMTPat (g2 `env_extends` g1)]
   = eliminate exists suffix2. suffix2 @ g1.g == g2.g
     returns _
     with _. (
@@ -124,13 +126,22 @@ val intro_comp_typing (g:env)
                       (post_typing:tot_typing (extend x (Inl (comp_res c)) g) (open_term (comp_post c) x) Tm_VProp)
   : T.Tac (comp_typing g c (comp_u c))
 
+let checker_result_t (g:env) (pre:term) (post_hint:option post_hint_t) =
+    t:st_term &
+    c:comp{stateful_comp c ==> comp_pre c == pre} &
+    st_typing g t c
+
+let continuation_elaborator (g:env) (ctxt:term)
+                            (g':env) (ctxt':term) =
+    post_hint:option post_hint_t ->
+    checker_result_t g' ctxt' post_hint ->
+    T.Tac (checker_result_t g ctxt post_hint)
+
 type check_t =
   g:env ->
   t:st_term ->
   pre:term ->
   pre_typing:tot_typing g pre Tm_VProp ->
   post_hint:post_hint_opt g ->
-  T.Tac (t:st_term &
-         c:comp{stateful_comp c ==> comp_pre c == pre} &
-         st_typing g t c)
+  T.Tac (checker_result_t g pre post_hint)
 
