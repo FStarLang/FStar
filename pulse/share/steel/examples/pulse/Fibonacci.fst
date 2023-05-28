@@ -41,17 +41,7 @@ fn fibo (n:pos)
      i := vj;
      j := vi + vj;
      ctr := vc + 1;
-     introduce exists b vi vj vctr. (
-       pts_to i full_perm vi `star`
-       pts_to j full_perm vj `star`
-       pts_to ctr full_perm vctr `star`     
-       pure (1 <= vctr /\
-             vctr <= n /\
-             vi == fib (vctr - 1) /\
-             vj == fib vctr /\
-             b == (vctr < n))
-     )
-     with (vc + 1 < n)
+     ()
   };
   let r = !j;
   r

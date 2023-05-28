@@ -168,12 +168,15 @@ let maybe_infer_intro_exists
     in
     (* Weird: defining prepare_instantiations here causes extraction to crash with
        Failure("This should not happen (should have been handled at Tm_abs level)")
-     *)       
-    T.print (Printf.sprintf "At %s: infer_intro_exists for %s\n"
-                (T.range_to_string st.range)
-                (P.st_term_to_string st));
+     *)
+    if RU.debug_at_level g "inference"
+    then (      
+      T.print (Printf.sprintf "At %s: infer_intro_exists for %s\n"
+                  (T.range_to_string st.range)
+                  (P.st_term_to_string st))
+    );
     let Tm_IntroExists {erased; p=t; witnesses} = st.term in
-    // let (| t, t_typing |) = check_vprop g t in
+    let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
     let goal_vprop, insts, uvs = prepare_instantiations [] [] t witnesses in
     let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
     let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal pre goal_vprop in
@@ -193,11 +196,14 @@ let maybe_infer_intro_exists
       | _ -> solutions
     in
     let solutions = T.fold_left maybe_solve_pure solutions pure_conjuncts in
-    T.print
-      (Printf.sprintf
-         "maybe_infer_intro_exists: solutions after solving pure conjuncts (%s): %s\n"
-          (P.term_to_string (list_as_vprop pure_conjuncts))
-          (Pulse.Checker.Inference.solutions_to_string solutions));
+    if RU.debug_at_level g "inference"
+    then (      
+      T.print
+        (Printf.sprintf
+          "maybe_infer_intro_exists: solutions after solving pure conjuncts (%s): %s\n"
+            (P.term_to_string (list_as_vprop pure_conjuncts))
+            (Pulse.Checker.Inference.solutions_to_string solutions))
+    );
     let mk_hide ty_opt (e:term) : term =
         let hd = tm_fvar (as_fv hide_lid) in
         match ty_opt with
@@ -234,8 +240,11 @@ let maybe_infer_intro_exists
        pure_conjuncts
     in
     let result = List.Tot.fold_left (add_intro_pure intro_exists_chain.range) intro_exists_chain pure_conjuncts in
-    T.print (Printf.sprintf "Inferred pure and exists:{\n\t %s\n\t}"
-              (P.st_term_to_string result));
+    if RU.debug_at_level g "inference"
+    then (      
+      T.print (Printf.sprintf "Inferred pure and exists:{\n\t %s\n\t}"
+                (P.st_term_to_string result))
+    );
     result
       
 
@@ -251,12 +260,15 @@ let handle_framing_failure
            c:comp{stateful_comp c ==> comp_pre c == pre} &
            st_typing g t c)
   = let wr t = { term = t; range = t0.range } in
-    T.print (Printf.sprintf
-                     "Handling framing failure in term:\n%s\n\
-                      with unmatched_pre={\n%s\n} and context={\n%s\n}"
-                     (P.st_term_to_string t0)
-                     (terms_to_string failure.unmatched_preconditions)
-                     (terms_to_string failure.remaining_context));
+    if RU.debug_at_level g "inference"
+    then (      
+      T.print (Printf.sprintf
+                      "Handling framing failure in term:\n%s\n\
+                        with unmatched_pre={\n%s\n} and context={\n%s\n}"
+                      (P.st_term_to_string t0)
+                      (terms_to_string failure.unmatched_preconditions)
+                      (terms_to_string failure.remaining_context))
+    );
     let pures, rest = 
       L.partition (function Tm_Pure _ -> true | _ -> false) failure.unmatched_preconditions
     in
