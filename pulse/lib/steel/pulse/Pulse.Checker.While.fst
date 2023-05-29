@@ -86,7 +86,8 @@ let check_while
           in
           if eq_comp body_comp (comp_while_body inv)
           then let d = T_While g inv cond body inv_typing cond_typing body_typing in
-               repack (Framing.apply_frame pre_typing d framing_token) post_hint true
+               let (| c, st_d |) = Framing.apply_frame pre_typing d framing_token in
+               repack (| c, st_d |) post_hint true
           else 
             T.fail
               (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\

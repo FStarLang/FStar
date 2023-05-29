@@ -29,6 +29,8 @@ let frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term)
       tot_typing g frame Tm_VProp &
       vprop_equiv g (Tm_Star req frame) ctxt)
 
+let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) =
+  let (| frame, _, _ |) = f in frame
 
 val check_frameable (#g:env)
                     (#ctxt:term)
@@ -44,7 +46,7 @@ val apply_frame (#g:env)
                 (#c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
-  : Tot (c':comp_st { comp_pre c' == ctxt } &
+  : Tot (c':comp_st { comp_pre c' == ctxt /\ comp_post c' == Tm_Star (comp_post c) (frame_of frame_t)} &
          st_typing g t c')
 
 

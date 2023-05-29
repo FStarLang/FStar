@@ -223,7 +223,7 @@ let apply_frame (#g:env)
                 (#c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
-  : Tot (c':comp_st { comp_pre c' == ctxt } &
+  : Tot (c':comp_st { comp_pre c' == ctxt /\ comp_post c' == Tm_Star (comp_post c) (frame_of frame_t) } &
            st_typing g t c')
   = let s = st_comp_of_comp c in
     let (| frame, frame_typing, ve |) = frame_t in
@@ -256,7 +256,9 @@ let try_frame_pre (#g:env)
                   framing_failure)
   = match check_frameable pre_typing (comp_pre c) with
     | Inr failure -> Inr failure  
-    | Inl frame_t -> Inl (apply_frame pre_typing t_typing frame_t)
+    | Inl frame_t -> 
+      let (| c', st_d |) = apply_frame pre_typing t_typing frame_t in
+      Inl (| c', st_d |)
   
 let frame_empty (#g:env)
                 (#pre:term)

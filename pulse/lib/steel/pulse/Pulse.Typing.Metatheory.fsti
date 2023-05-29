@@ -41,3 +41,6 @@ val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
                          (b:binding)
                          (_:tot_typing g t ty)
    : tot_typing (extend x b g) t ty
+
+val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
+   : tot_typing g p (Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0)
