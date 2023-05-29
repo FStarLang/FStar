@@ -561,6 +561,7 @@ let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
 let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"] (* In a separate module due to the mention of TAC *)
 let map_seal_lid    = p2l ["FStar"; "Sealed"; "map_seal"]
 let bind_seal_lid   = p2l ["FStar"; "Sealed"; "bind_seal"]
+let tref_lid        = p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]
 
 let document_lid = p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]

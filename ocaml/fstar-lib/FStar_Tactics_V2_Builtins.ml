@@ -137,6 +137,10 @@ let all_ext_options         = from_tac_1 "B.all_ext_options" B.all_ext_options
 let ext_getv                = from_tac_1 "B.ext_getv" B.ext_getv
 let ext_getns               = from_tac_1 "B.ext_getns" B.ext_getns
 
+let alloc x                 = from_tac_1 "B.alloc" B.alloc x
+let read  r                 = from_tac_1 "B.read" B.read r
+let write r x               = from_tac_2 "B.write" B.write r x
+
 type ('env, 't) prop_validity_token = unit
 type ('env, 'sc, 't, 'pats, 'bnds) match_complete_token = unit
 

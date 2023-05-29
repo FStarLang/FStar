@@ -416,6 +416,7 @@ and lazy_kind =
   | Lazy_ident
   | Lazy_doc
   | Lazy_extension of string
+  | Lazy_tref
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)

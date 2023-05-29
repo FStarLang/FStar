@@ -69,3 +69,5 @@ val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
 (* Must be inline, this definition is not there in src/FStar.Tactics.Types *)
 inline_for_extraction
 let issues = list FStar.Issue.issue
+
+val tref (a:Type) : Type0

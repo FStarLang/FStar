@@ -118,6 +118,8 @@ type direction =
 val check_goal_solved' : goal -> option term
 val check_goal_solved  : goal -> bool
 
+type tref (a:Type) = ref a
+
 (*** These are here for userspace, the library has an interface into this module. *)
 (* Typing reflection *)
 val non_informative_token (g:env) (t:typ) : Type0

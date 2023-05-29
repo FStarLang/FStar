@@ -458,6 +458,15 @@ val ext_getv (k:string) : Tac string
 the given namespace. *)
 val ext_getns (ns:string) : Tac (list (string & string))
 
+(** The following primitives provide support for local state
+    during execution of a tactic.
+    The local state is monotonic, it is not
+    reverted when the tactic backtracks (using catch e.g.)
+ *)
+val alloc (#a:Type) (x:a) : Tac (tref a)
+val read (#a:Type) (r:tref a) : Tac a
+val write (#a:Type) (r:tref a) (x:a) : Tac unit
+
 (***** APIs used in the meta DSL framework *****)
 
 (** Meta DSL framework is an experimental feature

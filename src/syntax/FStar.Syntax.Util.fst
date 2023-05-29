@@ -489,6 +489,7 @@ let eq_lazy_kind k k' =
      | Lazy_issue, Lazy_issue
      | Lazy_ident, Lazy_ident
      | Lazy_doc, Lazy_doc
+     | Lazy_tref, Lazy_tref
        -> true
      | Lazy_extension s, Lazy_extension t ->
        s = t
