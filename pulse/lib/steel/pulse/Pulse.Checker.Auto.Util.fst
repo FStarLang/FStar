@@ -149,8 +149,8 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
       // ctxt is well-typed, hence ln
       assume (open_term ctxt x == ctxt);
       assert (open_term (comp_post c1) x == comp_pre c2);
-      // e2 is well-typed in g, so its fvs should be a subset of g
-      assume (~ (x `Set.mem` freevars_st e2));
+      // we closed e2 with x
+      assume (~ (x `Set.mem` freevars_st e2_closed));
       if x `Set.mem` freevars (comp_post c2)
       then T.fail "Impossible"
       else (
