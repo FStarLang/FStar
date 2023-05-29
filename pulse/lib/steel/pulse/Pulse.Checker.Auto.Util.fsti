@@ -35,3 +35,23 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
            continuation_elaborator
              g (Tm_Star ctxt (comp_pre c1))
              (extend x (Inl (comp_res c1)) g) (Tm_Star (open_term (comp_post c1) x) ctxt))
+
+type mk_elim_tm_t (f:vprop -> bool) = v:vprop{f v} -> st_term
+type mk_elim_comp_t (f:vprop -> bool) =
+  v:vprop{f v} -> c:comp{stateful_comp c /\ comp_pre c == v}
+type elim_tm_typing_t (#f:vprop -> bool) (mk_t:mk_elim_tm_t f) (mk_c:mk_elim_comp_t f) =
+  #g:env ->
+  v:vprop{f v} ->
+  tot_typing g v Tm_VProp ->
+  T.Tac (st_typing g (mk_t v) (mk_c v))
+
+val add_elims (#g:env) (#ctxt:term)
+  (f:vprop -> bool)
+  (mk_t:mk_elim_tm_t f)
+  (mk_c:mk_elim_comp_t f) 
+  (mk_typing:elim_tm_typing_t mk_t mk_c)
+  (ctxt_typing:tot_typing g ctxt Tm_VProp)
+   : T.Tac (g':env { env_extends g' g } &
+            ctxt':term &
+            tot_typing g' ctxt' Tm_VProp &
+            continuation_elaborator g ctxt g' ctxt')
