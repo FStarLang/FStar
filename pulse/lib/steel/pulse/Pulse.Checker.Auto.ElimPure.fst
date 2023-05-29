@@ -9,8 +9,6 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Common
 open Pulse.Typing
 module Metatheory = Pulse.Typing.Metatheory
-module VP = Pulse.Checker.VPropEquiv
-module F = Pulse.Checker.Framing
 open Pulse.Reflection.Util
 open Pulse.Checker.Auto.Util
 
@@ -55,14 +53,23 @@ let elim_pure_typing (g:env) (p:host_term)
    = admit();
      T_STApp g elim_pure_head (tm_fstar (`(prop))) None (elim_pure_comp p) _ (elim_pure_head_typing g) p_prop
 
-let is_elim_pure (vp:term) =
+let is_elim_pure (vp:term) : T.Tac bool =
   match vp with
   | Tm_Pure (Tm_FStar _ _) -> true
   | _ -> false
 
-let get_pure_prop (vp:term{is_elim_pure vp}) =
-  match vp with
-  | Tm_Pure (Tm_FStar pp _) -> pp
+let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v Tm_VProp)
+  : T.Tac (option (t:st_term &
+           c:comp { stateful_comp c /\ comp_pre c == v } &
+           st_typing g t c)) =
+  match v with
+  | Tm_Pure (Tm_FStar pp _) ->
+    let p_typing =
+      Metatheory.pure_typing_inversion #g #(tm_fstar pp) v_typing in
+    Some (| mk_elim_pure (tm_fstar pp),
+            elim_pure_comp pp,
+            elim_pure_typing g pp p_typing |)
+  | _ -> None
 
 let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
   : T.Tac (g':env { env_extends g' g } &
@@ -70,12 +77,5 @@ let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
            tot_typing g' ctxt' Tm_VProp &
            continuation_elaborator g ctxt g' ctxt') =
   
-  add_elims
-    is_elim_pure
-    (fun v -> mk_elim_pure (tm_fstar (get_pure_prop v)))
-    (fun v -> elim_pure_comp (get_pure_prop v))
-    (fun #g v v_typing ->
-     let p_typing = Metatheory.pure_typing_inversion #g #(tm_fstar (get_pure_prop v)) v_typing in
-     elim_pure_typing g (get_pure_prop v) p_typing)
-    ctxt_typing
+  add_elims is_elim_pure mk ctxt_typing
  

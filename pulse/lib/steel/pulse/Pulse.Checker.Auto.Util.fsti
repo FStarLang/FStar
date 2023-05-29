@@ -20,12 +20,11 @@ val k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
                  (d2:vprop_equiv g2 ctxt2 ctxt2')
   : continuation_elaborator g1 ctxt1' g2 ctxt2'
 
-val canon_right (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
-  (f:vprop -> bool)
-  : (ctxt':term &
-     tot_typing g ctxt' Tm_VProp &
-     continuation_elaborator g ctxt g ctxt')
 
+
+//
+// A canonical continuation elaborator for Bind
+//
 val continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})
   (#e1:st_term)
@@ -36,20 +35,21 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
              g (Tm_Star ctxt (comp_pre c1))
              (extend x (Inl (comp_res c1)) g) (Tm_Star (open_term (comp_post c1) x) ctxt))
 
-type mk_elim_tm_t (f:vprop -> bool) = v:vprop{f v} -> st_term
-type mk_elim_comp_t (f:vprop -> bool) =
-  v:vprop{f v} -> c:comp{stateful_comp c /\ comp_pre c == v}
-type elim_tm_typing_t (#f:vprop -> bool) (mk_t:mk_elim_tm_t f) (mk_c:mk_elim_comp_t f) =
+//
+// Scaffolding for adding elims
+//
+
+type mk_t =
   #g:env ->
-  v:vprop{f v} ->
+  #v:vprop ->
   tot_typing g v Tm_VProp ->
-  T.Tac (st_typing g (mk_t v) (mk_c v))
+  T.Tac (option (t:st_term &
+                 c:comp { stateful_comp c /\ comp_pre c == v } &
+                 st_typing g t c))
 
 val add_elims (#g:env) (#ctxt:term)
-  (f:vprop -> bool)
-  (mk_t:mk_elim_tm_t f)
-  (mk_c:mk_elim_comp_t f) 
-  (mk_typing:elim_tm_typing_t mk_t mk_c)
+  (f:vprop -> T.Tac bool)
+  (mk:mk_t)
   (ctxt_typing:tot_typing g ctxt Tm_VProp)
    : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
