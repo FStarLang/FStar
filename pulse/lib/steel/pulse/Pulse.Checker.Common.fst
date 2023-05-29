@@ -161,4 +161,3 @@ let intro_comp_typing (g:env)
       if not (eq_tm ty Tm_Inames)
       then T.fail "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc
-

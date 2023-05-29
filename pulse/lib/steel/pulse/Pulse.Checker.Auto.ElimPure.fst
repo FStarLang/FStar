@@ -12,65 +12,7 @@ module Metatheory = Pulse.Typing.Metatheory
 module VP = Pulse.Checker.VPropEquiv
 module F = Pulse.Checker.Framing
 open Pulse.Reflection.Util
-
-let k_elab_unit (g:env) (ctxt:term)
-  : continuation_elaborator g ctxt g ctxt
-  = fun p r -> r
-
-let k_elab_trans (#g0 #g1 #g2:env) (#ctxt0 #ctxt1 #ctxt2:term)
-                 (k0:continuation_elaborator g0 ctxt0 g1 ctxt1)
-                 (k1:continuation_elaborator g1 ctxt1 g2 ctxt2 { g1 `env_extends` g0})
-   : continuation_elaborator g0 ctxt0 g2 ctxt2
-   = fun post_hint res -> k0 post_hint (k1 post_hint res)
-
-let vprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt Tm_VProp)
-                           (#p:_) (d:vprop_equiv g ctxt p)
-  : tot_typing g p Tm_VProp 
-  = let fwd, _ = VP.vprop_equiv_typing d in
-    fwd ctxt_typing
-
-
-let vprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt Tm_VProp)
-                           (#p:_) (d:vprop_equiv g p ctxt)
-  : tot_typing g p Tm_VProp 
-  = let _, bk = VP.vprop_equiv_typing d in
-    bk ctxt_typing
-
-let k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)                 
-                 (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
-                 (d1:vprop_equiv g1 ctxt1 ctxt1')
-                 (d2:vprop_equiv g2 ctxt2 ctxt2')
-  : continuation_elaborator g1 ctxt1' g2 ctxt2'
-  =  fun post_hint res -> 
-        let framing_token2 : F.frame_for_req_in_ctxt g2 ctxt2 ctxt2' = 
-            let d : vprop_equiv g2 (Tm_Star ctxt2' Tm_Emp) ctxt2 = 
-              VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Trans _ _ _ _ (VE_Unit _ _) (VE_Sym _ _ _ d2)) in
-            (| Tm_Emp, emp_typing, d |)
-        in
-        let framing_token1 : F.frame_for_req_in_ctxt g1 ctxt1' ctxt1 = 
-            let d = VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Trans _ _ _ _ (VE_Unit _ _) d1) in
-            (| Tm_Emp, emp_typing, d |)
-        in
-        let (| st, c, st_d |) = res in
-        if not (stateful_comp c)
-        then T.fail "Unexpected non-stateful comp in continuation elaborate"
-        else (
-            let (| _, pre_typing, _, _ |) =
-                Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
-            let (| c', st_d' |) = Pulse.Checker.Framing.apply_frame (vprop_equiv_typing_bk pre_typing d2) st_d framing_token2 in
-            let (| st, c, st_d |) = k post_hint (| st, c', st_d' |) in
-            if not (stateful_comp c)
-            then T.fail "Unexpected non-stateful comp in continuation elaborate"
-            else 
-                let (| _, pre_typing, _, _ |) =
-                    Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
-                let (| c', st_d' |) =
-                    Pulse.Checker.Framing.apply_frame
-                        (vprop_equiv_typing_fwd pre_typing d1)
-                        st_d
-                        framing_token1 in
-                (| st, c', st_d' |)
-        )
+open Pulse.Checker.Auto.Util
     
 
 let elim_pure_head =
@@ -137,7 +79,7 @@ let elim_one_pure (#g:env) (ctxt:term) (p:term)
        let k : continuation_elaborator g (Tm_Star ctxt (Tm_Pure p)) g' (Tm_Star Tm_Emp ctxt) =
            fun post_hint res -> 
                let (| e2, c2, e2_typing |) = res in
-                if not (stateful_comp c2) || None? post_hint
+                if not (stateful_comp c2) // || None? post_hint
                 then T.fail "Unexpected non-stateful comp in continuation elaborate"
                 else (
                     let e2_typing : st_typing g' e2 c2 = e2_typing in
@@ -147,23 +89,20 @@ let elim_one_pure (#g:env) (ctxt:term) (p:term)
                     assert (comp_post c1 == Tm_Star Tm_Emp ctxt);
                     assert (comp_pre c2 == Tm_Star Tm_Emp ctxt); 
                     assume (open_term (comp_post c1) x == comp_post c1);
-                    assume (~(x `Set.mem` freevars (comp_post c2)));
-                    let Some post_hint = post_hint in
-                    if x `Set.mem` freevars post_hint.post
-                    || not (eq_tm post_hint.ret_ty (comp_res c2) &&
-                            eq_univ post_hint.u (comp_u c2) &&
-                            eq_tm post_hint.post (comp_post c2))
+                    if x `Set.mem` freevars (comp_post c2)
+
                     then T.fail "Impossible"
                     else (
-                        let pht = Pulse.Checker.Common.post_hint_typing g post_hint x in
+                        let t_typing, post_typing =
+                          Pulse.Checker.Bind.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
                         let (| e, c, e_typing |) =
                             Pulse.Checker.Bind.mk_bind
                                 g (Tm_Star ctxt (Tm_Pure p)) 
                                 e1 e2_closed _ _ (v_as_nv x) e1_typing
                                 u_of_1 
                                 e2_typing
-                                pht.ty_typing
-                                pht.post_typing
+                                t_typing
+                                post_typing
                         in
                         (| e, c, e_typing |)
                     )
@@ -232,7 +171,7 @@ let canon_pure_right (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VPr
     let veq : vprop_equiv g ctxt (list_as_vprop (vps'@pures)) =
         VE_Trans _ _ _ _ (vprop_list_equiv g ctxt) veq
     in
-    (| _, vprop_equiv_typing_fwd ctxt_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
+    (| _, VP.vprop_equiv_typing_fwd ctxt_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
 
   
                 

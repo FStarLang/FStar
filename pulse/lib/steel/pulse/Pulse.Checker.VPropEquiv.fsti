@@ -50,3 +50,17 @@ val vprop_equiv_split_frame (g:_) (ctxt req:term) (frame:list term)
                             (d:vprop_equiv g (list_as_vprop (vprop_as_list req @ frame))
                                              (list_as_vprop (vprop_as_list ctxt)))
   : vprop_equiv g (Tm_Star req (list_as_vprop frame)) ctxt
+
+
+let vprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt Tm_VProp)
+                           (#p:_) (d:vprop_equiv g ctxt p)
+  : tot_typing g p Tm_VProp 
+  = let fwd, _ = vprop_equiv_typing d in
+    fwd ctxt_typing
+
+
+let vprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt Tm_VProp)
+                           (#p:_) (d:vprop_equiv g p ctxt)
+  : tot_typing g p Tm_VProp 
+  = let _, bk = vprop_equiv_typing d in
+    bk ctxt_typing

@@ -33,6 +33,12 @@ val mk_bind (g:env)
               (~ (x `Set.mem` freevars (comp_post c2))))
            (ensures fun _ _ -> True)
 
+val bind_res_and_post_typing (g:env) (s2:st_comp)
+                             (x:var { Pulse.Typing.Metatheory.fresh_wrt x g (freevars s2.post) })
+                             (post_hint:post_hint_opt g)
+  : T.Tac (universe_of g s2.res s2.u &
+           tot_typing (extend x (Inl s2.res) g) (open_term_nv s2.post (v_as_nv x)) Tm_VProp)
+
 val check_bind (g:env)
                (t:st_term{Tm_Bind? t.term})
                (pre:term)

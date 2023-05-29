@@ -148,6 +148,7 @@ let bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { Metatheory.fresh_wrt 
       if not (eq_tm s2.post post.post &&
               eq_tm s2.res post.ret_ty &&
               eq_univ s2.u post.u)
+      || x `Set.mem` freevars s2.post
       then T.fail "Unexpected mismatched postcondition in bind" //exclude with a stronger type on check'
       else (
          let pr = Pulse.Checker.Common.post_hint_typing g post x in
