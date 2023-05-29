@@ -155,6 +155,20 @@ let (uzero : FStar_Reflection_Types.universe) =
 let (steel_wrapper : Prims.string Prims.list) = ["Pulse"; "Steel"; "Wrapper"]
 let (mk_steel_wrapper_lid : Prims.string -> Prims.string Prims.list) =
   fun s -> FStar_List_Tot_Base.op_At steel_wrapper [s]
+let (mk_squash :
+  FStar_Reflection_Types.universe ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun u ->
+    fun ty ->
+      let t =
+        FStar_Reflection_Builtins.pack_ln
+          (FStar_Reflection_Data.Tv_UInst
+             ((FStar_Reflection_Builtins.pack_fv
+                 FStar_Reflection_Const.squash_qn), [u])) in
+      FStar_Reflection_Builtins.pack_ln
+        (FStar_Reflection_Data.Tv_App
+           (t, (ty, FStar_Reflection_Data.Q_Explicit)))
 let (mk_eq2 :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->

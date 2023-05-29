@@ -19,9 +19,19 @@ let elim_pure_head =
 let elim_pure_head_ty = 
     let open Pulse.Steel.Wrapper in
     let open Steel.Effect.Common in
-    `(p:prop -> stt_ghost (squash p) emp_inames
-                          (pure p)
-                          (fun _ -> emp))
+    let squash_p = mk_squash u0 (RT.bound_var 0) in
+    let pure_p = mk_pure (RT.bound_var 0) in
+    let post =
+      mk_abs squash_p R.Q_Explicit (R.pack_ln (R.Tv_FVar (R.pack_fv emp_lid)))
+    in
+    let cod = mk_stt_ghost_comp u0 squash_p emp_inames_tm pure_p post in
+    mk_arrow
+      (R.pack_ln (R.Tv_FVar (R.pack_fv R.prop_qn)), R.Q_Explicit)
+      cod
+    // Following crashes in extraction
+    // `(p:prop -> stt_ghost (squash p) emp_inames
+    //                       (pure p)
+    //                       (fun _ -> emp))
 
 let tm_fstar t = Tm_FStar t Range.range_0
 
