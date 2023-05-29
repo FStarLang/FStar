@@ -223,7 +223,9 @@ let apply_frame (#g:env)
                 (#c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
-  : Tot (c':comp_st { comp_pre c' == ctxt /\ comp_post c' == Tm_Star (comp_post c) (frame_of frame_t) } &
+  : Tot (c':comp_st { comp_pre c' == ctxt /\
+                      comp_res c' == comp_res c /\
+                      comp_post c' == Tm_Star (comp_post c) (frame_of frame_t) } &
            st_typing g t c')
   = let s = st_comp_of_comp c in
     let (| frame, frame_typing, ve |) = frame_t in
