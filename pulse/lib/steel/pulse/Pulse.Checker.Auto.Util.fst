@@ -29,10 +29,28 @@ let comp_st_with_post (c:comp_st) (post:term) : c':comp_st { st_comp_of_comp c' 
   | C_STGhost i st -> C_STGhost i { st with post }
   | C_STAtomic i st -> C_STAtomic i {st with post}
 
-assume
-val simplify_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+let ve_unit_r g (p:term) : vprop_equiv g (Tm_Star p Tm_Emp) p = 
+  VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _)
+
+let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+                  (post:term { freevars post `Set.subset` freevars (comp_post c)})
+                  (veq: (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) } ->
+                         vprop_equiv (extend x (Inl (comp_res c)) g) 
+                                     (open_term (comp_post c) x)
+                                     (open_term post x)))
+  : st_typing g t (comp_st_with_post c post)
+  = let c' = comp_st_with_post c post in
+    let (| u_of, pre_typing, x, post_typing |) = Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
+    let veq = veq x in
+    let st_equiv : st_equiv g c c' =
+        ST_VPropEquiv g c c' x pre_typing u_of post_typing (VE_Refl _ _) veq
+    in
+    T_Equiv _ _ _ _ d st_equiv
+
+let simplify_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                   (post:term { comp_post c == Tm_Star post Tm_Emp})
   : st_typing g t (comp_st_with_post c post)
+  = st_equiv_post d post (fun x -> ve_unit_r (extend x (Inl (comp_res c)) g) (open_term post x))
 
 let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
   : Lemma
