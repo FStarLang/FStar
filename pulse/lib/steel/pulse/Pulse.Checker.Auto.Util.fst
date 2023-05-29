@@ -23,12 +23,35 @@ let k_elab_trans (#g0 #g1 #g2:env) (#ctxt0 #ctxt1 #ctxt2:term)
    : continuation_elaborator g0 ctxt0 g2 ctxt2
    = fun post_hint res -> k0 post_hint (k1 post_hint res)
 
+let comp_st_with_post (c:comp_st) (post:term) : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
+  match c with
+  | C_ST st -> C_ST { st with post }
+  | C_STGhost i st -> C_STGhost i { st with post }
+  | C_STAtomic i st -> C_STAtomic i {st with post}
+
+assume
+val simplify_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+                  (post:term { comp_post c == Tm_Star post Tm_Emp})
+  : st_typing g t (comp_st_with_post c post)
+
+let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
+  : Lemma
+    (requires
+        comp_post_matches_hint c post_hint /\
+        comp_res c' == comp_res c /\
+        comp_u c' == comp_u c /\
+        comp_post c' == Tm_Star (comp_post c) Tm_Emp)
+    (ensures comp_post_matches_hint (comp_st_with_post c' (comp_post c)) post_hint /\
+             comp_pre (comp_st_with_post c' (comp_post c)) == comp_pre c')
+  = () 
+
+#push-options "--z3rlimit_factor 8 --query_stats --ifuel 2 --fuel 1"
 let k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)                 
                  (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
                  (d1:vprop_equiv g1 ctxt1 ctxt1')
                  (d2:vprop_equiv g2 ctxt2 ctxt2')
   : continuation_elaborator g1 ctxt1' g2 ctxt2'
-  =  fun post_hint res -> 
+  = fun post_hint res -> 
         let framing_token2 : frame_for_req_in_ctxt g2 ctxt2 ctxt2' = 
             let d : vprop_equiv g2 (Tm_Star ctxt2' Tm_Emp) ctxt2 = 
               VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Trans _ _ _ _ (VE_Unit _ _) (VE_Sym _ _ _ d2)) in
@@ -45,7 +68,9 @@ let k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
             let (| _, pre_typing, _, _ |) =
                 Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
             let (| c', st_d' |) = Pulse.Checker.Framing.apply_frame (vprop_equiv_typing_bk pre_typing d2) st_d framing_token2 in
-            let (| st, c, st_d |) = k post_hint (| st, c', st_d' |) in
+            assert (comp_post c' == Tm_Star (comp_post c) Tm_Emp);
+            let st_d' = simplify_post st_d' (comp_post c) in
+            let (| st, c, st_d |) = k post_hint (| st, _, st_d' |) in
             if not (stateful_comp c)
             then T.fail "Unexpected non-stateful comp in continuation elaborate"
             else 
@@ -56,9 +81,13 @@ let k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
                         (vprop_equiv_typing_fwd pre_typing d1)
                         st_d
                         framing_token1 in
-                (| st, c', st_d' |)
+                simplify_lemma c c' post_hint;
+                let c''  = comp_st_with_post c' (comp_post c) in
+                let st_d' : st_typing g1 st c'' = simplify_post st_d' (comp_post c) in
+                let res : (checker_result_t g1 ctxt1' post_hint) = (| st, c'', st_d' |) in
+                res
         )
-
+#pop-options
 let rec canon_right_aux (g:env) (vps:list vprop) (f:vprop -> T.Tac bool)
   : T.Tac (vps' : list vprop &
            fvps : list vprop &
@@ -104,7 +133,7 @@ let canon_right (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
     in
     (| _, VP.vprop_equiv_typing_fwd ctxt_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 4"
+#push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 8"
 let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})
   (#e1:st_term)

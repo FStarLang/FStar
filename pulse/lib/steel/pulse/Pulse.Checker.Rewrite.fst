@@ -16,9 +16,7 @@ let check_rewrite
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "check_rewrite" g in
   let Tm_Rewrite {t1=p; t2=q} = t.term in
   let (| p, p_typing |) = check_vprop g p in
@@ -32,4 +30,4 @@ let check_rewrite
                           (Pulse.Checker.Pure.print_issues g issues))
            | Some token, _ -> VE_Ext g p q token in
 	     let d = T_Rewrite _ p q p_typing equiv_p_q in
-	     repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint true
+	     repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint

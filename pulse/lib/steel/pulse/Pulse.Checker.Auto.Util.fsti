@@ -32,7 +32,7 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (ctxt_pre1_typing:tot_typing g (Tm_Star ctxt (comp_pre c1)) Tm_VProp)
   : T.Tac (x:var { None? (lookup g x) } &
            continuation_elaborator
-             g (Tm_Star ctxt (comp_pre c1))
+             g                                (Tm_Star ctxt (comp_pre c1))
              (extend x (Inl (comp_res c1)) g) (Tm_Star (open_term (comp_post c1) x) ctxt))
 
 //

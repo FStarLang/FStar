@@ -10,6 +10,14 @@ open Pulse.Checker.Common
 
 module FV = Pulse.Typing.FV
 
+let post_hint_compatible (p:option post_hint_t) (x:var) (t:term) (u:universe) (post:vprop) =
+  match p with
+  | None -> True
+  | Some p ->
+    p.post== close_term post x /\
+    p.u == u /\
+    p.ret_ty == t
+
 #push-options "--z3rlimit_factor 4"
 let check_admit
   (g:env)
@@ -17,16 +25,16 @@ let check_admit
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
-
+  : T.Tac (checker_result_t g pre post_hint) =
   let Tm_Admit { ctag = c; typ=t; post } = t.term in
   let x = fresh g in
   let px = v_as_nv x in
   let res
-    : (t:term & u:universe & universe_of g t u &
-       post:vprop & tot_typing (extend x (Inl t) g) post Tm_VProp)
+    : (t:term &
+       u:universe &
+       universe_of g t u &
+       post:vprop { post_hint_compatible post_hint x t u post } &
+       tot_typing (extend x (Inl t) g) post Tm_VProp)
     = match post, post_hint with
       | None, None
       | Some _, Some _ ->
@@ -47,12 +55,14 @@ let check_admit
         else (
           let post_typing_rec = post_hint_typing g post x in
           let post_opened = open_term_nv post.post px in              
+          assume (close_term post_opened x == post.post);
           (| post.ret_ty, post.u, post_typing_rec.ty_typing, post_opened, post_typing_rec.post_typing |)
         )
   in
   let (| t, u, t_typing, post_opened, post_typing |) = res in
   let post = close_term post_opened x in
   let s : st_comp = {u;res=t;pre;post} in
+
   assume (open_term (close_term post_opened x) x == post_opened);
   (|
      _, //Tm_Admit c u t None,

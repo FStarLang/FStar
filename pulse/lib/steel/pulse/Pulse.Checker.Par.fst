@@ -20,9 +20,7 @@ let check_par
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "check_par" g in
   let Tm_Par {pre1=preL; body1=eL; post1=postL;
               pre2=preR; body2=eR; post2=postR} = t.term in
@@ -47,6 +45,6 @@ let check_par
       let cR_typing = MT.st_typing_correctness eR_typing in
       let x = fresh g in
       let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
-      repack (try_frame_pre pre_typing d) post_hint true
+      repack (try_frame_pre pre_typing d) post_hint
     else T.fail "par: cR is not stt"
   else T.fail "par: cL is not stt"

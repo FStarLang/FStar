@@ -260,9 +260,7 @@ let handle_framing_failure
     (post_hint:post_hint_opt g)
     (failure:framing_failure)
     (check:check_t)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c)
+  : T.Tac (checker_result_t g pre post_hint)
   = let wr t = { term = t; range = t0.range } in
     if RU.debug_at_level g "inference"
     then (      
@@ -286,9 +284,7 @@ let handle_framing_failure
         pures
     in
     let rec handle_intro_exists rest (t:st_term)
-      : T.Tac (t:st_term &
-               c:comp{stateful_comp c ==> comp_pre c == pre} &
-               st_typing g t c)
+      : T.Tac (checker_result_t g pre post_hint)
       = match rest with
         | [] -> check g t pre pre_typing post_hint
         | Tm_ExistsSL u ty p se :: rest ->
@@ -442,7 +438,8 @@ let rec check' : bool -> check_t =
             Checker.Common.intro_post_hint g None p
           | _, _ -> T.fail "Either two annotations for if post or none"
         in
-        If.check_if g b e1 e2 pre pre_typing post (check' true)
+        let (| t, c, d |) = If.check_if g b e1 e2 pre pre_typing post (check' true) in
+        ( (| t, c, d |) <: checker_result_t g pre post_hint)
 
       | Tm_ElimExists _ ->
         Exists.check_elim_exists g t pre pre_typing post_hint
@@ -482,6 +479,8 @@ let rec check' : bool -> check_t =
 
       | Tm_Rewrite _ ->
         Rewrite.check_rewrite g t pre pre_typing post_hint
+
+      | _ -> admit()
     with
     | Framing_failure failure ->
       handle_framing_failure g t pre pre_typing post_hint failure (check' true)

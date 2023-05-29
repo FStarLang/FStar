@@ -18,11 +18,10 @@ let check_abs
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
   (check:check_t)
-  : T.Tac (t:st_term &
-           c:comp { stateful_comp c ==> comp_pre c == pre } &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
+  if Some? post_hint then T.fail "Unexpected post-condition annotation from context for an abstraction" else 
   match t.term with  
-  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; pre=pre_hint; body; ret_ty; post=post_hint } ->
+  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; pre=pre_hint; body; ret_ty; post=post_hint_body } ->
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = check_term g t in //elaborate it first
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls
@@ -37,7 +36,7 @@ let check_abs
     | (| pre_opened, Tm_VProp, pre_typing |) ->
       let pre = close_term pre_opened x in
       let post =
-        match post_hint with
+        match post_hint_body with
         | None -> None
         | Some post ->
           let post = open_term' post (tm_var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=Range.range_0}) 1 in

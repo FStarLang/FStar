@@ -13,6 +13,4 @@ val check_if (g:env)
              (pre_typing: tot_typing g pre Tm_VProp)
              (post_hint:post_hint_for_env g)
              (check:check_t)
-  : T.Tac (t:st_term &
-           c:comp { stateful_comp c ==> comp_pre c == pre } &
-           st_typing g t c)
+  : T.Tac (checker_result_t g pre (Some post_hint))

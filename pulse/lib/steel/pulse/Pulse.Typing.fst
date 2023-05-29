@@ -517,7 +517,9 @@ type st_equiv : env -> comp -> comp -> Type =
       g:env ->
       c1:comp_st ->
       c2:comp_st { st_equiv_pre c1 c2 } -> 
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars (comp_post c1)) /\ ~(x `Set.mem` freevars (comp_post c2)) } ->
+      x:var { None? (lookup g x) /\
+              ~(x `Set.mem` freevars (comp_post c1)) /\
+              ~(x `Set.mem` freevars (comp_post c2)) } ->
       tot_typing g (comp_pre c1) Tm_VProp ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) ->
       tot_typing (extend x (Inl (comp_res c1)) g) (open_term (comp_post c1) x) Tm_VProp ->

@@ -30,9 +30,7 @@ let check_elim_exists
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
   let Tm_ElimExists { p = t } = t.term in
   let t_t_typing : (t:term & tot_typing g t Tm_VProp ) = 
       match t with
@@ -67,7 +65,7 @@ let check_elim_exists
     if eq_univ u u'
     then let x = fresh g in
          let d = T_ElimExists g u ty p x ty_typing t_typing in
-         repack (try_frame_pre pre_typing d) post_hint true
+         repack (try_frame_pre pre_typing d) post_hint
     else T.fail "Universe checking failed in elim_exists"
   | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
 
@@ -84,9 +82,7 @@ let check_intro_exists_erased
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
 
   let Tm_IntroExists { p=t; witnesses=[e] } = st.term in
   let (| t, t_typing |) = 
@@ -101,7 +97,7 @@ let check_intro_exists_erased
     let (| e, e_typing |) = 
         check_term_with_expected_type g e (mk_erased u ty) in
     let d = T_IntroExistsErased g u ty p e ty_typing t_typing (E e_typing) in
-    repack (try_frame_pre pre_typing d) post_hint true
+    repack (try_frame_pre pre_typing d) post_hint
   | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
 
 
@@ -112,9 +108,7 @@ let check_intro_exists
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
 
   let Tm_IntroExists { p=t; witnesses=[witness] } = st.term in
   let (| t, t_typing |) =
@@ -132,7 +126,7 @@ let check_intro_exists
     let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
     T.print (Printf.sprintf "Intro exists with witness, got: %s\n"
                      (P.comp_to_string c));
-    repack (try_frame_pre pre_typing d) post_hint true
+    repack (try_frame_pre pre_typing d) post_hint
   | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
 
 let check_intro_exists_either
@@ -142,10 +136,7 @@ let check_intro_exists_either
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c)
-  = 
+  : T.Tac (checker_result_t g pre post_hint) = 
   // T.print (Printf.sprintf "LOG INTRO EXISTS: %s"
   //                           (P.term_to_string (intro_exists_vprop st)));
     if is_intro_exists_erased st

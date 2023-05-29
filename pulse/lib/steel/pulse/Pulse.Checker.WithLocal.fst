@@ -34,9 +34,7 @@ let check_withlocal
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "check_withlocal" g in
   let wr t0 = { term = t0; range = t.range } in
   let Tm_WithLocal {initializer=init; body} = t.term in
@@ -69,10 +67,7 @@ let check_withlocal
            //
            // Checking post equality here to match the typing rule
            // 
-           if not (C_ST? c_body && ///these next three checks should be excluded by a stronger type on check'
-                   eq_tm (comp_post c_body) body_post.post &&
-                   eq_tm (comp_res c_body) body_post.ret_ty &&
-                   eq_univ (comp_u c_body) body_post.u)
+           if not (C_ST? c_body)
            then T.fail "withlocal: body is not stt or postcondition mismatch"
            else let body = close_st_term opened_body x in
                 assume (open_st_term (close_st_term opened_body x) x == opened_body);

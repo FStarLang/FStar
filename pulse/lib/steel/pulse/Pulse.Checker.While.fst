@@ -32,9 +32,7 @@ let check_while
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "while loop" g in
   let Tm_While { invariant=inv; condition=cond; body } = t.term in
   let (| ex_inv, inv_typing |) =
@@ -87,7 +85,7 @@ let check_while
           if eq_comp body_comp (comp_while_body inv)
           then let d = T_While g inv cond body inv_typing cond_typing body_typing in
                let (| c, st_d |) = Framing.apply_frame pre_typing d framing_token in
-               repack (| c, st_d |) post_hint true
+               repack (| c, st_d |) post_hint
           else 
             T.fail
               (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\

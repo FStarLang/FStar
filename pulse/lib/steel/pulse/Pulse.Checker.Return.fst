@@ -18,9 +18,7 @@ let check_return
   (pre:term)
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "check_return" g in
   let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = st.term in
   let (| t, u, ty, uty, d |) = check_term_and_type g t in
@@ -48,4 +46,4 @@ let check_return
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
-  repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint true
+  repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint

@@ -67,11 +67,13 @@ let try_frame_pre (#g:env)
 
 #push-options "--z3rlimit_factor 2"
 let replace_equiv_post
+      (r:range)
       (g:env)
       (c:comp{stateful_comp c /\ freevars_comp c `Set.subset` FV.vars_of_env g})
       (ct:Metatheory.comp_typing_u g c)
       (post_hint:post_hint_opt g)
-  : T.Tac (c1:comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c } & st_equiv g c c1)
+  : T.Tac (c1:comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c /\ comp_post_matches_hint c1 post_hint } &
+           st_equiv g c c1)
   = let g = CP.push_context "replace_equiv_post" g in
     let {u=u_c;res=res_c;pre=pre_c;post=post_c} = st_comp_of_comp c in
     let st_typing = Metatheory.comp_typing_inversion ct in
@@ -87,7 +89,16 @@ let replace_equiv_post
            (VE_Refl _ _)
            (VE_Refl _ _) |)
     | Some post ->
-      if (x `Set.mem` freevars post.post)
+      if not (eq_univ u_c post.u &&
+              eq_tm res_c post.ret_ty)
+      then T.fail 
+            (Printf.sprintf "(%s) Inferred result type does not match annotation.\n\
+                             Expected type %s\n\
+                             Got type %s\n"
+                  (T.range_to_string r)
+                  (P.term_to_string post.ret_ty)
+                  (P.term_to_string res_c))
+      else if (x `Set.mem` freevars post.post)
       then T.fail "Unexpected variable clash with annotated postcondition"
       else (
         let post_opened = open_term_nv post.post px in
@@ -106,6 +117,7 @@ let replace_equiv_post
           post=close_term post_opened x
         } in
         let c_with_post = c `with_st_comp` st_comp_with_post in
+        assume (close_term post_opened x == post.post);
         assume (open_term (close_term post_opened x) x == post_opened);
         (| c_with_post,
            ST_VPropEquiv
@@ -118,15 +130,12 @@ let replace_equiv_post
 let repack (#g:env) (#pre:term) (#t:st_term)
            (x:(c:comp_st { comp_pre c == pre } & st_typing g t c))
            (post_hint:post_hint_opt g)
-           (apply_post_hint:bool)
-  : T.Tac (t:st_term &
-           c:comp {stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c)
+  : T.Tac (checker_result_t g pre post_hint)
   = let (| c, d_c |) = x in
-    if apply_post_hint && stateful_comp c
+    if stateful_comp c
     then (
       FV.st_typing_freevars d_c;
-      let (| c1, c_c1_eq |) = replace_equiv_post g c (Metatheory.st_typing_correctness d_c) post_hint in
+      let (| c1, c_c1_eq |) = replace_equiv_post t.range g c (Metatheory.st_typing_correctness d_c) post_hint in
       (| t, c1, T_Equiv _ _ _ _ d_c c_c1_eq |)
     )
     else (| t, c, d_c |)

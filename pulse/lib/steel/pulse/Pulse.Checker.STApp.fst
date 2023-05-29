@@ -20,9 +20,7 @@ let check_stapp
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
-  : T.Tac (t:st_term &
-           c:comp{stateful_comp c ==> comp_pre c == pre} &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
   // maybe_log t;
   let range = t.range in
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
@@ -84,7 +82,7 @@ let check_stapp
           //  T.print (Printf.sprintf "ST application trying to frame, context: %s and pre: %s\n"
           //             (Pulse.Syntax.Printer.term_to_string pre)
           //             (Pulse.Syntax.Printer.term_to_string (comp_pre (open_comp_with comp_typ arg))));
-           repack (try_frame_pre pre_typing d) post_hint true
+           repack (try_frame_pre pre_typing d) post_hint
          | _ ->
            let t = tm_pureapp head qual arg in
            let comp_typ = open_comp_with comp_typ arg in
