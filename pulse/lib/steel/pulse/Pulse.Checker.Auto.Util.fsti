@@ -38,6 +38,11 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
 //
 // Scaffolding for adding elims
 //
+// Given a function f : vprop -> T.Tac bool that decides whether a vprop
+//   should be elim-ed,
+//   and an mk function to create the elim term, comp, and typing,
+//   add_elims will create a continuation_elaborator
+//
 
 type mk_t =
   #g:env ->
