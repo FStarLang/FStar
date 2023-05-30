@@ -27,6 +27,9 @@ let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv
     | Tv_AscribedC t' _ _ _ -> inspect_ln_unascribe t'
     | tv -> tv
 
+let subst1 (n:namedv) (t1:term) (t2:term) : term =
+  subst [NT (n, t1)] t2
+
 (*
  * AR: add versions that take attributes as arguments?
  *)

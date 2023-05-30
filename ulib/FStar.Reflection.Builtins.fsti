@@ -173,8 +173,8 @@ val embed_vconfig : vconfig -> term
 irreducible
 let check_with (vcfg : vconfig) : unit = ()
 
-(** Substitute an open bv (a name) by a term [t1] in a term [t2]. *)
-val subst : bv -> t1:term -> t2:term -> term
+(** Apply a substitution on a term *)
+val subst : subst -> term -> term
 
 (** Close an open binder in a term (i.e. turn the name into a de Bruijn index. *)
 val close_term : binder -> term -> term

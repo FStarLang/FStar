@@ -204,6 +204,17 @@ let e_env =
     in
     mk_emb' embed_env unembed_env fstar_refl_env_fv
 
+let e_subst_elt =
+    let embed_const cb (e:subst_elt) : t =
+        failwith "IOU"
+    in
+    let unembed_const cb (t:t) : option subst_elt =
+        None
+    in
+    mk_emb' embed_const unembed_const fstar_refl_subst_elt_fv
+
+let e_subst = e_list e_subst_elt
+
 let e_const =
     let embed_const cb (c:vconst) : t =
         match c with

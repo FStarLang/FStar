@@ -235,9 +235,41 @@ type named_sigelt_view =
 
   | Unk
 
-let open_sigelt_view (sv : sigelt_view) : named_sigelt_view = magic ()
+(* let inspect_letbinding *)
 
-let close_sigelt_view (sv : named_sigelt_view) : sigelt_view = magic ()
+let open_sigelt_view (sv : sigelt_view) : named_sigelt_view =
+  match sv with
+  | RD.Sg_Let isrec lbs ->
+    (* open universes, maybe *)
+    Sg_Let { isrec; lbs }
+
+  | RD.Sg_Inductive nm univs params typ ctors ->
+    (* open univs *)
+    (* open params *)
+    (* open ctors? *)
+    Sg_Inductive {nm; univs; params; typ; ctors}
+
+  | RD.Sg_Val nm univs typ ->
+    (* TODO: open universes *)
+    Sg_Val {nm; univs; typ}
+  | RD.Unk -> Unk
+
+let close_sigelt_view (sv : named_sigelt_view) : sigelt_view =
+  match sv with
+  | Sg_Let { isrec; lbs } ->
+    (* close universes, maybe *)
+    RD.Sg_Let isrec lbs 
+
+  | Sg_Inductive {nm; univs; params; typ; ctors} ->
+    (* close univs *)
+    (* close params *)
+    (* close ctors? *)
+    RD.Sg_Inductive nm univs params typ ctors
+
+  | Sg_Val {nm; univs; typ} ->
+    (* TODO: close universes *)
+    RD.Sg_Val nm univs typ
+  | Unk -> RD.Unk
 
 let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
   let sv = Reflection.inspect_sigelt s in

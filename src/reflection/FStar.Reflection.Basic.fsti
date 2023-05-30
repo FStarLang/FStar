@@ -82,7 +82,6 @@ val pack_aqual     : aqualv -> aqual
 val inspect_universe : universe -> universe_view
 val pack_universe    : universe_view -> universe
 
-val subst          : bv -> term -> term -> term
 val close_term     : binder -> term -> term
 
 (* We're only taking these as primitives to break the dependency from *
@@ -96,3 +95,5 @@ val push_namedv    : Env.env -> bv     -> Env.env
 
 val range_of_term : term -> FStar.Compiler.Range.range
 val range_of_sigelt : sigelt -> FStar.Compiler.Range.range
+
+val subst : list subst_elt -> term -> term

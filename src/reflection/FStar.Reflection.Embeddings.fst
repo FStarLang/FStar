@@ -303,7 +303,7 @@ let e_env =
             None
     in
     mk_emb embed_env unembed_env fstar_refl_env
-
+  
 let e_const =
     let embed_const (rng:Range.range) (c:vconst) : term =
         let r =
@@ -856,6 +856,70 @@ let e_univ_name =
 
 let e_univ_names = e_list e_univ_name
 
+let e_subst_elt =
+    let ee (rng:Range.range) (e:subst_elt) : term =
+        match e with
+        | DB (i, x) ->
+            S.mk_Tm_app ref_DB.t [
+                S.as_arg (embed e_fsint rng i);
+                S.as_arg (embed e_namedv rng x);
+               ]
+               rng
+
+        | NM (x, i) ->
+            S.mk_Tm_app ref_NM.t [
+                S.as_arg (embed e_namedv rng x);
+                S.as_arg (embed e_fsint rng i);
+               ]
+               rng
+
+        | NT (x, t) ->
+            S.mk_Tm_app ref_NT.t [
+                S.as_arg (embed e_namedv rng x);
+                S.as_arg (embed e_term rng t);
+               ]
+               rng
+
+        | UN (i, u) ->
+            S.mk_Tm_app ref_UN.t [
+                S.as_arg (embed e_fsint rng i);
+                S.as_arg (embed e_universe rng u);
+               ]
+               rng
+
+        | UD (u, i) ->
+            S.mk_Tm_app ref_UD.t [
+                S.as_arg (embed e_univ_name rng u);
+                S.as_arg (embed e_fsint rng i);
+               ]
+               rng
+    in
+    let uu w (t:term) : option subst_elt =
+        let xDB x y = DB (x, y) in
+        let xNM x y = NM (x, y) in
+        let xNT x y = NT (x, y) in
+        let xUN x y = UN (x, y) in
+        let xUD x y = UD (x, y) in
+        let? fv, args = head_fv_and_args t in
+        match () with
+        | _ when S.fv_eq_lid fv ref_DB.lid ->
+            run args (xDB <$$> e_fsint <**> e_namedv)
+        | _ when S.fv_eq_lid fv ref_NM.lid ->
+            run args (xNM <$$> e_namedv <**> e_fsint)
+        | _ when S.fv_eq_lid fv ref_NT.lid ->
+            run args (xNT <$$> e_namedv <**> e_term)
+        | _ when S.fv_eq_lid fv ref_UN.lid ->
+            run args (xUN <$$> e_fsint <**> e_universe)
+        | _ when S.fv_eq_lid fv ref_UD.lid ->
+            run args (xUD <$$> e_univ_name <**> e_fsint)
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded subst_elt: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb ee uu fstar_refl_subst_elt
+
+let e_subst = e_list e_subst_elt
 let e_ctor = e_tuple2 (e_string_list) e_term
 
 let e_lb_view =

@@ -62,6 +62,8 @@ val e_univ_name     : embedding univ_name
 val e_univ_names    : embedding (list univ_name)
 val e_universe      : embedding universe
 val e_universe_view : embedding universe_view
+val e_subst_elt     : embedding subst_elt
+val e_subst         : embedding (list subst_elt)
 
 (* Useful for embedding antiquoted terms. They are only used for the embedding part,
  * so this is a bit hackish. *)

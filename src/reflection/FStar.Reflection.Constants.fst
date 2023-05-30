@@ -133,6 +133,10 @@ let fstar_refl_lb_view          = mk_refl_data_lid_as_term "lb_view"
 let fstar_refl_lb_view_fv       = mk_refl_data_lid_as_fv   "lb_view"
 let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
 let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv   "sigelt_view"
+let fstar_refl_subst_elt        = mk_refl_data_lid_as_term "subst_elt"
+let fstar_refl_subst_elt_fv     = mk_refl_data_lid_as_fv   "subst_elt"
+let fstar_refl_subst            = mk_refl_data_lid_as_term "subst"
+let fstar_refl_subst_fv         = mk_refl_data_lid_as_fv   "subst"
 let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
 let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv   "exp"
 let fstar_refl_qualifier        = mk_refl_data_lid_as_term "qualifier"
@@ -211,6 +215,13 @@ let ref_Mk_lb =
 let ref_Q_Explicit  = fstar_refl_data_const "Q_Explicit"
 let ref_Q_Implicit  = fstar_refl_data_const "Q_Implicit"
 let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
+
+(* subst_elt *)
+let ref_DB          = fstar_refl_data_const "DB"
+let ref_NM          = fstar_refl_data_const "NM"
+let ref_NT          = fstar_refl_data_const "NT"
+let ref_UN          = fstar_refl_data_const "UN"
+let ref_UD          = fstar_refl_data_const "UD"
 
 (* const *)
 let ref_C_Unit      = fstar_refl_data_const "C_Unit"

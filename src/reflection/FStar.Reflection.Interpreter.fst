@@ -159,6 +159,8 @@ let e_qualifiers      : dualemb RD.qualifiers      = (RE.e_qualifiers, NRE.e_qua
 let e_range           : dualemb Range.range              = 
   (FStar.Syntax.Embeddings.e_range, FStar.TypeChecker.NBETerm.e_range)
 
+let e_subst           : dualemb (list subst_elt)   = (RE.e_subst, NRE.e_subst)
+
 let e_list (e : dualemb 'a) : dualemb (list 'a) =
   (EMB.e_list (fst e), NBET.e_list (snd e))
 let e_option (e : dualemb 'a) : dualemb (option 'a) =
@@ -332,10 +334,9 @@ let reflection_primops : list Cfg.primitive_step = [
     e_qualifiers e_sigelt
     e_sigelt;
 
-  mk3 "subst"
+  mk2 "subst"
     RB.subst
-    e_bv e_term e_term
-    e_term;
+    e_subst e_term e_term;
 
   mk2 "close_term"
     RB.close_term
