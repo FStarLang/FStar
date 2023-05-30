@@ -4566,6 +4566,15 @@ let rec (norm :
                                          (t1.FStar_Syntax_Syntax.pos))) ::
                                    stack2) head
                              | FStar_Syntax_Syntax.Meta_desugared
+                                 (FStar_Syntax_Syntax.Sequence) when
+                                 (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.do_not_unfold_pure_lets
+                                 ->
+                                 norm cfg env1
+                                   ((Meta
+                                       (env1, m,
+                                         (t1.FStar_Syntax_Syntax.pos))) ::
+                                   stack2) head
+                             | FStar_Syntax_Syntax.Meta_desugared
                                  (FStar_Syntax_Syntax.Machine_integer
                                  (uu___7, uu___8)) ->
                                  norm cfg env1
