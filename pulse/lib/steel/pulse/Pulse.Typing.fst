@@ -865,15 +865,15 @@ type st_typing : env -> st_term -> comp -> Type =
 *)
 let star_typing_inversion_l (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
   : tot_typing g t0 Tm_VProp
-  = admit()
+  = admit ()
 
 let star_typing_inversion_r (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
   : tot_typing g t1 Tm_VProp
-  = admit()
+  = admit ()
 
 let star_typing_inversion (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
-  : tot_typing g t0 Tm_VProp & tot_typing g t1 Tm_VProp
-  = admit()
+  : GTot (tot_typing g t0 Tm_VProp & tot_typing g t1 Tm_VProp)
+  = admit ()
 
 let vprop_eq_typing_inversion g (t0 t1:term)
                               (token:FTB.equiv_token (elab_env g)
@@ -888,8 +888,8 @@ let star_typing (#g:_) (#t0 #t1:term)
                 (d0:tot_typing g t0 Tm_VProp)
                 (d1:tot_typing g t1 Tm_VProp)
   : tot_typing g (Tm_Star t0 t1) Tm_VProp
-  = admit()
+  = admit ()
 
 let emp_typing (#g:_) 
   : tot_typing g Tm_Emp Tm_VProp
-  = admit()
+  = admit ()

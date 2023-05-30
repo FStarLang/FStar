@@ -63,49 +63,68 @@ let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
              comp_pre (comp_st_with_post c' (comp_post c)) == comp_pre c')
   = () 
 
-#push-options "--z3rlimit_factor 8 --query_stats --ifuel 2 --fuel 1"
+#push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 0"
+let k_elab_equiv_continutation (#g1 #g2:env) (#ctxt #ctxt1 #ctxt2:term)
+  (k:continuation_elaborator g1 ctxt g2 ctxt1)
+  (d:vprop_equiv g2 ctxt1 ctxt2)
+  : continuation_elaborator g1 ctxt g2 ctxt2 =
+  fun post_hint res ->
+  let framing_token : frame_for_req_in_ctxt g2 ctxt1 ctxt2 =
+    let d : vprop_equiv g2 (Tm_Star ctxt2 Tm_Emp) ctxt1 = 
+      VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Trans _ _ _ _ (VE_Unit _ _) (VE_Sym _ _ _ d)) in
+      (| Tm_Emp, emp_typing, d |)
+  in
+  let (| st, c, st_d |) = res in
+  if not (stateful_comp c) then k post_hint (| st, c, st_d |)
+  else
+    let (| _, pre_typing, _, _ |) =
+      Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
+    let (| c', st_d' |) =
+      Pulse.Checker.Framing.apply_frame (vprop_equiv_typing_bk pre_typing d) st_d framing_token in
+    assert (comp_post c' == Tm_Star (comp_post c) Tm_Emp);
+    let st_d' = simplify_post st_d' (comp_post c) in
+    k post_hint (| st, _, st_d' |)
+#pop-options
+
+#push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 0"
+let k_elab_equiv_prefix (#g1 #g2:env) (#ctxt1 #ctxt2 #ctxt:term)
+  (k:continuation_elaborator g1 ctxt1 g2 ctxt)
+  (d:vprop_equiv g1 ctxt1 ctxt2)
+  : continuation_elaborator g1 ctxt2 g2 ctxt =
+  fun post_hint res ->
+  let framing_token : frame_for_req_in_ctxt g1 ctxt2 ctxt1 = 
+  let d = VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Trans _ _ _ _ (VE_Unit _ _) d) in
+    (| Tm_Emp, emp_typing, d |)
+  in
+  let res = k post_hint res in
+  let (| st, c, st_d |) = res in
+  if not (stateful_comp c) then (| st, c, st_d |)
+  else let (| _, pre_typing, _, _ |) =
+         Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
+       let (| c', st_d' |) =
+         Pulse.Checker.Framing.apply_frame
+           (vprop_equiv_typing_fwd pre_typing d)
+           st_d
+           framing_token in
+        simplify_lemma c c' post_hint;
+        let c''  = comp_st_with_post c' (comp_post c) in
+        let st_d' : st_typing g1 st c'' = simplify_post st_d' (comp_post c) in
+        let res : (checker_result_t g1 ctxt2 post_hint) = (| st, c'', st_d' |) in
+        res
+#pop-options
+
 let k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)                 
                  (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
                  (d1:vprop_equiv g1 ctxt1 ctxt1')
                  (d2:vprop_equiv g2 ctxt2 ctxt2')
-  : continuation_elaborator g1 ctxt1' g2 ctxt2'
-  = fun post_hint res -> 
-        let framing_token2 : frame_for_req_in_ctxt g2 ctxt2 ctxt2' = 
-            let d : vprop_equiv g2 (Tm_Star ctxt2' Tm_Emp) ctxt2 = 
-              VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Trans _ _ _ _ (VE_Unit _ _) (VE_Sym _ _ _ d2)) in
-            (| Tm_Emp, emp_typing, d |)
-        in
-        let framing_token1 : frame_for_req_in_ctxt g1 ctxt1' ctxt1 = 
-            let d = VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Trans _ _ _ _ (VE_Unit _ _) d1) in
-            (| Tm_Emp, emp_typing, d |)
-        in
-        let (| st, c, st_d |) = res in
-        if not (stateful_comp c)
-        then T.fail "Unexpected non-stateful comp in continuation elaborate"
-        else (
-            let (| _, pre_typing, _, _ |) =
-                Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
-            let (| c', st_d' |) = Pulse.Checker.Framing.apply_frame (vprop_equiv_typing_bk pre_typing d2) st_d framing_token2 in
-            assert (comp_post c' == Tm_Star (comp_post c) Tm_Emp);
-            let st_d' = simplify_post st_d' (comp_post c) in
-            let (| st, c, st_d |) = k post_hint (| st, _, st_d' |) in
-            if not (stateful_comp c)
-            then T.fail "Unexpected non-stateful comp in continuation elaborate"
-            else 
-                let (| _, pre_typing, _, _ |) =
-                    Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
-                let (| c', st_d' |) =
-                    Pulse.Checker.Framing.apply_frame
-                        (vprop_equiv_typing_fwd pre_typing d1)
-                        st_d
-                        framing_token1 in
-                simplify_lemma c c' post_hint;
-                let c''  = comp_st_with_post c' (comp_post c) in
-                let st_d' : st_typing g1 st c'' = simplify_post st_d' (comp_post c) in
-                let res : (checker_result_t g1 ctxt1' post_hint) = (| st, c'', st_d' |) in
-                res
-        )
-#pop-options
+  : continuation_elaborator g1 ctxt1' g2 ctxt2' =
+  
+  let k : continuation_elaborator g1 ctxt1 g2 ctxt2' =
+    k_elab_equiv_continutation k d2 in
+  let k : continuation_elaborator g1 ctxt1' g2 ctxt2' =
+    k_elab_equiv_prefix k d1 in
+  k
+
 let rec canon_right_aux (g:env) (vps:list vprop) (f:vprop -> T.Tac bool)
   : T.Tac (vps' : list vprop &
            fvps : list vprop &
@@ -165,7 +184,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   let pre1 = comp_pre c1 in
   let res1 = comp_res c1 in
   let post1 = comp_post c1 in
-  let ctxt_typing, pre1_typing = star_typing_inversion ctxt_pre1_typing in
+  let ctxt_typing = star_typing_inversion_l ctxt_pre1_typing in
   // let p_prop = Metatheory.pure_typing_inversion pure_typing in
   let v_eq = VE_Comm g ctxt pre1 in
   let framing_token : F.frame_for_req_in_ctxt g (Tm_Star ctxt pre1) pre1 = 
@@ -230,7 +249,7 @@ let elim_one (#g:env)
            tot_typing g' ctxt' Tm_VProp &
            continuation_elaborator g (Tm_Star ctxt p) g' ctxt') =
   
-  let ctxt_typing, p_typing = star_typing_inversion ctxt_p_typing in
+  let ctxt_typing = star_typing_inversion_l ctxt_p_typing in
 
   let (| x, k |) = continuation_elaborator_with_bind ctxt e1_typing ctxt_p_typing in
   let g' = extend x (Inl (comp_res c1)) g in
@@ -256,7 +275,7 @@ let rec elim_all (#g:env)
             continuation_elaborator g ctxt g' ctxt')
    = match ctxt with
      | Tm_Star ctxt' p ->
-       let _, p_typing = star_typing_inversion #_ #ctxt' #p ctxt_typing in
+       let p_typing = star_typing_inversion_r #_ #ctxt' #p ctxt_typing in
        if f p
        then match mk #_ #p p_typing with
             | Some (| e1, c1, e1_typing |) ->
