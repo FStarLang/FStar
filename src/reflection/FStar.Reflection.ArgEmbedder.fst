@@ -47,3 +47,13 @@ let run args u =
   match u args with
   | Some (r, []) -> Some r
   | _ -> None
+
+
+val wrap : (bool -> term -> option 'a) -> arg_unembedder 'a
+let wrap f =
+  fun args ->
+    match args with
+    | (t,_)::xs ->
+      match f false t with
+      | None -> None
+      | Some v -> Some (v, xs)

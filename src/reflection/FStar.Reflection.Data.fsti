@@ -89,14 +89,14 @@ val as_ppname (s:string) : Tot string
 
 type namedv_view = {
   uniq   : Z.t;
-  ppname : string;
   sort   : typ;
+  ppname : string;
 }
 
 type bv_view = {
   index  : Z.t;
-  ppname : string;
   sort   : typ;
+  ppname : string;
 }
 
 type binder_view = {

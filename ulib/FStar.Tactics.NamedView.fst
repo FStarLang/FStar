@@ -61,8 +61,9 @@ type pattern =
 
 noeq
 type binder = {
-  ppname : ppname_t;
   uniq   : nat;
+
+  ppname : ppname_t;
   sort   : typ;
   qual   : aqualv;
   attrs  : list term;

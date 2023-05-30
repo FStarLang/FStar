@@ -591,7 +591,7 @@ let e_term_view = e_term_view_aq (0, [])
 
 let e_namedv_view =
     let embed_namedv_view cb (namedvv:namedv_view) : t =
-        mkConstruct ref_Mk_namedv.fv [] [
+        mkConstruct ref_Mk_namedv_view.fv [] [
           as_arg (embed e_int               cb namedvv.uniq);
           as_arg (embed (e_sealed e_string) cb namedvv.ppname);
           as_arg (embed e_term              cb namedvv.sort);
@@ -599,7 +599,7 @@ let e_namedv_view =
     in
     let unembed_namedv_view cb (t : t) : option namedv_view =
         match t.nbe_t with
-        | Construct (fv, _, [(sort, _); (ppname, _); (uniq, _)]) when S.fv_eq_lid fv ref_Mk_namedv.lid ->
+        | Construct (fv, _, [(sort, _); (ppname, _); (uniq, _)]) when S.fv_eq_lid fv ref_Mk_namedv_view.lid ->
             BU.bind_opt (unembed e_int cb uniq) (fun uniq ->
             BU.bind_opt (unembed (e_sealed e_string) cb ppname) (fun ppname ->
             BU.bind_opt (unembed e_term cb sort) (fun sort ->
@@ -614,7 +614,7 @@ let e_namedv_view =
 
 let e_bv_view =
     let embed_bv_view cb (bvv:bv_view) : t =
-        mkConstruct ref_Mk_bv.fv [] [
+        mkConstruct ref_Mk_bv_view.fv [] [
           as_arg (embed e_int               cb bvv.index);
           as_arg (embed (e_sealed e_string) cb bvv.ppname);
           as_arg (embed e_term              cb bvv.sort);
@@ -622,7 +622,7 @@ let e_bv_view =
     in
     let unembed_bv_view cb (t : t) : option bv_view =
         match t.nbe_t with
-        | Construct (fv, _, [(sort, _); (ppname, _); (idx, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
+        | Construct (fv, _, [(sort, _); (ppname, _); (idx, _)]) when S.fv_eq_lid fv ref_Mk_bv_view.lid ->
             BU.bind_opt (unembed e_int cb idx) (fun idx ->
             BU.bind_opt (unembed (e_sealed e_string) cb ppname) (fun ppname ->
             BU.bind_opt (unembed e_term cb sort) (fun sort ->
