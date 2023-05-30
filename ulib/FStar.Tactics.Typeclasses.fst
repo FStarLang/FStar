@@ -189,7 +189,7 @@ let mk_class (nm:string) : Tac decls =
                   in
 
                   let def : term =
-                    let bs = (map (fun b -> { binding_to_binder b with qual = Q_Implicit}) params)
+                    let bs = (map (fun b -> { b with qual = Q_Implicit}) params)
                                     @ [tcdict] in
                     mk_abs bs (mk_e_app proj [named_binder_to_term tcdict])
                   in

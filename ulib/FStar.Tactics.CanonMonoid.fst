@@ -17,8 +17,8 @@ module FStar.Tactics.CanonMonoid
 
 open FStar.Algebra.Monoid
 open FStar.List
-open FStar.Tactics
 open FStar.Reflection
+open FStar.Tactics
 
 (* Only dump when debugging is on *)
 let dump m = if debugging () then dump m

@@ -1004,5 +1004,8 @@ let close_term (b:binder) (t:term) : term = SS.close [b] t
 let subst (s : list subst_elt) (t : term) : term =
   SS.subst s t
 
+let subst_comp (s : list subst_elt) (c : comp) : comp =
+  SS.subst_comp s c
+
 let range_of_term (t:term) = t.pos
 let range_of_sigelt (s:sigelt) = s.sigrng

@@ -521,13 +521,3 @@ val resolve_name (g:env) (n:name)
 
 val log_issues (issues:list FStar.Issue.issue)
   : Tac unit
-
-
-(* TODO: make open/close return substitutions and make
-term and comp subtitutable. Use a typeclass? *)
-
-val open_term : binder -> term -> Tac (binding & term)
-val open_comp : binder -> comp -> Tac (binding & comp)
-
-val close_term : binding -> term -> simple_binder & term
-val close_comp : binding -> comp -> simple_binder & comp

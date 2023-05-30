@@ -174,7 +174,10 @@ irreducible
 let check_with (vcfg : vconfig) : unit = ()
 
 (** Apply a substitution on a term *)
-val subst : subst -> term -> term
+val subst : subst_t -> term -> term
+
+(** Apply a substitution on a computation *)
+val subst_comp : subst_t -> comp -> comp
 
 (** Close an open binder in a term (i.e. turn the name into a de Bruijn index. *)
 val close_term : binder -> term -> term

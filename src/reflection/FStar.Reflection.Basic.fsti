@@ -97,3 +97,4 @@ val range_of_term : term -> FStar.Compiler.Range.range
 val range_of_sigelt : sigelt -> FStar.Compiler.Range.range
 
 val subst : list subst_elt -> term -> term
+val subst_comp : list subst_elt -> comp -> comp

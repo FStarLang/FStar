@@ -63,7 +63,8 @@ type binder = {
 
 type binders = list binder
 
-type simple_binder = b:binder{Q_Explicit? b.qual /\ Nil? b.attrs}
+let is_simple_binder (b:binder) = Q_Explicit? b.qual /\ Nil? b.attrs
+type simple_binder = b:binder{is_simple_binder b}
 
 noeq
 type named_term_view =
@@ -112,6 +113,169 @@ let binder_to_binding (b : binder) : binding =
       sort   = b.sort;
   }
 
+let binder_to_namedv (b : binder) : namedv =
+  pack_namedv {
+    uniq   = b.uniq;
+    sort   = seal b.sort;
+    ppname = b.ppname;
+  }
+
+(* Bindings and simple_binders are the same *)
+let binding_to_simple_binder (b:binding) : simple_binder = {
+  uniq = b.uniq;
+  sort = b.sort;
+  ppname = b.ppname;
+  qual = Q_Explicit;
+  attrs = [];
+}
+let simple_binder_to_binding (b:simple_binder) : binding = {
+  uniq = b.uniq;
+  sort = b.sort;
+  ppname = b.ppname;
+}
+
+let open_term (b : Reflection.binder) (t : term) : Tac (binder & term) =
+  let n = fresh () in
+  let bv : binder_view = inspect_binder b in
+  let nv : namedv = pack_namedv {
+    uniq   = n;
+    sort   = seal bv.sort;
+    ppname = bv.ppname;
+  }
+  in
+  let t' = subst [DB 0 nv] t in
+  let bndr : binder = {
+    uniq   = n;
+    sort   = bv.sort;
+    ppname = bv.ppname;
+    qual   = bv.qual;
+    attrs  = bv.attrs;
+  }
+  in
+  (bndr, t')
+
+let open_comp (b : Reflection.binder) (t : comp) : Tac (binder & comp) =
+  let n = fresh () in
+  let bv : binder_view = inspect_binder b in
+  let nv : namedv = pack_namedv {
+    uniq   = n;
+    sort   = seal bv.sort;
+    ppname = bv.ppname;
+  }
+  in
+  let t' = subst_comp [DB 0 nv] t in
+  let bndr : binder = {
+    uniq   = n;
+    sort   = bv.sort;
+    ppname = bv.ppname;
+    qual   = bv.qual;
+    attrs  = bv.attrs;
+  }
+  in
+  (bndr, t')
+
+(* FIXME: unfortunate duplication here. The effect means this proof cannot
+be done extrinsically. Can we add a refinement to the binder? *)
+let open_term_simple (b : Reflection.simple_binder) (t : term) : Tac (simple_binder & term) =
+  let n = fresh () in
+  let bv : binder_view = inspect_binder b in
+  let nv : namedv = pack_namedv {
+    uniq   = n;
+    sort   = seal bv.sort;
+    ppname = bv.ppname;
+  }
+  in
+  let t' = subst [DB 0 nv] t in
+  let bndr : binder = {
+    uniq   = n;
+    sort   = bv.sort;
+    ppname = bv.ppname;
+    qual   = bv.qual;
+    attrs  = bv.attrs;
+  }
+  in
+  (bndr, t')
+
+let open_comp_simple (b : Reflection.simple_binder) (t : comp) : Tac (simple_binder & comp) =
+  let n = fresh () in
+  let bv : binder_view = inspect_binder b in
+  let nv : namedv = pack_namedv {
+    uniq   = n;
+    sort   = seal bv.sort;
+    ppname = bv.ppname;
+  }
+  in
+  let t' = subst_comp [DB 0 nv] t in
+  let bndr : binder = {
+    uniq   = n;
+    sort   = bv.sort;
+    ppname = bv.ppname;
+    qual   = bv.qual;
+    attrs  = bv.attrs;
+  }
+  in
+  (bndr, t')
+
+(* This two are in Tot *)
+let close_term (b:binder) (t:term) : Reflection.binder & term =
+  let nv = binder_to_namedv b in
+  let t' = subst [NM nv 0] t in
+  let b = pack_binder { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
+  (b, t')
+let close_comp (b:binder) (t:comp) : Reflection.binder & comp =
+  let nv = binder_to_namedv b in
+  let t' = subst_comp [NM nv 0] t in
+  let b = pack_binder { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
+  (b, t')
+
+let close_term_simple (b:simple_binder) (t:term) : Reflection.simple_binder & term =
+  let nv = binder_to_namedv b in
+  let t' = subst [NM nv 0] t in
+  let bv : binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
+  let b = pack_binder bv in
+  inspect_pack_binder bv;
+  (b, t')
+let close_comp_simple (b:simple_binder) (t:comp) : Reflection.simple_binder & comp =
+  let nv = binder_to_namedv b in
+  let t' = subst_comp [NM nv 0] t in
+  let bv : binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
+  let b = pack_binder bv in
+  inspect_pack_binder bv;
+  (b, t')
+
+let rec open_term_n (bs : list Reflection.binder) (t : term) : Tac (list binder & term) =
+  match bs with
+  | [] -> ([], t)
+  | b::bs ->
+    let bs', t' = open_term_n bs t in
+    let b', t'' = open_term b t' in
+    (b'::bs', t'')
+
+let rec close_term_n (bs : list binder) (t : term) : list Reflection.binder & term =
+  match bs with
+  | [] -> ([], t)
+  | b::bs ->
+    let bs', t' = close_term_n bs t in
+    let b', t'' = close_term b t' in
+    (b'::bs', t'')
+
+let rec open_term_n_simple (bs : list Reflection.simple_binder) (t : term) : Tac (list simple_binder & term) =
+  match bs with
+  | [] -> ([], t)
+  | b::bs ->
+    let bs', t' = open_term_n_simple bs t in
+    let b', t'' = open_term_simple b t' in
+    (b'::bs', t'')
+
+let rec close_term_n_simple (bs : list simple_binder) (t : term) : list Reflection.simple_binder & term =
+  match bs with
+  | [] -> ([], t)
+  | b::bs ->
+    let bs', t' = close_term_n_simple bs t in
+    let b', t'' = close_term_simple b t' in
+    (b'::bs', t'')
+  
+
 let open_view (tv:term_view) : Tac named_term_view =
   match tv with
   (* Nothing interesting *)
@@ -132,23 +296,19 @@ let open_view (tv:term_view) : Tac named_term_view =
   Open them and convert to named binders. *)
 
   | RD.Tv_Abs b body ->
-    let bnd, body = open_term b body in
-    let nb = __binding_to_binder bnd b in
+    let nb, body = open_term b body in
     Tv_Abs nb body
 
   | RD.Tv_Arrow b c ->
-    let bnd, body = open_comp b c in
-    let nb = __binding_to_binder bnd b in
+    let nb, body = open_comp b c in
     Tv_Arrow nb c
 
   | RD.Tv_Refine b ref ->
-    let bnd, ref = open_term b ref in
-    let nb = __binding_to_binder bnd b in
+    let nb, ref = open_term_simple b ref in
     Tv_Refine nb ref
 
   | RD.Tv_Let recf attrs b def body ->
-    let bnd, body = open_term b body in
-    let nb = __binding_to_binder bnd b in
+    let nb, body = open_term_simple b body in
     Tv_Let recf attrs nb def body
 
   (* FIXME *)
@@ -174,23 +334,19 @@ let close_view (tv : named_term_view) : term_view =
   Open them and convert to named binders. *)
   
   | Tv_Abs nb body ->
-    let bnd = binder_to_binding nb in
-    let b, body = close_term bnd body in
+    let b, body = close_term nb body in
     RD.Tv_Abs b body
   
   | Tv_Arrow nb c ->
-    let bnd = binder_to_binding nb in
-    let b, c = close_comp bnd c in
+    let b, c = close_comp nb c in
     RD.Tv_Arrow b c
   
   | Tv_Refine nb ref ->
-    let bnd = binder_to_binding nb in
-    let b, ref = close_term bnd ref in
+    let b, ref = close_term_simple nb ref in
     RD.Tv_Refine b ref
   
   | Tv_Let recf attrs nb def body ->
-    let bnd = binder_to_binding nb in
-    let b, body = close_term bnd body in
+    let b, body = close_term_simple nb body in
     RD.Tv_Let recf attrs b def body
   
   (* FIXME *)
@@ -222,7 +378,7 @@ type named_sigelt_view =
   | Sg_Inductive {
       nm     : name;             // name of the inductive type being defined
       univs  : list univ_name;   // named universe variables
-      params : bindings;         // parameters
+      params : binders;          // parameters
       typ    : typ;              // the type annotation for the inductive, i.e., indices -> Type #u
       ctors  : list ctor;        // the constructors, opened with univs and applied to params already
     }
@@ -237,13 +393,14 @@ type named_sigelt_view =
 
 (* let inspect_letbinding *)
 
-let open_sigelt_view (sv : sigelt_view) : named_sigelt_view =
+let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
   match sv with
   | RD.Sg_Let isrec lbs ->
     (* open universes, maybe *)
     Sg_Let { isrec; lbs }
 
   | RD.Sg_Inductive nm univs params typ ctors ->
+    let params, typ = open_term_n params typ in
     (* open univs *)
     (* open params *)
     (* open ctors? *)
@@ -261,6 +418,7 @@ let close_sigelt_view (sv : named_sigelt_view) : sigelt_view =
     RD.Sg_Let isrec lbs 
 
   | Sg_Inductive {nm; univs; params; typ; ctors} ->
+    let params, typ = close_term_n params typ in
     (* close univs *)
     (* close params *)
     (* close ctors? *)

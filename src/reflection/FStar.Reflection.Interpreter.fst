@@ -338,6 +338,10 @@ let reflection_primops : list Cfg.primitive_step = [
     RB.subst
     e_subst e_term e_term;
 
+  mk2 "subst_comp"
+    RB.subst_comp
+    e_subst e_comp e_comp;
+
   mk2 "close_term"
     RB.close_term
     e_binder

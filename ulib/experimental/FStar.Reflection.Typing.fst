@@ -142,8 +142,8 @@ let rec open_close_inverse' (i:nat) (t:term { ln' t (i - 1) }) (x:var)
     | Tv_Const _
     | Tv_Unsupp
     | Tv_Unknown
-    | Tv_Var _ 
     | Tv_BVar _ -> ()
+    | Tv_Var _  -> admit() // FIXME
     | Tv_App t1 a ->
       open_close_inverse' i t1 x;
       open_close_inverse' i (fst a) x
@@ -156,13 +156,13 @@ let rec open_close_inverse' (i:nat) (t:term { ln' t (i - 1) }) (x:var)
       open_close_inverse'_binder i b x;
       open_close_inverse'_comp (i + 1) c x
 
-    | Tv_Refine b sort f ->
-      open_close_inverse' i sort x;
+    | Tv_Refine b f ->
+      open_close_inverse'_binder i b x;
       open_close_inverse' (i + 1) f x
       
-    | Tv_Let recf attrs bv ty def body ->
+    | Tv_Let recf attrs b def body ->
       open_close_inverse'_terms i attrs x;
-      open_close_inverse' i ty x;
+      open_close_inverse'_binder i b x;
       (if recf 
       then open_close_inverse' (i + 1) def x
       else open_close_inverse' i def x);
@@ -198,12 +198,12 @@ and open_close_inverse'_binder (i:nat) (b:binder { ln'_binder b (i - 1) }) (x:va
                    == b)
           (decreases b)                   
   = let bndr  = inspect_binder b in
-    let {binder_bv=bv; binder_qual=q; binder_attrs=attrs; binder_sort=sort} = bndr in
+    let {ppname; qual=q; attrs=attrs; sort=sort} = bndr in
     open_close_inverse' i sort x;
     open_close_inverse'_terms i attrs x;
     assert (open_or_close_terms' (open_or_close_terms' attrs (CloseVar x) i) (open_with_var x) i == attrs);    
     pack_inspect_binder b;    
-    assert (pack_binder {binder_bv=bv; binder_qual=q; binder_attrs=attrs; binder_sort=sort} == b)
+    assert (pack_binder {ppname; qual=q; attrs=attrs; sort=sort} == b)
 
 and open_close_inverse'_terms (i:nat) (ts:list term { ln'_terms ts (i - 1) }) (x:var)
   : Lemma (ensures open_or_close_terms' (open_or_close_terms' ts (CloseVar x) i)
@@ -371,9 +371,9 @@ let rec close_open_inverse' (i:nat)
     | Tv_Type _
     | Tv_Const _
     | Tv_Unsupp
-    | Tv_Unknown
-    | Tv_Var _
-    | Tv_BVar _ -> ()
+    | Tv_Unknown -> ()
+    | Tv_BVar _ -> admit() // FIXME
+    | Tv_Var _ -> admit() // FIXME
     | Tv_App t1 a ->
       close_open_inverse' i t1 x;
       close_open_inverse' i (fst a) x
@@ -386,13 +386,13 @@ let rec close_open_inverse' (i:nat)
       close_open_inverse'_binder i b x;
       close_open_inverse'_comp (i + 1) c x
 
-    | Tv_Refine bv sort f ->
-      close_open_inverse' i sort x;
+    | Tv_Refine b f ->
+      close_open_inverse'_binder i b x;
       close_open_inverse' (i + 1) f x
       
-    | Tv_Let recf attrs bv ty def body ->
+    | Tv_Let recf attrs b def body ->
       close_open_inverse'_terms i attrs x;
-      close_open_inverse' i ty x;
+      close_open_inverse'_binder i b x;
       close_open_inverse' (if recf then (i + 1) else i) def x;
       close_open_inverse' (i + 1) body x
 
@@ -465,8 +465,8 @@ and close_open_inverse'_binder (i:nat) (b:binder) (x:var{ ~(x `Set.mem` freevars
                 == b)
        (decreases b)
   = let bndr  = inspect_binder b in
-    close_open_inverse' i bndr.binder_sort x;
-    close_open_inverse'_terms i bndr.binder_attrs x;
+    close_open_inverse' i bndr.sort x;
+    close_open_inverse'_terms i bndr.attrs x;
     pack_inspect_binder b
 
 and close_open_inverse'_terms (i:nat) (ts:list term) (x:var{ ~(x `Set.mem` freevars_terms ts) })
@@ -600,14 +600,14 @@ let rec close_with_not_free_var (t:R.term) (x:var) (i:nat)
     close_binder_with_not_free_var b x i;
     close_comp_with_not_free_var c x (i + 1)
   | Tv_Type _ -> ()
-  | Tv_Refine bv sort t ->
-    close_with_not_free_var sort x i;
+  | Tv_Refine b t ->
+    close_binder_with_not_free_var b x i;
     close_with_not_free_var t x (i + 1)
   | Tv_Const _ -> ()
   | Tv_Uvar _ _ -> assert False
-  | Tv_Let recf attrs bv ty e1 e2 ->
+  | Tv_Let recf attrs b e1 e2 ->
     close_terms_with_not_free_var attrs x i;
-    close_with_not_free_var ty x i;
+    close_binder_with_not_free_var b x i;
     (if recf then close_with_not_free_var e1 x (i + 1)
      else close_with_not_free_var e1 x i);
     close_with_not_free_var e2 x (i + 1)
@@ -724,9 +724,9 @@ and close_binder_with_not_free_var (b:R.binder) (x:var) (i:nat)
       (ensures open_or_close_binder' b (CloseVar x) i == b)
       (decreases b) =
 
-  let {binder_bv; binder_attrs; binder_sort} = inspect_binder b in
-  close_with_not_free_var binder_sort x i;
-  close_terms_with_not_free_var binder_attrs x i
+  let {attrs; sort} = inspect_binder b in
+  close_with_not_free_var sort x i;
+  close_terms_with_not_free_var attrs x i
 
 and close_comp_with_not_free_var (c:R.comp) (x:var) (i:nat)
   : Lemma
@@ -802,13 +802,13 @@ let rec open_with_gt_ln e i t j
   | Tv_Arrow b c ->
     open_with_gt_ln_binder b i t j;
     open_with_gt_ln_comp c (i + 1) t (j + 1)
-  | Tv_Refine bv sort f ->
-    open_with_gt_ln sort i t j;
+  | Tv_Refine b f ->
+    open_with_gt_ln_binder b i t j;
     open_with_gt_ln f (i + 1) t (j + 1)
   | Tv_Uvar j c -> admit ()
-  | Tv_Let recf attrs bv ty def body ->
+  | Tv_Let recf attrs b def body ->
     open_with_gt_ln_terms attrs i t j;
-    open_with_gt_ln ty i t j;
+    open_with_gt_ln_binder b i t j;
     (if recf
      then open_with_gt_ln def (i + 1) t (j + 1)
      else open_with_gt_ln def i t j);
@@ -837,9 +837,9 @@ and open_with_gt_ln_binder (b:binder) (i:nat) (t:term) (j:nat)
           (ensures open_or_close_binder' b (OpenWith t) j == b)
           (decreases b) =
 
-  let {binder_bv;binder_attrs;binder_sort} = inspect_binder b in
-  open_with_gt_ln binder_sort i t j;
-  open_with_gt_ln_terms binder_attrs i t j
+  let {attrs;sort} = inspect_binder b in
+  open_with_gt_ln sort i t j;
+  open_with_gt_ln_terms attrs i t j
 
 and open_with_gt_ln_comp (c:comp) (i:nat) (t:term) (j:nat)
   : Lemma (requires ln'_comp c i /\ i < j)
