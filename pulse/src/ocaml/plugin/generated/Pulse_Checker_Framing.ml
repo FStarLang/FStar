@@ -942,11 +942,11 @@ let (try_frame_pre :
             fun t_typing ->
               FStar_Tactics_Effect.tac_bind
                 (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                   (Prims.of_int (259)) (Prims.of_int (10))
-                   (Prims.of_int (259)) (Prims.of_int (49)))
+                   (Prims.of_int (260)) (Prims.of_int (10))
+                   (Prims.of_int (260)) (Prims.of_int (49)))
                 (FStar_Range.mk_range "Pulse.Checker.Framing.fst"
-                   (Prims.of_int (259)) (Prims.of_int (4))
-                   (Prims.of_int (263)) (Prims.of_int (24)))
+                   (Prims.of_int (260)) (Prims.of_int (4))
+                   (Prims.of_int (264)) (Prims.of_int (24)))
                 (Obj.magic
                    (check_frameable g pre () (Pulse_Syntax_Base.comp_pre c)))
                 (fun uu___ ->
