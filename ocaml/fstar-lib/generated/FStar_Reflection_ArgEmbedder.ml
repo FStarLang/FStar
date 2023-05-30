@@ -109,3 +109,18 @@ let run :
       | FStar_Pervasives_Native.Some (r, []) ->
           FStar_Pervasives_Native.Some r
       | uu___1 -> FStar_Pervasives_Native.None
+let wrap :
+  'a .
+    (Prims.bool ->
+       FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option)
+      -> 'a arg_unembedder
+  =
+  fun f ->
+    fun args ->
+      match args with
+      | (t, uu___)::xs ->
+          let uu___1 = f false t in
+          (match uu___1 with
+           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+           | FStar_Pervasives_Native.Some v ->
+               FStar_Pervasives_Native.Some (v, xs))

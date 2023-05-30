@@ -190,6 +190,10 @@ let (fstar_refl_universe : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "universe"
 let (fstar_refl_universe_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_types_lid_as_fv "universe"
+let (fstar_refl_ctx_uvar_and_subst : FStar_Syntax_Syntax.term) =
+  mk_refl_types_lid_as_term "ctx_uvar_and_subst"
+let (fstar_refl_ctx_uvar_and_subst_fv : FStar_Syntax_Syntax.fv) =
+  mk_refl_types_lid_as_fv "ctx_uvar_and_subst"
 let (fstar_refl_aqualv : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "aqualv"
 let (fstar_refl_aqualv_fv : FStar_Syntax_Syntax.fv) =
@@ -254,7 +258,7 @@ let (fstar_refl_universe_view : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "universe_view"
 let (fstar_refl_universe_view_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_data_lid_as_fv "universe_view"
-let (ref_Mk_namedv : refl_constant) =
+let (ref_Mk_namedv_view : refl_constant) =
   let lid = fstar_refl_data_lid "Mknamedv_view" in
   let attr =
     let uu___ =
@@ -278,7 +282,7 @@ let (ref_Mk_namedv : refl_constant) =
   let fv =
     FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
   let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
-let (ref_Mk_bv : refl_constant) =
+let (ref_Mk_bv_view : refl_constant) =
   let lid = fstar_refl_data_lid "Mkbv_view" in
   let attr =
     let uu___ =

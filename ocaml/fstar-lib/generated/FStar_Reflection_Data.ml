@@ -119,33 +119,33 @@ type argv = (FStar_Syntax_Syntax.term * aqualv)
 let (as_ppname : Prims.string -> Prims.string) = fun x -> x
 type namedv_view = {
   uniq: FStar_BigInt.t ;
-  ppname1: Prims.string ;
-  sort1: typ }
+  sort1: typ ;
+  ppname1: Prims.string }
 let (__proj__Mknamedv_view__item__uniq : namedv_view -> FStar_BigInt.t) =
   fun projectee ->
-    match projectee with | { uniq; ppname1 = ppname; sort1 = sort;_} -> uniq
+    match projectee with | { uniq; sort1 = sort; ppname1 = ppname;_} -> uniq
+let (__proj__Mknamedv_view__item__sort : namedv_view -> typ) =
+  fun projectee ->
+    match projectee with | { uniq; sort1 = sort; ppname1 = ppname;_} -> sort
 let (__proj__Mknamedv_view__item__ppname : namedv_view -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { uniq; ppname1 = ppname; sort1 = sort;_} -> ppname
-let (__proj__Mknamedv_view__item__sort : namedv_view -> typ) =
-  fun projectee ->
-    match projectee with | { uniq; ppname1 = ppname; sort1 = sort;_} -> sort
+    | { uniq; sort1 = sort; ppname1 = ppname;_} -> ppname
 type bv_view = {
   index: FStar_BigInt.t ;
-  ppname2: Prims.string ;
-  sort2: typ }
+  sort2: typ ;
+  ppname2: Prims.string }
 let (__proj__Mkbv_view__item__index : bv_view -> FStar_BigInt.t) =
   fun projectee ->
     match projectee with
-    | { index; ppname2 = ppname; sort2 = sort;_} -> index
+    | { index; sort2 = sort; ppname2 = ppname;_} -> index
+let (__proj__Mkbv_view__item__sort : bv_view -> typ) =
+  fun projectee ->
+    match projectee with | { index; sort2 = sort; ppname2 = ppname;_} -> sort
 let (__proj__Mkbv_view__item__ppname : bv_view -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { index; ppname2 = ppname; sort2 = sort;_} -> ppname
-let (__proj__Mkbv_view__item__sort : bv_view -> typ) =
-  fun projectee ->
-    match projectee with | { index; ppname2 = ppname; sort2 = sort;_} -> sort
+    | { index; sort2 = sort; ppname2 = ppname;_} -> ppname
 type binder_view =
   {
   sort3: typ ;

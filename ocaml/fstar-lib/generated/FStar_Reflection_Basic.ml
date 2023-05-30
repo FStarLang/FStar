@@ -1037,8 +1037,8 @@ let (inspect_namedv :
      let uu___2 = FStar_Ident.string_of_id v.FStar_Syntax_Syntax.ppname in
      {
        FStar_Reflection_Data.uniq = uu___1;
-       FStar_Reflection_Data.ppname1 = uu___2;
-       FStar_Reflection_Data.sort1 = (v.FStar_Syntax_Syntax.sort)
+       FStar_Reflection_Data.sort1 = (v.FStar_Syntax_Syntax.sort);
+       FStar_Reflection_Data.ppname1 = uu___2
      })
 let (pack_namedv :
   FStar_Reflection_Data.namedv_view -> FStar_Reflection_Data.namedv) =
@@ -1090,8 +1090,8 @@ let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =
      let uu___2 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
      {
        FStar_Reflection_Data.index = uu___1;
-       FStar_Reflection_Data.ppname2 = uu___2;
-       FStar_Reflection_Data.sort2 = (bv.FStar_Syntax_Syntax.sort)
+       FStar_Reflection_Data.sort2 = (bv.FStar_Syntax_Syntax.sort);
+       FStar_Reflection_Data.ppname2 = uu___2
      })
 let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
   fun bvv ->

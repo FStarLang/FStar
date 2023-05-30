@@ -1360,7 +1360,7 @@ let (e_namedv_view :
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     mkConstruct
-      FStar_Reflection_Constants.ref_Mk_namedv.FStar_Reflection_Constants.fv
+      FStar_Reflection_Constants.ref_Mk_namedv_view.FStar_Reflection_Constants.fv
       [] uu___ in
   let unembed_namedv_view cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
@@ -1368,7 +1368,7 @@ let (e_namedv_view :
         (fv, uu___, (sort, uu___1)::(ppname, uu___2)::(uniq, uu___3)::[])
         when
         FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Reflection_Constants.ref_Mk_namedv.FStar_Reflection_Constants.lid
+          FStar_Reflection_Constants.ref_Mk_namedv_view.FStar_Reflection_Constants.lid
         ->
         let uu___4 =
           FStar_TypeChecker_NBETerm.unembed FStar_TypeChecker_NBETerm.e_int
@@ -1389,8 +1389,8 @@ let (e_namedv_view :
                        let r =
                          {
                            FStar_Reflection_Data.uniq = uniq1;
-                           FStar_Reflection_Data.ppname1 = ppname1;
-                           FStar_Reflection_Data.sort1 = sort1
+                           FStar_Reflection_Data.sort1 = sort1;
+                           FStar_Reflection_Data.ppname1 = ppname1
                          } in
                        FStar_Pervasives_Native.Some r)))
     | uu___ ->
@@ -1432,14 +1432,14 @@ let (e_bv_view :
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     mkConstruct
-      FStar_Reflection_Constants.ref_Mk_bv.FStar_Reflection_Constants.fv []
-      uu___ in
+      FStar_Reflection_Constants.ref_Mk_bv_view.FStar_Reflection_Constants.fv
+      [] uu___ in
   let unembed_bv_view cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Construct
         (fv, uu___, (sort, uu___1)::(ppname, uu___2)::(idx, uu___3)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Reflection_Constants.ref_Mk_bv.FStar_Reflection_Constants.lid
+          FStar_Reflection_Constants.ref_Mk_bv_view.FStar_Reflection_Constants.lid
         ->
         let uu___4 =
           FStar_TypeChecker_NBETerm.unembed FStar_TypeChecker_NBETerm.e_int
@@ -1460,8 +1460,8 @@ let (e_bv_view :
                        let r =
                          {
                            FStar_Reflection_Data.index = idx1;
-                           FStar_Reflection_Data.ppname2 = ppname1;
-                           FStar_Reflection_Data.sort2 = sort1
+                           FStar_Reflection_Data.sort2 = sort1;
+                           FStar_Reflection_Data.ppname2 = ppname1
                          } in
                        FStar_Pervasives_Native.Some r)))
     | uu___ ->
