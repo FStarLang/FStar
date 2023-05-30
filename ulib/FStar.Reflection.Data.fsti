@@ -88,8 +88,8 @@ type namedv_view = {
 noeq
 type bv_view = {
   index  : nat;
-  ppname : ppname_t;
   sort   : sealed typ; // REMOVE?
+  ppname : ppname_t;
 }
 
 (* FIXME: comment *)
