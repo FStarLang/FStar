@@ -122,6 +122,11 @@ let term_as_formula' (t:term) : Tac formula =
         | Tv_FVar fv, [(a, Q_Explicit)] ->
             let qn = inspect_fv fv in
             if qn = not_qn then Not a
+            else if qn = b2t_qn then begin
+              if term_eq a (`false) then False_
+              else if term_eq a (`true) then True_
+              else App h0 (fst t)
+            end
             else App h0 (fst t)
         | _ ->
             App h0 (fst t)
