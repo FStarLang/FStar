@@ -848,49 +848,7 @@ let (inspect_sigelt :
                 FStar_Syntax_Syntax.sigmeta = uu___7;
                 FStar_Syntax_Syntax.sigattrs = uu___8;
                 FStar_Syntax_Syntax.sigopts = uu___9;_}
-              ->
-              let uu___10 = FStar_Syntax_Subst.open_univ_vars us1 cty in
-              (match uu___10 with
-               | (us2, cty1) ->
-                   let uu___11 =
-                     let uu___12 = get_env () in
-                     FStar_TypeChecker_Normalize.get_n_binders uu___12 nparam
-                       cty1 in
-                   (match uu___11 with
-                    | (param_ctor_bs, c) ->
-                        (if
-                           (FStar_Compiler_List.length param_ctor_bs) <>
-                             nparam
-                         then
-                           failwith
-                             "impossible: inspect_sigelt: could not obtain sufficient ctor param binders"
-                         else ();
-                         (let uu___14 =
-                            let uu___15 = FStar_Syntax_Util.is_total_comp c in
-                            Prims.op_Negation uu___15 in
-                          if uu___14
-                          then
-                            failwith
-                              "impossible: inspect_sigelt: removed parameters and got an effectful comp"
-                          else ());
-                         (let cty2 = FStar_Syntax_Util.comp_result c in
-                          let s' =
-                            FStar_Compiler_List.map2
-                              (fun b1 ->
-                                 fun b2 ->
-                                   let uu___14 =
-                                     let uu___15 =
-                                       FStar_Syntax_Syntax.bv_to_name
-                                         b2.FStar_Syntax_Syntax.binder_bv in
-                                     ((b1.FStar_Syntax_Syntax.binder_bv),
-                                       uu___15) in
-                                   FStar_Syntax_Syntax.NT uu___14)
-                              param_ctor_bs param_bs in
-                          let cty3 = FStar_Syntax_Subst.subst s' cty2 in
-                          let cty4 =
-                            FStar_Syntax_Subst.close_univ_vars us2 cty3 in
-                          let uu___14 = FStar_Ident.path_of_lid lid1 in
-                          (uu___14, cty4)))))
+              -> let uu___10 = FStar_Ident.path_of_lid lid1 in (uu___10, cty)
           | uu___3 ->
               failwith "impossible: inspect_sigelt: did not find ctor" in
         let uu___2 =
@@ -1020,7 +978,8 @@ let (pack_sigelt :
                 FStar_Syntax_Syntax.us2 = us_names;
                 FStar_Syntax_Syntax.t2 = ty
               }))
-    | FStar_Reflection_Data.Unk -> failwith "packing Unk, sorry"
+    | FStar_Reflection_Data.Unk ->
+        failwith "packing Unk, this should never happen"
 let (inspect_lb :
   FStar_Syntax_Syntax.letbinding -> FStar_Reflection_Data.lb_view) =
   fun lb ->
@@ -1444,10 +1403,6 @@ let (push_namedv :
     fun b ->
       let uu___ = let uu___1 = FStar_Syntax_Syntax.mk_binder b in [uu___1] in
       FStar_TypeChecker_Env.push_binders e uu___
-let (close_term :
-  FStar_Syntax_Syntax.binder ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-  = fun b -> fun t -> FStar_Syntax_Subst.close [b] t
 let (subst :
   FStar_Syntax_Syntax.subst_elt Prims.list ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
