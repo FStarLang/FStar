@@ -179,9 +179,6 @@ val subst : subst_t -> term -> term
 (** Apply a substitution on a computation *)
 val subst_comp : subst_t -> comp -> comp
 
-(** Close an open binder in a term (i.e. turn the name into a de Bruijn index. *)
-val close_term : binder -> term -> term
-
 (** Get the range of a term, i.e., the source location where it was defined. *)
 val range_of_term : term -> range
 

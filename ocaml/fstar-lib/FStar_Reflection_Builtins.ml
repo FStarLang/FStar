@@ -38,7 +38,7 @@ let explode_qn              = RB.explode_qn
 let compare_string          = RB.compare_string
 let push_binder             = RB.push_binder
 let subst                   = RB.subst
-let close_term              = RB.close_term
+let subst_comp              = RB.subst_comp
 
 let inspect_universe        = RB.inspect_universe
 let pack_universe           = RB.pack_universe

@@ -555,31 +555,9 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
     | Sig_inductive_typ {lid; us; params=param_bs; t=ty; ds=c_lids} ->
         let nm = Ident.path_of_lid lid in
 
-        (* let param_bs, ty = SS.open_term param_bs ty in *)
-
         let inspect_ctor (c_lid:Ident.lid) : ctor =
           match Env.lookup_sigelt (get_env ()) c_lid with
           | Some ({sigel = Sig_datacon {lid; us; t=cty; num_ty_params=nparam}}) ->
-            let us, cty = SS.open_univ_vars us cty in
-
-            let param_ctor_bs, c = N.get_n_binders (get_env ()) nparam cty in
-
-            if List.length param_ctor_bs <> nparam then
-              failwith "impossible: inspect_sigelt: could not obtain sufficient ctor param binders";
-
-            if not (U.is_total_comp c) then
-              failwith "impossible: inspect_sigelt: removed parameters and got an effectful comp";
-            let cty = U.comp_result c in
-
-            (* Substitute the parameters of the constructor to match *)
-            (* those of the inductive opened above, and return the type *)
-            (* of the constructor already instantiated. *)
-            let s' = List.map2 (fun b1 b2 -> NT (b1.binder_bv, S.bv_to_name b2.binder_bv))
-                               param_ctor_bs param_bs
-            in
-            let cty = SS.subst s' cty in
-            let cty = SS.close_univ_vars us cty in
-
             (Ident.path_of_lid lid, cty)
 
           | _ ->
@@ -650,8 +628,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         check_lid val_lid;
         mk_sigelt <| Sig_declare_typ {lid=val_lid; us=us_names; t=ty}
 
-    | Unk ->
-        failwith "packing Unk, sorry"
+    | Unk -> failwith "packing Unk, this should never happen"
 
 let inspect_lb (lb:letbinding) : lb_view =
     let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos}
@@ -973,8 +950,6 @@ let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
 
 let push_binder e b = Env.push_binders e [b]
 let push_namedv e b = Env.push_binders e [S.mk_binder b]
-
-let close_term (b:binder) (t:term) : term = SS.close [b] t
 
 let subst (s : list subst_elt) (t : term) : term =
   SS.subst s t

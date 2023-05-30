@@ -124,15 +124,15 @@ let mk_class (nm:string) : Tac decls =
     let to_propagate = List.Tot.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
-    let Sg_Inductive {nm=name;univs=us;params;typ=ty;ctors} = sv in
+    let Sg_Inductive {nm=name;univs=us;params;typ=ity;ctors} = sv in
     print ("params = " ^ string_of_list binder_to_string params);
-    dump ("got it, name = " ^ implode_qn name);
-    dump ("got it, ty = " ^ term_to_string ty);
+    print ("got it, name = " ^ implode_qn name);
+    print ("got it, ity = " ^ term_to_string ity);
     let ctor_name = last name in
     // Must have a single constructor
     guard (List.Tot.Base.length ctors = 1);
     let [(c_name, ty)] = ctors in
-    dump ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty);
+    print ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty);
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);
@@ -149,9 +149,9 @@ let mk_class (nm:string) : Tac decls =
 
     (* Make a sigelt for each method *)
     T.map (fun (b:binder) ->
-                  dump ("b = " ^ term_to_string b.sort);
+                  print ("b = " ^ term_to_string b.sort);
                   let s = name_of_binder b in
-                  dump ("b = " ^ s);
+                  print ("b = " ^ s);
                   let ns = cur_module () in
                   let sfv = pack_fv (ns @ [s]) in
                   let dbv = fresh_namedv_named "d" in
@@ -177,7 +177,7 @@ let mk_class (nm:string) : Tac decls =
                         end
                       | _ -> fail "mk_class: proj not Sg_Let?"
                   in
-                  dump ("proj_ty = " ^ term_to_string proj_ty);
+                  print ("proj_ty = " ^ term_to_string proj_ty);
                   let ty =
                     let bs, cod = collect_arr_bs proj_ty in
                     let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
@@ -199,8 +199,8 @@ let mk_class (nm:string) : Tac decls =
                                     @ [tcdict] in
                     mk_abs bs (mk_e_app proj [named_binder_to_term tcdict])
                   in
-                  dump ("def = " ^ term_to_string def);
-                  dump ("ty  = " ^ term_to_string ty);
+                  print ("def = " ^ term_to_string def);
+                  print ("ty  = " ^ term_to_string ty);
 
                   let ty : term = ty in
                   let def : term = def in
@@ -210,6 +210,6 @@ let mk_class (nm:string) : Tac decls =
                   let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
                   let se = set_sigelt_quals to_propagate se in
                   let se = set_sigelt_attrs b.attrs se in
-                  dump ("trying to return : " ^ term_to_string (quote se));
+                  print ("trying to return : " ^ term_to_string (quote se));
                   se
     ) (filter_no_method_binders bs)

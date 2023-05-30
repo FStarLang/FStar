@@ -25,6 +25,9 @@ exception IOU
 
 module RD = FStar.Reflection.Data
 
+(* Disable printing *)
+let print (s:string) : Tac unit = ()
+
 (** FIXME: needs named version. *)
 noeq
 type pattern =
@@ -338,7 +341,7 @@ let open_view (tv:term_view) : Tac named_term_view =
     Tv_Abs nb body
 
   | RD.Tv_Arrow b c ->
-    let nb, body = open_comp b c in
+    let nb, c = open_comp b c in
     Tv_Arrow nb c
 
   | RD.Tv_Refine b ref ->
@@ -453,6 +456,28 @@ let close_lb (lb : letbinding) : Reflection.letbinding =
   let lb_def = subst s lb_def in
   pack_lb { lb_fv; lb_us; lb_typ; lb_def }
 
+exception NotEnoughBinders
+exception NotTot
+
+let rec open_n_binders_from_arrow (bs : binders) (t : term) : Tac term =
+  match bs with
+  | [] -> t
+  | b::bs ->
+    print ("t = " ^ term_to_string t);
+    match inspect t with
+    | Tv_Arrow b' c ->
+      begin match inspect_comp c with
+      | C_Total t' ->
+        print ("t' = " ^ term_to_string t);
+        print ("sub " ^ binder_to_string b' ^ " for " ^ binder_to_string b);
+        print ("substituting " ^ term_to_string t');
+        let t' = subst [NT (binder_to_namedv b') (pack (Tv_Var (binder_to_namedv b)))] t' in
+        print ("got " ^ term_to_string t');
+        open_n_binders_from_arrow bs t'
+      | _ -> raise NotTot
+      end
+    | _ -> raise NotEnoughBinders
+
 let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
   match sv with
   | RD.Sg_Let isrec lbs ->
@@ -473,7 +498,14 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
     dump ("params0 = " ^ string_of_list rbinder_to_string params);
     let params, typ = open_term_n params typ in
     dump ("params = " ^ string_of_list binder_to_string params);
-    let ctors = map (fun (nm, ty) -> nm, open_term_n_with params0 params ty) ctors in
+    print ("ctors typs = " ^ string_of_list (fun (nm, cty) -> term_to_string cty) ctors);
+    let ctors =
+      map (fun (nm, ty) ->
+          let ty'= open_n_binders_from_arrow params ty in
+          nm, ty')
+        ctors
+    in
+    print ("ctors typs2 = " ^ string_of_list (fun (nm, cty) -> term_to_string cty) ctors);
 
     Sg_Inductive {nm; univs; params; typ; ctors}
 
@@ -484,7 +516,7 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
 
   | RD.Unk -> Unk
 
-let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : sigelt_view =
+let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view{~(RD.Unk? sv)}) =
   match sv with
   | Sg_Let { isrec; lbs } ->
     let lbs = List.Tot.map close_lb lbs in
@@ -495,10 +527,12 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : sigelt_view =
     (* close univs *)
     (* close params *)
     (* close ctors? *)
+    raise IOU;
     RD.Sg_Inductive nm univs params typ ctors
 
   | Sg_Val {nm; univs; typ} ->
-    (* TODO: close universes *)
+    let univs, s = close_univ_s univs in
+    let typ = subst s typ in
     RD.Sg_Val nm univs typ
 
 let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
@@ -506,7 +540,7 @@ let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
   dump ("sv orig = " ^ term_to_string (quote sv));
   open_sigelt_view sv
 
-let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tot sigelt =
+let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tac sigelt =
   let sv = close_sigelt_view sv in
   Reflection.pack_sigelt sv
 

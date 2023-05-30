@@ -82,8 +82,6 @@ val pack_aqual     : aqualv -> aqual
 val inspect_universe : universe -> universe_view
 val pack_universe    : universe_view -> universe
 
-val close_term     : binder -> term -> term
-
 (* We're only taking these as primitives to break the dependency from *
 FStar.Tactics into FStar.String, which pulls a LOT of modules. *)
 val implode_qn     : list string -> string
