@@ -358,15 +358,16 @@ and br_cmp br1 br2 =
 
 and pat_cmp p1 p2 =
   match p1, p2 with
-  | Pat_Var x1, Pat_Var x2 ->
-    sealed_singl x1.sort x2.sort;
+  | Pat_Var x1 s1, Pat_Var x2 s2 ->
+    sealed_singl x1 x2;
+    sealed_singl s1 s2;
     Eq
-  | Pat_Constant x1, Pat_Constant x2 -> const_cmp x1.c x2.c
-  | Pat_Dot_Term x1, Pat_Dot_Term x2 -> opt_dec_cmp p1 p2 term_cmp x1.t x2.t
-  | Pat_Cons x1, Pat_Cons x2 ->
-    fv_cmp x1.head x2.head
-     &&& opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) x1.univs x2.univs
-     &&& list_dec_cmp p1 p2 pat_arg_cmp x1.subpats x2.subpats
+  | Pat_Constant x1, Pat_Constant x2 -> const_cmp x1 x2
+  | Pat_Dot_Term x1, Pat_Dot_Term x2 -> opt_dec_cmp p1 p2 term_cmp x1 x2
+  | Pat_Cons head1 us1 subpats1, Pat_Cons head2 us2 subpats2 ->
+    fv_cmp head1 head2
+     &&& opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) us1 us2
+     &&& list_dec_cmp p1 p2 pat_arg_cmp subpats1 subpats2
 
   | _ -> Neq
 
@@ -515,14 +516,14 @@ and faithful_branch (b : branch) : Type0 =
 and faithful_pattern (p : pattern) : Type0 =
   match p with
   | Pat_Constant _ -> True
-  | Pat_Cons {head; univs; subpats} ->
+  | Pat_Cons head univs subpats ->
     optP p (allP p faithful_univ) univs
      /\ allP p faithful_pattern_arg subpats
 
   (* non-binding bvs are always OK *)
-  | Pat_Var _ -> True
-  | Pat_Dot_Term {t=None} -> True
-  | Pat_Dot_Term {t=(Some t)} -> faithful t
+  | Pat_Var _ _ -> True
+  | Pat_Dot_Term None -> True
+  | Pat_Dot_Term (Some t) -> faithful t
 
 and faithful_pattern_arg (pb : pattern * bool) : Type0 =
   faithful_pattern (fst pb)
@@ -579,12 +580,12 @@ let term_eq_Tv_Match (t1 t2 : term) (sc1 sc2 : term) (o1 o2 : option match_retur
                    &&& list_dec_cmp t1 t2 br_cmp brs1 brs2)) // #2908, somehow assert_norm also does not work
 
 let faithful_Pat_Cons (p : pattern) (f:fv) (ous : option universes) (subpats : list (pattern & bool))
-  : Lemma (requires p == Pat_Cons {head=f;univs=ous;subpats=subpats} /\ faithful_pattern p)
+  : Lemma (requires p == Pat_Cons f ous subpats /\ faithful_pattern p)
           (ensures allP p faithful_pattern_arg subpats)
   = assert_norm (faithful_pattern p ==> allP p faithful_pattern_arg subpats) // #2908
 
 let pat_eq_Pat_Cons (p1 p2 : pattern) (f1 f2 : fv) (ous1 ous2 : option universes) (args1 args2 : list (pattern & bool))
-  : Lemma (requires p1 == Pat_Cons {head=f1;univs=ous1;subpats=args1} /\ p2 == Pat_Cons {head=f2; univs=ous2; subpats=args2})
+  : Lemma (requires p1 == Pat_Cons f1 ous1 args1 /\ p2 == Pat_Cons f2 ous2 args2)
           (ensures pat_cmp p1 p2 == (fv_cmp f1 f2
                                     &&& opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) ous1 ous2
                                     &&& list_dec_cmp p1 p2 pat_arg_cmp args1 args2))
@@ -667,23 +668,21 @@ let rec faithful_lemma (t1 t2 : term) =
 
 and faithful_lemma_pattern (p1 p2 : pattern) : Lemma (requires faithful_pattern p1 /\ faithful_pattern p2) (ensures defined (pat_cmp p1 p2)) =
   match p1, p2 with
-  | Pat_Var v1, Pat_Var v2 -> ()
-  | Pat_Constant c1, Pat_Constant c2 -> ()
-  | Pat_Dot_Term {t=(Some t1)}, Pat_Dot_Term {t=(Some t2)} ->
-    assume (t1 << p1); // FIXME, this is obvious. Is it just out of fuel?
-    assume (t2 << p2); // FIXME, this is obvious. Is it just out of fuel?
+  | Pat_Var _ _, Pat_Var _ _ -> ()
+  | Pat_Constant _, Pat_Constant _ -> ()
+  | Pat_Dot_Term (Some t1), Pat_Dot_Term (Some t2) ->
     faithful_lemma t1 t2
-  | Pat_Cons x1, Pat_Cons x2 ->
-    (***)faithful_Pat_Cons p1 x1.head x1.univs x1.subpats;
-    (***)faithful_Pat_Cons p2 x2.head x2.univs x2.subpats;
-    let aux : squash (defined (opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) x1.univs x2.univs)) =
-      match x1.univs, x2.univs with
+  | Pat_Cons head1 univs1 subpats1, Pat_Cons head2 univs2 subpats2 ->
+    (***)faithful_Pat_Cons p1 head1 univs1 subpats1;
+    (***)faithful_Pat_Cons p2 head2 univs2 subpats2;
+    let aux : squash (defined (opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) univs1 univs2)) =
+      match univs1, univs2 with
       | Some us1, Some us2 ->
         univ_faithful_lemma_list p1 p2 us1 us2
       | _ -> ()
     in
-    faithful_lemma_pattern_args p1 p2 x1.subpats x2.subpats;
-    (***)pat_eq_Pat_Cons p1 p2 x1.head x2.head x1.univs x2.univs x1.subpats x2.subpats;
+    faithful_lemma_pattern_args p1 p2 subpats1 subpats2;
+    (***)pat_eq_Pat_Cons p1 p2 head1 head2 univs1 univs2 subpats1 subpats2;
     ()
 
   | _ -> ()
