@@ -8,29 +8,29 @@ open FStar.Ghost
 module U32 = FStar.UInt32
 open Pulse.Steel.Wrapper
 
-```pulse
-fn test_write_10 (x:ref U32.t)
-                 (#n:erased U32.t)
-   requires pts_to x full_perm n
-   ensures  pts_to x full_perm 0ul
-{
-    x := 1ul;
-    x := 0ul;
-}
-```
+// ```pulse
+// fn test_write_10 (x:ref U32.t)
+//                  (#n:erased U32.t)
+//    requires pts_to x full_perm n
+//    ensures  pts_to x full_perm 0ul
+// {
+//     x := 1ul;
+//     x := 0ul;
+// }
+// ```
 
-```pulse
-fn test_read (r:ref U32.t)
-             (#n:erased U32.t)
-             (#p:perm)
-   requires pts_to r p n
-   returns x : U32.t
-   ensures pts_to r p x
-{
-  let x = !r;
-  x
-}
-```
+// ```pulse
+// fn test_read (r:ref U32.t)
+//              (#n:erased U32.t)
+//              (#p:perm)
+//    requires pts_to r p n
+//    returns x : U32.t
+//    ensures pts_to r p x
+// {
+//   let x = !r;
+//   x
+// }
+// ```
 
 // ```pulse
 // fn swap (r1 r2:ref U32.t)
@@ -83,41 +83,41 @@ fn test_read (r:ref U32.t)
 // }
 // ```
 
-// ```pulse
-// fn intro_pure_example (r:ref U32.t)
-//                       (#n1 #n2:erased U32.t)
-//    requires 
-//      (pts_to r full_perm n1 `star`
-//       pure (eq2_prop (reveal n1) (reveal n2)))
-//    ensures 
-//      (pts_to r full_perm n2 `star`
-//       pure (eq2_prop (reveal n2) (reveal n1)))
-// {
-//   ()
-// }
-// ```
+```pulse
+fn intro_pure_example (r:ref U32.t)
+                      (#n1 #n2:erased U32.t)
+   requires 
+     (pts_to r full_perm n1 `star`
+      pure (eq2_prop (reveal n1) (reveal n2)))
+   ensures 
+     (pts_to r full_perm n2 `star`
+      pure (eq2_prop (reveal n2) (reveal n1)))
+{
+  ()
+}
+```
 
 
-// ```pulse
-// fn if_example (r:ref U32.t)
-//               (n:(n:erased U32.t{eq2_prop (U32.v (reveal n)) 1}))
-//               (b:bool)
-//    requires 
-//      pts_to r full_perm n
-//    ensures
-//      pts_to r full_perm (U32.add (reveal n) 2ul)
-// {
-//    let x = read_atomic r;
-//    if b
-//    {
-//      r := U32.add x 2ul
-//    }
-//    else
-//    {
-//      write_atomic r 3ul
-//    }
-// }
-// ```
+```pulse
+fn if_example (r:ref U32.t)
+              (n:(n:erased U32.t{eq2_prop (U32.v (reveal n)) 1}))
+              (b:bool)
+   requires 
+     pts_to r full_perm n
+   ensures
+     pts_to r full_perm (U32.add (reveal n) 2ul)
+{
+   let x = read_atomic r;
+   if b
+   {
+     r := U32.add x 2ul
+   }
+   else
+   {
+     write_atomic r 3ul
+   }
+}
+```
 
 // ```pulse
 // fn elim_intro_exists2 (r:ref U32.t)

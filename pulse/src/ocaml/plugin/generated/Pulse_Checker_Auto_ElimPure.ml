@@ -43,7 +43,7 @@ let (elim_pure_comp : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.comp)
       {
         Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u_zero;
         Pulse_Syntax_Base.res =
-          (tm_fstar (FStar_Tactics_Derived.mk_squash p));
+          (tm_fstar (Pulse_Reflection_Util.mk_squash Pulse_Syntax_Pure.u0 p));
         Pulse_Syntax_Base.pre = (Pulse_Syntax_Base.Tm_Pure (tm_fstar p));
         Pulse_Syntax_Base.post = Pulse_Syntax_Base.Tm_Emp
       } in
