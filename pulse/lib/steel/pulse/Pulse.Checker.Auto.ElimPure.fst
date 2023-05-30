@@ -51,7 +51,7 @@ let mk_elim_pure (p:term)
 let elim_pure_comp (p:host_term) =
     let st : st_comp = {
         u=u_zero;
-        res=tm_fstar (T.mk_squash p);
+        res=tm_fstar (mk_squash u0 p);
         pre=Tm_Pure (tm_fstar p);
         post=Tm_Emp
     } in
