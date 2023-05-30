@@ -823,8 +823,4 @@ let uu___is_T_Admit uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Admit _ -> true | _ -> false
 
 
-let (star_typing_inversion :
-  env ->
-    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> unit -> (unit * unit))
-  = fun g -> fun t0 -> fun t1 -> fun d -> Prims.admit ()
 
