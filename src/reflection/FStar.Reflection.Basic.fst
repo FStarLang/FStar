@@ -780,7 +780,14 @@ let env_open_modules (e : Env.env) : list name =
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 
-let vars_of_env e = FStar.TypeChecker.Env.all_binders e |> List.map (fun b -> b.binder_bv)
+let bv_to_binding (bv : bv) : RD.binding =
+  {
+    uniq   = Z.of_int_fs bv.index;
+    sort   = bv.sort;
+    ppname = string_of_id bv.ppname;
+  }
+
+let vars_of_env e = FStar.TypeChecker.Env.all_binders e |> List.map (fun b -> bv_to_binding b.binder_bv)
 
 (* Generic combinators, safe *)
 let eqopt  = Syntax.Util.eqopt

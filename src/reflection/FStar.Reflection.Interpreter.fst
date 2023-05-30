@@ -135,6 +135,7 @@ let e_bv              : dualemb bv                 = (RE.e_bv, NRE.e_bv)
 let e_namedv          : dualemb RE.namedv          = e_bv
 let e_bv_view         : dualemb RD.bv_view         = (RE.e_bv_view, NRE.e_bv_view)
 let e_namedv_view     : dualemb RD.namedv_view     = (RE.e_namedv_view, NRE.e_namedv_view)
+let e_binding         : dualemb RD.binding         = (RE.e_binding, NRE.e_binding)
 let e_comp            : dualemb comp               = (RE.e_comp, NRE.e_comp)
 let e_comp_view       : dualemb RD.comp_view       = (RE.e_comp_view, NRE.e_comp_view)
 let e_universe        : dualemb universe           = (RE.e_universe, NRE.e_universe)
@@ -383,7 +384,7 @@ let reflection_primops : list Cfg.primitive_step = [
   mk1 "vars_of_env"
     RB.vars_of_env
     e_env
-    (e_list e_bv);
+    (e_list e_binding);
 
   mk2 "lookup_typ"
     RB.lookup_typ

@@ -41,9 +41,9 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
              ddump "C";
              let hh = intro () in
              apply (`return_squash);
-             exact (pack (Tv_Var (bv_of_binder hh)));
+             exact (pack (Tv_Var (binding_to_namedv hh)));
              ddump "D";
-             exact (pack (Tv_Var (bv_of_binder h))) )
+             exact (pack (Tv_Var (binding_to_namedv h))) )
 
 [@@expect_failure]
 let test2 (post:(unit -> Type0))
@@ -74,9 +74,9 @@ let test3 (p:(unit -> Type0)) (q:(unit -> Type0))
              let hh = intro () in
              apply (`return_squash);
              ddump "D";
-             exact (pack (Tv_Var (bv_of_binder hh)));
+             exact (pack (Tv_Var (binding_to_namedv hh)));
              ddump "E";
-             exact (pack (Tv_Var (bv_of_binder h)))
+             exact (pack (Tv_Var (binding_to_namedv h)))
              )
 
 let test4 (post:(unit -> Type0))
@@ -91,6 +91,6 @@ let test4 (post:(unit -> Type0))
              ddump "C";
              let hh = intro () in
              apply (`return_squash);
-             exact (pack (Tv_Var (bv_of_binder hh)));
-             exact (pack (Tv_Var (bv_of_binder h)));
+             exact (pack (Tv_Var (binding_to_namedv hh)));
+             exact (pack (Tv_Var (binding_to_namedv h)));
              ())
