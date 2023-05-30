@@ -44,7 +44,6 @@ let check_abs
           let post_hint_typing : post_hint_t = Pulse.Checker.Common.intro_post_hint g' ret_ty post in
           Some post_hint_typing
       in
-      T.print (Printf.sprintf "Checking abstraction body: %s\n" (P.st_term_to_string body));
       let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened (E pre_typing) post in
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body' x in
