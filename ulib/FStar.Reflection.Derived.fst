@@ -27,6 +27,14 @@ let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv
     | Tv_AscribedC t' _ _ _ -> inspect_ln_unascribe t'
     | tv -> tv
 
+let shift n s = match s with
+    | DB i t -> DB (i+n) t
+    | UN i t -> UN (i+n) t
+    | NM x i -> NM x (i+n)
+    | UD x i -> UD x (i+n)
+    | NT _ _ -> s
+let shift_subst n s = List.Tot.map (shift n) s
+
 let subst1 (n:namedv) (t1:term) (t2:term) : term =
   subst [NT n t1] t2
 

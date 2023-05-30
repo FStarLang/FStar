@@ -55,13 +55,12 @@ let rec blah (t : term) : Tac term =
              | Tv_Abs b t -> let t = blah t in
                              Tv_Abs b t
              | Tv_Arrow b t -> Tv_Arrow b t
-             | Tv_Refine b s t -> let s = blah s in
-                                  let t = blah t in
-                                  Tv_Refine b s t
+             | Tv_Refine b t -> let t = blah t in
+                                Tv_Refine b t
              | Tv_Type u -> Tv_Type u
              | Tv_Const c -> Tv_Const c
              | Tv_Uvar u t -> Tv_Uvar u t
-             | Tv_Let r attrs b ty t1 t2 -> Tv_Let r attrs b ty t1 t2
+             | Tv_Let r attrs b t1 t2 -> Tv_Let r attrs b t1 t2
              | Tv_Match t ret_opt brs -> Tv_Match t ret_opt brs
              | Tv_AscribedT e t tac use_eq -> Tv_AscribedT e t tac use_eq
              | Tv_AscribedC e c tac use_eq -> Tv_AscribedC e c tac use_eq

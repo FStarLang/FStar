@@ -655,11 +655,11 @@ let l_to_r (lems:list term) : Tac unit =
                   trefl lems () in
     pointwise first_or_trefl
 
-let mk_squash (t : term) : term =
+let mk_squash (t : term) : Tot term =
     let sq : term = pack (Tv_FVar (pack_fv squash_qn)) in
     mk_e_app sq [t]
 
-let mk_sq_eq (t1 t2 : term) : term =
+let mk_sq_eq (t1 t2 : term) : Tot term =
     let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
     mk_squash (mk_e_app eq [t1; t2])
 

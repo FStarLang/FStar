@@ -23,6 +23,7 @@ open FStar.Tactics.Util
 exception LengthMismatch
 exception IOU
 
+module R = FStar.Reflection
 module RD = FStar.Reflection.Data
 
 (* Disable printing *)
@@ -55,6 +56,8 @@ type pattern =
      t : option term;
    }
 
+type branch = pattern & term
+
 
 // TODO: Can we do the same in pure reflection? Do we need
 // access to the _actual_ binder type?
@@ -69,7 +72,7 @@ type binder = {
   attrs  : list term;
 }
 
-let rbinder_to_string (b : Reflection.binder) : Tac string =
+let rbinder_to_string (b : R.binder) : Tac string =
   let bv = inspect_binder b in
   unseal bv.ppname ^ "::(" ^ term_to_string bv.sort ^ ")"
 
@@ -104,7 +107,7 @@ type named_term_view =
   | Tv_Unsupp : named_term_view // failed to inspect, not supported
 
 private
-let __binding_to_binder (bnd : binding) (b : Reflection.binder) : binder =
+let __binding_to_binder (bnd : binding) (b : R.binder) : binder =
   {
       ppname = bnd.ppname;
       uniq   = bnd.uniq;
@@ -150,7 +153,7 @@ let simple_binder_to_binding (b:simple_binder) : binding = {
   ppname = b.ppname;
 }
 
-let open_term_with (b : Reflection.binder) (nb : binder) (t : term) : Tac term =
+let open_term_with (b : R.binder) (nb : binder) (t : term) : Tac term =
   let nv : namedv = pack_namedv {
     uniq   = nb.uniq;
     sort   = seal nb.sort;
@@ -160,7 +163,7 @@ let open_term_with (b : Reflection.binder) (nb : binder) (t : term) : Tac term =
   let t' = subst [DB 0 nv] t in
   t'
 
-let open_term (b : Reflection.binder) (t : term) : Tac (binder & term) =
+let open_term (b : R.binder) (t : term) : Tac (binder & term) =
   let n = fresh () in
   let bv = inspect_binder b in
   let bndr : binder = {
@@ -173,7 +176,7 @@ let open_term (b : Reflection.binder) (t : term) : Tac (binder & term) =
   in
   (bndr, open_term_with b bndr t)
 
-let open_comp (b : Reflection.binder) (t : comp) : Tac (binder & comp) =
+let open_comp (b : R.binder) (t : comp) : Tac (binder & comp) =
   let n = fresh () in
   let bv : binder_view = inspect_binder b in
   let nv : namedv = pack_namedv {
@@ -195,7 +198,7 @@ let open_comp (b : Reflection.binder) (t : comp) : Tac (binder & comp) =
 
 (* FIXME: unfortunate duplication here. The effect means this proof cannot
 be done extrinsically. Can we add a refinement to the binder? *)
-let open_term_simple (b : Reflection.simple_binder) (t : term) : Tac (simple_binder & term) =
+let open_term_simple (b : R.simple_binder) (t : term) : Tac (simple_binder & term) =
   let n = fresh () in
   let bv : binder_view = inspect_binder b in
   let nv : namedv = pack_namedv {
@@ -215,7 +218,7 @@ let open_term_simple (b : Reflection.simple_binder) (t : term) : Tac (simple_bin
   in
   (bndr, t')
 
-let open_comp_simple (b : Reflection.simple_binder) (t : comp) : Tac (simple_binder & comp) =
+let open_comp_simple (b : R.simple_binder) (t : comp) : Tac (simple_binder & comp) =
   let n = fresh () in
   let bv : binder_view = inspect_binder b in
   let nv : namedv = pack_namedv {
@@ -236,25 +239,25 @@ let open_comp_simple (b : Reflection.simple_binder) (t : comp) : Tac (simple_bin
   (bndr, t')
 
 (* This two are in Tot *)
-let close_term (b:binder) (t:term) : Reflection.binder & term =
+let close_term (b:binder) (t:term) : R.binder & term =
   let nv = binder_to_namedv b in
   let t' = subst [NM nv 0] t in
   let b = pack_binder { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   (b, t')
-let close_comp (b:binder) (t:comp) : Reflection.binder & comp =
+let close_comp (b:binder) (t:comp) : R.binder & comp =
   let nv = binder_to_namedv b in
   let t' = subst_comp [NM nv 0] t in
   let b = pack_binder { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   (b, t')
 
-let close_term_simple (b:simple_binder) (t:term) : Reflection.simple_binder & term =
+let close_term_simple (b:simple_binder) (t:term) : R.simple_binder & term =
   let nv = binder_to_namedv b in
   let t' = subst [NM nv 0] t in
   let bv : binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   let b = pack_binder bv in
   inspect_pack_binder bv;
   (b, t')
-let close_comp_simple (b:simple_binder) (t:comp) : Reflection.simple_binder & comp =
+let close_comp_simple (b:simple_binder) (t:comp) : R.simple_binder & comp =
   let nv = binder_to_namedv b in
   let t' = subst_comp [NM nv 0] t in
   let bv : binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
@@ -262,7 +265,7 @@ let close_comp_simple (b:simple_binder) (t:comp) : Reflection.simple_binder & co
   inspect_pack_binder bv;
   (b, t')
 
-let rec open_term_n (bs : list Reflection.binder) (t : term) : Tac (list binder & term) =
+let rec open_term_n (bs : list R.binder) (t : term) : Tac (list binder & term) =
   match bs with
   | [] -> ([], t)
   | b::bs ->
@@ -270,7 +273,7 @@ let rec open_term_n (bs : list Reflection.binder) (t : term) : Tac (list binder 
     let b', t'' = open_term b t' in
     (b'::bs', t'')
     
-let rec open_term_n_with (bs : list Reflection.binder) (nbs : list binder) (t : term) : Tac term =
+let rec open_term_n_with (bs : list R.binder) (nbs : list binder) (t : term) : Tac term =
   match bs, nbs with
   | [], [] -> t
   | b::bs, nb::nbs ->
@@ -279,7 +282,7 @@ let rec open_term_n_with (bs : list Reflection.binder) (nbs : list binder) (t : 
     t''
   | _ -> raise LengthMismatch
 
-let rec close_term_n (bs : list binder) (t : term) : list Reflection.binder & term =
+let rec close_term_n (bs : list binder) (t : term) : list R.binder & term =
   match bs with
   | [] -> ([], t)
   | b::bs ->
@@ -287,7 +290,7 @@ let rec close_term_n (bs : list binder) (t : term) : list Reflection.binder & te
     let b', t'' = close_term b t' in
     (b'::bs', t'')
 
-let rec open_term_n_simple (bs : list Reflection.simple_binder) (t : term) : Tac (list simple_binder & term) =
+let rec open_term_n_simple (bs : list R.simple_binder) (t : term) : Tac (list simple_binder & term) =
   match bs with
   | [] -> ([], t)
   | b::bs ->
@@ -295,7 +298,7 @@ let rec open_term_n_simple (bs : list Reflection.simple_binder) (t : term) : Tac
     let b', t'' = open_term_simple b t' in
     (b'::bs', t'')
 
-let rec close_term_n_simple (bs : list simple_binder) (t : term) : list Reflection.simple_binder & term =
+let rec close_term_n_simple (bs : list simple_binder) (t : term) : list R.simple_binder & term =
   match bs with
   | [] -> ([], t)
   | b::bs ->
@@ -304,19 +307,94 @@ let rec close_term_n_simple (bs : list simple_binder) (t : term) : list Reflecti
     (b'::bs', t'')
 
 let open_univ_s (us : list univ_name) : Tac (list univ_name & subst_t) =
-  let n = List.length us in
+  let n = List.Tot.length us in
   let s = mapi (fun i u -> UN (n-1-i) (pack_universe (Uv_Name u))) us in
   us, s
   
 let close_univ_s (us : list univ_name) : list univ_name & subst_t =
-  let n = List.length us in
+  let n = List.Tot.length us in
   let s = List.Tot.mapi (fun i u -> UD u (n-i-1)) us in
   us, s
 
-let subst_binder_sort (s : subst_t) (b : Reflection.binder) : Reflection.binder =
+let subst_binder_sort (s : subst_t) (b : R.binder) : R.binder =
   let v = inspect_binder b in
   let v = { v with sort = subst s v.sort } in
   pack_binder v
+
+let rec open_pat (p : R.pattern) (s : subst_t) : Tac (pattern & subst_t) =
+  match p with
+  | R.Pat_Constant c ->
+    Pat_Constant {c=c}, s
+
+  | R.Pat_Var ssort n ->
+    let sort = unseal ssort in
+    let sort = subst s sort in
+    let nv : namedv = pack_namedv {
+      uniq = fresh();
+      sort = seal sort;
+      ppname = n;
+    }
+    in
+    Pat_Var {v=nv; sort=seal sort}, (DB 0 nv) :: shift_subst 1 s
+
+  | R.Pat_Cons head univs subpats ->
+    let subpats, s = fold_left (fun (pats,s) (pat,b) ->
+                        let pat, s' = open_pat pat s in
+                        ((pat,b)::pats, s'))
+                       ([], s) subpats
+    in
+    let subpats = List.Tot.rev subpats in
+    Pat_Cons {head=head; univs=univs; subpats=subpats}, s
+
+  | R.Pat_Dot_Term None ->
+    Pat_Dot_Term {t=None}, s
+
+  | R.Pat_Dot_Term (Some t) ->
+    let t = subst s t in
+    Pat_Dot_Term {t=Some t}, s
+
+let open_branch (b : R.branch) : Tac branch =
+  let (pat, t) = b in
+  let pat, s = open_pat pat [] in
+  let t' = subst s t in
+  (pat, t')
+
+let rec close_pat (p : pattern) (s : subst_t) : Tot (R.pattern & subst_t) =
+  match p with
+  | Pat_Constant {c} ->
+    R.Pat_Constant c, s
+
+  | Pat_Var {v; sort} ->
+    (* NOTE: we cannot do anything on the sort wihtout going
+    into TAC. Need a sealed_bind. *)
+    //let sort = unseal sort in
+    //let sort = subst s sort in
+    //let sort = seal sort in
+    let s = (NM v 0) :: shift_subst 1 s in
+    R.Pat_Var sort (inspect_namedv v).ppname, s
+
+  | Pat_Cons {head; univs; subpats} ->
+    let subpats, s = List.Tot.fold_left (fun (pats,s) (pat,b) ->
+                        assume(pat << p);
+                        let pat, s' = close_pat pat s in
+                        ((pat,b)::pats, s'))
+                       ([], s) subpats
+    in
+    let subpats = List.Tot.rev subpats in
+    R.Pat_Cons head univs subpats, s
+
+  | Pat_Dot_Term {t=None} ->
+    R.Pat_Dot_Term None, s
+
+  | Pat_Dot_Term {t=Some t} ->
+    let t = subst s t in
+    R.Pat_Dot_Term (Some t), s
+
+let close_branch (b : branch) : Tot R.branch =
+  let (pat, t) = b in
+  let pat, s = close_pat pat [] in
+  let t' = subst s t in
+  (pat, t')
 
 let open_view (tv:term_view) : Tac named_term_view =
   match tv with
@@ -353,12 +431,11 @@ let open_view (tv:term_view) : Tac named_term_view =
     let nb, body = open_term_simple b body in
     Tv_Let recf attrs nb def body
 
-  (* FIXME *)
   | RD.Tv_Match scrutinee ret brs ->
-    raise IOU;
+    let brs = map open_branch brs in
     Tv_Match scrutinee ret brs
 
-let close_view (tv : named_term_view) : term_view =
+let close_view (tv : named_term_view) : Tot term_view =
   match tv with
   (* Nothing interesting *)
   | Tv_Var v -> RD.Tv_Var v
@@ -393,8 +470,9 @@ let close_view (tv : named_term_view) : term_view =
     let b, body = close_term_simple nb body in
     RD.Tv_Let recf attrs b def body
   
-  (* FIXME *)
-  | Tv_Match scrutinee ret brs -> RD.Tv_Match scrutinee ret brs
+  | Tv_Match scrutinee ret brs ->
+    let brs = List.Tot.map close_branch brs in
+    RD.Tv_Match scrutinee ret brs
 
 let inspect (t:term) : Tac named_term_view =
   let tv = inspect_ln t in
@@ -404,7 +482,7 @@ let pack (tv:named_term_view) : Tot term =
   let tv = close_view tv in
   pack_ln tv
 
-// Repeat from FStar.Reflection.Data
+// Repeat from FStar.R.Data
 let notAscription (tv:named_term_view) : bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
 
@@ -443,14 +521,14 @@ type named_sigelt_view =
 
   | Unk
 
-let open_lb (lb : Reflection.letbinding) : Tac letbinding =
+let open_lb (lb : R.letbinding) : Tac letbinding =
   let {lb_fv; lb_us; lb_typ; lb_def} = inspect_lb lb in
   let lb_us, s = open_univ_s lb_us in
   let lb_typ = subst s lb_typ in
   let lb_def = subst s lb_def in
   { lb_fv; lb_us; lb_typ; lb_def }
 
-let close_lb (lb : letbinding) : Reflection.letbinding =
+let close_lb (lb : letbinding) : R.letbinding =
   let {lb_fv; lb_us; lb_typ; lb_def} = lb in
   let lb_us, s = close_univ_s lb_us in
   let lb_typ = subst s lb_typ in
@@ -537,13 +615,13 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
     RD.Sg_Val nm univs typ
 
 let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
-  let sv = Reflection.inspect_sigelt s in
+  let sv = R.inspect_sigelt s in
   dump ("sv orig = " ^ term_to_string (quote sv));
   open_sigelt_view sv
 
 let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tac sigelt =
   let sv = close_sigelt_view sv in
-  Reflection.pack_sigelt sv
+  R.pack_sigelt sv
 
 (* Clients of this module use the named view. *)
 let term_view        = named_term_view
