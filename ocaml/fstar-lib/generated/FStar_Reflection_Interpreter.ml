@@ -312,6 +312,12 @@ let (e_namedv : FStar_Reflection_Embeddings.namedv dualemb) = e_bv
 let (e_bv_view : FStar_Reflection_Data.bv_view dualemb) =
   (FStar_Reflection_Embeddings.e_bv_view,
     FStar_Reflection_NBEEmbeddings.e_bv_view)
+let (e_namedv_view : FStar_Reflection_Data.namedv_view dualemb) =
+  (FStar_Reflection_Embeddings.e_namedv_view,
+    FStar_Reflection_NBEEmbeddings.e_namedv_view)
+let (e_binding : FStar_Reflection_Data.binding dualemb) =
+  (FStar_Reflection_Embeddings.e_binding,
+    FStar_Reflection_NBEEmbeddings.e_binding)
 let (e_comp : FStar_Syntax_Syntax.comp dualemb) =
   (FStar_Reflection_Embeddings.e_comp, FStar_Reflection_NBEEmbeddings.e_comp)
 let (e_comp_view : FStar_Reflection_Data.comp_view dualemb) =
@@ -359,6 +365,9 @@ let (e_qualifiers : FStar_Reflection_Data.qualifiers dualemb) =
     FStar_Reflection_NBEEmbeddings.e_qualifiers)
 let (e_range : FStar_Compiler_Range_Type.range dualemb) =
   (FStar_Syntax_Embeddings.e_range, FStar_TypeChecker_NBETerm.e_range)
+let (e_subst : FStar_Syntax_Syntax.subst_elt Prims.list dualemb) =
+  (FStar_Reflection_Embeddings.e_subst,
+    FStar_Reflection_NBEEmbeddings.e_subst)
 let e_list : 'a . 'a dualemb -> 'a Prims.list dualemb =
   fun e ->
     let uu___ =
@@ -498,128 +507,157 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                             e_lb_view e_letbinding in
                         let uu___23 =
                           let uu___24 =
-                            mk1 "inspect_bv"
-                              FStar_Reflection_Basic.inspect_bv e_bv
-                              e_bv_view in
+                            mk1 "inspect_namedv"
+                              FStar_Reflection_Basic.inspect_namedv e_namedv
+                              e_namedv_view in
                           let uu___25 =
                             let uu___26 =
-                              mk1 "pack_bv" FStar_Reflection_Basic.pack_bv
-                                e_bv_view e_bv in
+                              mk1 "pack_namedv"
+                                FStar_Reflection_Basic.pack_namedv
+                                e_namedv_view e_namedv in
                             let uu___27 =
                               let uu___28 =
-                                mk1 "inspect_binder"
-                                  FStar_Reflection_Basic.inspect_binder
-                                  e_binder e_binder_view in
+                                mk1 "inspect_bv"
+                                  FStar_Reflection_Basic.inspect_bv e_bv
+                                  e_bv_view in
                               let uu___29 =
                                 let uu___30 =
-                                  mk1 "pack_binder"
-                                    FStar_Reflection_Basic.pack_binder
-                                    e_binder_view e_binder in
+                                  mk1 "pack_bv"
+                                    FStar_Reflection_Basic.pack_bv e_bv_view
+                                    e_bv in
                                 let uu___31 =
                                   let uu___32 =
-                                    let uu___33 = e_option e_vconfig in
-                                    mk1 "sigelt_opts"
-                                      FStar_Reflection_Basic.sigelt_opts
-                                      e_sigelt uu___33 in
+                                    mk1 "inspect_binder"
+                                      FStar_Reflection_Basic.inspect_binder
+                                      e_binder e_binder_view in
                                   let uu___33 =
                                     let uu___34 =
-                                      mk1 "embed_vconfig"
-                                        FStar_Reflection_Basic.embed_vconfig
-                                        e_vconfig e_term in
+                                      mk1 "pack_binder"
+                                        FStar_Reflection_Basic.pack_binder
+                                        e_binder_view e_binder in
                                     let uu___35 =
                                       let uu___36 =
-                                        mk1 "sigelt_attrs"
-                                          FStar_Reflection_Basic.sigelt_attrs
-                                          e_sigelt e_attributes in
+                                        let uu___37 = e_option e_vconfig in
+                                        mk1 "sigelt_opts"
+                                          FStar_Reflection_Basic.sigelt_opts
+                                          e_sigelt uu___37 in
                                       let uu___37 =
                                         let uu___38 =
-                                          mk2 "set_sigelt_attrs"
-                                            FStar_Reflection_Basic.set_sigelt_attrs
-                                            e_attributes e_sigelt e_sigelt in
+                                          mk1 "embed_vconfig"
+                                            FStar_Reflection_Basic.embed_vconfig
+                                            e_vconfig e_term in
                                         let uu___39 =
                                           let uu___40 =
-                                            mk1 "sigelt_quals"
-                                              FStar_Reflection_Basic.sigelt_quals
-                                              e_sigelt e_qualifiers in
+                                            mk1 "sigelt_attrs"
+                                              FStar_Reflection_Basic.sigelt_attrs
+                                              e_sigelt e_attributes in
                                           let uu___41 =
                                             let uu___42 =
-                                              mk2 "set_sigelt_quals"
-                                                FStar_Reflection_Basic.set_sigelt_quals
-                                                e_qualifiers e_sigelt
+                                              mk2 "set_sigelt_attrs"
+                                                FStar_Reflection_Basic.set_sigelt_attrs
+                                                e_attributes e_sigelt
                                                 e_sigelt in
                                             let uu___43 =
                                               let uu___44 =
-                                                mk3 "subst"
-                                                  FStar_Reflection_Basic.subst
-                                                  e_bv e_term e_term e_term in
+                                                mk1 "sigelt_quals"
+                                                  FStar_Reflection_Basic.sigelt_quals
+                                                  e_sigelt e_qualifiers in
                                               let uu___45 =
                                                 let uu___46 =
-                                                  mk2 "close_term"
-                                                    FStar_Reflection_Basic.close_term
-                                                    e_binder e_term e_term in
+                                                  mk2 "set_sigelt_quals"
+                                                    FStar_Reflection_Basic.set_sigelt_quals
+                                                    e_qualifiers e_sigelt
+                                                    e_sigelt in
                                                 let uu___47 =
                                                   let uu___48 =
-                                                    mk2 "compare_bv"
-                                                      FStar_Reflection_Basic.compare_bv
-                                                      e_bv e_bv e_order in
+                                                    mk2 "subst"
+                                                      FStar_Reflection_Basic.subst
+                                                      e_subst e_term e_term in
                                                   let uu___49 =
                                                     let uu___50 =
-                                                      let uu___51 =
-                                                        e_list e_fv in
-                                                      mk2 "lookup_attr"
-                                                        FStar_Reflection_Basic.lookup_attr
-                                                        e_term e_env uu___51 in
+                                                      mk2 "subst_comp"
+                                                        FStar_Reflection_Basic.subst_comp
+                                                        e_subst e_comp e_comp in
                                                     let uu___51 =
                                                       let uu___52 =
-                                                        let uu___53 =
-                                                          e_list e_fv in
-                                                        mk1 "all_defs_in_env"
-                                                          FStar_Reflection_Basic.all_defs_in_env
-                                                          e_env uu___53 in
+                                                        mk2 "close_term"
+                                                          FStar_Reflection_Basic.close_term
+                                                          e_binder e_term
+                                                          e_term in
                                                       let uu___53 =
                                                         let uu___54 =
-                                                          let uu___55 =
-                                                            e_list e_fv in
-                                                          mk2
-                                                            "defs_in_module"
-                                                            FStar_Reflection_Basic.defs_in_module
-                                                            e_env
-                                                            e_string_list
-                                                            uu___55 in
+                                                          mk2 "compare_bv"
+                                                            FStar_Reflection_Basic.compare_bv
+                                                            e_bv e_bv e_order in
                                                         let uu___55 =
                                                           let uu___56 =
-                                                            mk2 "term_eq"
-                                                              FStar_Reflection_Basic.term_eq
-                                                              e_term e_term
-                                                              e_bool in
+                                                            let uu___57 =
+                                                              e_list e_fv in
+                                                            mk2 "lookup_attr"
+                                                              FStar_Reflection_Basic.lookup_attr
+                                                              e_term e_env
+                                                              uu___57 in
                                                           let uu___57 =
                                                             let uu___58 =
-                                                              mk1 "moduleof"
-                                                                FStar_Reflection_Basic.moduleof
-                                                                e_env
-                                                                e_string_list in
+                                                              let uu___59 =
+                                                                e_list e_fv in
+                                                              mk1
+                                                                "all_defs_in_env"
+                                                                FStar_Reflection_Basic.all_defs_in_env
+                                                                e_env uu___59 in
                                                             let uu___59 =
                                                               let uu___60 =
-                                                                mk1
-                                                                  "binders_of_env"
-                                                                  FStar_Reflection_Basic.binders_of_env
+                                                                let uu___61 =
+                                                                  e_list e_fv in
+                                                                mk2
+                                                                  "defs_in_module"
+                                                                  FStar_Reflection_Basic.defs_in_module
                                                                   e_env
-                                                                  e_binders in
+                                                                  e_string_list
+                                                                  uu___61 in
                                                               let uu___61 =
                                                                 let uu___62 =
-                                                                  let uu___63
-                                                                    =
-                                                                    e_list
-                                                                    e_bv in
-                                                                  mk1
-                                                                    "vars_of_env"
-                                                                    FStar_Reflection_Basic.vars_of_env
-                                                                    e_env
-                                                                    uu___63 in
+                                                                  mk2
+                                                                    "term_eq"
+                                                                    FStar_Reflection_Basic.term_eq
+                                                                    e_term
+                                                                    e_term
+                                                                    e_bool in
                                                                 let uu___63 =
                                                                   let uu___64
                                                                     =
-                                                                    let uu___65
+                                                                    mk1
+                                                                    "moduleof"
+                                                                    FStar_Reflection_Basic.moduleof
+                                                                    e_env
+                                                                    e_string_list in
+                                                                  let uu___65
+                                                                    =
+                                                                    let uu___66
+                                                                    =
+                                                                    mk1
+                                                                    "binders_of_env"
+                                                                    FStar_Reflection_Basic.binders_of_env
+                                                                    e_env
+                                                                    e_binders in
+                                                                    let uu___67
+                                                                    =
+                                                                    let uu___68
+                                                                    =
+                                                                    let uu___69
+                                                                    =
+                                                                    e_list
+                                                                    e_binding in
+                                                                    mk1
+                                                                    "vars_of_env"
+                                                                    FStar_Reflection_Basic.vars_of_env
+                                                                    e_env
+                                                                    uu___69 in
+                                                                    let uu___69
+                                                                    =
+                                                                    let uu___70
+                                                                    =
+                                                                    let uu___71
                                                                     =
                                                                     e_option
                                                                     e_sigelt in
@@ -628,12 +666,12 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     FStar_Reflection_Basic.lookup_typ
                                                                     e_env
                                                                     e_string_list
-                                                                    uu___65 in
-                                                                  let uu___65
+                                                                    uu___71 in
+                                                                    let uu___71
                                                                     =
-                                                                    let uu___66
+                                                                    let uu___72
                                                                     =
-                                                                    let uu___67
+                                                                    let uu___73
                                                                     =
                                                                     e_list
                                                                     e_string_list in
@@ -641,28 +679,28 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     "env_open_modules"
                                                                     FStar_Reflection_Basic.env_open_modules
                                                                     e_env
-                                                                    uu___67 in
-                                                                    let uu___67
+                                                                    uu___73 in
+                                                                    let uu___73
                                                                     =
-                                                                    let uu___68
+                                                                    let uu___74
                                                                     =
                                                                     mk1
                                                                     "implode_qn"
                                                                     FStar_Reflection_Basic.implode_qn
                                                                     e_string_list
                                                                     e_string in
-                                                                    let uu___69
+                                                                    let uu___75
                                                                     =
-                                                                    let uu___70
+                                                                    let uu___76
                                                                     =
                                                                     mk1
                                                                     "explode_qn"
                                                                     FStar_Reflection_Basic.explode_qn
                                                                     e_string
                                                                     e_string_list in
-                                                                    let uu___71
+                                                                    let uu___77
                                                                     =
-                                                                    let uu___72
+                                                                    let uu___78
                                                                     =
                                                                     mk2
                                                                     "compare_string"
@@ -670,9 +708,9 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_string
                                                                     e_string
                                                                     e_int in
-                                                                    let uu___73
+                                                                    let uu___79
                                                                     =
-                                                                    let uu___74
+                                                                    let uu___80
                                                                     =
                                                                     mk2
                                                                     "push_binder"
@@ -680,9 +718,9 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_env
                                                                     e_binder
                                                                     e_env in
-                                                                    let uu___75
+                                                                    let uu___81
                                                                     =
-                                                                    let uu___76
+                                                                    let uu___82
                                                                     =
                                                                     mk2
                                                                     "push_namedv"
@@ -690,25 +728,34 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_env
                                                                     e_namedv
                                                                     e_env in
-                                                                    let uu___77
+                                                                    let uu___83
                                                                     =
-                                                                    let uu___78
+                                                                    let uu___84
                                                                     =
                                                                     mk1
                                                                     "range_of_term"
                                                                     FStar_Reflection_Basic.range_of_term
                                                                     e_term
                                                                     e_range in
-                                                                    let uu___79
+                                                                    let uu___85
                                                                     =
-                                                                    let uu___80
+                                                                    let uu___86
                                                                     =
                                                                     mk1
                                                                     "range_of_sigelt"
                                                                     FStar_Reflection_Basic.range_of_sigelt
                                                                     e_sigelt
                                                                     e_range in
-                                                                    [uu___80] in
+                                                                    [uu___86] in
+                                                                    uu___84
+                                                                    ::
+                                                                    uu___85 in
+                                                                    uu___82
+                                                                    ::
+                                                                    uu___83 in
+                                                                    uu___80
+                                                                    ::
+                                                                    uu___81 in
                                                                     uu___78
                                                                     ::
                                                                     uu___79 in

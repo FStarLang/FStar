@@ -308,6 +308,16 @@ let (e_env : FStar_TypeChecker_Env.env FStar_TypeChecker_NBETerm.embedding) =
           FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_env unembed_env FStar_Reflection_Constants.fstar_refl_env_fv
+let (e_subst_elt :
+  FStar_Syntax_Syntax.subst_elt FStar_TypeChecker_NBETerm.embedding) =
+  let embed_const cb e = failwith "IOU" in
+  let unembed_const cb t = FStar_Pervasives_Native.None in
+  mk_emb' embed_const unembed_const
+    FStar_Reflection_Constants.fstar_refl_subst_elt_fv
+let (e_subst :
+  FStar_Syntax_Syntax.subst_elt Prims.list
+    FStar_TypeChecker_NBETerm.embedding)
+  = FStar_TypeChecker_NBETerm.e_list e_subst_elt
 let (e_const :
   FStar_Reflection_Data.vconst FStar_TypeChecker_NBETerm.embedding) =
   let embed_const cb c =

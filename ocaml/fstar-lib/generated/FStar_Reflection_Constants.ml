@@ -234,6 +234,14 @@ let (fstar_refl_sigelt_view : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "sigelt_view"
 let (fstar_refl_sigelt_view_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_data_lid_as_fv "sigelt_view"
+let (fstar_refl_subst_elt : FStar_Syntax_Syntax.term) =
+  mk_refl_data_lid_as_term "subst_elt"
+let (fstar_refl_subst_elt_fv : FStar_Syntax_Syntax.fv) =
+  mk_refl_data_lid_as_fv "subst_elt"
+let (fstar_refl_subst : FStar_Syntax_Syntax.term) =
+  mk_refl_data_lid_as_term "subst"
+let (fstar_refl_subst_fv : FStar_Syntax_Syntax.fv) =
+  mk_refl_data_lid_as_fv "subst"
 let (fstar_refl_exp : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "exp"
 let (fstar_refl_exp_fv : FStar_Syntax_Syntax.fv) =
@@ -381,6 +389,11 @@ let (ref_Mk_lb : refl_constant) =
 let (ref_Q_Explicit : refl_constant) = fstar_refl_data_const "Q_Explicit"
 let (ref_Q_Implicit : refl_constant) = fstar_refl_data_const "Q_Implicit"
 let (ref_Q_Meta : refl_constant) = fstar_refl_data_const "Q_Meta"
+let (ref_DB : refl_constant) = fstar_refl_data_const "DB"
+let (ref_NM : refl_constant) = fstar_refl_data_const "NM"
+let (ref_NT : refl_constant) = fstar_refl_data_const "NT"
+let (ref_UN : refl_constant) = fstar_refl_data_const "UN"
+let (ref_UD : refl_constant) = fstar_refl_data_const "UD"
 let (ref_C_Unit : refl_constant) = fstar_refl_data_const "C_Unit"
 let (ref_C_True : refl_constant) = fstar_refl_data_const "C_True"
 let (ref_C_False : refl_constant) = fstar_refl_data_const "C_False"

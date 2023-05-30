@@ -1107,7 +1107,7 @@ let (pack_lb :
           FStar_Parser_Const.effect_Tot_lid def1 []
           FStar_Compiler_Range_Type.dummyRange
 let (inspect_namedv :
-  FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.namedv_view) =
+  FStar_Reflection_Data.namedv -> FStar_Reflection_Data.namedv_view) =
   fun v ->
     if v.FStar_Syntax_Syntax.index < Prims.int_zero
     then
@@ -1269,12 +1269,23 @@ let (env_open_modules :
 let (binders_of_env :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders) =
   fun e -> FStar_TypeChecker_Env.all_binders e
+let (bv_to_binding : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.binding)
+  =
+  fun bv ->
+    let uu___ = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index in
+    let uu___1 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+    {
+      FStar_Reflection_Data.uniq1 = uu___;
+      FStar_Reflection_Data.sort4 = (bv.FStar_Syntax_Syntax.sort);
+      FStar_Reflection_Data.ppname4 = uu___1
+    }
 let (vars_of_env :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.bv Prims.list) =
+  FStar_TypeChecker_Env.env -> FStar_Reflection_Data.binding Prims.list) =
   fun e ->
     let uu___ = FStar_TypeChecker_Env.all_binders e in
     FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_List.map (fun b -> b.FStar_Syntax_Syntax.binder_bv))
+      (FStar_Compiler_List.map
+         (fun b -> bv_to_binding b.FStar_Syntax_Syntax.binder_bv))
 let eqopt :
   'uuuuu .
     unit ->
@@ -1481,18 +1492,18 @@ let (push_namedv :
     fun b ->
       let uu___ = let uu___1 = FStar_Syntax_Syntax.mk_binder b in [uu___1] in
       FStar_TypeChecker_Env.push_binders e uu___
-let (subst :
-  FStar_Syntax_Syntax.bv ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-  =
-  fun x ->
-    fun n ->
-      fun m -> FStar_Syntax_Subst.subst [FStar_Syntax_Syntax.NT (x, n)] m
 let (close_term :
   FStar_Syntax_Syntax.binder ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   = fun b -> fun t -> FStar_Syntax_Subst.close [b] t
+let (subst :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  = fun s -> fun t -> FStar_Syntax_Subst.subst s t
+let (subst_comp :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp)
+  = fun s -> fun c -> FStar_Syntax_Subst.subst_comp s c
 let (range_of_term :
   FStar_Syntax_Syntax.term -> FStar_Compiler_Range_Type.range) =
   fun t -> t.FStar_Syntax_Syntax.pos
