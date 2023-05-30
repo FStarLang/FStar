@@ -125,36 +125,43 @@ let k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
     k_elab_equiv_prefix k d1 in
   k
 
+let rec list_as_vprop' (vp:vprop) (fvps:list vprop)
+  : Tot vprop (decreases fvps) =
+  match fvps with
+  | [] -> vp
+  | hd::tl -> list_as_vprop' (Tm_Star vp hd) tl
+
 let rec canon_right_aux (g:env) (vps:list vprop) (f:vprop -> T.Tac bool)
   : T.Tac (vps' : list vprop &
            fvps : list vprop &
-           vprop_equiv g (list_as_vprop vps) (list_as_vprop (vps' @ fvps))) =
+           vprop_equiv g (list_as_vprop vps) (list_as_vprop' (list_as_vprop vps') fvps)) =
 
   match vps with
   | [] -> (| [], [], VE_Refl _ _ |)
   | hd::rest ->
     if f hd
     then begin
-      let (| vps', fvps, v_eq |) = canon_right_aux g rest f in
-      let v_eq
-        : vprop_equiv g (list_as_vprop vps)
-                        (list_as_vprop (hd :: (vps' @ fvps)))
-        = list_as_vprop_ctx g [hd] _ rest (vps' @ fvps) (VE_Refl _ _) v_eq    
-      in  
-      let v_eq
-        : vprop_equiv g (list_as_vprop vps)
-                        (list_as_vprop ((vps'@[hd]) @ fvps))
-        = VE_Trans _ _ _ _ v_eq (VE_Sym _ _ _ (vprop_equiv_swap_equiv _ _ _ hd _ (VE_Refl _ _)))
-      in
-      let v_eq 
-        :  vprop_equiv g (list_as_vprop vps)
-                         (list_as_vprop (vps'@(hd::fvps)))
-        = VE_Trans _ _ _ _ v_eq (VE_Sym _ _ _ (list_as_vprop_assoc _ _ _ _)) in
+      let (| vps', fvps, _ |) = canon_right_aux g rest f in
+      let v_eq = magic () in
+      // let v_eq
+      //   : vprop_equiv g (list_as_vprop vps)
+      //                   (list_as_vprop (hd :: (vps' @ fvps)))
+      //   = list_as_vprop_ctx g [hd] _ rest (vps' @ fvps) (VE_Refl _ _) v_eq    
+      // in  
+      // let v_eq
+      //   : vprop_equiv g (list_as_vprop vps)
+      //                   (list_as_vprop ((vps'@[hd]) @ fvps))
+      //   = VE_Trans _ _ _ _ v_eq (VE_Sym _ _ _ (vprop_equiv_swap_equiv _ _ _ hd _ (VE_Refl _ _)))
+      // in
+      // let v_eq 
+      //   :  vprop_equiv g (list_as_vprop vps)
+      //                    (list_as_vprop (vps'@(hd::fvps)))
+      //   = VE_Trans _ _ _ _ v_eq (VE_Sym _ _ _ (list_as_vprop_assoc _ _ _ _)) in
       (| vps', hd :: fvps, v_eq |)
     end
     else begin
-      let (| vps', pures, v_eq |) = canon_right_aux g rest f in
-      let v_eq = list_as_vprop_ctx g [hd] _ _ _ (VE_Refl _ _) v_eq in
+      let (| vps', pures, _ |) = canon_right_aux g rest f in
+      let v_eq = magic () in //list_as_vprop_ctx g [hd] _ _ _ (VE_Refl _ _) v_eq in
       (| hd::vps', pures, v_eq |)
     end
 
@@ -163,11 +170,11 @@ let canon_right (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
   : T.Tac (ctxt':term &
            tot_typing g ctxt' Tm_VProp &
            continuation_elaborator g ctxt g ctxt')
-  = let ctxt' = canon_vprop ctxt in
-    let (| vps', pures, veq |) = canon_right_aux g (vprop_as_list ctxt) f in
-    let veq : vprop_equiv g ctxt (list_as_vprop (vps'@pures)) =
-      VE_Trans _ _ _ _ (vprop_list_equiv g ctxt) veq
-    in
+  = let (| vps', pures, veq |) = canon_right_aux g (vprop_as_list ctxt) f in
+    let veq : vprop_equiv g ctxt (list_as_vprop' (list_as_vprop vps') pures)
+      = magic () in
+    //   VE_Trans _ _ _ _ (vprop_list_equiv g ctxt) veq
+    // in
     (| _, VP.vprop_equiv_typing_fwd ctxt_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 8"
