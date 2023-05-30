@@ -378,11 +378,7 @@ let elim_then_check (#g:env) (#ctxt:term)
                     (post_hint: post_hint_opt g)
                     (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint)
-  = T.print (Printf.sprintf "elim_then_check: trying to elim pure with ctxt: %s\n"
-               (P.term_to_string ctxt));
-    let (| g', ctxt', ctxt'_typing, elab_k |) = ElimPure.elim_pure ctxt_typing in
-    T.print (Printf.sprintf "elim_then_check: after eliminating pure, ctxt: %s\n"
-               (P.term_to_string ctxt'));
+  = let (| g', ctxt', ctxt'_typing, elab_k |) = ElimPure.elim_pure ctxt_typing in
     let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimExists.elim_exists ctxt'_typing in
     let res = check g'' st ctxt'' ctxt'_typing post_hint in
     elab_k post_hint (elab_k' post_hint res)

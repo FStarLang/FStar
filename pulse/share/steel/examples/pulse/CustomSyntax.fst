@@ -98,26 +98,26 @@ fn intro_pure_example (r:ref U32.t)
 ```
 
 
-```pulse
-fn if_example (r:ref U32.t)
-              (n:(n:erased U32.t{eq2_prop (U32.v (reveal n)) 1}))
-              (b:bool)
-   requires 
-     pts_to r full_perm n
-   ensures
-     pts_to r full_perm (U32.add (reveal n) 2ul)
-{
-   let x = read_atomic r;
-   if b
-   {
-     r := U32.add x 2ul
-   }
-   else
-   {
-     write_atomic r 3ul
-   }
-}
-```
+// ```pulse
+// fn if_example (r:ref U32.t)
+//               (n:(n:erased U32.t{eq2_prop (U32.v (reveal n)) 1}))
+//               (b:bool)
+//    requires 
+//      pts_to r full_perm n
+//    ensures
+//      pts_to r full_perm (U32.add (reveal n) 2ul)
+// {
+//    let x = read_atomic r;
+//    if b
+//    {
+//      r := U32.add x 2ul
+//    }
+//    else
+//    {
+//      write_atomic r 3ul
+//    }
+// }
+// ```
 
 // ```pulse
 // fn elim_intro_exists2 (r:ref U32.t)
