@@ -677,19 +677,29 @@ let goal_typedness_deps (g:goal) = U.ctx_uvar_typedness_deps g.goal_ctx_uvar
 
 let bnorm_and_replace g = replace_cur (bnorm_goal g)
 
-let binder_to_binding (b:binder) : RD.binding = {
-  uniq   = Z.of_int_fs (b.binder_bv.index);
-  sort   = b.binder_bv.sort;
-  ppname = string_of_id b.binder_bv.ppname;
-}
+let bv_to_binding (bv : bv) : RD.binding =
+  {
+    uniq   = Z.of_int_fs bv.index;
+    sort   = bv.sort;
+    ppname = string_of_id bv.ppname;
+  }
 
-let binding_to_binder (b:RD.binding) : RD.binder =
-  let bv = {
+let binder_to_binding (b:binder) : RD.binding =
+  bv_to_binding b.binder_bv
+
+let binding_to_string (b : RD.binding) : string =
+  b.ppname ^ "#" ^ string_of_int (Z.to_int_fs b.uniq)
+
+
+let binding_to_bv (b : RD.binding) : bv =
+  {
     sort = b.sort;
     ppname = mk_ident(b.ppname, Range.dummyRange);
-    index = b.uniq;
+    index = Z.to_int_fs b.uniq;
   }
-  in
+
+let binding_to_binder (b:RD.binding) : S.binder =
+  let bv = binding_to_bv b in
   S.mk_binder bv
 
 let arrow_one (env:Env.env) (t:term) =
@@ -1226,24 +1236,19 @@ let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
 // FIXME: Add a coment here on why this makes sense, since it seems to remove
 // the variable from the middle of the environment, and may break dependency?
 // Or remove if broken.
-let rename_to (b : binder) (s : string) : tac binder = wrap_err "rename_to" <| (
+let rename_to (b : RD.binding) (s : string) : tac RD.binding = wrap_err "rename_to" <| (
     let! goal = cur_goal in
-    let bv = b.binder_bv in
+    let bv = binding_to_bv b in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, (range_of_id bv.ppname)) }) in
     match! subst_goal bv bv' goal with
     | None -> fail "binder not found in environment"
     | Some (bv', goal) ->
       replace_cur goal ;!
-      ret {b with binder_bv=bv'}
+      let uniq = Z.of_int_fs bv'.index in
+      ret {b with uniq=uniq; ppname = s}
     )
 
-let binding_to_bv (b : binding) : bv = {
-  sort   = b.sort;
-  ppname = b.ppname;
-  index  = b.uniq;
-}
-
-let var_retype (b : binding) : tac unit = wrap_err "binder_retype" <| (
+let var_retype (b : RD.binding) : tac unit = wrap_err "binder_retype" <| (
     let! goal = cur_goal in
     let bv = binding_to_bv b in
     match split_env bv (goal_env goal) with
@@ -1274,9 +1279,9 @@ let var_retype (b : binding) : tac unit = wrap_err "binder_retype" <| (
     )
 
 (* TODO: move to bv *)
-let norm_binder_type (s : list EMB.norm_step) (b : binder) : tac unit = wrap_err "norm_binder_type" <| (
+let norm_binder_type (s : list EMB.norm_step) (b : RD.binding) : tac unit = wrap_err "norm_binder_type" <| (
     let! goal = cur_goal in
-    let bv = b.binder_bv in
+    let bv = binding_to_bv b in
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) ->
@@ -1304,11 +1309,11 @@ let revert () : tac unit =
 
 let free_in bv t = Util.set_mem bv (SF.names t)
 
-let clear (b : binder) : tac unit =
-    let bv = b.binder_bv in
+let clear (b : RD.binding) : tac unit =
+    let bv = binding_to_bv b in
     let! goal = cur_goal in
     if_verbose (fun () -> BU.print2 "Clear of (%s), env has %s binders\n"
-                        (Print.binder_to_string b)
+                        (binding_to_string b)
                         (Env.all_binders (goal_env goal) |> List.length |> string_of_int)) ;!
     match split_env bv (goal_env goal) with
     | None -> fail "Cannot clear; binder not in environment"
@@ -1340,7 +1345,7 @@ let clear_top () : tac unit =
     let! goal = cur_goal in
     match Env.pop_bv (goal_env goal) with
     | None -> fail "Cannot clear; empty context"
-    | Some (x, _) -> clear (S.mk_binder x) // we ignore the qualifier anyway
+    | Some (x, _) -> clear (bv_to_binding x) // we ignore the qualifier anyway
 
 let prune (s:string) : tac unit =
     let! g = cur_goal in
@@ -1992,10 +1997,10 @@ let string_to_term (e: Env.env) (s: string): tac term
     | ASTFragment _ -> fail ("string_of_term: expected a Term as a result, got an ASTFragment")
     | ParseError (_, err, _) -> fail ("string_of_term: got error " ^ err)
 
-let push_bv_dsenv (e: Env.env) (i: string): tac (env * bv)
+let push_bv_dsenv (e: Env.env) (i: string): tac (env * RD.binding)
   = let ident = Ident.mk_ident (i, FStar.Compiler.Range.dummyRange) in
     let dsenv, bv = FStar.Syntax.DsEnv.push_bv e.dsenv ident in
-    ret ({ e with dsenv }, bv)
+    ret ({ e with dsenv }, bv_to_binding bv)
 
 let term_to_string (t:term) : tac string
   = let s = Print.term_to_string t in

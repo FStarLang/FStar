@@ -324,12 +324,12 @@ let () =
         (fun _ -> recover) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either E.e_exn_nbe NBET.e_any);
 
       mk_tac_step_1 0 "intro"
-        intro e_unit RE.e_binder
-        intro NBET.e_unit NRE.e_binder;
+        intro e_unit RE.e_binding
+        intro NBET.e_unit NRE.e_binding;
 
       mk_tac_step_1 0 "intro_rec"
-        intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder)
-        intro_rec NBET.e_unit (NBET.e_tuple2 NRE.e_binder NRE.e_binder);
+        intro_rec e_unit (e_tuple2 RE.e_binding RE.e_binding)
+        intro_rec NBET.e_unit (NBET.e_tuple2 NRE.e_binding NRE.e_binding);
 
       mk_tac_step_1 0 "norm"
         norm (e_list e_norm_step) e_unit
@@ -340,12 +340,12 @@ let () =
         norm_term_env NRE.e_env (NBET.e_list NBET.e_norm_step) NRE.e_term NRE.e_term;
 
       mk_tac_step_2 0 "norm_binder_type"
-        norm_binder_type (e_list e_norm_step) RE.e_binder e_unit
-        norm_binder_type (NBET.e_list NBET.e_norm_step) NRE.e_binder NBET.e_unit;
+        norm_binder_type (e_list e_norm_step) RE.e_binding e_unit
+        norm_binder_type (NBET.e_list NBET.e_norm_step) NRE.e_binding NBET.e_unit;
 
       mk_tac_step_2 0 "rename_to"
-        rename_to RE.e_binder e_string RE.e_binder
-        rename_to NRE.e_binder NBET.e_string NRE.e_binder;
+        rename_to RE.e_binding e_string RE.e_binding
+        rename_to NRE.e_binding NBET.e_string NRE.e_binding;
 
       mk_tac_step_1 0 "var_retype"
         var_retype RE.e_binding e_unit
@@ -360,12 +360,12 @@ let () =
         clear_top NBET.e_unit NBET.e_unit;
 
       mk_tac_step_1 0 "clear"
-        clear RE.e_binder e_unit
-        clear NRE.e_binder NBET.e_unit;
+        clear RE.e_binding e_unit
+        clear NRE.e_binding NBET.e_unit;
 
       mk_tac_step_1 0 "rewrite"
-        rewrite RE.e_binder e_unit
-        rewrite NRE.e_binder NBET.e_unit;
+        rewrite RE.e_binding e_unit
+        rewrite NRE.e_binding NBET.e_unit;
 
       mk_tac_step_1 0 "refine_intro"
         refine_intro e_unit e_unit
@@ -548,8 +548,8 @@ let () =
         string_to_term NRE.e_env NBET.e_string NRE.e_term;
 
       mk_tac_step_2 0 "push_bv_dsenv"
-        push_bv_dsenv RE.e_env e_string (e_tuple2 RE.e_env RE.e_bv)
-        push_bv_dsenv NRE.e_env NBET.e_string (NBET.e_tuple2 NRE.e_env NRE.e_bv);
+        push_bv_dsenv RE.e_env e_string (e_tuple2 RE.e_env RE.e_binding)
+        push_bv_dsenv NRE.e_env NBET.e_string (NBET.e_tuple2 NRE.e_env NRE.e_binding);
 
       mk_tac_step_1 0 "term_to_string"
         term_to_string RE.e_term e_string
