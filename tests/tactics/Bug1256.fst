@@ -34,7 +34,7 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
          by (let eq = implies_intro () in
              let h = implies_intro () in
              ddump "A";
-             my_cut (type_of_binder h);
+             my_cut h.sort;
              ddump "B";
              rewrite eq;
              norm [];
@@ -66,7 +66,7 @@ let test3 (p:(unit -> Type0)) (q:(unit -> Type0))
          by (let eq = implies_intro () in
              let h = implies_intro () in
              ddump "A";
-             my_cut (type_of_binder h);
+             my_cut h.sort;
              ddump "B";
              rewrite eq;
              norm [];
@@ -84,7 +84,7 @@ let test4 (post:(unit -> Type0))
          by (let eq = implies_intro () in
              let h = implies_intro () in
              ddump "A";
-             my_cut (type_of_binder h);
+             my_cut h.sort;
              ddump "B";
              rewrite eq;
              norm [];

@@ -33,8 +33,8 @@ let l1 (x : bool) (y : int) (z : unit) =
 
 let clear_all_of_type (t : typ) : Tac unit =
     let e = cur_env () in
-    let bs = binders_of_env e in
-    let _ = map (fun b -> if term_eq (type_of_binder b) t
+    let bs = vars_of_env e in
+    let _ = map (fun (b:binding) -> if term_eq b.sort t
                           then clear b
                           else ())
          // We need to traverse the list backwards, to clear rightmost
@@ -46,9 +46,9 @@ let clear_all_of_type (t : typ) : Tac unit =
 let l2 (x : int) (y : bool) (z : int) =
     assert (phi ==> (psi ==> xi))
         by (let e = cur_env () in
-            let n = List.length (binders_of_env e) in
+            let n = List.length (vars_of_env e) in
             let u = quote int in
             clear_all_of_type u;
             let e = cur_env () in
-            // We're removing two binders
-            guard (List.length (binders_of_env e) = n - 2))
+            // We're removing two variables
+            guard (List.length (vars_of_env e) = n - 2))

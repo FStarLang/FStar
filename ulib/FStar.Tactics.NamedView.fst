@@ -139,6 +139,16 @@ let binder_to_namedv (b : binder) : namedv =
     ppname = b.ppname;
   }
 
+let namedv_to_binder (nv : namedv) (sort : term) : binder =
+  let nvv = inspect_namedv nv in
+  {
+    uniq   = nvv.uniq;
+    sort   = sort;
+    ppname = nvv.ppname;
+    qual   = Q_Explicit;
+    attrs  = [];
+  }
+
 (* Bindings and simple_binders are the same *)
 let binding_to_simple_binder (b:binding) : simple_binder = {
   uniq = b.uniq;
