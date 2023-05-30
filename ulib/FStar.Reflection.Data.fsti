@@ -39,32 +39,32 @@ type universes = list universe
 noeq
 type pattern =
  // A built-in constant
- | Pat_Constant {
-     c : vconst
-   }
+ | Pat_Constant :
+     c : vconst ->
+     pattern
 
  // A fully applied constructor, each boolean marks whether the
  // argument was an explicitly-provided implicit argument
- | Pat_Cons {
-     head    : fv;
-     univs   : option universes;
-     subpats : list (pattern * bool)
-   }
+ | Pat_Cons :
+     head    : fv ->
+     univs   : option universes ->
+     subpats : list (pattern * bool) ->
+     pattern
 
  // A pattern-bound variable. It has a sealed sort in it.
  // This sort is ignored by the typechecker, but may be useful
  // for metaprogram to look at heuristically. There is nothing
  // else here but a ppname, the variable is referred to by its DB index.
  // This means all Pat_Var are provably equal.
- | Pat_Var {
-     sort   : sealed term;
-     ppname : ppname_t;
-   }
+ | Pat_Var :
+     sort   : sealed term ->
+     ppname : ppname_t ->
+     pattern
 
  // Dot pattern: resolved by other elements in the pattern and type
- | Pat_Dot_Term {
-     t : option term;
-   }
+ | Pat_Dot_Term :
+     t : option term ->
+     pattern
 
 type branch = pattern * term  // | pattern -> term
 

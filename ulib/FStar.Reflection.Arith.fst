@@ -194,7 +194,7 @@ let is_arith_expr t =
 // val is_arith_prop : term -> tm prop
 val is_arith_prop : term -> st -> Tac (either string (prop * st))
 let rec is_arith_prop (t:term) = fun i ->
-   (let! f = lift term_as_formula t in
+   (let! f = lift (fun t -> term_as_formula t) t in
     match f with
     | Comp (Eq _) l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
     | Comp (BoolEq _) l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)

@@ -50,6 +50,7 @@ val e_sigelt        : embedding sigelt
 val e_letbinding    : embedding letbinding
 val e_lb_view       : embedding lb_view
 val e_sigelt_view   : embedding sigelt_view
+val e_namedv_view   : embedding namedv_view
 val e_bv_view       : embedding bv_view
 val e_exp           : embedding exp
 val e_attribute     : embedding attribute

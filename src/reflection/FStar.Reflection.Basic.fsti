@@ -67,6 +67,9 @@ val pack_sigelt    : sigelt_view -> sigelt
 val inspect_lb     : letbinding -> lb_view
 val pack_lb        : lb_view -> letbinding
 
+val inspect_namedv : namedv -> namedv_view
+val pack_namedv    : namedv_view -> namedv
+
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 

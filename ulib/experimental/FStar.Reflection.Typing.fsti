@@ -221,9 +221,9 @@ and binder_offset_pattern (p:pattern)
     | Pat_Constant _
     | Pat_Dot_Term _ -> 0
 
-    | Pat_Var _ -> 1
+    | Pat_Var _ _ -> 1
 
-    | Pat_Cons {head=fv; univs=us; subpats} -> 
+    | Pat_Cons head univs subpats ->
       binder_offset_patterns subpats
 
 let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
@@ -375,17 +375,17 @@ and open_or_close_pattern' (p:pattern) (v:open_or_close) (i:nat)
   = match p with
     | Pat_Constant _ -> p
 
-    | Pat_Cons {head; univs; subpats} -> 
+    | Pat_Cons head univs subpats ->
       let subpats = open_or_close_patterns' subpats v i in
-      Pat_Cons {head; univs; subpats}
+      Pat_Cons head univs subpats
 
-    | Pat_Var bv ->
-      Pat_Var bv
+    | Pat_Var bv s ->
+      Pat_Var bv s
 
-    | Pat_Dot_Term {t=topt} ->
-      Pat_Dot_Term {t=(match topt with
+    | Pat_Dot_Term topt ->
+      Pat_Dot_Term (match topt with
                     | None -> None
-                    | Some t -> Some (open_or_close_term' t v i))}
+                    | Some t -> Some (open_or_close_term' t v i))
 
     
 and open_or_close_branch' (br:branch) (v:open_or_close) (i:nat)
@@ -579,12 +579,12 @@ and freevars_pattern (p:pattern)
     | Pat_Constant _ ->
       Set.empty
 
-    | Pat_Cons {subpats} ->
+    | Pat_Cons head univs subpats ->
       freevars_patterns subpats
       
-    | Pat_Var bv -> Set.empty
+    | Pat_Var bv s -> Set.empty
 
-    | Pat_Dot_Term {t=topt} ->
+    | Pat_Dot_Term topt ->
       freevars_opt topt freevars
 
 and freevars_patterns (ps:list (pattern & bool))
@@ -727,12 +727,12 @@ and ln'_pattern (p:pattern) (i:int)
   = match p with
     | Pat_Constant _ -> true
 
-    | Pat_Cons {subpats} ->
+    | Pat_Cons head univs subpats ->
       ln'_patterns subpats i
       
-    | Pat_Var bv -> true
+    | Pat_Var bv s -> true
 
-    | Pat_Dot_Term {t=topt} ->
+    | Pat_Dot_Term topt ->
       (match topt with
        | None -> true
        | Some t -> ln' t i)
@@ -896,8 +896,8 @@ and univ_leq : universe -> universe -> Type0 =
     univ_leq u (u_max u v)
 
 let mk_if (scrutinee then_ else_:R.term) : R.term =
-  pack_ln (Tv_Match scrutinee None [(Pat_Constant {c=C_True}, then_); 
-                                    (Pat_Constant {c=C_False}, else_)])
+  pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_);
+                                    (Pat_Constant C_False, else_)])
 
 
 // effect and type

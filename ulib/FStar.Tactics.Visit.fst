@@ -98,14 +98,14 @@ and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
   (p, t)
 and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   match p with
-  | Pat_Constant c -> p
-  | Pat_Cons {head;univs;subpats} ->
+  | Pat_Constant _ -> p
+  | Pat_Var v s -> Pat_Var v s
+  | Pat_Cons head univs subpats  ->
       let subpats = (map (fun(p,b) -> (visit_pat ff p, b)) subpats) in
-      Pat_Cons {head;univs;subpats}
-  | Pat_Var v -> Pat_Var v
-  | Pat_Dot_Term {t} ->
+      Pat_Cons head univs subpats
+  | Pat_Dot_Term t ->
       let t = map_opt (visit_tm ff) t in
-      Pat_Dot_Term {t}
+      Pat_Dot_Term t
 
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in

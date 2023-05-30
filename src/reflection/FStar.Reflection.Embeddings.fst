@@ -671,7 +671,7 @@ let e_bv_view =
                     rng
     in
     let unembed_bv_view w (t : term) : option bv_view =
-    BU.print1 "GG trying to unembed bv_view (%s)\n" (Print.term_to_string t);
+    (* BU.print1 "GG trying to unembed bv_view (%s)\n" (Print.term_to_string t); *)
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -730,7 +730,7 @@ let e_binder_view =
                 rng in
 
   let unembed_binder_view w (t:term) : option binder_view =
-    BU.print1 "GG trying to unembed binder_view (%s)\n" (Print.term_to_string t);
+    (* BU.print1 "GG trying to unembed binder_view (%s)\n" (Print.term_to_string t); *)
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
