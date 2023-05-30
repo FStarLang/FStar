@@ -829,9 +829,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
 
     // env.splice will check the tactic
 
-    BU.print_string "GGGG1\n";
     let ses = env.splice env is_typed lids t se.sigrng in
-    BU.print_string "GGGG2\n";
     let ses = 
       if is_typed
       then let sigquals = 
@@ -844,15 +842,12 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
               ses
       else ses
     in
-    BU.print_string "GGGG3\n";
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
 
-    BU.print_string "GGGG4\n";
     if Env.debug env Options.Low then
       BU.print1 "Splice returned sigelts {\n%s\n}\n"
         (String.concat "\n" <| List.map Print.sigelt_to_string ses);
-    BU.print_string "GGGG5\n";
 
     if is_typed
     then ses, [], env

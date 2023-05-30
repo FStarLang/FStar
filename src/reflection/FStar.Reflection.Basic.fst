@@ -452,6 +452,13 @@ let compare_bv (x:bv) (y:bv) : order =
     else if n = 0 then Eq
     else Gt
 
+// Same as above
+let compare_namedv (x:bv) (y:bv) : order =
+    let n = S.order_bv x y in
+    if n < 0 then Lt
+    else if n = 0 then Eq
+    else Gt
+
 let lookup_attr (attr:term) (env:Env.env) : list fv =
     match (SS.compress_subst attr).n with
     | Tm_fvar fv ->

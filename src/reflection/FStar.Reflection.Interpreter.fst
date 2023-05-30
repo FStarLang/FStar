@@ -348,6 +348,12 @@ let reflection_primops : list Cfg.primitive_step = [
     e_bv
     e_order;
 
+  mk2 "compare_namedv"
+    RB.compare_namedv
+    e_namedv
+    e_namedv
+    e_order;
+
   mk2 "lookup_attr"
     RB.lookup_attr
     e_term

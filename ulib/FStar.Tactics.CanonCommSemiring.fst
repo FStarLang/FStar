@@ -44,8 +44,8 @@ module FStar.Tactics.CanonCommSemiring
 ///  - http://www.cs.ru.nl/~freek/courses/tt-2014/read/10.1.1.61.3041.pdf
 
 open FStar.List
-open FStar.Tactics
 open FStar.Reflection
+open FStar.Tactics
 open FStar.Algebra.CommMonoid
 
 let term_eq = FStar.Tactics.term_eq_old

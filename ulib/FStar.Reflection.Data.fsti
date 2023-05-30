@@ -243,6 +243,7 @@ type qualifier =
 
 let var : eqtype = nat
 
+(* FIXME: explain why this is here or remove. *)
 type exp : Type =
   | Unit : exp
   | Var : var -> exp
