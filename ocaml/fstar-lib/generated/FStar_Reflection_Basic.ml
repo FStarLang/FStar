@@ -628,6 +628,16 @@ let (compare_bv :
       if n < Prims.int_zero
       then FStar_Order.Lt
       else if n = Prims.int_zero then FStar_Order.Eq else FStar_Order.Gt
+let (compare_namedv :
+  FStar_Reflection_Data.namedv ->
+    FStar_Reflection_Data.namedv -> FStar_Order.order)
+  =
+  fun x ->
+    fun y ->
+      let n = FStar_Syntax_Syntax.order_bv x y in
+      if n < Prims.int_zero
+      then FStar_Order.Lt
+      else if n = Prims.int_zero then FStar_Order.Eq else FStar_Order.Gt
 let (lookup_attr :
   FStar_Syntax_Syntax.term ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.fv Prims.list)
