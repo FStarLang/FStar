@@ -16,11 +16,15 @@ buildDunePackage {
     patchShebangs fstar-lib/make_fstar_version.sh
   '';
 
-  nativeBuildInputs = [ installShellFiles makeWrapper removeReferencesTo ];
+  nativeBuildInputs = [
+    installShellFiles
+    makeWrapper
+    removeReferencesTo
+    menhir
+  ];
 
   buildInputs = [
     batteries
-    menhir
     menhirLib
     pprint
     ppx_deriving
