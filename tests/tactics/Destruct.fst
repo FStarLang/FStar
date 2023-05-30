@@ -54,7 +54,7 @@ let f2 (x:t2) : int =
     synth_by_tactic (fun () -> destruct (quote x);
                                dump "21"; let b = intro () in
                                           let _eq = intro () in
-                                          exact b;
+                                          exact (binder_to_term b);
                                dump "22"; let b = intro () in
                                           let _eq = intro () in
                                           exact (`(snd (`#b)));

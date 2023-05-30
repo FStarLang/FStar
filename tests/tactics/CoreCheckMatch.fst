@@ -224,7 +224,7 @@ let _: x:dtuple2 toto tata -> squash (g_ss (f_ss x) == x) =
     let solve_one_goal () =
       apply (`eq_to_eq);
       apply (`add_squash);
-      let x_eq_term = binder_to_term (implies_intro ()) in
+      let x_eq_term = binding_to_term (implies_intro ()) in
       l_to_r [x_eq_term];
       let _ = forall_intro () in
       trefl()
@@ -232,6 +232,7 @@ let _: x:dtuple2 toto tata -> squash (g_ss (f_ss x) == x) =
     apply (`or_split);
     focus solve_one_goal;
     focus solve_one_goal;
-    dump "SMT goals"
+    (* dump "SMT goals"; *)
+    ()
   )
 #pop-options

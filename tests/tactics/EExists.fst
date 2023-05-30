@@ -38,7 +38,7 @@ let f1 =
 let foo () : Tac unit =
             eexists unit (fun _ ->
             let b = implies_intro() in
-            (match term_as_formula' (type_of_binder b) with
+            (match term_as_formula' b.sort with
             | Comp (Eq (Some t)) x y ->
               (match inspect x, inspect y with
               | Tv_Uvar _ _, _ | _, Tv_Uvar _ _ ->
