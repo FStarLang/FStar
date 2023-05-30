@@ -720,20 +720,20 @@ let (uu___193 : unit) =
                                             Prims.int_zero "intro"
                                             FStar_Tactics_Basic.intro
                                             FStar_Syntax_Embeddings.e_unit
-                                            FStar_Reflection_Embeddings.e_binder
+                                            FStar_Reflection_Embeddings.e_binding
                                             FStar_Tactics_Basic.intro
                                             FStar_TypeChecker_NBETerm.e_unit
-                                            FStar_Reflection_NBEEmbeddings.e_binder in
+                                            FStar_Reflection_NBEEmbeddings.e_binding in
                                         let uu___37 =
                                           let uu___38 =
                                             let uu___39 =
                                               FStar_Syntax_Embeddings.e_tuple2
-                                                FStar_Reflection_Embeddings.e_binder
-                                                FStar_Reflection_Embeddings.e_binder in
+                                                FStar_Reflection_Embeddings.e_binding
+                                                FStar_Reflection_Embeddings.e_binding in
                                             let uu___40 =
                                               FStar_TypeChecker_NBETerm.e_tuple2
-                                                FStar_Reflection_NBEEmbeddings.e_binder
-                                                FStar_Reflection_NBEEmbeddings.e_binder in
+                                                FStar_Reflection_NBEEmbeddings.e_binding
+                                                FStar_Reflection_NBEEmbeddings.e_binding in
                                             FStar_Tactics_InterpFuns.mk_tac_step_1
                                               Prims.int_zero "intro_rec"
                                               FStar_Tactics_Basic.intro_rec
@@ -792,11 +792,11 @@ let (uu___193 : unit) =
                                                     "norm_binder_type"
                                                     FStar_Tactics_Basic.norm_binder_type
                                                     uu___45
-                                                    FStar_Reflection_Embeddings.e_binder
+                                                    FStar_Reflection_Embeddings.e_binding
                                                     FStar_Syntax_Embeddings.e_unit
                                                     FStar_Tactics_Basic.norm_binder_type
                                                     uu___46
-                                                    FStar_Reflection_NBEEmbeddings.e_binder
+                                                    FStar_Reflection_NBEEmbeddings.e_binding
                                                     FStar_TypeChecker_NBETerm.e_unit in
                                                 let uu___45 =
                                                   let uu___46 =
@@ -804,23 +804,23 @@ let (uu___193 : unit) =
                                                       Prims.int_zero
                                                       "rename_to"
                                                       FStar_Tactics_Basic.rename_to
-                                                      FStar_Reflection_Embeddings.e_binder
+                                                      FStar_Reflection_Embeddings.e_binding
                                                       FStar_Syntax_Embeddings.e_string
-                                                      FStar_Reflection_Embeddings.e_binder
+                                                      FStar_Reflection_Embeddings.e_binding
                                                       FStar_Tactics_Basic.rename_to
-                                                      FStar_Reflection_NBEEmbeddings.e_binder
+                                                      FStar_Reflection_NBEEmbeddings.e_binding
                                                       FStar_TypeChecker_NBETerm.e_string
-                                                      FStar_Reflection_NBEEmbeddings.e_binder in
+                                                      FStar_Reflection_NBEEmbeddings.e_binding in
                                                   let uu___47 =
                                                     let uu___48 =
                                                       FStar_Tactics_InterpFuns.mk_tac_step_1
                                                         Prims.int_zero
-                                                        "binder_retype"
-                                                        FStar_Tactics_Basic.binder_retype
-                                                        FStar_Reflection_Embeddings.e_binder
+                                                        "var_retype"
+                                                        FStar_Tactics_Basic.var_retype
+                                                        FStar_Reflection_Embeddings.e_binding
                                                         FStar_Syntax_Embeddings.e_unit
-                                                        FStar_Tactics_Basic.binder_retype
-                                                        FStar_Reflection_NBEEmbeddings.e_binder
+                                                        FStar_Tactics_Basic.var_retype
+                                                        FStar_Reflection_NBEEmbeddings.e_binding
                                                         FStar_TypeChecker_NBETerm.e_unit in
                                                     let uu___49 =
                                                       let uu___50 =
@@ -850,10 +850,10 @@ let (uu___193 : unit) =
                                                               Prims.int_zero
                                                               "clear"
                                                               FStar_Tactics_Basic.clear
-                                                              FStar_Reflection_Embeddings.e_binder
+                                                              FStar_Reflection_Embeddings.e_binding
                                                               FStar_Syntax_Embeddings.e_unit
                                                               FStar_Tactics_Basic.clear
-                                                              FStar_Reflection_NBEEmbeddings.e_binder
+                                                              FStar_Reflection_NBEEmbeddings.e_binding
                                                               FStar_TypeChecker_NBETerm.e_unit in
                                                           let uu___55 =
                                                             let uu___56 =
@@ -861,10 +861,10 @@ let (uu___193 : unit) =
                                                                 Prims.int_zero
                                                                 "rewrite"
                                                                 FStar_Tactics_Basic.rewrite
-                                                                FStar_Reflection_Embeddings.e_binder
+                                                                FStar_Reflection_Embeddings.e_binding
                                                                 FStar_Syntax_Embeddings.e_unit
                                                                 FStar_Tactics_Basic.rewrite
-                                                                FStar_Reflection_NBEEmbeddings.e_binder
+                                                                FStar_Reflection_NBEEmbeddings.e_binding
                                                                 FStar_TypeChecker_NBETerm.e_unit in
                                                             let uu___57 =
                                                               let uu___58 =
@@ -1583,12 +1583,12 @@ let (uu___193 : unit) =
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Reflection_Embeddings.e_env
-                                                                    FStar_Reflection_Embeddings.e_bv in
+                                                                    FStar_Reflection_Embeddings.e_binding in
                                                                     let uu___148
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_tuple2
                                                                     FStar_Reflection_NBEEmbeddings.e_env
-                                                                    FStar_Reflection_NBEEmbeddings.e_bv in
+                                                                    FStar_Reflection_NBEEmbeddings.e_binding in
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
                                                                     "push_bv_dsenv"
