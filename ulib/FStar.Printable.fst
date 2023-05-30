@@ -26,6 +26,8 @@ class printable (a:Type) =
   to_string : a -> string
 }
 
+(*
+
 (* First the prim types. *)
 
 instance printable_unit : printable unit =

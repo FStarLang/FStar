@@ -125,27 +125,33 @@ let mk_class (nm:string) : Tac decls =
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive {nm=name;univs=us;params;typ=ty;ctors} = sv in
-    (* dump ("got it, name = " ^ implode_qn name); *)
-    (* dump ("got it, ty = " ^ term_to_string ty); *)
+    print ("params = " ^ string_of_list binder_to_string params);
+    dump ("got it, name = " ^ implode_qn name);
+    dump ("got it, ty = " ^ term_to_string ty);
     let ctor_name = last name in
     // Must have a single constructor
     guard (List.Tot.Base.length ctors = 1);
     let [(c_name, ty)] = ctors in
-    (* dump ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty); *)
+    dump ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty);
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);
     let C_Total cod = r in (* must be total *)
 
-    (* print ("n_univs = " ^ string_of_int (List.Tot.Base.length us)); *)
+    print ("params = " ^ string_of_list binder_to_string params);
+    print ("n_params = " ^ string_of_int (List.Tot.Base.length params));
+    print ("n_univs = " ^ string_of_int (List.Tot.Base.length us));
+    print ("cod = " ^ term_to_string cod);
+
+    print ("n_bs = " ^ string_of_int (List.Tot.Base.length bs));
 
     let base : string = "__proj__Mk" ^ ctor_name ^ "__item__" in
 
     (* Make a sigelt for each method *)
     T.map (fun (b:binder) ->
-                  (* dump ("b = " ^ term_to_string (type_of_binder b)); *)
+                  dump ("b = " ^ term_to_string b.sort);
                   let s = name_of_binder b in
-                  (* dump ("b = " ^ s); *)
+                  dump ("b = " ^ s);
                   let ns = cur_module () in
                   let sfv = pack_fv (ns @ [s]) in
                   let dbv = fresh_namedv_named "d" in
@@ -167,11 +173,11 @@ let mk_class (nm:string) : Tac decls =
                       match inspect_sigelt se with
                       | Sg_Let {lbs} ->  begin
                         let ({lb_fv=_;lb_us=_;lb_typ=typ;lb_def=_}) =
-                          lookup_lb_view lbs proj_name in typ
+                          lookup_lb lbs proj_name in typ
                         end
                       | _ -> fail "mk_class: proj not Sg_Let?"
                   in
-                  //dump ("proj_ty = " ^ term_to_string proj_ty);
+                  dump ("proj_ty = " ^ term_to_string proj_ty);
                   let ty =
                     let bs, cod = collect_arr_bs proj_ty in
                     let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
@@ -193,18 +199,17 @@ let mk_class (nm:string) : Tac decls =
                                     @ [tcdict] in
                     mk_abs bs (mk_e_app proj [named_binder_to_term tcdict])
                   in
-                  //dump ("def = " ^ term_to_string def);
-                  //dump ("ty  = " ^ term_to_string ty);
+                  dump ("def = " ^ term_to_string def);
+                  dump ("ty  = " ^ term_to_string ty);
 
                   let ty : term = ty in
                   let def : term = def in
                   let sfv : fv = sfv in
 
-                  let lbv = {lb_fv=sfv;lb_us=us;lb_typ=ty;lb_def=def} in
-                  let lb = pack_lb lbv in
+                  let lb = {lb_fv=sfv;lb_us=us;lb_typ=ty;lb_def=def} in
                   let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
                   let se = set_sigelt_quals to_propagate se in
                   let se = set_sigelt_attrs b.attrs se in
-                  //dump ("trying to return : " ^ term_to_string (quote se));
+                  dump ("trying to return : " ^ term_to_string (quote se));
                   se
     ) (filter_no_method_binders bs)

@@ -820,28 +820,7 @@ let (inspect_sigelt :
     | FStar_Syntax_Syntax.Sig_let
         { FStar_Syntax_Syntax.lbs1 = (r, lbs);
           FStar_Syntax_Syntax.lids1 = uu___;_}
-        ->
-        let inspect_letbinding lb =
-          let uu___1 = lb in
-          match uu___1 with
-          | { FStar_Syntax_Syntax.lbname = nm;
-              FStar_Syntax_Syntax.lbunivs = us;
-              FStar_Syntax_Syntax.lbtyp = typ;
-              FStar_Syntax_Syntax.lbeff = eff;
-              FStar_Syntax_Syntax.lbdef = def;
-              FStar_Syntax_Syntax.lbattrs = attrs;
-              FStar_Syntax_Syntax.lbpos = pos;_} ->
-              let uu___2 = FStar_Syntax_Subst.univ_var_opening us in
-              (match uu___2 with
-               | (s, us1) ->
-                   let typ1 = FStar_Syntax_Subst.subst s typ in
-                   let def1 = FStar_Syntax_Subst.subst s def in
-                   FStar_Syntax_Util.mk_letbinding nm us1 typ1 eff def1 attrs
-                     pos) in
-        let uu___1 =
-          let uu___2 = FStar_Compiler_List.map inspect_letbinding lbs in
-          (r, uu___2) in
-        FStar_Reflection_Data.Sg_Let uu___1
+        -> FStar_Reflection_Data.Sg_Let (r, lbs)
     | FStar_Syntax_Syntax.Sig_inductive_typ
         { FStar_Syntax_Syntax.lid = lid; FStar_Syntax_Syntax.us = us;
           FStar_Syntax_Syntax.params = param_bs;
@@ -850,90 +829,80 @@ let (inspect_sigelt :
           FStar_Syntax_Syntax.ds = c_lids;_}
         ->
         let nm = FStar_Ident.path_of_lid lid in
-        let uu___2 = FStar_Syntax_Subst.univ_var_opening us in
-        (match uu___2 with
-         | (s, us1) ->
-             let param_bs1 = FStar_Syntax_Subst.subst_binders s param_bs in
-             let ty1 = FStar_Syntax_Subst.subst s ty in
-             let uu___3 = FStar_Syntax_Subst.open_term param_bs1 ty1 in
-             (match uu___3 with
-              | (param_bs2, ty2) ->
-                  let inspect_ctor c_lid =
-                    let uu___4 =
-                      let uu___5 = get_env () in
-                      FStar_TypeChecker_Env.lookup_sigelt uu___5 c_lid in
-                    match uu___4 with
-                    | FStar_Pervasives_Native.Some
-                        {
-                          FStar_Syntax_Syntax.sigel =
-                            FStar_Syntax_Syntax.Sig_datacon
-                            { FStar_Syntax_Syntax.lid1 = lid1;
-                              FStar_Syntax_Syntax.us1 = us2;
-                              FStar_Syntax_Syntax.t1 = cty;
-                              FStar_Syntax_Syntax.ty_lid = uu___5;
-                              FStar_Syntax_Syntax.num_ty_params = nparam;
-                              FStar_Syntax_Syntax.mutuals1 = uu___6;_};
-                          FStar_Syntax_Syntax.sigrng = uu___7;
-                          FStar_Syntax_Syntax.sigquals = uu___8;
-                          FStar_Syntax_Syntax.sigmeta = uu___9;
-                          FStar_Syntax_Syntax.sigattrs = uu___10;
-                          FStar_Syntax_Syntax.sigopts = uu___11;_}
-                        ->
-                        let cty1 = FStar_Syntax_Subst.subst s cty in
-                        let uu___12 =
-                          let uu___13 = get_env () in
-                          FStar_TypeChecker_Normalize.get_n_binders uu___13
-                            nparam cty1 in
-                        (match uu___12 with
-                         | (param_ctor_bs, c) ->
-                             (if
-                                (FStar_Compiler_List.length param_ctor_bs) <>
-                                  nparam
-                              then
-                                failwith
-                                  "impossible: inspect_sigelt: could not obtain sufficient ctor param binders"
-                              else ();
-                              (let uu___15 =
-                                 let uu___16 =
-                                   FStar_Syntax_Util.is_total_comp c in
-                                 Prims.op_Negation uu___16 in
-                               if uu___15
-                               then
-                                 failwith
-                                   "impossible: inspect_sigelt: removed parameters and got an effectful comp"
-                               else ());
-                              (let cty2 = FStar_Syntax_Util.comp_result c in
-                               let s' =
-                                 FStar_Compiler_List.map2
-                                   (fun b1 ->
-                                      fun b2 ->
-                                        let uu___15 =
-                                          let uu___16 =
-                                            FStar_Syntax_Syntax.bv_to_name
-                                              b2.FStar_Syntax_Syntax.binder_bv in
-                                          ((b1.FStar_Syntax_Syntax.binder_bv),
-                                            uu___16) in
-                                        FStar_Syntax_Syntax.NT uu___15)
-                                   param_ctor_bs param_bs2 in
-                               let cty3 = FStar_Syntax_Subst.subst s' cty2 in
-                               let cty4 = FStar_Syntax_Util.remove_inacc cty3 in
-                               let uu___15 = FStar_Ident.path_of_lid lid1 in
-                               (uu___15, cty4))))
-                    | uu___5 ->
-                        failwith
-                          "impossible: inspect_sigelt: did not find ctor" in
-                  let uu___4 =
-                    let uu___5 = FStar_Compiler_List.map inspect_ctor c_lids in
-                    (nm, us1, param_bs2, ty2, uu___5) in
-                  FStar_Reflection_Data.Sg_Inductive uu___4))
+        let inspect_ctor c_lid =
+          let uu___2 =
+            let uu___3 = get_env () in
+            FStar_TypeChecker_Env.lookup_sigelt uu___3 c_lid in
+          match uu___2 with
+          | FStar_Pervasives_Native.Some
+              {
+                FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
+                  { FStar_Syntax_Syntax.lid1 = lid1;
+                    FStar_Syntax_Syntax.us1 = us1;
+                    FStar_Syntax_Syntax.t1 = cty;
+                    FStar_Syntax_Syntax.ty_lid = uu___3;
+                    FStar_Syntax_Syntax.num_ty_params = nparam;
+                    FStar_Syntax_Syntax.mutuals1 = uu___4;_};
+                FStar_Syntax_Syntax.sigrng = uu___5;
+                FStar_Syntax_Syntax.sigquals = uu___6;
+                FStar_Syntax_Syntax.sigmeta = uu___7;
+                FStar_Syntax_Syntax.sigattrs = uu___8;
+                FStar_Syntax_Syntax.sigopts = uu___9;_}
+              ->
+              let uu___10 = FStar_Syntax_Subst.open_univ_vars us1 cty in
+              (match uu___10 with
+               | (us2, cty1) ->
+                   let uu___11 =
+                     let uu___12 = get_env () in
+                     FStar_TypeChecker_Normalize.get_n_binders uu___12 nparam
+                       cty1 in
+                   (match uu___11 with
+                    | (param_ctor_bs, c) ->
+                        (if
+                           (FStar_Compiler_List.length param_ctor_bs) <>
+                             nparam
+                         then
+                           failwith
+                             "impossible: inspect_sigelt: could not obtain sufficient ctor param binders"
+                         else ();
+                         (let uu___14 =
+                            let uu___15 = FStar_Syntax_Util.is_total_comp c in
+                            Prims.op_Negation uu___15 in
+                          if uu___14
+                          then
+                            failwith
+                              "impossible: inspect_sigelt: removed parameters and got an effectful comp"
+                          else ());
+                         (let cty2 = FStar_Syntax_Util.comp_result c in
+                          let s' =
+                            FStar_Compiler_List.map2
+                              (fun b1 ->
+                                 fun b2 ->
+                                   let uu___14 =
+                                     let uu___15 =
+                                       FStar_Syntax_Syntax.bv_to_name
+                                         b2.FStar_Syntax_Syntax.binder_bv in
+                                     ((b1.FStar_Syntax_Syntax.binder_bv),
+                                       uu___15) in
+                                   FStar_Syntax_Syntax.NT uu___14)
+                              param_ctor_bs param_bs in
+                          let cty3 = FStar_Syntax_Subst.subst s' cty2 in
+                          let cty4 =
+                            FStar_Syntax_Subst.close_univ_vars us2 cty3 in
+                          let uu___14 = FStar_Ident.path_of_lid lid1 in
+                          (uu___14, cty4)))))
+          | uu___3 ->
+              failwith "impossible: inspect_sigelt: did not find ctor" in
+        let uu___2 =
+          let uu___3 = FStar_Compiler_List.map inspect_ctor c_lids in
+          (nm, us, param_bs, ty, uu___3) in
+        FStar_Reflection_Data.Sg_Inductive uu___2
     | FStar_Syntax_Syntax.Sig_declare_typ
         { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = us;
           FStar_Syntax_Syntax.t2 = ty;_}
         ->
         let nm = FStar_Ident.path_of_lid lid in
-        let uu___ = FStar_Syntax_Subst.open_univ_vars us ty in
-        (match uu___ with
-         | (us1, ty1) -> FStar_Reflection_Data.Sg_Val (nm, us1, ty1))
+        FStar_Reflection_Data.Sg_Val (nm, us, ty)
     | uu___ -> FStar_Reflection_Data.Unk
 let (pack_sigelt :
   FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.sigelt) =
@@ -959,26 +928,19 @@ let (pack_sigelt :
           let uu___ = lb in
           match uu___ with
           | { FStar_Syntax_Syntax.lbname = nm;
-              FStar_Syntax_Syntax.lbunivs = us;
-              FStar_Syntax_Syntax.lbtyp = typ;
-              FStar_Syntax_Syntax.lbeff = eff;
-              FStar_Syntax_Syntax.lbdef = def;
-              FStar_Syntax_Syntax.lbattrs = attrs;
-              FStar_Syntax_Syntax.lbpos = pos;_} ->
+              FStar_Syntax_Syntax.lbunivs = uu___1;
+              FStar_Syntax_Syntax.lbtyp = uu___2;
+              FStar_Syntax_Syntax.lbeff = uu___3;
+              FStar_Syntax_Syntax.lbdef = uu___4;
+              FStar_Syntax_Syntax.lbattrs = uu___5;
+              FStar_Syntax_Syntax.lbpos = uu___6;_} ->
               let lid =
                 match nm with
                 | FStar_Pervasives.Inr fv -> FStar_Syntax_Syntax.lid_of_fv fv
-                | uu___1 ->
+                | uu___7 ->
                     failwith
                       "impossible: pack_sigelt: bv in toplevel let binding" in
-              (check_lid lid;
-               (let s = FStar_Syntax_Subst.univ_var_closing us in
-                let typ1 = FStar_Syntax_Subst.subst s typ in
-                let def1 = FStar_Syntax_Subst.subst s def in
-                let lb1 =
-                  FStar_Syntax_Util.mk_letbinding nm us typ1 eff def1 attrs
-                    pos in
-                (lid, lb1))) in
+              (check_lid lid; (lid, lb)) in
         let packed = FStar_Compiler_List.map pack_letbinding lbs in
         let lbs1 = FStar_Compiler_List.map FStar_Pervasives_Native.snd packed in
         let lids = FStar_Compiler_List.map FStar_Pervasives_Native.fst packed in
@@ -993,8 +955,7 @@ let (pack_sigelt :
         let ind_lid =
           FStar_Ident.lid_of_path nm FStar_Compiler_Range_Type.dummyRange in
         (check_lid ind_lid;
-         (let s = FStar_Syntax_Subst.univ_var_closing us_names in
-          let nparam = FStar_Compiler_List.length param_bs in
+         (let nparam = FStar_Compiler_List.length param_bs in
           let pack_ctor c =
             let uu___1 = c in
             match uu___1 with
@@ -1002,17 +963,13 @@ let (pack_sigelt :
                 let lid =
                   FStar_Ident.lid_of_path nm1
                     FStar_Compiler_Range_Type.dummyRange in
-                let ty2 =
-                  let uu___2 = FStar_Syntax_Syntax.mk_Total ty1 in
-                  FStar_Syntax_Util.arrow param_bs uu___2 in
-                let ty3 = FStar_Syntax_Subst.subst s ty2 in
                 FStar_Compiler_Effect.op_Less_Bar
                   FStar_Syntax_Syntax.mk_sigelt
                   (FStar_Syntax_Syntax.Sig_datacon
                      {
                        FStar_Syntax_Syntax.lid1 = lid;
                        FStar_Syntax_Syntax.us1 = us_names;
-                       FStar_Syntax_Syntax.t1 = ty3;
+                       FStar_Syntax_Syntax.t1 = ty1;
                        FStar_Syntax_Syntax.ty_lid = ind_lid;
                        FStar_Syntax_Syntax.num_ty_params = nparam;
                        FStar_Syntax_Syntax.mutuals1 = []
@@ -1024,19 +981,15 @@ let (pack_sigelt :
                  let uu___1 = FStar_Syntax_Util.lid_of_sigelt se in
                  FStar_Compiler_Util.must uu___1) ctor_ses in
           let ind_se =
-            let param_bs1 = FStar_Syntax_Subst.close_binders param_bs in
-            let ty1 = FStar_Syntax_Subst.close param_bs1 ty in
-            let param_bs2 = FStar_Syntax_Subst.subst_binders s param_bs1 in
-            let ty2 = FStar_Syntax_Subst.subst s ty1 in
             FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
               (FStar_Syntax_Syntax.Sig_inductive_typ
                  {
                    FStar_Syntax_Syntax.lid = ind_lid;
                    FStar_Syntax_Syntax.us = us_names;
-                   FStar_Syntax_Syntax.params = param_bs2;
+                   FStar_Syntax_Syntax.params = param_bs;
                    FStar_Syntax_Syntax.num_uniform_params =
                      FStar_Pervasives_Native.None;
-                   FStar_Syntax_Syntax.t = ty2;
+                   FStar_Syntax_Syntax.t = ty;
                    FStar_Syntax_Syntax.mutuals = [];
                    FStar_Syntax_Syntax.ds = c_lids
                  }) in
@@ -1060,14 +1013,13 @@ let (pack_sigelt :
         let val_lid =
           FStar_Ident.lid_of_path nm FStar_Compiler_Range_Type.dummyRange in
         (check_lid val_lid;
-         (let typ = FStar_Syntax_Subst.close_univ_vars us_names ty in
-          FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
-            (FStar_Syntax_Syntax.Sig_declare_typ
-               {
-                 FStar_Syntax_Syntax.lid2 = val_lid;
-                 FStar_Syntax_Syntax.us2 = us_names;
-                 FStar_Syntax_Syntax.t2 = typ
-               })))
+         FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
+           (FStar_Syntax_Syntax.Sig_declare_typ
+              {
+                FStar_Syntax_Syntax.lid2 = val_lid;
+                FStar_Syntax_Syntax.us2 = us_names;
+                FStar_Syntax_Syntax.t2 = ty
+              }))
     | FStar_Reflection_Data.Unk -> failwith "packing Unk, sorry"
 let (inspect_lb :
   FStar_Syntax_Syntax.letbinding -> FStar_Reflection_Data.lb_view) =

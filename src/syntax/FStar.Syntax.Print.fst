@@ -230,7 +230,7 @@ and term_to_string x =
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
-      | Tm_name x ->        nm_to_string x // ^ "@@(" ^ term_to_string x.sort ^ ")"
+      | Tm_name x ->        nm_to_string x ^ "@@(" ^ term_to_string x.sort ^ ")"
       | Tm_fvar f ->
         // Add a prefix to unresolved constructors/projectors, otherwise
         // we print a unqualified fvar, which looks exactly like a Tm_name

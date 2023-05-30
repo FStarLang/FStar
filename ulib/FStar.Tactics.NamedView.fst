@@ -18,6 +18,10 @@ module FStar.Tactics.NamedView
 open FStar.Reflection
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+open FStar.Tactics.Util
+
+exception LengthMismatch
+exception IOU
 
 module RD = FStar.Reflection.Data
 
@@ -60,6 +64,14 @@ type binder = {
   qual   : aqualv;
   attrs  : list term;
 }
+
+let rbinder_to_string (b : Reflection.binder) : Tac string =
+  let bv = inspect_binder b in
+  unseal bv.ppname ^ "::(" ^ term_to_string bv.sort ^ ")"
+
+let binder_to_string (b : binder) : Tac string =
+  // TODO: print aqual, attributes..? or no?
+  unseal b.ppname ^ "@@" ^ string_of_int b.uniq ^ "::(" ^ term_to_string b.sort ^ ")"
 
 type binders = list binder
 
@@ -134,16 +146,19 @@ let simple_binder_to_binding (b:simple_binder) : binding = {
   ppname = b.ppname;
 }
 
-let open_term (b : Reflection.binder) (t : term) : Tac (binder & term) =
-  let n = fresh () in
-  let bv : binder_view = inspect_binder b in
+let open_term_with (b : Reflection.binder) (nb : binder) (t : term) : Tac term =
   let nv : namedv = pack_namedv {
-    uniq   = n;
-    sort   = seal bv.sort;
-    ppname = bv.ppname;
+    uniq   = nb.uniq;
+    sort   = seal nb.sort;
+    ppname = nb.ppname;
   }
   in
   let t' = subst [DB 0 nv] t in
+  t'
+
+let open_term (b : Reflection.binder) (t : term) : Tac (binder & term) =
+  let n = fresh () in
+  let bv = inspect_binder b in
   let bndr : binder = {
     uniq   = n;
     sort   = bv.sort;
@@ -152,7 +167,7 @@ let open_term (b : Reflection.binder) (t : term) : Tac (binder & term) =
     attrs  = bv.attrs;
   }
   in
-  (bndr, t')
+  (bndr, open_term_with b bndr t)
 
 let open_comp (b : Reflection.binder) (t : comp) : Tac (binder & comp) =
   let n = fresh () in
@@ -250,6 +265,15 @@ let rec open_term_n (bs : list Reflection.binder) (t : term) : Tac (list binder 
     let bs', t' = open_term_n bs t in
     let b', t'' = open_term b t' in
     (b'::bs', t'')
+    
+let rec open_term_n_with (bs : list Reflection.binder) (nbs : list binder) (t : term) : Tac term =
+  match bs, nbs with
+  | [], [] -> t
+  | b::bs, nb::nbs ->
+    let t' = open_term_n_with bs nbs t in
+    let t'' = open_term_with b nb t' in
+    t''
+  | _ -> raise LengthMismatch
 
 let rec close_term_n (bs : list binder) (t : term) : list Reflection.binder & term =
   match bs with
@@ -274,7 +298,21 @@ let rec close_term_n_simple (bs : list simple_binder) (t : term) : list Reflecti
     let bs', t' = close_term_n_simple bs t in
     let b', t'' = close_term_simple b t' in
     (b'::bs', t'')
+
+let open_univ_s (us : list univ_name) : Tac (list univ_name & subst_t) =
+  let n = List.length us in
+  let s = mapi (fun i u -> UN (n-1-i) (pack_universe (Uv_Name u))) us in
+  us, s
   
+let close_univ_s (us : list univ_name) : list univ_name & subst_t =
+  let n = List.length us in
+  let s = List.Tot.mapi (fun i u -> UD u (n-i-1)) us in
+  us, s
+
+let subst_binder_sort (s : subst_t) (b : Reflection.binder) : Reflection.binder =
+  let v = inspect_binder b in
+  let v = { v with sort = subst s v.sort } in
+  pack_binder v
 
 let open_view (tv:term_view) : Tac named_term_view =
   match tv with
@@ -312,7 +350,9 @@ let open_view (tv:term_view) : Tac named_term_view =
     Tv_Let recf attrs nb def body
 
   (* FIXME *)
-  | RD.Tv_Match scrutinee ret brs -> Tv_Match scrutinee ret brs
+  | RD.Tv_Match scrutinee ret brs ->
+    raise IOU;
+    Tv_Match scrutinee ret brs
 
 let close_view (tv : named_term_view) : term_view =
   match tv with
@@ -365,6 +405,14 @@ let notAscription (tv:named_term_view) : bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
 
 noeq
+type letbinding = {
+  lb_fv : fv;
+  lb_us : list univ_name; (* opened *)
+  lb_typ : typ;
+  lb_def : term;
+}
+
+noeq
 type named_sigelt_view =
   | Sg_Let {
       isrec : bool;
@@ -391,30 +439,55 @@ type named_sigelt_view =
 
   | Unk
 
-(* let inspect_letbinding *)
+let open_lb (lb : Reflection.letbinding) : Tac letbinding =
+  let {lb_fv; lb_us; lb_typ; lb_def} = inspect_lb lb in
+  let lb_us, s = open_univ_s lb_us in
+  let lb_typ = subst s lb_typ in
+  let lb_def = subst s lb_def in
+  { lb_fv; lb_us; lb_typ; lb_def }
+
+let close_lb (lb : letbinding) : Reflection.letbinding =
+  let {lb_fv; lb_us; lb_typ; lb_def} = lb in
+  let lb_us, s = close_univ_s lb_us in
+  let lb_typ = subst s lb_typ in
+  let lb_def = subst s lb_def in
+  pack_lb { lb_fv; lb_us; lb_typ; lb_def }
 
 let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
   match sv with
   | RD.Sg_Let isrec lbs ->
+    let lbs = map open_lb lbs in
     (* open universes, maybe *)
     Sg_Let { isrec; lbs }
 
   | RD.Sg_Inductive nm univs params typ ctors ->
+    let nparams = List.Tot.length params in
+
+    (* Open universes everywhere *)
+    let us, s = open_univ_s univs in
+    let params = List.Tot.map (subst_binder_sort s) params in
+    let typ = subst s typ in
+    let ctors = map (fun (nm, ty) -> nm, subst s ty) ctors in
+
+    let params0 = params in
+    dump ("params0 = " ^ string_of_list rbinder_to_string params);
     let params, typ = open_term_n params typ in
-    (* open univs *)
-    (* open params *)
-    (* open ctors? *)
+    dump ("params = " ^ string_of_list binder_to_string params);
+    let ctors = map (fun (nm, ty) -> nm, open_term_n_with params0 params ty) ctors in
+
     Sg_Inductive {nm; univs; params; typ; ctors}
 
   | RD.Sg_Val nm univs typ ->
-    (* TODO: open universes *)
+    let univs, s = open_univ_s univs in
+    let typ = subst s typ in
     Sg_Val {nm; univs; typ}
+
   | RD.Unk -> Unk
 
-let close_sigelt_view (sv : named_sigelt_view) : sigelt_view =
+let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : sigelt_view =
   match sv with
   | Sg_Let { isrec; lbs } ->
-    (* close universes, maybe *)
+    let lbs = List.Tot.map close_lb lbs in
     RD.Sg_Let isrec lbs 
 
   | Sg_Inductive {nm; univs; params; typ; ctors} ->
@@ -427,13 +500,13 @@ let close_sigelt_view (sv : named_sigelt_view) : sigelt_view =
   | Sg_Val {nm; univs; typ} ->
     (* TODO: close universes *)
     RD.Sg_Val nm univs typ
-  | Unk -> RD.Unk
 
 let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
   let sv = Reflection.inspect_sigelt s in
+  dump ("sv orig = " ^ term_to_string (quote sv));
   open_sigelt_view sv
 
-let pack_sigelt (sv:named_sigelt_view) : Tot sigelt =
+let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tot sigelt =
   let sv = close_sigelt_view sv in
   Reflection.pack_sigelt sv
 

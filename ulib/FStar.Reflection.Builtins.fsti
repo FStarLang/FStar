@@ -51,7 +51,7 @@ val inspect_comp   : (c:comp) -> cv:comp_view{cv << c}
 val pack_comp      : comp_view -> comp
 
 val inspect_sigelt : sigelt -> sigelt_view
-val pack_sigelt    : sigelt_view -> sigelt
+val pack_sigelt    : sv:sigelt_view{~(Unk? sv)} -> sigelt
 
 val inspect_fv     : fv -> name
 val pack_fv        : name -> fv

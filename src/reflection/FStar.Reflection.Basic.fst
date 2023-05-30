@@ -550,27 +550,17 @@ let embed_vconfig (vcfg : vconfig) : term =
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
     | Sig_let {lbs=(r, lbs)} ->
-        let inspect_letbinding (lb:letbinding) =
-            let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos} = lb in
-            let s, us = SS.univ_var_opening us in
-            let typ = SS.subst s typ in
-            let def = SS.subst s def in
-            U.mk_letbinding nm us typ eff def attrs pos
-        in
-        Sg_Let (r, List.map inspect_letbinding lbs)
+        Sg_Let (r, lbs)
 
     | Sig_inductive_typ {lid; us; params=param_bs; t=ty; ds=c_lids} ->
         let nm = Ident.path_of_lid lid in
-        let s, us = SS.univ_var_opening us in
-        let param_bs = SS.subst_binders s param_bs in
-        let ty = SS.subst s ty in
 
-        let param_bs, ty = SS.open_term param_bs ty in
+        (* let param_bs, ty = SS.open_term param_bs ty in *)
 
         let inspect_ctor (c_lid:Ident.lid) : ctor =
           match Env.lookup_sigelt (get_env ()) c_lid with
           | Some ({sigel = Sig_datacon {lid; us; t=cty; num_ty_params=nparam}}) ->
-            let cty = SS.subst s cty in // open universes from above
+            let us, cty = SS.open_univ_vars us cty in
 
             let param_ctor_bs, c = N.get_n_binders (get_env ()) nparam cty in
 
@@ -581,15 +571,15 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
               failwith "impossible: inspect_sigelt: removed parameters and got an effectful comp";
             let cty = U.comp_result c in
 
-            (* Substitute the parameters of the constructor to match
-             * those of the inductive opened above, and return the type
-             * of the constructor already instantiated. *)
+            (* Substitute the parameters of the constructor to match *)
+            (* those of the inductive opened above, and return the type *)
+            (* of the constructor already instantiated. *)
             let s' = List.map2 (fun b1 b2 -> NT (b1.binder_bv, S.bv_to_name b2.binder_bv))
                                param_ctor_bs param_bs
             in
             let cty = SS.subst s' cty in
+            let cty = SS.close_univ_vars us cty in
 
-            let cty = U.remove_inacc cty in
             (Ident.path_of_lid lid, cty)
 
           | _ ->
@@ -599,7 +589,6 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
     | Sig_declare_typ {lid; us; t=ty} ->
         let nm = Ident.path_of_lid lid in
-        let us, ty = SS.open_univ_vars us ty in
         Sg_Val (nm, us, ty)
 
     | _ ->
@@ -608,41 +597,34 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 let pack_sigelt (sv:sigelt_view) : sigelt =
     let check_lid lid =
         if List.length (Ident.path_of_lid lid) <= 1
-	then failwith ("pack_sigelt: invalid long identifier \""
-	              ^ Ident.string_of_lid lid
-		      ^ "\" (did you forget a module path?)")
+        then failwith ("pack_sigelt: invalid long identifier \""
+                      ^ Ident.string_of_lid lid
+                      ^ "\" (did you forget a module path?)")
     in
     match sv with
     | Sg_Let (r, lbs) ->
         let pack_letbinding (lb:letbinding) =
-	    let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos} = lb in
+            let {lbname=nm} = lb in
             let lid = match nm with
                       | Inr fv -> lid_of_fv fv
                       | _ -> failwith
                               "impossible: pack_sigelt: bv in toplevel let binding"
             in
             check_lid lid;
-            let s = SS.univ_var_closing us in
-            let typ = SS.subst s typ in
-            let def = SS.subst s def in
-            let lb = U.mk_letbinding nm us typ eff def attrs pos in
             (lid, lb)
         in
-	let packed = List.map pack_letbinding lbs in
-	let lbs = List.map snd packed in
-	let lids = List.map fst packed in
+        let packed = List.map pack_letbinding lbs in
+        let lbs = List.map snd packed in
+        let lids = List.map fst packed in
         mk_sigelt <| Sig_let {lbs=(r, lbs); lids}
 
     | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
       check_lid ind_lid;
-      let s = SS.univ_var_closing us_names in
       let nparam = List.length param_bs in
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
-        let ty = U.arrow param_bs (S.mk_Total ty) in
-        let ty = SS.subst s ty in (* close univs *)
         mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
       in
 
@@ -650,12 +632,6 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let c_lids : list Ident.lid = List.map (fun se -> BU.must (U.lid_of_sigelt se)) ctor_ses in
 
       let ind_se : sigelt =
-        let param_bs = SS.close_binders param_bs in
-        let ty = SS.close param_bs ty in
-
-        (* close univs *)
-        let param_bs = SS.subst_binders s param_bs in
-        let ty = SS.subst s ty in
         //We can't trust the assignment of num uniform binders from the reflection API
         //So, set it to None; it has to be checked and recomputed
         mk_sigelt <| Sig_inductive_typ {lid=ind_lid;
@@ -672,8 +648,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
         check_lid val_lid;
-        let typ = SS.close_univ_vars us_names ty in
-        mk_sigelt <| Sig_declare_typ {lid=val_lid; us=us_names; t=typ}
+        mk_sigelt <| Sig_declare_typ {lid=val_lid; us=us_names; t=ty}
 
     | Unk ->
         failwith "packing Unk, sorry"

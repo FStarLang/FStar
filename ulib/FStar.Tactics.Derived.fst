@@ -42,7 +42,7 @@ let name_of_binder (b : binder) : Tac string =
 
 let binder_to_string (b : binder) : Tac string =
   // TODO: print aqual, attributes..? or no?
-  name_of_binder b
+  name_of_binder b ^ "@@" ^ string_of_int b.uniq ^ "::(" ^ term_to_string b.sort ^ ")"
 
 let binding_to_string (b : binding) : Tac string =
   unseal b.ppname

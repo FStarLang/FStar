@@ -436,7 +436,14 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                    Prims.op_Hat uu___6 ")" in
                  Prims.op_Hat ":(" uu___5 in
                Prims.op_Hat uu___3 uu___4
-           | FStar_Syntax_Syntax.Tm_name x3 -> nm_to_string x3
+           | FStar_Syntax_Syntax.Tm_name x3 ->
+               let uu___3 = nm_to_string x3 in
+               let uu___4 =
+                 let uu___5 =
+                   let uu___6 = term_to_string x3.FStar_Syntax_Syntax.sort in
+                   Prims.op_Hat uu___6 ")" in
+                 Prims.op_Hat "@@(" uu___5 in
+               Prims.op_Hat uu___3 uu___4
            | FStar_Syntax_Syntax.Tm_fvar f ->
                let pref =
                  match f.FStar_Syntax_Syntax.fv_qual with
