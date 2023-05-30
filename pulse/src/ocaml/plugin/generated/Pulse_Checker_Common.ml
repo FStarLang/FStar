@@ -481,7 +481,7 @@ let (try_frame_pre :
                                                (Framing_failure fail))))
                                 uu___))) uu___)
 type ('c, 'postuhint) comp_post_matches_hint = Obj.t
-type ('g, 'pre, 'postuhint) checker_result_t =
+type ('g, 'ctxt, 'postuhint) checker_result_t =
   (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
     (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3
 type ('g, 'ctxt, 'gu, 'ctxtu) continuation_elaborator =

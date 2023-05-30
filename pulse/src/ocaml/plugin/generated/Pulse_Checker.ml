@@ -2434,7 +2434,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                      (Prims.of_int (411)) (Prims.of_int (5)))
                   (FStar_Range.mk_range "Pulse.Checker.fst"
                      (Prims.of_int (411)) (Prims.of_int (6))
-                     (Prims.of_int (487)) (Prims.of_int (20)))
+                     (Prims.of_int (485)) (Prims.of_int (20)))
                   (if Pulse_RuntimeUtils.debug_at_level g "proof_states"
                    then
                      Obj.magic
@@ -2555,7 +2555,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                 (Prims.of_int (412)) (Prims.of_int (47)))
                              (FStar_Range.mk_range "Pulse.Checker.fst"
                                 (Prims.of_int (413)) (Prims.of_int (4))
-                                (Prims.of_int (487)) (Prims.of_int (20)))
+                                (Prims.of_int (485)) (Prims.of_int (20)))
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___2 ->
                                    Pulse_Checker_Pure.push_context
@@ -2846,14 +2846,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                          (Obj.repr
                                                             (Pulse_Checker_Rewrite.check_rewrite
                                                                g1 t pre ()
-                                                               post_hint))
-                                                   | uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (FStar_Tactics_Effect.lift_div_tac
-                                                               (fun uu___4 ->
-                                                                  Prims.admit
-                                                                    ())))))
+                                                               post_hint))))
                                              uu___2)
                                         (fun uu___2 ->
                                            (fun uu___2 ->
