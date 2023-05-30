@@ -111,9 +111,9 @@ let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =
     comp_u c == post_hint.u /\
     comp_post c == post_hint.post
 
-let checker_result_t (g:env) (pre:term) (post_hint:option post_hint_t) =
+let checker_result_t (g:env) (ctxt:term) (post_hint:option post_hint_t) =
     t:st_term &
-    c:comp{stateful_comp c ==> comp_pre c == pre /\ comp_post_matches_hint c post_hint } &
+    c:comp{stateful_comp c ==> comp_pre c == ctxt /\ comp_post_matches_hint c post_hint } &
     st_typing g t c
 
 let continuation_elaborator (g:env) (ctxt:term)

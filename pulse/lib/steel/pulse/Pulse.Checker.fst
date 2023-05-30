@@ -479,8 +479,6 @@ let rec check' : bool -> check_t =
 
       | Tm_Rewrite _ ->
         Rewrite.check_rewrite g t pre pre_typing post_hint
-
-      | _ -> admit()
     with
     | Framing_failure failure ->
       handle_framing_failure g t pre pre_typing post_hint failure (check' true)

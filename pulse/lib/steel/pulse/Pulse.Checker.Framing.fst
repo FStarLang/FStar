@@ -145,7 +145,7 @@ let split_vprop (g:env)
        let typing : tot_typing g (VP.list_as_vprop frame) Tm_VProp = 
          let fwd, bk = VP.vprop_equiv_typing d in
          let star_typing = bk ctxt_typing in
-         snd (star_typing_inversion star_typing)
+         star_typing_inversion_r star_typing
        in
        Inl (| VP.list_as_vprop frame, typing, d |)
 

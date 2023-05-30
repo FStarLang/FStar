@@ -587,4 +587,3 @@ let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
 let full_perm_tm : R.term =
   let open R in
   pack_ln (Tv_FVar (pack_fv full_perm_lid))
-

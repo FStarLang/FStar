@@ -26,13 +26,15 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       let f1, f1' = vprop_equiv_typing v1 in      
       let ff (x:tot_typing g (Tm_Star s0 s1) Tm_VProp)
         : tot_typing g (Tm_Star s0' s1') Tm_VProp
-        = let s0_typing, s1_typing = star_typing_inversion x in
+        = let s0_typing = star_typing_inversion_l x in
+          let s1_typing = star_typing_inversion_r x in
           let s0'_typing, s1'_typing = f0 s0_typing, f1 s1_typing in
           star_typing s0'_typing s1'_typing
       in
       let gg (x:tot_typing g (Tm_Star s0' s1') Tm_VProp)
         : tot_typing g (Tm_Star s0 s1) Tm_VProp
-        = let s0'_typing, s1'_typing = star_typing_inversion x in
+        = let s0'_typing = star_typing_inversion_l x in
+          let s1'_typing = star_typing_inversion_r x in
           star_typing (f0' s0'_typing) (f1' s1'_typing)        
       in
       ff, gg
@@ -40,7 +42,7 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
     | VE_Unit g t ->
       let fwd (x:tot_typing g (Tm_Star Tm_Emp t) Tm_VProp)
         : tot_typing g t Tm_VProp
-        = let _, r = star_typing_inversion x in
+        = let r = star_typing_inversion_r x in
           r
       in
       let bk (x:tot_typing g t Tm_VProp)
@@ -52,7 +54,8 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
     | VE_Comm g t0 t1 ->
       let f t0 t1 (x:tot_typing g (Tm_Star t0 t1) Tm_VProp)
         : tot_typing g (Tm_Star t1 t0) Tm_VProp
-        = let tt0, tt1 = star_typing_inversion x in
+        = let tt0 = star_typing_inversion_l x in
+          let tt1 = star_typing_inversion_r x in
           star_typing tt1 tt0
       in
       f t0 t1, f t1 t0
@@ -60,14 +63,18 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
     | VE_Assoc g t0 t1 t2 ->
       let fwd (x:tot_typing g (Tm_Star t0 (Tm_Star t1 t2)) Tm_VProp)
         : tot_typing g (Tm_Star (Tm_Star t0 t1) t2) Tm_VProp
-        = let tt0, tt12 = star_typing_inversion x in
-          let tt1, tt2 = star_typing_inversion tt12 in
+        = let tt0 = star_typing_inversion_l x in
+          let tt12 = star_typing_inversion_r x in
+          let tt1 = star_typing_inversion_l tt12 in
+          let tt2 = star_typing_inversion_r tt12 in
           star_typing (star_typing tt0 tt1) tt2
       in
       let bk (x : tot_typing g (Tm_Star (Tm_Star t0 t1) t2) Tm_VProp)
         : tot_typing g (Tm_Star t0 (Tm_Star t1 t2)) Tm_VProp
-        = let tt01, tt2 = star_typing_inversion x in
-          let tt0, tt1 = star_typing_inversion tt01 in
+        = let tt01 = star_typing_inversion_l x in
+          let tt2 = star_typing_inversion_r x in
+          let tt0 = star_typing_inversion_l tt01 in
+          let tt1 = star_typing_inversion_r tt01 in
           star_typing tt0 (star_typing tt1 tt2)
       in
       fwd, bk

@@ -83,10 +83,29 @@ let readback_qual = function
   | R.Q_Implicit -> Some Implicit
   | _ -> None
 
+#push-options "--admit_smt_queries true"
 let collect_app_refined (t:R.term) : tuple2 (t':R.term{t' << t})
                                             (list (a:R.argv{a << t})) =
-  admit ();
   R.collect_app_ln t
+
+let readback_ty_ascribed (t:R.term { let t = R.inspect_ln t in
+                                     R.Tv_AscribedT? t || R.Tv_AscribedC? t })
+  : option (ty:term { elab_term ty == t }) =
+  match R.inspect_ln t with
+  //
+  // The following is dropping the ascription, which is not ideal
+  // However, if we don't, then ascriptions start to come in the way of
+  //   R.term_eq used to decide equality of Tm_FStar terms,
+  //   which then results in framing failures
+  //
+  // At least in the examples it came up, the ascription was a redundant
+  //   ascription on F* Tm_Match
+  //   I tried an F* patch that did not add the ascription, if it was already
+  //   ascribed, but that failed a couple of proofs in HACL* : (
+  //
+  | R.Tv_AscribedT t _ _ _
+  | R.Tv_AscribedC t _ _ _ -> Some (Tm_FStar t (R.range_of_term t))
+#pop-options
 
 let rec readback_ty (t:R.term)
   : option (ty:term { elab_term ty == t }) =
@@ -168,19 +187,8 @@ let rec readback_ty (t:R.term)
 
   | Tv_Uvar _ _ -> None // TODO: FIXME: T.fail "readback_ty: unexpected Tv_Uvar"
 
-  //
-  // The following is dropping the ascription, which is not ideal
-  // However, if we don't, then ascriptions start to come in the way of
-  //   R.term_eq used to decide equality of Tm_FStar terms,
-  //   which then results in framing failures
-  //
-  // At least in the examples it came up, the ascription was a redundant
-  //   ascription on F* Tm_Match
-  //   I tried an F* patch that did not add the ascription, if it was already
-  //   ascribed, but that failed a couple of proofs in HACL* : (
-  //
   | Tv_AscribedT t _ _ _
-  | Tv_AscribedC t _ _ _ -> admit (); Some (Tm_FStar t (range_of_term t))
+  | Tv_AscribedC t _ _ _ -> readback_ty_ascribed t
 
   | Tv_Unknown -> Some Tm_Unknown
 
