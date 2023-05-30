@@ -56,12 +56,13 @@ let elim_pure_comp (p:host_term) =
         post=Tm_Emp
     } in
     C_STGhost Tm_EmpInames st
-    
+
+#push-options "--admit_smt_queries true"    
 let elim_pure_typing (g:env) (p:host_term)
                      (p_prop:tot_typing g (tm_fstar p) (tm_fstar RT.tm_prop))
    : st_typing g (mk_elim_pure (tm_fstar p)) (elim_pure_comp p)
-   = admit();
-     T_STApp g elim_pure_head (tm_fstar (`(prop))) None (elim_pure_comp p) _ (elim_pure_head_typing g) p_prop
+   = T_STApp g elim_pure_head (tm_fstar (`(prop))) None (elim_pure_comp p) _ (elim_pure_head_typing g) p_prop
+#pop-options
 
 let is_elim_pure (vp:term) : T.Tac bool =
   match vp with
