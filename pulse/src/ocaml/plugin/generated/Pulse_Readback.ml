@@ -302,10 +302,10 @@ let rec (readback_ty :
         FStar_Pervasives_Native.None
     | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) ->
         FStar_Pervasives_Native.None
-    | FStar_Reflection_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
-        readback_ty_ascribed t1
-    | FStar_Reflection_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
-        readback_ty_ascribed t1
+    | FStar_Reflection_Data.Tv_AscribedT (uu___, uu___1, uu___2, uu___3) ->
+        readback_ty_ascribed t
+    | FStar_Reflection_Data.Tv_AscribedC (uu___, uu___1, uu___2, uu___3) ->
+        readback_ty_ascribed t
     | FStar_Reflection_Data.Tv_Unknown ->
         FStar_Pervasives_Native.Some Pulse_Syntax_Base.Tm_Unknown
     | FStar_Reflection_Data.Tv_Unsupp -> FStar_Pervasives_Native.None

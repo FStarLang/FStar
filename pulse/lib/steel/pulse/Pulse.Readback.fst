@@ -187,8 +187,8 @@ let rec readback_ty (t:R.term)
 
   | Tv_Uvar _ _ -> None // TODO: FIXME: T.fail "readback_ty: unexpected Tv_Uvar"
 
-  | Tv_AscribedT t _ _ _
-  | Tv_AscribedC t _ _ _ -> readback_ty_ascribed t
+  | Tv_AscribedT _ _ _ _
+  | Tv_AscribedC _ _ _ _ -> readback_ty_ascribed t
 
   | Tv_Unknown -> Some Tm_Unknown
 
