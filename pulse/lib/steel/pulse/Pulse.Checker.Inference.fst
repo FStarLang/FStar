@@ -6,6 +6,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Framing
+open Pulse.Checker.VPropEquiv
 module P = Pulse.Syntax.Printer
 
 module RT = FStar.Reflection.Typing
@@ -13,17 +14,23 @@ module RUtil = Pulse.Reflection.Util
 
 type uvar_id = nat
 
+let uvar_id_to_string n = FStar.Printf.sprintf "?u_%d" n
+
 let embedded_uvar_lid = ["__pulse_embedded_uvar__"]
 
+let is_uvar_r (t:R.term) : option uvar_id = 
+    match R.inspect_ln t with
+    | R.Tv_UInst fv [u] ->
+      if R.inspect_fv fv = embedded_uvar_lid
+      then match R.inspect_universe u with
+           | R.Uv_BVar n -> Some n
+            | _ -> None
+      else None
+    | _ -> None
+
 let is_uvar (t:term) : option uvar_id =
-  match is_fvar t with
-  | Some (l, [u]) ->
-    if l = embedded_uvar_lid
-    then begin match R.inspect_universe u with
-               | R.Uv_BVar n -> Some n
-               | _ -> None
-         end
-    else None
+  match t with
+  | Tm_FStar r _ -> is_uvar_r r
   | _ -> None
 
 
@@ -164,8 +171,8 @@ let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (uvar_id & te
       //                    (P.term_to_string (List.Tot.hd matching_ctxt))
       //                    (List.Tot.length uv_sols)) in 
       let uv_sols = match_typ t (List.Tot.hd matching_ctxt) uv_sols in
-      T.print (FStar.Printf.sprintf "post matching, uv_sols has %d solutions\n"
-                 (List.Tot.length uv_sols));
+      // T.print (FStar.Printf.sprintf "post matching, uv_sols has %d solutions\n"
+      //            (List.Tot.length uv_sols))
       uv_sols
     else uv_sols
   else uv_sols
@@ -191,6 +198,17 @@ let rec rebuild_head (head:term) (uvs:list uvar_id) (uv_sols:list (uvar_id & ter
       let app_node = tm_pureapp head (Some Implicit) t2 in
       rebuild_head app_node tl uv_sols r
 
+
+let print_solutions (l:list (uvar_id & term))
+  : T.Tac string
+  = String.concat "\n"
+      (T.map #(uvar_id & term) #string
+        (fun (u, t) ->
+          Printf.sprintf "%d := %s" 
+                       u
+                       (P.term_to_string t))
+        l)
+
 let try_inst_uvs_in_goal (ctxt:term)
                          (goal:vprop)
   : T.Tac (list (uvar_id & term))
@@ -204,17 +222,10 @@ let try_inst_uvs_in_goal (ctxt:term)
         uv_sols
         goal_list
     in
-    uv_sols
+    let sols = uv_sols in
+    sols
 
-let print_solutions (l:list (uvar_id & term))
-  : T.Tac string
-  = String.concat "\n"
-      (T.map #(uvar_id & term) #string
-        (fun (u, t) ->
-          Printf.sprintf "%d := %s" 
-                       u
-                       (P.term_to_string t))
-        l)
+
 
 let infer
   (head:term)
@@ -254,6 +265,24 @@ let find_solution (sol:list (uvar_id * term)) (t:uvar_id)
     match r with
     | None -> None
     | Some (_, t) -> Some t
+
+let solutions_to_string sol = print_solutions sol
+
+let rec apply_sol (sol:solution) (t:R.term) =
+  match is_uvar_r t with
+  | None -> (
+    match R.inspect_ln t with
+    | R.Tv_App hd (arg, q) ->
+      let hd = apply_sol sol hd in
+      let arg = apply_sol sol arg in
+      R.pack_ln (R.Tv_App hd (arg, q))
+    | _ -> t
+  )
+  | Some n ->
+    match find_solution sol n with
+    | None -> t
+    | Some (Tm_FStar t _) -> t
+    | Some t -> Pulse.Elaborate.Pure.elab_term t
     
 let rec apply_solution (sol:list (uvar_id * term)) (t:term)
   : term
@@ -294,6 +323,15 @@ let rec apply_solution (sol:list (uvar_id * term)) (t:term)
       Tm_ForallSL u (apply_solution sol t)
                     (apply_solution sol body)
 
+let rec contains_uvar_r (t:R.term) =
+    
+    Some? (is_uvar_r t) ||
+    (match R.inspect_ln t with
+     | R.Tv_App hd (arg, _) ->
+      contains_uvar_r hd || 
+      contains_uvar_r arg
+     | _ -> false)
+
 let rec contains_uvar (t:term)
   : bool
   = match t with
@@ -318,13 +356,48 @@ let rec contains_uvar (t:term)
       (contains_uvar t) ||
       (contains_uvar body)
                     
-    | Tm_FStar _ _ ->
-      // TODO: should embedded F* terms be allowed to contain Pulse uvars?
-      Some? (is_uvar t) ||
-      (match is_pure_app t with
-       | Some (head, _, arg) ->
-         assume (head << t /\ arg << t);
-         contains_uvar head || contains_uvar arg
-       | _ -> false)
+    | Tm_FStar t _ ->
+      contains_uvar_r t
 
 let try_unify (l r:term) = match_typ l r []
+
+module RF = FStar.Reflection.Formula
+
+let is_eq2 (t:R.term) : option (R.term & R.term) =
+  let head, args = R.collect_app_ln t in
+  match R.inspect_ln head, args with
+  | R.Tv_FVar fv, [_; (a1, _); (a2, _)]
+  | R.Tv_UInst fv _, [_; (a1, _); (a2, _)] -> 
+    let l = R.inspect_fv fv in
+    if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"] ||
+       l = ["Prims"; "eq2"]
+    then Some (a1, a2)
+    else None
+  | _ -> None
+
+let try_solve_pure_equalities (p:term) : T.Tac solution =
+  let rec aux (sol:solution) (t:R.term) : T.Tac solution =
+    let open RF in
+    let t = apply_sol sol t in
+    let f = RF.term_as_formula' t in
+    let handle_eq (t0 t1:R.term) =
+      if contains_uvar_r t0
+      || contains_uvar_r t1
+      then (
+        assume (not_tv_unknown t0 /\ not_tv_unknown t1);
+        try_unify (Tm_FStar t0 FStar.Range.range_0) (Tm_FStar t1 FStar.Range.range_0) @ sol
+      )
+      else sol
+    in
+    match f with
+    | Comp  (Eq _) t0 t1 -> handle_eq t0 t1
+    | And t0 t1 -> aux (aux sol t0) t1
+    | _ ->
+      match is_eq2 t with
+      | Some (t0, t1) -> handle_eq t0 t1
+      | _ -> sol 
+  in
+  match p with
+  | Tm_FStar t r -> aux [] t
+  | _ -> []
+

@@ -32,78 +32,45 @@ let univ_to_string u = sprintf "u#%s" (universe_to_string 0 u)
 let qual_to_string = function
   | None -> ""
   | Some Implicit -> "#"
-  
-let rec term_to_string (t:term)
+
+let indent (level:string) = level ^ "\t"
+    
+let rec term_to_string' (level:string) (t:term)
   : T.Tac string
   = match t with
-    // | tm_bvar x ->
-    //   if dbg_printing
-    //   then sprintf "%s@%d" (T.unseal x.bv_ppname) x.bv_index
-    //   else T.unseal x.bv_ppname
-    // | tm_var x ->
-    //   if dbg_printing
-    //   then sprintf "%s#%d" (T.unseal x.nm_ppname) x.nm_index
-    //   else T.unseal x.nm_ppname
-    // | tm_fvar f -> name_to_string f.fv_name
-    // | tm_uinst f us -> sprintf "%s %s" (name_to_string f.fv_name) (String.concat " " (List.Tot.map univ_to_string us))
-    // | tm_constant c -> constant_to_string c
-    // | tm_refine b phi ->
-    //   sprintf "%s:%s{%s}"
-    //           (T.unseal b.binder_ppname)
-    //           (term_to_string b.binder_ty)
-    //           (term_to_string phi)
-
-    // | Tm_PureApp head q arg ->
-    //   sprintf "(%s %s%s)" 
-    //     (term_to_string head)
-    //     (qual_to_string q)
-    //     (term_to_string arg)
-      
-    // | Tm_Let t e1 e2 ->
-    //   sprintf "let _ : %s = %s in %s"
-    //     (term_to_string t)
-    //     (term_to_string e1)
-    //     (term_to_string e2)        
-      
     | Tm_Emp -> "emp"
-    | Tm_Pure p -> sprintf "tm_pure %s" (term_to_string p)
+
+    | Tm_Pure p ->
+      sprintf "pure (\n%s%s)" 
+        (indent level)
+        (term_to_string' (indent level) p)
+      
     | Tm_Star p1 p2 ->
-      sprintf "(%s * %s)" (term_to_string p1)
-                          (term_to_string p2)
+      sprintf "%s `star`\n%s%s" 
+        (term_to_string' level p1)
+        level
+        (term_to_string' level p2)
                           
-    | Tm_ExistsSL u t body _ ->
-      sprintf "(exists<%s> (_:%s). %s)"
-              (universe_to_string 0 u)
-              (term_to_string t)
-              (term_to_string body)
+    | Tm_ExistsSL _ t body _ ->
+      sprintf "(exists (_:%s).\n%s%s)"
+              (term_to_string' (indent level) t)
+              level
+              (term_to_string' (indent level) body)
 
     | Tm_ForallSL u t body ->
-      sprintf "(forall<%s> (_:%s). %s)"
-              (universe_to_string 0 u)
-              (term_to_string t)
-              (term_to_string body)
+      sprintf "(forall (_:%s).\n%s%s)"
+              (term_to_string' (indent level) t)
+              level
+              (term_to_string' (indent level) body)
                           
-    // | tm_arrow b q c ->
-    //   sprintf "%s%s -> %s"
-    //     (qual_to_string q)
-    //     (binder_to_string b)
-    //     (comp_to_string c)
-        
-    // | tm_type _ ->
-    //   "Type u#_"
-      
-    | Tm_VProp ->
-      "vprop"
-
+    | Tm_VProp -> "vprop"
     | Tm_Inames -> "inames"
-
     | Tm_EmpInames -> "emp_inames"
-      
     | Tm_Unknown -> "_"
-    
     | Tm_FStar t _ ->
-      sprintf "((tm_fstar) (%s))" (T.term_to_string t)
-      
+      T.term_to_string t
+let term_to_string t = term_to_string' "" t
+
 let binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s:%s" 
@@ -117,20 +84,20 @@ let comp_to_string (c:comp)
       sprintf "Tot %s" (term_to_string t)
       
     | C_ST s ->
-      sprintf "ST %s %s %s"
+      sprintf "ST %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
               (term_to_string s.pre)
               (term_to_string s.post)
 
     | C_STAtomic inames s ->
-      sprintf "STAtomic %s %s %s %s"
+      sprintf "STAtomic %s %s (requires\n%s) (ensures\n%s)"
               (term_to_string inames)
               (term_to_string s.res)
               (term_to_string s.pre)
               (term_to_string s.post)
 
     | C_STGhost inames s ->
-      sprintf "STGhost %s %s %s %s"
+      sprintf "STGhost %s %s (requires\n%s) (ensures\n%s)"
               (term_to_string inames)
               (term_to_string s.res)
               (term_to_string s.pre)
@@ -146,7 +113,7 @@ let term_list_to_string (sep:string) (t:list term)
   : T.Tac string
   = String.concat sep (T.map term_to_string t)
 
-let rec st_term_to_string (t:st_term)
+let rec st_term_to_string' (level:string) (t:st_term)
   : T.Tac string
   = match t.term with
     | Tm_Return { ctag; insert_eq; term } ->
@@ -166,68 +133,95 @@ let rec st_term_to_string (t:st_term)
         (term_to_string arg)
         
     | Tm_Bind { binder; head; body } ->
-      sprintf "bind %s = %s in %s"
-        (binder_to_string binder)      
-        (st_term_to_string head)
-        (st_term_to_string body)
+      if T.unseal binder.binder_ppname = "_"
+      then sprintf "%s;\n%s%s" 
+                   (st_term_to_string' level head)
+                   level
+                   (st_term_to_string' level body)                   
+      else (
+        sprintf "let %s = %s;\n%s%s"
+          (binder_to_string binder)      
+          (st_term_to_string' level head)
+          level
+          (st_term_to_string' level body)
+      )
 
     | Tm_TotBind { head; body } ->
-      sprintf "totbind _ = %s in %s"
+      sprintf "let tot _ = %s;\n%s%s"
         (term_to_string head)
-        (st_term_to_string body)
+        level
+        (st_term_to_string' level body)
   
-    | Tm_Abs { b; q; pre; body; post } ->
-      sprintf "(fun (%s%s) {%s} {_.%s} -> %s)"
+    | Tm_Abs { b; q; pre; body; ret_ty; post } ->
+      sprintf "(fun (%s%s)\nrequires\n%s\nreturns %s\nensures\n%s\n {\n%s%s\n}"
               (qual_to_string q)
               (binder_to_string b)
               (term_opt_to_string pre)
+              (term_opt_to_string ret_ty)
               (term_opt_to_string post)
-              (st_term_to_string body)
+              (indent level)
+              (st_term_to_string' (indent level) body)
 
     | Tm_If { b; then_; else_ } ->
-      sprintf "(if %s then %s else %s)"
+      sprintf "if (%s)\n%s{\n%s%s\n%s}\n%selse\n%s{\n%s%s\n%s}"
         (term_to_string b)
-        (st_term_to_string then_)
-        (st_term_to_string else_)        
+        level
+        (indent level)
+        (st_term_to_string' (indent level) then_)
+        level
+        level
+        level
+        (indent level)
+        (st_term_to_string' (indent level) else_)
+        level
 
     | Tm_ElimExists { p } ->
       sprintf "elim_exists %s"
         (term_to_string p)
 
     | Tm_IntroExists { erased=false; p; witnesses } ->
-      sprintf "intro_exists %s %s"
-        (term_to_string p)
+      sprintf "introduce\n%s%s\n%swith %s"
+        (indent level)
+        (term_to_string' (indent level) p)
+        level
         (term_list_to_string " " witnesses)
 
     | Tm_IntroExists { erased=true; p; witnesses } ->
-      sprintf "intro_exists_erased %s %s"
-        (term_to_string p)
+      sprintf "introduce (erased)\n%s%s\n%swith %s"
+        (indent level)
+        (term_to_string' (indent level) p)
+        level
         (term_list_to_string " " witnesses)
 
     | Tm_While { invariant; condition; body } ->
-      sprintf "while<%s> (%s) {%s}"
+      sprintf "while (%s)\n%sinvariant %s\n%s{\n%s%s\n%s}"
+        (st_term_to_string' level condition)
+        level
         (term_to_string invariant)
-        (st_term_to_string condition)
-        (st_term_to_string body)
+        level
+        (indent level)
+        (st_term_to_string' (indent level) body)
+        level
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       sprintf "par (<%s> (%s) <%s) (<%s> (%s) <%s)"
         (term_to_string pre1)
-        (st_term_to_string body1)
+        (st_term_to_string' level body1)
         (term_to_string post1)
         (term_to_string pre2)
-        (st_term_to_string body2)
+        (st_term_to_string' level body2)
         (term_to_string post2)
 
     | Tm_Rewrite { t1; t2 } ->
-				  sprintf "rewrite %s %s"
-						  (term_to_string t1)
-              (term_to_string t2)
+       sprintf "rewrite %s %s"
+	       (term_to_string t1)
+               (term_to_string t2)
 
     | Tm_WithLocal { initializer; body } ->
-      sprintf "let mut _ = %s in %s"
+      sprintf "let mut _ = %s;\n%s%s"
         (term_to_string initializer)
-        (st_term_to_string body)
+        level
+        (st_term_to_string' level body)
 
     | Tm_Admit { ctag; u; typ; post } ->
       sprintf "%s<%s> %s%s"
@@ -242,4 +236,81 @@ let rec st_term_to_string (t:st_term)
          | Some post -> sprintf " %s" (term_to_string post))
 
     | Tm_Protect { t } ->
-      st_term_to_string t
+      sprintf "Protect(\n%s%s)"
+      level
+      (st_term_to_string' level t)
+
+let st_term_to_string t = st_term_to_string' "" t
+
+
+let tag_of_term (t:term) =
+  match t with
+  | Tm_Emp -> "Tm_Emp"
+  | Tm_Pure _ -> "Tm_Pure"
+  | Tm_Star _ _ -> "Tm_Star"
+  | Tm_ExistsSL _ _ _ _ -> "Tm_ExistsSL"
+  | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
+  | Tm_VProp -> "Tm_VProp"
+  | Tm_Inames -> "Tm_Inames"
+  | Tm_EmpInames -> "Tm_EmpInames"
+  | Tm_Unknown -> "Tm_Unknown"
+  | Tm_FStar _ _ -> "Tm_FStar"
+
+let tag_of_st_term (t:st_term) =
+  match t.term with
+  | Tm_Return _ -> "Tm_Return"
+  | Tm_Abs _ -> "Tm_Abs"
+  | Tm_STApp _ -> "Tm_STApp"
+  | Tm_Bind _ -> "Tm_Bind"
+  | Tm_TotBind _ -> "Tm_TotBind"
+  | Tm_If _ -> "Tm_If"
+  | Tm_ElimExists _ -> "Tm_ElimExists"
+  | Tm_IntroExists _ -> "Tm_IntroExists"
+  | Tm_While _ -> "Tm_While"
+  | Tm_Par _ -> "Tm_Par"
+  | Tm_WithLocal _ -> "Tm_WithLocal"
+  | Tm_Rewrite _ -> "Tm_Rewrite"
+  | Tm_Admit _ -> "Tm_Admit"
+  | Tm_Protect _ -> "Tm_Protect"
+
+let rec print_st_head (t:st_term)
+  : Tot string (decreases t) =
+  match t.term with
+  | Tm_Abs _  -> "Abs"
+  | Tm_Protect p -> print_st_head p.t
+  | Tm_Return p -> print_head p.term
+  | Tm_Bind _ -> "Bind"
+  | Tm_TotBind _ -> "TotBind"
+  | Tm_If _ -> "If"
+  | Tm_While _ -> "While"
+  | Tm_Admit _ -> "Admit"
+  | Tm_Par _ -> "Par"
+  | Tm_Rewrite _ -> "Rewrite"
+  | Tm_WithLocal _ -> "WithLocal"
+  | Tm_STApp { head = p } -> print_head p
+  | Tm_IntroExists _ -> "IntroExists"
+  | Tm_ElimExists _ -> "ElimExists"  
+and print_head (t:term) =
+  match t with
+  // | Tm_FVar fv
+  // | Tm_UInst fv _ -> String.concat "." fv.fv_name
+  // | Tm_PureApp head _ _ -> print_head head
+  | _ -> "<pure term>"
+
+
+let rec print_skel (t:st_term) = 
+  match t.term with
+  | Tm_Abs { body }  -> Printf.sprintf "(fun _ -> %s)" (print_skel body)
+  | Tm_Protect { t=p } -> Printf.sprintf "(Protect %s)" (print_skel p)
+  | Tm_Return { term = p } -> print_head p
+  | Tm_Bind { head=e1; body=e2 } -> Printf.sprintf "(Bind %s %s)" (print_skel e1) (print_skel e2)
+  | Tm_TotBind { body=e2 } -> Printf.sprintf "(TotBind _ %s)" (print_skel e2)
+  | Tm_If _ -> "If"
+  | Tm_While _ -> "While"
+  | Tm_Admit _ -> "Admit"
+  | Tm_Par _ -> "Par"
+  | Tm_Rewrite _ -> "Rewrite"
+  | Tm_WithLocal _ -> "WithLocal"
+  | Tm_STApp { head = p } -> print_head p
+  | Tm_IntroExists _ -> "IntroExists"
+  | Tm_ElimExists _ -> "ElimExists"

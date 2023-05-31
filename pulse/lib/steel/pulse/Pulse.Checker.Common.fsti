@@ -5,8 +5,8 @@ module L = FStar.List.Tot
 module T = FStar.Tactics
 open FStar.List.Tot
 open Pulse.Syntax
-open Pulse.Elaborate.Pure
 open Pulse.Typing
+module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
 
@@ -33,6 +33,8 @@ let extends_env_trans (g2 g1 g:env)
     (requires g2 `env_extends` g1 /\ 
               g1 `env_extends` g)
     (ensures g2 `env_extends` g)
+    [SMTPat (g2 `env_extends` g);
+     SMTPat (g2 `env_extends` g1)]
   = eliminate exists suffix2. suffix2 @ g1.g == g2.g
     returns _
     with _. (
@@ -89,14 +91,54 @@ val intro_post_hint (g:env) (ret_ty:option term) (post:term)
 
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_u g c)
   : post_hint_for_env g
-  
+
+exception Framing_failure of Pulse.Checker.Framing.framing_failure
+
+val try_frame_pre (#g:env)
+                  (#t:st_term)
+                  (#pre:term)
+                  (pre_typing: tot_typing g pre Tm_VProp)
+                  (#c:comp_st)
+                  (t_typing: st_typing g t c)
+  : T.Tac (c':comp_st { comp_pre c' == pre } &
+           st_typing g t c')
+
+let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =
+  match post_hint with
+  | None -> True
+  | Some post_hint ->
+    comp_res c == post_hint.ret_ty /\
+    comp_u c == post_hint.u /\
+    comp_post c == post_hint.post
+
+let checker_result_t (g:env) (ctxt:term) (post_hint:option post_hint_t) =
+    t:st_term &
+    c:comp{stateful_comp c ==> (comp_pre c == ctxt /\ comp_post_matches_hint c post_hint) } &
+    st_typing g t c
+
+let continuation_elaborator (g:env) (ctxt:term)
+                            (g':env) (ctxt':term) =
+    post_hint:post_hint_opt g ->
+    checker_result_t g' ctxt' post_hint ->
+    T.Tac (checker_result_t g ctxt post_hint)
+
 type check_t =
   g:env ->
   t:st_term ->
   pre:term ->
   pre_typing:tot_typing g pre Tm_VProp ->
   post_hint:post_hint_opt g ->
-  T.Tac (t:st_term &
-         c:comp{stateful_comp c ==> comp_pre c == pre} &
-         st_typing g t c)
+  T.Tac (checker_result_t g pre post_hint)
 
+val repack (#g:env) (#pre:term) (#t:st_term)
+           (x:(c:comp_st { comp_pre c == pre } & st_typing g t c))
+           (post_hint:post_hint_opt g)
+  : T.Tac (checker_result_t g pre post_hint)
+
+val intro_comp_typing (g:env) 
+                      (c:comp_st)
+                      (pre_typing:tot_typing g (comp_pre c) Tm_VProp)
+                      (res_typing:universe_of g (comp_res c) (comp_u c))
+                      (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
+                      (post_typing:tot_typing (extend x (Inl (comp_res c)) g) (open_term (comp_post c) x) Tm_VProp)
+  : T.Tac (comp_typing g c (comp_u c))

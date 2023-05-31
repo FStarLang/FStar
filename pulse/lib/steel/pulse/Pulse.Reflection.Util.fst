@@ -73,6 +73,11 @@ let uzero = R.pack_universe (R.Uv_Zero)
 let steel_wrapper = ["Pulse"; "Steel"; "Wrapper"]
 let mk_steel_wrapper_lid s = steel_wrapper@[s]
 
+let mk_squash (u:R.universe) (ty:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv R.squash_qn) [u]) in
+  pack_ln (Tv_App t (ty, Q_Explicit))
+
 let mk_eq2 (u:R.universe) (ty e1 e2:R.term) : R.term =
   let open R in
   let t = pack_ln (Tv_UInst (pack_fv (mk_steel_wrapper_lid "eq2_prop")) [u]) in
@@ -582,4 +587,3 @@ let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
 let full_perm_tm : R.term =
   let open R in
   pack_ln (Tv_FVar (pack_fv full_perm_lid))
-

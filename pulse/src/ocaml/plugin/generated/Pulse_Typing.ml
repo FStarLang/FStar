@@ -821,15 +821,6 @@ let uu___is_T_Rewrite uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Rewrite _ -> true | _ -> false
 let uu___is_T_Admit uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Admit _ -> true | _ -> false
-let (star_typing_inversion :
-  env ->
-    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> unit -> (unit * unit))
-  = fun g -> fun t0 -> fun t1 -> fun d -> Prims.admit ()
-let (vprop_eq_typing_inversion :
-  env ->
-    Pulse_Syntax_Base.term ->
-      Pulse_Syntax_Base.term ->
-        (unit, unit, unit) FStar_Tactics_Builtins.equiv_token ->
-          (unit * unit))
-  = fun g -> fun t0 -> fun t1 -> fun token -> Prims.admit ()
+
+
 

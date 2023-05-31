@@ -14,6 +14,8 @@ module RU = Pulse.RuntimeUtils
 let push_context (ctx:string) (g:env) : (g':env { g == g' })
   = {g with ctxt = RU.extend_context ctx g.ctxt}
 
+val print_context (g:env) : T.Tac string
+
 val print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string
 
 val print_issues (g:env) (i:list FStar.Issue.issue) : T.Tac string

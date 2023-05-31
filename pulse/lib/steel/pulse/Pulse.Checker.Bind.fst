@@ -16,7 +16,7 @@ module Metatheory = Pulse.Typing.Metatheory
 let nvar_as_binder (x:nvar) (t:term) : binder =
   {binder_ty=t;binder_ppname=fst x}
 
-#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
+#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2 --query_stats"
 let rec mk_bind (g:env)
                 (pre:term)
                 (e1:st_term)
@@ -28,9 +28,11 @@ let rec mk_bind (g:env)
                 (d_c1res:tot_typing g (comp_res c1) (tm_type (comp_u c1)))
                 (d_e2:st_typing (extend (snd px) (Inl (comp_res c1)) g) (open_st_term_nv e2 px) c2)
                 (res_typing:universe_of g (comp_res c2) (comp_u c2))
-                (post_typing:tot_typing (extend (snd px) (Inl (comp_res c2)) g) (open_term_nv (comp_post c2) px) Tm_VProp)
+                (post_typing:tot_typing (extend (snd px) (Inl (comp_res c2)) g)
+                                        (open_term_nv (comp_post c2) px)
+                                        Tm_VProp)
   : T.TacH (t:st_term &
-            c:comp { stateful_comp c ==> comp_pre c == pre } &
+            c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre } &
             st_typing g t c)
            (requires fun _ ->
               let _, x = px in
@@ -108,7 +110,8 @@ let rec mk_bind (g:env)
       let c2lifted = C_STAtomic inames (st_comp_of_comp c2) in
       let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
         T_Lift _ _ _ c2lifted d_e2 (Lift_STGhost_STAtomic g' c2 w) in
-      mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing
+      let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing in
+      (| t, c, d |)
     end
     else T.fail "Cannot compose stt with ghost with non-emp opened invariants"
   | C_STAtomic inames _, C_STAtomic _ _ ->
@@ -124,9 +127,8 @@ let rec mk_bind (g:env)
 #pop-options
 
 
-
 let bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { Metatheory.fresh_wrt x g (freevars s2.post) })
-                             (post_hint:post_hint_opt g)
+                             (post_hint:post_hint_opt g { comp_post_matches_hint (C_ST s2) post_hint })
   : T.Tac (universe_of g s2.res s2.u &
            tot_typing (extend x (Inl s2.res) g) (open_term_nv s2.post (v_as_nv x)) Tm_VProp)
   = match post_hint with
@@ -145,16 +147,46 @@ let bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { Metatheory.fresh_wrt 
         res_typing, post_typing
       )
     | Some post -> 
-      if not (eq_tm s2.post post.post &&
-              eq_tm s2.res post.ret_ty &&
-              eq_univ s2.u post.u)
+      if x `Set.mem` freevars s2.post
       then T.fail "Unexpected mismatched postcondition in bind" //exclude with a stronger type on check'
       else (
          let pr = Pulse.Checker.Common.post_hint_typing g post x in
          pr.ty_typing, pr.post_typing
       )
 
-#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1 --query_stats"
+#push-options "--query_stats --ifuel 2 --z3rlimit_factor 4"
+let  mk_bind' (g:env)
+                (pre:term)
+                (e1:st_term)
+                (e2:st_term)
+                (c1:comp_st)
+                (c2:comp_st)
+                (px:nvar)
+                (d_e1:st_typing g e1 c1)
+                (d_c1res:tot_typing g (comp_res c1) (tm_type (comp_u c1)))
+                (d_e2:st_typing (extend (snd px) (Inl (comp_res c1)) g) (open_st_term_nv e2 px) c2)
+                (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint })
+                (_:squash (
+                    let _, x = px in
+                    comp_pre c1 == pre /\
+                    None? (lookup g x) /\
+                    (~(x `Set.mem` freevars_st e2)) /\
+                    open_term (comp_post c1) x == comp_pre c2))
+  : T.Tac (checker_result_t g pre post_hint)
+   =  let _,x  = px in
+      let s2 = st_comp_of_comp c2 in
+      if x `Set.mem` freevars s2.post
+      then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
+      else ( 
+        let res_typing, post_typing = bind_res_and_post_typing g s2 x post_hint  in
+        let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing in
+        (| t, c, d |)
+      )
+
+   
+//   mk_bind g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+
+#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 2 --query_stats"
 let check_bind
   (g:env)
   (t:st_term{Tm_Bind? t.term})
@@ -162,44 +194,31 @@ let check_bind
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
   (check:check_t)
-  : T.Tac (t:st_term &
-           c:comp { stateful_comp c ==> comp_pre c == pre } &
-           st_typing g t c) =
+  : T.Tac (checker_result_t g pre post_hint) =
   let Tm_Bind { binder=b; head=e1; body=e2 } = t.term in
   let (| e1, c1, d1 |) = check g e1 pre pre_typing None in
-  if C_Tot? c1
+  if not (stateful_comp c1)
   then T.fail "Bind: c1 is not st"
-  else
-    let c1_typing = Metatheory.st_typing_correctness d1 in
+  else 
     let s1 = st_comp_of_comp c1 in
     let t = s1.res in
-    let s1_typing = Metatheory.comp_typing_inversion c1_typing in
-    let (| t_typing, _, x, next_pre_typing |) = Metatheory.st_comp_typing_inversion s1_typing in
+    let (| t_typing, _, x, next_pre_typing |) = 
+      Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d1))) in
     let px = b.binder_ppname, x in
     let next_pre = open_term_nv s1.post px in
     let g' = extend x (Inl s1.res) g in
     let (| e2', c2, d2 |) = check g' (open_st_term_nv e2 px) next_pre next_pre_typing post_hint in
     FV.st_typing_freevars d2;
-    assume (not (C_Tot? c2));
-    // if C_Tot? c2
-    // then T.fail "Bind: c2 is not st"
-    // else
-    ( 
+    if not (stateful_comp c2)
+    then T.fail "Bind: c2 is not st"
+    else ( 
       let e2_closed = close_st_term e2' x in
       assume (open_st_term e2_closed x == e2');
-      let d2 : st_typing g' e2' c2 = d2 in
-      let d2 : st_typing g' (open_st_term e2_closed x) c2 = d2 in
-      let s2 = st_comp_of_comp c2 in
-      if x `Set.mem` freevars s2.post
-      then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
-      else (
-        let res_typing, post_typing = bind_res_and_post_typing g s2 x post_hint  in
-        mk_bind g pre e1 e2_closed c1 c2 px d1 t_typing d2 res_typing post_typing
-      )
+      mk_bind' g pre e1 e2_closed c1 c2 px d1 t_typing d2 post_hint ()
     )
-
+//inlining mk_bind' causes memory to blow up. F* takes a long time to compute a VC for the definition above^. Z3 finishes the proof quickly    
 #pop-options
-//F* takes a long time to compute a VC for the definition above^. Z3 finishes the proof quickly
+
 
 let check_tot_bind g t pre pre_typing post_hint check =
   let Tm_TotBind { head=e1; body=e2 } = t.term in
@@ -220,7 +239,7 @@ let check_tot_bind g t pre pre_typing post_hint check =
     check_vprop_with_core g' pre in
   let (| e2, c2, e2_typing |) =
     check g' (open_st_term_nv e2 px) pre pre_typing' post_hint in
-  if C_Tot? c2
+  if not (stateful_comp c2)
   then T.fail "Tm_TotBind: e2 is not a stateful computation"
   else
     let e2_closed = close_st_term e2 x in
@@ -230,6 +249,14 @@ let check_tot_bind g t pre pre_typing post_hint check =
     FV.tot_typing_freevars pre_typing;
     close_with_non_freevar pre x 0;
     let c = open_comp_with (close_comp c2 x) e1 in
+    let _ = 
+      match post_hint with
+      | None -> ()
+      | Some post ->
+        assume (comp_post c == comp_post c2 /\
+                comp_res c == comp_res c2 /\
+                comp_u c == comp_u c2)
+    in
     // T.print (Printf.sprintf "c is %s\n\n" (P.comp_to_string c));
     LN.tot_typing_ln pre_typing';
     open_with_gt_ln pre (-1) e1 0;

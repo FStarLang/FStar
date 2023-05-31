@@ -517,7 +517,9 @@ type st_equiv : env -> comp -> comp -> Type =
       g:env ->
       c1:comp_st ->
       c2:comp_st { st_equiv_pre c1 c2 } -> 
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars (comp_post c1)) /\ ~(x `Set.mem` freevars (comp_post c2)) } ->
+      x:var { None? (lookup g x) /\
+              ~(x `Set.mem` freevars (comp_post c1)) /\
+              ~(x `Set.mem` freevars (comp_post c2)) } ->
       tot_typing g (comp_pre c1) Tm_VProp ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) ->
       tot_typing (extend x (Inl (comp_res c1)) g) (open_term (comp_post c1) x) Tm_VProp ->
@@ -861,17 +863,24 @@ type st_typing : env -> st_term -> comp -> Type =
     G |- e1 : t0
 
 *)
+let star_typing_inversion_l (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
+  : tot_typing g t0 Tm_VProp
+  = admit ()
+
+let star_typing_inversion_r (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
+  : tot_typing g t1 Tm_VProp
+  = admit ()
+
 let star_typing_inversion (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
-  : (tot_typing g t0 Tm_VProp &
-     tot_typing g t1 Tm_VProp)
-  = admit()
+  : GTot (tot_typing g t0 Tm_VProp & tot_typing g t1 Tm_VProp)
+  = admit ()
 
 let vprop_eq_typing_inversion g (t0 t1:term)
                               (token:FTB.equiv_token (elab_env g)
                                                      (elab_term t0)
                                                      (elab_term t1))
-  : (tot_typing g t0 Tm_VProp &
-     tot_typing g t1 Tm_VProp)
+  : GTot (tot_typing g t0 Tm_VProp &
+          tot_typing g t1 Tm_VProp)
   = admit ()
 
 (* These I can easily prove *)
@@ -879,81 +888,8 @@ let star_typing (#g:_) (#t0 #t1:term)
                 (d0:tot_typing g t0 Tm_VProp)
                 (d1:tot_typing g t1 Tm_VProp)
   : tot_typing g (Tm_Star t0 t1) Tm_VProp
-  = admit()
+  = admit ()
 
 let emp_typing (#g:_) 
   : tot_typing g Tm_Emp Tm_VProp
-  = admit()
-
-let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
-  : GTot ((tot_typing g t0 Tm_VProp -> tot_typing g t1 Tm_VProp) &
-          (tot_typing g t1 Tm_VProp -> tot_typing g t0 Tm_VProp))
-        (decreases v)
-  = match v with
-    | VE_Refl _ _ -> (fun x -> x), (fun x -> x)
-
-    | VE_Sym _ _ _ v' -> 
-      let f, g = vprop_equiv_typing v' in
-      g, f
-
-    | VE_Trans g t0 t2 t1 v02 v21 ->
-      let f02, f20 = vprop_equiv_typing v02 in
-      let f21, f12 = vprop_equiv_typing v21 in
-      (fun x -> f21 (f02 x)), 
-      (fun x -> f20 (f12 x))
-
-    | VE_Ctxt g s0 s1 s0' s1' v0 v1 ->
-      let f0, f0' = vprop_equiv_typing v0 in
-      let f1, f1' = vprop_equiv_typing v1 in      
-      let ff (x:tot_typing g (Tm_Star s0 s1) Tm_VProp)
-        : tot_typing g (Tm_Star s0' s1') Tm_VProp
-        = let s0_typing, s1_typing = star_typing_inversion x in
-          let s0'_typing, s1'_typing = f0 s0_typing, f1 s1_typing in
-          star_typing s0'_typing s1'_typing
-      in
-      let gg (x:tot_typing g (Tm_Star s0' s1') Tm_VProp)
-        : tot_typing g (Tm_Star s0 s1) Tm_VProp
-        = let s0'_typing, s1'_typing = star_typing_inversion x in
-          star_typing (f0' s0'_typing) (f1' s1'_typing)        
-      in
-      ff, gg
-
-    | VE_Unit g t ->
-      let fwd (x:tot_typing g (Tm_Star Tm_Emp t) Tm_VProp)
-        : tot_typing g t Tm_VProp
-        = let _, r = star_typing_inversion x in
-          r
-      in
-      let bk (x:tot_typing g t Tm_VProp)
-        : tot_typing g (Tm_Star Tm_Emp t) Tm_VProp
-        = star_typing emp_typing x
-      in
-      fwd, bk
-
-    | VE_Comm g t0 t1 ->
-      let f t0 t1 (x:tot_typing g (Tm_Star t0 t1) Tm_VProp)
-        : tot_typing g (Tm_Star t1 t0) Tm_VProp
-        = let tt0, tt1 = star_typing_inversion x in
-          star_typing tt1 tt0
-      in
-      f t0 t1, f t1 t0
-
-    | VE_Assoc g t0 t1 t2 ->
-      let fwd (x:tot_typing g (Tm_Star t0 (Tm_Star t1 t2)) Tm_VProp)
-        : tot_typing g (Tm_Star (Tm_Star t0 t1) t2) Tm_VProp
-        = let tt0, tt12 = star_typing_inversion x in
-          let tt1, tt2 = star_typing_inversion tt12 in
-          star_typing (star_typing tt0 tt1) tt2
-      in
-      let bk (x : tot_typing g (Tm_Star (Tm_Star t0 t1) t2) Tm_VProp)
-        : tot_typing g (Tm_Star t0 (Tm_Star t1 t2)) Tm_VProp
-        = let tt01, tt2 = star_typing_inversion x in
-          let tt0, tt1 = star_typing_inversion tt01 in
-          star_typing tt0 (star_typing tt1 tt2)
-      in
-      fwd, bk
-   
-    | VE_Ext g t0 t1 token ->
-      let d1, d2 = vprop_eq_typing_inversion g t0 t1 token in
-      (fun _ -> d2),
-      (fun _ -> d1)
+  = admit ()

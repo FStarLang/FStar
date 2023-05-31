@@ -119,6 +119,7 @@ fn if_example (r:ref U32.t)
 }
 ```
 
+
 ```pulse
 fn elim_intro_exists2 (r:ref U32.t)
    requires 
@@ -215,7 +216,8 @@ fn test_par (r1 r2:ref U32.t)
   }
   {
      r2 := 1ul
-  }
+  };
+  ()
 }
 ```
 
@@ -313,6 +315,31 @@ fn sum (r:ref nat) (n:nat)
    with _;
    introduce exists s. (pts_to sum full_perm s)
    with _
+}
+```
+
+```pulse
+fn sum2 (r:ref nat) (n:nat)
+   requires exists i. (pts_to r full_perm i)
+   ensures (pts_to r full_perm (sum_spec n))
+{
+   let mut i = zero;
+   let mut sum = zero;
+   while (let m = !i; (m <> n))
+   invariant b . exists m s. (
+     pts_to i full_perm m `star`
+     pts_to sum full_perm s `star`
+     pure (s == sum_spec m /\ b == (m <> n)))
+   {
+     let m = !i;
+     let s = !sum;
+     i := (m + 1);
+     sum := s + m + 1;
+     ()
+   };
+   let s = !sum;
+   r := s;
+   ()
 }
 ```
 

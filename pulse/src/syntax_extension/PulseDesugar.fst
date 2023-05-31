@@ -274,6 +274,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
   = let open SW in
     let open Sugar in
+    BU.print1 "Desugar statement at %s\n" (R.string_of_range s.range);
     match s.s with
     | Expr { e } -> 
       let? tm = tosyntax env e in

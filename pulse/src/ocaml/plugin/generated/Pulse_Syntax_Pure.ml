@@ -349,7 +349,9 @@ let (is_eq2 :
                   ->
                   (match is_fvar head2 with
                    | FStar_Pervasives_Native.Some (l, uu___1) ->
-                       if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"]
+                       if
+                         (l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"]) ||
+                           (l = ["Prims"; "eq2"])
                        then FStar_Pervasives_Native.Some (a1, a2)
                        else FStar_Pervasives_Native.None
                    | uu___1 -> FStar_Pervasives_Native.None)

@@ -8,28 +8,17 @@ open FStar.Ghost
 module U32 = FStar.UInt32
 open Pulse.Steel.Wrapper
 
-let rec fib' (n:nat) =
+let rec fib (n:nat) : nat =
   if n <= 1 then 1
-  else fib' (n - 1) + fib' (n - 2)
+  else fib (n - 1) + fib (n - 2)
 
-assume
-val fib (n:nat) :  nat
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Steel.Wrapper -Pulse.Steel.Wrapper.Typing'"
 
-assume
-val fib_eq (n:nat)
-  : Lemma
-    (ensures fib n == fib' n)
-    [SMTPat (fib n)]
-
-
-//#push-options "--admit_smt_queries true"
-
-[@@expect_failure]
 ```pulse
-fn fibo (n:nat)
+fn fibo (n:pos)
   requires emp
-  returns r: nat
-  ensures emp
+  returns r:int
+  ensures pure (r == fib n)
 {
   let mut i = 1;
   let mut j = 1;
@@ -39,9 +28,11 @@ fn fibo (n:nat)
      pts_to i full_perm vi `star`
      pts_to j full_perm vj `star`
      pts_to ctr full_perm vctr `star`     
-     pure (1 <= vctr /\ vctr <= n /\ (not b ==> vctr == n) /\
+     pure (1 <= vctr /\
+           vctr <= n /\
            vi == fib (vctr - 1) /\
-           vj == fib vctr)
+           vj == fib vctr /\
+           b == (vctr < n))
   )
   {
      let vc = !ctr;
@@ -50,28 +41,9 @@ fn fibo (n:nat)
      i := vj;
      j := vi + vj;
      ctr := vc + 1;
+     ()
   };
-  ()
+  let r = !j;
+  r
 }
 ```
-
-//   while (let vctr = !ctr; (vctr < n))
-//   invariant b . exists vi vj vctr. (
-//      pts_to i full_perm vi `star`
-//      pts_to j full_perm vj `star`
-//      pts_to ctr full_perm vctr `star`     
-//      pure (1 <= vctr /\ vctr <= n /\ (not b ==> vctr == n) /\
-//            vi == fib (vctr - 1) /\
-//            vj == fib vctr)
-//   )
-//   {
-//      let tmp = !vi;
-//      vi := !vj;
-//      vj = !vj + tmp;
-//   };
-//   let res = !vj;
-//   res
-// }
-// ```
-
-

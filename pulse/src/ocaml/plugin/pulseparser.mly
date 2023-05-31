@@ -143,7 +143,7 @@ pulseStmt:
       let s1 = PulseSugar.mk_stmt s1 (rr ($loc(s1))) in
       match s2 with
       | None -> s1
-      | Some s2 -> PulseSugar.mk_stmt (PulseSugar.mk_sequence s1 s2) (rr ($loc(s2)))
+      | Some s2 -> PulseSugar.mk_stmt (PulseSugar.mk_sequence s1 s2) (rr ($loc))
     }
 
 elseBlock:

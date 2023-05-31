@@ -10,7 +10,7 @@ open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
-
+open Pulse.Checker.VPropEquiv
 
 (*** Soundness of vprop equivalence **)
 

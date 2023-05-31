@@ -50,3 +50,6 @@ let tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
 
 let tot_typing_weakening #g #t #ty x b d = admit()
 
+let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
+   : tot_typing g p (Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0)
+   = admit()

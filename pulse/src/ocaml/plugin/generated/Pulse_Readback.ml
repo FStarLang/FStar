@@ -156,6 +156,20 @@ let (collect_app_refined :
   FStar_Reflection_Types.term ->
     (FStar_Reflection_Types.term * FStar_Reflection_Data.argv Prims.list))
   = fun t -> FStar_Reflection_Derived.collect_app_ln t
+let (readback_ty_ascribed :
+  FStar_Reflection_Types.term ->
+    Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    match FStar_Reflection_Builtins.inspect_ln t with
+    | FStar_Reflection_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
+        FStar_Pervasives_Native.Some
+          (Pulse_Syntax_Base.Tm_FStar
+             (t1, (FStar_Reflection_Builtins.range_of_term t1)))
+    | FStar_Reflection_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
+        FStar_Pervasives_Native.Some
+          (Pulse_Syntax_Base.Tm_FStar
+             (t1, (FStar_Reflection_Builtins.range_of_term t1)))
 let rec (readback_ty :
   FStar_Reflection_Types.term ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
@@ -288,14 +302,10 @@ let rec (readback_ty :
         FStar_Pervasives_Native.None
     | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) ->
         FStar_Pervasives_Native.None
-    | FStar_Reflection_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t1, (FStar_Reflection_Builtins.range_of_term t1)))
-    | FStar_Reflection_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t1, (FStar_Reflection_Builtins.range_of_term t1)))
+    | FStar_Reflection_Data.Tv_AscribedT (uu___, uu___1, uu___2, uu___3) ->
+        readback_ty_ascribed t
+    | FStar_Reflection_Data.Tv_AscribedC (uu___, uu___1, uu___2, uu___3) ->
+        readback_ty_ascribed t
     | FStar_Reflection_Data.Tv_Unknown ->
         FStar_Pervasives_Native.Some Pulse_Syntax_Base.Tm_Unknown
     | FStar_Reflection_Data.Tv_Unsupp -> FStar_Pervasives_Native.None
