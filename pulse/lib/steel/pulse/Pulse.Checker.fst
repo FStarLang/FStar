@@ -45,34 +45,6 @@ let default_binder_annot = {
     binder_ty = Tm_Unknown
 }
    
-let maybe_add_elim_pure (pre:list term) (t:st_term) : T.Tac (bool & st_term) =
-  let pure_props =
-    L.flatten (L.map (fun (t:term) ->
-                      match t with
-                      | Tm_Pure p -> [p]
-                      | _ -> []) pre) in
-
-  if L.length pure_props = 0
-  then false, t
-  else (
-    true,
-    L.fold_left 
-      (fun t (p:term) ->
-        let elim_pure_tm =
-          Tm_STApp { head = tm_fvar (as_fv elim_pure_explicit_lid);
-                     arg_qual = None;
-                     arg = p }
-        in
-        let bind =
-          Tm_Bind { binder = default_binder_annot;
-                    head = wr (Tm_Protect { t = wr elim_pure_tm });
-                    body = t }
-        in
-        wr bind)
-      t
-      pure_props
-  )
-
 let add_intro_pure rng (continuation:st_term) (p:term) =
     let wr t = { term = t; range = rng } in
     let intro_pure_tm =
@@ -312,44 +284,6 @@ let handle_framing_failure
     in
     handle_intro_exists rest t
 
-// let rec maybe_add_elims
-//            (g:env)
-//            (ctxt:list term)
-//            (t:st_term)
-//   : T.Tac st_term
-//   = let wr t' = { term = t'; range = t.range } in
-//     match ctxt with
-//     | [] -> t
-//     | Tm_ExistsSL u ty b se :: rest ->
-//       let e = wr (Tm_Protect { t = wr (Tm_ElimExists { p = Tm_ExistsSL u ty b se }) }) in
-//       let x = fresh g in
-//       let px = v_as_nv x in
-//       let g = extend x (Inl ty) g in
-//       let b = open_term_nv b px in
-//       let t = maybe_add_elims g [b] t in
-//       let t = close_st_term t x in
-//       let t = Tm_Bind { binder = default_binder_annot;
-//                         head = e;
-//                         body = wr (Tm_Protect { t }) } in
-//       maybe_add_elims g rest (wr t)
-//     | Tm_Pure p :: rest ->
-//       let elim_pure_tm = 
-//         wr (Tm_STApp { head = tm_fvar (as_fv elim_pure_explicit_lid);
-//                        arg_qual = None;
-//                        arg = p })
-//       in
-//       wr (
-//         Tm_Bind { binder = default_binder_annot;
-//                   head = wr (Tm_Protect { t = elim_pure_tm } );
-//                   body = wr (Tm_Protect { t = maybe_add_elims g rest t }) }
-//       )
-
-//     | Tm_Star p q :: rest ->
-//       maybe_add_elims g (p :: q :: rest) t    
-      
-//     | _ :: rest ->
-//       maybe_add_elims g rest t
-
 let protect t = { term = Tm_Protect { t }; range = t.range }
   
 let rec unprotect t = 
@@ -363,14 +297,6 @@ let rec unprotect t =
     unprotect t
   | _ -> t
   
-// let auto_elims (g:env) (ctxt:term) (t:st_term) =
-//   match t.term with
-//   | Tm_Protect _ -> unprotect t
-//   | _ ->
-//     let ctxt = vprop_as_list ctxt in
-//     let t = maybe_add_elims g ctxt t in 
-//     unprotect t
-    
 #push-options "--ifuel 2"
 
 let elim_then_check (#g:env) (#ctxt:term) 
