@@ -315,12 +315,10 @@ let upd
 : STT unit
     (pts_to a P.full_perm s)
     (fun res -> pts_to a P.full_perm (Seq.upd s (US.v i) v))
-= [@inline_let]
-  let (| pt, len |) = a in
-  rewrite
+= rewrite
     (pts_to _ _ _)
-    (pts_to (| pt, len |) _ s);
-  upd_ptr pt i v;
+    (pts_to (| ptr_of a, (dsnd a) |) _ s);
+  upd_ptr (ptr_of a) i v;
   rewrite
     (pts_to _ _ _)
     (pts_to _ _ _)
