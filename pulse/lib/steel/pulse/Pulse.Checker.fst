@@ -31,6 +31,143 @@ module Rewrite = Pulse.Checker.Rewrite
 module ElimPure = Pulse.Checker.Auto.ElimPure
 module ElimExists = Pulse.Checker.Auto.ElimExists
 
+let ( * ) (t1 t2:term) : term = Tm_Star t1 t2
+
+noeq
+type framing_st (g:env) (original_ctxt:term) = {
+    t:st_term;
+    c: c:comp { stateful_comp c };
+    t_typing:st_typing g t c;
+
+    ctxt:term;
+    matched_pre:term;
+    unmatched_pre:term;
+    ctxt_eq:vprop_equiv g original_ctxt (ctxt * matched_pre);
+    pre_eq:vprop_equiv g (comp_pre c) (unmatched_pre * matched_pre);
+}
+
+assume val intro_vp:
+  g:env ->
+  ctxt:term -> tot_typing g ctxt Tm_VProp ->
+  v:vprop -> tot_typing g v Tm_VProp ->
+  option (ctxt':term &
+          t:st_term &
+          c:comp { stateful_comp c /\ comp_post c == v} &
+          st_typing g t c &
+          vprop_equiv g ctxt (ctxt' * comp_pre c))
+
+assume val add_frame (#g:env) (#t:st_term) (#c:comp { stateful_comp c }) (t_typing:st_typing g t c)
+  (frame:term)
+  : c':comp { stateful_comp c' /\
+              comp_pre c' == comp_pre c * frame /\
+              comp_post c' == comp_post c * frame } &
+    st_typing g t c'
+
+assume val c_equiv_post (#g:env) (#t:st_term) (#c:comp { stateful_comp c /\ ln (comp_post c)}) (t_typing:st_typing g t c)
+  (post:term {ln post}) (_:vprop_equiv g post (comp_post c))
+  : c':comp { stateful_comp c' /\
+              comp_pre c' == comp_pre c /\
+              comp_post c' == post } &
+    st_typing g t c'
+
+assume val c_equiv_pre (#g:env) (#t:st_term) (#c:comp { stateful_comp c }) (t_typing:st_typing g t c)
+  (pre:term) (_:vprop_equiv g pre (comp_pre c))
+  : c':comp { stateful_comp c' /\
+              comp_pre c' == comp_pre c /\
+              comp_post c' == comp_post c } &
+    st_typing g t c'
+
+#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 2"
+let rec handle_framing_failure (#g:env) (#ctxt:term)
+  (ctxt_typing:tot_typing g ctxt Tm_VProp)
+  (s:framing_st g ctxt)
+  : T.Tac (t:st_term &
+           c:comp { stateful_comp c /\ comp_pre c == ctxt } &
+           st_typing g t c) =
+
+  // we have typing of ctxt, eq of ctxt with comp_pre c * s.ctxt
+  // so with inversion of vprop_equiv and Tm_Star typing w.r.t. typing
+  let s_ctxt_typing : tot_typing g s.ctxt Tm_VProp = magic () in
+
+  match vprop_as_list s.unmatched_pre with
+  | [] ->
+    // from s.pre_eq, we should get this, since s.unmatched_pre is emp
+    let pre_eq : vprop_equiv g (comp_pre s.c) s.matched_pre = magic () in
+    // from s.ctxt_eq
+    let ctxt_eq : vprop_equiv g ctxt (s.matched_pre * s.ctxt) = magic () in
+    // using pre_eq and ctxt_eq above
+    let ctxt_eq : vprop_equiv g (comp_pre s.c * s.ctxt)
+                                ctxt = magic () in
+    let f : frame_for_req_in_ctxt g ctxt (comp_pre s.c) =
+      (| s.ctxt, s_ctxt_typing, ctxt_eq |) in
+    let (| c', t_typing |) = apply_frame ctxt_typing s.t_typing f in
+    (| s.t, c', t_typing |)
+
+  | hd::tl ->
+    // in s.pre_eq we have s.unmatched_pre in vprop_equiv relation
+    //   with comp_pre c, from that we should be able to derive it
+    let hd_typing : tot_typing g hd Tm_VProp = magic () in
+    assume (ln hd);
+    match intro_vp g s.ctxt s_ctxt_typing hd hd_typing with
+    | Some (| ctxt', t, c, t_typing, veq |) ->
+      // we now need to create the new framing_st
+
+      // commutation of list_as_vprop and vprop_as_list
+      assume (s.unmatched_pre == hd * (list_as_vprop tl));
+
+      // the term that we create for the next framing state is:
+      //   bind (add_frame (tl * s.matched) t) s.t
+      let c_pre = comp_pre c in
+      let veq : vprop_equiv g s.ctxt (ctxt' * c_pre) = veq in
+      assume (ln (list_as_vprop tl) /\ ln s.matched_pre);
+      let (| c, t_typing |) = add_frame t_typing (list_as_vprop tl * s.matched_pre) in
+      assert (comp_pre c == c_pre * (list_as_vprop tl * s.matched_pre));
+      assert (comp_post c == hd * (list_as_vprop tl * s.matched_pre));
+        
+      let (| c, t_typing |) = c_equiv_post t_typing
+        (s.unmatched_pre * s.matched_pre) (magic ()) in
+      assert (ln (comp_post c));
+
+      let (| s_c, s_t_typing |) = c_equiv_pre s.t_typing
+        (s.unmatched_pre * s.matched_pre) (magic ()) in
+        
+      let x = fresh g in
+      admit ();
+      let (| t, c, t_typing |) = Pulse.Checker.Bind.mk_bind
+        g
+        (comp_pre c)  // c_pre * (tl * s.matched_pre)
+        t
+        s.t
+        c
+        s_c
+        (v_as_nv x)
+        t_typing
+        (magic ())  // typing of c's return type, from inversion?
+        s_t_typing
+        (magic ())  // typing of s_c's return type, from inversion?
+        (magic ())  // post typing for s_c ... from inversion and then weakening
+      in
+      
+
+      admit ()
+      
+
+    | _ ->
+      T.fail (Printf.sprintf "Cannot match the precondition %s"
+                (P.term_to_string hd))
+
+
+
+
+
+
+
+
+
+
+
+
+
 let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)

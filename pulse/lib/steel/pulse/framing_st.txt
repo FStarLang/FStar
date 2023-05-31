@@ -1,0 +1,77 @@
+type framing_state (g:env) (orig:vprop) = {  // have orig typing around
+  t:st_term;
+  c:comp {stateful c};
+  t_typing:st_typing g t c;
+
+  ctxt:term;
+  matched_pre:term;
+  unmatched_pre:term;
+  v1:vprop_equiv orig (ctxt * matched_pre);
+  v2:vprop_equiv c.pre (unmatched_pre * matched_pre);
+}
+
+intro_vp:
+g:env -> ctxt:term -> ctxt_typing -> v:vprop -> v_typing ->
+option (ctxt':term &
+        t:st_term &
+        c:comp { comp_post c == v } &
+        st_typing g t c &
+        vprop_equiv g ctxt (ctxt' * comp_pre c))
+
+handle_framing_failure:
+g:env -> orig:term -> s:framing_state ->
+T.Tac (| t:st_term & c:comp { comp_pre c == orig } & st_typing g t c |)
+
+
+base case:
+s.unmatched = []
+
+we know:
+
+(1) s.c.pre ~ s.matched_pre  // from s.v2
+(2) orig ~ s.ctxt * s.matched_pre  // from s.v1
+
+so s.ctxt is the frame and we return (| s.t, add_frame s.c s.ctxt, _ |)
+
+when s.unmatched is not empty:
+s.unmatched = hd::tl
+
+let Some (| ctxt', t', c', t'_typing, veq |) = intro_vp g s.ctxt _ hd _
+
+We know:
+
+(1) comp_post c' = hd
+(2) s.ctxt ~ ctxt' * comp_pre c'
+(3) s.c.pre ~ s.unmatched_pre * s.matched_pre
+(4) orig ~ s.ctxt * s.matched_pre  // (3) and (4) from s.v2 and s.v1
+
+We now need to contruct the framing_st for the recursive call on handle_framing_failure
+
+let t1 = bind (frame t' (tl * s.matched)) s.t
+and similarly, c1 = bind_comp (frame c' (tl * s.matched)) s.c
+
+this bind will be ok, if (frame c' (tl * s.matched)).post = s.c.pre
+
+To prove (frame c' (tl * s.matched)).post = s.c.pre
+
+lhs = hd * (tl * s.matched)  // using (1)
+    = s.unmatched * s.matched -- which is same as s.c.pre from (3)
+
+So bind node is fine
+
+now pre of the bind node = comp_pre c' * (tl * s.matched) -- (5)
+
+For the new framing state:
+
+ctxt = ctxt'
+unmatched = tl
+matched = comp_pre c' * s.matched
+c = c1 (the bind comp)
+t = t1 (the bind node)
+
+now we need to prove v1 and v2 for this new state:
+
+v1 : orig ~ ctxt' * comp_pre c' * s.matched  -- follows from (2) and (4)
+v2 : comp_pre c ~ tl * (comp_pre c' * s.matched)  -- follows from (5)
+
+Now we call handle_framing_failure with this new state
