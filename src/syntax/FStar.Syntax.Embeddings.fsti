@@ -112,6 +112,11 @@ val embed_as     : embedding 'a ->
                    option typ -> (* optionally change the type *)
                    embedding 'b
 
+(* Construct a simple lazy embedding as a blob. *)
+val e_lazy        : lazy_kind ->
+                    ty:term ->
+                    embedding 'a
+
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding term // an identity
 val e_unit        : embedding unit

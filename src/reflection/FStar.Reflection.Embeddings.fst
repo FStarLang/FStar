@@ -69,27 +69,18 @@ let noaqs : antiquotations = (0, [])
 (* ------------------------------------- EMBEDDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
 
-let e_lazy #a (k:lazy_kind) (ty : term) : embedding a =
-  let ee rng (x:a) : term = U.mk_lazy x ty k (Some rng) in
-  let uu _ (t:term) : option a =
-    match (SS.compress t).n with
-    | Tm_lazy {blob=b; lkind=lkind} when S.lazy_kind_eq lkind k -> Some (undyn b)
-    | _ -> None
-  in
-  mk_emb ee uu ty
-
 (* The lazy embeddings: just embedding whatever value as a blob inside a Tm_Lazy node. *)
-let e_bv                 : embedding bv                 = e_lazy Lazy_bv fstar_refl_bv
-let e_namedv             : embedding namedv             = e_lazy Lazy_namedv fstar_refl_namedv
-let e_binder             : embedding binder             = e_lazy Lazy_binder fstar_refl_binder
-let e_fv                 : embedding fv                 = e_lazy Lazy_fvar fstar_refl_fv
-let e_comp               : embedding comp               = e_lazy Lazy_comp fstar_refl_comp
-let e_universe           : embedding universe           = e_lazy Lazy_universe fstar_refl_universe
-let e___ident            : embedding I.ident            = e_lazy Lazy_ident fstar_refl_ident
-let e_env                : embedding env                = e_lazy Lazy_env fstar_refl_env
-let e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
-let e_sigelt             : embedding sigelt             = e_lazy Lazy_sigelt fstar_refl_sigelt
-let e_letbinding         : embedding letbinding         = e_lazy Lazy_letbinding fstar_refl_letbinding
+let e_bv                 : embedding bv                 = EMB.e_lazy Lazy_bv fstar_refl_bv
+let e_namedv             : embedding namedv             = EMB.e_lazy Lazy_namedv fstar_refl_namedv
+let e_binder             : embedding binder             = EMB.e_lazy Lazy_binder fstar_refl_binder
+let e_fv                 : embedding fv                 = EMB.e_lazy Lazy_fvar fstar_refl_fv
+let e_comp               : embedding comp               = EMB.e_lazy Lazy_comp fstar_refl_comp
+let e_universe           : embedding universe           = EMB.e_lazy Lazy_universe fstar_refl_universe
+let e___ident            : embedding I.ident            = EMB.e_lazy Lazy_ident fstar_refl_ident
+let e_env                : embedding env                = EMB.e_lazy Lazy_env fstar_refl_env
+let e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
+let e_sigelt             : embedding sigelt             = EMB.e_lazy Lazy_sigelt fstar_refl_sigelt
+let e_letbinding         : embedding letbinding         = EMB.e_lazy Lazy_letbinding fstar_refl_letbinding
 
 let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with

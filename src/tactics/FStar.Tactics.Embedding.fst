@@ -128,26 +128,14 @@ let hd'_and_args tm =
   let hd, args = U.head_and_args tm in
   (U.un_uinst hd).n, args
 
-let e_proofstate =
-    let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
-        U.mk_lazy ps fstar_tactics_proofstate.t Lazy_proofstate (Some rng)
-    in
-    let unembed_proofstate w (t:term) : option proofstate =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_proofstate} ->
-            Some <| FStar.Compiler.Dyn.undyn b
-        | _ ->
-            if w then
-                Err.log_issue t.pos
-                  (Err.Warning_NotEmbedded,
-                   BU.format1 "Not an embedded proofstate: %s\n"
-                     (Print.term_to_string t));
-            None
-    in
-    mk_emb embed_proofstate unembed_proofstate fstar_tactics_proofstate.t
+let e_proofstate : embedding proofstate = e_lazy Lazy_proofstate fstar_tactics_proofstate.t
+let e_goal       : embedding goal       = e_lazy Lazy_goal fstar_tactics_goal.t
 
 let unfold_lazy_proofstate (i : lazyinfo) : term =
     U.exp_string "(((proofstate)))"
+
+let unfold_lazy_goal (i : lazyinfo) : term =
+    U.exp_string "(((goal)))"
 
 (* PLEASE NOTE: Construct and FV accumulate their arguments BACKWARDS. That is,
  * the expression (f 1 2) is stored as FV (f, [], [Constant (Int 2); Constant (Int 1)].
@@ -184,24 +172,6 @@ let e_proofstate_nbe =
     ; NBETerm.un = unembed_proofstate
     ; NBETerm.typ = mkFV fstar_tactics_proofstate.fv [] []
     ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_proofstate.fv }
-
-let e_goal =
-    let embed_goal (rng:Range.range) (g:goal) : term =
-        U.mk_lazy g fstar_tactics_goal.t Lazy_goal (Some rng)
-    in
-    let unembed_goal w (t:term) : option goal =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_goal} ->
-            Some <| FStar.Compiler.Dyn.undyn b
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded goal: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_goal unembed_goal fstar_tactics_goal.t
-
-let unfold_lazy_goal (i : lazyinfo) : term =
-    U.exp_string "(((goal)))"
 
 let e_goal_nbe =
     let embed_goal _cb (ps:goal) : NBETerm.t =

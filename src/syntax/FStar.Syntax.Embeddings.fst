@@ -206,6 +206,16 @@ let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
                 (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
                 ea.emb_typ
 
+(* A simple lazy embedding, without cancellations nor an expressive type. *)
+let e_lazy #a (k:lazy_kind) (ty : term) : embedding a =
+  let ee rng (x:a) _topt _norm : term = U.mk_lazy x ty k (Some rng) in
+  let uu (t:term) _w _norm : option a =
+    match (SS.compress t).n with
+    | Tm_lazy {blob=b; lkind=lkind} when S.lazy_kind_eq lkind k -> Some (Dyn.undyn b)
+    | _ -> None
+  in
+  mk_emb ee uu (term_as_fv ty)
+
 let lazy_embed (pa:printer 'a) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
     then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
@@ -231,7 +241,7 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
            in
            res
-      else let a = FStar.Compiler.Dyn.undyn b in
+      else let a = Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
                                 (Print.emb_typ_to_string et)
@@ -888,27 +898,8 @@ let e_range =
         Range.string_of_range
         (ET_app (PC.range_lid |> Ident.string_of_lid, []))
 
-let e_issue =
-    let t_issue = S.fv_to_tm (S.lid_as_fv PC.issue_lid None) in
-    let em (i:FStar.Errors.issue) (rng:range) _shadow _norm : term = 
-        U.mk_lazy i t_issue Lazy_issue (Some rng)
-    in
-    let un (t0:term) (w:bool) _norm : option FStar.Errors.issue =
-        let t = unmeta_div_results t0 in
-        match t.n with
-        | Tm_lazy { lkind = Lazy_issue; blob } -> Some (Dyn.undyn blob)
-        | _ ->
-            if w then
-            Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded issue: %s" (Print.term_to_string t0)));
-            None
-    in
-    mk_emb_full
-        em
-        un
-        t_issue
-        (fun i -> BU.format1 "%s" (FStar.Errors.format_issue i))
-        (ET_app (PC.issue_lid |> Ident.string_of_lid, []))
-    
+let e_issue : embedding Err.issue = e_lazy Lazy_issue (S.fvar PC.issue_lid None)
+
 let e_vconfig =
     let em (vcfg:vconfig) (rng:Range.range) _shadow norm : term =
       (* The order is very important here, even if this is a record. *)

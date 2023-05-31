@@ -269,7 +269,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       failwith "Tm_delayed is impossible after compress"
 
     | Tm_lazy i ->
-      mk (A.Paren (mk (A.Paren (resugar_term' env (U.unfold_lazy i)))))
+      resugar_term' env (U.unfold_lazy i)
 
     | Tm_bvar x ->
       (* this case can happen when printing a subterm of a term that is not opened *)
