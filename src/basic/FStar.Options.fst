@@ -195,6 +195,7 @@ let defaults =
       ("MLish"                        , Bool false);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
+      ("no_hide_reveal_coercions"     , Bool false);
       ("no_location_info"             , Bool false);
       ("no_smt"                       , Bool false);
       ("no_plugins"                   , Bool false);
@@ -379,6 +380,7 @@ let get_max_ifuel               ()      = lookup_opt "max_ifuel"                
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
+let get_no_hide_reveal_coercions ()     = lookup_opt "no_hide_reveal_coercions" as_bool
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
@@ -943,6 +945,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "no_extract",
         Accumulated (PathStr "module name"),
         "Deprecated: use --extract instead; Do not extract code from this module");
+
+       ( noshort,
+        "no_hide_reveal_coercions",
+        Const (Bool true),
+        "Disable the automatic hide/reveal coercions for ghost terms");
 
        ( noshort,
         "no_location_info",
@@ -1764,6 +1771,7 @@ let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
+let no_hide_reveal_coercions     () = get_no_hide_reveal_coercions    ()
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()

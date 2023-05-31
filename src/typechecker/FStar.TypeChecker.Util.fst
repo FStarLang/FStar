@@ -2385,7 +2385,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
 
     | _ ->
     match check_erased env res_typ, check_erased env exp_t with
-    | No, Yes ty ->
+    | No, Yes ty when not (Options.no_hide_reveal_coercions ()) ->
         begin
         let u = env.universe_of env ty in
         match Rel.get_subtyping_predicate env res_typ ty with
@@ -2397,7 +2397,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
           e, lc, g
         end
 
-    | Yes ty, No ->
+    | Yes ty, No when not (Options.no_hide_reveal_coercions ()) ->
         let u = env.universe_of env ty in
         let e, lc = coerce_with env e lc ty C.reveal [u] [S.iarg ty] S.mk_GTotal in
         e, lc, Env.trivial_guard
