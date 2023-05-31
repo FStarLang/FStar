@@ -281,11 +281,10 @@ let index
     (fun _ -> pts_to a p s)
     (US.v i < length a \/ US.v i < Seq.length s)
     (fun res -> Seq.length s == length a /\ US.v i < Seq.length s /\ res == Seq.index s (US.v i))
-= let (| pt, len |) = a in
-  rewrite
+= rewrite
     (pts_to _ _ _)
-    (pts_to (| pt, len |) p s);
-  let res = index_ptr pt i in
+    (pts_to (| (ptr_of a), (dsnd a) |) p s);
+  let res = index_ptr (ptr_of a) i in
   rewrite
     (pts_to _ _ _)
     (pts_to a p s);
@@ -316,11 +315,10 @@ let upd
 : STT unit
     (pts_to a P.full_perm s)
     (fun res -> pts_to a P.full_perm (Seq.upd s (US.v i) v))
-= let (| pt, len |) = a in
-  rewrite
+= rewrite
     (pts_to _ _ _)
-    (pts_to (| pt, len |) _ s);
-  upd_ptr pt i v;
+    (pts_to (| ptr_of a, (dsnd a) |) _ s);
+  upd_ptr (ptr_of a) i v;
   rewrite
     (pts_to _ _ _)
     (pts_to _ _ _)
