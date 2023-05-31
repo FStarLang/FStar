@@ -365,6 +365,14 @@ let (e_qualifiers : FStar_Reflection_Data.qualifiers dualemb) =
     FStar_Reflection_NBEEmbeddings.e_qualifiers)
 let (e_range : FStar_Compiler_Range_Type.range dualemb) =
   (FStar_Syntax_Embeddings.e_range, FStar_TypeChecker_NBETerm.e_range)
+let nbe_dummy : 'a . unit -> 'a FStar_TypeChecker_NBETerm.embedding =
+  fun uu___ ->
+    let uu___1 = FStar_Compiler_Dyn.mkdyn () in
+    FStar_Compiler_Dyn.undyn uu___1
+let (e_ident : FStar_Ident.ident dualemb) =
+  let uu___ = nbe_dummy () in (FStar_Reflection_Embeddings.e_ident, uu___)
+let (e___ident : FStar_Ident.ident dualemb) =
+  let uu___ = nbe_dummy () in (FStar_Reflection_Embeddings.e___ident, uu___)
 let (e_subst : FStar_Syntax_Syntax.subst_elt Prims.list dualemb) =
   (FStar_Reflection_Embeddings.e_subst,
     FStar_Reflection_NBEEmbeddings.e_subst)
@@ -382,6 +390,16 @@ let e_option : 'a . 'a dualemb -> 'a FStar_Pervasives_Native.option dualemb =
     let uu___1 =
       FStar_TypeChecker_NBETerm.e_option (FStar_Pervasives_Native.snd e) in
     (uu___, uu___1)
+let e_tuple2 : 'a 'b . 'a dualemb -> 'b dualemb -> ('a * 'b) dualemb =
+  fun ea ->
+    fun eb ->
+      let uu___ =
+        FStar_Syntax_Embeddings.e_tuple2 (FStar_Pervasives_Native.fst ea)
+          (FStar_Pervasives_Native.fst eb) in
+      let uu___1 =
+        FStar_TypeChecker_NBETerm.e_tuple2 (FStar_Pervasives_Native.snd ea)
+          (FStar_Pervasives_Native.snd eb) in
+      (uu___, uu___1)
 let (e_string_list : Prims.string Prims.list dualemb) = e_list e_string
 let mk1' :
   'a 'r .
@@ -747,7 +765,41 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     FStar_Reflection_Basic.range_of_sigelt
                                                                     e_sigelt
                                                                     e_range in
-                                                                    [uu___86] in
+                                                                    let uu___87
+                                                                    =
+                                                                    let uu___88
+                                                                    =
+                                                                    let uu___89
+                                                                    =
+                                                                    e_tuple2
+                                                                    e_string
+                                                                    e_range in
+                                                                    mk1
+                                                                    "inspect_ident"
+                                                                    FStar_Reflection_Basic.inspect_ident
+                                                                    e___ident
+                                                                    uu___89 in
+                                                                    let uu___89
+                                                                    =
+                                                                    let uu___90
+                                                                    =
+                                                                    let uu___91
+                                                                    =
+                                                                    e_tuple2
+                                                                    e_string
+                                                                    e_range in
+                                                                    mk1
+                                                                    "pack_ident"
+                                                                    FStar_Reflection_Basic.pack_ident
+                                                                    uu___91
+                                                                    e___ident in
+                                                                    [uu___90] in
+                                                                    uu___88
+                                                                    ::
+                                                                    uu___89 in
+                                                                    uu___86
+                                                                    ::
+                                                                    uu___87 in
                                                                     uu___84
                                                                     ::
                                                                     uu___85 in
@@ -815,6 +867,6 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (uu___213 : unit) =
+let (uu___218 : unit) =
   FStar_Compiler_List.iter FStar_TypeChecker_Cfg.register_extra_step
     reflection_primops

@@ -2223,8 +2223,8 @@ let (bv_to_binding : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.binding)
     let uu___1 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
     {
       FStar_Reflection_Data.uniq1 = uu___;
-      FStar_Reflection_Data.sort4 = (bv.FStar_Syntax_Syntax.sort);
-      FStar_Reflection_Data.ppname4 = uu___1
+      FStar_Reflection_Data.sort3 = (bv.FStar_Syntax_Syntax.sort);
+      FStar_Reflection_Data.ppname3 = uu___1
     }
 let (binder_to_binding :
   FStar_Syntax_Syntax.binder -> FStar_Reflection_Data.binding) =
@@ -2236,19 +2236,19 @@ let (binding_to_string : FStar_Reflection_Data.binding -> Prims.string) =
         let uu___2 = FStar_BigInt.to_int_fs b.FStar_Reflection_Data.uniq1 in
         FStar_Compiler_Util.string_of_int uu___2 in
       Prims.op_Hat "#" uu___1 in
-    Prims.op_Hat b.FStar_Reflection_Data.ppname4 uu___
+    Prims.op_Hat b.FStar_Reflection_Data.ppname3 uu___
 let (binding_to_bv : FStar_Reflection_Data.binding -> FStar_Syntax_Syntax.bv)
   =
   fun b ->
     let uu___ =
       FStar_Ident.mk_ident
-        ((b.FStar_Reflection_Data.ppname4),
+        ((b.FStar_Reflection_Data.ppname3),
           FStar_Compiler_Range_Type.dummyRange) in
     let uu___1 = FStar_BigInt.to_int_fs b.FStar_Reflection_Data.uniq1 in
     {
       FStar_Syntax_Syntax.ppname = uu___;
       FStar_Syntax_Syntax.index = uu___1;
-      FStar_Syntax_Syntax.sort = (b.FStar_Reflection_Data.sort4)
+      FStar_Syntax_Syntax.sort = (b.FStar_Reflection_Data.sort3)
     }
 let (binding_to_binder :
   FStar_Reflection_Data.binding -> FStar_Syntax_Syntax.binder) =
@@ -3815,9 +3815,9 @@ let (rename_to :
                            FStar_Tactics_Monad.ret
                              {
                                FStar_Reflection_Data.uniq1 = uniq;
-                               FStar_Reflection_Data.sort4 =
-                                 (b.FStar_Reflection_Data.sort4);
-                               FStar_Reflection_Data.ppname4 = s
+                               FStar_Reflection_Data.sort3 =
+                                 (b.FStar_Reflection_Data.sort3);
+                               FStar_Reflection_Data.ppname3 = s
                              }))) in
       FStar_Compiler_Effect.op_Less_Bar
         (FStar_Tactics_Monad.wrap_err "rename_to") uu___

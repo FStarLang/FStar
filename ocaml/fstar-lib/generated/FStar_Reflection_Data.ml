@@ -39,69 +39,46 @@ let (uu___is_C_Reflect : vconst -> Prims.bool) =
 let (__proj__C_Reflect__item___0 : vconst -> name) =
   fun projectee -> match projectee with | C_Reflect _0 -> _0
 type universes = FStar_Syntax_Syntax.universe Prims.list
-type pattern__Pat_Constant__payload = {
-  c: vconst }
-and pattern__Pat_Cons__payload =
-  {
-  head: FStar_Syntax_Syntax.fv ;
-  univs: universes FStar_Pervasives_Native.option ;
-  subpats: (pattern * Prims.bool) Prims.list }
-and pattern__Pat_Var__payload =
-  {
-  sort: FStar_Syntax_Syntax.term ;
-  ppname: Prims.string }
-and pattern__Pat_Dot_Term__payload =
-  {
-  t: FStar_Syntax_Syntax.term FStar_Pervasives_Native.option }
-and pattern =
-  | Pat_Constant of pattern__Pat_Constant__payload 
-  | Pat_Cons of pattern__Pat_Cons__payload 
-  | Pat_Var of pattern__Pat_Var__payload 
-  | Pat_Dot_Term of pattern__Pat_Dot_Term__payload 
-let (__proj__Mkpattern__Pat_Constant__payload__item__c :
-  pattern__Pat_Constant__payload -> vconst) =
-  fun projectee -> match projectee with | { c;_} -> c
-let (__proj__Mkpattern__Pat_Cons__payload__item__head :
-  pattern__Pat_Cons__payload -> FStar_Syntax_Syntax.fv) =
-  fun projectee -> match projectee with | { head; univs; subpats;_} -> head
-let (__proj__Mkpattern__Pat_Cons__payload__item__univs :
-  pattern__Pat_Cons__payload -> universes FStar_Pervasives_Native.option) =
-  fun projectee -> match projectee with | { head; univs; subpats;_} -> univs
-let (__proj__Mkpattern__Pat_Cons__payload__item__subpats :
-  pattern__Pat_Cons__payload -> (pattern * Prims.bool) Prims.list) =
-  fun projectee ->
-    match projectee with | { head; univs; subpats;_} -> subpats
-let (__proj__Mkpattern__Pat_Var__payload__item__sort :
-  pattern__Pat_Var__payload -> FStar_Syntax_Syntax.term) =
-  fun projectee -> match projectee with | { sort; ppname;_} -> sort
-let (__proj__Mkpattern__Pat_Var__payload__item__ppname :
-  pattern__Pat_Var__payload -> Prims.string) =
-  fun projectee -> match projectee with | { sort; ppname;_} -> ppname
-let (__proj__Mkpattern__Pat_Dot_Term__payload__item__t :
-  pattern__Pat_Dot_Term__payload ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-  = fun projectee -> match projectee with | { t;_} -> t
+type pattern =
+  | Pat_Constant of vconst 
+  | Pat_Cons of FStar_Syntax_Syntax.fv * universes
+  FStar_Pervasives_Native.option * (pattern * Prims.bool) Prims.list 
+  | Pat_Var of FStar_Syntax_Syntax.term * Prims.string 
+  | Pat_Dot_Term of FStar_Syntax_Syntax.term FStar_Pervasives_Native.option 
 let (uu___is_Pat_Constant : pattern -> Prims.bool) =
   fun projectee ->
-    match projectee with | Pat_Constant _0 -> true | uu___ -> false
-let (__proj__Pat_Constant__item___0 :
-  pattern -> pattern__Pat_Constant__payload) =
-  fun projectee -> match projectee with | Pat_Constant _0 -> _0
+    match projectee with | Pat_Constant c -> true | uu___ -> false
+let (__proj__Pat_Constant__item__c : pattern -> vconst) =
+  fun projectee -> match projectee with | Pat_Constant c -> c
 let (uu___is_Pat_Cons : pattern -> Prims.bool) =
   fun projectee ->
-    match projectee with | Pat_Cons _0 -> true | uu___ -> false
-let (__proj__Pat_Cons__item___0 : pattern -> pattern__Pat_Cons__payload) =
-  fun projectee -> match projectee with | Pat_Cons _0 -> _0
+    match projectee with
+    | Pat_Cons (head, univs, subpats) -> true
+    | uu___ -> false
+let (__proj__Pat_Cons__item__head : pattern -> FStar_Syntax_Syntax.fv) =
+  fun projectee ->
+    match projectee with | Pat_Cons (head, univs, subpats) -> head
+let (__proj__Pat_Cons__item__univs :
+  pattern -> universes FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | Pat_Cons (head, univs, subpats) -> univs
+let (__proj__Pat_Cons__item__subpats :
+  pattern -> (pattern * Prims.bool) Prims.list) =
+  fun projectee ->
+    match projectee with | Pat_Cons (head, univs, subpats) -> subpats
 let (uu___is_Pat_Var : pattern -> Prims.bool) =
-  fun projectee -> match projectee with | Pat_Var _0 -> true | uu___ -> false
-let (__proj__Pat_Var__item___0 : pattern -> pattern__Pat_Var__payload) =
-  fun projectee -> match projectee with | Pat_Var _0 -> _0
+  fun projectee ->
+    match projectee with | Pat_Var (sort, ppname) -> true | uu___ -> false
+let (__proj__Pat_Var__item__sort : pattern -> FStar_Syntax_Syntax.term) =
+  fun projectee -> match projectee with | Pat_Var (sort, ppname) -> sort
+let (__proj__Pat_Var__item__ppname : pattern -> Prims.string) =
+  fun projectee -> match projectee with | Pat_Var (sort, ppname) -> ppname
 let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
-    match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
-let (__proj__Pat_Dot_Term__item___0 :
-  pattern -> pattern__Pat_Dot_Term__payload) =
-  fun projectee -> match projectee with | Pat_Dot_Term _0 -> _0
+    match projectee with | Pat_Dot_Term t -> true | uu___ -> false
+let (__proj__Pat_Dot_Term__item__t :
+  pattern -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | Pat_Dot_Term t -> t
 type branch = (pattern * FStar_Syntax_Syntax.term)
 type aqualv =
   | Q_Implicit 
@@ -116,75 +93,73 @@ let (uu___is_Q_Meta : aqualv -> Prims.bool) =
 let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Q_Meta _0 -> _0
 type argv = (FStar_Syntax_Syntax.term * aqualv)
+type xxuniv_name = (Prims.string * FStar_Compiler_Range_Type.range)
+type ppname_t = Prims.string
 let (as_ppname : Prims.string -> Prims.string) = fun x -> x
 type namedv_view = {
   uniq: FStar_BigInt.t ;
-  sort1: typ ;
-  ppname1: Prims.string }
+  sort: typ ;
+  ppname: Prims.string }
 let (__proj__Mknamedv_view__item__uniq : namedv_view -> FStar_BigInt.t) =
-  fun projectee ->
-    match projectee with | { uniq; sort1 = sort; ppname1 = ppname;_} -> uniq
+  fun projectee -> match projectee with | { uniq; sort; ppname;_} -> uniq
 let (__proj__Mknamedv_view__item__sort : namedv_view -> typ) =
-  fun projectee ->
-    match projectee with | { uniq; sort1 = sort; ppname1 = ppname;_} -> sort
+  fun projectee -> match projectee with | { uniq; sort; ppname;_} -> sort
 let (__proj__Mknamedv_view__item__ppname : namedv_view -> Prims.string) =
-  fun projectee ->
-    match projectee with
-    | { uniq; sort1 = sort; ppname1 = ppname;_} -> ppname
+  fun projectee -> match projectee with | { uniq; sort; ppname;_} -> ppname
 type bv_view = {
   index: FStar_BigInt.t ;
-  sort2: typ ;
-  ppname2: Prims.string }
+  sort1: typ ;
+  ppname1: Prims.string }
 let (__proj__Mkbv_view__item__index : bv_view -> FStar_BigInt.t) =
   fun projectee ->
     match projectee with
-    | { index; sort2 = sort; ppname2 = ppname;_} -> index
+    | { index; sort1 = sort; ppname1 = ppname;_} -> index
 let (__proj__Mkbv_view__item__sort : bv_view -> typ) =
   fun projectee ->
-    match projectee with | { index; sort2 = sort; ppname2 = ppname;_} -> sort
+    match projectee with | { index; sort1 = sort; ppname1 = ppname;_} -> sort
 let (__proj__Mkbv_view__item__ppname : bv_view -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { index; sort2 = sort; ppname2 = ppname;_} -> ppname
+    | { index; sort1 = sort; ppname1 = ppname;_} -> ppname
 type binder_view =
   {
-  sort3: typ ;
+  sort2: typ ;
   qual: aqualv ;
   attrs: FStar_Syntax_Syntax.term Prims.list ;
-  ppname3: Prims.string }
+  ppname2: Prims.string }
 let (__proj__Mkbinder_view__item__sort : binder_view -> typ) =
   fun projectee ->
     match projectee with
-    | { sort3 = sort; qual; attrs; ppname3 = ppname;_} -> sort
+    | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> sort
 let (__proj__Mkbinder_view__item__qual : binder_view -> aqualv) =
   fun projectee ->
     match projectee with
-    | { sort3 = sort; qual; attrs; ppname3 = ppname;_} -> qual
+    | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> qual
 let (__proj__Mkbinder_view__item__attrs :
   binder_view -> FStar_Syntax_Syntax.term Prims.list) =
   fun projectee ->
     match projectee with
-    | { sort3 = sort; qual; attrs; ppname3 = ppname;_} -> attrs
+    | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> attrs
 let (__proj__Mkbinder_view__item__ppname : binder_view -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { sort3 = sort; qual; attrs; ppname3 = ppname;_} -> ppname
+    | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> ppname
 type binding = {
   uniq1: FStar_BigInt.t ;
-  sort4: typ ;
-  ppname4: Prims.string }
+  sort3: typ ;
+  ppname3: Prims.string }
 let (__proj__Mkbinding__item__uniq : binding -> FStar_BigInt.t) =
   fun projectee ->
     match projectee with
-    | { uniq1 = uniq; sort4 = sort; ppname4 = ppname;_} -> uniq
+    | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> uniq
 let (__proj__Mkbinding__item__sort : binding -> typ) =
   fun projectee ->
     match projectee with
-    | { uniq1 = uniq; sort4 = sort; ppname4 = ppname;_} -> sort
+    | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> sort
 let (__proj__Mkbinding__item__ppname : binding -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { uniq1 = uniq; sort4 = sort; ppname4 = ppname;_} -> ppname
+    | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> ppname
 type bindings = binding Prims.list
 type universe_view =
   | Uv_Zero 
@@ -373,14 +348,13 @@ type ctor = (name * typ)
 type lb_view =
   {
   lb_fv: FStar_Syntax_Syntax.fv ;
-  lb_us: FStar_Syntax_Syntax.univ_name Prims.list ;
+  lb_us: xxuniv_name Prims.list ;
   lb_typ: typ ;
   lb_def: FStar_Syntax_Syntax.term }
 let (__proj__Mklb_view__item__lb_fv : lb_view -> FStar_Syntax_Syntax.fv) =
   fun projectee ->
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_fv
-let (__proj__Mklb_view__item__lb_us :
-  lb_view -> FStar_Syntax_Syntax.univ_name Prims.list) =
+let (__proj__Mklb_view__item__lb_us : lb_view -> xxuniv_name Prims.list) =
   fun projectee ->
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_us
 let (__proj__Mklb_view__item__lb_typ : lb_view -> typ) =
@@ -391,9 +365,9 @@ let (__proj__Mklb_view__item__lb_def : lb_view -> FStar_Syntax_Syntax.term) =
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_def
 type sigelt_view =
   | Sg_Let of (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list) 
-  | Sg_Inductive of (name * FStar_Syntax_Syntax.univ_name Prims.list *
+  | Sg_Inductive of (name * xxuniv_name Prims.list *
   FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
-  | Sg_Val of (name * FStar_Syntax_Syntax.univ_name Prims.list * typ) 
+  | Sg_Val of (name * xxuniv_name Prims.list * typ) 
   | Unk 
 let (uu___is_Sg_Let : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Sg_Let _0 -> true | uu___ -> false
@@ -405,13 +379,13 @@ let (uu___is_Sg_Inductive : sigelt_view -> Prims.bool) =
     match projectee with | Sg_Inductive _0 -> true | uu___ -> false
 let (__proj__Sg_Inductive__item___0 :
   sigelt_view ->
-    (name * FStar_Syntax_Syntax.univ_name Prims.list *
-      FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list))
+    (name * xxuniv_name Prims.list * FStar_Syntax_Syntax.binder Prims.list *
+      typ * ctor Prims.list))
   = fun projectee -> match projectee with | Sg_Inductive _0 -> _0
 let (uu___is_Sg_Val : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Sg_Val _0 -> true | uu___ -> false
 let (__proj__Sg_Val__item___0 :
-  sigelt_view -> (name * FStar_Syntax_Syntax.univ_name Prims.list * typ)) =
+  sigelt_view -> (name * xxuniv_name Prims.list * typ)) =
   fun projectee -> match projectee with | Sg_Val _0 -> _0
 let (uu___is_Unk : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Unk -> true | uu___ -> false
@@ -537,3 +511,4 @@ let (uu___is_Mult : exp -> Prims.bool) =
 let (__proj__Mult__item___0 : exp -> (exp * exp)) =
   fun projectee -> match projectee with | Mult _0 -> _0
 type decls = FStar_Syntax_Syntax.sigelt Prims.list
+type simple_binder = FStar_Syntax_Syntax.binder
