@@ -94,6 +94,19 @@ let e_bv =
     in
     mk_emb' embed_bv unembed_bv fstar_refl_bv_fv
 
+let e_namedv =
+    let embed_namedv cb (namedv:namedv) : t =
+        mk_lazy cb namedv fstar_refl_namedv Lazy_namedv
+    in
+    let unembed_namedv cb (t:t) : option namedv =
+        match t.nbe_t with
+        | Lazy (Inl {blob=b; lkind=Lazy_namedv}, _) ->
+            Some <| FStar.Compiler.Dyn.undyn b
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded namedv: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_namedv unembed_namedv fstar_refl_namedv_fv
 
 let e_binder =
     let embed_binder cb (b:binder) : t =

@@ -27,8 +27,7 @@ module RD = FStar.Reflection.Data
 
 (* Embeddings *)
 val e_bv            : embedding bv
-let e_namedv = e_bv
-
+val e_namedv        : embedding namedv
 val e_binder        : embedding binder
 val e_binder_view   : embedding binder_view
 val e_binders       : embedding binders

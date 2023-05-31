@@ -126,7 +126,7 @@ type universe_view =
   | Uv_Unk  : universe_view
 
 type term_view =
-    | Tv_Var       of bv
+    | Tv_Var       of namedv
     | Tv_BVar      of bv
     | Tv_FVar      of fv
     | Tv_UInst     of fv * universes
