@@ -1,6 +1,9 @@
 module FStar.Syntax.Syntax
 open FStar.Reflection.Types
 
+(* Do not look at me! *)
+type hack = { sort:int }
+
 noeq
 type subst_elt =
   | DB : int -> namedv -> subst_elt
