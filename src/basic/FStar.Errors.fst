@@ -72,10 +72,14 @@ let update_flags (l:list (error_flag * string))
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot silence error %s"
                              (BU.string_of_int i)))
-      | (_, CFatal) ->
+      | (CSilent, CFatal)
+      | (CWarning, CFatal)
+      | (CError, CFatal) ->
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot change the error level of fatal error %s"
                              (BU.string_of_int i)))
+      | (CAlwaysError, CFatal) ->
+        CFatal
       | _ -> flag
    in
    let set_flag_for_range (flag, range) =
