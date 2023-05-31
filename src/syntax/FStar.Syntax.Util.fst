@@ -517,7 +517,7 @@ let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option range) : term =
     let i = {
         lkind = k;
         blob  = mkdyn t;
-        ltyp   = typ;
+        ltyp  = typ;
         rng   = rng;
       } in
     mk (Tm_lazy i) rng
