@@ -263,6 +263,29 @@ let embed_as :
                let uu___1 = let uu___2 = ba x in ea.print uu___2 in
                FStar_Compiler_Util.format1 "(embed_as>> %s)\n" uu___1)
             ea.emb_typ
+let e_lazy :
+  'a .
+    FStar_Syntax_Syntax.lazy_kind -> FStar_Syntax_Syntax.term -> 'a embedding
+  =
+  fun k ->
+    fun ty ->
+      let ee rng x _topt _norm =
+        FStar_Syntax_Util.mk_lazy x ty k (FStar_Pervasives_Native.Some rng) in
+      let uu t _w _norm =
+        let uu___ =
+          let uu___1 = FStar_Syntax_Subst.compress t in
+          uu___1.FStar_Syntax_Syntax.n in
+        match uu___ with
+        | FStar_Syntax_Syntax.Tm_lazy
+            { FStar_Syntax_Syntax.blob = b;
+              FStar_Syntax_Syntax.lkind = lkind;
+              FStar_Syntax_Syntax.ltyp = uu___1;
+              FStar_Syntax_Syntax.rng = uu___2;_}
+            when FStar_Syntax_Syntax.lazy_kind_eq lkind k ->
+            let uu___3 = FStar_Compiler_Dyn.undyn b in
+            FStar_Pervasives_Native.Some uu___3
+        | uu___1 -> FStar_Pervasives_Native.None in
+      let uu___ = term_as_fv ty in mk_emb (Obj.magic ee) uu uu___
 let lazy_embed :
   'a .
     'a printer ->
@@ -1600,48 +1623,10 @@ let (e_range : FStar_Compiler_Range_Type.range embedding) =
   mk_emb_full em un FStar_Syntax_Syntax.t_range
     FStar_Compiler_Range_Ops.string_of_range uu___
 let (e_issue : FStar_Errors.issue embedding) =
-  let t_issue =
-    let uu___ =
-      FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.issue_lid
-        FStar_Pervasives_Native.None in
-    FStar_Syntax_Syntax.fv_to_tm uu___ in
-  let em i rng _shadow _norm =
-    FStar_Syntax_Util.mk_lazy i t_issue FStar_Syntax_Syntax.Lazy_issue
-      (FStar_Pervasives_Native.Some rng) in
-  let un t0 w _norm =
-    let t = unmeta_div_results t0 in
-    match t.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = blob;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_issue;
-          FStar_Syntax_Syntax.ltyp = uu___;
-          FStar_Syntax_Syntax.rng = uu___1;_}
-        ->
-        let uu___2 = FStar_Compiler_Dyn.undyn blob in
-        FStar_Pervasives_Native.Some uu___2
-    | uu___ ->
-        (if w
-         then
-           (let uu___2 =
-              let uu___3 =
-                let uu___4 = FStar_Syntax_Print.term_to_string t0 in
-                FStar_Compiler_Util.format1 "Not an embedded issue: %s"
-                  uu___4 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
-            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___2)
-         else ();
-         FStar_Pervasives_Native.None) in
   let uu___ =
-    let uu___1 =
-      let uu___2 =
-        FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.issue_lid
-          FStar_Ident.string_of_lid in
-      (uu___2, []) in
-    FStar_Syntax_Syntax.ET_app uu___1 in
-  mk_emb_full em un t_issue
-    (fun i ->
-       let uu___1 = FStar_Errors.format_issue i in
-       FStar_Compiler_Util.format1 "%s" uu___1) uu___
+    FStar_Syntax_Syntax.fvar FStar_Parser_Const.issue_lid
+      FStar_Pervasives_Native.None in
+  e_lazy FStar_Syntax_Syntax.Lazy_issue uu___
 let (e_vconfig : FStar_VConfig.vconfig embedding) =
   let em vcfg rng _shadow norm =
     let uu___ =

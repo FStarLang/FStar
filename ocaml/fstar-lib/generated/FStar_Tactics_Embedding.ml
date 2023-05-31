@@ -149,39 +149,17 @@ let (hd'_and_args :
         (uu___1, args)
 let (e_proofstate :
   FStar_Tactics_Types.proofstate FStar_Syntax_Embeddings.embedding) =
-  let embed_proofstate rng ps =
-    FStar_Syntax_Util.mk_lazy ps fstar_tactics_proofstate.t
-      FStar_Syntax_Syntax.Lazy_proofstate (FStar_Pervasives_Native.Some rng) in
-  let unembed_proofstate w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Compiler_Effect.op_Less_Bar
-          (fun uu___4 -> FStar_Pervasives_Native.Some uu___4) uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1
-                  "Not an embedded proofstate: %s\n" uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  mk_emb embed_proofstate unembed_proofstate fstar_tactics_proofstate.t
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_proofstate
+    fstar_tactics_proofstate.t
+let (e_goal : FStar_Tactics_Types.goal FStar_Syntax_Embeddings.embedding) =
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_goal
+    fstar_tactics_goal.t
 let (unfold_lazy_proofstate :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i -> FStar_Syntax_Util.exp_string "(((proofstate)))"
+let (unfold_lazy_goal :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+  fun i -> FStar_Syntax_Util.exp_string "(((goal)))"
 let (mkFV :
   FStar_Syntax_Syntax.fv ->
     FStar_Syntax_Syntax.universe Prims.list ->
@@ -270,39 +248,6 @@ let (e_proofstate_nbe :
     FStar_TypeChecker_NBETerm.typ = uu___;
     FStar_TypeChecker_NBETerm.emb_typ = uu___1
   }
-let (e_goal : FStar_Tactics_Types.goal FStar_Syntax_Embeddings.embedding) =
-  let embed_goal rng g =
-    FStar_Syntax_Util.mk_lazy g fstar_tactics_goal.t
-      FStar_Syntax_Syntax.Lazy_goal (FStar_Pervasives_Native.Some rng) in
-  let unembed_goal w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_goal;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Compiler_Effect.op_Less_Bar
-          (fun uu___4 -> FStar_Pervasives_Native.Some uu___4) uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded goal: %s" uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  mk_emb embed_goal unembed_goal fstar_tactics_goal.t
-let (unfold_lazy_goal :
-  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
-  fun i -> FStar_Syntax_Util.exp_string "(((goal)))"
 let (e_goal_nbe :
   FStar_Tactics_Types.goal FStar_TypeChecker_NBETerm.embedding) =
   let embed_goal _cb ps =

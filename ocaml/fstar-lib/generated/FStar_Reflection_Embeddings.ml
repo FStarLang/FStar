@@ -37,66 +37,43 @@ let (head_fv_and_args :
              FStar_Pervasives_Native.Some (fv, args)
          | uu___2 -> FStar_Pervasives_Native.None)
 let (noaqs : FStar_Syntax_Syntax.antiquotations) = (Prims.int_zero, [])
-let e_lazy :
-  'a .
-    FStar_Syntax_Syntax.lazy_kind ->
-      FStar_Syntax_Syntax.term -> 'a FStar_Syntax_Embeddings.embedding
-  =
-  fun k ->
-    fun ty ->
-      let ee rng x =
-        FStar_Syntax_Util.mk_lazy x ty k (FStar_Pervasives_Native.Some rng) in
-      let uu uu___ t =
-        let uu___1 =
-          let uu___2 = FStar_Syntax_Subst.compress t in
-          uu___2.FStar_Syntax_Syntax.n in
-        match uu___1 with
-        | FStar_Syntax_Syntax.Tm_lazy
-            { FStar_Syntax_Syntax.blob = b;
-              FStar_Syntax_Syntax.lkind = lkind;
-              FStar_Syntax_Syntax.ltyp = uu___2;
-              FStar_Syntax_Syntax.rng = uu___3;_}
-            when FStar_Syntax_Syntax.lazy_kind_eq lkind k ->
-            let uu___4 = FStar_Compiler_Dyn.undyn b in
-            FStar_Pervasives_Native.Some uu___4
-        | uu___2 -> FStar_Pervasives_Native.None in
-      FStar_Reflection_ArgEmbedder.mk_emb ee uu ty
 let (e_bv : FStar_Syntax_Syntax.bv FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_bv FStar_Reflection_Constants.fstar_refl_bv
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_bv
+    FStar_Reflection_Constants.fstar_refl_bv
 let (e_namedv : namedv FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_namedv
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_namedv
     FStar_Reflection_Constants.fstar_refl_namedv
 let (e_binder : FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings.embedding)
   =
-  e_lazy FStar_Syntax_Syntax.Lazy_binder
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_binder
     FStar_Reflection_Constants.fstar_refl_binder
 let (e_fv : FStar_Syntax_Syntax.fv FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_fvar
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_fvar
     FStar_Reflection_Constants.fstar_refl_fv
 let (e_comp : FStar_Syntax_Syntax.comp FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_comp
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_comp
     FStar_Reflection_Constants.fstar_refl_comp
 let (e_universe :
   FStar_Syntax_Syntax.universe FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_universe
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_universe
     FStar_Reflection_Constants.fstar_refl_universe
 let (e___ident : FStar_Ident.ident FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_ident
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_ident
     FStar_Reflection_Constants.fstar_refl_ident
 let (e_env : FStar_TypeChecker_Env.env FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_env
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_env
     FStar_Reflection_Constants.fstar_refl_env
 let (e_ctx_uvar_and_subst :
   FStar_Syntax_Syntax.ctx_uvar_and_subst FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_uvar
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_uvar
     FStar_Reflection_Constants.fstar_refl_ctx_uvar_and_subst
 let (e_sigelt : FStar_Syntax_Syntax.sigelt FStar_Syntax_Embeddings.embedding)
   =
-  e_lazy FStar_Syntax_Syntax.Lazy_sigelt
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_sigelt
     FStar_Reflection_Constants.fstar_refl_sigelt
 let (e_letbinding :
   FStar_Syntax_Syntax.letbinding FStar_Syntax_Embeddings.embedding) =
-  e_lazy FStar_Syntax_Syntax.Lazy_letbinding
+  FStar_Syntax_Embeddings.e_lazy FStar_Syntax_Syntax.Lazy_letbinding
     FStar_Reflection_Constants.fstar_refl_letbinding
 let rec mapM_opt :
   'a 'b .

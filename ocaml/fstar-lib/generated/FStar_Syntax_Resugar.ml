@@ -444,16 +444,8 @@ let rec (resugar_term' :
       | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
           failwith "Tm_delayed is impossible after compress"
       | FStar_Syntax_Syntax.Tm_lazy i ->
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                let uu___4 =
-                  let uu___5 = FStar_Syntax_Util.unfold_lazy i in
-                  resugar_term' env uu___5 in
-                FStar_Parser_AST.Paren uu___4 in
-              mk uu___3 in
-            FStar_Parser_AST.Paren uu___2 in
-          mk uu___1
+          let uu___1 = FStar_Syntax_Util.unfold_lazy i in
+          resugar_term' env uu___1
       | FStar_Syntax_Syntax.Tm_bvar x ->
           let l =
             let uu___1 = let uu___2 = bv_as_unique_ident x in [uu___2] in
