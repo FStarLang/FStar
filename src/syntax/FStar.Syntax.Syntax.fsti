@@ -432,8 +432,6 @@ and arg_qualifier = {
 }
 and aqual = option arg_qualifier
 
-val lazy_kind_eq : lazy_kind -> lazy_kind -> bool
-
 type freenames_l = list bv
 type formula = typ
 type formulae = list typ

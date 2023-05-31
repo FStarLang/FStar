@@ -207,11 +207,11 @@ let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
                 ea.emb_typ
 
 (* A simple lazy embedding, without cancellations nor an expressive type. *)
-let e_lazy #a (k:lazy_kind) (ty : term) : embedding a =
-  let ee rng (x:a) _topt _norm : term = U.mk_lazy x ty k (Some rng) in
+let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
+  let ee (x:a) rng _topt _norm : term = U.mk_lazy x ty k (Some rng) in
   let uu (t:term) _w _norm : option a =
     match (SS.compress t).n with
-    | Tm_lazy {blob=b; lkind=lkind} when S.lazy_kind_eq lkind k -> Some (Dyn.undyn b)
+    | Tm_lazy {blob=b; lkind=lkind} when U.eq_lazy_kind lkind k -> Some (Dyn.undyn b)
     | _ -> None
   in
   mk_emb ee uu (term_as_fv ty)

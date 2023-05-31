@@ -159,8 +159,13 @@ let e_qualifiers      : dualemb RD.qualifiers      = (RE.e_qualifiers, NRE.e_qua
 let e_range           : dualemb Range.range              = 
   (FStar.Syntax.Embeddings.e_range, FStar.TypeChecker.NBETerm.e_range)
 
-let nbe_dummy #a : NBET.embedding a = Dyn.undyn (Dyn.mkdyn ())
-
+let nbe_dummy #a : NBET.embedding a =
+  let open FStar.Compiler.Effect in
+  NBET.mk_emb
+    (fun _ _ -> failwith "nbe_dummy embed")
+    (fun _ _ -> failwith "nbe_dummy unembed")
+    (NBET.mk_t NBET.Unknown)
+    ET_abstract
 
 let e_ident           : dualemb Ident.ident            = (RE.e_ident, nbe_dummy #Ident.ident)
 let e___ident         : dualemb Ident.ident            = (RE.e___ident, nbe_dummy #Ident.ident)

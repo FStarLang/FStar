@@ -468,6 +468,7 @@ let unlazy_emb t =
         end
     | _ -> t
 
+(* NOTE: Lazy_embedding compares false to itself, by design. *)
 let eq_lazy_kind k k' =
     match k, k' with
      | BadLazy, BadLazy
@@ -481,14 +482,19 @@ let eq_lazy_kind k k' =
      | Lazy_goal, Lazy_goal
      | Lazy_sigelt, Lazy_sigelt
      | Lazy_letbinding, Lazy_letbinding
-     | Lazy_uvar, Lazy_uvar -> true
-     | Lazy_issue, Lazy_issue -> true
+     | Lazy_uvar, Lazy_uvar
+     | Lazy_universe, Lazy_universe
+     | Lazy_universe_uvar, Lazy_universe_uvar
+     | Lazy_issue, Lazy_issue
+     | Lazy_ident, Lazy_ident
+       -> true
      | _ -> false
 
 let lazy_kind_to_string k = 
     match k with
     | BadLazy -> "BadLazy"
     | Lazy_bv -> "Lazy_bv"
+    | Lazy_namedv -> "Lazy_namedv"
     | Lazy_binder -> "Lazy_binder"
     | Lazy_optionstate -> "Lazy_optionstate"
     | Lazy_fvar -> "Lazy_fvar"
@@ -499,7 +505,10 @@ let lazy_kind_to_string k =
     | Lazy_sigelt -> "Lazy_sigelt"
     | Lazy_letbinding -> "Lazy_letbinding"
     | Lazy_uvar -> "Lazy_uvar"
+    | Lazy_universe -> "Lazy_universe"
+    | Lazy_universe_uvar -> "Lazy_universe_uvar"
     | Lazy_issue -> "Lazy_issue"
+    | Lazy_ident -> "Lazy_ident"
     | _ -> "Unknown"
 
 let unlazy_as_t k t =
