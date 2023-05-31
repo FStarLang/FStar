@@ -8,6 +8,7 @@ open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 module P = Pulse.Syntax.Printer
+open Pulse.Checker.VPropEquiv
 
 noeq
 type framing_failure = {
@@ -16,6 +17,18 @@ type framing_failure = {
 }
 
 val print_framing_failure (f:framing_failure) : T.Tac string
+
+noeq
+type match_result g p q = {
+  matched:list vprop;
+  unmatched_p:list vprop;
+  unmatched_q:list vprop;
+  p_eq: vprop_equiv g (list_as_vprop p) (list_as_vprop (unmatched_p @ matched));
+  q_eq: vprop_equiv g (list_as_vprop q) (list_as_vprop (unmatched_q @ matched))
+}
+
+val all_matches (g:env) (p q:list vprop)
+  : T.Tac (match_result g p q)
 
 val check_vprop_equiv
   (g:env)
@@ -31,6 +44,7 @@ let frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term)
 
 let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) =
   let (| frame, _, _ |) = f in frame
+
 
 val check_frameable (#g:env)
                     (#ctxt:term)

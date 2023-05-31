@@ -149,6 +149,54 @@ let split_vprop (g:env)
        in
        Inl (| VP.list_as_vprop frame, typing, d |)
 
+
+open Pulse.Checker.VPropEquiv
+noeq
+type match_result g p q = {
+  matched:list vprop;
+  unmatched_p:list vprop;
+  unmatched_q:list vprop;
+  p_eq: vprop_equiv g (list_as_vprop p) (list_as_vprop (unmatched_p @ matched));
+  q_eq: vprop_equiv g (list_as_vprop q) (list_as_vprop (unmatched_q @ matched))
+}
+let rec all_matches g p q
+  : T.Tac (match_result g p q)
+  = match p with
+    | [] ->
+      { matched = []; unmatched_p = p; unmatched_q = q; p_eq = VE_Refl _ _; q_eq = VE_Refl _ _ }
+    
+    | hd::tl ->
+      match maybe_split_one_vprop g hd q with
+      | None -> //hd is in unmatched_p
+        let res = all_matches g tl q in
+        let p_eq : vprop_equiv g (list_as_vprop p) (list_as_vprop (hd::res.unmatched_p @ res.matched)) = 
+          VP.list_as_vprop_ctx _ [hd] [hd] _ _ (VE_Refl _ _) res.p_eq in
+        { res with unmatched_p = hd::res.unmatched_p; p_eq}
+
+      | Some res ->
+        let (| l, found, v, r |) = res in
+        assert (q == (l @ [found]) @ r);
+        let v : vprop_equiv g hd found = v in
+        let res = all_matches g tl (l @ r) in
+        let aux hd tl l r (v:vprop_equiv g (list_as_vprop tl) (list_as_vprop (l @ r)))
+          : vprop_equiv g (list_as_vprop (hd::tl)) (list_as_vprop (l @ (hd::r)))
+          = let v =  
+                VE_Trans _ _ _ _ (VP.list_as_vprop_ctx _ [hd] [hd] _ _ (VE_Refl _ _) v)
+                                 (VE_Sym _ _ _ (VP.vprop_equiv_swap_equiv _ _ _ hd hd (VE_Refl _ _)))
+            in
+            (VE_Trans _ _ _ _ v (VE_Sym _ _ _ (VP.list_as_vprop_assoc _ _ _ _)))
+        in
+        let q_eq : vprop_equiv g (list_as_vprop q) (list_as_vprop (res.unmatched_q @ (hd::res.matched))) = 
+           let q_eq' : vprop_equiv g (list_as_vprop q) (list_as_vprop (hd::(l@r))) =
+                (VP.vprop_equiv_swap_equiv _ l r hd found v)
+           in
+           VE_Trans _ _ _ _ q_eq' (aux hd (l@r) _ _ res.q_eq)
+        in
+        { res with matched = hd::res.matched;
+                   p_eq = aux hd tl _ _ res.p_eq;
+                   q_eq }
+
+
 let rec check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp Tm_Emp)
   = match vp with
