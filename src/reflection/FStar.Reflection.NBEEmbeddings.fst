@@ -342,32 +342,26 @@ let unlazy_as_t k t =
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
 
-// TODO: It would be nice to have a
-// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding 'a -> embedding 'b
-// so we don't write these things
-let e_ident : embedding I.ident =
-    let repr = e_tuple2 e_range e_string in
-    let embed_ident cb (i:I.ident) : t =
-        embed repr cb (I.range_of_id i, I.string_of_id i)
+let e_ident : embedding I.ident = (* fake *)
+    embed_as (e_tuple2 e_string e_range)
+             I.mk_ident
+             (fun i -> (I.string_of_id i, I.range_of_id i))
+             None // fixme?
+
+let e___ident : embedding I.ident = (* real *)
+    let embed_ident cb (se:I.ident) : t =
+        mk_lazy cb se fstar_refl_ident Lazy_ident
     in
     let unembed_ident cb (t:t) : option I.ident =
-        match unembed repr cb t with
-        | Some (rng, s) -> Some (I.mk_ident (s, rng))
-        | None -> None
+        match t.nbe_t with
+        | Lazy (Inl {blob=b; lkind=Lazy_ident}, _) ->
+            Some (undyn b)
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded ident: %s" (t_to_string t)));
+            None
     in
-    let range_fv = (lid_as_fv PC.range_lid  None) in
-    let string_fv = (lid_as_fv PC.string_lid None) in
-    let et =
-      ET_app (FStar.Ident.string_of_lid PC.lid_tuple2,
-              [fv_as_emb_typ range_fv;
-               fv_as_emb_typ string_fv])
-    in
-    mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 None)
-                                           [U_zero;U_zero]
-                                           [as_arg (mkFV range_fv [] []);
-                                            as_arg (mkFV string_fv [] [])]) et
-    // TODO: again a delta depth issue, should be this
-    (* fstar_refl_ident *)
+    mk_emb' embed_ident unembed_ident fstar_refl_ident_fv
+
 
 
 let e_universe_view =
@@ -765,9 +759,7 @@ let e_sigelt =
     mk_emb' embed_sigelt unembed_sigelt fstar_refl_sigelt_fv
 
 let e_univ_name =
-    (* TODO: Should be this, but there's a delta depth issue *)
-    (* set_type fstar_refl_univ_name e_ident *)
-    e_ident
+    e_tuple2 e_string e_range
 
 let e_univ_names = e_list e_univ_name
 let e_string_list = e_list e_string
@@ -778,19 +770,19 @@ let e_lb_view =
     let embed_lb_view cb (lbv:lb_view) : t =
         mkConstruct ref_Mk_lb.fv [] [as_arg (embed e_fv         cb lbv.lb_fv);
                                  as_arg (embed e_univ_names cb lbv.lb_us);
-				 as_arg (embed e_term       cb lbv.lb_typ);
+                                 as_arg (embed e_term       cb lbv.lb_typ);
                                  as_arg (embed e_term       cb lbv.lb_def)]
     in
     let unembed_lb_view cb (t : t) : option lb_view =
        match t.nbe_t with
        | Construct (fv, _, [(fv', _); (us, _); (typ, _); (def,_)])
-	  when S.fv_eq_lid fv ref_Mk_lb.lid ->
+          when S.fv_eq_lid fv ref_Mk_lb.lid ->
             BU.bind_opt (unembed e_fv cb fv') (fun fv' ->
-	    BU.bind_opt (unembed e_univ_names cb us) (fun us ->
+            BU.bind_opt (unembed e_univ_names cb us) (fun us ->
             BU.bind_opt (unembed e_term cb typ) (fun typ ->
             BU.bind_opt (unembed e_term cb def) (fun def ->
             Some <|
-	      { lb_fv = fv'; lb_us = us; lb_typ = typ; lb_def = def }))))
+              { lb_fv = fv'; lb_us = us; lb_typ = typ; lb_def = def }))))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded lb_view: %s" (t_to_string t)));
@@ -933,16 +925,14 @@ let e_qualifier =
         | RD.Action l ->
             mkConstruct ref_qual_Action.fv [] [as_arg (embed e_lid cb l)]
 
-        | RD.Projector (l, i) ->
-            mkConstruct ref_qual_Projector.fv [] [as_arg (embed e_lid cb l); as_arg (embed e_ident cb i)]
+        | RD.Projector li ->
+            mkConstruct ref_qual_Projector.fv [] [as_arg (embed (e_tuple2 e_lid e_ident) cb li)]
 
-        | RD.RecordType (ids1, ids2) ->
-            mkConstruct ref_qual_RecordType.fv [] [as_arg (embed (e_list e_ident) cb ids1);
-                                                   as_arg (embed (e_list e_ident) cb ids2)]
+        | RD.RecordType ids12 ->
+            mkConstruct ref_qual_RecordType.fv [] [as_arg (embed (e_tuple2 (e_list e_ident) (e_list e_ident)) cb ids12)]
 
-        | RD.RecordConstructor (ids1, ids2) ->
-            mkConstruct ref_qual_RecordConstructor.fv [] [as_arg (embed (e_list e_ident) cb ids1);
-                                                          as_arg (embed (e_list e_ident) cb ids2)]
+        | RD.RecordConstructor ids12 ->
+            mkConstruct ref_qual_RecordConstructor.fv [] [as_arg (embed (e_tuple2 (e_list e_ident) (e_list e_ident)) cb ids12)]
     in
     let unembed cb (t:t) : option RD.qualifier =
         match t.nbe_t with
@@ -976,20 +966,17 @@ let e_qualifier =
             BU.bind_opt (unembed e_lid cb l) (fun l ->
             Some (RD.Action l))
 
-        | Construct (fv, [], [(i, _); (l, _)]) when S.fv_eq_lid fv ref_qual_Projector.lid ->
-            BU.bind_opt (unembed e_ident cb i) (fun i ->
-            BU.bind_opt (unembed e_lid cb l) (fun l ->
-            Some (RD.Projector (l, i))))
+        | Construct (fv, [], [(li, _)]) when S.fv_eq_lid fv ref_qual_Projector.lid ->
+            BU.bind_opt (unembed (e_tuple2 e_lid e_ident) cb li) (fun li ->
+            Some (RD.Projector li))
 
-        | Construct (fv, [], [(ids2, _); (ids1, _)]) when S.fv_eq_lid fv ref_qual_RecordType.lid ->
-            BU.bind_opt (unembed (e_list e_ident) cb ids1) (fun ids1 ->
-            BU.bind_opt (unembed (e_list e_ident) cb ids2) (fun ids2 ->
-            Some (RD.RecordType (ids1, ids2))))
+        | Construct (fv, [], [(ids12, _)]) when S.fv_eq_lid fv ref_qual_RecordType.lid ->
+            BU.bind_opt (unembed (e_tuple2 (e_list e_ident) (e_list e_ident)) cb ids12) (fun ids12 ->
+            Some (RD.RecordType ids12))
 
-        | Construct (fv, [], [(ids2, _); (ids1, _)]) when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->
-            BU.bind_opt (unembed (e_list e_ident) cb ids1) (fun ids1 ->
-            BU.bind_opt (unembed (e_list e_ident) cb ids2) (fun ids2 ->
-            Some (RD.RecordConstructor (ids1, ids2))))
+        | Construct (fv, [], [(ids12, _)]) when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->
+            BU.bind_opt (unembed (e_tuple2 (e_list e_ident) (e_list e_ident)) cb ids12) (fun ids12 ->
+            Some (RD.RecordConstructor ids12))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded qualifier: %s" (t_to_string t)));

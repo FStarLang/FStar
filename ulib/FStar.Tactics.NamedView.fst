@@ -323,7 +323,7 @@ let open_univ_s (us : list univ_name) : Tac (list univ_name & subst_t) =
   
 let close_univ_s (us : list univ_name) : list univ_name & subst_t =
   let n = List.Tot.length us in
-  let s = List.Tot.mapi (fun i u -> UD u (n-i-1)) us in
+  let s = List.Tot.mapi (fun i u -> UD (pack_ident u) (n-i-1)) us in
   us, s
 
 let subst_binder_sort (s : subst_t) (b : R.binder) : R.binder =

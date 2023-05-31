@@ -7,6 +7,7 @@ let lookup_attr             = RB.lookup_attr
 let all_defs_in_env         = RB.all_defs_in_env
 let defs_in_module          = RB.defs_in_module
 let binders_of_env          = RB.binders_of_env
+let vars_of_env             = RB.vars_of_env
 let moduleof                = RB.moduleof
 let term_eq                 = RB.term_eq
 let env_open_modules        = RB.env_open_modules

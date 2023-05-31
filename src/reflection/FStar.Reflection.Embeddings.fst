@@ -706,7 +706,7 @@ let e_sigelt =
     mk_emb embed_sigelt unembed_sigelt fstar_refl_sigelt
 
 let e_univ_name =
-    set_type fstar_refl_univ_name e_ident
+    set_type fstar_refl_univ_name (e_tuple2 e_string e_range)
 
 let e_univ_names = e_list e_univ_name
 
@@ -743,7 +743,7 @@ let e_subst_elt =
 
         | UD (u, i) ->
             S.mk_Tm_app ref_UD.t [
-                S.as_arg (embed e_univ_name rng u);
+                S.as_arg (embed e___ident rng u);
                 S.as_arg (embed e_fsint rng i);
                ]
                rng
@@ -760,7 +760,7 @@ let e_subst_elt =
         | _ when S.fv_eq_lid fv ref_UN.lid ->
             run args (curry UN <$$> e_fsint <**> e_universe)
         | _ when S.fv_eq_lid fv ref_UD.lid ->
-            run args (curry UD <$$> e_univ_name <**> e_fsint)
+            run args (curry UD <$$> e___ident <**> e_fsint)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded subst_elt: %s" (Print.term_to_string t)));
@@ -775,7 +775,7 @@ let e_lb_view =
     let embed_lb_view (rng:Range.range) (lbv:lb_view) : term =
         S.mk_Tm_app ref_Mk_lb.t [S.as_arg (embed e_fv         rng lbv.lb_fv);
                                  S.as_arg (embed e_univ_names rng lbv.lb_us);
-				 S.as_arg (embed e_term       rng lbv.lb_typ);
+                                 S.as_arg (embed e_term       rng lbv.lb_typ);
                                  S.as_arg (embed e_term       rng lbv.lb_def)]
                     rng
     in

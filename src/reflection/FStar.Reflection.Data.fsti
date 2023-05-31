@@ -28,6 +28,9 @@ module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 open FStar.Ident
 
+// HACK
+let xxuniv_name = string & Range.range
+
 type name = list string
 type typ  = term
 type binders = list binder
@@ -154,7 +157,7 @@ type ctor = name * typ
 
 type lb_view = {
     lb_fv : fv;
-    lb_us : list univ_name;
+    lb_us : list xxuniv_name;
     lb_typ : typ;
     lb_def : term
 }
@@ -163,8 +166,8 @@ type sigelt_view =
     | Sg_Let of bool * list letbinding
         // The bool indicates if it's a let rec
         // Non-empty list of (possibly) mutually recursive let-bindings
-    | Sg_Inductive of name * list univ_name * list binder * typ * list ctor // name, params, type, constructors
-    | Sg_Val of name * list univ_name * typ
+    | Sg_Inductive of name * list xxuniv_name * list binder * typ * list ctor // name, params, type, constructors
+    | Sg_Val of name * list xxuniv_name * typ
     | Unk
 
 

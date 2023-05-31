@@ -542,6 +542,11 @@ let syntax_to_rd_qual = function
   | S.Effect -> RD.Effect
   | OnlyName -> RD.OnlyName
 
+let inspect_ident (i:ident) : string & Range.range =
+  (string_of_id i, range_of_id i)
+
+let pack_ident (i: string & Range.range) : ident =
+  Ident.mk_ident i
 
 let sigelt_quals (se : sigelt) : list RD.qualifier =
     se.sigquals |> List.map syntax_to_rd_qual
@@ -570,11 +575,11 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
           | _ ->
             failwith "impossible: inspect_sigelt: did not find ctor"
         in
-        Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
+        Sg_Inductive (nm, List.map inspect_ident us, param_bs, ty, List.map inspect_ctor c_lids)
 
     | Sig_declare_typ {lid; us; t=ty} ->
         let nm = Ident.path_of_lid lid in
-        Sg_Val (nm, us, ty)
+        Sg_Val (nm, List.map inspect_ident us, ty)
 
     | _ ->
         Unk
@@ -610,7 +615,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
-        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
+        mk_sigelt <| Sig_datacon {lid; us=List.map pack_ident us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in
@@ -620,7 +625,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         //We can't trust the assignment of num uniform binders from the reflection API
         //So, set it to None; it has to be checked and recomputed
         mk_sigelt <| Sig_inductive_typ {lid=ind_lid;
-                                        us=us_names;
+                                        us=List.map pack_ident us_names;
                                         params=param_bs;
                                         num_uniform_params=None;
                                         t=ty;
@@ -633,7 +638,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
         check_lid val_lid;
-        mk_sigelt <| Sig_declare_typ {lid=val_lid; us=us_names; t=ty}
+        mk_sigelt <| Sig_declare_typ {lid=val_lid; us=List.map pack_ident us_names; t=ty}
 
     | Unk -> failwith "packing Unk, this should never happen"
 
@@ -644,11 +649,12 @@ let inspect_lb (lb:letbinding) : lb_view =
     let typ = SS.subst s typ in
     let def = SS.subst s def in
     match nm with
-    | Inr fv -> {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def}
+    | Inr fv -> {lb_fv = fv; lb_us = List.map inspect_ident us; lb_typ = typ; lb_def = def}
     | _ -> failwith "Impossible: bv in top-level let binding"
 
 let pack_lb (lbv:lb_view) : letbinding =
     let {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def} = lbv in
+    let us = List.map pack_ident us in
     let s = SS.univ_var_closing us in
     let typ = SS.subst s typ in
     let def = SS.subst s def in
@@ -967,8 +973,3 @@ let subst_comp (s : list subst_elt) (c : comp) : comp =
 let range_of_term (t:term) = t.pos
 let range_of_sigelt (s:sigelt) = s.sigrng
 
-let inspect_ident (i:ident) : string & Range.range =
-  (string_of_id i, range_of_id i)
-
-let pack_ident (i: string & Range.range) : ident =
-  Ident.mk_ident i
