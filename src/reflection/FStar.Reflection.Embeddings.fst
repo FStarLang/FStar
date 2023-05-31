@@ -69,37 +69,27 @@ let noaqs : antiquotations = (0, [])
 (* ------------------------------------- EMBEDDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
 
-let e_bv =
-    let embed_bv (rng:Range.range) (bv:bv) : term =
-        U.mk_lazy bv fstar_refl_bv Lazy_bv (Some rng)
-    in
-    let unembed_bv w (t:term) : option bv =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_bv} ->
-            Some (undyn b)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_bv unembed_bv fstar_refl_bv
+let e_lazy #a (k:lazy_kind) (ty : term) : embedding a =
+  let ee rng (x:a) : term = U.mk_lazy x ty k (Some rng) in
+  let uu _ (t:term) : option a =
+    match (SS.compress t).n with
+    | Tm_lazy {blob=b; lkind=lkind} when S.lazy_kind_eq lkind k -> Some (undyn b)
+    | _ -> None
+  in
+  mk_emb ee uu ty
 
-let e_namedv = e_bv
-
-let e_binder =
-    let embed_binder (rng:Range.range) (b:binder) : term =
-        U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
-    in
-    let unembed_binder w (t:term) : option binder =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_binder} ->
-            Some (undyn b)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_binder unembed_binder fstar_refl_binder
+(* The lazy embeddings: just embedding whatever value as a blob inside a Tm_Lazy node. *)
+let e_bv                 : embedding bv                 = e_lazy Lazy_bv fstar_refl_bv
+let e_namedv             : embedding namedv             = e_lazy Lazy_namedv fstar_refl_namedv
+let e_binder             : embedding binder             = e_lazy Lazy_binder fstar_refl_binder
+let e_fv                 : embedding fv                 = e_lazy Lazy_fvar fstar_refl_fv
+let e_comp               : embedding comp               = e_lazy Lazy_comp fstar_refl_comp
+let e_universe           : embedding universe           = e_lazy Lazy_universe fstar_refl_universe
+let e___ident            : embedding I.ident            = e_lazy Lazy_ident fstar_refl_ident
+let e_env                : embedding env                = e_lazy Lazy_env fstar_refl_env
+let e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
+let e_sigelt             : embedding sigelt             = e_lazy Lazy_sigelt fstar_refl_sigelt
+let e_letbinding         : embedding letbinding         = e_lazy Lazy_letbinding fstar_refl_letbinding
 
 let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
@@ -174,52 +164,6 @@ let e_aqualv =
 
 let e_binders = e_list e_binder
 
-let e_fv =
-    let embed_fv (rng:Range.range) (fv:fv) : term =
-        U.mk_lazy fv fstar_refl_fv Lazy_fvar (Some rng)
-    in
-    let unembed_fv w (t:term) : option fv =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_fvar} ->
-            Some (undyn b)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_fv unembed_fv fstar_refl_fv
-
-let e_comp =
-    let embed_comp (rng:Range.range) (c:comp) : term =
-        U.mk_lazy c fstar_refl_comp Lazy_comp (Some rng)
-    in
-    let unembed_comp w (t:term) : option comp =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_comp} ->
-            Some (undyn b)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_comp unembed_comp fstar_refl_comp
-
-let e_universe =
-  let embed_universe (rng:Range.range) (u:universe) : term =
-    U.mk_lazy u fstar_refl_universe Lazy_universe (Some rng) in
-  let unembed_universe w (t:term) : option universe =
-    match (SS.compress t).n with
-    | Tm_lazy {blob=b; lkind=Lazy_universe} ->
-            Some (undyn b)
-    | _ ->
-      if w
-      then Err.log_issue t.pos
-             (Err.Warning_NotEmbedded,
-              (BU.format1 "Not an embedded universe: %s" (Print.term_to_string t)));
-      None
-    in
-    mk_emb embed_universe unembed_universe fstar_refl_universe
-
 (* This is a fake inspecting embedding *)
 let e_ident : embedding I.ident =
     let repr = e_tuple2 e_string e_range in
@@ -227,22 +171,6 @@ let e_ident : embedding I.ident =
              I.mk_ident
              (fun i -> I.string_of_id i, I.range_of_id i)
              (Some fstar_refl_ident)
-
-let e___ident : embedding I.ident =
-  let embed_ident (rng:Range.range) (u:I.ident) : term =
-    U.mk_lazy u fstar_refl_ident Lazy_ident (Some rng) in
-  let unembed_ident w (t:term) : option I.ident =
-    match (SS.compress t).n with
-    | Tm_lazy {blob=b; lkind=Lazy_ident} ->
-            Some (undyn b)
-    | _ ->
-      if w
-      then Err.log_issue t.pos
-             (Err.Warning_NotEmbedded,
-              (BU.format1 "Not an embedded ident: %s" (Print.term_to_string t)));
-      None
-  in
-  mk_emb embed_ident unembed_ident fstar_refl_ident
 
 let e_universe_view =
   let embed_universe_view (rng:Range.range) (uv:universe_view) : term =
@@ -299,21 +227,6 @@ let e_universe_view =
   in
 
   mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view
-
-let e_env =
-    let embed_env (rng:Range.range) (e:Env.env) : term =
-        U.mk_lazy e fstar_refl_env Lazy_env (Some rng)
-    in
-    let unembed_env w (t:term) : option Env.env =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_env} ->
-            Some (undyn b)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_env unembed_env fstar_refl_env
 
 let e_const =
     let embed_const (rng:Range.range) (c:vconst) : term =
@@ -408,21 +321,6 @@ let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 let e_match_returns_annotation =
   e_option (e_tuple2 e_binder
                      (e_tuple3 (e_either e_term e_comp) (e_option e_term) e_bool))
-
-let e_ctx_uvar_and_subst =
-  let ee (rng:Range.range) (u:ctx_uvar_and_subst) : term =
-      U.mk_lazy u U.t_ctx_uvar_and_sust Lazy_uvar (Some rng)
-  in
-  let uu w (t:term) : option ctx_uvar_and_subst =
-      match (SS.compress t).n with
-      | Tm_lazy {blob=b; lkind=Lazy_uvar} ->
-          Some (undyn b)
-      | _ ->
-          if w then
-              Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded ctx_u: %s" (Print.term_to_string t)));
-          None
-  in
-  mk_emb ee uu fstar_refl_ctx_uvar_and_subst
 
 let e_term_view_aq aq =
     let push (s, aq) = (s+1, aq) in
@@ -690,20 +588,6 @@ let e_order =
     in
     mk_emb embed_order unembed_order S.t_order
 
-let e_sigelt =
-    let embed_sigelt (rng:Range.range) (se:sigelt) : term =
-        U.mk_lazy se fstar_refl_sigelt Lazy_sigelt (Some rng)
-    in
-    let unembed_sigelt w (t:term) : option sigelt =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_sigelt} ->
-            Some (undyn b)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_sigelt unembed_sigelt fstar_refl_sigelt
 
 let e_univ_name =
     set_type fstar_refl_univ_name (e_tuple2 e_string e_range)
@@ -787,21 +671,6 @@ let e_lb_view =
         | _ -> None
     in
     mk_emb embed_lb_view unembed_lb_view fstar_refl_lb_view
-
-let e_letbinding =
-    let embed_letbinding (rng:Range.range) (lb:letbinding) : term =
-        U.mk_lazy lb fstar_refl_letbinding Lazy_letbinding (Some rng)
-    in
-    let unembed_letbinding w (t : term) : option letbinding =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=lb; lkind=Lazy_letbinding} ->
-            Some (undyn lb)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded letbinding: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_letbinding unembed_letbinding fstar_refl_letbinding
 
 let e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
@@ -967,9 +836,14 @@ let e_qualifiers = e_list e_qualifier
  * the types are abstract.
  *)
 
-let unfold_lazy_bv  (i : lazyinfo) : term =
+let unfold_lazy_bv (i : lazyinfo) : term =
     let bv : bv = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed e_bv_view i.rng (inspect_bv bv))]
+                i.rng
+
+let unfold_lazy_namedv (i : lazyinfo) : term =
+    let namedv : namedv = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_namedv.t [S.as_arg (embed e_namedv_view i.rng (inspect_namedv namedv))]
                 i.rng
 
 let unfold_lazy_binder (i : lazyinfo) : term =

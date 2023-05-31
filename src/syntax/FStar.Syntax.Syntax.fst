@@ -34,6 +34,28 @@ module GS   = FStar.GenSym
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
 
+(* NOTE: Lazy_embedding compares false to itself. *)
+let lazy_kind_eq k1 k2 =
+  match k1, k2 with
+  | Lazy_bv, Lazy_bv
+  | Lazy_namedv, Lazy_namedv
+  | Lazy_binder, Lazy_binder
+  | Lazy_optionstate, Lazy_optionstate
+  | Lazy_fvar, Lazy_fvar
+  | Lazy_comp, Lazy_comp
+  | Lazy_env, Lazy_env
+  | Lazy_proofstate, Lazy_proofstate
+  | Lazy_goal, Lazy_goal
+  | Lazy_sigelt, Lazy_sigelt
+  | Lazy_uvar, Lazy_uvar
+  | Lazy_letbinding, Lazy_letbinding
+  | Lazy_universe, Lazy_universe
+  | Lazy_universe_uvar, Lazy_universe_uvar
+  | Lazy_issue, Lazy_issue
+  | Lazy_ident, Lazy_ident ->
+    true
+  | _ -> false
+
 let is_internal_qualifier (q:qualifier) : bool =
   match q with
   | Visible_default

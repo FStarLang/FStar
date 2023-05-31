@@ -81,7 +81,7 @@ let traverse (name:string) : Tac decls =
   let d, us = match inspect_sigelt d with
     | Sg_Let _ lbs -> begin
       let {lb_fv=_;lb_us=us;lb_typ=typ;lb_def=d} =
-                          lookup_lb_view lbs nm in d, us
+                          lookup_lb lbs nm in d, us
     end
     | _ -> fail "1"
   in

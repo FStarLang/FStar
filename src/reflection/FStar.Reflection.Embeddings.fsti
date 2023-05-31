@@ -73,6 +73,7 @@ val e_term_view_aq  : antiquotations -> embedding term_view
 
 (* Lazy unfoldings *)
 val unfold_lazy_bv     : lazyinfo -> term
+val unfold_lazy_namedv : lazyinfo -> term
 val unfold_lazy_fvar   : lazyinfo -> term
 val unfold_lazy_binder : lazyinfo -> term
 val unfold_lazy_optionstate : lazyinfo -> term

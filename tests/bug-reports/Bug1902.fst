@@ -22,7 +22,7 @@ let rec f m (n: nat): Tot int (decreases n) =
 let typOfF (): Tac typ =
   let Some fdef = admit (); lookup_typ (top_env ()) (inspect_fv (fvOf (`f (*`*)))) in
   let Sg_Let _ lbs = admit (); inspect_sigelt fdef in
-  let lbv = lookup_lb_view lbs (inspect_fv (fvOf (`f (*`*)))) in
+  let lbv = lookup_lb lbs (inspect_fv (fvOf (`f (*`*)))) in
   lbv.lb_typ
 
 // Note that the type of f is actually

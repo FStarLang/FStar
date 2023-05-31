@@ -76,6 +76,7 @@ let mk_inspect_pack_pair s =
 let fstar_refl_inspect_ln      , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
 let fstar_refl_inspect_fv      , fstar_refl_pack_fv     = mk_inspect_pack_pair "_fv"
 let fstar_refl_inspect_bv      , fstar_refl_pack_bv     = mk_inspect_pack_pair "_bv"
+let fstar_refl_inspect_namedv  , fstar_refl_pack_namedv = mk_inspect_pack_pair "_namedv"
 let fstar_refl_inspect_binder  , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
 let fstar_refl_inspect_comp    , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
 let fstar_refl_inspect_sigelt  , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
@@ -85,6 +86,8 @@ let fstar_refl_inspect_universe, fstar_refl_pack_universe  = mk_inspect_pack_pai
 (* assumed types *)
 let fstar_refl_env              = mk_refl_types_lid_as_term "env"
 let fstar_refl_env_fv           = mk_refl_types_lid_as_fv   "env"
+let fstar_refl_namedv           = mk_refl_types_lid_as_term "namedv"
+let fstar_refl_namedv_fv        = mk_refl_types_lid_as_fv   "namedv"
 let fstar_refl_bv               = mk_refl_types_lid_as_term "bv"
 let fstar_refl_bv_fv            = mk_refl_types_lid_as_fv   "bv"
 let fstar_refl_fv               = mk_refl_types_lid_as_term "fv"
@@ -152,8 +155,8 @@ let ref_Mk_namedv_view =
     let lid = fstar_refl_data_lid "Mknamedv_view" in
     let attr = Record_ctor (fstar_refl_data_lid "namedv_view", [
                                 Ident.mk_ident ("uniq" , Range.dummyRange);
-                                Ident.mk_ident ("ppname", Range.dummyRange);
                                 Ident.mk_ident ("sort" , Range.dummyRange);
+                                Ident.mk_ident ("ppname", Range.dummyRange);
                                 ]) in
     let fv = lid_as_fv lid (Some attr) in
     { lid = lid
@@ -165,8 +168,8 @@ let ref_Mk_bv_view =
     let lid = fstar_refl_data_lid "Mkbv_view" in
     let attr = Record_ctor (fstar_refl_data_lid "view", [
                                 Ident.mk_ident ("index" , Range.dummyRange);
-                                Ident.mk_ident ("ppname", Range.dummyRange);
                                 Ident.mk_ident ("sort" , Range.dummyRange);
+                                Ident.mk_ident ("ppname", Range.dummyRange);
                                 ]) in
     let fv = lid_as_fv lid (Some attr) in
     { lid = lid

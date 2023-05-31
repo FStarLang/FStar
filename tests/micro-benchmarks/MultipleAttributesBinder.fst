@@ -46,7 +46,7 @@ let binders_from_term (env : T.env) (qname : list string) : T.Tac (list binders)
         | Some s -> begin
             match T.inspect_sigelt s with
             | T.Sg_Let _ lbs -> begin
-                let lbv = T.lookup_lb_view lbs qname in
+                let lbv = T.lookup_lb lbs qname in
                 [ binders_from_arrow T.(lbv.lb_typ) ] // single binder in letbinding
                 end
             | T.Sg_Inductive _ _ _ _ cts -> begin

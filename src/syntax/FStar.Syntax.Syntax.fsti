@@ -395,6 +395,7 @@ and lazyinfo = {
 and lazy_kind =
   | BadLazy
   | Lazy_bv
+  | Lazy_namedv
   | Lazy_binder
   | Lazy_optionstate
   | Lazy_fvar
@@ -430,6 +431,8 @@ and arg_qualifier = {
   aqual_attributes : list attribute
 }
 and aqual = option arg_qualifier
+
+val lazy_kind_eq : lazy_kind -> lazy_kind -> bool
 
 type freenames_l = list bv
 type formula = typ
