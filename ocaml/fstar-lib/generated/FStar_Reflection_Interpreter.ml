@@ -308,7 +308,9 @@ let (e_fv : FStar_Syntax_Syntax.fv dualemb) =
   (FStar_Reflection_Embeddings.e_fv, FStar_Reflection_NBEEmbeddings.e_fv)
 let (e_bv : FStar_Syntax_Syntax.bv dualemb) =
   (FStar_Reflection_Embeddings.e_bv, FStar_Reflection_NBEEmbeddings.e_bv)
-let (e_namedv : FStar_Reflection_Embeddings.namedv dualemb) = e_bv
+let (e_namedv : FStar_Reflection_Embeddings.namedv dualemb) =
+  (FStar_Reflection_Embeddings.e_namedv,
+    FStar_Reflection_NBEEmbeddings.e_namedv)
 let (e_bv_view : FStar_Reflection_Data.bv_view dualemb) =
   (FStar_Reflection_Embeddings.e_bv_view,
     FStar_Reflection_NBEEmbeddings.e_bv_view)

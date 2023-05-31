@@ -764,7 +764,7 @@ let (e_term_view_aq :
       | FStar_Reflection_Data.Tv_Var bv ->
           let uu___ =
             let uu___1 =
-              let uu___2 = FStar_Reflection_ArgEmbedder.embed e_bv rng bv in
+              let uu___2 = FStar_Reflection_ArgEmbedder.embed e_namedv rng bv in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app

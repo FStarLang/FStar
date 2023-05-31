@@ -197,7 +197,7 @@ let (__proj__Uv_Unif__item___0 :
 let (uu___is_Uv_Unk : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Unk -> true | uu___ -> false
 type term_view =
-  | Tv_Var of FStar_Syntax_Syntax.bv 
+  | Tv_Var of namedv 
   | Tv_BVar of FStar_Syntax_Syntax.bv 
   | Tv_FVar of FStar_Syntax_Syntax.fv 
   | Tv_UInst of (FStar_Syntax_Syntax.fv * universes) 
@@ -222,7 +222,7 @@ type term_view =
   | Tv_Unsupp 
 let (uu___is_Tv_Var : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Var _0 -> true | uu___ -> false
-let (__proj__Tv_Var__item___0 : term_view -> FStar_Syntax_Syntax.bv) =
+let (__proj__Tv_Var__item___0 : term_view -> namedv) =
   fun projectee -> match projectee with | Tv_Var _0 -> _0
 let (uu___is_Tv_BVar : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_BVar _0 -> true | uu___ -> false

@@ -99,6 +99,34 @@ let (e_bv : FStar_Syntax_Syntax.bv FStar_TypeChecker_NBETerm.embedding) =
           FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___2);
          FStar_Pervasives_Native.None) in
   mk_emb' embed_bv unembed_bv FStar_Reflection_Constants.fstar_refl_bv_fv
+let (e_namedv :
+  FStar_Reflection_Data.namedv FStar_TypeChecker_NBETerm.embedding) =
+  let embed_namedv cb namedv =
+    mk_lazy cb namedv FStar_Reflection_Constants.fstar_refl_namedv
+      FStar_Syntax_Syntax.Lazy_namedv in
+  let unembed_namedv cb t =
+    match t.FStar_TypeChecker_NBETerm.nbe_t with
+    | FStar_TypeChecker_NBETerm.Lazy
+        (FStar_Pervasives.Inl
+         { FStar_Syntax_Syntax.blob = b;
+           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_namedv;
+           FStar_Syntax_Syntax.ltyp = uu___;
+           FStar_Syntax_Syntax.rng = uu___1;_},
+         uu___2)
+        ->
+        let uu___3 = FStar_Compiler_Dyn.undyn b in
+        FStar_Compiler_Effect.op_Less_Bar
+          (fun uu___4 -> FStar_Pervasives_Native.Some uu___4) uu___3
+    | uu___ ->
+        ((let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1 "Not an embedded namedv: %s" uu___4 in
+            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
+          FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___2);
+         FStar_Pervasives_Native.None) in
+  mk_emb' embed_namedv unembed_namedv
+    FStar_Reflection_Constants.fstar_refl_namedv_fv
 let (e_binder :
   FStar_Syntax_Syntax.binder FStar_TypeChecker_NBETerm.embedding) =
   let embed_binder cb b =
