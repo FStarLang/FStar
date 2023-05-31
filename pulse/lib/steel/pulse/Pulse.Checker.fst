@@ -78,7 +78,7 @@ assume val c_equiv_pre (#g:env) (#t:st_term) (#c:comp { stateful_comp c }) (t_ty
     st_typing g t c'
 
 #push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 2"
-let rec handle_framing_failure (#g:env) (#ctxt:term)
+let rec handle_framing_failure_experimental (#g:env) (#ctxt:term)
   (ctxt_typing:tot_typing g ctxt Tm_VProp)
   (s:framing_st g ctxt)
   : T.Tac (t:st_term &

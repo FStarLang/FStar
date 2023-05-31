@@ -84,6 +84,7 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       (fun _ -> d2),
       (fun _ -> d1)
 
+
 let rec vprop_as_list (vp:term)
   : list term
   = match vp with
@@ -96,7 +97,11 @@ let rec list_as_vprop (vps:list term)
   = match vps with
     | [] -> Tm_Emp
     | hd::tl -> Tm_Star hd (list_as_vprop tl)
-    
+
+
+let ve_unit_r g (p:term) : vprop_equiv g (Tm_Star p Tm_Emp) p = 
+  VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _)
+      
 let rec list_as_vprop_append g (vp0 vp1:list term)
   : GTot (vprop_equiv g (list_as_vprop (vp0 @ vp1))
                         (Tm_Star (list_as_vprop vp0) 
@@ -118,6 +123,7 @@ let rec list_as_vprop_append g (vp0 vp1:list term)
                               (Tm_Star (Tm_Star hd (list_as_vprop tl)) (list_as_vprop vp1))
             = VE_Trans _ _ _ _ d (VE_Assoc _ _ _ _) in
       d
+
 
 let list_as_vprop_comm g (vp0 vp1:list term)
   : GTot (vprop_equiv g (list_as_vprop (vp0 @ vp1))

@@ -17,6 +17,9 @@ let canon_vprop (vp:term)
   : term
   = list_as_vprop (vprop_as_list vp)
 
+
+val ve_unit_r (g:env) (p:term) : vprop_equiv g (Tm_Star p Tm_Emp) p
+
 val list_as_vprop_append (g:env) (vp0 vp1:list term)
   : GTot (vprop_equiv g (list_as_vprop (vp0 @ vp1))
                         (Tm_Star (list_as_vprop vp0) 
