@@ -137,6 +137,10 @@ ci:
 	+$(Q)$(MAKE) ci-pre
 	+$(Q)$(MAKE) ci-post
 
+.PHONY: docker-ci
+docker-ci:
+	docker build -f .docker/standalone.Dockerfile --build-arg CI_THREADS=$(shell nproc) .
+
 .PHONY: ci-pre
 ci-pre:
 	+$(Q)$(MAKE) full-bootstrap FSTAR_BUILD_PROFILE=test
