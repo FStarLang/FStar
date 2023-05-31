@@ -350,9 +350,10 @@ let rec maybe_add_elims
     | _ :: rest ->
       maybe_add_elims g rest t
 
+let protect t = { term = Tm_Protect { t }; range = t.range }
+  
 let rec unprotect t = 
   let wr t0 = { term = t0; range = t.range } in
-  let protect t = { term = Tm_Protect { t }; range = t.range } in
   match t.term with
   | Tm_Protect { t = { term = Tm_Bind { binder; head; body } } } ->
     wr (Tm_Bind { binder; head=protect head; body })
@@ -378,11 +379,15 @@ let elim_then_check (#g:env) (#ctxt:term)
                     (post_hint: post_hint_opt g)
                     (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint)
-  = let (| g', ctxt', ctxt'_typing, elab_k |) = ElimPure.elim_pure ctxt_typing in
-    let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimExists.elim_exists ctxt'_typing in
-    let res = check g'' st ctxt'' ctxt'_typing post_hint in
-    elab_k post_hint (elab_k' post_hint res)
-    
+  = match st.term with
+    | Tm_Protect t ->
+      check g (unprotect st) _ ctxt_typing post_hint
+    | _ -> 
+      let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
+      let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimPure.elim_pure ctxt'_typing in
+      let res = check g'' (unprotect st) ctxt'' ctxt'_typing post_hint in
+      elab_k post_hint (elab_k' post_hint res)
+      
 
 #push-options "--query_stats"
 let rec check' : bool -> check_t =

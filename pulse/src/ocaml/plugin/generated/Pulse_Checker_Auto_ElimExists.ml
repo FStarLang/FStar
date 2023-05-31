@@ -12,11 +12,6 @@ let (should_elim_exists :
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> false))))
       uu___
-let (mk_elim_exists_tm :
-  Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.st_term) =
-  fun p ->
-    Pulse_Typing.wr
-      (Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p = p })
 let (mk :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.vprop ->
@@ -39,12 +34,12 @@ let (mk :
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Range.mk_range
                               "Pulse.Checker.Auto.ElimExists.fst"
-                              (Prims.of_int (24)) (Prims.of_int (7))
-                              (Prims.of_int (24)) (Prims.of_int (17)))
+                              (Prims.of_int (22)) (Prims.of_int (7))
+                              (Prims.of_int (22)) (Prims.of_int (17)))
                            (FStar_Range.mk_range
                               "Pulse.Checker.Auto.ElimExists.fst"
-                              (Prims.of_int (24)) (Prims.of_int (4))
-                              (Prims.of_int (30)) (Prims.of_int (13)))
+                              (Prims.of_int (22)) (Prims.of_int (4))
+                              (Prims.of_int (29)) (Prims.of_int (13)))
                            (Obj.magic (FStar_Tactics_Builtins.unseal s))
                            (fun uu___ ->
                               FStar_Tactics_Effect.lift_div_tac
@@ -53,10 +48,29 @@ let (mk :
                                    then
                                      FStar_Pervasives_Native.Some
                                        (FStar_Pervasives.Mkdtuple3
-                                          ((mk_elim_exists_tm p),
+                                          ((Pulse_Typing.wr
+                                              (Pulse_Syntax_Base.Tm_ElimExists
+                                                 {
+                                                   Pulse_Syntax_Base.p =
+                                                     (Pulse_Syntax_Base.Tm_ExistsSL
+                                                        ((Pulse_Syntax_Base.comp_u
+                                                            (Pulse_Typing.comp_elim_exists
+                                                               u t p
+                                                               (Pulse_Typing.fresh
+                                                                  g))), t, p,
+                                                          Pulse_Syntax_Base.should_elim_false))
+                                                 })),
                                             (Pulse_Typing.comp_elim_exists u
                                                t p (Pulse_Typing.fresh g)),
-                                            (Prims.magic ())))
+                                            (Pulse_Typing.T_ElimExists
+                                               (g,
+                                                 (Pulse_Syntax_Base.comp_u
+                                                    (Pulse_Typing.comp_elim_exists
+                                                       u t p
+                                                       (Pulse_Typing.fresh g))),
+                                                 t, p,
+                                                 (Pulse_Typing.fresh g), (),
+                                                 ()))))
                                    else FStar_Pervasives_Native.None))))
                | uu___ ->
                    Obj.magic

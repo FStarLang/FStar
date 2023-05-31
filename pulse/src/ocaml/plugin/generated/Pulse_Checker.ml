@@ -2222,6 +2222,13 @@ let rec (maybe_add_elims :
                       (Obj.repr (maybe_add_elims g (p :: q :: rest) t))
                 | uu___::rest ->
                     Obj.magic (Obj.repr (maybe_add_elims g rest t))) uu___)
+let (protect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term) =
+  fun t ->
+    {
+      Pulse_Syntax_Base.term1 =
+        (Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t });
+      Pulse_Syntax_Base.range = (t.Pulse_Syntax_Base.range)
+    }
 let rec (unprotect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term)
   =
   fun t ->
@@ -2229,12 +2236,6 @@ let rec (unprotect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term)
       {
         Pulse_Syntax_Base.term1 = t0;
         Pulse_Syntax_Base.range = (t.Pulse_Syntax_Base.range)
-      } in
-    let protect t1 =
-      {
-        Pulse_Syntax_Base.term1 =
-          (Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t1 });
-        Pulse_Syntax_Base.range = (t1.Pulse_Syntax_Base.range)
       } in
     match t.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_Protect
@@ -2298,11 +2299,11 @@ let (auto_elims :
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Range.mk_range "Pulse.Checker.fst"
-                              (Prims.of_int (369)) (Prims.of_int (15))
-                              (Prims.of_int (369)) (Prims.of_int (33)))
+                              (Prims.of_int (370)) (Prims.of_int (15))
+                              (Prims.of_int (370)) (Prims.of_int (33)))
                            (FStar_Range.mk_range "Pulse.Checker.fst"
-                              (Prims.of_int (369)) (Prims.of_int (36))
-                              (Prims.of_int (371)) (Prims.of_int (15)))
+                              (Prims.of_int (370)) (Prims.of_int (36))
+                              (Prims.of_int (372)) (Prims.of_int (15)))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___1 ->
                                  Pulse_Checker_VPropEquiv.vprop_as_list ctxt))
@@ -2312,15 +2313,15 @@ let (auto_elims :
                                    (FStar_Tactics_Effect.tac_bind
                                       (FStar_Range.mk_range
                                          "Pulse.Checker.fst"
-                                         (Prims.of_int (370))
+                                         (Prims.of_int (371))
                                          (Prims.of_int (12))
-                                         (Prims.of_int (370))
+                                         (Prims.of_int (371))
                                          (Prims.of_int (36)))
                                       (FStar_Range.mk_range
                                          "Pulse.Checker.fst"
-                                         (Prims.of_int (371))
+                                         (Prims.of_int (372))
                                          (Prims.of_int (4))
-                                         (Prims.of_int (371))
+                                         (Prims.of_int (372))
                                          (Prims.of_int (15)))
                                       (Obj.magic (maybe_add_elims g ctxt1 t))
                                       (fun t1 ->
@@ -2343,81 +2344,94 @@ let (elim_then_check :
         fun st ->
           fun post_hint ->
             fun check ->
-              FStar_Tactics_Effect.tac_bind
-                (FStar_Range.mk_range "Pulse.Checker.fst"
-                   (Prims.of_int (381)) (Prims.of_int (48))
-                   (Prims.of_int (381)) (Prims.of_int (78)))
-                (FStar_Range.mk_range "Pulse.Checker.fst"
-                   (Prims.of_int (381)) (Prims.of_int (3))
-                   (Prims.of_int (384)) (Prims.of_int (44)))
-                (Obj.magic (Pulse_Checker_Auto_ElimPure.elim_pure g ctxt ()))
-                (fun uu___ ->
-                   (fun uu___ ->
-                      match uu___ with
-                      | FStar_Pervasives.Mkdtuple4
-                          (g', ctxt', ctxt'_typing, elab_k) ->
-                          Obj.magic
-                            (FStar_Tactics_Effect.tac_bind
-                               (FStar_Range.mk_range "Pulse.Checker.fst"
-                                  (Prims.of_int (382)) (Prims.of_int (51))
-                                  (Prims.of_int (382)) (Prims.of_int (86)))
-                               (FStar_Range.mk_range "Pulse.Checker.fst"
-                                  (Prims.of_int (381)) (Prims.of_int (81))
-                                  (Prims.of_int (384)) (Prims.of_int (44)))
-                               (Obj.magic
-                                  (Pulse_Checker_Auto_ElimExists.elim_exists
-                                     g' ctxt' ()))
-                               (fun uu___1 ->
-                                  (fun uu___1 ->
-                                     match uu___1 with
-                                     | FStar_Pervasives.Mkdtuple4
-                                         (g'', ctxt'', ctxt'_typing1,
-                                          elab_k')
-                                         ->
-                                         Obj.magic
-                                           (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "Pulse.Checker.fst"
-                                                 (Prims.of_int (383))
-                                                 (Prims.of_int (14))
-                                                 (Prims.of_int (383))
-                                                 (Prims.of_int (56)))
-                                              (FStar_Range.mk_range
-                                                 "Pulse.Checker.fst"
-                                                 (Prims.of_int (384))
-                                                 (Prims.of_int (4))
-                                                 (Prims.of_int (384))
-                                                 (Prims.of_int (44)))
-                                              (Obj.magic
-                                                 (check g'' st ctxt'' ()
-                                                    post_hint))
-                                              (fun uu___2 ->
-                                                 (fun res ->
-                                                    Obj.magic
-                                                      (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "Pulse.Checker.fst"
-                                                            (Prims.of_int (384))
-                                                            (Prims.of_int (21))
-                                                            (Prims.of_int (384))
-                                                            (Prims.of_int (44)))
-                                                         (FStar_Range.mk_range
-                                                            "Pulse.Checker.fst"
-                                                            (Prims.of_int (384))
-                                                            (Prims.of_int (4))
-                                                            (Prims.of_int (384))
-                                                            (Prims.of_int (44)))
-                                                         (Obj.magic
-                                                            (elab_k'
-                                                               post_hint res))
-                                                         (fun uu___2 ->
-                                                            (fun uu___2 ->
-                                                               Obj.magic
-                                                                 (elab_k
+              match st.Pulse_Syntax_Base.term1 with
+              | Pulse_Syntax_Base.Tm_Protect t ->
+                  check g (unprotect st) ctxt () post_hint
+              | uu___ ->
+                  FStar_Tactics_Effect.tac_bind
+                    (FStar_Range.mk_range "Pulse.Checker.fst"
+                       (Prims.of_int (386)) (Prims.of_int (50))
+                       (Prims.of_int (386)) (Prims.of_int (84)))
+                    (FStar_Range.mk_range "Pulse.Checker.fst"
+                       (Prims.of_int (385)) (Prims.of_int (10))
+                       (Prims.of_int (389)) (Prims.of_int (46)))
+                    (Obj.magic
+                       (Pulse_Checker_Auto_ElimExists.elim_exists g ctxt ()))
+                    (fun uu___1 ->
+                       (fun uu___1 ->
+                          match uu___1 with
+                          | FStar_Pervasives.Mkdtuple4
+                              (g', ctxt', ctxt'_typing, elab_k) ->
+                              Obj.magic
+                                (FStar_Tactics_Effect.tac_bind
+                                   (FStar_Range.mk_range "Pulse.Checker.fst"
+                                      (Prims.of_int (387))
+                                      (Prims.of_int (53))
+                                      (Prims.of_int (387))
+                                      (Prims.of_int (84)))
+                                   (FStar_Range.mk_range "Pulse.Checker.fst"
+                                      (Prims.of_int (386))
+                                      (Prims.of_int (87))
+                                      (Prims.of_int (389))
+                                      (Prims.of_int (46)))
+                                   (Obj.magic
+                                      (Pulse_Checker_Auto_ElimPure.elim_pure
+                                         g' ctxt' ()))
+                                   (fun uu___2 ->
+                                      (fun uu___2 ->
+                                         match uu___2 with
+                                         | FStar_Pervasives.Mkdtuple4
+                                             (g'', ctxt'', ctxt'_typing1,
+                                              elab_k')
+                                             ->
+                                             Obj.magic
+                                               (FStar_Tactics_Effect.tac_bind
+                                                  (FStar_Range.mk_range
+                                                     "Pulse.Checker.fst"
+                                                     (Prims.of_int (388))
+                                                     (Prims.of_int (16))
+                                                     (Prims.of_int (388))
+                                                     (Prims.of_int (70)))
+                                                  (FStar_Range.mk_range
+                                                     "Pulse.Checker.fst"
+                                                     (Prims.of_int (389))
+                                                     (Prims.of_int (6))
+                                                     (Prims.of_int (389))
+                                                     (Prims.of_int (46)))
+                                                  (Obj.magic
+                                                     (check g''
+                                                        (unprotect st) ctxt''
+                                                        () post_hint))
+                                                  (fun uu___3 ->
+                                                     (fun res ->
+                                                        Obj.magic
+                                                          (FStar_Tactics_Effect.tac_bind
+                                                             (FStar_Range.mk_range
+                                                                "Pulse.Checker.fst"
+                                                                (Prims.of_int (389))
+                                                                (Prims.of_int (23))
+                                                                (Prims.of_int (389))
+                                                                (Prims.of_int (46)))
+                                                             (FStar_Range.mk_range
+                                                                "Pulse.Checker.fst"
+                                                                (Prims.of_int (389))
+                                                                (Prims.of_int (6))
+                                                                (Prims.of_int (389))
+                                                                (Prims.of_int (46)))
+                                                             (Obj.magic
+                                                                (elab_k'
+                                                                   post_hint
+                                                                   res))
+                                                             (fun uu___3 ->
+                                                                (fun uu___3
+                                                                   ->
+                                                                   Obj.magic
+                                                                    (elab_k
                                                                     post_hint
-                                                                    uu___2))
-                                                              uu___2)))
-                                                   uu___2))) uu___1))) uu___)
+                                                                    uu___3))
+                                                                  uu___3)))
+                                                       uu___3))) uu___2)))
+                         uu___1)
 let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
   fun allow_inst ->
     fun g ->
@@ -2430,33 +2444,33 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
               else
                 FStar_Tactics_Effect.tac_bind
                   (FStar_Range.mk_range "Pulse.Checker.fst"
-                     (Prims.of_int (405)) (Prims.of_int (4))
-                     (Prims.of_int (411)) (Prims.of_int (5)))
+                     (Prims.of_int (410)) (Prims.of_int (4))
+                     (Prims.of_int (416)) (Prims.of_int (5)))
                   (FStar_Range.mk_range "Pulse.Checker.fst"
-                     (Prims.of_int (411)) (Prims.of_int (6))
-                     (Prims.of_int (485)) (Prims.of_int (20)))
+                     (Prims.of_int (416)) (Prims.of_int (6))
+                     (Prims.of_int (491)) (Prims.of_int (20)))
                   (if Pulse_RuntimeUtils.debug_at_level g "proof_states"
                    then
                      Obj.magic
                        (Obj.repr
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "Pulse.Checker.fst"
-                                (Prims.of_int (407)) (Prims.of_int (14))
-                                (Prims.of_int (410)) (Prims.of_int (51)))
+                                (Prims.of_int (412)) (Prims.of_int (14))
+                                (Prims.of_int (415)) (Prims.of_int (51)))
                              (FStar_Range.mk_range "Pulse.Checker.fst"
-                                (Prims.of_int (406)) (Prims.of_int (9))
-                                (Prims.of_int (411)) (Prims.of_int (5)))
+                                (Prims.of_int (411)) (Prims.of_int (9))
+                                (Prims.of_int (416)) (Prims.of_int (5)))
                              (Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
                                    (FStar_Range.mk_range "Pulse.Checker.fst"
-                                      (Prims.of_int (410))
+                                      (Prims.of_int (415))
                                       (Prims.of_int (28))
-                                      (Prims.of_int (410))
+                                      (Prims.of_int (415))
                                       (Prims.of_int (50)))
                                    (FStar_Range.mk_range "Pulse.Checker.fst"
-                                      (Prims.of_int (407))
+                                      (Prims.of_int (412))
                                       (Prims.of_int (14))
-                                      (Prims.of_int (410))
+                                      (Prims.of_int (415))
                                       (Prims.of_int (51)))
                                    (Obj.magic
                                       (Pulse_Syntax_Printer.term_to_string
@@ -2467,37 +2481,37 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                            (FStar_Tactics_Effect.tac_bind
                                               (FStar_Range.mk_range
                                                  "Pulse.Checker.fst"
-                                                 (Prims.of_int (407))
+                                                 (Prims.of_int (412))
                                                  (Prims.of_int (14))
-                                                 (Prims.of_int (410))
+                                                 (Prims.of_int (415))
                                                  (Prims.of_int (51)))
                                               (FStar_Range.mk_range
                                                  "Pulse.Checker.fst"
-                                                 (Prims.of_int (407))
+                                                 (Prims.of_int (412))
                                                  (Prims.of_int (14))
-                                                 (Prims.of_int (410))
+                                                 (Prims.of_int (415))
                                                  (Prims.of_int (51)))
                                               (Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (FStar_Range.mk_range
                                                        "Pulse.Checker.fst"
-                                                       (Prims.of_int (407))
+                                                       (Prims.of_int (412))
                                                        (Prims.of_int (14))
-                                                       (Prims.of_int (410))
+                                                       (Prims.of_int (415))
                                                        (Prims.of_int (51)))
                                                     (FStar_Range.mk_range
                                                        "Pulse.Checker.fst"
-                                                       (Prims.of_int (407))
+                                                       (Prims.of_int (412))
                                                        (Prims.of_int (14))
-                                                       (Prims.of_int (410))
+                                                       (Prims.of_int (415))
                                                        (Prims.of_int (51)))
                                                     (Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (FStar_Range.mk_range
                                                              "Pulse.Checker.fst"
-                                                             (Prims.of_int (408))
+                                                             (Prims.of_int (413))
                                                              (Prims.of_int (28))
-                                                             (Prims.of_int (408))
+                                                             (Prims.of_int (413))
                                                              (Prims.of_int (55)))
                                                           (FStar_Range.mk_range
                                                              "FStar.Printf.fst"
@@ -2551,115 +2565,150 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "Pulse.Checker.fst"
-                                (Prims.of_int (412)) (Prims.of_int (12))
-                                (Prims.of_int (412)) (Prims.of_int (47)))
+                                (Prims.of_int (417)) (Prims.of_int (12))
+                                (Prims.of_int (417)) (Prims.of_int (23)))
                              (FStar_Range.mk_range "Pulse.Checker.fst"
-                                (Prims.of_int (413)) (Prims.of_int (4))
-                                (Prims.of_int (485)) (Prims.of_int (20)))
+                                (Prims.of_int (417)) (Prims.of_int (26))
+                                (Prims.of_int (491)) (Prims.of_int (20)))
                              (FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___2 ->
-                                   Pulse_Checker_Pure.push_context
-                                     (Pulse_Syntax_Printer.tag_of_st_term t)
-                                     g))
+                                (fun uu___2 -> unprotect t))
                              (fun uu___2 ->
-                                (fun g1 ->
+                                (fun t1 ->
                                    Obj.magic
-                                     (FStar_Tactics_Derived.try_with
-                                        (fun uu___2 ->
+                                     (FStar_Tactics_Effect.tac_bind
+                                        (FStar_Range.mk_range
+                                           "Pulse.Checker.fst"
+                                           (Prims.of_int (418))
+                                           (Prims.of_int (12))
+                                           (Prims.of_int (418))
+                                           (Prims.of_int (47)))
+                                        (FStar_Range.mk_range
+                                           "Pulse.Checker.fst"
+                                           (Prims.of_int (419))
+                                           (Prims.of_int (4))
+                                           (Prims.of_int (491))
+                                           (Prims.of_int (20)))
+                                        (FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___2 ->
-                                              match () with
-                                              | () ->
-                                                  (match t.Pulse_Syntax_Base.term1
-                                                   with
-                                                   | Pulse_Syntax_Base.Tm_Protect
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (FStar_Tactics_Derived.fail
-                                                               "Protect should have been removed"))
-                                                   | Pulse_Syntax_Base.Tm_Return
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_Return.check_return
-                                                               allow_inst g1
-                                                               t pre ()
-                                                               post_hint))
-                                                   | Pulse_Syntax_Base.Tm_Abs
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_Abs.check_abs
-                                                               g1 t pre ()
-                                                               post_hint
-                                                               (check' true)))
-                                                   | Pulse_Syntax_Base.Tm_STApp
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_STApp.check_stapp
-                                                               allow_inst g1
-                                                               t pre ()
-                                                               post_hint
-                                                               check'))
-                                                   | Pulse_Syntax_Base.Tm_Bind
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_Bind.check_bind
-                                                               g1 t pre ()
-                                                               post_hint
-                                                               (check' true)))
-                                                   | Pulse_Syntax_Base.Tm_TotBind
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_Bind.check_tot_bind
-                                                               g1 t pre ()
-                                                               post_hint
-                                                               (check' true)))
-                                                   | Pulse_Syntax_Base.Tm_If
-                                                       {
-                                                         Pulse_Syntax_Base.b1
-                                                           = b;
-                                                         Pulse_Syntax_Base.then_
-                                                           = e1;
-                                                         Pulse_Syntax_Base.else_
-                                                           = e2;
-                                                         Pulse_Syntax_Base.post2
-                                                           = post_if;_}
-                                                       ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (FStar_Tactics_Effect.tac_bind
-                                                               (FStar_Range.mk_range
-                                                                  "Pulse.Checker.fst"
-                                                                  (Prims.of_int (435))
-                                                                  (Prims.of_int (10))
-                                                                  (Prims.of_int (439))
-                                                                  (Prims.of_int (71)))
-                                                               (FStar_Range.mk_range
-                                                                  "Pulse.Checker.fst"
-                                                                  (Prims.of_int (440))
-                                                                  (Prims.of_int (10))
-                                                                  (Prims.of_int (442))
-                                                                  (Prims.of_int (60)))
-                                                               (match 
-                                                                  (post_if,
+                                              Pulse_Checker_Pure.push_context
+                                                (Pulse_Syntax_Printer.tag_of_st_term
+                                                   t1) g))
+                                        (fun uu___2 ->
+                                           (fun g1 ->
+                                              Obj.magic
+                                                (FStar_Tactics_Derived.try_with
+                                                   (fun uu___2 ->
+                                                      (fun uu___2 ->
+                                                         match () with
+                                                         | () ->
+                                                             (match t1.Pulse_Syntax_Base.term1
+                                                              with
+                                                              | Pulse_Syntax_Base.Tm_Protect
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (FStar_Tactics_Derived.fail
+                                                                    "Protect should have been removed"))
+                                                              | Pulse_Syntax_Base.Tm_Return
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_Return.check_return
+                                                                    allow_inst
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint))
+                                                              | Pulse_Syntax_Base.Tm_Abs
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_Abs.check_abs
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint
+                                                                    (check'
+                                                                    true)))
+                                                              | Pulse_Syntax_Base.Tm_STApp
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_STApp.check_stapp
+                                                                    allow_inst
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint
+                                                                    check'))
+                                                              | Pulse_Syntax_Base.Tm_Bind
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_Bind.check_bind
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint
+                                                                    (check'
+                                                                    true)))
+                                                              | Pulse_Syntax_Base.Tm_TotBind
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_Bind.check_tot_bind
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint
+                                                                    (check'
+                                                                    true)))
+                                                              | Pulse_Syntax_Base.Tm_If
+                                                                  {
+                                                                    Pulse_Syntax_Base.b1
+                                                                    = b;
+                                                                    Pulse_Syntax_Base.then_
+                                                                    = e1;
+                                                                    Pulse_Syntax_Base.else_
+                                                                    = e2;
+                                                                    Pulse_Syntax_Base.post2
+                                                                    = post_if;_}
+                                                                  ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.fst"
+                                                                    (Prims.of_int (441))
+                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (445))
+                                                                    (Prims.of_int (71)))
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.fst"
+                                                                    (Prims.of_int (446))
+                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (60)))
+                                                                    (match 
+                                                                    (post_if,
                                                                     post_hint)
-                                                                with
-                                                                | (FStar_Pervasives_Native.None,
-                                                                   FStar_Pervasives_Native.Some
-                                                                   p) ->
+                                                                    with
+                                                                    | 
+                                                                    (FStar_Pervasives_Native.None,
+                                                                    FStar_Pervasives_Native.Some
+                                                                    p) ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
                                                                     p)))
-                                                                | (FStar_Pervasives_Native.Some
-                                                                   p,
-                                                                   FStar_Pervasives_Native.None)
+                                                                    | 
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    p,
+                                                                    FStar_Pervasives_Native.None)
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -2667,28 +2716,31 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     g1
                                                                     FStar_Pervasives_Native.None
                                                                     p))
-                                                                | (uu___3,
-                                                                   uu___4) ->
+                                                                    | 
+                                                                    (uu___3,
+                                                                    uu___4)
+                                                                    ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
                                                                     "Either two annotations for if post or none")))
-                                                               (fun uu___3 ->
-                                                                  (fun post
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    (fun post
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (441))
+                                                                    (Prims.of_int (447))
                                                                     (Prims.of_int (28))
-                                                                    (Prims.of_int (441))
+                                                                    (Prims.of_int (447))
                                                                     (Prims.of_int (83)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (440))
+                                                                    (Prims.of_int (446))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (448))
                                                                     (Prims.of_int (60)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_If.check_if
@@ -2706,46 +2758,50 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    (t1, c,
+                                                                    (t2, c,
                                                                     d) ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    (t1, c,
+                                                                    (t2, c,
                                                                     d)))))
                                                                     uu___3)))
-                                                   | Pulse_Syntax_Base.Tm_ElimExists
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_Exists.check_elim_exists
-                                                               g1 t pre ()
-                                                               post_hint))
-                                                   | Pulse_Syntax_Base.Tm_IntroExists
-                                                       {
-                                                         Pulse_Syntax_Base.erased
-                                                           = uu___3;
-                                                         Pulse_Syntax_Base.p1
-                                                           = uu___4;
-                                                         Pulse_Syntax_Base.witnesses
-                                                           = witnesses;_}
-                                                       ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (FStar_Tactics_Effect.tac_bind
-                                                               (FStar_Range.mk_range
-                                                                  "Pulse.Checker.fst"
-                                                                  (Prims.of_int (449))
-                                                                  (Prims.of_int (10))
-                                                                  (Prims.of_int (455))
-                                                                  (Prims.of_int (21)))
-                                                               (FStar_Range.mk_range
-                                                                  "Pulse.Checker.fst"
-                                                                  (Prims.of_int (457))
-                                                                  (Prims.of_int (8))
-                                                                  (Prims.of_int (466))
-                                                                  (Prims.of_int (9)))
-                                                               (FStar_Tactics_Effect.lift_div_tac
-                                                                  (fun uu___5
-                                                                    ->
+                                                              | Pulse_Syntax_Base.Tm_ElimExists
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_Exists.check_elim_exists
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint))
+                                                              | Pulse_Syntax_Base.Tm_IntroExists
+                                                                  {
+                                                                    Pulse_Syntax_Base.erased
+                                                                    = uu___3;
+                                                                    Pulse_Syntax_Base.p1
+                                                                    = uu___4;
+                                                                    Pulse_Syntax_Base.witnesses
+                                                                    =
+                                                                    witnesses;_}
+                                                                  ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.fst"
+                                                                    (Prims.of_int (455))
+                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (461))
+                                                                    (Prims.of_int (21)))
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.fst"
+                                                                    (Prims.of_int (463))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (472))
+                                                                    (Prims.of_int (9)))
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___5 ->
                                                                     match witnesses
                                                                     with
                                                                     | 
@@ -2761,8 +2817,9 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     | 
                                                                     uu___6 ->
                                                                     true))
-                                                               (fun uu___5 ->
-                                                                  (fun
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    (fun
                                                                     should_infer_witnesses
                                                                     ->
                                                                     if
@@ -2772,19 +2829,19 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (459))
+                                                                    (Prims.of_int (465))
                                                                     (Prims.of_int (29))
-                                                                    (Prims.of_int (459))
+                                                                    (Prims.of_int (465))
                                                                     (Prims.of_int (61)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (462))
+                                                                    (Prims.of_int (468))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (462))
+                                                                    (Prims.of_int (468))
                                                                     (Prims.of_int (67)))
                                                                     (Obj.magic
                                                                     (maybe_infer_intro_exists
-                                                                    g1 t pre))
+                                                                    g1 t1 pre))
                                                                     (fun
                                                                     uu___5 ->
                                                                     (fun
@@ -2801,68 +2858,82 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     else
                                                                     Obj.magic
                                                                     (Pulse_Checker_Exists.check_intro_exists_either
-                                                                    g1 t
+                                                                    g1 t1
                                                                     FStar_Pervasives_Native.None
                                                                     pre ()
                                                                     post_hint))
                                                                     uu___5)))
-                                                   | Pulse_Syntax_Base.Tm_While
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_While.check_while
-                                                               allow_inst g1
-                                                               t pre ()
-                                                               post_hint
-                                                               check'))
-                                                   | Pulse_Syntax_Base.Tm_Admit
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_Admit.check_admit
-                                                               g1 t pre ()
-                                                               post_hint))
-                                                   | Pulse_Syntax_Base.Tm_Par
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_Par.check_par
-                                                               allow_inst g1
-                                                               t pre ()
-                                                               post_hint
-                                                               check'))
-                                                   | Pulse_Syntax_Base.Tm_WithLocal
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_WithLocal.check_withlocal
-                                                               allow_inst g1
-                                                               t pre ()
-                                                               post_hint
-                                                               check'))
-                                                   | Pulse_Syntax_Base.Tm_Rewrite
-                                                       uu___3 ->
-                                                       Obj.magic
-                                                         (Obj.repr
-                                                            (Pulse_Checker_Rewrite.check_rewrite
-                                                               g1 t pre ()
-                                                               post_hint))))
-                                             uu___2)
-                                        (fun uu___2 ->
-                                           (fun uu___2 ->
-                                              match uu___2 with
-                                              | Pulse_Checker_Common.Framing_failure
-                                                  failure ->
-                                                  Obj.magic
-                                                    (Obj.repr
-                                                       (handle_framing_failure
-                                                          g1 t pre ()
-                                                          post_hint failure
-                                                          (check' true)))
-                                              | e ->
-                                                  Obj.magic
-                                                    (Obj.repr
-                                                       (FStar_Tactics_Effect.raise
-                                                          e))) uu___2)))
+                                                              | Pulse_Syntax_Base.Tm_While
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_While.check_while
+                                                                    allow_inst
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint
+                                                                    check'))
+                                                              | Pulse_Syntax_Base.Tm_Admit
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_Admit.check_admit
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint))
+                                                              | Pulse_Syntax_Base.Tm_Par
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_Par.check_par
+                                                                    allow_inst
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint
+                                                                    check'))
+                                                              | Pulse_Syntax_Base.Tm_WithLocal
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_WithLocal.check_withlocal
+                                                                    allow_inst
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint
+                                                                    check'))
+                                                              | Pulse_Syntax_Base.Tm_Rewrite
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (Pulse_Checker_Rewrite.check_rewrite
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint))))
+                                                        uu___2)
+                                                   (fun uu___2 ->
+                                                      (fun uu___2 ->
+                                                         match uu___2 with
+                                                         | Pulse_Checker_Common.Framing_failure
+                                                             failure ->
+                                                             Obj.magic
+                                                               (Obj.repr
+                                                                  (handle_framing_failure
+                                                                    g1 t1 pre
+                                                                    ()
+                                                                    post_hint
+                                                                    failure
+                                                                    (check'
+                                                                    true)))
+                                                         | e ->
+                                                             Obj.magic
+                                                               (Obj.repr
+                                                                  (FStar_Tactics_Effect.raise
+                                                                    e)))
+                                                        uu___2))) uu___2)))
                                   uu___2))) uu___1)
 let (check : Pulse_Checker_Common.check_t) = check' true
