@@ -326,7 +326,7 @@ let e_term_view_aq aq =
                         rng
 
         | Tv_Var bv ->
-            S.mk_Tm_app ref_Tv_Var.t [S.as_arg (embed e_bv rng bv)]
+            S.mk_Tm_app ref_Tv_Var.t [S.as_arg (embed e_namedv rng bv)]
                         rng
 
         | Tv_UInst (fv, us) ->
