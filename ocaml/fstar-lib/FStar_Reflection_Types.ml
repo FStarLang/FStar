@@ -16,6 +16,7 @@ type universe_uvar = FStar_Syntax_Syntax.universe_uvar
 type universe = FStar_Syntax_Syntax.universe
 
 type name        = string list
+type __ident     = FStar_Ident.ident
 type ident       = string * FStar_Compiler_Range.range
 type univ_name   = ident
 type typ         = term

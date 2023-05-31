@@ -220,12 +220,29 @@ let e_universe =
     in
     mk_emb embed_universe unembed_universe fstar_refl_universe
 
+(* This is a fake inspecting embedding *)
 let e_ident : embedding I.ident =
     let repr = e_tuple2 e_string e_range in
     embed_as repr
              I.mk_ident
              (fun i -> I.string_of_id i, I.range_of_id i)
              (Some fstar_refl_ident)
+
+let e___ident : embedding I.ident =
+  let embed_ident (rng:Range.range) (u:I.ident) : term =
+    U.mk_lazy u fstar_refl_ident Lazy_ident (Some rng) in
+  let unembed_ident w (t:term) : option I.ident =
+    match (SS.compress t).n with
+    | Tm_lazy {blob=b; lkind=Lazy_ident} ->
+            Some (undyn b)
+    | _ ->
+      if w
+      then Err.log_issue t.pos
+             (Err.Warning_NotEmbedded,
+              (BU.format1 "Not an embedded ident: %s" (Print.term_to_string t)));
+      None
+  in
+  mk_emb embed_ident unembed_ident fstar_refl_ident
 
 let e_universe_view =
   let embed_universe_view (rng:Range.range) (uv:universe_view) : term =

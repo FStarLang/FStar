@@ -15,6 +15,8 @@
 *)
 module FStar.Reflection.Basic
 
+open FStar.Compiler
+
 open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
@@ -92,8 +94,11 @@ val compare_string : string -> string -> Z.t
 val push_binder    : Env.env -> binder -> Env.env
 val push_namedv    : Env.env -> bv     -> Env.env
 
-val range_of_term : term -> FStar.Compiler.Range.range
-val range_of_sigelt : sigelt -> FStar.Compiler.Range.range
+val range_of_term : term -> Range.range
+val range_of_sigelt : sigelt -> Range.range
 
 val subst : list subst_elt -> term -> term
 val subst_comp : list subst_elt -> comp -> comp
+
+val inspect_ident : ident -> string & Range.range
+val pack_ident : string & Range.range -> ident

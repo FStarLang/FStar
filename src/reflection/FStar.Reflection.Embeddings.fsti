@@ -57,7 +57,8 @@ val e_attribute     : embedding attribute
 val e_attributes    : embedding (list attribute) (* This seems rather silly, but `attributes` is a keyword *)
 val e_qualifier     : embedding RD.qualifier
 val e_qualifiers    : embedding (list RD.qualifier)
-val e_ident         : embedding Ident.ident
+val e_ident         : embedding Ident.ident (* fake *)
+val e___ident       : embedding Ident.ident (* real *)
 val e_univ_name     : embedding univ_name
 val e_univ_names    : embedding (list univ_name)
 val e_universe      : embedding universe

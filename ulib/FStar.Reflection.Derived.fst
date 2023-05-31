@@ -57,6 +57,15 @@ let mk_implicit_binder (nm : string) (sort : typ) : binder =
     sort   = sort;
   }
 
+let push_binding (e:env) (b:binding) : env =
+  let nv : namedv = pack_namedv {
+    uniq = b.uniq;
+    sort = seal b.sort;
+    ppname = b.ppname;
+  }
+  in
+  push_namedv e nv
+
 let type_of_binder (b : binder) : typ =
     (inspect_binder b).sort
 

@@ -273,7 +273,7 @@ let rec inspect_ln (t:term) : term_view =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons fv us_opt (List.map (fun (p, b) -> inspect_pat p, b) ps)
-            | Pat_var bv -> Pat_Var bv.sort bv.ppname
+            | Pat_var bv -> Pat_Var bv.sort (string_of_id bv.ppname)
             | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
@@ -966,3 +966,9 @@ let subst_comp (s : list subst_elt) (c : comp) : comp =
 
 let range_of_term (t:term) = t.pos
 let range_of_sigelt (s:sigelt) = s.sigrng
+
+let inspect_ident (i:ident) : string & Range.range =
+  (string_of_id i, range_of_id i)
+
+let pack_ident (i: string & Range.range) : ident =
+  Ident.mk_ident i

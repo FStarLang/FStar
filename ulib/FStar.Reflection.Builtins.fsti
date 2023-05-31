@@ -71,6 +71,10 @@ val pack_binder    : binder_view -> binder
 val inspect_universe : u:universe -> uv:universe_view{uv << u}
 val pack_universe    : universe_view -> universe
 
+(* hacky.. *)
+val inspect_ident : i:__ident -> iv:ident{iv << i}
+val pack_ident    : ident -> __ident
+
 (* The bijection lemmas: the view exposes all details of terms. *)
 val pack_inspect_inv : (t:term) -> Lemma (~(Tv_Unsupp? (inspect_ln t)) ==> pack_ln (inspect_ln t) == t)
 val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
@@ -151,7 +155,7 @@ val push_binder           : env -> binder -> env
 This is useful as one traverses the syntax of a term,
 pushing bindings as one traverses (and opens) a binder in a lambda,
 match, etc. *)
-val push_binding          : env -> binding -> env
+val push_namedv           : env -> namedv -> env
 
 (** Attributes are terms, not to be confused with Prims.attribute. *)
 val sigelt_attrs     : sigelt -> list term

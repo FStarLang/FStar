@@ -159,12 +159,22 @@ let e_qualifiers      : dualemb RD.qualifiers      = (RE.e_qualifiers, NRE.e_qua
 let e_range           : dualemb Range.range              = 
   (FStar.Syntax.Embeddings.e_range, FStar.TypeChecker.NBETerm.e_range)
 
+let nbe_dummy #a : NBET.embedding a = Dyn.undyn (Dyn.mkdyn ())
+
+
+let e_ident           : dualemb Ident.ident            = (RE.e_ident, nbe_dummy #Ident.ident)
+let e___ident         : dualemb Ident.ident            = (RE.e___ident, nbe_dummy #Ident.ident)
+
 let e_subst           : dualemb (list subst_elt)   = (RE.e_subst, NRE.e_subst)
 
 let e_list (e : dualemb 'a) : dualemb (list 'a) =
   (EMB.e_list (fst e), NBET.e_list (snd e))
+
 let e_option (e : dualemb 'a) : dualemb (option 'a) =
   (EMB.e_option (fst e), NBET.e_option (snd e))
+
+let e_tuple2 (ea : dualemb 'a) (eb : dualemb 'b) : dualemb ('a & 'b) =
+  (EMB.e_tuple2 (fst ea) (fst eb), NBET.e_tuple2 (snd ea) (snd eb))
 
 let e_string_list = e_list e_string
 
@@ -440,6 +450,16 @@ let reflection_primops : list Cfg.primitive_step = [
     RB.range_of_sigelt
     e_sigelt
     e_range;
+
+  mk1 "inspect_ident"
+    RB.inspect_ident
+    e___ident
+    (e_tuple2 e_string e_range);
+
+  mk1 "pack_ident"
+    RB.pack_ident
+    (e_tuple2 e_string e_range)
+    e___ident;
 ]
 
 let _ = List.iter FStar.TypeChecker.Cfg.register_extra_step reflection_primops

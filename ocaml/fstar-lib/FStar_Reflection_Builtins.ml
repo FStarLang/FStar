@@ -1,6 +1,7 @@
 module RB = FStar_Reflection_Basic
 
 let compare_bv              = RB.compare_bv
+let compare_namedv          = RB.compare_namedv
 let lookup_typ              = RB.lookup_typ
 let lookup_attr             = RB.lookup_attr
 let all_defs_in_env         = RB.all_defs_in_env
@@ -37,7 +38,7 @@ let implode_qn              = RB.implode_qn
 let explode_qn              = RB.explode_qn
 let compare_string          = RB.compare_string
 let push_binder             = RB.push_binder
-let push_binding            = RB.push_binding
+let push_namedv             = RB.push_namedv
 let subst                   = RB.subst
 let subst_comp              = RB.subst_comp
 
@@ -46,3 +47,6 @@ let pack_universe           = RB.pack_universe
 
 let range_of_term           = RB.range_of_term
 let range_of_sigelt         = RB.range_of_sigelt
+
+let inspect_ident           = RB.inspect_ident
+let pack_ident              = RB.pack_ident
