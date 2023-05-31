@@ -5195,7 +5195,10 @@ let (maybe_coerce_lc :
                          let uu___7 = check_erased env exp_t in
                          (uu___6, uu___7) in
                        (match uu___5 with
-                        | (No, Yes ty) ->
+                        | (No, Yes ty) when
+                            let uu___6 =
+                              FStar_Options.no_hide_reveal_coercions () in
+                            Prims.op_Negation uu___6 ->
                             let u =
                               env.FStar_TypeChecker_Env.universe_of env ty in
                             let uu___6 =
@@ -5216,7 +5219,10 @@ let (maybe_coerce_lc :
                                      FStar_Syntax_Syntax.mk_Total in
                                  (match uu___7 with
                                   | (e1, lc1) -> (e1, lc1, g1)))
-                        | (Yes ty, No) ->
+                        | (Yes ty, No) when
+                            let uu___6 =
+                              FStar_Options.no_hide_reveal_coercions () in
+                            Prims.op_Negation uu___6 ->
                             let u =
                               env.FStar_TypeChecker_Env.universe_of env ty in
                             let uu___6 =
