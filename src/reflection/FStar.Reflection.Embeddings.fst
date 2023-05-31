@@ -343,41 +343,36 @@ let e_const =
 let rec e_pattern_aq aq =
     let rec embed_pattern (rng:Range.range) (p : pattern) : term =
         match p with
-        | Pat_Constant {c} ->
+        | Pat_Constant c ->
             S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed e_const rng c)] rng
-        | Pat_Cons {head; univs; subpats} ->
+        | Pat_Cons head univs subpats ->
             S.mk_Tm_app ref_Pat_Cons.t
               [S.as_arg (embed e_fv rng head);
                S.as_arg (embed (e_option (e_list e_universe)) rng univs);
                S.as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) rng subpats)] rng
-        | Pat_Var {sort;ppname} ->
+        | Pat_Var sort ppname ->
             S.mk_Tm_app ref_Pat_Var.t [
               S.as_arg (embed (e_sealed e_term) rng sort);
               S.as_arg (embed e_string rng ppname);
             ] rng
-        | Pat_Dot_Term {t=eopt} ->
+        | Pat_Dot_Term eopt ->
             S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed (e_option e_term) rng eopt)]
                         rng
     in
     let rec unembed_pattern w (t : term) : option pattern =
-        (* adaptors required due to they payload indirection *)
-        let pat_Constant c = Pat_Constant {c} in
-        let pat_Cons head univs subpats = Pat_Cons {head;univs;subpats} in
-        let pat_Var sort ppname = Pat_Var {sort;ppname} in
-        let pat_Dot_Term t = Pat_Dot_Term {t} in
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Pat_Constant.lid ->
-            run args (pat_Constant <$$> e_const)
+            run args (Pat_Constant <$$> e_const)
 
         | _ when S.fv_eq_lid fv ref_Pat_Cons.lid ->
-            run args (pat_Cons <$$> e_fv <**> e_option (e_list e_universe) <**> e_list (e_tuple2 (e_pattern_aq aq) e_bool))
+            run args (Pat_Cons <$$> e_fv <**> e_option (e_list e_universe) <**> e_list (e_tuple2 (e_pattern_aq aq) e_bool))
 
         | _ when S.fv_eq_lid fv ref_Pat_Var.lid ->
-            run args (pat_Var <$$> e_sealed e_term <**> e_string)
+            run args (Pat_Var <$$> e_sealed e_term <**> e_string)
 
         | _ when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
-            run args (pat_Dot_Term <$$> e_option e_term)
+            run args (Pat_Dot_Term <$$> e_option e_term)
 
         | _ -> None
     in

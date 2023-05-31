@@ -37,6 +37,7 @@ let implode_qn              = RB.implode_qn
 let explode_qn              = RB.explode_qn
 let compare_string          = RB.compare_string
 let push_binder             = RB.push_binder
+let push_binding            = RB.push_binding
 let subst                   = RB.subst
 let subst_comp              = RB.subst_comp
 

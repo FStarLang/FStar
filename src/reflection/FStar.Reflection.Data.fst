@@ -38,6 +38,7 @@ open FStar.Ident
    functions in the interface are not supported for extraction. So, 
    we include them in this module implementation file to force them
    to be extracted *)
+type ppname_t = string
 let as_ppname (x:string) : Tot string = x
 
 let notAscription (tv:term_view) : Tot bool =
