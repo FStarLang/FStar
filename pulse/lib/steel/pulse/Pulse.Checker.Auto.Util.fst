@@ -276,10 +276,11 @@ let rec elim_all (#g:env)
   (f:vprop -> T.Tac bool)
   (mk:mk_t)
   (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
-   : T.Tac (g':env { env_extends g' g } &
+   : T.Tac (bool & 
+           (g':env { env_extends g' g } &
             ctxt':term &
             tot_typing g' ctxt' Tm_VProp &
-            continuation_elaborator g ctxt g' ctxt')
+            continuation_elaborator g ctxt g' ctxt'))
    = match ctxt with
      | Tm_Star ctxt' p ->
        let p_typing = star_typing_inversion_r #_ #ctxt' #p ctxt_typing in
@@ -288,30 +289,48 @@ let rec elim_all (#g:env)
             | Some (| e1, c1, e1_typing |) ->
               let (| g', _, ctxt_typing', k |) =
                 elim_one ctxt' p ctxt_typing e1 c1 e1_typing in
-              let (| g'', ctxt'', ctxt_typing'', k' |) =
+              let _, (| g'', ctxt'', ctxt_typing'', k' |) =
                 elim_all #g' f mk ctxt_typing' in
-              (| g'', ctxt'', ctxt_typing'', k_elab_trans k k' |)
+              true, (| g'', ctxt'', ctxt_typing'', k_elab_trans k k' |)
             | None ->
               extends_env_refl g;
-                (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
+              false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
        else begin
          extends_env_refl g;
-         (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
+         false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
        end
      | _ ->
        extends_env_refl g;
-       (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
+       false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
 
-let add_elims (#g:env) (#ctxt:term)
+let add_elims_aux (#g:env) (#ctxt:term)
   (f:vprop -> T.Tac bool)
   (mk:mk_t)
   (ctxt_typing:tot_typing g ctxt Tm_VProp)
+   : T.Tac (bool & 
+           (g':env { env_extends g' g } &
+            ctxt':term &
+            tot_typing g' ctxt' Tm_VProp &
+            continuation_elaborator g ctxt g' ctxt'))
+   = let (| ctxt', ctxt'_typing, k |) = canon_right ctxt_typing f in
+     let progress, (| g', ctxt'', ctxt''_typing, k' |) =
+         elim_all f mk ctxt'_typing in
+      extends_env_refl g;
+      progress, (| g', ctxt'', ctxt''_typing, k_elab_trans k k' |)
+
+  let rec add_elims (#g:env) (#ctxt:term)
+                    (f:vprop -> T.Tac bool)
+                    (mk:mk_t)
+                    (ctxt_typing:tot_typing g ctxt Tm_VProp)
    : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
             tot_typing g' ctxt' Tm_VProp &
             continuation_elaborator g ctxt g' ctxt')
-   = let (| ctxt', ctxt'_typing, k |) = canon_right ctxt_typing f in
-     let (| g', ctxt'', ctxt''_typing, k' |) =
-       elim_all f mk ctxt'_typing in
-     extends_env_refl g;
-     (| g', ctxt'', ctxt''_typing, k_elab_trans k k' |)
+   = let progress, res = add_elims_aux f mk ctxt_typing in
+     if not progress
+     then res
+     else (
+      let (| g', ctxt', ctxt'_typing, k |) = res in
+      let (| g'', ctxt'', ctxt''_typing, k' |) = add_elims f mk ctxt'_typing in
+      (| g'', ctxt'', ctxt''_typing, k_elab_trans k k' |)
+     )

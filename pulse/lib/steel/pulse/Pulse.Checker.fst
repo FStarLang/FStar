@@ -312,43 +312,43 @@ let handle_framing_failure
     in
     handle_intro_exists rest t
 
-let rec maybe_add_elims
-           (g:env)
-           (ctxt:list term)
-           (t:st_term)
-  : T.Tac st_term
-  = let wr t' = { term = t'; range = t.range } in
-    match ctxt with
-    | [] -> t
-    | Tm_ExistsSL u ty b se :: rest ->
-      let e = wr (Tm_Protect { t = wr (Tm_ElimExists { p = Tm_ExistsSL u ty b se }) }) in
-      let x = fresh g in
-      let px = v_as_nv x in
-      let g = extend x (Inl ty) g in
-      let b = open_term_nv b px in
-      let t = maybe_add_elims g [b] t in
-      let t = close_st_term t x in
-      let t = Tm_Bind { binder = default_binder_annot;
-                        head = e;
-                        body = wr (Tm_Protect { t }) } in
-      maybe_add_elims g rest (wr t)
-    | Tm_Pure p :: rest ->
-      let elim_pure_tm = 
-        wr (Tm_STApp { head = tm_fvar (as_fv elim_pure_explicit_lid);
-                       arg_qual = None;
-                       arg = p })
-      in
-      wr (
-        Tm_Bind { binder = default_binder_annot;
-                  head = wr (Tm_Protect { t = elim_pure_tm } );
-                  body = wr (Tm_Protect { t = maybe_add_elims g rest t }) }
-      )
+// let rec maybe_add_elims
+//            (g:env)
+//            (ctxt:list term)
+//            (t:st_term)
+//   : T.Tac st_term
+//   = let wr t' = { term = t'; range = t.range } in
+//     match ctxt with
+//     | [] -> t
+//     | Tm_ExistsSL u ty b se :: rest ->
+//       let e = wr (Tm_Protect { t = wr (Tm_ElimExists { p = Tm_ExistsSL u ty b se }) }) in
+//       let x = fresh g in
+//       let px = v_as_nv x in
+//       let g = extend x (Inl ty) g in
+//       let b = open_term_nv b px in
+//       let t = maybe_add_elims g [b] t in
+//       let t = close_st_term t x in
+//       let t = Tm_Bind { binder = default_binder_annot;
+//                         head = e;
+//                         body = wr (Tm_Protect { t }) } in
+//       maybe_add_elims g rest (wr t)
+//     | Tm_Pure p :: rest ->
+//       let elim_pure_tm = 
+//         wr (Tm_STApp { head = tm_fvar (as_fv elim_pure_explicit_lid);
+//                        arg_qual = None;
+//                        arg = p })
+//       in
+//       wr (
+//         Tm_Bind { binder = default_binder_annot;
+//                   head = wr (Tm_Protect { t = elim_pure_tm } );
+//                   body = wr (Tm_Protect { t = maybe_add_elims g rest t }) }
+//       )
 
-    | Tm_Star p q :: rest ->
-      maybe_add_elims g (p :: q :: rest) t    
+//     | Tm_Star p q :: rest ->
+//       maybe_add_elims g (p :: q :: rest) t    
       
-    | _ :: rest ->
-      maybe_add_elims g rest t
+//     | _ :: rest ->
+//       maybe_add_elims g rest t
 
 let protect t = { term = Tm_Protect { t }; range = t.range }
   
@@ -363,30 +363,32 @@ let rec unprotect t =
     unprotect t
   | _ -> t
   
-let auto_elims (g:env) (ctxt:term) (t:st_term) =
-  match t.term with
-  | Tm_Protect _ -> unprotect t
-  | _ ->
-    let ctxt = vprop_as_list ctxt in
-    let t = maybe_add_elims g ctxt t in 
-    unprotect t
+// let auto_elims (g:env) (ctxt:term) (t:st_term) =
+//   match t.term with
+//   | Tm_Protect _ -> unprotect t
+//   | _ ->
+//     let ctxt = vprop_as_list ctxt in
+//     let t = maybe_add_elims g ctxt t in 
+//     unprotect t
     
 #push-options "--ifuel 2"
 
 let elim_then_check (#g:env) (#ctxt:term) 
                     (ctxt_typing:tot_typing g ctxt Tm_VProp)
-                    (st:st_term)
+                    (st:st_term { not (Tm_Protect? st.term) })
                     (post_hint: post_hint_opt g)
                     (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint)
-  = match st.term with
-    | Tm_Protect t ->
-      check g (unprotect st) _ ctxt_typing post_hint
-    | _ -> 
-      let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
-      let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimPure.elim_pure ctxt'_typing in
-      let res = check g'' (unprotect st) ctxt'' ctxt'_typing post_hint in
-      elab_k post_hint (elab_k' post_hint res)
+  = if RU.debug_at_level g "proof_states"
+    then ( T.print "Unprotected node: Elim exists and pure \n" );
+    let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
+    let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimPure.elim_pure ctxt'_typing in
+    if RU.debug_at_level g "proof_states"
+    then ( T.print (Printf.sprintf "Eliminated context from\n\t%s\n\tto %s\n"
+                (P.term_to_string ctxt)
+                (P.term_to_string ctxt'') )) ;
+    let res = check g'' (protect st) ctxt'' ctxt'_typing post_hint in
+    elab_k post_hint (elab_k' post_hint res)
       
 
 #push-options "--query_stats"
@@ -403,17 +405,19 @@ let rec check' : bool -> check_t =
   //            (string_of_bool allow_inst)
   //            (Pulse.Syntax.Printer.term_to_string pre)
   //            (Pulse.Syntax.Printer.st_term_to_string t));
-  if allow_inst
-  then elim_then_check pre_typing t post_hint (check' false)
-  else begin
 
+  if not (Tm_Protect? t.term)
+  then elim_then_check pre_typing t post_hint (check' allow_inst)
+  else begin
     if RU.debug_at_level g "proof_states"
     then (
-      T.print (Printf.sprintf "At %s: (%s) precondition is %s\n"
+      T.print (Printf.sprintf "At %s: (%s) %s\n\tprecondition is %s\n"
                             (T.range_to_string t.range)
                             (P.tag_of_st_term t)
+                            (P.st_term_to_string t)
                             (P.term_to_string pre))
     );
+    let t = unprotect t in
     let g = push_context (P.tag_of_st_term t) g in
     try 
       match t.term with

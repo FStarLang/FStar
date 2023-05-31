@@ -236,7 +236,9 @@ let rec st_term_to_string' (level:string) (t:st_term)
          | Some post -> sprintf " %s" (term_to_string post))
 
     | Tm_Protect { t } ->
-      st_term_to_string' level t
+      sprintf "Protect(\n%s%s)"
+      level
+      (st_term_to_string' level t)
 
 let st_term_to_string t = st_term_to_string' "" t
 

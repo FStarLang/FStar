@@ -2347,7 +2347,19 @@ let rec (st_term_to_string' :
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___2 -> uu___1 uu___)))) uu___)
       | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t1;_} ->
-          st_term_to_string' level t1
+          FStar_Tactics_Effect.tac_bind
+            (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
+               (Prims.of_int (241)) (Prims.of_int (6)) (Prims.of_int (241))
+               (Prims.of_int (34)))
+            (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+               (Prims.of_int (19)) (Prims.of_int (590)) (Prims.of_int (31)))
+            (Obj.magic (st_term_to_string' level t1))
+            (fun uu___ ->
+               FStar_Tactics_Effect.lift_div_tac
+                 (fun uu___1 ->
+                    Prims.strcat
+                      (Prims.strcat "Protect(\n" (Prims.strcat level ""))
+                      (Prims.strcat uu___ ")")))
 let (st_term_to_string :
   Pulse_Syntax_Base.st_term ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
