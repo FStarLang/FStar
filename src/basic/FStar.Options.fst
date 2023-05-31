@@ -1283,7 +1283,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
         ( noshort,
         "warn_error",
-        Accumulated (SimpleStr ("")),
+        ReverseAccumulated (SimpleStr ("")),
         "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
