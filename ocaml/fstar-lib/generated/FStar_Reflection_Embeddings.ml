@@ -37,69 +37,67 @@ let (head_fv_and_args :
              FStar_Pervasives_Native.Some (fv, args)
          | uu___2 -> FStar_Pervasives_Native.None)
 let (noaqs : FStar_Syntax_Syntax.antiquotations) = (Prims.int_zero, [])
+let e_lazy :
+  'a .
+    FStar_Syntax_Syntax.lazy_kind ->
+      FStar_Syntax_Syntax.term -> 'a FStar_Syntax_Embeddings.embedding
+  =
+  fun k ->
+    fun ty ->
+      let ee rng x =
+        FStar_Syntax_Util.mk_lazy x ty k (FStar_Pervasives_Native.Some rng) in
+      let uu uu___ t =
+        let uu___1 =
+          let uu___2 = FStar_Syntax_Subst.compress t in
+          uu___2.FStar_Syntax_Syntax.n in
+        match uu___1 with
+        | FStar_Syntax_Syntax.Tm_lazy
+            { FStar_Syntax_Syntax.blob = b;
+              FStar_Syntax_Syntax.lkind = lkind;
+              FStar_Syntax_Syntax.ltyp = uu___2;
+              FStar_Syntax_Syntax.rng = uu___3;_}
+            when FStar_Syntax_Syntax.lazy_kind_eq lkind k ->
+            let uu___4 = FStar_Compiler_Dyn.undyn b in
+            FStar_Pervasives_Native.Some uu___4
+        | uu___2 -> FStar_Pervasives_Native.None in
+      FStar_Reflection_ArgEmbedder.mk_emb ee uu ty
 let (e_bv : FStar_Syntax_Syntax.bv FStar_Syntax_Embeddings.embedding) =
-  let embed_bv rng bv =
-    FStar_Syntax_Util.mk_lazy bv FStar_Reflection_Constants.fstar_refl_bv
-      FStar_Syntax_Syntax.Lazy_bv (FStar_Pervasives_Native.Some rng) in
-  let unembed_bv w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_bv;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded bv: %s" uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_bv unembed_bv
-    FStar_Reflection_Constants.fstar_refl_bv
-let (e_namedv : namedv FStar_Syntax_Embeddings.embedding) = e_bv
+  e_lazy FStar_Syntax_Syntax.Lazy_bv FStar_Reflection_Constants.fstar_refl_bv
+let (e_namedv : namedv FStar_Syntax_Embeddings.embedding) =
+  e_lazy FStar_Syntax_Syntax.Lazy_namedv
+    FStar_Reflection_Constants.fstar_refl_namedv
 let (e_binder : FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings.embedding)
   =
-  let embed_binder rng b =
-    FStar_Syntax_Util.mk_lazy b FStar_Reflection_Constants.fstar_refl_binder
-      FStar_Syntax_Syntax.Lazy_binder (FStar_Pervasives_Native.Some rng) in
-  let unembed_binder w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_binder;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded binder: %s"
-                  uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_binder unembed_binder
+  e_lazy FStar_Syntax_Syntax.Lazy_binder
     FStar_Reflection_Constants.fstar_refl_binder
+let (e_fv : FStar_Syntax_Syntax.fv FStar_Syntax_Embeddings.embedding) =
+  e_lazy FStar_Syntax_Syntax.Lazy_fvar
+    FStar_Reflection_Constants.fstar_refl_fv
+let (e_comp : FStar_Syntax_Syntax.comp FStar_Syntax_Embeddings.embedding) =
+  e_lazy FStar_Syntax_Syntax.Lazy_comp
+    FStar_Reflection_Constants.fstar_refl_comp
+let (e_universe :
+  FStar_Syntax_Syntax.universe FStar_Syntax_Embeddings.embedding) =
+  e_lazy FStar_Syntax_Syntax.Lazy_universe
+    FStar_Reflection_Constants.fstar_refl_universe
+let (e___ident : FStar_Ident.ident FStar_Syntax_Embeddings.embedding) =
+  e_lazy FStar_Syntax_Syntax.Lazy_ident
+    FStar_Reflection_Constants.fstar_refl_ident
+let (e_env : FStar_TypeChecker_Env.env FStar_Syntax_Embeddings.embedding) =
+  e_lazy FStar_Syntax_Syntax.Lazy_env
+    FStar_Reflection_Constants.fstar_refl_env
+let (e_ctx_uvar_and_subst :
+  FStar_Syntax_Syntax.ctx_uvar_and_subst FStar_Syntax_Embeddings.embedding) =
+  e_lazy FStar_Syntax_Syntax.Lazy_uvar
+    FStar_Reflection_Constants.fstar_refl_ctx_uvar_and_subst
+let (e_sigelt : FStar_Syntax_Syntax.sigelt FStar_Syntax_Embeddings.embedding)
+  =
+  e_lazy FStar_Syntax_Syntax.Lazy_sigelt
+    FStar_Reflection_Constants.fstar_refl_sigelt
+let (e_letbinding :
+  FStar_Syntax_Syntax.letbinding FStar_Syntax_Embeddings.embedding) =
+  e_lazy FStar_Syntax_Syntax.Lazy_letbinding
+    FStar_Reflection_Constants.fstar_refl_letbinding
 let rec mapM_opt :
   'a 'b .
     ('a -> 'b FStar_Pervasives_Native.option) ->
@@ -256,99 +254,6 @@ let (e_aqualv :
 let (e_binders :
   FStar_Syntax_Syntax.binders FStar_Syntax_Embeddings.embedding) =
   FStar_Syntax_Embeddings.e_list e_binder
-let (e_fv : FStar_Syntax_Syntax.fv FStar_Syntax_Embeddings.embedding) =
-  let embed_fv rng fv =
-    FStar_Syntax_Util.mk_lazy fv FStar_Reflection_Constants.fstar_refl_fv
-      FStar_Syntax_Syntax.Lazy_fvar (FStar_Pervasives_Native.Some rng) in
-  let unembed_fv w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_fvar;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded fvar: %s" uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_fv unembed_fv
-    FStar_Reflection_Constants.fstar_refl_fv
-let (e_comp : FStar_Syntax_Syntax.comp FStar_Syntax_Embeddings.embedding) =
-  let embed_comp rng c =
-    FStar_Syntax_Util.mk_lazy c FStar_Reflection_Constants.fstar_refl_comp
-      FStar_Syntax_Syntax.Lazy_comp (FStar_Pervasives_Native.Some rng) in
-  let unembed_comp w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_comp;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded comp: %s" uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_comp unembed_comp
-    FStar_Reflection_Constants.fstar_refl_comp
-let (e_universe :
-  FStar_Syntax_Syntax.universe FStar_Syntax_Embeddings.embedding) =
-  let embed_universe rng u =
-    FStar_Syntax_Util.mk_lazy u
-      FStar_Reflection_Constants.fstar_refl_universe
-      FStar_Syntax_Syntax.Lazy_universe (FStar_Pervasives_Native.Some rng) in
-  let unembed_universe w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_universe;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded universe: %s"
-                  uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_universe unembed_universe
-    FStar_Reflection_Constants.fstar_refl_universe
 let (e_ident : FStar_Ident.ident FStar_Syntax_Embeddings.embedding) =
   let repr =
     FStar_Syntax_Embeddings.e_tuple2 FStar_Syntax_Embeddings.e_string
@@ -358,37 +263,6 @@ let (e_ident : FStar_Ident.ident FStar_Syntax_Embeddings.embedding) =
        let uu___ = FStar_Ident.string_of_id i in
        let uu___1 = FStar_Ident.range_of_id i in (uu___, uu___1))
     (FStar_Pervasives_Native.Some FStar_Reflection_Constants.fstar_refl_ident)
-let (e___ident : FStar_Ident.ident FStar_Syntax_Embeddings.embedding) =
-  let embed_ident rng u =
-    FStar_Syntax_Util.mk_lazy u FStar_Reflection_Constants.fstar_refl_ident
-      FStar_Syntax_Syntax.Lazy_ident (FStar_Pervasives_Native.Some rng) in
-  let unembed_ident w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_ident;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded ident: %s"
-                  uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_ident unembed_ident
-    FStar_Reflection_Constants.fstar_refl_ident
 let (e_universe_view :
   FStar_Reflection_Data.universe_view FStar_Syntax_Embeddings.embedding) =
   let embed_universe_view rng uv =
@@ -544,36 +418,6 @@ let (e_universe_view :
                          else FStar_Pervasives_Native.None) in
   FStar_Reflection_ArgEmbedder.mk_emb embed_universe_view
     unembed_universe_view FStar_Reflection_Constants.fstar_refl_universe_view
-let (e_env : FStar_TypeChecker_Env.env FStar_Syntax_Embeddings.embedding) =
-  let embed_env rng e =
-    FStar_Syntax_Util.mk_lazy e FStar_Reflection_Constants.fstar_refl_env
-      FStar_Syntax_Syntax.Lazy_env (FStar_Pervasives_Native.Some rng) in
-  let unembed_env w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_env;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded env: %s" uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_env unembed_env
-    FStar_Reflection_Constants.fstar_refl_env
 let (e_const :
   FStar_Reflection_Data.vconst FStar_Syntax_Embeddings.embedding) =
   let embed_const rng c =
@@ -913,38 +757,6 @@ let (e_match_returns_annotation :
         FStar_Syntax_Embeddings.e_bool in
     FStar_Syntax_Embeddings.e_tuple2 e_binder uu___1 in
   FStar_Syntax_Embeddings.e_option uu___
-let (e_ctx_uvar_and_subst :
-  FStar_Syntax_Syntax.ctx_uvar_and_subst FStar_Syntax_Embeddings.embedding) =
-  let ee rng u =
-    FStar_Syntax_Util.mk_lazy u FStar_Syntax_Util.t_ctx_uvar_and_sust
-      FStar_Syntax_Syntax.Lazy_uvar (FStar_Pervasives_Native.Some rng) in
-  let uu w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_uvar;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded ctx_u: %s"
-                  uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb ee uu
-    FStar_Reflection_Constants.fstar_refl_ctx_uvar_and_subst
 let (e_term_view_aq :
   FStar_Syntax_Syntax.antiquotations ->
     FStar_Reflection_Data.term_view FStar_Syntax_Embeddings.embedding)
@@ -2037,38 +1849,6 @@ let (e_order : FStar_Order.order FStar_Syntax_Embeddings.embedding) =
                  else FStar_Pervasives_Native.None) in
   FStar_Reflection_ArgEmbedder.mk_emb embed_order unembed_order
     FStar_Syntax_Syntax.t_order
-let (e_sigelt : FStar_Syntax_Syntax.sigelt FStar_Syntax_Embeddings.embedding)
-  =
-  let embed_sigelt rng se =
-    FStar_Syntax_Util.mk_lazy se FStar_Reflection_Constants.fstar_refl_sigelt
-      FStar_Syntax_Syntax.Lazy_sigelt (FStar_Pervasives_Native.Some rng) in
-  let unembed_sigelt w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_sigelt;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded sigelt: %s"
-                  uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_sigelt unembed_sigelt
-    FStar_Reflection_Constants.fstar_refl_sigelt
 let (e_univ_name :
   (Prims.string * FStar_Compiler_Range_Type.range)
     FStar_Syntax_Embeddings.embedding)
@@ -2332,39 +2112,6 @@ let (e_lb_view :
              else FStar_Pervasives_Native.None) in
   FStar_Reflection_ArgEmbedder.mk_emb embed_lb_view unembed_lb_view
     FStar_Reflection_Constants.fstar_refl_lb_view
-let (e_letbinding :
-  FStar_Syntax_Syntax.letbinding FStar_Syntax_Embeddings.embedding) =
-  let embed_letbinding rng lb =
-    FStar_Syntax_Util.mk_lazy lb
-      FStar_Reflection_Constants.fstar_refl_letbinding
-      FStar_Syntax_Syntax.Lazy_letbinding (FStar_Pervasives_Native.Some rng) in
-  let unembed_letbinding w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = lb;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_letbinding;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn lb in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded letbinding: %s"
-                  uu___5 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  FStar_Reflection_ArgEmbedder.mk_emb embed_letbinding unembed_letbinding
-    FStar_Reflection_Constants.fstar_refl_letbinding
 let (e_sigelt_view :
   FStar_Reflection_Data.sigelt_view FStar_Syntax_Embeddings.embedding) =
   let embed_sigelt_view rng sev =
@@ -3033,6 +2780,21 @@ let (unfold_lazy_bv :
       [uu___1] in
     FStar_Syntax_Syntax.mk_Tm_app
       FStar_Reflection_Constants.fstar_refl_pack_bv.FStar_Reflection_Constants.t
+      uu___ i.FStar_Syntax_Syntax.rng
+let (unfold_lazy_namedv :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+  fun i ->
+    let namedv1 = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          let uu___3 = FStar_Reflection_Basic.inspect_namedv namedv1 in
+          FStar_Reflection_ArgEmbedder.embed e_namedv_view
+            i.FStar_Syntax_Syntax.rng uu___3 in
+        FStar_Syntax_Syntax.as_arg uu___2 in
+      [uu___1] in
+    FStar_Syntax_Syntax.mk_Tm_app
+      FStar_Reflection_Constants.fstar_refl_pack_namedv.FStar_Reflection_Constants.t
       uu___ i.FStar_Syntax_Syntax.rng
 let (unfold_lazy_binder :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =

@@ -263,6 +263,8 @@ let (lazy_chooser :
       | FStar_Syntax_Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
       | FStar_Syntax_Syntax.Lazy_bv ->
           FStar_Reflection_Embeddings.unfold_lazy_bv i
+      | FStar_Syntax_Syntax.Lazy_namedv ->
+          FStar_Reflection_Embeddings.unfold_lazy_namedv i
       | FStar_Syntax_Syntax.Lazy_binder ->
           FStar_Reflection_Embeddings.unfold_lazy_binder i
       | FStar_Syntax_Syntax.Lazy_letbinding ->
@@ -290,6 +292,8 @@ let (lazy_chooser :
           FStar_Syntax_Util.exp_string "((universe_uvar))"
       | FStar_Syntax_Syntax.Lazy_issue ->
           FStar_Syntax_Util.exp_string "((issue))"
+      | FStar_Syntax_Syntax.Lazy_ident ->
+          FStar_Syntax_Util.exp_string "((ident??)"
 let (setup_hooks : unit -> unit) =
   fun uu___ ->
     FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;

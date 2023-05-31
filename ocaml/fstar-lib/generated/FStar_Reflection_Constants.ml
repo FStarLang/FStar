@@ -92,56 +92,70 @@ let (fstar_refl_pack_bv : refl_constant) =
   match uu___48 with
   | (fstar_refl_inspect_bv1, fstar_refl_pack_bv1) -> fstar_refl_pack_bv1
 let (uu___55 : (refl_constant * refl_constant)) =
+  mk_inspect_pack_pair "_namedv"
+let (fstar_refl_inspect_namedv : refl_constant) =
+  match uu___55 with
+  | (fstar_refl_inspect_namedv1, fstar_refl_pack_namedv) ->
+      fstar_refl_inspect_namedv1
+let (fstar_refl_pack_namedv : refl_constant) =
+  match uu___55 with
+  | (fstar_refl_inspect_namedv1, fstar_refl_pack_namedv1) ->
+      fstar_refl_pack_namedv1
+let (uu___62 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_binder"
 let (fstar_refl_inspect_binder : refl_constant) =
-  match uu___55 with
+  match uu___62 with
   | (fstar_refl_inspect_binder1, fstar_refl_pack_binder) ->
       fstar_refl_inspect_binder1
 let (fstar_refl_pack_binder : refl_constant) =
-  match uu___55 with
+  match uu___62 with
   | (fstar_refl_inspect_binder1, fstar_refl_pack_binder1) ->
       fstar_refl_pack_binder1
-let (uu___62 : (refl_constant * refl_constant)) =
+let (uu___69 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_comp"
 let (fstar_refl_inspect_comp : refl_constant) =
-  match uu___62 with
+  match uu___69 with
   | (fstar_refl_inspect_comp1, fstar_refl_pack_comp) ->
       fstar_refl_inspect_comp1
 let (fstar_refl_pack_comp : refl_constant) =
-  match uu___62 with
+  match uu___69 with
   | (fstar_refl_inspect_comp1, fstar_refl_pack_comp1) ->
       fstar_refl_pack_comp1
-let (uu___69 : (refl_constant * refl_constant)) =
+let (uu___76 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_sigelt"
 let (fstar_refl_inspect_sigelt : refl_constant) =
-  match uu___69 with
+  match uu___76 with
   | (fstar_refl_inspect_sigelt1, fstar_refl_pack_sigelt) ->
       fstar_refl_inspect_sigelt1
 let (fstar_refl_pack_sigelt : refl_constant) =
-  match uu___69 with
+  match uu___76 with
   | (fstar_refl_inspect_sigelt1, fstar_refl_pack_sigelt1) ->
       fstar_refl_pack_sigelt1
-let (uu___76 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_lb"
+let (uu___83 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_lb"
 let (fstar_refl_inspect_lb : refl_constant) =
-  match uu___76 with
+  match uu___83 with
   | (fstar_refl_inspect_lb1, fstar_refl_pack_lb) -> fstar_refl_inspect_lb1
 let (fstar_refl_pack_lb : refl_constant) =
-  match uu___76 with
+  match uu___83 with
   | (fstar_refl_inspect_lb1, fstar_refl_pack_lb1) -> fstar_refl_pack_lb1
-let (uu___83 : (refl_constant * refl_constant)) =
+let (uu___90 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_universe"
 let (fstar_refl_inspect_universe : refl_constant) =
-  match uu___83 with
+  match uu___90 with
   | (fstar_refl_inspect_universe1, fstar_refl_pack_universe) ->
       fstar_refl_inspect_universe1
 let (fstar_refl_pack_universe : refl_constant) =
-  match uu___83 with
+  match uu___90 with
   | (fstar_refl_inspect_universe1, fstar_refl_pack_universe1) ->
       fstar_refl_pack_universe1
 let (fstar_refl_env : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "env"
 let (fstar_refl_env_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_types_lid_as_fv "env"
+let (fstar_refl_namedv : FStar_Syntax_Syntax.term) =
+  mk_refl_types_lid_as_term "namedv"
+let (fstar_refl_namedv_fv : FStar_Syntax_Syntax.fv) =
+  mk_refl_types_lid_as_fv "namedv"
 let (fstar_refl_bv : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "bv"
 let (fstar_refl_bv_fv : FStar_Syntax_Syntax.fv) =
@@ -269,11 +283,11 @@ let (ref_Mk_namedv_view : refl_constant) =
         let uu___4 =
           let uu___5 =
             FStar_Ident.mk_ident
-              ("ppname", FStar_Compiler_Range_Type.dummyRange) in
+              ("sort", FStar_Compiler_Range_Type.dummyRange) in
           let uu___6 =
             let uu___7 =
               FStar_Ident.mk_ident
-                ("sort", FStar_Compiler_Range_Type.dummyRange) in
+                ("ppname", FStar_Compiler_Range_Type.dummyRange) in
             [uu___7] in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
@@ -294,11 +308,11 @@ let (ref_Mk_bv_view : refl_constant) =
         let uu___4 =
           let uu___5 =
             FStar_Ident.mk_ident
-              ("ppname", FStar_Compiler_Range_Type.dummyRange) in
+              ("sort", FStar_Compiler_Range_Type.dummyRange) in
           let uu___6 =
             let uu___7 =
               FStar_Ident.mk_ident
-                ("sort", FStar_Compiler_Range_Type.dummyRange) in
+                ("ppname", FStar_Compiler_Range_Type.dummyRange) in
             [uu___7] in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
