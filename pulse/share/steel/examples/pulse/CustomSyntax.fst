@@ -216,7 +216,8 @@ fn test_par (r1 r2:ref U32.t)
   }
   {
      r2 := 1ul
-  }
+  };
+  ()
 }
 ```
 
