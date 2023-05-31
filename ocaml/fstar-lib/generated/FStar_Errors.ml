@@ -81,14 +81,32 @@ let (update_flags :
               FStar_Compiler_Util.format1 "cannot silence error %s" uu___2 in
             Invalid_warn_error_setting uu___1 in
           FStar_Compiler_Effect.raise uu___
-      | (uu___, FStar_Errors_Codes.CFatal) ->
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStar_Compiler_Util.string_of_int i in
+      | (FStar_Errors_Codes.CSilent, FStar_Errors_Codes.CFatal) ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_Compiler_Util.string_of_int i in
               FStar_Compiler_Util.format1
-                "cannot change the error level of fatal error %s" uu___3 in
-            Invalid_warn_error_setting uu___2 in
-          FStar_Compiler_Effect.raise uu___1
+                "cannot change the error level of fatal error %s" uu___2 in
+            Invalid_warn_error_setting uu___1 in
+          FStar_Compiler_Effect.raise uu___
+      | (FStar_Errors_Codes.CWarning, FStar_Errors_Codes.CFatal) ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_Compiler_Util.string_of_int i in
+              FStar_Compiler_Util.format1
+                "cannot change the error level of fatal error %s" uu___2 in
+            Invalid_warn_error_setting uu___1 in
+          FStar_Compiler_Effect.raise uu___
+      | (FStar_Errors_Codes.CError, FStar_Errors_Codes.CFatal) ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_Compiler_Util.string_of_int i in
+              FStar_Compiler_Util.format1
+                "cannot change the error level of fatal error %s" uu___2 in
+            Invalid_warn_error_setting uu___1 in
+          FStar_Compiler_Effect.raise uu___
+      | (FStar_Errors_Codes.CAlwaysError, FStar_Errors_Codes.CFatal) ->
+          FStar_Errors_Codes.CFatal
       | uu___ -> flag in
     let set_flag_for_range uu___ =
       match uu___ with
@@ -529,7 +547,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___290 :
+let (uu___299 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -575,10 +593,10 @@ let (uu___290 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___290 with
+  match uu___299 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___290 with
+  match uu___299 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
