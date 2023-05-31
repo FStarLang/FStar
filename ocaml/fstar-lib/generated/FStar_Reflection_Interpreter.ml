@@ -367,8 +367,12 @@ let (e_range : FStar_Compiler_Range_Type.range dualemb) =
   (FStar_Syntax_Embeddings.e_range, FStar_TypeChecker_NBETerm.e_range)
 let nbe_dummy : 'a . unit -> 'a FStar_TypeChecker_NBETerm.embedding =
   fun uu___ ->
-    let uu___1 = FStar_Compiler_Dyn.mkdyn () in
-    FStar_Compiler_Dyn.undyn uu___1
+    let uu___1 =
+      FStar_TypeChecker_NBETerm.mk_t FStar_TypeChecker_NBETerm.Unknown in
+    FStar_TypeChecker_NBETerm.mk_emb
+      (fun uu___2 -> fun uu___3 -> failwith "nbe_dummy embed")
+      (fun uu___2 -> fun uu___3 -> failwith "nbe_dummy unembed") uu___1
+      FStar_Syntax_Syntax.ET_abstract
 let (e_ident : FStar_Ident.ident dualemb) =
   let uu___ = nbe_dummy () in (FStar_Reflection_Embeddings.e_ident, uu___)
 let (e___ident : FStar_Ident.ident dualemb) =
@@ -867,6 +871,6 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (uu___218 : unit) =
+let (uu___222 : unit) =
   FStar_Compiler_List.iter FStar_TypeChecker_Cfg.register_extra_step
     reflection_primops

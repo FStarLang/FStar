@@ -269,7 +269,7 @@ let e_lazy :
   =
   fun k ->
     fun ty ->
-      let ee rng x _topt _norm =
+      let ee x rng _topt _norm =
         FStar_Syntax_Util.mk_lazy x ty k (FStar_Pervasives_Native.Some rng) in
       let uu t _w _norm =
         let uu___ =
@@ -281,11 +281,11 @@ let e_lazy :
               FStar_Syntax_Syntax.lkind = lkind;
               FStar_Syntax_Syntax.ltyp = uu___1;
               FStar_Syntax_Syntax.rng = uu___2;_}
-            when FStar_Syntax_Syntax.lazy_kind_eq lkind k ->
+            when FStar_Syntax_Util.eq_lazy_kind lkind k ->
             let uu___3 = FStar_Compiler_Dyn.undyn b in
             FStar_Pervasives_Native.Some uu___3
         | uu___1 -> FStar_Pervasives_Native.None in
-      let uu___ = term_as_fv ty in mk_emb (Obj.magic ee) uu uu___
+      let uu___ = term_as_fv ty in mk_emb ee uu uu___
 let lazy_embed :
   'a .
     'a printer ->

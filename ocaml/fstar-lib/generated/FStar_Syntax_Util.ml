@@ -917,7 +917,13 @@ let (eq_lazy_kind :
          FStar_Syntax_Syntax.Lazy_letbinding) -> true
       | (FStar_Syntax_Syntax.Lazy_uvar, FStar_Syntax_Syntax.Lazy_uvar) ->
           true
+      | (FStar_Syntax_Syntax.Lazy_universe,
+         FStar_Syntax_Syntax.Lazy_universe) -> true
+      | (FStar_Syntax_Syntax.Lazy_universe_uvar,
+         FStar_Syntax_Syntax.Lazy_universe_uvar) -> true
       | (FStar_Syntax_Syntax.Lazy_issue, FStar_Syntax_Syntax.Lazy_issue) ->
+          true
+      | (FStar_Syntax_Syntax.Lazy_ident, FStar_Syntax_Syntax.Lazy_ident) ->
           true
       | uu___ -> false
 let (lazy_kind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
@@ -925,6 +931,7 @@ let (lazy_kind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
     match k with
     | FStar_Syntax_Syntax.BadLazy -> "BadLazy"
     | FStar_Syntax_Syntax.Lazy_bv -> "Lazy_bv"
+    | FStar_Syntax_Syntax.Lazy_namedv -> "Lazy_namedv"
     | FStar_Syntax_Syntax.Lazy_binder -> "Lazy_binder"
     | FStar_Syntax_Syntax.Lazy_optionstate -> "Lazy_optionstate"
     | FStar_Syntax_Syntax.Lazy_fvar -> "Lazy_fvar"
@@ -935,7 +942,10 @@ let (lazy_kind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
     | FStar_Syntax_Syntax.Lazy_sigelt -> "Lazy_sigelt"
     | FStar_Syntax_Syntax.Lazy_letbinding -> "Lazy_letbinding"
     | FStar_Syntax_Syntax.Lazy_uvar -> "Lazy_uvar"
+    | FStar_Syntax_Syntax.Lazy_universe -> "Lazy_universe"
+    | FStar_Syntax_Syntax.Lazy_universe_uvar -> "Lazy_universe_uvar"
     | FStar_Syntax_Syntax.Lazy_issue -> "Lazy_issue"
+    | FStar_Syntax_Syntax.Lazy_ident -> "Lazy_ident"
     | uu___ -> "Unknown"
 let unlazy_as_t :
   'uuuuu .

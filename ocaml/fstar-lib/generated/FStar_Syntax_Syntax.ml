@@ -1138,31 +1138,6 @@ type attribute = term' syntax
 type tscheme = (univ_name Prims.list * term' syntax)
 type gamma = binding Prims.list
 type bqual = binder_qualifier FStar_Pervasives_Native.option
-let (lazy_chooser :
-  (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option
-    FStar_Compiler_Effect.ref)
-  = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
-let (lazy_kind_eq : lazy_kind -> lazy_kind -> Prims.bool) =
-  fun k1 ->
-    fun k2 ->
-      match (k1, k2) with
-      | (Lazy_bv, Lazy_bv) -> true
-      | (Lazy_namedv, Lazy_namedv) -> true
-      | (Lazy_binder, Lazy_binder) -> true
-      | (Lazy_optionstate, Lazy_optionstate) -> true
-      | (Lazy_fvar, Lazy_fvar) -> true
-      | (Lazy_comp, Lazy_comp) -> true
-      | (Lazy_env, Lazy_env) -> true
-      | (Lazy_proofstate, Lazy_proofstate) -> true
-      | (Lazy_goal, Lazy_goal) -> true
-      | (Lazy_sigelt, Lazy_sigelt) -> true
-      | (Lazy_uvar, Lazy_uvar) -> true
-      | (Lazy_letbinding, Lazy_letbinding) -> true
-      | (Lazy_universe, Lazy_universe) -> true
-      | (Lazy_universe_uvar, Lazy_universe_uvar) -> true
-      | (Lazy_issue, Lazy_issue) -> true
-      | (Lazy_ident, Lazy_ident) -> true
-      | uu___ -> false
 type freenames_l = bv Prims.list
 type formula = typ
 type formulae = typ Prims.list
@@ -1271,6 +1246,10 @@ let (uu___is_OnlyName : qualifier -> Prims.bool) =
 let (uu___is_InternalAssumption : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | InternalAssumption -> true | uu___ -> false
+let (lazy_chooser :
+  (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option
+    FStar_Compiler_Effect.ref)
+  = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
 let (is_internal_qualifier : qualifier -> Prims.bool) =
   fun q ->
     match q with
