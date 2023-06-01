@@ -898,6 +898,8 @@ let (eq_lazy_kind :
       match (k, k') with
       | (FStar_Syntax_Syntax.BadLazy, FStar_Syntax_Syntax.BadLazy) -> true
       | (FStar_Syntax_Syntax.Lazy_bv, FStar_Syntax_Syntax.Lazy_bv) -> true
+      | (FStar_Syntax_Syntax.Lazy_namedv, FStar_Syntax_Syntax.Lazy_namedv) ->
+          true
       | (FStar_Syntax_Syntax.Lazy_binder, FStar_Syntax_Syntax.Lazy_binder) ->
           true
       | (FStar_Syntax_Syntax.Lazy_optionstate,
@@ -925,7 +927,9 @@ let (eq_lazy_kind :
           true
       | (FStar_Syntax_Syntax.Lazy_ident, FStar_Syntax_Syntax.Lazy_ident) ->
           true
-      | uu___ -> false
+      | (FStar_Syntax_Syntax.Lazy_embedding uu___, uu___1) -> false
+      | (uu___, FStar_Syntax_Syntax.Lazy_embedding uu___1) -> false
+      | uu___ -> failwith "FIXME! eq_lazy_kind must be complete"
 let (lazy_kind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
   fun k ->
     match k with
@@ -946,7 +950,8 @@ let (lazy_kind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
     | FStar_Syntax_Syntax.Lazy_universe_uvar -> "Lazy_universe_uvar"
     | FStar_Syntax_Syntax.Lazy_issue -> "Lazy_issue"
     | FStar_Syntax_Syntax.Lazy_ident -> "Lazy_ident"
-    | uu___ -> "Unknown"
+    | FStar_Syntax_Syntax.Lazy_embedding uu___ -> "Lazy_embedding _"
+    | uu___ -> failwith "FIXME! lazy_kind_to_string must be complete"
 let unlazy_as_t :
   'uuuuu .
     FStar_Syntax_Syntax.lazy_kind -> FStar_Syntax_Syntax.term -> 'uuuuu
@@ -962,14 +967,16 @@ let unlazy_as_t :
             FStar_Syntax_Syntax.ltyp = uu___1;
             FStar_Syntax_Syntax.rng = uu___2;_}
           ->
-          if eq_lazy_kind k k'
+          let uu___3 = eq_lazy_kind k k' in
+          if uu___3
           then FStar_Compiler_Dyn.undyn v
           else
-            (let uu___4 =
+            (let uu___5 =
+               let uu___6 = lazy_kind_to_string k in
+               let uu___7 = lazy_kind_to_string k' in
                FStar_Compiler_Util.format2
-                 "Expected Tm_lazy of kind %s, got %s"
-                 (lazy_kind_to_string k) (lazy_kind_to_string k') in
-             failwith uu___4)
+                 "Expected Tm_lazy of kind %s, got %s" uu___6 uu___7 in
+             failwith uu___5)
       | uu___1 -> failwith "Not a Tm_lazy of the expected kind"
 let mk_lazy :
   'a .

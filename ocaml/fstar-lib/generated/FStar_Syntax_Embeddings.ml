@@ -272,8 +272,10 @@ let e_lazy :
       let ee x rng _topt _norm =
         FStar_Syntax_Util.mk_lazy x ty k (FStar_Pervasives_Native.Some rng) in
       let uu t _w _norm =
+        let t0 = t in
+        let t1 = unmeta_div_results t in
         let uu___ =
-          let uu___1 = FStar_Syntax_Subst.compress t in
+          let uu___1 = FStar_Syntax_Subst.compress t1 in
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
         | FStar_Syntax_Syntax.Tm_lazy
@@ -284,6 +286,23 @@ let e_lazy :
             when FStar_Syntax_Util.eq_lazy_kind lkind k ->
             let uu___3 = FStar_Compiler_Dyn.undyn b in
             FStar_Pervasives_Native.Some uu___3
+        | FStar_Syntax_Syntax.Tm_lazy
+            { FStar_Syntax_Syntax.blob = b;
+              FStar_Syntax_Syntax.lkind = lkind;
+              FStar_Syntax_Syntax.ltyp = uu___1;
+              FStar_Syntax_Syntax.rng = uu___2;_}
+            ->
+            ((let uu___4 =
+                let uu___5 =
+                  let uu___6 = FStar_Syntax_Print.term_to_string t0 in
+                  let uu___7 = FStar_Syntax_Util.lazy_kind_to_string lkind in
+                  let uu___8 = FStar_Syntax_Util.lazy_kind_to_string k in
+                  FStar_Compiler_Util.format3
+                    "Warning, lazy unembedding failed, tag mismatch.\n\tExpected %s, got %s\n\tt = %s."
+                    uu___6 uu___7 uu___8 in
+                (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
+              FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___4);
+             FStar_Pervasives_Native.None)
         | uu___1 -> FStar_Pervasives_Native.None in
       let uu___ = term_as_fv ty in mk_emb ee uu uu___
 let lazy_embed :
