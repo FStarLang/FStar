@@ -60,7 +60,7 @@ let _ = assert (x == 42)
                           (`Type0)
                           []
                           [`(10 - (`#(binder_to_term n)))]))
-    ; lb_def = `(fun n -> if n>=10 then int else int * (`#recursive) (n + 1))
+    ; lb_def = `(fun n -> if n>=10 then int else int * (`#recursive) (n + 1));
     }]}
     )
   ]
