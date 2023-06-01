@@ -219,7 +219,9 @@ let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
       Err.log_issue t0.pos (Err.Warning_NotEmbedded,
                 BU.format3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
                             Expected %s, got %s\n\t\
-                            t = %s." (Print.term_to_string t0) (U.lazy_kind_to_string lkind) (U.lazy_kind_to_string k));
+                            t = %s."
+                            (U.lazy_kind_to_string lkind) (U.lazy_kind_to_string k)
+                            (Print.term_to_string t0));
       None
     | _ ->
       None

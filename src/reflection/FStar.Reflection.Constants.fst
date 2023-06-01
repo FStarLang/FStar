@@ -43,12 +43,22 @@ type refl_constant = {
 
 let refl_constant_lid rc = rc.lid
 let refl_constant_term rc = rc.t
+
+let fstar_syntax_syntax_lid s = Ident.lid_of_path (["FStar"; "Syntax"; "Syntax"]@s) Range.dummyRange
+
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
 let fstar_refl_builtins_lid  s = fstar_refl_lid ["Builtins";  s]
 let fstar_refl_syntax_lid    s = fstar_refl_lid ["Syntax";    s]
 let fstar_refl_types_lid     s = fstar_refl_lid ["Types";     s]
 let fstar_refl_data_lid      s = fstar_refl_lid ["Data";      s]
+
+let fstar_syntax_syntax_const s =
+    let lid = fstar_syntax_syntax_lid s in
+    { lid = lid
+    ; fv  = lid_as_fv lid (Some Data_ctor)
+    ; t   = tdataconstr lid
+    }
 
 let fstar_refl_data_const s =
     let lid = fstar_refl_data_lid s in
@@ -63,6 +73,10 @@ let mk_refl_syntax_lid_as_term (s:string) = tconst  (fstar_refl_syntax_lid s)
 let mk_refl_syntax_lid_as_fv   (s:string) = fvconst (fstar_refl_syntax_lid s)
 let mk_refl_data_lid_as_term   (s:string) = tconst  (fstar_refl_data_lid s)
 let mk_refl_data_lid_as_fv     (s:string) = fvconst (fstar_refl_data_lid s)
+
+(* FStar.Syntax.Syntax *)
+let mk_ss_lid_as_fv     (s:string) = fvconst (fstar_syntax_syntax_lid [s])
+let mk_ss_lid_as_term   (s:string) = tconst  (fstar_syntax_syntax_lid [s])
 
 let mk_inspect_pack_pair s =
     let inspect_lid = fstar_refl_builtins_lid ("inspect" ^ s) in
@@ -138,16 +152,18 @@ let fstar_refl_lb_view          = mk_refl_data_lid_as_term "lb_view"
 let fstar_refl_lb_view_fv       = mk_refl_data_lid_as_fv   "lb_view"
 let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
 let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv   "sigelt_view"
-let fstar_refl_subst_elt        = mk_refl_data_lid_as_term "subst_elt"
-let fstar_refl_subst_elt_fv     = mk_refl_data_lid_as_fv   "subst_elt"
-let fstar_refl_subst            = mk_refl_data_lid_as_term "subst"
-let fstar_refl_subst_fv         = mk_refl_data_lid_as_fv   "subst"
 let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
 let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv   "exp"
 let fstar_refl_qualifier        = mk_refl_data_lid_as_term "qualifier"
 let fstar_refl_qualifier_fv     = mk_refl_data_lid_as_fv   "qualifier"
 let fstar_refl_universe_view    = mk_refl_data_lid_as_term "universe_view"
 let fstar_refl_universe_view_fv = mk_refl_data_lid_as_fv   "universe_view"
+
+let fstar_refl_subst_elt        = mk_ss_lid_as_term "subst_elt"
+let fstar_refl_subst_elt_fv     = mk_ss_lid_as_fv   "subst_elt"
+let fstar_refl_subst            = mk_ss_lid_as_term "subst"
+let fstar_refl_subst_fv         = mk_ss_lid_as_fv   "subst"
+
 
 (* bv_view, this is a record constructor *)
 
@@ -222,11 +238,11 @@ let ref_Q_Implicit  = fstar_refl_data_const "Q_Implicit"
 let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
 
 (* subst_elt *)
-let ref_DB          = fstar_refl_data_const "DB"
-let ref_NM          = fstar_refl_data_const "NM"
-let ref_NT          = fstar_refl_data_const "NT"
-let ref_UN          = fstar_refl_data_const "UN"
-let ref_UD          = fstar_refl_data_const "UD"
+let ref_DB          = fstar_syntax_syntax_const ["DB"]
+let ref_NM          = fstar_syntax_syntax_const ["NM"]
+let ref_NT          = fstar_syntax_syntax_const ["NT"]
+let ref_UN          = fstar_syntax_syntax_const ["UN"]
+let ref_UD          = fstar_syntax_syntax_const ["UD"]
 
 (* const *)
 let ref_C_Unit      = fstar_refl_data_const "C_Unit"
