@@ -9,6 +9,9 @@ let (tm_true : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_constant FStar_Reflection_Data.C_True
 let (tm_false : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_constant FStar_Reflection_Data.C_False
+let (tm_prop : Pulse_Syntax_Base.term) =
+  Pulse_Syntax_Base.Tm_FStar
+    (FStar_Reflection_Typing.tm_prop, FStar_Range.range_0)
 let (mk_erased :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)

@@ -1,8 +1,13 @@
 open Prims
+type ('g, 'ctxt, 'gu, 'ctxtu) continuation_elaborator =
+  unit Pulse_Checker_Common.post_hint_opt ->
+    (unit, unit, unit) Pulse_Checker_Common.checker_result_t ->
+      ((unit, unit, unit) Pulse_Checker_Common.checker_result_t, unit)
+        FStar_Tactics_Effect.tac_repr
 let (k_elab_unit :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.term ->
-      (unit, unit, unit, unit) Pulse_Checker_Common.continuation_elaborator)
+      (unit, unit, unit, unit) continuation_elaborator)
   =
   fun uu___1 ->
     fun uu___ ->
@@ -19,12 +24,9 @@ let (k_elab_trans :
         Pulse_Syntax_Base.term ->
           Pulse_Syntax_Base.term ->
             Pulse_Syntax_Base.term ->
-              (unit, unit, unit, unit)
-                Pulse_Checker_Common.continuation_elaborator ->
-                (unit, unit, unit, unit)
-                  Pulse_Checker_Common.continuation_elaborator ->
-                  (unit, unit, unit, unit)
-                    Pulse_Checker_Common.continuation_elaborator)
+              (unit, unit, unit, unit) continuation_elaborator ->
+                (unit, unit, unit, unit) continuation_elaborator ->
+                  (unit, unit, unit, unit) continuation_elaborator)
   =
   fun g0 ->
     fun g1 ->
@@ -122,11 +124,8 @@ let (k_elab_equiv_continutation :
       Pulse_Syntax_Base.term ->
         Pulse_Syntax_Base.term ->
           Pulse_Syntax_Base.term ->
-            (unit, unit, unit, unit)
-              Pulse_Checker_Common.continuation_elaborator ->
-              unit ->
-                (unit, unit, unit, unit)
-                  Pulse_Checker_Common.continuation_elaborator)
+            (unit, unit, unit, unit) continuation_elaborator ->
+              unit -> (unit, unit, unit, unit) continuation_elaborator)
   =
   fun g1 ->
     fun g2 ->
@@ -288,11 +287,8 @@ let (k_elab_equiv_prefix :
       Pulse_Syntax_Base.term ->
         Pulse_Syntax_Base.term ->
           Pulse_Syntax_Base.term ->
-            (unit, unit, unit, unit)
-              Pulse_Checker_Common.continuation_elaborator ->
-              unit ->
-                (unit, unit, unit, unit)
-                  Pulse_Checker_Common.continuation_elaborator)
+            (unit, unit, unit, unit) continuation_elaborator ->
+              unit -> (unit, unit, unit, unit) continuation_elaborator)
   =
   fun g1 ->
     fun g2 ->
@@ -380,12 +376,9 @@ let (k_elab_equiv :
         Pulse_Syntax_Base.term ->
           Pulse_Syntax_Base.term ->
             Pulse_Syntax_Base.term ->
-              (unit, unit, unit, unit)
-                Pulse_Checker_Common.continuation_elaborator ->
+              (unit, unit, unit, unit) continuation_elaborator ->
                 unit ->
-                  unit ->
-                    (unit, unit, unit, unit)
-                      Pulse_Checker_Common.continuation_elaborator)
+                  unit -> (unit, unit, unit, unit) continuation_elaborator)
   =
   fun g1 ->
     fun g2 ->
@@ -509,8 +502,7 @@ let (canon_right :
            (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
           ->
           ((Pulse_Syntax_Base.term, unit,
-             (unit, unit, unit, unit)
-               Pulse_Checker_Common.continuation_elaborator)
+             (unit, unit, unit, unit) continuation_elaborator)
              FStar_Pervasives.dtuple3,
             unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -549,8 +541,7 @@ let (continuation_elaborator_with_bind :
           (unit, unit, unit) Pulse_Typing.st_typing ->
             unit ->
               ((Pulse_Syntax_Base.var,
-                 (unit, unit, unit, unit)
-                   Pulse_Checker_Common.continuation_elaborator)
+                 (unit, unit, unit, unit) continuation_elaborator)
                  Prims.dtuple2,
                 unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -792,8 +783,7 @@ let (elim_one :
             Pulse_Syntax_Base.comp ->
               (unit, unit, unit) Pulse_Typing.st_typing ->
                 ((Pulse_Typing.env, Pulse_Syntax_Base.term, unit,
-                   (unit, unit, unit, unit)
-                     Pulse_Checker_Common.continuation_elaborator)
+                   (unit, unit, unit, unit) continuation_elaborator)
                    FStar_Pervasives.dtuple4,
                   unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -853,9 +843,7 @@ let rec (elim_all :
         Pulse_Syntax_Base.term ->
           unit ->
             ((Prims.bool * (Pulse_Typing.env, Pulse_Syntax_Base.term, 
-               unit,
-               (unit, unit, unit, unit)
-                 Pulse_Checker_Common.continuation_elaborator)
+               unit, (unit, unit, unit, unit) continuation_elaborator)
                FStar_Pervasives.dtuple4),
               unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1060,9 +1048,7 @@ let (add_elims_aux :
         mk_t ->
           unit ->
             ((Prims.bool * (Pulse_Typing.env, Pulse_Syntax_Base.term, 
-               unit,
-               (unit, unit, unit, unit)
-                 Pulse_Checker_Common.continuation_elaborator)
+               unit, (unit, unit, unit, unit) continuation_elaborator)
                FStar_Pervasives.dtuple4),
               unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1114,8 +1100,7 @@ let rec (add_elims :
         mk_t ->
           unit ->
             ((Pulse_Typing.env, Pulse_Syntax_Base.term, unit,
-               (unit, unit, unit, unit)
-                 Pulse_Checker_Common.continuation_elaborator)
+               (unit, unit, unit, unit) continuation_elaborator)
                FStar_Pervasives.dtuple4,
               unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1349,3 +1334,99 @@ type prover_step_t =
       (unit, unit) prover_state ->
         ((unit, unit) prover_state FStar_Pervasives_Native.option, unit)
           FStar_Tactics_Effect.tac_repr
+type 'c intro_comp = unit
+type ('g, 'ctxt, 'p) intro_result =
+  {
+  v: Pulse_Syntax_Base.vprop ;
+  unmatched': Pulse_Syntax_Base.vprop Prims.list ;
+  remaining': Pulse_Syntax_Base.vprop Prims.list ;
+  t': Pulse_Syntax_Base.st_term ;
+  c': Pulse_Syntax_Base.comp ;
+  t'_typing: (unit, unit, unit) Pulse_Typing.st_typing ;
+  unmatched_equiv: unit ;
+  remaining_equiv: unit }
+let (__proj__Mkintro_result__item__v :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_result -> Pulse_Syntax_Base.vprop)
+  =
+  fun g ->
+    fun ctxt ->
+      fun p ->
+        fun projectee ->
+          match projectee with
+          | { v; unmatched'; remaining'; t'; c'; t'_typing; unmatched_equiv;
+              remaining_equiv;_} -> v
+let (__proj__Mkintro_result__item__unmatched' :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_result -> Pulse_Syntax_Base.vprop Prims.list)
+  =
+  fun g ->
+    fun ctxt ->
+      fun p ->
+        fun projectee ->
+          match projectee with
+          | { v; unmatched'; remaining'; t'; c'; t'_typing; unmatched_equiv;
+              remaining_equiv;_} -> unmatched'
+let (__proj__Mkintro_result__item__remaining' :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_result -> Pulse_Syntax_Base.vprop Prims.list)
+  =
+  fun g ->
+    fun ctxt ->
+      fun p ->
+        fun projectee ->
+          match projectee with
+          | { v; unmatched'; remaining'; t'; c'; t'_typing; unmatched_equiv;
+              remaining_equiv;_} -> remaining'
+let (__proj__Mkintro_result__item__t' :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_result -> Pulse_Syntax_Base.st_term)
+  =
+  fun g ->
+    fun ctxt ->
+      fun p ->
+        fun projectee ->
+          match projectee with
+          | { v; unmatched'; remaining'; t'; c'; t'_typing; unmatched_equiv;
+              remaining_equiv;_} -> t'
+let (__proj__Mkintro_result__item__c' :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_result -> Pulse_Syntax_Base.comp)
+  =
+  fun g ->
+    fun ctxt ->
+      fun p ->
+        fun projectee ->
+          match projectee with
+          | { v; unmatched'; remaining'; t'; c'; t'_typing; unmatched_equiv;
+              remaining_equiv;_} -> c'
+let (__proj__Mkintro_result__item__t'_typing :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_result ->
+          (unit, unit, unit) Pulse_Typing.st_typing)
+  =
+  fun g ->
+    fun ctxt ->
+      fun p ->
+        fun projectee ->
+          match projectee with
+          | { v; unmatched'; remaining'; t'; c'; t'_typing; unmatched_equiv;
+              remaining_equiv;_} -> t'_typing
+type intro_step_t =
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        ((unit, unit, unit) intro_result FStar_Pervasives_Native.option,
+          unit) FStar_Tactics_Effect.tac_repr

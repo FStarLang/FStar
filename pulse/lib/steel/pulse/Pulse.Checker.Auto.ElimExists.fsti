@@ -1,7 +1,9 @@
 module Pulse.Checker.Auto.ElimExists
 open Pulse.Syntax
-open Pulse.Checker.Common
 open Pulse.Typing
+
+open Pulse.Checker.Common
+open Pulse.Checker.Auto.Util
 
 module T = FStar.Tactics
 

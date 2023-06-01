@@ -484,11 +484,6 @@ type ('c, 'postuhint) comp_post_matches_hint = Obj.t
 type ('g, 'ctxt, 'postuhint) checker_result_t =
   (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
     (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3
-type ('g, 'ctxt, 'gu, 'ctxtu) continuation_elaborator =
-  unit post_hint_opt ->
-    (unit, unit, unit) checker_result_t ->
-      ((unit, unit, unit) checker_result_t, unit)
-        FStar_Tactics_Effect.tac_repr
 type check_t =
   Pulse_Typing.env ->
     Pulse_Syntax_Base.st_term ->

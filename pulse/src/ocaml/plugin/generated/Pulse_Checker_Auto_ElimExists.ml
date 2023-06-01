@@ -61,7 +61,7 @@ let (elim_exists :
       unit ->
         ((Pulse_Typing.env, Pulse_Syntax_Base.term, unit,
            (unit, unit, unit, unit)
-             Pulse_Checker_Common.continuation_elaborator)
+             Pulse_Checker_Auto_Util.continuation_elaborator)
            FStar_Pervasives.dtuple4,
           unit) FStar_Tactics_Effect.tac_repr)
   =

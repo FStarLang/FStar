@@ -20,6 +20,8 @@ let tm_bool = tm_fvar (as_fv bool_lid)
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
+let tm_prop = Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0
+
 let mk_erased (u:universe) (t:term) : term =
   let hd = tm_uinst (as_fv erased_lid) [u] in
   tm_pureapp hd None t

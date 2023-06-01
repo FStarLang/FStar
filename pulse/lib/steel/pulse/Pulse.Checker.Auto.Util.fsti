@@ -7,6 +7,12 @@ open Pulse.Typing
 open Pulse.Checker.Common
 open Pulse.Typing.Metatheory
 
+let continuation_elaborator (g:env) (ctxt:term)
+                            (g':env) (ctxt':term) =
+    post_hint:post_hint_opt g ->
+    checker_result_t g' ctxt' post_hint ->
+    T.Tac (checker_result_t g ctxt post_hint)
+
 val k_elab_unit (g:env) (ctxt:term)
   : continuation_elaborator g ctxt g ctxt
 
@@ -97,4 +103,35 @@ let bind_proof_steps_with #g #o (p:prover_state g o)
    : (t':st_term & st_typing g t' (comp_st_with_pre c o))
    = admit()
 
-let prover_step_t = #g:_ -> #o:_ -> p:prover_state g o -> T.Tac (option (prover_state g o))
+type prover_step_t = #g:_ -> #o:_ -> p:prover_state g o -> T.Tac (option (prover_state g o))
+
+//
+// result of an intro (pure, exists, rewrite) step
+//   that consumes some vprop v from p.unmatched_pre
+//
+
+let intro_comp (c:comp) =
+  C_STGhost? c /\ comp_u c == u_zero /\ comp_res c == tm_unit
+
+noeq
+type intro_result (#g:env) (#ctxt:vprop) (p:prover_state g ctxt) = {
+  // the vprop that intro introduced
+  v : vprop;
+
+  // new unmatched pre and remaining ctxt
+  unmatched' : list vprop;
+  remaining' : list vprop;
+
+  // the term, comp, and term typing as a witness of the introduction
+  t' : st_term;
+  c' : c:comp { intro_comp c /\ comp_post c == v };
+  t'_typing : st_typing g t' c';
+
+  // relation between new and old unmatched_pre and remaining_ctxt
+  unmatched_equiv : vprop_equiv g (list_as_vprop p.unmatched_pre)
+                                  (Tm_Star v (list_as_vprop unmatched'));
+  remaining_equiv : vprop_equiv g (list_as_vprop p.remaining_ctxt)
+                                  (Tm_Star (comp_pre c') (list_as_vprop remaining'));
+}
+
+type intro_step_t = #g:_ -> #ctxt:_ -> p:prover_state g ctxt -> T.Tac (option (intro_result p))

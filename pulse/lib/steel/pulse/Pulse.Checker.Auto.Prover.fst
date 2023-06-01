@@ -51,35 +51,6 @@ let init_prover_state (#g:env) (#ctxt:vprop) (ctxt_typing: vprop_typing g ctxt)
 
 open FStar.List.Tot
 
-let is_ghost_comp (c:comp) =
-  C_STGhost? c /\ comp_u c == u_zero /\ comp_res c == tm_unit
-
-//
-// result of an intro (pure, exists, rewrite) step
-//   that consumes some vprop v from p.unmatched_pre
-//
-noeq
-type intro_result (#g:env) (#ctxt:vprop) (p:prover_state g ctxt) = {
-  // the vprop that intro introduced
-  v : vprop;
-
-  // new unmatched pre and remaining ctxt
-  unmatched' : list vprop;
-  remaining' : list vprop;
-
-  // the term, comp, and term typing as a witness of the introduction
-  t' : st_term;
-  c' : c:comp { is_ghost_comp c /\ comp_post c == v };
-  t'_typing : st_typing g t' c';
-
-  // relation between new and old unmatched_pre and remaining_ctxt
-  unmatched_equiv : vprop_equiv g (list_as_vprop p.unmatched_pre)
-                                  (Tm_Star v (list_as_vprop unmatched'));
-  remaining_equiv : vprop_equiv g (list_as_vprop p.remaining_ctxt)
-                                  (Tm_Star (comp_pre c') (list_as_vprop remaining'));
-}
-
-
 let add_frame (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (f:vprop)
@@ -112,7 +83,6 @@ let st_typing_weakening (#g:env) (#t:st_term) (#c:comp)
   (d:st_typing g t c)
   (g':env { env_extends g' g })
   : st_typing g' t c = admit ()
-
 
 //
 // derive next prover state from an intro step
@@ -209,109 +179,17 @@ let get_next_prover_state (#g:env) (#ctxt:vprop) (#p:prover_state g ctxt)
     pre_equiv = d3 }
 #pop-options
 
-let tm_prop = Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0
-
-type intro_step_t =
-  #g:env -> #ctxt:vprop ->
-  p:prover_state g ctxt ->
-  T.Tac (option (intro_result p))
-
-let is_pure (p:term) =
-  match p with
-  | Tm_Pure (Tm_FStar _ _) -> true
-  | _ -> false
-
-let get_one_pure (g:env) (l:list vprop)
-  : option (v:vprop { is_pure v } &
-            rest:list vprop &
-            vprop_equiv g (list_as_vprop l) (Tm_Star v (list_as_vprop rest))) =
-  admit ()
-
-let intro_pure_tm (p:term) =
-  let open Pulse.Reflection.Util in
-  wr (Tm_STApp
-        { head =
-            tm_pureapp (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
-                       None
-                       p;
-          arg_qual = None;
-          arg = Tm_FStar (`()) Range.range_0 })
-
-let intro_pure_comp (p:term) =
-  C_STGhost Tm_EmpInames {
-      u=u_zero;
-      res=tm_unit;
-      pre=Tm_Emp;
-      post=Tm_Pure p }
-
-let intro_pure_typing (#g:env) (#p:term)
-  (p_typing:tot_typing g p tm_prop)
-  (p_valid:tot_typing g (Tm_FStar (`()) Range.range_0) p)
-  : st_typing g (intro_pure_tm p) (intro_pure_comp p) =
-
-  let open Pulse.Reflection.Util in
-  assume (open_comp_with (intro_pure_comp p) (Tm_FStar (`()) Range.range_0) ==
-          intro_pure_comp p);
-  T_STApp g
-    (tm_pureapp (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure"))) None p)
-    p
-    None
-    (intro_pure_comp p)
-    (Tm_FStar (`()) Range.range_0)
-    (magic ())  // typing of head
-    p_valid
-
-
-module RT = FStar.Reflection.Typing
-let step_intro_pure : intro_step_t =
-  fun #g #ctxt pst ->
-  let open Pulse.Syntax in
-  match get_one_pure g pst.unmatched_pre with
-  | None -> None
-  | Some (| v, rest, veq |) ->
-    let v_typing : tot_typing g v Tm_VProp = magic () in
-    let Tm_Pure p = v in
-    let p_typing : tot_typing g p (Tm_FStar RT.tm_prop Range.range_0) =
-      Metatheory.pure_typing_inversion v_typing in
-    match T.check_prop_validity (elab_env g) (elab_term p) with
-    | Some e, _ ->
-      let d : squash (T.typing_token (elab_env g) e (T.E_Total, (elab_term p))) =
-        FStar.Squash.get_proof _ in
-      let d : RT.typing (elab_env g) e (T.E_Total, (elab_term p)) =
-        RT.T_Token _ _ _ d in
-      let d : RT.typing (elab_env g) (`()) (T.E_Total, (elab_term p)) =
-        RT.T_PropIrrelevance _ _ _ _ T.E_Total d (magic ()) in
-      let d : tot_typing g (Tm_FStar (`()) Range.range_0) p = E d in
-      let d = intro_pure_typing p_typing d in
-      let pre_eq : vprop_equiv g (list_as_vprop pst.remaining_ctxt)
-                                 (Tm_Star Tm_Emp (list_as_vprop pst.remaining_ctxt)) = magic () in  
-      Some {
-        v;
-        unmatched' = rest;
-        remaining' = pst.remaining_ctxt;
-        t' = intro_pure_tm p;
-        c' = intro_pure_comp p;
-        t'_typing = d;
-        unmatched_equiv = veq;
-        remaining_equiv = pre_eq;
-      }
-    | _ -> None
-
-
-assume val step_intro_exists : intro_step_t
-assume val step_intro_rewrite : intro_step_t
-
-let prover_step_intro_exists #g #o (p:prover_state g o)
+let step_intro_exists #g #o (p:prover_state g o)
   : T.Tac (option (prover_state g o)) =
-  T.map_opt get_next_prover_state (step_intro_exists p)
+  T.map_opt get_next_prover_state (Pulse.Checker.Auto.IntroExists.intro_exists p)
 
-let prover_step_intro_pure #g #o (p:prover_state g o)
+let step_intro_pure #g #o (p:prover_state g o)
   : T.Tac (option (prover_state g o)) =
-  T.map_opt get_next_prover_state (step_intro_pure p)
+  T.map_opt get_next_prover_state (Pulse.Checker.Auto.IntroPure.intro_pure p)
 
-let prover_step_intro_rewrite #g #o (p:prover_state g o)
+let step_intro_rewrite #g #o (p:prover_state g o)
   : T.Tac (option (prover_state g o)) =
-  T.map_opt get_next_prover_state (step_intro_rewrite p)
+  T.map_opt get_next_prover_state (Pulse.Checker.Auto.IntroRewrite.intro_rewrite p)
 
 let rec first_success (l:list prover_step_t) : prover_step_t = 
   fun #g #o p ->
@@ -326,9 +204,9 @@ let rec first_success (l:list prover_step_t) : prover_step_t =
    If neither, then returns None; and the outer loop should fail reporting unmatched preconditions *)
 let step : prover_step_t
   = first_success [ Pulse.Checker.Auto.Framing.step_match <: prover_step_t;
-                    prover_step_intro_exists <: prover_step_t;
-                    prover_step_intro_pure <: prover_step_t;
-                    prover_step_intro_rewrite <: prover_step_t ]
+                    step_intro_exists <: prover_step_t;
+                    step_intro_pure <: prover_step_t;
+                    step_intro_rewrite <: prover_step_t ]
 
 let finish #g #o (p:prover_state g o { p.unmatched_pre == []})
   : (t:st_term & c:comp_st { comp_pre c == o } & st_typing g t c)
