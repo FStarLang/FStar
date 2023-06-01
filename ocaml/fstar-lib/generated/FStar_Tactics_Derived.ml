@@ -1874,9 +1874,7 @@ let (fresh_binder_named :
                 {
                   FStar_Tactics_NamedView.uniq = n;
                   FStar_Tactics_NamedView.ppname = (FStar_Sealed.seal s);
-                  FStar_Tactics_NamedView.sort1 =
-                    (FStar_Tactics_NamedView.pack
-                       FStar_Tactics_NamedView.Tv_Unknown);
+                  FStar_Tactics_NamedView.sort1 = t;
                   FStar_Tactics_NamedView.qual =
                     FStar_Reflection_Data.Q_Explicit;
                   FStar_Tactics_NamedView.attrs = []
@@ -1900,9 +1898,7 @@ let (fresh_binder :
                 FStar_Tactics_NamedView.ppname =
                   (FStar_Sealed.seal
                      (Prims.strcat "x" (Prims.string_of_int n)));
-                FStar_Tactics_NamedView.sort1 =
-                  (FStar_Tactics_NamedView.pack
-                     FStar_Tactics_NamedView.Tv_Unknown);
+                FStar_Tactics_NamedView.sort1 = t;
                 FStar_Tactics_NamedView.qual =
                   FStar_Reflection_Data.Q_Explicit;
                 FStar_Tactics_NamedView.attrs = []
@@ -1926,9 +1922,7 @@ let (fresh_implicit_binder :
                 FStar_Tactics_NamedView.ppname =
                   (FStar_Sealed.seal
                      (Prims.strcat "x" (Prims.string_of_int n)));
-                FStar_Tactics_NamedView.sort1 =
-                  (FStar_Tactics_NamedView.pack
-                     FStar_Tactics_NamedView.Tv_Unknown);
+                FStar_Tactics_NamedView.sort1 = t;
                 FStar_Tactics_NamedView.qual =
                   FStar_Reflection_Data.Q_Implicit;
                 FStar_Tactics_NamedView.attrs = []
