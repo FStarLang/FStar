@@ -406,7 +406,7 @@ let fresh_binder_named (s : string) (t : typ) : Tac binder =
   let n = fresh () in
   {
     ppname = seal s;
-    sort   = pack Tv_Unknown;
+    sort   = t;
     uniq   = n;
     qual   = Q_Explicit;
     attrs  = [] ;
@@ -416,7 +416,7 @@ let fresh_binder (t : typ) : Tac binder =
   let n = fresh () in
   {
     ppname = seal ("x" ^ string_of_int n);
-    sort   = pack Tv_Unknown;
+    sort   = t;
     uniq   = n;
     qual   = Q_Explicit;
     attrs  = [] ;
@@ -426,7 +426,7 @@ let fresh_implicit_binder (t : typ) : Tac binder =
   let n = fresh () in
   {
     ppname = seal ("x" ^ string_of_int n);
-    sort   = pack Tv_Unknown;
+    sort   = t;
     uniq   = n;
     qual   = Q_Implicit;
     attrs  = [] ;
