@@ -906,7 +906,7 @@ let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
            (FStar_Range.mk_range "FStar.Tactics.BV.fst" (Prims.of_int (183))
               (Prims.of_int (2)) (Prims.of_int (188)) (Prims.of_int (8)))
            (Obj.magic
-              (FStar_Tactics_Derived.mapply
+              (FStar_Tactics_MApply.mapply FStar_Tactics_MApply.termable_term
                  (FStar_Reflection_Builtins.pack_ln
                     (FStar_Reflection_Data.Tv_FVar
                        (FStar_Reflection_Builtins.pack_fv
@@ -922,7 +922,8 @@ let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                          (Prims.of_int (184)) (Prims.of_int (2))
                          (Prims.of_int (188)) (Prims.of_int (8)))
                       (Obj.magic
-                         (FStar_Tactics_Derived.mapply
+                         (FStar_Tactics_MApply.mapply
+                            FStar_Tactics_MApply.termable_term
                             (FStar_Reflection_Builtins.pack_ln
                                (FStar_Reflection_Data.Tv_FVar
                                   (FStar_Reflection_Builtins.pack_fv

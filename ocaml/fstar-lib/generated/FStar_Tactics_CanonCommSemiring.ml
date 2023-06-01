@@ -2194,7 +2194,8 @@ let canon_semiring_aux :
                                                                     (Prims.of_int (1668))
                                                                     (Prims.of_int (16)))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Derived.mapply
+                                                                    (FStar_Tactics_MApply.mapply
+                                                                    FStar_Tactics_MApply.termable_term
                                                                     (FStar_Reflection_Builtins.pack_ln
                                                                     (FStar_Reflection_Data.Tv_App
                                                                     ((FStar_Reflection_Builtins.pack_ln
