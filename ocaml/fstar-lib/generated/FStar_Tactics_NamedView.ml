@@ -2812,74 +2812,11 @@ let (inspect_sigelt :
          (Prims.of_int (628)) (Prims.of_int (11)) (Prims.of_int (628))
          (Prims.of_int (29)))
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (629)) (Prims.of_int (2)) (Prims.of_int (630))
+         (Prims.of_int (630)) (Prims.of_int (2)) (Prims.of_int (630))
          (Prims.of_int (21)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Builtins.inspect_sigelt s))
-      (fun uu___ ->
-         (fun sv ->
-            Obj.magic
-              (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                    (Prims.of_int (629)) (Prims.of_int (2))
-                    (Prims.of_int (629)) (Prims.of_int (49)))
-                 (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                    (Prims.of_int (630)) (Prims.of_int (2))
-                    (Prims.of_int (630)) (Prims.of_int (21)))
-                 (Obj.magic
-                    (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (629)) (Prims.of_int (7))
-                          (Prims.of_int (629)) (Prims.of_int (49)))
-                       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (629)) (Prims.of_int (2))
-                          (Prims.of_int (629)) (Prims.of_int (49)))
-                       (Obj.magic
-                          (FStar_Tactics_Effect.tac_bind
-                             (FStar_Range.mk_range
-                                "FStar.Tactics.NamedView.fst"
-                                (Prims.of_int (629)) (Prims.of_int (23))
-                                (Prims.of_int (629)) (Prims.of_int (48)))
-                             (FStar_Range.mk_range "prims.fst"
-                                (Prims.of_int (590)) (Prims.of_int (19))
-                                (Prims.of_int (590)) (Prims.of_int (31)))
-                             (Obj.magic
-                                (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range
-                                      "FStar.Tactics.NamedView.fst"
-                                      (Prims.of_int (629))
-                                      (Prims.of_int (38))
-                                      (Prims.of_int (629))
-                                      (Prims.of_int (48)))
-                                   (FStar_Range.mk_range
-                                      "FStar.Tactics.NamedView.fst"
-                                      (Prims.of_int (629))
-                                      (Prims.of_int (23))
-                                      (Prims.of_int (629))
-                                      (Prims.of_int (48)))
-                                   (FStar_Tactics_Effect.lift_div_tac
-                                      (fun uu___ ->
-                                         (fun uu___ ->
-                                            Obj.magic
-                                              (failwith
-                                                 "Cannot evaluate open quotation at runtime"))
-                                           uu___))
-                                   (fun uu___ ->
-                                      (fun uu___ ->
-                                         Obj.magic
-                                           (FStar_Tactics_Builtins.term_to_string
-                                              uu___)) uu___)))
-                             (fun uu___ ->
-                                FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___1 ->
-                                     Prims.strcat "sv orig = " uu___))))
-                       (fun uu___ ->
-                          (fun uu___ ->
-                             Obj.magic (FStar_Tactics_Builtins.dump uu___))
-                            uu___)))
-                 (fun uu___ ->
-                    (fun uu___ -> Obj.magic (open_sigelt_view sv)) uu___)))
-           uu___)
+      (fun uu___ -> (fun sv -> Obj.magic (open_sigelt_view sv)) uu___)
 let (pack_sigelt :
   named_sigelt_view ->
     (FStar_Reflection_Types.sigelt, unit) FStar_Tactics_Effect.tac_repr)
