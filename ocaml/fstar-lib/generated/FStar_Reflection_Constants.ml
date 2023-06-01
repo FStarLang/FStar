@@ -15,6 +15,12 @@ let (__proj__Mkrefl_constant__item__t :
 let (refl_constant_lid : refl_constant -> FStar_Ident.lid) = fun rc -> rc.lid
 let (refl_constant_term : refl_constant -> FStar_Syntax_Syntax.term) =
   fun rc -> rc.t
+let (fstar_syntax_syntax_lid : Prims.string Prims.list -> FStar_Ident.lident)
+  =
+  fun s ->
+    FStar_Ident.lid_of_path
+      (FStar_Compiler_List.op_At ["FStar"; "Syntax"; "Syntax"] s)
+      FStar_Compiler_Range_Type.dummyRange
 let (fstar_refl_lid : Prims.string Prims.list -> FStar_Ident.lident) =
   fun s ->
     FStar_Ident.lid_of_path
@@ -28,6 +34,14 @@ let (fstar_refl_types_lid : Prims.string -> FStar_Ident.lident) =
   fun s -> fstar_refl_lid ["Types"; s]
 let (fstar_refl_data_lid : Prims.string -> FStar_Ident.lident) =
   fun s -> fstar_refl_lid ["Data"; s]
+let (fstar_syntax_syntax_const : Prims.string Prims.list -> refl_constant) =
+  fun s ->
+    let lid = fstar_syntax_syntax_lid s in
+    let uu___ =
+      FStar_Syntax_Syntax.lid_as_fv lid
+        (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
+    let uu___1 = FStar_Syntax_Syntax.tdataconstr lid in
+    { lid; fv = uu___; t = uu___1 }
 let (fstar_refl_data_const : Prims.string -> refl_constant) =
   fun s ->
     let lid = fstar_refl_data_lid s in
@@ -54,6 +68,14 @@ let (mk_refl_data_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
 let (mk_refl_data_lid_as_fv : Prims.string -> FStar_Syntax_Syntax.fv) =
   fun s ->
     let uu___ = fstar_refl_data_lid s in FStar_Syntax_Syntax.fvconst uu___
+let (mk_ss_lid_as_fv : Prims.string -> FStar_Syntax_Syntax.fv) =
+  fun s ->
+    let uu___ = fstar_syntax_syntax_lid [s] in
+    FStar_Syntax_Syntax.fvconst uu___
+let (mk_ss_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
+  fun s ->
+    let uu___ = fstar_syntax_syntax_lid [s] in
+    FStar_Syntax_Syntax.tconst uu___
 let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
   =
   fun s ->
@@ -70,82 +92,82 @@ let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
       let uu___ = FStar_Syntax_Syntax.fv_to_tm pack_fv in
       { lid = pack_lid; fv = pack_fv; t = uu___ } in
     (inspect, pack)
-let (uu___34 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_ln"
+let (uu___39 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_ln"
 let (fstar_refl_inspect_ln : refl_constant) =
-  match uu___34 with
+  match uu___39 with
   | (fstar_refl_inspect_ln1, fstar_refl_pack_ln) -> fstar_refl_inspect_ln1
 let (fstar_refl_pack_ln : refl_constant) =
-  match uu___34 with
+  match uu___39 with
   | (fstar_refl_inspect_ln1, fstar_refl_pack_ln1) -> fstar_refl_pack_ln1
-let (uu___41 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_fv"
+let (uu___46 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_fv"
 let (fstar_refl_inspect_fv : refl_constant) =
-  match uu___41 with
+  match uu___46 with
   | (fstar_refl_inspect_fv1, fstar_refl_pack_fv) -> fstar_refl_inspect_fv1
 let (fstar_refl_pack_fv : refl_constant) =
-  match uu___41 with
+  match uu___46 with
   | (fstar_refl_inspect_fv1, fstar_refl_pack_fv1) -> fstar_refl_pack_fv1
-let (uu___48 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_bv"
+let (uu___53 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_bv"
 let (fstar_refl_inspect_bv : refl_constant) =
-  match uu___48 with
+  match uu___53 with
   | (fstar_refl_inspect_bv1, fstar_refl_pack_bv) -> fstar_refl_inspect_bv1
 let (fstar_refl_pack_bv : refl_constant) =
-  match uu___48 with
+  match uu___53 with
   | (fstar_refl_inspect_bv1, fstar_refl_pack_bv1) -> fstar_refl_pack_bv1
-let (uu___55 : (refl_constant * refl_constant)) =
+let (uu___60 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_namedv"
 let (fstar_refl_inspect_namedv : refl_constant) =
-  match uu___55 with
+  match uu___60 with
   | (fstar_refl_inspect_namedv1, fstar_refl_pack_namedv) ->
       fstar_refl_inspect_namedv1
 let (fstar_refl_pack_namedv : refl_constant) =
-  match uu___55 with
+  match uu___60 with
   | (fstar_refl_inspect_namedv1, fstar_refl_pack_namedv1) ->
       fstar_refl_pack_namedv1
-let (uu___62 : (refl_constant * refl_constant)) =
+let (uu___67 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_binder"
 let (fstar_refl_inspect_binder : refl_constant) =
-  match uu___62 with
+  match uu___67 with
   | (fstar_refl_inspect_binder1, fstar_refl_pack_binder) ->
       fstar_refl_inspect_binder1
 let (fstar_refl_pack_binder : refl_constant) =
-  match uu___62 with
+  match uu___67 with
   | (fstar_refl_inspect_binder1, fstar_refl_pack_binder1) ->
       fstar_refl_pack_binder1
-let (uu___69 : (refl_constant * refl_constant)) =
+let (uu___74 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_comp"
 let (fstar_refl_inspect_comp : refl_constant) =
-  match uu___69 with
+  match uu___74 with
   | (fstar_refl_inspect_comp1, fstar_refl_pack_comp) ->
       fstar_refl_inspect_comp1
 let (fstar_refl_pack_comp : refl_constant) =
-  match uu___69 with
+  match uu___74 with
   | (fstar_refl_inspect_comp1, fstar_refl_pack_comp1) ->
       fstar_refl_pack_comp1
-let (uu___76 : (refl_constant * refl_constant)) =
+let (uu___81 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_sigelt"
 let (fstar_refl_inspect_sigelt : refl_constant) =
-  match uu___76 with
+  match uu___81 with
   | (fstar_refl_inspect_sigelt1, fstar_refl_pack_sigelt) ->
       fstar_refl_inspect_sigelt1
 let (fstar_refl_pack_sigelt : refl_constant) =
-  match uu___76 with
+  match uu___81 with
   | (fstar_refl_inspect_sigelt1, fstar_refl_pack_sigelt1) ->
       fstar_refl_pack_sigelt1
-let (uu___83 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_lb"
+let (uu___88 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_lb"
 let (fstar_refl_inspect_lb : refl_constant) =
-  match uu___83 with
+  match uu___88 with
   | (fstar_refl_inspect_lb1, fstar_refl_pack_lb) -> fstar_refl_inspect_lb1
 let (fstar_refl_pack_lb : refl_constant) =
-  match uu___83 with
+  match uu___88 with
   | (fstar_refl_inspect_lb1, fstar_refl_pack_lb1) -> fstar_refl_pack_lb1
-let (uu___90 : (refl_constant * refl_constant)) =
+let (uu___95 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_universe"
 let (fstar_refl_inspect_universe : refl_constant) =
-  match uu___90 with
+  match uu___95 with
   | (fstar_refl_inspect_universe1, fstar_refl_pack_universe) ->
       fstar_refl_inspect_universe1
 let (fstar_refl_pack_universe : refl_constant) =
-  match uu___90 with
+  match uu___95 with
   | (fstar_refl_inspect_universe1, fstar_refl_pack_universe1) ->
       fstar_refl_pack_universe1
 let (fstar_refl_env : FStar_Syntax_Syntax.term) =
@@ -252,14 +274,6 @@ let (fstar_refl_sigelt_view : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "sigelt_view"
 let (fstar_refl_sigelt_view_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_data_lid_as_fv "sigelt_view"
-let (fstar_refl_subst_elt : FStar_Syntax_Syntax.term) =
-  mk_refl_data_lid_as_term "subst_elt"
-let (fstar_refl_subst_elt_fv : FStar_Syntax_Syntax.fv) =
-  mk_refl_data_lid_as_fv "subst_elt"
-let (fstar_refl_subst : FStar_Syntax_Syntax.term) =
-  mk_refl_data_lid_as_term "subst"
-let (fstar_refl_subst_fv : FStar_Syntax_Syntax.fv) =
-  mk_refl_data_lid_as_fv "subst"
 let (fstar_refl_exp : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "exp"
 let (fstar_refl_exp_fv : FStar_Syntax_Syntax.fv) =
@@ -272,6 +286,12 @@ let (fstar_refl_universe_view : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "universe_view"
 let (fstar_refl_universe_view_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_data_lid_as_fv "universe_view"
+let (fstar_refl_subst_elt : FStar_Syntax_Syntax.term) =
+  mk_ss_lid_as_term "subst_elt"
+let (fstar_refl_subst_elt_fv : FStar_Syntax_Syntax.fv) =
+  mk_ss_lid_as_fv "subst_elt"
+let (fstar_refl_subst : FStar_Syntax_Syntax.term) = mk_ss_lid_as_term "subst"
+let (fstar_refl_subst_fv : FStar_Syntax_Syntax.fv) = mk_ss_lid_as_fv "subst"
 let (ref_Mk_namedv_view : refl_constant) =
   let lid = fstar_refl_data_lid "Mknamedv_view" in
   let attr =
@@ -407,11 +427,11 @@ let (ref_Mk_lb : refl_constant) =
 let (ref_Q_Explicit : refl_constant) = fstar_refl_data_const "Q_Explicit"
 let (ref_Q_Implicit : refl_constant) = fstar_refl_data_const "Q_Implicit"
 let (ref_Q_Meta : refl_constant) = fstar_refl_data_const "Q_Meta"
-let (ref_DB : refl_constant) = fstar_refl_data_const "DB"
-let (ref_NM : refl_constant) = fstar_refl_data_const "NM"
-let (ref_NT : refl_constant) = fstar_refl_data_const "NT"
-let (ref_UN : refl_constant) = fstar_refl_data_const "UN"
-let (ref_UD : refl_constant) = fstar_refl_data_const "UD"
+let (ref_DB : refl_constant) = fstar_syntax_syntax_const ["DB"]
+let (ref_NM : refl_constant) = fstar_syntax_syntax_const ["NM"]
+let (ref_NT : refl_constant) = fstar_syntax_syntax_const ["NT"]
+let (ref_UN : refl_constant) = fstar_syntax_syntax_const ["UN"]
+let (ref_UD : refl_constant) = fstar_syntax_syntax_const ["UD"]
 let (ref_C_Unit : refl_constant) = fstar_refl_data_const "C_Unit"
 let (ref_C_True : refl_constant) = fstar_refl_data_const "C_True"
 let (ref_C_False : refl_constant) = fstar_refl_data_const "C_False"
