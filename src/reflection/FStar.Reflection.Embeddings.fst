@@ -82,6 +82,9 @@ let e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar f
 let e_sigelt             : embedding sigelt             = EMB.e_lazy Lazy_sigelt fstar_refl_sigelt
 let e_letbinding         : embedding letbinding         = EMB.e_lazy Lazy_letbinding fstar_refl_letbinding
 
+let e_sort   : embedding term   = e_sealed e_term
+let e_ppname : embedding string = e_sealed e_string
+
 let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
     | [] -> Some []
@@ -273,8 +276,8 @@ let rec e_pattern_aq aq =
                S.as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) rng subpats)] rng
         | Pat_Var sort ppname ->
             S.mk_Tm_app ref_Pat_Var.t [
-              S.as_arg (embed (e_sealed e_term) rng sort);
-              S.as_arg (embed e_string rng ppname);
+              S.as_arg (embed e_sort rng sort);
+              S.as_arg (embed e_ppname rng ppname);
             ] rng
         | Pat_Dot_Term eopt ->
             S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed (e_option e_term) rng eopt)]
@@ -290,7 +293,7 @@ let rec e_pattern_aq aq =
             run args (Pat_Cons <$$> e_fv <**> e_option (e_list e_universe) <**> e_list (e_tuple2 (e_pattern_aq aq) e_bool))
 
         | _ when S.fv_eq_lid fv ref_Pat_Var.lid ->
-            run args (Pat_Var <$$> e_sealed e_term <**> e_string)
+            run args (Pat_Var <$$> e_sort <**> e_ppname)
 
         | _ when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
             run args (Pat_Dot_Term <$$> e_option e_term)
@@ -448,9 +451,9 @@ let e_lid : embedding I.lid =
 let e_namedv_view =
     let embed_namedv_view (rng:Range.range) (namedvv:namedv_view) : term =
         S.mk_Tm_app ref_Mk_namedv_view.t [
-          S.as_arg (embed e_int               rng namedvv.uniq);
-          S.as_arg (embed (e_sealed e_term)   rng namedvv.sort);
-          S.as_arg (embed (e_sealed e_string) rng namedvv.ppname);
+          S.as_arg (embed e_int    rng namedvv.uniq);
+          S.as_arg (embed e_sort   rng namedvv.sort);
+          S.as_arg (embed e_ppname rng namedvv.ppname);
         ]
                     rng
     in
@@ -458,7 +461,7 @@ let e_namedv_view =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_namedv_view.lid ->
-          run args (Mknamedv_view <$$> e_int <**> e_sealed e_term <**> e_sealed e_string)
+          run args (Mknamedv_view <$$> e_int <**> e_sort <**> e_ppanme)
         | _ -> None
     in
     mk_emb embed_namedv_view unembed_namedv_view fstar_refl_namedv_view
@@ -466,9 +469,9 @@ let e_namedv_view =
 let e_bv_view =
     let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
         S.mk_Tm_app ref_Mk_bv_view.t [
-          S.as_arg (embed e_int               rng bvv.index);
-          S.as_arg (embed (e_sealed e_term)   rng bvv.sort);
-          S.as_arg (embed (e_sealed e_string) rng bvv.ppname);
+          S.as_arg (embed e_int    rng bvv.index);
+          S.as_arg (embed e_sort   rng bvv.sort);
+          S.as_arg (embed e_ppname rng bvv.ppname);
         ]
                     rng
     in
@@ -476,7 +479,7 @@ let e_bv_view =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_bv_view.lid ->
-          run args (Mkbv_view <$$> e_int <**> e_sealed e_term <**> e_sealed e_string)
+          run args (Mkbv_view <$$> e_int <**> e_sort <**> e_ppname)
         | _ -> None
     in
     mk_emb embed_bv_view unembed_bv_view fstar_refl_bv_view
@@ -486,7 +489,7 @@ let e_binding =
         S.mk_Tm_app ref_Mk_binding.t [
           S.as_arg (embed e_int    rng bindingv.uniq);
           S.as_arg (embed e_term   rng bindingv.sort);
-          S.as_arg (embed (e_sealed e_string) rng bindingv.ppname);
+          S.as_arg (embed e_ppname rng bindingv.ppname);
         ]
                     rng
     in
@@ -494,7 +497,7 @@ let e_binding =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_binding.lid ->
-          run args (Mkbinding <$$> e_int <**> e_term <**> e_sealed e_string)
+          run args (Mkbinding <$$> e_int <**> e_term <**> e_ppname)
         | _ -> None
     in
     mk_emb embed unembed fstar_refl_binding
@@ -508,7 +511,7 @@ let e_binder_view =
       S.as_arg (embed e_term rng bview.sort);
       S.as_arg (embed e_aqualv rng bview.qual);
       S.as_arg (embed e_attributes rng bview.attrs);
-      S.as_arg (embed (e_sealed e_string) rng bview.ppname);
+      S.as_arg (embed e_ppname rng bview.ppname);
     ]
                 rng in
 
@@ -516,7 +519,7 @@ let e_binder_view =
     let? fv, args = head_fv_and_args t in
     match () with
     | _ when S.fv_eq_lid fv ref_Mk_binder_view.lid ->
-      run args (Mkbinder_view <$$> e_term <**> e_aqualv <**> e_list e_term <**> e_sealed e_string)
+      run args (Mkbinder_view <$$> e_term <**> e_aqualv <**> e_list e_term <**> e_ppname)
     | _ -> None
   in
   mk_emb embed_binder_view unembed_binder_view fstar_refl_binder_view
