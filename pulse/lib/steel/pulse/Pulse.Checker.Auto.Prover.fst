@@ -14,7 +14,8 @@ let vprop_typing g v = tot_typing g v Tm_VProp
 let ghost_comp pre post = 
   C_STGhost Tm_EmpInames { u=u_zero; res=tm_unit; pre; post }
 
-let unit_const = magic()
+let unit_const = Tm_FStar (`()) Range.range_0
+
 let proof_steps_idem
   : st_term
   = { term = Tm_Return { ctag=STT_Ghost; insert_eq=false; term=unit_const};
@@ -215,23 +216,89 @@ type intro_step_t =
   p:prover_state g ctxt ->
   T.Tac (option (intro_result p))
 
+let is_pure (p:term) =
+  match p with
+  | Tm_Pure (Tm_FStar _ _) -> true
+  | _ -> false
+
 let get_one_pure (g:env) (l:list vprop)
-  : option (v:vprop { Tm_Pure? v } &
+  : option (v:vprop { is_pure v } &
             rest:list vprop &
             vprop_equiv g (list_as_vprop l) (Tm_Star v (list_as_vprop rest))) =
   admit ()
 
-// let step_intro_exists : intro_step_t =
-//   fun #g #ctxt p ->
-//   match get_one_pure g p.unmatched_pre with
-//   | None -> None
-//   | Some (| v, rest, veq |) ->
-//     let Tm_Pure p = v in
-//     admit ()
+let intro_pure_tm (p:term) =
+  let open Pulse.Reflection.Util in
+  wr (Tm_STApp
+        { head =
+            tm_pureapp (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
+                       None
+                       p;
+          arg_qual = None;
+          arg = Tm_FStar (`()) Range.range_0 })
+
+let intro_pure_comp (p:term) =
+  C_STGhost Tm_EmpInames {
+      u=u_zero;
+      res=tm_unit;
+      pre=Tm_Emp;
+      post=Tm_Pure p }
+
+let intro_pure_typing (#g:env) (#p:term)
+  (p_typing:tot_typing g p tm_prop)
+  (p_valid:tot_typing g (Tm_FStar (`()) Range.range_0) p)
+  : st_typing g (intro_pure_tm p) (intro_pure_comp p) =
+
+  let open Pulse.Reflection.Util in
+  assume (open_comp_with (intro_pure_comp p) (Tm_FStar (`()) Range.range_0) ==
+          intro_pure_comp p);
+  T_STApp g
+    (tm_pureapp (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure"))) None p)
+    p
+    None
+    (intro_pure_comp p)
+    (Tm_FStar (`()) Range.range_0)
+    (magic ())  // typing of head
+    p_valid
+
+
+module RT = FStar.Reflection.Typing
+let step_intro_pure : intro_step_t =
+  fun #g #ctxt pst ->
+  let open Pulse.Syntax in
+  match get_one_pure g pst.unmatched_pre with
+  | None -> None
+  | Some (| v, rest, veq |) ->
+    let v_typing : tot_typing g v Tm_VProp = magic () in
+    let Tm_Pure p = v in
+    let p_typing : tot_typing g p (Tm_FStar RT.tm_prop Range.range_0) =
+      Metatheory.pure_typing_inversion v_typing in
+    match T.check_prop_validity (elab_env g) (elab_term p) with
+    | Some e, _ ->
+      let d : squash (T.typing_token (elab_env g) e (T.E_Total, (elab_term p))) =
+        FStar.Squash.get_proof _ in
+      let d : RT.typing (elab_env g) e (T.E_Total, (elab_term p)) =
+        RT.T_Token _ _ _ d in
+      let d : RT.typing (elab_env g) (`()) (T.E_Total, (elab_term p)) =
+        RT.T_PropIrrelevance _ _ _ _ T.E_Total d (magic ()) in
+      let d : tot_typing g (Tm_FStar (`()) Range.range_0) p = E d in
+      let d = intro_pure_typing p_typing d in
+      let pre_eq : vprop_equiv g (list_as_vprop pst.remaining_ctxt)
+                                 (Tm_Star Tm_Emp (list_as_vprop pst.remaining_ctxt)) = magic () in  
+      Some {
+        v;
+        unmatched' = rest;
+        remaining' = pst.remaining_ctxt;
+        t' = intro_pure_tm p;
+        c' = intro_pure_comp p;
+        t'_typing = d;
+        unmatched_equiv = veq;
+        remaining_equiv = pre_eq;
+      }
+    | _ -> None
 
 
 assume val step_intro_exists : intro_step_t
-assume val step_intro_pure : intro_step_t
 assume val step_intro_rewrite : intro_step_t
 
 let prover_step_intro_exists #g #o (p:prover_state g o)

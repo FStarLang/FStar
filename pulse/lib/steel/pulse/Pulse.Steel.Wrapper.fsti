@@ -316,7 +316,7 @@ val elim_pure (_:unit) (#p:prop)
               (pure p)
               (fun _ -> emp)
 
-val intro_pure (p:prop) (_:squash p)
+val intro_pure (p:prop) (_:p)
   : stt_ghost unit emp_inames
               emp
               (fun _ -> pure p)
