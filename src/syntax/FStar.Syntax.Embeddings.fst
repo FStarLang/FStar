@@ -1143,7 +1143,7 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
                                   [S.iarg (type_of ea); S.as_arg t]
                                   rng)
                   in
-                  S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.seal_lid) [U_zero])
+                  S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.seal_lid) [U_zero])
                               [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
                               rng)
     in
