@@ -21,7 +21,6 @@ open FStar.Tactics.Builtins
 open FStar.Tactics.Util
 
 exception LengthMismatch
-exception IOU
 
 module R = FStar.Reflection
 module RD = FStar.Reflection.Data
@@ -583,11 +582,14 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
     let typ = subst s typ in
     let ctors = map (fun (nm, ty) -> nm, subst s ty) ctors in
 
-    let params0 = params in
-    dump ("params0 = " ^ string_of_list rbinder_to_string params);
+    (* Open parameters in themselves and in type *)
     let params, typ = open_term_n params typ in
-    dump ("params = " ^ string_of_list binder_to_string params);
-    print ("ctors typs = " ^ string_of_list (fun (nm, cty) -> term_to_string cty) ctors);
+    (* Remove the parameter binders from the constructors,
+    replace them by the opened param binders. Hence we get
+      Cons : a0 -> list a0
+    instead of
+      Cons : #a:Type -> a -> list a
+    for the returned open parameter a0. *)
     let ctors =
       map (fun (nm, ty) ->
           let ty'= open_n_binders_from_arrow params ty in
@@ -605,6 +607,15 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
 
   | RD.Unk -> Unk
 
+(** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
+private
+let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+  match args with
+  | [] -> t
+  | a :: args' ->
+    let t' = mk_abs args' t in
+    pack (Tv_Abs a t')
+
 let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view{~(RD.Unk? sv)}) =
   match sv with
   | Sg_Let { isrec; lbs } ->
@@ -612,11 +623,19 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
     RD.Sg_Let isrec lbs 
 
   | Sg_Inductive {nm; univs; params; typ; ctors} ->
+    (* Abstract constructors by the parameters. This
+    is the inverses of the open_n_binders_from_arrow above. *)
+    let ctors = map (fun (nm, ty) -> nm, mk_abs params ty) ctors in
+
+    (* Close parameters in themselves and typ *)
     let params, typ = close_term_n params typ in
+
     (* close univs *)
-    (* close params *)
-    (* close ctors? *)
-    raise IOU;
+    let us, s = close_univ_s univs in
+    let params = List.Tot.map (subst_binder_sort s) params in
+    let typ = subst s typ in
+    let ctors = map (fun (nm, ty) -> nm, subst s ty) ctors in
+
     RD.Sg_Inductive nm univs params typ ctors
 
   | Sg_Val {nm; univs; typ} ->

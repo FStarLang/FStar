@@ -3,13 +3,19 @@ module PackInd
 open FStar.Tactics
 
 let tau () : Tac (list sigelt) =
-  let myty : term = Tv_FVar (pack_fv (explode_qn "PackInd.myty")) in
+  let myty : term = pack (Tv_FVar (pack_fv (explode_qn "PackInd.myty"))) in
   let c (s:string) : ctor =
     (["PackInd"; s], myty)
   in
   let t : sigelt =
     pack_sigelt (
-     Sg_Inductive (explode_qn "PackInd.myty") [] [] (`Type0) [c "A"; c "B"; c "C"])
+     Sg_Inductive {
+       nm = explode_qn "PackInd.myty";
+       univs = [];
+       params = [];
+       typ = `Type0;
+       ctors = [c "A"; c "B"; c "C"]
+     })
   in
   [t]
 

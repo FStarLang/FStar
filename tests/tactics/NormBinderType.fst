@@ -29,7 +29,7 @@ let g =
 
                 norm_binder_type [delta; primops] b;
 
-                match binders_of_env (cur_env ()) with
+                match vars_of_env (cur_env ()) with
                 | [b] ->
                     let t = b.sort in
                     let q = quote (eq2 #int 5 7) in
