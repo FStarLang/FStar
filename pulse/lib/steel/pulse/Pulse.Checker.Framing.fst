@@ -8,6 +8,7 @@ open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Typing
 open Pulse.Checker.Pure
+open Pulse.Checker.VPropEquiv
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module FV = Pulse.Typing.FV
@@ -150,15 +151,7 @@ let split_vprop (g:env)
        Inl (| VP.list_as_vprop frame, typing, d |)
 
 
-open Pulse.Checker.VPropEquiv
-noeq
-type match_result g p q = {
-  matched:list vprop;
-  unmatched_p:list vprop;
-  unmatched_q:list vprop;
-  p_eq: vprop_equiv g (list_as_vprop p) (list_as_vprop (unmatched_p @ matched));
-  q_eq: vprop_equiv g (list_as_vprop q) (list_as_vprop (unmatched_q @ matched))
-}
+
 let rec all_matches g p q
   : T.Tac (match_result g p q)
   = match p with

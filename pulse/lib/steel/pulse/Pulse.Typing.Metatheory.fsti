@@ -65,12 +65,14 @@ let vprop_equiv_x g t p1 p2 =
               (open_term p1 x)
               (open_term p2 x)
 
-val st_typing_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+let st_typing_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                          (#post:term )//{ freevars post `Set.subset` freevars (comp_post c)}
                          (veq: vprop_equiv_x g (comp_res c) (comp_post c) post)
   : st_typing g t (comp_st_with_post c post)
+  = admit()
 
-val st_typing_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+let st_typing_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                         (#pre:term )
                         (veq: vprop_equiv g (comp_pre c) pre)
   : st_typing g t (comp_st_with_pre c pre)
+  = admit()
