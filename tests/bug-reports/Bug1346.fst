@@ -34,7 +34,7 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
          by (let eq = implies_intro () in
              let h = implies_intro () in
              dump "A" ;
-             my_cut (type_of_binder h);
+             my_cut h.sort;
              dump "B" ;
              rewrite eq;
              norm [] ;
@@ -42,8 +42,8 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
              let hh = intro () in
              apply (`FStar.Squash.return_squash) ;
              dump "D" ;
-             exact (pack (Tv_Var (bv_of_binder hh))) ; //USED TO FAIL
-             exact (pack (Tv_Var (bv_of_binder h))))
+             exact (pack (Tv_Var (binding_to_namedv hh))) ; //USED TO FAIL
+             exact (pack (Tv_Var (binding_to_namedv h))))
 
 let t1 () : Tac unit =
   let x     = forall_intro  () in
@@ -55,7 +55,7 @@ let t1 () : Tac unit =
   dump "***************After rewrite";
   squash_intro ();
   dump "***************After squash" ;
-  exact (pack (Tv_Var (bv_of_binder px)));
+  exact (pack (Tv_Var (binding_to_namedv px)));
   dump "End"
 
 let foo1 () =
