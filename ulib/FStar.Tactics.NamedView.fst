@@ -626,7 +626,7 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
 
 let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
   let sv = R.inspect_sigelt s in
-  dump ("sv orig = " ^ term_to_string (quote sv));
+  (* dump ("sv orig = " ^ term_to_string (quote sv)); *)
   open_sigelt_view sv
 
 let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tac sigelt =

@@ -210,6 +210,6 @@ let mk_class (nm:string) : Tac decls =
                   let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
                   let se = set_sigelt_quals to_propagate se in
                   let se = set_sigelt_attrs b.attrs se in
-                  print ("trying to return : " ^ term_to_string (quote se));
+                  (* print ("trying to return : " ^ term_to_string (quote se)); *)
                   se
     ) (filter_no_method_binders bs)
