@@ -402,6 +402,16 @@ let fresh_namedv () : Tac namedv =
     uniq   = n;
   })
 
+let fresh_binder_named (s : string) (t : typ) : Tac binder =
+  let n = fresh () in
+  {
+    ppname = seal s;
+    sort   = pack Tv_Unknown;
+    uniq   = n;
+    qual   = Q_Explicit;
+    attrs  = [] ;
+  }
+
 let fresh_binder (t : typ) : Tac binder =
   let n = fresh () in
   {
@@ -558,6 +568,16 @@ let rec revert_all (bs:list binding) : Tac unit =
 
 let namedv_to_term (x : namedv) : Tac term =
   pack (Tv_Var x)
+
+let binder_to_namedv (b : binder) : Tot namedv =
+  pack_namedv {
+    ppname = b.ppname;
+    uniq   = b.uniq;
+    sort   = seal b.sort;
+  }
+
+let binder_to_term (b : binder) : Tac term =
+  pack (Tv_Var (binder_to_namedv b))
 
 let binding_to_namedv (b : binding) : Tac namedv =
   pack_namedv {
@@ -975,13 +995,6 @@ let namedv_to_simple_binder (n : namedv) : Tac simple_binder =
     attrs  = [];
   }
 
-let binder_to_namedv (b : binder) : Tot namedv =
-  pack_namedv {
-    ppname = b.ppname;
-    uniq   = b.uniq;
-    sort   = seal b.sort;
-  }
-  
 let binding_to_simple_binder (b : binding) : Tot simple_binder =
   {
     ppname = b.ppname;
