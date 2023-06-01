@@ -1,4 +1,4 @@
-module Sealed
+module TestSealed
 
 open FStar.Mul
 open FStar.Sealed
