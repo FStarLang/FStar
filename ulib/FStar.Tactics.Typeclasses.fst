@@ -15,9 +15,15 @@
 *)
 module FStar.Tactics.Typeclasses
 
-open FStar.List.Tot
-open FStar.Tactics
-module T = FStar.Tactics
+open FStar.Reflection
+open FStar.Tactics.Common
+open FStar.Tactics.Effect
+open FStar.Tactics.Builtins
+open FStar.Tactics.SyntaxHelpers
+open FStar.Tactics.Derived
+open FStar.Tactics.NamedView
+
+let (@) = FStar.List.Tot.append
 
 (* The attribute that marks classes *)
 irreducible
@@ -125,7 +131,7 @@ let mk_class (nm:string) : Tac decls =
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive {nm=name;univs=us;params;typ=ity;ctors} = sv in
-    print ("params = " ^ string_of_list binder_to_string params);
+    print ("params = " ^ Tactics.Util.string_of_list binder_to_string params);
     print ("got it, name = " ^ implode_qn name);
     print ("got it, ity = " ^ term_to_string ity);
     let ctor_name = last name in
@@ -138,7 +144,7 @@ let mk_class (nm:string) : Tac decls =
     guard (C_Total? r);
     let C_Total cod = r in (* must be total *)
 
-    print ("params = " ^ string_of_list binder_to_string params);
+    print ("params = " ^ Tactics.Util.string_of_list binder_to_string params);
     print ("n_params = " ^ string_of_int (List.Tot.Base.length params));
     print ("n_univs = " ^ string_of_int (List.Tot.Base.length us));
     print ("cod = " ^ term_to_string cod);
@@ -148,7 +154,7 @@ let mk_class (nm:string) : Tac decls =
     let base : string = "__proj__Mk" ^ ctor_name ^ "__item__" in
 
     (* Make a sigelt for each method *)
-    T.map (fun (b:binder) ->
+    Tactics.Util.map (fun (b:binder) ->
                   print ("b = " ^ term_to_string b.sort);
                   let s = name_of_binder b in
                   print ("b = " ^ s);
@@ -195,8 +201,7 @@ let mk_class (nm:string) : Tac decls =
                   in
 
                   let def : term =
-                    let bs = (map (fun b -> { b with qual = Q_Implicit}) params)
-                                    @ [tcdict] in
+                    let bs = (List.Tot.map (fun b -> { b with qual = Q_Implicit}) params) @ [tcdict] in
                     mk_abs bs (mk_e_app proj [named_binder_to_term tcdict])
                   in
                   print ("def = " ^ term_to_string def);

@@ -67,9 +67,6 @@ type pattern =
      t : option term ->
      pattern
 
-(* Do not look at me! *)
-(* type __hack = { sort:unit; ppname:unit } *)
-
 type branch = pattern * term  // | pattern -> term
 
 noeq

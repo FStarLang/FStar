@@ -31,7 +31,7 @@ let g =
 
                 match binders_of_env (cur_env ()) with
                 | [b] ->
-                    let t = type_of_binder b in
+                    let t = b.sort in
                     let q = quote (eq2 #int 5 7) in
                     if FStar.Order.ne (compare_term t q)
                     then fail "type was not normalized"

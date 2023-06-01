@@ -29,7 +29,7 @@ let f1 =
   assert (exists x. x == 42 ==> x + 1 == 43)
       by (eexists unit (fun _ ->
           let b = implies_intro() in
-          let _ = tcut (mk_e_app (pack_fv' squash_qn) [type_of_binder b]) in
+          let _ = tcut (mk_e_app (pack_fv' squash_qn) [b.sort]) in
           flip();
           trefl();
           norm [primops]; trefl()))

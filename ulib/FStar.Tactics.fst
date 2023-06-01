@@ -34,3 +34,4 @@ include FStar.Tactics.SyntaxHelpers
 include FStar.Tactics.Print
 include FStar.Tactics.Visit
 include FStar.Tactics.NamedView
+include FStar.Tactics.MApply

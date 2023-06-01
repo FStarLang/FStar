@@ -97,7 +97,7 @@ val norm_term_env  : env -> list norm_step -> term -> Tac term
 (** [norm_binder_type steps b] will call the normalizer on the type of the [b]
 binder for the current goal. Notably, this cannot be done via binder_retype and norm,
 because of uvars being resolved to lambda-abstractions. *)
-val norm_binder_type  : list norm_step -> binder -> Tac unit
+val norm_binder_type  : list norm_step -> binding -> Tac unit
 
 (** [intro] pushes the first argument of an arrow goal into the
 environment, turning [Gamma |- ?u : x:a -> b] into [Gamma, x:a |- ?u' : b].
