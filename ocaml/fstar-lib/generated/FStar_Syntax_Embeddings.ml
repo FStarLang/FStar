@@ -2480,7 +2480,7 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
                      FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
               let uu___1 =
                 let uu___2 =
-                  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.seal_lid in
+                  FStar_Syntax_Util.fvar_const FStar_Parser_Const.seal_lid in
                 FStar_Syntax_Syntax.mk_Tm_uinst uu___2
                   [FStar_Syntax_Syntax.U_zero] in
               let uu___2 =
