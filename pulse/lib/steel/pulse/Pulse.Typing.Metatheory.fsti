@@ -44,3 +44,33 @@ val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
 
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
    : tot_typing g p (Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0)
+
+
+let comp_st_with_post (c:comp_st) (post:term) : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
+  match c with
+  | C_ST st -> C_ST { st with post }
+  | C_STGhost i st -> C_STGhost i { st with post }
+  | C_STAtomic i st -> C_STAtomic i {st with post}
+
+let comp_st_with_pre (c:comp_st) (pre:term) : comp_st =
+  match c with
+  | C_ST st -> C_ST { st with pre }
+  | C_STGhost i st -> C_STGhost i { st with pre }
+  | C_STAtomic i st -> C_STAtomic i {st with pre }
+
+
+let vprop_equiv_x g t p1 p2 =
+  x:var { fresh_wrt x g (freevars p1) } ->
+  vprop_equiv (extend x (Inl t) g) 
+              (open_term p1 x)
+              (open_term p2 x)
+
+val st_typing_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+                         (#post:term )//{ freevars post `Set.subset` freevars (comp_post c)}
+                         (veq: vprop_equiv_x g (comp_res c) (comp_post c) post)
+  : st_typing g t (comp_st_with_post c post)
+
+val st_typing_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+                        (#pre:term )
+                        (veq: vprop_equiv g (comp_pre c) pre)
+  : st_typing g t (comp_st_with_pre c pre)

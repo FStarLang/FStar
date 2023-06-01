@@ -3,6 +3,8 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Common
 open Pulse.Checker.VPropEquiv
+open Pulse.Typing.Metatheory
+open Pulse.Checker.Auto.Util
 module T = FStar.Tactics
 module VP = Pulse.Checker.VPropEquiv
 module F = Pulse.Checker.Framing
@@ -21,69 +23,11 @@ let proof_steps_idem_typing (g:env) (ctxt:vprop)
   : st_typing g proof_steps_idem (ghost_comp ctxt ctxt)
   = magic()
 
-let comp_st_with_post (c:comp_st) (post:term) : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
-  match c with
-  | C_ST st -> C_ST { st with post }
-  | C_STGhost i st -> C_STGhost i { st with post }
-  | C_STAtomic i st -> C_STAtomic i {st with post}
-
-let comp_st_with_pre (c:comp_st) (pre:term) : comp_st =
-  match c with
-  | C_ST st -> C_ST { st with pre }
-  | C_STGhost i st -> C_STGhost i { st with pre }
-  | C_STAtomic i st -> C_STAtomic i {st with pre }
-
 assume
 val post_with_emp (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
   : st_typing g t (comp_st_with_post c (Tm_Star (canon_vprop (comp_post c)) Tm_Emp) )
 
 module Metatheory = Pulse.Typing.Metatheory
-
-let vprop_equiv_x g t p1 p2 =
-  x:var { Metatheory.fresh_wrt x g (freevars p1) } ->
-  vprop_equiv (extend x (Inl t) g) 
-              (open_term p1 x)
-              (open_term p2 x)
-
-assume
-val st_typing_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
-                         (#post:term )//{ freevars post `Set.subset` freevars (comp_post c)}
-                         (veq: vprop_equiv_x g (comp_res c) (comp_post c) post)
-  : st_typing g t (comp_st_with_post c post)
-
-assume
-val st_typing_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
-                        (#pre:term )//{ freevars post `Set.subset` freevars (comp_post c)}
-                        (veq: vprop_equiv g (comp_pre c) pre)
-  : st_typing g t (comp_st_with_pre c pre)
-
-
-noeq
-type prover_state (g:env) (ctxt:vprop) = {
-  (* the original context is well-typed *)
-  ctxt_typing: vprop_typing g ctxt;
-  (* the program whose precondition we're trying to derive *)
-  t:st_term;
-  c:comp_st;
-  t_typing:st_typing g t c;
-  (* the in-progress proof state *)
-  matched_pre:term; (* conjuncts that we have already derived *)
-  unmatched_pre:list term; (* conjuncts remaining to be derived *)
-  remaining_ctxt:list term; (* unused conjuncts in the context *)
-  (* Ghost proof steps witnessing the derivation of matched_pre from ctxt *)
-  proof_steps: st_term;
-  proof_steps_typing: st_typing g proof_steps (ghost_comp ctxt (Tm_Star (list_as_vprop remaining_ctxt) matched_pre));
-  pre_equiv:vprop_equiv g (comp_pre c) (Tm_Star (list_as_vprop unmatched_pre) matched_pre);
-}
-
-let proof_steps_post #g #o (p:prover_state g o) : vprop = Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre
-
-let bind_proof_steps_with #g #o (p:prover_state g o) 
-                                (t:st_term)
-                                (c:comp_st {comp_pre c == proof_steps_post p})
-                                (t_typing:st_typing g t c)
-   : (t':st_term & st_typing g t' (comp_st_with_pre c o))
-   = admit()
 
 let init_prover_state (#g:env) (#ctxt:vprop) (ctxt_typing: vprop_typing g ctxt)
                       (#t:st_term) (#c:comp_st) (t_typing: st_typing g t c)
@@ -106,41 +50,16 @@ let init_prover_state (#g:env) (#ctxt:vprop) (ctxt_typing: vprop_typing g ctxt)
 
 open FStar.List.Tot 
 
-let step_t = #g:_ -> #o:_ -> p:prover_state g o -> T.Tac (option (prover_state g o))
-
-let step_match : step_t = 
-  fun #g #o (p:prover_state g o) ->
-    let res = F.all_matches g p.unmatched_pre p.remaining_ctxt in
-    match res.matched with
-    | [] -> None
-    | _ ->
-      let matched_pre = Tm_Star (list_as_vprop res.matched) p.matched_pre in
-        // remaining_ctxt ~ res.ctxt' * res.matched
-      let veq 
-        : vprop_equiv_x g tm_unit 
-                          (Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre)
-                          (Tm_Star (list_as_vprop res.unmatched_q) matched_pre)
-        = magic ()
-      in
-        // p.unmatched_pre ~ res.unmatched @ res.matched
-      let pre_equiv
-          : vprop_equiv g (comp_pre p.c) (Tm_Star (list_as_vprop res.unmatched_p) matched_pre)
-          = magic ()
-      in
-      let proof_steps_typing = st_typing_equiv_post p.proof_steps_typing veq in
-      Some 
-        { p with unmatched_pre = res.unmatched_p;
-                 matched_pre;
-                 remaining_ctxt = res.unmatched_q;
-                 proof_steps_typing;
-                 pre_equiv }
+let tm_prop = Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0
+let step_intro_one_pure #g (goal:term) (d:tot_typing g goal tm_prop)
+  : prover_step_t 
+  = fun #g #o p -> None
 
 let step_intro_exists #g #o (p:prover_state g o) : T.Tac (option (prover_state g o)) = None
-
 let step_intro_pure #g #o (p:prover_state g o) : T.Tac (option (prover_state g o)) = None
 let step_intro_rewrite #g #o (p:prover_state g o) : T.Tac (option (prover_state g o)) = None
 
-let rec first_success (l:list step_t) : step_t = 
+let rec first_success (l:list prover_step_t) : prover_step_t = 
   fun #g #o p ->
     match l with
     | [] -> None
@@ -151,13 +70,12 @@ let rec first_success (l:list step_t) : step_t =
 
 (* Take one step of proving, matching at least one unmatched pre, or rewriting the context.
    If neither, then returns None; and the outer loop should fail reporting unmatched preconditions *)
-let step : step_t
-  = first_success [ step_match <: step_t;
-                    step_intro_exists <: step_t;
-                    step_intro_pure <: step_t;
-                    step_intro_rewrite <: step_t ]
+let step : prover_step_t
+  = first_success [ Pulse.Checker.Auto.Framing.step_match <: prover_step_t;
+                    step_intro_exists <: prover_step_t;
+                    step_intro_pure <: prover_step_t;
+                    step_intro_rewrite <: prover_step_t ]
 
-                                //  
 let finish #g #o (p:prover_state g o { p.unmatched_pre == []})
   : (t:st_term & c:comp_st { comp_pre c == o } & st_typing g t c)
   = assume (list_as_vprop [] == Tm_Emp);

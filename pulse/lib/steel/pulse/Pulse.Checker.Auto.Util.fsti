@@ -5,6 +5,7 @@ module T = FStar.Tactics
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Common
+open Pulse.Typing.Metatheory
 
 val k_elab_unit (g:env) (ctxt:term)
   : continuation_elaborator g ctxt g ctxt
@@ -60,3 +61,39 @@ val add_elims (#g:env) (#ctxt:term)
             ctxt':term &
             tot_typing g' ctxt' Tm_VProp &
             continuation_elaborator g ctxt g' ctxt')
+
+
+let vprop_typing g v = tot_typing g v Tm_VProp
+
+let ghost_comp pre post = 
+  C_STGhost Tm_EmpInames { u=u_zero; res=tm_unit; pre; post }
+
+open Pulse.Checker.VPropEquiv
+noeq
+type prover_state (g:env) (ctxt:vprop) = {
+  (* the original context is well-typed *)
+  ctxt_typing: vprop_typing g ctxt;
+  (* the program whose precondition we're trying to derive *)
+  t:st_term;
+  c:comp_st;
+  t_typing:st_typing g t c;
+  (* the in-progress proof state *)
+  matched_pre:term; (* conjuncts that we have already derived *)
+  unmatched_pre:list term; (* conjuncts remaining to be derived *)
+  remaining_ctxt:list term; (* unused conjuncts in the context *)
+  (* Ghost proof steps witnessing the derivation of matched_pre from ctxt *)
+  proof_steps: st_term;
+  proof_steps_typing: st_typing g proof_steps (ghost_comp ctxt (Tm_Star (list_as_vprop remaining_ctxt) matched_pre));
+  pre_equiv:vprop_equiv g (comp_pre c) (Tm_Star (list_as_vprop unmatched_pre) matched_pre);
+}
+
+let proof_steps_post #g #o (p:prover_state g o) : vprop = Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre
+
+let bind_proof_steps_with #g #o (p:prover_state g o) 
+                                (t:st_term)
+                                (c:comp_st {comp_pre c == proof_steps_post p})
+                                (t_typing:st_typing g t c)
+   : (t':st_term & st_typing g t' (comp_st_with_pre c o))
+   = admit()
+
+let prover_step_t = #g:_ -> #o:_ -> p:prover_state g o -> T.Tac (option (prover_state g o))
