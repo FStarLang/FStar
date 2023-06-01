@@ -82,9 +82,6 @@ let e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar f
 let e_sigelt             : embedding sigelt             = EMB.e_lazy Lazy_sigelt fstar_refl_sigelt
 let e_letbinding         : embedding letbinding         = EMB.e_lazy Lazy_letbinding fstar_refl_letbinding
 
-let e_sort   : embedding term   = e_sealed e_term
-let e_ppname : embedding string = e_sealed e_string
-
 let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
     | [] -> Some []
@@ -134,6 +131,9 @@ let e_term_aq aq =
     mk_emb embed_term unembed_term S.t_term
 
 let e_term = e_term_aq noaqs
+
+let e_sort   : embedding term   = e_sealed e_term
+let e_ppname : embedding string = e_sealed e_string
 
 let e_aqualv =
     let embed_aqualv (rng:Range.range) (q : aqualv) : term =
@@ -461,7 +461,7 @@ let e_namedv_view =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_namedv_view.lid ->
-          run args (Mknamedv_view <$$> e_int <**> e_sort <**> e_ppanme)
+          run args (Mknamedv_view <$$> e_int <**> e_sort <**> e_ppname)
         | _ -> None
     in
     mk_emb embed_namedv_view unembed_namedv_view fstar_refl_namedv_view
