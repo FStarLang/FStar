@@ -77,6 +77,7 @@ type prover_state (g:env) (ctxt:vprop) = {
   t:st_term;
   c:comp_st;
   t_typing:st_typing g t c;
+
   (* the in-progress proof state *)
   matched_pre:term; (* conjuncts that we have already derived *)
   unmatched_pre:list term; (* conjuncts remaining to be derived *)
