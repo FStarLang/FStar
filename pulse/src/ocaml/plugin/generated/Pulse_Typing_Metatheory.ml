@@ -76,3 +76,87 @@ let (tm_exists_inversion :
           unit -> Pulse_Syntax_Base.var -> (unit * unit))
   = fun g -> fun u -> fun ty -> fun p -> fun uu___ -> fun x -> ((), ())
 
+
+let (comp_st_with_post :
+  Pulse_Syntax_Base.comp_st ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp_st)
+  =
+  fun c ->
+    fun post ->
+      match c with
+      | Pulse_Syntax_Base.C_ST st ->
+          Pulse_Syntax_Base.C_ST
+            {
+              Pulse_Syntax_Base.u = (st.Pulse_Syntax_Base.u);
+              Pulse_Syntax_Base.res = (st.Pulse_Syntax_Base.res);
+              Pulse_Syntax_Base.pre = (st.Pulse_Syntax_Base.pre);
+              Pulse_Syntax_Base.post = post
+            }
+      | Pulse_Syntax_Base.C_STGhost (i, st) ->
+          Pulse_Syntax_Base.C_STGhost
+            (i,
+              {
+                Pulse_Syntax_Base.u = (st.Pulse_Syntax_Base.u);
+                Pulse_Syntax_Base.res = (st.Pulse_Syntax_Base.res);
+                Pulse_Syntax_Base.pre = (st.Pulse_Syntax_Base.pre);
+                Pulse_Syntax_Base.post = post
+              })
+      | Pulse_Syntax_Base.C_STAtomic (i, st) ->
+          Pulse_Syntax_Base.C_STAtomic
+            (i,
+              {
+                Pulse_Syntax_Base.u = (st.Pulse_Syntax_Base.u);
+                Pulse_Syntax_Base.res = (st.Pulse_Syntax_Base.res);
+                Pulse_Syntax_Base.pre = (st.Pulse_Syntax_Base.pre);
+                Pulse_Syntax_Base.post = post
+              })
+let (comp_st_with_pre :
+  Pulse_Syntax_Base.comp_st ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp_st)
+  =
+  fun c ->
+    fun pre ->
+      match c with
+      | Pulse_Syntax_Base.C_ST st ->
+          Pulse_Syntax_Base.C_ST
+            {
+              Pulse_Syntax_Base.u = (st.Pulse_Syntax_Base.u);
+              Pulse_Syntax_Base.res = (st.Pulse_Syntax_Base.res);
+              Pulse_Syntax_Base.pre = pre;
+              Pulse_Syntax_Base.post = (st.Pulse_Syntax_Base.post)
+            }
+      | Pulse_Syntax_Base.C_STGhost (i, st) ->
+          Pulse_Syntax_Base.C_STGhost
+            (i,
+              {
+                Pulse_Syntax_Base.u = (st.Pulse_Syntax_Base.u);
+                Pulse_Syntax_Base.res = (st.Pulse_Syntax_Base.res);
+                Pulse_Syntax_Base.pre = pre;
+                Pulse_Syntax_Base.post = (st.Pulse_Syntax_Base.post)
+              })
+      | Pulse_Syntax_Base.C_STAtomic (i, st) ->
+          Pulse_Syntax_Base.C_STAtomic
+            (i,
+              {
+                Pulse_Syntax_Base.u = (st.Pulse_Syntax_Base.u);
+                Pulse_Syntax_Base.res = (st.Pulse_Syntax_Base.res);
+                Pulse_Syntax_Base.pre = pre;
+                Pulse_Syntax_Base.post = (st.Pulse_Syntax_Base.post)
+              })
+type ('g, 't, 'p1, 'p2) vprop_equiv_x = unit
+let (st_typing_equiv_post :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.st_term ->
+      Pulse_Syntax_Base.comp_st ->
+        (unit, unit, unit) Pulse_Typing.st_typing ->
+          Pulse_Syntax_Base.term ->
+            unit -> (unit, unit, unit) Pulse_Typing.st_typing)
+  = fun g -> fun t -> fun c -> fun d -> fun post -> fun veq -> Prims.admit ()
+let (st_typing_equiv_pre :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.st_term ->
+      Pulse_Syntax_Base.comp_st ->
+        (unit, unit, unit) Pulse_Typing.st_typing ->
+          Pulse_Syntax_Base.term ->
+            unit -> (unit, unit, unit) Pulse_Typing.st_typing)
+  = fun g -> fun t -> fun c -> fun d -> fun pre -> fun veq -> Prims.admit ()

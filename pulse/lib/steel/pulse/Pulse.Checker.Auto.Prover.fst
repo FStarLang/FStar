@@ -215,6 +215,21 @@ type intro_step_t =
   p:prover_state g ctxt ->
   T.Tac (option (intro_result p))
 
+let get_one_pure (g:env) (l:list vprop)
+  : option (v:vprop { Tm_Pure? v } &
+            rest:list vprop &
+            vprop_equiv g (list_as_vprop l) (Tm_Star v (list_as_vprop rest))) =
+  admit ()
+
+// let step_intro_exists : intro_step_t =
+//   fun #g #ctxt p ->
+//   match get_one_pure g p.unmatched_pre with
+//   | None -> None
+//   | Some (| v, rest, veq |) ->
+//     let Tm_Pure p = v in
+//     admit ()
+
+
 assume val step_intro_exists : intro_step_t
 assume val step_intro_pure : intro_step_t
 assume val step_intro_rewrite : intro_step_t

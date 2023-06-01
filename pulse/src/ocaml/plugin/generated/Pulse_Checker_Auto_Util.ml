@@ -1197,3 +1197,155 @@ let rec (add_elims :
                                                                     ctxt'' k
                                                                     k'))))))
                                        uu___2)))) uu___)
+type ('g, 'v) vprop_typing = unit
+let (ghost_comp :
+  Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.comp)
+  =
+  fun pre ->
+    fun post ->
+      Pulse_Syntax_Base.C_STGhost
+        (Pulse_Syntax_Base.Tm_EmpInames,
+          {
+            Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u_zero;
+            Pulse_Syntax_Base.res = Pulse_Typing.tm_unit;
+            Pulse_Syntax_Base.pre = pre;
+            Pulse_Syntax_Base.post = post
+          })
+type ('g, 'ctxt) prover_state =
+  {
+  ctxt_typing: unit ;
+  t: Pulse_Syntax_Base.st_term ;
+  c: Pulse_Syntax_Base.comp_st ;
+  t_typing: (unit, unit, unit) Pulse_Typing.st_typing ;
+  matched_pre: Pulse_Syntax_Base.term ;
+  unmatched_pre: Pulse_Syntax_Base.term Prims.list ;
+  remaining_ctxt: Pulse_Syntax_Base.term Prims.list ;
+  proof_steps: Pulse_Syntax_Base.st_term ;
+  proof_steps_typing: (unit, unit, unit) Pulse_Typing.st_typing ;
+  pre_equiv: unit }
+
+let (__proj__Mkprover_state__item__t :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.st_term)
+  =
+  fun g ->
+    fun ctxt ->
+      fun projectee ->
+        match projectee with
+        | { ctxt_typing; t; c; t_typing; matched_pre; unmatched_pre;
+            remaining_ctxt; proof_steps; proof_steps_typing; pre_equiv;_} ->
+            t
+let (__proj__Mkprover_state__item__c :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.comp_st)
+  =
+  fun g ->
+    fun ctxt ->
+      fun projectee ->
+        match projectee with
+        | { ctxt_typing; t; c; t_typing; matched_pre; unmatched_pre;
+            remaining_ctxt; proof_steps; proof_steps_typing; pre_equiv;_} ->
+            c
+let (__proj__Mkprover_state__item__t_typing :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> (unit, unit, unit) Pulse_Typing.st_typing)
+  =
+  fun g ->
+    fun ctxt ->
+      fun projectee ->
+        match projectee with
+        | { ctxt_typing; t; c; t_typing; matched_pre; unmatched_pre;
+            remaining_ctxt; proof_steps; proof_steps_typing; pre_equiv;_} ->
+            t_typing
+let (__proj__Mkprover_state__item__matched_pre :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.term)
+  =
+  fun g ->
+    fun ctxt ->
+      fun projectee ->
+        match projectee with
+        | { ctxt_typing; t; c; t_typing; matched_pre; unmatched_pre;
+            remaining_ctxt; proof_steps; proof_steps_typing; pre_equiv;_} ->
+            matched_pre
+let (__proj__Mkprover_state__item__unmatched_pre :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.term Prims.list)
+  =
+  fun g ->
+    fun ctxt ->
+      fun projectee ->
+        match projectee with
+        | { ctxt_typing; t; c; t_typing; matched_pre; unmatched_pre;
+            remaining_ctxt; proof_steps; proof_steps_typing; pre_equiv;_} ->
+            unmatched_pre
+let (__proj__Mkprover_state__item__remaining_ctxt :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.term Prims.list)
+  =
+  fun g ->
+    fun ctxt ->
+      fun projectee ->
+        match projectee with
+        | { ctxt_typing; t; c; t_typing; matched_pre; unmatched_pre;
+            remaining_ctxt; proof_steps; proof_steps_typing; pre_equiv;_} ->
+            remaining_ctxt
+let (__proj__Mkprover_state__item__proof_steps :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.st_term)
+  =
+  fun g ->
+    fun ctxt ->
+      fun projectee ->
+        match projectee with
+        | { ctxt_typing; t; c; t_typing; matched_pre; unmatched_pre;
+            remaining_ctxt; proof_steps; proof_steps_typing; pre_equiv;_} ->
+            proof_steps
+let (__proj__Mkprover_state__item__proof_steps_typing :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> (unit, unit, unit) Pulse_Typing.st_typing)
+  =
+  fun g ->
+    fun ctxt ->
+      fun projectee ->
+        match projectee with
+        | { ctxt_typing; t; c; t_typing; matched_pre; unmatched_pre;
+            remaining_ctxt; proof_steps; proof_steps_typing; pre_equiv;_} ->
+            proof_steps_typing
+let (proof_steps_post :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.vprop)
+  =
+  fun g ->
+    fun o ->
+      fun p ->
+        Pulse_Syntax_Base.Tm_Star
+          ((Pulse_Checker_VPropEquiv.list_as_vprop p.remaining_ctxt),
+            (p.matched_pre))
+let (bind_proof_steps_with :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        Pulse_Syntax_Base.st_term ->
+          Pulse_Syntax_Base.comp_st ->
+            (unit, unit, unit) Pulse_Typing.st_typing ->
+              (Pulse_Syntax_Base.st_term,
+                (unit, unit, unit) Pulse_Typing.st_typing) Prims.dtuple2)
+  =
+  fun g -> fun o -> fun p -> fun t -> fun c -> fun t_typing -> Prims.admit ()
+type prover_step_t =
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop ->
+      (unit, unit) prover_state ->
+        ((unit, unit) prover_state FStar_Pervasives_Native.option, unit)
+          FStar_Tactics_Effect.tac_repr
