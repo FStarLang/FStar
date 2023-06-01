@@ -473,6 +473,7 @@ let eq_lazy_kind k k' =
     match k, k' with
      | BadLazy, BadLazy
      | Lazy_bv, Lazy_bv
+     | Lazy_namedv, Lazy_namedv
      | Lazy_binder, Lazy_binder
      | Lazy_optionstate, Lazy_optionstate
      | Lazy_fvar, Lazy_fvar
@@ -488,7 +489,9 @@ let eq_lazy_kind k k' =
      | Lazy_issue, Lazy_issue
      | Lazy_ident, Lazy_ident
        -> true
-     | _ -> false
+     | Lazy_embedding _, _
+     | _, Lazy_embedding _ -> false
+     | _ -> failwith "FIXME! eq_lazy_kind must be complete"
 
 let lazy_kind_to_string k = 
     match k with
@@ -509,7 +512,8 @@ let lazy_kind_to_string k =
     | Lazy_universe_uvar -> "Lazy_universe_uvar"
     | Lazy_issue -> "Lazy_issue"
     | Lazy_ident -> "Lazy_ident"
-    | _ -> "Unknown"
+    | Lazy_embedding _ -> "Lazy_embedding _"
+     | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
 
 let unlazy_as_t k t =
     match (compress t).n with

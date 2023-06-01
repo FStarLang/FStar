@@ -210,9 +210,19 @@ let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
 let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
   let ee (x:a) rng _topt _norm : term = U.mk_lazy x ty k (Some rng) in
   let uu (t:term) _w _norm : option a =
+    let t0 = t in
+    let t = unmeta_div_results t in
     match (SS.compress t).n with
     | Tm_lazy {blob=b; lkind=lkind} when U.eq_lazy_kind lkind k -> Some (Dyn.undyn b)
-    | _ -> None
+    | Tm_lazy {blob=b; lkind=lkind} ->
+      (* This is very likely a bug, warn! *)
+      Err.log_issue t0.pos (Err.Warning_NotEmbedded,
+                BU.format3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
+                            Expected %s, got %s\n\t\
+                            t = %s." (Print.term_to_string t0) (U.lazy_kind_to_string lkind) (U.lazy_kind_to_string k));
+      None
+    | _ ->
+      None
   in
   mk_emb ee uu (term_as_fv ty)
 
