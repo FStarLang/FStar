@@ -20,12 +20,13 @@ open FStar.Tactics
 let make_42 (nm:string) : Tac decls =
     (* The let binds are needed due to the Tac effect *)
     (* TODO: make the cur_module call unneeded? it doesn't make sense to use another module *)
-    let lbv = {lb_fv = (pack_fv (cur_module () @ [nm]));
-               lb_us = [];
-               lb_typ = (`nat);
-               lb_def = (`42)} in
-    let lb = pack_lb lbv in
-    let sv : sigelt_view = Sg_Let false [lb] in
+    let lb = {
+      lb_fv = (pack_fv (cur_module () @ [nm]));
+      lb_us = [];
+      lb_typ = (`nat);
+      lb_def = (`42);
+    } in
+    let sv : sigelt_view = Sg_Let {isrec=false; lbs=[lb]} in
     let ses : list sigelt = [pack_sigelt sv] in
     ses
 
@@ -50,7 +51,7 @@ let _ = assert (x == 42)
   let recursive_fv = pack_fv (cur_module () @ ["recursive"]) in
   let recursive = pack (Tv_FVar recursive_fv) in
   [pack_sigelt (
-    Sg_Let true [pack_lb ({
+    Sg_Let {isrec=true; lbs=[{
       lb_fv = recursive_fv
     ; lb_us = []
     ; lb_typ = mk_arr [n]
@@ -60,7 +61,7 @@ let _ = assert (x == 42)
                           []
                           [`(10 - (`#(binder_to_term n)))]))
     ; lb_def = `(fun n -> if n>=10 then int else int * (`#recursive) (n + 1))
-    })]
+    }]}
     )
   ]
 )

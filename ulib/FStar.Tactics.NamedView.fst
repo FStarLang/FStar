@@ -653,5 +653,5 @@ let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tac sigelt =
   R.pack_sigelt sv
 
 (* Clients of this module use the named view. *)
-let term_view        = named_term_view
-let sigelt_term_view = named_sigelt_view
+let term_view   = named_term_view
+let sigelt_view = named_sigelt_view
