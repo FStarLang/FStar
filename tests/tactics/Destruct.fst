@@ -54,10 +54,10 @@ let f2 (x:t2) : int =
     synth_by_tactic (fun () -> destruct (quote x);
                                dump "21"; let b = intro () in
                                           let _eq = intro () in
-                                          exact (binder_to_term b);
+                                          exact (binding_to_term b);
                                dump "22"; let b = intro () in
                                           let _eq = intro () in
-                                          exact (`(snd (`#b)));
+                                          exact (`(snd (`#(binding_to_term b))));
                                dump "23"; intros' (); exact (`3))
 
 let _ = assert_norm (f2 (A2 1) == 1)
@@ -135,9 +135,9 @@ let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
                                dump "72"; let [b1;b2;_] = intros () in
                                           // TODO: Ugh! We need the squash because z3 cannot
                                           // prove a Prims.equals, but only Prims.eq2
-                                          let beq = tcut (`squash (`@s == `#b1)) in
+                                          let beq = tcut (`squash (`@s == `#(binding_to_term b1))) in
                                           rewrite beq;
-                                          exact_guard b2;
+                                          exact_guard (binding_to_term b2);
                                dump "73"))
 
 

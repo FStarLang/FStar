@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Syntax
+module SyntaxBasics
 
 open FStar.Tactics
 open FStar.Reflection.Arith
@@ -122,9 +122,9 @@ let arith_test2 (x : int) =
 let _ = assert True
             by (let t = quote (let x = 2 in x + 6) in
                 match inspect t with
-                | Tv_Let r attrs bv ty t1 t2 -> (
+                | Tv_Let r attrs b t1 t2 -> (
                    debug ("r = " ^ (if r then "true" else "false"));
-                   debug ("bv = " ^ bv_to_string bv);
+                   debug ("b = " ^ binder_to_string b);
                    debug ("t1 = " ^ term_to_string t1);
                    debug ("t2 = " ^ term_to_string t2)
                    )
@@ -133,9 +133,9 @@ let _ = assert True
 let _ = assert True
             by (let t = quote (let rec f x = if (x <= 0) then 1 else f (x - 1) in f 5) in
                 match inspect t with
-                | Tv_Let r attrs bv ty t1 t2 -> (
+                | Tv_Let r attrs b t1 t2 -> (
                    debug ("r = " ^ (if r then "true" else "false"));
-                   debug ("bv = " ^ bv_to_string bv);
+                   debug ("b = " ^ binder_to_string b);
                    debug ("t1 = " ^ term_to_string t1);
                    debug ("t2 = " ^ term_to_string t2)
                    )
