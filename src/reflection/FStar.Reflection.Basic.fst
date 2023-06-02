@@ -252,20 +252,11 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head),
                 (ctx_u, s))
 
-    | Tm_let {lbs=(false, [lb]); body=t2} ->
+    | Tm_let {lbs=(isrec, [lb]); body=t2} ->
         if lb.lbunivs <> [] then Tv_Unsupp else
         begin match lb.lbname with
         | Inr _ -> Tv_Unsupp // no top level lets
-        | Inl bv ->
-            // The type of `bv` should match `lb.lbtyp`
-            Tv_Let (false, lb.lbattrs, S.mk_binder bv, lb.lbdef, t2)
-        end
-
-    | Tm_let {lbs=(true, [lb]); body=t2} ->
-        if lb.lbunivs <> [] then Tv_Unsupp else
-        begin match lb.lbname with
-        | Inr _  -> Tv_Unsupp // no top level lets
-        | Inl bv -> Tv_Let (true, lb.lbattrs, S.mk_binder bv, lb.lbdef, t2)
+        | Inl bv -> Tv_Let (isrec, lb.lbattrs, S.mk_binder bv, lb.lbdef, t2)
         end
 
     | Tm_match {scrutinee=t; ret_opt; brs} ->
@@ -408,15 +399,10 @@ let pack_ln (tv:term_view) : term =
     | Tv_Uvar (u, ctx_u_s) ->
       S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
-    | Tv_Let (false, attrs, b, t1, t2) ->
+    | Tv_Let (isrec, attrs, b, t1, t2) ->
         let bv = b.binder_bv in
         let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let {lbs=(false, [lb]); body=t2}) Range.dummyRange
-
-    | Tv_Let (true, attrs, b, t1, t2) ->
-        let bv = b.binder_bv in
-        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let {lbs=(true, [lb]); body=t2}) Range.dummyRange
+        S.mk (Tm_let {lbs=(isrec, [lb]); body=t2}) Range.dummyRange
 
     | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
