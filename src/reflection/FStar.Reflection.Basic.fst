@@ -859,17 +859,6 @@ and binder_eq (b1 : binder) (b2 : binder) : bool =
     aqual_eq bview1.qual bview2.qual &&
     eqlist term_eq bview1.attrs bview2.attrs
 
-and binding_bv_eq (bv1 : bv) (bv2 : bv) : bool =
-  (*
-   * In binding ocurrences, we compare the sorts of variables. Not so
-   * in normal ocurrences, as term_eq does. Note we can access the sort
-   * safely since it's exactly what inspect_bv does.
-   *
-   * We do _not_ compare the indices. This is a binding ocurrence, so
-   * they do not matter at all.
-   *)
-  term_eq bv1.sort bv2.sort
-
 and bv_eq (bv1 : bv) (bv2 : bv) : bool =
   (*
    * Just compare the index. Note: this is safe since inspect_bv
@@ -915,20 +904,19 @@ and branch_eq (c1 : Data.branch) (c2 : Data.branch) : bool =
 
 and pattern_eq (p1 : pattern) (p2 : pattern) : bool =
   match p1, p2 with
-  // GGG FIXME
-  (* | Pat_Constant {c=c1}, Pat_Constant {c=c2} -> *)
-  (*   const_eq c1 c2 *)
-  (* | Pat_Cons (fv1, us1, subpats1), Pat_Cons (fv2, us2, subpats2) -> *)
-  (*   S.fv_eq fv1 fv2 && *)
-  (*     eqopt (eqlist univ_eq) us1 us2 && *)
-  (*     eqlist (eqprod pattern_eq (fun b1 b2 -> b1 = b2)) subpats1 subpats2 *)
+  | Pat_Constant c1, Pat_Constant c2 ->
+    const_eq c1 c2
+  | Pat_Cons fv1 us1 subpats1, Pat_Cons fv2 us2 subpats2 ->
+    S.fv_eq fv1 fv2 &&
+      eqopt (eqlist univ_eq) us1 us2 &&
+      eqlist (eqprod pattern_eq (fun b1 b2 -> b1 = b2)) subpats1 subpats2
 
-  (* | Pat_Var (bv1, _), Pat_Var (bv2, _) -> *)
-  (*   binding_bv_eq bv1 bv2 *)
-  (*   // Should this just be true? Sorts are sealed. *)
+  | Pat_Var _ _, Pat_Var _ _ ->
+    true
+    // Should this just be true? Sorts are sealed.
 
-  (* | Pat_Dot_Term topt1, Pat_Dot_Term topt2 -> *)
-  (*   eqopt term_eq topt1 topt2 *)
+  | Pat_Dot_Term topt1, Pat_Dot_Term topt2 ->
+    eqopt term_eq topt1 topt2
 
   | _ -> false
 
