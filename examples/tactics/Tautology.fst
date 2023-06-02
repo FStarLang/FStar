@@ -37,14 +37,13 @@ let rec tauto (): Tac unit =
       P.implies_intro' ()
     );
     P.gpm (fun (a: Type0) (h: P.hyp a) (g: P.pm_goal (squash a)) ->
-      P.exact_hyp a h
+      P.exact_hyp a (binder_to_namedv h)
     );
     P.gpm (fun (a: Type0) (h: P.hyp a) (g: P.pm_goal a) ->
-      P.exact_hyp' h
+      P.exact_hyp' (binder_to_namedv h)
     );
   ]);
   qed ()
-
 
 assume val p: prop
 

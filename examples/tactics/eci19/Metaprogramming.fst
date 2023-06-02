@@ -67,7 +67,7 @@ A `binder` for `x` is returned by intro, so it can be used to construct
 the new solution. *)
 
 let fancy_id : x:int -> int = _ by (let x = intro () in
-                               exact (binder_to_term x))
+                               exact (binding_to_term x))
 
 (* Exercise: look at the proof states and final solution of `fancy_id` *)
 
@@ -98,7 +98,7 @@ type enum = | A | B | C
 
 let matchenum : enum -> int =
   _ by (let x = intro () in
-        destruct (binder_to_term x);
+        destruct (binding_to_term x);
         ignore (intro ()); exact (`1);
         ignore (intro ()); exact (`2);
         ignore (intro ()); exact (`3))
@@ -110,9 +110,9 @@ type either (a b : Type) = | Left of a | Right of b
 
 let matcheither : either int int -> int =
   _ by (let x = intro () in
-        destruct (binder_to_term x);
-        let x = intro() in ignore (intro ()); exact (binder_to_term x);
-        let y = intro() in ignore (intro ()); exact (binder_to_term y))
+        destruct (binding_to_term x);
+        let x = intro() in ignore (intro ()); exact (binding_to_term x);
+        let y = intro() in ignore (intro ()); exact (binding_to_term y))
 
 let _ = assert (matcheither (Left 10) == 10)
 let _ = assert (matcheither (Right 20) == 20)

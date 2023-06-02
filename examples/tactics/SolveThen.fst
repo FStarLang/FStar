@@ -29,6 +29,6 @@ let constr (a b : prop) : squash (a ==> b ==> b /\ a)
        (let ha = implies_intro () in
         let hb = implies_intro () in
         split ();
-        hyp hb;
-        hyp ha;
+        hyp (binding_to_namedv hb);
+        hyp (binding_to_namedv ha);
         qed ())

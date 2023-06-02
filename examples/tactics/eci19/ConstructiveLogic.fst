@@ -57,7 +57,7 @@ the goal via `hyp`.
 let ex1 (p : prop) =
   assert (p ==> p)
       by (let b = implies_intro () in
-          hyp b)
+          hyp (binding_to_namedv b))
 
 (*
 The `qed` tactic checks that there are no more open goals when called,
@@ -73,7 +73,7 @@ assertion via tactics.
 let ex1_qed (p : prop) =
   assert (p ==> p)
       by (let b = implies_intro () in
-          hyp b;
+          hyp (binding_to_namedv b);
           qed ())
 
 (* Exercise: add intermediate `dump` calls to see how the proofstate evolves *)
@@ -85,7 +85,7 @@ let ex2 (p q : prop) =
   assert (p ==> q ==> p)
       by (let bp = implies_intro () in
           let _ = implies_intro () in
-          hyp bp;
+          hyp (binding_to_namedv bp);
           qed ())
 
 (*
@@ -103,9 +103,9 @@ let ex3 (p q : prop) =
           let bq = implies_intro () in
           split ();
           (* Now we have two goals: q and p *)
-          hyp bq;
+          hyp (binding_to_namedv bq);
           (* Only one goal left, p *)
-          hyp bp;
+          hyp (binding_to_namedv bp);
           (* Done! *)
           qed ())
 
@@ -114,8 +114,8 @@ for each conjunct. *)
 let ex4 (p q : prop) =
   assert (p /\ q ==> p)
       by (let h = implies_intro () in
-          let (bp, bq) = destruct_and (binder_to_term h) in
-          hyp bp;
+          let (bp, bq) = destruct_and (binding_to_term h) in
+          hyp (binding_to_namedv bp);
           qed ())
 
 (* The `left` and `right` tactics solve a disjunction by reducing
@@ -124,14 +124,14 @@ let ex5 (p q : prop) =
   assert (p ==> p \/ q)
       by (let bp = implies_intro () in
           left ();
-          hyp bp;
+          hyp (binding_to_namedv bp);
           qed ())
 
 let ex6 (p q : prop) =
   assert (p ==> q \/ p)
       by (let bp = implies_intro () in
           right ();
-          hyp bp;
+          hyp (binding_to_namedv bp);
           qed ())
 
 (* `cases_or` instead destroys a disjunction `p \/ q`, and splits the
@@ -139,15 +139,15 @@ let ex6 (p q : prop) =
 let ex7 (p q : prop) =
   assert (p \/ q ==> q \/ p)
       by (let bp_or_q = implies_intro () in
-          cases_or (binder_to_term bp_or_q);
+          cases_or (binding_to_term bp_or_q);
           (* first case *)
             let bp = implies_intro () in
             right ();
-            hyp bp;
+            hyp (binding_to_namedv bp);
           (* second case *)
             let bq = implies_intro () in
             left ();
-            hyp bq;
+            hyp (binding_to_namedv bq);
           qed ())
 
 (* To use an implication, we can use the `mapply` tactic. This tactic
@@ -157,8 +157,8 @@ let ex8 (p q : prop) =
   assert ((p ==> q) ==> p ==> q)
       by (let i = implies_intro () in
           let h = implies_intro () in
-          mapply (binder_to_term i);
-          mapply (binder_to_term h);
+          mapply i;
+          mapply h;
           qed ())
 
 (* `forall_intro` will turn a goal of the shape `forall (x:t). phi` into
@@ -168,7 +168,7 @@ let ex9 (p : prop) =
   assert (p ==> (forall (_x:int). p))
       by (let bp = implies_intro () in
           let _bx = forall_intro () in
-          hyp bp;
+          hyp (binding_to_namedv bp);
           qed ())
 
 (* `instantiate` will instantiate a forall with some particular term
@@ -180,8 +180,8 @@ let ex10 (p : int -> prop) =
   assert ((forall x. p x) ==> (exists x. p x))
       by (let bf = implies_intro () in
           witness (`0);
-          let bp0 = instantiate (binder_to_term bf) (`0) in
-          hyp bp0)
+          let bp0 = instantiate (binding_to_term bf) (`0) in
+          hyp (binding_to_namedv bp0))
 
 (* Exercises: do these proofs constructively, and make sure to end with
 a `qed ()` to check that the SMT solver is not used. *)

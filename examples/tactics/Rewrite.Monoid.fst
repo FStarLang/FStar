@@ -16,8 +16,8 @@
 module Rewrite.Monoid
 open FStar.Algebra.Monoid
 open FStar.List
-open FStar.Tactics
 open FStar.Reflection
+open FStar.Tactics
 open FStar.Tactics.CanonMonoid
 
 

@@ -1,5 +1,9 @@
 module Bug2806d
 
+(*** This example is now outdated. Binders do not have
+a bv or an index in them, not even a sealed one. *)
+
+(*
 open FStar.Tactics
 
 let dom (t:term{exists b c. inspect_ln t == Tv_Arrow b c}) =
@@ -19,3 +23,4 @@ let t2 : (t:term{Tv_Arrow? (inspect_ln t)}) = (`(x:int -> int))
 let falso () : Lemma False =
   assert (t1 == t2) by (compute ());
   assert_norm (idx t1 =!= idx t2)
+  *)
