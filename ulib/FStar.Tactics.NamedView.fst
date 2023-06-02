@@ -171,7 +171,7 @@ let open_term_with (b : R.binder) (nb : binder) (t : term) : Tac term =
     ppname = nb.ppname;
   }
   in
-  let t' = subst [DB 0 nv] t in
+  let t' = subst_term [DB 0 nv] t in
   t'
 
 let open_term (b : R.binder) (t : term) : Tac (binder & term) =
@@ -218,7 +218,7 @@ let open_term_simple (b : R.simple_binder) (t : term) : Tac (simple_binder & ter
     ppname = bv.ppname;
   }
   in
-  let t' = subst [DB 0 nv] t in
+  let t' = subst_term [DB 0 nv] t in
   let bndr : binder = {
     uniq   = n;
     sort   = bv.sort;
@@ -252,7 +252,7 @@ let open_comp_simple (b : R.simple_binder) (t : comp) : Tac (simple_binder & com
 (* This two are in Tot *)
 let close_term (b:binder) (t:term) : R.binder & term =
   let nv = binder_to_namedv b in
-  let t' = subst [NM nv 0] t in
+  let t' = subst_term [NM nv 0] t in
   let b = pack_binder { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   (b, t')
 let close_comp (b:binder) (t:comp) : R.binder & comp =
@@ -263,7 +263,7 @@ let close_comp (b:binder) (t:comp) : R.binder & comp =
 
 let close_term_simple (b:simple_binder) (t:term) : R.simple_binder & term =
   let nv = binder_to_namedv b in
-  let t' = subst [NM nv 0] t in
+  let t' = subst_term [NM nv 0] t in
   let bv : binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   let b = pack_binder bv in
   inspect_pack_binder bv;
@@ -329,7 +329,7 @@ let close_univ_s (us : list univ_name) : list univ_name & subst_t =
 
 let subst_binder_sort (s : subst_t) (b : R.binder) : R.binder =
   let v = inspect_binder b in
-  let v = { v with sort = subst s v.sort } in
+  let v = { v with sort = subst_term s v.sort } in
   pack_binder v
 
 let rec open_pat (p : R.pattern) (s : subst_t) : Tac (pattern & subst_t) =
@@ -339,7 +339,7 @@ let rec open_pat (p : R.pattern) (s : subst_t) : Tac (pattern & subst_t) =
 
   | R.Pat_Var ssort n ->
     let sort = unseal ssort in
-    let sort = subst s sort in
+    let sort = subst_term s sort in
     let nv : namedv = pack_namedv {
       uniq = fresh();
       sort = seal sort;
@@ -361,13 +361,13 @@ let rec open_pat (p : R.pattern) (s : subst_t) : Tac (pattern & subst_t) =
     Pat_Dot_Term {t=None}, s
 
   | R.Pat_Dot_Term (Some t) ->
-    let t = subst s t in
+    let t = subst_term s t in
     Pat_Dot_Term {t=Some t}, s
 
 let open_branch (b : R.branch) : Tac branch =
   let (pat, t) = b in
   let pat, s = open_pat pat [] in
-  let t' = subst s t in
+  let t' = subst_term s t in
   (pat, t')
 
 let rec close_pat (p : pattern) (s : subst_t) : Tot (R.pattern & subst_t) =
@@ -379,7 +379,7 @@ let rec close_pat (p : pattern) (s : subst_t) : Tot (R.pattern & subst_t) =
     (* NOTE: we cannot do anything on the sort wihtout going
     into TAC. Need a sealed_bind. *)
     //let sort = unseal sort in
-    //let sort = subst s sort in
+    //let sort = subst_term s sort in
     //let sort = seal sort in
     let s = (NM v 0) :: shift_subst 1 s in
     R.Pat_Var sort (inspect_namedv v).ppname, s
@@ -398,13 +398,13 @@ let rec close_pat (p : pattern) (s : subst_t) : Tot (R.pattern & subst_t) =
     R.Pat_Dot_Term None, s
 
   | Pat_Dot_Term {t=Some t} ->
-    let t = subst s t in
+    let t = subst_term s t in
     R.Pat_Dot_Term (Some t), s
 
 let close_branch (b : branch) : Tot R.branch =
   let (pat, t) = b in
   let pat, s = close_pat pat [] in
-  let t' = subst s t in
+  let t' = subst_term s t in
   (pat, t')
 
 let open_view (tv:term_view) : Tac named_term_view =
@@ -442,7 +442,7 @@ let open_view (tv:term_view) : Tac named_term_view =
     let nb, body = open_term_simple b body in
     let def =
       if recf
-      then subst [DB 0 (binder_to_namedv nb)] def
+      then subst_term [DB 0 (binder_to_namedv nb)] def
       else def
     in
     Tv_Let recf attrs nb def body
@@ -485,7 +485,7 @@ let close_view (tv : named_term_view) : Tot term_view =
   | Tv_Let recf attrs nb def body ->
     let def =
       if recf
-      then subst [NM (binder_to_namedv nb) 0] def
+      then subst_term [NM (binder_to_namedv nb) 0] def
       else def
     in
     let b, body = close_term_simple nb body in
@@ -545,15 +545,15 @@ type named_sigelt_view =
 let open_lb (lb : R.letbinding) : Tac letbinding =
   let {lb_fv; lb_us; lb_typ; lb_def} = inspect_lb lb in
   let lb_us, s = open_univ_s lb_us in
-  let lb_typ = subst s lb_typ in
-  let lb_def = subst s lb_def in
+  let lb_typ = subst_term s lb_typ in
+  let lb_def = subst_term s lb_def in
   { lb_fv; lb_us; lb_typ; lb_def }
 
 let close_lb (lb : letbinding) : R.letbinding =
   let {lb_fv; lb_us; lb_typ; lb_def} = lb in
   let lb_us, s = close_univ_s lb_us in
-  let lb_typ = subst s lb_typ in
-  let lb_def = subst s lb_def in
+  let lb_typ = subst_term s lb_typ in
+  let lb_def = subst_term s lb_def in
   pack_lb { lb_fv; lb_us; lb_typ; lb_def }
 
 exception NotEnoughBinders
@@ -571,7 +571,7 @@ let rec open_n_binders_from_arrow (bs : binders) (t : term) : Tac term =
         print ("t' = " ^ term_to_string t);
         print ("sub " ^ binder_to_string b' ^ " for " ^ binder_to_string b);
         print ("substituting " ^ term_to_string t');
-        let t' = subst [NT (binder_to_namedv b') (pack (Tv_Var (binder_to_namedv b)))] t' in
+        let t' = subst_term [NT (binder_to_namedv b') (pack (Tv_Var (binder_to_namedv b)))] t' in
         print ("got " ^ term_to_string t');
         open_n_binders_from_arrow bs t'
       | _ -> raise NotTot
@@ -591,8 +591,8 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
     (* Open universes everywhere *)
     let us, s = open_univ_s univs in
     let params = List.Tot.map (subst_binder_sort s) params in
-    let typ = subst s typ in
-    let ctors = map (fun (nm, ty) -> nm, subst s ty) ctors in
+    let typ = subst_term s typ in
+    let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
 
     (* Open parameters in themselves and in type *)
     let params, typ = open_term_n params typ in
@@ -614,7 +614,7 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
 
   | RD.Sg_Val nm univs typ ->
     let univs, s = open_univ_s univs in
-    let typ = subst s typ in
+    let typ = subst_term s typ in
     Sg_Val {nm; univs; typ}
 
   | RD.Unk -> Unk
@@ -645,14 +645,14 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
     (* close univs *)
     let us, s = close_univ_s univs in
     let params = List.Tot.map (subst_binder_sort s) params in
-    let typ = subst s typ in
-    let ctors = map (fun (nm, ty) -> nm, subst s ty) ctors in
+    let typ = subst_term s typ in
+    let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
 
     RD.Sg_Inductive nm univs params typ ctors
 
   | Sg_Val {nm; univs; typ} ->
     let univs, s = close_univ_s univs in
-    let typ = subst s typ in
+    let typ = subst_term s typ in
     RD.Sg_Val nm univs typ
 
 let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =

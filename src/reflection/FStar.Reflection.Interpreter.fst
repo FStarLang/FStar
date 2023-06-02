@@ -349,8 +349,8 @@ let reflection_primops : list Cfg.primitive_step = [
     e_qualifiers e_sigelt
     e_sigelt;
 
-  mk2 "subst"
-    RB.subst
+  mk2 "subst_term"
+    RB.subst_term
     e_subst e_term e_term;
 
   mk2 "subst_comp"

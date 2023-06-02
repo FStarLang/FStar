@@ -950,7 +950,7 @@ let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
 let push_binder e b = Env.push_binders e [b]
 let push_namedv e b = Env.push_binders e [S.mk_binder b]
 
-let subst (s : list subst_elt) (t : term) : term =
+let subst_term (s : list subst_elt) (t : term) : term =
   SS.subst s t
 
 let subst_comp (s : list subst_elt) (c : comp) : comp =

@@ -178,9 +178,9 @@ irreducible
 let check_with (vcfg : vconfig) : unit = ()
 
 (** Apply a substitution on a term *)
-val subst : subst_t -> term -> term
+val subst_term : subst_t -> term -> term
 
-(** Apply a substitution on a computation *)
+(** Apply a substitution on a computation. TODO: userspace? *)
 val subst_comp : subst_t -> comp -> comp
 
 (** Get the range of a term, i.e., the source location where it was defined. *)

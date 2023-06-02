@@ -36,7 +36,7 @@ let shift n s = match s with
 let shift_subst n s = List.Tot.map (shift n) s
 
 let subst1 (n:namedv) (t1:term) (t2:term) : term =
-  subst [NT n t1] t2
+  subst_term [NT n t1] t2
 
 (*
  * AR: add versions that take attributes as arguments?

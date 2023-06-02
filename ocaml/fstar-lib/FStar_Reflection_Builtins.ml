@@ -40,7 +40,7 @@ let explode_qn              = RB.explode_qn
 let compare_string          = RB.compare_string
 let push_binder             = RB.push_binder
 let push_namedv             = RB.push_namedv
-let subst                   = RB.subst
+let subst_term              = RB.subst_term
 let subst_comp              = RB.subst_comp
 
 let inspect_universe        = RB.inspect_universe
