@@ -53,6 +53,7 @@ val focus                  : tac 'a -> tac 'a
 (* Metaprogramming primitives (not all of them).
  * Documented in `ulib/FStar.Tactics.Builtins.fst` *)
 
+val compress               : term -> tac term
 val top_env                : unit -> tac env
 val fresh                  : unit -> tac Z.t
 val refine_intro           : unit -> tac unit

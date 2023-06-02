@@ -259,6 +259,10 @@ let () =
         unseal e_any      (e_sealed      e_any)      e_any
         unseal NBET.e_any (NBET.e_sealed NBET.e_any) NBET.e_any;
 
+      mk_tac_step_1 0 "compress"
+        compress RE.e_term RE.e_term
+        compress NRE.e_term NRE.e_term;
+
       mk_total_step_1'_psc 0 "tracepoint"
         tracepoint_with_psc E.e_proofstate e_bool
         tracepoint_with_psc E.e_proofstate_nbe NBET.e_bool;

@@ -111,6 +111,7 @@ let from_tac_4 (t: 'a -> 'b -> 'c -> 'd -> 'e TM.tac): 'a  -> 'b -> 'c -> 'd -> 
 let unseal x = E.tac_return x
 
 (* Pointing to the internal primitives *)
+let compress                = from_tac_1 B.compress
 let set_goals               = from_tac_1 TM.set_goals
 let set_smt_goals           = from_tac_1 TM.set_smt_goals
 let top_env                 = from_tac_1 B.top_env

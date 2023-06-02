@@ -56,6 +56,10 @@ module U      = FStar.Syntax.Util
 module Z      = FStar.BigInt
 module Core   = FStar.TypeChecker.Core
 
+let compress (t:term) : tac term =
+  idtac ;!
+  ret (SS.compress t)
+
 let core_check env sol t must_tot
   : either (option typ) Core.error
   = if not (Options.compat_pre_core_should_check()) then Inl None else
