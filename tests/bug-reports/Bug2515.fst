@@ -3,7 +3,7 @@ module Bug2515
 open FStar.Tactics
 
 let match_term (t: term) : Tac term =
-    match t with
+    match inspect t with
     | Tv_App fn' arg -> t
     | _ -> t
 

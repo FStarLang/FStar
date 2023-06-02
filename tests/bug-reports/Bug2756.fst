@@ -37,11 +37,11 @@ assume val bar:
 let the_proof (): Tac unit =
   apply (`arrow_to_forall);
   compute();
-  let x_term = binder_to_term (forall_intro ()) in
+  let x_term = binding_to_term (forall_intro ()) in
   destruct x_term;
   iterAll (fun () ->
     let destruct_binders = intros() in
-    let breq_term = binder_to_term (last destruct_binders) in
+    let breq_term = binding_to_term (last destruct_binders) in
     l_to_r [breq_term];
     compute();
     trefl ()

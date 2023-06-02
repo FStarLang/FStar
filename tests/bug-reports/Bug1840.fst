@@ -4,23 +4,22 @@ open FStar.Tactics
 
 (* Simpler repro *)
 let resolve bs : Tac unit =
-  let rec try_binders (bs: binders): Tac unit =
-    match bs with
+  let rec try_namedv (vs: list namedv): Tac unit =
+    match vs with
     | [] -> ()
-    | b :: bs -> try_binders bs
+    | v :: vs -> try_namedv vs
   in
-  try_binders bs
+  try_namedv bs
 
 (* Original *)
 let resolve' (): Tac unit =
   // dump "blah"
-  let rec try_binders (bs: binders): Tac unit =
-    match bs with
+  let rec try_namedv (vs: list binding): Tac unit =
+    match vs with
     | [] -> fail "found no suitable type class"
-    | b :: bs ->
-        let b = (inspect_binder b).binder_bv in
-        try exact (pack_ln (Tv_BVar b))
-        with | TacticFailure _ -> try_binders bs
+    | v :: vs ->
+        try exact (pack (Tv_Var (binding_to_namedv v)))
+        with | TacticFailure _ -> try_namedv vs
              | _ -> ()
   in
-  try_binders (binders_of_env (cur_env ()))
+  try_namedv (vars_of_env (cur_env ()))

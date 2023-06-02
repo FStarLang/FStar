@@ -8,12 +8,12 @@ assume val mk : x:int -> y:(t x) -> int
 
 let f (xxxx:int) (y : t xxxx) =
   assert (y == y)
-      by (let xXX = nth_binder (-2) in
+      by (let xXX = nth_var (-2) in
           let zZZ = rename_to xXX "zzzz" in
           apply_lemma (`lem))
 
 let syn (xxxx:int) (y : t xxxx) : int =
-    _ by (let xXX = nth_binder (-2) in
+    _ by (let xXX = nth_var (-2) in
           let zZZ = rename_to xXX "zzzz" in
-          let y = nth_binder (-1) in
-          apply (`mk _ (`#y)))
+          let y = nth_var (-1) in
+          apply (`mk _ (`#(binding_to_term y))))
