@@ -1163,9 +1163,6 @@ let (env_open_modules :
          | (l, m) ->
              let uu___2 = FStar_Ident.ids_of_lid l in
              FStar_Compiler_List.map FStar_Ident.string_of_id uu___2) uu___
-let (binders_of_env :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders) =
-  fun e -> FStar_TypeChecker_Env.all_binders e
 let (bv_to_binding : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.binding)
   =
   fun bv ->

@@ -660,16 +660,7 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     =
                                                                     let uu___66
                                                                     =
-                                                                    mk1
-                                                                    "binders_of_env"
-                                                                    FStar_Reflection_Basic.binders_of_env
-                                                                    e_env
-                                                                    e_binders in
                                                                     let uu___67
-                                                                    =
-                                                                    let uu___68
-                                                                    =
-                                                                    let uu___69
                                                                     =
                                                                     e_list
                                                                     e_binding in
@@ -677,12 +668,12 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     "vars_of_env"
                                                                     FStar_Reflection_Basic.vars_of_env
                                                                     e_env
-                                                                    uu___69 in
+                                                                    uu___67 in
+                                                                    let uu___67
+                                                                    =
+                                                                    let uu___68
+                                                                    =
                                                                     let uu___69
-                                                                    =
-                                                                    let uu___70
-                                                                    =
-                                                                    let uu___71
                                                                     =
                                                                     e_option
                                                                     e_sigelt in
@@ -691,12 +682,12 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     FStar_Reflection_Basic.lookup_typ
                                                                     e_env
                                                                     e_string_list
-                                                                    uu___71 in
+                                                                    uu___69 in
+                                                                    let uu___69
+                                                                    =
+                                                                    let uu___70
+                                                                    =
                                                                     let uu___71
-                                                                    =
-                                                                    let uu___72
-                                                                    =
-                                                                    let uu___73
                                                                     =
                                                                     e_list
                                                                     e_string_list in
@@ -704,28 +695,28 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     "env_open_modules"
                                                                     FStar_Reflection_Basic.env_open_modules
                                                                     e_env
-                                                                    uu___73 in
-                                                                    let uu___73
+                                                                    uu___71 in
+                                                                    let uu___71
                                                                     =
-                                                                    let uu___74
+                                                                    let uu___72
                                                                     =
                                                                     mk1
                                                                     "implode_qn"
                                                                     FStar_Reflection_Basic.implode_qn
                                                                     e_string_list
                                                                     e_string in
-                                                                    let uu___75
+                                                                    let uu___73
                                                                     =
-                                                                    let uu___76
+                                                                    let uu___74
                                                                     =
                                                                     mk1
                                                                     "explode_qn"
                                                                     FStar_Reflection_Basic.explode_qn
                                                                     e_string
                                                                     e_string_list in
-                                                                    let uu___77
+                                                                    let uu___75
                                                                     =
-                                                                    let uu___78
+                                                                    let uu___76
                                                                     =
                                                                     mk2
                                                                     "compare_string"
@@ -733,9 +724,9 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_string
                                                                     e_string
                                                                     e_int in
-                                                                    let uu___79
+                                                                    let uu___77
                                                                     =
-                                                                    let uu___80
+                                                                    let uu___78
                                                                     =
                                                                     mk2
                                                                     "push_binder"
@@ -743,9 +734,9 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_env
                                                                     e_binder
                                                                     e_env in
-                                                                    let uu___81
+                                                                    let uu___79
                                                                     =
-                                                                    let uu___82
+                                                                    let uu___80
                                                                     =
                                                                     mk2
                                                                     "push_namedv"
@@ -753,24 +744,38 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_env
                                                                     e_namedv
                                                                     e_env in
-                                                                    let uu___83
+                                                                    let uu___81
                                                                     =
-                                                                    let uu___84
+                                                                    let uu___82
                                                                     =
                                                                     mk1
                                                                     "range_of_term"
                                                                     FStar_Reflection_Basic.range_of_term
                                                                     e_term
                                                                     e_range in
-                                                                    let uu___85
+                                                                    let uu___83
                                                                     =
-                                                                    let uu___86
+                                                                    let uu___84
                                                                     =
                                                                     mk1
                                                                     "range_of_sigelt"
                                                                     FStar_Reflection_Basic.range_of_sigelt
                                                                     e_sigelt
                                                                     e_range in
+                                                                    let uu___85
+                                                                    =
+                                                                    let uu___86
+                                                                    =
+                                                                    let uu___87
+                                                                    =
+                                                                    e_tuple2
+                                                                    e_string
+                                                                    e_range in
+                                                                    mk1
+                                                                    "inspect_ident"
+                                                                    FStar_Reflection_Basic.inspect_ident
+                                                                    e___ident
+                                                                    uu___87 in
                                                                     let uu___87
                                                                     =
                                                                     let uu___88
@@ -781,28 +786,11 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_string
                                                                     e_range in
                                                                     mk1
-                                                                    "inspect_ident"
-                                                                    FStar_Reflection_Basic.inspect_ident
-                                                                    e___ident
-                                                                    uu___89 in
-                                                                    let uu___89
-                                                                    =
-                                                                    let uu___90
-                                                                    =
-                                                                    let uu___91
-                                                                    =
-                                                                    e_tuple2
-                                                                    e_string
-                                                                    e_range in
-                                                                    mk1
                                                                     "pack_ident"
                                                                     FStar_Reflection_Basic.pack_ident
-                                                                    uu___91
+                                                                    uu___89
                                                                     e___ident in
-                                                                    [uu___90] in
-                                                                    uu___88
-                                                                    ::
-                                                                    uu___89 in
+                                                                    [uu___88] in
                                                                     uu___86
                                                                     ::
                                                                     uu___87 in
