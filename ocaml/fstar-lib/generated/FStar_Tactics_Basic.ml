@@ -1,4 +1,13 @@
 open Prims
+let (compress :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
+  =
+  fun t ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 = FStar_Syntax_Subst.compress t in
+         FStar_Tactics_Monad.ret uu___1)
 let (core_check :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

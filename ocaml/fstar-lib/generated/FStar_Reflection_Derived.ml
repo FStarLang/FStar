@@ -406,6 +406,8 @@ let rec (is_name_imp :
       | FStar_Reflection_Data.Tv_App
           (l, (uu___, FStar_Reflection_Data.Q_Implicit)) -> is_name_imp nm l
       | uu___ -> false
+let isuvar : 'a . unit -> 'a =
+  fun uu___ -> failwith "Not yet implemented:isuvar"
 let (unsquash_term :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term FStar_Pervasives_Native.option)
@@ -417,6 +419,7 @@ let (unsquash_term :
         if is_name_imp FStar_Reflection_Const.squash_qn l
         then FStar_Pervasives_Native.Some r
         else FStar_Pervasives_Native.None
+    | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) -> isuvar ()
     | uu___ -> FStar_Pervasives_Native.None
 let (maybe_unsquash_term :
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =

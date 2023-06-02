@@ -1193,7 +1193,7 @@ let rec (term_to_ast_string :
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 -> "<Tv_Unsupp>")))) uu___)
 and (match_returns_to_string :
-  FStar_Reflection_Types.match_returns_ascription
+  FStar_Tactics_NamedView.match_returns_ascription
     FStar_Pervasives_Native.option ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
