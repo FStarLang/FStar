@@ -21,16 +21,21 @@ open FStar.Reflection.Derived
 open FStar.Reflection.Const
 open FStar.Reflection.Data
 
+open FStar.Tactics.Common
+open FStar.Tactics.Effect
+open FStar.Tactics.Builtins
+open FStar.Tactics.NamedView
+
 ///// Helpers (we cannot use the ones in Tactics.Derived, those are for named views /////
-private let rec inspect_unascribe (t:term) : Tot (tv:term_view{notAscription tv /\ tv << t}) =
-  match inspect_ln t with
+private let rec inspect_unascribe (t:term) : Tac term_view =
+  match inspect t with
   | Tv_AscribedT t _ _ _
   | Tv_AscribedC t _ _ _ ->
     inspect_unascribe t
   | tv -> tv
 
 private let rec collect_app' (args : list argv) (t : term)
-  : Tot (term * list argv) (decreases t) =
+  : Tac (term * list argv) (decreases t) =
     match inspect_unascribe t with
     | Tv_App l r ->
         collect_app' (r::args) l
@@ -65,15 +70,15 @@ let mk_Forall (typ : term) (pred : term) : Tot formula =
     let b = pack_bv ({ ppname = as_ppname "x";
                        sort = seal typ;
                        index = 0; }) in
-    Forall b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
+    Forall b typ (pack (Tv_App pred (pack (Tv_BVar b), Q_Explicit)))
 
 let mk_Exists (typ : term) (pred : term) : Tot formula =
     let b = pack_bv ({ ppname = as_ppname "x";
                        sort = seal typ;
                        index = 0; }) in
-    Exists b typ (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
+    Exists b typ (pack (Tv_App pred (pack (Tv_BVar b), Q_Explicit)))
 
-let term_as_formula' (t:term) : Tot formula =
+let term_as_formula' (t:term) : Tac formula =
     match inspect_unascribe t with
     | Tv_Var n ->
         Name n
@@ -92,7 +97,7 @@ let term_as_formula' (t:term) : Tot formula =
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app h0 in
         let h = un_uinst h in
-        match inspect_ln h, ts@[t] with
+        match inspect h, ts@[t] with
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit); (a3, Q_Explicit)] ->
             let qn = inspect_fv fv in
             if      qn = eq2_qn then Comp (Eq     (Some a1)) a2 a3
@@ -143,11 +148,12 @@ let term_as_formula' (t:term) : Tot formula =
     (* Other constants? *)
     | Tv_Const _ -> F_Unknown
 
-    (* Should not occur, we're using inspect_ln *)
+    (* Should not occur, we're using inspect *)
     | Tv_BVar _ -> F_Unknown
+    | _ -> raise (TacticFailure "???")
 
 // Unsquashing
-let term_as_formula (t:term) : Tot formula =
+let term_as_formula (t:term) : Tac formula =
     match unsquash_term t with
     | None -> F_Unknown
     | Some t ->
@@ -155,11 +161,11 @@ let term_as_formula (t:term) : Tot formula =
 
 // Badly named, this only means it always returns a formula even if not properly
 // squashed at the top-level.
-let term_as_formula_total (t:term) : Tot formula =
+let term_as_formula_total (t:term) : Tac formula =
     term_as_formula' (maybe_unsquash_term t)
 
 let formula_as_term_view (f:formula) : Tot term_view =
-    let mk_app' tv args = List.Tot.Base.fold_left (fun tv a -> Tv_App (pack_ln tv) a) tv args in
+    let mk_app' tv args = List.Tot.Base.fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
     let e = Q_Explicit in
     let i = Q_Implicit in
     match f with
@@ -197,7 +203,7 @@ let formula_as_term_view (f:formula) : Tot term_view =
         Tv_Unknown
 
 let formula_as_term (f:formula) : Tot term =
-    pack_ln (formula_as_term_view f)
+    pack (formula_as_term_view f)
 
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins (* For unseal *)
