@@ -32,7 +32,7 @@ let g =
 
                 match vars_of_env (cur_env ()) with
                 | [b] ->
-                    let t = type_of_namedv b in
+                    let t = type_of_binding b in
                     let q = quote (eq2 #int 5 7) in
                     if FStar.Order.ne (compare_term t q)
                     then fail "type was not normalized"

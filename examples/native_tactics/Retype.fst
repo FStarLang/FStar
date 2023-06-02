@@ -48,7 +48,7 @@ let tau () : Tac unit =
     let e = cur_env () in
     match vars_of_env e with
     | [_;_;_;b] ->
-        let t = type_of_namedv b in
+        let t = type_of_binding b in
         let t = norm_term [] t in // contains uvar redexes.
         if FStar.Order.ne (compare_term t rr)
         then fail "binder was not retyped?"

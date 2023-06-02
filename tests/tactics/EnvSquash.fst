@@ -28,9 +28,9 @@ let test () =
       let bs = vars_of_env (cur_env ()) in
       guard (Cons? (List.Tot.rev bs));
       let b = List.Tot.hd (List.Tot.rev bs) in
-      match term_as_formula' (type_of_namedv b) with
+      match term_as_formula' (type_of_binding b) with
       | Exists _ _ _ -> ()
-      | _ -> fail ("unexpected type for last binder: " ^ term_to_string (type_of_namedv b))
+      | _ -> fail ("unexpected type for last binder: " ^ term_to_string (type_of_binding b))
     in
     assume (exists x. p x);
     assert True by tau ()

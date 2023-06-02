@@ -39,7 +39,7 @@ let prune_for_seq () : Tac unit =
   let bs = vars_of_env e in
   //prune the local environment
   let _ = map (fun b ->
-    match term_as_formula (type_of_namedv b) with
+    match term_as_formula (type_of_binding b) with
     | Comp (Eq (Some t)) _ _ ->
       if is_seq_t t then //this is a sequence equality; keep it
         ()

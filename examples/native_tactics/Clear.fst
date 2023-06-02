@@ -38,7 +38,7 @@ let l1 (x : bool) (y : int) (z : unit) =
 let clear_all_of_type (t : typ) : Tac unit =
     let e = cur_env () in
     let bs = vars_of_env e in
-    let _ = map (fun b -> if term_eq (type_of_namedv b) t
+    let _ = map (fun b -> if term_eq (type_of_binding b) t
                           then clear b
                           else ())
          // We need to traverse the list backwards, to clear rightmost
