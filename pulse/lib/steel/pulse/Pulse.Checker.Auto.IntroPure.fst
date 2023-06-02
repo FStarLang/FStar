@@ -93,7 +93,7 @@ let intro_pure_proof_step_aux (#g:env) (ctxt:list vprop)
   | _ -> None
 
 let intro_pure_proof_step =
-  fun #g ctxt v v_typing ->
+  fun #g #ctxt #v _ v_typing ->
   if is_pure v
   then intro_pure_proof_step_aux ctxt v v_typing
   else None

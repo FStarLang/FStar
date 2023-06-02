@@ -140,14 +140,15 @@ let (intro_pure_proof_step : Pulse_Checker_Auto_Util.proof_step_fn) =
   fun g ->
     fun ctxt ->
       fun v ->
-        fun v_typing ->
-          if is_pure v
-          then Obj.magic (Obj.repr (intro_pure_proof_step_aux g ctxt v ()))
-          else
-            Obj.magic
-              (Obj.repr
-                 (FStar_Tactics_Effect.lift_div_tac
-                    (fun uu___1 -> FStar_Pervasives_Native.None)))
+        fun uu___ ->
+          fun v_typing ->
+            if is_pure v
+            then Obj.magic (Obj.repr (intro_pure_proof_step_aux g ctxt v ()))
+            else
+              Obj.magic
+                (Obj.repr
+                   (FStar_Tactics_Effect.lift_div_tac
+                      (fun uu___2 -> FStar_Pervasives_Native.None)))
 let (get_one_pure :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.vprop Prims.list ->

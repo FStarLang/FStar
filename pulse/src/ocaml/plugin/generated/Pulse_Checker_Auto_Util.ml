@@ -1437,11 +1437,12 @@ let (__proj__Mkintro_from_unmatched_step__item__unmatched' :
           | { v; ps; unmatched'; unmatched_equiv;_} -> unmatched'
 type proof_step_fn =
   Pulse_Typing.env ->
-    Pulse_Syntax_Base.vprop Prims.list ->
+    Pulse_Syntax_Base.term Prims.list ->
       Pulse_Syntax_Base.vprop ->
         unit ->
-          ((unit, unit, unit) proof_step FStar_Pervasives_Native.option,
-            unit) FStar_Tactics_Effect.tac_repr
+          unit ->
+            ((unit, unit, unit) proof_step FStar_Pervasives_Native.option,
+              unit) FStar_Tactics_Effect.tac_repr
 type intro_from_unmatched_fn =
   Pulse_Typing.env ->
     Pulse_Syntax_Base.vprop ->

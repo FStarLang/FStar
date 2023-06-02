@@ -147,8 +147,9 @@ type intro_from_unmatched_step (#g:env) (#ctxt:vprop) (p:prover_state g ctxt) = 
 
 type proof_step_fn =
   #g:_ ->
-  ctxt:_ ->
-  v:vprop ->
+  #ctxt:_ ->
+  #v:vprop ->
+  tot_typing g (list_as_vprop ctxt) Tm_VProp ->
   tot_typing g v Tm_VProp ->
   T.Tac (option (proof_step g ctxt v))
 
