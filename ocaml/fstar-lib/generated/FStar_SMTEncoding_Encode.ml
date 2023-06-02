@@ -5705,6 +5705,16 @@ and (encode_sigelt' :
                                                                     | 
                                                                     (uu___24,
                                                                     vars') ->
+                                                                    let norm
+                                                                    t2 =
+                                                                    FStar_TypeChecker_Normalize.unfold_whnf'
+                                                                    [FStar_TypeChecker_Env.AllowUnboundUniverses;
+                                                                    FStar_TypeChecker_Env.EraseUniverses;
+                                                                    FStar_TypeChecker_Env.Unascribe;
+                                                                    FStar_TypeChecker_Env.Exclude
+                                                                    FStar_TypeChecker_Env.Zeta]
+                                                                    env'.FStar_SMTEncoding_Env.tcenv
+                                                                    t2 in
                                                                     let uu___25
                                                                     =
                                                                     FStar_Compiler_List.fold_left2
@@ -5784,19 +5794,58 @@ and (encode_sigelt' :
                                                                     FStar_Syntax_Util.unrefine
                                                                     (FStar_Syntax_Util.comp_result
                                                                     c) in
+                                                                    let t5 =
+                                                                    norm t4 in
                                                                     let uu___33
                                                                     =
                                                                     (FStar_Syntax_Syntax.is_type
-                                                                    t4) ||
+                                                                    t5) ||
                                                                     (FStar_Syntax_Util.is_sub_singleton
-                                                                    t4) in
+                                                                    t5) in
                                                                     if
                                                                     uu___33
                                                                     then
                                                                     FStar_Pervasives_Native.None
                                                                     else
+                                                                    (let uu___35
+                                                                    =
+                                                                    FStar_Syntax_Util.head_and_args_full
+                                                                    t5 in
+                                                                    match uu___35
+                                                                    with
+                                                                    | 
+                                                                    (head1,
+                                                                    uu___36)
+                                                                    ->
+                                                                    let uu___37
+                                                                    =
+                                                                    let uu___38
+                                                                    =
+                                                                    FStar_Syntax_Util.un_uinst
+                                                                    head1 in
+                                                                    uu___38.FStar_Syntax_Syntax.n in
+                                                                    (match uu___37
+                                                                    with
+                                                                    | 
+                                                                    FStar_Syntax_Syntax.Tm_fvar
+                                                                    fv1 ->
+                                                                    let uu___38
+                                                                    =
+                                                                    FStar_Compiler_Util.for_some
+                                                                    (FStar_Syntax_Syntax.fv_eq_lid
+                                                                    fv1)
+                                                                    mutuals in
+                                                                    if
+                                                                    uu___38
+                                                                    then
                                                                     FStar_Pervasives_Native.Some
-                                                                    (bs, c))))
+                                                                    (bs, c)
+                                                                    else
+                                                                    FStar_Pervasives_Native.None
+                                                                    | 
+                                                                    uu___38
+                                                                    ->
+                                                                    FStar_Pervasives_Native.None)))))
                                                                     | 
                                                                     uu___28
                                                                     ->
@@ -5811,14 +5860,7 @@ and (encode_sigelt' :
                                                                     uu___30)
                                                                     ->
                                                                     let t' =
-                                                                    FStar_TypeChecker_Normalize.unfold_whnf'
-                                                                    [FStar_TypeChecker_Env.AllowUnboundUniverses;
-                                                                    FStar_TypeChecker_Env.EraseUniverses;
-                                                                    FStar_TypeChecker_Env.Unascribe;
-                                                                    FStar_TypeChecker_Env.Exclude
-                                                                    FStar_TypeChecker_Env.Zeta]
-                                                                    env'.FStar_SMTEncoding_Env.tcenv
-                                                                    t3 in
+                                                                    norm t3 in
                                                                     let uu___31
                                                                     =
                                                                     FStar_Syntax_Util.head_and_args
@@ -6378,6 +6420,16 @@ and (encode_sigelt' :
                                                                     | 
                                                                     (uu___20,
                                                                     vars') ->
+                                                                    let norm
+                                                                    t2 =
+                                                                    FStar_TypeChecker_Normalize.unfold_whnf'
+                                                                    [FStar_TypeChecker_Env.AllowUnboundUniverses;
+                                                                    FStar_TypeChecker_Env.EraseUniverses;
+                                                                    FStar_TypeChecker_Env.Unascribe;
+                                                                    FStar_TypeChecker_Env.Exclude
+                                                                    FStar_TypeChecker_Env.Zeta]
+                                                                    env'.FStar_SMTEncoding_Env.tcenv
+                                                                    t2 in
                                                                     let uu___21
                                                                     =
                                                                     FStar_Compiler_List.fold_left2
@@ -6457,19 +6509,58 @@ and (encode_sigelt' :
                                                                     FStar_Syntax_Util.unrefine
                                                                     (FStar_Syntax_Util.comp_result
                                                                     c) in
+                                                                    let t5 =
+                                                                    norm t4 in
                                                                     let uu___29
                                                                     =
                                                                     (FStar_Syntax_Syntax.is_type
-                                                                    t4) ||
+                                                                    t5) ||
                                                                     (FStar_Syntax_Util.is_sub_singleton
-                                                                    t4) in
+                                                                    t5) in
                                                                     if
                                                                     uu___29
                                                                     then
                                                                     FStar_Pervasives_Native.None
                                                                     else
+                                                                    (let uu___31
+                                                                    =
+                                                                    FStar_Syntax_Util.head_and_args_full
+                                                                    t5 in
+                                                                    match uu___31
+                                                                    with
+                                                                    | 
+                                                                    (head1,
+                                                                    uu___32)
+                                                                    ->
+                                                                    let uu___33
+                                                                    =
+                                                                    let uu___34
+                                                                    =
+                                                                    FStar_Syntax_Util.un_uinst
+                                                                    head1 in
+                                                                    uu___34.FStar_Syntax_Syntax.n in
+                                                                    (match uu___33
+                                                                    with
+                                                                    | 
+                                                                    FStar_Syntax_Syntax.Tm_fvar
+                                                                    fv1 ->
+                                                                    let uu___34
+                                                                    =
+                                                                    FStar_Compiler_Util.for_some
+                                                                    (FStar_Syntax_Syntax.fv_eq_lid
+                                                                    fv1)
+                                                                    mutuals in
+                                                                    if
+                                                                    uu___34
+                                                                    then
                                                                     FStar_Pervasives_Native.Some
-                                                                    (bs, c))))
+                                                                    (bs, c)
+                                                                    else
+                                                                    FStar_Pervasives_Native.None
+                                                                    | 
+                                                                    uu___34
+                                                                    ->
+                                                                    FStar_Pervasives_Native.None)))))
                                                                     | 
                                                                     uu___24
                                                                     ->
@@ -6484,14 +6575,7 @@ and (encode_sigelt' :
                                                                     uu___26)
                                                                     ->
                                                                     let t' =
-                                                                    FStar_TypeChecker_Normalize.unfold_whnf'
-                                                                    [FStar_TypeChecker_Env.AllowUnboundUniverses;
-                                                                    FStar_TypeChecker_Env.EraseUniverses;
-                                                                    FStar_TypeChecker_Env.Unascribe;
-                                                                    FStar_TypeChecker_Env.Exclude
-                                                                    FStar_TypeChecker_Env.Zeta]
-                                                                    env'.FStar_SMTEncoding_Env.tcenv
-                                                                    t3 in
+                                                                    norm t3 in
                                                                     let uu___27
                                                                     =
                                                                     FStar_Syntax_Util.head_and_args
