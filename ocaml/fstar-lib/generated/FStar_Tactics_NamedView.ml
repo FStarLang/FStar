@@ -108,10 +108,10 @@ let (rbinder_to_string :
   =
   fun b ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst" (Prims.of_int (75))
-         (Prims.of_int (11)) (Prims.of_int (75)) (Prims.of_int (27)))
-      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst" (Prims.of_int (76))
-         (Prims.of_int (2)) (Prims.of_int (76)) (Prims.of_int (57)))
+      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst" (Prims.of_int (77))
+         (Prims.of_int (11)) (Prims.of_int (77)) (Prims.of_int (27)))
+      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst" (Prims.of_int (78))
+         (Prims.of_int (2)) (Prims.of_int (78)) (Prims.of_int (57)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Builtins.inspect_binder b))
       (fun uu___ ->
@@ -119,11 +119,11 @@ let (rbinder_to_string :
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                    (Prims.of_int (76)) (Prims.of_int (2))
-                    (Prims.of_int (76)) (Prims.of_int (18)))
+                    (Prims.of_int (78)) (Prims.of_int (2))
+                    (Prims.of_int (78)) (Prims.of_int (18)))
                  (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                    (Prims.of_int (76)) (Prims.of_int (2))
-                    (Prims.of_int (76)) (Prims.of_int (57)))
+                    (Prims.of_int (78)) (Prims.of_int (2))
+                    (Prims.of_int (78)) (Prims.of_int (57)))
                  (Obj.magic
                     (FStar_Tactics_Builtins.unseal
                        bv.FStar_Reflection_Data.ppname2))
@@ -133,8 +133,8 @@ let (rbinder_to_string :
                          (FStar_Tactics_Effect.tac_bind
                             (FStar_Range.mk_range
                                "FStar.Tactics.NamedView.fst"
-                               (Prims.of_int (76)) (Prims.of_int (21))
-                               (Prims.of_int (76)) (Prims.of_int (57)))
+                               (Prims.of_int (78)) (Prims.of_int (21))
+                               (Prims.of_int (78)) (Prims.of_int (57)))
                             (FStar_Range.mk_range "prims.fst"
                                (Prims.of_int (590)) (Prims.of_int (19))
                                (Prims.of_int (590)) (Prims.of_int (31)))
@@ -142,8 +142,8 @@ let (rbinder_to_string :
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (76)) (Prims.of_int (29))
-                                     (Prims.of_int (76)) (Prims.of_int (57)))
+                                     (Prims.of_int (78)) (Prims.of_int (29))
+                                     (Prims.of_int (78)) (Prims.of_int (57)))
                                   (FStar_Range.mk_range "prims.fst"
                                      (Prims.of_int (590)) (Prims.of_int (19))
                                      (Prims.of_int (590)) (Prims.of_int (31)))
@@ -151,9 +151,9 @@ let (rbinder_to_string :
                                      (FStar_Tactics_Effect.tac_bind
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.NamedView.fst"
-                                           (Prims.of_int (76))
+                                           (Prims.of_int (78))
                                            (Prims.of_int (29))
-                                           (Prims.of_int (76))
+                                           (Prims.of_int (78))
                                            (Prims.of_int (51)))
                                         (FStar_Range.mk_range "prims.fst"
                                            (Prims.of_int (590))
@@ -179,26 +179,26 @@ let (binder_to_string :
   binder -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun b ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst" (Prims.of_int (80))
-         (Prims.of_int (2)) (Prims.of_int (80)) (Prims.of_int (17)))
-      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst" (Prims.of_int (80))
-         (Prims.of_int (2)) (Prims.of_int (80)) (Prims.of_int (85)))
+      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst" (Prims.of_int (82))
+         (Prims.of_int (2)) (Prims.of_int (82)) (Prims.of_int (17)))
+      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst" (Prims.of_int (82))
+         (Prims.of_int (2)) (Prims.of_int (82)) (Prims.of_int (85)))
       (Obj.magic (FStar_Tactics_Builtins.unseal b.ppname))
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                    (Prims.of_int (80)) (Prims.of_int (20))
-                    (Prims.of_int (80)) (Prims.of_int (85)))
+                    (Prims.of_int (82)) (Prims.of_int (20))
+                    (Prims.of_int (82)) (Prims.of_int (85)))
                  (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
                     (Prims.of_int (19)) (Prims.of_int (590))
                     (Prims.of_int (31)))
                  (Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (80)) (Prims.of_int (27))
-                          (Prims.of_int (80)) (Prims.of_int (85)))
+                          (Prims.of_int (82)) (Prims.of_int (27))
+                          (Prims.of_int (82)) (Prims.of_int (85)))
                        (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
                           (Prims.of_int (19)) (Prims.of_int (590))
                           (Prims.of_int (31)))
@@ -206,8 +206,8 @@ let (binder_to_string :
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range
                                 "FStar.Tactics.NamedView.fst"
-                                (Prims.of_int (80)) (Prims.of_int (50))
-                                (Prims.of_int (80)) (Prims.of_int (85)))
+                                (Prims.of_int (82)) (Prims.of_int (50))
+                                (Prims.of_int (82)) (Prims.of_int (85)))
                              (FStar_Range.mk_range "prims.fst"
                                 (Prims.of_int (590)) (Prims.of_int (19))
                                 (Prims.of_int (590)) (Prims.of_int (31)))
@@ -215,8 +215,8 @@ let (binder_to_string :
                                 (FStar_Tactics_Effect.tac_bind
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.NamedView.fst"
-                                      (Prims.of_int (80)) (Prims.of_int (58))
-                                      (Prims.of_int (80)) (Prims.of_int (85)))
+                                      (Prims.of_int (82)) (Prims.of_int (58))
+                                      (Prims.of_int (82)) (Prims.of_int (85)))
                                    (FStar_Range.mk_range "prims.fst"
                                       (Prims.of_int (590))
                                       (Prims.of_int (19))
@@ -226,9 +226,9 @@ let (binder_to_string :
                                       (FStar_Tactics_Effect.tac_bind
                                          (FStar_Range.mk_range
                                             "FStar.Tactics.NamedView.fst"
-                                            (Prims.of_int (80))
+                                            (Prims.of_int (82))
                                             (Prims.of_int (58))
-                                            (Prims.of_int (80))
+                                            (Prims.of_int (82))
                                             (Prims.of_int (79)))
                                          (FStar_Range.mk_range "prims.fst"
                                             (Prims.of_int (590))
@@ -528,7 +528,7 @@ let (open_term_with :
                Obj.magic
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
-                       FStar_Reflection_Builtins.subst
+                       FStar_Reflection_Builtins.subst_term
                          [FStar_Syntax_Syntax.DB
                             (Prims.int_zero,
                               (FStar_Reflection_Builtins.pack_namedv
@@ -548,21 +548,21 @@ let (open_term :
     fun t ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-           (Prims.of_int (176)) (Prims.of_int (10)) (Prims.of_int (176))
+           (Prims.of_int (178)) (Prims.of_int (10)) (Prims.of_int (178))
            (Prims.of_int (18)))
         (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-           (Prims.of_int (176)) (Prims.of_int (21)) (Prims.of_int (186))
+           (Prims.of_int (178)) (Prims.of_int (21)) (Prims.of_int (188))
            (Prims.of_int (33))) (Obj.magic (FStar_Tactics_Builtins.fresh ()))
         (fun uu___ ->
            (fun n ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (177)) (Prims.of_int (11))
-                      (Prims.of_int (177)) (Prims.of_int (27)))
+                      (Prims.of_int (179)) (Prims.of_int (11))
+                      (Prims.of_int (179)) (Prims.of_int (27)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (177)) (Prims.of_int (30))
-                      (Prims.of_int (186)) (Prims.of_int (33)))
+                      (Prims.of_int (179)) (Prims.of_int (30))
+                      (Prims.of_int (188)) (Prims.of_int (33)))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ ->
                          FStar_Reflection_Builtins.inspect_binder b))
@@ -572,12 +572,12 @@ let (open_term :
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Range.mk_range
                                  "FStar.Tactics.NamedView.fst"
-                                 (Prims.of_int (179)) (Prims.of_int (4))
-                                 (Prims.of_int (183)) (Prims.of_int (22)))
+                                 (Prims.of_int (181)) (Prims.of_int (4))
+                                 (Prims.of_int (185)) (Prims.of_int (22)))
                               (FStar_Range.mk_range
                                  "FStar.Tactics.NamedView.fst"
-                                 (Prims.of_int (186)) (Prims.of_int (2))
-                                 (Prims.of_int (186)) (Prims.of_int (33)))
+                                 (Prims.of_int (188)) (Prims.of_int (2))
+                                 (Prims.of_int (188)) (Prims.of_int (33)))
                               (FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___ ->
                                     {
@@ -596,15 +596,15 @@ let (open_term :
                                       (FStar_Tactics_Effect.tac_bind
                                          (FStar_Range.mk_range
                                             "FStar.Tactics.NamedView.fst"
-                                            (Prims.of_int (186))
+                                            (Prims.of_int (188))
                                             (Prims.of_int (9))
-                                            (Prims.of_int (186))
+                                            (Prims.of_int (188))
                                             (Prims.of_int (32)))
                                          (FStar_Range.mk_range
                                             "FStar.Tactics.NamedView.fst"
-                                            (Prims.of_int (186))
+                                            (Prims.of_int (188))
                                             (Prims.of_int (2))
-                                            (Prims.of_int (186))
+                                            (Prims.of_int (188))
                                             (Prims.of_int (33)))
                                          (Obj.magic (open_term_with b bndr t))
                                          (fun uu___ ->
@@ -621,10 +621,10 @@ let (open_comp :
     fun t ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-           (Prims.of_int (189)) (Prims.of_int (10)) (Prims.of_int (189))
+           (Prims.of_int (191)) (Prims.of_int (10)) (Prims.of_int (191))
            (Prims.of_int (18)))
         (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-           (Prims.of_int (189)) (Prims.of_int (21)) (Prims.of_int (206))
+           (Prims.of_int (191)) (Prims.of_int (21)) (Prims.of_int (208))
            (Prims.of_int (12))) (Obj.magic (FStar_Tactics_Builtins.fresh ()))
         (fun n ->
            FStar_Tactics_Effect.lift_div_tac
@@ -663,10 +663,10 @@ let (open_term_simple :
     fun t ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-           (Prims.of_int (211)) (Prims.of_int (10)) (Prims.of_int (211))
+           (Prims.of_int (213)) (Prims.of_int (10)) (Prims.of_int (213))
            (Prims.of_int (18)))
         (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-           (Prims.of_int (211)) (Prims.of_int (21)) (Prims.of_int (228))
+           (Prims.of_int (213)) (Prims.of_int (21)) (Prims.of_int (230))
            (Prims.of_int (12))) (Obj.magic (FStar_Tactics_Builtins.fresh ()))
         (fun n ->
            FStar_Tactics_Effect.lift_div_tac
@@ -682,7 +682,7 @@ let (open_term_simple :
                    attrs =
                      ((FStar_Reflection_Builtins.inspect_binder b).FStar_Reflection_Data.attrs)
                  },
-                  (FStar_Reflection_Builtins.subst
+                  (FStar_Reflection_Builtins.subst_term
                      [FStar_Syntax_Syntax.DB
                         (Prims.int_zero,
                           (FStar_Reflection_Builtins.pack_namedv
@@ -705,10 +705,10 @@ let (open_comp_simple :
     fun t ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-           (Prims.of_int (231)) (Prims.of_int (10)) (Prims.of_int (231))
+           (Prims.of_int (233)) (Prims.of_int (10)) (Prims.of_int (233))
            (Prims.of_int (18)))
         (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-           (Prims.of_int (231)) (Prims.of_int (21)) (Prims.of_int (248))
+           (Prims.of_int (233)) (Prims.of_int (21)) (Prims.of_int (250))
            (Prims.of_int (12))) (Obj.magic (FStar_Tactics_Builtins.fresh ()))
         (fun n ->
            FStar_Tactics_Effect.lift_div_tac
@@ -746,7 +746,7 @@ let (close_term :
     fun t ->
       let nv = binder_to_namedv b in
       let t' =
-        FStar_Reflection_Builtins.subst
+        FStar_Reflection_Builtins.subst_term
           [FStar_Syntax_Syntax.NM (nv, Prims.int_zero)] t in
       let b1 =
         FStar_Reflection_Builtins.pack_binder
@@ -786,7 +786,7 @@ let (close_term_simple :
     fun t ->
       let nv = binder_to_namedv b in
       let t' =
-        FStar_Reflection_Builtins.subst
+        FStar_Reflection_Builtins.subst_term
           [FStar_Syntax_Syntax.NM (nv, Prims.int_zero)] t in
       let bv =
         {
@@ -835,11 +835,11 @@ let rec (open_term_n :
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (281)) (Prims.of_int (18))
-                          (Prims.of_int (281)) (Prims.of_int (34)))
+                          (Prims.of_int (283)) (Prims.of_int (18))
+                          (Prims.of_int (283)) (Prims.of_int (34)))
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (280)) (Prims.of_int (12))
-                          (Prims.of_int (283)) (Prims.of_int (18)))
+                          (Prims.of_int (282)) (Prims.of_int (12))
+                          (Prims.of_int (285)) (Prims.of_int (18)))
                        (Obj.magic (open_term_n bs1 t))
                        (fun uu___ ->
                           (fun uu___ ->
@@ -849,15 +849,15 @@ let rec (open_term_n :
                                    (FStar_Tactics_Effect.tac_bind
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.NamedView.fst"
-                                         (Prims.of_int (282))
+                                         (Prims.of_int (284))
                                          (Prims.of_int (18))
-                                         (Prims.of_int (282))
+                                         (Prims.of_int (284))
                                          (Prims.of_int (32)))
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.NamedView.fst"
-                                         (Prims.of_int (281))
-                                         (Prims.of_int (37))
                                          (Prims.of_int (283))
+                                         (Prims.of_int (37))
+                                         (Prims.of_int (285))
                                          (Prims.of_int (18)))
                                       (Obj.magic (open_term b t'))
                                       (fun uu___1 ->
@@ -890,12 +890,12 @@ let rec (open_term_n_with :
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Range.mk_range
                               "FStar.Tactics.NamedView.fst"
-                              (Prims.of_int (289)) (Prims.of_int (13))
-                              (Prims.of_int (289)) (Prims.of_int (38)))
+                              (Prims.of_int (291)) (Prims.of_int (13))
+                              (Prims.of_int (291)) (Prims.of_int (38)))
                            (FStar_Range.mk_range
                               "FStar.Tactics.NamedView.fst"
-                              (Prims.of_int (289)) (Prims.of_int (41))
-                              (Prims.of_int (291)) (Prims.of_int (7)))
+                              (Prims.of_int (291)) (Prims.of_int (41))
+                              (Prims.of_int (293)) (Prims.of_int (7)))
                            (Obj.magic (open_term_n_with bs1 nbs1 t))
                            (fun uu___ ->
                               (fun t' ->
@@ -903,15 +903,15 @@ let rec (open_term_n_with :
                                    (FStar_Tactics_Effect.tac_bind
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.NamedView.fst"
-                                         (Prims.of_int (290))
+                                         (Prims.of_int (292))
                                          (Prims.of_int (14))
-                                         (Prims.of_int (290))
+                                         (Prims.of_int (292))
                                          (Prims.of_int (36)))
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.NamedView.fst"
-                                         (Prims.of_int (290))
+                                         (Prims.of_int (292))
                                          (Prims.of_int (8))
-                                         (Prims.of_int (290))
+                                         (Prims.of_int (292))
                                          (Prims.of_int (11)))
                                       (Obj.magic (open_term_with b nb t'))
                                       (fun t'' ->
@@ -957,11 +957,11 @@ let rec (open_term_n_simple :
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (306)) (Prims.of_int (18))
-                          (Prims.of_int (306)) (Prims.of_int (41)))
+                          (Prims.of_int (308)) (Prims.of_int (18))
+                          (Prims.of_int (308)) (Prims.of_int (41)))
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (305)) (Prims.of_int (12))
-                          (Prims.of_int (308)) (Prims.of_int (18)))
+                          (Prims.of_int (307)) (Prims.of_int (12))
+                          (Prims.of_int (310)) (Prims.of_int (18)))
                        (Obj.magic (open_term_n_simple bs1 t))
                        (fun uu___ ->
                           (fun uu___ ->
@@ -971,15 +971,15 @@ let rec (open_term_n_simple :
                                    (FStar_Tactics_Effect.tac_bind
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.NamedView.fst"
-                                         (Prims.of_int (307))
+                                         (Prims.of_int (309))
                                          (Prims.of_int (18))
-                                         (Prims.of_int (307))
+                                         (Prims.of_int (309))
                                          (Prims.of_int (39)))
                                       (FStar_Range.mk_range
                                          "FStar.Tactics.NamedView.fst"
-                                         (Prims.of_int (306))
-                                         (Prims.of_int (44))
                                          (Prims.of_int (308))
+                                         (Prims.of_int (44))
+                                         (Prims.of_int (310))
                                          (Prims.of_int (18)))
                                       (Obj.magic (open_term_simple b t'))
                                       (fun uu___1 ->
@@ -1014,10 +1014,10 @@ let (open_univ_s :
   fun us ->
     FStar_Tactics_Effect.tac_bind
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (319)) (Prims.of_int (10)) (Prims.of_int (319))
+         (Prims.of_int (321)) (Prims.of_int (10)) (Prims.of_int (321))
          (Prims.of_int (28)))
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (319)) (Prims.of_int (31)) (Prims.of_int (321))
+         (Prims.of_int (321)) (Prims.of_int (31)) (Prims.of_int (323))
          (Prims.of_int (7)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_List_Tot_Base.length us))
@@ -1026,11 +1026,11 @@ let (open_univ_s :
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                    (Prims.of_int (320)) (Prims.of_int (10))
-                    (Prims.of_int (320)) (Prims.of_int (69)))
+                    (Prims.of_int (322)) (Prims.of_int (10))
+                    (Prims.of_int (322)) (Prims.of_int (69)))
                  (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                    (Prims.of_int (321)) (Prims.of_int (2))
-                    (Prims.of_int (321)) (Prims.of_int (7)))
+                    (Prims.of_int (323)) (Prims.of_int (2))
+                    (Prims.of_int (323)) (Prims.of_int (7)))
                  (Obj.magic
                     (FStar_Tactics_Util.mapi
                        (fun uu___1 ->
@@ -1073,7 +1073,8 @@ let (subst_binder_sort :
       let v1 =
         {
           FStar_Reflection_Data.sort2 =
-            (FStar_Reflection_Builtins.subst s v.FStar_Reflection_Data.sort2);
+            (FStar_Reflection_Builtins.subst_term s
+               v.FStar_Reflection_Data.sort2);
           FStar_Reflection_Data.qual = (v.FStar_Reflection_Data.qual);
           FStar_Reflection_Data.attrs = (v.FStar_Reflection_Data.attrs);
           FStar_Reflection_Data.ppname2 = (v.FStar_Reflection_Data.ppname2)
@@ -1100,11 +1101,11 @@ let rec (open_pat :
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (339)) (Prims.of_int (15))
-                          (Prims.of_int (339)) (Prims.of_int (27)))
+                          (Prims.of_int (341)) (Prims.of_int (15))
+                          (Prims.of_int (341)) (Prims.of_int (27)))
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (339)) (Prims.of_int (30))
-                          (Prims.of_int (347)) (Prims.of_int (64)))
+                          (Prims.of_int (341)) (Prims.of_int (30))
+                          (Prims.of_int (349)) (Prims.of_int (64)))
                        (Obj.magic (FStar_Tactics_Builtins.unseal ssort))
                        (fun uu___ ->
                           (fun sort ->
@@ -1112,59 +1113,59 @@ let rec (open_pat :
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (340)) (Prims.of_int (15))
-                                     (Prims.of_int (340)) (Prims.of_int (27)))
+                                     (Prims.of_int (342)) (Prims.of_int (15))
+                                     (Prims.of_int (342)) (Prims.of_int (32)))
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (340)) (Prims.of_int (30))
-                                     (Prims.of_int (347)) (Prims.of_int (64)))
+                                     (Prims.of_int (342)) (Prims.of_int (35))
+                                     (Prims.of_int (349)) (Prims.of_int (64)))
                                   (FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___ ->
-                                        FStar_Reflection_Builtins.subst s
-                                          sort))
+                                        FStar_Reflection_Builtins.subst_term
+                                          s sort))
                                   (fun uu___ ->
                                      (fun sort1 ->
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.NamedView.fst"
-                                                (Prims.of_int (341))
+                                                (Prims.of_int (343))
                                                 (Prims.of_int (22))
-                                                (Prims.of_int (345))
+                                                (Prims.of_int (347))
                                                 (Prims.of_int (5)))
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.NamedView.fst"
-                                                (Prims.of_int (347))
+                                                (Prims.of_int (349))
                                                 (Prims.of_int (4))
-                                                (Prims.of_int (347))
+                                                (Prims.of_int (349))
                                                 (Prims.of_int (64)))
                                              (Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.NamedView.fst"
-                                                      (Prims.of_int (342))
-                                                      (Prims.of_int (6))
                                                       (Prims.of_int (344))
+                                                      (Prims.of_int (6))
+                                                      (Prims.of_int (346))
                                                       (Prims.of_int (17)))
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.NamedView.fst"
-                                                      (Prims.of_int (341))
+                                                      (Prims.of_int (343))
                                                       (Prims.of_int (22))
-                                                      (Prims.of_int (345))
+                                                      (Prims.of_int (347))
                                                       (Prims.of_int (5)))
                                                    (Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
                                                          (FStar_Range.mk_range
                                                             "FStar.Tactics.NamedView.fst"
-                                                            (Prims.of_int (342))
+                                                            (Prims.of_int (344))
                                                             (Prims.of_int (13))
-                                                            (Prims.of_int (342))
+                                                            (Prims.of_int (344))
                                                             (Prims.of_int (20)))
                                                          (FStar_Range.mk_range
                                                             "FStar.Tactics.NamedView.fst"
-                                                            (Prims.of_int (342))
-                                                            (Prims.of_int (6))
                                                             (Prims.of_int (344))
+                                                            (Prims.of_int (6))
+                                                            (Prims.of_int (346))
                                                             (Prims.of_int (17)))
                                                          (Obj.magic
                                                             (FStar_Tactics_Builtins.fresh
@@ -1208,11 +1209,11 @@ let rec (open_pat :
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (350)) (Prims.of_int (21))
-                          (Prims.of_int (353)) (Prims.of_int (38)))
+                          (Prims.of_int (352)) (Prims.of_int (21))
+                          (Prims.of_int (355)) (Prims.of_int (38)))
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (349)) (Prims.of_int (36))
-                          (Prims.of_int (356)) (Prims.of_int (57)))
+                          (Prims.of_int (351)) (Prims.of_int (36))
+                          (Prims.of_int (358)) (Prims.of_int (57)))
                        (Obj.magic
                           (FStar_Tactics_Util.fold_left
                              (fun uu___ ->
@@ -1222,15 +1223,15 @@ let rec (open_pat :
                                       FStar_Tactics_Effect.tac_bind
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.NamedView.fst"
-                                           (Prims.of_int (351))
+                                           (Prims.of_int (353))
                                            (Prims.of_int (38))
-                                           (Prims.of_int (351))
+                                           (Prims.of_int (353))
                                            (Prims.of_int (52)))
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.NamedView.fst"
-                                           (Prims.of_int (350))
-                                           (Prims.of_int (55))
                                            (Prims.of_int (352))
+                                           (Prims.of_int (55))
+                                           (Prims.of_int (354))
                                            (Prims.of_int (43)))
                                         (Obj.magic (open_pat pat s1))
                                         (fun uu___2 ->
@@ -1270,7 +1271,8 @@ let rec (open_pat :
                               {
                                 t =
                                   (FStar_Pervasives_Native.Some
-                                     (FStar_Reflection_Builtins.subst s t))
+                                     (FStar_Reflection_Builtins.subst_term s
+                                        t))
                               }), s))))) uu___1 uu___
 let (open_branch :
   FStar_Reflection_Data.branch ->
@@ -1279,10 +1281,10 @@ let (open_branch :
   fun b ->
     FStar_Tactics_Effect.tac_bind
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (366)) (Prims.of_int (17)) (Prims.of_int (366))
+         (Prims.of_int (368)) (Prims.of_int (17)) (Prims.of_int (368))
          (Prims.of_int (18)))
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (365)) (Prims.of_int (45)) (Prims.of_int (369))
+         (Prims.of_int (367)) (Prims.of_int (45)) (Prims.of_int (371))
          (Prims.of_int (11)))
       (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> b))
       (fun uu___ ->
@@ -1292,11 +1294,11 @@ let (open_branch :
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                        (Prims.of_int (367)) (Prims.of_int (15))
-                        (Prims.of_int (367)) (Prims.of_int (30)))
+                        (Prims.of_int (369)) (Prims.of_int (15))
+                        (Prims.of_int (369)) (Prims.of_int (30)))
                      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                        (Prims.of_int (366)) (Prims.of_int (21))
-                        (Prims.of_int (369)) (Prims.of_int (11)))
+                        (Prims.of_int (368)) (Prims.of_int (21))
+                        (Prims.of_int (371)) (Prims.of_int (11)))
                      (Obj.magic (open_pat pat []))
                      (fun uu___1 ->
                         FStar_Tactics_Effect.lift_div_tac
@@ -1304,7 +1306,7 @@ let (open_branch :
                              match uu___1 with
                              | (pat1, s) ->
                                  (pat1,
-                                   (FStar_Reflection_Builtins.subst s t))))))
+                                   (FStar_Reflection_Builtins.subst_term s t))))))
            uu___)
 let rec (close_pat :
   pattern ->
@@ -1341,7 +1343,7 @@ let rec (close_pat :
           ((FStar_Reflection_Data.Pat_Dot_Term FStar_Pervasives_Native.None),
             s)
       | Pat_Dot_Term { t = FStar_Pervasives_Native.Some t;_} ->
-          let t1 = FStar_Reflection_Builtins.subst s t in
+          let t1 = FStar_Reflection_Builtins.subst_term s t in
           ((FStar_Reflection_Data.Pat_Dot_Term
               (FStar_Pervasives_Native.Some t1)), s)
 let (close_branch : branch -> FStar_Reflection_Data.branch) =
@@ -1352,7 +1354,7 @@ let (close_branch : branch -> FStar_Reflection_Data.branch) =
         let uu___1 = close_pat pat [] in
         (match uu___1 with
          | (pat1, s) ->
-             let t' = FStar_Reflection_Builtins.subst s t in (pat1, t'))
+             let t' = FStar_Reflection_Builtins.subst_term s t in (pat1, t'))
 let (open_view :
   FStar_Reflection_Data.term_view ->
     (named_term_view, unit) FStar_Tactics_Effect.tac_repr)
@@ -1418,11 +1420,11 @@ let (open_view :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (428)) (Prims.of_int (19))
-                      (Prims.of_int (428)) (Prims.of_int (35)))
+                      (Prims.of_int (430)) (Prims.of_int (19))
+                      (Prims.of_int (430)) (Prims.of_int (35)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (427)) (Prims.of_int (23))
-                      (Prims.of_int (429)) (Prims.of_int (18)))
+                      (Prims.of_int (429)) (Prims.of_int (23))
+                      (Prims.of_int (431)) (Prims.of_int (18)))
                    (Obj.magic (open_term b body))
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -1434,11 +1436,11 @@ let (open_view :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (432)) (Prims.of_int (16))
-                      (Prims.of_int (432)) (Prims.of_int (29)))
+                      (Prims.of_int (434)) (Prims.of_int (16))
+                      (Prims.of_int (434)) (Prims.of_int (29)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (431)) (Prims.of_int (22))
-                      (Prims.of_int (433)) (Prims.of_int (17)))
+                      (Prims.of_int (433)) (Prims.of_int (22))
+                      (Prims.of_int (435)) (Prims.of_int (17)))
                    (Obj.magic (open_comp b c))
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -1449,11 +1451,11 @@ let (open_view :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (436)) (Prims.of_int (18))
-                      (Prims.of_int (436)) (Prims.of_int (40)))
+                      (Prims.of_int (438)) (Prims.of_int (18))
+                      (Prims.of_int (438)) (Prims.of_int (40)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (435)) (Prims.of_int (25))
-                      (Prims.of_int (437)) (Prims.of_int (20)))
+                      (Prims.of_int (437)) (Prims.of_int (25))
+                      (Prims.of_int (439)) (Prims.of_int (20)))
                    (Obj.magic (open_term_simple b ref))
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -1465,28 +1467,36 @@ let (open_view :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (440)) (Prims.of_int (19))
-                      (Prims.of_int (440)) (Prims.of_int (42)))
+                      (Prims.of_int (442)) (Prims.of_int (19))
+                      (Prims.of_int (442)) (Prims.of_int (42)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (439)) (Prims.of_int (38))
-                      (Prims.of_int (441)) (Prims.of_int (33)))
+                      (Prims.of_int (441)) (Prims.of_int (38))
+                      (Prims.of_int (448)) (Prims.of_int (33)))
                    (Obj.magic (open_term_simple b body))
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 ->
                            match uu___ with
                            | (nb, body1) ->
-                               Tv_Let (recf, attrs, nb, def, body1)))))
+                               Tv_Let
+                                 (recf, attrs, nb,
+                                   (if recf
+                                    then
+                                      FStar_Reflection_Builtins.subst_term
+                                        [FStar_Syntax_Syntax.DB
+                                           (Prims.int_zero,
+                                             (binder_to_namedv nb))] def
+                                    else def), body1)))))
        | FStar_Reflection_Data.Tv_Match (scrutinee, ret, brs) ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (444)) (Prims.of_int (14))
-                      (Prims.of_int (444)) (Prims.of_int (33)))
+                      (Prims.of_int (451)) (Prims.of_int (14))
+                      (Prims.of_int (451)) (Prims.of_int (33)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (445)) (Prims.of_int (4))
-                      (Prims.of_int (445)) (Prims.of_int (30)))
+                      (Prims.of_int (452)) (Prims.of_int (4))
+                      (Prims.of_int (452)) (Prims.of_int (30)))
                    (Obj.magic (FStar_Tactics_Util.map open_branch brs))
                    (fun brs1 ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -1522,10 +1532,17 @@ let (close_view : named_term_view -> FStar_Reflection_Data.term_view) =
         (match uu___ with
          | (b, ref1) -> FStar_Reflection_Data.Tv_Refine (b, ref1))
     | Tv_Let (recf, attrs, nb, def, body) ->
+        let def1 =
+          if recf
+          then
+            FStar_Reflection_Builtins.subst_term
+              [FStar_Syntax_Syntax.NM ((binder_to_namedv nb), Prims.int_zero)]
+              def
+          else def in
         let uu___ = close_term_simple nb body in
         (match uu___ with
          | (b, body1) ->
-             FStar_Reflection_Data.Tv_Let (recf, attrs, b, def, body1))
+             FStar_Reflection_Data.Tv_Let (recf, attrs, b, def1, body1))
     | Tv_Match (scrutinee, ret, brs) ->
         let brs1 = FStar_List_Tot_Base.map close_branch brs in
         FStar_Reflection_Data.Tv_Match (scrutinee, ret, brs1)
@@ -1536,10 +1553,10 @@ let (inspect :
   fun t ->
     FStar_Tactics_Effect.tac_bind
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (487)) (Prims.of_int (11)) (Prims.of_int (487))
+         (Prims.of_int (499)) (Prims.of_int (11)) (Prims.of_int (499))
          (Prims.of_int (23)))
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (488)) (Prims.of_int (2)) (Prims.of_int (488))
+         (Prims.of_int (500)) (Prims.of_int (2)) (Prims.of_int (500))
          (Prims.of_int (14)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Builtins.inspect_ln t))
@@ -1665,10 +1682,10 @@ let (open_lb :
   fun lb ->
     FStar_Tactics_Effect.tac_bind
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (534)) (Prims.of_int (39)) (Prims.of_int (534))
+         (Prims.of_int (546)) (Prims.of_int (39)) (Prims.of_int (546))
          (Prims.of_int (52)))
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (533)) (Prims.of_int (50)) (Prims.of_int (538))
+         (Prims.of_int (545)) (Prims.of_int (50)) (Prims.of_int (550))
          (Prims.of_int (34)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Builtins.inspect_lb lb))
@@ -1682,11 +1699,11 @@ let (open_lb :
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                        (Prims.of_int (535)) (Prims.of_int (17))
-                        (Prims.of_int (535)) (Prims.of_int (34)))
+                        (Prims.of_int (547)) (Prims.of_int (17))
+                        (Prims.of_int (547)) (Prims.of_int (34)))
                      (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                        (Prims.of_int (534)) (Prims.of_int (55))
-                        (Prims.of_int (538)) (Prims.of_int (34)))
+                        (Prims.of_int (546)) (Prims.of_int (55))
+                        (Prims.of_int (550)) (Prims.of_int (34)))
                      (Obj.magic (open_univ_s lb_us))
                      (fun uu___1 ->
                         FStar_Tactics_Effect.lift_div_tac
@@ -1697,10 +1714,10 @@ let (open_lb :
                                    lb_fv;
                                    lb_us = lb_us1;
                                    lb_typ =
-                                     (FStar_Reflection_Builtins.subst s
+                                     (FStar_Reflection_Builtins.subst_term s
                                         lb_typ);
                                    lb_def =
-                                     (FStar_Reflection_Builtins.subst s
+                                     (FStar_Reflection_Builtins.subst_term s
                                         lb_def)
                                  })))) uu___)
 let (close_lb : letbinding -> FStar_Reflection_Types.letbinding) =
@@ -1711,8 +1728,8 @@ let (close_lb : letbinding -> FStar_Reflection_Types.letbinding) =
         let uu___1 = close_univ_s lb_us in
         (match uu___1 with
          | (lb_us1, s) ->
-             let lb_typ1 = FStar_Reflection_Builtins.subst s lb_typ in
-             let lb_def1 = FStar_Reflection_Builtins.subst s lb_def in
+             let lb_typ1 = FStar_Reflection_Builtins.subst_term s lb_typ in
+             let lb_def1 = FStar_Reflection_Builtins.subst_term s lb_def in
              FStar_Reflection_Builtins.pack_lb
                {
                  FStar_Reflection_Data.lb_fv = lb_fv;
@@ -1746,28 +1763,28 @@ let rec (open_n_binders_from_arrow :
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (554)) (Prims.of_int (4))
-                          (Prims.of_int (554)) (Prims.of_int (37)))
+                          (Prims.of_int (566)) (Prims.of_int (4))
+                          (Prims.of_int (566)) (Prims.of_int (37)))
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (555)) (Prims.of_int (4))
-                          (Prims.of_int (567)) (Prims.of_int (33)))
+                          (Prims.of_int (567)) (Prims.of_int (4))
+                          (Prims.of_int (579)) (Prims.of_int (33)))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range
                                 "FStar.Tactics.NamedView.fst"
-                                (Prims.of_int (554)) (Prims.of_int (10))
-                                (Prims.of_int (554)) (Prims.of_int (37)))
+                                (Prims.of_int (566)) (Prims.of_int (10))
+                                (Prims.of_int (566)) (Prims.of_int (37)))
                              (FStar_Range.mk_range
                                 "FStar.Tactics.NamedView.fst"
-                                (Prims.of_int (554)) (Prims.of_int (4))
-                                (Prims.of_int (554)) (Prims.of_int (37)))
+                                (Prims.of_int (566)) (Prims.of_int (4))
+                                (Prims.of_int (566)) (Prims.of_int (37)))
                              (Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.NamedView.fst"
-                                      (Prims.of_int (554))
+                                      (Prims.of_int (566))
                                       (Prims.of_int (20))
-                                      (Prims.of_int (554))
+                                      (Prims.of_int (566))
                                       (Prims.of_int (36)))
                                    (FStar_Range.mk_range "prims.fst"
                                       (Prims.of_int (590))
@@ -1789,12 +1806,12 @@ let rec (open_n_binders_from_arrow :
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (555)) (Prims.of_int (10))
-                                     (Prims.of_int (555)) (Prims.of_int (19)))
+                                     (Prims.of_int (567)) (Prims.of_int (10))
+                                     (Prims.of_int (567)) (Prims.of_int (19)))
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (555)) (Prims.of_int (4))
-                                     (Prims.of_int (567)) (Prims.of_int (33)))
+                                     (Prims.of_int (567)) (Prims.of_int (4))
+                                     (Prims.of_int (579)) (Prims.of_int (33)))
                                   (Obj.magic (inspect t))
                                   (fun uu___1 ->
                                      (fun uu___1 ->
@@ -1811,38 +1828,38 @@ let rec (open_n_binders_from_arrow :
                                                         (FStar_Tactics_Effect.tac_bind
                                                            (FStar_Range.mk_range
                                                               "FStar.Tactics.NamedView.fst"
-                                                              (Prims.of_int (559))
+                                                              (Prims.of_int (571))
                                                               (Prims.of_int (8))
-                                                              (Prims.of_int (559))
+                                                              (Prims.of_int (571))
                                                               (Prims.of_int (42)))
                                                            (FStar_Range.mk_range
                                                               "FStar.Tactics.NamedView.fst"
-                                                              (Prims.of_int (560))
+                                                              (Prims.of_int (572))
                                                               (Prims.of_int (8))
-                                                              (Prims.of_int (564))
+                                                              (Prims.of_int (576))
                                                               (Prims.of_int (39)))
                                                            (Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (559))
+                                                                    (Prims.of_int (571))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (559))
+                                                                    (Prims.of_int (571))
                                                                     (Prims.of_int (42)))
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (559))
+                                                                    (Prims.of_int (571))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (559))
+                                                                    (Prims.of_int (571))
                                                                     (Prims.of_int (42)))
                                                                  (Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (559))
+                                                                    (Prims.of_int (571))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (559))
+                                                                    (Prims.of_int (571))
                                                                     (Prims.of_int (41)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
@@ -1875,37 +1892,37 @@ let rec (open_n_binders_from_arrow :
                                                                    (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (75)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (564))
+                                                                    (Prims.of_int (576))
                                                                     (Prims.of_int (39)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (75)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (75)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (74)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
@@ -1917,15 +1934,15 @@ let rec (open_n_binders_from_arrow :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (43)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (74)))
                                                                     (Obj.magic
                                                                     (binder_to_string
@@ -1938,9 +1955,9 @@ let rec (open_n_binders_from_arrow :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (46))
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (74)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
@@ -1952,9 +1969,9 @@ let rec (open_n_binders_from_arrow :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (56))
-                                                                    (Prims.of_int (560))
+                                                                    (Prims.of_int (572))
                                                                     (Prims.of_int (74)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
@@ -2006,37 +2023,37 @@ let rec (open_n_binders_from_arrow :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (51)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (564))
+                                                                    (Prims.of_int (576))
                                                                     (Prims.of_int (39)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (51)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (51)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (33))
-                                                                    (Prims.of_int (561))
+                                                                    (Prims.of_int (573))
                                                                     (Prims.of_int (50)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
@@ -2071,20 +2088,20 @@ let rec (open_n_binders_from_arrow :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (562))
+                                                                    (Prims.of_int (574))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (562))
-                                                                    (Prims.of_int (89)))
+                                                                    (Prims.of_int (574))
+                                                                    (Prims.of_int (94)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (564))
+                                                                    (Prims.of_int (576))
                                                                     (Prims.of_int (39)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    FStar_Reflection_Builtins.subst
+                                                                    FStar_Reflection_Builtins.subst_term
                                                                     [
                                                                     FStar_Syntax_Syntax.NT
                                                                     ((binder_to_namedv
@@ -2101,37 +2118,37 @@ let rec (open_n_binders_from_arrow :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (42)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (564))
+                                                                    (Prims.of_int (576))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (564))
+                                                                    (Prims.of_int (576))
                                                                     (Prims.of_int (39)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (42)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (42)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (563))
+                                                                    (Prims.of_int (575))
                                                                     (Prims.of_int (41)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
@@ -2192,11 +2209,11 @@ let (open_sigelt_view :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (572)) (Prims.of_int (14))
-                      (Prims.of_int (572)) (Prims.of_int (29)))
+                      (Prims.of_int (584)) (Prims.of_int (14))
+                      (Prims.of_int (584)) (Prims.of_int (29)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (574)) (Prims.of_int (4))
-                      (Prims.of_int (574)) (Prims.of_int (25)))
+                      (Prims.of_int (586)) (Prims.of_int (4))
+                      (Prims.of_int (586)) (Prims.of_int (25)))
                    (Obj.magic (FStar_Tactics_Util.map open_lb lbs))
                    (fun lbs1 ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -2207,11 +2224,11 @@ let (open_sigelt_view :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (577)) (Prims.of_int (18))
-                      (Prims.of_int (577)) (Prims.of_int (40)))
+                      (Prims.of_int (589)) (Prims.of_int (18))
+                      (Prims.of_int (589)) (Prims.of_int (40)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (577)) (Prims.of_int (43))
-                      (Prims.of_int (601)) (Prims.of_int (48)))
+                      (Prims.of_int (589)) (Prims.of_int (43))
+                      (Prims.of_int (613)) (Prims.of_int (48)))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ -> FStar_List_Tot_Base.length params))
                    (fun uu___ ->
@@ -2220,12 +2237,12 @@ let (open_sigelt_view :
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Range.mk_range
                                  "FStar.Tactics.NamedView.fst"
-                                 (Prims.of_int (580)) (Prims.of_int (16))
-                                 (Prims.of_int (580)) (Prims.of_int (33)))
+                                 (Prims.of_int (592)) (Prims.of_int (16))
+                                 (Prims.of_int (592)) (Prims.of_int (33)))
                               (FStar_Range.mk_range
                                  "FStar.Tactics.NamedView.fst"
-                                 (Prims.of_int (577)) (Prims.of_int (43))
-                                 (Prims.of_int (601)) (Prims.of_int (48)))
+                                 (Prims.of_int (589)) (Prims.of_int (43))
+                                 (Prims.of_int (613)) (Prims.of_int (48)))
                               (Obj.magic (open_univ_s univs))
                               (fun uu___ ->
                                  (fun uu___ ->
@@ -2235,15 +2252,15 @@ let (open_sigelt_view :
                                           (FStar_Tactics_Effect.tac_bind
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.NamedView.fst"
-                                                (Prims.of_int (581))
+                                                (Prims.of_int (593))
                                                 (Prims.of_int (17))
-                                                (Prims.of_int (581))
+                                                (Prims.of_int (593))
                                                 (Prims.of_int (58)))
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.NamedView.fst"
-                                                (Prims.of_int (581))
+                                                (Prims.of_int (593))
                                                 (Prims.of_int (61))
-                                                (Prims.of_int (601))
+                                                (Prims.of_int (613))
                                                 (Prims.of_int (48)))
                                              (FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___1 ->
@@ -2256,19 +2273,19 @@ let (open_sigelt_view :
                                                      (FStar_Tactics_Effect.tac_bind
                                                         (FStar_Range.mk_range
                                                            "FStar.Tactics.NamedView.fst"
-                                                           (Prims.of_int (582))
+                                                           (Prims.of_int (594))
                                                            (Prims.of_int (14))
-                                                           (Prims.of_int (582))
-                                                           (Prims.of_int (25)))
+                                                           (Prims.of_int (594))
+                                                           (Prims.of_int (30)))
                                                         (FStar_Range.mk_range
                                                            "FStar.Tactics.NamedView.fst"
-                                                           (Prims.of_int (582))
-                                                           (Prims.of_int (28))
-                                                           (Prims.of_int (601))
+                                                           (Prims.of_int (594))
+                                                           (Prims.of_int (33))
+                                                           (Prims.of_int (613))
                                                            (Prims.of_int (48)))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___1 ->
-                                                              FStar_Reflection_Builtins.subst
+                                                              FStar_Reflection_Builtins.subst_term
                                                                 s typ))
                                                         (fun uu___1 ->
                                                            (fun typ1 ->
@@ -2276,15 +2293,15 @@ let (open_sigelt_view :
                                                                 (FStar_Tactics_Effect.tac_bind
                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (583))
+                                                                    (Prims.of_int (595))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (583))
-                                                                    (Prims.of_int (58)))
+                                                                    (Prims.of_int (595))
+                                                                    (Prims.of_int (63)))
                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (583))
-                                                                    (Prims.of_int (61))
-                                                                    (Prims.of_int (601))
+                                                                    (Prims.of_int (595))
+                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (613))
                                                                     (Prims.of_int (48)))
                                                                    (Obj.magic
                                                                     (FStar_Tactics_Util.map
@@ -2302,7 +2319,7 @@ let (open_sigelt_view :
                                                                     (nm1, ty)
                                                                     ->
                                                                     (nm1,
-                                                                    (FStar_Reflection_Builtins.subst
+                                                                    (FStar_Reflection_Builtins.subst_term
                                                                     s ty)))))
                                                                     uu___1)
                                                                     ctors))
@@ -2314,15 +2331,15 @@ let (open_sigelt_view :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (586))
+                                                                    (Prims.of_int (598))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (586))
+                                                                    (Prims.of_int (598))
                                                                     (Prims.of_int (44)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (583))
-                                                                    (Prims.of_int (61))
-                                                                    (Prims.of_int (601))
+                                                                    (Prims.of_int (595))
+                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (613))
                                                                     (Prims.of_int (48)))
                                                                     (Obj.magic
                                                                     (open_term_n
@@ -2341,15 +2358,15 @@ let (open_sigelt_view :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (594))
+                                                                    (Prims.of_int (606))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (597))
+                                                                    (Prims.of_int (609))
                                                                     (Prims.of_int (13)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (601))
+                                                                    (Prims.of_int (613))
                                                                     (Prims.of_int (48)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Util.map
@@ -2363,15 +2380,15 @@ let (open_sigelt_view :
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (595))
+                                                                    (Prims.of_int (607))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (595))
+                                                                    (Prims.of_int (607))
                                                                     (Prims.of_int (54)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (596))
+                                                                    (Prims.of_int (608))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (596))
+                                                                    (Prims.of_int (608))
                                                                     (Prims.of_int (17)))
                                                                     (Obj.magic
                                                                     (open_n_binders_from_arrow
@@ -2393,37 +2410,37 @@ let (open_sigelt_view :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (89)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (601))
+                                                                    (Prims.of_int (613))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (601))
+                                                                    (Prims.of_int (613))
                                                                     (Prims.of_int (48)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (89)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (89)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (599))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (88)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
@@ -2486,11 +2503,11 @@ let (open_sigelt_view :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (604)) (Prims.of_int (19))
-                      (Prims.of_int (604)) (Prims.of_int (36)))
+                      (Prims.of_int (616)) (Prims.of_int (19))
+                      (Prims.of_int (616)) (Prims.of_int (36)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (603)) (Prims.of_int (29))
-                      (Prims.of_int (606)) (Prims.of_int (27)))
+                      (Prims.of_int (615)) (Prims.of_int (29))
+                      (Prims.of_int (618)) (Prims.of_int (27)))
                    (Obj.magic (open_univ_s univs))
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -2502,7 +2519,8 @@ let (open_sigelt_view :
                                    nm1 = nm;
                                    univs2 = univs1;
                                    typ1 =
-                                     (FStar_Reflection_Builtins.subst s typ)
+                                     (FStar_Reflection_Builtins.subst_term s
+                                        typ)
                                  }))))
        | FStar_Reflection_Data.Unk ->
            Obj.magic
@@ -2527,11 +2545,11 @@ let rec (mk_abs :
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (616)) (Prims.of_int (13))
-                          (Prims.of_int (616)) (Prims.of_int (27)))
+                          (Prims.of_int (628)) (Prims.of_int (13))
+                          (Prims.of_int (628)) (Prims.of_int (27)))
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (617)) (Prims.of_int (4))
-                          (Prims.of_int (617)) (Prims.of_int (22)))
+                          (Prims.of_int (629)) (Prims.of_int (4))
+                          (Prims.of_int (629)) (Prims.of_int (22)))
                        (Obj.magic (mk_abs args' t))
                        (fun t' ->
                           FStar_Tactics_Effect.lift_div_tac
@@ -2556,11 +2574,11 @@ let (close_sigelt_view :
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (628)) (Prims.of_int (16))
-                      (Prims.of_int (628)) (Prims.of_int (64)))
+                      (Prims.of_int (640)) (Prims.of_int (16))
+                      (Prims.of_int (640)) (Prims.of_int (64)))
                    (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                      (Prims.of_int (628)) (Prims.of_int (67))
-                      (Prims.of_int (639)) (Prims.of_int (45)))
+                      (Prims.of_int (640)) (Prims.of_int (67))
+                      (Prims.of_int (651)) (Prims.of_int (45)))
                    (Obj.magic
                       (FStar_Tactics_Util.map
                          (fun uu___ ->
@@ -2569,12 +2587,12 @@ let (close_sigelt_view :
                                 FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (628)) (Prims.of_int (41))
-                                     (Prims.of_int (628)) (Prims.of_int (57)))
+                                     (Prims.of_int (640)) (Prims.of_int (41))
+                                     (Prims.of_int (640)) (Prims.of_int (57)))
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (628)) (Prims.of_int (37))
-                                     (Prims.of_int (628)) (Prims.of_int (57)))
+                                     (Prims.of_int (640)) (Prims.of_int (37))
+                                     (Prims.of_int (640)) (Prims.of_int (57)))
                                   (Obj.magic (mk_abs params ty))
                                   (fun uu___1 ->
                                      FStar_Tactics_Effect.lift_div_tac
@@ -2585,12 +2603,12 @@ let (close_sigelt_view :
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Range.mk_range
                                  "FStar.Tactics.NamedView.fst"
-                                 (Prims.of_int (631)) (Prims.of_int (22))
-                                 (Prims.of_int (631)) (Prims.of_int (45)))
+                                 (Prims.of_int (643)) (Prims.of_int (22))
+                                 (Prims.of_int (643)) (Prims.of_int (45)))
                               (FStar_Range.mk_range
                                  "FStar.Tactics.NamedView.fst"
-                                 (Prims.of_int (628)) (Prims.of_int (67))
-                                 (Prims.of_int (639)) (Prims.of_int (45)))
+                                 (Prims.of_int (640)) (Prims.of_int (67))
+                                 (Prims.of_int (651)) (Prims.of_int (45)))
                               (FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___ -> close_term_n params typ))
                               (fun uu___ ->
@@ -2601,15 +2619,15 @@ let (close_sigelt_view :
                                           (FStar_Tactics_Effect.tac_bind
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.NamedView.fst"
-                                                (Prims.of_int (634))
+                                                (Prims.of_int (646))
                                                 (Prims.of_int (16))
-                                                (Prims.of_int (634))
+                                                (Prims.of_int (646))
                                                 (Prims.of_int (34)))
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.NamedView.fst"
-                                                (Prims.of_int (631))
+                                                (Prims.of_int (643))
                                                 (Prims.of_int (48))
-                                                (Prims.of_int (639))
+                                                (Prims.of_int (651))
                                                 (Prims.of_int (45)))
                                              (FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___1 ->
@@ -2622,15 +2640,15 @@ let (close_sigelt_view :
                                                          (FStar_Tactics_Effect.tac_bind
                                                             (FStar_Range.mk_range
                                                                "FStar.Tactics.NamedView.fst"
-                                                               (Prims.of_int (635))
+                                                               (Prims.of_int (647))
                                                                (Prims.of_int (17))
-                                                               (Prims.of_int (635))
+                                                               (Prims.of_int (647))
                                                                (Prims.of_int (58)))
                                                             (FStar_Range.mk_range
                                                                "FStar.Tactics.NamedView.fst"
-                                                               (Prims.of_int (635))
+                                                               (Prims.of_int (647))
                                                                (Prims.of_int (61))
-                                                               (Prims.of_int (639))
+                                                               (Prims.of_int (651))
                                                                (Prims.of_int (45)))
                                                             (FStar_Tactics_Effect.lift_div_tac
                                                                (fun uu___2 ->
@@ -2647,20 +2665,20 @@ let (close_sigelt_view :
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (636))
+                                                                    (Prims.of_int (648))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (636))
-                                                                    (Prims.of_int (25)))
+                                                                    (Prims.of_int (648))
+                                                                    (Prims.of_int (30)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (636))
-                                                                    (Prims.of_int (28))
-                                                                    (Prims.of_int (639))
+                                                                    (Prims.of_int (648))
+                                                                    (Prims.of_int (33))
+                                                                    (Prims.of_int (651))
                                                                     (Prims.of_int (45)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    FStar_Reflection_Builtins.subst
+                                                                    FStar_Reflection_Builtins.subst_term
                                                                     s typ1))
                                                                     (fun
                                                                     uu___2 ->
@@ -2670,15 +2688,15 @@ let (close_sigelt_view :
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (637))
+                                                                    (Prims.of_int (649))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (58)))
+                                                                    (Prims.of_int (649))
+                                                                    (Prims.of_int (63)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (639))
+                                                                    (Prims.of_int (651))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (639))
+                                                                    (Prims.of_int (651))
                                                                     (Prims.of_int (45)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Util.map
@@ -2696,7 +2714,7 @@ let (close_sigelt_view :
                                                                     (nm1, ty)
                                                                     ->
                                                                     (nm1,
-                                                                    (FStar_Reflection_Builtins.subst
+                                                                    (FStar_Reflection_Builtins.subst_term
                                                                     s ty)))))
                                                                     uu___2)
                                                                     ctors1))
@@ -2723,7 +2741,7 @@ let (close_sigelt_view :
                       | (univs1, s) ->
                           FStar_Reflection_Data.Sg_Val
                             (nm, univs1,
-                              (FStar_Reflection_Builtins.subst s typ))))))
+                              (FStar_Reflection_Builtins.subst_term s typ))))))
       uu___
 let (inspect_sigelt :
   FStar_Reflection_Types.sigelt ->
@@ -2732,10 +2750,10 @@ let (inspect_sigelt :
   fun s ->
     FStar_Tactics_Effect.tac_bind
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (647)) (Prims.of_int (11)) (Prims.of_int (647))
+         (Prims.of_int (659)) (Prims.of_int (11)) (Prims.of_int (659))
          (Prims.of_int (29)))
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (649)) (Prims.of_int (2)) (Prims.of_int (649))
+         (Prims.of_int (661)) (Prims.of_int (2)) (Prims.of_int (661))
          (Prims.of_int (21)))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_Builtins.inspect_sigelt s))
@@ -2747,10 +2765,10 @@ let (pack_sigelt :
   fun sv ->
     FStar_Tactics_Effect.tac_bind
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (652)) (Prims.of_int (11)) (Prims.of_int (652))
+         (Prims.of_int (664)) (Prims.of_int (11)) (Prims.of_int (664))
          (Prims.of_int (31)))
       (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-         (Prims.of_int (653)) (Prims.of_int (2)) (Prims.of_int (653))
+         (Prims.of_int (665)) (Prims.of_int (2)) (Prims.of_int (665))
          (Prims.of_int (18))) (Obj.magic (close_sigelt_view sv))
       (fun sv1 ->
          FStar_Tactics_Effect.lift_div_tac

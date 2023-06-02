@@ -438,7 +438,7 @@ let (debug : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___ ->
          (fun uu___ ->
             if uu___
-            then Obj.magic (Obj.repr (FStar_Tactics_NamedView.print m))
+            then Obj.magic (Obj.repr (FStar_Tactics_Builtins.print m))
             else
               Obj.magic
                 (Obj.repr

@@ -594,8 +594,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                     e_sigelt in
                                                 let uu___47 =
                                                   let uu___48 =
-                                                    mk2 "subst"
-                                                      FStar_Reflection_Basic.subst
+                                                    mk2 "subst_term"
+                                                      FStar_Reflection_Basic.subst_term
                                                       e_subst e_term e_term in
                                                   let uu___49 =
                                                     let uu___50 =

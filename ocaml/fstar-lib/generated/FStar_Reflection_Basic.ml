@@ -243,7 +243,7 @@ let rec (inspect_ln :
           (uu___1, (ctx_u, s)) in
         FStar_Reflection_Data.Tv_Uvar uu___
     | FStar_Syntax_Syntax.Tm_let
-        { FStar_Syntax_Syntax.lbs = (false, lb::[]);
+        { FStar_Syntax_Syntax.lbs = (isrec, lb::[]);
           FStar_Syntax_Syntax.body1 = t2;_}
         ->
         if lb.FStar_Syntax_Syntax.lbunivs <> []
@@ -254,22 +254,7 @@ let rec (inspect_ln :
            | FStar_Pervasives.Inl bv ->
                let uu___1 =
                  let uu___2 = FStar_Syntax_Syntax.mk_binder bv in
-                 (false, (lb.FStar_Syntax_Syntax.lbattrs), uu___2,
-                   (lb.FStar_Syntax_Syntax.lbdef), t2) in
-               FStar_Reflection_Data.Tv_Let uu___1)
-    | FStar_Syntax_Syntax.Tm_let
-        { FStar_Syntax_Syntax.lbs = (true, lb::[]);
-          FStar_Syntax_Syntax.body1 = t2;_}
-        ->
-        if lb.FStar_Syntax_Syntax.lbunivs <> []
-        then FStar_Reflection_Data.Tv_Unsupp
-        else
-          (match lb.FStar_Syntax_Syntax.lbname with
-           | FStar_Pervasives.Inr uu___1 -> FStar_Reflection_Data.Tv_Unsupp
-           | FStar_Pervasives.Inl bv ->
-               let uu___1 =
-                 let uu___2 = FStar_Syntax_Syntax.mk_binder bv in
-                 (true, (lb.FStar_Syntax_Syntax.lbattrs), uu___2,
+                 (isrec, (lb.FStar_Syntax_Syntax.lbattrs), uu___2,
                    (lb.FStar_Syntax_Syntax.lbdef), t2) in
                FStar_Reflection_Data.Tv_Let uu___1)
     | FStar_Syntax_Syntax.Tm_match
@@ -498,7 +483,7 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
     | FStar_Reflection_Data.Tv_Uvar (u, ctx_u_s) ->
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_uvar ctx_u_s)
           FStar_Compiler_Range_Type.dummyRange
-    | FStar_Reflection_Data.Tv_Let (false, attrs, b, t1, t2) ->
+    | FStar_Reflection_Data.Tv_Let (isrec, attrs, b, t1, t2) ->
         let bv = b.FStar_Syntax_Syntax.binder_bv in
         let lb =
           FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
@@ -507,19 +492,7 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_let
              {
-               FStar_Syntax_Syntax.lbs = (false, [lb]);
-               FStar_Syntax_Syntax.body1 = t2
-             }) FStar_Compiler_Range_Type.dummyRange
-    | FStar_Reflection_Data.Tv_Let (true, attrs, b, t1, t2) ->
-        let bv = b.FStar_Syntax_Syntax.binder_bv in
-        let lb =
-          FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
-            bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
-            attrs FStar_Compiler_Range_Type.dummyRange in
-        FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_let
-             {
-               FStar_Syntax_Syntax.lbs = (true, [lb]);
+               FStar_Syntax_Syntax.lbs = (isrec, [lb]);
                FStar_Syntax_Syntax.body1 = t2
              }) FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_Data.Tv_Match (t, ret_opt, brs) ->
@@ -1416,7 +1389,7 @@ let (push_namedv :
     fun b ->
       let uu___ = let uu___1 = FStar_Syntax_Syntax.mk_binder b in [uu___1] in
       FStar_TypeChecker_Env.push_binders e uu___
-let (subst :
+let (subst_term :
   FStar_Syntax_Syntax.subst_elt Prims.list ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   = fun s -> fun t -> FStar_Syntax_Subst.subst s t

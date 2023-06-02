@@ -32,7 +32,8 @@ let (subst1 :
   fun n ->
     fun t1 ->
       fun t2 ->
-        FStar_Reflection_Builtins.subst [FStar_Syntax_Syntax.NT (n, t1)] t2
+        FStar_Reflection_Builtins.subst_term [FStar_Syntax_Syntax.NT (n, t1)]
+          t2
 let (mk_binder :
   Prims.string -> FStar_Reflection_Types.typ -> FStar_Reflection_Types.binder)
   =

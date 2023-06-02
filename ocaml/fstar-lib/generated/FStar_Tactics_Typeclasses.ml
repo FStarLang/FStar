@@ -740,7 +740,7 @@ let (mk_class :
                                                                     (fun
                                                                     uu___4 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___4))
                                                                     uu___4)))
                                                                     (fun
@@ -762,7 +762,7 @@ let (mk_class :
                                                                     (Prims.of_int (220))
                                                                     (Prims.of_int (35)))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     (Prims.strcat
                                                                     "got it, name = "
                                                                     (FStar_Reflection_Builtins.implode_qn
@@ -829,7 +829,7 @@ let (mk_class :
                                                                     (fun
                                                                     uu___6 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___6))
                                                                     uu___6)))
                                                                     (fun
@@ -1015,7 +1015,7 @@ let (mk_class :
                                                                     (fun
                                                                     uu___9 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___9))
                                                                     uu___9)))
                                                                     (fun
@@ -1191,7 +1191,7 @@ let (mk_class :
                                                                     uu___13
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___13))
                                                                     uu___13)))
                                                                     (fun
@@ -1215,7 +1215,7 @@ let (mk_class :
                                                                     (Prims.of_int (220))
                                                                     (Prims.of_int (35)))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     (Prims.strcat
                                                                     "n_params = "
                                                                     (Prims.string_of_int
@@ -1242,7 +1242,7 @@ let (mk_class :
                                                                     (Prims.of_int (220))
                                                                     (Prims.of_int (35)))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     (Prims.strcat
                                                                     "n_univs = "
                                                                     (Prims.string_of_int
@@ -1316,7 +1316,7 @@ let (mk_class :
                                                                     uu___16
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___16))
                                                                     uu___16)))
                                                                     (fun
@@ -1340,7 +1340,7 @@ let (mk_class :
                                                                     (Prims.of_int (220))
                                                                     (Prims.of_int (35)))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     (Prims.strcat
                                                                     "n_bs = "
                                                                     (Prims.string_of_int
@@ -1444,7 +1444,7 @@ let (mk_class :
                                                                     uu___18
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___18))
                                                                     uu___18)))
                                                                     (fun
@@ -1489,7 +1489,7 @@ let (mk_class :
                                                                     (Prims.of_int (219))
                                                                     (Prims.of_int (20)))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     (Prims.strcat
                                                                     "b = " s)))
                                                                     (fun
@@ -1957,7 +1957,7 @@ let (mk_class :
                                                                     uu___20
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___20))
                                                                     uu___20)))
                                                                     (fun
@@ -2243,7 +2243,7 @@ let (mk_class :
                                                                     uu___21
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___21))
                                                                     uu___21)))
                                                                     (fun
@@ -2314,7 +2314,7 @@ let (mk_class :
                                                                     uu___22
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_NamedView.print
+                                                                    (FStar_Tactics_Builtins.print
                                                                     uu___22))
                                                                     uu___22)))
                                                                     (fun
