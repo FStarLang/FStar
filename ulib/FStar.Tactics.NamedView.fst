@@ -46,7 +46,7 @@ type pattern =
      subpats : list (pattern * bool)
    }
 
- // A pattern-bound *named* variable. 
+ // A pattern-bound *named* variable.
  | Pat_Var {
      v    : namedv;
      sort : sealed typ;
@@ -86,6 +86,8 @@ type binders = list binder
 let is_simple_binder (b:binder) = Q_Explicit? b.qual /\ Nil? b.attrs
 type simple_binder = b:binder{is_simple_binder b}
 
+type match_returns_ascription = binder & (either term comp & option term & bool)
+
 noeq
 type named_term_view =
   | Tv_Var    : v:namedv -> named_term_view
@@ -100,7 +102,6 @@ type named_term_view =
   | Tv_Const  : vconst -> named_term_view
   | Tv_Uvar   : nat -> ctx_uvar_and_subst -> named_term_view
   | Tv_Let    : recf:bool -> attrs:(list term) -> b:simple_binder -> def:term -> body:term -> named_term_view
-  // TODO: returns ascription has a binder, open?
   | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> named_term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> named_term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> named_term_view
@@ -164,6 +165,25 @@ let simple_binder_to_binding (b:simple_binder) : binding = {
   ppname = b.ppname;
 }
 
+let open_binder (b : R.binder) : Tac binder =
+  let n = fresh () in
+  let bv = inspect_binder b in
+  {
+    uniq   = n;
+    sort   = bv.sort;
+    ppname = bv.ppname;
+    qual   = bv.qual;
+    attrs  = bv.attrs;
+  }
+
+let close_binder (b : binder) : R.binder =
+  pack_binder {
+    sort   = b.sort;
+    qual   = b.qual;
+    ppname = b.ppname;
+    attrs  = b.attrs;
+  }
+
 let open_term_with (b : R.binder) (nb : binder) (t : term) : Tac term =
   let nv : namedv = pack_namedv {
     uniq   = nb.uniq;
@@ -175,16 +195,7 @@ let open_term_with (b : R.binder) (nb : binder) (t : term) : Tac term =
   t'
 
 let open_term (b : R.binder) (t : term) : Tac (binder & term) =
-  let n = fresh () in
-  let bv = inspect_binder b in
-  let bndr : binder = {
-    uniq   = n;
-    sort   = bv.sort;
-    ppname = bv.ppname;
-    qual   = bv.qual;
-    attrs  = bv.attrs;
-  }
-  in
+  let bndr : binder = open_binder b in
   (bndr, open_term_with b bndr t)
 
 let open_comp (b : R.binder) (t : comp) : Tac (binder & comp) =
@@ -206,6 +217,16 @@ let open_comp (b : R.binder) (t : comp) : Tac (binder & comp) =
   }
   in
   (bndr, t')
+
+let open_comp_with (b : R.binder) (nb : binder) (c : comp) : Tac comp =
+  let nv : namedv = pack_namedv {
+    uniq   = nb.uniq;
+    sort   = seal nb.sort;
+    ppname = nb.ppname;
+  }
+  in
+  let t' = subst_comp [DB 0 nv] c in
+  t'
 
 (* FIXME: unfortunate duplication here. The effect means this proof cannot
 be done extrinsically. Can we add a refinement to the binder? *)
@@ -283,7 +304,7 @@ let rec open_term_n (bs : list R.binder) (t : term) : Tac (list binder & term) =
     let bs', t' = open_term_n bs t in
     let b', t'' = open_term b t' in
     (b'::bs', t'')
-    
+
 let rec open_term_n_with (bs : list R.binder) (nbs : list binder) (t : term) : Tac term =
   match bs, nbs with
   | [], [] -> t
@@ -321,7 +342,7 @@ let open_univ_s (us : list univ_name) : Tac (list univ_name & subst_t) =
   let n = List.Tot.length us in
   let s = mapi (fun i u -> UN (n-1-i) (pack_universe (Uv_Name u))) us in
   us, s
-  
+
 let close_univ_s (us : list univ_name) : list univ_name & subst_t =
   let n = List.Tot.length us in
   let s = List.Tot.mapi (fun i u -> UD (pack_ident u) (n-i-1)) us in
@@ -407,6 +428,35 @@ let close_branch (b : branch) : Tot R.branch =
   let t' = subst_term s t in
   (pat, t')
 
+let open_match_returns_ascription (mra : R.match_returns_ascription) : Tac match_returns_ascription =
+  let (b, (ct, topt, use_eq)) = mra in
+  let nb = open_binder b in
+  let ct = match ct with
+    | Inl t -> Inl (open_term_with b nb t)
+    | Inr c -> Inr (open_comp_with b nb c)
+  in
+  let topt =
+    match topt with
+    | None -> None
+    | Some t -> Some (open_term_with b nb t)
+  in
+  (nb, (ct, topt, use_eq))
+
+let close_match_returns_ascription (mra : match_returns_ascription) : R.match_returns_ascription =
+  let (nb, (ct, topt, use_eq)) = mra in
+  let b = close_binder nb in
+  // FIXME: all this is repeating the close_binder work, for no good reason
+  let ct = match ct with
+    | Inl t -> Inl (snd (close_term nb t))
+    | Inr c -> Inr (snd (close_comp nb c))
+  in
+  let topt =
+    match topt with
+    | None -> None
+    | Some t -> Some (snd (close_term nb t))
+  in
+  (b, (ct, topt, use_eq))
+
 let open_view (tv:term_view) : Tac named_term_view =
   match tv with
   (* Nothing interesting *)
@@ -449,6 +499,7 @@ let open_view (tv:term_view) : Tac named_term_view =
 
   | RD.Tv_Match scrutinee ret brs ->
     let brs = map open_branch brs in
+    let ret = map_opt open_match_returns_ascription ret in
     Tv_Match scrutinee ret brs
 
 let close_view (tv : named_term_view) : Tot term_view =
@@ -466,22 +517,22 @@ let close_view (tv : named_term_view) : Tot term_view =
   | Tv_AscribedC e c tac use_eq -> RD.Tv_AscribedC e c tac use_eq
   | Tv_Unknown -> RD.Tv_Unknown
   | Tv_Unsupp -> RD.Tv_Unsupp
-  
+
   (* Below are the nodes that actually involve a binder.
   Open them and convert to named binders. *)
-  
+
   | Tv_Abs nb body ->
     let b, body = close_term nb body in
     RD.Tv_Abs b body
-  
+
   | Tv_Arrow nb c ->
     let b, c = close_comp nb c in
     RD.Tv_Arrow b c
-  
+
   | Tv_Refine nb ref ->
     let b, ref = close_term_simple nb ref in
     RD.Tv_Refine b ref
-  
+
   | Tv_Let recf attrs nb def body ->
     let def =
       if recf
@@ -493,6 +544,7 @@ let close_view (tv : named_term_view) : Tot term_view =
 
   | Tv_Match scrutinee ret brs ->
     let brs = List.Tot.map close_branch brs in
+    let ret = FStar.Option.mapTot close_match_returns_ascription ret in
     RD.Tv_Match scrutinee ret brs
 
 let inspect (t:term) : Tac named_term_view =
@@ -632,7 +684,7 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
   match sv with
   | Sg_Let { isrec; lbs } ->
     let lbs = List.Tot.map close_lb lbs in
-    RD.Sg_Let isrec lbs 
+    RD.Sg_Let isrec lbs
 
   | Sg_Inductive {nm; univs; params; typ; ctors} ->
     (* Abstract constructors by the parameters. This
