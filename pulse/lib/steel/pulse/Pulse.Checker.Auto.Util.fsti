@@ -113,37 +113,66 @@ type prover_step_t = #g:_ -> #o:_ -> p:prover_state g o -> T.Tac (option (prover
 let intro_comp (c:comp) =
   C_STGhost? c /\ comp_u c == u_zero /\ comp_res c == tm_unit
 
-// A proof step that transforms the proof_steps_post p to
-// v * remaining' * p.matched_pre
+//
+// A proof step that provides v, eating away some of the ctxt
+//
 noeq
-type proof_step (#g:env) (#ctxt:vprop) (p:prover_state g ctxt) = {
-  // the vprop that intro introduced
-  v : vprop;
-
+type proof_step (g:env) (ctxt:list vprop) (v:vprop) = {
   remaining' : list vprop;
 
-  // the term, comp, and term typing as a witness of the introduction
   t' : st_term;
   c' : c:comp { intro_comp c /\ comp_post c == v };
   t'_typing : st_typing g t' c';
 
-  remaining_equiv : vprop_equiv g (list_as_vprop p.remaining_ctxt)
+  remaining_equiv : vprop_equiv g (list_as_vprop ctxt)
                                   (Tm_Star (comp_pre c') (list_as_vprop remaining'));
 }
 
 
 // An intro step that makes progress by solving one conjunct
-// ps.v from the p.unmatched_pre
+// v from the p.unmatched_pre
 noeq
-type intro_result (#g:env) (#ctxt:vprop) (p:prover_state g ctxt) = {
-  ps:proof_step p;
+type intro_from_unmatched_step (#g:env) (#ctxt:vprop) (p:prover_state g ctxt) = {
+  v : vprop;
+
+  ps:proof_step g p.remaining_ctxt v;
  
   // new unmatched pre and remaining ctxt
   unmatched' : list vprop;
  
   // relation between new and old unmatched_pre and remaining_ctxt
   unmatched_equiv : vprop_equiv g (list_as_vprop p.unmatched_pre)
-                                  (Tm_Star ps.v (list_as_vprop unmatched'));
+                                  (Tm_Star v (list_as_vprop unmatched'));
 }
 
-type intro_step_t = #g:_ -> #ctxt:_ -> p:prover_state g ctxt -> T.Tac (option (intro_result p))
+type proof_step_fn =
+  #g:_ ->
+  ctxt:_ ->
+  v:vprop ->
+  tot_typing g v Tm_VProp ->
+  T.Tac (option (proof_step g ctxt v))
+
+type intro_from_unmatched_fn =
+  #g:_ ->
+  #ctxt:_ ->
+  p:prover_state g ctxt ->
+  T.Tac (option (intro_from_unmatched_step p))
+
+val apply_proof_step (#g:env) (#ctxt:vprop)
+  (p:prover_state g ctxt)
+  (v:vprop)
+  (r:proof_step g p.remaining_ctxt v)  
+  : T.Tac (p':prover_state g ctxt {
+      p'.matched_pre == p.matched_pre /\
+      p'.unmatched_pre == p.unmatched_pre /\
+      p'.remaining_ctxt == v::r.remaining'
+    })
+
+val apply_intro_from_unmatched_step (#g:env) (#ctxt:vprop)
+  (#p:prover_state g ctxt)
+  (r:intro_from_unmatched_step p)
+  : T.Tac (p':prover_state g ctxt {
+      p'.matched_pre == Tm_Star p.matched_pre r.v /\
+      p'.unmatched_pre == r.unmatched' /\
+      p'.remaining_ctxt == r.ps.remaining'
+    })

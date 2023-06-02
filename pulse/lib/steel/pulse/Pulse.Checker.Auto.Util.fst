@@ -334,3 +334,159 @@ let add_elims_aux (#g:env) (#ctxt:term)
       let (| g'', ctxt'', ctxt''_typing, k' |) = add_elims f mk ctxt'_typing in
       (| g'', ctxt'', ctxt''_typing, k_elab_trans k k' |)
      )
+
+module Metatheory = Pulse.Typing.Metatheory
+
+open FStar.List.Tot
+
+let add_frame (#g:env) (#t:st_term) (#c:comp_st)
+  (d:st_typing g t c)
+  (f:vprop)
+  : c':comp { c' == Pulse.Typing.add_frame c f } &
+    st_typing g t c' = admit ()
+
+let with_pre_post (c:comp_st) (pre:vprop) (post:vprop) : comp_st =
+  match c with
+  | C_ST s
+  | C_STGhost _ s
+  | C_STAtomic _ s -> with_st_comp c { s with pre; post }
+
+let pre_equiv (#g:env) (#t:st_term) (#c:comp_st)
+  (d:st_typing g t c)
+  (f:vprop) (_:vprop_equiv g (comp_pre c) f)
+  : c':comp { c' == with_pre_post c f (comp_post c) } &
+    st_typing g t c' = admit ()
+
+//
+// note that we need post to be ln
+//
+let pre_post_equiv (#g:env) (#t:st_term) (#c:comp_st {ln (comp_post c)})
+  (d:st_typing g t c)
+  (#pre:vprop) (_:vprop_equiv g (comp_pre c) pre)
+  (#post:vprop) (_:vprop_equiv g (comp_post c) post)
+  : c':comp_st { c' == with_pre_post c pre post } &
+    st_typing g t c' = admit ()
+
+let st_typing_weakening (#g:env) (#t:st_term) (#c:comp)
+  (d:st_typing g t c)
+  (g':env { env_extends g' g })
+  : st_typing g' t c = admit ()
+
+//
+// derive next prover state from an intro step
+//
+#push-options "--z3rlimit_factor 5 --fuel 2 --ifuel 2 --query_stats"
+let apply_proof_step (#g:env) (#ctxt:vprop)
+  (p:prover_state g ctxt)
+  (v:vprop)
+  (r:proof_step g p.remaining_ctxt v)  
+  : T.Tac (p':prover_state g ctxt {
+      p'.matched_pre == p.matched_pre /\
+      p'.unmatched_pre == p.unmatched_pre /\
+      p'.remaining_ctxt == v::r.remaining'
+    }) =
+
+  let remaining'_matched = Tm_Star (list_as_vprop r.remaining') p.matched_pre in
+  let (| r_c', r_t'_typing |) = add_frame r.t'_typing remaining'_matched in
+  assert (comp_pre r_c' == Tm_Star (comp_pre r.c') remaining'_matched);
+  assert (comp_post r_c' == Tm_Star v remaining'_matched);
+
+  let (| x, bind_continuation_elaborator |) =
+    continuation_elaborator_with_bind #g Tm_Emp
+    #(ghost_comp ctxt (Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre))
+    #p.proof_steps
+    p.proof_steps_typing
+    (magic () <: tot_typing g (Tm_Star Tm_Emp ctxt) Tm_VProp)
+  in
+
+  assume (open_term (Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre) x ==
+                    Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre);
+
+  let _ : vprop_equiv g (list_as_vprop p.remaining_ctxt)
+                        (Tm_Star (comp_pre r.c') (list_as_vprop r.remaining')) = r.remaining_equiv in
+  let d : vprop_equiv g
+    (Tm_Star (comp_pre r.c') (Tm_Star (list_as_vprop r.remaining') p.matched_pre))
+    (Tm_Star (Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre) Tm_Emp) = magic () in
+
+  let (| r_c', r_t'_typing |) = pre_equiv r_t'_typing
+    (Tm_Star (Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre) Tm_Emp)
+    d in
+  
+  assume (env_extends (extend x (Inl tm_unit) g) g);
+  let r_t'_typing = st_typing_weakening r_t'_typing (extend x (Inl tm_unit) g) in
+
+  let post_hint = Some {
+    g;
+    ret_ty = tm_unit;
+    u = u_zero;
+    ty_typing = magic ();
+    post = comp_post r_c';
+    post_typing = magic ();
+  } in
+  assert (comp_post_matches_hint r_c' post_hint);
+  assume (env_extends g g);
+  let (| steps, steps_c, steps_typing |) = bind_continuation_elaborator post_hint
+    (| r.t', r_c', r_t'_typing  |) in
+
+  assume (stateful_comp steps_c);
+  assert (comp_pre steps_c == Tm_Star Tm_Emp ctxt);
+  assert (comp_post steps_c == comp_post r_c');
+  assume (steps_c == ghost_comp (Tm_Star Tm_Emp ctxt) (comp_post r_c'));
+  assume (ln (comp_post steps_c));
+
+  assert (comp_post steps_c ==
+          Tm_Star v (Tm_Star (list_as_vprop r.remaining') p.matched_pre));
+
+  let steps_pre_equiv : vprop_equiv g (Tm_Star Tm_Emp ctxt) ctxt = magic () in
+  let steps_post_equiv : vprop_equiv g
+    (Tm_Star v (Tm_Star (list_as_vprop r.remaining') p.matched_pre))
+    (Tm_Star (list_as_vprop (v::r.remaining')) p.matched_pre) = magic () in
+
+  let (| steps_c, steps_typing |) = pre_post_equiv steps_typing
+    steps_pre_equiv
+    steps_post_equiv in
+
+  assert (comp_pre steps_c == ctxt);
+  assert (comp_post steps_c == Tm_Star (list_as_vprop (v::r.remaining'))
+                                       p.matched_pre);
+  assume (steps_c == ghost_comp ctxt (Tm_Star (list_as_vprop (v::r.remaining'))
+                                              p.matched_pre));
+  { p with
+    remaining_ctxt = v::r.remaining';
+    proof_steps = steps;
+    proof_steps_typing = steps_typing }
+#pop-options
+
+let apply_intro_from_unmatched_step (#g:env) (#ctxt:vprop)
+  (#p:prover_state g ctxt)
+  (r:intro_from_unmatched_step p)
+  : T.Tac (p':prover_state g ctxt {
+      p'.matched_pre == Tm_Star p.matched_pre r.v /\
+      p'.unmatched_pre == r.unmatched' /\
+      p'.remaining_ctxt == r.ps.remaining'
+    }) =
+  
+  let p = apply_proof_step p r.v r.ps in
+  let new_matched = Tm_Star p.matched_pre r.v in
+  let d1 : vprop_equiv g (comp_pre p.c)
+                         (Tm_Star (list_as_vprop p.unmatched_pre) p.matched_pre) = p.pre_equiv in
+  let d2 : vprop_equiv g (list_as_vprop p.unmatched_pre)
+                         (Tm_Star r.v (list_as_vprop r.unmatched')) = r.unmatched_equiv in
+  let d3 : vprop_equiv g (comp_pre p.c) (Tm_Star (list_as_vprop r.unmatched')
+                                                 (Tm_Star p.matched_pre r.v)) = magic () in
+  let proof_steps_typing
+    : st_typing g _
+        (ghost_comp ctxt (Tm_Star (list_as_vprop (r.v::r.ps.remaining')) p.matched_pre))
+    = p.proof_steps_typing
+  in
+  let proof_steps_typing
+    : st_typing g p.proof_steps
+                (ghost_comp ctxt (Tm_Star (list_as_vprop r.ps.remaining') new_matched))
+    = magic()
+  in
+  { p with
+    proof_steps_typing;
+    remaining_ctxt = r.ps.remaining';
+    matched_pre = new_matched;
+    unmatched_pre = r.unmatched';
+    pre_equiv = d3 }

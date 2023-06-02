@@ -1,5 +1,5 @@
 open Prims
-let (intro_exists : Pulse_Checker_Auto_Util.intro_step_t) =
+let (intro_exists : Pulse_Checker_Auto_Util.intro_from_unmatched_fn) =
   fun g ->
     fun ctxt ->
       fun p ->

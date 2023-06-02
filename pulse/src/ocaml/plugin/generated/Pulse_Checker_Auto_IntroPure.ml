@@ -5,12 +5,6 @@ let (is_pure : Pulse_Syntax_Base.term -> Prims.bool) =
     | Pulse_Syntax_Base.Tm_Pure (Pulse_Syntax_Base.Tm_FStar (uu___, uu___1))
         -> true
     | uu___ -> false
-let (get_one_pure :
-  Pulse_Typing.env ->
-    Pulse_Syntax_Base.vprop Prims.list ->
-      (Pulse_Syntax_Base.vprop, Pulse_Syntax_Base.vprop Prims.list, unit)
-        FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option)
-  = fun g -> fun l -> Prims.admit ()
 let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
   fun p ->
     Pulse_Typing.wr
@@ -61,7 +55,106 @@ let (intro_pure_typing :
                      (FStar_Reflection_Data.Tv_Const
                         FStar_Reflection_Data.C_Unit)), FStar_Range.range_0)),
               (), ())
-let (intro_pure : Pulse_Checker_Auto_Util.intro_step_t) =
+let (intro_pure_proof_step_aux :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop Prims.list ->
+      Pulse_Syntax_Base.vprop ->
+        unit ->
+          ((unit, unit, unit) Pulse_Checker_Auto_Util.proof_step
+             FStar_Pervasives_Native.option,
+            unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun ctxt ->
+      fun v ->
+        fun v_typing ->
+          FStar_Tactics_Effect.tac_bind
+            (FStar_Range.mk_range "Pulse.Checker.Auto.IntroPure.fst"
+               (Prims.of_int (67)) (Prims.of_int (18)) (Prims.of_int (67))
+               (Prims.of_int (19)))
+            (FStar_Range.mk_range "Pulse.Checker.Auto.IntroPure.fst"
+               (Prims.of_int (65)) (Prims.of_int (42)) (Prims.of_int (93))
+               (Prims.of_int (13)))
+            (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> v))
+            (fun uu___ ->
+               (fun uu___ ->
+                  match uu___ with
+                  | Pulse_Syntax_Base.Tm_Pure p ->
+                      Obj.magic
+                        (FStar_Tactics_Effect.tac_bind
+                           (FStar_Range.mk_range
+                              "Pulse.Checker.Auto.IntroPure.fst"
+                              (Prims.of_int (69)) (Prims.of_int (4))
+                              (Prims.of_int (69)) (Prims.of_int (45)))
+                           (FStar_Range.mk_range
+                              "Pulse.Checker.Auto.IntroPure.fst"
+                              (Prims.of_int (71)) (Prims.of_int (2))
+                              (Prims.of_int (93)) (Prims.of_int (13)))
+                           (FStar_Tactics_Effect.lift_div_tac
+                              (fun uu___1 -> ()))
+                           (fun uu___1 ->
+                              (fun p_typing ->
+                                 Obj.magic
+                                   (FStar_Tactics_Effect.tac_bind
+                                      (FStar_Range.mk_range
+                                         "Pulse.Checker.Auto.IntroPure.fst"
+                                         (Prims.of_int (71))
+                                         (Prims.of_int (8))
+                                         (Prims.of_int (71))
+                                         (Prims.of_int (56)))
+                                      (FStar_Range.mk_range
+                                         "Pulse.Checker.Auto.IntroPure.fst"
+                                         (Prims.of_int (71))
+                                         (Prims.of_int (2))
+                                         (Prims.of_int (93))
+                                         (Prims.of_int (13)))
+                                      (Obj.magic
+                                         (FStar_Tactics_Builtins.check_prop_validity
+                                            (Pulse_Typing.elab_env g)
+                                            (Pulse_Elaborate_Pure.elab_term p)))
+                                      (fun uu___1 ->
+                                         FStar_Tactics_Effect.lift_div_tac
+                                           (fun uu___2 ->
+                                              match uu___1 with
+                                              | (FStar_Pervasives_Native.Some
+                                                 e, uu___3) ->
+                                                  FStar_Pervasives_Native.Some
+                                                    {
+                                                      Pulse_Checker_Auto_Util.remaining'
+                                                        = ctxt;
+                                                      Pulse_Checker_Auto_Util.t'
+                                                        = (intro_pure_tm p);
+                                                      Pulse_Checker_Auto_Util.c'
+                                                        = (intro_pure_comp p);
+                                                      Pulse_Checker_Auto_Util.t'_typing
+                                                        =
+                                                        (intro_pure_typing g
+                                                           p () ());
+                                                      Pulse_Checker_Auto_Util.remaining_equiv
+                                                        = ()
+                                                    }
+                                              | uu___3 ->
+                                                  FStar_Pervasives_Native.None))))
+                                uu___1))) uu___)
+let (intro_pure_proof_step : Pulse_Checker_Auto_Util.proof_step_fn) =
+  fun g ->
+    fun ctxt ->
+      fun v ->
+        fun v_typing ->
+          if is_pure v
+          then Obj.magic (Obj.repr (intro_pure_proof_step_aux g ctxt v ()))
+          else
+            Obj.magic
+              (Obj.repr
+                 (FStar_Tactics_Effect.lift_div_tac
+                    (fun uu___1 -> FStar_Pervasives_Native.None)))
+let (get_one_pure :
+  Pulse_Typing.env ->
+    Pulse_Syntax_Base.vprop Prims.list ->
+      (Pulse_Syntax_Base.vprop, Pulse_Syntax_Base.vprop Prims.list, unit)
+        FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option)
+  = fun g -> fun l -> Prims.admit ()
+let (intro_pure : Pulse_Checker_Auto_Util.intro_from_unmatched_fn) =
   fun g ->
     fun ctxt ->
       fun pst ->
@@ -77,11 +170,11 @@ let (intro_pure : Pulse_Checker_Auto_Util.intro_step_t) =
               (Obj.repr
                  (FStar_Tactics_Effect.tac_bind
                     (FStar_Range.mk_range "Pulse.Checker.Auto.IntroPure.fst"
-                       (Prims.of_int (71)) (Prims.of_int (45))
-                       (Prims.of_int (71)) (Prims.of_int (53)))
+                       (Prims.of_int (112)) (Prims.of_int (45))
+                       (Prims.of_int (112)) (Prims.of_int (53)))
                     (FStar_Range.mk_range "Pulse.Checker.Auto.IntroPure.fst"
-                       (Prims.of_int (71)) (Prims.of_int (56))
-                       (Prims.of_int (97)) (Prims.of_int (15)))
+                       (Prims.of_int (113)) (Prims.of_int (4))
+                       (Prims.of_int (121)) (Prims.of_int (18)))
                     (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
                     (fun uu___ ->
                        (fun v_typing ->
@@ -89,91 +182,31 @@ let (intro_pure : Pulse_Checker_Auto_Util.intro_step_t) =
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Range.mk_range
                                   "Pulse.Checker.Auto.IntroPure.fst"
-                                  (Prims.of_int (72)) (Prims.of_int (20))
-                                  (Prims.of_int (72)) (Prims.of_int (21)))
+                                  (Prims.of_int (113)) (Prims.of_int (10))
+                                  (Prims.of_int (113)) (Prims.of_int (65)))
                                (FStar_Range.mk_range
                                   "Pulse.Checker.Auto.IntroPure.fst"
-                                  (Prims.of_int (71)) (Prims.of_int (56))
-                                  (Prims.of_int (97)) (Prims.of_int (15)))
-                               (FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___ -> v))
+                                  (Prims.of_int (113)) (Prims.of_int (4))
+                                  (Prims.of_int (121)) (Prims.of_int (18)))
+                               (Obj.magic
+                                  (intro_pure_proof_step_aux g
+                                     pst.Pulse_Checker_Auto_Util.remaining_ctxt
+                                     v ()))
                                (fun uu___ ->
-                                  (fun uu___ ->
-                                     match uu___ with
-                                     | Pulse_Syntax_Base.Tm_Pure p ->
-                                         Obj.magic
-                                           (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "Pulse.Checker.Auto.IntroPure.fst"
-                                                 (Prims.of_int (74))
-                                                 (Prims.of_int (6))
-                                                 (Prims.of_int (74))
-                                                 (Prims.of_int (47)))
-                                              (FStar_Range.mk_range
-                                                 "Pulse.Checker.Auto.IntroPure.fst"
-                                                 (Prims.of_int (75))
-                                                 (Prims.of_int (4))
-                                                 (Prims.of_int (97))
-                                                 (Prims.of_int (15)))
-                                              (FStar_Tactics_Effect.lift_div_tac
-                                                 (fun uu___1 -> ()))
-                                              (fun uu___1 ->
-                                                 (fun p_typing ->
-                                                    Obj.magic
-                                                      (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "Pulse.Checker.Auto.IntroPure.fst"
-                                                            (Prims.of_int (75))
-                                                            (Prims.of_int (10))
-                                                            (Prims.of_int (75))
-                                                            (Prims.of_int (58)))
-                                                         (FStar_Range.mk_range
-                                                            "Pulse.Checker.Auto.IntroPure.fst"
-                                                            (Prims.of_int (75))
-                                                            (Prims.of_int (4))
-                                                            (Prims.of_int (97))
-                                                            (Prims.of_int (15)))
-                                                         (Obj.magic
-                                                            (FStar_Tactics_Builtins.check_prop_validity
-                                                               (Pulse_Typing.elab_env
-                                                                  g)
-                                                               (Pulse_Elaborate_Pure.elab_term
-                                                                  p)))
-                                                         (fun uu___1 ->
-                                                            FStar_Tactics_Effect.lift_div_tac
-                                                              (fun uu___2 ->
-                                                                 match uu___1
-                                                                 with
-                                                                 | (FStar_Pervasives_Native.Some
-                                                                    e,
-                                                                    uu___3)
-                                                                    ->
-                                                                    FStar_Pervasives_Native.Some
-                                                                    {
-                                                                    Pulse_Checker_Auto_Util.v
-                                                                    = v;
-                                                                    Pulse_Checker_Auto_Util.unmatched'
-                                                                    = rest;
-                                                                    Pulse_Checker_Auto_Util.remaining'
-                                                                    =
-                                                                    (pst.Pulse_Checker_Auto_Util.remaining_ctxt);
-                                                                    Pulse_Checker_Auto_Util.t'
-                                                                    =
-                                                                    (intro_pure_tm
-                                                                    p);
-                                                                    Pulse_Checker_Auto_Util.c'
-                                                                    =
-                                                                    (intro_pure_comp
-                                                                    p);
-                                                                    Pulse_Checker_Auto_Util.t'_typing
-                                                                    =
-                                                                    (intro_pure_typing
-                                                                    g p () ());
-                                                                    Pulse_Checker_Auto_Util.unmatched_equiv
-                                                                    = ();
-                                                                    Pulse_Checker_Auto_Util.remaining_equiv
-                                                                    = ()
-                                                                    }
-                                                                 | uu___3 ->
-                                                                    FStar_Pervasives_Native.None))))
-                                                   uu___1))) uu___))) uu___)))
+                                  FStar_Tactics_Effect.lift_div_tac
+                                    (fun uu___1 ->
+                                       match uu___ with
+                                       | FStar_Pervasives_Native.Some ps ->
+                                           FStar_Pervasives_Native.Some
+                                             {
+                                               Pulse_Checker_Auto_Util.v = v;
+                                               Pulse_Checker_Auto_Util.ps =
+                                                 ps;
+                                               Pulse_Checker_Auto_Util.unmatched'
+                                                 = rest;
+                                               Pulse_Checker_Auto_Util.unmatched_equiv
+                                                 = ()
+                                             }
+                                       | FStar_Pervasives_Native.None ->
+                                           FStar_Pervasives_Native.None))))
+                         uu___)))

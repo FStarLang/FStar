@@ -15,16 +15,12 @@ open Pulse.Typing
 
 module Metatheory = Pulse.Typing.Metatheory
 
+module RT = FStar.Reflection.Typing
+
 let is_pure (p:term) =
   match p with
   | Tm_Pure (Tm_FStar _ _) -> true
   | _ -> false
-
-let get_one_pure (g:env) (l:list vprop)
-  : option (v:vprop { is_pure v } &
-            rest:list vprop &
-            vprop_equiv g (list_as_vprop l) (Tm_Star v (list_as_vprop rest))) =
-  admit ()
 
 let intro_pure_tm (p:term) =
   let open Pulse.Reflection.Util in
@@ -46,6 +42,7 @@ let intro_pure_comp (p:term) =
 let intro_pure_typing (#g:env) (#p:term)
   (p_typing:tot_typing g p tm_prop)
   (p_valid:tot_typing g (Tm_FStar (`()) Range.range_0) p)
+
   : st_typing g (intro_pure_tm p) (intro_pure_comp p) =
 
   let open Pulse.Reflection.Util in
@@ -61,37 +58,64 @@ let intro_pure_typing (#g:env) (#p:term)
     p_valid
 
 
-module RT = FStar.Reflection.Typing
-let intro_pure : intro_step_t =
+let intro_pure_proof_step_aux (#g:env) (ctxt:list vprop)
+  (v:vprop{is_pure v})
+  (v_typing:tot_typing g v Tm_VProp)
+
+  : T.Tac (option (proof_step g ctxt v)) =
+  
+  let Tm_Pure p = v in
+  let p_typing : tot_typing g p (Tm_FStar RT.tm_prop Range.range_0) =
+    Metatheory.pure_typing_inversion v_typing in
+  
+  match T.check_prop_validity (elab_env g) (elab_term p) with
+  | Some e, _ ->
+    let d : squash (T.typing_token (elab_env g) e (T.E_Total, (elab_term p))) =
+      FStar.Squash.get_proof _ in
+    let d : RT.typing (elab_env g) e (T.E_Total, (elab_term p)) =
+      RT.T_Token _ _ _ d in
+    let d : RT.typing (elab_env g) (`()) (T.E_Total, (elab_term p)) =
+      RT.T_PropIrrelevance _ _ _ _ T.E_Total d (magic ()) in
+    let d : tot_typing g (Tm_FStar (`()) Range.range_0) p = E d in
+    let d = intro_pure_typing p_typing d in
+    let pre_eq : vprop_equiv g (list_as_vprop ctxt)
+                               (Tm_Star Tm_Emp (list_as_vprop ctxt)) = magic () in  
+
+    Some {
+      remaining' = ctxt;
+
+      t' = intro_pure_tm p;
+      c' = intro_pure_comp p;
+      t'_typing = d;
+    
+      remaining_equiv = pre_eq;
+    }
+  | _ -> None
+
+let intro_pure_proof_step =
+  fun #g ctxt v v_typing ->
+  if is_pure v
+  then intro_pure_proof_step_aux ctxt v v_typing
+  else None
+let get_one_pure (g:env) (l:list vprop)
+  : option (v:vprop { is_pure v } &
+            rest:list vprop &
+            vprop_equiv g (list_as_vprop l) (Tm_Star v (list_as_vprop rest))) =
+  admit ()
+
+let intro_pure : intro_from_unmatched_fn =
+  
   fun #g #ctxt pst ->
-  let open Pulse.Syntax in
   match get_one_pure g pst.unmatched_pre with
   | None -> None
   | Some (| v, rest, veq |) ->
     let v_typing : tot_typing g v Tm_VProp = magic () in
-    let Tm_Pure p = v in
-    let p_typing : tot_typing g p (Tm_FStar RT.tm_prop Range.range_0) =
-      Metatheory.pure_typing_inversion v_typing in
-    match T.check_prop_validity (elab_env g) (elab_term p) with
-    | Some e, _ ->
-      let d : squash (T.typing_token (elab_env g) e (T.E_Total, (elab_term p))) =
-        FStar.Squash.get_proof _ in
-      let d : RT.typing (elab_env g) e (T.E_Total, (elab_term p)) =
-        RT.T_Token _ _ _ d in
-      let d : RT.typing (elab_env g) (`()) (T.E_Total, (elab_term p)) =
-        RT.T_PropIrrelevance _ _ _ _ T.E_Total d (magic ()) in
-      let d : tot_typing g (Tm_FStar (`()) Range.range_0) p = E d in
-      let d = intro_pure_typing p_typing d in
-      let pre_eq : vprop_equiv g (list_as_vprop pst.remaining_ctxt)
-                                 (Tm_Star Tm_Emp (list_as_vprop pst.remaining_ctxt)) = magic () in  
+    match intro_pure_proof_step_aux pst.remaining_ctxt v v_typing with
+    | Some ps ->
       Some {
         v;
+        ps;
         unmatched' = rest;
-        remaining' = pst.remaining_ctxt;
-        t' = intro_pure_tm p;
-        c' = intro_pure_comp p;
-        t'_typing = d;
         unmatched_equiv = veq;
-        remaining_equiv = pre_eq;
       }
-    | _ -> None
+    | None -> None
