@@ -638,7 +638,7 @@ let matching_problem_of_abs (tm: term)
   debug ("Got binders: " ^ (String.concat ", "
          (map (fun b -> name_of_named_binder b <: Tac string) binders)));
 
-  let classified_binders =
+  let classified_binders : list (binder & string & abspat_binder_kind & typ) =
     map (fun binder ->
         let bv_name = name_of_named_binder binder in
         debug ("Got binder: " ^ bv_name ^ "; type is " ^
@@ -664,7 +664,7 @@ let matching_problem_of_abs (tm: term)
   let continuation =
     let abspat_argspec_of_binder xx : Tac abspat_argspec =
     match xx with | (binder, xx, binder_kind, yy)  ->
-      { asa_name = binder; asa_kind = binder_kind } in
+      { asa_name = binder_to_binding binder; asa_kind = binder_kind } in
     (map abspat_argspec_of_binder classified_binders, tm) in
 
   let mp =
@@ -701,7 +701,7 @@ matching solution ``solution_term``. **)
 let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
     : Tac term =
   let loc_fn = locate_fn_of_binder_kind argspec.asa_kind in
-  let name_tm = pack (Tv_Const (C_String (name_of_named_binder argspec.asa_name))) in
+  let name_tm = pack (Tv_Const (C_String (unseal argspec.asa_name.ppname))) in
   let locate_args = [(arg_type_of_binder_kind argspec.asa_kind, Q_Explicit);
                      (solution_term, Q_Explicit); (name_tm, Q_Explicit)] in
   mk_app loc_fn locate_args
@@ -725,7 +725,7 @@ let rec hoist_and_apply (head:term) (arg_terms:list term) (hoisted_args:list arg
       attrs = [] ;
     }
     in
-    pack (Tv_Let false [] nb arg_term (hoist_and_apply head rest ((pack (Tv_Var (namedv_of_named_binder nb)), Q_Explicit)::hoisted_args)))
+    pack (Tv_Let false [] nb arg_term (hoist_and_apply head rest ((pack (Tv_Var (binder_to_namedv nb)), Q_Explicit)::hoisted_args)))
   
 let specialize_abspat_continuation' (continuation: abspat_continuation)
                                     (solution_term:term)
@@ -741,7 +741,7 @@ bindings. **)
 let specialize_abspat_continuation (continuation: abspat_continuation)
     : Tac term =
   let solution_binder = fresh_binder (`matching_solution) in
-  let solution_term = pack (Tv_Var (bv_of_binder solution_binder)) in
+  let solution_term = pack (Tv_Var (binder_to_namedv solution_binder)) in
   let applied = specialize_abspat_continuation' continuation solution_term in
   let thunked = pack (Tv_Abs solution_binder applied) in
   debug ("Specialized into " ^ (term_to_string thunked));
@@ -774,7 +774,7 @@ let match_abspat #b #a (abspat: a)
                  (k: abspat_continuation -> Tac (matching_solution -> Tac b))
     : Tac b =
   let goal = cur_goal () in
-  let hypotheses = binders_of_env (cur_env ()) in
+  let hypotheses = vars_of_env (cur_env ()) in
   let problem, continuation = interp_abspat abspat in
   solve_mp problem hypotheses goal (k continuation)
 
