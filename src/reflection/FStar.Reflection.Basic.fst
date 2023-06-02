@@ -729,8 +729,6 @@ let env_open_modules (e : Env.env) : list name =
     List.map (fun (l, m) -> List.map Ident.string_of_id (Ident.ids_of_lid l))
              (DsEnv.open_modules e.dsenv)
 
-let binders_of_env e = FStar.TypeChecker.Env.all_binders e
-
 let bv_to_binding (bv : bv) : RD.binding =
   {
     uniq   = Z.of_int_fs bv.index;

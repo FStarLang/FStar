@@ -120,9 +120,6 @@ val compare_bv            : bv -> bv -> order
 val compare_namedv        : namedv -> namedv -> order
 
 (** FIXME *)
-val binders_of_env        : env -> binders
-
-(** FIXME *)
 val vars_of_env           : env -> list binding
 
 (** FIXME *)

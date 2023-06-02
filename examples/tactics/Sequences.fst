@@ -36,10 +36,10 @@ let unrefine_eq_lem (#a:Type) (#p : (a -> Type)) (x y : (z:a{p z})) (s : squash 
   
 let prune_for_seq () : Tac unit =
   let e = cur_env () in 
-  let bs = binders_of_env e in
+  let bs = vars_of_env e in
   //prune the local environment
   let _ = map (fun b ->
-    match term_as_formula (type_of_binder b) with
+    match term_as_formula (type_of_namedv b) with
     | Comp (Eq (Some t)) _ _ ->
       if is_seq_t t then //this is a sequence equality; keep it
         ()

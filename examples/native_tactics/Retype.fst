@@ -46,9 +46,9 @@ let tau () : Tac unit =
     apply_lemma (`l); //prove (p == q), asked by grewrite
 
     let e = cur_env () in
-    match binders_of_env e with
+    match vars_of_env e with
     | [_;_;_;b] ->
-        let t = type_of_binder b in
+        let t = type_of_namedv b in
         let t = norm_term [] t in // contains uvar redexes.
         if FStar.Order.ne (compare_term t rr)
         then fail "binder was not retyped?"

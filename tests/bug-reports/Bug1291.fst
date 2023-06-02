@@ -528,7 +528,7 @@ let match_abspat #b #a (abspat: a)
     : Tac b =
   admit ();
   let goal = cur_goal () in
-  let hypotheses = binders_of_env (cur_env ()) in
+  let hypotheses = vars_of_env (cur_env ()) in
   let problem, continuation = interp_abspat abspat in
   solve_mp #matching_solution problem hypotheses goal (k continuation)
 
