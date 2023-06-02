@@ -105,7 +105,7 @@ let get_one_pure (g:env) (l:list vprop)
 
 let intro_pure : intro_from_unmatched_fn =
   
-  fun #g #ctxt pst ->
+  fun #g pst ->
   match get_one_pure g pst.unmatched_pre with
   | None -> None
   | Some (| v, rest, veq |) ->

@@ -376,16 +376,19 @@ let st_typing_weakening (#g:env) (#t:st_term) (#c:comp)
 // derive next prover state from an intro step
 //
 #push-options "--z3rlimit_factor 5 --fuel 2 --ifuel 2 --query_stats"
-let apply_proof_step (#g:env) (#ctxt:vprop)
-  (p:prover_state g ctxt)
+let apply_proof_step
+  (#g:env)
+  (p:prover_state g)
   (v:vprop)
   (r:proof_step g p.remaining_ctxt v)  
-  : T.Tac (p':prover_state g ctxt {
+  : T.Tac (p':prover_state g {
+      p'.preamble == p.preamble /\
       p'.matched_pre == p.matched_pre /\
       p'.unmatched_pre == p.unmatched_pre /\
       p'.remaining_ctxt == v::r.remaining'
     }) =
 
+  let ctxt = p.preamble.ctxt in
   let remaining'_matched = Tm_Star (list_as_vprop r.remaining') p.matched_pre in
   let (| r_c', r_t'_typing |) = add_frame r.t'_typing remaining'_matched in
   assert (comp_pre r_c' == Tm_Star (comp_pre r.c') remaining'_matched);
@@ -416,7 +419,7 @@ let apply_proof_step (#g:env) (#ctxt:vprop)
   let r_t'_typing = st_typing_weakening r_t'_typing (extend x (Inl tm_unit) g) in
 
   let post_hint = Some {
-    g;
+    g = g;
     ret_ty = tm_unit;
     u = u_zero;
     ty_typing = magic ();
@@ -457,22 +460,24 @@ let apply_proof_step (#g:env) (#ctxt:vprop)
     proof_steps_typing = steps_typing }
 #pop-options
 
-let apply_intro_from_unmatched_step (#g:env) (#ctxt:vprop)
-  (#p:prover_state g ctxt)
+let apply_intro_from_unmatched_step (#g:env)
+  (#p:prover_state g)
   (r:intro_from_unmatched_step p)
-  : T.Tac (p':prover_state g ctxt {
+  : T.Tac (p':prover_state g {
+      p'.preamble == p.preamble /\
       p'.matched_pre == Tm_Star p.matched_pre r.v /\
       p'.unmatched_pre == r.unmatched' /\
       p'.remaining_ctxt == r.ps.remaining'
     }) =
-  
+
+  let ctxt = p.preamble.ctxt in  
   let p = apply_proof_step p r.v r.ps in
   let new_matched = Tm_Star p.matched_pre r.v in
-  let d1 : vprop_equiv g (comp_pre p.c)
+  let d1 : vprop_equiv g (comp_pre p.preamble.c)
                          (Tm_Star (list_as_vprop p.unmatched_pre) p.matched_pre) = p.pre_equiv in
   let d2 : vprop_equiv g (list_as_vprop p.unmatched_pre)
                          (Tm_Star r.v (list_as_vprop r.unmatched')) = r.unmatched_equiv in
-  let d3 : vprop_equiv g (comp_pre p.c) (Tm_Star (list_as_vprop r.unmatched')
+  let d3 : vprop_equiv g (comp_pre p.preamble.c) (Tm_Star (list_as_vprop r.unmatched')
                                                  (Tm_Star p.matched_pre r.v)) = magic () in
   let proof_steps_typing
     : st_typing g _

@@ -15,9 +15,6 @@ open Pulse.Typing
 
 module Metatheory = Pulse.Typing.Metatheory
 
-
-
-
 let intro_exists =
-  fun #g #ctxt p ->
+  fun #g p ->
   None

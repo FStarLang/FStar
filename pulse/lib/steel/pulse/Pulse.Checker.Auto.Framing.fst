@@ -10,7 +10,7 @@ open FStar.List.Tot
 let vprop_equiv_as_x (g:env) (p q:vprop) (_:vprop_equiv g p q) (t:term) : vprop_equiv_x g t p q = admit()
 
 let step_match : prover_step_t = 
-  fun #g #o (p:prover_state g o) ->
+  fun #g (p:prover_state g) ->
     let res = F.all_matches g p.unmatched_pre p.remaining_ctxt in
     match res.matched with
     | [] -> None
@@ -36,10 +36,10 @@ let step_match : prover_step_t =
       in
         // p.unmatched_pre ~ res.unmatched @ res.matched
       let pre_equiv
-          : vprop_equiv g (comp_pre p.c) (Tm_Star (list_as_vprop res.unmatched_p) matched_pre)
-          = let p_eq : vprop_equiv g (comp_pre p.c) (Tm_Star (list_as_vprop p.unmatched_pre) p.matched_pre) = p.pre_equiv in
+          : vprop_equiv g (comp_pre p.preamble.c) (Tm_Star (list_as_vprop res.unmatched_p) matched_pre)
+          = let p_eq : vprop_equiv g (comp_pre p.preamble.c) (Tm_Star (list_as_vprop p.unmatched_pre) p.matched_pre) = p.pre_equiv in
             let step_eq : vprop_equiv g (list_as_vprop p.unmatched_pre) (list_as_vprop (res.unmatched_p @ res.matched)) = res.p_eq in
-            let p_eq  : vprop_equiv g (comp_pre p.c) (Tm_Star (list_as_vprop (res.unmatched_p @ res.matched)) p.matched_pre) =
+            let p_eq  : vprop_equiv g (comp_pre p.preamble.c) (Tm_Star (list_as_vprop (res.unmatched_p @ res.matched)) p.matched_pre) =
                 VE_Trans _ _ _ _ p_eq (VE_Ctxt _ _ _ _ _ step_eq (VE_Refl _ _)) in   
             aux _ _ _ _ p_eq
       in

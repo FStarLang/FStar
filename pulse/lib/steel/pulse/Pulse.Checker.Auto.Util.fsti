@@ -75,14 +75,22 @@ let ghost_comp pre post =
   C_STGhost Tm_EmpInames { u=u_zero; res=tm_unit; pre; post }
 
 open Pulse.Checker.VPropEquiv
+
+//
+// This remains fixed as prover state is transformed by steps
+//
 noeq
-type prover_state (g:env) (ctxt:vprop) = {
-  (* the original context is well-typed *)
-  ctxt_typing: vprop_typing g ctxt;
-  (* the program whose precondition we're trying to derive *)
+type prover_state_preamble (g:env) = {
+  ctxt:vprop;
+  ctxt_typing:vprop_typing g ctxt;
   t:st_term;
   c:comp_st;
   t_typing:st_typing g t c;
+}
+
+noeq
+type prover_state (g:env) = {
+  preamble:prover_state_preamble g;
 
   (* the in-progress proof state *)
   matched_pre:term; (* conjuncts that we have already derived *)
@@ -90,20 +98,30 @@ type prover_state (g:env) (ctxt:vprop) = {
   remaining_ctxt:list term; (* unused conjuncts in the context *)
   (* Ghost proof steps witnessing the derivation of matched_pre from ctxt *)
   proof_steps: st_term;
-  proof_steps_typing: st_typing g proof_steps (ghost_comp ctxt (Tm_Star (list_as_vprop remaining_ctxt) matched_pre));
-  pre_equiv:vprop_equiv g (comp_pre c) (Tm_Star (list_as_vprop unmatched_pre) matched_pre);
+  proof_steps_typing:
+    st_typing g
+      proof_steps
+      (ghost_comp preamble.ctxt (Tm_Star (list_as_vprop remaining_ctxt) matched_pre));
+  pre_equiv:
+    vprop_equiv g
+      (comp_pre preamble.c)
+      (Tm_Star (list_as_vprop unmatched_pre) matched_pre);
 }
 
-let proof_steps_post #g #o (p:prover_state g o) : vprop = Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre
+let proof_steps_post (#g:env) (p:prover_state g) : vprop =
+  Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre
 
-let bind_proof_steps_with #g #o (p:prover_state g o) 
-                                (t:st_term)
-                                (c:comp_st {comp_pre c == proof_steps_post p})
-                                (t_typing:st_typing g t c)
-   : (t':st_term & st_typing g t' (comp_st_with_pre c o))
-   = admit()
+let bind_proof_steps_with (#g:env) (p:prover_state g)
+  (t:st_term)
+  (c:comp_st {comp_pre c == proof_steps_post p})
+  (t_typing:st_typing g t c)
+  : (t':st_term & st_typing g t' (comp_st_with_pre c p.preamble.ctxt))
+  = admit()
 
-type prover_step_t = #g:_ -> #o:_ -> p:prover_state g o -> T.Tac (option (prover_state g o))
+type prover_step_t =
+  #g:env ->
+  p:prover_state g ->
+  T.Tac (option (p':prover_state g { p.preamble == p'.preamble }))
 
 //
 // result of an intro (pure, exists, rewrite) step
@@ -128,11 +146,10 @@ type proof_step (g:env) (ctxt:list vprop) (v:vprop) = {
                                   (Tm_Star (comp_pre c') (list_as_vprop remaining'));
 }
 
-
 // An intro step that makes progress by solving one conjunct
 // v from the p.unmatched_pre
 noeq
-type intro_from_unmatched_step (#g:env) (#ctxt:vprop) (p:prover_state g ctxt) = {
+type intro_from_unmatched_step (#g:env) (p:prover_state g) = {
   v : vprop;
 
   ps:proof_step g p.remaining_ctxt v;
@@ -154,25 +171,28 @@ type proof_step_fn =
   T.Tac (option (proof_step g ctxt v))
 
 type intro_from_unmatched_fn =
-  #g:_ ->
-  #ctxt:_ ->
-  p:prover_state g ctxt ->
+  #g:env ->
+  p:prover_state g ->
   T.Tac (option (intro_from_unmatched_step p))
 
-val apply_proof_step (#g:env) (#ctxt:vprop)
-  (p:prover_state g ctxt)
+val apply_proof_step
+  (#g:env)
+  (p:prover_state g)
   (v:vprop)
   (r:proof_step g p.remaining_ctxt v)  
-  : T.Tac (p':prover_state g ctxt {
+  : T.Tac (p':prover_state g {
+      p'.preamble == p.preamble /\
       p'.matched_pre == p.matched_pre /\
       p'.unmatched_pre == p.unmatched_pre /\
       p'.remaining_ctxt == v::r.remaining'
     })
 
-val apply_intro_from_unmatched_step (#g:env) (#ctxt:vprop)
-  (#p:prover_state g ctxt)
+val apply_intro_from_unmatched_step
+  (#g:env)
+  (#p:prover_state g)
   (r:intro_from_unmatched_step p)
-  : T.Tac (p':prover_state g ctxt {
+  : T.Tac (p':prover_state g {
+      p'.preamble == p.preamble /\
       p'.matched_pre == Tm_Star p.matched_pre r.v /\
       p'.unmatched_pre == r.unmatched' /\
       p'.remaining_ctxt == r.ps.remaining'
