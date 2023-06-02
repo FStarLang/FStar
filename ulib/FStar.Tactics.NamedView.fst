@@ -548,6 +548,7 @@ let close_view (tv : named_term_view) : Tot term_view =
     RD.Tv_Match scrutinee ret brs
 
 let inspect (t:term) : Tac named_term_view =
+  let t = compress t in
   let tv = inspect_ln t in
   open_view tv
 
