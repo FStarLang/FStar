@@ -26,7 +26,7 @@ let rec close_open_inverse' (t:term)
       close_open_inverse' l x i;
       close_open_inverse' r x i
 
-    | Tm_ExistsSL _ t b _
+    | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
       close_open_inverse' t x i;    
       close_open_inverse' b x (i + 1)
@@ -172,7 +172,7 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
   | Tm_Star e1 e2 ->
     open_with_gt_ln e1 i t j;
     open_with_gt_ln e2 i t j
-  | Tm_ExistsSL _ t1 body _
+  | Tm_ExistsSL _ t1 body
   | Tm_ForallSL _ t1 body ->
     open_with_gt_ln t1 i t j;
     open_with_gt_ln body (i + 1) t (j + 1)
@@ -213,7 +213,7 @@ let rec close_with_non_freevar (e:term) (x:var) (i:nat)
     close_with_non_freevar t1 x i;
     close_with_non_freevar t2 x i
   | Tm_Pure p -> close_with_non_freevar p x i
-  | Tm_ExistsSL _ t1 body _
+  | Tm_ExistsSL _ t1 body
   | Tm_ForallSL _ t1 body ->
     close_with_non_freevar t1 x i;
     close_with_non_freevar body x (i + 1)

@@ -44,7 +44,7 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
     | Pulse_Syntax_Base.Tm_Star (l, r) ->
         let l1 = elab_term l in
         let r1 = elab_term r in Pulse_Reflection_Util.mk_star l1 r1
-    | Pulse_Syntax_Base.Tm_ExistsSL (u, t, body, uu___) ->
+    | Pulse_Syntax_Base.Tm_ExistsSL (u, t, body) ->
         let t1 = elab_term t in
         let b = elab_term body in
         if Pulse_Syntax_Base.uu___is_Tm_ExistsSL top

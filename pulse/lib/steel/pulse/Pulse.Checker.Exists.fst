@@ -37,7 +37,7 @@ let check_elim_exists
       | Tm_Unknown -> (
         //There should be exactly one exists_ vprop in the context and we eliminate it      
         let ts = vprop_as_list pre in
-        let exist_tms = List.Tot.Base.filter (function | Tm_ExistsSL _ _ _ _ -> true | _ -> false) ts in
+        let exist_tms = List.Tot.Base.filter (function | Tm_ExistsSL _ _ _ -> true | _ -> false) ts in
         match exist_tms with
         | [one] -> 
           assume (one `List.Tot.memP` ts);
@@ -56,7 +56,7 @@ let check_elim_exists
   let (| t, t_typing |) = t_t_typing in
 //  let (| t, t_typing |) = check_vprop g t in
   match t with
-  | Tm_ExistsSL u ty p _ ->
+  | Tm_ExistsSL u ty p ->
     // T.print (Printf.sprintf "LOG ELIM EXISTS: %s\n"
     //                         (P.term_to_string t));
 
@@ -91,7 +91,7 @@ let check_intro_exists_erased
     | _ -> check_vprop g t
   in
   match t with
-  | Tm_ExistsSL u ty p _ ->
+  | Tm_ExistsSL u ty p ->
     Pulse.Typing.FV.tot_typing_freevars t_typing;
     let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #ty #p t_typing (fresh g) in
     let (| e, e_typing |) = 
@@ -117,7 +117,7 @@ let check_intro_exists
     | _ -> check_vprop g t    
   in
   match t with
-  | Tm_ExistsSL u ty p _ ->
+  | Tm_ExistsSL u ty p ->
     Pulse.Typing.FV.tot_typing_freevars t_typing;
     let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #ty #p t_typing (fresh g) in
     let (| witness, witness_typing |) = 

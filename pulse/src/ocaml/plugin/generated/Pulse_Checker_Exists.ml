@@ -80,7 +80,7 @@ let (check_elim_exists :
                                                      (Prims.of_int (40))
                                                      (Prims.of_int (24))
                                                      (Prims.of_int (40))
-                                                     (Prims.of_int (101)))
+                                                     (Prims.of_int (99)))
                                                   (FStar_Range.mk_range
                                                      "Pulse.Checker.Exists.fst"
                                                      (Prims.of_int (41))
@@ -96,8 +96,7 @@ let (check_elim_exists :
                                                              | Pulse_Syntax_Base.Tm_ExistsSL
                                                                  (uu___3,
                                                                   uu___4,
-                                                                  uu___5,
-                                                                  uu___6)
+                                                                  uu___5)
                                                                  -> true
                                                              | uu___3 ->
                                                                  false) ts))
@@ -213,7 +212,7 @@ let (check_elim_exists :
                                                   (t2, t_typing) ->
                                                   (match t2 with
                                                    | Pulse_Syntax_Base.Tm_ExistsSL
-                                                       (u, ty, p, uu___2) ->
+                                                       (u, ty, p) ->
                                                        Obj.magic
                                                          (Obj.repr
                                                             (FStar_Tactics_Effect.tac_bind
@@ -226,16 +225,16 @@ let (check_elim_exists :
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Checker.Exists.fst"
                                                                   (Prims.of_int (59))
-                                                                  (Prims.of_int (27))
+                                                                  (Prims.of_int (25))
                                                                   (Prims.of_int (69))
                                                                   (Prims.of_int (57)))
                                                                (Obj.magic
                                                                   (Pulse_Checker_Pure.check_universe
                                                                     g ty))
-                                                               (fun uu___3 ->
-                                                                  (fun uu___3
+                                                               (fun uu___2 ->
+                                                                  (fun uu___2
                                                                     ->
-                                                                    match uu___3
+                                                                    match uu___2
                                                                     with
                                                                     | 
                                                                     Prims.Mkdtuple2
@@ -263,11 +262,11 @@ let (check_elim_exists :
                                                                     (Prims.of_int (54)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     Pulse_Typing.fresh
                                                                     g))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     (fun x ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -285,13 +284,13 @@ let (check_elim_exists :
                                                                     (Prims.of_int (54)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     Pulse_Typing.T_ElimExists
                                                                     (g, u,
                                                                     ty, p, x,
                                                                     (), ())))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     (fun d ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -317,17 +316,16 @@ let (check_elim_exists :
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
-                                                                    p,
-                                                                    Pulse_Syntax_Base.should_elim_false))
+                                                                    p))
                                                                     })) pre
                                                                     ()
                                                                     (Pulse_Typing.comp_elim_exists
                                                                     u ty p x)
                                                                     d))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     Obj.magic
                                                                     (Pulse_Checker_Common.repack
                                                                     g pre
@@ -338,20 +336,19 @@ let (check_elim_exists :
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
-                                                                    p,
-                                                                    Pulse_Syntax_Base.should_elim_false))
+                                                                    p))
                                                                     }))
-                                                                    uu___4
+                                                                    uu___3
                                                                     post_hint))
-                                                                    uu___4)))
-                                                                    uu___4)))
-                                                                    uu___4)))
+                                                                    uu___3)))
+                                                                    uu___3)))
+                                                                    uu___3)))
                                                                     else
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
                                                                     "Universe checking failed in elim_exists")))
-                                                                    uu___3)))
+                                                                    uu___2)))
                                                    | uu___2 ->
                                                        Obj.magic
                                                          (Obj.repr
@@ -364,7 +361,8 @@ let (intro_exists_witness_singleton :
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
         { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p1 = uu___1;
-          Pulse_Syntax_Base.witnesses = uu___2::[];_}
+          Pulse_Syntax_Base.witnesses = uu___2::[];
+          Pulse_Syntax_Base.should_check = uu___3;_}
         -> true
     | uu___ -> false
 let (intro_exists_vprop :
@@ -373,14 +371,16 @@ let (intro_exists_vprop :
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
         { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p1 = p;
-          Pulse_Syntax_Base.witnesses = uu___1;_}
+          Pulse_Syntax_Base.witnesses = uu___1;
+          Pulse_Syntax_Base.should_check = uu___2;_}
         -> p
 let (is_intro_exists_erased : Pulse_Syntax_Base.st_term -> Prims.bool) =
   fun st ->
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
         { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p1 = uu___;
-          Pulse_Syntax_Base.witnesses = uu___1;_}
+          Pulse_Syntax_Base.witnesses = uu___1;
+          Pulse_Syntax_Base.should_check = uu___2;_}
         -> erased
     | uu___ -> false
 let (check_intro_exists_erased :
@@ -414,7 +414,8 @@ let (check_intro_exists_erased :
                       | Pulse_Syntax_Base.Tm_IntroExists
                           { Pulse_Syntax_Base.erased = uu___1;
                             Pulse_Syntax_Base.p1 = t;
-                            Pulse_Syntax_Base.witnesses = e::[];_}
+                            Pulse_Syntax_Base.witnesses = e::[];
+                            Pulse_Syntax_Base.should_check = uu___2;_}
                           ->
                           Obj.magic
                             (FStar_Tactics_Effect.tac_bind
@@ -431,19 +432,19 @@ let (check_intro_exists_erased :
                                     Obj.magic
                                       (Obj.repr
                                          (FStar_Tactics_Effect.lift_div_tac
-                                            (fun uu___2 ->
+                                            (fun uu___3 ->
                                                Prims.Mkdtuple2 (t, ()))))
-                                | uu___2 ->
+                                | uu___3 ->
                                     Obj.magic
                                       (Obj.repr
                                          (Pulse_Checker_Pure.check_vprop g t)))
-                               (fun uu___2 ->
-                                  (fun uu___2 ->
-                                     match uu___2 with
+                               (fun uu___3 ->
+                                  (fun uu___3 ->
+                                     match uu___3 with
                                      | Prims.Mkdtuple2 (t1, t_typing) ->
                                          (match t1 with
                                           | Pulse_Syntax_Base.Tm_ExistsSL
-                                              (u, ty, p, uu___3) ->
+                                              (u, ty, p) ->
                                               Obj.magic
                                                 (Obj.repr
                                                    (FStar_Tactics_Effect.tac_bind
@@ -551,10 +552,12 @@ let (check_intro_exists_erased :
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
-                                                                    p,
-                                                                    Pulse_Syntax_Base.should_elim_false));
+                                                                    p));
                                                                     Pulse_Syntax_Base.witnesses
-                                                                    = [e1]
+                                                                    = [e1];
+                                                                    Pulse_Syntax_Base.should_check
+                                                                    =
+                                                                    Pulse_Syntax_Base.should_check_true
                                                                     })) pre
                                                                     ()
                                                                     (Pulse_Typing.comp_intro_exists_erased
@@ -576,10 +579,12 @@ let (check_intro_exists_erased :
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
-                                                                    p,
-                                                                    Pulse_Syntax_Base.should_elim_false));
+                                                                    p));
                                                                     Pulse_Syntax_Base.witnesses
-                                                                    = [e1]
+                                                                    = [e1];
+                                                                    Pulse_Syntax_Base.should_check
+                                                                    =
+                                                                    Pulse_Syntax_Base.should_check_true
                                                                     }))
                                                                     uu___7
                                                                     post_hint))
@@ -587,12 +592,12 @@ let (check_intro_exists_erased :
                                                                     uu___7)))
                                                                     uu___6)))
                                                            uu___4)))
-                                          | uu___3 ->
+                                          | uu___4 ->
                                               Obj.magic
                                                 (Obj.repr
                                                    (FStar_Tactics_Derived.fail
                                                       "elim_exists argument not a Tm_ExistsSL"))))
-                                    uu___2))) uu___)
+                                    uu___3))) uu___)
 let (check_intro_exists :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.st_term ->
@@ -624,7 +629,8 @@ let (check_intro_exists :
                       | Pulse_Syntax_Base.Tm_IntroExists
                           { Pulse_Syntax_Base.erased = uu___1;
                             Pulse_Syntax_Base.p1 = t;
-                            Pulse_Syntax_Base.witnesses = witness::[];_}
+                            Pulse_Syntax_Base.witnesses = witness::[];
+                            Pulse_Syntax_Base.should_check = uu___2;_}
                           ->
                           Obj.magic
                             (FStar_Tactics_Effect.tac_bind
@@ -641,19 +647,19 @@ let (check_intro_exists :
                                     Obj.magic
                                       (Obj.repr
                                          (FStar_Tactics_Effect.lift_div_tac
-                                            (fun uu___2 ->
+                                            (fun uu___3 ->
                                                Prims.Mkdtuple2 (t, ()))))
-                                | uu___2 ->
+                                | uu___3 ->
                                     Obj.magic
                                       (Obj.repr
                                          (Pulse_Checker_Pure.check_vprop g t)))
-                               (fun uu___2 ->
-                                  (fun uu___2 ->
-                                     match uu___2 with
+                               (fun uu___3 ->
+                                  (fun uu___3 ->
+                                     match uu___3 with
                                      | Prims.Mkdtuple2 (t1, t_typing) ->
                                          (match t1 with
                                           | Pulse_Syntax_Base.Tm_ExistsSL
-                                              (u, ty, p, uu___3) ->
+                                              (u, ty, p) ->
                                               Obj.magic
                                                 (Obj.repr
                                                    (FStar_Tactics_Effect.tac_bind
@@ -883,11 +889,13 @@ let (check_intro_exists :
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
-                                                                    p,
-                                                                    Pulse_Syntax_Base.should_elim_false));
+                                                                    p));
                                                                     Pulse_Syntax_Base.witnesses
                                                                     =
-                                                                    [witness1]
+                                                                    [witness1];
+                                                                    Pulse_Syntax_Base.should_check
+                                                                    =
+                                                                    Pulse_Syntax_Base.should_check_true
                                                                     })) pre
                                                                     () c d1))
                                                                     (fun
@@ -908,11 +916,13 @@ let (check_intro_exists :
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
-                                                                    p,
-                                                                    Pulse_Syntax_Base.should_elim_false));
+                                                                    p));
                                                                     Pulse_Syntax_Base.witnesses
                                                                     =
-                                                                    [witness1]
+                                                                    [witness1];
+                                                                    Pulse_Syntax_Base.should_check
+                                                                    =
+                                                                    Pulse_Syntax_Base.should_check_true
                                                                     }))
                                                                     uu___10
                                                                     post_hint))
@@ -923,12 +933,12 @@ let (check_intro_exists :
                                                                     uu___7)))
                                                                     uu___6)))
                                                            uu___4)))
-                                          | uu___3 ->
+                                          | uu___4 ->
                                               Obj.magic
                                                 (Obj.repr
                                                    (FStar_Tactics_Derived.fail
                                                       "elim_exists argument not a Tm_ExistsSL"))))
-                                    uu___2))) uu___)
+                                    uu___3))) uu___)
 let (check_intro_exists_either :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.st_term ->

@@ -51,7 +51,7 @@ let rec term_to_string' (level:string) (t:term)
         level
         (term_to_string' level p2)
                           
-    | Tm_ExistsSL _ t body _ ->
+    | Tm_ExistsSL _ t body ->
       sprintf "(exists (_:%s).\n%s%s)"
               (term_to_string' (indent level) t)
               level
@@ -248,7 +248,7 @@ let tag_of_term (t:term) =
   | Tm_Emp -> "Tm_Emp"
   | Tm_Pure _ -> "Tm_Pure"
   | Tm_Star _ _ -> "Tm_Star"
-  | Tm_ExistsSL _ _ _ _ -> "Tm_ExistsSL"
+  | Tm_ExistsSL _ _ _ -> "Tm_ExistsSL"
   | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
   | Tm_VProp -> "Tm_VProp"
   | Tm_Inames -> "Tm_Inames"

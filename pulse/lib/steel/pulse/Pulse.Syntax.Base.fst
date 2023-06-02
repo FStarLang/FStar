@@ -34,7 +34,7 @@ let rec eq_tm (t1 t2:term)
       eq_tm r1 r2
     | Tm_Pure p1, Tm_Pure p2 ->
       eq_tm p1 p2
-    | Tm_ExistsSL u1 t1 b1 _, Tm_ExistsSL u2 t2 b2 _
+    | Tm_ExistsSL u1 t1 b1, Tm_ExistsSL u2 t2 b2
     | Tm_ForallSL u1 t1 b1, Tm_ForallSL u2 t2 b2 ->
       univ_equality u1 u2;
       eq_univ u1 u2 &&

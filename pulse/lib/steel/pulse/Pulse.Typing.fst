@@ -369,7 +369,7 @@ let comp_elim_exists (u:universe) (t:term) (p:term) (x:var)
               {
                 u=u;
                 res=mk_erased u t;
-                pre=Tm_ExistsSL u t p should_elim_true;
+                pre=Tm_ExistsSL u t p;
                 post=elim_exists_post u t p x
               }
 
@@ -380,7 +380,7 @@ let comp_intro_exists (u:universe) (t:term) (p:term) (e:term)
                 u=u0;
                 res=tm_unit;
                 pre=open_term' p e 0;
-                post=Tm_ExistsSL u t p should_elim_false
+                post=Tm_ExistsSL u t p
               }
 
 let comp_intro_exists_erased (u:universe) (t:term) (p:term) (e:term)
@@ -390,7 +390,7 @@ let comp_intro_exists_erased (u:universe) (t:term) (p:term) (e:term)
                 u=u0;
                 res=tm_unit;
                 pre=open_term' p (mk_reveal u t e) 0;
-                post=Tm_ExistsSL u t p should_elim_false
+                post=Tm_ExistsSL u t p
               }
 
 let comp_while_cond (inv:term)
@@ -398,7 +398,7 @@ let comp_while_cond (inv:term)
   = C_ST {
            u=u0;
            res=tm_bool;
-           pre=Tm_ExistsSL u0 tm_bool inv should_elim_false;
+           pre=Tm_ExistsSL u0 tm_bool inv;
            post=inv
          }
 
@@ -408,7 +408,7 @@ let comp_while_body (inv:term)
            u=u0;
            res=tm_unit;
            pre=open_term' inv tm_true 0;
-           post=Tm_ExistsSL u0 tm_bool inv should_elim_true
+           post=Tm_ExistsSL u0 tm_bool inv
          }
 
 let comp_while (inv:term)
@@ -416,7 +416,7 @@ let comp_while (inv:term)
   = C_ST {
            u=u0;
            res=tm_unit;
-           pre=Tm_ExistsSL u0 tm_bool inv should_elim_true;
+           pre=Tm_ExistsSL u0 tm_bool inv;
            post=open_term' inv tm_false 0
          }
 
@@ -465,7 +465,7 @@ let comp_withlocal_body_pre (pre:vprop) (init_t:term) (r:term) (init:term) : vpr
   Tm_Star pre (mk_pts_to init_t r init)
 
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
-  Tm_Star post (Tm_ExistsSL u0 init_t (mk_pts_to init_t r (null_bvar 0)) should_elim_false)  
+  Tm_Star post (Tm_ExistsSL u0 init_t (mk_pts_to init_t r (null_bvar 0)))  
 
 let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in
@@ -753,8 +753,8 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       x:var { None? (lookup g x) } ->
       tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
-      st_typing g (wr (Tm_ElimExists { p = Tm_ExistsSL u t p should_elim_false }))
+      tot_typing g (Tm_ExistsSL u t p) Tm_VProp ->
+      st_typing g (wr (Tm_ElimExists { p = Tm_ExistsSL u t p }))
                     (comp_elim_exists u t p x)
 
   | T_IntroExists:
@@ -764,11 +764,12 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       e:term ->
       tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
+      tot_typing g (Tm_ExistsSL u t p) Tm_VProp ->
       tot_typing g e t ->
       st_typing g (wr (Tm_IntroExists { erased = false;
-                                        p = Tm_ExistsSL u t p should_elim_false;
-                                        witnesses= [e] }))
+                                        p = Tm_ExistsSL u t p;
+                                        witnesses= [e];
+                                        should_check=should_check_true }))
                   (comp_intro_exists u t p e)
       
   | T_IntroExistsErased:
@@ -778,11 +779,12 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       e:term ->
       tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u t p should_elim_false) Tm_VProp ->
+      tot_typing g (Tm_ExistsSL u t p) Tm_VProp ->
       tot_typing g e (mk_erased u t)  ->
       st_typing g (wr (Tm_IntroExists { erased = true;
-                                        p = Tm_ExistsSL u t p should_elim_false;
-                                        witnesses= [e] }))
+                                        p = Tm_ExistsSL u t p;
+                                        witnesses= [e];
+                                        should_check=should_check_true }))
                   (comp_intro_exists_erased u t p e)
 
   | T_While:
@@ -790,7 +792,7 @@ type st_typing : env -> st_term -> comp -> Type =
       inv:term ->
       cond:st_term ->
       body:st_term ->
-      tot_typing g (Tm_ExistsSL u0 tm_bool inv should_elim_false) Tm_VProp ->
+      tot_typing g (Tm_ExistsSL u0 tm_bool inv) Tm_VProp ->
       st_typing g cond (comp_while_cond inv) ->
       st_typing g body (comp_while_body inv) ->
       st_typing g (wr (Tm_While { invariant = inv;

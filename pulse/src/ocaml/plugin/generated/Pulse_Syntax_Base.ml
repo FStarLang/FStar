@@ -35,10 +35,10 @@ let (__proj__Mknm__item__nm_range : nm -> range) =
 type qualifier =
   | Implicit 
 let (uu___is_Implicit : qualifier -> Prims.bool) = fun projectee -> true
-type should_elim_t = (Prims.bool, unit) FStar_Sealed_Inhabited.sealed
-let (should_elim_true : should_elim_t) =
+type should_check_t = (Prims.bool, unit) FStar_Sealed_Inhabited.sealed
+let (should_check_true : should_check_t) =
   FStar_Sealed_Inhabited.seal false true
-let (should_elim_false : should_elim_t) =
+let (should_check_false : should_check_t) =
   FStar_Sealed_Inhabited.seal false false
 type fv = {
   fv_name: FStar_Reflection_Types.name ;
@@ -55,7 +55,7 @@ type term =
   | Tm_Emp 
   | Tm_Pure of term 
   | Tm_Star of term * term 
-  | Tm_ExistsSL of universe * term * term * should_elim_t 
+  | Tm_ExistsSL of universe * term * term 
   | Tm_ForallSL of universe * term * term 
   | Tm_VProp 
   | Tm_Inames 
@@ -178,7 +178,8 @@ and st_term'__Tm_IntroExists__payload =
   {
   erased: Prims.bool ;
   p1: vprop ;
-  witnesses: term Prims.list }
+  witnesses: term Prims.list ;
+  should_check: should_check_t }
 and st_term'__Tm_While__payload =
   {
   invariant: term ;
@@ -277,8 +278,8 @@ let rec (eq_tm : term -> term -> Prims.bool) =
       | (Tm_Star (l1, r1), Tm_Star (l2, r2)) ->
           (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Pure p1, Tm_Pure p2) -> eq_tm p1 p2
-      | (Tm_ExistsSL (u1, t11, b1, uu___), Tm_ExistsSL (u2, t21, b2, uu___1))
-          -> ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
+      | (Tm_ExistsSL (u1, t11, b1), Tm_ExistsSL (u2, t21, b2)) ->
+          ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
       | (Tm_ForallSL (u1, t11, b1), Tm_ForallSL (u2, t21, b2)) ->
           ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
       | (Tm_FStar (t11, r), Tm_FStar (t21, uu___)) ->
@@ -346,8 +347,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_TotBind { head2 = t11; body2 = k1;_}, Tm_TotBind
          { head2 = t21; body2 = k2;_}) ->
           (eq_tm t11 t21) && (eq_st_term k1 k2)
-      | (Tm_IntroExists { erased = b1; p1; witnesses = l1;_}, Tm_IntroExists
-         { erased = b2; p1 = p2; witnesses = l2;_}) ->
+      | (Tm_IntroExists
+         { erased = b1; p1; witnesses = l1; should_check = uu___;_},
+         Tm_IntroExists
+         { erased = b2; p1 = p2; witnesses = l2; should_check = uu___1;_}) ->
           ((b1 = b2) && (eq_tm p1 p2)) && (eq_tm_list l1 l2)
       | (Tm_ElimExists { p = p1;_}, Tm_ElimExists { p = p2;_}) -> eq_tm p1 p2
       | (Tm_If { b1 = g1; then_ = ethen1; else_ = eelse1; post2 = p1;_},

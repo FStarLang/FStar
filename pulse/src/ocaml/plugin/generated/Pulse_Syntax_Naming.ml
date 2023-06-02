@@ -10,7 +10,7 @@ let rec (freevars :
     | Pulse_Syntax_Base.Tm_Unknown -> FStar_Set.empty ()
     | Pulse_Syntax_Base.Tm_Star (t1, t2) ->
         FStar_Set.union (freevars t1) (freevars t2)
-    | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, t2, uu___1) ->
+    | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, t2) ->
         FStar_Set.union (freevars t1) (freevars t2)
     | Pulse_Syntax_Base.Tm_ForallSL (uu___, t1, t2) ->
         FStar_Set.union (freevars t1) (freevars t2)
@@ -91,7 +91,8 @@ let rec (freevars_st :
         freevars p
     | Pulse_Syntax_Base.Tm_IntroExists
         { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p1 = p;
-          Pulse_Syntax_Base.witnesses = witnesses;_}
+          Pulse_Syntax_Base.witnesses = witnesses;
+          Pulse_Syntax_Base.should_check = uu___1;_}
         -> FStar_Set.union (freevars p) (freevars_list witnesses)
     | Pulse_Syntax_Base.Tm_While
         { Pulse_Syntax_Base.invariant = invariant;
@@ -135,7 +136,7 @@ let rec (ln' : Pulse_Syntax_Base.term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_Unknown -> true
       | Pulse_Syntax_Base.Tm_Star (t1, t2) -> (ln' t1 i) && (ln' t2 i)
       | Pulse_Syntax_Base.Tm_Pure p -> ln' p i
-      | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, body, uu___1) ->
+      | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, body) ->
           (ln' t1 i) && (ln' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_ForallSL (uu___, t1, body) ->
           (ln' t1 i) && (ln' body (i + Prims.int_one))
@@ -215,7 +216,8 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ln' p i
       | Pulse_Syntax_Base.Tm_IntroExists
           { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p1 = p;
-            Pulse_Syntax_Base.witnesses = witnesses;_}
+            Pulse_Syntax_Base.witnesses = witnesses;
+            Pulse_Syntax_Base.should_check = uu___1;_}
           -> (ln' p i) && (ln_list' witnesses i)
       | Pulse_Syntax_Base.Tm_While
           { Pulse_Syntax_Base.invariant = invariant;
@@ -273,10 +275,10 @@ let rec (open_term' :
         | Pulse_Syntax_Base.Tm_Star (l, r) ->
             Pulse_Syntax_Base.Tm_Star
               ((open_term' l v i), (open_term' r v i))
-        | Pulse_Syntax_Base.Tm_ExistsSL (u, t1, body, se) ->
+        | Pulse_Syntax_Base.Tm_ExistsSL (u, t1, body) ->
             Pulse_Syntax_Base.Tm_ExistsSL
               (u, (open_term' t1 v i),
-                (open_term' body v (i + Prims.int_one)), se)
+                (open_term' body v (i + Prims.int_one)))
         | Pulse_Syntax_Base.Tm_ForallSL (u, t1, body) ->
             Pulse_Syntax_Base.Tm_ForallSL
               (u, (open_term' t1 v i),
@@ -449,14 +451,16 @@ let rec (open_st_term' :
                 { Pulse_Syntax_Base.p = (open_term' p v i) }
           | Pulse_Syntax_Base.Tm_IntroExists
               { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p1 = p;
-                Pulse_Syntax_Base.witnesses = witnesses;_}
+                Pulse_Syntax_Base.witnesses = witnesses;
+                Pulse_Syntax_Base.should_check = should_check;_}
               ->
               Pulse_Syntax_Base.Tm_IntroExists
                 {
                   Pulse_Syntax_Base.erased = erased;
                   Pulse_Syntax_Base.p1 = (open_term' p v i);
                   Pulse_Syntax_Base.witnesses =
-                    (open_term_list' witnesses v i)
+                    (open_term_list' witnesses v i);
+                  Pulse_Syntax_Base.should_check = should_check
                 }
           | Pulse_Syntax_Base.Tm_While
               { Pulse_Syntax_Base.invariant = invariant;
@@ -561,10 +565,10 @@ let rec (close_term' :
         | Pulse_Syntax_Base.Tm_Star (l, r) ->
             Pulse_Syntax_Base.Tm_Star
               ((close_term' l v i), (close_term' r v i))
-        | Pulse_Syntax_Base.Tm_ExistsSL (u, t1, body, se) ->
+        | Pulse_Syntax_Base.Tm_ExistsSL (u, t1, body) ->
             Pulse_Syntax_Base.Tm_ExistsSL
               (u, (close_term' t1 v i),
-                (close_term' body v (i + Prims.int_one)), se)
+                (close_term' body v (i + Prims.int_one)))
         | Pulse_Syntax_Base.Tm_ForallSL (u, t1, body) ->
             Pulse_Syntax_Base.Tm_ForallSL
               (u, (close_term' t1 v i),
@@ -736,14 +740,16 @@ let rec (close_st_term' :
                 { Pulse_Syntax_Base.p = (close_term' p v i) }
           | Pulse_Syntax_Base.Tm_IntroExists
               { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p1 = p;
-                Pulse_Syntax_Base.witnesses = witnesses;_}
+                Pulse_Syntax_Base.witnesses = witnesses;
+                Pulse_Syntax_Base.should_check = should_check;_}
               ->
               Pulse_Syntax_Base.Tm_IntroExists
                 {
                   Pulse_Syntax_Base.erased = erased;
                   Pulse_Syntax_Base.p1 = (close_term' p v i);
                   Pulse_Syntax_Base.witnesses =
-                    (close_term_list' witnesses v i)
+                    (close_term_list' witnesses v i);
+                  Pulse_Syntax_Base.should_check = should_check
                 }
           | Pulse_Syntax_Base.Tm_While
               { Pulse_Syntax_Base.invariant = invariant;

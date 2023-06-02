@@ -211,7 +211,7 @@ let rec prepare_instantiations
   witnesses
   : T.Tac (vprop & list (vprop & either term term) & uvar_tys)
   = match witnesses, goal_vprop with
-    | [], Tm_ExistsSL u ty p _ ->  
+    | [], Tm_ExistsSL u ty p ->  
       let next_goal_vprop, inst, uv =
           let uv, t = Pulse.Checker.Inference.gen_uvar () in
           open_term' p t 0, Inr t, uv
@@ -221,7 +221,7 @@ let rec prepare_instantiations
     | [], _ -> 
       goal_vprop, out, out_uvars
 
-    | t :: witnesses, Tm_ExistsSL u ty p _ ->
+    | t :: witnesses, Tm_ExistsSL u ty p ->
       let next_goal_vprop, inst, uvs =
           match t with
           | Tm_Unknown ->
@@ -241,15 +241,15 @@ let rec prepare_instantiations
           let v = Pulse.Checker.Inference.apply_solution solutions v in
           match i with
           | Inl user_provided ->
-            wr (Tm_IntroExists {erased=false; p=v; witnesses=[user_provided]})
+            wr (Tm_IntroExists {erased=false; p=v; witnesses=[user_provided]; should_check=should_check_true})
 
           | Inr inferred ->
             let sol = Pulse.Checker.Inference.apply_solution solutions inferred in
             match unreveal sol with
             | Some sol ->
-              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]})
+              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_true})
             | _ ->
-              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]})
+              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_true})
         in
         match insts with
         | [] -> T.fail "Impossible"
@@ -396,7 +396,7 @@ let handle_framing_failure
       : T.Tac (checker_result_t g pre post_hint)
       = match rest with
         | [] -> check g t pre pre_typing post_hint
-        | Tm_ExistsSL u ty p se :: rest ->
+        | Tm_ExistsSL u ty p :: rest ->
           let t = 
               Tm_Bind { 
                 binder = default_binder_annot;
@@ -404,8 +404,9 @@ let handle_framing_failure
                    wr (Tm_Protect {
                           t = wr (Tm_IntroExists {
                                     erased=true;
-                                    p=Tm_ExistsSL u ty p se;
-                                    witnesses=[]
+                                    p=Tm_ExistsSL u ty p;
+                                    witnesses=[];
+                                    should_check=should_check_true
                                   });
                       });
                 body = wr (Tm_Protect { t })

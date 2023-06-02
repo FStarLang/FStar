@@ -243,10 +243,7 @@ let rec (readback_ty :
                                 if
                                   (FStar_Reflection_Builtins.inspect_fv fv) =
                                     Pulse_Reflection_Util.exists_lid
-                                then
-                                  Pulse_Syntax_Base.Tm_ExistsSL
-                                    (u, ty, p,
-                                      Pulse_Syntax_Base.should_elim_true)
+                                then Pulse_Syntax_Base.Tm_ExistsSL (u, ty, p)
                                 else Pulse_Syntax_Base.Tm_ForallSL (u, ty, p) in
                               FStar_Pervasives_Native.Some pulse_t))
                   else aux ()

@@ -397,8 +397,7 @@ let (comp_elim_exists :
                 Pulse_Syntax_Base.u = u;
                 Pulse_Syntax_Base.res = (mk_erased u t);
                 Pulse_Syntax_Base.pre =
-                  (Pulse_Syntax_Base.Tm_ExistsSL
-                     (u, t, p, Pulse_Syntax_Base.should_elim_true));
+                  (Pulse_Syntax_Base.Tm_ExistsSL (u, t, p));
                 Pulse_Syntax_Base.post = (elim_exists_post u t p x)
               })
 let (comp_intro_exists :
@@ -419,8 +418,7 @@ let (comp_intro_exists :
                 Pulse_Syntax_Base.pre =
                   (Pulse_Syntax_Naming.open_term' p e Prims.int_zero);
                 Pulse_Syntax_Base.post =
-                  (Pulse_Syntax_Base.Tm_ExistsSL
-                     (u, t, p, Pulse_Syntax_Base.should_elim_false))
+                  (Pulse_Syntax_Base.Tm_ExistsSL (u, t, p))
               })
 let (comp_intro_exists_erased :
   Pulse_Syntax_Base.universe ->
@@ -441,8 +439,7 @@ let (comp_intro_exists_erased :
                   (Pulse_Syntax_Naming.open_term' p (mk_reveal u t e)
                      Prims.int_zero);
                 Pulse_Syntax_Base.post =
-                  (Pulse_Syntax_Base.Tm_ExistsSL
-                     (u, t, p, Pulse_Syntax_Base.should_elim_false))
+                  (Pulse_Syntax_Base.Tm_ExistsSL (u, t, p))
               })
 let (comp_while_cond : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
   fun inv ->
@@ -451,9 +448,7 @@ let (comp_while_cond : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
         Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
         Pulse_Syntax_Base.res = tm_bool;
         Pulse_Syntax_Base.pre =
-          (Pulse_Syntax_Base.Tm_ExistsSL
-             (Pulse_Syntax_Pure.u0, tm_bool, inv,
-               Pulse_Syntax_Base.should_elim_false));
+          (Pulse_Syntax_Base.Tm_ExistsSL (Pulse_Syntax_Pure.u0, tm_bool, inv));
         Pulse_Syntax_Base.post = inv
       }
 let (comp_while_body : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
@@ -465,9 +460,7 @@ let (comp_while_body : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
         Pulse_Syntax_Base.pre =
           (Pulse_Syntax_Naming.open_term' inv tm_true Prims.int_zero);
         Pulse_Syntax_Base.post =
-          (Pulse_Syntax_Base.Tm_ExistsSL
-             (Pulse_Syntax_Pure.u0, tm_bool, inv,
-               Pulse_Syntax_Base.should_elim_true))
+          (Pulse_Syntax_Base.Tm_ExistsSL (Pulse_Syntax_Pure.u0, tm_bool, inv))
       }
 let (comp_while : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
   fun inv ->
@@ -476,9 +469,7 @@ let (comp_while : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
         Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
         Pulse_Syntax_Base.res = tm_unit;
         Pulse_Syntax_Base.pre =
-          (Pulse_Syntax_Base.Tm_ExistsSL
-             (Pulse_Syntax_Pure.u0, tm_bool, inv,
-               Pulse_Syntax_Base.should_elim_true));
+          (Pulse_Syntax_Base.Tm_ExistsSL (Pulse_Syntax_Pure.u0, tm_bool, inv));
         Pulse_Syntax_Base.post =
           (Pulse_Syntax_Naming.open_term' inv tm_false Prims.int_zero)
       }
@@ -615,8 +606,7 @@ let (comp_withlocal_body_post :
             (Pulse_Syntax_Base.Tm_ExistsSL
                (Pulse_Syntax_Pure.u0, init_t,
                  (mk_pts_to init_t r
-                    (Pulse_Syntax_Pure.null_bvar Prims.int_zero)),
-                 Pulse_Syntax_Base.should_elim_false)))
+                    (Pulse_Syntax_Pure.null_bvar Prims.int_zero)))))
 let (comp_withlocal_body :
   Pulse_Syntax_Base.var ->
     Pulse_Syntax_Base.term ->

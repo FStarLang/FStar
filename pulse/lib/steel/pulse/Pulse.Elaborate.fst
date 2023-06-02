@@ -43,7 +43,7 @@ let rec elab_open_commute' (e:term)
     | Tm_Star e1 e2 ->
       elab_open_commute' e1 v n;
       elab_open_commute' e2 v n
-    | Tm_ExistsSL u t body _
+    | Tm_ExistsSL u t body
     | Tm_ForallSL u t body ->
       elab_open_commute' t v n;
       elab_open_commute' body v (n + 1)
@@ -84,7 +84,7 @@ let rec elab_close_commute' (e:term)
     | Tm_Star e1 e2 ->
       elab_close_commute' e1 v n;
       elab_close_commute' e2 v n
-    | Tm_ExistsSL _ t body _
+    | Tm_ExistsSL _ t body
     | Tm_ForallSL _ t body ->
       elab_close_commute' t v n;
       elab_close_commute' body v (n + 1)    
@@ -130,7 +130,7 @@ let rec elab_ln t i =
   | Tm_Star l r ->
     elab_ln l i;
     elab_ln r i
-  | Tm_ExistsSL _ t body _
+  | Tm_ExistsSL _ t body
   | Tm_ForallSL _ t body ->
     elab_ln t i;
     elab_ln body (i + 1)
@@ -165,7 +165,7 @@ let rec elab_freevars_eq (e:term)
   | Tm_Star l r ->
     elab_freevars_eq l;
     elab_freevars_eq r
-  | Tm_ExistsSL _ t body _
+  | Tm_ExistsSL _ t body
   | Tm_ForallSL _ t body ->
     elab_freevars_eq t;
     elab_freevars_eq body

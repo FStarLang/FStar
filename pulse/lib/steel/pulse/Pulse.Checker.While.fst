@@ -14,12 +14,12 @@ module Framing = Pulse.Checker.Framing
 module Metatheory = Pulse.Typing.Metatheory
 
 let while_cond_comp_typing (#g:env) (u:universe) (ty:term) (inv_body:term)
-                           (inv_typing:tot_typing g (Tm_ExistsSL u ty inv_body should_elim_false) Tm_VProp)
+                           (inv_typing:tot_typing g (Tm_ExistsSL u ty inv_body) Tm_VProp)
   : Metatheory.comp_typing_u g (comp_while_cond inv_body)
   = Metatheory.admit_comp_typing g (comp_while_cond inv_body)
 
 let while_body_comp_typing (#g:env) (u:universe) (ty:term) (inv_body:term)
-                           (inv_typing:tot_typing g (Tm_ExistsSL u ty inv_body should_elim_false) Tm_VProp)
+                           (inv_typing:tot_typing g (Tm_ExistsSL u ty inv_body) Tm_VProp)
   : Metatheory.comp_typing_u g (comp_while_body inv_body)
   = Metatheory.admit_comp_typing g (comp_while_body inv_body)
 
@@ -37,13 +37,13 @@ let check_while
   let Tm_While { invariant=inv; condition=cond; body } = t.term in
   let (| ex_inv, inv_typing |) =
     check_vprop (push_context "invariant" g)
-                (Tm_ExistsSL u0 tm_bool inv should_elim_true)
+                (Tm_ExistsSL u0 tm_bool inv)
   in
   match Framing.check_frameable pre_typing ex_inv with
   | Inr f -> T.raise (Framing_failure f)
   | Inl framing_token ->
     match ex_inv with
-    | Tm_ExistsSL u ty inv _ ->
+    | Tm_ExistsSL u ty inv ->
       if not (eq_tm ty tm_bool) ||
         not (eq_univ u u0)
       then T.fail "While loop invariant is exists but its witness type is not bool"

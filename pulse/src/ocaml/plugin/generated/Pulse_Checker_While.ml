@@ -82,7 +82,7 @@ let (check_while :
                                                (Prims.of_int (39))
                                                (Prims.of_int (4))
                                                (Prims.of_int (40))
-                                               (Prims.of_int (61)))
+                                               (Prims.of_int (44)))
                                             (FStar_Range.mk_range
                                                "Pulse.Checker.While.fst"
                                                (Prims.of_int (37))
@@ -96,8 +96,7 @@ let (check_while :
                                                   (Pulse_Syntax_Base.Tm_ExistsSL
                                                      (Pulse_Syntax_Pure.u0,
                                                        Pulse_Typing.tm_bool,
-                                                       inv,
-                                                       Pulse_Syntax_Base.should_elim_true))))
+                                                       inv))))
                                             (fun uu___1 ->
                                                (fun uu___1 ->
                                                   match uu___1 with
@@ -142,9 +141,7 @@ let (check_while :
                                                                     | 
                                                                     Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
-                                                                    inv1,
-                                                                    uu___3)
-                                                                    ->
+                                                                    inv1) ->
                                                                     Obj.repr
                                                                     (if
                                                                     (Prims.op_Negation
@@ -177,14 +174,14 @@ let (check_while :
                                                                     (Prims.of_int (74)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___4 ->
                                                                     while_cond_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
                                                                     g1) u ty
                                                                     inv1 ()))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___4 ->
                                                                     (fun
                                                                     while_cond_comp_typing1
                                                                     ->
@@ -204,7 +201,7 @@ let (check_while :
                                                                     (Prims.of_int (74)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___4 ->
                                                                     Pulse_Typing_Metatheory.st_comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
@@ -220,10 +217,10 @@ let (check_while :
                                                                     inv1)
                                                                     while_cond_comp_typing1)))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___4 ->
                                                                     (fun
-                                                                    uu___5 ->
-                                                                    match uu___5
+                                                                    uu___4 ->
+                                                                    match uu___4
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives.Mkdtuple4
@@ -248,7 +245,7 @@ let (check_while :
                                                                     (Prims.of_int (74)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___5 ->
                                                                     Pulse_Checker_Common.post_hint_from_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
@@ -257,7 +254,7 @@ let (check_while :
                                                                     inv1)
                                                                     while_cond_comp_typing1))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___5 ->
                                                                     (fun
                                                                     while_cond_hint
                                                                     ->
@@ -287,10 +284,10 @@ let (check_while :
                                                                     (FStar_Pervasives_Native.Some
                                                                     while_cond_hint)))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___5 ->
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    match uu___6
+                                                                    uu___5 ->
+                                                                    match uu___5
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives.Mkdtuple3
@@ -320,14 +317,14 @@ let (check_while :
                                                                     (Prims.of_int (78)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     while_body_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
                                                                     g1) u ty
                                                                     inv1 ()))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     (fun
                                                                     while_body_comp_typing1
                                                                     ->
@@ -347,7 +344,7 @@ let (check_while :
                                                                     (Prims.of_int (78)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     Pulse_Typing_Metatheory.st_comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
@@ -363,10 +360,10 @@ let (check_while :
                                                                     inv1)
                                                                     while_body_comp_typing1)))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     (fun
-                                                                    uu___7 ->
-                                                                    match uu___7
+                                                                    uu___6 ->
+                                                                    match uu___6
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives.Mkdtuple4
@@ -391,7 +388,7 @@ let (check_while :
                                                                     (Prims.of_int (78)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___7 ->
                                                                     Pulse_Checker_Common.post_hint_from_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
@@ -400,7 +397,7 @@ let (check_while :
                                                                     inv1)
                                                                     while_body_comp_typing1))
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___7 ->
                                                                     (fun
                                                                     while_post_hint
                                                                     ->
@@ -430,10 +427,10 @@ let (check_while :
                                                                     (FStar_Pervasives_Native.Some
                                                                     while_post_hint)))
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___7 ->
                                                                     (fun
-                                                                    uu___8 ->
-                                                                    match uu___8
+                                                                    uu___7 ->
+                                                                    match uu___7
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives.Mkdtuple3
@@ -463,7 +460,7 @@ let (check_while :
                                                                     (Prims.of_int (45)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___8 ->
                                                                     Pulse_Typing.T_While
                                                                     (g1,
                                                                     inv1,
@@ -473,7 +470,7 @@ let (check_while :
                                                                     cond_typing,
                                                                     body_typing)))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___8 ->
                                                                     (fun d ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -491,7 +488,7 @@ let (check_while :
                                                                     (Prims.of_int (45)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___8 ->
                                                                     Pulse_Checker_Framing.apply_frame
                                                                     g
                                                                     (Pulse_Typing.wr
@@ -509,10 +506,10 @@ let (check_while :
                                                                     inv1) d
                                                                     framing_token))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___8 ->
                                                                     (fun
-                                                                    uu___9 ->
-                                                                    match uu___9
+                                                                    uu___8 ->
+                                                                    match uu___8
                                                                     with
                                                                     | 
                                                                     Prims.Mkdtuple2
@@ -534,8 +531,8 @@ let (check_while :
                                                                     (Prims.Mkdtuple2
                                                                     (c, st_d))
                                                                     post_hint))
-                                                                    uu___9)))
-                                                                    uu___9))
+                                                                    uu___8)))
+                                                                    uu___8))
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -570,11 +567,9 @@ let (check_while :
                                                                     (Pulse_Typing.comp_while_body
                                                                     inv1)))
                                                                     (fun
-                                                                    uu___10
-                                                                    ->
+                                                                    uu___9 ->
                                                                     (fun
-                                                                    uu___10
-                                                                    ->
+                                                                    uu___9 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -607,40 +602,39 @@ let (check_while :
                                                                     (Pulse_Syntax_Printer.comp_to_string
                                                                     body_comp))
                                                                     (fun
-                                                                    uu___11
+                                                                    uu___10
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___12
+                                                                    uu___11
                                                                     ->
                                                                     fun x2 ->
                                                                     Prims.strcat
                                                                     (Prims.strcat
                                                                     "Could not prove the inferred type of the while body matches the annotation\nInferred type = "
                                                                     (Prims.strcat
-                                                                    uu___11
+                                                                    uu___10
                                                                     "\nAnnotated type = "))
                                                                     (Prims.strcat
                                                                     x2 "\n")))))
                                                                     (fun
-                                                                    uu___11
+                                                                    uu___10
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___12
-                                                                    ->
                                                                     uu___11
-                                                                    uu___10))))
-                                                                    uu___10)))
-                                                                    (fun
-                                                                    uu___10
                                                                     ->
+                                                                    uu___10
+                                                                    uu___9))))
+                                                                    uu___9)))
+                                                                    (fun
+                                                                    uu___9 ->
                                                                     FStar_Tactics_Derived.fail
-                                                                    uu___10)))
-                                                                    uu___8)))
-                                                                    uu___8)))
+                                                                    uu___9)))
                                                                     uu___7)))
-                                                                    uu___7))
+                                                                    uu___7)))
+                                                                    uu___6)))
+                                                                    uu___6))
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -675,9 +669,9 @@ let (check_while :
                                                                     (Pulse_Typing.comp_while_cond
                                                                     inv1)))
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___7 ->
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___7 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -710,37 +704,35 @@ let (check_while :
                                                                     (Pulse_Syntax_Printer.comp_to_string
                                                                     cond_comp))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___8 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___10
-                                                                    ->
+                                                                    uu___9 ->
                                                                     fun x1 ->
                                                                     Prims.strcat
                                                                     (Prims.strcat
                                                                     "Could not prove that the inferred type of the while condition matches the annotation\nInferred type = "
                                                                     (Prims.strcat
-                                                                    uu___9
+                                                                    uu___8
                                                                     "\nAnnotated type = "))
                                                                     (Prims.strcat
                                                                     x1 "\n")))))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___8 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___10
-                                                                    ->
-                                                                    uu___9
-                                                                    uu___8))))
-                                                                    uu___8)))
+                                                                    uu___9 ->
+                                                                    uu___8
+                                                                    uu___7))))
+                                                                    uu___7)))
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___7 ->
                                                                     FStar_Tactics_Derived.fail
-                                                                    uu___8)))
-                                                                    uu___6)))
-                                                                    uu___6)))
+                                                                    uu___7)))
                                                                     uu___5)))
                                                                     uu___5)))
+                                                                    uu___4)))
+                                                                    uu___4)))
                                                                     | 
                                                                     uu___3 ->
                                                                     Obj.repr

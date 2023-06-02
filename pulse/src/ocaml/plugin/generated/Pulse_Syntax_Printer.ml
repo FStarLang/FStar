@@ -146,7 +146,7 @@ let rec (term_to_string' :
                                   (fun uu___1 ->
                                      FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___2 -> uu___1 uu___)))) uu___)))
-           | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, body, uu___1) ->
+           | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, body) ->
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
@@ -157,8 +157,8 @@ let rec (term_to_string' :
                           (Prims.of_int (55)) (Prims.of_int (6))
                           (Prims.of_int (58)) (Prims.of_int (51)))
                        (Obj.magic (term_to_string' (indent level) body))
-                       (fun uu___2 ->
-                          (fun uu___2 ->
+                       (fun uu___1 ->
+                          (fun uu___1 ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Range.mk_range
@@ -200,9 +200,9 @@ let rec (term_to_string' :
                                               (Obj.magic
                                                  (term_to_string'
                                                     (indent level) t1))
-                                              (fun uu___3 ->
+                                              (fun uu___2 ->
                                                  FStar_Tactics_Effect.lift_div_tac
-                                                   (fun uu___4 ->
+                                                   (fun uu___3 ->
                                                       fun x ->
                                                         fun x1 ->
                                                           Prims.strcat
@@ -210,19 +210,19 @@ let rec (term_to_string' :
                                                                (Prims.strcat
                                                                   "(exists (_:"
                                                                   (Prims.strcat
-                                                                    uu___3
+                                                                    uu___2
                                                                     ").\n"))
                                                                (Prims.strcat
                                                                   x ""))
                                                             (Prims.strcat x1
                                                                ")")))))
-                                        (fun uu___3 ->
+                                        (fun uu___2 ->
                                            FStar_Tactics_Effect.lift_div_tac
-                                             (fun uu___4 -> uu___3 level))))
-                                  (fun uu___3 ->
+                                             (fun uu___3 -> uu___2 level))))
+                                  (fun uu___2 ->
                                      FStar_Tactics_Effect.lift_div_tac
-                                       (fun uu___4 -> uu___3 uu___2))))
-                            uu___2)))
+                                       (fun uu___3 -> uu___2 uu___1))))
+                            uu___1)))
            | Pulse_Syntax_Base.Tm_ForallSL (u, t1, body) ->
                Obj.magic
                  (Obj.repr
@@ -1633,7 +1633,8 @@ let rec (st_term_to_string' :
                     Prims.strcat "elim_exists " (Prims.strcat uu___ "")))
       | Pulse_Syntax_Base.Tm_IntroExists
           { Pulse_Syntax_Base.erased = false; Pulse_Syntax_Base.p1 = p;
-            Pulse_Syntax_Base.witnesses = witnesses;_}
+            Pulse_Syntax_Base.witnesses = witnesses;
+            Pulse_Syntax_Base.should_check = uu___;_}
           ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
@@ -1643,8 +1644,8 @@ let rec (st_term_to_string' :
                (Prims.of_int (183)) (Prims.of_int (6)) (Prims.of_int (187))
                (Prims.of_int (43)))
             (Obj.magic (term_list_to_string " " witnesses))
-            (fun uu___ ->
-               (fun uu___ ->
+            (fun uu___1 ->
+               (fun uu___1 ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
@@ -1674,9 +1675,9 @@ let rec (st_term_to_string' :
                                       (Prims.of_int (44)))
                                    (Obj.magic
                                       (term_to_string' (indent level) p))
-                                   (fun uu___1 ->
+                                   (fun uu___2 ->
                                       FStar_Tactics_Effect.lift_div_tac
-                                        (fun uu___2 ->
+                                        (fun uu___3 ->
                                            fun x ->
                                              fun x1 ->
                                                Prims.strcat
@@ -1687,19 +1688,20 @@ let rec (st_term_to_string' :
                                                           (Prims.strcat
                                                              (indent level)
                                                              ""))
-                                                       (Prims.strcat uu___1
+                                                       (Prims.strcat uu___2
                                                           "\n"))
                                                     (Prims.strcat x "with "))
                                                  (Prims.strcat x1 "")))))
-                             (fun uu___1 ->
+                             (fun uu___2 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___2 -> uu___1 level))))
-                       (fun uu___1 ->
+                                  (fun uu___3 -> uu___2 level))))
+                       (fun uu___2 ->
                           FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___2 -> uu___1 uu___)))) uu___)
+                            (fun uu___3 -> uu___2 uu___1)))) uu___1)
       | Pulse_Syntax_Base.Tm_IntroExists
           { Pulse_Syntax_Base.erased = true; Pulse_Syntax_Base.p1 = p;
-            Pulse_Syntax_Base.witnesses = witnesses;_}
+            Pulse_Syntax_Base.witnesses = witnesses;
+            Pulse_Syntax_Base.should_check = uu___;_}
           ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
@@ -1709,8 +1711,8 @@ let rec (st_term_to_string' :
                (Prims.of_int (190)) (Prims.of_int (6)) (Prims.of_int (194))
                (Prims.of_int (43)))
             (Obj.magic (term_list_to_string " " witnesses))
-            (fun uu___ ->
-               (fun uu___ ->
+            (fun uu___1 ->
+               (fun uu___1 ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
@@ -1740,9 +1742,9 @@ let rec (st_term_to_string' :
                                       (Prims.of_int (44)))
                                    (Obj.magic
                                       (term_to_string' (indent level) p))
-                                   (fun uu___1 ->
+                                   (fun uu___2 ->
                                       FStar_Tactics_Effect.lift_div_tac
-                                        (fun uu___2 ->
+                                        (fun uu___3 ->
                                            fun x ->
                                              fun x1 ->
                                                Prims.strcat
@@ -1753,16 +1755,16 @@ let rec (st_term_to_string' :
                                                           (Prims.strcat
                                                              (indent level)
                                                              ""))
-                                                       (Prims.strcat uu___1
+                                                       (Prims.strcat uu___2
                                                           "\n"))
                                                     (Prims.strcat x "with "))
                                                  (Prims.strcat x1 "")))))
-                             (fun uu___1 ->
+                             (fun uu___2 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___2 -> uu___1 level))))
-                       (fun uu___1 ->
+                                  (fun uu___3 -> uu___2 level))))
+                       (fun uu___2 ->
                           FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___2 -> uu___1 uu___)))) uu___)
+                            (fun uu___3 -> uu___2 uu___1)))) uu___1)
       | Pulse_Syntax_Base.Tm_While
           { Pulse_Syntax_Base.invariant = invariant;
             Pulse_Syntax_Base.condition = condition;
@@ -2370,8 +2372,7 @@ let (tag_of_term : Pulse_Syntax_Base.term -> Prims.string) =
     | Pulse_Syntax_Base.Tm_Emp -> "Tm_Emp"
     | Pulse_Syntax_Base.Tm_Pure uu___ -> "Tm_Pure"
     | Pulse_Syntax_Base.Tm_Star (uu___, uu___1) -> "Tm_Star"
-    | Pulse_Syntax_Base.Tm_ExistsSL (uu___, uu___1, uu___2, uu___3) ->
-        "Tm_ExistsSL"
+    | Pulse_Syntax_Base.Tm_ExistsSL (uu___, uu___1, uu___2) -> "Tm_ExistsSL"
     | Pulse_Syntax_Base.Tm_ForallSL (uu___, uu___1, uu___2) -> "Tm_ForallSL"
     | Pulse_Syntax_Base.Tm_VProp -> "Tm_VProp"
     | Pulse_Syntax_Base.Tm_Inames -> "Tm_Inames"

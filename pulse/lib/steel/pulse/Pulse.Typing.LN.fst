@@ -51,7 +51,7 @@ let rec open_term_ln' (e:term)
       open_term_ln' l x i;
       open_term_ln' r x i
 
-    | Tm_ExistsSL _ t b _
+    | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
       open_term_ln' t x i;    
       open_term_ln' b x (i + 1)
@@ -214,7 +214,7 @@ let rec ln_weakening (e:term) (i j:int)
       ln_weakening l i j;
       ln_weakening r i j
 
-    | Tm_ExistsSL _ t b _
+    | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
       ln_weakening t i j;    
       ln_weakening b (i + 1) (j + 1)
@@ -362,7 +362,7 @@ let rec open_term_ln_inv' (e:term)
       open_term_ln_inv' l x i;
       open_term_ln_inv' r x i
 
-    | Tm_ExistsSL _ t b _
+    | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
       open_term_ln_inv' t x i;    
       open_term_ln_inv' b x (i + 1)
@@ -518,7 +518,7 @@ let rec close_term_ln' (e:term)
       close_term_ln' l x i;
       close_term_ln' r x i
 
-    | Tm_ExistsSL _ t b _
+    | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
       close_term_ln' t x i;    
       close_term_ln' b x (i + 1)

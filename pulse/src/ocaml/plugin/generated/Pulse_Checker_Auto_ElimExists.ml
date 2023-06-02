@@ -8,7 +8,7 @@ let (should_elim_exists :
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
                match v with
-               | Pulse_Syntax_Base.Tm_ExistsSL (uu___1, uu___2, uu___3, s) ->
+               | Pulse_Syntax_Base.Tm_ExistsSL (uu___1, uu___2, uu___3) ->
                    true
                | uu___1 -> false))) uu___
 let (mk :
@@ -30,7 +30,7 @@ let (mk :
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
                        match v with
-                       | Pulse_Syntax_Base.Tm_ExistsSL (u, t, p, s) ->
+                       | Pulse_Syntax_Base.Tm_ExistsSL (u, t, p) ->
                            FStar_Pervasives_Native.Some
                              (FStar_Pervasives.Mkdtuple3
                                 ((Pulse_Typing.wr
@@ -42,8 +42,7 @@ let (mk :
                                                   (Pulse_Typing.comp_elim_exists
                                                      u t p
                                                      (Pulse_Typing.fresh g))),
-                                                t, p,
-                                                Pulse_Syntax_Base.should_elim_false))
+                                                t, p))
                                        })),
                                   (Pulse_Typing.comp_elim_exists u t p
                                      (Pulse_Typing.fresh g)),

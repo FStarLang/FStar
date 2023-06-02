@@ -36,7 +36,7 @@ let rec elab_term (top:term)
       let r = elab_term r in
       mk_star l r
       
-    | Tm_ExistsSL u t body _
+    | Tm_ExistsSL u t body
     | Tm_ForallSL u t body ->
       let t = elab_term t in
       let b = elab_term body in

@@ -107,7 +107,9 @@ let (tm_intro_exists :
           {
             Pulse_Syntax_Base.erased = erased;
             Pulse_Syntax_Base.p1 = p;
-            Pulse_Syntax_Base.witnesses = witnesses
+            Pulse_Syntax_Base.witnesses = witnesses;
+            Pulse_Syntax_Base.should_check =
+              Pulse_Syntax_Base.should_check_true
           }
 let (tm_while :
   Pulse_Syntax_Base.term ->
