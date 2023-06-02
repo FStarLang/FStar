@@ -24,7 +24,7 @@ let qname_as_term (x:string) : term =
   let qn = explode_qn x in
   let fv = pack_fv qn in
   let tv = Tv_FVar fv in
-  pack_ln tv
+  pack tv
 
 (** This tactic unfolds only [t] and reduces matches and recursive
     functions fully *)
