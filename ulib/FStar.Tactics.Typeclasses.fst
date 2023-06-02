@@ -131,33 +131,31 @@ let mk_class (nm:string) : Tac decls =
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive {nm=name;univs=us;params;typ=ity;ctors} = sv in
-    print ("params = " ^ Tactics.Util.string_of_list binder_to_string params);
-    print ("got it, name = " ^ implode_qn name);
-    print ("got it, ity = " ^ term_to_string ity);
+    (* print ("params = " ^ Tactics.Util.string_of_list binder_to_string params); *)
+    (* print ("got it, name = " ^ implode_qn name); *)
+    (* print ("got it, ity = " ^ term_to_string ity); *)
     let ctor_name = last name in
     // Must have a single constructor
     guard (List.Tot.Base.length ctors = 1);
     let [(c_name, ty)] = ctors in
-    print ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty);
+    (* print ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty); *)
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);
     let C_Total cod = r in (* must be total *)
 
-    print ("params = " ^ Tactics.Util.string_of_list binder_to_string params);
-    print ("n_params = " ^ string_of_int (List.Tot.Base.length params));
-    print ("n_univs = " ^ string_of_int (List.Tot.Base.length us));
-    print ("cod = " ^ term_to_string cod);
+    (* print ("params = " ^ Tactics.Util.string_of_list binder_to_string params); *)
+    (* print ("n_params = " ^ string_of_int (List.Tot.Base.length params)); *)
+    (* print ("n_univs = " ^ string_of_int (List.Tot.Base.length us)); *)
+    (* print ("cod = " ^ term_to_string cod); *)
 
-    print ("n_bs = " ^ string_of_int (List.Tot.Base.length bs));
+    (* print ("n_bs = " ^ string_of_int (List.Tot.Base.length bs)); *)
 
     let base : string = "__proj__Mk" ^ ctor_name ^ "__item__" in
 
     (* Make a sigelt for each method *)
     Tactics.Util.map (fun (b:binder) ->
-                  print ("b = " ^ term_to_string b.sort);
                   let s = name_of_binder b in
-                  print ("b = " ^ s);
                   let ns = cur_module () in
                   let sfv = pack_fv (ns @ [s]) in
                   let dbv = fresh_namedv_named "d" in
@@ -183,7 +181,7 @@ let mk_class (nm:string) : Tac decls =
                         end
                       | _ -> fail "mk_class: proj not Sg_Let?"
                   in
-                  print ("proj_ty = " ^ term_to_string proj_ty);
+                  (* print ("proj_ty = " ^ term_to_string proj_ty); *)
                   let ty =
                     let bs, cod = collect_arr_bs proj_ty in
                     let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
@@ -204,8 +202,8 @@ let mk_class (nm:string) : Tac decls =
                     let bs = (List.Tot.map (fun b -> { b with qual = Q_Implicit}) params) @ [tcdict] in
                     mk_abs bs (mk_e_app proj [named_binder_to_term tcdict])
                   in
-                  print ("def = " ^ term_to_string def);
-                  print ("ty  = " ^ term_to_string ty);
+                  (* print ("def = " ^ term_to_string def); *)
+                  (* print ("ty  = " ^ term_to_string ty); *)
 
                   let ty : term = ty in
                   let def : term = def in
