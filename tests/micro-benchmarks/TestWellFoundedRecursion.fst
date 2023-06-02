@@ -287,3 +287,9 @@ let lemma_my_fun_dep (#a: Type) (#b: (a -> Type)) (f: my_fun_dep a b) (x: a)
 let lemma_my_fun (#a: Type u#n) (#b: Type u#m) (f: my_fun a b) (x: a)
   : Lemma (app f x << f)
   = ()
+
+
+//variant universe levels should be rejected
+[@@expect_failure [90]]
+noeq
+type ind = | Mk : (int -> ind u#0) -> ind u#aa
