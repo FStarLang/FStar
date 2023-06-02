@@ -39,7 +39,7 @@ let def_of (#t:Type) (x:t) : Tac term =
              | Some se -> se
     in
     match inspect_sigelt se with
-    | Sg_Let _ lbs -> begin
+    | Sg_Let {lbs} -> begin
       let lbv = lookup_lb lbs (inspect_fv fv) in
       lbv.lb_def
       end

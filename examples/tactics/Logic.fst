@@ -20,9 +20,9 @@ open FStar.Tactics
 let tau () : Tac unit =
     let h = implies_intro () in
     right ();
-    let (h1, _) = destruct_and h in
+    let (h1, _) = destruct_and (binding_to_term h) in
     apply (`FStar.Squash.return_squash);
-    exact h1;
+    exact (binding_to_term h1);
     qed ()
 
 let test phi psi xi =
