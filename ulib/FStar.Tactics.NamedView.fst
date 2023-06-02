@@ -25,7 +25,9 @@ exception LengthMismatch
 module R = FStar.Reflection
 module RD = FStar.Reflection.Data
 
-(* Disable printing *)
+(* Disable printing, but mark private so we don't mess
+with clients. *)
+private
 let print (s:string) : Tac unit = ()
 
 (** FIXME: needs named version. *)
@@ -438,6 +440,11 @@ let open_view (tv:term_view) : Tac named_term_view =
 
   | RD.Tv_Let recf attrs b def body ->
     let nb, body = open_term_simple b body in
+    let def =
+      if recf
+      then subst [DB 0 (binder_to_namedv nb)] def
+      else def
+    in
     Tv_Let recf attrs nb def body
 
   | RD.Tv_Match scrutinee ret brs ->
@@ -476,9 +483,14 @@ let close_view (tv : named_term_view) : Tot term_view =
     RD.Tv_Refine b ref
   
   | Tv_Let recf attrs nb def body ->
+    let def =
+      if recf
+      then subst [NM (binder_to_namedv nb) 0] def
+      else def
+    in
     let b, body = close_term_simple nb body in
     RD.Tv_Let recf attrs b def body
-  
+
   | Tv_Match scrutinee ret brs ->
     let brs = List.Tot.map close_branch brs in
     RD.Tv_Match scrutinee ret brs
