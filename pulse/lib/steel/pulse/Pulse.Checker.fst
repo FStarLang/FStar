@@ -247,9 +247,9 @@ let rec prepare_instantiations
             let sol = Pulse.Checker.Inference.apply_solution solutions inferred in
             match unreveal sol with
             | Some sol ->
-              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_true})
+              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_false})
             | _ ->
-              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_true})
+              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_false})
         in
         match insts with
         | [] -> T.fail "Impossible"

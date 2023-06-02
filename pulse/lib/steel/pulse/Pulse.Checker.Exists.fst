@@ -84,11 +84,15 @@ let check_intro_exists_erased
   (post_hint:post_hint_opt g)
   : T.Tac (checker_result_t g pre post_hint) =
 
-  let Tm_IntroExists { p=t; witnesses=[e] } = st.term in
+  let Tm_IntroExists { p=t; witnesses=[e]; should_check } = st.term in
   let (| t, t_typing |) = 
     match vprop_typing with
     | Some typing -> (| t, typing |)
-    | _ -> check_vprop g t
+    | _ ->   
+      if T.unseal should_check
+      then check_vprop g t
+      else let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
+           (| t, magic () |)
   in
   match t with
   | Tm_ExistsSL u ty p ->
@@ -110,11 +114,15 @@ let check_intro_exists
   (post_hint:post_hint_opt g)
   : T.Tac (checker_result_t g pre post_hint) =
 
-  let Tm_IntroExists { p=t; witnesses=[witness] } = st.term in
+  let Tm_IntroExists { p=t; witnesses=[witness]; should_check } = st.term in
   let (| t, t_typing |) =
     match vprop_typing with
     | Some typing -> (| t, typing |)
-    | _ -> check_vprop g t    
+    | _ -> 
+      if T.unseal should_check
+      then check_vprop g t
+      else let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
+           (| t, magic () |)
   in
   match t with
   | Tm_ExistsSL u ty p ->

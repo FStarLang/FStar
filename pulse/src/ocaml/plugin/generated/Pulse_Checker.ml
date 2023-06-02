@@ -670,7 +670,7 @@ let rec (build_instantiations :
     fun insts ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "Pulse.Checker.fst" (Prims.of_int (240))
-           (Prims.of_int (29)) (Prims.of_int (252)) (Prims.of_int (101)))
+           (Prims.of_int (29)) (Prims.of_int (252)) (Prims.of_int (102)))
         (FStar_Range.mk_range "Pulse.Checker.fst" (Prims.of_int (254))
            (Prims.of_int (8)) (Prims.of_int (261)) (Prims.of_int (92)))
         (FStar_Tactics_Effect.lift_div_tac
@@ -706,7 +706,7 @@ let rec (build_instantiations :
                                           solutions v);
                                      Pulse_Syntax_Base.witnesses = [sol];
                                      Pulse_Syntax_Base.should_check =
-                                       Pulse_Syntax_Base.should_check_true
+                                       Pulse_Syntax_Base.should_check_false
                                    })
                           | uu___2 ->
                               Pulse_Typing.wr
@@ -720,7 +720,7 @@ let rec (build_instantiations :
                                        [Pulse_Checker_Inference.apply_solution
                                           solutions inferred];
                                      Pulse_Syntax_Base.should_check =
-                                       Pulse_Syntax_Base.should_check_true
+                                       Pulse_Syntax_Base.should_check_false
                                    })))))
         (fun uu___ ->
            (fun one_inst ->
