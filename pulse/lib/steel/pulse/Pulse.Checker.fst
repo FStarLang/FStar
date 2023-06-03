@@ -514,6 +514,9 @@ let rec check' : bool -> check_t =
         let (| t, c, d |) = If.check_if g b e1 e2 pre pre_typing post (check' true) in
         ( (| t, c, d |) <: checker_result_t g pre post_hint)
 
+      | Tm_IntroPure _ -> 
+        T.fail "Not yet handled"
+        
       | Tm_ElimExists _ ->
         Exists.check_elim_exists g t pre pre_typing post_hint
 

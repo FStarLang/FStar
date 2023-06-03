@@ -94,7 +94,7 @@ let (tm_if :
               Pulse_Syntax_Base.post2 = post
             }
 let (tm_elim_exists : Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.st_term')
-  = fun p -> Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p = p }
+  = fun p -> Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p }
 let (tm_intro_exists :
   Prims.bool ->
     Pulse_Syntax_Base.vprop ->
@@ -106,9 +106,9 @@ let (tm_intro_exists :
         Pulse_Syntax_Base.Tm_IntroExists
           {
             Pulse_Syntax_Base.erased = erased;
-            Pulse_Syntax_Base.p1 = p;
+            Pulse_Syntax_Base.p2 = p;
             Pulse_Syntax_Base.witnesses = witnesses;
-            Pulse_Syntax_Base.should_check =
+            Pulse_Syntax_Base.should_check1 =
               Pulse_Syntax_Base.should_check_true
           }
 let (tm_while :

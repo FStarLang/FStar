@@ -117,6 +117,9 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm t1 t2 &&
       eq_st_term k1 k2
       
+    | Tm_IntroPure { p=p1 }, Tm_IntroPure { p=p2 } ->
+      eq_tm p1 p2
+
     | Tm_IntroExists { erased=b1; p=p1; witnesses=l1 },
       Tm_IntroExists { erased=b2; p=p2; witnesses=l2 } ->
       b1 = b2 &&

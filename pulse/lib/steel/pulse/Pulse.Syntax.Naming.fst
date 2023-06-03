@@ -110,6 +110,7 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' p x i;
       close_open_inverse_list' witnesses x i
     
+    | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       close_open_inverse' p x i
       

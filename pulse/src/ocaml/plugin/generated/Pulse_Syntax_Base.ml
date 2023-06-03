@@ -172,14 +172,18 @@ and st_term'__Tm_If__payload =
   then_: st_term ;
   else_: st_term ;
   post2: vprop FStar_Pervasives_Native.option }
+and st_term'__Tm_IntroPure__payload =
+  {
+  p: term ;
+  should_check: should_check_t }
 and st_term'__Tm_ElimExists__payload = {
-  p: vprop }
+  p1: vprop }
 and st_term'__Tm_IntroExists__payload =
   {
   erased: Prims.bool ;
-  p1: vprop ;
+  p2: vprop ;
   witnesses: term Prims.list ;
-  should_check: should_check_t }
+  should_check1: should_check_t }
 and st_term'__Tm_While__payload =
   {
   invariant: term ;
@@ -214,6 +218,7 @@ and st_term' =
   | Tm_Bind of st_term'__Tm_Bind__payload 
   | Tm_TotBind of st_term'__Tm_TotBind__payload 
   | Tm_If of st_term'__Tm_If__payload 
+  | Tm_IntroPure of st_term'__Tm_IntroPure__payload 
   | Tm_ElimExists of st_term'__Tm_ElimExists__payload 
   | Tm_IntroExists of st_term'__Tm_IntroExists__payload 
   | Tm_While of st_term'__Tm_While__payload 
@@ -234,6 +239,8 @@ let uu___is_Tm_Bind uu___ = match uu___ with | Tm_Bind _ -> true | _ -> false
 let uu___is_Tm_TotBind uu___ =
   match uu___ with | Tm_TotBind _ -> true | _ -> false
 let uu___is_Tm_If uu___ = match uu___ with | Tm_If _ -> true | _ -> false
+let uu___is_Tm_IntroPure uu___ =
+  match uu___ with | Tm_IntroPure _ -> true | _ -> false
 let uu___is_Tm_ElimExists uu___ =
   match uu___ with | Tm_ElimExists _ -> true | _ -> false
 let uu___is_Tm_IntroExists uu___ =
@@ -347,12 +354,14 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_TotBind { head2 = t11; body2 = k1;_}, Tm_TotBind
          { head2 = t21; body2 = k2;_}) ->
           (eq_tm t11 t21) && (eq_st_term k1 k2)
+      | (Tm_IntroPure { p = p1; should_check = uu___;_}, Tm_IntroPure
+         { p = p2; should_check = uu___1;_}) -> eq_tm p1 p2
       | (Tm_IntroExists
-         { erased = b1; p1; witnesses = l1; should_check = uu___;_},
+         { erased = b1; p2 = p1; witnesses = l1; should_check1 = uu___;_},
          Tm_IntroExists
-         { erased = b2; p1 = p2; witnesses = l2; should_check = uu___1;_}) ->
+         { erased = b2; p2; witnesses = l2; should_check1 = uu___1;_}) ->
           ((b1 = b2) && (eq_tm p1 p2)) && (eq_tm_list l1 l2)
-      | (Tm_ElimExists { p = p1;_}, Tm_ElimExists { p = p2;_}) -> eq_tm p1 p2
+      | (Tm_ElimExists { p1;_}, Tm_ElimExists { p1 = p2;_}) -> eq_tm p1 p2
       | (Tm_If { b1 = g1; then_ = ethen1; else_ = eelse1; post2 = p1;_},
          Tm_If { b1 = g2; then_ = ethen2; else_ = eelse2; post2 = p2;_}) ->
           (((eq_tm g1 g2) && (eq_st_term ethen1 ethen2)) &&

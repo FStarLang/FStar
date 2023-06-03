@@ -175,6 +175,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' (indent level) else_)
         level
 
+    | Tm_IntroPure { p } ->
+      sprintf "introduce pure (\n%s%s)"
+        (indent level)
+        (term_to_string' (indent level) p)
+
     | Tm_ElimExists { p } ->
       sprintf "elim_exists %s"
         (term_to_string p)
@@ -264,6 +269,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_Bind _ -> "Tm_Bind"
   | Tm_TotBind _ -> "Tm_TotBind"
   | Tm_If _ -> "Tm_If"
+  | Tm_IntroPure _ -> "Tm_IntroPure"
   | Tm_ElimExists _ -> "Tm_ElimExists"
   | Tm_IntroExists _ -> "Tm_IntroExists"
   | Tm_While _ -> "Tm_While"
@@ -288,6 +294,7 @@ let rec print_st_head (t:st_term)
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_STApp { head = p } -> print_head p
+  | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"  
 and print_head (t:term) =
@@ -312,5 +319,6 @@ let rec print_skel (t:st_term) =
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_STApp { head = p } -> print_head p
+  | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"

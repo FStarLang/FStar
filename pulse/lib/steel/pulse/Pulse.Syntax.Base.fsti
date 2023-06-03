@@ -138,6 +138,10 @@ type st_term' =
       else_:st_term;
       post:option vprop;
     }
+  | Tm_IntroPure {
+      p:term;
+      should_check:should_check_t;
+    }
   | Tm_ElimExists {
       p:vprop;
     }

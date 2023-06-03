@@ -87,12 +87,15 @@ let rec (freevars_st :
         ->
         FStar_Set.union (FStar_Set.union (freevars b) (freevars_st then_))
           (FStar_Set.union (freevars_st else_) (freevars_opt post))
-    | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p = p;_} ->
+    | Pulse_Syntax_Base.Tm_IntroPure
+        { Pulse_Syntax_Base.p = p; Pulse_Syntax_Base.should_check = uu___;_}
+        -> freevars p
+    | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
         freevars p
     | Pulse_Syntax_Base.Tm_IntroExists
-        { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p1 = p;
+        { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p2 = p;
           Pulse_Syntax_Base.witnesses = witnesses;
-          Pulse_Syntax_Base.should_check = uu___1;_}
+          Pulse_Syntax_Base.should_check1 = uu___1;_}
         -> FStar_Set.union (freevars p) (freevars_list witnesses)
     | Pulse_Syntax_Base.Tm_While
         { Pulse_Syntax_Base.invariant = invariant;
@@ -212,12 +215,16 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ->
           (((ln' b i) && (ln_st' then_ i)) && (ln_st' else_ i)) &&
             (ln_opt' post (i + Prims.int_one))
-      | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p = p;_} ->
+      | Pulse_Syntax_Base.Tm_IntroPure
+          { Pulse_Syntax_Base.p = p;
+            Pulse_Syntax_Base.should_check = uu___;_}
+          -> ln' p i
+      | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
           ln' p i
       | Pulse_Syntax_Base.Tm_IntroExists
-          { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p1 = p;
+          { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p2 = p;
             Pulse_Syntax_Base.witnesses = witnesses;
-            Pulse_Syntax_Base.should_check = uu___1;_}
+            Pulse_Syntax_Base.should_check1 = uu___1;_}
           -> (ln' p i) && (ln_list' witnesses i)
       | Pulse_Syntax_Base.Tm_While
           { Pulse_Syntax_Base.invariant = invariant;
@@ -446,21 +453,30 @@ let rec (open_st_term' :
                   Pulse_Syntax_Base.post2 =
                     (open_term_opt' post v (i + Prims.int_one))
                 }
-          | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p = p;_} ->
-              Pulse_Syntax_Base.Tm_ElimExists
-                { Pulse_Syntax_Base.p = (open_term' p v i) }
-          | Pulse_Syntax_Base.Tm_IntroExists
-              { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p1 = p;
-                Pulse_Syntax_Base.witnesses = witnesses;
+          | Pulse_Syntax_Base.Tm_IntroPure
+              { Pulse_Syntax_Base.p = p;
                 Pulse_Syntax_Base.should_check = should_check;_}
+              ->
+              Pulse_Syntax_Base.Tm_IntroPure
+                {
+                  Pulse_Syntax_Base.p = (open_term' p v i);
+                  Pulse_Syntax_Base.should_check = should_check
+                }
+          | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
+              Pulse_Syntax_Base.Tm_ElimExists
+                { Pulse_Syntax_Base.p1 = (open_term' p v i) }
+          | Pulse_Syntax_Base.Tm_IntroExists
+              { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p2 = p;
+                Pulse_Syntax_Base.witnesses = witnesses;
+                Pulse_Syntax_Base.should_check1 = should_check;_}
               ->
               Pulse_Syntax_Base.Tm_IntroExists
                 {
                   Pulse_Syntax_Base.erased = erased;
-                  Pulse_Syntax_Base.p1 = (open_term' p v i);
+                  Pulse_Syntax_Base.p2 = (open_term' p v i);
                   Pulse_Syntax_Base.witnesses =
                     (open_term_list' witnesses v i);
-                  Pulse_Syntax_Base.should_check = should_check
+                  Pulse_Syntax_Base.should_check1 = should_check
                 }
           | Pulse_Syntax_Base.Tm_While
               { Pulse_Syntax_Base.invariant = invariant;
@@ -735,21 +751,30 @@ let rec (close_st_term' :
                   Pulse_Syntax_Base.post2 =
                     (close_term_opt' post v (i + Prims.int_one))
                 }
-          | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p = p;_} ->
-              Pulse_Syntax_Base.Tm_ElimExists
-                { Pulse_Syntax_Base.p = (close_term' p v i) }
-          | Pulse_Syntax_Base.Tm_IntroExists
-              { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p1 = p;
-                Pulse_Syntax_Base.witnesses = witnesses;
+          | Pulse_Syntax_Base.Tm_IntroPure
+              { Pulse_Syntax_Base.p = p;
                 Pulse_Syntax_Base.should_check = should_check;_}
+              ->
+              Pulse_Syntax_Base.Tm_IntroPure
+                {
+                  Pulse_Syntax_Base.p = (close_term' p v i);
+                  Pulse_Syntax_Base.should_check = should_check
+                }
+          | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
+              Pulse_Syntax_Base.Tm_ElimExists
+                { Pulse_Syntax_Base.p1 = (close_term' p v i) }
+          | Pulse_Syntax_Base.Tm_IntroExists
+              { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p2 = p;
+                Pulse_Syntax_Base.witnesses = witnesses;
+                Pulse_Syntax_Base.should_check1 = should_check;_}
               ->
               Pulse_Syntax_Base.Tm_IntroExists
                 {
                   Pulse_Syntax_Base.erased = erased;
-                  Pulse_Syntax_Base.p1 = (close_term' p v i);
+                  Pulse_Syntax_Base.p2 = (close_term' p v i);
                   Pulse_Syntax_Base.witnesses =
                     (close_term_list' witnesses v i);
-                  Pulse_Syntax_Base.should_check = should_check
+                  Pulse_Syntax_Base.should_check1 = should_check
                 }
           | Pulse_Syntax_Base.Tm_While
               { Pulse_Syntax_Base.invariant = invariant;

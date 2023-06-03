@@ -208,6 +208,24 @@ let (elab_lift :
                      (Pulse_Elaborate_Pure.elab_term
                         (Pulse_Syntax_Base.comp_post c1))) e
                   (Pulse_Elaborate_Pure.elab_term reveal_a)
+let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
+  fun p ->
+    Pulse_Typing.wr
+      (Pulse_Syntax_Base.Tm_STApp
+         {
+           Pulse_Syntax_Base.head =
+             (Pulse_Syntax_Pure.tm_pureapp
+                (Pulse_Syntax_Pure.tm_fvar
+                   (Pulse_Syntax_Base.as_fv
+                      (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                         "intro_pure"))) FStar_Pervasives_Native.None p);
+           Pulse_Syntax_Base.arg_qual = FStar_Pervasives_Native.None;
+           Pulse_Syntax_Base.arg =
+             (Pulse_Syntax_Base.Tm_FStar
+                ((FStar_Reflection_Builtins.pack_ln
+                    (FStar_Reflection_Data.Tv_Const
+                       FStar_Reflection_Data.C_Unit)), FStar_Range.range_0))
+         })
 let rec (elab_st_typing :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.st_term ->
@@ -331,6 +349,22 @@ let rec (elab_st_typing :
                            Pulse_Typing.tm_bool b Pulse_Typing.tm_false))
                      uu___) uu___2 uu___3 e2_typing in
               FStar_Reflection_Typing.mk_if rb re1 re2
+          | Pulse_Typing.T_IntroPure (uu___, p, uu___1, uu___2) ->
+              let head =
+                Pulse_Syntax_Pure.tm_pureapp
+                  (Pulse_Syntax_Pure.tm_fvar
+                     (Pulse_Syntax_Base.as_fv
+                        (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                           "intro_pure"))) FStar_Pervasives_Native.None p in
+              let arg =
+                FStar_Reflection_Builtins.pack_ln
+                  (FStar_Reflection_Data.Tv_Const
+                     FStar_Reflection_Data.C_Unit) in
+              FStar_Reflection_Derived.mk_app
+                (Pulse_Elaborate_Pure.elab_term head)
+                [(arg,
+                   (Pulse_Elaborate_Pure.elab_qual
+                      FStar_Pervasives_Native.None))]
           | Pulse_Typing.T_ElimExists
               (uu___, u, t1, p, uu___1, d_t, d_exists) ->
               let ru = u in

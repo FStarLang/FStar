@@ -115,6 +115,16 @@ let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
         e
         (elab_term reveal_a)
 
+let intro_pure_tm (p:term) =
+  let open Pulse.Reflection.Util in
+  wr (Tm_STApp
+        { head =
+            tm_pureapp (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
+                       None
+                       p;
+          arg_qual = None;
+          arg = Tm_FStar (`()) Range.range_0 })
+
 let rec elab_st_typing (#g:env)
                        (#t:st_term)
                        (#c:comp)
@@ -178,6 +188,15 @@ let rec elab_st_typing (#g:env)
       let re1 = elab_st_typing e1_typing in
       let re2 = elab_st_typing e2_typing in
       RT.mk_if rb re1 re2
+
+    | T_IntroPure _ p _ _ ->
+      let head = 
+        tm_pureapp (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
+                       None
+                       p
+      in
+      let arg = (`()) in
+      R.mk_app (elab_term head) [(arg, elab_qual None)]
 
     | T_ElimExists _ u t p _ d_t d_exists ->
       let ru = u in

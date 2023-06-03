@@ -137,8 +137,9 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' b x i;    
       open_st_term_ln' then_ x i;    
       open_st_term_ln' else_ x i;          
-      open_term_ln_opt' post x (i + 1)      
+      open_term_ln_opt' post x (i + 1)
 
+    | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       open_term_ln' p x i
 
@@ -272,6 +273,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Return { term } ->
       ln_weakening term i j
 
+    | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       ln_weakening p i j
       
@@ -429,6 +431,7 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_Return { term } ->
       open_term_ln_inv' term x i
 
+    | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       open_term_ln_inv' p x i
       
@@ -578,6 +581,7 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_Return { term } ->
       close_term_ln' term x i
 
+    | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       close_term_ln' p x i
       
@@ -816,10 +820,12 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln d1;
       st_typing_ln d2
 
-
     | T_Frame _ _ _ _ df dc ->
       tot_typing_ln df;
       st_typing_ln dc
+
+    | T_IntroPure _ _ t _ ->
+      tot_typing_ln t
 
     | T_ElimExists _ u t p x dt dv ->
       tot_typing_ln dt;

@@ -684,11 +684,11 @@ let rec (build_instantiations :
                            (Pulse_Syntax_Base.Tm_IntroExists
                               {
                                 Pulse_Syntax_Base.erased = false;
-                                Pulse_Syntax_Base.p1 =
+                                Pulse_Syntax_Base.p2 =
                                   (Pulse_Checker_Inference.apply_solution
                                      solutions v);
                                 Pulse_Syntax_Base.witnesses = [user_provided];
-                                Pulse_Syntax_Base.should_check =
+                                Pulse_Syntax_Base.should_check1 =
                                   Pulse_Syntax_Base.should_check_true
                               })
                      | FStar_Pervasives.Inr inferred ->
@@ -701,11 +701,11 @@ let rec (build_instantiations :
                                 (Pulse_Syntax_Base.Tm_IntroExists
                                    {
                                      Pulse_Syntax_Base.erased = true;
-                                     Pulse_Syntax_Base.p1 =
+                                     Pulse_Syntax_Base.p2 =
                                        (Pulse_Checker_Inference.apply_solution
                                           solutions v);
                                      Pulse_Syntax_Base.witnesses = [sol];
-                                     Pulse_Syntax_Base.should_check =
+                                     Pulse_Syntax_Base.should_check1 =
                                        Pulse_Syntax_Base.should_check_false
                                    })
                           | uu___2 ->
@@ -713,13 +713,13 @@ let rec (build_instantiations :
                                 (Pulse_Syntax_Base.Tm_IntroExists
                                    {
                                      Pulse_Syntax_Base.erased = true;
-                                     Pulse_Syntax_Base.p1 =
+                                     Pulse_Syntax_Base.p2 =
                                        (Pulse_Checker_Inference.apply_solution
                                           solutions v);
                                      Pulse_Syntax_Base.witnesses =
                                        [Pulse_Checker_Inference.apply_solution
                                           solutions inferred];
-                                     Pulse_Syntax_Base.should_check =
+                                     Pulse_Syntax_Base.should_check1 =
                                        Pulse_Syntax_Base.should_check_false
                                    })))))
         (fun uu___ ->
@@ -1004,10 +1004,10 @@ let (maybe_infer_intro_exists :
                                       | Pulse_Syntax_Base.Tm_IntroExists
                                           {
                                             Pulse_Syntax_Base.erased = erased;
-                                            Pulse_Syntax_Base.p1 = t;
+                                            Pulse_Syntax_Base.p2 = t;
                                             Pulse_Syntax_Base.witnesses =
                                               witnesses;
-                                            Pulse_Syntax_Base.should_check =
+                                            Pulse_Syntax_Base.should_check1 =
                                               uu___2;_}
                                           ->
                                           Obj.magic
@@ -2060,14 +2060,14 @@ let (handle_framing_failure :
                                                                     {
                                                                     Pulse_Syntax_Base.erased
                                                                     = true;
-                                                                    Pulse_Syntax_Base.p1
+                                                                    Pulse_Syntax_Base.p2
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
                                                                     p));
                                                                     Pulse_Syntax_Base.witnesses
                                                                     = [];
-                                                                    Pulse_Syntax_Base.should_check
+                                                                    Pulse_Syntax_Base.should_check1
                                                                     =
                                                                     Pulse_Syntax_Base.should_check_true
                                                                     }))
@@ -2572,7 +2572,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                      (Prims.of_int (483)) (Prims.of_int (5)))
                   (FStar_Range.mk_range "Pulse.Checker.fst"
                      (Prims.of_int (483)) (Prims.of_int (6))
-                     (Prims.of_int (558)) (Prims.of_int (20)))
+                     (Prims.of_int (561)) (Prims.of_int (20)))
                   (if Pulse_RuntimeUtils.debug_at_level g "proof_states"
                    then
                      Obj.magic
@@ -2742,7 +2742,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                 (Prims.of_int (484)) (Prims.of_int (23)))
                              (FStar_Range.mk_range "Pulse.Checker.fst"
                                 (Prims.of_int (484)) (Prims.of_int (26))
-                                (Prims.of_int (558)) (Prims.of_int (20)))
+                                (Prims.of_int (561)) (Prims.of_int (20)))
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___2 -> unprotect t))
                              (fun uu___2 ->
@@ -2759,7 +2759,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                            "Pulse.Checker.fst"
                                            (Prims.of_int (486))
                                            (Prims.of_int (4))
-                                           (Prims.of_int (558))
+                                           (Prims.of_int (561))
                                            (Prims.of_int (20)))
                                         (FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___2 ->
@@ -2937,6 +2937,13 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (t2, c,
                                                                     d)))))
                                                                     uu___3)))
+                                                              | Pulse_Syntax_Base.Tm_IntroPure
+                                                                  uu___3 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Obj.repr
+                                                                    (FStar_Tactics_Derived.fail
+                                                                    "Not yet handled"))
                                                               | Pulse_Syntax_Base.Tm_ElimExists
                                                                   uu___3 ->
                                                                   Obj.magic
@@ -2950,12 +2957,12 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                   {
                                                                     Pulse_Syntax_Base.erased
                                                                     = uu___3;
-                                                                    Pulse_Syntax_Base.p1
+                                                                    Pulse_Syntax_Base.p2
                                                                     = uu___4;
                                                                     Pulse_Syntax_Base.witnesses
                                                                     =
                                                                     witnesses;
-                                                                    Pulse_Syntax_Base.should_check
+                                                                    Pulse_Syntax_Base.should_check1
                                                                     = uu___5;_}
                                                                   ->
                                                                   Obj.magic
@@ -2964,15 +2971,15 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (522))
+                                                                    (Prims.of_int (525))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (528))
+                                                                    (Prims.of_int (531))
                                                                     (Prims.of_int (21)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (530))
+                                                                    (Prims.of_int (533))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (539))
+                                                                    (Prims.of_int (542))
                                                                     (Prims.of_int (9)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3004,15 +3011,15 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (532))
+                                                                    (Prims.of_int (535))
                                                                     (Prims.of_int (29))
-                                                                    (Prims.of_int (532))
+                                                                    (Prims.of_int (535))
                                                                     (Prims.of_int (61)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
-                                                                    (Prims.of_int (535))
+                                                                    (Prims.of_int (538))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (535))
+                                                                    (Prims.of_int (538))
                                                                     (Prims.of_int (67)))
                                                                     (Obj.magic
                                                                     (maybe_infer_intro_exists

@@ -400,6 +400,16 @@ let (comp_elim_exists :
                   (Pulse_Syntax_Base.Tm_ExistsSL (u, t, p));
                 Pulse_Syntax_Base.post = (elim_exists_post u t p x)
               })
+let (comp_intro_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
+  fun p ->
+    Pulse_Syntax_Base.C_STGhost
+      (Pulse_Syntax_Base.Tm_EmpInames,
+        {
+          Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u_zero;
+          Pulse_Syntax_Base.res = tm_unit;
+          Pulse_Syntax_Base.pre = Pulse_Syntax_Base.Tm_Emp;
+          Pulse_Syntax_Base.post = (Pulse_Syntax_Base.Tm_Pure p)
+        })
 let (comp_intro_exists :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term ->
@@ -725,6 +735,8 @@ let uu___is_CT_STAtomic uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STAtomic _ -> true | _ -> false
 let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
+type ('g, 't) prop_validity =
+  (unit, unit) FStar_Tactics_Builtins.prop_validity_token
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of env * Pulse_Syntax_Base.var * Pulse_Syntax_Base.qualifier
   FStar_Pervasives_Native.option * Pulse_Syntax_Base.binder *
@@ -757,6 +769,8 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Equiv of env * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp *
   Pulse_Syntax_Base.comp * (unit, unit, unit) st_typing * (unit, unit, 
   unit) st_equiv 
+  | T_IntroPure of env * Pulse_Syntax_Base.term * unit * (unit, unit)
+  prop_validity 
   | T_ElimExists of env * Pulse_Syntax_Base.universe * Pulse_Syntax_Base.term
   * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var * unit * unit 
   | T_IntroExists of env * Pulse_Syntax_Base.universe *
@@ -798,6 +812,8 @@ let uu___is_T_Frame uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Frame _ -> true | _ -> false
 let uu___is_T_Equiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Equiv _ -> true | _ -> false
+let uu___is_T_IntroPure uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_IntroPure _ -> true | _ -> false
 let uu___is_T_ElimExists uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_ElimExists _ -> true | _ -> false
 let uu___is_T_IntroExists uu___2 uu___1 uu___ uu___3 =

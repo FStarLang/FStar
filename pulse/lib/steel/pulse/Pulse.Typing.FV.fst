@@ -123,6 +123,7 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' else_ x i;          
       freevars_close_term_opt' post x (i + 1)      
 
+    | Tm_IntroPure { p } 
     | Tm_ElimExists { p } ->
       freevars_close_term' p x i
       
@@ -435,6 +436,9 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
    | T_Frame _ _ _ _ df dc ->
      tot_typing_freevars df;
      st_typing_freevars dc
+
+   | T_IntroPure _ p prop_typing _ ->
+     tot_typing_freevars prop_typing
 
    | T_ElimExists _ u t p x dt dv ->
      let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in

@@ -271,6 +271,9 @@ let rec soundness (g:stt_env)
       in
       if_soundness _ _ _ d soundness ct_soundness
 
+    | T_IntroPure _ _ _ _  ->
+      admit()
+      
     | T_ElimExists _ _ _ _ _ _ _ ->
       Exists.elim_exists_soundness d
 

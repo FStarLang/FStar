@@ -42,7 +42,7 @@ let (check_elim_exists :
                  (fun uu___ ->
                     match uu___ with
                     | Pulse_Syntax_Base.Tm_ElimExists
-                        { Pulse_Syntax_Base.p = t1;_} ->
+                        { Pulse_Syntax_Base.p1 = t1;_} ->
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "Pulse.Checker.Exists.fst"
@@ -312,7 +312,7 @@ let (check_elim_exists :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_ElimExists
                                                                     {
-                                                                    Pulse_Syntax_Base.p
+                                                                    Pulse_Syntax_Base.p1
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
@@ -332,7 +332,7 @@ let (check_elim_exists :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_ElimExists
                                                                     {
-                                                                    Pulse_Syntax_Base.p
+                                                                    Pulse_Syntax_Base.p1
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
@@ -360,9 +360,9 @@ let (intro_exists_witness_singleton :
   fun st ->
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
-        { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p1 = uu___1;
+        { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p2 = uu___1;
           Pulse_Syntax_Base.witnesses = uu___2::[];
-          Pulse_Syntax_Base.should_check = uu___3;_}
+          Pulse_Syntax_Base.should_check1 = uu___3;_}
         -> true
     | uu___ -> false
 let (intro_exists_vprop :
@@ -370,17 +370,17 @@ let (intro_exists_vprop :
   fun st ->
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
-        { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p1 = p;
+        { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p2 = p;
           Pulse_Syntax_Base.witnesses = uu___1;
-          Pulse_Syntax_Base.should_check = uu___2;_}
+          Pulse_Syntax_Base.should_check1 = uu___2;_}
         -> p
 let (is_intro_exists_erased : Pulse_Syntax_Base.st_term -> Prims.bool) =
   fun st ->
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
-        { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p1 = uu___;
+        { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p2 = uu___;
           Pulse_Syntax_Base.witnesses = uu___1;
-          Pulse_Syntax_Base.should_check = uu___2;_}
+          Pulse_Syntax_Base.should_check1 = uu___2;_}
         -> erased
     | uu___ -> false
 let (check_intro_exists_erased :
@@ -413,9 +413,9 @@ let (check_intro_exists_erased :
                       match uu___ with
                       | Pulse_Syntax_Base.Tm_IntroExists
                           { Pulse_Syntax_Base.erased = uu___1;
-                            Pulse_Syntax_Base.p1 = t;
+                            Pulse_Syntax_Base.p2 = t;
                             Pulse_Syntax_Base.witnesses = e::[];
-                            Pulse_Syntax_Base.should_check = should_check;_}
+                            Pulse_Syntax_Base.should_check1 = should_check;_}
                           ->
                           Obj.magic
                             (FStar_Tactics_Effect.tac_bind
@@ -599,14 +599,14 @@ let (check_intro_exists_erased :
                                                                     {
                                                                     Pulse_Syntax_Base.erased
                                                                     = true;
-                                                                    Pulse_Syntax_Base.p1
+                                                                    Pulse_Syntax_Base.p2
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
                                                                     p));
                                                                     Pulse_Syntax_Base.witnesses
                                                                     = [e1];
-                                                                    Pulse_Syntax_Base.should_check
+                                                                    Pulse_Syntax_Base.should_check1
                                                                     =
                                                                     Pulse_Syntax_Base.should_check_true
                                                                     })) pre
@@ -626,14 +626,14 @@ let (check_intro_exists_erased :
                                                                     {
                                                                     Pulse_Syntax_Base.erased
                                                                     = true;
-                                                                    Pulse_Syntax_Base.p1
+                                                                    Pulse_Syntax_Base.p2
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
                                                                     p));
                                                                     Pulse_Syntax_Base.witnesses
                                                                     = [e1];
-                                                                    Pulse_Syntax_Base.should_check
+                                                                    Pulse_Syntax_Base.should_check1
                                                                     =
                                                                     Pulse_Syntax_Base.should_check_true
                                                                     }))
@@ -679,9 +679,9 @@ let (check_intro_exists :
                       match uu___ with
                       | Pulse_Syntax_Base.Tm_IntroExists
                           { Pulse_Syntax_Base.erased = uu___1;
-                            Pulse_Syntax_Base.p1 = t;
+                            Pulse_Syntax_Base.p2 = t;
                             Pulse_Syntax_Base.witnesses = witness::[];
-                            Pulse_Syntax_Base.should_check = should_check;_}
+                            Pulse_Syntax_Base.should_check1 = should_check;_}
                           ->
                           Obj.magic
                             (FStar_Tactics_Effect.tac_bind
@@ -986,7 +986,7 @@ let (check_intro_exists :
                                                                     {
                                                                     Pulse_Syntax_Base.erased
                                                                     = false;
-                                                                    Pulse_Syntax_Base.p1
+                                                                    Pulse_Syntax_Base.p2
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
@@ -994,7 +994,7 @@ let (check_intro_exists :
                                                                     Pulse_Syntax_Base.witnesses
                                                                     =
                                                                     [witness1];
-                                                                    Pulse_Syntax_Base.should_check
+                                                                    Pulse_Syntax_Base.should_check1
                                                                     =
                                                                     Pulse_Syntax_Base.should_check_true
                                                                     })) pre
@@ -1011,7 +1011,7 @@ let (check_intro_exists :
                                                                     {
                                                                     Pulse_Syntax_Base.erased
                                                                     = false;
-                                                                    Pulse_Syntax_Base.p1
+                                                                    Pulse_Syntax_Base.p2
                                                                     =
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
@@ -1019,7 +1019,7 @@ let (check_intro_exists :
                                                                     Pulse_Syntax_Base.witnesses
                                                                     =
                                                                     [witness1];
-                                                                    Pulse_Syntax_Base.should_check
+                                                                    Pulse_Syntax_Base.should_check1
                                                                     =
                                                                     Pulse_Syntax_Base.should_check_true
                                                                     }))

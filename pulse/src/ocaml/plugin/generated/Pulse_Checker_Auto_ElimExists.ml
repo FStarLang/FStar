@@ -36,7 +36,7 @@ let (mk :
                                 ((Pulse_Typing.wr
                                     (Pulse_Syntax_Base.Tm_ElimExists
                                        {
-                                         Pulse_Syntax_Base.p =
+                                         Pulse_Syntax_Base.p1 =
                                            (Pulse_Syntax_Base.Tm_ExistsSL
                                               ((Pulse_Syntax_Base.comp_u
                                                   (Pulse_Typing.comp_elim_exists

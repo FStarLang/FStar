@@ -69,6 +69,8 @@ let rec freevars_st (t:st_term)
     | Tm_If { b; then_; else_; post } ->
       Set.union (Set.union (freevars b) (freevars_st then_))
                 (Set.union (freevars_st else_) (freevars_opt post))
+
+    | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       freevars p
     | Tm_IntroExists { p; witnesses } ->
@@ -180,6 +182,7 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' else_ i &&
       ln_opt' post (i + 1)
   
+    | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       ln' p i
 
@@ -325,6 +328,9 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
               then_ = open_st_term' then_ v i;
               else_ = open_st_term' else_ v i;
               post = open_term_opt' post v (i + 1) }
+
+    | Tm_IntroPure { p; should_check } ->
+      Tm_IntroPure { p = open_term' p v i; should_check }
 
     | Tm_ElimExists { p } ->
       Tm_ElimExists { p = open_term' p v i }
@@ -485,6 +491,9 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
               else_ = close_st_term' else_ v i;
               post = close_term_opt' post v (i + 1) }
 
+    | Tm_IntroPure { p; should_check } ->
+      Tm_IntroPure { p = close_term' p v i; should_check }
+      
     | Tm_ElimExists { p } ->
       Tm_ElimExists { p = close_term' p v i }
       
