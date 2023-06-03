@@ -8,6 +8,8 @@ open FStar.Ghost
 module U32 = FStar.UInt32
 open Pulse.Steel.Wrapper
 
+
+#push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 ```pulse
 fn test_write_10 (x:ref U32.t)
                  (#n:erased U32.t)
@@ -88,10 +90,10 @@ fn intro_pure_example (r:ref U32.t)
                       (#n1 #n2:erased U32.t)
    requires 
      (pts_to r full_perm n1 `star`
-      pure (eq2_prop (reveal n1) (reveal n2)))
+      pure (reveal n1 == reveal n2))
    ensures 
      (pts_to r full_perm n2 `star`
-      pure (eq2_prop (reveal n2) (reveal n1)))
+      pure (reveal n2 == reveal n1))
 {
   ()
 }
@@ -100,7 +102,7 @@ fn intro_pure_example (r:ref U32.t)
 
 ```pulse
 fn if_example (r:ref U32.t)
-              (n:(n:erased U32.t{eq2_prop (U32.v (reveal n)) 1}))
+              (n:(n:erased U32.t{U32.v (reveal n) == 1}))
               (b:bool)
    requires 
      pts_to r full_perm n
@@ -177,7 +179,7 @@ fn while_count2 (r:ref U32.t)
   while (let x = !r; (x <> 10ul))
   invariant b. 
     exists n. (pts_to r full_perm n `star`
-          pure (eq2_prop b (n <> 10ul)))
+          pure (b == (n <> 10ul)))
   {
     let x = !r;
     if (x <^ 10ul)
@@ -261,7 +263,7 @@ fn count_local (r:ref int) (n:int)
     (let m = !i; (m <> n))
   invariant b. exists m. 
     (pts_to i full_perm m `star`
-     pure (eq2_prop b (m <> n)))
+     pure (b == (m <> n)))
   {
     let m = !i;
     i := m + 1;
@@ -290,14 +292,16 @@ fn sum (r:ref nat) (n:nat)
    introduce exists b m s. (
      pts_to i full_perm m `star`
      pts_to sum full_perm s `star`
-     pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n))))
+     pure (s == sum_spec m /\
+           b == (m <> n)))
    with (zero <> n);
         
    while (let m = !i; (m <> n))
    invariant b . exists m s. (
      pts_to i full_perm m `star`
      pts_to sum full_perm s `star`
-     pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n))))
+     pure (s == sum_spec m /\
+           b == (m <> n)))
    {
      let m = !i;
      let s = !sum;
@@ -306,7 +310,8 @@ fn sum (r:ref nat) (n:nat)
      introduce exists b m s. (
        pts_to i full_perm m `star`
        pts_to sum full_perm s `star`
-       pure (and_prop (eq2_prop s (sum_spec m)) (eq2_prop b (m <> n))))
+       pure (s == sum_spec m /\
+             b == (m <> n)))
      with (m + 1 <> n)
    };
    let s = !sum;
