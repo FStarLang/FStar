@@ -381,7 +381,7 @@ let comp_intro_pure (p:term) =
               pre=Tm_Emp;
               post=Tm_Pure p
             }
-            
+
 let comp_intro_exists (u:universe) (t:term) (p:term) (e:term)
   : comp
   = C_STGhost Tm_EmpInames
@@ -638,8 +638,8 @@ type comp_typing : env -> comp -> universe -> Type =
       st_comp_typing g st ->
       comp_typing g (C_STGhost inames st) st.u
 
-let prop_validity (g:env) (t:term{Tm_FStar? t}) =
-  FTB.prop_validity_token (elab_env g) (Tm_FStar?._0 t)
+let prop_validity (g:env) (t:term) =
+  FTB.prop_validity_token (elab_env g) (elab_term t)
 
 [@@ no_auto_projectors]
 noeq
@@ -760,7 +760,7 @@ type st_typing : env -> st_term -> comp -> Type =
 
   | T_IntroPure:
       g:env ->
-      p:term { Tm_FStar? p } ->
+      p:term ->
       tot_typing g p tm_prop ->
       prop_validity g p -> 
       st_typing g (wr (Tm_IntroPure { p; should_check=should_check_true }))

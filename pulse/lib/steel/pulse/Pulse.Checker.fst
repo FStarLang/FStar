@@ -187,13 +187,7 @@ let add_intro_pure rng (continuation:st_term) (p:term) =
     let intro_pure_tm =
       wr (
         Tm_Protect
-          { t = wr (Tm_STApp 
-                      { head = tm_pureapp 
-                                (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
-                                None
-                                p;
-                        arg_qual = None;
-                        arg = tm_constant R.C_Unit }) }
+          { t = wr (Tm_IntroPure { p; should_check=should_check_false }) }
       )
     in
     wr (
@@ -515,8 +509,8 @@ let rec check' : bool -> check_t =
         ( (| t, c, d |) <: checker_result_t g pre post_hint)
 
       | Tm_IntroPure _ -> 
-        T.fail "Not yet handled"
-        
+        Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint
+
       | Tm_ElimExists _ ->
         Exists.check_elim_exists g t pre pre_typing post_hint
 

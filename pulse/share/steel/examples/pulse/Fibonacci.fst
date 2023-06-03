@@ -12,7 +12,7 @@ let rec fib (n:nat) : nat =
   if n <= 1 then 1
   else fib (n - 1) + fib (n - 2)
 
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Steel.Wrapper -Pulse.Steel.Wrapper.Typing'"
+#push-options "--using_facts_from 'Prims FStar.Pervasives FStar.Ghost Fibonacci'" //" -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Steel.Wrapper -Pulse.Steel.Wrapper.Typing'"
 
 ```pulse
 fn fibo (n:pos)

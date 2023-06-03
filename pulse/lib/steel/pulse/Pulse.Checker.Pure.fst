@@ -61,6 +61,24 @@ let rtb_core_check_term_at_type g f e t =
   let res = RTB.core_check_term f e t T.E_Total in
   res
 
+let mk_squash t =
+  let open T in
+  let sq : term = pack_ln (Tv_UInst (pack_fv squash_qn) [u_zero ]) in
+  mk_e_app sq [t]
+
+let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash p))
+  : prop_validity_token f p
+  = admit(); t
+
+let rtb_check_prop_validity (g:env) (f:_) (p:_) = 
+  debug g (fun _ -> Printf.sprintf "Calling check_prop_validity on %s"
+                                       (T.term_to_string p));
+  let sp = mk_squash p in
+  let res, issues = RTB.check_prop_validity f sp in
+  match res with
+  | None -> None, issues
+  | Some tok -> Some (squash_prop_validity_token f p tok), issues
+
 let exn_as_issue (e:exn) : FStar.Issue.issue = 
   FStar.Issue.mk_issue "Error" (RU.print_exn e) None None []
 
@@ -287,3 +305,12 @@ let get_non_informative_witness g u t
     | Some e ->
       let (| x, y |) = check_term_with_expected_type (push_context "get_noninformative_witness" g) e (non_informative_witness_t u t) in
       (|x, E y|)
+
+let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
+  : T.Tac (Pulse.Typing.prop_validity g p)
+  = let t_opt, issues = rtb_check_prop_validity g (elab_env g) (elab_term p) in
+    match t_opt with
+    | None -> T.fail (Printf.sprintf "check_prop_validity failed: %s\n%s\n" 
+                      (Pulse.Syntax.Printer.term_to_string p)
+                      (print_issues g issues))
+   | Some tok -> tok

@@ -76,7 +76,7 @@ let and_prop (p q:Type0) : prop = p /\ q
 
 inline_for_extraction
 val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
-  : stt a (p x) (fun r -> p r `star` pure (eq2_prop r x))
+  : stt a (p x) (fun r -> p r `star` pure (r == x))
 
 inline_for_extraction
 val return (#a:Type u#a) (x:a) (p:a -> vprop)
@@ -229,10 +229,12 @@ open FStar.Ghost
 val read (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
   : stt a
         (R.pts_to r p n)
-        (fun x -> R.pts_to r p x `star` pure (eq2_prop (reveal n) x))
+        (fun x -> R.pts_to r p x `star` pure (reveal n == x))
 
 let ( ! ) (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
-  : stt a (R.pts_to r p n) (fun x -> R.pts_to r p x `star` pure (eq2_prop (reveal n) x)) =
+  : stt a (R.pts_to r p n)
+          (fun x -> R.pts_to r p x `star`
+                    pure (reveal n == x)) =
   read #a r #n #p
 
 val write (#a:Type) (r:R.ref a) (x:a) (#n:erased a)
@@ -247,7 +249,7 @@ let ( := ) (#a:Type) (r:R.ref a) (x:a) (#n:erased a)
 val read_atomic (r:R.ref U32.t) (#n:erased U32.t) (#p:perm)
   : stt_atomic U32.t emp_inames
                (R.pts_to r p n)
-               (fun x -> R.pts_to r p n `star` pure (eq2_prop (reveal n) x))
+               (fun x -> R.pts_to r p n `star` pure (reveal n == x))
 
 val write_atomic (r:R.ref U32.t) (x:U32.t) (#n:erased U32.t)
   : stt_atomic unit emp_inames
@@ -266,7 +268,7 @@ val galloc (#a:Type0) (x:erased a)
 val gread (#a:Type0) (r:GR.ref a) (#v:erased a) (#p:perm)
   : stt_ghost (erased a) emp_inames
       (GR.pts_to r p v)
-      (fun x -> GR.pts_to r p x `star` pure (eq2_prop v x))
+      (fun x -> GR.pts_to r p x `star` pure (v == x))
 
 val gwrite (#a:Type0) (r:GR.ref a) (x:erased a) (#v:erased a)
   : stt_ghost unit emp_inames
@@ -283,7 +285,7 @@ val gshare (#a:Type0) (r:GR.ref a) (#v:erased a) (#p:perm)
 val ggather (#a:Type0) (r:GR.ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   : stt_ghost unit emp_inames
       (GR.pts_to r p0 x0 `star` GR.pts_to r p1 x1)
-      (fun _ -> GR.pts_to r (sum_perm p0 p1) x0 `star` pure (eq2_prop x0 x1))
+      (fun _ -> GR.pts_to r (sum_perm p0 p1) x0 `star` pure (x0 == x1))
 
 val gfree (#a:Type0) (r:GR.ref a) (#v:erased a)
   : stt_ghost unit emp_inames
