@@ -47,10 +47,10 @@ val lemma_enqueue_ok: #a:Type -> x:a -> q:queue a -> Lemma
   (as_list (enqueue x q) == append (as_list q) [x]) 
   [SMTPat (enqueue x q)]
 
-val dequeue_ok: #a:Type -> q:queue a{not_empty q} -> Lemma
+val lemma_dequeue_ok: #a:Type -> q:queue a{not_empty q} -> Lemma
   ((fst (dequeue q) :: as_list (snd (dequeue q))) == as_list q)
   [SMTPat (dequeue q)]
 
-val peek_ok: #a:Type -> q:queue a{not_empty q} -> Lemma
+val lemma_peek_ok: #a:Type -> q:queue a{not_empty q} -> Lemma
   (peek q == hd (as_list q))
   [SMTPat (peek q)]
