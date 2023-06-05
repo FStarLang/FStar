@@ -26,6 +26,7 @@ open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
+open FStar.Extraction.ML.RegEmb
 open FStar.Ident
 open FStar.Syntax
 
@@ -923,56 +924,6 @@ let extract_bundle env se =
         end
 
     | _ -> failwith "Unexpected signature element"
-
-
-
-(* When extracting a plugin, each top-level definition marked with a `@plugin` attribute
-   is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
-   which installs the compiled term as a primitive step in the normalizer
- *)
-let maybe_register_plugin (g:env_t) (se:sigelt) : list mlmodule1 =
-    let w = with_ty MLTY_Top in
-    let plugin_with_arity attrs =
-        BU.find_map attrs (fun t ->
-              let head, args = U.head_and_args t in
-              if not (U.is_fvar PC.plugin_attr head)
-              then None
-              else match args with
-                   | [({n=Tm_constant (Const_int(s, _))}, _)] ->
-                     Some (Some (BU.int_of_string s))
-                   | _ -> Some None)
-    in
-    if Options.codegen() <> Some Options.Plugin then []
-    else match plugin_with_arity se.sigattrs with
-         | None -> []
-         | Some arity_opt ->
-           // BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
-           //          (List.map Print.term_to_string se.sigattrs |> String.concat " ")
-           //          (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
-           begin
-           match se.sigel with
-           | Sig_let {lbs} ->
-               let mk_registration lb : list mlmodule1 =
-                  let fv = right lb.lbname in
-                  let fv_lid = fv.fv_name.v in
-                  let fv_t = lb.lbtyp in
-                  let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
-                  match Util.interpret_plugin_as_term_fun g fv fv_t arity_opt ml_name_str with
-                  | Some (interp, nbe_interp, arity, plugin) ->
-                      let register, args =
-                        if plugin
-                        then (["FStar_Tactics_Native"], "register_plugin"), [interp; nbe_interp]
-                        else (["FStar_Tactics_Native"], "register_tactic"), [interp]
-                      in
-                      let h = with_ty MLTY_Top <| MLE_Name register in
-                      let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
-                      let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity] @ args) in
-                      [MLM_Top app]
-                  | None -> []
-               in
-               List.collect mk_registration (snd lbs)
-           | _ -> []
-           end
 
 let lb_irrelevant (g:env_t) (lb:letbinding) : bool =
     Env.non_informative (tcenv_of_uenv g) lb.lbtyp && // result type is non informative
