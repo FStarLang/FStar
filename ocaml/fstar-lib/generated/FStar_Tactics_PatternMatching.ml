@@ -2109,7 +2109,7 @@ let (pattern_of_term :
                         (Obj.magic (string_of_match_exception ex))
                         (fun uu___1 -> FStar_Tactics_Derived.fail uu___1))))
            uu___)
-type 'a hyp = FStar_Tactics_NamedView.binder
+type 'a hyp = FStar_Reflection_Data.binding
 type 'a pm_goal = unit
 let (hyp_qn : Prims.string) = "FStar.Tactics.PatternMatching.hyp"
 let (goal_qn : Prims.string) = "FStar.Tactics.PatternMatching.pm_goal"

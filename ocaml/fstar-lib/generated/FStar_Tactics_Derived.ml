@@ -354,18 +354,31 @@ let (trivial : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                  (Obj.magic (cur_goal ()))
                  (fun uu___2 ->
                     (fun g ->
-                       match FStar_Reflection_Formula.term_as_formula g with
-                       | FStar_Reflection_Formula.True_ ->
-                           Obj.magic
-                             (Obj.repr
-                                (exact
-                                   (FStar_Reflection_Builtins.pack_ln
-                                      (FStar_Reflection_Data.Tv_Const
-                                         FStar_Reflection_Data.C_Unit))))
-                       | uu___2 ->
-                           Obj.magic
-                             (Obj.repr
-                                (FStar_Tactics_Effect.raise Goal_not_trivial)))
+                       Obj.magic
+                         (FStar_Tactics_Effect.tac_bind
+                            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
+                               (Prims.of_int (118)) (Prims.of_int (8))
+                               (Prims.of_int (118)) (Prims.of_int (25)))
+                            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
+                               (Prims.of_int (118)) (Prims.of_int (2))
+                               (Prims.of_int (120)) (Prims.of_int (31)))
+                            (Obj.magic
+                               (FStar_Reflection_Formula.term_as_formula g))
+                            (fun uu___2 ->
+                               (fun uu___2 ->
+                                  match uu___2 with
+                                  | FStar_Reflection_Formula.True_ ->
+                                      Obj.magic
+                                        (Obj.repr
+                                           (exact
+                                              (FStar_Reflection_Builtins.pack_ln
+                                                 (FStar_Reflection_Data.Tv_Const
+                                                    FStar_Reflection_Data.C_Unit))))
+                                  | uu___3 ->
+                                      Obj.magic
+                                        (Obj.repr
+                                           (FStar_Tactics_Effect.raise
+                                              Goal_not_trivial))) uu___2)))
                       uu___2))) uu___1)
 let (dismiss : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -2661,22 +2674,43 @@ let (destruct_equality_implication :
        FStar_Pervasives_Native.option,
       unit) FStar_Tactics_Effect.tac_repr)
   =
-  fun uu___ ->
-    (fun t ->
-       Obj.magic
-         (FStar_Tactics_Effect.lift_div_tac
-            (fun uu___ ->
-               match FStar_Reflection_Formula.term_as_formula t with
-               | FStar_Reflection_Formula.Implies (lhs, rhs) ->
-                   (match FStar_Reflection_Formula.term_as_formula' lhs with
-                    | FStar_Reflection_Formula.Comp
-                        (FStar_Reflection_Formula.Eq uu___1, uu___2, uu___3)
-                        ->
-                        FStar_Pervasives_Native.Some
-                          ((FStar_Reflection_Formula.term_as_formula' lhs),
-                            rhs)
-                    | uu___1 -> FStar_Pervasives_Native.None)
-               | uu___1 -> FStar_Pervasives_Native.None))) uu___
+  fun t ->
+    FStar_Tactics_Effect.tac_bind
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (611))
+         (Prims.of_int (10)) (Prims.of_int (611)) (Prims.of_int (27)))
+      (FStar_Range.mk_range "FStar.Tactics.Derived.fst" (Prims.of_int (611))
+         (Prims.of_int (4)) (Prims.of_int (618)) (Prims.of_int (15)))
+      (Obj.magic (FStar_Reflection_Formula.term_as_formula t))
+      (fun uu___ ->
+         (fun uu___ ->
+            match uu___ with
+            | FStar_Reflection_Formula.Implies (lhs, rhs) ->
+                Obj.magic
+                  (Obj.repr
+                     (FStar_Tactics_Effect.tac_bind
+                        (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
+                           (Prims.of_int (613)) (Prims.of_int (18))
+                           (Prims.of_int (613)) (Prims.of_int (38)))
+                        (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
+                           (Prims.of_int (614)) (Prims.of_int (14))
+                           (Prims.of_int (616)) (Prims.of_int (19)))
+                        (Obj.magic
+                           (FStar_Reflection_Formula.term_as_formula' lhs))
+                        (fun lhs1 ->
+                           FStar_Tactics_Effect.lift_div_tac
+                             (fun uu___1 ->
+                                match lhs1 with
+                                | FStar_Reflection_Formula.Comp
+                                    (FStar_Reflection_Formula.Eq uu___2,
+                                     uu___3, uu___4)
+                                    ->
+                                    FStar_Pervasives_Native.Some (lhs1, rhs)
+                                | uu___2 -> FStar_Pervasives_Native.None))))
+            | uu___1 ->
+                Obj.magic
+                  (Obj.repr
+                     (FStar_Tactics_Effect.lift_div_tac
+                        (fun uu___2 -> FStar_Pervasives_Native.None)))) uu___)
 let (rewrite' :
   FStar_Reflection_Data.binding -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -2753,10 +2787,10 @@ let rec (try_rewrite_equality :
                                 (Prims.of_int (637)) (Prims.of_int (57)))
                              (Obj.magic (type_of_binding x_t))
                              (fun uu___ ->
-                                FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___1 ->
-                                     FStar_Reflection_Formula.term_as_formula
-                                       uu___))))
+                                (fun uu___ ->
+                                   Obj.magic
+                                     (FStar_Reflection_Formula.term_as_formula
+                                        uu___)) uu___)))
                        (fun uu___ ->
                           (fun uu___ ->
                              match uu___ with
@@ -3018,10 +3052,10 @@ let (grewrite :
                                                   (Prims.of_int (42)))
                                                (Obj.magic (cur_goal ()))
                                                (fun uu___1 ->
-                                                  FStar_Tactics_Effect.lift_div_tac
-                                                    (fun uu___2 ->
-                                                       FStar_Reflection_Formula.term_as_formula
-                                                         uu___1))))
+                                                  (fun uu___1 ->
+                                                     Obj.magic
+                                                       (FStar_Reflection_Formula.term_as_formula
+                                                          uu___1)) uu___1)))
                                          (fun uu___1 ->
                                             (fun uu___1 ->
                                                match uu___1 with
@@ -3098,9 +3132,9 @@ let (grewrite_eq :
                (Prims.of_int (710)) (Prims.of_int (8)) (Prims.of_int (710))
                (Prims.of_int (43))) (Obj.magic (type_of_binding b))
             (fun uu___ ->
-               FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___1 ->
-                    FStar_Reflection_Formula.term_as_formula uu___))))
+               (fun uu___ ->
+                  Obj.magic (FStar_Reflection_Formula.term_as_formula uu___))
+                 uu___)))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -3158,10 +3192,10 @@ let (grewrite_eq :
                               (Prims.of_int (715)) (Prims.of_int (52)))
                            (Obj.magic (type_of_binding b))
                            (fun uu___2 ->
-                              FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___3 ->
-                                   FStar_Reflection_Formula.term_as_formula'
-                                     uu___2))))
+                              (fun uu___2 ->
+                                 Obj.magic
+                                   (FStar_Reflection_Formula.term_as_formula'
+                                      uu___2)) uu___2)))
                      (fun uu___2 ->
                         (fun uu___2 ->
                            match uu___2 with

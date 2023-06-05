@@ -510,14 +510,7 @@ let rec (is_arith_prop :
   fun t ->
     fun i ->
       op_let_Bang
-        (lift
-           (fun uu___ ->
-              (fun t1 ->
-                 Obj.magic
-                   (FStar_Tactics_Effect.lift_div_tac
-                      (fun uu___ ->
-                         FStar_Reflection_Formula.term_as_formula t1))) uu___)
-           t)
+        (lift (fun t1 -> FStar_Reflection_Formula.term_as_formula t1) t)
         (fun f ->
            match f with
            | FStar_Reflection_Formula.Comp

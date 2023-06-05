@@ -2050,37 +2050,57 @@ let canon_semiring_aux :
                                          (FStar_Tactics_Derived.cur_goal ()))
                                       (fun uu___2 ->
                                          (fun g ->
-                                            match FStar_Reflection_Formula.term_as_formula
-                                                    g
-                                            with
-                                            | FStar_Reflection_Formula.Comp
-                                                (FStar_Reflection_Formula.Eq
-                                                 (FStar_Pervasives_Native.Some
-                                                 t), t1, t2)
-                                                ->
-                                                Obj.magic
-                                                  (Obj.repr
-                                                     (FStar_Tactics_Effect.tac_bind
-                                                        (FStar_Range.mk_range
-                                                           "FStar.Tactics.CanonCommSemiring.fst"
-                                                           (Prims.of_int (1634))
-                                                           (Prims.of_int (9))
-                                                           (Prims.of_int (1634))
-                                                           (Prims.of_int (21)))
-                                                        (FStar_Range.mk_range
-                                                           "FStar.Tactics.CanonCommSemiring.fst"
-                                                           (Prims.of_int (1634))
-                                                           (Prims.of_int (6))
-                                                           (Prims.of_int (1671))
-                                                           (Prims.of_int (73)))
-                                                        (Obj.magic
-                                                           (term_eq t ta))
-                                                        (fun uu___2 ->
-                                                           (fun uu___2 ->
-                                                              if uu___2
-                                                              then
-                                                                Obj.magic
-                                                                  (Obj.repr
+                                            Obj.magic
+                                              (FStar_Tactics_Effect.tac_bind
+                                                 (FStar_Range.mk_range
+                                                    "FStar.Tactics.CanonCommSemiring.fst"
+                                                    (Prims.of_int (1630))
+                                                    (Prims.of_int (8))
+                                                    (Prims.of_int (1630))
+                                                    (Prims.of_int (25)))
+                                                 (FStar_Range.mk_range
+                                                    "FStar.Tactics.CanonCommSemiring.fst"
+                                                    (Prims.of_int (1630))
+                                                    (Prims.of_int (2))
+                                                    (Prims.of_int (1673))
+                                                    (Prims.of_int (42)))
+                                                 (Obj.magic
+                                                    (FStar_Reflection_Formula.term_as_formula
+                                                       g))
+                                                 (fun uu___2 ->
+                                                    (fun uu___2 ->
+                                                       match uu___2 with
+                                                       | FStar_Reflection_Formula.Comp
+                                                           (FStar_Reflection_Formula.Eq
+                                                            (FStar_Pervasives_Native.Some
+                                                            t), t1, t2)
+                                                           ->
+                                                           Obj.magic
+                                                             (Obj.repr
+                                                                (FStar_Tactics_Effect.tac_bind
+                                                                   (FStar_Range.mk_range
+                                                                    "FStar.Tactics.CanonCommSemiring.fst"
+                                                                    (Prims.of_int (1634))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (1634))
+                                                                    (Prims.of_int (21)))
+                                                                   (FStar_Range.mk_range
+                                                                    "FStar.Tactics.CanonCommSemiring.fst"
+                                                                    (Prims.of_int (1634))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (1671))
+                                                                    (Prims.of_int (73)))
+                                                                   (Obj.magic
+                                                                    (term_eq
+                                                                    t ta))
+                                                                   (fun
+                                                                    uu___3 ->
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    if uu___3
+                                                                    then
+                                                                    Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonCommSemiring.fst"
@@ -2104,10 +2124,10 @@ let canon_semiring_aux :
                                                                     munit
                                                                     [t1; t2]))
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     (fun
-                                                                    uu___3 ->
-                                                                    match uu___3
+                                                                    uu___4 ->
+                                                                    match uu___4
                                                                     with
                                                                     | 
                                                                     (e1::e2::[],
@@ -2132,7 +2152,7 @@ let canon_semiring_aux :
                                                                     ta quotea
                                                                     vm))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun tvm
                                                                     ->
                                                                     Obj.magic
@@ -2154,7 +2174,7 @@ let canon_semiring_aux :
                                                                     ta quotea
                                                                     e1))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun te1
                                                                     ->
                                                                     Obj.magic
@@ -2176,7 +2196,7 @@ let canon_semiring_aux :
                                                                     ta quotea
                                                                     e2))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun te2
                                                                     ->
                                                                     Obj.magic
@@ -2232,9 +2252,9 @@ let canon_semiring_aux :
                                                                     (t2,
                                                                     FStar_Reflection_Data.Q_Explicit))))))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -2253,9 +2273,9 @@ let canon_semiring_aux :
                                                                     (canon_norm
                                                                     ()))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -2274,9 +2294,9 @@ let canon_semiring_aux :
                                                                     (FStar_Tactics_Derived.later
                                                                     ()))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -2295,9 +2315,9 @@ let canon_semiring_aux :
                                                                     (canon_norm
                                                                     ()))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -2316,9 +2336,9 @@ let canon_semiring_aux :
                                                                     (FStar_Tactics_Derived.trefl
                                                                     ()))
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___9 ->
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___9 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -2337,40 +2357,43 @@ let canon_semiring_aux :
                                                                     (canon_norm
                                                                     ()))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___10
+                                                                    ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Derived.trefl
                                                                     ()))
+                                                                    uu___10)))
                                                                     uu___9)))
                                                                     uu___8)))
                                                                     uu___7)))
                                                                     uu___6)))
                                                                     uu___5)))
-                                                                    uu___4)))
-                                                                    uu___4)))
-                                                                    uu___4)))
-                                                                    uu___4)))
+                                                                    uu___5)))
+                                                                    uu___5)))
+                                                                    uu___5)))
                                                                     | 
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
                                                                     "Unexpected")))
-                                                                    uu___3)))
-                                                              else
-                                                                Obj.magic
-                                                                  (Obj.repr
+                                                                    uu___4)))
+                                                                    else
+                                                                    Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
                                                                     "Found equality, but terms do not have the expected type")))
-                                                             uu___2)))
-                                            | uu___2 ->
-                                                Obj.magic
-                                                  (Obj.repr
-                                                     (FStar_Tactics_Derived.fail
-                                                        "Goal should be an equality")))
-                                           uu___2))) uu___1))
+                                                                    uu___3)))
+                                                       | uu___3 ->
+                                                           Obj.magic
+                                                             (Obj.repr
+                                                                (FStar_Tactics_Derived.fail
+                                                                   "Goal should be an equality")))
+                                                      uu___2))) uu___2)))
+                                uu___1))
 let canon_semiring : 'a . 'a cr -> (unit, unit) FStar_Tactics_Effect.tac_repr
   =
   fun r ->
@@ -2630,9 +2653,9 @@ let (int_semiring : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                (Prims.of_int (1695)) (Prims.of_int (39)))
             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
             (fun uu___1 ->
-               FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___2 ->
-                    FStar_Reflection_Formula.term_as_formula uu___1))))
+               (fun uu___1 ->
+                  Obj.magic (FStar_Reflection_Formula.term_as_formula uu___1))
+                 uu___1)))
       (fun uu___1 ->
          (fun uu___1 ->
             match uu___1 with

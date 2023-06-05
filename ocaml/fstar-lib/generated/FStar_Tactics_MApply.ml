@@ -158,9 +158,28 @@ let rec (apply_squash_or_lem :
                                                                     uu___6 ->
                                                                     (fun
                                                                     post2 ->
-                                                                    match 
-                                                                    FStar_Reflection_Formula.term_as_formula'
-                                                                    post2
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MApply.fst"
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (13))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (34)))
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MApply.fst"
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (7))
+                                                                    (Prims.of_int (53))
+                                                                    (Prims.of_int (41)))
+                                                                    (Obj.magic
+                                                                    (FStar_Reflection_Formula.term_as_formula'
+                                                                    post2))
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    match uu___6
                                                                     with
                                                                     | 
                                                                     FStar_Reflection_Formula.Implies
@@ -190,21 +209,22 @@ let rec (apply_squash_or_lem :
                                                                     "MApply";
                                                                     "push1"])))))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     Obj.magic
                                                                     (apply_squash_or_lem
                                                                     (d -
                                                                     Prims.int_one)
                                                                     t))
-                                                                    uu___6)))
+                                                                    uu___7)))
                                                                     | 
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
                                                                     "mapply: can't apply (1)")))
+                                                                    uu___6)))
                                                                     uu___6)))
                                                                     uu___6)))
                                                         | FStar_Reflection_Data.C_Total
@@ -237,9 +257,28 @@ let rec (apply_squash_or_lem :
                                                                     uu___5 ->
                                                                     (fun rt2
                                                                     ->
-                                                                    match 
-                                                                    FStar_Reflection_Formula.term_as_formula'
-                                                                    rt2
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MApply.fst"
+                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (15))
+                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (34)))
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MApply.fst"
+                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (69))
+                                                                    (Prims.of_int (43)))
+                                                                    (Obj.magic
+                                                                    (FStar_Reflection_Formula.term_as_formula'
+                                                                    rt2))
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    match uu___5
                                                                     with
                                                                     | 
                                                                     FStar_Reflection_Formula.Implies
@@ -269,21 +308,22 @@ let rec (apply_squash_or_lem :
                                                                     "MApply";
                                                                     "push1"])))))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Obj.magic
                                                                     (apply_squash_or_lem
                                                                     (d -
                                                                     Prims.int_one)
                                                                     t))
-                                                                    uu___5)))
+                                                                    uu___6)))
                                                                     | 
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
                                                                     "mapply: can't apply (1)")))
+                                                                    uu___5)))
                                                                     uu___5)
                                                                   | FStar_Pervasives_Native.None
                                                                     ->
@@ -307,9 +347,28 @@ let rec (apply_squash_or_lem :
                                                                     uu___5 ->
                                                                     (fun rt1
                                                                     ->
-                                                                    match 
-                                                                    FStar_Reflection_Formula.term_as_formula'
-                                                                    rt1
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MApply.fst"
+                                                                    (Prims.of_int (78))
+                                                                    (Prims.of_int (15))
+                                                                    (Prims.of_int (78))
+                                                                    (Prims.of_int (34)))
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MApply.fst"
+                                                                    (Prims.of_int (78))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (85))
+                                                                    (Prims.of_int (20)))
+                                                                    (Obj.magic
+                                                                    (FStar_Reflection_Formula.term_as_formula'
+                                                                    rt1))
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    match uu___5
                                                                     with
                                                                     | 
                                                                     FStar_Reflection_Formula.Implies
@@ -338,17 +397,17 @@ let rec (apply_squash_or_lem :
                                                                     "MApply";
                                                                     "push1"])))))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Obj.magic
                                                                     (apply_squash_or_lem
                                                                     (d -
                                                                     Prims.int_one)
                                                                     t))
-                                                                    uu___5))
+                                                                    uu___6))
                                                                     | 
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -372,13 +431,14 @@ let rec (apply_squash_or_lem :
                                                                     "Squash";
                                                                     "return_squash"])))))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Derived.apply
                                                                     t))
-                                                                    uu___6)))
+                                                                    uu___7)))
+                                                                    uu___5)))
                                                                     uu___5)))
                                                         | uu___5 ->
                                                             Obj.magic

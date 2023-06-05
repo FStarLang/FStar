@@ -787,10 +787,9 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                  (FStar_Range.mk_range "FStar.Tactics.BV.fst"
                                     (Prims.of_int (164)) (Prims.of_int (4))
                                     (Prims.of_int (175)) (Prims.of_int (65)))
-                                 (FStar_Tactics_Effect.lift_div_tac
-                                    (fun uu___3 ->
-                                       FStar_Reflection_Formula.term_as_formula
-                                         g))
+                                 (Obj.magic
+                                    (FStar_Reflection_Formula.term_as_formula
+                                       g))
                                  (fun uu___3 ->
                                     (fun f ->
                                        match f with

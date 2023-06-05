@@ -234,16 +234,14 @@ let rec (inspect_ln :
     | FStar_Syntax_Syntax.Tm_constant c ->
         let uu___ = inspect_const c in FStar_Reflection_Data.Tv_Const uu___
     | FStar_Syntax_Syntax.Tm_uvar (ctx_u, s) ->
-        ((let uu___1 = FStar_Syntax_Print.term_to_string t1 in
-          FStar_Compiler_Util.print1 "GGG returning uvar (%s)\n" uu___1);
-         (let uu___1 =
+        let uu___ =
+          let uu___1 =
             let uu___2 =
-              let uu___3 =
-                FStar_Syntax_Unionfind.uvar_unique_id
-                  ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
-              FStar_BigInt.of_int_fs uu___3 in
-            (uu___2, (ctx_u, s)) in
-          FStar_Reflection_Data.Tv_Uvar uu___1))
+              FStar_Syntax_Unionfind.uvar_unique_id
+                ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
+            FStar_BigInt.of_int_fs uu___2 in
+          (uu___1, (ctx_u, s)) in
+        FStar_Reflection_Data.Tv_Uvar uu___
     | FStar_Syntax_Syntax.Tm_let
         { FStar_Syntax_Syntax.lbs = (isrec, lb::[]);
           FStar_Syntax_Syntax.body1 = t2;_}

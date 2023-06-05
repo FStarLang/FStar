@@ -76,69 +76,88 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                    (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
                    (fun uu___3 ->
                       (fun g ->
-                         match FStar_Reflection_Formula.term_as_formula g
-                         with
-                         | FStar_Reflection_Formula.True_ ->
-                             Obj.magic
-                               (Obj.repr (FStar_Tactics_Derived.trivial ()))
-                         | FStar_Reflection_Formula.And (l, r) ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Derived.seq
-                                     FStar_Tactics_Logic.split split_arith))
-                         | FStar_Reflection_Formula.Implies (p, q) ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.tac_bind
-                                     (FStar_Range.mk_range
-                                        "FStar.Tactics.Arith.fst"
-                                        (Prims.of_int (45))
-                                        (Prims.of_int (20))
-                                        (Prims.of_int (45))
-                                        (Prims.of_int (36)))
-                                     (FStar_Range.mk_range
-                                        "FStar.Tactics.Arith.fst"
-                                        (Prims.of_int (46))
-                                        (Prims.of_int (12))
-                                        (Prims.of_int (46))
-                                        (Prims.of_int (36)))
-                                     (Obj.magic
-                                        (FStar_Tactics_Logic.implies_intro ()))
-                                     (fun uu___3 ->
-                                        (fun uu___3 ->
-                                           Obj.magic
+                         Obj.magic
+                           (FStar_Tactics_Effect.tac_bind
+                              (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
+                                 (Prims.of_int (39)) (Prims.of_int (14))
+                                 (Prims.of_int (39)) (Prims.of_int (31)))
+                              (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
+                                 (Prims.of_int (39)) (Prims.of_int (8))
+                                 (Prims.of_int (51)) (Prims.of_int (14)))
+                              (Obj.magic
+                                 (FStar_Reflection_Formula.term_as_formula g))
+                              (fun uu___3 ->
+                                 (fun uu___3 ->
+                                    match uu___3 with
+                                    | FStar_Reflection_Formula.True_ ->
+                                        Obj.magic
+                                          (Obj.repr
+                                             (FStar_Tactics_Derived.trivial
+                                                ()))
+                                    | FStar_Reflection_Formula.And (l, r) ->
+                                        Obj.magic
+                                          (Obj.repr
                                              (FStar_Tactics_Derived.seq
-                                                split_arith
-                                                FStar_Tactics_Logic.l_revert))
-                                          uu___3)))
-                         | FStar_Reflection_Formula.Forall (_x, _sort, _p) ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.tac_bind
-                                     (FStar_Range.mk_range
-                                        "FStar.Tactics.Arith.fst"
-                                        (Prims.of_int (48))
-                                        (Prims.of_int (21))
-                                        (Prims.of_int (48))
-                                        (Prims.of_int (37)))
-                                     (FStar_Range.mk_range
-                                        "FStar.Tactics.Arith.fst"
-                                        (Prims.of_int (49))
-                                        (Prims.of_int (12))
-                                        (Prims.of_int (49))
-                                        (Prims.of_int (55)))
-                                     (Obj.magic
-                                        (FStar_Tactics_Logic.forall_intros ()))
-                                     (fun uu___3 ->
-                                        (fun bs ->
-                                           Obj.magic
-                                             (FStar_Tactics_Derived.seq
-                                                split_arith
-                                                (fun uu___3 ->
-                                                   FStar_Tactics_Logic.l_revert_all
-                                                     bs))) uu___3)))
-                         | uu___3 ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___4 -> ())))) uu___3))) uu___1)
+                                                FStar_Tactics_Logic.split
+                                                split_arith))
+                                    | FStar_Reflection_Formula.Implies 
+                                        (p, q) ->
+                                        Obj.magic
+                                          (Obj.repr
+                                             (FStar_Tactics_Effect.tac_bind
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.Arith.fst"
+                                                   (Prims.of_int (45))
+                                                   (Prims.of_int (20))
+                                                   (Prims.of_int (45))
+                                                   (Prims.of_int (36)))
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.Arith.fst"
+                                                   (Prims.of_int (46))
+                                                   (Prims.of_int (12))
+                                                   (Prims.of_int (46))
+                                                   (Prims.of_int (36)))
+                                                (Obj.magic
+                                                   (FStar_Tactics_Logic.implies_intro
+                                                      ()))
+                                                (fun uu___4 ->
+                                                   (fun uu___4 ->
+                                                      Obj.magic
+                                                        (FStar_Tactics_Derived.seq
+                                                           split_arith
+                                                           FStar_Tactics_Logic.l_revert))
+                                                     uu___4)))
+                                    | FStar_Reflection_Formula.Forall
+                                        (_x, _sort, _p) ->
+                                        Obj.magic
+                                          (Obj.repr
+                                             (FStar_Tactics_Effect.tac_bind
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.Arith.fst"
+                                                   (Prims.of_int (48))
+                                                   (Prims.of_int (21))
+                                                   (Prims.of_int (48))
+                                                   (Prims.of_int (37)))
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.Arith.fst"
+                                                   (Prims.of_int (49))
+                                                   (Prims.of_int (12))
+                                                   (Prims.of_int (49))
+                                                   (Prims.of_int (55)))
+                                                (Obj.magic
+                                                   (FStar_Tactics_Logic.forall_intros
+                                                      ()))
+                                                (fun uu___4 ->
+                                                   (fun bs ->
+                                                      Obj.magic
+                                                        (FStar_Tactics_Derived.seq
+                                                           split_arith
+                                                           (fun uu___4 ->
+                                                              FStar_Tactics_Logic.l_revert_all
+                                                                bs))) uu___4)))
+                                    | uu___4 ->
+                                        Obj.magic
+                                          (Obj.repr
+                                             (FStar_Tactics_Effect.lift_div_tac
+                                                (fun uu___5 -> ())))) uu___3)))
+                        uu___3))) uu___1)

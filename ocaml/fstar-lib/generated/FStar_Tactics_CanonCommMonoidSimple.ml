@@ -595,10 +595,10 @@ let canon_monoid :
                           (Prims.of_int (251)) (Prims.of_int (37)))
                        (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
                        (fun uu___1 ->
-                          FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___2 ->
-                               FStar_Reflection_Formula.term_as_formula
-                                 uu___1))))
+                          (fun uu___1 ->
+                             Obj.magic
+                               (FStar_Reflection_Formula.term_as_formula
+                                  uu___1)) uu___1)))
                  (fun uu___1 ->
                     (fun uu___1 ->
                        match uu___1 with
