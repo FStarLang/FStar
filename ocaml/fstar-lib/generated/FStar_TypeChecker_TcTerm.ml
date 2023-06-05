@@ -1799,10 +1799,10 @@ and (tc_maybe_toplevel_term :
             uu___4 uu___5
         else ());
        (match top.FStar_Syntax_Syntax.n with
+        | FStar_Syntax_Syntax.Tm_bvar uu___2 -> failwith "Impossible"
         | FStar_Syntax_Syntax.Tm_delayed uu___2 -> failwith "Impossible"
         | FStar_Syntax_Syntax.Tm_uinst uu___2 -> tc_value env1 e
         | FStar_Syntax_Syntax.Tm_uvar uu___2 -> tc_value env1 e
-        | FStar_Syntax_Syntax.Tm_bvar uu___2 -> tc_value env1 e
         | FStar_Syntax_Syntax.Tm_name uu___2 -> tc_value env1 e
         | FStar_Syntax_Syntax.Tm_fvar uu___2 -> tc_value env1 e
         | FStar_Syntax_Syntax.Tm_constant uu___2 -> tc_value env1 e
