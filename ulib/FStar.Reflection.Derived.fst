@@ -41,13 +41,16 @@ let subst1 (n:namedv) (t1:term) (t2:term) : term =
 (*
  * AR: add versions that take attributes as arguments?
  *)
-let mk_binder (nm : string) (sort : typ) : binder =
-  pack_binder {
+let mk_binder (nm : string) (sort : typ) : simple_binder =
+  let bv : binder_view = {
     ppname = seal nm;
     qual   = Q_Explicit;
     attrs  = [];
     sort   = sort;
   }
+  in
+  inspect_pack_binder bv;
+  pack_binder bv
 
 let mk_implicit_binder (nm : string) (sort : typ) : binder =
   pack_binder {

@@ -402,7 +402,7 @@ let fresh_namedv () : Tac namedv =
     uniq   = n;
   })
 
-let fresh_binder_named (s : string) (t : typ) : Tac binder =
+let fresh_binder_named (s : string) (t : typ) : Tac simple_binder =
   let n = fresh () in
   {
     ppname = seal s;
@@ -412,7 +412,7 @@ let fresh_binder_named (s : string) (t : typ) : Tac binder =
     attrs  = [] ;
   }
 
-let fresh_binder (t : typ) : Tac binder =
+let fresh_binder (t : typ) : Tac simple_binder =
   let n = fresh () in
   {
     ppname = seal ("x" ^ string_of_int n);
