@@ -703,10 +703,9 @@ let proc_check_with :
       | FStar_Pervasives_Native.Some ((a1, FStar_Pervasives_Native.None)::[])
           ->
           let uu___1 =
-            let uu___2 =
-              FStar_Syntax_Embeddings_Base.unembed
-                FStar_Syntax_Embeddings.e_vconfig a1 in
-            uu___2 true FStar_Syntax_Embeddings_Base.id_norm_cb in
+            FStar_Syntax_Embeddings_Base.unembed
+              FStar_Syntax_Embeddings.e_vconfig a1
+              FStar_Syntax_Embeddings_Base.id_norm_cb in
           (match uu___1 with
            | FStar_Pervasives_Native.None -> failwith "nah"
            | FStar_Pervasives_Native.Some vcfg ->

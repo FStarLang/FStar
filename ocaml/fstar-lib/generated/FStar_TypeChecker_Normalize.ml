@@ -1308,8 +1308,8 @@ let (unembed_binder :
     let uu___ = FStar_Compiler_Effect.op_Bang unembed_binder_knot in
     match uu___ with
     | FStar_Pervasives_Native.Some e ->
-        let uu___1 = FStar_Syntax_Embeddings_Base.unembed e t in
-        uu___1 false FStar_Syntax_Embeddings_Base.id_norm_cb
+        FStar_Syntax_Embeddings_Base.try_unembed e t
+          FStar_Syntax_Embeddings_Base.id_norm_cb
     | FStar_Pervasives_Native.None ->
         (FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
            (FStar_Errors_Codes.Warning_UnembedBinderKnot,

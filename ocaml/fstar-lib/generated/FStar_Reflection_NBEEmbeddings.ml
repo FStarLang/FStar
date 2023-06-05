@@ -188,13 +188,12 @@ let (e_term_aq :
       match t.FStar_TypeChecker_NBETerm.nbe_t with
       | FStar_TypeChecker_NBETerm.Quote (tm, qi) ->
           let uu___ =
-            let uu___1 =
-              FStar_Reflection_Embeddings.e_term_aq (Prims.int_zero, []) in
-            let uu___2 =
-              FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_quoted (tm, qi))
-                FStar_Compiler_Range_Type.dummyRange in
-            FStar_Syntax_Embeddings_Base.unembed uu___1 uu___2 in
-          uu___ false FStar_Syntax_Embeddings_Base.id_norm_cb
+            FStar_Reflection_Embeddings.e_term_aq (Prims.int_zero, []) in
+          let uu___1 =
+            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_quoted (tm, qi))
+              FStar_Compiler_Range_Type.dummyRange in
+          FStar_Syntax_Embeddings_Base.unembed uu___ uu___1
+            FStar_Syntax_Embeddings_Base.id_norm_cb
       | uu___ -> FStar_Pervasives_Native.None in
     let uu___ = mkFV FStar_Reflection_Constants.fstar_refl_term_fv [] [] in
     let uu___1 = fv_as_emb_typ FStar_Reflection_Constants.fstar_refl_term_fv in

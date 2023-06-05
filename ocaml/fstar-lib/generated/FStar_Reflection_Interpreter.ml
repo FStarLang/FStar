@@ -1,28 +1,20 @@
 open Prims
 let unembed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings_Base.norm_cb ->
-          'uuuuu FStar_Pervasives_Native.option
-  =
-  fun ea ->
-    fun a ->
-      fun norm_cb ->
-        let uu___ = FStar_Syntax_Embeddings_Base.unembed ea a in
-        uu___ true norm_cb
+    unit ->
+      'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+        FStar_Syntax_Syntax.term ->
+          FStar_Syntax_Embeddings_Base.norm_cb ->
+            'uuuuu FStar_Pervasives_Native.option
+  = fun uu___ -> FStar_Syntax_Embeddings_Base.unembed
 let try_unembed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings_Base.norm_cb ->
-          'uuuuu FStar_Pervasives_Native.option
-  =
-  fun ea ->
-    fun a ->
-      fun norm_cb ->
-        let uu___ = FStar_Syntax_Embeddings_Base.unembed ea a in
-        uu___ false norm_cb
+    unit ->
+      'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+        FStar_Syntax_Syntax.term ->
+          FStar_Syntax_Embeddings_Base.norm_cb ->
+            'uuuuu FStar_Pervasives_Native.option
+  = fun uu___ -> FStar_Syntax_Embeddings_Base.try_unembed
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
@@ -56,7 +48,7 @@ let int1 :
               fun args ->
                 match args with
                 | (a1, uu___)::[] ->
-                    let uu___1 = try_unembed ea a1 n in
+                    let uu___1 = (try_unembed ()) ea a1 n in
                     FStar_Compiler_Util.bind_opt uu___1
                       (fun a2 ->
                          let uu___2 =
@@ -86,10 +78,10 @@ let int2 :
                 fun args ->
                   match args with
                   | (a1, uu___)::(b1, uu___1)::[] ->
-                      let uu___2 = try_unembed ea a1 n in
+                      let uu___2 = (try_unembed ()) ea a1 n in
                       FStar_Compiler_Util.bind_opt uu___2
                         (fun a2 ->
-                           let uu___3 = try_unembed eb b1 n in
+                           let uu___3 = (try_unembed ()) eb b1 n in
                            FStar_Compiler_Util.bind_opt uu___3
                              (fun b2 ->
                                 let uu___4 =
@@ -123,13 +115,13 @@ let int3 :
                   fun args ->
                     match args with
                     | (a1, uu___)::(b1, uu___1)::(c1, uu___2)::[] ->
-                        let uu___3 = try_unembed ea a1 n in
+                        let uu___3 = (try_unembed ()) ea a1 n in
                         FStar_Compiler_Util.bind_opt uu___3
                           (fun a2 ->
-                             let uu___4 = try_unembed eb b1 n in
+                             let uu___4 = (try_unembed ()) eb b1 n in
                              FStar_Compiler_Util.bind_opt uu___4
                                (fun b2 ->
-                                  let uu___5 = try_unembed ec c1 n in
+                                  let uu___5 = (try_unembed ()) ec c1 n in
                                   FStar_Compiler_Util.bind_opt uu___5
                                     (fun c2 ->
                                        let uu___6 =
@@ -862,6 +854,6 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (uu___222 : unit) =
+let (uu___216 : unit) =
   FStar_Compiler_List.iter FStar_TypeChecker_Cfg.register_extra_step
     reflection_primops

@@ -1517,10 +1517,9 @@ let (get_noextract_to :
                       FStar_Parser_Const.noextract_to_attr
                     ->
                     let uu___4 =
-                      let uu___5 =
-                        FStar_Syntax_Embeddings_Base.unembed
-                          FStar_Syntax_Embeddings.e_string a in
-                      uu___5 false FStar_Syntax_Embeddings_Base.id_norm_cb in
+                      FStar_Syntax_Embeddings_Base.try_unembed
+                        FStar_Syntax_Embeddings.e_string a
+                        FStar_Syntax_Embeddings_Base.id_norm_cb in
                     (match uu___4 with
                      | FStar_Pervasives_Native.Some s ->
                          (FStar_Compiler_Option.isSome backend) &&

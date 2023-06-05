@@ -7,8 +7,7 @@ type shadow_term =
 type embed_t =
   FStar_Compiler_Range_Type.range ->
     shadow_term -> norm_cb -> FStar_Syntax_Syntax.term
-type 'a unembed_t =
-  Prims.bool -> norm_cb -> 'a FStar_Pervasives_Native.option
+type 'a unembed_t = norm_cb -> 'a FStar_Pervasives_Native.option
 type 'a raw_embedder = 'a -> embed_t
 type 'a raw_unembedder = FStar_Syntax_Syntax.term -> 'a unembed_t
 type 'a printer = 'a -> Prims.string
@@ -143,21 +142,6 @@ let rec (unmeta_div_results :
           FStar_Syntax_Syntax.eff_opt = uu___2;_}
         -> unmeta_div_results t'
     | uu___1 -> t
-let embed : 'a . 'a embedding -> 'a -> embed_t = fun e -> fun x -> e.em x
-let unembed : 'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
-  fun e -> fun t -> let uu___ = unmeta_div_results t in e.un uu___
-let warn_unembed :
-  'a .
-    'a embedding ->
-      FStar_Syntax_Syntax.term ->
-        norm_cb -> 'a FStar_Pervasives_Native.option
-  = fun e -> fun t -> fun n -> let uu___ = unembed e t in uu___ true n
-let try_unembed :
-  'a .
-    'a embedding ->
-      FStar_Syntax_Syntax.term ->
-        norm_cb -> 'a FStar_Pervasives_Native.option
-  = fun e -> fun t -> fun n -> let uu___ = unembed e t in uu___ false n
 let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ = fun e -> e.typ
 let printer_of : 'a . 'a embedding -> 'a printer = fun e -> e.print
 let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
@@ -170,6 +154,45 @@ let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
         print = (e.print);
         emb_typ = (e.emb_typ)
       }
+let embed : 'a . 'a embedding -> 'a -> embed_t = fun e -> e.em
+let try_unembed :
+  'a .
+    'a embedding ->
+      FStar_Syntax_Syntax.term ->
+        norm_cb -> 'a FStar_Pervasives_Native.option
+  =
+  fun e ->
+    fun t ->
+      fun n ->
+        let t1 = unmeta_div_results t in let uu___ = e.un t1 in uu___ n
+let unembed :
+  'a .
+    'a embedding ->
+      FStar_Syntax_Syntax.term ->
+        norm_cb -> 'a FStar_Pervasives_Native.option
+  =
+  fun e ->
+    fun t ->
+      fun n ->
+        let r = try_unembed e t n in
+        if FStar_Pervasives_Native.uu___is_None r
+        then
+          (let uu___1 =
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 = type_of e in
+                 FStar_Syntax_Print.term_to_string uu___4 in
+               let uu___4 =
+                 let uu___5 = emb_typ_of e in
+                 FStar_Syntax_Print.emb_typ_to_string uu___5 in
+               let uu___5 = FStar_Syntax_Print.term_to_string t in
+               FStar_Compiler_Util.format3
+                 "Warning, unembedding failed for type %s (%s); term = %s\n"
+                 uu___3 uu___4 uu___5 in
+             (FStar_Errors_Codes.Warning_NotEmbedded, uu___2) in
+           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___1)
+        else ();
+        r
 let embed_as :
   'a 'b .
     'a embedding ->
@@ -188,10 +211,9 @@ let embed_as :
             | uu___1 -> type_of ea in
           mk_emb_full (fun x -> let uu___1 = ba x in embed ea uu___1)
             (fun t ->
-               fun w ->
-                 fun cb ->
-                   let uu___1 = let uu___2 = unembed ea t in uu___2 w cb in
-                   FStar_Compiler_Util.map_opt uu___1 ab) uu___
+               fun cb ->
+                 let uu___1 = unembed ea t cb in
+                 FStar_Compiler_Util.map_opt uu___1 ab) uu___
             (fun x ->
                let uu___1 = let uu___2 = ba x in ea.print uu___2 in
                FStar_Compiler_Util.format1 "(embed_as>> %s)\n" uu___1)
@@ -204,11 +226,10 @@ let e_lazy :
     fun ty ->
       let ee x rng _topt _norm =
         FStar_Syntax_Util.mk_lazy x ty k (FStar_Pervasives_Native.Some rng) in
-      let uu t _w _norm =
+      let uu t _norm =
         let t0 = t in
-        let t1 = unmeta_div_results t in
         let uu___ =
-          let uu___1 = FStar_Syntax_Subst.compress t1 in
+          let uu___1 = FStar_Syntax_Subst.compress t in
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
         | FStar_Syntax_Syntax.Tm_lazy

@@ -2007,8 +2007,8 @@ let try_unembed_simple :
   =
   fun emb ->
     fun x ->
-      let uu___ = FStar_Syntax_Embeddings_Base.unembed emb x in
-      uu___ false FStar_Syntax_Embeddings_Base.id_norm_cb
+      FStar_Syntax_Embeddings_Base.try_unembed emb x
+        FStar_Syntax_Embeddings_Base.id_norm_cb
 let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
   let arg_as_int a =
     FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a)
@@ -3842,10 +3842,9 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
   let issue_ops =
     let mk_lid l = FStar_Parser_Const.p2l ["FStar"; "Issue"; l] in
     let arg_as_issue x =
-      let uu___ =
-        FStar_Syntax_Embeddings_Base.unembed FStar_Syntax_Embeddings.e_issue
-          (FStar_Pervasives_Native.fst x) in
-      uu___ false FStar_Syntax_Embeddings_Base.id_norm_cb in
+      FStar_Syntax_Embeddings_Base.try_unembed
+        FStar_Syntax_Embeddings.e_issue (FStar_Pervasives_Native.fst x)
+        FStar_Syntax_Embeddings_Base.id_norm_cb in
     let option_int_as_option_z oi =
       match oi with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None

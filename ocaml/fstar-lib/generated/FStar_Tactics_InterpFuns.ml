@@ -5,11 +5,7 @@ let unembed :
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings_Base.norm_cb ->
           'uuuuu FStar_Pervasives_Native.option
-  =
-  fun e ->
-    fun t ->
-      fun n ->
-        let uu___ = FStar_Syntax_Embeddings_Base.unembed e t in uu___ true n
+  = fun e -> fun t -> fun n -> FStar_Syntax_Embeddings_Base.unembed e t n
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings_Base.embedding ->

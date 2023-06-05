@@ -3,9 +3,7 @@ let mk_emb :
   'uuuuu .
     (FStar_Compiler_Range_Type.range -> 'uuuuu -> FStar_Syntax_Syntax.term)
       ->
-      (Prims.bool ->
-         FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option)
-        ->
+      (FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option) ->
         FStar_Syntax_Syntax.term ->
           'uuuuu FStar_Syntax_Embeddings_Base.embedding
   =
@@ -15,7 +13,7 @@ let mk_emb :
         let uu___ = FStar_Syntax_Embeddings_Base.term_as_fv t in
         FStar_Syntax_Embeddings_Base.mk_emb
           (fun x -> fun r -> fun _topt -> fun _norm -> f r x)
-          (fun x -> fun w -> fun _norm -> g w x) uu___
+          (fun x -> fun _norm -> g x) uu___
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
@@ -29,15 +27,13 @@ let embed :
           FStar_Syntax_Embeddings_Base.id_norm_cb
 let unembed' :
   'uuuuu .
-    Prims.bool ->
-      'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
-        FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+      FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option
   =
-  fun w ->
-    fun e ->
-      fun x ->
-        let uu___ = FStar_Syntax_Embeddings_Base.unembed e x in
-        uu___ w FStar_Syntax_Embeddings_Base.id_norm_cb
+  fun e ->
+    fun x ->
+      FStar_Syntax_Embeddings_Base.unembed e x
+        FStar_Syntax_Embeddings_Base.id_norm_cb
 type 'a arg_unembedder =
   FStar_Syntax_Syntax.args ->
     ('a * FStar_Syntax_Syntax.args) FStar_Pervasives_Native.option
@@ -47,7 +43,7 @@ let one : 'a . 'a FStar_Syntax_Embeddings_Base.embedding -> 'a arg_unembedder
     fun args ->
       match args with
       | (t, uu___)::xs ->
-          let uu___1 = unembed' false e t in
+          let uu___1 = unembed' e t in
           (match uu___1 with
            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
            | FStar_Pervasives_Native.Some v ->
@@ -114,15 +110,14 @@ let run :
       | uu___1 -> FStar_Pervasives_Native.None
 let wrap :
   'a .
-    (Prims.bool ->
-       FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option)
-      -> 'a arg_unembedder
+    (FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option) ->
+      'a arg_unembedder
   =
   fun f ->
     fun args ->
       match args with
       | (t, uu___)::xs ->
-          let uu___1 = f false t in
+          let uu___1 = f t in
           (match uu___1 with
            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
            | FStar_Pervasives_Native.Some v ->

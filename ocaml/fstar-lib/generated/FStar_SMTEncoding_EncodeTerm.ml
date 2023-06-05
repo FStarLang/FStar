@@ -3850,15 +3850,13 @@ and (encode_formula :
                  ->
                  let uu___3 =
                    let uu___4 =
-                     let uu___5 =
-                       FStar_Syntax_Embeddings_Base.unembed
-                         FStar_Syntax_Embeddings.e_range r in
-                     uu___5 false FStar_Syntax_Embeddings_Base.id_norm_cb in
+                     FStar_Syntax_Embeddings_Base.try_unembed
+                       FStar_Syntax_Embeddings.e_range r
+                       FStar_Syntax_Embeddings_Base.id_norm_cb in
                    let uu___5 =
-                     let uu___6 =
-                       FStar_Syntax_Embeddings_Base.unembed
-                         FStar_Syntax_Embeddings.e_string msg in
-                     uu___6 false FStar_Syntax_Embeddings_Base.id_norm_cb in
+                     FStar_Syntax_Embeddings_Base.try_unembed
+                       FStar_Syntax_Embeddings.e_string msg
+                       FStar_Syntax_Embeddings_Base.id_norm_cb in
                    (uu___4, uu___5) in
                  (match uu___3 with
                   | (FStar_Pervasives_Native.Some r1,
