@@ -459,7 +459,8 @@ let to_term :
   'a .
     'a termable ->
       'a -> (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr
-  = fun dict -> __proj__Mktermable__item__to_term dict
+  =
+  fun projectee -> match projectee with | { to_term = to_term1;_} -> to_term1
 let (termable_term : FStar_Reflection_Types.term termable) =
   {
     to_term =

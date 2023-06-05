@@ -5,7 +5,8 @@ let __proj__Mkprintable__item__to_string :
   'a . 'a printable -> 'a -> Prims.string =
   fun projectee -> match projectee with | { to_string;_} -> to_string
 let to_string : 'a . 'a printable -> 'a -> Prims.string =
-  fun dict -> __proj__Mkprintable__item__to_string dict
+  fun projectee ->
+    match projectee with | { to_string = to_string1;_} -> to_string1
 let (printable_unit : unit printable) = { to_string = (fun uu___ -> "()") }
 let (printable_bool : Prims.bool printable) =
   { to_string = Prims.string_of_bool }

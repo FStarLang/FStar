@@ -35,17 +35,19 @@ let (subst1 :
         FStar_Reflection_Builtins.subst_term [FStar_Syntax_Syntax.NT (n, t1)]
           t2
 let (mk_binder :
-  Prims.string -> FStar_Reflection_Types.typ -> FStar_Reflection_Types.binder)
+  Prims.string ->
+    FStar_Reflection_Types.typ -> FStar_Reflection_Data.simple_binder)
   =
   fun nm ->
     fun sort ->
-      FStar_Reflection_Builtins.pack_binder
+      let bv =
         {
           FStar_Reflection_Data.sort2 = sort;
           FStar_Reflection_Data.qual = FStar_Reflection_Data.Q_Explicit;
           FStar_Reflection_Data.attrs = [];
           FStar_Reflection_Data.ppname2 = (FStar_Sealed.seal nm)
-        }
+        } in
+      FStar_Reflection_Builtins.pack_binder bv
 let (mk_implicit_binder :
   Prims.string -> FStar_Reflection_Types.typ -> FStar_Reflection_Types.binder)
   =

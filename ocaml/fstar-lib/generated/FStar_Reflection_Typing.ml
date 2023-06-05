@@ -18,6 +18,13 @@ type pp_name_t = (Prims.string, unit) FStar_Sealed_Inhabited.sealed
 let (pp_name_default : pp_name_t) = FStar_Sealed_Inhabited.seal "x" "x"
 let (seal_pp_name : Prims.string -> pp_name_t) =
   fun x -> FStar_Sealed_Inhabited.seal "x" x
+let (tun : FStar_Reflection_Types.term) =
+  FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
+type sort_t =
+  (FStar_Reflection_Types.term, unit) FStar_Sealed_Inhabited.sealed
+let (sort_default : sort_t) = FStar_Sealed_Inhabited.seal tun tun
+let (seal_sort : FStar_Reflection_Types.term -> sort_t) =
+  fun x -> FStar_Sealed_Inhabited.seal tun x
 let (mk_binder :
   pp_name_t ->
     FStar_Reflection_Data.var ->
@@ -97,13 +104,11 @@ let (__proj__Rename__item___0 : open_or_close -> FStar_Reflection_Data.var) =
   fun projectee -> match projectee with | Rename (_0, _1) -> _0
 let (__proj__Rename__item___1 : open_or_close -> FStar_Reflection_Data.var) =
   fun projectee -> match projectee with | Rename (_0, _1) -> _1
-let (tun : FStar_Reflection_Types.term) =
-  FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
 let (make_bv : Prims.nat -> FStar_Reflection_Data.bv_view) =
   fun n ->
     {
       FStar_Reflection_Data.index = n;
-      FStar_Reflection_Data.sort1 = (FStar_Sealed.seal tun);
+      FStar_Reflection_Data.sort1 = sort_default;
       FStar_Reflection_Data.ppname1 = pp_name_default
     }
 let (make_bv_with_name :
@@ -112,8 +117,24 @@ let (make_bv_with_name :
     fun n ->
       {
         FStar_Reflection_Data.index = n;
-        FStar_Reflection_Data.sort1 = (FStar_Sealed.seal tun);
+        FStar_Reflection_Data.sort1 = sort_default;
         FStar_Reflection_Data.ppname1 = s
+      }
+let (make_namedv : Prims.nat -> FStar_Reflection_Data.namedv_view) =
+  fun n ->
+    {
+      FStar_Reflection_Data.uniq = n;
+      FStar_Reflection_Data.sort = sort_default;
+      FStar_Reflection_Data.ppname = pp_name_default
+    }
+let (make_namedv_with_name :
+  pp_name_t -> Prims.nat -> FStar_Reflection_Data.namedv_view) =
+  fun s ->
+    fun n ->
+      {
+        FStar_Reflection_Data.uniq = n;
+        FStar_Reflection_Data.sort = sort_default;
+        FStar_Reflection_Data.ppname = s
       }
 let (var_as_bv : Prims.nat -> FStar_Reflection_Types.bv) =
   fun v -> FStar_Reflection_Builtins.pack_bv (make_bv v)
@@ -122,7 +143,7 @@ let (var_as_namedv : Prims.nat -> FStar_Reflection_Types.namedv) =
     FStar_Reflection_Builtins.pack_namedv
       {
         FStar_Reflection_Data.uniq = v;
-        FStar_Reflection_Data.sort = (FStar_Sealed.seal tun);
+        FStar_Reflection_Data.sort = sort_default;
         FStar_Reflection_Data.ppname = pp_name_default
       }
 let (var_as_term : FStar_Reflection_Data.var -> FStar_Reflection_Types.term)

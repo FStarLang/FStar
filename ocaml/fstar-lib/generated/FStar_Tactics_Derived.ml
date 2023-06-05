@@ -1870,7 +1870,8 @@ let (fresh_namedv :
 let (fresh_binder_named :
   Prims.string ->
     FStar_Reflection_Types.typ ->
-      (FStar_Tactics_NamedView.binder, unit) FStar_Tactics_Effect.tac_repr)
+      (FStar_Tactics_NamedView.simple_binder, unit)
+        FStar_Tactics_Effect.tac_repr)
   =
   fun s ->
     fun t ->
@@ -1894,7 +1895,8 @@ let (fresh_binder_named :
                 }))
 let (fresh_binder :
   FStar_Reflection_Types.typ ->
-    (FStar_Tactics_NamedView.binder, unit) FStar_Tactics_Effect.tac_repr)
+    (FStar_Tactics_NamedView.simple_binder, unit)
+      FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
