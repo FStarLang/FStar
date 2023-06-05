@@ -139,7 +139,7 @@ let e_term_aq aq =
         match t.nbe_t with
         | NBETerm.Quote (tm, qi) ->
             (* Just reuse the code from Reflection *)
-            Syntax.Embeddings.unembed (Reflection.Embeddings.e_term_aq (0, [])) (S.mk (Tm_quoted (tm, qi)) Range.dummyRange) false Syntax.Embeddings.id_norm_cb
+            Syntax.Embeddings.unembed (Reflection.Embeddings.e_term_aq (0, [])) (S.mk (Tm_quoted (tm, qi)) Range.dummyRange) Syntax.Embeddings.id_norm_cb
         | _ ->
             None
     in

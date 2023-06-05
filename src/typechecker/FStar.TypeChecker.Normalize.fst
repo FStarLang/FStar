@@ -597,7 +597,7 @@ let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 let unembed_binder_knot : ref (option (EMB.embedding binder)) = BU.mk_ref None
 let unembed_binder (t : term) : option S.binder =
     match !unembed_binder_knot with
-    | Some e -> EMB.unembed e t false EMB.id_norm_cb
+    | Some e -> EMB.try_unembed e t EMB.id_norm_cb
     | None ->
         Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
         None

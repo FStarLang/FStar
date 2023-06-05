@@ -181,21 +181,34 @@ let rec unmeta_div_results t =
   | Tm_meta {tm=t'} -> unmeta_div_results t'
 
   | Tm_ascribed {tm=t'} -> unmeta_div_results t'
-  
+
   | _ -> t
 
-(* Eta-expand to make F# happy *)
-let embed        (e:embedding 'a) x   = e.em x
-let unembed      (e:embedding 'a) t   = e.un (unmeta_div_results t)  //strip meta first
-let warn_unembed (e:embedding 'a) t n = unembed e t true n
-let try_unembed  (e:embedding 'a) t n = unembed e t false n
-let type_of      (e:embedding 'a)     = e.typ
-let printer_of   (e:embedding 'a)     = e.print
-let set_type ty  (e:embedding 'a)     = { e with typ = ty }
+let type_of      (e:embedding 'a) = e.typ
+let printer_of   (e:embedding 'a) = e.print
+let set_type ty  (e:embedding 'a) = { e with typ = ty }
+
+let embed        (e:embedding 'a) = e.em
+let try_unembed  (e:embedding 'a) t n =
+  (* Unembed always receives a term without the meta_monadics above,
+  strip it here. TODO: maybe also compress? *)
+  let t = unmeta_div_results t in
+  e.un t n
+
+let unembed (e:embedding 'a) t n =
+  let r = try_unembed e t n in
+  if None? r then
+    Err.log_issue t.pos (Err.Warning_NotEmbedded,
+              BU.format3 "Warning, unembedding failed for type %s (%s); term = %s\n"
+                          (Print.term_to_string (type_of e))
+                          (Print.emb_typ_to_string (emb_typ_of e))
+                          (Print.term_to_string t));
+  r
+
 
 let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
     mk_emb_full (fun (x:'b) -> embed ea (ba x))
-                (fun (t:term) w cb -> BU.map_opt (unembed ea t w cb) ab)
+                (fun (t:term) cb -> BU.map_opt (unembed ea t cb) ab)
                 (match o with | Some t -> t | _ -> type_of ea)
                 (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
                 ea.emb_typ
@@ -203,9 +216,8 @@ let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
 (* A simple lazy embedding, without cancellations nor an expressive type. *)
 let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
   let ee (x:a) rng _topt _norm : term = U.mk_lazy x ty k (Some rng) in
-  let uu (t:term) _w _norm : option a =
+  let uu (t:term) _norm : option a =
     let t0 = t in
-    let t = unmeta_div_results t in
     match (SS.compress t).n with
     | Tm_lazy {blob=b; lkind=lkind} when U.eq_lazy_kind lkind k -> Some (Dyn.undyn b)
     | Tm_lazy {blob=b; lkind=lkind} ->

@@ -246,7 +246,7 @@ let log_nbe cfg f =
 let embed_simple (emb:EMB.embedding 'a) (r:Range.range) (x:'a) : term =
     EMB.embed emb x r None EMB.id_norm_cb
 let try_unembed_simple (emb:EMB.embedding 'a) (x:term) : option 'a =
-    EMB.unembed emb x false EMB.id_norm_cb
+    EMB.try_unembed emb x EMB.id_norm_cb
 let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
@@ -1188,7 +1188,7 @@ let built_in_primitive_steps : prim_step_set =
     let issue_ops =
         let mk_lid l = PC.p2l ["FStar"; "Issue"; l] in
         let arg_as_issue (x:arg) : option issue =
-            EMB.(unembed e_issue (fst x) false id_norm_cb)
+            EMB.(try_unembed e_issue (fst x) id_norm_cb)
         in
         let option_int_as_option_z oi = 
           match oi with

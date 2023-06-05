@@ -95,12 +95,12 @@ let e_term_aq aq =
         let qi = { qkind = Quote_static; antiquotations = aq } in
         S.mk (Tm_quoted (t, qi)) rng
     in
-    let rec unembed_term w (t:term) : option term =
+    let rec unembed_term (t:term) : option term =
         let apply_antiquotations (t:term) (aq:antiquotations) : option term =
             let shift, aqs = aq in
             let aqs = List.rev aqs in
             // Try to unembed all antiquotations
-            BU.bind_opt (mapM_opt (unembed_term w) aqs) (fun aq_ts ->
+            BU.bind_opt (mapM_opt unembed_term aqs) (fun aq_ts ->
             // Create a substitution of the DB indices of t for the antiquotations
             (* let n = List.length aq_ts - 1 in *)
             let subst_open, subst =
@@ -117,16 +117,8 @@ let e_term_aq aq =
         let t = U.unmeta t in
         match (SS.compress t).n with
         | Tm_quoted (tm, qi) ->
-            let r = apply_antiquotations tm qi.antiquotations in
-            (match r with
-             | None when w ->
-                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Failed to unembed antiquotations for: %s" (Print.term_to_string t)))
-             | _ -> ());
-            r
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term: %s" (Print.term_to_string t)));
-            None
+            apply_antiquotations tm qi.antiquotations
+        | _ -> None
     in
     mk_emb embed_term unembed_term S.t_term
 
@@ -146,7 +138,7 @@ let e_aqualv =
                       Range.dummyRange
       in { r with pos = rng }
     in
-    let unembed_aqualv _w (t : term) : option aqualv =
+    let unembed_aqualv (t : term) : option aqualv =
       let? fv, args = head_fv_and_args t in
       match () with
       | _ when S.fv_eq_lid fv ref_Q_Explicit.lid -> run args (pure Data.Q_Explicit)
@@ -198,7 +190,7 @@ let e_universe_view =
     | Uv_Unk ->
       ref_Uv_Unk.t in
 
-  let unembed_universe_view w (t:term) : option universe_view =
+  let unembed_universe_view (t:term) : option universe_view =
     let? fv, args = head_fv_and_args t in
     match () with
     | _ when S.fv_eq_lid fv ref_Uv_Zero.lid  -> run args (pure Uv_Zero)
@@ -249,7 +241,7 @@ let e_const =
 
         in { r with pos = rng }
     in
-    let unembed_const w (t:term) : option vconst =
+    let unembed_const (t:term) : option vconst =
       let? fv, args = head_fv_and_args t in
       match () with
       | _ when S.fv_eq_lid fv ref_C_Unit.lid -> run args (pure C_Unit)
@@ -283,7 +275,7 @@ let rec e_pattern_aq aq =
             S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed (e_option e_term) rng eopt)]
                         rng
     in
-    let rec unembed_pattern w (t : term) : option pattern =
+    let rec unembed_pattern (t : term) : option pattern =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Pat_Constant.lid ->
@@ -406,7 +398,7 @@ let e_term_view_aq aq =
         | Tv_Unsupp ->
             { ref_Tv_Unsupp.t with pos = rng }
     in
-    let unembed_term_view w (t:term) : option term_view =
+    let unembed_term_view (t:term) : option term_view =
         let? fv, args = head_fv_and_args t in
         let xTv_Let a b c d e = Tv_Let (a,b,c,d,e) in
         match () with
@@ -438,11 +430,11 @@ let e_lid : embedding I.lid =
     let embed rng lid : term =
         embed e_string_list rng (I.path_of_lid lid)
     in
-    let unembed w t : option I.lid =
-        BU.map_opt (unembed' w e_string_list t) (fun p -> I.lid_of_path p t.pos)
+    let uu t _norm : option I.lid =
+        BU.map_opt (unembed' e_string_list t) (fun p -> I.lid_of_path p t.pos)
     in
     EMB.mk_emb_full (fun x r _ _ -> embed r x)
-               (fun x w _ -> unembed w x)
+               uu
                (t_list_of t_string)
                I.string_of_lid
                ET_abstract
@@ -457,7 +449,7 @@ let e_namedv_view =
         ]
                     rng
     in
-    let unembed_namedv_view w (t : term) : option namedv_view =
+    let unembed_namedv_view (t : term) : option namedv_view =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_namedv_view.lid ->
@@ -475,7 +467,7 @@ let e_bv_view =
         ]
                     rng
     in
-    let unembed_bv_view w (t : term) : option bv_view =
+    let unembed_bv_view (t : term) : option bv_view =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_bv_view.lid ->
@@ -493,7 +485,7 @@ let e_binding =
         ]
                     rng
     in
-    let unembed w (t : term) : option RD.binding =
+    let unembed (t : term) : option RD.binding =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_binding.lid ->
@@ -515,7 +507,7 @@ let e_binder_view =
     ]
                 rng in
 
-  let unembed_binder_view w (t:term) : option binder_view =
+  let unembed_binder_view (t:term) : option binder_view =
     let? fv, args = head_fv_and_args t in
     match () with
     | _ when S.fv_eq_lid fv ref_Mk_binder_view.lid ->
@@ -549,7 +541,7 @@ let e_comp_view =
 
 
     in
-    let unembed_comp_view w (t : term) : option comp_view =
+    let unembed_comp_view (t : term) : option comp_view =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_C_Total.lid -> run args (C_Total <$$> e_term)
@@ -572,7 +564,7 @@ let e_order =
         | Gt -> ord_Gt
         in { r with pos = rng }
     in
-    let unembed_order w (t:term) : option order =
+    let unembed_order (t:term) : option order =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ord_Lt_lid -> run args (pure Lt)
@@ -581,7 +573,6 @@ let e_order =
         | _ -> None
     in
     mk_emb embed_order unembed_order S.t_order
-
 
 let e_univ_name =
     set_type fstar_refl_univ_name (e_tuple2 e_string e_range)
@@ -626,7 +617,7 @@ let e_subst_elt =
                ]
                rng
     in
-    let uu w (t:term) : option subst_elt =
+    let uu (t:term) : option subst_elt =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_DB.lid ->
@@ -639,10 +630,7 @@ let e_subst_elt =
             run args (curry UN <$$> e_fsint <**> e_universe)
         | _ when S.fv_eq_lid fv ref_UD.lid ->
             run args (curry UD <$$> e___ident <**> e_fsint)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded subst_elt: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb ee uu fstar_refl_subst_elt
 
@@ -657,7 +645,7 @@ let e_lb_view =
                                  S.as_arg (embed e_term       rng lbv.lb_def)]
                     rng
     in
-    let unembed_lb_view w (t : term) : option lb_view =
+    let unembed_lb_view (t : term) : option lb_view =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_lb.lid ->
@@ -694,7 +682,7 @@ let e_sigelt_view =
         | Unk ->
             { ref_Unk.t with pos = rng }
     in
-    let unembed_sigelt_view w (t:term) : option sigelt_view =
+    let unembed_sigelt_view (t:term) : option sigelt_view =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
@@ -722,7 +710,7 @@ let e_exp =
                         Range.dummyRange
         in { r with pos = rng }
     in
-    let rec unembed_exp w (t: term) : option exp =
+    let rec unembed_exp (t: term) : option exp =
       let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_E_Unit.lid -> run args (pure Unit)
@@ -782,7 +770,7 @@ let e_qualifier =
 
         in { r with pos = rng }
     in
-    let unembed w (t: term) : option RD.qualifier =
+    let unembed (t: term) : option RD.qualifier =
       let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_qual_Assumption.lid                       -> run args (pure RD.Assumption)

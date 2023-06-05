@@ -40,7 +40,7 @@ module RE    = FStar.Reflection.Embeddings
 module NBETerm = FStar.TypeChecker.NBETerm
 module NBET    = FStar.TypeChecker.NBETerm
 
-let unembed e t n = FStar.Syntax.Embeddings.unembed e t true n
+let unembed e t n = FStar.Syntax.Embeddings.unembed e t n
 let embed e rng t n = FStar.Syntax.Embeddings.embed e t rng None n
 
 let rec drop n l =

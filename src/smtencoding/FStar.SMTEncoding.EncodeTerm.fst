@@ -1502,8 +1502,8 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
-              begin match SE.unembed SE.e_range r false SE.id_norm_cb,
-                          SE.unembed SE.e_string msg false SE.id_norm_cb with
+              begin match SE.try_unembed SE.e_range r SE.id_norm_cb,
+                          SE.try_unembed SE.e_string msg SE.id_norm_cb with
               | Some r, Some s ->
                 let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, r, false)}) r in
                 fallback phi

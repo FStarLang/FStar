@@ -113,13 +113,13 @@ let fstar_tactics_Force         = fstar_tactics_data  ["Types"; "Force"]
 
 
 let mk_emb (em: Range.range -> 'a -> term)
-           (un: bool -> term -> option 'a)
+           (un: term -> option 'a)
            (t: term) =
     mk_emb (fun x r _topt _norm -> em r x)
-           (fun x w _norm -> un w x)
+           (fun x _norm -> un x)
            (FStar.Syntax.Embeddings.term_as_fv t)
 let embed e r x = FStar.Syntax.Embeddings.embed e x r None id_norm_cb
-let unembed' w e x = FStar.Syntax.Embeddings.unembed e x w id_norm_cb
+let unembed' e x = FStar.Syntax.Embeddings.unembed e x id_norm_cb
 
 let t_result_of t   = U.mk_app fstar_tactics_result.t [S.as_arg t] // TODO: uinst on t_result?
 
@@ -212,10 +212,10 @@ let e_exn : embedding exn =
                 [S.as_arg (embed e_string rng s)]
                 rng
     in
-    let unembed_exn (t:term) w _ : option exn =
+    let unembed_exn (t:term) _ : option exn =
         match hd'_and_args t with
         | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-            BU.bind_opt (unembed' w e_string s) (fun s ->
+            BU.bind_opt (unembed' e_string s) (fun s ->
             Some (TacticFailure s))
 
         | _ ->
@@ -271,22 +271,19 @@ let e_result (ea : embedding 'a)  =
                   S.as_arg (embed e_proofstate rng ps)]
                  rng
     in
-    let unembed_result (t:term) w _ : option (__result 'a) =
+    let unembed_result (t:term) _ : option (__result 'a) =
         match hd'_and_args t with
         | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            BU.bind_opt (unembed' w ea a) (fun a ->
-            BU.bind_opt (unembed' w e_proofstate ps) (fun ps ->
+            BU.bind_opt (unembed' ea a) (fun a ->
+            BU.bind_opt (unembed' e_proofstate ps) (fun ps ->
             Some (Success (a, ps))))
 
         | Tm_fvar fv, [_t; (e, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed.lid ->
-            BU.bind_opt (unembed' w e_exn e) (fun e ->
-            BU.bind_opt (unembed' w e_proofstate ps) (fun ps ->
+            BU.bind_opt (unembed' e_exn e) (fun e ->
+            BU.bind_opt (unembed' e_proofstate ps) (fun ps ->
             Some (Failed (e, ps))))
 
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb_full
         embed_result
@@ -337,14 +334,11 @@ let e_direction =
         | TopDown -> fstar_tactics_topdown.t
         | BottomUp -> fstar_tactics_bottomup.t
     in
-    let unembed_direction w (t : term) : option direction =
+    let unembed_direction (t : term) : option direction =
         match (SS.compress t).n with
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_topdown.lid -> Some TopDown
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_bottomup.lid -> Some BottomUp
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb embed_direction unembed_direction fstar_tactics_direction.t
 
@@ -375,15 +369,12 @@ let e_ctrl_flag =
         | Skip     -> fstar_tactics_Skip.t
         | Abort    -> fstar_tactics_Abort.t
     in
-    let unembed_ctrl_flag w (t : term) : option ctrl_flag =
+    let unembed_ctrl_flag (t : term) : option ctrl_flag =
         match (SS.compress t).n with
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Continue.lid -> Some Continue
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Skip.lid     -> Some Skip
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Abort.lid    -> Some Abort
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded ctrl_flag: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb embed_ctrl_flag unembed_ctrl_flag fstar_tactics_ctrl_flag.t
 
@@ -418,16 +409,13 @@ let e_unfold_side =
     | Both -> fstar_tactics_unfold_side_Both.t
     | Neither  -> fstar_tactics_unfold_side_Neither.t
   in
-  let unembed_unfold_side w (t : term) : option side =
+  let unembed_unfold_side (t : term) : option side =
     match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Left.lid -> Some Left
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Right.lid -> Some Right
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Both.lid -> Some Both
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Neither.lid -> Some Neither
     | _ ->
-      if w then
-        Err.log_issue t.pos (Err.Warning_NotEmbedded,
-                             BU.format1 "Not an embedded unfold_side: %s" (Print.term_to_string t));
         None
   in
   mk_emb embed_unfold_side unembed_unfold_side fstar_tactics_unfold_side.t
@@ -464,15 +452,11 @@ let e_tot_or_ghost =
     | E_Total -> fstar_tactics_tot_or_ghost_ETotal.t
     | E_Ghost -> fstar_tactics_tot_or_ghost_EGhost.t
   in
-  let unembed_tot_or_ghost w (t : term) : option tot_or_ghost =
+  let unembed_tot_or_ghost (t : term) : option tot_or_ghost =
     match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_tot_or_ghost_ETotal.lid -> Some E_Total
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_tot_or_ghost_EGhost.lid -> Some E_Ghost
-    | _ ->
-      if w then
-        Err.log_issue t.pos (Err.Warning_NotEmbedded,
-                             BU.format1 "Not an embedded tot_or_ghost: %s" (Print.term_to_string t));
-        None
+    | _ -> None
   in
   mk_emb embed_tot_or_ghost unembed_tot_or_ghost fstar_tactics_tot_or_ghost.t
 
@@ -505,16 +489,13 @@ let e_guard_policy =
         | Force -> fstar_tactics_Force.t
         | Drop  -> fstar_tactics_Drop.t
     in
-    let unembed_guard_policy w (t : term) : option guard_policy =
+    let unembed_guard_policy (t : term) : option guard_policy =
         match (SS.compress t).n with
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_SMT.lid   -> Some SMT
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Goal.lid  -> Some Goal
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Force.lid -> Some Force
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Drop.lid  -> Some Drop
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded guard_policy: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb embed_guard_policy unembed_guard_policy fstar_tactics_guard_policy.t
 

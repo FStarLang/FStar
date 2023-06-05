@@ -45,7 +45,7 @@ type norm_step =
     | UnfoldFully of list string
     | UnfoldAttr  of list string
     | UnfoldQual  of list string
-    | UnfoldNamespace of list string    
+    | UnfoldNamespace of list string
     | Unascribe
     | NBE
     | Unmeta

@@ -6,10 +6,10 @@ open FStar.Syntax.Embeddings
 (* Copied from reflection embeddings. *)
 let mk_emb f g t =
     mk_emb (fun x r _topt _norm -> f r x)
-           (fun x w _norm -> g w x)
+           (fun x _norm -> g x)
            (term_as_fv t)
 let embed e r x = embed e x r None id_norm_cb
-let unembed' w e x = unembed e x w id_norm_cb
+let unembed' e x = unembed e x id_norm_cb
 
 type arg_unembedder 'a = args -> option ('a & args)
 
@@ -17,7 +17,7 @@ let one (e : embedding 'a) : arg_unembedder 'a =
   fun args ->
     match args with
     | (t,_)::xs ->
-      match unembed' false e t with
+      match unembed' e t with
       | None -> None
       | Some v -> Some (v, xs)
 
@@ -49,11 +49,11 @@ let run args u =
   | _ -> None
 
 
-val wrap : (bool -> term -> option 'a) -> arg_unembedder 'a
+val wrap : (term -> option 'a) -> arg_unembedder 'a
 let wrap f =
   fun args ->
     match args with
     | (t,_)::xs ->
-      match f false t with
+      match f t with
       | None -> None
       | Some v -> Some (v, xs)

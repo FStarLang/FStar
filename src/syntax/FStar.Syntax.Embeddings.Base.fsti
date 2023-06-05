@@ -29,7 +29,8 @@ type norm_cb = either Ident.lident term -> term // a callback to the normalizer
 type shadow_term = option (Thunk.t term)
 
 type embed_t = Range.range -> shadow_term -> norm_cb -> term
-type unembed_t 'a = bool -> norm_cb -> option 'a // bool = whether we should warn on a failure
+
+type unembed_t 'a = norm_cb -> option 'a // bool = whether we should warn on a failure
 
 type raw_embedder 'a   = 'a -> embed_t
 type raw_unembedder 'a = term -> unembed_t 'a
@@ -70,9 +71,9 @@ val mk_emb_full: raw_embedder 'a
  * able to unembed.
  *)
 val embed        : embedding 'a -> 'a -> embed_t
-val unembed      : embedding 'a -> term -> unembed_t 'a
-val warn_unembed : embedding 'a -> term -> norm_cb -> option 'a
 val try_unembed  : embedding 'a -> term -> norm_cb -> option 'a
+val unembed      : embedding 'a -> term -> norm_cb -> option 'a
+
 val type_of      : embedding 'a -> typ
 val printer_of   : embedding 'a -> printer 'a
 val set_type     : typ -> embedding 'a -> embedding 'a

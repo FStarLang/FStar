@@ -57,7 +57,7 @@ module PC      = FStar.Parser.Const
 
 let tacdbg = BU.mk_ref false
 
-let unembed ea a norm_cb = unembed ea a true norm_cb
+let unembed ea a norm_cb = unembed ea a norm_cb
 let embed ea r x norm_cb = embed ea x r None norm_cb
 
 let native_tactics_steps () =
@@ -215,7 +215,7 @@ let unembed_tactic_nbe_1 (ea:NBET.embedding 'a) (er:NBET.embedding 'r) (cb:NBET.
 let e_tactic_thunk (er : embedding 'r) : embedding (tac 'r)
     =
     mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (thunk)?")
-           (fun t w cb -> Some (unembed_tactic_1 e_unit er t cb ()))
+           (fun t cb -> Some (unembed_tactic_1 e_unit er t cb ()))
            (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
 
 let e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
@@ -229,7 +229,7 @@ let e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
 let e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : embedding ('a -> tac 'r)
     =
     mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?")
-           (fun t w cb -> Some (unembed_tactic_1 ea er t cb))
+           (fun t cb -> Some (unembed_tactic_1 ea er t cb))
            (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
 
 let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embedding ('a -> tac 'r)
@@ -660,7 +660,7 @@ let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_
 
 let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> (proofstate -> __result 'r)) =
     let em = (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?") in
-    let un (t0: term) (w: bool) (n: norm_cb): option ('a -> (proofstate -> __result 'r)) =
+    let un (t0: term) (n: norm_cb): option ('a -> (proofstate -> __result 'r)) =
         match unembed_tactic_1_alt ea er t0 n with
         | Some f -> Some (fun x -> run (f x))
         | None -> None
