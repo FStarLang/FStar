@@ -40,11 +40,9 @@ ocaml-unit-tests:
 ulib-in-fsharp:
 	$(MAKE) -C ../ulib ulib-in-fsharp
 
-# Getting parallelism from this target
 .PHONY: uregressions
 uregressions: ulib-extra tutorial utests uexamples
 
-# Getting parallelism from this target as well
 # This is a hook for nightly builds (on Linux)
 # But, at the moment, it tests the same files as get tested on every push
 # We may add more nightly tests here in the future

@@ -132,11 +132,16 @@ output:
 	+$(Q)$(MAKE) -C tests/ide/emacs accept
 	+$(Q)$(MAKE) -C tests/bug-reports output-accept
 
+# This rule is meant to mimic what the docker based CI does, but it
+# is not perfect. In particular it will not look for a diff on the
+# snapshot, nor run the build-standalone script.
 .PHONY: ci
 ci:
 	+$(Q)FSTAR_HOME=$(CURDIR) $(MAKE) ci-pre
 	+$(Q)FSTAR_HOME=$(CURDIR) $(MAKE) ci-post
 
+# This rule runs a CI job in a local container, exactly like is done for
+# CI.
 .PHONY: docker-ci
 docker-ci:
 	docker build -f .docker/standalone.Dockerfile --build-arg CI_THREADS=$(shell nproc) .
@@ -149,7 +154,6 @@ ci-pre:
 
 .PHONY: ci-post
 ci-post: ci-uregressions
-	+if [ -n "${FSTAR_CI_UREGRESSIONS_ULONG}" ]; then $(MAKE) ci-uregressions-ulong; fi
 
 .PHONY: ci-uregressions
 ci-uregressions:
