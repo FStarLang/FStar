@@ -35,6 +35,15 @@ let unembed :
     fun x ->
       FStar_Syntax_Embeddings_Base.unembed e x
         FStar_Syntax_Embeddings_Base.id_norm_cb
+let try_unembed :
+  'uuuuu .
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+      FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option
+  =
+  fun e ->
+    fun x ->
+      FStar_Syntax_Embeddings_Base.try_unembed e x
+        FStar_Syntax_Embeddings_Base.id_norm_cb
 let curry :
   'uuuuu 'uuuuu1 'uuuuu2 .
     (('uuuuu * 'uuuuu1) -> 'uuuuu2) -> 'uuuuu -> 'uuuuu1 -> 'uuuuu2
@@ -1329,7 +1338,7 @@ let (e_lid : FStar_Ident.lid FStar_Syntax_Embeddings_Base.embedding) =
     let uu___ = FStar_Ident.path_of_lid lid in
     embed FStar_Syntax_Embeddings.e_string_list rng uu___ in
   let uu t _norm =
-    let uu___ = unembed FStar_Syntax_Embeddings.e_string_list t in
+    let uu___ = try_unembed FStar_Syntax_Embeddings.e_string_list t in
     FStar_Compiler_Util.map_opt uu___
       (fun p -> FStar_Ident.lid_of_path p t.FStar_Syntax_Syntax.pos) in
   let uu___ = FStar_Syntax_Syntax.t_list_of FStar_Syntax_Syntax.t_string in
