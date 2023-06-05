@@ -1440,7 +1440,8 @@ let mk_refine (e:R.term)
   : R.term 
   = let open R in
     let ref = apply e (bv_as_arg bv0) in
-    pack_ln (Tv_Refine bv0 RT.bool_ty (r_b2t ref))
+    let b = RT.mk_simple_binder RT.bool_ty in
+    pack_ln (Tv_Refine b (r_b2t ref))
 
 #push-options "--fuel 4"
 let apply_refinement_closed (e:src_exp { ln e && closed e })
@@ -1521,7 +1522,7 @@ let rec soundness (#f:RT.fstar_top_env)
       RT.T_Const _ _ _ RT.CT_False
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x))
+      RT.T_Var _ (R.pack_namedv (RT.make_namedv x))
 
     | T_Lam _ t e t' x dt de ->
       let de : RT.tot_typing (extend_env_l f ((x,Inl t)::sg))
@@ -1630,7 +1631,7 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
        : RT.tot_typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
                        arg_x
                        RT.bool_ty
-       = RT.T_Var _ (RT.var_as_bv x)
+       = RT.T_Var _ (RT.var_as_namedv x)
      in
      let refinement = apply (elab_exp e) (arg_x, R.Q_Explicit) in
      let dr : RT.tot_typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)

@@ -724,7 +724,7 @@ let rec soundness (#f:fstar_top_env)
       RT.T_Const _ _ _ RT.CT_False
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x))
+      RT.T_Var _ (R.pack_namedv (RT.make_namedv x))
 
     | T_Lam _ t e t' x dt de ->
       let de : RT.tot_typing (extend_env_l f ((x,Inl t)::sg))
