@@ -23,7 +23,7 @@ function export_home() {
 # By default, karamel master works against F* stable. Can also be overridden.
 function fetch_karamel() {
     if [ ! -d karamel ]; then
-        git clone https://github.com/FStarLang/karamel karamel
+        git clone https://github.com/mtzguido/karamel karamel
     fi
 
     cd karamel
