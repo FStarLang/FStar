@@ -147,10 +147,19 @@ docker-ci:
 	docker build -f .docker/standalone.Dockerfile --build-arg CI_THREADS=$(shell nproc) .
 
 .PHONY: ci-pre
-ci-pre:
+ci-pre: ci-rebootstrap ci-ocaml-test ci-ulib-in-fsharp
+
+.PHONY: ci-rebootstrap
+ci-rebootstrap:
 	+$(Q)$(MAKE) full-bootstrap FSTAR_BUILD_PROFILE=test
+
+.PHONY: ci-ocaml-test
+ci-ocaml-test: ci-rebootstrap
 	+$(Q)$(MAKE) -C src ocaml-unit-tests
-	+$(Q)$(MAKE) -C ulib ulib-in-fsharp    #build ulibfs
+
+.PHONY: ci-ulib-in-fsharp
+ci-ulib-in-fsharp: ci-rebootstrap
+	+$(Q)$(MAKE) -C ulib ulib-in-fsharp
 
 .PHONY: ci-post
 ci-post: ci-uregressions
