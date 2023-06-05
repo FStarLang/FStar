@@ -38,6 +38,7 @@ let tcinstance : unit = ()
 irreducible
 let no_method : unit = ()
 
+private
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
     | [] -> fail "no cands"
@@ -64,6 +65,7 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
     (fun () -> apply_noinst t) `seq` (fun () -> tcresolve' seen (fuel-1))
 
+private
 let rec maybe_intros () : Tac unit =
   let g = cur_goal () in
   match inspect_ln g with
@@ -89,17 +91,20 @@ unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev
 (**** Generating methods from a class ****)
 
 (* In TAC, not Tot *)
+private
 let rec mk_abs (bs : list binder) (body : term) : Tac term (decreases bs) =
     match bs with
     | [] -> body
     | b::bs -> pack (Tv_Abs b (mk_abs bs body))
 
+private
 let rec last (l : list 'a) : Tac 'a =
   match l with
   | [] -> fail "last: empty list"
   | [x] -> x
   | _::xs -> last xs
 
+private
 let filter_no_method_binders (bs:binders)
   : binders
   = let has_no_method_attr (b:binder)
@@ -120,6 +125,10 @@ let filter_no_method_binders (bs:binders)
 (* GGG FIXME move *)
 let named_binder_to_term (nb : binder) : term =
   pack (Tv_Var (binder_to_namedv nb))
+
+private
+let binder_set_meta (b : binder) (t : term) : binder =
+  { b with qual = Q_Meta t }
 
 [@@plugin]
 let mk_class (nm:string) : Tac decls =
@@ -170,37 +179,33 @@ let mk_class (nm:string) : Tac decls =
                   let proj_name = cur_module () @ [base ^ s] in
                   let proj = pack (Tv_FVar (pack_fv proj_name)) in
 
-                  let proj_ty =
+                  let proj_lb =
                     match lookup_typ (top_env ()) proj_name with
                     | None -> fail "mk_class: proj not found?"
                     | Some se ->
                       match inspect_sigelt se with
-                      | Sg_Let {lbs} ->  begin
-                        let ({lb_fv=_;lb_us=_;lb_typ=typ;lb_def=_}) =
-                          lookup_lb lbs proj_name in typ
-                        end
+                      | Sg_Let {lbs} -> lookup_lb lbs proj_name
                       | _ -> fail "mk_class: proj not Sg_Let?"
                   in
-                  (* print ("proj_ty = " ^ term_to_string proj_ty); *)
+                  (* print ("proj_ty = " ^ term_to_string proj_lb.lb_typ); *)
+
                   let ty =
-                    let bs, cod = collect_arr_bs proj_ty in
+                    let bs, cod = collect_arr_bs proj_lb.lb_typ in
                     let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
                     match bs with
                     | [] -> fail "mk_class: impossible, no binders"
                     | b1::bs' ->
-                        let b1 = {
-                          ppname = b1.ppname;
-                          sort   = b1.sort;
-                          uniq   = b1.uniq; (* this is fine.. *)
-                          qual   = Q_Meta tcr;
-                          attrs  = [];
-                        } in
+                        let b1 = binder_set_meta b1 tcr in
                         mk_arr (ps@(b1::bs')) cod
                   in
-
-                  let def : term =
-                    let bs = (List.Tot.map (fun b -> { b with qual = Q_Implicit}) params) @ [tcdict] in
-                    mk_abs bs (mk_e_app proj [named_binder_to_term tcdict])
+                  let def =
+                    let bs, body = collect_abs proj_lb.lb_def in
+                    let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
+                    match bs with
+                    | [] -> fail "mk_class: impossible, no binders"
+                    | b1::bs' ->
+                        let b1 = binder_set_meta b1 tcr in
+                        mk_abs (ps@(b1::bs')) body
                   in
                   (* print ("def = " ^ term_to_string def); *)
                   (* print ("ty  = " ^ term_to_string ty); *)
@@ -209,7 +214,7 @@ let mk_class (nm:string) : Tac decls =
                   let def : term = def in
                   let sfv : fv = sfv in
 
-                  let lb = {lb_fv=sfv;lb_us=us;lb_typ=ty;lb_def=def} in
+                  let lb = { lb_fv=sfv; lb_us=proj_lb.lb_us; lb_typ=ty; lb_def=def } in
                   let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
                   let se = set_sigelt_quals to_propagate se in
                   let se = set_sigelt_attrs b.attrs se in
