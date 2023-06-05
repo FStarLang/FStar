@@ -309,9 +309,8 @@ let rec elab_exp (e:src_exp)
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
-      // tun because type does not matter at a use site
-      let bv = R.pack_bv (RT.make_bv n) in
-      R.pack_ln (Tv_Var bv)
+      let namedv = R.pack_namedv (RT.make_namedv n) in
+      R.pack_ln (Tv_Var namedv)
 
     | ELam t e ->
       let t = elab_ty t in
@@ -346,9 +345,10 @@ and elab_ty (t:src_ty)
           
     | TRefineBool e ->
       let e = elab_exp e in
+      let b : R.simple_binder = R.mk_binder "x" RT.bool_ty in
       let bv = R.pack_bv (RT.make_bv 0) in
       let refinement = r_b2t (R.pack_ln (Tv_App e (R.pack_ln (Tv_BVar bv), Q_Explicit))) in
-      R.pack_ln (Tv_Refine bv RT.bool_ty refinement)
+      R.pack_ln (Tv_Refine b refinement)
 
 let elab_eqn (e1 e2:src_exp)
   : R.term
@@ -1430,10 +1430,6 @@ let bv0 = R.pack_bv (RT.make_bv 0)
 let bv_as_arg (x:R.bv)
   = let open R in
     pack_ln (Tv_BVar x), Q_Explicit
-
-let var_as_arg (x:R.bv)
-  = let open R in
-    pack_ln (Tv_Var x), Q_Explicit
 
 let apply (e:R.term) (x:_)
   : R.term

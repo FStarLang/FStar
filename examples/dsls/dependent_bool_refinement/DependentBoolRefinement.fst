@@ -231,8 +231,8 @@ let rec elab_exp (e:src_exp)
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
-      let bv = R.pack_bv (RT.make_bv n) in
-      R.pack_ln (Tv_Var bv)
+      let v = R.pack_namedv (RT.make_namedv n) in
+      R.pack_ln (Tv_Var v)
 
     | ELam t e ->
       let t = elab_ty t in
@@ -267,9 +267,10 @@ and elab_ty (t:src_ty)
           
     | TRefineBool e ->
       let e = elab_exp e in
+      let b = R.mk_binder "x" RT.bool_ty in
       let bv = R.pack_bv (RT.make_bv 0) in
       let refinement = r_b2t e in
-      R.pack_ln (Tv_Refine bv RT.bool_ty refinement)
+      R.pack_ln (Tv_Refine b refinement)
 
 let rec freevars_elab_exp (e:src_exp)
   : Lemma (freevars e `Set.equal` RT.freevars (elab_exp e))
