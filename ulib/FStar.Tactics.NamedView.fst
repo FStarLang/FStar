@@ -308,17 +308,19 @@ let subst_r_binder_sort (s : subst_t) (b : R.binder) : R.binder =
 let subst_binder_sort (s : subst_t) (b : binder) : binder =
   { b with sort = subst_term s b.sort }
 
+(* Can't define this inside open_term_n. See #2955 *)
+private
+let rec __open_term_n_aux (bs : list R.binder) (nbs : list binder) (s : subst_t) : Tac (list binder & subst_t) =
+  match bs with
+  | [] -> nbs, s
+  | b::bs ->
+    let b = subst_r_binder_sort s b in
+    let b = open_binder b in
+    let nv = binder_to_namedv b in
+    __open_term_n_aux bs (b::nbs) (DB 0 nv :: shift_subst 1 s)
+
 let open_term_n (bs : list R.binder) (t : term) : Tac (list binder & term) =
-  let rec aux (bs : list R.binder) (nbs : list binder) (s : subst_t) : Tac (list binder & subst_t) =
-    match bs with
-    | [] -> nbs, s
-    | b::bs ->
-      let b = subst_r_binder_sort s b in
-      let b = open_binder b in
-      let nv = binder_to_namedv b in
-      aux bs (b::nbs) (DB 0 nv :: shift_subst 1 s)
-  in
-  let nbs, s = aux bs [] [] in
+  let nbs, s = __open_term_n_aux bs [] [] in
   List.Tot.rev nbs, subst_term s t
 
 let rec open_term_n_with (bs : list R.binder) (nbs : list binder) (t : term) : Tac term =
