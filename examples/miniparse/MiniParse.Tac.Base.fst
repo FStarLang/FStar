@@ -74,11 +74,10 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
   match T.lookup_typ env n with
   | Some s ->
     begin match T.inspect_sigelt s with
-    | T.Sg_Let false [lb] ->
-      let lbv = T.inspect_lb lb in
+    | T.Sg_Let {isrec=false; lbs=[lb]} ->
       let nm = string_of_name n in
       T.debug ("Unfolded definition: " ^ nm);
-      T.(lbv.lb_def)
+      T.(lb.lb_def)
     | _ ->
       let nm = string_of_name n in
       tfail (nm ^ ": not a non-recursive let definition")

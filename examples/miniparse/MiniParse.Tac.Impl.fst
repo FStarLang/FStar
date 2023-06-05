@@ -55,7 +55,7 @@ let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
     let (t1, _) = qt1 in
     let (f2, _) = qf2 in
     let bx = T.fresh_binder t1 in
-    let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
+    let x = T.pack (T.Tv_Var (T.binder_to_namedv bx)) in
     let f2' = T.pack (T.Tv_Abs bx (T.mk_app f2 [x, T.Q_Explicit])) in
     let p1' = gen_parser_impl' p1 in
     T.mk_app (`(parse_synth_impl)) [
@@ -80,7 +80,7 @@ let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
   then match tl with
   | [(t, _); (p, _); (f, _)] ->
     let bx = T.fresh_binder t in
-    let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
+    let x = T.pack (T.Tv_Var (T.binder_to_namedv bx)) in
     let f' = T.pack (T.Tv_Abs bx (T.mk_app f [x, T.Q_Explicit])) in
     let p' = gen_parser_impl' p in
     T.mk_app (`parse_filter_impl) [
@@ -206,7 +206,7 @@ let rec gen_serializer_impl (pol: T.guard_policy) : T.Tac unit =
           let (t2, _) = qt2 in
           let (g1, _) = qg1 in
           let bx = T.fresh_binder t2 in
-          let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
+          let x = T.pack (T.Tv_Var (T.binder_to_namedv bx)) in
           let g1' = T.pack (T.Tv_Abs bx (T.mk_app g1 [x, T.Q_Explicit])) in
           T.with_policy pol (fun () -> T.apply (T.mk_app (`(serialize_synth_impl')) [
             qt1;
