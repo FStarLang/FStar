@@ -15,6 +15,9 @@
 *)
 module FStar.Tactics.NamedView
 
+(* inner let bindings not encoded, OK *)
+#set-options "--warn_error -242"
+
 open FStar.Reflection
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
@@ -658,7 +661,7 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
     (* Open universes everywhere *)
     let us, s = open_univ_s univs in
     let params = List.Tot.map (subst_r_binder_sort s) params in
-    let typ = subst_term s typ in
+    let typ = subst_term (shift_subst nparams s) typ in
     let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
 
     (* Open parameters in themselves and in type *)
@@ -686,13 +689,6 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
   | RD.Unk -> Unk
 
 private
-let rec mk_abs (args : list binder) (t : term) : Tac term =
-  match args with
-  | [] -> t
-  | a :: args' ->
-    let t' = mk_abs args' t in
-    pack (Tv_Abs a t')
-private
 let rec mk_arr (args : list binder) (t : term) : Tac term =
   match args with
   | [] -> t
@@ -707,6 +703,7 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
     RD.Sg_Let isrec lbs
 
   | Sg_Inductive {nm; univs; params; typ; ctors} ->
+    let nparams = List.Tot.length params in
     (* Abstract constructors by the parameters. This
     is the inverse of the open_n_binders_from_arrow above. *)
     let ctors =
@@ -722,7 +719,7 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
     (* close univs *)
     let us, s = close_univ_s univs in
     let params = List.Tot.map (subst_r_binder_sort s) params in
-    let typ = subst_term s typ in
+    let typ = subst_term (shift_subst nparams s) typ in
     let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
 
     RD.Sg_Inductive nm univs params typ ctors
