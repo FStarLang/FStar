@@ -24,6 +24,8 @@ open FStar.Syntax.Syntax
 open FStar.Compiler.Range
 open FStar.VConfig
 
+open FStar.Syntax.Embeddings.Base
+
 module Print = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
 module C = FStar.Const
@@ -35,7 +37,6 @@ module UF = FStar.Syntax.Unionfind
 module Ident = FStar.Ident
 module Err = FStar.Errors
 module Z = FStar.BigInt
-open FStar.Char
 
 (*********************************************************************
 
@@ -122,15 +123,6 @@ let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
 type printer 'a = 'a -> string
 
-type embedding (a:Type0) = {
-  em : a -> embed_t;
-  un : term -> unembed_t a;
-  typ : typ;
-  print: printer a;
-  emb_typ: emb_typ
-}
-let emb_typ_of e = e.emb_typ
-
 let unknown_printer typ _ =
     BU.format1 "unknown %s" (Print.term_to_string typ)
 
@@ -138,24 +130,6 @@ let term_as_fv t =
     match (SS.compress t).n with
     | Tm_fvar fv -> fv
     | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (Print.term_to_string t))
-
-let mk_emb em un fv =
-    let typ = S.fv_to_tm fv in
-    {
-        em = em ;
-        un = un ;
-        typ = typ;
-        print=unknown_printer typ;
-        emb_typ=ET_app (S.lid_of_fv fv |> Ident.string_of_lid, [])
-    }
-
-let mk_emb_full em un typ printer emb_typ = {
-    em = em ;
-    un = un ;
-    typ = typ;
-    print = printer;
-    emb_typ = emb_typ
-}
 
 //
 // AR/NS: 04/22/2022:
@@ -171,6 +145,7 @@ let mk_emb_full em un typ printer emb_typ = {
 //          code, we enforce terms to be normalized to be PURE
 //
 
+// FIXME: repeat
 let rec unmeta_div_results t =
   let open FStar.Ident in
   match (SS.compress t).n with
@@ -190,43 +165,6 @@ let rec unmeta_div_results t =
   | Tm_ascribed {tm=t'} -> unmeta_div_results t'
   
   | _ -> t
-
-(* Eta-expand to make F# happy *)
-let embed        (e:embedding 'a) x   = e.em x
-let unembed      (e:embedding 'a) t   = e.un (unmeta_div_results t)  //strip meta first
-let warn_unembed (e:embedding 'a) t n = unembed e t true n
-let try_unembed  (e:embedding 'a) t n = unembed e t false n
-let type_of      (e:embedding 'a)     = e.typ
-let set_type ty  (e:embedding 'a)     = { e with typ = ty }
-
-let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
-    mk_emb_full (fun (x:'b) -> embed ea (ba x))
-                (fun (t:term) w cb -> BU.map_opt (unembed ea t w cb) ab)
-                (match o with | Some t -> t | _ -> type_of ea)
-                (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
-                ea.emb_typ
-
-(* A simple lazy embedding, without cancellations nor an expressive type. *)
-let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
-  let ee (x:a) rng _topt _norm : term = U.mk_lazy x ty k (Some rng) in
-  let uu (t:term) _w _norm : option a =
-    let t0 = t in
-    let t = unmeta_div_results t in
-    match (SS.compress t).n with
-    | Tm_lazy {blob=b; lkind=lkind} when U.eq_lazy_kind lkind k -> Some (Dyn.undyn b)
-    | Tm_lazy {blob=b; lkind=lkind} ->
-      (* This is very likely a bug, warn! *)
-      Err.log_issue t0.pos (Err.Warning_NotEmbedded,
-                BU.format3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
-                            Expected %s, got %s\n\t\
-                            t = %s."
-                            (U.lazy_kind_to_string lkind) (U.lazy_kind_to_string k)
-                            (Print.term_to_string t0));
-      None
-    | _ ->
-      None
-  in
-  mk_emb ee uu (term_as_fv ty)
 
 let lazy_embed (pa:printer 'a) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
@@ -420,9 +358,9 @@ let e_string =
 let e_option (ea : embedding 'a) =
     let typ = S.t_option_of (type_of ea) in
     let emb_t_option_a =
-        ET_app(PC.option_lid |> Ident.string_of_lid, [ea.emb_typ])
+        ET_app(PC.option_lid |> Ident.string_of_lid, [emb_typ_of ea])
     in
-    let printer = FStar.Common.string_of_option ea.print in
+    let printer = FStar.Common.string_of_option (printer_of ea) in
     let em (o:option 'a) (rng:range) shadow norm : term =
         lazy_embed
             printer
@@ -477,10 +415,10 @@ let e_option (ea : embedding 'a) =
 let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let typ = S.t_tuple2_of (type_of ea) (type_of eb) in
     let emb_t_pair_a_b =
-        ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])
+        ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [emb_typ_of ea; emb_typ_of eb])
     in
     let printer (x, y) =
-        BU.format2 "(%s, %s)" (ea.print x) (eb.print y)
+        BU.format2 "(%s, %s)" (printer_of ea x) (printer_of eb y)
     in
     let em (x:('a * 'b)) (rng:range) shadow norm : term =
         lazy_embed
@@ -537,10 +475,10 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
 let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let typ = S.t_tuple3_of (type_of ea) (type_of eb) (type_of ec) in
     let emb_t_pair_a_b_c =
-        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ; ec.emb_typ])
+        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [emb_typ_of ea; emb_typ_of eb; emb_typ_of ec])
     in
     let printer (x, y, z) =
-        BU.format3 "(%s, %s, %s)" (ea.print x) (eb.print y) (ec.print z)
+        BU.format3 "(%s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z)
     in
     let em ((x1, x2, x3):('a * 'b * 'c)) (rng:range) shadow norm : term =
         lazy_embed
@@ -602,12 +540,12 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
 let e_either (ea:embedding 'a) (eb:embedding 'b) =
     let typ = S.t_either_of (type_of ea) (type_of eb) in
     let emb_t_sum_a_b =
-        ET_app(PC.either_lid |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])
+        ET_app(PC.either_lid |> Ident.string_of_lid, [emb_typ_of ea; emb_typ_of eb])
     in
     let printer s =
         match s with
-        | Inl a -> BU.format1 "Inl %s" (ea.print a)
-        | Inr b -> BU.format1 "Inr %s" (eb.print b)
+        | Inl a -> BU.format1 "Inl %s" (printer_of ea a)
+        | Inr b -> BU.format1 "Inr %s" (printer_of eb b)
     in
     let em (s:either 'a 'b) (rng:range) shadow norm : term =
         lazy_embed
@@ -681,10 +619,10 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
 let e_list (ea:embedding 'a) =
     let typ = S.t_list_of (type_of ea) in
     let emb_t_list_a =
-        ET_app(PC.list_lid |> Ident.string_of_lid, [ea.emb_typ])
+        ET_app(PC.list_lid |> Ident.string_of_lid, [emb_typ_of ea])
     in
     let printer =
-        (fun (l:list 'a) -> "[" ^ (List.map ea.print l |> String.concat "; ") ^ "]")
+        (fun (l:list 'a) -> "[" ^ (List.map (printer_of ea) l |> String.concat "; ") ^ "]")
     in
     let rec em (l:list 'a) (rng:range) shadow_l norm : term =
         lazy_embed
@@ -773,11 +711,11 @@ let steps_Unascribe     = tconst PC.steps_unascribe
 let steps_NBE           = tconst PC.steps_nbe
 let steps_Unmeta        = tconst PC.steps_unmeta
 
-let e_norm_step =
+let e_norm_step : embedding this_norm_step =
     let typ = S.t_norm_step in
     let emb_t_norm_step = ET_app (PC.norm_step_lid |> Ident.string_of_lid, []) in
     let printer _ = "norm_step" in
-    let em (n:norm_step) (rng:range) _shadow norm : term =
+    let em (n:this_norm_step) (rng:range) _shadow norm : term =
         lazy_embed
             printer
             emb_t_norm_step
@@ -829,7 +767,7 @@ let e_norm_step =
 
                 )
     in
-    let un (t0:term) (w:bool) norm : option norm_step =
+    let un (t0:term) (w:bool) norm : option this_norm_step =
         let t = unmeta_div_results t0 in
         lazy_unembed
             printer
@@ -1055,11 +993,11 @@ let or_else (f: option 'a) (g:unit -> 'a) =
 
 let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
     let typ =
-        S.mk (Tm_arrow {bs=[S.mk_binder (S.null_bv ea.typ)];
-                        comp=S.mk_Total eb.typ})
+        S.mk (Tm_arrow {bs=[S.mk_binder (S.null_bv (type_of ea))];
+                        comp=S.mk_Total (type_of eb)})
               Range.dummyRange
     in
-    let emb_t_arr_a_b = ET_fun(ea.emb_typ, eb.emb_typ) in
+    let emb_t_arr_a_b = ET_fun(emb_typ_of ea, emb_typ_of eb) in
     let printer (f:'a -> 'b) = "<fun>" in
     let em (f:'a -> 'b) rng shadow_f norm =
         // let f_wrapped (x:term) =
@@ -1126,9 +1064,9 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
 let e_sealed (ea : embedding 'a) : embedding 'a =
     let typ = S.t_sealed_of (type_of ea) in
     let emb_ty_a =
-        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.emb_typ])
+        ET_app(PC.sealed_lid |> Ident.string_of_lid, [emb_typ_of ea])
     in
-    let printer x = "(seal " ^ ea.print x ^ ")" in
+    let printer x = "(seal " ^ printer_of ea x ^ ")" in
     let em (a:'a) (rng:range) shadow norm : term =
         lazy_embed
             printer

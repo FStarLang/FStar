@@ -13,6 +13,7 @@ module CTRW = FStar_Tactics_CtrlRewrite
 module RT   = FStar_Reflection_Types
 module RD   = FStar_Reflection_Data
 module EMB  = FStar_Syntax_Embeddings
+module EMB_Base  = FStar_Syntax_Embeddings_Base
 module NBET = FStar_TypeChecker_NBETerm
 
 type 'a __tac = ('a, unit) E.tac_repr
@@ -61,8 +62,8 @@ let rt1 = function
           | EMB.UnfoldNamespace  ss -> UnfoldNamespace  ss
 
 (* the one plugins actually use *)
-let e_norm_step' : norm_step EMB.embedding =
-    EMB.embed_as EMB.e_norm_step rt1 tr1 None
+let e_norm_step' : norm_step EMB_Base.embedding =
+    EMB_Base.embed_as EMB.e_norm_step rt1 tr1 None
 
 let e_norm_step_nbe' : norm_step NBET.embedding =
     NBET.embed_as NBET.e_norm_step rt1 tr1 None
