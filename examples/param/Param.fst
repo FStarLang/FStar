@@ -289,7 +289,7 @@ let param (t:term) : Tac term =
 let fv_to_tm (f:fv) : Tac term = pack (Tv_FVar f)
 
 let param_ctor (nm_ty:name) (s:param_state) (c:ctor) : Tac ctor =
-  dump ("ctor0: " ^ term_to_string (quote c));
+  (* dump ("ctor0: " ^ term_to_string (quote c)); *)
   let nm, ty = c in
   let nm' = cur_module () @ [last nm ^ "_param"] in
   let bs, c = collect_arr_bs ty in
@@ -313,7 +313,7 @@ let param_ctor (nm_ty:name) (s:param_state) (c:ctor) : Tac ctor =
   let ty' = mk_tot_arr bs cod in
 
   let r = (nm', ty') in
-  dump ("ctor1: " ^ term_to_string (quote r));
+  (* dump ("ctor1: " ^ term_to_string (quote r)); *)
   r
 
 //let absN (bs : list binder) (t : term) : Tac term =
@@ -322,10 +322,10 @@ let param_ctor (nm_ty:name) (s:param_state) (c:ctor) : Tac ctor =
 let param_inductive (se:sigelt) (fv0 fv1 : fv) : Tac decls =
   match inspect_sigelt se with
   | Sg_Inductive {nm; univs; params; typ; ctors} ->
-    dump ("typ = " ^ term_to_string typ);
+    (* dump ("typ = " ^ term_to_string typ); *)
     let s = push_fv fv0 fv1 init_param_state in
     let orig = app_binders (fv_to_tm (pack_fv nm)) params in
-    dump ("orig = " ^ term_to_string orig);
+    (* dump ("orig = " ^ term_to_string orig); *)
     let (s, param_bs) =
         fold_left (fun (s, bvs) b -> let (s, (bx0, bx1, bxr)) = push_binder b s in
                                   //dump ("bx0 = " ^ term_to_string (quote bx0));
@@ -336,10 +336,10 @@ let param_inductive (se:sigelt) (fv0 fv1 : fv) : Tac decls =
     let param_bs = List.Tot.rev param_bs in
     //Tactics.Util.iter (fun bv -> dump ("param bv = " ^ binder_to_string bv)) param_bs;
     let typ = mk_e_app (param' s typ) [replace_by s false orig; replace_by s true orig] in
-    dump ("new typ = " ^ term_to_string typ);
+    (* dump ("new typ = " ^ term_to_string typ); *)
     let ctors = Tactics.map (param_ctor nm s) ctors in
     let se = Sg_Inductive {nm=inspect_fv fv1; univs; params=param_bs; typ; ctors} in
-    dump ("param_ind : " ^ term_to_string (quote se));
+    (* dump ("param_ind : " ^ term_to_string (quote se)); *)
     [pack_sigelt se]
   | _ -> fail ""
 
