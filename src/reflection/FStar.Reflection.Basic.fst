@@ -23,6 +23,7 @@ open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 open FStar.Order
 open FStar.Errors
+open FStar.List.Tot.Base
 
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
@@ -365,10 +366,10 @@ let pack_const (c:vconst) : sconst =
 let pack_ln (tv:term_view) : term =
     match tv with
     | Tv_Var bv ->
-        S.bv_to_name bv
+        S.bv_to_name { bv with sort = S.tun }
 
     | Tv_BVar bv ->
-        S.bv_to_tm bv
+        S.bv_to_tm { bv with sort = S.tun }
 
     | Tv_FVar fv ->
         S.fv_to_tm fv
@@ -600,6 +601,25 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let nparam = List.length param_bs in
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
+
+        (* NOTE: The first binders of ty are the parameters of the
+        inductive. They must match exactly with the ones in param_bs,
+        even in the uniqs. But the reflection API will not require that.
+        Hence, replace them here. But also take care to not do anything
+        if there are no parameters. *)
+        BU.print1 "GG param_bs = %s\n" (Print.binders_to_string "," param_bs);
+        BU.print1 "GG cty0 = %s\n" (Print.term_to_string ty);
+        (* let ty = *)
+        (*   if nparam = 0 then ty else *)
+        (*   let (bs, comp) = U.arrow_formals_comp_ln ty in *)
+        (*   let bs = *)
+        (*     let pref, suf = BU.first_N nparam bs in *)
+        (*     param_bs @ suf *)
+        (*   in *)
+        (*   S.mk (Tm_arrow {bs; comp}) ty.pos *)
+        (* in *)
+        BU.print1 "GG cty1 = %s\n" (Print.term_to_string ty);
+
         let lid = Ident.lid_of_path nm Range.dummyRange in
         mk_sigelt <| Sig_datacon {lid; us=List.map pack_ident us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
       in
@@ -670,7 +690,7 @@ let pack_namedv (vv:namedv_view) : namedv =
     {
       index  = Z.to_int_fs vv.uniq;
       ppname = Ident.mk_ident (vv.ppname, Range.dummyRange);
-      sort   = S.tun; // GGG Ignoring user provided sort!!
+      sort   = vv.sort;
     }
 
 let inspect_bv (bv:bv) : bv_view =
@@ -697,7 +717,7 @@ let pack_bv (bvv:bv_view) : bv =
     {
       index = Z.to_int_fs bvv.index;
       ppname = Ident.mk_ident (bvv.ppname, Range.dummyRange);
-      sort = S.tun;
+      sort = bvv.sort;
     }
 
 let inspect_binder (b:binder) : binder_view = 
