@@ -10,7 +10,7 @@ let one (e : embedding 'a) : appemb 'a =
   fun args ->
     match args with
     | (t,_)::xs ->
-      match unembed e t id_norm_cb with
+      match try_unembed e t id_norm_cb with
       | None -> None
       | Some v -> Some (v, xs)
 

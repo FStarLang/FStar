@@ -199,11 +199,10 @@ let unembed (e:embedding 'a) t n =
   let r = try_unembed e t n in
   if None? r then
     Err.log_issue t.pos (Err.Warning_NotEmbedded,
-              BU.format4 "Warning, unembedding failed for type %s (%s); term = %s\n\n\n%s\n\n"
+              BU.format3 "Warning, unembedding failed for type %s (%s); term = %s"
                           (Print.term_to_string (type_of e))
                           (Print.emb_typ_to_string (emb_typ_of e))
                           (Print.term_to_string t)
-                          (BU.stack_dump ())
                           );
   r
 
