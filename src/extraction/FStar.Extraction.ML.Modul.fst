@@ -14,38 +14,39 @@
    limitations under the License.
 *)
 module FStar.Extraction.ML.Modul
-open FStar.Pervasives
-open FStar.Compiler.Effect
-open FStar.Compiler.List
+
 open FStar
 open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Compiler.Util
-open FStar.Syntax.Syntax
 open FStar.Const
 open FStar.Extraction.ML
+open FStar.Extraction.ML.RegEmb
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
-open FStar.Extraction.ML.RegEmb
 open FStar.Ident
+open FStar.Pervasives
 open FStar.Syntax
+open FStar.Syntax.Syntax
 
-module Term = FStar.Extraction.ML.Term
-module Print = FStar.Syntax.Print
-module MLS = FStar.Extraction.ML.Syntax
-module BU = FStar.Compiler.Util
-module S  = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module UF = FStar.Syntax.Unionfind
-module U  = FStar.Syntax.Util
-module TC = FStar.TypeChecker.Tc
-module N  = FStar.TypeChecker.Normalize
-module PC = FStar.Parser.Const
-module Util = FStar.Extraction.ML.Util
-module Env = FStar.TypeChecker.Env
+module Term   = FStar.Extraction.ML.Term
+module Print  = FStar.Syntax.Print
+module MLS    = FStar.Extraction.ML.Syntax
+module BU     = FStar.Compiler.Util
+module S      = FStar.Syntax.Syntax
+module SS     = FStar.Syntax.Subst
+module UF     = FStar.Syntax.Unionfind
+module U      = FStar.Syntax.Util
+module TC     = FStar.TypeChecker.Tc
+module N      = FStar.TypeChecker.Normalize
+module PC     = FStar.Parser.Const
+module Util   = FStar.Extraction.ML.Util
+module Env    = FStar.TypeChecker.Env
 module TcUtil = FStar.TypeChecker.Util
-module EMB=FStar.Syntax.Embeddings
-module Cfg = FStar.TypeChecker.Cfg
+module EMB    = FStar.Syntax.Embeddings
+module Cfg    = FStar.TypeChecker.Cfg
 
 type env_t = UEnv.uenv
 
@@ -327,7 +328,7 @@ let extract_typ_abbrev env quals attrs lb
     * list mlmodule1 =
     let tcenv, (lbdef, lbtyp) =
         let tcenv, _, def_typ =
-          FStar.TypeChecker.Env.open_universes_in (tcenv_of_uenv env) lb.lbunivs [lb.lbdef; lb.lbtyp]
+          Env.open_universes_in (tcenv_of_uenv env) lb.lbunivs [lb.lbdef; lb.lbtyp]
         in
         tcenv, as_pair def_typ
     in
