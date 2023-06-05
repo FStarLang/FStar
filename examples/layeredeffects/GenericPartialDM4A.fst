@@ -75,7 +75,7 @@ let bind (a : Type) (b : Type)
   fun (pf : squash (pre_v /\ (forall x. pre_f x))) ->
     let v = v () in
     let _ = and_elim_2 pf in
-    assert (forall (x:a). pre_f x) by (exact (nth_binder (-1))); // what the hell? #1948?
+    assert (forall (x:a). pre_f x) by (exact (binding_to_term (nth_var (-1)))); // what the hell? #1948?
     let f x = f x () in
     let r = m_bind v f in
     (* Proof that stronger holds *)

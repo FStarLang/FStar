@@ -406,11 +406,11 @@ let reify_read
 =
   extract_read_repr_impl _ _ _ _ _ _ (destr_read_repr_impl _ _ _ _ _ r)
 
-let is_uvar (t:term) : Tac bool = match t with
+let is_uvar (t:term) : Tac bool = match inspect t with
   | Tv_Uvar _ _ -> true
   | Tv_App _ _ ->
       let hd, args = collect_app t in
-      Tv_Uvar? hd
+      Tv_Uvar? (inspect hd)
   | _ -> false
 
 let is_eq (t:term) : Tac (option (term & term)) =
@@ -443,10 +443,10 @@ let rec try_rewrite_equality (x:term) (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs ->
-        begin match term_as_formula' (type_of_binder x_t) with
+        begin match term_as_formula' x_t.sort with
         | Comp (Eq _) y _ ->
             if term_eq x y
-            then rewrite x_t
+            then rewrite (binder_to_binding x_t)
             else try_rewrite_equality x bs
         | _ ->
             try_rewrite_equality x bs
@@ -456,12 +456,12 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs -> begin
-        (try rewrite x_t with | _ -> ());
+        (try rewrite (binder_to_binding x_t) with | _ -> ());
         rewrite_all_context_equalities bs
     end
 
 let rewrite_eqs_from_context_non_sq () : Tac unit =
-    rewrite_all_context_equalities (cur_binders ())
+    rewrite_all_context_equalities (List.Tot.map binding_to_binder (cur_vars ()))
 
 let rewrite_eqs_from_context () : Tac unit =
   rewrite_eqs_from_context ();

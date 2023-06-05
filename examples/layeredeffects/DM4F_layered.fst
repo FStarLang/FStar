@@ -78,8 +78,8 @@ let bind (a:Type) (b:Type) (st:Type0)
   (f : (x:a -> repr b st (wp_f x)))
 : repr b st (bind_wp wp_c wp_f)
    by (explode ();
-       let w = nth_binder 3 in
-       apply_lemma (`(wp_squash_lem (`#w)));
+       let w = nth_var 3 in
+       apply_lemma (`(wp_squash_lem (`#(binding_to_term w))));
        dump "")
 = fun s0 ->
       let (y, s1) = c s0 in
