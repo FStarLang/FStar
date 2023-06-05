@@ -186,10 +186,9 @@ let unembed :
                  let uu___5 = emb_typ_of e in
                  FStar_Syntax_Print.emb_typ_to_string uu___5 in
                let uu___5 = FStar_Syntax_Print.term_to_string t in
-               let uu___6 = FStar_Compiler_Util.stack_dump () in
-               FStar_Compiler_Util.format4
-                 "Warning, unembedding failed for type %s (%s); term = %s\n\n\n%s\n\n"
-                 uu___3 uu___4 uu___5 uu___6 in
+               FStar_Compiler_Util.format3
+                 "Warning, unembedding failed for type %s (%s); term = %s"
+                 uu___3 uu___4 uu___5 in
              (FStar_Errors_Codes.Warning_NotEmbedded, uu___2) in
            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___1)
         else ();

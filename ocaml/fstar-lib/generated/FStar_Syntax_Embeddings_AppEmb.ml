@@ -8,7 +8,7 @@ let one : 'a . 'a FStar_Syntax_Embeddings_Base.embedding -> 'a appemb =
       match args with
       | (t, uu___)::xs ->
           let uu___1 =
-            FStar_Syntax_Embeddings_Base.unembed e t
+            FStar_Syntax_Embeddings_Base.try_unembed e t
               FStar_Syntax_Embeddings_Base.id_norm_cb in
           (match uu___1 with
            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
