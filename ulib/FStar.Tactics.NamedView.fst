@@ -297,30 +297,49 @@ let close_comp_simple (b:simple_binder) (t:comp) : R.simple_binder & comp =
   inspect_pack_binder bv;
   (b, t')
 
-let rec open_term_n (bs : list R.binder) (t : term) : Tac (list binder & term) =
-  match bs with
-  | [] -> ([], t)
-  | b::bs ->
-    let bs', t' = open_term_n bs t in
-    let b', t'' = open_term b t' in
-    (b'::bs', t'')
+let subst_r_binder_sort (s : subst_t) (b : R.binder) : R.binder =
+  let v = inspect_binder b in
+  let v = { v with sort = subst_term s v.sort } in
+  pack_binder v
+
+let subst_binder_sort (s : subst_t) (b : binder) : binder =
+  { b with sort = subst_term s b.sort }
+
+let open_term_n (bs : list R.binder) (t : term) : Tac (list binder & term) =
+  let rec aux (bs : list R.binder) (nbs : list binder) (s : subst_t) : Tac (list binder & subst_t) =
+    match bs with
+    | [] -> nbs, s
+    | b::bs ->
+      let b = subst_r_binder_sort s b in
+      let b = open_binder b in
+      let nv = binder_to_namedv b in
+      aux bs (b::nbs) (DB 0 nv :: shift_subst 1 s)
+  in
+  let nbs, s = aux bs [] [] in
+  List.Tot.rev nbs, subst_term s t
 
 let rec open_term_n_with (bs : list R.binder) (nbs : list binder) (t : term) : Tac term =
   match bs, nbs with
   | [], [] -> t
   | b::bs, nb::nbs ->
+    // FIXME: sorts
     let t' = open_term_n_with bs nbs t in
     let t'' = open_term_with b nb t' in
     t''
   | _ -> raise LengthMismatch
 
-let rec close_term_n (bs : list binder) (t : term) : list R.binder & term =
-  match bs with
-  | [] -> ([], t)
-  | b::bs ->
-    let bs', t' = close_term_n bs t in
-    let b', t'' = close_term b t' in
-    (b'::bs', t'')
+let close_term_n (bs : list binder) (t : term) : list R.binder & term =
+  let rec aux (bs : list binder) (cbs : list R.binder) (s : subst_t) : list R.binder & subst_t =
+    match bs with
+    | [] -> cbs, s
+    | b::bs ->
+      let b = subst_binder_sort s b in
+      let nv = binder_to_namedv b in
+      let b = close_binder b in
+      aux bs (b::cbs) (NM nv 0 :: shift_subst 1 s)
+  in
+  let cbs, s = aux bs [] [] in
+  List.Tot.rev cbs, subst_term s t
 
 let rec open_term_n_simple (bs : list R.simple_binder) (t : term) : Tac (list simple_binder & term) =
   match bs with
@@ -347,11 +366,6 @@ let close_univ_s (us : list univ_name) : list univ_name & subst_t =
   let n = List.Tot.length us in
   let s = List.Tot.mapi (fun i u -> UD (pack_ident u) (n-i-1)) us in
   us, s
-
-let subst_binder_sort (s : subst_t) (b : R.binder) : R.binder =
-  let v = inspect_binder b in
-  let v = { v with sort = subst_term s v.sort } in
-  pack_binder v
 
 let rec open_pat (p : R.pattern) (s : subst_t) : Tac (pattern & subst_t) =
   match p with
@@ -643,7 +657,7 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
 
     (* Open universes everywhere *)
     let us, s = open_univ_s univs in
-    let params = List.Tot.map (subst_binder_sort s) params in
+    let params = List.Tot.map (subst_r_binder_sort s) params in
     let typ = subst_term s typ in
     let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
 
@@ -661,7 +675,6 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
           nm, ty')
         ctors
     in
-    print ("ctors typs2 = " ^ string_of_list (fun (nm, cty) -> term_to_string cty) ctors);
 
     Sg_Inductive {nm; univs; params; typ; ctors}
 
@@ -672,14 +685,20 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
 
   | RD.Unk -> Unk
 
-(** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
 private
-let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+let rec mk_abs (args : list binder) (t : term) : Tac term =
   match args with
   | [] -> t
   | a :: args' ->
     let t' = mk_abs args' t in
     pack (Tv_Abs a t')
+private
+let rec mk_arr (args : list binder) (t : term) : Tac term =
+  match args with
+  | [] -> t
+  | a :: args' ->
+    let t' = pack_comp (C_Total (mk_arr args' t)) in
+    pack (Tv_Arrow a t')
 
 let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view{~(RD.Unk? sv)}) =
   match sv with
@@ -689,15 +708,20 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
 
   | Sg_Inductive {nm; univs; params; typ; ctors} ->
     (* Abstract constructors by the parameters. This
-    is the inverses of the open_n_binders_from_arrow above. *)
-    let ctors = map (fun (nm, ty) -> nm, mk_abs params ty) ctors in
+    is the inverse of the open_n_binders_from_arrow above. *)
+    let ctors =
+        map (fun (nm, ty) ->
+            let ty' = mk_arr params ty in
+            nm, ty')
+        ctors
+    in
 
     (* Close parameters in themselves and typ *)
     let params, typ = close_term_n params typ in
 
     (* close univs *)
     let us, s = close_univ_s univs in
-    let params = List.Tot.map (subst_binder_sort s) params in
+    let params = List.Tot.map (subst_r_binder_sort s) params in
     let typ = subst_term s typ in
     let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
 
