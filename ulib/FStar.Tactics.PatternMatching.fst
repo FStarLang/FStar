@@ -319,9 +319,6 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     | PQn qn -> interp_qn qn cur_bindings tm
     | PType -> interp_type cur_bindings tm
     | PApp p_hd p_arg -> interp_app p_hd p_arg cur_bindings tm
-    // GM: Jul 11 2018, sadly this is needed, seems this monad layered
-    // on top of Tac causesq queries to be hard on Z3
-    | _ -> fail "?"
 
 (** Match a pattern `pat` against a term.
 Returns a result in the exception monad. **)
@@ -844,15 +841,13 @@ let fetch_eq_side' #a : Tac (term * term) =
 /// Commenting out the following example and comparing ``pm`` and ``gpm`` can be
 /// instructive:
 
-(*
-let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
-  assert_by_tactic ((a ==> d) ==> (b ==> d) ==> (c ==> d) ==> a ==> d)
-    (fun () -> repeat' implies_intro';
-               gpm (fun (a b: Type0) (h: hyp (a ==> b)) ->
-                           print (binder_to_string h);
-                           fail "fail here" <: Tac unit);
-               qed ())
-*)
+// let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
+//   assert_by_tactic ((a ==> d) ==> (b ==> d) ==> (c ==> d) ==> a ==> d)
+//     (fun () -> repeat' implies_intro';
+//                gpm (fun (a b: Type0) (h: hyp (a ==> b)) ->
+//                            print (binder_to_string h);
+//                            fail "fail here" <: Tac unit);
+//                qed ())
 
 /// A real-life example
 /// -------------------
