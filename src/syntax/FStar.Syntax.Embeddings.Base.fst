@@ -199,16 +199,18 @@ let unembed (e:embedding 'a) t n =
   let r = try_unembed e t n in
   if None? r then
     Err.log_issue t.pos (Err.Warning_NotEmbedded,
-              BU.format3 "Warning, unembedding failed for type %s (%s); term = %s\n"
+              BU.format4 "Warning, unembedding failed for type %s (%s); term = %s\n\n\n%s\n\n"
                           (Print.term_to_string (type_of e))
                           (Print.emb_typ_to_string (emb_typ_of e))
-                          (Print.term_to_string t));
+                          (Print.term_to_string t)
+                          (BU.stack_dump ())
+                          );
   r
 
 
 let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
     mk_emb_full (fun (x:'b) -> embed ea (ba x))
-                (fun (t:term) cb -> BU.map_opt (unembed ea t cb) ab)
+                (fun (t:term) cb -> BU.map_opt (try_unembed ea t cb) ab)
                 (match o with | Some t -> t | _ -> type_of ea)
                 (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
                 ea.emb_typ

@@ -51,6 +51,7 @@ let mk_emb f g t =
            (term_as_fv t)
 let embed e r x = embed e x r None id_norm_cb
 let unembed e x = unembed e x id_norm_cb
+let try_unembed e x = try_unembed e x id_norm_cb
 
 open FStar.Reflection.Constants
 
@@ -434,7 +435,7 @@ let e_lid : embedding I.lid =
         embed e_string_list rng (I.path_of_lid lid)
     in
     let uu t _norm : option I.lid =
-        BU.map_opt (unembed e_string_list t) (fun p -> I.lid_of_path p t.pos)
+        BU.map_opt (try_unembed e_string_list t) (fun p -> I.lid_of_path p t.pos)
     in
     EMB.mk_emb_full (fun x r _ _ -> embed r x)
                uu
