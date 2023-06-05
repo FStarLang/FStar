@@ -559,7 +559,7 @@ let pattern_of_term tm : Tac pattern =
 // inference, requiring non-trivial normalization.
 
 // let var (a: Type) = a
-let hyp (a: Type) = binder
+let hyp (a: Type) = binding
 let pm_goal (a: Type) = unit
 
 let hyp_qn  = `%hyp
