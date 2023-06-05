@@ -24,19 +24,20 @@ open FStar.Syntax.Syntax
 open FStar.Compiler.Range
 open FStar.VConfig
 
-open FStar.Syntax.Embeddings.Base
-
-module Print = FStar.Syntax.Print
-module S = FStar.Syntax.Syntax
-module C = FStar.Const
-module PC = FStar.Parser.Const
-module SS = FStar.Syntax.Subst
-module BU = FStar.Compiler.Util
-module U = FStar.Syntax.Util
-module UF = FStar.Syntax.Unionfind
+module BU    = FStar.Compiler.Util
+module C     = FStar.Const
+module Err   = FStar.Errors
 module Ident = FStar.Ident
-module Err = FStar.Errors
-module Z = FStar.BigInt
+module PC    = FStar.Parser.Const
+module Print = FStar.Syntax.Print
+module S     = FStar.Syntax.Syntax
+module SS    = FStar.Syntax.Subst
+module U     = FStar.Syntax.Util
+module UF    = FStar.Syntax.Unionfind
+module Z     = FStar.BigInt
+
+open FStar.Syntax.Embeddings.Base
+module AE = FStar.Syntax.Embeddings.AppEmb
 
 (*********************************************************************
 

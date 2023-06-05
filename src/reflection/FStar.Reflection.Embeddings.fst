@@ -42,7 +42,15 @@ module RD = FStar.Reflection.Data
 module List = FStar.Compiler.List
 
 open FStar.Compiler.Dyn
-open FStar.Reflection.ArgEmbedder
+open FStar.Syntax.Embeddings.AppEmb
+
+(* We only use simple embeddings here *)
+let mk_emb f g t =
+    mk_emb (fun x r _topt _norm -> f r x)
+           (fun x _norm -> g x)
+           (term_as_fv t)
+let embed e r x = embed e x r None id_norm_cb
+let unembed e x = unembed e x id_norm_cb
 
 open FStar.Reflection.Constants
 
@@ -57,11 +65,6 @@ let head_fv_and_args (t : term) : option (fv & args) =
   match (U.un_uinst hd).n with
   | Tm_fvar fv -> Some (fv, args)
   | _ -> None
-
-(*
- * embed   : from compiler to user
- * unembed : from user to compiler
- *)
 
 let noaqs : antiquotations = (0, [])
 
@@ -201,7 +204,7 @@ let e_universe_view =
 
     (* no actual embedding, hack it. *)
     | _ when S.fv_eq_lid fv ref_Uv_Unif.lid ->
-      let unemb_uuvar : arg_unembedder universe_uvar =
+      let unemb_uuvar : appemb universe_uvar =
         function [] -> None | (t,_)::xs ->
           let u : universe_uvar = U.unlazy_as_t Lazy_universe_uvar t in
           Some (u, xs)
@@ -431,7 +434,7 @@ let e_lid : embedding I.lid =
         embed e_string_list rng (I.path_of_lid lid)
     in
     let uu t _norm : option I.lid =
-        BU.map_opt (unembed' e_string_list t) (fun p -> I.lid_of_path p t.pos)
+        BU.map_opt (unembed e_string_list t) (fun p -> I.lid_of_path p t.pos)
     in
     EMB.mk_emb_full (fun x r _ _ -> embed r x)
                uu
