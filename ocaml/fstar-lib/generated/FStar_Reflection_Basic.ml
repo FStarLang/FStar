@@ -791,9 +791,10 @@ let (sigelt_opts :
 let (embed_vconfig : FStar_VConfig.vconfig -> FStar_Syntax_Syntax.term) =
   fun vcfg ->
     let uu___ =
-      FStar_Syntax_Embeddings.embed FStar_Syntax_Embeddings.e_vconfig vcfg in
+      FStar_Syntax_Embeddings_Base.embed FStar_Syntax_Embeddings.e_vconfig
+        vcfg in
     uu___ FStar_Compiler_Range_Type.dummyRange FStar_Pervasives_Native.None
-      FStar_Syntax_Embeddings.id_norm_cb
+      FStar_Syntax_Embeddings_Base.id_norm_cb
 let (inspect_sigelt :
   FStar_Syntax_Syntax.sigelt -> FStar_Reflection_Data.sigelt_view) =
   fun se ->

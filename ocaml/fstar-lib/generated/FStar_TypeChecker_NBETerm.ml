@@ -898,7 +898,7 @@ let (e_unit : unit embedding) =
   let un _cb t1 = FStar_Pervasives_Native.Some () in
   let uu___ = lid_as_typ FStar_Parser_Const.unit_lid [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_unit in
+    FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_unit in
   mk_emb' em un uu___ uu___1
 let (e_bool : Prims.bool embedding) =
   let em _cb a = Constant (Bool a) in
@@ -908,7 +908,7 @@ let (e_bool : Prims.bool embedding) =
     | uu___ -> FStar_Pervasives_Native.None in
   let uu___ = lid_as_typ FStar_Parser_Const.bool_lid [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_unit in
+    FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_unit in
   mk_emb' em un uu___ uu___1
 let (e_char : FStar_Char.char embedding) =
   let em _cb c = Constant (Char c) in
@@ -918,7 +918,7 @@ let (e_char : FStar_Char.char embedding) =
     | uu___ -> FStar_Pervasives_Native.None in
   let uu___ = lid_as_typ FStar_Parser_Const.char_lid [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_char in
+    FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_char in
   mk_emb' em un uu___ uu___1
 let (e_string : Prims.string embedding) =
   let em _cb s = Constant (String (s, FStar_Compiler_Range_Type.dummyRange)) in
@@ -928,7 +928,7 @@ let (e_string : Prims.string embedding) =
     | uu___ -> FStar_Pervasives_Native.None in
   let uu___ = lid_as_typ FStar_Parser_Const.string_lid [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_string in
+    FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_string in
   mk_emb' em un uu___ uu___1
 let (e_int : FStar_BigInt.t embedding) =
   let em _cb c = Constant (Int c) in
@@ -938,7 +938,7 @@ let (e_int : FStar_BigInt.t embedding) =
     | uu___ -> FStar_Pervasives_Native.None in
   let uu___ = lid_as_typ FStar_Parser_Const.int_lid [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_int in
+    FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_int in
   mk_emb' em un uu___ uu___1
 let e_option :
   'a . 'a embedding -> 'a FStar_Pervasives_Native.option embedding =
@@ -1215,11 +1215,11 @@ let (e_range : FStar_Compiler_Range_Type.range embedding) =
     | uu___ -> FStar_Pervasives_Native.None in
   let uu___ = lid_as_typ FStar_Parser_Const.range_lid [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_range in
+    FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_range in
   mk_emb' em un uu___ uu___1
 let (e_issue : FStar_Errors.issue embedding) =
   let t_issue =
-    FStar_Syntax_Embeddings.type_of FStar_Syntax_Embeddings.e_issue in
+    FStar_Syntax_Embeddings_Base.type_of FStar_Syntax_Embeddings.e_issue in
   let li blob rng =
     let uu___ = FStar_Compiler_Dyn.mkdyn blob in
     {
@@ -1252,14 +1252,14 @@ let (e_issue : FStar_Errors.issue embedding) =
     | uu___ -> FStar_Pervasives_Native.None in
   let uu___ = lid_as_typ FStar_Parser_Const.issue_lid [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_issue in
+    FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_issue in
   mk_emb' em un uu___ uu___1
 let (e_vconfig : FStar_VConfig.vconfig embedding) =
   let em cb r = failwith "e_vconfig NBE" in
   let un cb t1 = failwith "e_vconfig NBE" in
   let uu___ = lid_as_typ FStar_Parser_Const.vconfig_lid [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_vconfig in
+    FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_vconfig in
   mk_emb' em un uu___ uu___1
 let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
   fun ea ->
@@ -1588,7 +1588,8 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         FStar_Pervasives_Native.None in
     mkFV uu___1 [] [] in
   let uu___1 =
-    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_norm_step in
+    FStar_Syntax_Embeddings_Base.emb_typ_of
+      FStar_Syntax_Embeddings.e_norm_step in
   mk_emb em un uu___ uu___1
 let e_sealed : 'a . 'a embedding -> 'a embedding =
   fun ea ->

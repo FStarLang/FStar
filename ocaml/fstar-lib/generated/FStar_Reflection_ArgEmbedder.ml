@@ -6,41 +6,43 @@ let mk_emb :
       (Prims.bool ->
          FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option)
         ->
-        FStar_Syntax_Syntax.term -> 'uuuuu FStar_Syntax_Embeddings.embedding
+        FStar_Syntax_Syntax.term ->
+          'uuuuu FStar_Syntax_Embeddings_Base.embedding
   =
   fun f ->
     fun g ->
       fun t ->
-        let uu___ = FStar_Syntax_Embeddings.term_as_fv t in
-        FStar_Syntax_Embeddings.mk_emb
+        let uu___ = FStar_Syntax_Embeddings_Base.term_as_fv t in
+        FStar_Syntax_Embeddings_Base.mk_emb
           (fun x -> fun r -> fun _topt -> fun _norm -> f r x)
           (fun x -> fun w -> fun _norm -> g w x) uu___
 let embed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings.embedding ->
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Compiler_Range_Type.range -> 'uuuuu -> FStar_Syntax_Syntax.term
   =
   fun e ->
     fun r ->
       fun x ->
-        let uu___ = FStar_Syntax_Embeddings.embed e x in
+        let uu___ = FStar_Syntax_Embeddings_Base.embed e x in
         uu___ r FStar_Pervasives_Native.None
-          FStar_Syntax_Embeddings.id_norm_cb
+          FStar_Syntax_Embeddings_Base.id_norm_cb
 let unembed' :
   'uuuuu .
     Prims.bool ->
-      'uuuuu FStar_Syntax_Embeddings.embedding ->
+      'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
         FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option
   =
   fun w ->
     fun e ->
       fun x ->
-        let uu___ = FStar_Syntax_Embeddings.unembed e x in
-        uu___ w FStar_Syntax_Embeddings.id_norm_cb
+        let uu___ = FStar_Syntax_Embeddings_Base.unembed e x in
+        uu___ w FStar_Syntax_Embeddings_Base.id_norm_cb
 type 'a arg_unembedder =
   FStar_Syntax_Syntax.args ->
     ('a * FStar_Syntax_Syntax.args) FStar_Pervasives_Native.option
-let one : 'a . 'a FStar_Syntax_Embeddings.embedding -> 'a arg_unembedder =
+let one : 'a . 'a FStar_Syntax_Embeddings_Base.embedding -> 'a arg_unembedder
+  =
   fun e ->
     fun args ->
       match args with
@@ -82,7 +84,7 @@ let op_Less_Star_Greater :
 let op_Less_Star_Star_Greater :
   'a 'b .
     ('a -> 'b) arg_unembedder ->
-      'a FStar_Syntax_Embeddings.embedding -> 'b arg_unembedder
+      'a FStar_Syntax_Embeddings_Base.embedding -> 'b arg_unembedder
   = fun u1 -> fun u2 -> let uu___ = one u2 in op_Less_Star_Greater u1 uu___
 let pure : 'a . 'a -> 'a arg_unembedder =
   fun x -> fun args -> FStar_Pervasives_Native.Some (x, args)
@@ -91,7 +93,8 @@ let op_Less_Dollar_Greater :
   fun u1 -> fun u2 -> let uu___ = pure u1 in op_Less_Star_Greater uu___ u2
 let op_Less_Dollar_Dollar_Greater :
   'a 'b .
-    ('a -> 'b) -> 'a FStar_Syntax_Embeddings.embedding -> 'b arg_unembedder
+    ('a -> 'b) ->
+      'a FStar_Syntax_Embeddings_Base.embedding -> 'b arg_unembedder
   =
   fun u1 ->
     fun u2 ->

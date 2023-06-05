@@ -7483,8 +7483,8 @@ let (parse_attr_with_list :
                           let uu___5 =
                             FStar_Syntax_Embeddings.e_list
                               FStar_Syntax_Embeddings.e_int in
-                          FStar_Syntax_Embeddings.unembed uu___5 a1 in
-                        uu___4 true FStar_Syntax_Embeddings.id_norm_cb in
+                          FStar_Syntax_Embeddings_Base.unembed uu___5 a1 in
+                        uu___4 true FStar_Syntax_Embeddings_Base.id_norm_cb in
                       (match uu___3 with
                        | FStar_Pervasives_Native.Some es ->
                            let uu___4 =

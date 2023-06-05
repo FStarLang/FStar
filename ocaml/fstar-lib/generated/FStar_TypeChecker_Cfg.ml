@@ -1707,7 +1707,7 @@ type primitive_step =
   requires_binder_substitution: Prims.bool ;
   interpretation:
     psc ->
-      FStar_Syntax_Embeddings.norm_cb ->
+      FStar_Syntax_Embeddings_Base.norm_cb ->
         FStar_Syntax_Syntax.universes ->
           FStar_Syntax_Syntax.args ->
             FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -1762,7 +1762,7 @@ let (__proj__Mkprimitive_step__item__requires_binder_substitution :
 let (__proj__Mkprimitive_step__item__interpretation :
   primitive_step ->
     psc ->
-      FStar_Syntax_Embeddings.norm_cb ->
+      FStar_Syntax_Embeddings_Base.norm_cb ->
         FStar_Syntax_Syntax.universes ->
           FStar_Syntax_Syntax.args ->
             FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
@@ -1991,24 +1991,24 @@ let (log_nbe : cfg -> (unit -> unit) -> unit) =
   fun cfg1 -> fun f -> if (cfg1.debug).debug_nbe then f () else ()
 let embed_simple :
   'a .
-    'a FStar_Syntax_Embeddings.embedding ->
+    'a FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Compiler_Range_Type.range -> 'a -> FStar_Syntax_Syntax.term
   =
   fun emb ->
     fun r ->
       fun x ->
-        let uu___ = FStar_Syntax_Embeddings.embed emb x in
+        let uu___ = FStar_Syntax_Embeddings_Base.embed emb x in
         uu___ r FStar_Pervasives_Native.None
-          FStar_Syntax_Embeddings.id_norm_cb
+          FStar_Syntax_Embeddings_Base.id_norm_cb
 let try_unembed_simple :
   'a .
-    'a FStar_Syntax_Embeddings.embedding ->
+    'a FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
   =
   fun emb ->
     fun x ->
-      let uu___ = FStar_Syntax_Embeddings.unembed emb x in
-      uu___ false FStar_Syntax_Embeddings.id_norm_cb
+      let uu___ = FStar_Syntax_Embeddings_Base.unembed emb x in
+      uu___ false FStar_Syntax_Embeddings_Base.id_norm_cb
 let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
   let arg_as_int a =
     FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a)
@@ -3657,7 +3657,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                           let uu___4 =
                             let uu___5 =
                               let uu___6 =
-                                FStar_Syntax_Embeddings.emb_typ_of
+                                FStar_Syntax_Embeddings_Base.emb_typ_of
                                   FStar_Syntax_Embeddings.e_any in
                               emb_typ uu___6 in
                             let uu___6 =
@@ -3720,7 +3720,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                         let uu___4 =
                           let uu___5 =
                             let uu___6 =
-                              FStar_Syntax_Embeddings.emb_typ_of
+                              FStar_Syntax_Embeddings_Base.emb_typ_of
                                 FStar_Syntax_Embeddings.e_any in
                             emb_typ uu___6 in
                           (blob, uu___5) in
@@ -3843,9 +3843,9 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     let mk_lid l = FStar_Parser_Const.p2l ["FStar"; "Issue"; l] in
     let arg_as_issue x =
       let uu___ =
-        FStar_Syntax_Embeddings.unembed FStar_Syntax_Embeddings.e_issue
+        FStar_Syntax_Embeddings_Base.unembed FStar_Syntax_Embeddings.e_issue
           (FStar_Pervasives_Native.fst x) in
-      uu___ false FStar_Syntax_Embeddings.id_norm_cb in
+      uu___ false FStar_Syntax_Embeddings_Base.id_norm_cb in
     let option_int_as_option_z oi =
       match oi with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
@@ -3974,8 +3974,8 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                                                 uu___14)::
                                (number, uu___15)::(context, uu___16)::[] ->
                                let try_unembed e x =
-                                 FStar_Syntax_Embeddings.try_unembed e x
-                                   FStar_Syntax_Embeddings.id_norm_cb in
+                                 FStar_Syntax_Embeddings_Base.try_unembed e x
+                                   FStar_Syntax_Embeddings_Base.id_norm_cb in
                                let uu___17 =
                                  let uu___18 =
                                    try_unembed

@@ -1,26 +1,27 @@
 open Prims
 let unembed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings.embedding ->
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings.norm_cb ->
+        FStar_Syntax_Embeddings_Base.norm_cb ->
           'uuuuu FStar_Pervasives_Native.option
   =
   fun e ->
     fun t ->
       fun n ->
-        let uu___ = FStar_Syntax_Embeddings.unembed e t in uu___ true n
+        let uu___ = FStar_Syntax_Embeddings_Base.unembed e t in uu___ true n
 let embed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings.embedding ->
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Compiler_Range_Type.range ->
-        'uuuuu -> FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
+        'uuuuu ->
+          FStar_Syntax_Embeddings_Base.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun e ->
     fun rng ->
       fun t ->
         fun n ->
-          let uu___ = FStar_Syntax_Embeddings.embed e t in
+          let uu___ = FStar_Syntax_Embeddings_Base.embed e t in
           uu___ rng FStar_Pervasives_Native.None n
 let rec drop : 'uuuuu . Prims.int -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
   fun n ->
@@ -49,7 +50,7 @@ let (mk :
     Prims.int ->
       Prims.int ->
         (FStar_TypeChecker_Cfg.psc ->
-           FStar_Syntax_Embeddings.norm_cb ->
+           FStar_Syntax_Embeddings_Base.norm_cb ->
              FStar_Syntax_Syntax.args ->
                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
           ->
@@ -86,7 +87,7 @@ let (mkt :
     Prims.int ->
       Prims.int ->
         (FStar_TypeChecker_Cfg.psc ->
-           FStar_Syntax_Embeddings.norm_cb ->
+           FStar_Syntax_Embeddings_Base.norm_cb ->
              FStar_Syntax_Syntax.args ->
                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
           ->
@@ -121,10 +122,10 @@ let (mkt :
 let mk_total_interpretation_1_psc :
   'r 't1 .
     (FStar_TypeChecker_Cfg.psc -> 't1 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        'r FStar_Syntax_Embeddings_Base.embedding ->
           FStar_TypeChecker_Cfg.psc ->
-            FStar_Syntax_Embeddings.norm_cb ->
+            FStar_Syntax_Embeddings_Base.norm_cb ->
               FStar_Syntax_Syntax.args ->
                 FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -173,8 +174,8 @@ let mk_total_step_1_psc :
     Prims.int ->
       Prims.string ->
         (FStar_TypeChecker_Cfg.psc -> 'a -> 'r) ->
-          'a FStar_Syntax_Embeddings.embedding ->
-            'r FStar_Syntax_Embeddings.embedding ->
+          'a FStar_Syntax_Embeddings_Base.embedding ->
+            'r FStar_Syntax_Embeddings_Base.embedding ->
               (FStar_TypeChecker_Cfg.psc -> 'na -> 'nr) ->
                 'na FStar_TypeChecker_NBETerm.embedding ->
                   'nr FStar_TypeChecker_NBETerm.embedding ->
@@ -199,10 +200,10 @@ let (max_tac_arity : Prims.int) = (Prims.of_int (20))
 let mk_tactic_interpretation_1 :
   'r 't1 .
     ('t1 -> 'r FStar_Tactics_Monad.tac) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        'r FStar_Syntax_Embeddings_Base.embedding ->
           FStar_TypeChecker_Cfg.psc ->
-            FStar_Syntax_Embeddings.norm_cb ->
+            FStar_Syntax_Embeddings_Base.norm_cb ->
               FStar_Syntax_Syntax.args ->
                 FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -236,11 +237,11 @@ let mk_tactic_interpretation_1 :
 let mk_tactic_interpretation_2 :
   'r 't1 't2 .
     ('t1 -> 't2 -> 'r FStar_Tactics_Monad.tac) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          'r FStar_Syntax_Embeddings_Base.embedding ->
             FStar_TypeChecker_Cfg.psc ->
-              FStar_Syntax_Embeddings.norm_cb ->
+              FStar_Syntax_Embeddings_Base.norm_cb ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -280,12 +281,12 @@ let mk_tactic_interpretation_2 :
 let mk_tactic_interpretation_3 :
   'r 't1 't2 't3 .
     ('t1 -> 't2 -> 't3 -> 'r FStar_Tactics_Monad.tac) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            'r FStar_Syntax_Embeddings_Base.embedding ->
               FStar_TypeChecker_Cfg.psc ->
-                FStar_Syntax_Embeddings.norm_cb ->
+                FStar_Syntax_Embeddings_Base.norm_cb ->
                   FStar_Syntax_Syntax.args ->
                     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -335,13 +336,13 @@ let mk_tactic_interpretation_3 :
 let mk_tactic_interpretation_4 :
   'r 't1 't2 't3 't4 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 'r FStar_Tactics_Monad.tac) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              'r FStar_Syntax_Embeddings_Base.embedding ->
                 FStar_TypeChecker_Cfg.psc ->
-                  FStar_Syntax_Embeddings.norm_cb ->
+                  FStar_Syntax_Embeddings_Base.norm_cb ->
                     FStar_Syntax_Syntax.args ->
                       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -399,14 +400,14 @@ let mk_tactic_interpretation_4 :
 let mk_tactic_interpretation_5 :
   'r 't1 't2 't3 't4 't5 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r FStar_Tactics_Monad.tac) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                'r FStar_Syntax_Embeddings_Base.embedding ->
                   FStar_TypeChecker_Cfg.psc ->
-                    FStar_Syntax_Embeddings.norm_cb ->
+                    FStar_Syntax_Embeddings_Base.norm_cb ->
                       FStar_Syntax_Syntax.args ->
                         FStar_Syntax_Syntax.term
                           FStar_Pervasives_Native.option
@@ -471,15 +472,15 @@ let mk_tactic_interpretation_5 :
 let mk_tactic_interpretation_6 :
   'r 't1 't2 't3 't4 't5 't6 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r FStar_Tactics_Monad.tac) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  'r FStar_Syntax_Embeddings_Base.embedding ->
                     FStar_TypeChecker_Cfg.psc ->
-                      FStar_Syntax_Embeddings.norm_cb ->
+                      FStar_Syntax_Embeddings_Base.norm_cb ->
                         FStar_Syntax_Syntax.args ->
                           FStar_Syntax_Syntax.term
                             FStar_Pervasives_Native.option
@@ -562,16 +563,16 @@ let mk_tactic_interpretation_7 :
     ('t1 ->
        't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    'r FStar_Syntax_Embeddings_Base.embedding ->
                       FStar_TypeChecker_Cfg.psc ->
-                        FStar_Syntax_Embeddings.norm_cb ->
+                        FStar_Syntax_Embeddings_Base.norm_cb ->
                           FStar_Syntax_Syntax.args ->
                             FStar_Syntax_Syntax.term
                               FStar_Pervasives_Native.option
@@ -665,17 +666,17 @@ let mk_tactic_interpretation_8 :
        't2 ->
          't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      'r FStar_Syntax_Embeddings_Base.embedding ->
                         FStar_TypeChecker_Cfg.psc ->
-                          FStar_Syntax_Embeddings.norm_cb ->
+                          FStar_Syntax_Embeddings_Base.norm_cb ->
                             FStar_Syntax_Syntax.args ->
                               FStar_Syntax_Syntax.term
                                 FStar_Pervasives_Native.option
@@ -784,18 +785,18 @@ let mk_tactic_interpretation_9 :
            't4 ->
              't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        'r FStar_Syntax_Embeddings_Base.embedding ->
                           FStar_TypeChecker_Cfg.psc ->
-                            FStar_Syntax_Embeddings.norm_cb ->
+                            FStar_Syntax_Embeddings_Base.norm_cb ->
                               FStar_Syntax_Syntax.args ->
                                 FStar_Syntax_Syntax.term
                                   FStar_Pervasives_Native.option
@@ -916,19 +917,19 @@ let mk_tactic_interpretation_10 :
              't5 ->
                't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          'r FStar_Syntax_Embeddings_Base.embedding ->
                             FStar_TypeChecker_Cfg.psc ->
-                              FStar_Syntax_Embeddings.norm_cb ->
+                              FStar_Syntax_Embeddings_Base.norm_cb ->
                                 FStar_Syntax_Syntax.args ->
                                   FStar_Syntax_Syntax.term
                                     FStar_Pervasives_Native.option
@@ -1064,20 +1065,20 @@ let mk_tactic_interpretation_11 :
                  't7 ->
                    't8 -> 't9 -> 't10 -> 't11 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            'r FStar_Syntax_Embeddings_Base.embedding ->
                               FStar_TypeChecker_Cfg.psc ->
-                                FStar_Syntax_Embeddings.norm_cb ->
+                                FStar_Syntax_Embeddings_Base.norm_cb ->
                                   FStar_Syntax_Syntax.args ->
                                     FStar_Syntax_Syntax.term
                                       FStar_Pervasives_Native.option
@@ -1230,21 +1231,21 @@ let mk_tactic_interpretation_12 :
                      't9 ->
                        't10 -> 't11 -> 't12 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              'r FStar_Syntax_Embeddings_Base.embedding ->
                                 FStar_TypeChecker_Cfg.psc ->
-                                  FStar_Syntax_Embeddings.norm_cb ->
+                                  FStar_Syntax_Embeddings_Base.norm_cb ->
                                     FStar_Syntax_Syntax.args ->
                                       FStar_Syntax_Syntax.term
                                         FStar_Pervasives_Native.option
@@ -1411,22 +1412,22 @@ let mk_tactic_interpretation_13 :
                        't10 ->
                          't11 -> 't12 -> 't13 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                'r FStar_Syntax_Embeddings_Base.embedding ->
                                   FStar_TypeChecker_Cfg.psc ->
-                                    FStar_Syntax_Embeddings.norm_cb ->
+                                    FStar_Syntax_Embeddings_Base.norm_cb ->
                                       FStar_Syntax_Syntax.args ->
                                         FStar_Syntax_Syntax.term
                                           FStar_Pervasives_Native.option
@@ -1608,23 +1609,25 @@ let mk_tactic_interpretation_14 :
                          't11 ->
                            't12 -> 't13 -> 't14 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  'r FStar_Syntax_Embeddings_Base.embedding
+                                    ->
                                     FStar_TypeChecker_Cfg.psc ->
-                                      FStar_Syntax_Embeddings.norm_cb ->
+                                      FStar_Syntax_Embeddings_Base.norm_cb ->
                                         FStar_Syntax_Syntax.args ->
                                           FStar_Syntax_Syntax.term
                                             FStar_Pervasives_Native.option
@@ -1820,24 +1823,28 @@ let mk_tactic_interpretation_15 :
                              't13 ->
                                't14 -> 't15 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    'r FStar_Syntax_Embeddings_Base.embedding
+                                      ->
                                       FStar_TypeChecker_Cfg.psc ->
-                                        FStar_Syntax_Embeddings.norm_cb ->
+                                        FStar_Syntax_Embeddings_Base.norm_cb
+                                          ->
                                           FStar_Syntax_Syntax.args ->
                                             FStar_Syntax_Syntax.term
                                               FStar_Pervasives_Native.option
@@ -2049,25 +2056,32 @@ let mk_tactic_interpretation_16 :
                                't14 ->
                                  't15 -> 't16 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      'r
+                                        FStar_Syntax_Embeddings_Base.embedding
+                                        ->
                                         FStar_TypeChecker_Cfg.psc ->
-                                          FStar_Syntax_Embeddings.norm_cb ->
+                                          FStar_Syntax_Embeddings_Base.norm_cb
+                                            ->
                                             FStar_Syntax_Syntax.args ->
                                               FStar_Syntax_Syntax.term
                                                 FStar_Pervasives_Native.option
@@ -2294,28 +2308,34 @@ let mk_tactic_interpretation_17 :
                                  't15 ->
                                    't16 -> 't17 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      't17 FStar_Syntax_Embeddings.embedding
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't17
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
-                                        'r FStar_Syntax_Embeddings.embedding
+                                        'r
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           FStar_TypeChecker_Cfg.psc ->
-                                            FStar_Syntax_Embeddings.norm_cb
+                                            FStar_Syntax_Embeddings_Base.norm_cb
                                               ->
                                               FStar_Syntax_Syntax.args ->
                                                 FStar_Syntax_Syntax.term
@@ -2561,32 +2581,37 @@ let mk_tactic_interpretation_18 :
                                      't17 ->
                                        't18 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      't17 FStar_Syntax_Embeddings.embedding
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't17
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't18
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           'r
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             FStar_TypeChecker_Cfg.psc ->
-                                              FStar_Syntax_Embeddings.norm_cb
+                                              FStar_Syntax_Embeddings_Base.norm_cb
                                                 ->
                                                 FStar_Syntax_Syntax.args ->
                                                   FStar_Syntax_Syntax.term
@@ -2848,35 +2873,40 @@ let mk_tactic_interpretation_19 :
                                        't18 ->
                                          't19 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      't17 FStar_Syntax_Embeddings.embedding
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't17
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't18
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't19
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             'r
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               FStar_TypeChecker_Cfg.psc ->
-                                                FStar_Syntax_Embeddings.norm_cb
+                                                FStar_Syntax_Embeddings_Base.norm_cb
                                                   ->
                                                   FStar_Syntax_Syntax.args ->
                                                     FStar_Syntax_Syntax.term
@@ -3151,38 +3181,43 @@ let mk_tactic_interpretation_20 :
                                          't19 ->
                                            't20 -> 'r FStar_Tactics_Monad.tac)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      't17 FStar_Syntax_Embeddings.embedding
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't17
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't18
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't19
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             't20
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               'r
-                                                FStar_Syntax_Embeddings.embedding
+                                                FStar_Syntax_Embeddings_Base.embedding
                                                 ->
                                                 FStar_TypeChecker_Cfg.psc ->
-                                                  FStar_Syntax_Embeddings.norm_cb
+                                                  FStar_Syntax_Embeddings_Base.norm_cb
                                                     ->
                                                     FStar_Syntax_Syntax.args
                                                       ->
@@ -6615,10 +6650,10 @@ let mk_tactic_nbe_interpretation_20 :
 let mk_total_interpretation_1 :
   'r 't1 .
     ('t1 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        'r FStar_Syntax_Embeddings_Base.embedding ->
           FStar_TypeChecker_Cfg.psc ->
-            FStar_Syntax_Embeddings.norm_cb ->
+            FStar_Syntax_Embeddings_Base.norm_cb ->
               FStar_Syntax_Syntax.args ->
                 FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -6642,11 +6677,11 @@ let mk_total_interpretation_1 :
 let mk_total_interpretation_2 :
   'r 't1 't2 .
     ('t1 -> 't2 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          'r FStar_Syntax_Embeddings_Base.embedding ->
             FStar_TypeChecker_Cfg.psc ->
-              FStar_Syntax_Embeddings.norm_cb ->
+              FStar_Syntax_Embeddings_Base.norm_cb ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -6675,12 +6710,12 @@ let mk_total_interpretation_2 :
 let mk_total_interpretation_3 :
   'r 't1 't2 't3 .
     ('t1 -> 't2 -> 't3 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            'r FStar_Syntax_Embeddings_Base.embedding ->
               FStar_TypeChecker_Cfg.psc ->
-                FStar_Syntax_Embeddings.norm_cb ->
+                FStar_Syntax_Embeddings_Base.norm_cb ->
                   FStar_Syntax_Syntax.args ->
                     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -6713,13 +6748,13 @@ let mk_total_interpretation_3 :
 let mk_total_interpretation_4 :
   'r 't1 't2 't3 't4 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              'r FStar_Syntax_Embeddings_Base.embedding ->
                 FStar_TypeChecker_Cfg.psc ->
-                  FStar_Syntax_Embeddings.norm_cb ->
+                  FStar_Syntax_Embeddings_Base.norm_cb ->
                     FStar_Syntax_Syntax.args ->
                       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -6759,14 +6794,14 @@ let mk_total_interpretation_4 :
 let mk_total_interpretation_5 :
   'r 't1 't2 't3 't4 't5 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                'r FStar_Syntax_Embeddings_Base.embedding ->
                   FStar_TypeChecker_Cfg.psc ->
-                    FStar_Syntax_Embeddings.norm_cb ->
+                    FStar_Syntax_Embeddings_Base.norm_cb ->
                       FStar_Syntax_Syntax.args ->
                         FStar_Syntax_Syntax.term
                           FStar_Pervasives_Native.option
@@ -6813,15 +6848,15 @@ let mk_total_interpretation_5 :
 let mk_total_interpretation_6 :
   'r 't1 't2 't3 't4 't5 't6 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  'r FStar_Syntax_Embeddings_Base.embedding ->
                     FStar_TypeChecker_Cfg.psc ->
-                      FStar_Syntax_Embeddings.norm_cb ->
+                      FStar_Syntax_Embeddings_Base.norm_cb ->
                         FStar_Syntax_Syntax.args ->
                           FStar_Syntax_Syntax.term
                             FStar_Pervasives_Native.option
@@ -6879,16 +6914,16 @@ let mk_total_interpretation_6 :
 let mk_total_interpretation_7 :
   'r 't1 't2 't3 't4 't5 't6 't7 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    'r FStar_Syntax_Embeddings_Base.embedding ->
                       FStar_TypeChecker_Cfg.psc ->
-                        FStar_Syntax_Embeddings.norm_cb ->
+                        FStar_Syntax_Embeddings_Base.norm_cb ->
                           FStar_Syntax_Syntax.args ->
                             FStar_Syntax_Syntax.term
                               FStar_Pervasives_Native.option
@@ -6958,17 +6993,17 @@ let mk_total_interpretation_7 :
 let mk_total_interpretation_8 :
   'r 't1 't2 't3 't4 't5 't6 't7 't8 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      'r FStar_Syntax_Embeddings_Base.embedding ->
                         FStar_TypeChecker_Cfg.psc ->
-                          FStar_Syntax_Embeddings.norm_cb ->
+                          FStar_Syntax_Embeddings_Base.norm_cb ->
                             FStar_Syntax_Syntax.args ->
                               FStar_Syntax_Syntax.term
                                 FStar_Pervasives_Native.option
@@ -7049,18 +7084,18 @@ let mk_total_interpretation_8 :
 let mk_total_interpretation_9 :
   'r 't1 't2 't3 't4 't5 't6 't7 't8 't9 .
     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r) ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        'r FStar_Syntax_Embeddings_Base.embedding ->
                           FStar_TypeChecker_Cfg.psc ->
-                            FStar_Syntax_Embeddings.norm_cb ->
+                            FStar_Syntax_Embeddings_Base.norm_cb ->
                               FStar_Syntax_Syntax.args ->
                                 FStar_Syntax_Syntax.term
                                   FStar_Pervasives_Native.option
@@ -7155,19 +7190,19 @@ let mk_total_interpretation_10 :
     ('t1 ->
        't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          'r FStar_Syntax_Embeddings_Base.embedding ->
                             FStar_TypeChecker_Cfg.psc ->
-                              FStar_Syntax_Embeddings.norm_cb ->
+                              FStar_Syntax_Embeddings_Base.norm_cb ->
                                 FStar_Syntax_Syntax.args ->
                                   FStar_Syntax_Syntax.term
                                     FStar_Pervasives_Native.option
@@ -7276,20 +7311,20 @@ let mk_total_interpretation_11 :
        't2 ->
          't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            'r FStar_Syntax_Embeddings_Base.embedding ->
                               FStar_TypeChecker_Cfg.psc ->
-                                FStar_Syntax_Embeddings.norm_cb ->
+                                FStar_Syntax_Embeddings_Base.norm_cb ->
                                   FStar_Syntax_Syntax.args ->
                                     FStar_Syntax_Syntax.term
                                       FStar_Pervasives_Native.option
@@ -7414,21 +7449,21 @@ let mk_total_interpretation_12 :
            't4 ->
              't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              'r FStar_Syntax_Embeddings_Base.embedding ->
                                 FStar_TypeChecker_Cfg.psc ->
-                                  FStar_Syntax_Embeddings.norm_cb ->
+                                  FStar_Syntax_Embeddings_Base.norm_cb ->
                                     FStar_Syntax_Syntax.args ->
                                       FStar_Syntax_Syntax.term
                                         FStar_Pervasives_Native.option
@@ -7568,22 +7603,22 @@ let mk_total_interpretation_13 :
              't5 ->
                't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                'r FStar_Syntax_Embeddings_Base.embedding ->
                                   FStar_TypeChecker_Cfg.psc ->
-                                    FStar_Syntax_Embeddings.norm_cb ->
+                                    FStar_Syntax_Embeddings_Base.norm_cb ->
                                       FStar_Syntax_Syntax.args ->
                                         FStar_Syntax_Syntax.term
                                           FStar_Pervasives_Native.option
@@ -7739,23 +7774,25 @@ let mk_total_interpretation_14 :
                  't7 ->
                    't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  'r FStar_Syntax_Embeddings_Base.embedding
+                                    ->
                                     FStar_TypeChecker_Cfg.psc ->
-                                      FStar_Syntax_Embeddings.norm_cb ->
+                                      FStar_Syntax_Embeddings_Base.norm_cb ->
                                         FStar_Syntax_Syntax.args ->
                                           FStar_Syntax_Syntax.term
                                             FStar_Pervasives_Native.option
@@ -7925,24 +7962,28 @@ let mk_total_interpretation_15 :
                      't9 ->
                        't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    'r FStar_Syntax_Embeddings_Base.embedding
+                                      ->
                                       FStar_TypeChecker_Cfg.psc ->
-                                        FStar_Syntax_Embeddings.norm_cb ->
+                                        FStar_Syntax_Embeddings_Base.norm_cb
+                                          ->
                                           FStar_Syntax_Syntax.args ->
                                             FStar_Syntax_Syntax.term
                                               FStar_Pervasives_Native.option
@@ -8127,25 +8168,32 @@ let mk_total_interpretation_16 :
                        't10 ->
                          't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      'r FStar_Syntax_Embeddings.embedding ->
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      'r
+                                        FStar_Syntax_Embeddings_Base.embedding
+                                        ->
                                         FStar_TypeChecker_Cfg.psc ->
-                                          FStar_Syntax_Embeddings.norm_cb ->
+                                          FStar_Syntax_Embeddings_Base.norm_cb
+                                            ->
                                             FStar_Syntax_Syntax.args ->
                                               FStar_Syntax_Syntax.term
                                                 FStar_Pervasives_Native.option
@@ -8346,28 +8394,34 @@ let mk_total_interpretation_17 :
                          't11 ->
                            't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      't17 FStar_Syntax_Embeddings.embedding
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't17
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
-                                        'r FStar_Syntax_Embeddings.embedding
+                                        'r
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           FStar_TypeChecker_Cfg.psc ->
-                                            FStar_Syntax_Embeddings.norm_cb
+                                            FStar_Syntax_Embeddings_Base.norm_cb
                                               ->
                                               FStar_Syntax_Syntax.args ->
                                                 FStar_Syntax_Syntax.term
@@ -8585,32 +8639,37 @@ let mk_total_interpretation_18 :
                              't13 ->
                                't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      't17 FStar_Syntax_Embeddings.embedding
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't17
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't18
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           'r
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             FStar_TypeChecker_Cfg.psc ->
-                                              FStar_Syntax_Embeddings.norm_cb
+                                              FStar_Syntax_Embeddings_Base.norm_cb
                                                 ->
                                                 FStar_Syntax_Syntax.args ->
                                                   FStar_Syntax_Syntax.term
@@ -8845,35 +8904,40 @@ let mk_total_interpretation_19 :
                                't14 ->
                                  't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      't17 FStar_Syntax_Embeddings.embedding
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't17
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't18
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't19
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             'r
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               FStar_TypeChecker_Cfg.psc ->
-                                                FStar_Syntax_Embeddings.norm_cb
+                                                FStar_Syntax_Embeddings_Base.norm_cb
                                                   ->
                                                   FStar_Syntax_Syntax.args ->
                                                     FStar_Syntax_Syntax.term
@@ -9121,38 +9185,43 @@ let mk_total_interpretation_20 :
                                  't15 ->
                                    't16 -> 't17 -> 't18 -> 't19 -> 't20 -> 'r)
       ->
-      't1 FStar_Syntax_Embeddings.embedding ->
-        't2 FStar_Syntax_Embeddings.embedding ->
-          't3 FStar_Syntax_Embeddings.embedding ->
-            't4 FStar_Syntax_Embeddings.embedding ->
-              't5 FStar_Syntax_Embeddings.embedding ->
-                't6 FStar_Syntax_Embeddings.embedding ->
-                  't7 FStar_Syntax_Embeddings.embedding ->
-                    't8 FStar_Syntax_Embeddings.embedding ->
-                      't9 FStar_Syntax_Embeddings.embedding ->
-                        't10 FStar_Syntax_Embeddings.embedding ->
-                          't11 FStar_Syntax_Embeddings.embedding ->
-                            't12 FStar_Syntax_Embeddings.embedding ->
-                              't13 FStar_Syntax_Embeddings.embedding ->
-                                't14 FStar_Syntax_Embeddings.embedding ->
-                                  't15 FStar_Syntax_Embeddings.embedding ->
-                                    't16 FStar_Syntax_Embeddings.embedding ->
-                                      't17 FStar_Syntax_Embeddings.embedding
+      't1 FStar_Syntax_Embeddings_Base.embedding ->
+        't2 FStar_Syntax_Embeddings_Base.embedding ->
+          't3 FStar_Syntax_Embeddings_Base.embedding ->
+            't4 FStar_Syntax_Embeddings_Base.embedding ->
+              't5 FStar_Syntax_Embeddings_Base.embedding ->
+                't6 FStar_Syntax_Embeddings_Base.embedding ->
+                  't7 FStar_Syntax_Embeddings_Base.embedding ->
+                    't8 FStar_Syntax_Embeddings_Base.embedding ->
+                      't9 FStar_Syntax_Embeddings_Base.embedding ->
+                        't10 FStar_Syntax_Embeddings_Base.embedding ->
+                          't11 FStar_Syntax_Embeddings_Base.embedding ->
+                            't12 FStar_Syntax_Embeddings_Base.embedding ->
+                              't13 FStar_Syntax_Embeddings_Base.embedding ->
+                                't14 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't15 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't16
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't17
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't18
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't19
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             't20
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               'r
-                                                FStar_Syntax_Embeddings.embedding
+                                                FStar_Syntax_Embeddings_Base.embedding
                                                 ->
                                                 FStar_TypeChecker_Cfg.psc ->
-                                                  FStar_Syntax_Embeddings.norm_cb
+                                                  FStar_Syntax_Embeddings_Base.norm_cb
                                                     ->
                                                     FStar_Syntax_Syntax.args
                                                       ->
@@ -12150,8 +12219,8 @@ let mk_tac_step_1 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 'r FStar_Tactics_Monad.tac) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            'r FStar_Syntax_Embeddings_Base.embedding ->
               ('nt1 -> 'nr FStar_Tactics_Monad.tac) ->
                 'nt1 FStar_TypeChecker_NBETerm.embedding ->
                   'nr FStar_TypeChecker_NBETerm.embedding ->
@@ -12176,9 +12245,9 @@ let mk_tac_step_2 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 'r FStar_Tactics_Monad.tac) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              'r FStar_Syntax_Embeddings_Base.embedding ->
                 ('nt1 -> 'nt2 -> 'nr FStar_Tactics_Monad.tac) ->
                   'nt1 FStar_TypeChecker_NBETerm.embedding ->
                     'nt2 FStar_TypeChecker_NBETerm.embedding ->
@@ -12207,10 +12276,10 @@ let mk_tac_step_3 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 'r FStar_Tactics_Monad.tac) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                'r FStar_Syntax_Embeddings_Base.embedding ->
                   ('nt1 -> 'nt2 -> 'nt3 -> 'nr FStar_Tactics_Monad.tac) ->
                     'nt1 FStar_TypeChecker_NBETerm.embedding ->
                       'nt2 FStar_TypeChecker_NBETerm.embedding ->
@@ -12242,11 +12311,11 @@ let mk_tac_step_4 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 'r FStar_Tactics_Monad.tac) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  'r FStar_Syntax_Embeddings_Base.embedding ->
                     ('nt1 ->
                        'nt2 -> 'nt3 -> 'nt4 -> 'nr FStar_Tactics_Monad.tac)
                       ->
@@ -12283,12 +12352,12 @@ let mk_tac_step_5 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r FStar_Tactics_Monad.tac) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    'r FStar_Syntax_Embeddings_Base.embedding ->
                       ('nt1 ->
                          'nt2 ->
                            'nt3 ->
@@ -12332,13 +12401,13 @@ let mk_tac_step_6 :
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      'r FStar_Syntax_Embeddings_Base.embedding ->
                         ('nt1 ->
                            'nt2 ->
                              'nt3 ->
@@ -12391,14 +12460,14 @@ let mk_tac_step_7 :
            't2 ->
              't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        'r FStar_Syntax_Embeddings_Base.embedding ->
                           ('nt1 ->
                              'nt2 ->
                                'nt3 ->
@@ -12463,15 +12532,15 @@ let mk_tac_step_8 :
              't3 ->
                't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          'r FStar_Syntax_Embeddings_Base.embedding ->
                             ('nt1 ->
                                'nt2 ->
                                  'nt3 ->
@@ -12550,16 +12619,16 @@ let mk_tac_step_9 :
                  't5 ->
                    't6 -> 't7 -> 't8 -> 't9 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            'r FStar_Syntax_Embeddings_Base.embedding ->
                               ('nt1 ->
                                  'nt2 ->
                                    'nt3 ->
@@ -12648,17 +12717,17 @@ let mk_tac_step_10 :
                    't6 ->
                      't7 -> 't8 -> 't9 -> 't10 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              'r FStar_Syntax_Embeddings_Base.embedding ->
                                 ('nt1 ->
                                    'nt2 ->
                                      'nt3 ->
@@ -12762,18 +12831,18 @@ let mk_tac_step_11 :
                        't8 ->
                          't9 -> 't10 -> 't11 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                'r FStar_Syntax_Embeddings_Base.embedding ->
                                   ('nt1 ->
                                      'nt2 ->
                                        'nt3 ->
@@ -12890,19 +12959,21 @@ let mk_tac_step_12 :
                          't9 ->
                            't10 -> 't11 -> 't12 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  'r FStar_Syntax_Embeddings_Base.embedding
+                                    ->
                                     ('nt1 ->
                                        'nt2 ->
                                          'nt3 ->
@@ -13033,20 +13104,23 @@ let mk_tac_step_13 :
                              't11 ->
                                't12 -> 't13 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    'r FStar_Syntax_Embeddings_Base.embedding
+                                      ->
                                       ('nt1 ->
                                          'nt2 ->
                                            'nt3 ->
@@ -13187,21 +13261,27 @@ let mk_tac_step_14 :
                                't12 ->
                                  't13 -> 't14 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      'r
+                                        FStar_Syntax_Embeddings_Base.embedding
+                                        ->
                                         ('nt1 ->
                                            'nt2 ->
                                              'nt3 ->
@@ -13352,23 +13432,29 @@ let mk_tac_step_15 :
                                  't13 ->
                                    't14 -> 't15 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
-                                        'r FStar_Syntax_Embeddings.embedding
+                                        'r
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           ('nt1 ->
                                              'nt2 ->
@@ -13530,27 +13616,32 @@ let mk_tac_step_16 :
                                      't15 ->
                                        't16 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           'r
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             ('nt1 ->
                                                'nt2 ->
@@ -13723,30 +13814,35 @@ let mk_tac_step_17 :
                                        't16 ->
                                          't17 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't17
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             'r
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               ('nt1 ->
                                                  'nt2 ->
@@ -13928,33 +14024,38 @@ let mk_tac_step_18 :
                                          't17 ->
                                            't18 -> 'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't17
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             't18
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               'r
-                                                FStar_Syntax_Embeddings.embedding
+                                                FStar_Syntax_Embeddings_Base.embedding
                                                 ->
                                                 ('nt1 ->
                                                    'nt2 ->
@@ -14148,36 +14249,41 @@ let mk_tac_step_19 :
                                              't19 ->
                                                'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't17
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             't18
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               't19
-                                                FStar_Syntax_Embeddings.embedding
+                                                FStar_Syntax_Embeddings_Base.embedding
                                                 ->
                                                 'r
-                                                  FStar_Syntax_Embeddings.embedding
+                                                  FStar_Syntax_Embeddings_Base.embedding
                                                   ->
                                                   ('nt1 ->
                                                      'nt2 ->
@@ -14380,39 +14486,44 @@ let mk_tac_step_20 :
                                                't20 ->
                                                  'r FStar_Tactics_Monad.tac)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't17
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             't18
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               't19
-                                                FStar_Syntax_Embeddings.embedding
+                                                FStar_Syntax_Embeddings_Base.embedding
                                                 ->
                                                 't20
-                                                  FStar_Syntax_Embeddings.embedding
+                                                  FStar_Syntax_Embeddings_Base.embedding
                                                   ->
                                                   'r
-                                                    FStar_Syntax_Embeddings.embedding
+                                                    FStar_Syntax_Embeddings_Base.embedding
                                                     ->
                                                     ('nt1 ->
                                                        'nt2 ->
@@ -14602,8 +14713,8 @@ let mk_total_step_1 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 'r) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            'r FStar_Syntax_Embeddings_Base.embedding ->
               ('nt1 -> 'nr) ->
                 'nt1 FStar_TypeChecker_NBETerm.embedding ->
                   'nr FStar_TypeChecker_NBETerm.embedding ->
@@ -14628,9 +14739,9 @@ let mk_total_step_2 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 'r) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              'r FStar_Syntax_Embeddings_Base.embedding ->
                 ('nt1 -> 'nt2 -> 'nr) ->
                   'nt1 FStar_TypeChecker_NBETerm.embedding ->
                     'nt2 FStar_TypeChecker_NBETerm.embedding ->
@@ -14659,10 +14770,10 @@ let mk_total_step_3 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 'r) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                'r FStar_Syntax_Embeddings_Base.embedding ->
                   ('nt1 -> 'nt2 -> 'nt3 -> 'nr) ->
                     'nt1 FStar_TypeChecker_NBETerm.embedding ->
                       'nt2 FStar_TypeChecker_NBETerm.embedding ->
@@ -14694,11 +14805,11 @@ let mk_total_step_4 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 'r) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  'r FStar_Syntax_Embeddings_Base.embedding ->
                     ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nr) ->
                       'nt1 FStar_TypeChecker_NBETerm.embedding ->
                         'nt2 FStar_TypeChecker_NBETerm.embedding ->
@@ -14733,12 +14844,12 @@ let mk_total_step_5 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    'r FStar_Syntax_Embeddings_Base.embedding ->
                       ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nr) ->
                         'nt1 FStar_TypeChecker_NBETerm.embedding ->
                           'nt2 FStar_TypeChecker_NBETerm.embedding ->
@@ -14777,13 +14888,13 @@ let mk_total_step_6 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      'r FStar_Syntax_Embeddings_Base.embedding ->
                         ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nr)
                           ->
                           'nt1 FStar_TypeChecker_NBETerm.embedding ->
@@ -14829,14 +14940,14 @@ let mk_total_step_7 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        'r FStar_Syntax_Embeddings_Base.embedding ->
                           ('nt1 ->
                              'nt2 ->
                                'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nr)
@@ -14893,15 +15004,15 @@ let mk_total_step_8 :
     Prims.int ->
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r) ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          'r FStar_Syntax_Embeddings_Base.embedding ->
                             ('nt1 ->
                                'nt2 ->
                                  'nt3 ->
@@ -14971,16 +15082,16 @@ let mk_total_step_9 :
       Prims.string ->
         ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            'r FStar_Syntax_Embeddings_Base.embedding ->
                               ('nt1 ->
                                  'nt2 ->
                                    'nt3 ->
@@ -15060,17 +15171,17 @@ let mk_total_step_10 :
         ('t1 ->
            't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              'r FStar_Syntax_Embeddings_Base.embedding ->
                                 ('nt1 ->
                                    'nt2 ->
                                      'nt3 ->
@@ -15165,18 +15276,18 @@ let mk_total_step_11 :
              't3 ->
                't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                'r FStar_Syntax_Embeddings_Base.embedding ->
                                   ('nt1 ->
                                      'nt2 ->
                                        'nt3 ->
@@ -15286,19 +15397,21 @@ let mk_total_step_12 :
                  't5 ->
                    't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  'r FStar_Syntax_Embeddings_Base.embedding
+                                    ->
                                     ('nt1 ->
                                        'nt2 ->
                                          'nt3 ->
@@ -15422,20 +15535,23 @@ let mk_total_step_13 :
                    't6 ->
                      't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    'r FStar_Syntax_Embeddings_Base.embedding
+                                      ->
                                       ('nt1 ->
                                          'nt2 ->
                                            'nt3 ->
@@ -15570,21 +15686,27 @@ let mk_total_step_14 :
                        't8 ->
                          't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      'r FStar_Syntax_Embeddings.embedding ->
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      'r
+                                        FStar_Syntax_Embeddings_Base.embedding
+                                        ->
                                         ('nt1 ->
                                            'nt2 ->
                                              'nt3 ->
@@ -15730,23 +15852,29 @@ let mk_total_step_15 :
                          't9 ->
                            't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
-                                        'r FStar_Syntax_Embeddings.embedding
+                                        'r
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           ('nt1 ->
                                              'nt2 ->
@@ -15903,27 +16031,32 @@ let mk_total_step_16 :
                              't11 ->
                                't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           'r
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             ('nt1 ->
                                                'nt2 ->
@@ -16091,30 +16224,35 @@ let mk_total_step_17 :
                                't12 ->
                                  't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't17
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             'r
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               ('nt1 ->
                                                  'nt2 ->
@@ -16291,33 +16429,38 @@ let mk_total_step_18 :
                                  't13 ->
                                    't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't17
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             't18
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               'r
-                                                FStar_Syntax_Embeddings.embedding
+                                                FStar_Syntax_Embeddings_Base.embedding
                                                 ->
                                                 ('nt1 ->
                                                    'nt2 ->
@@ -16506,36 +16649,41 @@ let mk_total_step_19 :
                                      't15 ->
                                        't16 -> 't17 -> 't18 -> 't19 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't17
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             't18
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               't19
-                                                FStar_Syntax_Embeddings.embedding
+                                                FStar_Syntax_Embeddings_Base.embedding
                                                 ->
                                                 'r
-                                                  FStar_Syntax_Embeddings.embedding
+                                                  FStar_Syntax_Embeddings_Base.embedding
                                                   ->
                                                   ('nt1 ->
                                                      'nt2 ->
@@ -16733,39 +16881,44 @@ let mk_total_step_20 :
                                        't16 ->
                                          't17 -> 't18 -> 't19 -> 't20 -> 'r)
           ->
-          't1 FStar_Syntax_Embeddings.embedding ->
-            't2 FStar_Syntax_Embeddings.embedding ->
-              't3 FStar_Syntax_Embeddings.embedding ->
-                't4 FStar_Syntax_Embeddings.embedding ->
-                  't5 FStar_Syntax_Embeddings.embedding ->
-                    't6 FStar_Syntax_Embeddings.embedding ->
-                      't7 FStar_Syntax_Embeddings.embedding ->
-                        't8 FStar_Syntax_Embeddings.embedding ->
-                          't9 FStar_Syntax_Embeddings.embedding ->
-                            't10 FStar_Syntax_Embeddings.embedding ->
-                              't11 FStar_Syntax_Embeddings.embedding ->
-                                't12 FStar_Syntax_Embeddings.embedding ->
-                                  't13 FStar_Syntax_Embeddings.embedding ->
-                                    't14 FStar_Syntax_Embeddings.embedding ->
-                                      't15 FStar_Syntax_Embeddings.embedding
+          't1 FStar_Syntax_Embeddings_Base.embedding ->
+            't2 FStar_Syntax_Embeddings_Base.embedding ->
+              't3 FStar_Syntax_Embeddings_Base.embedding ->
+                't4 FStar_Syntax_Embeddings_Base.embedding ->
+                  't5 FStar_Syntax_Embeddings_Base.embedding ->
+                    't6 FStar_Syntax_Embeddings_Base.embedding ->
+                      't7 FStar_Syntax_Embeddings_Base.embedding ->
+                        't8 FStar_Syntax_Embeddings_Base.embedding ->
+                          't9 FStar_Syntax_Embeddings_Base.embedding ->
+                            't10 FStar_Syntax_Embeddings_Base.embedding ->
+                              't11 FStar_Syntax_Embeddings_Base.embedding ->
+                                't12 FStar_Syntax_Embeddings_Base.embedding
+                                  ->
+                                  't13 FStar_Syntax_Embeddings_Base.embedding
+                                    ->
+                                    't14
+                                      FStar_Syntax_Embeddings_Base.embedding
+                                      ->
+                                      't15
+                                        FStar_Syntax_Embeddings_Base.embedding
                                         ->
                                         't16
-                                          FStar_Syntax_Embeddings.embedding
+                                          FStar_Syntax_Embeddings_Base.embedding
                                           ->
                                           't17
-                                            FStar_Syntax_Embeddings.embedding
+                                            FStar_Syntax_Embeddings_Base.embedding
                                             ->
                                             't18
-                                              FStar_Syntax_Embeddings.embedding
+                                              FStar_Syntax_Embeddings_Base.embedding
                                               ->
                                               't19
-                                                FStar_Syntax_Embeddings.embedding
+                                                FStar_Syntax_Embeddings_Base.embedding
                                                 ->
                                                 't20
-                                                  FStar_Syntax_Embeddings.embedding
+                                                  FStar_Syntax_Embeddings_Base.embedding
                                                   ->
                                                   'r
-                                                    FStar_Syntax_Embeddings.embedding
+                                                    FStar_Syntax_Embeddings_Base.embedding
                                                     ->
                                                     ('nt1 ->
                                                        'nt2 ->

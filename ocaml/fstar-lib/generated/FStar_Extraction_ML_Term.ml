@@ -2763,11 +2763,11 @@ and (term_as_mlexpr' :
                   let tv' = FStar_Reflection_Data.Tv_BVar bv in
                   let tv =
                     let uu___2 =
-                      FStar_Syntax_Embeddings.embed
+                      FStar_Syntax_Embeddings_Base.embed
                         FStar_Reflection_Embeddings.e_term_view tv' in
                     uu___2 t.FStar_Syntax_Syntax.pos
                       FStar_Pervasives_Native.None
-                      FStar_Syntax_Embeddings.id_norm_cb in
+                      FStar_Syntax_Embeddings_Base.id_norm_cb in
                   let t1 =
                     let uu___2 =
                       let uu___3 = FStar_Syntax_Syntax.as_arg tv in [uu___3] in
@@ -2784,10 +2784,10 @@ and (term_as_mlexpr' :
                   let uu___2 =
                     let uu___3 =
                       FStar_Reflection_Embeddings.e_term_view_aq (shift, aqs) in
-                    FStar_Syntax_Embeddings.embed uu___3 tv in
+                    FStar_Syntax_Embeddings_Base.embed uu___3 tv in
                   uu___2 t.FStar_Syntax_Syntax.pos
                     FStar_Pervasives_Native.None
-                    FStar_Syntax_Embeddings.id_norm_cb in
+                    FStar_Syntax_Embeddings_Base.id_norm_cb in
                 let t1 =
                   let uu___2 =
                     let uu___3 = FStar_Syntax_Syntax.as_arg tv1 in [uu___3] in

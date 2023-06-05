@@ -3,27 +3,28 @@ let (tacdbg : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref false
 let unembed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings.embedding ->
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings.norm_cb ->
+        FStar_Syntax_Embeddings_Base.norm_cb ->
           'uuuuu FStar_Pervasives_Native.option
   =
   fun ea ->
     fun a ->
       fun norm_cb ->
-        let uu___ = FStar_Syntax_Embeddings.unembed ea a in
+        let uu___ = FStar_Syntax_Embeddings_Base.unembed ea a in
         uu___ true norm_cb
 let embed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings.embedding ->
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Compiler_Range_Type.range ->
-        'uuuuu -> FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
+        'uuuuu ->
+          FStar_Syntax_Embeddings_Base.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun ea ->
     fun r ->
       fun x ->
         fun norm_cb ->
-          let uu___ = FStar_Syntax_Embeddings.embed ea x in
+          let uu___ = FStar_Syntax_Embeddings_Base.embed ea x in
           uu___ r FStar_Pervasives_Native.None norm_cb
 let (native_tactics_steps :
   unit -> FStar_TypeChecker_Cfg.primitive_step Prims.list) =
@@ -56,8 +57,8 @@ let mk_total_step_1' :
     Prims.int ->
       Prims.string ->
         ('uuuuu -> 'uuuuu1) ->
-          'uuuuu FStar_Syntax_Embeddings.embedding ->
-            'uuuuu1 FStar_Syntax_Embeddings.embedding ->
+          'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+            'uuuuu1 FStar_Syntax_Embeddings_Base.embedding ->
               ('uuuuu2 -> 'uuuuu3) ->
                 'uuuuu2 FStar_TypeChecker_NBETerm.embedding ->
                   'uuuuu3 FStar_TypeChecker_NBETerm.embedding ->
@@ -99,8 +100,8 @@ let mk_total_step_1'_psc :
     Prims.int ->
       Prims.string ->
         (FStar_TypeChecker_Cfg.psc -> 'uuuuu -> 'uuuuu1) ->
-          'uuuuu FStar_Syntax_Embeddings.embedding ->
-            'uuuuu1 FStar_Syntax_Embeddings.embedding ->
+          'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+            'uuuuu1 FStar_Syntax_Embeddings_Base.embedding ->
               (FStar_TypeChecker_Cfg.psc -> 'uuuuu2 -> 'uuuuu3) ->
                 'uuuuu2 FStar_TypeChecker_NBETerm.embedding ->
                   'uuuuu3 FStar_TypeChecker_NBETerm.embedding ->
@@ -142,9 +143,9 @@ let mk_total_step_2' :
     Prims.int ->
       Prims.string ->
         ('uuuuu -> 'uuuuu1 -> 'uuuuu2) ->
-          'uuuuu FStar_Syntax_Embeddings.embedding ->
-            'uuuuu1 FStar_Syntax_Embeddings.embedding ->
-              'uuuuu2 FStar_Syntax_Embeddings.embedding ->
+          'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+            'uuuuu1 FStar_Syntax_Embeddings_Base.embedding ->
+              'uuuuu2 FStar_Syntax_Embeddings_Base.embedding ->
                 ('uuuuu3 -> 'uuuuu4 -> 'uuuuu5) ->
                   'uuuuu3 FStar_TypeChecker_NBETerm.embedding ->
                     'uuuuu4 FStar_TypeChecker_NBETerm.embedding ->
@@ -233,9 +234,9 @@ let rec (t_head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     | uu___1 -> t
 let unembed_tactic_0 :
   'b .
-    'b FStar_Syntax_Embeddings.embedding ->
+    'b FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings.norm_cb -> 'b FStar_Tactics_Monad.tac
+        FStar_Syntax_Embeddings_Base.norm_cb -> 'b FStar_Tactics_Monad.tac
   =
   fun eb ->
     fun embedded_tac_b ->
@@ -366,10 +367,11 @@ let unembed_tactic_nbe_0 :
                    (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)
 let unembed_tactic_1 :
   'a 'r .
-    'a FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Syntax_Embeddings.embedding ->
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      'r FStar_Syntax_Embeddings_Base.embedding ->
         FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Embeddings.norm_cb -> 'a -> 'r FStar_Tactics_Monad.tac
+          FStar_Syntax_Embeddings_Base.norm_cb ->
+            'a -> 'r FStar_Tactics_Monad.tac
   =
   fun ea ->
     fun er ->
@@ -404,12 +406,13 @@ let unembed_tactic_nbe_1 :
             unembed_tactic_nbe_0 er cb app
 let e_tactic_thunk :
   'r .
-    'r FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Tactics_Monad.tac FStar_Syntax_Embeddings.embedding
+    'r FStar_Syntax_Embeddings_Base.embedding ->
+      'r FStar_Tactics_Monad.tac FStar_Syntax_Embeddings_Base.embedding
   =
   fun er ->
-    let uu___ = FStar_Syntax_Embeddings.term_as_fv FStar_Syntax_Syntax.t_unit in
-    FStar_Syntax_Embeddings.mk_emb
+    let uu___ =
+      FStar_Syntax_Embeddings_Base.term_as_fv FStar_Syntax_Syntax.t_unit in
+    FStar_Syntax_Embeddings_Base.mk_emb
       (fun uu___1 ->
          fun uu___2 ->
            fun uu___3 ->
@@ -432,7 +435,7 @@ let e_tactic_nbe_thunk :
       FStar_TypeChecker_NBETerm.mk_t
         (FStar_TypeChecker_NBETerm.Constant FStar_TypeChecker_NBETerm.Unit) in
     let uu___1 =
-      FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_unit in
+      FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_unit in
     FStar_TypeChecker_NBETerm.mk_emb
       (fun cb ->
          fun uu___2 -> failwith "Impossible: NBE embedding tactic (thunk)?")
@@ -445,15 +448,16 @@ let e_tactic_nbe_thunk :
            FStar_Pervasives_Native.Some uu___2) uu___ uu___1
 let e_tactic_1 :
   'a 'r .
-    'a FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Syntax_Embeddings.embedding ->
-        ('a -> 'r FStar_Tactics_Monad.tac) FStar_Syntax_Embeddings.embedding
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      'r FStar_Syntax_Embeddings_Base.embedding ->
+        ('a -> 'r FStar_Tactics_Monad.tac)
+          FStar_Syntax_Embeddings_Base.embedding
   =
   fun ea ->
     fun er ->
       let uu___ =
-        FStar_Syntax_Embeddings.term_as_fv FStar_Syntax_Syntax.t_unit in
-      FStar_Syntax_Embeddings.mk_emb
+        FStar_Syntax_Embeddings_Base.term_as_fv FStar_Syntax_Syntax.t_unit in
+      FStar_Syntax_Embeddings_Base.mk_emb
         (fun uu___1 ->
            fun uu___2 ->
              fun uu___3 ->
@@ -476,7 +480,8 @@ let e_tactic_nbe_1 :
         FStar_TypeChecker_NBETerm.mk_t
           (FStar_TypeChecker_NBETerm.Constant FStar_TypeChecker_NBETerm.Unit) in
       let uu___1 =
-        FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_unit in
+        FStar_Syntax_Embeddings_Base.emb_typ_of
+          FStar_Syntax_Embeddings.e_unit in
       FStar_TypeChecker_NBETerm.mk_emb
         (fun cb ->
            fun uu___2 -> failwith "Impossible: NBE embedding tactic (1)?")
@@ -492,9 +497,9 @@ let uu___192 :
       Prims.int ->
         Prims.string ->
           ('uuuuu -> 'uuuuu1 -> 'uuuuu2 FStar_Tactics_Monad.tac) ->
-            'uuuuu FStar_Syntax_Embeddings.embedding ->
-              'uuuuu1 FStar_Syntax_Embeddings.embedding ->
-                'uuuuu2 FStar_Syntax_Embeddings.embedding ->
+            'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+              'uuuuu1 FStar_Syntax_Embeddings_Base.embedding ->
+                'uuuuu2 FStar_Syntax_Embeddings_Base.embedding ->
                   ('uuuuu3 -> 'uuuuu4 -> 'uuuuu5 FStar_Tactics_Monad.tac) ->
                     'uuuuu3 FStar_TypeChecker_NBETerm.embedding ->
                       'uuuuu4 FStar_TypeChecker_NBETerm.embedding ->
@@ -2555,10 +2560,10 @@ let (uu___193 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __primitive_steps_ref uu___
 let unembed_tactic_1_alt :
   'a 'r .
-    'a FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Syntax_Embeddings.embedding ->
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      'r FStar_Syntax_Embeddings_Base.embedding ->
         FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Embeddings.norm_cb ->
+          FStar_Syntax_Embeddings_Base.norm_cb ->
             ('a -> 'r FStar_Tactics_Monad.tac) FStar_Pervasives_Native.option
   =
   fun ea ->
@@ -2576,11 +2581,11 @@ let unembed_tactic_1_alt :
                unembed_tactic_0 er app ncb)
 let e_tactic_1_alt :
   'a 'r .
-    'a FStar_Syntax_Embeddings.embedding ->
-      'r FStar_Syntax_Embeddings.embedding ->
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      'r FStar_Syntax_Embeddings_Base.embedding ->
         ('a ->
            FStar_Tactics_Types.proofstate -> 'r FStar_Tactics_Result.__result)
-          FStar_Syntax_Embeddings.embedding
+          FStar_Syntax_Embeddings_Base.embedding
   =
   fun ea ->
     fun er ->
@@ -2594,8 +2599,8 @@ let e_tactic_1_alt :
               ((fun x -> let uu___1 = f x in FStar_Tactics_Monad.run uu___1))
         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
       let uu___ =
-        FStar_Syntax_Embeddings.term_as_fv FStar_Syntax_Syntax.t_unit in
-      FStar_Syntax_Embeddings.mk_emb em un uu___
+        FStar_Syntax_Embeddings_Base.term_as_fv FStar_Syntax_Syntax.t_unit in
+      FStar_Syntax_Embeddings_Base.mk_emb em un uu___
 let (report_implicits :
   FStar_Compiler_Range_Type.range ->
     FStar_TypeChecker_Rel.tagged_implicits -> unit)
@@ -2671,9 +2676,9 @@ let run_tactic_on_ps' :
     FStar_Compiler_Range_Type.range ->
       FStar_Compiler_Range_Type.range ->
         Prims.bool ->
-          'a FStar_Syntax_Embeddings.embedding ->
+          'a FStar_Syntax_Embeddings_Base.embedding ->
             'a ->
-              'b FStar_Syntax_Embeddings.embedding ->
+              'b FStar_Syntax_Embeddings_Base.embedding ->
                 FStar_Syntax_Syntax.term ->
                   Prims.bool ->
                     FStar_Tactics_Types.proofstate ->
@@ -2706,9 +2711,9 @@ let run_tactic_on_ps' :
                        else
                          (let uu___2 =
                             let uu___3 =
-                              FStar_Syntax_Embeddings.type_of e_arg in
+                              FStar_Syntax_Embeddings_Base.type_of e_arg in
                             let uu___4 =
-                              FStar_Syntax_Embeddings.type_of e_res in
+                              FStar_Syntax_Embeddings_Base.type_of e_res in
                             FStar_TypeChecker_TcTerm.tc_tactic uu___3 uu___4
                               env tactic in
                           match uu___2 with | (uu___3, uu___4, g1) -> g1) in
@@ -2720,7 +2725,7 @@ let run_tactic_on_ps' :
                      FStar_Errors.stop_if_err ();
                      (let tau =
                         unembed_tactic_1 e_arg e_res tactic
-                          FStar_Syntax_Embeddings.id_norm_cb in
+                          FStar_Syntax_Embeddings_Base.id_norm_cb in
                       let res =
                         let uu___4 =
                           let uu___5 =
@@ -2901,9 +2906,9 @@ let run_tactic_on_ps :
     FStar_Compiler_Range_Type.range ->
       FStar_Compiler_Range_Type.range ->
         Prims.bool ->
-          'a FStar_Syntax_Embeddings.embedding ->
+          'a FStar_Syntax_Embeddings_Base.embedding ->
             'a ->
-              'b FStar_Syntax_Embeddings.embedding ->
+              'b FStar_Syntax_Embeddings_Base.embedding ->
                 FStar_Syntax_Syntax.term ->
                   Prims.bool ->
                     FStar_Tactics_Types.proofstate ->

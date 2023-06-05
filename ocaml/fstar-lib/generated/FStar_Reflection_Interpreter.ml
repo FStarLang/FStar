@@ -1,48 +1,49 @@
 open Prims
 let unembed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings.embedding ->
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings.norm_cb ->
+        FStar_Syntax_Embeddings_Base.norm_cb ->
           'uuuuu FStar_Pervasives_Native.option
   =
   fun ea ->
     fun a ->
       fun norm_cb ->
-        let uu___ = FStar_Syntax_Embeddings.unembed ea a in
+        let uu___ = FStar_Syntax_Embeddings_Base.unembed ea a in
         uu___ true norm_cb
 let try_unembed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings.embedding ->
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings.norm_cb ->
+        FStar_Syntax_Embeddings_Base.norm_cb ->
           'uuuuu FStar_Pervasives_Native.option
   =
   fun ea ->
     fun a ->
       fun norm_cb ->
-        let uu___ = FStar_Syntax_Embeddings.unembed ea a in
+        let uu___ = FStar_Syntax_Embeddings_Base.unembed ea a in
         uu___ false norm_cb
 let embed :
   'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings.embedding ->
+    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Compiler_Range_Type.range ->
-        'uuuuu -> FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
+        'uuuuu ->
+          FStar_Syntax_Embeddings_Base.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun ea ->
     fun r ->
       fun x ->
         fun norm_cb ->
-          let uu___ = FStar_Syntax_Embeddings.embed ea x in
+          let uu___ = FStar_Syntax_Embeddings_Base.embed ea x in
           uu___ r FStar_Pervasives_Native.None norm_cb
 let int1 :
   'a 'r .
     FStar_Ident.lid ->
       ('a -> 'r) ->
-        'a FStar_Syntax_Embeddings.embedding ->
-          'r FStar_Syntax_Embeddings.embedding ->
+        'a FStar_Syntax_Embeddings_Base.embedding ->
+          'r FStar_Syntax_Embeddings_Base.embedding ->
             FStar_TypeChecker_Cfg.psc ->
-              FStar_Syntax_Embeddings.norm_cb ->
+              FStar_Syntax_Embeddings_Base.norm_cb ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -67,11 +68,11 @@ let int2 :
   'a 'b 'r .
     FStar_Ident.lid ->
       ('a -> 'b -> 'r) ->
-        'a FStar_Syntax_Embeddings.embedding ->
-          'b FStar_Syntax_Embeddings.embedding ->
-            'r FStar_Syntax_Embeddings.embedding ->
+        'a FStar_Syntax_Embeddings_Base.embedding ->
+          'b FStar_Syntax_Embeddings_Base.embedding ->
+            'r FStar_Syntax_Embeddings_Base.embedding ->
               FStar_TypeChecker_Cfg.psc ->
-                FStar_Syntax_Embeddings.norm_cb ->
+                FStar_Syntax_Embeddings_Base.norm_cb ->
                   FStar_Syntax_Syntax.args ->
                     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -102,12 +103,12 @@ let int3 :
   'a 'b 'c 'r .
     FStar_Ident.lid ->
       ('a -> 'b -> 'c -> 'r) ->
-        'a FStar_Syntax_Embeddings.embedding ->
-          'b FStar_Syntax_Embeddings.embedding ->
-            'c FStar_Syntax_Embeddings.embedding ->
-              'r FStar_Syntax_Embeddings.embedding ->
+        'a FStar_Syntax_Embeddings_Base.embedding ->
+          'b FStar_Syntax_Embeddings_Base.embedding ->
+            'c FStar_Syntax_Embeddings_Base.embedding ->
+              'r FStar_Syntax_Embeddings_Base.embedding ->
                 FStar_TypeChecker_Cfg.psc ->
-                  FStar_Syntax_Embeddings.norm_cb ->
+                  FStar_Syntax_Embeddings_Base.norm_cb ->
                     FStar_Syntax_Syntax.args ->
                       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -244,7 +245,7 @@ let (mk_us :
     Prims.int ->
       Prims.int ->
         (FStar_TypeChecker_Cfg.psc ->
-           FStar_Syntax_Embeddings.norm_cb ->
+           FStar_Syntax_Embeddings_Base.norm_cb ->
              FStar_Syntax_Syntax.args ->
                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
           ->
@@ -275,7 +276,7 @@ let (mk :
   FStar_Ident.lid ->
     Prims.int ->
       (FStar_TypeChecker_Cfg.psc ->
-         FStar_Syntax_Embeddings.norm_cb ->
+         FStar_Syntax_Embeddings_Base.norm_cb ->
            FStar_Syntax_Syntax.args ->
              FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
         ->
@@ -288,7 +289,7 @@ let (mk :
     fun arity ->
       fun fn -> fun nbe_fn -> mk_us l Prims.int_zero arity fn nbe_fn
 type 'a dualemb =
-  ('a FStar_Syntax_Embeddings.embedding * 'a
+  ('a FStar_Syntax_Embeddings_Base.embedding * 'a
     FStar_TypeChecker_NBETerm.embedding)
 let (e_int : FStar_BigInt.t dualemb) =
   (FStar_Syntax_Embeddings.e_int, FStar_TypeChecker_NBETerm.e_int)
