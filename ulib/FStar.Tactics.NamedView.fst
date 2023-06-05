@@ -626,6 +626,12 @@ let close_lb (lb : letbinding) : R.letbinding =
   let lb_def = subst_term s lb_def in
   pack_lb { lb_fv; lb_us; lb_typ; lb_def }
 
+let subst_r_binders (s:subst_t) (bs : list R.binder) : list R.binder =
+  List.Tot.mapi (fun i b -> subst_r_binder_sort (shift_subst i s) b) bs
+
+let subst_binders (s:subst_t) (bs : list binder) : list binder =
+  List.Tot.mapi (fun i b -> subst_binder_sort (shift_subst i s) b) bs
+
 exception NotEnoughBinders
 exception NotTot
 
@@ -660,7 +666,7 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
 
     (* Open universes everywhere *)
     let us, s = open_univ_s univs in
-    let params = List.Tot.map (subst_r_binder_sort s) params in
+    let params = subst_r_binders s params in
     let typ = subst_term (shift_subst nparams s) typ in
     let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
 
@@ -718,7 +724,7 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
 
     (* close univs *)
     let us, s = close_univ_s univs in
-    let params = List.Tot.map (subst_r_binder_sort s) params in
+    let params = subst_r_binders s params in
     let typ = subst_term (shift_subst nparams s) typ in
     let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
 
