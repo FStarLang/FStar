@@ -903,31 +903,23 @@ let (pack_sigelt :
             let uu___1 = c in
             match uu___1 with
             | (nm1, ty1) ->
-                ((let uu___3 =
-                    FStar_Syntax_Print.binders_to_string "," param_bs in
-                  FStar_Compiler_Util.print1 "GG param_bs = %s\n" uu___3);
-                 (let uu___4 = FStar_Syntax_Print.term_to_string ty1 in
-                  FStar_Compiler_Util.print1 "GG cty0 = %s\n" uu___4);
-                 (let uu___5 = FStar_Syntax_Print.term_to_string ty1 in
-                  FStar_Compiler_Util.print1 "GG cty1 = %s\n" uu___5);
-                 (let lid =
-                    FStar_Ident.lid_of_path nm1
-                      FStar_Compiler_Range_Type.dummyRange in
-                  let uu___5 =
-                    let uu___6 =
-                      let uu___7 =
-                        FStar_Compiler_List.map pack_ident us_names in
-                      {
-                        FStar_Syntax_Syntax.lid1 = lid;
-                        FStar_Syntax_Syntax.us1 = uu___7;
-                        FStar_Syntax_Syntax.t1 = ty1;
-                        FStar_Syntax_Syntax.ty_lid = ind_lid;
-                        FStar_Syntax_Syntax.num_ty_params = nparam;
-                        FStar_Syntax_Syntax.mutuals1 = []
-                      } in
-                    FStar_Syntax_Syntax.Sig_datacon uu___6 in
-                  FStar_Compiler_Effect.op_Less_Bar
-                    FStar_Syntax_Syntax.mk_sigelt uu___5)) in
+                let lid =
+                  FStar_Ident.lid_of_path nm1
+                    FStar_Compiler_Range_Type.dummyRange in
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = FStar_Compiler_List.map pack_ident us_names in
+                    {
+                      FStar_Syntax_Syntax.lid1 = lid;
+                      FStar_Syntax_Syntax.us1 = uu___4;
+                      FStar_Syntax_Syntax.t1 = ty1;
+                      FStar_Syntax_Syntax.ty_lid = ind_lid;
+                      FStar_Syntax_Syntax.num_ty_params = nparam;
+                      FStar_Syntax_Syntax.mutuals1 = []
+                    } in
+                  FStar_Syntax_Syntax.Sig_datacon uu___3 in
+                FStar_Compiler_Effect.op_Less_Bar
+                  FStar_Syntax_Syntax.mk_sigelt uu___2 in
           let ctor_ses = FStar_Compiler_List.map pack_ctor ctors in
           let c_lids =
             FStar_Compiler_List.map
