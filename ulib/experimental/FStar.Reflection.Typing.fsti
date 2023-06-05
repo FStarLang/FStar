@@ -42,6 +42,14 @@ val pack_inspect (t:R.term)
           (ensures R.(pack_ln (inspect_ln t) == t))
           [SMTPat R.(pack_ln (inspect_ln t))]
   
+val inspect_pack_namedv (t:R.namedv_view)
+  : Lemma (ensures R.(inspect_namedv (pack_namedv t) == t))
+          [SMTPat R.(inspect_namedv (pack_namedv t))]
+
+val pack_inspect_namedv (t:R.namedv)
+  : Lemma (ensures R.(pack_namedv (inspect_namedv t) == t))
+          [SMTPat R.(pack_namedv (inspect_namedv t))]
+
 val inspect_pack_bv (t:R.bv_view)
   : Lemma (ensures R.(inspect_bv (pack_bv t) == t))
           [SMTPat R.(inspect_bv (pack_bv t))]
@@ -58,30 +66,30 @@ val pack_inspect_binder (t:R.binder)
    : Lemma (ensures (R.pack_binder (R.inspect_binder t) == t))
            [SMTPat (R.pack_binder (R.inspect_binder t))]
   
+val inspect_pack_comp (t:R.comp_view)
+  : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
+          [SMTPat (R.inspect_comp (R.pack_comp t))]
+
 val pack_inspect_comp (t:R.comp)
   : Lemma (ensures (R.pack_comp (R.inspect_comp t) == t))
           [SMTPat (R.pack_comp (R.inspect_comp t))]
   
-val inspect_pack_comp (t:R.comp_view)
-  : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
-          [SMTPat (R.inspect_comp (R.pack_comp t))]
+val inspect_pack_fv (nm:R.name)
+  : Lemma (ensures R.inspect_fv (R.pack_fv nm) == nm)
+          [SMTPat (R.inspect_fv (R.pack_fv nm))]
 
 val pack_inspect_fv (fv:R.fv)
   : Lemma (ensures R.pack_fv (R.inspect_fv fv) == fv)
           [SMTPat (R.pack_fv (R.inspect_fv fv))]
 
-val inspect_pack_fv (nm:R.name)
-  : Lemma (ensures R.inspect_fv (R.pack_fv nm) == nm)
-          [SMTPat (R.inspect_fv (R.pack_fv nm))]
+val inspect_pack_universe (u:R.universe_view)
+  : Lemma (ensures R.inspect_universe (R.pack_universe u) == u)
+          [SMTPat (R.inspect_universe (R.pack_universe u))]
 
 val pack_inspect_universe (u:R.universe)
   : Lemma (requires ~(Uv_Unk? (inspect_universe u)))
           (ensures R.pack_universe (R.inspect_universe u) == u)
           [SMTPat (R.pack_universe (R.inspect_universe u))]
-
-val inspect_pack_universe (u:R.universe_view)
-  : Lemma (ensures R.inspect_universe (R.pack_universe u) == u)
-          [SMTPat (R.inspect_universe (R.pack_universe u))]
 
 val lookup_bvar (e:env) (x:int) : option term
 
@@ -92,6 +100,12 @@ let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
 let pp_name_t = FStar.Sealed.Inhabited.sealed "x"
 let pp_name_default : pp_name_t = FStar.Sealed.Inhabited.seal "x"
 let seal_pp_name x : pp_name_t = FStar.Sealed.Inhabited.seal x
+
+let tun = pack_ln Tv_Unknown
+
+let sort_t = FStar.Sealed.Inhabited.sealed tun
+let sort_default : sort_t = FStar.Sealed.Inhabited.seal tun
+let seal_sort x : sort_t = FStar.Sealed.Inhabited.seal x
 
 let mk_binder (pp_name:pp_name_t) (x:var) (ty:term) (q:aqualv)
   = pack_binder
@@ -143,18 +157,28 @@ type open_or_close =
   | CloseVar of var
   | Rename   : var -> var -> open_or_close
 
-let tun = pack_ln Tv_Unknown
-
 let make_bv (n:nat) : bv_view = {
-  ppname = pp_name_default;
   index  = n;
-  sort   = seal tun;
+  ppname = pp_name_default;
+  sort   = sort_default;
 }
 
 let make_bv_with_name (s:pp_name_t) (n:nat) : bv_view = {
   ppname = s;
   index  = n;
-  sort   = seal tun;
+  sort   = sort_default;
+}
+
+let make_namedv (n:nat) : namedv_view = {
+  ppname = pp_name_default;
+  uniq   = n;
+  sort   = sort_default;
+}
+
+let make_namedv_with_name (s:pp_name_t) (n:nat) : namedv_view = {
+  ppname = s;
+  uniq   = n;
+  sort   = sort_default;
 }
 
 let var_as_bv (v:nat) : bv = pack_bv (make_bv v)
@@ -162,7 +186,7 @@ let var_as_bv (v:nat) : bv = pack_bv (make_bv v)
 let var_as_namedv (v:nat) : namedv =
   pack_namedv {
     uniq = v;
-    sort = seal tun;
+    sort = sort_default;
     ppname = pp_name_default;
   }
 
@@ -441,6 +465,10 @@ val rename_spec (t:term) (x y:var)
 val bv_index_of_make_bv (n:nat)
   : Lemma (ensures bv_index (pack_bv (make_bv n)) == n)
           [SMTPat (bv_index (pack_bv (make_bv n)))]
+
+val namedv_uniq_of_make_namedv (n:nat)
+  : Lemma (ensures namedv_uniq (pack_namedv (make_namedv n)) == n)
+          [SMTPat (namedv_uniq (pack_namedv (make_namedv n)))]
 
 let constant_as_term (v:vconst) = pack_ln (Tv_Const v)
 let unit_exp = constant_as_term C_Unit

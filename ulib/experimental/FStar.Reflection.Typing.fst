@@ -33,29 +33,27 @@ module T = FStar.Tactics
 module FTB = FStar.Tactics.Builtins
 module RTB = FStar.Reflection.Typing.Builtins
 
-let inspect_pack t = R.inspect_pack_inv t
+let inspect_pack = R.inspect_pack_inv
+let pack_inspect = R.pack_inspect_inv
   
-let pack_inspect t = R.pack_inspect_inv t
-  
-let inspect_pack_bv t = admit ()
-  
-let pack_inspect_bv t = admit ()
+let inspect_pack_namedv = R.inspect_pack_namedv
+let pack_inspect_namedv = R.pack_inspect_namedv
 
-let inspect_pack_binder (bv:_) = admit ()
-  
-let pack_inspect_binder (t:R.binder) = admit ()
-  
-let pack_inspect_comp (t:R.comp) = admit ()
-  
-let inspect_pack_comp (t:R.comp_view) = admit ()
+let inspect_pack_bv = R.inspect_pack_bv
+let pack_inspect_bv = R.pack_inspect_bv
 
-let pack_inspect_fv (fv:R.fv) = admit ()
+let inspect_pack_binder = R.inspect_pack_binder
+let pack_inspect_binder = R.pack_inspect_binder
 
-let inspect_pack_fv (nm:R.name) = admit ()
+let inspect_pack_comp = R.inspect_pack_comp_inv
+let pack_inspect_comp = R.pack_inspect_comp_inv
 
-let pack_inspect_universe u = admit ()
+let inspect_pack_fv = R.inspect_pack_fv
+let pack_inspect_fv = R.pack_inspect_fv
 
-let inspect_pack_universe u = admit ()
+let inspect_pack_universe = R.inspect_pack_universe
+let pack_inspect_universe = R.pack_inspect_universe
+
 
 let lookup_bvar (e:env) (x:int) : option term = magic ()
 
@@ -85,6 +83,7 @@ let rename (t:term) (x y:var)= RTB.rename t x y
 let rename_spec (t:term) (x y:var) = admit ()
   
 let bv_index_of_make_bv (n:nat) = ()
+let namedv_uniq_of_make_namedv (n:nat) = ()
 
 let subtyping_token_renaming (g:env)
                              (bs0:bindings)
