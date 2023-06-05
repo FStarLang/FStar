@@ -98,6 +98,8 @@ let l_exact (t:term) =
     try exact t with
     | _ -> (squash_intro (); exact t)
 
+// FIXME: should this take a binding? It's less general...
+// but usually what we want. Coercions could help.
 let hyp (x:namedv) : Tac unit = l_exact (namedv_to_term x)
 
 private

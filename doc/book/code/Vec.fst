@@ -156,7 +156,7 @@ let lem #a #b (f:a -> b) : (a ==> b) =
   FStar.Squash.join_squash x
 
 open FStar.Tactics
-let implies_intro () : Tac binder =
+let implies_intro () : Tac binding =
   apply (`lem);
   intro()
 
@@ -179,7 +179,7 @@ let a_very_explicit_tactic_proof (a b : prop) : (a ==> b ==> b /\ a)
        (let ha = implies_intro () in
         let hb = implies_intro () in
         split ();
-        hyp hb;
-        hyp ha;
+        hyp (binding_to_namedv hb);
+        hyp (binding_to_namedv ha);
         qed ())
 //SNIPPET_END: tac
