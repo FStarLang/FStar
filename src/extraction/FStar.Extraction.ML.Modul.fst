@@ -86,10 +86,10 @@ let as_pair = function
    | [a;b] -> (a,b)
    | _ -> failwith "Expected a list with 2 elements"
 
-let flag_of_qual = function
-  | Assumption -> Some Assumed
-  | S.Private -> Some Private
-  | S.NoExtract -> Some NoExtract
+let flag_of_qual : S.qualifier -> option meta = function
+  | S.Assumption -> Some Assumed
+  | S.Private    -> Some Private
+  | S.NoExtract  -> Some NoExtract
   | _ -> None
 
 (*****************************************************************************)
@@ -99,7 +99,7 @@ let flag_of_qual = function
 // So far, we recognize only a couple special attributes; they are encoded as
 // type constructors for an inductive defined in Pervasives, to provide a minimal
 // amount of typo-checking via desugaring.
-let rec extract_meta x =
+let rec extract_meta x : option meta =
   match SS.compress x with
   | { n = Tm_fvar fv } ->
       begin match string_of_lid (lid_of_fv fv) with
@@ -949,7 +949,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
         | Sig_bundle _
         | Sig_inductive_typ _
         | Sig_datacon _ ->
-          extract_bundle g se
+          let g, ses = extract_bundle g se in
+          g, ses @ maybe_register_plugin g se
 
         | Sig_new_effect ed when Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname ->
           let env, _iface, impl =

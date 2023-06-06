@@ -275,3 +275,18 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
                                (Print.term_to_string x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
+
+let (let?) o f = BU.map_opt o f
+
+let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> term) : embedding 'a =
+  let uu (t:term) _norm : option 'a =
+    let hd, args = U.head_and_args t in
+    let? hd_lid =
+      match (SS.compress (U.un_uinst hd)).n with
+      | Tm_fvar fv -> Some fv.fv_name.v
+      | _ -> None
+    in
+    u (Ident.string_of_lid hd_lid, List.map fst args)
+  in
+  let ee (x:'a) rng _topt _norm : term = e x in
+  mk_emb ee uu (S.lid_as_fv (Ident.lid_of_str name) None)

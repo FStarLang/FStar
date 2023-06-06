@@ -88,3 +88,12 @@ val embed_as     : embedding 'a ->
 val e_lazy        : lazy_kind ->
                     ty:term ->
                     embedding 'a
+
+
+
+(* A helper for extracted embeddings of inductive types. *)
+val mk_extracted_embedding :
+  string -> (* name *)
+  (string & list term -> option 'a) -> (* unembedding specialized to an applied fvar *)
+  ('a -> term) -> (* embedding *)
+  embedding 'a
