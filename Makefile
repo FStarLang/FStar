@@ -24,7 +24,7 @@ fstar:
 	@echo "  DUNE INSTALL"
 	$(Q)cd $(DUNE_SNAPSHOT) && dune install --profile=$(FSTAR_BUILD_PROFILE) --prefix=$(FSTAR_CURDIR)
 
-.PHONY: verify-ulin
+.PHONY: verify-ulib
 verify-ulib:
 	+$(Q)$(MAKE) -C ulib
 
