@@ -1231,82 +1231,98 @@ let (__proj__Mkprover_state_preamble__item__t_typing :
     fun projectee ->
       match projectee with
       | { ctxt; ctxt_typing; t; c; t_typing;_} -> t_typing
-type 'g prover_state =
+type ('g, 'preamble) prover_state =
   {
-  preamble: unit prover_state_preamble ;
   matched_pre: Pulse_Syntax_Base.term ;
   unmatched_pre: Pulse_Syntax_Base.term Prims.list ;
   remaining_ctxt: Pulse_Syntax_Base.term Prims.list ;
   proof_steps: Pulse_Syntax_Base.st_term ;
   proof_steps_typing: (unit, unit, unit) Pulse_Typing.st_typing ;
   pre_equiv: unit }
-let (__proj__Mkprover_state__item__preamble :
-  Pulse_Typing.env -> unit prover_state -> unit prover_state_preamble) =
-  fun g ->
-    fun projectee ->
-      match projectee with
-      | { preamble; matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
-          proof_steps_typing; pre_equiv;_} -> preamble
 let (__proj__Mkprover_state__item__matched_pre :
-  Pulse_Typing.env -> unit prover_state -> Pulse_Syntax_Base.term) =
+  Pulse_Typing.env ->
+    unit prover_state_preamble ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.term)
+  =
   fun g ->
-    fun projectee ->
-      match projectee with
-      | { preamble; matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
-          proof_steps_typing; pre_equiv;_} -> matched_pre
+    fun preamble ->
+      fun projectee ->
+        match projectee with
+        | { matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
+            proof_steps_typing; pre_equiv;_} -> matched_pre
 let (__proj__Mkprover_state__item__unmatched_pre :
-  Pulse_Typing.env -> unit prover_state -> Pulse_Syntax_Base.term Prims.list)
+  Pulse_Typing.env ->
+    unit prover_state_preamble ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.term Prims.list)
   =
   fun g ->
-    fun projectee ->
-      match projectee with
-      | { preamble; matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
-          proof_steps_typing; pre_equiv;_} -> unmatched_pre
+    fun preamble ->
+      fun projectee ->
+        match projectee with
+        | { matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
+            proof_steps_typing; pre_equiv;_} -> unmatched_pre
 let (__proj__Mkprover_state__item__remaining_ctxt :
-  Pulse_Typing.env -> unit prover_state -> Pulse_Syntax_Base.term Prims.list)
+  Pulse_Typing.env ->
+    unit prover_state_preamble ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.term Prims.list)
   =
   fun g ->
-    fun projectee ->
-      match projectee with
-      | { preamble; matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
-          proof_steps_typing; pre_equiv;_} -> remaining_ctxt
+    fun preamble ->
+      fun projectee ->
+        match projectee with
+        | { matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
+            proof_steps_typing; pre_equiv;_} -> remaining_ctxt
 let (__proj__Mkprover_state__item__proof_steps :
-  Pulse_Typing.env -> unit prover_state -> Pulse_Syntax_Base.st_term) =
+  Pulse_Typing.env ->
+    unit prover_state_preamble ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.st_term)
+  =
   fun g ->
-    fun projectee ->
-      match projectee with
-      | { preamble; matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
-          proof_steps_typing; pre_equiv;_} -> proof_steps
+    fun preamble ->
+      fun projectee ->
+        match projectee with
+        | { matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
+            proof_steps_typing; pre_equiv;_} -> proof_steps
 let (__proj__Mkprover_state__item__proof_steps_typing :
   Pulse_Typing.env ->
-    unit prover_state -> (unit, unit, unit) Pulse_Typing.st_typing)
+    unit prover_state_preamble ->
+      (unit, unit) prover_state -> (unit, unit, unit) Pulse_Typing.st_typing)
   =
   fun g ->
-    fun projectee ->
-      match projectee with
-      | { preamble; matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
-          proof_steps_typing; pre_equiv;_} -> proof_steps_typing
+    fun preamble ->
+      fun projectee ->
+        match projectee with
+        | { matched_pre; unmatched_pre; remaining_ctxt; proof_steps;
+            proof_steps_typing; pre_equiv;_} -> proof_steps_typing
 let (proof_steps_post :
-  Pulse_Typing.env -> unit prover_state -> Pulse_Syntax_Base.vprop) =
+  Pulse_Typing.env ->
+    unit prover_state_preamble ->
+      (unit, unit) prover_state -> Pulse_Syntax_Base.vprop)
+  =
   fun g ->
-    fun p ->
-      Pulse_Syntax_Base.Tm_Star
-        ((Pulse_Checker_VPropEquiv.list_as_vprop p.remaining_ctxt),
-          (p.matched_pre))
+    fun preamble ->
+      fun p ->
+        Pulse_Syntax_Base.Tm_Star
+          ((Pulse_Checker_VPropEquiv.list_as_vprop p.remaining_ctxt),
+            (p.matched_pre))
 let (bind_proof_steps_with :
   Pulse_Typing.env ->
-    unit prover_state ->
-      Pulse_Syntax_Base.st_term ->
-        Pulse_Syntax_Base.comp_st ->
-          (unit, unit, unit) Pulse_Typing.st_typing ->
-            (Pulse_Syntax_Base.st_term,
-              (unit, unit, unit) Pulse_Typing.st_typing) Prims.dtuple2)
-  = fun g -> fun p -> fun t -> fun c -> fun t_typing -> Prims.admit ()
+    unit prover_state_preamble ->
+      (unit, unit) prover_state ->
+        Pulse_Syntax_Base.st_term ->
+          Pulse_Syntax_Base.comp_st ->
+            (unit, unit, unit) Pulse_Typing.st_typing ->
+              (Pulse_Syntax_Base.st_term,
+                (unit, unit, unit) Pulse_Typing.st_typing) Prims.dtuple2)
+  =
+  fun g ->
+    fun preamble -> fun p -> fun t -> fun c -> fun t_typing -> Prims.admit ()
 type prover_step_t =
   Pulse_Typing.env ->
-    unit prover_state ->
-      (unit prover_state FStar_Pervasives_Native.option, unit)
-        FStar_Tactics_Effect.tac_repr
+    unit prover_state_preamble ->
+      (unit, unit) prover_state ->
+        ((unit, unit) prover_state FStar_Pervasives_Native.option, unit)
+          FStar_Tactics_Effect.tac_repr
 type 'c intro_comp = unit
 type ('g, 'ctxt, 'v) proof_step =
   {
@@ -1364,7 +1380,7 @@ let (__proj__Mkproof_step__item__t'_typing :
         fun projectee ->
           match projectee with
           | { remaining'; t'; c'; t'_typing; remaining_equiv;_} -> t'_typing
-type ('g, 'p) intro_from_unmatched_step =
+type ('g, 'preamble, 'p) intro_from_unmatched_step =
   {
   v: Pulse_Syntax_Base.vprop ;
   ps: (unit, unit, unit) proof_step ;
@@ -1372,33 +1388,42 @@ type ('g, 'p) intro_from_unmatched_step =
   unmatched_equiv: unit }
 let (__proj__Mkintro_from_unmatched_step__item__v :
   Pulse_Typing.env ->
-    unit prover_state ->
-      (unit, unit) intro_from_unmatched_step -> Pulse_Syntax_Base.vprop)
+    unit prover_state_preamble ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_from_unmatched_step ->
+          Pulse_Syntax_Base.vprop)
   =
   fun g ->
-    fun p ->
-      fun projectee ->
-        match projectee with | { v; ps; unmatched'; unmatched_equiv;_} -> v
+    fun preamble ->
+      fun p ->
+        fun projectee ->
+          match projectee with | { v; ps; unmatched'; unmatched_equiv;_} -> v
 let (__proj__Mkintro_from_unmatched_step__item__ps :
   Pulse_Typing.env ->
-    unit prover_state ->
-      (unit, unit) intro_from_unmatched_step -> (unit, unit, unit) proof_step)
+    unit prover_state_preamble ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_from_unmatched_step ->
+          (unit, unit, unit) proof_step)
   =
   fun g ->
-    fun p ->
-      fun projectee ->
-        match projectee with | { v; ps; unmatched'; unmatched_equiv;_} -> ps
+    fun preamble ->
+      fun p ->
+        fun projectee ->
+          match projectee with
+          | { v; ps; unmatched'; unmatched_equiv;_} -> ps
 let (__proj__Mkintro_from_unmatched_step__item__unmatched' :
   Pulse_Typing.env ->
-    unit prover_state ->
-      (unit, unit) intro_from_unmatched_step ->
-        Pulse_Syntax_Base.vprop Prims.list)
+    unit prover_state_preamble ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_from_unmatched_step ->
+          Pulse_Syntax_Base.vprop Prims.list)
   =
   fun g ->
-    fun p ->
-      fun projectee ->
-        match projectee with
-        | { v; ps; unmatched'; unmatched_equiv;_} -> unmatched'
+    fun preamble ->
+      fun p ->
+        fun projectee ->
+          match projectee with
+          | { v; ps; unmatched'; unmatched_equiv;_} -> unmatched'
 type proof_step_fn =
   Pulse_Typing.env ->
     Pulse_Syntax_Base.term Prims.list ->
@@ -1409,9 +1434,11 @@ type proof_step_fn =
               unit) FStar_Tactics_Effect.tac_repr
 type intro_from_unmatched_fn =
   Pulse_Typing.env ->
-    unit prover_state ->
-      ((unit, unit) intro_from_unmatched_step FStar_Pervasives_Native.option,
-        unit) FStar_Tactics_Effect.tac_repr
+    unit prover_state_preamble ->
+      (unit, unit) prover_state ->
+        ((unit, unit, unit) intro_from_unmatched_step
+           FStar_Pervasives_Native.option,
+          unit) FStar_Tactics_Effect.tac_repr
 let (add_frame :
   Pulse_Typing.env ->
     Pulse_Syntax_Base.st_term ->
@@ -1490,118 +1517,123 @@ let (st_typing_weakening :
   = fun g -> fun t -> fun c -> fun d -> fun g' -> Prims.admit ()
 let (apply_proof_step :
   Pulse_Typing.env ->
-    unit prover_state ->
-      Pulse_Syntax_Base.vprop ->
-        (unit, unit, unit) proof_step ->
-          (unit prover_state, unit) FStar_Tactics_Effect.tac_repr)
+    unit prover_state_preamble ->
+      (unit, unit) prover_state ->
+        Pulse_Syntax_Base.vprop ->
+          (unit, unit, unit) proof_step ->
+            ((unit, unit) prover_state, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
-    fun p ->
-      fun v ->
-        fun r ->
-          FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
-               (Prims.of_int (391)) (Prims.of_int (13)) (Prims.of_int (391))
-               (Prims.of_int (28)))
-            (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
-               (Prims.of_int (391)) (Prims.of_int (31)) (Prims.of_int (460))
-               (Prims.of_int (39)))
-            (FStar_Tactics_Effect.lift_div_tac
-               (fun uu___ -> (p.preamble).ctxt))
-            (fun uu___ ->
-               (fun ctxt ->
-                  Obj.magic
-                    (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
-                          (Prims.of_int (392)) (Prims.of_int (27))
-                          (Prims.of_int (392)) (Prims.of_int (77)))
-                       (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
-                          (Prims.of_int (392)) (Prims.of_int (80))
-                          (Prims.of_int (460)) (Prims.of_int (39)))
-                       (FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___ ->
-                             Pulse_Syntax_Base.Tm_Star
-                               ((Pulse_Checker_VPropEquiv.list_as_vprop
-                                   r.remaining'), (p.matched_pre))))
-                       (fun uu___ ->
-                          (fun remaining'_matched ->
-                             Obj.magic
-                               (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range
-                                     "Pulse.Checker.Auto.Util.fst"
-                                     (Prims.of_int (393)) (Prims.of_int (32))
-                                     (Prims.of_int (393)) (Prims.of_int (72)))
-                                  (FStar_Range.mk_range
-                                     "Pulse.Checker.Auto.Util.fst"
-                                     (Prims.of_int (392)) (Prims.of_int (80))
-                                     (Prims.of_int (460)) (Prims.of_int (39)))
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___ ->
-                                        add_frame g
-                                          (__proj__Mkproof_step__item__t' g
-                                             p.remaining_ctxt v r)
-                                          (__proj__Mkproof_step__item__c' g
-                                             p.remaining_ctxt v r)
-                                          r.t'_typing remaining'_matched))
-                                  (fun uu___ ->
-                                     (fun uu___ ->
-                                        match uu___ with
-                                        | Prims.Mkdtuple2 (r_c', r_t'_typing)
-                                            ->
-                                            Obj.magic
-                                              (FStar_Tactics_Effect.tac_bind
-                                                 (FStar_Range.mk_range
-                                                    "Pulse.Checker.Auto.Util.fst"
-                                                    (Prims.of_int (398))
-                                                    (Prims.of_int (4))
-                                                    (Prims.of_int (402))
-                                                    (Prims.of_int (61)))
-                                                 (FStar_Range.mk_range
-                                                    "Pulse.Checker.Auto.Util.fst"
-                                                    (Prims.of_int (395))
-                                                    (Prims.of_int (58))
-                                                    (Prims.of_int (460))
-                                                    (Prims.of_int (39)))
-                                                 (Obj.magic
-                                                    (continuation_elaborator_with_bind
-                                                       g
-                                                       Pulse_Syntax_Base.Tm_Emp
-                                                       (ghost_comp ctxt
-                                                          (Pulse_Syntax_Base.Tm_Star
-                                                             ((Pulse_Checker_VPropEquiv.list_as_vprop
-                                                                 p.remaining_ctxt),
-                                                               (p.matched_pre))))
-                                                       p.proof_steps
-                                                       p.proof_steps_typing
-                                                       ()))
-                                                 (fun uu___1 ->
-                                                    (fun uu___1 ->
-                                                       match uu___1 with
-                                                       | Prims.Mkdtuple2
-                                                           (x,
-                                                            bind_continuation_elaborator)
-                                                           ->
-                                                           Obj.magic
-                                                             (FStar_Tactics_Effect.tac_bind
-                                                                (FStar_Range.mk_range
-                                                                   "Pulse.Checker.Auto.Util.fst"
-                                                                   (Prims.of_int (409))
-                                                                   (Prims.of_int (81))
-                                                                   (Prims.of_int (409))
-                                                                   (Prims.of_int (98)))
-                                                                (FStar_Range.mk_range
-                                                                   "Pulse.Checker.Auto.Util.fst"
-                                                                   (Prims.of_int (409))
-                                                                   (Prims.of_int (101))
-                                                                   (Prims.of_int (460))
-                                                                   (Prims.of_int (39)))
-                                                                (FStar_Tactics_Effect.lift_div_tac
-                                                                   (fun
+    fun preamble ->
+      fun p ->
+        fun v ->
+          fun r ->
+            FStar_Tactics_Effect.tac_bind
+              (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
+                 (Prims.of_int (391)) (Prims.of_int (13))
+                 (Prims.of_int (391)) (Prims.of_int (26)))
+              (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
+                 (Prims.of_int (391)) (Prims.of_int (29))
+                 (Prims.of_int (460)) (Prims.of_int (39)))
+              (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> preamble.ctxt))
+              (fun uu___ ->
+                 (fun ctxt ->
+                    Obj.magic
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
+                            (Prims.of_int (392)) (Prims.of_int (27))
+                            (Prims.of_int (392)) (Prims.of_int (77)))
+                         (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
+                            (Prims.of_int (392)) (Prims.of_int (80))
+                            (Prims.of_int (460)) (Prims.of_int (39)))
+                         (FStar_Tactics_Effect.lift_div_tac
+                            (fun uu___ ->
+                               Pulse_Syntax_Base.Tm_Star
+                                 ((Pulse_Checker_VPropEquiv.list_as_vprop
+                                     r.remaining'), (p.matched_pre))))
+                         (fun uu___ ->
+                            (fun remaining'_matched ->
+                               Obj.magic
+                                 (FStar_Tactics_Effect.tac_bind
+                                    (FStar_Range.mk_range
+                                       "Pulse.Checker.Auto.Util.fst"
+                                       (Prims.of_int (393))
+                                       (Prims.of_int (32))
+                                       (Prims.of_int (393))
+                                       (Prims.of_int (72)))
+                                    (FStar_Range.mk_range
+                                       "Pulse.Checker.Auto.Util.fst"
+                                       (Prims.of_int (392))
+                                       (Prims.of_int (80))
+                                       (Prims.of_int (460))
+                                       (Prims.of_int (39)))
+                                    (FStar_Tactics_Effect.lift_div_tac
+                                       (fun uu___ ->
+                                          add_frame g
+                                            (__proj__Mkproof_step__item__t' g
+                                               p.remaining_ctxt v r)
+                                            (__proj__Mkproof_step__item__c' g
+                                               p.remaining_ctxt v r)
+                                            r.t'_typing remaining'_matched))
+                                    (fun uu___ ->
+                                       (fun uu___ ->
+                                          match uu___ with
+                                          | Prims.Mkdtuple2
+                                              (r_c', r_t'_typing) ->
+                                              Obj.magic
+                                                (FStar_Tactics_Effect.tac_bind
+                                                   (FStar_Range.mk_range
+                                                      "Pulse.Checker.Auto.Util.fst"
+                                                      (Prims.of_int (398))
+                                                      (Prims.of_int (4))
+                                                      (Prims.of_int (402))
+                                                      (Prims.of_int (61)))
+                                                   (FStar_Range.mk_range
+                                                      "Pulse.Checker.Auto.Util.fst"
+                                                      (Prims.of_int (395))
+                                                      (Prims.of_int (58))
+                                                      (Prims.of_int (460))
+                                                      (Prims.of_int (39)))
+                                                   (Obj.magic
+                                                      (continuation_elaborator_with_bind
+                                                         g
+                                                         Pulse_Syntax_Base.Tm_Emp
+                                                         (ghost_comp ctxt
+                                                            (Pulse_Syntax_Base.Tm_Star
+                                                               ((Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                   p.remaining_ctxt),
+                                                                 (p.matched_pre))))
+                                                         p.proof_steps
+                                                         p.proof_steps_typing
+                                                         ()))
+                                                   (fun uu___1 ->
+                                                      (fun uu___1 ->
+                                                         match uu___1 with
+                                                         | Prims.Mkdtuple2
+                                                             (x,
+                                                              bind_continuation_elaborator)
+                                                             ->
+                                                             Obj.magic
+                                                               (FStar_Tactics_Effect.tac_bind
+                                                                  (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Auto.Util.fst"
+                                                                    (Prims.of_int (409))
+                                                                    (Prims.of_int (81))
+                                                                    (Prims.of_int (409))
+                                                                    (Prims.of_int (98)))
+                                                                  (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Auto.Util.fst"
+                                                                    (Prims.of_int (409))
+                                                                    (Prims.of_int (101))
+                                                                    (Prims.of_int (460))
+                                                                    (Prims.of_int (39)))
+                                                                  (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
                                                                     uu___2 ->
                                                                     ()))
-                                                                (fun uu___2
-                                                                   ->
-                                                                   (fun
+                                                                  (fun uu___2
+                                                                    ->
+                                                                    (fun
                                                                     uu___2 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1795,9 +1827,6 @@ let (apply_proof_step :
                                                                     steps_typing1)
                                                                     ->
                                                                     {
-                                                                    preamble
-                                                                    =
-                                                                    (p.preamble);
                                                                     matched_pre
                                                                     =
                                                                     (p.matched_pre);
@@ -1820,47 +1849,48 @@ let (apply_proof_step :
                                                                     uu___3)))
                                                                     uu___3)))
                                                                     uu___2)))
-                                                      uu___1))) uu___)))
-                            uu___))) uu___)
+                                                        uu___1))) uu___)))
+                              uu___))) uu___)
 let (apply_intro_from_unmatched_step :
   Pulse_Typing.env ->
-    unit prover_state ->
-      (unit, unit) intro_from_unmatched_step ->
-        (unit prover_state, unit) FStar_Tactics_Effect.tac_repr)
+    unit prover_state_preamble ->
+      (unit, unit) prover_state ->
+        (unit, unit, unit) intro_from_unmatched_step ->
+          ((unit, unit) prover_state, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
-    fun p ->
-      fun r ->
-        FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
-             (Prims.of_int (473)) (Prims.of_int (13)) (Prims.of_int (473))
-             (Prims.of_int (28)))
-          (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
-             (Prims.of_int (473)) (Prims.of_int (31)) (Prims.of_int (497))
-             (Prims.of_int (20)))
-          (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> (p.preamble).ctxt))
-          (fun uu___ ->
-             (fun ctxt ->
-                Obj.magic
-                  (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
-                        (Prims.of_int (474)) (Prims.of_int (10))
-                        (Prims.of_int (474)) (Prims.of_int (37)))
-                     (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
-                        (Prims.of_int (492)) (Prims.of_int (4))
-                        (Prims.of_int (497)) (Prims.of_int (18)))
-                     (Obj.magic (apply_proof_step g p r.v r.ps))
-                     (fun p1 ->
-                        FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___ ->
-                             {
-                               preamble = (p1.preamble);
-                               matched_pre =
-                                 (Pulse_Syntax_Base.Tm_Star
-                                    ((p1.matched_pre), (r.v)));
-                               unmatched_pre = (r.unmatched');
-                               remaining_ctxt = ((r.ps).remaining');
-                               proof_steps = (p1.proof_steps);
-                               proof_steps_typing = (Prims.magic ());
-                               pre_equiv = ()
-                             })))) uu___)
+    fun preamble ->
+      fun p ->
+        fun r ->
+          FStar_Tactics_Effect.tac_bind
+            (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
+               (Prims.of_int (472)) (Prims.of_int (13)) (Prims.of_int (472))
+               (Prims.of_int (26)))
+            (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
+               (Prims.of_int (472)) (Prims.of_int (29)) (Prims.of_int (496))
+               (Prims.of_int (20)))
+            (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> preamble.ctxt))
+            (fun uu___ ->
+               (fun ctxt ->
+                  Obj.magic
+                    (FStar_Tactics_Effect.tac_bind
+                       (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
+                          (Prims.of_int (473)) (Prims.of_int (10))
+                          (Prims.of_int (473)) (Prims.of_int (37)))
+                       (FStar_Range.mk_range "Pulse.Checker.Auto.Util.fst"
+                          (Prims.of_int (491)) (Prims.of_int (4))
+                          (Prims.of_int (496)) (Prims.of_int (18)))
+                       (Obj.magic (apply_proof_step g preamble p r.v r.ps))
+                       (fun p1 ->
+                          FStar_Tactics_Effect.lift_div_tac
+                            (fun uu___ ->
+                               {
+                                 matched_pre =
+                                   (Pulse_Syntax_Base.Tm_Star
+                                      ((p1.matched_pre), (r.v)));
+                                 unmatched_pre = (r.unmatched');
+                                 remaining_ctxt = ((r.ps).remaining');
+                                 proof_steps = (p1.proof_steps);
+                                 proof_steps_typing = (Prims.magic ());
+                                 pre_equiv = ()
+                               })))) uu___)

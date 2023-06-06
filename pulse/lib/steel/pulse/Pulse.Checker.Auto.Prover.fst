@@ -30,16 +30,9 @@ module Metatheory = Pulse.Typing.Metatheory
 
 let init_prover_state (#g:env) (#ctxt:vprop) (ctxt_typing: vprop_typing g ctxt)
                       (#t:st_term) (#c:comp_st) (t_typing: st_typing g t c)
-  : prover_state g
-  = { 
-        preamble = {
-          ctxt;
-          ctxt_typing;
-          t; 
-          c; 
-          t_typing
-        };
-
+  : prover_state g { ctxt; ctxt_typing; t; c; t_typing }
+  = 
+  { 
         matched_pre = Tm_Emp;
         unmatched_pre = vprop_as_list (comp_pre c);
         remaining_ctxt = vprop_as_list ctxt;
@@ -82,13 +75,13 @@ let step : prover_step_t
                     step_intro_pure <: prover_step_t;
                     step_intro_rewrite <: prover_step_t ]
 
-let finish #g (p:prover_state g { p.unmatched_pre == [] })
-  : (t:st_term & c:comp_st { comp_pre c == p.preamble.ctxt } & st_typing g t c)
+let finish #g #preamble (p:prover_state g preamble { p.unmatched_pre == [] })
+  : (t:st_term & c:comp_st { comp_pre c == preamble.ctxt } & st_typing g t c)
   = assume (list_as_vprop [] == Tm_Emp);
-    let veq1 : vprop_equiv _ (comp_pre p.preamble.c) p.matched_pre
+    let veq1 : vprop_equiv _ (comp_pre preamble.c) p.matched_pre
       = VE_Trans _ _ _ _ p.pre_equiv (VE_Unit _ _) in
-    let t_typing : st_typing g p.preamble.t (comp_st_with_pre p.preamble.c p.matched_pre)
-      = st_typing_equiv_pre p.preamble.t_typing veq1 in
+    let t_typing : st_typing g preamble.t (comp_st_with_pre preamble.c p.matched_pre)
+      = st_typing_equiv_pre preamble.t_typing veq1 in
     let remaining_context_typing : vprop_typing g (list_as_vprop p.remaining_ctxt) = magic () in
     let framing_token : F.frame_for_req_in_ctxt g (proof_steps_post p) p.matched_pre =
       (| list_as_vprop p.remaining_ctxt,
@@ -100,16 +93,16 @@ let finish #g (p:prover_state g { p.unmatched_pre == [] })
     let (| t, t_typing |) = bind_proof_steps_with p _ _ t_typing in
     (| _, _, t_typing |)
 
-let as_failure #g (p:prover_state g) = {
+let as_failure #g #preamble (p:prover_state g preamble) = {
   unmatched_preconditions = p.unmatched_pre;
   remaining_context = p.remaining_ctxt
 }
 
-let rec solve #g (p:prover_state g)
+let rec solve #g #preamble (p:prover_state g preamble)
   : T.Tac 
     (either 
         (t:st_term &
-         c:comp_st { comp_pre c == p.preamble.ctxt } &
+         c:comp_st { comp_pre c == preamble.ctxt } &
          st_typing g t c)
         framing_failure)
   = match step p with

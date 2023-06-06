@@ -89,9 +89,7 @@ type prover_state_preamble (g:env) = {
 }
 
 noeq
-type prover_state (g:env) = {
-  preamble:prover_state_preamble g;
-
+type prover_state (g:env) (preamble:prover_state_preamble g) = {
   (* the in-progress proof state *)
   matched_pre:term; (* conjuncts that we have already derived *)
   unmatched_pre:list term; (* conjuncts remaining to be derived *)
@@ -108,20 +106,21 @@ type prover_state (g:env) = {
       (Tm_Star (list_as_vprop unmatched_pre) matched_pre);
 }
 
-let proof_steps_post (#g:env) (p:prover_state g) : vprop =
+let proof_steps_post (#g:_) (#preamble:_) (p:prover_state g preamble) : vprop =
   Tm_Star (list_as_vprop p.remaining_ctxt) p.matched_pre
 
-let bind_proof_steps_with (#g:env) (p:prover_state g)
+let bind_proof_steps_with (#g:env) (#preamble:_) (p:prover_state g preamble)
   (t:st_term)
   (c:comp_st {comp_pre c == proof_steps_post p})
   (t_typing:st_typing g t c)
-  : (t':st_term & st_typing g t' (comp_st_with_pre c p.preamble.ctxt))
+  : (t':st_term & st_typing g t' (comp_st_with_pre c preamble.ctxt))
   = admit()
 
 type prover_step_t =
-  #g:env ->
-  p:prover_state g ->
-  T.Tac (option (p':prover_state g { p.preamble == p'.preamble }))
+  #g:_ ->
+  #preamble:_ ->
+  p:prover_state g preamble ->
+  T.Tac (option (prover_state g preamble))
 
 //
 // result of an intro (pure, exists, rewrite) step
@@ -149,7 +148,7 @@ type proof_step (g:env) (ctxt:list vprop) (v:vprop) = {
 // An intro step that makes progress by solving one conjunct
 // v from the p.unmatched_pre
 noeq
-type intro_from_unmatched_step (#g:env) (p:prover_state g) = {
+type intro_from_unmatched_step (#g:env) (#preamble:_) (p:prover_state g preamble) = {
   v : vprop;
 
   ps:proof_step g p.remaining_ctxt v;
@@ -171,17 +170,18 @@ type proof_step_fn =
   T.Tac (option (proof_step g ctxt v))
 
 type intro_from_unmatched_fn =
-  #g:env ->
-  p:prover_state g ->
+  #g:_ ->
+  #preamble:_ ->
+  p:prover_state g preamble ->
   T.Tac (option (intro_from_unmatched_step p))
 
 val apply_proof_step
   (#g:env)
-  (p:prover_state g)
+  (#preamble:_)
+  (p:prover_state g preamble)
   (v:vprop)
   (r:proof_step g p.remaining_ctxt v)  
-  : T.Tac (p':prover_state g {
-      p'.preamble == p.preamble /\
+  : T.Tac (p':prover_state g preamble {
       p'.matched_pre == p.matched_pre /\
       p'.unmatched_pre == p.unmatched_pre /\
       p'.remaining_ctxt == v::r.remaining'
@@ -189,10 +189,10 @@ val apply_proof_step
 
 val apply_intro_from_unmatched_step
   (#g:env)
-  (#p:prover_state g)
+  (#preamble:_)
+  (#p:prover_state g preamble)
   (r:intro_from_unmatched_step p)
-  : T.Tac (p':prover_state g {
-      p'.preamble == p.preamble /\
+  : T.Tac (p':prover_state g preamble {
       p'.matched_pre == Tm_Star p.matched_pre r.v /\
       p'.unmatched_pre == r.unmatched' /\
       p'.remaining_ctxt == r.ps.remaining'
