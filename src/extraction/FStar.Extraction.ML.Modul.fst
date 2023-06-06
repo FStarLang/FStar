@@ -23,13 +23,14 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.Extraction.ML
 open FStar.Extraction.ML.RegEmb
-open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
 open FStar.Ident
 open FStar.Pervasives
 open FStar.Syntax
+
 open FStar.Syntax.Syntax
+open FStar.Extraction.ML.Syntax (* Intentionally shadows part of Syntax.Syntax *)
 
 module Term   = FStar.Extraction.ML.Term
 module Print  = FStar.Syntax.Print
