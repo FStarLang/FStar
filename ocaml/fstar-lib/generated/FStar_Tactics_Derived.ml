@@ -1,4 +1,8 @@
 open Prims
+let op_At :
+  'uuuuu .
+    unit -> 'uuuuu Prims.list -> 'uuuuu Prims.list -> 'uuuuu Prims.list
+  = fun uu___ -> FStar_List_Tot_Base.op_At
 let (name_of_bv :
   FStar_Reflection_Types.bv ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
@@ -423,8 +427,7 @@ let (later : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
             | g::gs ->
                 Obj.magic
                   (Obj.repr
-                     (FStar_Tactics_Builtins.set_goals
-                        (FStar_List_Tot_Base.op_At gs [g])))
+                     (FStar_Tactics_Builtins.set_goals ((op_At ()) gs [g])))
             | uu___2 -> Obj.magic (Obj.repr (fail "later: no goals"))) uu___1)
 let (apply :
   FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
@@ -1021,8 +1024,9 @@ let divide :
                                                                     (Prims.of_int (10)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.set_goals
-                                                                    (FStar_List_Tot_Base.op_At
-                                                                    gsl gsr)))
+                                                                    ((op_At
+                                                                    ()) gsl
+                                                                    gsr)))
                                                                     (fun
                                                                     uu___9 ->
                                                                     (fun
@@ -1043,10 +1047,11 @@ let divide :
                                                                     (Prims.of_int (10)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.set_smt_goals
-                                                                    (FStar_List_Tot_Base.op_At
-                                                                    sgs
-                                                                    (FStar_List_Tot_Base.op_At
-                                                                    sgsl sgsr))))
+                                                                    ((op_At
+                                                                    ()) sgs
+                                                                    ((op_At
+                                                                    ()) sgsl
+                                                                    sgsr))))
                                                                     (fun
                                                                     uu___10
                                                                     ->
@@ -1222,7 +1227,7 @@ let focus :
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    FStar_List_Tot_Base.op_At
+                                                                    (op_At ())
                                                                     uu___3 gs))))
                                                                     (fun
                                                                     uu___3 ->
@@ -1287,7 +1292,7 @@ let focus :
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    FStar_List_Tot_Base.op_At
+                                                                    (op_At ())
                                                                     uu___4
                                                                     sgs))))
                                                                     (fun
@@ -1542,8 +1547,9 @@ let (iterAllSMT :
                                                                     uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Builtins.set_smt_goals
-                                                                    (FStar_List_Tot_Base.op_At
-                                                                    gs' sgs')))
+                                                                    ((op_At
+                                                                    ()) gs'
+                                                                    sgs')))
                                                                     uu___5)))
                                                            uu___4))) uu___3)))
                                      uu___2))) uu___1))) uu___)
@@ -3805,8 +3811,7 @@ let (focus_all : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                              (Obj.magic (smt_goals ()))
                              (fun uu___2 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___3 ->
-                                     FStar_List_Tot_Base.op_At uu___1 uu___2))))
+                                  (fun uu___3 -> (op_At ()) uu___1 uu___2))))
                        uu___1)))
             (fun uu___1 ->
                (fun uu___1 ->
