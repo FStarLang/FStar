@@ -36,12 +36,14 @@ let check_abs
     match check_term g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
       let pre = close_term pre_opened x in
+      let var = tm_var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=Range.range_0} in
+      let ret_ty = open_term_opt' ret_ty var 0 in
+      let post_hint_body = open_term_opt' post_hint_body var 1 in
       let post =
         match post_hint_body with
         | None -> None
         | Some post ->
-          let post = open_term' post (tm_var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=Range.range_0}) 1 in
-          let post_hint_typing : post_hint_t = Pulse.Checker.Common.intro_post_hint g' ret_ty post in
+          let post_hint_typing : post_hint_t = Pulse.Checker.Common.intro_post_hint (push_context "post_hint_typing" g') ret_ty post in
           Some post_hint_typing
       in
       let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened (E pre_typing) post in
