@@ -1337,7 +1337,7 @@ let rec (specs_with_types :
               then option_warning_callback "__no_positivity"
               else ())), (Const (Bool true)))),
       "Don't check positivity of inductive types");
-    (FStar_Getopt.noshort, "warn_error", (Accumulated (SimpleStr "")),
+    (FStar_Getopt.noshort, "warn_error", (ReverseAccumulated (SimpleStr "")),
       "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t- [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t- [-r] silences range [r]\n\t\t- [+r] enables range [r]\n\t\t- [@r] makes range [r] fatal.");
     (FStar_Getopt.noshort, "use_nbe", BoolStr,
       "Use normalization by evaluation as the default normalization strategy (default 'false')");

@@ -137,7 +137,8 @@ let (update_flags :
                   Invalid_warn_error_setting uu___4 in
                 FStar_Compiler_Effect.raise uu___3 in
           (match uu___1 with | (l1, h) -> (flag, (l1, h))) in
-    let error_range_settings = FStar_Compiler_List.map compute_range l in
+    let error_range_settings =
+      FStar_Compiler_List.map compute_range (FStar_Compiler_List.rev l) in
     let uu___ =
       FStar_Compiler_List.collect set_flag_for_range error_range_settings in
     FStar_Compiler_List.op_At uu___ FStar_Errors_Codes.default_settings
