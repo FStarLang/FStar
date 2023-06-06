@@ -96,7 +96,9 @@ let update_flags (l:list (error_flag * string))
      in
      flag, (l, h)
   in
-  let error_range_settings = List.map compute_range l in
+  // NOTE: Rev below so when we handle things like '@0..100-50'
+  // the -50 overrides the @0..100.
+  let error_range_settings = List.map compute_range (List.rev l) in
   List.collect set_flag_for_range error_range_settings
   @ default_settings
 
