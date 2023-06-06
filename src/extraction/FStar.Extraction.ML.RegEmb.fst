@@ -47,7 +47,7 @@ let ml_some : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "Some"))
 let tm_fvar_lid    = Ident.lid_of_str "FStar.Syntax.Syntax.Tm_fvar"
 let fv_eq_lid_lid  = Ident.lid_of_str "FStar.Syntax.Syntax.fv_eq_lid"
 let s_fvar_lid     = Ident.lid_of_str "FStar.Syntax.Syntax.fvar"
-let lid_of_str_lid = Ident.lid_of_str "Ident.lid_of_str" // :^)
+let lid_of_str_lid = Ident.lid_of_str "FStar.Ident.lid_of_str" // :^)
 
 let fresh : string -> string =
   let r = BU.mk_ref 0 in

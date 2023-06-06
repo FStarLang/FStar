@@ -564,8 +564,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           let n_args = List.length args in
           begin
           match (U.un_uinst head).n with
-          | Tm_fvar fv
-              when is_known_type_constructor l fv n_args ->
+          | Tm_fvar fv when is_known_type_constructor l fv n_args ->
             begin
             let arg_embeddings =
                 args
@@ -583,6 +582,18 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                 head
             | n ->
                 w <| MLE_App (head, arg_embeddings)
+            end
+
+          | Tm_fvar fv when true ->
+            begin
+            let arg_embeddings = args |> List.map (fun (t, _) -> mk_embedding l env t) in
+
+            let last :: init = List.rev (ids_of_lid fv.fv_name.v) in
+
+            let head = as_name (List.map Ident.string_of_id (List.rev init), "e_" ^ Ident.string_of_id last) in
+            match arg_embeddings with
+            | [] -> head
+            | _ -> w <| MLE_App (head, arg_embeddings)
             end
 
           | _ ->
