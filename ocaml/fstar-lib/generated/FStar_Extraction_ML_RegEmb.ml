@@ -24,7 +24,7 @@ let (fv_eq_lid_lid : FStar_Ident.lident) =
 let (s_fvar_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.fvar"
 let (lid_of_str_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_str "Ident.lid_of_str"
+  FStar_Ident.lid_of_str "FStar.Ident.lid_of_str"
 let (fresh : Prims.string -> Prims.string) =
   let r = FStar_Compiler_Util.mk_ref Prims.int_zero in
   fun s ->

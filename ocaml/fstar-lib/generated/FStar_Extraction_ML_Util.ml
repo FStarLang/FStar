@@ -1156,6 +1156,39 @@ let (interpret_plugin_as_term_fun :
                                       FStar_Compiler_Effect.op_Less_Bar w
                                         (FStar_Extraction_ML_Syntax.MLE_App
                                            (head1, arg_embeddings))))
+                        | FStar_Syntax_Syntax.Tm_fvar fv1 when true ->
+                            let arg_embeddings =
+                              FStar_Compiler_Effect.op_Bar_Greater args
+                                (FStar_Compiler_List.map
+                                   (fun uu___4 ->
+                                      match uu___4 with
+                                      | (t4, uu___5) ->
+                                          mk_embedding l env1 t4)) in
+                            let uu___4 =
+                              let uu___5 =
+                                FStar_Ident.ids_of_lid
+                                  (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                              FStar_Compiler_List.rev uu___5 in
+                            (match uu___4 with
+                             | last::init ->
+                                 let head1 =
+                                   let uu___5 =
+                                     let uu___6 =
+                                       FStar_Compiler_List.map
+                                         FStar_Ident.string_of_id
+                                         (FStar_Compiler_List.rev init) in
+                                     let uu___7 =
+                                       let uu___8 =
+                                         FStar_Ident.string_of_id last in
+                                       Prims.op_Hat "e_" uu___8 in
+                                     (uu___6, uu___7) in
+                                   as_name uu___5 in
+                                 (match arg_embeddings with
+                                  | [] -> head1
+                                  | uu___5 ->
+                                      FStar_Compiler_Effect.op_Less_Bar w
+                                        (FStar_Extraction_ML_Syntax.MLE_App
+                                           (head1, arg_embeddings))))
                         | uu___4 ->
                             let uu___5 =
                               let uu___6 =
@@ -1204,6 +1237,39 @@ let (interpret_plugin_as_term_fun :
                                       FStar_Compiler_Effect.op_Less_Bar w
                                         (FStar_Extraction_ML_Syntax.MLE_App
                                            (head1, arg_embeddings))))
+                        | FStar_Syntax_Syntax.Tm_fvar fv1 when true ->
+                            let arg_embeddings =
+                              FStar_Compiler_Effect.op_Bar_Greater args
+                                (FStar_Compiler_List.map
+                                   (fun uu___4 ->
+                                      match uu___4 with
+                                      | (t4, uu___5) ->
+                                          mk_embedding l env1 t4)) in
+                            let uu___4 =
+                              let uu___5 =
+                                FStar_Ident.ids_of_lid
+                                  (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                              FStar_Compiler_List.rev uu___5 in
+                            (match uu___4 with
+                             | last::init ->
+                                 let head1 =
+                                   let uu___5 =
+                                     let uu___6 =
+                                       FStar_Compiler_List.map
+                                         FStar_Ident.string_of_id
+                                         (FStar_Compiler_List.rev init) in
+                                     let uu___7 =
+                                       let uu___8 =
+                                         FStar_Ident.string_of_id last in
+                                       Prims.op_Hat "e_" uu___8 in
+                                     (uu___6, uu___7) in
+                                   as_name uu___5 in
+                                 (match arg_embeddings with
+                                  | [] -> head1
+                                  | uu___5 ->
+                                      FStar_Compiler_Effect.op_Less_Bar w
+                                        (FStar_Extraction_ML_Syntax.MLE_App
+                                           (head1, arg_embeddings))))
                         | uu___4 ->
                             let uu___5 =
                               let uu___6 =
@@ -1249,6 +1315,39 @@ let (interpret_plugin_as_term_fun :
                                   | uu___6 when uu___6 = Prims.int_zero ->
                                       head1
                                   | n ->
+                                      FStar_Compiler_Effect.op_Less_Bar w
+                                        (FStar_Extraction_ML_Syntax.MLE_App
+                                           (head1, arg_embeddings))))
+                        | FStar_Syntax_Syntax.Tm_fvar fv1 when true ->
+                            let arg_embeddings =
+                              FStar_Compiler_Effect.op_Bar_Greater args
+                                (FStar_Compiler_List.map
+                                   (fun uu___4 ->
+                                      match uu___4 with
+                                      | (t4, uu___5) ->
+                                          mk_embedding l env1 t4)) in
+                            let uu___4 =
+                              let uu___5 =
+                                FStar_Ident.ids_of_lid
+                                  (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                              FStar_Compiler_List.rev uu___5 in
+                            (match uu___4 with
+                             | last::init ->
+                                 let head1 =
+                                   let uu___5 =
+                                     let uu___6 =
+                                       FStar_Compiler_List.map
+                                         FStar_Ident.string_of_id
+                                         (FStar_Compiler_List.rev init) in
+                                     let uu___7 =
+                                       let uu___8 =
+                                         FStar_Ident.string_of_id last in
+                                       Prims.op_Hat "e_" uu___8 in
+                                     (uu___6, uu___7) in
+                                   as_name uu___5 in
+                                 (match arg_embeddings with
+                                  | [] -> head1
+                                  | uu___5 ->
                                       FStar_Compiler_Effect.op_Less_Bar w
                                         (FStar_Extraction_ML_Syntax.MLE_App
                                            (head1, arg_embeddings))))
