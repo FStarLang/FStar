@@ -1,8 +1,5 @@
 module FStar.InteractiveHelpers.PostProcess
 
-module HS = FStar.HyperStack
-module ST = FStar.HyperStack.ST
-
 open FStar.List
 open FStar.Tactics
 open FStar.Mul
