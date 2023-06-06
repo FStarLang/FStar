@@ -132,24 +132,37 @@ output:
 	+$(Q)$(MAKE) -C tests/ide/emacs accept
 	+$(Q)$(MAKE) -C tests/bug-reports output-accept
 
+# This rule is meant to mimic what the docker based CI does, but it
+# is not perfect. In particular it will not look for a diff on the
+# snapshot, nor run the build-standalone script.
 .PHONY: ci
 ci:
 	+$(Q)FSTAR_HOME=$(CURDIR) $(MAKE) ci-pre
 	+$(Q)FSTAR_HOME=$(CURDIR) $(MAKE) ci-post
 
+# This rule runs a CI job in a local container, exactly like is done for
+# CI.
 .PHONY: docker-ci
 docker-ci:
 	docker build -f .docker/standalone.Dockerfile --build-arg CI_THREADS=$(shell nproc) .
 
 .PHONY: ci-pre
-ci-pre:
+ci-pre: ci-rebootstrap ci-ocaml-test ci-ulib-in-fsharp
+
+.PHONY: ci-rebootstrap
+ci-rebootstrap:
 	+$(Q)$(MAKE) full-bootstrap FSTAR_BUILD_PROFILE=test
+
+.PHONY: ci-ocaml-test
+ci-ocaml-test: ci-rebootstrap
 	+$(Q)$(MAKE) -C src ocaml-unit-tests
-	+$(Q)$(MAKE) -C ulib ulib-in-fsharp    #build ulibfs
+
+.PHONY: ci-ulib-in-fsharp
+ci-ulib-in-fsharp: ci-rebootstrap
+	+$(Q)$(MAKE) -C ulib ulib-in-fsharp
 
 .PHONY: ci-post
 ci-post: ci-uregressions
-	+if [ -n "${FSTAR_CI_UREGRESSIONS_ULONG}" ]; then $(MAKE) ci-uregressions-ulong; fi
 
 .PHONY: ci-uregressions
 ci-uregressions:
