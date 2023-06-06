@@ -2042,11 +2042,35 @@ let rec (extract_sig :
               (let se1 = karamel_fixup_qual se in
                match se1.FStar_Syntax_Syntax.sigel with
                | FStar_Syntax_Syntax.Sig_bundle uu___5 ->
-                   extract_bundle g se1
+                   let uu___6 = extract_bundle g se1 in
+                   (match uu___6 with
+                    | (g1, ses) ->
+                        let uu___7 =
+                          let uu___8 =
+                            FStar_Extraction_ML_RegEmb.maybe_register_plugin
+                              g1 se1 in
+                          FStar_Compiler_List.op_At ses uu___8 in
+                        (g1, uu___7))
                | FStar_Syntax_Syntax.Sig_inductive_typ uu___5 ->
-                   extract_bundle g se1
+                   let uu___6 = extract_bundle g se1 in
+                   (match uu___6 with
+                    | (g1, ses) ->
+                        let uu___7 =
+                          let uu___8 =
+                            FStar_Extraction_ML_RegEmb.maybe_register_plugin
+                              g1 se1 in
+                          FStar_Compiler_List.op_At ses uu___8 in
+                        (g1, uu___7))
                | FStar_Syntax_Syntax.Sig_datacon uu___5 ->
-                   extract_bundle g se1
+                   let uu___6 = extract_bundle g se1 in
+                   (match uu___6 with
+                    | (g1, ses) ->
+                        let uu___7 =
+                          let uu___8 =
+                            FStar_Extraction_ML_RegEmb.maybe_register_plugin
+                              g1 se1 in
+                          FStar_Compiler_List.op_At ses uu___8 in
+                        (g1, uu___7))
                | FStar_Syntax_Syntax.Sig_new_effect ed when
                    let uu___5 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
                    FStar_TypeChecker_Env.is_reifiable_effect uu___5

@@ -374,3 +374,48 @@ let lazy_unembed :
                       uu___3 uu___4 uu___5
                   else ());
                  aopt)
+let op_let_Question :
+  'uuuuu 'uuuuu1 .
+    'uuuuu FStar_Pervasives_Native.option ->
+      ('uuuuu -> 'uuuuu1) -> 'uuuuu1 FStar_Pervasives_Native.option
+  = fun o -> fun f -> FStar_Compiler_Util.map_opt o f
+let mk_extracted_embedding :
+  'a .
+    Prims.string ->
+      ((Prims.string * FStar_Syntax_Syntax.term Prims.list) ->
+         'a FStar_Pervasives_Native.option)
+        -> ('a -> FStar_Syntax_Syntax.term) -> 'a embedding
+  =
+  fun name ->
+    fun u ->
+      fun e ->
+        let uu t _norm =
+          let uu___ = FStar_Syntax_Util.head_and_args t in
+          match uu___ with
+          | (hd, args) ->
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = FStar_Syntax_Util.un_uinst hd in
+                    FStar_Syntax_Subst.compress uu___4 in
+                  uu___3.FStar_Syntax_Syntax.n in
+                match uu___2 with
+                | FStar_Syntax_Syntax.Tm_fvar fv ->
+                    FStar_Pervasives_Native.Some
+                      ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
+                | uu___3 -> FStar_Pervasives_Native.None in
+              Obj.magic
+                (op_let_Question uu___1
+                   (fun hd_lid ->
+                      let uu___2 =
+                        let uu___3 = FStar_Ident.string_of_lid hd_lid in
+                        let uu___4 =
+                          FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                            args in
+                        (uu___3, uu___4) in
+                      u uu___2)) in
+        let ee x rng _topt _norm = e x in
+        let uu___ =
+          let uu___1 = FStar_Ident.lid_of_str name in
+          FStar_Syntax_Syntax.lid_as_fv uu___1 FStar_Pervasives_Native.None in
+        mk_emb ee uu uu___
