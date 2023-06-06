@@ -162,7 +162,7 @@ let (mk_embed :
                                    (lid_of_str, uu___8) in
                                  FStar_Extraction_ML_Syntax.MLE_App uu___7 in
                                mk uu___6 in
-                             [uu___5] in
+                             [uu___5; ml_none] in
                            (fvar, uu___4) in
                          FStar_Extraction_ML_Syntax.MLE_App uu___3 in
                        mk uu___2 in

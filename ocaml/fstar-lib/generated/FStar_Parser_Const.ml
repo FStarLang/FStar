@@ -506,8 +506,6 @@ let (assert_by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let (fstar_syntax_syntax_term : FStar_Ident.lident) =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term"
-let (fstar_syntax_syntax_arg : FStar_Ident.lident) =
-  FStar_Ident.lid_of_str "FStar.Syntax.Syntax.arg"
 let (binder_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binder"]
     FStar_Compiler_Range_Type.dummyRange
