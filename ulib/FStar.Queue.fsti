@@ -10,17 +10,17 @@ val as_list (#a:Type) (q:queue a) : list a
 
 val as_queue (#a:Type) (l:list a) : queue a
 
-val equal (#a:Type) (q1 q2:queue a) : prop
+val eq (#a:Type) (q1 q2:queue a) : prop
 
 val lemma_eq_intro: #a:Type -> q1:queue a -> q2:queue a -> Lemma
-  (requires (as_list q1 == as_list q2))
-  (ensures (equal q1 q2))
-  [SMTPat (equal q1 q2)]
+  (requires as_list q1 == as_list q2)
+  (ensures (eq q1 q2))
+  [SMTPat (eq q1 q2)]
 
 val lemma_eq_elim: #a:Type -> q1:queue a -> q2:queue a -> Lemma
-  (requires (equal q1 q2))
-  (ensures q1 == q2)
-  [SMTPat (equal q1 q2)]
+  (requires (eq q1 q2))
+  (ensures as_list q1 == as_list q2)
+  [SMTPat (eq q1 q2)]
 
 let not_empty (#a:Type) (q:queue a) : prop
   = ~(as_list q == [])
@@ -30,7 +30,7 @@ val lemma_as_list_as_queue_inv: #a:Type -> l:list a -> Lemma
   [SMTPat (as_queue l)]
 
 val lemma_as_queue_as_list_inv: #a:Type -> q:queue a -> Lemma
-  (as_queue (as_list q) == q) 
+  (eq (as_queue (as_list q)) q) 
   [SMTPat (as_list q)]
 
 val enqueue (#a:Type) (x:a) (q:queue a) : queue a
@@ -44,7 +44,7 @@ val lemma_empty_ok: #a:Type -> Lemma
   [SMTPat (empty #a)]
 
 val lemma_enqueue_ok: #a:Type -> x:a -> q:queue a -> Lemma
-  (as_list (enqueue x q) == append (as_list q) [x]) 
+  (as_list (enqueue x q) == (as_list q) @ [x]) 
   [SMTPat (enqueue x q)]
 
 val lemma_dequeue_ok: #a:Type -> q:queue a{not_empty q} -> Lemma

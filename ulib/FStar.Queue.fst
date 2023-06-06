@@ -16,11 +16,11 @@ let as_queue #a l
 		| [] -> empty
 		| _ -> l, []
 
-let equal #a q1 q2 = as_list q1 == as_list q2
+let eq #a q1 q2 = as_list q1 == as_list q2
 
 let lemma_eq_intro #_ q1 q2 = ()
 
-let lemma_eq_elim #_ q1 q2 = admit()
+let lemma_eq_elim #_ q1 q2 = ()
 
 let lemma_as_list_as_queue_inv (#a:Type) (l:list a) 
 	: Lemma (as_list (as_queue l) == l)
@@ -29,12 +29,11 @@ let lemma_as_list_as_queue_inv (#a:Type) (l:list a)
 	  | _ -> append_l_nil l
 
 let lemma_as_queue_as_list_inv (#a:Type) (q:queue a) 
-	: Lemma (as_queue (as_list q) == q)
+	: Lemma (eq (as_queue (as_list q)) q)
 	= match fst q with
 	  | [] -> ()
 	  | l -> (
-		append_l_nil (append l (rev (snd q))); 
-		lemma_eq_intro (as_queue (as_list q)) q
+			append_l_nil (append l (rev (snd q)))
 		)
 
 let enqueue (#a:Type) (x:a) (q:queue a) 
