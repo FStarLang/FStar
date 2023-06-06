@@ -219,7 +219,7 @@ let parse_decl (s:string) (r:range) =
 
  
 let parse_peek_id (s:string) (r:range) =
-  print_string ("About to parse <" ^ s ^ ">");
+  (* print_string ("About to parse <" ^ s ^ ">"); *)
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
   try

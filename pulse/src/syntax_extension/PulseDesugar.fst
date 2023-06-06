@@ -186,22 +186,19 @@ let tosyntax' (env:env_t) (t:A.term)
       return (ToSyntax.desugar_term env.tcenv.dsenv t)
     with 
       | e -> 
-        let msg =
-          match FStar.Errors.issue_of_exn e with
-          | Some i -> FStar.Errors.format_issue i
-          | None -> SW.print_exn e
-        in
-        fail (BU.format2 "tosyntax failed on embedded term: %s\n msg %s\n"
-                         (A.term_to_string t)
-                         msg)
-             t.range
+        match FStar.Errors.issue_of_exn e with
+        | Some i -> 
+          FStar.Errors.add_issues [i];
+          fail "Failed to desugar Pulse term" t.range
+        | None -> 
+          fail (BU.format2 "Failed to desugar Pulse term %s\nUnexpected exception: %s\n"
+                             (A.term_to_string t)
+                             (SW.print_exn e))
+                t.range
 
 let tosyntax (env:env_t) (t:A.term)
   : err S.term
   = let? s = tosyntax' env t in
-    BU.print2 "Desugared %s to %s\n"
-              (A.term_to_string t)
-              (P.term_to_string s);
     return s
 
 let desugar_term (env:env_t) (t:A.term)
@@ -227,9 +224,6 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
     | S.Tm_fvar fv, [(l, _)]
       when S.fv_eq_lid fv pure_lid ->
       let res = SW.tm_pure (as_term l) in
-      BU.print2 "Interpreting %s as %s\n"
-        (P.term_to_string v)
-        (as_string (SW.term_to_string env.tcenv res));
       res
       
 
@@ -274,7 +268,6 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
   = let open SW in
     let open Sugar in
-    BU.print1 "Desugar statement at %s\n" (R.string_of_range s.range);
     match s.s with
     | Expr { e } -> 
       let? tm = tosyntax env e in
@@ -325,8 +318,6 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? invariant = 
         let env, bv = push_bv env id in
         let? inv = desugar_vprop env invariant in
-        BU.print1 "Desugared while invariant to: %s\n"
-                  (as_string (SW.term_to_string env.tcenv inv));
         return (SW.close_term inv bv.index)
       in
       let? body = desugar_stmt env body in
