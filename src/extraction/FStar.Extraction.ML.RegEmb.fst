@@ -134,6 +134,7 @@ let known_fv_embeddings : ref (list (Ident.lident * embedding_data)) =
     (PC.unit_lid,                         {arity=0; syn_emb=syn_emb_lid  "e_unit";       nbe_emb=Some(nbe_emb_lid "e_unit")});
     (PC.string_lid,                       {arity=0; syn_emb=syn_emb_lid  "e_string";     nbe_emb=Some(nbe_emb_lid "e_string")});
     (PC.norm_step_lid,                    {arity=0; syn_emb=syn_emb_lid  "e_norm_step";  nbe_emb=Some(nbe_emb_lid "e_norm_step")});
+    (PC.__range_lid,                      {arity=0; syn_emb=syn_emb_lid  "e_range";      nbe_emb=Some(nbe_emb_lid "e_range")});
 
     (PC.list_lid,                         {arity=1; syn_emb=syn_emb_lid  "e_list";       nbe_emb=Some(nbe_emb_lid "e_list")});
     (PC.option_lid,                       {arity=1; syn_emb=syn_emb_lid  "e_option";     nbe_emb=Some(nbe_emb_lid "e_option")});
