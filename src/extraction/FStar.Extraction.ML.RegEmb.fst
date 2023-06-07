@@ -143,12 +143,14 @@ let known_fv_embeddings : ref (list (Ident.lident * embedding_data)) =
     (PC.mk_tuple_lid 2 Range.dummyRange,  {arity=1; syn_emb=syn_emb_lid  "e_tuple2";     nbe_emb=Some(nbe_emb_lid "e_tuple2")});
 
     (RC.fstar_refl_types_lid "term",      {arity=0; syn_emb=refl_emb_lid "e_term";      nbe_emb=Some(nbe_refl_emb_lid "e_term")});
+    (RC.fstar_refl_types_lid "aqualv",    {arity=0; syn_emb=refl_emb_lid "e_aqualv";    nbe_emb=Some(nbe_refl_emb_lid "e_aqualv")});
     (RC.fstar_refl_types_lid "fv",        {arity=0; syn_emb=refl_emb_lid "e_fv";        nbe_emb=Some(nbe_refl_emb_lid "e_fv")});
     (RC.fstar_refl_types_lid "sigelt",    {arity=0; syn_emb=refl_emb_lid "e_sigelt";    nbe_emb=Some(nbe_refl_emb_lid "e_sigelt")});
     (RC.fstar_refl_types_lid "env",       {arity=0; syn_emb=refl_emb_lid "e_env";       nbe_emb=Some(nbe_refl_emb_lid "e_env")});
-    (RC.fstar_refl_types_lid "binders",   {arity=0; syn_emb=refl_emb_lid "e_binders";   nbe_emb=Some(nbe_refl_emb_lid "e_binders")});
+    (RC.fstar_refl_types_lid "bv",        {arity=0; syn_emb=refl_emb_lid "e_bv";        nbe_emb=Some(nbe_refl_emb_lid "e_bv")});
+    (RC.fstar_refl_types_lid "namedv",    {arity=0; syn_emb=refl_emb_lid "e_namedv";    nbe_emb=Some(nbe_refl_emb_lid "e_namedv")});
     (RC.fstar_refl_types_lid "binder",    {arity=0; syn_emb=refl_emb_lid "e_binder";    nbe_emb=Some(nbe_refl_emb_lid "e_binder")});
-    (RC.fstar_refl_types_lid "term",      {arity=0; syn_emb=refl_emb_lid "e_term";      nbe_emb=Some(nbe_refl_emb_lid "e_term")});
+    (RC.fstar_refl_types_lid "binders",   {arity=0; syn_emb=refl_emb_lid "e_binders";   nbe_emb=Some(nbe_refl_emb_lid "e_binders")});
   ]
 
 let register_embedding (l: Ident.lident) (d: embedding_data) : unit =
