@@ -14,10 +14,10 @@ val eq (#a:Type) (q1 q2:queue a) : prop
 
 let not_empty (#a:Type) (q:queue a) : prop
   = let s = queue_to_seq q in 
-    ~(s == Seq.empty) /\ length s > 0
+    ~(Seq.equal s Seq.empty) /\ length s > 0
 
 val lemma_eq_intro: #a:Type -> q1:queue a -> q2:queue a -> Lemma
-  (requires queue_to_seq q1 == queue_to_seq q2)
+  (requires Seq.equal (queue_to_seq q1) (queue_to_seq q2))
   (ensures (eq q1 q2))
   [SMTPat (eq q1 q2)]
 
@@ -49,9 +49,11 @@ val lemma_enqueue_ok: #a:Type -> x:a -> q:queue a -> Lemma
   [SMTPat (enqueue x q)]
 
 val lemma_dequeue_ok: #a:Type -> q:queue a{not_empty q} -> Lemma
-  (Seq.cons (fst (dequeue q)) (queue_to_seq (snd (dequeue q))) == queue_to_seq q)
+  (let hd, tl = dequeue q in
+   hd == Seq.head (queue_to_seq q) /\
+   eq tl (queue_of_seq (Seq.tail (queue_to_seq q))))
   [SMTPat (dequeue q)]
 
 val lemma_peek_ok: #a:Type -> q:queue a{not_empty q} -> Lemma
-  (peek q == index (queue_to_seq q) 0)
+  (peek q == Seq.head (queue_to_seq q))
   [SMTPat (peek q)]

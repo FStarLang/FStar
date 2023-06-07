@@ -148,11 +148,13 @@ let lemma_cons_list_seq (#a:Type) (x:a) (q:queue a)
 
 (* write comment *)
 let lemma_dequeue_ok (#a:Type) (q:queue a{not_empty q})
-  : Lemma (Seq.cons (fst (dequeue q)) (queue_to_seq (snd (dequeue q))) == queue_to_seq q)
-	= lemma_dequeue_ok_list q; 
+  : Lemma (let hd, tl = dequeue q in
+   		hd == Seq.head (queue_to_seq q) /\
+   		eq tl (queue_of_seq (Seq.tail (queue_to_seq q))))
+	= lemma_dequeue_ok_list q;
 		lemma_cons_list_seq (fst (dequeue q)) (snd (dequeue q))
 
 (* write comment *)
 let lemma_peek_ok (#a:Type) (q:queue a{not_empty q})
-	: Lemma (peek q == index (queue_to_seq q) 0)
+	: Lemma (peek q == Seq.head (queue_to_seq q))
 	= lemma_dequeue_ok_list q
