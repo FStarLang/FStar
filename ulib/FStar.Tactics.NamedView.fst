@@ -66,6 +66,7 @@ type branch = pattern & term
 // TODO: Can we do the same in pure reflection? Do we need
 // access to the _actual_ binder type?
 
+[@@plugin]
 noeq
 type binder = {
   uniq   : nat;
