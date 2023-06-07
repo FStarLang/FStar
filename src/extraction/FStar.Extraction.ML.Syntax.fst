@@ -165,7 +165,7 @@ type mlexpr' =
 | MLE_CTor   of mlpath * list mlexpr
 | MLE_Seq    of list mlexpr
 | MLE_Tuple  of list mlexpr
-| MLE_Record of list mlsymbol * list (mlsymbol * mlexpr)
+| MLE_Record of list mlsymbol * list (mlsymbol * mlexpr) // path of record type, and fields with values
 | MLE_Proj   of mlexpr * mlpath
 | MLE_If     of mlexpr * mlexpr * option mlexpr
 | MLE_Raise  of mlpath * list mlexpr

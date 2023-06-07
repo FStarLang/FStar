@@ -51,11 +51,18 @@ let ml_name : Ident.lid -> mlexpr =
     let s = Ident.path_of_lid l in
     let ns, id = splitlast s in
     mk (MLE_Name (ns, id))
+
 let ml_ctor : Ident.lid -> list mlexpr -> mlexpr =
   fun l args ->
     let s = Ident.path_of_lid l in
     let ns, id = splitlast s in
     mk (MLE_CTor ((ns, id), args))
+
+let ml_record : Ident.lid -> list (string & mlexpr) -> mlexpr =
+  fun l args ->
+    let s = Ident.path_of_lid l in
+    // [] -> assuming same module
+    mk (MLE_Record ([], args))
 
 let ml_none : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "None"))
 let ml_some : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "Some"))
@@ -94,7 +101,7 @@ let fresh : string -> string =
     r := v+1;
     s^"_"^(string_of_int v)
 
-let mk_unembed (ctors: list sigelt) : mlexpr =
+let mk_unembed (record_fields : option (list string)) (ctors: list sigelt) : mlexpr =
   let e_branches : ref (list mlbranch) = BU.mk_ref [] in
   let arg_v = fresh "tm" in
   ctors |> List.iter (fun ctor ->
@@ -109,8 +116,13 @@ let mk_unembed (ctors: list sigelt) : mlexpr =
       let pat_args = vs |> List.map (fun (v,_) -> MLP_Var v) |> pats_to_list_pat in
       let pat_both = MLP_Tuple [pat_s; pat_args] in
 
-      let head = ml_name lid in
-      let ret = mk (MLE_App (head, [mk (MLE_Tuple (List.map (fun (v, _) -> mk (MLE_Var v)) vs))])) in
+      let ret =
+        match record_fields with
+        | Some fields ->
+          ml_record lid (List.map2 (fun (v, _) fld -> fld, mk (MLE_Var v)) vs fields)
+        | None ->
+          ml_ctor lid (List.map (fun (v, _) -> mk (MLE_Var v)) vs)
+      in
       let ret = mk (MLE_App (ml_some, [ret])) in // final return
 
       let body = List.fold_right (fun (v, ty) body ->
@@ -133,7 +145,7 @@ let mk_unembed (ctors: list sigelt) : mlexpr =
   let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
   lam
 
-let mk_embed (ctors: list sigelt) : mlexpr =
+let mk_embed (record_fields : option (list string)) (ctors: list sigelt) : mlexpr =
   let e_branches : ref (list mlbranch) = BU.mk_ref [] in
   let arg_v = fresh "tm" in
   ctors |> List.iter (fun ctor ->
@@ -142,7 +154,14 @@ let mk_embed (ctors: list sigelt) : mlexpr =
       let fv = fresh "fv" in
       let bs, c = U.arrow_formals t in
       let vs = List.map (fun b -> fresh (Ident.string_of_id b.binder_bv.ppname), b.binder_bv.sort) bs in
-      let pat = MLP_CTor (splitlast (Ident.path_of_lid lid), List.map (fun v -> MLP_Var (fst v)) vs) in
+      let pat = 
+        match record_fields with
+        | Some fields ->
+          // [] -> assuming same module
+          MLP_Record ([], List.map2 (fun v fld -> fld, MLP_Var (fst v)) vs fields)
+        | None ->
+          MLP_CTor (splitlast (Ident.path_of_lid lid), List.map (fun v -> MLP_Var (fst v)) vs)
+      in
       let fvar = ml_name s_fvar_lid in
       let lid_of_str = ml_name lid_of_str_lid in
       let head = mk (MLE_App (fvar, [
@@ -606,8 +625,13 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
 
     let ctors = List.filter (fun se -> match se.sigel with | Sig_datacon _ -> true | _ -> false) ses in
     let ml_name = mk (MLE_Const (MLC_String (Ident.string_of_lid tlid))) in
-    let ml_unembed = mk_unembed ctors in
-    let ml_embed = mk_embed ctors in
+    let record_fields =
+      match List.find (function RecordType _ -> true | _ -> false) se.sigquals with
+      | Some (RecordType (a, b)) -> Some (List.map Ident.string_of_id b)
+      | _ -> None
+    in
+    let ml_unembed = mk_unembed record_fields ctors in
+    let ml_embed = mk_embed record_fields ctors in
     let def = mk (MLE_App (mk (MLE_Name (["FStar"; "Syntax"; "Embeddings"; "Base"], "mk_extracted_embedding")), [
                     ml_name;
                     ml_unembed;
