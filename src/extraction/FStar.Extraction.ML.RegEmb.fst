@@ -192,6 +192,12 @@ let rec embedding_for (tcenv:Env.env) (k: embedding_kind) (env:list (bv * string
     mk (MLE_App (comb, [e1; e2]))
   in
   let find_env_entry bv (bv', _) = S.bv_eq bv bv' in
+  (*
+   * We need the whnf to reduce things like
+   *   ppname_t ~> Inhabited.sealed_ string "" ~> Sealed.sealed string
+   * If we just unfold variable, we will hit lambdas.
+   *)
+  let t = N.unfold_whnf tcenv t in
   let t = U.un_uinst t in
   let t = SS.compress t in
   match t.n with
@@ -228,8 +234,8 @@ let rec embedding_for (tcenv:Env.env) (k: embedding_kind) (env:list (bv * string
 
   | Tm_app _ ->
     let head, args = U.head_and_args t in
-    let e_args = List.map (fun (t, _) -> embedding_for tcenv k env t) args in
     let e_head = embedding_for tcenv k env head in
+    let e_args = List.map (fun (t, _) -> embedding_for tcenv k env t) args in
     mk <| MLE_App (e_head, e_args)
 
   (* An fv for which we have an embedding already registered. *)
@@ -246,15 +252,9 @@ let rec embedding_for (tcenv:Env.env) (k: embedding_kind) (env:list (bv * string
       end
     end
 
-  (* An fv which we do not have registered, try to unfold it *)
+  (* An fv which we do not have registered, and did not unfold *)
   | Tm_fvar fv ->
-    (* TODO: I don't really understand why NoDelta causes unfolding (see TcEnv.visible_at).
-    Is it intended? *)
-    begin match Env.lookup_definition [Env.NoDelta] tcenv fv.fv_name.v with
-    | Some (_us, t) -> embedding_for tcenv k env t
-    | None ->
-      raise (NoEmbedding (BU.format1 "Embedding not defined for name `%s'" (Print.term_to_string t)))
-    end
+    raise (NoEmbedding (BU.format1 "Embedding not defined for name `%s'" (Print.term_to_string t)))
 
   | _ ->
     raise (NoEmbedding (BU.format2 "Cannot embed type `%s' (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
