@@ -419,3 +419,14 @@ let mk_extracted_embedding :
           let uu___1 = FStar_Ident.lid_of_str name in
           FStar_Syntax_Syntax.lid_as_fv uu___1 FStar_Pervasives_Native.None in
         mk_emb ee uu uu___
+let extracted_embed : 'a . 'a embedding -> 'a -> FStar_Syntax_Syntax.term =
+  fun e ->
+    fun x ->
+      let uu___ = embed e x in
+      uu___ FStar_Compiler_Range_Type.dummyRange FStar_Pervasives_Native.None
+        id_norm_cb
+let extracted_unembed :
+  'a .
+    'a embedding ->
+      FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
+  = fun e -> fun t -> unembed e t id_norm_cb
