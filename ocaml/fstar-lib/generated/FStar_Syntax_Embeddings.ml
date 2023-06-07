@@ -1449,8 +1449,9 @@ let (e_range :
           FStar_Ident.string_of_lid in
       (uu___2, []) in
     FStar_Syntax_Syntax.ET_app uu___1 in
-  FStar_Syntax_Embeddings_Base.mk_emb_full em un FStar_Syntax_Syntax.t_range
-    FStar_Compiler_Range_Ops.string_of_range uu___
+  FStar_Syntax_Embeddings_Base.mk_emb_full em un
+    FStar_Syntax_Syntax.t___range FStar_Compiler_Range_Ops.string_of_range
+    uu___
 let (e_issue : FStar_Errors.issue FStar_Syntax_Embeddings_Base.embedding) =
   let uu___ =
     FStar_Syntax_Syntax.fvar FStar_Parser_Const.issue_lid

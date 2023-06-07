@@ -1213,7 +1213,7 @@ let (e_range : FStar_Compiler_Range_Type.range embedding) =
     match t1 with
     | Constant (Range r) -> FStar_Pervasives_Native.Some r
     | uu___ -> FStar_Pervasives_Native.None in
-  let uu___ = lid_as_typ FStar_Parser_Const.range_lid [] [] in
+  let uu___ = lid_as_typ FStar_Parser_Const.__range_lid [] [] in
   let uu___1 =
     FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_range in
   mk_emb' em un uu___ uu___1
