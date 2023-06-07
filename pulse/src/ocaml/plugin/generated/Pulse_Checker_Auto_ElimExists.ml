@@ -30,7 +30,12 @@ let (mk :
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
                        match v with
-                       | Pulse_Syntax_Base.Tm_ExistsSL (u, t, p) ->
+                       | Pulse_Syntax_Base.Tm_ExistsSL
+                           (u,
+                            { Pulse_Syntax_Base.binder_ty = t;
+                              Pulse_Syntax_Base.binder_ppname = uu___1;_},
+                            p)
+                           ->
                            FStar_Pervasives_Native.Some
                              (FStar_Pervasives.Mkdtuple3
                                 ((Pulse_Typing.wr
@@ -42,7 +47,8 @@ let (mk :
                                                   (Pulse_Typing.comp_elim_exists
                                                      u t p
                                                      (Pulse_Typing.fresh g))),
-                                                t, p))
+                                                (Pulse_Typing.as_binder t),
+                                                p))
                                        })),
                                   (Pulse_Typing.comp_elim_exists u t p
                                      (Pulse_Typing.fresh g)),

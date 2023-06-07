@@ -11,9 +11,11 @@ let rec (freevars :
     | Pulse_Syntax_Base.Tm_Star (t1, t2) ->
         FStar_Set.union (freevars t1) (freevars t2)
     | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, t2) ->
-        FStar_Set.union (freevars t1) (freevars t2)
+        FStar_Set.union (freevars t1.Pulse_Syntax_Base.binder_ty)
+          (freevars t2)
     | Pulse_Syntax_Base.Tm_ForallSL (uu___, t1, t2) ->
-        FStar_Set.union (freevars t1) (freevars t2)
+        FStar_Set.union (freevars t1.Pulse_Syntax_Base.binder_ty)
+          (freevars t2)
     | Pulse_Syntax_Base.Tm_Pure p -> freevars p
     | Pulse_Syntax_Base.Tm_FStar (t1, uu___) ->
         FStar_Reflection_Typing.freevars t1
@@ -140,9 +142,11 @@ let rec (ln' : Pulse_Syntax_Base.term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_Star (t1, t2) -> (ln' t1 i) && (ln' t2 i)
       | Pulse_Syntax_Base.Tm_Pure p -> ln' p i
       | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, body) ->
-          (ln' t1 i) && (ln' body (i + Prims.int_one))
+          (ln' t1.Pulse_Syntax_Base.binder_ty i) &&
+            (ln' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_ForallSL (uu___, t1, body) ->
-          (ln' t1 i) && (ln' body (i + Prims.int_one))
+          (ln' t1.Pulse_Syntax_Base.binder_ty i) &&
+            (ln' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_FStar (t1, uu___) ->
           FStar_Reflection_Typing.ln' t1 i
 let (ln_st_comp : Pulse_Syntax_Base.st_comp -> Prims.int -> Prims.bool) =
@@ -282,14 +286,24 @@ let rec (open_term' :
         | Pulse_Syntax_Base.Tm_Star (l, r) ->
             Pulse_Syntax_Base.Tm_Star
               ((open_term' l v i), (open_term' r v i))
-        | Pulse_Syntax_Base.Tm_ExistsSL (u, t1, body) ->
+        | Pulse_Syntax_Base.Tm_ExistsSL (u, b, body) ->
             Pulse_Syntax_Base.Tm_ExistsSL
-              (u, (open_term' t1 v i),
-                (open_term' body v (i + Prims.int_one)))
-        | Pulse_Syntax_Base.Tm_ForallSL (u, t1, body) ->
+              (u,
+                {
+                  Pulse_Syntax_Base.binder_ty =
+                    (open_term' b.Pulse_Syntax_Base.binder_ty v i);
+                  Pulse_Syntax_Base.binder_ppname =
+                    (b.Pulse_Syntax_Base.binder_ppname)
+                }, (open_term' body v (i + Prims.int_one)))
+        | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
             Pulse_Syntax_Base.Tm_ForallSL
-              (u, (open_term' t1 v i),
-                (open_term' body v (i + Prims.int_one)))
+              (u,
+                {
+                  Pulse_Syntax_Base.binder_ty =
+                    (open_term' b.Pulse_Syntax_Base.binder_ty v i);
+                  Pulse_Syntax_Base.binder_ppname =
+                    (b.Pulse_Syntax_Base.binder_ppname)
+                }, (open_term' body v (i + Prims.int_one)))
         | Pulse_Syntax_Base.Tm_FStar (t1, r) ->
             Pulse_Syntax_Base.Tm_FStar
               ((FStar_Reflection_Typing.open_or_close_term' t1
@@ -581,14 +595,24 @@ let rec (close_term' :
         | Pulse_Syntax_Base.Tm_Star (l, r) ->
             Pulse_Syntax_Base.Tm_Star
               ((close_term' l v i), (close_term' r v i))
-        | Pulse_Syntax_Base.Tm_ExistsSL (u, t1, body) ->
+        | Pulse_Syntax_Base.Tm_ExistsSL (u, b, body) ->
             Pulse_Syntax_Base.Tm_ExistsSL
-              (u, (close_term' t1 v i),
-                (close_term' body v (i + Prims.int_one)))
-        | Pulse_Syntax_Base.Tm_ForallSL (u, t1, body) ->
+              (u,
+                {
+                  Pulse_Syntax_Base.binder_ty =
+                    (close_term' b.Pulse_Syntax_Base.binder_ty v i);
+                  Pulse_Syntax_Base.binder_ppname =
+                    (b.Pulse_Syntax_Base.binder_ppname)
+                }, (close_term' body v (i + Prims.int_one)))
+        | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
             Pulse_Syntax_Base.Tm_ForallSL
-              (u, (close_term' t1 v i),
-                (close_term' body v (i + Prims.int_one)))
+              (u,
+                {
+                  Pulse_Syntax_Base.binder_ty =
+                    (close_term' b.Pulse_Syntax_Base.binder_ty v i);
+                  Pulse_Syntax_Base.binder_ppname =
+                    (b.Pulse_Syntax_Base.binder_ppname)
+                }, (close_term' body v (i + Prims.int_one)))
         | Pulse_Syntax_Base.Tm_FStar (t1, r) ->
             Pulse_Syntax_Base.Tm_FStar
               ((FStar_Reflection_Typing.open_or_close_term' t1

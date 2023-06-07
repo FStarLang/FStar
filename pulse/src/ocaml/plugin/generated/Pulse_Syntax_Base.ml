@@ -55,13 +55,16 @@ type term =
   | Tm_Emp 
   | Tm_Pure of term 
   | Tm_Star of term * term 
-  | Tm_ExistsSL of universe * term * term 
-  | Tm_ForallSL of universe * term * term 
+  | Tm_ExistsSL of universe * binder * term 
+  | Tm_ForallSL of universe * binder * term 
   | Tm_VProp 
   | Tm_Inames 
   | Tm_EmpInames 
   | Tm_FStar of host_term * range 
   | Tm_Unknown 
+and binder = {
+  binder_ty: term ;
+  binder_ppname: ppname }
 let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
 let uu___is_Tm_Pure uu___ = match uu___ with | Tm_Pure _ -> true | _ -> false
 let uu___is_Tm_Star uu___ = match uu___ with | Tm_Star _ -> true | _ -> false
@@ -80,15 +83,6 @@ let uu___is_Tm_FStar uu___ =
 let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
 type vprop = term
-type binder = {
-  binder_ty: term ;
-  binder_ppname: ppname }
-let (__proj__Mkbinder__item__binder_ty : binder -> term) =
-  fun projectee ->
-    match projectee with | { binder_ty; binder_ppname;_} -> binder_ty
-let (__proj__Mkbinder__item__binder_ppname : binder -> ppname) =
-  fun projectee ->
-    match projectee with | { binder_ty; binder_ppname;_} -> binder_ppname
 type st_comp = {
   u: universe ;
   res: term ;
@@ -286,9 +280,11 @@ let rec (eq_tm : term -> term -> Prims.bool) =
           (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Pure p1, Tm_Pure p2) -> eq_tm p1 p2
       | (Tm_ExistsSL (u1, t11, b1), Tm_ExistsSL (u2, t21, b2)) ->
-          ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
+          ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
+            (eq_tm b1 b2)
       | (Tm_ForallSL (u1, t11, b1), Tm_ForallSL (u2, t21, b2)) ->
-          ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
+          ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
+            (eq_tm b1 b2)
       | (Tm_FStar (t11, r), Tm_FStar (t21, uu___)) ->
           FStar_Reflection_Builtins.term_eq t11 t21
       | uu___ -> false
@@ -444,3 +440,7 @@ let (comp_inames : comp -> term) =
 type nvar = (ppname * var)
 let v_as_nv : 'uuuuu . 'uuuuu -> (FStar_Reflection_Typing.pp_name_t * 'uuuuu)
   = fun x -> (FStar_Reflection_Typing.pp_name_default, x)
+let (as_binder : term -> binder) =
+  fun t ->
+    { binder_ty = t; binder_ppname = FStar_Reflection_Typing.pp_name_default
+    }

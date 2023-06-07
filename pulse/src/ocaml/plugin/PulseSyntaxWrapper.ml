@@ -44,7 +44,7 @@ let tm_uinst (l:fv) (us:universe list) : term = U.tm_uinst l us
 let tm_emp : term = Tm_Emp
 let tm_pure (p:term) : term = Tm_Pure p
 let tm_star (p0:term) (p1:term) : term = Tm_Star (p0, p1)
-let tm_exists (b:binder) (body:vprop) : term = Tm_ExistsSL (U_unknown, b.binder_ty, body)
+let tm_exists (b:binder) (body:vprop) : term = Tm_ExistsSL (U_unknown, b, body)
 let map_aqual (q:S.aqual) =
   match q with
   | Some { S.aqual_implicit = true } -> Some Implicit

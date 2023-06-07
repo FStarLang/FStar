@@ -44,30 +44,30 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
     | Pulse_Syntax_Base.Tm_Star (l, r) ->
         let l1 = elab_term l in
         let r1 = elab_term r in Pulse_Reflection_Util.mk_star l1 r1
-    | Pulse_Syntax_Base.Tm_ExistsSL (u, t, body) ->
-        let t1 = elab_term t in
-        let b = elab_term body in
+    | Pulse_Syntax_Base.Tm_ExistsSL (u, b, body) ->
+        let t = elab_term b.Pulse_Syntax_Base.binder_ty in
+        let b1 = elab_term body in
         if Pulse_Syntax_Base.uu___is_Tm_ExistsSL top
         then
-          Pulse_Reflection_Util.mk_exists u t1
-            (Pulse_Reflection_Util.mk_abs t1 FStar_Reflection_Data.Q_Explicit
-               b)
+          Pulse_Reflection_Util.mk_exists u t
+            (Pulse_Reflection_Util.mk_abs t FStar_Reflection_Data.Q_Explicit
+               b1)
         else
-          Pulse_Reflection_Util.mk_forall u t1
-            (Pulse_Reflection_Util.mk_abs t1 FStar_Reflection_Data.Q_Explicit
-               b)
-    | Pulse_Syntax_Base.Tm_ForallSL (u, t, body) ->
-        let t1 = elab_term t in
-        let b = elab_term body in
+          Pulse_Reflection_Util.mk_forall u t
+            (Pulse_Reflection_Util.mk_abs t FStar_Reflection_Data.Q_Explicit
+               b1)
+    | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
+        let t = elab_term b.Pulse_Syntax_Base.binder_ty in
+        let b1 = elab_term body in
         if Pulse_Syntax_Base.uu___is_Tm_ExistsSL top
         then
-          Pulse_Reflection_Util.mk_exists u t1
-            (Pulse_Reflection_Util.mk_abs t1 FStar_Reflection_Data.Q_Explicit
-               b)
+          Pulse_Reflection_Util.mk_exists u t
+            (Pulse_Reflection_Util.mk_abs t FStar_Reflection_Data.Q_Explicit
+               b1)
         else
-          Pulse_Reflection_Util.mk_forall u t1
-            (Pulse_Reflection_Util.mk_abs t1 FStar_Reflection_Data.Q_Explicit
-               b)
+          Pulse_Reflection_Util.mk_forall u t
+            (Pulse_Reflection_Util.mk_abs t FStar_Reflection_Data.Q_Explicit
+               b1)
     | Pulse_Syntax_Base.Tm_Inames ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_FVar

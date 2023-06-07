@@ -536,7 +536,7 @@ let rec (prepare_instantiations :
                fun goal_vprop ->
                  fun witnesses ->
                    match (witnesses, goal_vprop) with
-                   | ([], Pulse_Syntax_Base.Tm_ExistsSL (u, ty, p)) ->
+                   | ([], Pulse_Syntax_Base.Tm_ExistsSL (u, b, p)) ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.tac_bind
@@ -544,8 +544,8 @@ let rec (prepare_instantiations :
                                   (Prims.of_int (209)) (Prims.of_int (37))
                                   (Prims.of_int (211)) (Prims.of_int (37)))
                                (FStar_Range.mk_range "Pulse.Checker.fst"
-                                  (Prims.of_int (208)) (Prims.of_int (31))
-                                  (Prims.of_int (213)) (Prims.of_int (94)))
+                                  (Prims.of_int (208)) (Prims.of_int (30))
+                                  (Prims.of_int (213)) (Prims.of_int (103)))
                                (Obj.magic
                                   (FStar_Tactics_Effect.tac_bind
                                      (FStar_Range.mk_range
@@ -578,15 +578,17 @@ let rec (prepare_instantiations :
                                          Obj.magic
                                            (prepare_instantiations
                                               ((goal_vprop, inst) :: out)
-                                              ((uv, ty) :: out_uvars)
-                                              next_goal_vprop [])) uu___)))
+                                              ((uv,
+                                                 (b.Pulse_Syntax_Base.binder_ty))
+                                              :: out_uvars) next_goal_vprop
+                                              [])) uu___)))
                    | ([], uu___) ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___1 -> (goal_vprop, out, out_uvars))))
-                   | (t::witnesses1, Pulse_Syntax_Base.Tm_ExistsSL
-                      (u, ty, p)) ->
+                   | (t::witnesses1, Pulse_Syntax_Base.Tm_ExistsSL (u, b, p))
+                       ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.tac_bind
@@ -594,7 +596,7 @@ let rec (prepare_instantiations :
                                   (Prims.of_int (220)) (Prims.of_int (10))
                                   (Prims.of_int (225)) (Prims.of_int (39)))
                                (FStar_Range.mk_range "Pulse.Checker.fst"
-                                  (Prims.of_int (218)) (Prims.of_int (43))
+                                  (Prims.of_int (218)) (Prims.of_int (42))
                                   (Prims.of_int (227)) (Prims.of_int (96)))
                                (match t with
                                 | Pulse_Syntax_Base.Tm_Unknown ->
@@ -612,7 +614,7 @@ let rec (prepare_instantiations :
                                                (Prims.of_int (221))
                                                (Prims.of_int (25))
                                                (Prims.of_int (223))
-                                               (Prims.of_int (46)))
+                                               (Prims.of_int (55)))
                                             (Obj.magic
                                                (Pulse_Checker_Inference.gen_uvar
                                                   ()))
@@ -625,7 +627,9 @@ let rec (prepare_instantiations :
                                                             p t1
                                                             Prims.int_zero),
                                                           (FStar_Pervasives.Inr
-                                                             t1), [(uv, ty)])))))
+                                                             t1),
+                                                          [(uv,
+                                                             (b.Pulse_Syntax_Base.binder_ty))])))))
                                 | uu___ ->
                                     Obj.magic
                                       (Obj.repr

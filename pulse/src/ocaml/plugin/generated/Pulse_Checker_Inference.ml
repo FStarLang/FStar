@@ -834,12 +834,24 @@ let rec (apply_solution :
       | Pulse_Syntax_Base.Tm_Star (l, r) ->
           Pulse_Syntax_Base.Tm_Star
             ((apply_solution sol l), (apply_solution sol r))
-      | Pulse_Syntax_Base.Tm_ExistsSL (u, t1, body) ->
+      | Pulse_Syntax_Base.Tm_ExistsSL (u, b, body) ->
           Pulse_Syntax_Base.Tm_ExistsSL
-            (u, (apply_solution sol t1), (apply_solution sol body))
-      | Pulse_Syntax_Base.Tm_ForallSL (u, t1, body) ->
+            (u,
+              {
+                Pulse_Syntax_Base.binder_ty =
+                  (apply_solution sol b.Pulse_Syntax_Base.binder_ty);
+                Pulse_Syntax_Base.binder_ppname =
+                  (b.Pulse_Syntax_Base.binder_ppname)
+              }, (apply_solution sol body))
+      | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
           Pulse_Syntax_Base.Tm_ForallSL
-            (u, (apply_solution sol t1), (apply_solution sol body))
+            (u,
+              {
+                Pulse_Syntax_Base.binder_ty =
+                  (apply_solution sol b.Pulse_Syntax_Base.binder_ty);
+                Pulse_Syntax_Base.binder_ppname =
+                  (b.Pulse_Syntax_Base.binder_ppname)
+              }, (apply_solution sol body))
 let rec (contains_uvar_r : FStar_Reflection_Types.term -> Prims.bool) =
   fun t ->
     (FStar_Pervasives_Native.uu___is_Some (is_uvar_r t)) ||
@@ -859,9 +871,11 @@ let rec (contains_uvar : Pulse_Syntax_Base.term -> Prims.bool) =
     | Pulse_Syntax_Base.Tm_Star (l, r) ->
         (contains_uvar l) || (contains_uvar r)
     | Pulse_Syntax_Base.Tm_ExistsSL (u, t1, body) ->
-        (contains_uvar t1) || (contains_uvar body)
+        (contains_uvar t1.Pulse_Syntax_Base.binder_ty) ||
+          (contains_uvar body)
     | Pulse_Syntax_Base.Tm_ForallSL (u, t1, body) ->
-        (contains_uvar t1) || (contains_uvar body)
+        (contains_uvar t1.Pulse_Syntax_Base.binder_ty) ||
+          (contains_uvar body)
     | Pulse_Syntax_Base.Tm_FStar (t1, uu___) -> contains_uvar_r t1
 let (try_unify :
   Pulse_Syntax_Base.term ->
