@@ -22,7 +22,7 @@ open FStar.Tactics
 [@@plugin]
 let tau () : Tac unit =
     let b = intro () in
-    exact (pack (Tv_Var (bv_of_binder b)))
+    exact (pack (Tv_Var (binding_to_namedv b)))
 
 let f :    int -> int = synth_by_tactic tau
 let g : #x:int -> int = synth_by_tactic tau
