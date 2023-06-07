@@ -51,12 +51,12 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
         then
           Pulse_Reflection_Util.mk_exists u t
             (Pulse_Reflection_Util.mk_abs_with_name
-               b.Pulse_Syntax_Base.binder_ppname t
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name t
                FStar_Reflection_Data.Q_Explicit body1)
         else
           Pulse_Reflection_Util.mk_forall u t
             (Pulse_Reflection_Util.mk_abs_with_name
-               b.Pulse_Syntax_Base.binder_ppname t
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name t
                FStar_Reflection_Data.Q_Explicit body1)
     | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
         let t = elab_term b.Pulse_Syntax_Base.binder_ty in
@@ -65,12 +65,12 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
         then
           Pulse_Reflection_Util.mk_exists u t
             (Pulse_Reflection_Util.mk_abs_with_name
-               b.Pulse_Syntax_Base.binder_ppname t
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name t
                FStar_Reflection_Data.Q_Explicit body1)
         else
           Pulse_Reflection_Util.mk_forall u t
             (Pulse_Reflection_Util.mk_abs_with_name
-               b.Pulse_Syntax_Base.binder_ppname t
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name t
                FStar_Reflection_Data.Q_Explicit body1)
     | Pulse_Syntax_Base.Tm_Inames ->
         FStar_Reflection_Builtins.pack_ln

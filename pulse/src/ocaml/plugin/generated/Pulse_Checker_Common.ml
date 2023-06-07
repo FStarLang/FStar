@@ -396,7 +396,7 @@ let (try_frame_pre :
                                                                     (Prims.of_int (44)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.range_to_string
-                                                                    t.Pulse_Syntax_Base.range))
+                                                                    t.Pulse_Syntax_Base.range1))
                                                                     (fun
                                                                     uu___3 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -979,7 +979,7 @@ let (repack :
                                      (Prims.of_int (139)) (Prims.of_int (46)))
                                   (Obj.magic
                                      (replace_equiv_post
-                                        t.Pulse_Syntax_Base.range g c
+                                        t.Pulse_Syntax_Base.range1 g c
                                         (Pulse_Typing_Metatheory.st_typing_correctness
                                            g t c d_c) post_hint))
                                   (fun uu___1 ->

@@ -1530,7 +1530,7 @@ let (check_tot_bind :
                                                           = t1;
                                                         Pulse_Syntax_Base.binder_ppname
                                                           =
-                                                          FStar_Reflection_Typing.pp_name_default
+                                                          Pulse_Syntax_Base.ppname_default
                                                       }
                                                       (Pulse_Typing.mk_eq2 u1
                                                          t1

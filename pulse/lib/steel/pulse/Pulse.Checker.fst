@@ -178,7 +178,7 @@ let has_pure_vprops (pre:term) = L.existsb Tm_Pure? (vprop_as_list pre)
 let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit"
 
 let default_binder_annot = {
-    binder_ppname = RT.pp_name_default;
+    binder_ppname = ppname_default;
     binder_ty = Tm_Unknown
 }
    
@@ -203,15 +203,14 @@ let rec prepare_instantiations
           (out_uvars: uvar_tys)
           goal_vprop
           witnesses
-          rng
   : T.Tac (vprop & list (vprop & either term term) & uvar_tys)
   = match witnesses, goal_vprop with
     | [], Tm_ExistsSL u b p ->
       let next_goal_vprop, inst, uv =
-          let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname rng in
+          let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
           open_term' p t 0, Inr t, uv
       in
-      prepare_instantiations ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop [] rng
+      prepare_instantiations ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop []
 
     | [], _ -> 
       goal_vprop, out, out_uvars
@@ -220,12 +219,12 @@ let rec prepare_instantiations
       let next_goal_vprop, inst, uvs =
           match t with
           | Tm_Unknown ->
-            let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname rng in
+            let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
             open_term' p t 0, Inr t, [(uv,b.binder_ty)]
           | _ ->
             open_term' p t 0, Inl t, []
       in
-      prepare_instantiations ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses rng
+      prepare_instantiations ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses
 
     |  _ ->
        T.fail "Unexpected number of instantiations in intro"
@@ -285,7 +284,7 @@ let maybe_infer_intro_exists
     );
     let Tm_IntroExists {erased; p=t; witnesses} = st.term in
     let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
-    let goal_vprop, insts, uvs = prepare_instantiations [] [] t witnesses st.range in
+    let goal_vprop, insts, uvs = prepare_instantiations [] [] t witnesses in
     let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
     let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal pre goal_vprop in
     // T.print

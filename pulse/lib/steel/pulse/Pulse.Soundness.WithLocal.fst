@@ -69,7 +69,7 @@ let withlocal_soundness #g #t #c d soundness =
                     rbody
                     (mk_arrow (PReflUtil.mk_ref ra, R.Q_Explicit)
                               (elab_comp (close_comp (comp_withlocal_body x init_t init c) x))) =
-    mk_t_abs _ #_ #_ #_ #ref_init_t_typing RT.pp_name_default rref_init_t_typing rbody_typing in
+    mk_t_abs _ #_ #_ #_ #ref_init_t_typing ppname_default rref_init_t_typing rbody_typing in
 
   // We now have this rbody typing,
   //   need to match it to what is expected by wrapper withlocal typing

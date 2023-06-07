@@ -224,7 +224,7 @@ let check_tot_bind g t pre pre_typing post_hint check =
   let Tm_TotBind { head=e1; body=e2 } = t.term in
   let (| e1, u1, t1, _t1_typing, e1_typing |) = check_term_and_type g e1 in
   let t1 =
-    let b = {binder_ty=t1;binder_ppname=RT.pp_name_default} in
+    let b = {binder_ty=t1;binder_ppname=ppname_default} in
     let eq_tm = mk_eq2 u1 t1 (null_bvar 0) e1 in
     tm_refine b eq_tm in
   let (| e1, e1_typing |) =

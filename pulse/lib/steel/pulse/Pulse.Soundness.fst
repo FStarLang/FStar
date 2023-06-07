@@ -41,7 +41,7 @@ let tabs_t (d:'a) =
     #c:comp ->
     body_typing:st_typing (extend x (Inl ty) g) (open_st_term body x) c { body_typing << d } ->
     GTot (RT.tot_typing (elab_env g)
-            (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+            (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
             (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
 
 let lift_soundness
@@ -90,7 +90,7 @@ let stapp_soundness
   let r_arg = elab_term arg in
   let r_head_typing
     : RT.tot_typing _ r_head
-        (elab_term (tm_arrow {binder_ty=formal;binder_ppname=RT.pp_name_default} q res))
+        (elab_term (tm_arrow {binder_ty=formal;binder_ppname=ppname_default} q res))
     = tot_typing_soundness head_typing
   in
   let r_arg_typing = tot_typing_soundness arg_typing in
@@ -143,20 +143,20 @@ let bind_soundness
     | Bind_comp _ _ _ _ t2_typing y post2_typing ->
          Bind.elab_bind_typing g _ _ _ x _ r1_typing _ r2_typing bc 
                                (tot_typing_soundness t2_typing)
-                               (mk_t_abs_tot _ _ t2_typing post2_typing)
+                               (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
                                
     | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) t2_typing y post2_typing ->
          Bind.elab_bind_ghost_l_typing g _ _ _ x _ r1_typing
            _ r2_typing bc
            (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ _ t2_typing post2_typing)
+           (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
            (elab_term reveal_a)
            (tot_typing_soundness reveal_a_typing)
     | Bind_comp_ghost_r _ _ _ _ (| reveal_b, reveal_b_typing |) t2_typing y post2_typing ->
          Bind.elab_bind_ghost_r_typing g _ _ _ x _ r1_typing
            _ r2_typing bc
            (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ _ t2_typing post2_typing)
+           (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
            (elab_term reveal_b)
            (tot_typing_soundness reveal_b_typing)
 #pop-options
@@ -231,7 +231,7 @@ let rec soundness (g:stt_env)
                  (#c:comp)
                  (body_typing:st_typing (extend x (Inl ty) g) (open_st_term body x) c { body_typing << d })
       : GTot (RT.tot_typing (elab_env g)
-                (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+                (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
                 (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
       = let E t_typing = t_typing in
         let r_t_typing = tot_typing_soundness (E t_typing) in
@@ -248,7 +248,7 @@ let rec soundness (g:stt_env)
     // | T_Tot _ _ _ d -> tot_typing_soundness d
 
     | T_Abs _ x q ty u body c t_typing body_typing ->
-      mk_t_abs q RT.pp_name_default t_typing body_typing    
+      mk_t_abs q ppname_default t_typing body_typing    
 
     | T_STApp _ _ _ _ _ _ _ _ ->
       stapp_soundness _ _ _ d soundness

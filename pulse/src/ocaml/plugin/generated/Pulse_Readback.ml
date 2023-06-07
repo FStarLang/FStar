@@ -245,16 +245,19 @@ let rec (readback_ty :
                                          b1.FStar_Reflection_Data.binder_bv in
                                      FStar_Pervasives_Native.Some
                                        ((bv.FStar_Reflection_Data.bv_ppname),
+                                         (FStar_Reflection_Builtins.range_of_term
+                                            b1.FStar_Reflection_Data.binder_sort),
                                          p))
                             | uu___3 -> FStar_Pervasives_Native.None)
                            (fun uu___3 ->
                               match uu___3 with
-                              | (ppname, p) ->
+                              | (ppname, range, p) ->
                                   let b =
                                     {
                                       Pulse_Syntax_Base.binder_ty = ty;
                                       Pulse_Syntax_Base.binder_ppname =
-                                        ppname
+                                        (Pulse_Syntax_Base.mk_ppname ppname
+                                           range)
                                     } in
                                   let pulse_t =
                                     if

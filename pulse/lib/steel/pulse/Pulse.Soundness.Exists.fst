@@ -125,7 +125,7 @@ let elim_exists_soundness
   assert (~ (Set.mem x (freevars t)));
   assert (~ (Set.mem x (freevars p)));
 
-  let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
+  let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
   let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x))) in
 
   let rreveal_x = Pulse.Reflection.Util.mk_reveal ru rt rx_tm in

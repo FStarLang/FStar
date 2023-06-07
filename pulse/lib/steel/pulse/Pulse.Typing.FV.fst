@@ -441,7 +441,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      tot_typing_freevars prop_typing
 
    | T_ElimExists _ u t p x dt dv ->
-     let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
+     let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
      tot_typing_freevars dt;
      tot_typing_freevars dv;
      freevars_mk_reveal u t x_tm;

@@ -3,35 +3,42 @@ type constant = FStar_Reflection_Data.vconst
 type var = Prims.nat
 type index = Prims.nat
 type universe = FStar_Reflection_Types.universe
-type ppname = FStar_Reflection_Typing.pp_name_t
 type 'r range_singleton_trigger = unit
 type range = FStar_Range.range
+type ppname = {
+  name: FStar_Reflection_Typing.pp_name_t ;
+  range: range }
+let (__proj__Mkppname__item__name :
+  ppname -> FStar_Reflection_Typing.pp_name_t) =
+  fun projectee -> match projectee with | { name; range = range1;_} -> name
+let (__proj__Mkppname__item__range : ppname -> range) =
+  fun projectee -> match projectee with | { name; range = range1;_} -> range1
+let (ppname_default : ppname) =
+  {
+    name = FStar_Reflection_Typing.pp_name_default;
+    range = FStar_Range.range_0
+  }
+let (mk_ppname :
+  FStar_Reflection_Typing.pp_name_t -> FStar_Range.range -> ppname) =
+  fun name -> fun range1 -> { name; range = range1 }
 type bv = {
   bv_index: index ;
-  bv_ppname: ppname ;
-  bv_range: range }
+  bv_ppname: ppname }
 let (__proj__Mkbv__item__bv_index : bv -> index) =
   fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_index
+    match projectee with | { bv_index; bv_ppname;_} -> bv_index
 let (__proj__Mkbv__item__bv_ppname : bv -> ppname) =
   fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_ppname
-let (__proj__Mkbv__item__bv_range : bv -> range) =
-  fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_range
+    match projectee with | { bv_index; bv_ppname;_} -> bv_ppname
 type nm = {
   nm_index: var ;
-  nm_ppname: ppname ;
-  nm_range: range }
+  nm_ppname: ppname }
 let (__proj__Mknm__item__nm_index : nm -> var) =
   fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_index
+    match projectee with | { nm_index; nm_ppname;_} -> nm_index
 let (__proj__Mknm__item__nm_ppname : nm -> ppname) =
   fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_ppname
-let (__proj__Mknm__item__nm_range : nm -> range) =
-  fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_range
+    match projectee with | { nm_index; nm_ppname;_} -> nm_ppname
 type qualifier =
   | Implicit 
 let (uu___is_Implicit : qualifier -> Prims.bool) = fun projectee -> true
@@ -182,7 +189,7 @@ and st_term'__Tm_While__payload =
   {
   invariant: term ;
   condition: st_term ;
-  condition_var: FStar_Reflection_Typing.pp_name_t ;
+  condition_var: ppname ;
   body3: st_term }
 and st_term'__Tm_Par__payload =
   {
@@ -224,7 +231,7 @@ and st_term' =
   | Tm_Protect of st_term'__Tm_Protect__payload 
 and st_term = {
   term1: st_term' ;
-  range: range }
+  range1: range }
 let uu___is_Tm_Return uu___ =
   match uu___ with | Tm_Return _ -> true | _ -> false
 let uu___is_Tm_Abs uu___ = match uu___ with | Tm_Abs _ -> true | _ -> false
@@ -252,16 +259,16 @@ let uu___is_Tm_Admit uu___ =
 let uu___is_Tm_Protect uu___ =
   match uu___ with | Tm_Protect _ -> true | _ -> false
 let (null_binder : term -> binder) =
-  fun t ->
-    { binder_ty = t; binder_ppname = FStar_Reflection_Typing.pp_name_default
-    }
-let (mk_binder : Prims.string -> term -> binder) =
+  fun t -> { binder_ty = t; binder_ppname = ppname_default }
+let (mk_binder : Prims.string -> range -> term -> binder) =
   fun s ->
-    fun t ->
-      {
-        binder_ty = t;
-        binder_ppname = (FStar_Reflection_Typing.seal_pp_name s)
-      }
+    fun r ->
+      fun t ->
+        {
+          binder_ty = t;
+          binder_ppname =
+            (mk_ppname (FStar_Reflection_Typing.seal_pp_name s) r)
+        }
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 ->
     fun u2 ->
@@ -444,9 +451,6 @@ let (comp_inames : comp -> term) =
     | C_STAtomic (inames, uu___) -> inames
     | C_STGhost (inames, uu___) -> inames
 type nvar = (ppname * var)
-let v_as_nv : 'uuuuu . 'uuuuu -> (FStar_Reflection_Typing.pp_name_t * 'uuuuu)
-  = fun x -> (FStar_Reflection_Typing.pp_name_default, x)
+let (v_as_nv : var -> nvar) = fun x -> (ppname_default, x)
 let (as_binder : term -> binder) =
-  fun t ->
-    { binder_ty = t; binder_ppname = FStar_Reflection_Typing.pp_name_default
-    }
+  fun t -> { binder_ty = t; binder_ppname = ppname_default }

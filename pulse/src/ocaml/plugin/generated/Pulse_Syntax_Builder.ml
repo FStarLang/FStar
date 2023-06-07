@@ -114,7 +114,7 @@ let (tm_intro_exists :
 let (tm_while :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
-      FStar_Reflection_Typing.pp_name_t ->
+      Pulse_Syntax_Base.ppname ->
         Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
   fun invariant ->
@@ -195,4 +195,4 @@ let (with_range :
     Pulse_Syntax_Base.range -> Pulse_Syntax_Base.st_term)
   =
   fun t ->
-    fun r -> { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range = r }
+    fun r -> { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range1 = r }

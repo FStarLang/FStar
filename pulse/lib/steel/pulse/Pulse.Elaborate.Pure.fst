@@ -41,8 +41,8 @@ let rec elab_term (top:term)
       let t = elab_term b.binder_ty in
       let body = elab_term body in
       if Tm_ExistsSL? top
-      then mk_exists u t (mk_abs_with_name b.binder_ppname t R.Q_Explicit body)
-      else mk_forall u t (mk_abs_with_name b.binder_ppname t R.Q_Explicit body)
+      then mk_exists u t (mk_abs_with_name b.binder_ppname.name t R.Q_Explicit body)
+      else mk_forall u t (mk_abs_with_name b.binder_ppname.name t R.Q_Explicit body)
 
     | Tm_Inames ->
       pack_ln (Tv_FVar (pack_fv inames_lid))

@@ -42,17 +42,17 @@ let wrap_nat_to_uvar (name:string) (r:range) (n:nat) : term =
   let tm = set_range_of tm r in
   Tm_FStar tm r
 
-let gen_uvar (name:RT.pp_name_t) (r:range) =
+let gen_uvar (name:ppname) =
   let n = T.fresh () in
   assume (n >= 0);  // TODO: relying on the implementation of fresh in the typechecker
-  let name = T.unseal name in
-  (name, n), wrap_nat_to_uvar name r n
+  let nm = T.unseal name.name in
+  (nm, n), wrap_nat_to_uvar nm name.range n
 
 let rec gen_uvars (t_head:term) : T.Tac (list uvar_id & comp) =
   let ropt = is_arrow t_head in
   match ropt with
   | Some (b, Some Implicit, c_rest) -> (
-    let n, tm = gen_uvar b.binder_ppname Range.range_0 in
+    let n, tm = gen_uvar b.binder_ppname in
     let c_rest = open_comp_with c_rest tm in
     match c_rest with
     | C_ST c

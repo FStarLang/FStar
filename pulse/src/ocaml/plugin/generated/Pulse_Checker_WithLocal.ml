@@ -66,8 +66,8 @@ let (check_withlocal :
                                    fun t0 ->
                                      {
                                        Pulse_Syntax_Base.term1 = t0;
-                                       Pulse_Syntax_Base.range =
-                                         (t.Pulse_Syntax_Base.range)
+                                       Pulse_Syntax_Base.range1 =
+                                         (t.Pulse_Syntax_Base.range1)
                                      }))
                              (fun uu___ ->
                                 (fun wr ->

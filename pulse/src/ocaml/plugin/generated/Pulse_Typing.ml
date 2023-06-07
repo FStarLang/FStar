@@ -685,8 +685,7 @@ let (as_binder : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder) =
   fun t ->
     {
       Pulse_Syntax_Base.binder_ty = t;
-      Pulse_Syntax_Base.binder_ppname =
-        FStar_Reflection_Typing.pp_name_default
+      Pulse_Syntax_Base.binder_ppname = Pulse_Syntax_Base.ppname_default
     }
 type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
   | ST_VPropEquiv of env * Pulse_Syntax_Base.comp_st *
@@ -721,7 +720,7 @@ let (wr : Pulse_Syntax_Base.st_term' -> Pulse_Syntax_Base.st_term) =
   fun t ->
     {
       Pulse_Syntax_Base.term1 = t;
-      Pulse_Syntax_Base.range = FStar_Range.range_0
+      Pulse_Syntax_Base.range1 = FStar_Range.range_0
     }
 type ('dummyV0, 'dummyV1) st_comp_typing =
   | STC of env * Pulse_Syntax_Base.st_comp * Pulse_Syntax_Base.var * unit *

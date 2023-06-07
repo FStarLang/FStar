@@ -242,7 +242,8 @@ let rec (elab_st_typing :
               (uu___, x, qual, b, _u, body, _c, ty_typing, body_typing) ->
               let ty =
                 Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty in
-              let ppname = b.Pulse_Syntax_Base.binder_ppname in
+              let ppname =
+                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name in
               let body1 =
                 elab_st_typing
                   (Pulse_Typing.extend x
@@ -304,8 +305,8 @@ let rec (elab_st_typing :
                   (Pulse_Syntax_Base.comp_res c1) in
               elab_bind uu___ x c1 c2 c3 bc e11
                 (Pulse_Reflection_Util.mk_abs_with_name
-                   b.Pulse_Syntax_Base.binder_ppname ty1
-                   FStar_Reflection_Data.Q_Explicit
+                   (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+                   ty1 FStar_Reflection_Data.Q_Explicit
                    (FStar_Reflection_Typing.close_term e21 x))
           | Pulse_Typing.T_TotBind
               (uu___, e1, e2, t1, uu___1, x, uu___2, e2_typing) ->

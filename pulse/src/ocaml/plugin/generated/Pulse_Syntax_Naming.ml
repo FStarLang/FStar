@@ -563,7 +563,7 @@ let rec (open_st_term' :
                 { Pulse_Syntax_Base.t = (open_st_term' t1 v i) } in
         {
           Pulse_Syntax_Base.term1 = t';
-          Pulse_Syntax_Base.range = (t.Pulse_Syntax_Base.range)
+          Pulse_Syntax_Base.range1 = (t.Pulse_Syntax_Base.range1)
         }
 let (open_term_nv :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.nvar -> Pulse_Syntax_Base.term)
@@ -874,7 +874,7 @@ let rec (close_st_term' :
                 { Pulse_Syntax_Base.t = (close_st_term' t1 v i) } in
         {
           Pulse_Syntax_Base.term1 = t';
-          Pulse_Syntax_Base.range = (t.Pulse_Syntax_Base.range)
+          Pulse_Syntax_Base.range1 = (t.Pulse_Syntax_Base.range1)
         }
 let (close_term :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term)

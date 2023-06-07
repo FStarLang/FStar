@@ -512,7 +512,7 @@ let (check_while :
                                                                     = cond1;
                                                                     Pulse_Syntax_Base.condition_var
                                                                     =
-                                                                    FStar_Reflection_Typing.pp_name_default;
+                                                                    Pulse_Syntax_Base.ppname_default;
                                                                     Pulse_Syntax_Base.body3
                                                                     = body1
                                                                     })) pre
@@ -542,7 +542,7 @@ let (check_while :
                                                                     = cond1;
                                                                     Pulse_Syntax_Base.condition_var
                                                                     =
-                                                                    FStar_Reflection_Typing.pp_name_default;
+                                                                    Pulse_Syntax_Base.ppname_default;
                                                                     Pulse_Syntax_Base.body3
                                                                     = body1
                                                                     }))

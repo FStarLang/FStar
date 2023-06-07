@@ -29,7 +29,7 @@ let (proof_steps_idem : Pulse_Syntax_Base.st_term) =
            Pulse_Syntax_Base.insert_eq = false;
            Pulse_Syntax_Base.term = unit_const
          });
-    Pulse_Syntax_Base.range = FStar_Range.range_0
+    Pulse_Syntax_Base.range1 = FStar_Range.range_0
   }
 let (proof_steps_idem_typing :
   Pulse_Typing.env ->

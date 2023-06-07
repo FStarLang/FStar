@@ -46,36 +46,35 @@ let (wrap_nat_to_uvar :
                     (FStar_Reflection_Data.Uv_BVar n)])) in
         let tm1 = tm in Pulse_Syntax_Base.Tm_FStar (tm1, r)
 let (gen_uvar :
-  FStar_Reflection_Typing.pp_name_t ->
-    Pulse_Syntax_Base.range ->
-      ((uvar_id * Pulse_Syntax_Base.term), unit)
-        FStar_Tactics_Effect.tac_repr)
+  Pulse_Syntax_Base.ppname ->
+    ((uvar_id * Pulse_Syntax_Base.term), unit) FStar_Tactics_Effect.tac_repr)
   =
   fun name ->
-    fun r ->
-      FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "Pulse.Checker.Inference.fst"
-           (Prims.of_int (46)) (Prims.of_int (10)) (Prims.of_int (46))
-           (Prims.of_int (20)))
-        (FStar_Range.mk_range "Pulse.Checker.Inference.fst"
-           (Prims.of_int (47)) (Prims.of_int (18)) (Prims.of_int (49))
-           (Prims.of_int (38))) (Obj.magic (FStar_Tactics_Builtins.fresh ()))
-        (fun uu___ ->
-           (fun n ->
-              Obj.magic
-                (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "Pulse.Checker.Inference.fst"
-                      (Prims.of_int (48)) (Prims.of_int (13))
-                      (Prims.of_int (48)) (Prims.of_int (26)))
-                   (FStar_Range.mk_range "Pulse.Checker.Inference.fst"
-                      (Prims.of_int (49)) (Prims.of_int (2))
-                      (Prims.of_int (49)) (Prims.of_int (38)))
-                   (Obj.magic (FStar_Tactics_Builtins.unseal name))
-                   (fun name1 ->
-                      FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___ ->
-                           ((name1, n), (wrap_nat_to_uvar name1 r n))))))
-             uu___)
+    FStar_Tactics_Effect.tac_bind
+      (FStar_Range.mk_range "Pulse.Checker.Inference.fst" (Prims.of_int (46))
+         (Prims.of_int (10)) (Prims.of_int (46)) (Prims.of_int (20)))
+      (FStar_Range.mk_range "Pulse.Checker.Inference.fst" (Prims.of_int (47))
+         (Prims.of_int (18)) (Prims.of_int (49)) (Prims.of_int (43)))
+      (Obj.magic (FStar_Tactics_Builtins.fresh ()))
+      (fun uu___ ->
+         (fun n ->
+            Obj.magic
+              (FStar_Tactics_Effect.tac_bind
+                 (FStar_Range.mk_range "Pulse.Checker.Inference.fst"
+                    (Prims.of_int (48)) (Prims.of_int (11))
+                    (Prims.of_int (48)) (Prims.of_int (29)))
+                 (FStar_Range.mk_range "Pulse.Checker.Inference.fst"
+                    (Prims.of_int (49)) (Prims.of_int (2))
+                    (Prims.of_int (49)) (Prims.of_int (43)))
+                 (Obj.magic
+                    (FStar_Tactics_Builtins.unseal
+                       name.Pulse_Syntax_Base.name))
+                 (fun nm ->
+                    FStar_Tactics_Effect.lift_div_tac
+                      (fun uu___ ->
+                         ((nm, n),
+                           (wrap_nat_to_uvar nm name.Pulse_Syntax_Base.range
+                              n)))))) uu___)
 let rec (gen_uvars :
   Pulse_Syntax_Base.term ->
     ((uvar_id Prims.list * Pulse_Syntax_Base.comp), unit)
@@ -100,13 +99,11 @@ let rec (gen_uvars :
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Range.mk_range "Pulse.Checker.Inference.fst"
                         (Prims.of_int (55)) (Prims.of_int (16))
-                        (Prims.of_int (55)) (Prims.of_int (54)))
+                        (Prims.of_int (55)) (Prims.of_int (40)))
                      (FStar_Range.mk_range "Pulse.Checker.Inference.fst"
                         (Prims.of_int (54)) (Prims.of_int (39))
                         (Prims.of_int (65)) (Prims.of_int (3)))
-                     (Obj.magic
-                        (gen_uvar b.Pulse_Syntax_Base.binder_ppname
-                           FStar_Range.range_0))
+                     (Obj.magic (gen_uvar b.Pulse_Syntax_Base.binder_ppname))
                      (fun uu___ ->
                         (fun uu___ ->
                            match uu___ with
@@ -500,7 +497,7 @@ let (with_range :
     Pulse_Syntax_Base.range -> Pulse_Syntax_Base.st_term)
   =
   fun t ->
-    fun r -> { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range = r }
+    fun r -> { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range1 = r }
 let rec (rebuild_head :
   Pulse_Syntax_Base.term ->
     uvar_id Prims.list ->

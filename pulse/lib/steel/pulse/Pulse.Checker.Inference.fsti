@@ -15,7 +15,7 @@ val uvar_id_to_string (_:uvar_id) : string
 
 val is_uvar (t:term) : option uvar_id
 
-val gen_uvar (name:RT.pp_name_t) (r:range)
+val gen_uvar (name:ppname)
   : T.Tac (r:(uvar_id & term){
             is_uvar (snd r) == Some (fst r)
           })

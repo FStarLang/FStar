@@ -260,11 +260,11 @@ let (check_abs :
                                                                     (Prims.of_int (39))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (39))
-                                                                    (Prims.of_int (87)))
+                                                                    (Prims.of_int (52)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (39))
-                                                                    (Prims.of_int (90))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (14)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -275,11 +275,7 @@ let (check_abs :
                                                                     Pulse_Syntax_Base.nm_index
                                                                     = x;
                                                                     Pulse_Syntax_Base.nm_ppname
-                                                                    =
-                                                                    FStar_Reflection_Typing.pp_name_default;
-                                                                    Pulse_Syntax_Base.nm_range
-                                                                    =
-                                                                    FStar_Range.range_0
+                                                                    = ppname
                                                                     }))
                                                                     (fun
                                                                     uu___6 ->

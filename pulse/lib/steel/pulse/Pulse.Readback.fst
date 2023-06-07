@@ -148,15 +148,15 @@ let rec readback_ty (t:R.term)
          inspect_fv fv = forall_lid
       then (
         let? ty = readback_ty a1 in
-        let? (ppname, p) =
+        let? (ppname, range, p) =
           match inspect_ln a2 with
           | Tv_Abs b body ->
             let? p = readback_ty body in
             let b = inspect_binder b in
             let bv = inspect_bv b.binder_bv in
-            Some (bv.bv_ppname, p) <: option (ppname_t & term)
+            Some (bv.bv_ppname, range_of_term b.binder_sort, p) <: option (ppname_t & range & term)
           | _ -> None in  // TODO: FIXME: provide error from this function?
-        let b = { binder_ty = ty; binder_ppname = ppname } in
+        let b = { binder_ty = ty; binder_ppname = mk_ppname ppname range } in
         let pulse_t : (t':Pulse.Syntax.Base.term{elab_term t' == t}) =
           if inspect_fv fv = exists_lid
           then Tm_ExistsSL u b p

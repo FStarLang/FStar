@@ -36,7 +36,7 @@ let check_abs
     match check_term g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
       let pre = close_term pre_opened x in
-      let var = tm_var {nm_ppname=RT.pp_name_default;nm_index=x;nm_range=Range.range_0} in
+      let var = tm_var {nm_ppname=ppname;nm_index=x} in
       let ret_ty = open_term_opt' ret_ty var 0 in
       let post_hint_body = open_term_opt' post_hint_body var 1 in
       let post =

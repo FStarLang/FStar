@@ -519,7 +519,7 @@ let non_informative_t (g:env) (u:universe) (t:term) =
 let non_informative_c (g:env) (c:comp_st) =
     non_informative_t g (comp_u c) (comp_res c)
 
-let as_binder t = { binder_ty = t; binder_ppname = RT.pp_name_default }
+let as_binder t = { binder_ty = t; binder_ppname = ppname_default }
 
 [@@ no_auto_projectors]
 noeq
@@ -818,7 +818,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing g (wr (Tm_While { invariant = inv;
                                   condition = cond;
                                   body;
-                                  condition_var = RT.pp_name_default } ))
+                                  condition_var = ppname_default } ))
                   (comp_while inv)
 
   | T_Par:
