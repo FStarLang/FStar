@@ -666,7 +666,7 @@ let (interpret_plugin_as_term_fun :
                 | NBETerm -> ["FStar"; "TypeChecker"; "NBETerm"] in
               as_name1
                 (modul,
-                  (Prims.op_Hat "arrow_as_prim_step"
+                  (Prims.op_Hat "arrow_as_prim_step_"
                      (Prims.string_of_int arity))) in
             let mk_lam nm e =
               FStar_Compiler_Effect.op_Less_Bar mk
