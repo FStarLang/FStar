@@ -56,7 +56,7 @@ let check_elim_exists
   let (| t, t_typing |) = t_t_typing in
 //  let (| t, t_typing |) = check_vprop g t in
   match t with
-  | Tm_ExistsSL u ty p ->
+  | Tm_ExistsSL u { binder_ty=ty } p ->
     // T.print (Printf.sprintf "LOG ELIM EXISTS: %s\n"
     //                         (P.term_to_string t));
 
@@ -95,7 +95,7 @@ let check_intro_exists_erased
            (| t, magic () |)
   in
   match t with
-  | Tm_ExistsSL u ty p ->
+  | Tm_ExistsSL u { binder_ty=ty } p ->
     Pulse.Typing.FV.tot_typing_freevars t_typing;
     let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #ty #p t_typing (fresh g) in
     let (| e, e_typing |) = 
@@ -125,7 +125,7 @@ let check_intro_exists
            (| t, magic () |)
   in
   match t with
-  | Tm_ExistsSL u ty p ->
+  | Tm_ExistsSL u { binder_ty = ty } p ->
     Pulse.Typing.FV.tot_typing_freevars t_typing;
     let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #ty #p t_typing (fresh g) in
     let (| witness, witness_typing |) = 

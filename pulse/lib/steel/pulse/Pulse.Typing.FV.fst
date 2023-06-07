@@ -39,7 +39,7 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
 
     | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
-      freevars_close_term' t x i;    
+      freevars_close_term' t.binder_ty x i;    
       freevars_close_term' b x (i + 1)
 
     | Tm_FStar t _ ->
@@ -476,10 +476,10 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
         freevars Tm_EmpInames `Set.union`
         (freevars tm_unit `Set.union`
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p)));
+         freevars (Tm_ExistsSL u (as_binder tt) p)));
       (Set.equal) {} 
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p));
+         freevars (Tm_ExistsSL u (as_binder tt) p));
       (Set.subset) { freevars_open_term p w 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`
@@ -501,10 +501,10 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
         freevars Tm_EmpInames `Set.union`
         (freevars tm_unit `Set.union`
         (freevars (open_term' p (Pulse.Typing.mk_reveal u tt w) 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p)));
+         freevars (Tm_ExistsSL u (as_binder tt) p)));
       (Set.equal) {} 
         (freevars (open_term' p (Pulse.Typing.mk_reveal u tt w) 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p));
+         freevars (Tm_ExistsSL u (as_binder tt) p));
       (Set.subset) { freevars_open_term p (Pulse.Typing.mk_reveal u tt w) 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`

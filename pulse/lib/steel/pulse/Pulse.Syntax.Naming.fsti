@@ -15,10 +15,11 @@ let rec freevars (t:term)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> Set.empty
-    | Tm_Star  t1 t2
+    | Tm_Star t1 t2 ->
+      Set.union (freevars t1) (freevars t2)
     | Tm_ExistsSL _ t1 t2
     | Tm_ForallSL _ t1 t2 ->
-      Set.union (freevars t1) (freevars t2)
+      Set.union (freevars t1.binder_ty) (freevars t2)
     | Tm_Pure p -> freevars p
     | Tm_FStar t _ -> RT.freevars t
 
@@ -118,7 +119,7 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
 
   | Tm_ExistsSL _ t body
   | Tm_ForallSL _ t body ->
-    ln' t i &&
+    ln' t.binder_ty i &&
     ln' body (i + 1)
     
   | Tm_FStar t _ ->
@@ -242,12 +243,12 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Star (open_term' l v i)
               (open_term' r v i)
               
-    | Tm_ExistsSL u t body ->
-      Tm_ExistsSL u (open_term' t v i)
+    | Tm_ExistsSL u b body ->
+      Tm_ExistsSL u { b with binder_ty = open_term' b.binder_ty v i }
                     (open_term' body v (i + 1))
                   
-    | Tm_ForallSL u t body ->
-      Tm_ForallSL u (open_term' t v i)
+    | Tm_ForallSL u b body ->
+      Tm_ForallSL u { b with binder_ty = open_term' b.binder_ty v i }
                     (open_term' body v (i + 1))
     
     | Tm_FStar t r ->
@@ -405,12 +406,12 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Star (close_term' l v i)
               (close_term' r v i)
               
-    | Tm_ExistsSL u t body ->
-      Tm_ExistsSL u (close_term' t v i)
+    | Tm_ExistsSL u b body ->
+      Tm_ExistsSL u { b with binder_ty = close_term' b.binder_ty v i }
                     (close_term' body v (i + 1))
                   
-    | Tm_ForallSL u t body ->
-      Tm_ForallSL u (close_term' t v i)
+    | Tm_ForallSL u b body ->
+      Tm_ForallSL u { b with binder_ty = close_term' b.binder_ty v i }
                     (close_term' body v (i + 1))
     
     | Tm_FStar t r ->

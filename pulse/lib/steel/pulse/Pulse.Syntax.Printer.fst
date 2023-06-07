@@ -51,15 +51,17 @@ let rec term_to_string' (level:string) (t:term)
         level
         (term_to_string' level p2)
                           
-    | Tm_ExistsSL _ t body ->
-      sprintf "(exists (_:%s).\n%s%s)"
-              (term_to_string' (indent level) t)
+    | Tm_ExistsSL _ b body ->
+      sprintf "(exists (%s:%s).\n%s%s)"
+              (T.unseal b.binder_ppname)
+              (term_to_string' (indent level) b.binder_ty)
               level
               (term_to_string' (indent level) body)
 
-    | Tm_ForallSL u t body ->
-      sprintf "(forall (_:%s).\n%s%s)"
-              (term_to_string' (indent level) t)
+    | Tm_ForallSL u b body ->
+      sprintf "(forall (%s:%s).\n%s%s)"
+              (T.unseal b.binder_ppname)
+              (term_to_string' (indent level) b.binder_ty)
               level
               (term_to_string' (indent level) body)
                           

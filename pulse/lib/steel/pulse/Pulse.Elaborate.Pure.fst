@@ -36,9 +36,9 @@ let rec elab_term (top:term)
       let r = elab_term r in
       mk_star l r
       
-    | Tm_ExistsSL u t body
-    | Tm_ForallSL u t body ->
-      let t = elab_term t in
+    | Tm_ExistsSL u b body
+    | Tm_ForallSL u b body ->
+      let t = elab_term b.binder_ty in
       let b = elab_term body in
       if Tm_ExistsSL? top
       then mk_exists u t (mk_abs t R.Q_Explicit b)

@@ -56,14 +56,15 @@ let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
 let not_tv_unknown (t:R.term) = R.inspect_ln t =!= R.Tv_Unknown
 let host_term = t:R.term { not_tv_unknown t }
 
+
 [@@ no_auto_projectors]
 noeq
 type term =
   | Tm_Emp        : term
   | Tm_Pure       : p:term -> term
   | Tm_Star       : l:vprop -> r:vprop -> term
-  | Tm_ExistsSL   : u:universe -> t:term -> body:vprop -> term
-  | Tm_ForallSL   : u:universe -> t:term -> body:vprop -> term
+  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term
+  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term
   | Tm_VProp      : term
   | Tm_Inames     : term  // type inames
   | Tm_EmpInames  : term
@@ -72,8 +73,7 @@ type term =
 
 and vprop = term
 
-noeq
-type binder = {
+and binder = {
   binder_ty     : term;
   binder_ppname : ppname;
 }
@@ -262,3 +262,4 @@ let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
 
 let nvar = ppname & var 
 let v_as_nv x = RT.pp_name_default, x
+let as_binder (t:term) = { binder_ty=t; binder_ppname=RT.pp_name_default}

@@ -106,7 +106,7 @@ let withlocal_soundness #g #t #c d soundness =
       (mk_star
          (elab_term (comp_post c))
          (elab_term
-            (Tm_ExistsSL u0 init_t
+            (Tm_ExistsSL u0 (as_binder init_t)
                (mk_pts_to init_t (null_bvar 2) (null_bvar 0))))) in
 
   assert (c1 == mk_stt_comp ru rret_t c1_pre c1_post);
@@ -191,7 +191,7 @@ let withlocal_soundness #g #t #c d soundness =
     : RT.equiv g_z
         (RT.open_or_close_term'
            (RT.open_or_close_term'
-              (elab_term (Tm_ExistsSL u0 init_t
+              (elab_term (Tm_ExistsSL u0 (as_binder init_t)
                            (mk_pts_to init_t (null_bvar 2) (null_bvar 0))))
               (RT.open_with_var y) 1)
            (RT.open_with_var z) 0)
@@ -227,7 +227,7 @@ let withlocal_soundness #g #t #c d soundness =
                 (elab_term (comp_post c))
                 (RT.open_with_var y) 1)
              (RT.open_or_close_term'
-                (elab_term (Tm_ExistsSL u0 init_t
+                (elab_term (Tm_ExistsSL u0 (as_binder init_t)
                               (mk_pts_to init_t (null_bvar 2) (null_bvar 0))))
                 (RT.open_with_var y) 1)))
         (mk_abs (RT.open_or_close_term' rret_t (RT.open_with_var y) 0) R.Q_Explicit

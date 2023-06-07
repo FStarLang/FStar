@@ -205,22 +205,22 @@ let rec prepare_instantiations
   witnesses
   : T.Tac (vprop & list (vprop & either term term) & uvar_tys)
   = match witnesses, goal_vprop with
-    | [], Tm_ExistsSL u ty p ->  
+    | [], Tm_ExistsSL u b p ->  
       let next_goal_vprop, inst, uv =
           let uv, t = Pulse.Checker.Inference.gen_uvar () in
           open_term' p t 0, Inr t, uv
       in
-      prepare_instantiations ((goal_vprop, inst)::out) ((uv,ty)::out_uvars) next_goal_vprop []
+      prepare_instantiations ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop []
 
     | [], _ -> 
       goal_vprop, out, out_uvars
 
-    | t :: witnesses, Tm_ExistsSL u ty p ->
+    | t :: witnesses, Tm_ExistsSL u b p ->
       let next_goal_vprop, inst, uvs =
           match t with
           | Tm_Unknown ->
             let uv, t = Pulse.Checker.Inference.gen_uvar () in
-            open_term' p t 0, Inr t, [(uv,ty)]
+            open_term' p t 0, Inr t, [(uv,b.binder_ty)]
           | _ ->
             open_term' p t 0, Inl t, []
       in

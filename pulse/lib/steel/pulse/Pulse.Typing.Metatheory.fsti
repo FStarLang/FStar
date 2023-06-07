@@ -31,7 +31,7 @@ val st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st)
      tot_typing (extend x (Inl st.res) g) (open_term st.post x) Tm_VProp)
 
 val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
-                        (_:tot_typing g (Tm_ExistsSL u ty p) Tm_VProp)
+                        (_:tot_typing g (Tm_ExistsSL u (as_binder ty) p) Tm_VProp)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
     tot_typing (extend x (Inl ty) g) p Tm_VProp

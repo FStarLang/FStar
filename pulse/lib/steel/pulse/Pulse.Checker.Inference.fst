@@ -314,12 +314,12 @@ let rec apply_solution (sol:list (uvar_id * term)) (t:term)
       Tm_Star (apply_solution sol l)
               (apply_solution sol r)
               
-    | Tm_ExistsSL u t body ->
-      Tm_ExistsSL u (apply_solution sol t)
+    | Tm_ExistsSL u b body ->
+      Tm_ExistsSL u { b with binder_ty = apply_solution sol b.binder_ty }
                     (apply_solution sol body)
        
-    | Tm_ForallSL u t body ->
-      Tm_ForallSL u (apply_solution sol t)
+    | Tm_ForallSL u b body ->
+      Tm_ForallSL u { b with binder_ty = apply_solution sol b.binder_ty }
                     (apply_solution sol body)
 
 let rec contains_uvar_r (t:R.term) =
@@ -348,11 +348,11 @@ let rec contains_uvar (t:term)
       (contains_uvar r)
               
     | Tm_ExistsSL u t body ->
-      (contains_uvar t) ||
+      (contains_uvar t.binder_ty) ||
       (contains_uvar body)
        
     | Tm_ForallSL u t body ->
-      (contains_uvar t) ||
+      (contains_uvar t.binder_ty) ||
       (contains_uvar body)
                     
     | Tm_FStar t _ ->
