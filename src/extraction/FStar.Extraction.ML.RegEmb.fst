@@ -298,7 +298,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> ["FStar"; "Syntax"; "Embeddings"]
         | NBETerm    -> ["FStar"; "TypeChecker"; "NBETerm"]
       in
-      as_name (modul, "arrow_as_prim_step" ^ string_of_int arity)
+      as_name (modul, "arrow_as_prim_step_" ^ string_of_int arity)
     in
     let mk_lam nm e =
         mk <| MLE_Fun ([(nm, MLTY_Top)], e)
