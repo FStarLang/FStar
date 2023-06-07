@@ -30,7 +30,7 @@ let queue_of_seq #a s
 	= queue_of_list (seq_to_list s)
 
 (* write comment *)
-let eq #a q1 q2 = queue_to_seq q1 == queue_to_seq q2
+let equal #a q1 q2 = queue_to_seq q1 == queue_to_seq q2
 
 (* write comment *)
 let lemma_eq_intro #_ q1 q2 = ()
@@ -45,7 +45,7 @@ let lemma_list_queue_bij (#a:Type) (l:list a)
 	  | _ -> L.append_l_nil l
 
 let lemma_queue_list_bij (#a:Type) (q:queue a) 
-	: Lemma (eq (queue_of_list (queue_to_list q)) q)
+	: Lemma (equal (queue_of_list (queue_to_list q)) q)
 	= match fst q with
 	  | [] -> ()
 	  | l -> (
@@ -61,7 +61,7 @@ let lemma_seq_queue_bij (#a:Type) (s:seq a)
 
 (* write comment *)
 let lemma_queue_seq_bij (#a:Type) (q:queue a) 
-	: Lemma (eq (queue_of_seq (queue_to_seq q)) q) 
+	: Lemma (equal (queue_of_seq (queue_to_seq q)) q) 
 	= let l = (queue_to_list q) in
 		lemma_queue_list_bij q;
 		lemma_list_seq_bij l
@@ -150,7 +150,7 @@ let lemma_cons_list_seq (#a:Type) (x:a) (q:queue a)
 let lemma_dequeue_ok (#a:Type) (q:queue a{not_empty q})
   : Lemma (let hd, tl = dequeue q in
    		hd == Seq.head (queue_to_seq q) /\
-   		eq tl (queue_of_seq (Seq.tail (queue_to_seq q))))
+   		equal tl (queue_of_seq (Seq.tail (queue_to_seq q))))
 	= lemma_dequeue_ok_list q;
 		lemma_cons_list_seq (fst (dequeue q)) (snd (dequeue q))
 
