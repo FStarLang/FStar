@@ -12,20 +12,24 @@ module P = Pulse.Syntax.Printer
 module RT = FStar.Reflection.Typing
 module RUtil = Pulse.Reflection.Util
 
-type uvar_id = nat
+type uvar_id = string & nat
 
-let uvar_id_to_string n = FStar.Printf.sprintf "?u_%d" n
+let uvar_id_to_string (name, num) = FStar.Printf.sprintf "?%s_%d" name num
 
-let embedded_uvar_lid = ["__pulse_embedded_uvar__"]
+let embedded_uvar_prefix = "__pulse_embedded_uvar__"
 
 let is_uvar_r (t:R.term) : option uvar_id = 
     match R.inspect_ln t with
-    | R.Tv_UInst fv [u] ->
-      if R.inspect_fv fv = embedded_uvar_lid
-      then match R.inspect_universe u with
-           | R.Uv_BVar n -> Some n
-            | _ -> None
-      else None
+    | R.Tv_UInst fv [u] -> (
+      match R.inspect_fv fv with
+      | [prefix; name] -> 
+        if prefix = embedded_uvar_prefix
+        then match R.inspect_universe u with
+              | R.Uv_BVar n -> Some (name, n)
+              | _ -> None
+        else None
+      | _ -> None
+    )
     | _ -> None
 
 let is_uvar (t:term) : option uvar_id =
@@ -33,22 +37,22 @@ let is_uvar (t:term) : option uvar_id =
   | Tm_FStar r _ -> is_uvar_r r
   | _ -> None
 
+let wrap_nat_to_uvar (name:string) (r:range) (n:nat) : term =
+  let tm = R.pack_ln (R.Tv_UInst (R.pack_fv [embedded_uvar_prefix; name]) [R.pack_universe (R.Uv_BVar n)]) in
+  let tm = set_range_of tm r in
+  Tm_FStar tm r
 
-let wrap_nat_to_uvar (n:nat) : term =
-  Tm_FStar 
-    (R.pack_ln (R.Tv_UInst (R.pack_fv embedded_uvar_lid) [R.pack_universe (R.Uv_BVar n)]))
-    FStar.Range.range_0
-
-let gen_uvar () =
+let gen_uvar (name:RT.pp_name_t) (r:range) =
   let n = T.fresh () in
   assume (n >= 0);  // TODO: relying on the implementation of fresh in the typechecker
-  n, wrap_nat_to_uvar n
+  let name = T.unseal name in
+  (name, n), wrap_nat_to_uvar name r n
 
 let rec gen_uvars (t_head:term) : T.Tac (list uvar_id & comp) =
   let ropt = is_arrow t_head in
   match ropt with
-  | Some (_, Some Implicit, c_rest) -> (
-    let n, tm = gen_uvar () in
+  | Some (b, Some Implicit, c_rest) -> (
+    let n, tm = gen_uvar b.binder_ppname Range.range_0 in
     let c_rest = open_comp_with c_rest tm in
     match c_rest with
     | C_ST c
@@ -188,8 +192,8 @@ let rec rebuild_head (head:term) (uvs:list uvar_id) (uv_sols:list (uvar_id & ter
   match ropt with
   | None ->
     T.fail (FStar.Printf.sprintf
-              "inference failed in building head, no solution for %d\n"
-              hd)
+              "inference failed in building head, no solution for %s\n"
+              (uvar_id_to_string hd))
   | Some (_, t2) ->
     match tl with
     | [] -> with_range (Tm_STApp { head; arg_qual= Some Implicit; arg=t2 })
@@ -204,8 +208,8 @@ let print_solutions (l:list (uvar_id & term))
   = String.concat "\n"
       (T.map #(uvar_id & term) #string
         (fun (u, t) ->
-          Printf.sprintf "%d := %s" 
-                       u
+          Printf.sprintf "%s := %s" 
+                       (uvar_id_to_string u)
                        (P.term_to_string t))
         l)
 
@@ -399,4 +403,3 @@ let try_solve_pure_equalities (p:term) : T.Tac solution =
   match p with
   | Tm_FStar t r -> aux [] t
   | _ -> []
-

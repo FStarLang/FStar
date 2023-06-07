@@ -46,28 +46,32 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
         let r1 = elab_term r in Pulse_Reflection_Util.mk_star l1 r1
     | Pulse_Syntax_Base.Tm_ExistsSL (u, b, body) ->
         let t = elab_term b.Pulse_Syntax_Base.binder_ty in
-        let b1 = elab_term body in
+        let body1 = elab_term body in
         if Pulse_Syntax_Base.uu___is_Tm_ExistsSL top
         then
           Pulse_Reflection_Util.mk_exists u t
-            (Pulse_Reflection_Util.mk_abs t FStar_Reflection_Data.Q_Explicit
-               b1)
+            (Pulse_Reflection_Util.mk_abs_with_name
+               b.Pulse_Syntax_Base.binder_ppname t
+               FStar_Reflection_Data.Q_Explicit body1)
         else
           Pulse_Reflection_Util.mk_forall u t
-            (Pulse_Reflection_Util.mk_abs t FStar_Reflection_Data.Q_Explicit
-               b1)
+            (Pulse_Reflection_Util.mk_abs_with_name
+               b.Pulse_Syntax_Base.binder_ppname t
+               FStar_Reflection_Data.Q_Explicit body1)
     | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
         let t = elab_term b.Pulse_Syntax_Base.binder_ty in
-        let b1 = elab_term body in
+        let body1 = elab_term body in
         if Pulse_Syntax_Base.uu___is_Tm_ExistsSL top
         then
           Pulse_Reflection_Util.mk_exists u t
-            (Pulse_Reflection_Util.mk_abs t FStar_Reflection_Data.Q_Explicit
-               b1)
+            (Pulse_Reflection_Util.mk_abs_with_name
+               b.Pulse_Syntax_Base.binder_ppname t
+               FStar_Reflection_Data.Q_Explicit body1)
         else
           Pulse_Reflection_Util.mk_forall u t
-            (Pulse_Reflection_Util.mk_abs t FStar_Reflection_Data.Q_Explicit
-               b1)
+            (Pulse_Reflection_Util.mk_abs_with_name
+               b.Pulse_Syntax_Base.binder_ppname t
+               FStar_Reflection_Data.Q_Explicit body1)
     | Pulse_Syntax_Base.Tm_Inames ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_FVar

@@ -5,6 +5,7 @@ open Pulse.Typing
 
 module T = FStar.Tactics
 module R = FStar.Reflection
+module RT = FStar.Reflection.Typing
 
 val uvar_id : eqtype
 
@@ -14,8 +15,10 @@ val uvar_id_to_string (_:uvar_id) : string
 
 val is_uvar (t:term) : option uvar_id
 
-val gen_uvar (_:unit) : T.Tac (r:(uvar_id & term){Some? (is_uvar (snd r)) /\
-                                                  Some?.v (is_uvar (snd r)) == fst r})
+val gen_uvar (name:RT.pp_name_t) (r:range)
+  : T.Tac (r:(uvar_id & term){
+            is_uvar (snd r) == Some (fst r)
+          })
 
 val try_inst_uvs_in_goal (ctxt:term)
                          (goal:vprop)

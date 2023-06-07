@@ -199,18 +199,19 @@ let add_intro_pure rng (continuation:st_term) (p:term) =
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
 let uvar_tys = list (Pulse.Checker.Inference.uvar_id & term)
 let rec prepare_instantiations
-  (out:list (vprop & either term term))
-  (out_uvars: uvar_tys)
-  goal_vprop
-  witnesses
+          (out:list (vprop & either term term))
+          (out_uvars: uvar_tys)
+          goal_vprop
+          witnesses
+          rng
   : T.Tac (vprop & list (vprop & either term term) & uvar_tys)
   = match witnesses, goal_vprop with
-    | [], Tm_ExistsSL u b p ->  
+    | [], Tm_ExistsSL u b p ->
       let next_goal_vprop, inst, uv =
-          let uv, t = Pulse.Checker.Inference.gen_uvar () in
+          let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname rng in
           open_term' p t 0, Inr t, uv
       in
-      prepare_instantiations ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop []
+      prepare_instantiations ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop [] rng
 
     | [], _ -> 
       goal_vprop, out, out_uvars
@@ -219,12 +220,12 @@ let rec prepare_instantiations
       let next_goal_vprop, inst, uvs =
           match t with
           | Tm_Unknown ->
-            let uv, t = Pulse.Checker.Inference.gen_uvar () in
+            let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname rng in
             open_term' p t 0, Inr t, [(uv,b.binder_ty)]
           | _ ->
             open_term' p t 0, Inl t, []
       in
-      prepare_instantiations ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses
+      prepare_instantiations ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses rng
 
     |  _ ->
        T.fail "Unexpected number of instantiations in intro"
@@ -284,7 +285,7 @@ let maybe_infer_intro_exists
     );
     let Tm_IntroExists {erased; p=t; witnesses} = st.term in
     let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
-    let goal_vprop, insts, uvs = prepare_instantiations [] [] t witnesses in
+    let goal_vprop, insts, uvs = prepare_instantiations [] [] t witnesses st.range in
     let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
     let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal pre goal_vprop in
     // T.print
@@ -332,8 +333,15 @@ let maybe_infer_intro_exists
            None? ((List.Tot.tryFind (fun (u', _) -> u = u') solutions))
          ) uvs with
       | Some (u, _) ->
+        let i = FStar.Issue.mk_issue "Error" 
+                    (Printf.sprintf "Could not instantiate existential variable %s\n"
+                                    (Pulse.Checker.Inference.uvar_id_to_string u))
+                    (Some st.range)
+                    (Some 0)
+                    [print_context g] in
+        T.log_issues [i];
         T.fail (Printf.sprintf "maybe_infer_intro_exists: unification failed for uvar %s\n"
-                  (Pulse.Checker.Inference.uvar_id_to_string u))
+                               (Pulse.Checker.Inference.uvar_id_to_string u))
       | None -> ()
     in
     let wr t = { term = t; range = st.range } in
