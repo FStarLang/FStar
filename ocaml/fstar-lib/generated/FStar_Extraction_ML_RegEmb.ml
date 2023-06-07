@@ -297,11 +297,11 @@ let (known_fv_embeddings :
                           let uu___23 =
                             let uu___24 =
                               FStar_Reflection_Constants.fstar_refl_types_lid
-                                "aqualv" in
+                                "fv" in
                             let uu___25 =
-                              let uu___26 = refl_emb_lid "e_aqualv" in
+                              let uu___26 = refl_emb_lid "e_fv" in
                               let uu___27 =
-                                let uu___28 = nbe_refl_emb_lid "e_aqualv" in
+                                let uu___28 = nbe_refl_emb_lid "e_fv" in
                                 FStar_Pervasives_Native.Some uu___28 in
                               {
                                 arity = Prims.int_zero;
@@ -313,11 +313,11 @@ let (known_fv_embeddings :
                             let uu___25 =
                               let uu___26 =
                                 FStar_Reflection_Constants.fstar_refl_types_lid
-                                  "fv" in
+                                  "sigelt" in
                               let uu___27 =
-                                let uu___28 = refl_emb_lid "e_fv" in
+                                let uu___28 = refl_emb_lid "e_sigelt" in
                                 let uu___29 =
-                                  let uu___30 = nbe_refl_emb_lid "e_fv" in
+                                  let uu___30 = nbe_refl_emb_lid "e_sigelt" in
                                   FStar_Pervasives_Native.Some uu___30 in
                                 {
                                   arity = Prims.int_zero;
@@ -329,11 +329,11 @@ let (known_fv_embeddings :
                               let uu___27 =
                                 let uu___28 =
                                   FStar_Reflection_Constants.fstar_refl_types_lid
-                                    "sigelt" in
+                                    "env" in
                                 let uu___29 =
-                                  let uu___30 = refl_emb_lid "e_sigelt" in
+                                  let uu___30 = refl_emb_lid "e_env" in
                                   let uu___31 =
-                                    let uu___32 = nbe_refl_emb_lid "e_sigelt" in
+                                    let uu___32 = nbe_refl_emb_lid "e_env" in
                                     FStar_Pervasives_Native.Some uu___32 in
                                   {
                                     arity = Prims.int_zero;
@@ -345,11 +345,11 @@ let (known_fv_embeddings :
                                 let uu___29 =
                                   let uu___30 =
                                     FStar_Reflection_Constants.fstar_refl_types_lid
-                                      "env" in
+                                      "bv" in
                                   let uu___31 =
-                                    let uu___32 = refl_emb_lid "e_env" in
+                                    let uu___32 = refl_emb_lid "e_bv" in
                                     let uu___33 =
-                                      let uu___34 = nbe_refl_emb_lid "e_env" in
+                                      let uu___34 = nbe_refl_emb_lid "e_bv" in
                                       FStar_Pervasives_Native.Some uu___34 in
                                     {
                                       arity = Prims.int_zero;
@@ -361,11 +361,12 @@ let (known_fv_embeddings :
                                   let uu___31 =
                                     let uu___32 =
                                       FStar_Reflection_Constants.fstar_refl_types_lid
-                                        "bv" in
+                                        "namedv" in
                                     let uu___33 =
-                                      let uu___34 = refl_emb_lid "e_bv" in
+                                      let uu___34 = refl_emb_lid "e_namedv" in
                                       let uu___35 =
-                                        let uu___36 = nbe_refl_emb_lid "e_bv" in
+                                        let uu___36 =
+                                          nbe_refl_emb_lid "e_namedv" in
                                         FStar_Pervasives_Native.Some uu___36 in
                                       {
                                         arity = Prims.int_zero;
@@ -377,12 +378,12 @@ let (known_fv_embeddings :
                                     let uu___33 =
                                       let uu___34 =
                                         FStar_Reflection_Constants.fstar_refl_types_lid
-                                          "namedv" in
+                                          "binder" in
                                       let uu___35 =
-                                        let uu___36 = refl_emb_lid "e_namedv" in
+                                        let uu___36 = refl_emb_lid "e_binder" in
                                         let uu___37 =
                                           let uu___38 =
-                                            nbe_refl_emb_lid "e_namedv" in
+                                            nbe_refl_emb_lid "e_binder" in
                                           FStar_Pervasives_Native.Some
                                             uu___38 in
                                         {
@@ -395,13 +396,13 @@ let (known_fv_embeddings :
                                       let uu___35 =
                                         let uu___36 =
                                           FStar_Reflection_Constants.fstar_refl_types_lid
-                                            "binder" in
+                                            "binders" in
                                         let uu___37 =
                                           let uu___38 =
-                                            refl_emb_lid "e_binder" in
+                                            refl_emb_lid "e_binders" in
                                           let uu___39 =
                                             let uu___40 =
-                                              nbe_refl_emb_lid "e_binder" in
+                                              nbe_refl_emb_lid "e_binders" in
                                             FStar_Pervasives_Native.Some
                                               uu___40 in
                                           {
@@ -413,14 +414,14 @@ let (known_fv_embeddings :
                                       let uu___36 =
                                         let uu___37 =
                                           let uu___38 =
-                                            FStar_Reflection_Constants.fstar_refl_types_lid
-                                              "binders" in
+                                            FStar_Reflection_Constants.fstar_refl_data_lid
+                                              "aqualv" in
                                           let uu___39 =
                                             let uu___40 =
-                                              refl_emb_lid "e_binders" in
+                                              refl_emb_lid "e_aqualv" in
                                             let uu___41 =
                                               let uu___42 =
-                                                nbe_refl_emb_lid "e_binders" in
+                                                nbe_refl_emb_lid "e_aqualv" in
                                               FStar_Pervasives_Native.Some
                                                 uu___42 in
                                             {
@@ -514,9 +515,10 @@ let rec (embedding_for :
           let find_env_entry bv uu___ =
             match uu___ with
             | (bv', uu___1) -> FStar_Syntax_Syntax.bv_eq bv bv' in
-          let t1 = FStar_Syntax_Util.un_uinst t in
-          let t2 = FStar_Syntax_Subst.compress t1 in
-          match t2.FStar_Syntax_Syntax.n with
+          let t1 = FStar_TypeChecker_Normalize.unfold_whnf tcenv t in
+          let t2 = FStar_Syntax_Util.un_uinst t1 in
+          let t3 = FStar_Syntax_Subst.compress t2 in
+          match t3.FStar_Syntax_Syntax.n with
           | FStar_Syntax_Syntax.Tm_name bv when
               FStar_Compiler_Util.for_some (find_env_entry bv) env ->
               let comb =
@@ -539,9 +541,9 @@ let rec (embedding_for :
               { FStar_Syntax_Syntax.b = x; FStar_Syntax_Syntax.phi = uu___;_}
               -> embedding_for tcenv k env x.FStar_Syntax_Syntax.sort
           | FStar_Syntax_Syntax.Tm_ascribed
-              { FStar_Syntax_Syntax.tm = t3; FStar_Syntax_Syntax.asc = uu___;
+              { FStar_Syntax_Syntax.tm = t4; FStar_Syntax_Syntax.asc = uu___;
                 FStar_Syntax_Syntax.eff_opt = uu___1;_}
-              -> embedding_for tcenv k env t3
+              -> embedding_for tcenv k env t4
           | FStar_Syntax_Syntax.Tm_arrow
               { FStar_Syntax_Syntax.bs1 = b::[];
                 FStar_Syntax_Syntax.comp = c;_}
@@ -565,8 +567,8 @@ let rec (embedding_for :
                      {
                        FStar_Syntax_Syntax.bs1 = (more :: bs);
                        FStar_Syntax_Syntax.comp = c
-                     }) t2.FStar_Syntax_Syntax.pos in
-              let t3 =
+                     }) t3.FStar_Syntax_Syntax.pos in
+              let t4 =
                 let uu___ =
                   let uu___1 =
                     let uu___2 = FStar_Syntax_Syntax.mk_Total tail in
@@ -575,19 +577,19 @@ let rec (embedding_for :
                       FStar_Syntax_Syntax.comp = uu___2
                     } in
                   FStar_Syntax_Syntax.Tm_arrow uu___1 in
-                FStar_Syntax_Syntax.mk uu___ t2.FStar_Syntax_Syntax.pos in
-              embedding_for tcenv k env t3
+                FStar_Syntax_Syntax.mk uu___ t3.FStar_Syntax_Syntax.pos in
+              embedding_for tcenv k env t4
           | FStar_Syntax_Syntax.Tm_app uu___ ->
-              let uu___1 = FStar_Syntax_Util.head_and_args t2 in
+              let uu___1 = FStar_Syntax_Util.head_and_args t3 in
               (match uu___1 with
                | (head, args) ->
+                   let e_head = embedding_for tcenv k env head in
                    let e_args =
                      FStar_Compiler_List.map
                        (fun uu___2 ->
                           match uu___2 with
-                          | (t3, uu___3) -> embedding_for tcenv k env t3)
+                          | (t4, uu___3) -> embedding_for tcenv k env t4)
                        args in
-                   let e_head = embedding_for tcenv k env head in
                    FStar_Compiler_Effect.op_Less_Bar mk
                      (FStar_Extraction_ML_Syntax.MLE_App (e_head, e_args)))
           | FStar_Syntax_Syntax.Tm_fvar fv when
@@ -606,25 +608,17 @@ let rec (embedding_for :
                     | FStar_Pervasives_Native.None -> ml_magic))
           | FStar_Syntax_Syntax.Tm_fvar fv ->
               let uu___ =
-                FStar_TypeChecker_Env.lookup_definition
-                  [FStar_TypeChecker_Env.NoDelta] tcenv
-                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-              (match uu___ with
-               | FStar_Pervasives_Native.Some (_us, t3) ->
-                   embedding_for tcenv k env t3
-               | FStar_Pervasives_Native.None ->
-                   let uu___1 =
-                     let uu___2 =
-                       let uu___3 = FStar_Syntax_Print.term_to_string t2 in
-                       FStar_Compiler_Util.format1
-                         "Embedding not defined for name `%s'" uu___3 in
-                     NoEmbedding uu___2 in
-                   FStar_Compiler_Effect.raise uu___1)
+                let uu___1 =
+                  let uu___2 = FStar_Syntax_Print.term_to_string t3 in
+                  FStar_Compiler_Util.format1
+                    "Embedding not defined for name `%s'" uu___2 in
+                NoEmbedding uu___1 in
+              FStar_Compiler_Effect.raise uu___
           | uu___ ->
               let uu___1 =
                 let uu___2 =
-                  let uu___3 = FStar_Syntax_Print.term_to_string t2 in
-                  let uu___4 = FStar_Syntax_Print.tag_of_term t2 in
+                  let uu___3 = FStar_Syntax_Print.term_to_string t3 in
+                  let uu___4 = FStar_Syntax_Print.tag_of_term t3 in
                   FStar_Compiler_Util.format2 "Cannot embed type `%s' (%s)"
                     uu___3 uu___4 in
                 NoEmbedding uu___2 in
