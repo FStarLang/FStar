@@ -85,9 +85,6 @@ let bind_opt_lid   = Ident.lid_of_str "FStar.Compiler.Util.bind_opt"
 let ml_magic : mlexpr =
   mk (MLE_Coerce (ml_unit, MLTY_Top, MLTY_Top))
 
-let embedding_for (a:S.typ) : mlexpr =
-  ml_magic
-
 let rec as_ml_list (ts : list mlexpr) : mlexpr =
   match ts with
   | [] -> ml_ctor nil_lid []
@@ -105,98 +102,6 @@ let fresh : string -> string =
     let v = !r in
     r := v+1;
     s^"_"^(string_of_int v)
-
-(* Creates an unembedding function for the type *)
-let mk_unembed (record_fields : option (list string)) (ctors: list sigelt) : mlexpr =
-  let e_branches : ref (list mlbranch) = BU.mk_ref [] in
-  let arg_v = fresh "tm" in
-  ctors |> List.iter (fun ctor ->
-    match ctor.sigel with
-    | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals} ->
-      let fv = fresh "fv" in
-      let bs, c = U.arrow_formals t in
-      let vs = List.map (fun b -> fresh (Ident.string_of_id b.binder_bv.ppname), b.binder_bv.sort) bs in
-
-      let pat_s = MLP_Const (MLC_String (Ident.string_of_lid lid)) in
-      (* let pat_args = MLP_CTor ((["Prims"], "Nil"), List.map (fun (v, _) -> MLP_Var v) vs) in *)
-      let pat_args = vs |> List.map (fun (v,_) -> MLP_Var v) |> pats_to_list_pat in
-      let pat_both = MLP_Tuple [pat_s; pat_args] in
-
-      let ret =
-        match record_fields with
-        | Some fields ->
-          ml_record lid (List.map2 (fun (v, _) fld -> fld, mk (MLE_Var v)) vs fields)
-        | None ->
-          ml_ctor lid (List.map (fun (v, _) -> mk (MLE_Var v)) vs)
-      in
-      let ret = mk (MLE_App (ml_some, [ret])) in // final return
-
-      let body = List.fold_right (fun (v, ty) body ->
-        let body = mk (MLE_Fun ([(v, MLTY_Top)], body)) in
-        mk (MLE_App (ml_name bind_opt_lid, [
-                      mk (MLE_App (ml_name unembed_lid, [embedding_for ty; mk (MLE_Var v)]));
-                      body;
-                      ]))
-      ) vs ret
-      in
-      let br = (pat_both, None, body) in
-
-      e_branches := br :: !e_branches
-    | _ -> failwith "impossible, filter above"
-  );
-  let nomatch : mlbranch = (MLP_Wild, None, ml_none) in
-  let branches = List.rev (nomatch :: !e_branches) in
-  let sc = mk (MLE_Var arg_v) in
-  let def = mk (MLE_Match (sc, branches)) in
-  let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
-  lam
-
-(* Creates an embedding function for the type *)
-let mk_embed (record_fields : option (list string)) (ctors: list sigelt) : mlexpr =
-  let e_branches : ref (list mlbranch) = BU.mk_ref [] in
-  let arg_v = fresh "tm" in
-  ctors |> List.iter (fun ctor ->
-    match ctor.sigel with
-    | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals} ->
-      let fv = fresh "fv" in
-      let bs, c = U.arrow_formals t in
-      let vs = List.map (fun b -> fresh (Ident.string_of_id b.binder_bv.ppname), b.binder_bv.sort) bs in
-      let pat = 
-        match record_fields with
-        | Some fields ->
-          // [] -> assuming same module
-          MLP_Record ([], List.map2 (fun v fld -> fld, MLP_Var (fst v)) vs fields)
-        | None ->
-          MLP_CTor (splitlast (Ident.path_of_lid lid), List.map (fun v -> MLP_Var (fst v)) vs)
-      in
-      let fvar = ml_name s_fvar_lid in
-      let lid_of_str = ml_name lid_of_str_lid in
-      let head = mk (MLE_App (fvar, [
-                    mk (MLE_App (lid_of_str, [mk (MLE_Const (MLC_String (Ident.string_of_lid lid)))]));
-                    ml_none]))
-      in
-      let mk_mk_app t ts =
-        // FIXME: all explicit
-        let ts = List.map (fun t -> mk (MLE_Tuple [t; ml_none])) ts in
-        mk (MLE_App (ml_name mk_app_lid, [t; as_ml_list ts]))
-      in
-      let args =
-        vs |> List.map (fun (v, ty) ->
-          let vt = mk (MLE_Var v) in
-          mk (MLE_App (ml_name embed_lid, [embedding_for ty; vt]))
-        )
-      in
-      let ret = mk_mk_app head args in
-      let br = (pat, None, ret) in
-
-      e_branches := br :: !e_branches
-    | _ -> failwith "impossible, filter above"
-  );
-  let branches = List.rev !e_branches in
-  let sc = mk (MLE_Var arg_v) in
-  let def = mk (MLE_Match (sc, branches)) in
-  let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
-  lam
 
 let not_implemented_warning (r: Range.range) (t: string) (msg: string) =
     Errors.log_issue r
@@ -220,7 +125,7 @@ type embedding_data = {
   nbe_emb : option Ident.lid; (* nbe embedding, optional! will abort _at runtime_ if None and called *)
 }
 
-let known_embeddings : ref (list (Ident.lident * embedding_data)) =
+let known_fv_embeddings : ref (list (Ident.lident * embedding_data)) =
   let syn_emb_lid s      = Ident.lid_of_path ["FStar"; "Syntax"; "Embeddings"; s] Range.dummyRange in
   let nbe_emb_lid s      = Ident.lid_of_path ["FStar"; "TypeChecker"; "NBETerm"; s] Range.dummyRange in
   let refl_emb_lid s     = Ident.lid_of_path ["FStar"; "Reflection"; "Embeddings"; s] Range.dummyRange in
@@ -248,15 +153,15 @@ let known_embeddings : ref (list (Ident.lident * embedding_data)) =
   ]
 
 let register_embedding (l: Ident.lident) (d: embedding_data) : unit =
-  known_embeddings := (l,d) :: !known_embeddings
+  known_fv_embeddings := (l,d) :: !known_fv_embeddings
 
-let find_embedding' (l: Ident.lident) : option embedding_data =
-  match List.find (fun (l', _) -> Ident.lid_equals l l') !known_embeddings with
+let find_fv_embedding' (l: Ident.lident) : option embedding_data =
+  match List.find (fun (l', _) -> Ident.lid_equals l l') !known_fv_embeddings with
   | Some (_, data) -> Some data
   | None -> None
 
-let find_embedding (l: Ident.lident) : embedding_data =
-  match find_embedding' l with
+let find_fv_embedding (l: Ident.lident) : embedding_data =
+  match find_fv_embedding' l with
   | Some data -> data
   | None ->
     raise (NoEmbedding ("Embedding not defined for type " ^ Ident.string_of_lid l))
@@ -277,80 +182,77 @@ let emb_prefix = function
 
 (*** Make an embedding for a composite type (arrows, tuples, list, etc). The environment
 is a mapping from variable names into their embeddings. *)
-let rec mk_embedding tcenv l (env:list (bv * string)) (t: term): mlexpr =
-    let str_to_name s     = as_name ([], s) in
-    let mk_any_embedding l (s: string): mlexpr =
-        mk <| MLE_App(emb_prefix l "mk_any_emb", [str_to_name s])
-    in
-    let emb_arrow l e1 e2 =
-        mk <| MLE_App(emb_prefix l "e_arrow", [e1; e2])
-    in
-    let find_env_entry bv (bv', _) = S.bv_eq bv bv' in
-    let t = N.unfold_whnf' [Env.ForExtraction] tcenv t in
-    let s = SS.compress t in
-    match t.n with
-    (* A name, explain (why e_any?) *)
-    | Tm_name bv
-         when BU.for_some (find_env_entry bv) env ->
-      mk_any_embedding l <| snd (BU.must (BU.find_opt (find_env_entry bv) env))
+let rec embedding_for (tcenv:Env.env) l (env:list (bv * string)) (t: term): mlexpr =
+  let str_to_name s     = as_name ([], s) in
+  let mk_any_embedding l (s: string): mlexpr =
+      mk <| MLE_App(emb_prefix l "mk_any_emb", [str_to_name s])
+  in
+  let emb_arrow l e1 e2 =
+      mk <| MLE_App(emb_prefix l "e_arrow", [e1; e2])
+  in
+  let find_env_entry bv (bv', _) = S.bv_eq bv bv' in
+  let t = U.un_uinst t in
+  let t = SS.compress t in
+  match t.n with
+  (* A name, explain (why e_any?) *)
+  | Tm_name bv
+       when BU.for_some (find_env_entry bv) env ->
+    mk_any_embedding l <| snd (BU.must (BU.find_opt (find_env_entry bv) env))
 
-    | Tm_refine {b=x} ->
-      (* Refinements are irrelevant for embeddings. *)
-      mk_embedding tcenv l env x.sort
+  (* Refinements are irrelevant for embeddings. *)
+  | Tm_refine {b=x} ->
+    embedding_for tcenv l env x.sort
 
-    | Tm_ascribed {tm=t} ->
-      (* Ascriptions are irrelevant for embeddings. *)
-      mk_embedding tcenv l env t
+  (* Ascriptions are irrelevant for embeddings. *)
+  | Tm_ascribed {tm=t} ->
+    embedding_for tcenv l env t
 
-    (* Pure arrow *)
-    | Tm_arrow {bs=[b]; comp=c} when U.is_pure_comp c ->
-      let bs, c = FStar.Syntax.Subst.open_comp [b] c in
-      let t0 = (List.hd bs).binder_bv.sort in
-      let t1 = U.comp_result c in
-      emb_arrow l (mk_embedding tcenv l env t0) (mk_embedding tcenv l env t1)
+  (* Pure arrow *)
+  | Tm_arrow {bs=[b]; comp=c} when U.is_pure_comp c ->
+    let bs, c = FStar.Syntax.Subst.open_comp [b] c in
+    let t0 = (List.hd bs).binder_bv.sort in
+    let t1 = U.comp_result c in
+    emb_arrow l (embedding_for tcenv l env t0) (embedding_for tcenv l env t1)
 
-    (* More than 1 binder, curry and retry *)
-    | Tm_arrow {bs=b::more::bs; comp=c} ->
-      let tail = S.mk (Tm_arrow {bs=more::bs; comp=c}) t.pos in
-      let t = S.mk (Tm_arrow {bs=[b]; comp=S.mk_Total tail}) t.pos in
-      mk_embedding tcenv l env t
+  (* More than 1 binder, curry and retry *)
+  | Tm_arrow {bs=b::more::bs; comp=c} ->
+    let tail = S.mk (Tm_arrow {bs=more::bs; comp=c}) t.pos in
+    let t = S.mk (Tm_arrow {bs=[b]; comp=S.mk_Total tail}) t.pos in
+    embedding_for tcenv l env t
 
-    | Tm_fvar _
-    | Tm_uinst _
-    | Tm_app _ ->
-      let head, args = U.head_and_args t in
-      let n_args = List.length args in
-      begin
-      match (U.un_uinst head).n with
-      | Tm_fvar fv when Some? (find_embedding' fv.fv_name.v) ->
-        let arg_embeddings =
-            args
-            |> List.map (fun (t, _) -> mk_embedding tcenv l env t)
-        in
-        let emb_data = find_embedding fv.fv_name.v in
-        let t_arity = emb_data.arity in
-        let head =
-          match l with
-          | Syntax_term -> ml_name emb_data.syn_emb
-          | NBE_t ->
-            begin match emb_data.nbe_emb with
-            | Some lid -> ml_name lid
-            | None ->
-              // FIXME: generate NBE embeddings, or at least show a proper error
-              ml_magic
-            end
-          | _ -> failwith "????"
-        in
-        if t_arity = 0
-        then head
-        else mk <| MLE_App (head, arg_embeddings)
+  | Tm_app _ ->
+    let head, args = U.head_and_args t in
+    let e_args = List.map (fun (t, _) -> embedding_for tcenv l env t) args in
+    let e_head = embedding_for tcenv l env head in
+    mk <| MLE_App (e_head, e_args)
 
-      | _ ->
-        raise (NoEmbedding (BU.format1 "Embedding not defined for name `%s'" (Print.term_to_string t)))
+  (* An fv for which we have an embedding already registered. *)
+  | Tm_fvar fv when Some? (find_fv_embedding' fv.fv_name.v) ->
+    let emb_data = find_fv_embedding fv.fv_name.v in
+    begin match l with
+    | Syntax_term -> ml_name emb_data.syn_emb
+    | NBE_t ->
+      begin match emb_data.nbe_emb with
+      | Some lid -> ml_name lid
+      | None ->
+        // FIXME: generate NBE embeddings, or at least show a proper error
+        ml_magic
       end
+    | _ -> failwith "????"
+    end
 
-    | _ ->
-      raise (NoEmbedding (BU.format2 "Embedding not defined for type `%s' (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
+  (* An fv which we do not have registered, try to unfold it *)
+  | Tm_fvar fv ->
+    (* TODO: I don't really understand why NoDelta causes unfolding (see TcEnv.visible_at).
+    Is it intended? *)
+    begin match Env.lookup_definition [Env.NoDelta] tcenv fv.fv_name.v with
+    | Some (_us, t) -> embedding_for tcenv l env t
+    | None ->
+      raise (NoEmbedding (BU.format1 "Embedding not defined for name `%s'" (Print.term_to_string t)))
+    end
+
+  | _ ->
+    raise (NoEmbedding (BU.format2 "Cannot embed type `%s' (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
 
 type wrapped_term = mlexpr * mlexpr * int * bool
 
@@ -518,7 +420,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         match bs with
         | [] ->
           let arg_unembeddings = List.rev accum_embeddings in
-          let res_embedding = mk_embedding tcenv loc tvar_context result_typ in
+          let res_embedding = embedding_for tcenv loc tvar_context result_typ in
           let fv_lid = fv.fv_name.v in
           if U.is_pure_comp c
           then begin
@@ -566,7 +468,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           else raise (NoEmbedding("Plugins not defined for type " ^ Print.term_to_string t))
 
         | ({binder_bv=b})::bs ->
-          aux loc (mk_embedding tcenv loc tvar_context b.sort::accum_embeddings) bs
+          aux loc (embedding_for tcenv loc tvar_context b.sort::accum_embeddings) bs
     in
     try
         let w, a, b = aux Syntax_term [] bs in
@@ -584,6 +486,99 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
 
 
 
+
+(* Creates an unembedding function for the type *)
+let mk_unembed tcenv (record_fields : option (list mlpath)) (ctors: list sigelt) : mlexpr =
+  let e_branches : ref (list mlbranch) = BU.mk_ref [] in
+  let arg_v = fresh "tm" in
+  ctors |> List.iter (fun ctor ->
+    match ctor.sigel with
+    | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals} ->
+      let fv = fresh "fv" in
+      let bs, c = U.arrow_formals t in
+      let vs = List.map (fun b -> fresh (Ident.string_of_id b.binder_bv.ppname), b.binder_bv.sort) bs in
+
+      let pat_s = MLP_Const (MLC_String (Ident.string_of_lid lid)) in
+      (* let pat_args = MLP_CTor ((["Prims"], "Nil"), List.map (fun (v, _) -> MLP_Var v) vs) in *)
+      let pat_args = vs |> List.map (fun (v,_) -> MLP_Var v) |> pats_to_list_pat in
+      let pat_both = MLP_Tuple [pat_s; pat_args] in
+
+      let ret =
+        match record_fields with
+        | Some fields ->
+          ml_record lid (List.map2 (fun (v, _) fld -> snd fld, mk (MLE_Var v)) vs fields)
+        | None ->
+          ml_ctor lid (List.map (fun (v, _) -> mk (MLE_Var v)) vs)
+      in
+      let ret = mk (MLE_App (ml_some, [ret])) in // final return
+
+      let body = List.fold_right (fun (v, ty) body ->
+        let body = mk (MLE_Fun ([(v, MLTY_Top)], body)) in
+
+        mk (MLE_App (ml_name bind_opt_lid, [
+                      mk (MLE_App (ml_name unembed_lid, [embedding_for tcenv Syntax_term [] ty; mk (MLE_Var v)]));
+                      body;
+                      ]))
+      ) vs ret
+      in
+      let br = (pat_both, None, body) in
+
+      e_branches := br :: !e_branches
+    | _ -> failwith "impossible, filter above"
+  );
+  let nomatch : mlbranch = (MLP_Wild, None, ml_none) in
+  let branches = List.rev (nomatch :: !e_branches) in
+  let sc = mk (MLE_Var arg_v) in
+  let def = mk (MLE_Match (sc, branches)) in
+  let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
+  lam
+
+(* Creates an embedding function for the type *)
+let mk_embed tcenv (record_fields : option (list mlpath)) (ctors: list sigelt) : mlexpr =
+  let e_branches : ref (list mlbranch) = BU.mk_ref [] in
+  let arg_v = fresh "tm" in
+  ctors |> List.iter (fun ctor ->
+    match ctor.sigel with
+    | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals} ->
+      let fv = fresh "fv" in
+      let bs, c = U.arrow_formals t in
+      let vs = List.map (fun b -> fresh (Ident.string_of_id b.binder_bv.ppname), b.binder_bv.sort) bs in
+      let pat = 
+        match record_fields with
+        | Some fields ->
+          // [] -> assuming same module
+          MLP_Record ([], List.map2 (fun v fld -> snd fld, MLP_Var (fst v)) vs fields)
+        | None ->
+          MLP_CTor (splitlast (Ident.path_of_lid lid), List.map (fun v -> MLP_Var (fst v)) vs)
+      in
+      let fvar = ml_name s_fvar_lid in
+      let lid_of_str = ml_name lid_of_str_lid in
+      let head = mk (MLE_App (fvar, [
+                    mk (MLE_App (lid_of_str, [mk (MLE_Const (MLC_String (Ident.string_of_lid lid)))]));
+                    ml_none]))
+      in
+      let mk_mk_app t ts =
+        // FIXME: all explicit
+        let ts = List.map (fun t -> mk (MLE_Tuple [t; ml_none])) ts in
+        mk (MLE_App (ml_name mk_app_lid, [t; as_ml_list ts]))
+      in
+      let args =
+        vs |> List.map (fun (v, ty) ->
+          let vt = mk (MLE_Var v) in
+          mk (MLE_App (ml_name embed_lid, [embedding_for tcenv Syntax_term [] ty; vt]))
+        )
+      in
+      let ret = mk_mk_app head args in
+      let br = (pat, None, ret) in
+
+      e_branches := br :: !e_branches
+    | _ -> failwith "impossible, filter above"
+  );
+  let branches = List.rev !e_branches in
+  let sc = mk (MLE_Var arg_v) in
+  let def = mk (MLE_Match (sc, branches)) in
+  let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
+  lam
 
 
 
@@ -637,13 +632,20 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
 
     let ctors = List.filter (fun se -> match se.sigel with | Sig_datacon _ -> true | _ -> false) ses in
     let ml_name = mk (MLE_Const (MLC_String (Ident.string_of_lid tlid))) in
+
     let record_fields =
       match List.find (function RecordType _ -> true | _ -> false) se.sigquals with
-      | Some (RecordType (a, b)) -> Some (List.map Ident.string_of_id b)
-      | _ -> None
+      | Some (RecordType (_, b)) ->
+        (* Extraction may change the names of fields to disambiguate them,
+         * query the environment for the extracted names. *)
+        Some (List.map (fun f -> lookup_record_field_name g (tlid, f)) b)
+      | _ ->
+        None
     in
-    let ml_unembed = mk_unembed record_fields ctors in
-    let ml_embed = mk_embed record_fields ctors in
+
+    let tcenv = tcenv_of_uenv g in
+    let ml_unembed = mk_unembed tcenv record_fields ctors in
+    let ml_embed   = mk_embed   tcenv record_fields ctors in
     let def = mk (MLE_App (mk (MLE_Name (["FStar"; "Syntax"; "Embeddings"; "Base"], "mk_extracted_embedding")), [
                     ml_name;
                     ml_unembed;
@@ -674,6 +676,11 @@ let do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmod
     // FIXME: Change error code
     Errors.log_issue se.sigrng (Errors.Warning_PluginNotImplemented,
         BU.format2 "Could not generate a plugin for %s, reason = %s" (Print.sigelt_to_string_short se) msg);
+    []
+  | NoEmbedding msg ->
+    not_implemented_warning se.sigrng
+                            (Print.sigelt_to_string_short se)
+                            msg;
     []
 
 (* When extracting a plugin, each top-level definition marked with a `@plugin` attribute
