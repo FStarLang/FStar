@@ -341,6 +341,22 @@ let my_type_decls () = register_pre_translate_type_decl begin fun env ty ->
       ->
       define_union env tag fields
 
+    | {tydecl_name=name;
+       tydecl_parameters=args;
+       tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([_; fields; _; _], p)))}
+      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.Struct.struct_t0"
+      ->
+      let name = env.module_name, name in
+      define_struct_gen env name args fields
+
+    | {tydecl_name=name;
+       tydecl_parameters=args;
+       tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([_; fields; _; _], p)))}
+      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.Union.union_t0"
+      ->
+      let name = env.module_name, name in
+      define_union_gen env name args fields
+
     | _ -> raise NotSupportedByKrmlExtension
 end
 
