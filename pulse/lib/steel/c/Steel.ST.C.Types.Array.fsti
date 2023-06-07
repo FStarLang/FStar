@@ -167,7 +167,7 @@ val has_base_array_cell_equiv_to
 // ghost length of an array.
 
 [@@noextract_to "krml"] // primitive
-val array_ptr_gen ([@@@strictly_positive] t: Type0) : Tot Type0
+val array_ptr_gen ([@@@unused] t: Type0) : Tot Type0
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let array_ptr (#t: Type) (td: typedef t) = array_ptr_gen t
 [@@noextract_to "krml"] // primitive
