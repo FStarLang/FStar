@@ -342,10 +342,11 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
                        witnesses = open_term_list' witnesses v i;
                        should_check }                             
 
-    | Tm_While { invariant; condition; body } ->
+    | Tm_While { invariant; condition; body; condition_var } ->
       Tm_While { invariant = open_term' invariant v (i + 1);
                  condition = open_st_term' condition v i;
-                 body = open_st_term' body v i }
+                 body = open_st_term' body v i;
+                 condition_var }
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       Tm_Par { pre1=open_term' pre1 v i;
@@ -504,10 +505,11 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
                        witnesses = close_term_list' witnesses v i;
                        should_check }
 
-    | Tm_While { invariant; condition; body } ->
+    | Tm_While { invariant; condition; body; condition_var } ->
       Tm_While { invariant = close_term' invariant v (i + 1);
                  condition = close_st_term' condition v i;
-                 body = close_st_term' body v i }
+                 body = close_st_term' body v i;
+                 condition_var }
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       Tm_Par { pre1 = close_term' pre1 v i;

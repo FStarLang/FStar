@@ -102,6 +102,7 @@ let rec (freevars_st :
     | Pulse_Syntax_Base.Tm_While
         { Pulse_Syntax_Base.invariant = invariant;
           Pulse_Syntax_Base.condition = condition;
+          Pulse_Syntax_Base.condition_var = uu___;
           Pulse_Syntax_Base.body3 = body;_}
         ->
         FStar_Set.union (freevars invariant)
@@ -233,6 +234,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_While
           { Pulse_Syntax_Base.invariant = invariant;
             Pulse_Syntax_Base.condition = condition;
+            Pulse_Syntax_Base.condition_var = uu___;
             Pulse_Syntax_Base.body3 = body;_}
           ->
           ((ln' invariant (i + Prims.int_one)) && (ln_st' condition i)) &&
@@ -495,6 +497,7 @@ let rec (open_st_term' :
           | Pulse_Syntax_Base.Tm_While
               { Pulse_Syntax_Base.invariant = invariant;
                 Pulse_Syntax_Base.condition = condition;
+                Pulse_Syntax_Base.condition_var = condition_var;
                 Pulse_Syntax_Base.body3 = body;_}
               ->
               Pulse_Syntax_Base.Tm_While
@@ -502,6 +505,7 @@ let rec (open_st_term' :
                   Pulse_Syntax_Base.invariant =
                     (open_term' invariant v (i + Prims.int_one));
                   Pulse_Syntax_Base.condition = (open_st_term' condition v i);
+                  Pulse_Syntax_Base.condition_var = condition_var;
                   Pulse_Syntax_Base.body3 = (open_st_term' body v i)
                 }
           | Pulse_Syntax_Base.Tm_Par
@@ -803,6 +807,7 @@ let rec (close_st_term' :
           | Pulse_Syntax_Base.Tm_While
               { Pulse_Syntax_Base.invariant = invariant;
                 Pulse_Syntax_Base.condition = condition;
+                Pulse_Syntax_Base.condition_var = condition_var;
                 Pulse_Syntax_Base.body3 = body;_}
               ->
               Pulse_Syntax_Base.Tm_While
@@ -811,6 +816,7 @@ let rec (close_st_term' :
                     (close_term' invariant v (i + Prims.int_one));
                   Pulse_Syntax_Base.condition =
                     (close_st_term' condition v i);
+                  Pulse_Syntax_Base.condition_var = condition_var;
                   Pulse_Syntax_Base.body3 = (close_st_term' body v i)
                 }
           | Pulse_Syntax_Base.Tm_Par

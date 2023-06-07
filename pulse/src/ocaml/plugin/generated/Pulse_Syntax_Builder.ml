@@ -114,17 +114,20 @@ let (tm_intro_exists :
 let (tm_while :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
-      Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
+      FStar_Reflection_Typing.pp_name_t ->
+        Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
   fun invariant ->
     fun condition ->
-      fun body ->
-        Pulse_Syntax_Base.Tm_While
-          {
-            Pulse_Syntax_Base.invariant = invariant;
-            Pulse_Syntax_Base.condition = condition;
-            Pulse_Syntax_Base.body3 = body
-          }
+      fun condition_var ->
+        fun body ->
+          Pulse_Syntax_Base.Tm_While
+            {
+              Pulse_Syntax_Base.invariant = invariant;
+              Pulse_Syntax_Base.condition = condition;
+              Pulse_Syntax_Base.condition_var = condition_var;
+              Pulse_Syntax_Base.body3 = body
+            }
 let (tm_par :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->

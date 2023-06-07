@@ -34,10 +34,10 @@ let check_while
   (check':bool -> check_t)
   : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "while loop" g in
-  let Tm_While { invariant=inv; condition=cond; body } = t.term in
+  let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
   let (| ex_inv, inv_typing |) =
     check_vprop (push_context "invariant" g)
-                (Tm_ExistsSL u0 (as_binder tm_bool) inv)
+                (Tm_ExistsSL u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv)
   in
   match Framing.check_frameable pre_typing ex_inv with
   | Inr f -> T.raise (Framing_failure f)

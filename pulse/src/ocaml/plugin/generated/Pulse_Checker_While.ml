@@ -60,8 +60,8 @@ let (check_while :
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "Pulse.Checker.While.fst"
-                                (Prims.of_int (37)) (Prims.of_int (57))
-                                (Prims.of_int (37)) (Prims.of_int (63)))
+                                (Prims.of_int (37)) (Prims.of_int (72))
+                                (Prims.of_int (37)) (Prims.of_int (78)))
                              (FStar_Range.mk_range "Pulse.Checker.While.fst"
                                 (Prims.of_int (36)) (Prims.of_int (40))
                                 (Prims.of_int (104)) (Prims.of_int (59)))
@@ -73,6 +73,8 @@ let (check_while :
                                    | Pulse_Syntax_Base.Tm_While
                                        { Pulse_Syntax_Base.invariant = inv;
                                          Pulse_Syntax_Base.condition = cond;
+                                         Pulse_Syntax_Base.condition_var =
+                                           condition_var;
                                          Pulse_Syntax_Base.body3 = body;_}
                                        ->
                                        Obj.magic
@@ -82,11 +84,11 @@ let (check_while :
                                                (Prims.of_int (39))
                                                (Prims.of_int (4))
                                                (Prims.of_int (40))
-                                               (Prims.of_int (56)))
+                                               (Prims.of_int (87)))
                                             (FStar_Range.mk_range
                                                "Pulse.Checker.While.fst"
                                                (Prims.of_int (37))
-                                               (Prims.of_int (66))
+                                               (Prims.of_int (81))
                                                (Prims.of_int (104))
                                                (Prims.of_int (59)))
                                             (Obj.magic
@@ -95,9 +97,13 @@ let (check_while :
                                                      "invariant" g1)
                                                   (Pulse_Syntax_Base.Tm_ExistsSL
                                                      (Pulse_Syntax_Pure.u0,
-                                                       (Pulse_Typing.as_binder
-                                                          Pulse_Typing.tm_bool),
-                                                       inv))))
+                                                       {
+                                                         Pulse_Syntax_Base.binder_ty
+                                                           =
+                                                           Pulse_Typing.tm_bool;
+                                                         Pulse_Syntax_Base.binder_ppname
+                                                           = condition_var
+                                                       }, inv))))
                                             (fun uu___1 ->
                                                (fun uu___1 ->
                                                   match uu___1 with
@@ -504,6 +510,9 @@ let (check_while :
                                                                     = inv1;
                                                                     Pulse_Syntax_Base.condition
                                                                     = cond1;
+                                                                    Pulse_Syntax_Base.condition_var
+                                                                    =
+                                                                    FStar_Reflection_Typing.pp_name_default;
                                                                     Pulse_Syntax_Base.body3
                                                                     = body1
                                                                     })) pre
@@ -531,6 +540,9 @@ let (check_while :
                                                                     = inv1;
                                                                     Pulse_Syntax_Base.condition
                                                                     = cond1;
+                                                                    Pulse_Syntax_Base.condition_var
+                                                                    =
+                                                                    FStar_Reflection_Typing.pp_name_default;
                                                                     Pulse_Syntax_Base.body3
                                                                     = body1
                                                                     }))

@@ -98,7 +98,7 @@ let tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) r : st_term =
   PSB.(with_range (tm_with_local v k) r)
    
 let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) r : st_term =
-  PSB.(with_range (tm_while (snd invariant) head body) r)
+  PSB.(with_range (tm_while (snd invariant) head (FStar_Ident.string_of_id (fst invariant)) body) r)
    
 let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_term) r : st_term =
   PSB.(with_range (tm_if head then_ else_ returns_annot) r)

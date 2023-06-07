@@ -154,6 +154,7 @@ type st_term' =
   | Tm_While {
       invariant:term;
       condition:st_term;
+      condition_var: RT.pp_name_t;
       body:st_term;
     }
   | Tm_Par {

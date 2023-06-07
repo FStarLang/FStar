@@ -182,6 +182,7 @@ and st_term'__Tm_While__payload =
   {
   invariant: term ;
   condition: st_term ;
+  condition_var: FStar_Reflection_Typing.pp_name_t ;
   body3: st_term }
 and st_term'__Tm_Par__payload =
   {
@@ -363,8 +364,13 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
           (((eq_tm g1 g2) && (eq_st_term ethen1 ethen2)) &&
              (eq_st_term eelse1 eelse2))
             && (eq_tm_opt p1 p2)
-      | (Tm_While { invariant = inv1; condition = cond1; body3 = body1;_},
-         Tm_While { invariant = inv2; condition = cond2; body3 = body2;_}) ->
+      | (Tm_While
+         { invariant = inv1; condition = cond1; condition_var = uu___;
+           body3 = body1;_},
+         Tm_While
+         { invariant = inv2; condition = cond2; condition_var = uu___1;
+           body3 = body2;_})
+          ->
           ((eq_tm inv1 inv2) && (eq_st_term cond1 cond2)) &&
             (eq_st_term body1 body2)
       | (Tm_Par

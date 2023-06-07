@@ -817,7 +817,8 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing g body (comp_while_body inv) ->
       st_typing g (wr (Tm_While { invariant = inv;
                                   condition = cond;
-                                  body } ))
+                                  body;
+                                  condition_var = RT.pp_name_default } ))
                   (comp_while inv)
 
   | T_Par:

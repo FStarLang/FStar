@@ -1878,6 +1878,7 @@ let rec (st_term_to_string' :
       | Pulse_Syntax_Base.Tm_While
           { Pulse_Syntax_Base.invariant = invariant;
             Pulse_Syntax_Base.condition = condition;
+            Pulse_Syntax_Base.condition_var = uu___;
             Pulse_Syntax_Base.body3 = body;_}
           ->
           FStar_Tactics_Effect.tac_bind
@@ -1896,8 +1897,8 @@ let rec (st_term_to_string' :
                      (Prims.of_int (204)) (Prims.of_int (6))
                      (Prims.of_int (211)) (Prims.of_int (13)))
                   (Obj.magic (st_term_to_string' (indent level) body))
-                  (fun uu___ ->
-                     (fun uu___ ->
+                  (fun uu___1 ->
+                     (fun uu___1 ->
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
@@ -1948,8 +1949,8 @@ let rec (st_term_to_string' :
                                                   (Prims.of_int (13)))
                                                (Obj.magic
                                                   (term_to_string invariant))
-                                               (fun uu___1 ->
-                                                  (fun uu___1 ->
+                                               (fun uu___2 ->
+                                                  (fun uu___2 ->
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (FStar_Range.mk_range
@@ -1997,10 +1998,10 @@ let rec (st_term_to_string' :
                                                                     level
                                                                     condition))
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     fun x ->
                                                                     fun x1 ->
                                                                     fun x2 ->
@@ -2016,7 +2017,7 @@ let rec (st_term_to_string' :
                                                                     (Prims.strcat
                                                                     "while ("
                                                                     (Prims.strcat
-                                                                    uu___2
+                                                                    uu___3
                                                                     ")\n"))
                                                                     (Prims.strcat
                                                                     x
@@ -2031,30 +2032,30 @@ let rec (st_term_to_string' :
                                                                     x4 "\n"))
                                                                     (Prims.strcat
                                                                     x5 "}")))))
-                                                                (fun uu___2
+                                                                (fun uu___3
                                                                    ->
                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___3 ->
-                                                                    uu___2
+                                                                    uu___4 ->
+                                                                    uu___3
                                                                     level))))
-                                                          (fun uu___2 ->
+                                                          (fun uu___3 ->
                                                              FStar_Tactics_Effect.lift_div_tac
-                                                               (fun uu___3 ->
-                                                                  uu___2
-                                                                    uu___1))))
-                                                    uu___1)))
-                                         (fun uu___1 ->
+                                                               (fun uu___4 ->
+                                                                  uu___3
+                                                                    uu___2))))
+                                                    uu___2)))
+                                         (fun uu___2 ->
                                             FStar_Tactics_Effect.lift_div_tac
-                                              (fun uu___2 -> uu___1 level))))
-                                   (fun uu___1 ->
+                                              (fun uu___3 -> uu___2 level))))
+                                   (fun uu___2 ->
                                       FStar_Tactics_Effect.lift_div_tac
-                                        (fun uu___2 -> uu___1 (indent level)))))
-                             (fun uu___1 ->
+                                        (fun uu___3 -> uu___2 (indent level)))))
+                             (fun uu___2 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___2 -> uu___1 uu___)))) uu___)))
-            (fun uu___ ->
-               FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> uu___ level))
+                                  (fun uu___3 -> uu___2 uu___1)))) uu___1)))
+            (fun uu___1 ->
+               FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> uu___1 level))
       | Pulse_Syntax_Base.Tm_Par
           { Pulse_Syntax_Base.pre11 = pre1; Pulse_Syntax_Base.body11 = body1;
             Pulse_Syntax_Base.post11 = post1; Pulse_Syntax_Base.pre2 = pre2;
