@@ -469,7 +469,7 @@ let e_range : embedding Range.range =
     | _ ->
         None
     in
-    mk_emb' em un (lid_as_typ PC.range_lid [] []) (SE.emb_typ_of SE.e_range)
+    mk_emb' em un (lid_as_typ PC.__range_lid [] []) (SE.emb_typ_of SE.e_range)
 
 let e_issue : embedding FStar.Errors.issue =
     let t_issue = SE.type_of SE.e_issue in
