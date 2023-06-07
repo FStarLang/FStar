@@ -33,3 +33,11 @@ open FStar.Extraction.ML.UEnv
    which installs the compiled term as a primitive step in the normalizer
  *)
 val maybe_register_plugin (g:uenv) (se:sigelt) : list mlmodule1
+
+val interpret_plugin_as_term_fun :
+              UEnv.uenv
+            -> fv:fv
+            -> t:typ
+            -> arity:option int
+            -> ml_fv:mlexpr'
+            -> option (mlexpr * mlexpr * int * bool)

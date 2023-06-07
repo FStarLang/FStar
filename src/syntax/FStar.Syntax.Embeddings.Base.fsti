@@ -91,9 +91,18 @@ val e_lazy        : lazy_kind ->
 
 
 
-(* A helper for extracted embeddings of inductive types. *)
+(* Helpers for extracted embeddings of inductive types.
+Do not use internally. *)
 val mk_extracted_embedding :
   string -> (* name *)
   (string & list term -> option 'a) -> (* unembedding specialized to an applied fvar *)
   ('a -> term) -> (* embedding *)
   embedding 'a
+val extracted_embed :
+  embedding 'a ->
+  'a ->
+  term
+val extracted_unembed :
+  embedding 'a ->
+  term ->
+  option 'a

@@ -290,3 +290,9 @@ let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (
   in
   let ee (x:'a) rng _topt _norm : term = e x in
   mk_emb ee uu (S.lid_as_fv (Ident.lid_of_str name) None)
+
+let extracted_embed (e: embedding 'a) (x: 'a) : term =
+  embed e x Range.dummyRange None id_norm_cb
+
+let extracted_unembed (e: embedding 'a) (t: term) : option 'a =
+  unembed e t id_norm_cb
