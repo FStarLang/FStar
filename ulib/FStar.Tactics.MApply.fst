@@ -97,7 +97,7 @@ instance termable_term : termable term = {
 }
 
 instance termable_binding : termable binding = {
-  to_term = binding_to_term;
+  to_term = (fun b -> binding_to_term b);
 }
 
 (* `m` is for `magic` *)

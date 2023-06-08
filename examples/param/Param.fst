@@ -41,7 +41,7 @@ let fresh_binder_named (nm:string) (t:typ) : Tac binder =
   Tactics.fresh_binder_named nm t
 
 let app_binders (t:term) (bs:list binder) : Tac term =
-  mk_e_app t (Tactics.map binder_to_term bs)
+  mk_e_app t (List.Tot.map binder_to_term bs)
 
 let push_var_to_state (v:namedv) (b0 b1 b2 : binder) (s:param_state) : param_state =
   { s with bvmap = (v, (b0, b1, b2)) :: s.bvmap }

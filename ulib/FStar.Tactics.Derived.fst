@@ -50,7 +50,7 @@ let binding_to_string (b : binding) : Tac string =
 let type_of_var (x : namedv) : Tac typ =
   unseal ((inspect_namedv x).sort)
 
-let type_of_binding (x : binding) : Tac typ =
+let type_of_binding (x : binding) : Tot typ =
   x.sort
 
 exception Goal_not_trivial
@@ -566,7 +566,7 @@ let rec revert_all (bs:list binding) : Tac unit =
     | _::tl -> revert ();
              revert_all tl
 
-let namedv_to_term (x : namedv) : Tac term =
+let namedv_to_term (x : namedv) : Tot term =
   pack (Tv_Var x)
 
 let binder_to_namedv (b : binder) : Tot namedv =
@@ -576,20 +576,20 @@ let binder_to_namedv (b : binder) : Tot namedv =
     sort   = seal b.sort;
   }
 
-let binder_to_term (b : binder) : Tac term =
+let binder_to_term (b : binder) : Tot term =
   pack (Tv_Var (binder_to_namedv b))
 
-let binding_to_namedv (b : binding) : Tac namedv =
+let binding_to_namedv (b : binding) : Tot namedv =
   pack_namedv {
     ppname = b.ppname;
     sort   = seal b.sort;
     uniq   = b.uniq
   }
 
-let binding_to_term (x : binding) : Tac term =
+let binding_to_term (x : binding) : Tot term =
   namedv_to_term (binding_to_namedv x)
 
-let binder_sort (b : binder) : Tac typ = b.sort
+let binder_sort (b : binder) : Tot typ = b.sort
 
 // Cannot define this inside `assumption` due to #1091
 private
