@@ -143,6 +143,7 @@ let builtin_embeddings : list (Ident.lident & embedding_data) =
     (PC.sealed_lid,                       {arity=1; syn_emb=syn_emb_lid  "e_sealed";     nbe_emb=Some(nbe_emb_lid "e_sealed")});
 
     (PC.mk_tuple_lid 2 Range.dummyRange,  {arity=2; syn_emb=syn_emb_lid  "e_tuple2";     nbe_emb=Some(nbe_emb_lid "e_tuple2")});
+    (PC.mk_tuple_lid 3 Range.dummyRange,  {arity=3; syn_emb=syn_emb_lid  "e_tuple3";     nbe_emb=Some(nbe_emb_lid "e_tuple3")});
     (PC.either_lid,                       {arity=2; syn_emb=syn_emb_lid  "e_either";     nbe_emb=Some(nbe_emb_lid "e_either")});
 
     (* Reflection base types *)
