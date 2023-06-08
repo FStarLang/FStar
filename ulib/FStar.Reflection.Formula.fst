@@ -46,11 +46,13 @@ private let rec collect_app' (args : list argv) (t : term)
 private let collect_app = collect_app' []
 /////
 
+[@@plugin]
 noeq type comparison =
   | Eq     of option typ  (* Propositional equality (eq2), maybe annotated *)
   | BoolEq of option typ  (* Decidable, boolean equality (eq), maybe annotated *)
   | Lt | Le | Gt | Ge     (* Orderings, at type `int` (and subtypes) *)
 
+[@@plugin]
 noeq type formula =
   | True_  : formula
   | False_ : formula
@@ -80,6 +82,7 @@ let mk_Exists (typ : term) (pred : term) : Tot formula =
                        index = 0; }) in
     Exists b typ (pack (Tv_App pred (pack (Tv_BVar b), Q_Explicit)))
 
+[@@plugin]
 let term_as_formula' (t:term) : Tac formula =
     match inspect_unascribe t with
     | Tv_Var n ->

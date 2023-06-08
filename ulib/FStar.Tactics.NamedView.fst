@@ -644,7 +644,7 @@ let rec open_n_binders_from_arrow (bs : binders) (t : term) : Tac term =
   match bs with
   | [] -> t
   | b::bs ->
-    print ("t = " ^ term_to_string t);
+    (* print ("t = " ^ term_to_string t); *)
     match inspect t with
     | Tv_Arrow b' c ->
       begin match inspect_comp c with
