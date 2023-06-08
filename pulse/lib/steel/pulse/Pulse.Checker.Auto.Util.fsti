@@ -108,6 +108,8 @@ let set_difference (#a:eqtype) (s1 s2:Set.set a) =
 //    g: the current environment, may have names which are used as uvars
 //
 
+// TODO: we need to add a notion of well-typed env
+// and maintain that
 let uvs_invariant (g0 g:env) (uvs:uvs_t) : prop =
   g `env_extends` g0 /\
   Set.equal (set_difference (dom_env g) (dom_env g0)) (Map.domain uvs) /\
@@ -119,18 +121,30 @@ let uvs_invariant (g0 g:env) (uvs:uvs_t) : prop =
 //
 noeq
 type prover_state_preamble = {
+  // top-level entry env, no uvars
+  // when we enter the prover
+  // env into which we will elaborate the proof steps
+  // also the env in which the ctxt is well-typed
+  // initial_env
   g0:env;
+  // current_env (g0 + uvars)
   g:env;
+  // initial context
   ctxt:vprop;
   // ctxt is well-typed in g0
   // we never introduce uvars in the ctxt
+  // initial_ctxt_typing
   ctxt_typing:vprop_typing g0 ctxt;
+  // term whose precondition is the goal
   t:st_term;
+  // comp for t
   c:comp_st;
   // t and c however may contain uvars
   t_typing:st_typing g t c;
 
+  // set of uvars and their types that we have introduced so far
   uvs:uvs_t;
+  // uvars are well-typed in g
   uvs_props:squash (uvs_invariant g0 g uvs);
 }
 
@@ -142,6 +156,12 @@ type prover_state_preamble = {
 //
 // Solutions to uvars are closed in g0 --- no uvars in them
 //
+
+// TODO: this doesn't allow for dependent uvars,
+//   type of a uvar depending on another uvar
+// We need to close the telescope when stating this
+// Perhaps better to keep uvars and substs also as env,
+//   so that we get well-formedness for free
 let well_typed_substitution (g0:env) (uvs:uvs_t) (ss:substitution) : prop =
   dom_env g0 `Set.disjoint` Map.domain uvs /\
   (forall (x:var). Map.contains ss x ==>
@@ -150,24 +170,38 @@ let well_typed_substitution (g0:env) (uvs:uvs_t) (ss:substitution) : prop =
 
 noeq
 type prover_state (preamble:prover_state_preamble) = {
+  // things in cpre that we have solved
+  // rename to solved_conjuncts
   matched:term;
+  // remaining things in cpre
+  // goals
   unmatched:list term;
+  // context remaining that we can match from
+  // remaining_ctxt
   remaining:list term;
+  // the proof steps we have accumulated so far
+  // proof_steps
   steps:st_term;
 
+  // uvars -> terms
   ss:substitution;
 
   // remaining is well-typed in g0
+  // remaining_ctxt_typing
   remaining_typing:vprop_typing preamble.g0 (list_as_vprop remaining);
 
+  // goals_typing
   unmatched_typing:vprop_typing preamble.g (list_as_vprop unmatched);
 
   // steps are well-typed in g0
+  // proof_steps_typing
   steps_typing:st_typing preamble.g0 steps
     (ghost_comp
        preamble.ctxt
        (Tm_Star (list_as_vprop remaining) (apply_ss ss matched)));
 
+  // we haven't dropped any of the initial goals
+  // inductive invariant to relate solved goals and remaining goals
   veq:vprop_equiv preamble.g (comp_pre preamble.c)
                              (Tm_Star (list_as_vprop unmatched) matched);
 
@@ -380,7 +414,7 @@ val try_match (g0:_) (uvs:_)
   (ss:substitution { well_typed_substitution g0 uvs ss })
   : T.Tac (option (ss':substitution { well_typed_substitution g0 uvs ss' /\
                                       ss' `ss_extends` ss /\
-                                      freevars unm `Set.subset` Map.domain ss' } &
+                                      uvars unm `Set.subset` Map.domain ss' } &
                    vprop_equiv g0 (apply_ss ss' unm) rem))
 
 
