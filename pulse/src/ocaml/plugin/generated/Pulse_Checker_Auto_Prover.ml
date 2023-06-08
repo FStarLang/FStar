@@ -32,11 +32,11 @@ let (proof_steps_idem : Pulse_Syntax_Base.st_term) =
     Pulse_Syntax_Base.range1 = FStar_Range.range_0
   }
 let (proof_steps_idem_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop -> (unit, unit, unit) Pulse_Typing.st_typing)
   = fun g -> fun ctxt -> Prims.magic ()
 let (post_with_emp :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.comp_st ->
         (unit, unit, unit) Pulse_Typing.st_typing ->
@@ -45,7 +45,7 @@ let (post_with_emp :
   fun g ->
     fun t -> fun c -> fun d -> failwith "Not yet implemented:post_with_emp"
 let (init_prover_state :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->
       unit ->
         Pulse_Syntax_Base.st_term ->
@@ -177,7 +177,7 @@ let (step : Pulse_Checker_Auto_Util.prover_step_t) =
     step_intro_pure;
     step_intro_rewrite]
 let (finish :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     unit Pulse_Checker_Auto_Util.prover_state ->
       (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp_st,
         (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3)
@@ -217,7 +217,7 @@ let (finish :
                       (p.Pulse_Checker_Auto_Util.preamble).Pulse_Checker_Auto_Util.ctxt),
                    t_typing2))
 let (as_failure :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     unit Pulse_Checker_Auto_Util.prover_state -> framing_failure)
   =
   fun g ->
@@ -227,7 +227,7 @@ let (as_failure :
         remaining_context = (p.Pulse_Checker_Auto_Util.remaining_ctxt)
       }
 let rec (solve :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     unit Pulse_Checker_Auto_Util.prover_state ->
       (((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp_st,
           (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3,
@@ -263,7 +263,7 @@ let rec (solve :
                                     FStar_Pervasives.Inl (finish g p1)))
                         | uu___1 -> Obj.repr (solve g p1)))) uu___)
 let (prove_precondition :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
         Pulse_Syntax_Base.st_term ->

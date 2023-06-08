@@ -1,5 +1,6 @@
 open Prims
-let (contains : Pulse_Typing.env -> Pulse_Syntax_Base.var -> Prims.bool) =
+let (contains : Pulse_Typing_Env.env -> Pulse_Syntax_Base.var -> Prims.bool)
+  =
   fun g ->
     fun x -> FStar_Pervasives_Native.uu___is_Some (Pulse_Typing.lookup g x)
 let set_minus : 'a . 'a FStar_Set.set -> 'a -> 'a FStar_Set.set =

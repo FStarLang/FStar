@@ -6,7 +6,7 @@ module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
 module FTB = FStar.Tactics
-
+include Pulse.Typing.Env
 // let fstar_env =
 //   g:R.env { 
 //     RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
@@ -82,16 +82,6 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
     C_STGhost Tm_EmpInames
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
-let eqn = term & term & term
-let binding = either term eqn
-let env_bindings = list (var & binding)
-let context = FStar.Sealed.Inhabited.sealed #(list string) []
-noeq
-type env = {
-  f: RT.fstar_top_env;
-  g: env_bindings;
-  ctxt: context
-}
 
 
 

@@ -189,23 +189,7 @@ let (comp_return :
                                Prims.int_zero);
                           Pulse_Syntax_Base.post = post_maybe_eq
                         })
-type eqn =
-  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term)
-type binding = (Pulse_Syntax_Base.term, eqn) FStar_Pervasives.either
-type env_bindings = (Pulse_Syntax_Base.var * binding) Prims.list
-type context = (Prims.string Prims.list, unit) FStar_Sealed_Inhabited.sealed
-type env =
-  {
-  f: FStar_Reflection_Typing.fstar_top_env ;
-  g: env_bindings ;
-  ctxt: context }
-let (__proj__Mkenv__item__f : env -> FStar_Reflection_Typing.fstar_top_env) =
-  fun projectee -> match projectee with | { f; g; ctxt;_} -> f
-let (__proj__Mkenv__item__g : env -> env_bindings) =
-  fun projectee -> match projectee with | { f; g; ctxt;_} -> g
-let (__proj__Mkenv__item__ctxt : env -> context) =
-  fun projectee -> match projectee with | { f; g; ctxt;_} -> ctxt
-let (elab_eqn : eqn -> FStar_Reflection_Types.term) =
+let (elab_eqn : Pulse_Typing_Env.eqn -> FStar_Reflection_Types.term) =
   fun e ->
     let uu___ = e in
     match uu___ with
@@ -216,13 +200,16 @@ let (elab_eqn : eqn -> FStar_Reflection_Types.term) =
         FStar_Reflection_Typing.eq2
           (FStar_Reflection_Builtins.pack_universe
              FStar_Reflection_Data.Uv_Zero) ty1 l1 r1
-let (elab_binding : binding -> FStar_Reflection_Types.term) =
+let (elab_binding : Pulse_Typing_Env.binding -> FStar_Reflection_Types.term)
+  =
   fun b ->
     match b with
     | FStar_Pervasives.Inl t -> Pulse_Elaborate_Pure.elab_term t
-    | FStar_Pervasives.Inr eqn1 -> elab_eqn eqn1
+    | FStar_Pervasives.Inr eqn -> elab_eqn eqn
 let (extend_env_l :
-  FStar_Reflection_Types.env -> env_bindings -> FStar_Reflection_Types.env) =
+  FStar_Reflection_Types.env ->
+    Pulse_Typing_Env.env_bindings -> FStar_Reflection_Types.env)
+  =
   fun f ->
     fun g ->
       FStar_List_Tot_Base.fold_right
@@ -232,8 +219,8 @@ let (extend_env_l :
              | (x, b) ->
                  let t = elab_binding b in
                  FStar_Reflection_Typing.extend_env g1 x t) g f
-let (elab_env : env -> FStar_Reflection_Types.env) =
-  fun e -> extend_env_l e.f e.g
+let (elab_env : Pulse_Typing_Env.env -> FStar_Reflection_Types.env) =
+  fun e -> extend_env_l e.Pulse_Typing_Env.f e.Pulse_Typing_Env.g
 let rec lookup_binding :
   'a .
     (Pulse_Syntax_Base.var * 'a) Prims.list ->
@@ -248,10 +235,12 @@ let rec lookup_binding :
           then FStar_Pervasives_Native.Some v
           else lookup_binding tl x
 let (lookup :
-  env -> Pulse_Syntax_Base.var -> binding FStar_Pervasives_Native.option) =
-  fun e -> fun x -> lookup_binding e.g x
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.var ->
+      Pulse_Typing_Env.binding FStar_Pervasives_Native.option)
+  = fun e -> fun x -> lookup_binding e.Pulse_Typing_Env.g x
 let (lookup_ty :
-  env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
   =
@@ -261,9 +250,18 @@ let (lookup_ty :
       | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl t) ->
           FStar_Pervasives_Native.Some t
       | uu___ -> FStar_Pervasives_Native.None
-let (extend : Pulse_Syntax_Base.var -> binding -> env -> env) =
+let (extend :
+  Pulse_Syntax_Base.var ->
+    Pulse_Typing_Env.binding -> Pulse_Typing_Env.env -> Pulse_Typing_Env.env)
+  =
   fun x ->
-    fun b -> fun e -> { f = (e.f); g = ((x, b) :: (e.g)); ctxt = (e.ctxt) }
+    fun b ->
+      fun e ->
+        {
+          Pulse_Typing_Env.f = (e.Pulse_Typing_Env.f);
+          Pulse_Typing_Env.g = ((x, b) :: (e.Pulse_Typing_Env.g));
+          Pulse_Typing_Env.ctxt = (e.Pulse_Typing_Env.ctxt)
+        }
 let (max : Prims.nat -> Prims.nat -> Prims.nat) =
   fun n1 -> fun n2 -> if n1 < n2 then n2 else n1
 let rec fresh_wrt_bindings :
@@ -273,7 +271,8 @@ let rec fresh_wrt_bindings :
     | [] -> Prims.int_zero
     | (y, uu___)::tl -> (max (fresh_wrt_bindings tl) y) + Prims.int_one
     | uu___::tl -> fresh_wrt_bindings tl
-let (fresh : env -> Pulse_Syntax_Base.var) = fun e -> fresh_wrt_bindings e.g
+let (fresh : Pulse_Typing_Env.env -> Pulse_Syntax_Base.var) =
+  fun e -> fresh_wrt_bindings e.Pulse_Typing_Env.g
 let (add_frame :
   Pulse_Syntax_Base.comp_st ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp_st)
@@ -688,18 +687,19 @@ let (as_binder : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder) =
       Pulse_Syntax_Base.binder_ppname = Pulse_Syntax_Base.ppname_default
     }
 type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
-  | ST_VPropEquiv of env * Pulse_Syntax_Base.comp_st *
+  | ST_VPropEquiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * unit * unit *
   unit * unit 
 let uu___is_ST_VPropEquiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | ST_VPropEquiv _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
-  | Bind_comp of env * Pulse_Syntax_Base.var * Pulse_Syntax_Base.comp_st *
-  Pulse_Syntax_Base.comp_st * unit * Pulse_Syntax_Base.var * unit 
-  | Bind_comp_ghost_l of env * Pulse_Syntax_Base.var *
+  | Bind_comp of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * unit *
+  Pulse_Syntax_Base.var * unit 
+  | Bind_comp_ghost_l of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit)
   non_informative_c * unit * Pulse_Syntax_Base.var * unit 
-  | Bind_comp_ghost_r of env * Pulse_Syntax_Base.var *
+  | Bind_comp_ghost_r of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit)
   non_informative_c * unit * Pulse_Syntax_Base.var * unit 
 let uu___is_Bind_comp uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
@@ -709,9 +709,9 @@ let uu___is_Bind_comp_ghost_l uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
 let uu___is_Bind_comp_ghost_r uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
   match uu___5 with | Bind_comp_ghost_r _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2) lift_comp =
-  | Lift_STAtomic_ST of env * Pulse_Syntax_Base.comp_st 
-  | Lift_STGhost_STAtomic of env * Pulse_Syntax_Base.comp_st * (unit, 
-  unit) non_informative_c 
+  | Lift_STAtomic_ST of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st 
+  | Lift_STGhost_STAtomic of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st
+  * (unit, unit) non_informative_c 
 let uu___is_Lift_STAtomic_ST uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | Lift_STAtomic_ST _ -> true | _ -> false
 let uu___is_Lift_STGhost_STAtomic uu___2 uu___1 uu___ uu___3 =
@@ -723,18 +723,19 @@ let (wr : Pulse_Syntax_Base.st_term' -> Pulse_Syntax_Base.st_term) =
       Pulse_Syntax_Base.range1 = FStar_Range.range_0
     }
 type ('dummyV0, 'dummyV1) st_comp_typing =
-  | STC of env * Pulse_Syntax_Base.st_comp * Pulse_Syntax_Base.var * unit *
-  unit * unit 
+  | STC of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
+  Pulse_Syntax_Base.var * unit * unit * unit 
 let uu___is_STC uu___1 uu___ uu___2 =
   match uu___2 with | STC _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2) comp_typing =
-  | CT_Tot of env * Pulse_Syntax_Base.term * Pulse_Syntax_Base.universe *
-  unit 
-  | CT_ST of env * Pulse_Syntax_Base.st_comp * (unit, unit) st_comp_typing 
-  | CT_STAtomic of env * Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_comp *
-  unit * (unit, unit) st_comp_typing 
-  | CT_STGhost of env * Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_comp *
-  unit * (unit, unit) st_comp_typing 
+  | CT_Tot of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.universe * unit 
+  | CT_ST of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp * (unit, 
+  unit) st_comp_typing 
+  | CT_STAtomic of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.st_comp * unit * (unit, unit) st_comp_typing 
+  | CT_STGhost of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.st_comp * unit * (unit, unit) st_comp_typing 
 let uu___is_CT_Tot uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_Tot _ -> true | _ -> false
 let uu___is_CT_ST uu___2 uu___1 uu___ uu___3 =
@@ -746,62 +747,70 @@ let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
 type ('g, 't) prop_validity =
   (unit, unit) FStar_Tactics_Builtins.prop_validity_token
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
-  | T_Abs of env * Pulse_Syntax_Base.var * Pulse_Syntax_Base.qualifier
-  FStar_Pervasives_Native.option * Pulse_Syntax_Base.binder *
-  Pulse_Syntax_Base.universe * Pulse_Syntax_Base.st_term *
-  Pulse_Syntax_Base.comp * unit * (unit, unit, unit) st_typing 
-  | T_STApp of env * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term *
+  | T_Abs of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.term * unit * unit 
-  | T_Return of env * Pulse_Syntax_Base.ctag * Prims.bool *
+  Pulse_Syntax_Base.binder * Pulse_Syntax_Base.universe *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp * unit * (unit, 
+  unit, unit) st_typing 
+  | T_STApp of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.qualifier
+  FStar_Pervasives_Native.option * Pulse_Syntax_Base.comp_st *
+  Pulse_Syntax_Base.term * unit * unit 
+  | T_Return of Pulse_Typing_Env.env * Pulse_Syntax_Base.ctag * Prims.bool *
   Pulse_Syntax_Base.universe * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
   unit * unit * unit 
-  | T_Lift of env * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp_st *
-  Pulse_Syntax_Base.comp_st * (unit, unit, unit) st_typing * (unit, unit,
-  unit) lift_comp 
-  | T_Bind of env * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st *
-  Pulse_Syntax_Base.binder * Pulse_Syntax_Base.var * Pulse_Syntax_Base.comp *
-  (unit, unit, unit) st_typing * unit * (unit, unit, unit) st_typing * (
-  unit, unit, unit, unit, unit) bind_comp 
-  | T_TotBind of env * Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term *
-  Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var
-  * unit * (unit, unit, unit) st_typing 
-  | T_If of env * Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term *
+  | T_Lift of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit, 
+  unit) st_typing * (unit, unit, unit) lift_comp 
+  | T_Bind of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp_st *
-  Pulse_Syntax_Base.universe * Pulse_Syntax_Base.var * unit * (unit, 
-  unit, unit) st_typing * (unit, unit, unit) st_typing * unit 
-  | T_Frame of env * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp_st *
-  Pulse_Syntax_Base.term * unit * (unit, unit, unit) st_typing 
-  | T_Equiv of env * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp *
-  Pulse_Syntax_Base.comp * (unit, unit, unit) st_typing * (unit, unit, 
-  unit) st_equiv 
-  | T_IntroPure of env * Pulse_Syntax_Base.term * unit * (unit, unit)
-  prop_validity 
-  | T_ElimExists of env * Pulse_Syntax_Base.universe * Pulse_Syntax_Base.term
-  * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var * unit * unit 
-  | T_IntroExists of env * Pulse_Syntax_Base.universe *
-  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term *
-  unit * unit * unit 
-  | T_IntroExistsErased of env * Pulse_Syntax_Base.universe *
-  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term *
-  unit * unit * unit 
-  | T_While of env * Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term *
-  Pulse_Syntax_Base.st_term * unit * (unit, unit, unit) st_typing * (
-  unit, unit, unit) st_typing 
-  | T_Par of env * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp *
-  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp * Pulse_Syntax_Base.var
-  * (unit, unit, unit) comp_typing * (unit, unit, unit) comp_typing * (
-  unit, unit, unit) st_typing * (unit, unit, unit) st_typing 
-  | T_WithLocal of env * Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term *
-  Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp * Pulse_Syntax_Base.var *
-  unit * unit * (unit, unit, unit) comp_typing * (unit, unit, unit) st_typing
-  
-  | T_Rewrite of env * Pulse_Syntax_Base.vprop * Pulse_Syntax_Base.vprop *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
+  Pulse_Syntax_Base.var * Pulse_Syntax_Base.comp * (unit, unit, unit)
+  st_typing * unit * (unit, unit, unit) st_typing * (unit, unit, unit, 
+  unit, unit) bind_comp 
+  | T_TotBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
+  unit) st_typing 
+  | T_If of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.universe *
+  Pulse_Syntax_Base.var * unit * (unit, unit, unit) st_typing * (unit, 
+  unit, unit) st_typing * unit 
+  | T_Frame of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.term * unit * (unit, 
+  unit, unit) st_typing 
+  | T_Equiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit)
+  st_typing * (unit, unit, unit) st_equiv 
+  | T_IntroPure of Pulse_Typing_Env.env * Pulse_Syntax_Base.term * unit *
+  (unit, unit) prop_validity 
+  | T_ElimExists of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
   unit * unit 
-  | T_Admit of env * Pulse_Syntax_Base.st_comp * Pulse_Syntax_Base.ctag *
-  (unit, unit) st_comp_typing 
+  | T_IntroExists of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term *
+  unit * unit * unit 
+  | T_IntroExistsErased of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe
+  * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term
+  * unit * unit * unit 
+  | T_While of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term * unit * (unit, 
+  unit, unit) st_typing * (unit, unit, unit) st_typing 
+  | T_Par of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp
+  * Pulse_Syntax_Base.var * (unit, unit, unit) comp_typing * (unit, unit,
+  unit) comp_typing * (unit, unit, unit) st_typing * (unit, unit, unit)
+  st_typing 
+  | T_WithLocal of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp
+  * Pulse_Syntax_Base.var * unit * unit * (unit, unit, unit) comp_typing *
+  (unit, unit, unit) st_typing 
+  | T_Rewrite of Pulse_Typing_Env.env * Pulse_Syntax_Base.vprop *
+  Pulse_Syntax_Base.vprop * unit * unit 
+  | T_Admit of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
+  Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing 
 let uu___is_T_Abs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Abs _ -> true | _ -> false
 let uu___is_T_STApp uu___2 uu___1 uu___ uu___3 =

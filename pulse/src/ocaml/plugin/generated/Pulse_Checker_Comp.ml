@@ -1,6 +1,6 @@
 open Prims
 let (check_comp :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
       unit ->
         ((unit, unit, unit) Pulse_Typing.comp_typing, unit)

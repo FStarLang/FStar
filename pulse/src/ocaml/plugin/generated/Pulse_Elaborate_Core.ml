@@ -68,7 +68,7 @@ let (elab_sub :
              Pulse_Reflection_Util.mk_sub_stt_ghost u ty opened pre1 pre2
                post1 post2 e)
 let (elab_bind :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.comp ->
         Pulse_Syntax_Base.comp ->
@@ -167,7 +167,7 @@ let (elab_bind :
                               (Pulse_Syntax_Base.comp_post c2))) e1 e2
                         (Pulse_Elaborate_Pure.elab_term reveal_b)
 let (elab_lift :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp ->
       Pulse_Syntax_Base.comp ->
         (unit, unit, unit) Pulse_Typing.lift_comp ->
@@ -227,7 +227,7 @@ let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
                        FStar_Reflection_Data.C_Unit)), FStar_Range.range_0))
          })
 let rec (elab_st_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.comp ->
         (unit, unit, unit) Pulse_Typing.st_typing ->

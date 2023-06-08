@@ -12,7 +12,7 @@ let (should_elim_exists :
                    true
                | uu___1 -> false))) uu___
 let (mk :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->
       unit ->
         ((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
@@ -61,10 +61,10 @@ let (mk :
                        | uu___1 -> FStar_Pervasives_Native.None))) uu___2
           uu___1 uu___
 let (elim_exists :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
-        ((Pulse_Typing.env, Pulse_Syntax_Base.term, unit,
+        ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
            (unit, unit, unit, unit)
              Pulse_Checker_Auto_Util.continuation_elaborator)
            FStar_Pervasives.dtuple4,

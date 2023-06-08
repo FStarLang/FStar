@@ -16,7 +16,7 @@ let (terms_to_string :
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 -> FStar_String.concat "\n" uu___))
 let (check_elim_exists :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
@@ -393,7 +393,7 @@ let (is_intro_exists_erased : Pulse_Syntax_Base.st_term -> Prims.bool) =
         -> erased
     | uu___ -> false
 let (check_intro_exists_erased :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       unit FStar_Pervasives_Native.option ->
         Pulse_Syntax_Base.term ->
@@ -668,7 +668,7 @@ let (check_intro_exists_erased :
                                                       "elim_exists argument not a Tm_ExistsSL"))))
                                     uu___2))) uu___)
 let (check_intro_exists :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       unit FStar_Pervasives_Native.option ->
         Pulse_Syntax_Base.term ->
@@ -1069,7 +1069,7 @@ let (check_intro_exists :
                                                       "elim_exists argument not a Tm_ExistsSL"))))
                                     uu___2))) uu___)
 let (check_intro_exists_either :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       unit FStar_Pervasives_Native.option ->
         Pulse_Syntax_Base.term ->

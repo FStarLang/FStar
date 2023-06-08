@@ -2,6 +2,7 @@ module Pulse.Readback
 module R = FStar.Reflection
 open Pulse.Syntax.Base
 open Pulse.Reflection.Util
+module RU = Pulse.RuntimeUtils
 
 let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
   match f with
@@ -152,9 +153,9 @@ let rec readback_ty (t:R.term)
           match inspect_ln a2 with
           | Tv_Abs b body ->
             let? p = readback_ty body in
-            let b = inspect_binder b in
-            let bv = inspect_bv b.binder_bv in
-            Some (bv.bv_ppname, range_of_term b.binder_sort, p) <: option (ppname_t & range & term)
+            let bview = inspect_binder b in
+            let bv = inspect_bv bview.binder_bv in
+            Some (bv.bv_ppname, RU.binder_range b, p) <: option (ppname_t & range & term)
           | _ -> None in  // TODO: FIXME: provide error from this function?
         let b = { binder_ty = ty; binder_ppname = mk_ppname ppname range } in
         let pulse_t : (t':Pulse.Syntax.Base.term{elab_term t' == t}) =

@@ -197,7 +197,7 @@ let add_intro_pure rng (continuation:st_term) (p:term) =
     )
 
 #push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
-let uvar_tys = list (Pulse.Checker.Inference.uvar_id & term)
+let uvar_tys = list (Pulse.Checker.Inference.uvar & term)
 let rec prepare_instantiations
           (out:list (vprop & either term term))
           (out_uvars: uvar_tys)
@@ -317,7 +317,11 @@ let maybe_infer_intro_exists
         | None -> tm_pureapp hd None e
         | Some ty -> tm_pureapp (tm_pureapp hd (Some Implicit) ty) None e
     in
-    let type_of_uvar uv = List.Tot.assoc uv uvs in
+    let type_of_uvar uv =
+      match List.Tot.tryFind (fun (u, _) -> Pulse.Checker.Inference.uvar_eq u uv) uvs with
+      | None -> None
+      | Some (_, ty) -> Some ty
+    in
     let solutions = 
       List.Tot.map
         (fun (u, v) -> 
@@ -329,18 +333,19 @@ let maybe_infer_intro_exists
     in
     let _ =
       match List.Tot.tryFind (fun (u, _u_ty) ->
-           None? ((List.Tot.tryFind (fun (u', _) -> u = u') solutions))
+           None? (Pulse.Checker.Inference.find_solution solutions u)
          ) uvs with
       | Some (u, _) ->
         let i = FStar.Issue.mk_issue "Error" 
-                    (Printf.sprintf "Could not instantiate existential variable %s\n"
-                                    (Pulse.Checker.Inference.uvar_id_to_string u))
+                    (Printf.sprintf "Could not instantiate existential variable %s introduced at %s\n"
+                                    (Pulse.Checker.Inference.uvar_to_string u)
+                                    (T.range_to_string (Pulse.Checker.Inference.range_of_uvar u)))
                     (Some st.range)
-                    (Some 0)
+                    (Some (RU.error_code_uninstantiated_variable()))
                     [print_context g] in
         T.log_issues [i];
         T.fail (Printf.sprintf "maybe_infer_intro_exists: unification failed for uvar %s\n"
-                               (Pulse.Checker.Inference.uvar_id_to_string u))
+                               (Pulse.Checker.Inference.uvar_to_string u))
       | None -> ()
     in
     let wr t = { term = t; range = st.range } in

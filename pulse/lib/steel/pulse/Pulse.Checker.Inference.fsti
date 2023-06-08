@@ -7,18 +7,24 @@ module T = FStar.Tactics
 module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
 
-val uvar_id : eqtype
+val uvar : Type0
 
-let solution = list (uvar_id & term)
+val uvar_eq (u1 u2:uvar) : b:bool { b <==> (u1 == u2) }
 
-val uvar_id_to_string (_:uvar_id) : string
+let solution = list (uvar & term)
 
-val is_uvar (t:term) : option uvar_id
+val uvar_to_string (_:uvar) : T.Tac string
+
+val range_of_uvar (_:uvar) : range
+
+val is_uvar (t:term) : option uvar
 
 val gen_uvar (name:ppname)
-  : T.Tac (r:(uvar_id & term){
+  : T.Tac (r:(uvar & term){
             is_uvar (snd r) == Some (fst r)
           })
+
+val find_solution (sol:solution) (u:uvar) : option term
 
 val try_inst_uvs_in_goal (ctxt:term)
                          (goal:vprop)

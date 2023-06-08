@@ -1,6 +1,6 @@
 open Prims
 let (extend_post_hint_for_local :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     unit Pulse_Checker_Common.post_hint_for_env ->
       Pulse_Syntax_Base.term ->
         Pulse_Syntax_Base.var -> unit Pulse_Checker_Common.post_hint_for_env)
@@ -23,7 +23,7 @@ let (extend_post_hint_for_local :
 
 let (check_withlocal :
   Prims.bool ->
-    Pulse_Typing.env ->
+    Pulse_Typing_Env.env ->
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.term ->
           unit ->

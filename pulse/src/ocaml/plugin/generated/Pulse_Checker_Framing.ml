@@ -90,7 +90,7 @@ type ('g, 'p, 'q) match_result =
   p_eq: unit ;
   q_eq: unit }
 let (__proj__Mkmatch_result__item__matched :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term Prims.list ->
       Pulse_Syntax_Base.term Prims.list ->
         (unit, unit, unit) match_result -> Pulse_Syntax_Base.vprop Prims.list)
@@ -102,7 +102,7 @@ let (__proj__Mkmatch_result__item__matched :
           match projectee with
           | { matched; unmatched_p; unmatched_q; p_eq; q_eq;_} -> matched
 let (__proj__Mkmatch_result__item__unmatched_p :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term Prims.list ->
       Pulse_Syntax_Base.term Prims.list ->
         (unit, unit, unit) match_result -> Pulse_Syntax_Base.vprop Prims.list)
@@ -114,7 +114,7 @@ let (__proj__Mkmatch_result__item__unmatched_p :
           match projectee with
           | { matched; unmatched_p; unmatched_q; p_eq; q_eq;_} -> unmatched_p
 let (__proj__Mkmatch_result__item__unmatched_q :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term Prims.list ->
       Pulse_Syntax_Base.term Prims.list ->
         (unit, unit, unit) match_result -> Pulse_Syntax_Base.vprop Prims.list)
@@ -134,7 +134,7 @@ let (equational : Pulse_Syntax_Base.term -> Prims.bool) =
          | uu___1 -> false)
     | uu___ -> false
 let (check_one_vprop :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
         (unit FStar_Pervasives_Native.option, unit)
@@ -269,7 +269,7 @@ type ('g, 'p, 'qs) split_one_vprop_res =
     Pulse_Syntax_Base.term Prims.list) FStar_Pervasives.dtuple4
     FStar_Pervasives_Native.option
 let rec (maybe_split_one_vprop :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term Prims.list ->
         ((unit, unit, unit) split_one_vprop_res, unit)
@@ -349,7 +349,7 @@ type ('g, 'req, 'ctxt) try_frame_result =
   ((unit, unit, unit) framing_success, framing_failure)
     FStar_Pervasives.either
 let (mk_framing_failure :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term Prims.list ->
       Pulse_Syntax_Base.term Prims.list ->
         Pulse_Syntax_Base.term Prims.list ->
@@ -380,7 +380,7 @@ let (mk_framing_failure :
                         remaining_context = frame
                       }
 let rec (try_split_vprop :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term Prims.list ->
       Pulse_Syntax_Base.term Prims.list ->
         (((Pulse_Syntax_Base.term Prims.list, unit) Prims.dtuple2,
@@ -496,7 +496,7 @@ let rec (try_split_vprop :
                                                uu___1))) uu___)))) uu___2
           uu___1 uu___
 let (split_vprop :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
         Pulse_Syntax_Base.term ->
@@ -558,7 +558,7 @@ let (split_vprop :
                                                        frame), (), ()))))))
                             uu___))) uu___)
 let rec (all_matches :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop Prims.list ->
       Pulse_Syntax_Base.vprop Prims.list ->
         ((unit, unit, unit) match_result, unit) FStar_Tactics_Effect.tac_repr)
@@ -709,7 +709,7 @@ let rec (all_matches :
                                                uu___1))) uu___)))) uu___2
           uu___1 uu___
 let rec (check_equiv_emp :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term -> unit FStar_Pervasives_Native.option)
   =
   fun g ->
@@ -723,7 +723,7 @@ let rec (check_equiv_emp :
            | (uu___, uu___1) -> FStar_Pervasives_Native.None)
       | uu___ -> FStar_Pervasives_Native.None
 let (check_vprop_equiv :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
         unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
@@ -1038,7 +1038,7 @@ let (check_vprop_equiv :
 type ('g, 'ctxt, 'req) frame_for_req_in_ctxt =
   (Pulse_Syntax_Base.term, unit, unit) FStar_Pervasives.dtuple3
 let (frame_of :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
         (unit, unit, unit) frame_for_req_in_ctxt -> Pulse_Syntax_Base.term)
@@ -1051,7 +1051,7 @@ let (frame_of :
           match uu___ with
           | FStar_Pervasives.Mkdtuple3 (frame, uu___1, uu___2) -> frame
 let (check_frameable :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
         Pulse_Syntax_Base.term ->
@@ -1062,7 +1062,7 @@ let (check_frameable :
   fun g ->
     fun ctxt -> fun ctxt_typing -> fun req -> split_vprop g ctxt () req
 let (apply_frame :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
@@ -1117,7 +1117,7 @@ let (apply_frame :
                                t_typing1, st_equiv) in
                          Prims.Mkdtuple2 (c'', t_typing2))
 let (try_frame_pre :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
@@ -1156,7 +1156,7 @@ let (try_frame_pre :
                                  FStar_Pervasives.Inl
                                    (Prims.Mkdtuple2 (c', st_d)))))
 let (frame_empty :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
         Pulse_Syntax_Base.universe ->

@@ -22,7 +22,7 @@ let (nvar_as_binder :
         Pulse_Syntax_Base.binder_ppname = (FStar_Pervasives_Native.fst x)
       }
 let rec (mk_bind :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.st_term ->
@@ -802,7 +802,7 @@ let rec (mk_bind :
                                                              "bind either not implemented (e.g. ghost) or not possible")))
                                                 uu___2))) uu___)
 let (bind_res_and_post_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_comp ->
       Pulse_Syntax_Base.var ->
         unit Pulse_Checker_Common.post_hint_opt ->
@@ -987,7 +987,7 @@ let (bind_res_and_post_typing :
                                  (fun uu___1 -> ((), ()))))) uu___3 uu___2
             uu___1 uu___
 let (mk_bind' :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.st_term ->
@@ -1164,7 +1164,7 @@ let (mk_bind' :
                                                              uu___4))) uu___3)))
                                  uu___1)
 let (check_bind :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
@@ -1460,7 +1460,7 @@ let (check_bind :
                                                         uu___3)))) uu___1)))
                      uu___)
 let (check_tot_bind :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->

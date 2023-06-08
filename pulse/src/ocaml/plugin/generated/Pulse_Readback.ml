@@ -237,16 +237,15 @@ let rec (readback_ty :
                             | FStar_Reflection_Data.Tv_Abs (b, body) ->
                                 op_let_Question (readback_ty body)
                                   (fun p ->
-                                     let b1 =
+                                     let bview =
                                        FStar_Reflection_Builtins.inspect_binder
                                          b in
                                      let bv =
                                        FStar_Reflection_Builtins.inspect_bv
-                                         b1.FStar_Reflection_Data.binder_bv in
+                                         bview.FStar_Reflection_Data.binder_bv in
                                      FStar_Pervasives_Native.Some
                                        ((bv.FStar_Reflection_Data.bv_ppname),
-                                         (FStar_Reflection_Builtins.range_of_term
-                                            b1.FStar_Reflection_Data.binder_sort),
+                                         (Pulse_RuntimeUtils.binder_range b),
                                          p))
                             | uu___3 -> FStar_Pervasives_Native.None)
                            (fun uu___3 ->

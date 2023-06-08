@@ -52,8 +52,9 @@ let rec term_to_string' (level:string) (t:term)
         (term_to_string' level p2)
                           
     | Tm_ExistsSL _ b body ->
-      sprintf "(exists (%s:%s).\n%s%s)"
+      sprintf "(exists (%s@%s:%s).\n%s%s)"
               (T.unseal b.binder_ppname.name)
+              (T.range_to_string b.binder_ppname.range)
               (term_to_string' (indent level) b.binder_ty)
               level
               (term_to_string' (indent level) body)

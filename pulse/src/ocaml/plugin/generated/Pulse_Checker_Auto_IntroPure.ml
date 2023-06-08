@@ -34,7 +34,7 @@ let (intro_pure_comp : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
           Pulse_Syntax_Base.post = (Pulse_Syntax_Base.Tm_Pure p)
         })
 let (intro_pure_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit -> unit -> (unit, unit, unit) Pulse_Typing.st_typing)
   =
@@ -56,7 +56,7 @@ let (intro_pure_typing :
                         FStar_Reflection_Data.C_Unit)), FStar_Range.range_0)),
               (), ())
 let (intro_pure_proof_step_aux :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop Prims.list ->
       Pulse_Syntax_Base.vprop ->
         unit ->
@@ -150,7 +150,7 @@ let (intro_pure_proof_step : Pulse_Checker_Auto_Util.proof_step_fn) =
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___2 -> FStar_Pervasives_Native.None)))
 let (get_one_pure :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop Prims.list ->
       (Pulse_Syntax_Base.vprop, Pulse_Syntax_Base.vprop Prims.list, unit)
         FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option)

@@ -489,6 +489,22 @@ let (mk_abs_with_name :
         fun t ->
           FStar_Reflection_Builtins.pack_ln
             (FStar_Reflection_Data.Tv_Abs ((binder_of_t_q_s ty qual s), t))
+let (mk_abs_with_name_and_range :
+  FStar_Reflection_Typing.pp_name_t ->
+    FStar_Range.range ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Data.aqualv ->
+          FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun s ->
+    fun r ->
+      fun ty ->
+        fun qual ->
+          fun t ->
+            let b = binder_of_t_q_s ty qual s in
+            let b1 = Pulse_RuntimeUtils.binder_set_range b r in
+            FStar_Reflection_Builtins.pack_ln
+              (FStar_Reflection_Data.Tv_Abs (b1, t))
 let (mk_erased :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)

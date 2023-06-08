@@ -12,6 +12,7 @@ module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 module Framing = Pulse.Checker.Framing
 module Metatheory = Pulse.Typing.Metatheory
+module RU = Pulse.RuntimeUtils
 
 let while_cond_comp_typing (#g:env) (u:universe) (ty:term) (inv_body:term)
                            (inv_typing:tot_typing g (Tm_ExistsSL u (as_binder ty) inv_body) Tm_VProp)
@@ -36,9 +37,18 @@ let check_while
   let g = push_context "while loop" g in
   let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
   let (| ex_inv, inv_typing |) =
-    check_vprop (push_context "invariant" g)
-                (Tm_ExistsSL u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv)
+    let inv =                 (Tm_ExistsSL u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv) in
+
+    if RU.debug_at_level g "inference"
+    then (
+      T.print (Printf.sprintf "Annotated precondition of while loop: %s\n" (P.term_to_string inv))
+    ); 
+    check_vprop (push_context "invariant" g) inv
   in
+  if RU.debug_at_level g "inference"
+  then (
+    T.print (Printf.sprintf "Checking precondition of while loop: %s\n" (P.term_to_string ex_inv))
+  );
   match Framing.check_frameable pre_typing ex_inv with
   | Inr f -> T.raise (Framing_failure f)
   | Inl framing_token ->
