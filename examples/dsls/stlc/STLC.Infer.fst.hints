@@ -1,5 +1,5 @@
 [
-  "∆Ó\u001cÌ8•⁄\u0003ˆÍÅµƒ\u0006⁄õ",
+  "{\u001bY\u00047n\\ß«\r\u000bü\u0010ÿB¸",
   [
     [
       "STLC.Infer.__proj__EBVar__item___0",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_67dd0c8a36eaf642ae0fc764a3b385e4"
       ],
       0,
-      "261363c0d73e269eacdebf1604dfad1a"
+      "331dd7a016f907d19fd51fb0b9844535"
     ],
     [
       "STLC.Infer.__proj__EVar__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_10f5db85a110b66ccb5055c6ad6b968a"
       ],
       0,
-      "faea2d579b3a7001e1140d40cdbcd88f"
+      "a9f2c928add8bfbc416773c28c11ab4a"
     ],
     [
       "STLC.Infer.__proj__ELam__item___0",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "1e04a6220bdc05709e04dae872474fc8"
+      "d1a48d546c3e54c70bf4bb359494f144"
     ],
     [
       "STLC.Infer.__proj__ELam__item___1",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "41d023094364980bd88abbdabb066931"
+      "c914f11e83cce98c7db64505b901cbd6"
     ],
     [
       "STLC.Infer.__proj__EApp__item___0",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "8c6427453ec9787ac82e1325cbb2ac78"
+      "9aa54969747c123fd29cfb8bf4b29788"
     ],
     [
       "STLC.Infer.__proj__EApp__item___1",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "608ecffda470b2fc68b1bf2583dc0157"
+      "88d6dd567aa10f46d09ef0a848332072"
     ],
     [
       "STLC.Infer.open_exp'",
@@ -97,7 +97,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "afa0207c1bbec9c14c536af9e2935827"
+      "c796b2ab3945650b136b1157042175c1"
     ],
     [
       "STLC.Infer.close_exp'",
@@ -123,7 +123,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "b551b4b061c719aa8974b59fd952caed"
+      "a03991a136cfa51b68ae0fb0ff40d652"
     ],
     [
       "STLC.Infer.infer",
@@ -144,7 +144,7 @@
         "typing_STLC.Core.lookup", "typing_STLC.Infer.__proj__EVar__item___0"
       ],
       0,
-      "aa5c8fd2404ce4e00c77e9cc45f2763c"
+      "edb9385c49891ecc25add1df37da6517"
     ],
     [
       "STLC.Infer.elab_core",
@@ -159,7 +159,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3d130b000a26fc18a9200df7ba3a98a0"
+      "74fa670d6536343da10959c32b72c3c4"
     ]
   ]
 ]
