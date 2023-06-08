@@ -295,4 +295,4 @@ let extracted_embed (e: embedding 'a) (x: 'a) : term =
   embed e x Range.dummyRange None id_norm_cb
 
 let extracted_unembed (e: embedding 'a) (t: term) : option 'a =
-  unembed e t id_norm_cb
+  try_unembed e t id_norm_cb
