@@ -276,7 +276,7 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
 
-let (let?) o f = BU.map_opt o f
+let (let?) o f = BU.bind_opt o f
 
 let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> term) : embedding 'a =
   let uu (t:term) _norm : option 'a =
