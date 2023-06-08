@@ -45,8 +45,8 @@ let binder_tac: binder -> Tac binder = fun n -> admit ()
 [@@plugin]
 let binders_tac: binders -> Tac binders = fun n -> admit ()
 
-(* [@@plugin] *)
-(* let norm_step_tac: norm_step -> Tac norm_step = fun n -> admit () *)
+[@@plugin]
+let norm_step_tac: norm_step -> Tac norm_step = fun n -> admit ()
 
 [@@plugin]
 let fv_tac: fv -> Tac fv = fun n -> admit ()
