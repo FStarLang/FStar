@@ -207,8 +207,14 @@ type embedding_kind =
 
 (*** Make an embedding for a composite type (arrows, tuples, list, etc). The environment
 is a mapping from variable names into their embeddings. *)
-let rec embedding_for (tcenv:Env.env) (k: embedding_kind) (env:list (bv * string)) (t: term): mlexpr =
-  let str_to_name s     = as_name ([], s) in
+let rec embedding_for
+    (tcenv:Env.env)
+    (mutuals: list Ident.lid)
+    (k: embedding_kind)
+    (env:list (bv * string))
+    (t: term)
+: mlexpr
+= let str_to_name s     = as_name ([], s) in
   let emb_arrow e1 e2 =
     let comb =
       match k with
@@ -239,30 +245,35 @@ let rec embedding_for (tcenv:Env.env) (k: embedding_kind) (env:list (bv * string
 
   (* Refinements are irrelevant for embeddings. *)
   | Tm_refine {b=x} ->
-    embedding_for tcenv k env x.sort
+    embedding_for tcenv mutuals k env x.sort
 
   (* Ascriptions are irrelevant for embeddings. *)
   | Tm_ascribed {tm=t} ->
-    embedding_for tcenv k env t
+    embedding_for tcenv mutuals k env t
 
   (* Pure arrow *)
   | Tm_arrow {bs=[b]; comp=c} when U.is_pure_comp c ->
     let [b], c = FStar.Syntax.Subst.open_comp [b] c in
     let t0 = b.binder_bv.sort in
     let t1 = U.comp_result c in
-    emb_arrow (embedding_for tcenv k env t0) (embedding_for tcenv k env t1)
+    emb_arrow (embedding_for tcenv mutuals k env t0) (embedding_for tcenv mutuals k env t1)
 
   (* More than 1 binder, curry and retry *)
   | Tm_arrow {bs=b::more::bs; comp=c} ->
     let tail = S.mk (Tm_arrow {bs=more::bs; comp=c}) t.pos in
     let t = S.mk (Tm_arrow {bs=[b]; comp=S.mk_Total tail}) t.pos in
-    embedding_for tcenv k env t
+    embedding_for tcenv mutuals k env t
 
   | Tm_app _ ->
     let head, args = U.head_and_args t in
-    let e_head = embedding_for tcenv k env head in
-    let e_args = List.map (fun (t, _) -> embedding_for tcenv k env t) args in
+    let e_head = embedding_for tcenv mutuals k env head in
+    let e_args = List.map (fun (t, _) -> embedding_for tcenv mutuals k env t) args in
     mk <| MLE_App (e_head, e_args)
+
+  (* An fv part of the mutual set of inductives that we are making
+  an embedding for, just point to the recursive binding. *)
+  | Tm_fvar fv when List.existsb (Ident.lid_equals fv.fv_name.v) mutuals ->
+    mk <| MLE_Var ("e_" ^ Ident.string_of_id (Ident.ident_of_lid fv.fv_name.v))
 
   (* An fv for which we have an embedding already registered. *)
   | Tm_fvar fv when Some? (find_fv_embedding' fv.fv_name.v) ->
@@ -470,7 +481,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         match bs with
         | [] ->
           let arg_unembeddings = List.rev accum_embeddings in
-          let res_embedding = embedding_for tcenv loc tvar_context result_typ in
+          let res_embedding = embedding_for tcenv [] loc tvar_context result_typ in
           let fv_lid = fv.fv_name.v in
           if U.is_pure_comp c
           then begin
@@ -518,7 +529,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           else raise (NoEmbedding("Plugins not defined for type " ^ Print.term_to_string t))
 
         | ({binder_bv=b})::bs ->
-          aux loc (embedding_for tcenv loc tvar_context b.sort::accum_embeddings) bs
+          aux loc (embedding_for tcenv [] loc tvar_context b.sort::accum_embeddings) bs
     in
     try
         let w, a, b = aux SyntaxTerm [] bs in
@@ -532,12 +543,17 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
       None
 
 (* Creates an unembedding function for the type *)
-let mk_unembed tcenv (record_fields : option (list mlpath)) (ctors: list sigelt) : mlexpr =
-  let e_branches : ref (list mlbranch) = BU.mk_ref [] in
+let mk_unembed
+    (tcenv:Env.env)                           // tc environment mostly used to lookup fvs
+    (mutuals : list Ident.lid)                // mutual inductives we are defining embedding for
+    (record_fields : option (list mlpath))    // if this type is a record, these are the (extracted) field names
+    (ctors: list sigelt)                      // constructors of the inductive
+: mlexpr
+= let e_branches : ref (list mlbranch) = BU.mk_ref [] in
   let arg_v = fresh "tm" in
   ctors |> List.iter (fun ctor ->
     match ctor.sigel with
-    | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals} ->
+    | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals=_} ->
       let fv = fresh "fv" in
       let bs, c = U.arrow_formals t in
       let vs = List.map (fun b -> fresh (Ident.string_of_id b.binder_bv.ppname), b.binder_bv.sort) bs in
@@ -560,7 +576,7 @@ let mk_unembed tcenv (record_fields : option (list mlpath)) (ctors: list sigelt)
         let body = mk (MLE_Fun ([(v, MLTY_Top)], body)) in
 
         mk (MLE_App (ml_name bind_opt_lid, [
-                      mk (MLE_App (ml_name unembed_lid, [embedding_for tcenv SyntaxTerm [] ty; mk (MLE_Var v)]));
+                      mk (MLE_App (ml_name unembed_lid, [embedding_for tcenv mutuals SyntaxTerm [] ty; mk (MLE_Var v)]));
                       body;
                       ]))
       ) vs ret
@@ -578,12 +594,17 @@ let mk_unembed tcenv (record_fields : option (list mlpath)) (ctors: list sigelt)
   lam
 
 (* Creates an embedding function for the type *)
-let mk_embed tcenv (record_fields : option (list mlpath)) (ctors: list sigelt) : mlexpr =
-  let e_branches : ref (list mlbranch) = BU.mk_ref [] in
+let mk_embed
+    (tcenv:Env.env)                           // tc environment mostly used to lookup fvs
+    (mutuals : list Ident.lid)                // mutual inductives we are defining embedding for
+    (record_fields : option (list mlpath))    // if this type is a record, these are the (extracted) field names
+    (ctors: list sigelt)                      // constructors of the inductive
+: mlexpr
+= let e_branches : ref (list mlbranch) = BU.mk_ref [] in
   let arg_v = fresh "tm" in
   ctors |> List.iter (fun ctor ->
     match ctor.sigel with
-    | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals} ->
+    | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals=_} ->
       let fv = fresh "fv" in
       let bs, c = U.arrow_formals t in
       let vs = List.map (fun b -> fresh (Ident.string_of_id b.binder_bv.ppname), b.binder_bv.sort) bs in
@@ -609,7 +630,7 @@ let mk_embed tcenv (record_fields : option (list mlpath)) (ctors: list sigelt) :
       let args =
         vs |> List.map (fun (v, ty) ->
           let vt = mk (MLE_Var v) in
-          mk (MLE_App (ml_name embed_lid, [embedding_for tcenv SyntaxTerm [] ty; vt]))
+          mk (MLE_App (ml_name embed_lid, [embedding_for tcenv mutuals SyntaxTerm [] ty; vt]))
         )
       in
       let ret = mk_mk_app head args in
@@ -653,54 +674,58 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
       List.collect mk_registration (snd lbs)
 
   | Sig_bundle {ses} ->
-    let typ_sigelt =
-      match List.filter (fun se -> match se.sigel with | Sig_inductive_typ _ -> true | _ -> false) ses with
-      | [se] -> se
-      | _ -> raise (Unsupported "mutual inductives")
-    in
-    let Sig_inductive_typ {lid=tlid; params=ps} = typ_sigelt.sigel in
-    if List.length ps > 0 then
-      raise (Unsupported "parameters on inductive");
-    let ns = Ident.ns_of_lid tlid in
-    let name = Ident.string_of_id (List.last (Ident.ids_of_lid tlid)) in
+    let mutual_sigelts = List.filter (fun se -> match se.sigel with | Sig_inductive_typ _ -> true | _ -> false) ses in
+    let mutual_lids = List.map (fun se -> match se.sigel with | Sig_inductive_typ {lid} -> lid ) mutual_sigelts in
+    let proc_one (typ_sigelt:sigelt) =
+      let Sig_inductive_typ {lid=tlid; params=ps} = typ_sigelt.sigel in
+      if List.length ps > 0 then
+        raise (Unsupported "parameters on inductive");
+      let ns = Ident.ns_of_lid tlid in
+      let name = Ident.string_of_id (List.last (Ident.ids_of_lid tlid)) in
 
-    let ctors = List.filter (fun se -> match se.sigel with | Sig_datacon _ -> true | _ -> false) ses in
-    let ml_name = mk (MLE_Const (MLC_String (Ident.string_of_lid tlid))) in
+      (* get constructors for this particular mutual *)
+      let ctors =
+        List.filter (fun se -> match se.sigel with | Sig_datacon {ty_lid} -> Ident.lid_equals ty_lid tlid | _ -> false) ses
+      in
+      let ml_name = mk (MLE_Const (MLC_String (Ident.string_of_lid tlid))) in
 
-    let record_fields =
-      match List.find (function RecordType _ -> true | _ -> false) se.sigquals with
-      | Some (RecordType (_, b)) ->
-        (* Extraction may change the names of fields to disambiguate them,
-         * query the environment for the extracted names. *)
-        Some (List.map (fun f -> lookup_record_field_name g (tlid, f)) b)
-      | _ ->
-        None
-    in
+      let record_fields =
+        match List.find (function RecordType _ -> true | _ -> false) se.sigquals with
+        | Some (RecordType (_, b)) ->
+          (* Extraction may change the names of fields to disambiguate them,
+           * query the environment for the extracted names. *)
+          Some (List.map (fun f -> lookup_record_field_name g (tlid, f)) b)
+        | _ ->
+          None
+      in
 
-    let tcenv = tcenv_of_uenv g in
-    let ml_unembed = mk_unembed tcenv record_fields ctors in
-    let ml_embed   = mk_embed   tcenv record_fields ctors in
-    let def = mk (MLE_App (mk (MLE_Name (["FStar"; "Syntax"; "Embeddings"; "Base"], "mk_extracted_embedding")), [
-                    ml_name;
-                    ml_unembed;
-                    ml_embed]))
+      let tcenv = tcenv_of_uenv g in
+      let ml_unembed = mk_unembed tcenv mutual_lids record_fields ctors in
+      let ml_embed   = mk_embed   tcenv mutual_lids record_fields ctors in
+      let def = mk (MLE_App (mk (MLE_Name (["FStar"; "Syntax"; "Embeddings"; "Base"], "mk_extracted_embedding")), [
+                      ml_name;
+                      ml_unembed;
+                      ml_embed]))
+      in
+      let lb = {
+        mllb_name     = "e_" ^ name;
+        mllb_tysc     = None;
+        mllb_add_unit = false;
+        mllb_def      = def;
+        mllb_meta     = [];
+        print_typ     = false;
+      }
+      in
+      // TODO: parameters
+      register_embedding tlid {
+        arity   = 0;
+        syn_emb = Ident.lid_of_ns_and_id ns (Ident.mk_ident ("e_"^name, Range.dummyRange));
+        nbe_emb = None;
+      };
+      // TODO: We always make a let rec, we could check if that's really needed.
+      [MLM_Let (Rec, [lb])]
     in
-    let lb = {
-      mllb_name     = "e_" ^ name;
-      mllb_tysc     = None;
-      mllb_add_unit = false;
-      mllb_def      = def;
-      mllb_meta     = [];
-      print_typ     = false;
-    }
-    in
-    // TODO: parameters
-    register_embedding tlid {
-      arity   = 0;
-      syn_emb = Ident.lid_of_ns_and_id ns (Ident.mk_ident ("e_"^name, Range.dummyRange));
-      nbe_emb = None;
-    };
-    [MLM_Let (NonRec, [lb])]
+    List.concatMap proc_one mutual_sigelts
 
   | _ -> []
 
