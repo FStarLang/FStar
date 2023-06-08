@@ -80,35 +80,16 @@ val dom_env (g:env) : Set.set var
 type typ = term
 
 type uvs_t = Map.t var typ
-type substitution (g0:env) (uvs:uvs_t) =
-  m:Map.t var term {
-    forall (x:var). Map.contains m x ==>
-                    (Map.contains uvs x /\
-                     tot_typing g0 (Map.sel m x) (Map.sel uvs x))
-  }
+type substitution = Map.t var term
 
-val apply_ss (#g0:_) (#uvs:_) (s:substitution g0 uvs) (t:term) : term
-val apply_ss_st (#g0:_) (#uvs:_) (s:substitution g0 uvs) (t:st_term) : st_term
-val apply_c (#g0:_) (#uvs:_) (s:substitution g0 uvs) (c:comp) : comp
+val apply_ss (s:substitution) (t:term) : term
+val apply_ss_st (s:substitution) (t:st_term) : st_term
+val apply_c (s:substitution) (c:comp) : comp
 
 let uvars (t:term) (uvs:uvs_t) : Set.set var =
   Set.intersect (freevars t) (Map.domain uvs)
 let uvars_st (t:st_term) (uvs:uvs_t) : Set.set var =
   Set.intersect (freevars_st t) (Map.domain uvs)
-
-//
-// This remains fixed as prover state is transformed by steps
-//
-noeq
-type prover_state_preamble = {
-  g0:env;
-  g:env;
-  ctxt:vprop;
-  ctxt_typing:vprop_typing g0 ctxt;
-  t:st_term;
-  c:comp_st;
-  t_typing:st_typing g t c;
-}
 
 val env_contains (g:env) (x:var) (t:typ) : prop
 
@@ -121,6 +102,30 @@ let uvs_invariant (g0 g:env) (uvs:uvs_t) : prop =
   (forall (x:var). Map.contains uvs x ==>
                    env_contains g x (Map.sel uvs x))
 
+
+//
+// This remains fixed as prover state is transformed by steps
+//
+noeq
+type prover_state_preamble = {  // uvs could move to the preamble, since it doesn't change
+  g0:env;
+  g:env;
+  ctxt:vprop;
+  ctxt_typing:vprop_typing g0 ctxt;
+  t:st_term;
+  c:comp_st;
+  t_typing:st_typing g t c;
+
+  uvs:uvs_t;
+  uvs_props:squash (uvs_invariant g0 g uvs);
+}
+
+let well_typed_substitution (g0:env) (uvs:uvs_t) (ss:substitution) : prop =
+  dom_env g0 `Set.disjoint` Map.domain uvs /\
+  (forall (x:var). Map.contains ss x ==>
+                   (Map.contains uvs x /\
+                    tot_typing g0 (Map.sel ss x) (Map.sel uvs x)))
+
 noeq
 type prover_state (preamble:prover_state_preamble) = {
   matched:term;
@@ -128,8 +133,7 @@ type prover_state (preamble:prover_state_preamble) = {
   remaining:list term;
   steps:st_term;
 
-  uvs:uvs_t;
-  ss:substitution preamble.g0 uvs;
+  ss:substitution;
 
   remaining_typing:vprop_typing preamble.g0 (list_as_vprop remaining);
 
@@ -144,49 +148,61 @@ type prover_state (preamble:prover_state_preamble) = {
                              (Tm_Star (list_as_vprop unmatched) matched);
 
   props:squash (
-    uvs_invariant preamble.g0 preamble.g uvs /\
-    uvars matched uvs `Set.subset` Map.domain ss
+    well_typed_substitution preamble.g0 preamble.uvs ss /\
+    uvars matched preamble.uvs `Set.subset` Map.domain ss
   );
 }
 
-let ss_extends (#g0:_) (#uvs:_) (ss1 ss2:substitution g0 uvs) : prop =
-  forall (x:var). (Map.contains ss2 x ==> Map.contains ss1 x) /\
-                  (Map.sel ss1 x == Map.sel ss2 x)
+let ss_extends (ss1 ss2:substitution) : prop =
+  forall (x:var). (Map.contains ss2 x ==> (Map.contains ss1 x /\
+                                           Map.sel ss1 x == Map.sel ss2 x))
 
-val apply_ss_uvars (#g0:_) (#uvs:_) (ss:substitution g0 uvs) (t:term)
-  : Lemma (uvars (apply_ss ss t) uvs ==
-           set_difference (uvars t uvs) (Map.domain ss))
+val apply_ss_uvars (g0:env) (uvs:uvs_t) (ss:substitution) (t:term)
+  : Lemma
+      (requires well_typed_substitution g0 uvs ss)
+      (ensures uvars (apply_ss ss t) uvs ==
+               set_difference (uvars t uvs) (Map.domain ss))
 
-val apply_ss_st_uvars (#g0:_) (#uvs:_) (ss:substitution g0 uvs) (t:st_term)
-  : Lemma (uvars_st (apply_ss_st ss t) uvs ==
-           set_difference (uvars_st t uvs) (Map.domain ss))
+val apply_ss_st_uvars (g0:_) (uvs:_) (ss:substitution) (t:st_term)
+  : Lemma
+      (requires well_typed_substitution g0 uvs ss)
+      (ensures uvars_st (apply_ss_st ss t) uvs ==
+               set_difference (uvars_st t uvs) (Map.domain ss))
 
-val apply_ss_star (#g0:_) (#uvs:_) (ss:substitution g0 uvs) (p1 p2:vprop)
+val apply_ss_star (ss:substitution) (p1 p2:vprop)
   : Lemma (apply_ss ss (Tm_Star p1 p2) == apply_ss ss p1 `Tm_Star` apply_ss ss p2)
 
-val extends_apply (#g0:_) (#uvs:_) (ss1 ss2:substitution g0 uvs) (t:term)
+val extends_apply (g0:_) (uvs:_) (ss1 ss2:substitution) (t:term)
   : Lemma
       (requires
+         well_typed_substitution g0 uvs ss1 /\
+         well_typed_substitution g0 uvs ss2 /\
          ss1 `ss_extends` ss2 /\
          uvars t uvs `Set.subset` Map.domain ss2)
       (ensures apply_ss ss1 t == apply_ss ss2 t)
 
-val extends_apply_st (#g0:_) (#uvs:_) (ss1 ss2:substitution g0 uvs) (t:st_term)
+val extends_apply_st (g0:_) (uvs:_) (ss1 ss2:substitution) (t:st_term)
   : Lemma
       (requires
+         well_typed_substitution g0 uvs ss1 /\
+         well_typed_substitution g0 uvs ss2 /\
          ss1 `ss_extends` ss2 /\
          uvars_st t uvs `Set.subset` Map.domain ss2)
       (ensures apply_ss_st ss1 t == apply_ss_st ss2 t)
 
 
-val typing_ss (#g0:_) (#uvs:_) (g:env) (t:st_term) (c:comp) (t_typing:st_typing g t c) (ss:substitution g0 uvs)
+val typing_ss (g0:_) (uvs:_) (#g:env) (#t:st_term) (#c:comp) (t_typing:st_typing g t c) (ss:substitution)
   : Pure (st_typing g (apply_ss_st ss t) (apply_c ss c))
-         (requires uvs_invariant g0 g uvs)
+         (requires
+            uvs_invariant g0 g uvs /\
+            well_typed_substitution g0 uvs ss)
          (ensures fun _ -> True)
 
-val veq_ss (#g0:_) (#uvs:_) (g:env) (p1 p2:vprop) (veq:vprop_equiv g p1 p2) (ss:substitution g0 uvs)
+val veq_ss (g0:_) (uvs:_) (#g:env) (#p1 #p2:vprop) (veq:vprop_equiv g p1 p2) (ss:substitution)
   : Pure (vprop_equiv g (apply_ss ss p1) (apply_ss ss p2))
-         (requires uvs_invariant g0 g uvs)
+         (requires
+            uvs_invariant g0 g uvs /\
+            well_typed_substitution g0 uvs ss)
          (ensures fun _ -> True)
 
 val veq_weakening (#g:_) (#p1 #p2:_) (veq:vprop_equiv g p1 p2) (g':env { env_extends g' g })
@@ -233,15 +249,13 @@ type prover_t =
   #(preamble:_) ->
   p:prover_state preamble ->
   T.Tac (option (p':prover_state preamble { p'.unmatched == [] /\
-                                            p'.uvs == p.uvs /\
                                             p'.ss `ss_extends` p.ss }))
 
 type prover_step =
   #(preamble:_) ->
   p:prover_state preamble ->
   prover:prover_t ->
-  T.Tac (option (p':prover_state preamble { p'.uvs == p.uvs /\
-                                            p'.ss `ss_extends` p.ss }))
+  T.Tac (option (p':prover_state preamble { p'.ss `ss_extends` p.ss }))
 
 
 let idem_steps (g:env) (ctxt:vprop)
@@ -249,8 +263,8 @@ let idem_steps (g:env) (ctxt:vprop)
     st_typing g t (ghost_comp ctxt (Tm_Star (list_as_vprop (vprop_as_list ctxt))
                                             Tm_Emp)) = magic ()
 
-val empty_uvs : uvs_t
-val empty_ss (g0:_) : substitution g0 empty_uvs
+val empty_uvs : uvs:uvs_t { Map.domain uvs == Set.empty }
+val empty_ss : ss:substitution { Map.domain ss == Set.empty }
 
 val vprop_as_list_of_list_as_vprop (l:list vprop)
   : Lemma (vprop_as_list (list_as_vprop l) == l)
@@ -267,6 +281,7 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_V
                    c:comp_st { comp_pre c == ctxt } &
                    st_typing g t c)) =
   
+  assume (g `env_extends` g);
   let preamble = {
     g0 = g;
     g;
@@ -274,7 +289,10 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_V
     ctxt_typing;
     t;
     c;
-    t_typing
+    t_typing;
+
+    uvs = empty_uvs;
+    uvs_props = ()
   } in
 
   let (| steps, steps_typing |) = idem_steps g ctxt in
@@ -283,31 +301,26 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_V
   let unmatched = vprop_as_list (comp_pre c) in
   let remaining = vprop_as_list ctxt in
   let steps = steps in
-  let uvs = empty_uvs in
-  let ss = empty_ss g in
+  let ss = empty_ss in
 
   assume (apply_ss ss matched == Tm_Emp);
-  let (| steps, steps_typing |) = idem_steps g ctxt in
   let steps_typing : st_typing preamble.g steps
     (ghost_comp preamble.ctxt (Tm_Star (list_as_vprop remaining) (apply_ss ss matched))) = steps_typing in
 
   let veq : vprop_equiv preamble.g (comp_pre preamble.c)
                                    (Tm_Star (list_as_vprop unmatched) matched) = magic () in
 
-  assume (Map.domain empty_uvs == Set.empty);
-  assume (g `env_extends` g);
-
-
   let p = {
     matched;
     unmatched;
     remaining;
     steps;
-    uvs;
     ss;
     remaining_typing = ctxt_typing;
     unmatched_typing = magic ();  // get it from inversion of t_typing
-    steps_typing; veq; props = ();
+    steps_typing;
+    veq;
+    props = ();
   } in
 
   let popt = prover p in
@@ -336,12 +349,13 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_V
     admit ()
   | None -> None
 
-val try_match (#g0:_) (#uvs:_)
+val try_match (g0:_) (uvs:_)
   (unm:vprop)
   (rem:vprop)
-  (ss:substitution g0 uvs)
-  : T.Tac (option (ss':substitution g0 uvs { ss' `ss_extends` ss /\
-                                             freevars unm `Set.subset` Map.domain ss' } &
+  (ss:substitution { well_typed_substitution g0 uvs ss })
+  : T.Tac (option (ss':substitution { well_typed_substitution g0 uvs ss' /\
+                                      ss' `ss_extends` ss /\
+                                      freevars unm `Set.subset` Map.domain ss' } &
                    vprop_equiv g0 (apply_ss ss' unm) rem))
 
 
@@ -355,10 +369,9 @@ let match_step (#preamble:_) (p:prover_state preamble)
   (veq_unm:vprop_equiv preamble.g (list_as_vprop p.unmatched) (Tm_Star unm (list_as_vprop unmatched')))
   (veq_rem:vprop_equiv preamble.g (list_as_vprop p.remaining) (Tm_Star rem (list_as_vprop remaining')))
 
-  : T.Tac (option (p':prover_state preamble { p'.uvs == p.uvs /\
-                                              p'.ss `ss_extends` p.ss })) =
+  : T.Tac (option (p':prover_state preamble { p'.ss `ss_extends` p.ss })) =
 
-  let ropt = try_match unm rem p.ss in
+  let ropt = try_match preamble.g0 preamble.uvs unm rem p.ss in
   match ropt with
   | Some (| ss', veq_unm_rem |) ->
     let matched = Tm_Star unm p.matched in
@@ -368,7 +381,7 @@ let match_step (#preamble:_) (p:prover_state preamble)
     let ss = ss' in
 
     ///// restore p.steps_typing /////
-    extends_apply ss p.ss p.matched;
+    extends_apply preamble.g0 preamble.uvs ss p.ss p.matched;
     let steps_typing : st_typing preamble.g0 p.steps
       (ghost_comp preamble.ctxt
          (Tm_Star (list_as_vprop p.remaining) (apply_ss ss p.matched))) =
@@ -415,7 +428,6 @@ let match_step (#preamble:_) (p:prover_state preamble)
            unmatched;
            remaining;
            steps = p.steps;
-           uvs = p.uvs;
            ss;
            remaining_typing = magic ();  // remaining and matched are sub vprops of original ones,
                                          // whose typing came in with the orignal prover state
@@ -440,18 +452,16 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
   //
   // CHEATING:
   //   This is a Tac function, but with that calling it in the body
-  //   makes verification time unbearable for fast development
+  //   makes verification time unbearable for development
   //
   // See comment below in the body
   //
   (prover:(#(preamble:_) ->
            p:prover_state preamble ->
            (option (p':prover_state preamble { p'.unmatched == [] /\
-                                               p'.uvs == p.uvs /\
                                                p'.ss `ss_extends` p.ss }))))
 
-  : T.Tac (option (p':prover_state preamble { p'.uvs == p.uvs /\
-                                              p'.ss `ss_extends` p.ss })) =
+  : T.Tac (option (p':prover_state preamble { p'.ss `ss_extends` p.ss })) =
   
   let y = fresh preamble.g in
   let g' = extend y (Inl t) preamble.g in
@@ -485,6 +495,13 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
       (magic ())  // typing of witness_tm
   in
 
+  let uvs_sub = Map.upd preamble.uvs y t in
+  assume (~ (Map.contains preamble.uvs y));
+  assume (dom_env g_sub == Set.union (dom_env preamble.g) (Set.singleton y));
+  assume (~ (Set.mem y (dom_env preamble.g0)));
+  assume (forall (x:var). Map.contains uvs_sub x ==>
+                          env_contains g_sub x (Map.sel uvs_sub x));
+
   let preamble_sub = {
     g0 = g0_sub;
     g = g_sub;
@@ -493,10 +510,13 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
     t = t_sub;
     c = c_sub;
     t_typing = t_typing_sub;
+
+    uvs = uvs_sub;
+    uvs_props = ()
   } in
   /////
-
-  //// create a sub prover state /////
+  
+  // create a sub prover state /////
   let matched_sub = Tm_Emp in
   let unmatched_sub = vprop_as_list (comp_pre preamble_sub.c) in
   let remaining_sub = p.remaining in
@@ -520,28 +540,15 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
     (comp_pre preamble_sub.c)
     (Tm_Star (list_as_vprop unmatched_sub) matched_sub) = magic () in
 
-  assume (~ (Map.contains p.uvs y));
-  assert (~ (Map.contains p.ss y));
-  let uvs_sub = Map.upd p.uvs y t in
-  let ss_sub : substitution preamble_sub.g0 uvs_sub = p.ss in
+  let ss_sub = p.ss in
 
   assume (apply_ss ss_sub matched_sub == Tm_Emp);
-  let steps_typing_sub : st_typing preamble_sub.g0 steps_sub
-    (ghost_comp preamble_sub.ctxt
-       (Tm_Star (list_as_vprop remaining_sub) (apply_ss ss_sub matched_sub))) = coerce_eq steps_typing_sub () in
-
-  assume (~ (Set.mem y (dom_env preamble_sub.g0)));
-  assume (forall (x:var). Map.contains uvs_sub x ==>
-                          env_contains preamble_sub.g x (Map.sel uvs_sub x));
-  assume (dom_env preamble_sub.g ==
-          Set.union (dom_env preamble.g) (Set.singleton y));
 
   let prover_state_sub : prover_state preamble_sub = {
     matched = matched_sub;
     unmatched = unmatched_sub;
     remaining = remaining_sub;
     steps = steps_sub;
-    uvs = uvs_sub;
     ss = ss_sub;
     remaining_typing;
     unmatched_typing;
@@ -560,7 +567,7 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
   | Some psub ->
     // make sure witness is solved, and exists is uvars free
     if Set.mem y (Map.domain psub.ss) &&
-       subset_bool (uvars (Tm_ExistsSL u t body) psub.uvs) (Map.domain psub.ss)
+       subset_bool (uvars (Tm_ExistsSL u t body) preamble_sub.uvs) (Map.domain psub.ss)
     then begin
       let steps_typing_sub : st_typing preamble_sub.g0 psub.steps
         (ghost_comp
@@ -575,7 +582,7 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
       let veq_sub : vprop_equiv preamble_sub.g
         (apply_ss psub.ss (comp_pre c_sub))
         (apply_ss psub.ss psub.matched) =
-        veq_ss preamble_sub.g (comp_pre c_sub) psub.matched veq_sub psub.ss in
+        veq_ss preamble_sub.g0 preamble_sub.uvs veq_sub psub.ss in
 
       // THIS IS TODO, BUT WE SHOULD BE ABLE TO STRENGTHEN veq_sub to preamble_sub.g0
       let veq_sub : vprop_equiv preamble_sub.g0
@@ -593,16 +600,16 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
 
       let t_typing_sub : st_typing preamble_sub.g
         (apply_ss_st psub.ss t_sub)
-        (apply_c psub.ss c_sub) = typing_ss preamble_sub.g t_sub c_sub t_typing_sub psub.ss in
+        (apply_c psub.ss c_sub) = typing_ss preamble_sub.g0 preamble_sub.uvs t_typing_sub psub.ss in
 
       // AGAIN WE NEED A STRENGTHENING STEP HERE TO TAKE t_typing_sub to preamble_sub.g0
       let t_typing_sub : st_typing preamble_sub.g0
         (apply_ss_st psub.ss t_sub)
         (apply_c psub.ss c_sub) = magic () in
 
-      assume (stateful_comp (apply_c psub.ss c_sub));
-      assume (comp_pre (apply_c psub.ss c_sub) == apply_ss psub.ss (comp_pre c_sub));
-      assume (comp_post (apply_c psub.ss c_sub) == apply_ss psub.ss (comp_post c_sub));
+      // assume (stateful_comp (apply_c psub.ss c_sub));
+      // assume (comp_pre (apply_c psub.ss c_sub) == apply_ss psub.ss (comp_pre c_sub));
+      // assume (comp_post (apply_c psub.ss c_sub) == apply_ss psub.ss (comp_post c_sub));
 
       // g0 |- { p.remaining } psub.steps { psub.remaining * apply_ss psub.ss (comp_pre c_sub) }
       // g0 |- { apply_ss psub.ss (comp_pre c_sub) } apply_ss_st psub.ss t_sub { apply_ss psub.ss (comp_post c_sub) }
@@ -619,10 +626,19 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
                     (Tm_Star (list_as_vprop p.remaining)
                              (apply_ss p.ss p.matched))) = p.steps_typing in
 
-      let ss_new : substitution preamble.g0 p.uvs = Map.restrict (Map.domain p.uvs) psub.ss in
+      let ss_new = Map.restrict (Map.domain preamble.uvs) psub.ss in
+      assume (~ (Map.contains preamble.uvs y));
+      assume (~ (Map.contains p.ss y));
       assert (ss_new `ss_extends` p.ss);
+      assert (well_typed_substitution preamble.g0 preamble.uvs ss_new);
 
-      // extends_apply psub.ss p.ss p.matched;
+      extends_apply preamble.g0 preamble.uvs ss_new p.ss p.matched;
+      assert (apply_ss p.ss p.matched == apply_ss ss_new p.matched);
+
+      // let psteps_typing : st_typing preamble.g0 p.steps
+      //   (ghost_comp preamble.ctxt
+      //               (Tm_Star (list_as_vprop p.remaining)
+      //                        (apply_ss ss_new p.matched))) = coerce_eq psteps_typing () in
 
       // let psteps_typing : st_typing preamble.g0 p.steps
       //   (ghost_comp preamble.ctxt
