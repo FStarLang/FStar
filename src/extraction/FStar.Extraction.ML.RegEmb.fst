@@ -272,9 +272,20 @@ let rec embedding_for
     mk <| MLE_App (e_head, e_args)
 
   (* An fv part of the mutual set of inductives that we are making
-  an embedding for, just point to the recursive binding. *)
+  an embedding for, just point to the recursive binding. There is a catch
+  though: we want to generate something like:
+
+    let rec e_t1 = mk_emb ...
+    and e_t2 = mk_emb ...
+    ...
+
+  but this does not satisfy OCamls's let-rec restrictions. Hence, we thunk
+  all of them, using a name prefix __knot_e, and later define the e_X at the
+  top-level by unthunking.
+  *)
   | Tm_fvar fv when List.existsb (Ident.lid_equals fv.fv_name.v) mutuals ->
-    mk <| MLE_Var ("e_" ^ Ident.string_of_id (Ident.ident_of_lid fv.fv_name.v))
+    let head = mk <| MLE_Var ("__knot_e_" ^ Ident.string_of_id (Ident.ident_of_lid fv.fv_name.v)) in
+    mk (MLE_App (head, [ml_unit]))
 
   (* An fv for which we have an embedding already registered. *)
   | Tm_fvar fv when Some? (find_fv_embedding' fv.fv_name.v) ->
@@ -609,7 +620,7 @@ let mk_embed
       let fv = fresh "fv" in
       let bs, c = U.arrow_formals t in
       let vs = List.map (fun b -> fresh (Ident.string_of_id b.binder_bv.ppname), b.binder_bv.sort) bs in
-      let pat = 
+      let pat =
         match record_fields with
         | Some fields ->
           // [] -> assuming same module
@@ -708,8 +719,9 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
                       ml_unembed;
                       ml_embed]))
       in
+      let def = mk (MLE_Fun ([("_", MLTY_Erased)], def)) in // thunk
       let lb = {
-        mllb_name     = "e_" ^ name;
+        mllb_name     = "__knot_e_" ^ name;
         mllb_tysc     = None;
         mllb_add_unit = false;
         mllb_def      = def;
@@ -723,10 +735,31 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
         syn_emb = Ident.lid_of_ns_and_id ns (Ident.mk_ident ("e_"^name, Range.dummyRange));
         nbe_emb = None;
       };
-      // TODO: We always make a let rec, we could check if that's really needed.
-      [MLM_Let (Rec, [lb])]
+      [lb]
     in
-    List.concatMap proc_one mutual_sigelts
+    let lbs = List.concatMap proc_one mutual_sigelts in
+    let unthunking : list mlmodule1 =
+      mutual_sigelts |> List.concatMap (fun se ->
+        let tlid = (match se.sigel with | Sig_inductive_typ {lid=tlid} -> tlid) in
+        let name = Ident.string_of_id (List.last (Ident.ids_of_lid tlid)) in
+        let app =
+            let head = mk <| MLE_Var ("__knot_e_" ^ name) in
+            mk (MLE_App (head, [ml_unit]))
+        in
+        let lb = {
+          mllb_name     = "e_" ^ name;
+          mllb_tysc     = None;
+          mllb_add_unit = false;
+          mllb_def      = app;
+          mllb_meta     = [];
+          print_typ     = false;
+        }
+        in
+        [MLM_Let (NonRec, [lb])]
+      )
+    in
+    // TODO: We always make a let rec, we could check if that's really needed.
+    [MLM_Let (Rec, lbs)] @ unthunking
 
   | _ -> []
 
@@ -762,7 +795,7 @@ let maybe_register_plugin (g:uenv) (se:sigelt) : list mlmodule1 =
       | [(a, _)] ->
          (* Try to unembed the argument as an int, warn if not possible. *)
          let nopt = EMB.unembed EMB.e_fsint a EMB.id_norm_cb in
-         Some nopt 
+         Some nopt
       | _ -> Some None
     )
   in
