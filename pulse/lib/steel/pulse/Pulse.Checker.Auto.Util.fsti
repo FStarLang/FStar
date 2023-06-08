@@ -76,10 +76,15 @@ let ghost_comp pre post =
 
 open Pulse.Checker.VPropEquiv
 
+
+///// Sketch of the new prover /////
+
 val dom_env (g:env) : Set.set var
 type typ = term
 
+// uvars with their types
 type uvs_t = Map.t var typ
+
 type substitution = Map.t var term
 
 val apply_ss (s:substitution) (t:term) : term
@@ -96,30 +101,47 @@ val env_contains (g:env) (x:var) (t:typ) : prop
 let set_difference (#a:eqtype) (s1 s2:Set.set a) =
   Set.intersect s1 (Set.complement s2)
 
+
+//
+// In the prover state we maintain two environments,
+//   g0: the environment when we enter the prover, it doesn't have any uvars
+//    g: the current environment, may have names which are used as uvars
+//
+
 let uvs_invariant (g0 g:env) (uvs:uvs_t) : prop =
   g `env_extends` g0 /\
   Set.equal (set_difference (dom_env g) (dom_env g0)) (Map.domain uvs) /\
   (forall (x:var). Map.contains uvs x ==>
                    env_contains g x (Map.sel uvs x))
 
-
 //
-// This remains fixed as prover state is transformed by steps
+// The preamble remains fixed as prover state is transformed by steps
 //
 noeq
-type prover_state_preamble = {  // uvs could move to the preamble, since it doesn't change
+type prover_state_preamble = {
   g0:env;
   g:env;
   ctxt:vprop;
+  // ctxt is well-typed in g0
+  // we never introduce uvars in the ctxt
   ctxt_typing:vprop_typing g0 ctxt;
   t:st_term;
   c:comp_st;
+  // t and c however may contain uvars
   t_typing:st_typing g t c;
 
   uvs:uvs_t;
   uvs_props:squash (uvs_invariant g0 g uvs);
 }
 
+//
+// TODO:
+//   would like to have this: freevars t in g, and no uvars in t, then freevars t in g0
+//
+
+//
+// Solutions to uvars are closed in g0 --- no uvars in them
+//
 let well_typed_substitution (g0:env) (uvs:uvs_t) (ss:substitution) : prop =
   dom_env g0 `Set.disjoint` Map.domain uvs /\
   (forall (x:var). Map.contains ss x ==>
@@ -135,10 +157,12 @@ type prover_state (preamble:prover_state_preamble) = {
 
   ss:substitution;
 
+  // remaining is well-typed in g0
   remaining_typing:vprop_typing preamble.g0 (list_as_vprop remaining);
 
   unmatched_typing:vprop_typing preamble.g (list_as_vprop unmatched);
 
+  // steps are well-typed in g0
   steps_typing:st_typing preamble.g0 steps
     (ghost_comp
        preamble.ctxt
@@ -149,6 +173,7 @@ type prover_state (preamble:prover_state_preamble) = {
 
   props:squash (
     well_typed_substitution preamble.g0 preamble.uvs ss /\
+    // whatever has been matched, must be closed w.r.t. uvars
     uvars matched preamble.uvs `Set.subset` Map.domain ss
   );
 }
@@ -567,9 +592,6 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
   let c_sub = preamble_sub.c in
   let t_typing_sub = preamble_sub.t_typing in
 
-  // the function before this is Pure,
-  //   and it goes through quickly
-  // adding Tac steps below makes is real slow
   let popt = prover prover_state_sub in
   match popt with
   | None -> None
@@ -594,6 +616,8 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
         veq_ss preamble_sub.g0 preamble_sub.uvs veq_sub psub.ss in
 
       // THIS IS TODO, BUT WE SHOULD BE ABLE TO STRENGTHEN veq_sub to preamble_sub.g0
+      // Need a lemma that says, if freevars t in g, and no uvars in t, then freevars t in g0
+      //   Then we can use strengthening lemmas
       let veq_sub : vprop_equiv preamble_sub.g0
         (apply_ss psub.ss (comp_pre c_sub))
         (apply_ss psub.ss psub.matched) = magic () in
@@ -612,6 +636,8 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
         (apply_c psub.ss c_sub) = typing_ss preamble_sub.g0 preamble_sub.uvs t_typing_sub psub.ss in
 
       // AGAIN WE NEED A STRENGTHENING STEP HERE TO TAKE t_typing_sub to preamble_sub.g0
+      // Need a lemma that says, if freevars t in g, and no uvars in t, then freevars t in g0
+      //   Then we can use strengthening lemmas
       let t_typing_sub : st_typing preamble_sub.g0
         (apply_ss_st psub.ss t_sub)
         (apply_c psub.ss c_sub) = magic () in
@@ -706,7 +732,7 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
       }
     end
     else None
-
+#pop-options
 
 // let has_no_uvars_from (t:term) (uvs:Set.set var) =
 //   freevars t `Set.disjoint` uvs
