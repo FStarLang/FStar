@@ -1,4 +1,8 @@
 open Prims
+let op_At :
+  'uuuuu .
+    unit -> 'uuuuu Prims.list -> 'uuuuu Prims.list -> 'uuuuu Prims.list
+  = fun uu___ -> FStar_List_Tot_Base.op_At
 let (name_of_bv :
   FStar_Reflection_Types.bv ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
@@ -700,8 +704,7 @@ let (later : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
             | g::gs ->
                 Obj.magic
                   (Obj.repr
-                     (FStar_Tactics_Builtins.set_goals
-                        (FStar_List_Tot_Base.op_At gs [g])))
+                     (FStar_Tactics_Builtins.set_goals ((op_At ()) gs [g])))
             | uu___2 -> Obj.magic (Obj.repr (fail "later: no goals"))) uu___1)
 let (apply :
   FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
@@ -1427,8 +1430,9 @@ let divide :
                                                                     (Prims.of_int (10)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.set_goals
-                                                                    (FStar_List_Tot_Base.op_At
-                                                                    gsl gsr)))
+                                                                    ((op_At
+                                                                    ()) gsl
+                                                                    gsr)))
                                                                     (fun
                                                                     uu___9 ->
                                                                     (fun
@@ -1453,10 +1457,11 @@ let divide :
                                                                     (Prims.of_int (10)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.set_smt_goals
-                                                                    (FStar_List_Tot_Base.op_At
-                                                                    sgs
-                                                                    (FStar_List_Tot_Base.op_At
-                                                                    sgsl sgsr))))
+                                                                    ((op_At
+                                                                    ()) sgs
+                                                                    ((op_At
+                                                                    ()) sgsl
+                                                                    sgsr))))
                                                                     (fun
                                                                     uu___10
                                                                     ->
@@ -1673,7 +1678,7 @@ let focus :
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    FStar_List_Tot_Base.op_At
+                                                                    (op_At ())
                                                                     uu___3 gs))))
                                                                     (fun
                                                                     uu___3 ->
@@ -1750,7 +1755,7 @@ let focus :
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    FStar_List_Tot_Base.op_At
+                                                                    (op_At ())
                                                                     uu___4
                                                                     sgs))))
                                                                     (fun
@@ -2076,8 +2081,9 @@ let (iterAllSMT :
                                                                     uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Builtins.set_smt_goals
-                                                                    (FStar_List_Tot_Base.op_At
-                                                                    gs' sgs')))
+                                                                    ((op_At
+                                                                    ()) gs'
+                                                                    sgs')))
                                                                     uu___5)))
                                                            uu___4))) uu___3)))
                                      uu___2))) uu___1))) uu___)
@@ -3247,40 +3253,19 @@ let (binder_to_term :
                  (FStar_Tactics_NamedView.Tv_Var (binder_to_namedv b)))))
       uu___
 let (binding_to_namedv :
-  FStar_Reflection_Data.binding ->
-    (FStar_Reflection_Types.namedv, unit) FStar_Tactics_Effect.tac_repr)
-  =
-  fun uu___ ->
-    (fun b ->
-       Obj.magic
-         (FStar_Tactics_Effect.lift_div_tac
-            (fun uu___ ->
-               FStar_Reflection_Builtins.pack_namedv
-                 {
-                   FStar_Reflection_Data.uniq =
-                     (b.FStar_Reflection_Data.uniq1);
-                   FStar_Reflection_Data.sort =
-                     (FStar_Sealed.seal b.FStar_Reflection_Data.sort3);
-                   FStar_Reflection_Data.ppname =
-                     (b.FStar_Reflection_Data.ppname3)
-                 }))) uu___
+  FStar_Reflection_Data.binding -> FStar_Reflection_Types.namedv) =
+  fun b ->
+    FStar_Reflection_Builtins.pack_namedv
+      {
+        FStar_Reflection_Data.uniq = (b.FStar_Reflection_Data.uniq1);
+        FStar_Reflection_Data.sort =
+          (FStar_Sealed.seal b.FStar_Reflection_Data.sort3);
+        FStar_Reflection_Data.ppname = (b.FStar_Reflection_Data.ppname3)
+      }
 let (binding_to_term :
   FStar_Reflection_Data.binding ->
     (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
-  =
-  fun x ->
-    FStar_Tactics_Effect.tac_bind
-      (FStar_Sealed.seal
-         (Obj.magic
-            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-               (Prims.of_int (590)) (Prims.of_int (17)) (Prims.of_int (590))
-               (Prims.of_int (38)))))
-      (FStar_Sealed.seal
-         (Obj.magic
-            (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
-               (Prims.of_int (590)) (Prims.of_int (2)) (Prims.of_int (590))
-               (Prims.of_int (38))))) (Obj.magic (binding_to_namedv x))
-      (fun uu___ -> (fun uu___ -> Obj.magic (namedv_to_term uu___)) uu___)
+  = fun x -> namedv_to_term (binding_to_namedv x)
 let (binder_sort :
   FStar_Tactics_NamedView.binder ->
     (FStar_Reflection_Types.typ, unit) FStar_Tactics_Effect.tac_repr)
@@ -3760,47 +3745,11 @@ let (grewrite :
                          (FStar_Range.mk_range "FStar.Tactics.Derived.fst"
                             (Prims.of_int (691)) (Prims.of_int (4))
                             (Prims.of_int (703)) (Prims.of_int (44)))))
-                   (Obj.magic
-                      (FStar_Tactics_Effect.tac_bind
-                         (FStar_Sealed.seal
-                            (Obj.magic
-                               (FStar_Range.mk_range
-                                  "FStar.Tactics.Derived.fst"
-                                  (Prims.of_int (690)) (Prims.of_int (17))
-                                  (Prims.of_int (690)) (Prims.of_int (47)))))
-                         (FStar_Sealed.seal
-                            (Obj.magic
-                               (FStar_Range.mk_range
-                                  "FStar.Tactics.Derived.fst"
-                                  (Prims.of_int (690)) (Prims.of_int (12))
-                                  (Prims.of_int (690)) (Prims.of_int (47)))))
-                         (Obj.magic
-                            (FStar_Tactics_Effect.tac_bind
-                               (FStar_Sealed.seal
-                                  (Obj.magic
-                                     (FStar_Range.mk_range
-                                        "FStar.Tactics.Derived.fst"
-                                        (Prims.of_int (690))
-                                        (Prims.of_int (25))
-                                        (Prims.of_int (690))
-                                        (Prims.of_int (46)))))
-                               (FStar_Sealed.seal
-                                  (Obj.magic
-                                     (FStar_Range.mk_range
-                                        "FStar.Tactics.Derived.fst"
-                                        (Prims.of_int (690))
-                                        (Prims.of_int (17))
-                                        (Prims.of_int (690))
-                                        (Prims.of_int (47)))))
-                               (Obj.magic (binding_to_namedv e))
-                               (fun uu___ ->
-                                  FStar_Tactics_Effect.lift_div_tac
-                                    (fun uu___1 ->
-                                       FStar_Tactics_NamedView.Tv_Var uu___))))
-                         (fun uu___ ->
-                            FStar_Tactics_Effect.lift_div_tac
-                              (fun uu___1 ->
-                                 FStar_Tactics_NamedView.pack uu___))))
+                   (FStar_Tactics_Effect.lift_div_tac
+                      (fun uu___ ->
+                         FStar_Tactics_NamedView.pack
+                           (FStar_Tactics_NamedView.Tv_Var
+                              (binding_to_namedv e))))
                    (fun uu___ ->
                       (fun e1 ->
                          Obj.magic
@@ -4598,8 +4547,7 @@ let (focus_all : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                              (Obj.magic (smt_goals ()))
                              (fun uu___2 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___3 ->
-                                     FStar_List_Tot_Base.op_At uu___1 uu___2))))
+                                  (fun uu___3 -> (op_At ()) uu___1 uu___2))))
                        uu___1)))
             (fun uu___1 ->
                (fun uu___1 ->

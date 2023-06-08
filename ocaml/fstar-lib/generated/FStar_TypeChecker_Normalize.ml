@@ -6670,21 +6670,53 @@ and (maybe_simplify_aux :
                                                  else tm1)
                                               else
                                                 (let uu___29 =
-                                                   FStar_Syntax_Util.is_auto_squash
-                                                     tm1 in
-                                                 match uu___29 with
-                                                 | FStar_Pervasives_Native.Some
-                                                     (FStar_Syntax_Syntax.U_zero,
-                                                      t)
-                                                     when
-                                                     FStar_Syntax_Util.is_sub_singleton
-                                                       t
-                                                     -> t
-                                                 | uu___30 ->
-                                                     let uu___31 =
-                                                       norm_cb cfg in
-                                                     reduce_equality uu___31
-                                                       cfg env1 tm1)))))))))
+                                                   FStar_Syntax_Syntax.fv_eq_lid
+                                                     fv
+                                                     FStar_Parser_Const.subtype_of_lid in
+                                                 if uu___29
+                                                 then
+                                                   let is_unit ty =
+                                                     let uu___30 =
+                                                       let uu___31 =
+                                                         FStar_Syntax_Subst.compress
+                                                           ty in
+                                                       uu___31.FStar_Syntax_Syntax.n in
+                                                     match uu___30 with
+                                                     | FStar_Syntax_Syntax.Tm_fvar
+                                                         fv1 ->
+                                                         FStar_Syntax_Syntax.fv_eq_lid
+                                                           fv1
+                                                           FStar_Parser_Const.unit_lid
+                                                     | uu___31 -> false in
+                                                   match args with
+                                                   | (t, uu___30)::(ty,
+                                                                    uu___31)::[]
+                                                       when
+                                                       (is_unit ty) &&
+                                                         (FStar_Syntax_Util.is_sub_singleton
+                                                            t)
+                                                       ->
+                                                       w
+                                                         FStar_Syntax_Util.t_true
+                                                   | uu___30 -> tm1
+                                                 else
+                                                   (let uu___31 =
+                                                      FStar_Syntax_Util.is_auto_squash
+                                                        tm1 in
+                                                    match uu___31 with
+                                                    | FStar_Pervasives_Native.Some
+                                                        (FStar_Syntax_Syntax.U_zero,
+                                                         t)
+                                                        when
+                                                        FStar_Syntax_Util.is_sub_singleton
+                                                          t
+                                                        -> t
+                                                    | uu___32 ->
+                                                        let uu___33 =
+                                                          norm_cb cfg in
+                                                        reduce_equality
+                                                          uu___33 cfg env1
+                                                          tm1))))))))))
                   | FStar_Syntax_Syntax.Tm_app
                       {
                         FStar_Syntax_Syntax.hd =
@@ -7112,21 +7144,53 @@ and (maybe_simplify_aux :
                                                  else tm1)
                                               else
                                                 (let uu___25 =
-                                                   FStar_Syntax_Util.is_auto_squash
-                                                     tm1 in
-                                                 match uu___25 with
-                                                 | FStar_Pervasives_Native.Some
-                                                     (FStar_Syntax_Syntax.U_zero,
-                                                      t)
-                                                     when
-                                                     FStar_Syntax_Util.is_sub_singleton
-                                                       t
-                                                     -> t
-                                                 | uu___26 ->
-                                                     let uu___27 =
-                                                       norm_cb cfg in
-                                                     reduce_equality uu___27
-                                                       cfg env1 tm1)))))))))
+                                                   FStar_Syntax_Syntax.fv_eq_lid
+                                                     fv
+                                                     FStar_Parser_Const.subtype_of_lid in
+                                                 if uu___25
+                                                 then
+                                                   let is_unit ty =
+                                                     let uu___26 =
+                                                       let uu___27 =
+                                                         FStar_Syntax_Subst.compress
+                                                           ty in
+                                                       uu___27.FStar_Syntax_Syntax.n in
+                                                     match uu___26 with
+                                                     | FStar_Syntax_Syntax.Tm_fvar
+                                                         fv1 ->
+                                                         FStar_Syntax_Syntax.fv_eq_lid
+                                                           fv1
+                                                           FStar_Parser_Const.unit_lid
+                                                     | uu___27 -> false in
+                                                   match args with
+                                                   | (t, uu___26)::(ty,
+                                                                    uu___27)::[]
+                                                       when
+                                                       (is_unit ty) &&
+                                                         (FStar_Syntax_Util.is_sub_singleton
+                                                            t)
+                                                       ->
+                                                       w
+                                                         FStar_Syntax_Util.t_true
+                                                   | uu___26 -> tm1
+                                                 else
+                                                   (let uu___27 =
+                                                      FStar_Syntax_Util.is_auto_squash
+                                                        tm1 in
+                                                    match uu___27 with
+                                                    | FStar_Pervasives_Native.Some
+                                                        (FStar_Syntax_Syntax.U_zero,
+                                                         t)
+                                                        when
+                                                        FStar_Syntax_Util.is_sub_singleton
+                                                          t
+                                                        -> t
+                                                    | uu___28 ->
+                                                        let uu___29 =
+                                                          norm_cb cfg in
+                                                        reduce_equality
+                                                          uu___29 cfg env1
+                                                          tm1))))))))))
                   | FStar_Syntax_Syntax.Tm_refine
                       { FStar_Syntax_Syntax.b = bv;
                         FStar_Syntax_Syntax.phi = t;_}

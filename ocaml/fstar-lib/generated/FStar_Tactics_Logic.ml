@@ -1205,58 +1205,13 @@ let (unsquash :
                                      (Prims.of_int (209)) (Prims.of_int (4))
                                      (Prims.of_int (209)) (Prims.of_int (42)))))
                             (Obj.magic (FStar_Tactics_Builtins.intro ()))
-                            (fun uu___1 ->
-                               (fun b ->
-                                  Obj.magic
-                                    (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Sealed.seal
-                                          (Obj.magic
-                                             (FStar_Range.mk_range
-                                                "FStar.Tactics.Logic.fst"
-                                                (Prims.of_int (209))
-                                                (Prims.of_int (12))
-                                                (Prims.of_int (209))
-                                                (Prims.of_int (42)))))
-                                       (FStar_Sealed.seal
-                                          (Obj.magic
-                                             (FStar_Range.mk_range
-                                                "FStar.Tactics.Logic.fst"
-                                                (Prims.of_int (209))
-                                                (Prims.of_int (4))
-                                                (Prims.of_int (209))
-                                                (Prims.of_int (42)))))
-                                       (Obj.magic
-                                          (FStar_Tactics_Effect.tac_bind
-                                             (FStar_Sealed.seal
-                                                (Obj.magic
-                                                   (FStar_Range.mk_range
-                                                      "FStar.Tactics.Logic.fst"
-                                                      (Prims.of_int (209))
-                                                      (Prims.of_int (20))
-                                                      (Prims.of_int (209))
-                                                      (Prims.of_int (41)))))
-                                             (FStar_Sealed.seal
-                                                (Obj.magic
-                                                   (FStar_Range.mk_range
-                                                      "FStar.Tactics.Logic.fst"
-                                                      (Prims.of_int (209))
-                                                      (Prims.of_int (12))
-                                                      (Prims.of_int (209))
-                                                      (Prims.of_int (42)))))
-                                             (Obj.magic
-                                                (FStar_Tactics_Derived.binding_to_namedv
-                                                   b))
-                                             (fun uu___1 ->
-                                                FStar_Tactics_Effect.lift_div_tac
-                                                  (fun uu___2 ->
-                                                     FStar_Reflection_Data.Tv_Var
-                                                       uu___1))))
-                                       (fun uu___1 ->
-                                          FStar_Tactics_Effect.lift_div_tac
-                                            (fun uu___2 ->
-                                               FStar_Reflection_Builtins.pack_ln
-                                                 uu___1)))) uu___1))) uu___)))
-           uu___)
+                            (fun b ->
+                               FStar_Tactics_Effect.lift_div_tac
+                                 (fun uu___1 ->
+                                    FStar_Reflection_Builtins.pack_ln
+                                      (FStar_Reflection_Data.Tv_Var
+                                         (FStar_Tactics_Derived.binding_to_namedv
+                                            b)))))) uu___))) uu___)
 let (cases_or :
   FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =

@@ -1855,11 +1855,13 @@ and (p_aqual : FStar_Parser_AST.arg_qualifier -> FStar_Pprint.document) =
           match t.FStar_Parser_AST.tm with
           | FStar_Parser_AST.Abs (uu___1, e) -> e
           | uu___1 ->
-              FStar_Parser_AST.mk_term
-                (FStar_Parser_AST.App
-                   (t,
-                     (FStar_Parser_AST.unit_const t.FStar_Parser_AST.range),
-                     FStar_Parser_AST.Nothing)) t.FStar_Parser_AST.range
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    FStar_Parser_AST.unit_const t.FStar_Parser_AST.range in
+                  (t, uu___4, FStar_Parser_AST.Nothing) in
+                FStar_Parser_AST.App uu___3 in
+              FStar_Parser_AST.mk_term uu___2 t.FStar_Parser_AST.range
                 FStar_Parser_AST.Expr in
         let uu___1 = str "#[" in
         let uu___2 =

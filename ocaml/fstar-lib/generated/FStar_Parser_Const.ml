@@ -147,6 +147,7 @@ let (op_Modulus : FStar_Ident.lident) = pconst "op_Modulus"
 let (op_And : FStar_Ident.lident) = pconst "op_AmpAmp"
 let (op_Or : FStar_Ident.lident) = pconst "op_BarBar"
 let (op_Negation : FStar_Ident.lident) = pconst "op_Negation"
+let (subtype_of_lid : FStar_Ident.lident) = pconst "subtype_of"
 let (real_const : Prims.string -> FStar_Ident.lident) =
   fun s -> p2l ["FStar"; "Real"; s]
 let (real_op_LT : FStar_Ident.lident) = real_const "op_Less_Dot"
