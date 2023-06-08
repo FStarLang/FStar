@@ -1229,7 +1229,7 @@ let run_segment :
               let uu___2 =
                 let uu___3 =
                   FStar_Compiler_Range_Ops.json_of_def_range
-                    (FStar_Parser_AST.decl_drange decl) in
+                    decl.FStar_Parser_AST.drange in
                 ("def_range", uu___3) in
               [uu___2] in
             FStar_Json.JsonAssoc uu___1 in

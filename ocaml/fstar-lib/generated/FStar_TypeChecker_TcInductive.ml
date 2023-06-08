@@ -344,8 +344,9 @@ let (tc_data :
                                     FStar_TypeChecker_Normalize.whnf_steps
                                     [FStar_TypeChecker_Env.AllowUnboundUniverses])
                                  env2 t1 in
+                             let t3 = FStar_Syntax_Util.canon_arrow t2 in
                              let uu___4 =
-                               let uu___5 = FStar_Syntax_Subst.compress t2 in
+                               let uu___5 = FStar_Syntax_Subst.compress t3 in
                                uu___5.FStar_Syntax_Syntax.n in
                              match uu___4 with
                              | FStar_Syntax_Syntax.Tm_arrow
@@ -356,13 +357,13 @@ let (tc_data :
                                    FStar_Compiler_Util.first_N ntps bs in
                                  (match uu___5 with
                                   | (uu___6, bs') ->
-                                      let t3 =
+                                      let t4 =
                                         FStar_Syntax_Syntax.mk
                                           (FStar_Syntax_Syntax.Tm_arrow
                                              {
                                                FStar_Syntax_Syntax.bs1 = bs';
                                                FStar_Syntax_Syntax.comp = res
-                                             }) t2.FStar_Syntax_Syntax.pos in
+                                             }) t3.FStar_Syntax_Syntax.pos in
                                       let subst =
                                         FStar_Compiler_Effect.op_Bar_Greater
                                           tps
@@ -386,7 +387,7 @@ let (tc_data :
                                                                i)), x))) in
                                       let uu___7 =
                                         let uu___8 =
-                                          FStar_Syntax_Subst.subst subst t3 in
+                                          FStar_Syntax_Subst.subst subst t4 in
                                         FStar_Syntax_Util.arrow_formals_comp
                                           uu___8 in
                                       (match uu___7 with
@@ -409,7 +410,7 @@ let (tc_data :
                                                 (FStar_Errors_Codes.Fatal_UnexpectedConstructorType,
                                                   "Constructors cannot have effects")
                                                 uu___10)))
-                             | uu___5 -> ([], t2) in
+                             | uu___5 -> ([], t3) in
                            (match uu___3 with
                             | (arguments, result) ->
                                 ((let uu___5 =

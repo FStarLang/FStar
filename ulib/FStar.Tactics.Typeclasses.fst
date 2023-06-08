@@ -15,9 +15,11 @@
 *)
 module FStar.Tactics.Typeclasses
 
-open FStar.List.Tot
 open FStar.Tactics
 module T = FStar.Tactics
+module L = FStar.List.Tot.Base
+
+let (@) = L.op_At
 
 (* The attribute that marks classes *)
 irreducible
@@ -44,7 +46,7 @@ let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
         fail "out of fuel";
     debug ("fuel = " ^ string_of_int fuel);
     let g = cur_goal () in
-    if FStar.List.Tot.Base.existsb (term_eq g) seen then
+    if L.existsb (term_eq g) seen then
       fail "loop";
     let seen = g :: seen in
     local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail ("could not solve constraint: " ^ term_to_string g)))
@@ -107,9 +109,9 @@ let filter_no_method_binders (bs:binders)
               n = `%no_method
             | _ -> false
         in
-        List.Tot.existsb is_no_method attrs
+        L.existsb is_no_method attrs
     in
-    List.Tot.filter (fun b -> not (has_no_method_attr b)) bs
+    L.filter (fun b -> not (has_no_method_attr b)) bs
 
 [@@plugin]
 let mk_class (nm:string) : Tac decls =
@@ -117,7 +119,7 @@ let mk_class (nm:string) : Tac decls =
     let r = lookup_typ (top_env ()) ns in
     guard (Some? r);
     let Some se = r in
-    let to_propagate = List.Tot.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
+    let to_propagate = L.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive name us params ty ctors = sv in
@@ -125,7 +127,7 @@ let mk_class (nm:string) : Tac decls =
     (* dump ("got it, ty = " ^ term_to_string ty); *)
     let ctor_name = last name in
     // Must have a single constructor
-    guard (List.Tot.Base.length ctors = 1);
+    guard (L.length ctors = 1);
     let [(c_name, ty)] = ctors in
     (* dump ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty); *)
     let bs, cod = collect_arr_bs ty in
@@ -133,7 +135,7 @@ let mk_class (nm:string) : Tac decls =
     guard (C_Total? r);
     let C_Total cod = r in (* must be total *)
 
-    (* print ("n_univs = " ^ string_of_int (List.Tot.Base.length us)); *)
+    (* print ("n_univs = " ^ string_of_int (L.length us)); *)
 
     let base : string = "__proj__Mk" ^ ctor_name ^ "__item__" in
 
@@ -169,7 +171,7 @@ let mk_class (nm:string) : Tac decls =
                   //dump ("proj_ty = " ^ term_to_string proj_ty);
                   let ty =
                     let bs, cod = collect_arr_bs proj_ty in
-                    let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
+                    let ps, bs = L.splitAt (L.length params) bs in
                     match bs with
                     | [] -> fail "mk_class: impossible, no binders"
                     | b1::bs' ->

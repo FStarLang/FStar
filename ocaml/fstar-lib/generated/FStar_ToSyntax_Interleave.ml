@@ -74,7 +74,9 @@ let rec (prefix_with_iface_decls :
             (impl1.FStar_Parser_AST.attrs))
         } in
       match iface with
-      | [] -> ([], [qualify_karamel_private impl])
+      | [] ->
+          let uu___ = let uu___1 = qualify_karamel_private impl in [uu___1] in
+          ([], uu___)
       | iface_hd::iface_tl ->
           (match iface_hd.FStar_Parser_AST.d with
            | FStar_Parser_AST.Tycon (uu___, uu___1, tys) when
@@ -124,7 +126,10 @@ let rec (prefix_with_iface_decls :
                       (FStar_Errors_Codes.Fatal_WrongDefinitionOrder, uu___2) in
                     FStar_Errors.raise_error uu___1
                       impl.FStar_Parser_AST.drange
-                  else (iface, [qualify_karamel_private impl]))
+                  else
+                    (let uu___2 =
+                       let uu___3 = qualify_karamel_private impl in [uu___3] in
+                     (iface, uu___2)))
                else
                  (let mutually_defined_with_x =
                     FStar_Compiler_Effect.op_Bar_Greater def_ids

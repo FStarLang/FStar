@@ -15,7 +15,6 @@
 *)
 module FStar.Tactics.Derived
 
-open FStar.List.Tot
 open FStar.Reflection
 open FStar.Reflection.Formula
 open FStar.Tactics.Types
@@ -26,8 +25,9 @@ open FStar.Tactics.Util
 open FStar.Tactics.SyntaxHelpers
 open FStar.VConfig
 
-module L = FStar.List.Tot
+module L = FStar.List.Tot.Base
 module V = FStar.Tactics.Visit
+private let (@) = L.op_At
 
 let name_of_bv (bv : bv) : Tac string =
     unseal ((inspect_bv bv).bv_ppname)
