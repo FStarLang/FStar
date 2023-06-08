@@ -582,6 +582,35 @@ let (parse_steel_c_fields :
                              env ty in
                          (field, uu___6)))) fields1 in
             FStar_Pervasives_Native.Some uu___3))
+let (define_struct_gen :
+  FStar_Extraction_Krml.env ->
+    (Prims.string Prims.list * Prims.string) ->
+      Prims.string Prims.list ->
+        FStar_Extraction_ML_Syntax.mlty ->
+          FStar_Extraction_Krml.decl FStar_Pervasives_Native.option)
+  =
+  fun env ->
+    fun p ->
+      fun args ->
+        fun fields ->
+          let env1 =
+            FStar_Compiler_List.fold_left
+              (fun env2 ->
+                 fun name -> FStar_Extraction_Krml.extend_t env2 name) env
+              args in
+          let fields1 =
+            let uu___ = parse_steel_c_fields env1 fields in
+            FStar_Compiler_Util.must uu___ in
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                FStar_Compiler_List.map
+                  (fun uu___3 ->
+                     match uu___3 with | (field, ty) -> (field, (ty, true)))
+                  fields1 in
+              (p, [], (FStar_Compiler_List.length args), uu___2) in
+            FStar_Extraction_Krml.DTypeFlat uu___1 in
+          FStar_Pervasives_Native.Some uu___
 let (define_struct :
   FStar_Extraction_Krml.env ->
     FStar_Extraction_ML_Syntax.mlty ->
@@ -601,19 +630,29 @@ let (define_struct :
                  "Failed to parse struct tag from %s.\n" uu___3);
               FStar_Pervasives_Native.None)
          | FStar_Pervasives_Native.Some p ->
-             let fields1 =
-               let uu___2 = parse_steel_c_fields env fields in
-               FStar_Compiler_Util.must uu___2 in
-             let uu___2 =
-               let uu___3 =
-                 let uu___4 =
-                   FStar_Compiler_List.map
-                     (fun uu___5 ->
-                        match uu___5 with
-                        | (field, ty) -> (field, (ty, true))) fields1 in
-                 (p, [], Prims.int_zero, uu___4) in
-               FStar_Extraction_Krml.DTypeFlat uu___3 in
-             FStar_Pervasives_Native.Some uu___2)
+             define_struct_gen env p [] fields)
+let (define_union_gen :
+  FStar_Extraction_Krml.env ->
+    (Prims.string Prims.list * Prims.string) ->
+      Prims.string Prims.list ->
+        FStar_Extraction_ML_Syntax.mlty ->
+          FStar_Extraction_Krml.decl FStar_Pervasives_Native.option)
+  =
+  fun env ->
+    fun p ->
+      fun args ->
+        fun fields ->
+          let env1 =
+            FStar_Compiler_List.fold_left
+              (fun env2 ->
+                 fun name -> FStar_Extraction_Krml.extend_t env2 name) env
+              args in
+          let fields1 =
+            let uu___ = parse_steel_c_fields env1 fields in
+            FStar_Compiler_Util.must uu___ in
+          FStar_Pervasives_Native.Some
+            (FStar_Extraction_Krml.DUntaggedUnion
+               (p, [], (FStar_Compiler_List.length args), fields1))
 let (define_union :
   FStar_Extraction_Krml.env ->
     FStar_Extraction_ML_Syntax.mlty ->
@@ -632,13 +671,7 @@ let (define_union :
                FStar_Compiler_Util.print1
                  "Failed to parse union tag from %s.\n" uu___3);
               FStar_Pervasives_Native.None)
-         | FStar_Pervasives_Native.Some p ->
-             let fields1 =
-               let uu___2 = parse_steel_c_fields env fields in
-               FStar_Compiler_Util.must uu___2 in
-             FStar_Pervasives_Native.Some
-               (FStar_Extraction_Krml.DUntaggedUnion
-                  (p, [], Prims.int_zero, fields1)))
+         | FStar_Pervasives_Native.Some p -> define_union_gen env p [] fields)
 let (my_type_decls : unit -> unit) =
   fun uu___ ->
     FStar_Extraction_Krml.register_pre_translate_type_decl
@@ -673,8 +706,38 @@ let (my_type_decls : unit -> unit) =
                let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
                uu___8 = "Steel.ST.C.Types.Union.define_union0" ->
                define_union env tag fields
+           | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
+               FStar_Extraction_ML_Syntax.tydecl_name = name;
+               FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
+               FStar_Extraction_ML_Syntax.tydecl_parameters = args;
+               FStar_Extraction_ML_Syntax.tydecl_meta = uu___3;
+               FStar_Extraction_ML_Syntax.tydecl_defn =
+                 FStar_Pervasives_Native.Some
+                 (FStar_Extraction_ML_Syntax.MLTD_Abbrev
+                 (FStar_Extraction_ML_Syntax.MLTY_Named
+                 (uu___4::fields::uu___5::uu___6::[], p)));_}
+               when
+               let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___7 = "Steel.ST.C.Types.Struct.struct_t0" ->
+               let name1 = ((env.FStar_Extraction_Krml.module_name), name) in
+               define_struct_gen env name1 args fields
+           | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
+               FStar_Extraction_ML_Syntax.tydecl_name = name;
+               FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
+               FStar_Extraction_ML_Syntax.tydecl_parameters = args;
+               FStar_Extraction_ML_Syntax.tydecl_meta = uu___3;
+               FStar_Extraction_ML_Syntax.tydecl_defn =
+                 FStar_Pervasives_Native.Some
+                 (FStar_Extraction_ML_Syntax.MLTD_Abbrev
+                 (FStar_Extraction_ML_Syntax.MLTY_Named
+                 (uu___4::fields::uu___5::uu___6::[], p)));_}
+               when
+               let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___7 = "Steel.ST.C.Types.Union.union_t0" ->
+               let name1 = ((env.FStar_Extraction_Krml.module_name), name) in
+               define_union_gen env name1 args fields
            | uu___1 ->
                FStar_Compiler_Effect.raise
                  FStar_Extraction_Krml.NotSupportedByKrmlExtension)
-let (uu___386 : unit) =
+let (uu___428 : unit) =
   my_types_without_decay (); my_types (); my_exprs (); my_type_decls ()

@@ -77,4 +77,4 @@ clean::
 .PHONY: all verify clean %.fst-in %.fsti-in
 
 %.fst-in %.fsti-in:
-	@echo $(FSTAR_OPTIONS)
+	@echo $(FSTAR_OPTIONS) $(COMPAT_INDEXED_EFFECTS)

@@ -288,6 +288,14 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
                  (field, translate_type_without_decay env ty))
               fields)
 
+let define_struct_gen
+  env p args fields
+=
+    let env = List.fold_left (fun env name -> extend_t env name) env args in
+    let fields = must (parse_steel_c_fields env fields) in
+    Some (DTypeFlat (p, [], List.length args,
+      List.map (fun (field, ty) -> (field, (ty, true))) fields))
+
 let define_struct
   env tag fields
 =
@@ -299,9 +307,14 @@ let define_struct
       (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
     None
   | Some p ->
+    define_struct_gen env p [] fields
+
+let define_union_gen
+  env p args fields
+=
+    let env = List.fold_left (fun env name -> extend_t env name) env args in
     let fields = must (parse_steel_c_fields env fields) in
-    Some (DTypeFlat (p, [], 0,
-      List.map (fun (field, ty) -> (field, (ty, true))) fields))
+    Some (DUntaggedUnion (p, [], List.length args, fields))
 
 let define_union
   env tag fields
@@ -314,8 +327,7 @@ let define_union
       (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
     None
   | Some p ->
-    let fields = must (parse_steel_c_fields env fields) in
-    Some (DUntaggedUnion (p, [], 0, fields))
+    define_union_gen env p [] fields
 
 let my_type_decls () = register_pre_translate_type_decl begin fun env ty ->
     match ty with
@@ -328,6 +340,22 @@ let my_type_decls () = register_pre_translate_type_decl begin fun env ty ->
       when Syntax.string_of_mlpath p = "Steel.ST.C.Types.Union.define_union0"
       ->
       define_union env tag fields
+
+    | {tydecl_name=name;
+       tydecl_parameters=args;
+       tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([_; fields; _; _], p)))}
+      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.Struct.struct_t0"
+      ->
+      let name = env.module_name, name in
+      define_struct_gen env name args fields
+
+    | {tydecl_name=name;
+       tydecl_parameters=args;
+       tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([_; fields; _; _], p)))}
+      when Syntax.string_of_mlpath p = "Steel.ST.C.Types.Union.union_t0"
+      ->
+      let name = env.module_name, name in
+      define_union_gen env name args fields
 
     | _ -> raise NotSupportedByKrmlExtension
 end
