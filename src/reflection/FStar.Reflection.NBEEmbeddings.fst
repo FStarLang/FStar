@@ -228,7 +228,7 @@ let e_subst_elt =
 
 let e_subst = e_list e_subst_elt
 
-let e_const =
+let e_vconst =
     let embed_const cb (c:vconst) : t =
         match c with
         | C_Unit         -> mkConstruct ref_C_Unit.fv    [] []
@@ -296,7 +296,7 @@ let rec e_pattern_aq aq =
       failwith "FIXME"
         (* match p with *)
         (* | Pat_Constant {c=c} -> *)
-        (*     mkConstruct ref_Pat_Constant.fv [] [as_arg (embed e_const cb c)] *)
+        (*     mkConstruct ref_Pat_Constant.fv [] [as_arg (embed e_vconst cb c)] *)
         (* | Pat_Cons (fv, us_opt, ps) -> *)
         (*     mkConstruct ref_Pat_Cons.fv []  *)
         (*       [as_arg (embed e_fv cb fv); *)
@@ -311,7 +311,7 @@ let rec e_pattern_aq aq =
       failwith "FIXME"
         (* match t.nbe_t with *)
         (* | Construct (fv, [], [(c, _)]) when S.fv_eq_lid fv ref_Pat_Constant.lid -> *)
-        (*     BU.bind_opt (unembed e_const cb c) (fun c -> *)
+        (*     BU.bind_opt (unembed e_vconst cb c) (fun c -> *)
         (*     Some <| Pat_Constant c) *)
 
         (* | Construct (fv, [], [(ps, _); (us_opt, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid -> *)
@@ -466,7 +466,7 @@ let e_term_view_aq aq =
                                              as_arg (embed (e_term_aq (shift aq)) cb t)]
 
         | Tv_Const c ->
-            mkConstruct ref_Tv_Const.fv [] [as_arg (embed e_const cb c)]
+            mkConstruct ref_Tv_Const.fv [] [as_arg (embed e_vconst cb c)]
 
         | Tv_Uvar (u, d) ->
             mkConstruct ref_Tv_Uvar.fv [] [as_arg (embed e_int cb u); as_arg (mk_lazy cb (u,d) U.t_ctx_uvar_and_sust Lazy_uvar)]
@@ -546,7 +546,7 @@ let e_term_view_aq aq =
             Some <| Tv_Refine (b, t)))
 
         | Construct (fv, _, [(c, _)]) when S.fv_eq_lid fv ref_Tv_Const.lid ->
-            BU.bind_opt (unembed e_const cb c) (fun c ->
+            BU.bind_opt (unembed e_vconst cb c) (fun c ->
             Some <| Tv_Const c)
 
         | Construct (fv, _, [(l, _); (u, _)]) when S.fv_eq_lid fv ref_Tv_Uvar.lid ->

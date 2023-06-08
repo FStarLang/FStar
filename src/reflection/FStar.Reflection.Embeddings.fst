@@ -218,7 +218,7 @@ let e_universe_view =
 
   mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view
 
-let e_const =
+let e_vconst =
     let embed_const (rng:Range.range) (c:vconst) : term =
         let r =
         match c with
@@ -264,7 +264,7 @@ let rec e_pattern_aq aq =
     let rec embed_pattern (rng:Range.range) (p : pattern) : term =
         match p with
         | Pat_Constant c ->
-            S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed e_const rng c)] rng
+            S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed e_vconst rng c)] rng
         | Pat_Cons head univs subpats ->
             S.mk_Tm_app ref_Pat_Cons.t
               [S.as_arg (embed e_fv rng head);
@@ -283,7 +283,7 @@ let rec e_pattern_aq aq =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Pat_Constant.lid ->
-            run args (Pat_Constant <$$> e_const)
+            run args (Pat_Constant <$$> e_vconst)
 
         | _ when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             run args (Pat_Cons <$$> e_fv <**> e_option (e_list e_universe) <**> e_list (e_tuple2 (e_pattern_aq aq) e_bool))
@@ -357,7 +357,7 @@ let e_term_view_aq aq =
                         rng
 
         | Tv_Const c ->
-            S.mk_Tm_app ref_Tv_Const.t [S.as_arg (embed e_const rng c)]
+            S.mk_Tm_app ref_Tv_Const.t [S.as_arg (embed e_vconst rng c)]
                         rng
 
         | Tv_Uvar (u, ctx_u) ->
@@ -415,7 +415,7 @@ let e_term_view_aq aq =
         | _ when S.fv_eq_lid fv ref_Tv_Arrow.lid -> run args (curry Tv_Arrow <$$> e_binder <**> e_comp)
         | _ when S.fv_eq_lid fv ref_Tv_Type.lid -> run args (Tv_Type <$$> e_universe)
         | _ when S.fv_eq_lid fv ref_Tv_Refine.lid -> run args (curry Tv_Refine <$$> e_binder <**> e_term_aq (push aq))
-        | _ when S.fv_eq_lid fv ref_Tv_Const.lid -> run args (Tv_Const <$$> e_const)
+        | _ when S.fv_eq_lid fv ref_Tv_Const.lid -> run args (Tv_Const <$$> e_vconst)
         | _ when S.fv_eq_lid fv ref_Tv_Uvar.lid -> run args (curry Tv_Uvar <$$> e_int <**> e_ctx_uvar_and_subst)
         | _ when S.fv_eq_lid fv ref_Tv_Let.lid -> run args (xTv_Let <$$> e_bool <**> e_list e_term <**> e_binder <**> e_term_aq aq <**> e_term_aq (push aq))
         | _ when S.fv_eq_lid fv ref_Tv_Match.lid -> run args (curry3 Tv_Match <$$> e_term_aq aq <**> e_match_returns_annotation <**> e_list (e_branch_aq aq))

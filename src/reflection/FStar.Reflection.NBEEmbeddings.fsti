@@ -37,7 +37,7 @@ val e_term_view     : embedding term_view
 val e_fv            : embedding fv
 val e_comp          : embedding FStar.Syntax.Syntax.comp
 val e_comp_view     : embedding comp_view
-val e_const         : embedding vconst
+val e_vconst        : embedding vconst
 val e_env           : embedding FStar.TypeChecker.Env.env
 val e_pattern       : embedding pattern
 val e_branch        : embedding Data.branch
