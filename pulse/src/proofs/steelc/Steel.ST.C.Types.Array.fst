@@ -269,8 +269,7 @@ type array_void_ptr = {
   ar_offset: SZ.t;
   ar_prf: squash (array_void_ptr_prf ar_is_null ar_base_size ar_base ar_offset);
 }
-type array_ptr_gen t = array_void_ptr
-let null_array_ptr td = {
+let null_array_void_ptr = {
   ar_is_null = true;
   ar_base_size = 1sz;
   ar_base = void_null;
