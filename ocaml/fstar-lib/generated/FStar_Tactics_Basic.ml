@@ -2440,9 +2440,7 @@ let (intro_rec :
                 tts uu___5 uu___6 in
               fail1 "intro_rec: goal is not an arrow (%s)" uu___4))
 let (norm :
-  FStar_Syntax_Embeddings.norm_step Prims.list ->
-    unit FStar_Tactics_Monad.tac)
-  =
+  FStar_Pervasives.norm_step Prims.list -> unit FStar_Tactics_Monad.tac) =
   fun s ->
     FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
       (fun goal ->
@@ -2468,7 +2466,7 @@ let (norm :
               FStar_Tactics_Monad.replace_cur uu___2))
 let (norm_term_env :
   env ->
-    FStar_Syntax_Embeddings.norm_step Prims.list ->
+    FStar_Pervasives.norm_step Prims.list ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
   =
@@ -2700,8 +2698,7 @@ let (t_exact :
                           (fun uu___6 ->
                              let uu___7 =
                                let uu___8 =
-                                 let uu___9 =
-                                   norm [FStar_Syntax_Embeddings.Delta] in
+                                 let uu___9 = norm [FStar_Pervasives.Delta] in
                                  FStar_Tactics_Monad.op_let_Bang uu___9
                                    (fun uu___10 ->
                                       let uu___11 = refine_intro () in
@@ -3918,7 +3915,7 @@ let (var_retype :
     FStar_Compiler_Effect.op_Less_Bar
       (FStar_Tactics_Monad.wrap_err "binder_retype") uu___
 let (norm_binder_type :
-  FStar_Syntax_Embeddings.norm_step Prims.list ->
+  FStar_Pervasives.norm_step Prims.list ->
     FStar_Reflection_Data.binding -> unit FStar_Tactics_Monad.tac)
   =
   fun s ->

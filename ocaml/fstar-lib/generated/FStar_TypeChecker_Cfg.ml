@@ -4404,21 +4404,20 @@ let (should_reduce_local_let :
                 (Prims.op_Negation
                    (cfg1.steps).pure_subterms_within_computations)))
 let (translate_norm_step :
-  FStar_Syntax_Embeddings.norm_step -> FStar_TypeChecker_Env.step Prims.list)
-  =
+  FStar_Pervasives.norm_step -> FStar_TypeChecker_Env.step Prims.list) =
   fun uu___ ->
     match uu___ with
-    | FStar_Syntax_Embeddings.Zeta -> [FStar_TypeChecker_Env.Zeta]
-    | FStar_Syntax_Embeddings.ZetaFull -> [FStar_TypeChecker_Env.ZetaFull]
-    | FStar_Syntax_Embeddings.Iota -> [FStar_TypeChecker_Env.Iota]
-    | FStar_Syntax_Embeddings.Delta ->
+    | FStar_Pervasives.Zeta -> [FStar_TypeChecker_Env.Zeta]
+    | FStar_Pervasives.ZetaFull -> [FStar_TypeChecker_Env.ZetaFull]
+    | FStar_Pervasives.Iota -> [FStar_TypeChecker_Env.Iota]
+    | FStar_Pervasives.Delta ->
         [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant]
-    | FStar_Syntax_Embeddings.Simpl -> [FStar_TypeChecker_Env.Simplify]
-    | FStar_Syntax_Embeddings.Weak -> [FStar_TypeChecker_Env.Weak]
-    | FStar_Syntax_Embeddings.HNF -> [FStar_TypeChecker_Env.HNF]
-    | FStar_Syntax_Embeddings.Primops -> [FStar_TypeChecker_Env.Primops]
-    | FStar_Syntax_Embeddings.Reify -> [FStar_TypeChecker_Env.Reify]
-    | FStar_Syntax_Embeddings.UnfoldOnly names ->
+    | FStar_Pervasives.Simpl -> [FStar_TypeChecker_Env.Simplify]
+    | FStar_Pervasives.Weak -> [FStar_TypeChecker_Env.Weak]
+    | FStar_Pervasives.HNF -> [FStar_TypeChecker_Env.HNF]
+    | FStar_Pervasives.Primops -> [FStar_TypeChecker_Env.Primops]
+    | FStar_Pervasives.Reify -> [FStar_TypeChecker_Env.Reify]
+    | FStar_Pervasives.UnfoldOnly names ->
         let uu___1 =
           let uu___2 =
             let uu___3 = FStar_Compiler_List.map FStar_Ident.lid_of_str names in
@@ -4426,7 +4425,7 @@ let (translate_norm_step :
           [uu___2] in
         (FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant)
           :: uu___1
-    | FStar_Syntax_Embeddings.UnfoldFully names ->
+    | FStar_Pervasives.UnfoldFully names ->
         let uu___1 =
           let uu___2 =
             let uu___3 = FStar_Compiler_List.map FStar_Ident.lid_of_str names in
@@ -4434,7 +4433,7 @@ let (translate_norm_step :
           [uu___2] in
         (FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant)
           :: uu___1
-    | FStar_Syntax_Embeddings.UnfoldAttr names ->
+    | FStar_Pervasives.UnfoldAttr names ->
         let uu___1 =
           let uu___2 =
             let uu___3 = FStar_Compiler_List.map FStar_Ident.lid_of_str names in
@@ -4442,17 +4441,17 @@ let (translate_norm_step :
           [uu___2] in
         (FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant)
           :: uu___1
-    | FStar_Syntax_Embeddings.UnfoldQual names ->
+    | FStar_Pervasives.UnfoldQual names ->
         [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
         FStar_TypeChecker_Env.UnfoldQual names]
-    | FStar_Syntax_Embeddings.UnfoldNamespace names ->
+    | FStar_Pervasives.UnfoldNamespace names ->
         [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
         FStar_TypeChecker_Env.UnfoldNamespace names]
-    | FStar_Syntax_Embeddings.Unascribe -> [FStar_TypeChecker_Env.Unascribe]
-    | FStar_Syntax_Embeddings.NBE -> [FStar_TypeChecker_Env.NBE]
-    | FStar_Syntax_Embeddings.Unmeta -> [FStar_TypeChecker_Env.Unmeta]
+    | FStar_Pervasives.Unascribe -> [FStar_TypeChecker_Env.Unascribe]
+    | FStar_Pervasives.NBE -> [FStar_TypeChecker_Env.NBE]
+    | FStar_Pervasives.Unmeta -> [FStar_TypeChecker_Env.Unmeta]
 let (translate_norm_steps :
-  FStar_Syntax_Embeddings.norm_step Prims.list ->
+  FStar_Pervasives.norm_step Prims.list ->
     FStar_TypeChecker_Env.step Prims.list)
   =
   fun s ->
