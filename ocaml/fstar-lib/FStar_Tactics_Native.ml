@@ -50,7 +50,8 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) (n:nbe_itac) =
           }
     in
     FStar_TypeChecker_Cfg.register_plugin step;
-    perr1 "Registered plugin %s\n" s
+    (* perr1 "Registered plugin %s\n" s; *)
+    ()
 
 let register_tactic (s: string) (arity: Prims.int) (t: itac)=
     let step =
@@ -59,14 +60,15 @@ let register_tactic (s: string) (arity: Prims.int) (t: itac)=
           strong_reduction_ok=true;
           tactic=t } in
     compiled_tactics := step :: !compiled_tactics;
-    perr1 "Registered tactic %s\n" s
+    (* perr1 "Registered tactic %s\n" s; *)
+    ()
 
 let bump (f : 'b -> 'c) (g : 'a -> 'b) : 'a -> 'c =
     fun x -> f (g x)
 
 let from_tactic_0 (tau: 'b __tac) : 'b tac =
     (fun (ps: proofstate) ->
-        perr "Entering native tactic\n";
+        (* perr "Entering native tactic\n"; *)
         tau ps) |> mk_tac
 
 let from_tactic_1  t = bump from_tactic_0  t
