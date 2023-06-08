@@ -116,19 +116,19 @@ let not_implemented_warning (r: Range.range) (t: string) (msg: string) =
                         msg
                         (string_of_int <| Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented)))
 
-(*** List of registered embeddings ***)
 type embedding_data = {
   arity : int;
   syn_emb : Ident.lid; (* lid for regular embedding *)
   nbe_emb : option Ident.lid; (* nbe embedding, optional! will abort _at runtime_ if None and called *)
 }
 
-let known_fv_embeddings : ref (list (Ident.lident * embedding_data)) =
+(*** List of registered embeddings ***)
+let builtin_embeddings : list (Ident.lident & embedding_data) =
   let syn_emb_lid s      = Ident.lid_of_path ["FStar"; "Syntax"; "Embeddings"; s] Range.dummyRange in
   let nbe_emb_lid s      = Ident.lid_of_path ["FStar"; "TypeChecker"; "NBETerm"; s] Range.dummyRange in
   let refl_emb_lid s     = Ident.lid_of_path ["FStar"; "Reflection"; "Embeddings"; s] Range.dummyRange in
   let nbe_refl_emb_lid s = Ident.lid_of_path ["FStar"; "Reflection"; "NBEEmbeddings"; s] Range.dummyRange in
-  BU.mk_ref [
+  [
     (PC.int_lid,                          {arity=0; syn_emb=syn_emb_lid  "e_int";        nbe_emb=Some(nbe_emb_lid "e_int")});
     (PC.bool_lid,                         {arity=0; syn_emb=syn_emb_lid  "e_bool";       nbe_emb=Some(nbe_emb_lid "e_bool")});
     (PC.unit_lid,                         {arity=0; syn_emb=syn_emb_lid  "e_unit";       nbe_emb=Some(nbe_emb_lid "e_unit")});
@@ -176,11 +176,18 @@ let known_fv_embeddings : ref (list (Ident.lident * embedding_data)) =
     (RC.fstar_refl_data_lid  "qualifier",      {arity=0; syn_emb=refl_emb_lid "e_qualifier";      nbe_emb=Some(nbe_refl_emb_lid "e_qualifier")});
   ]
 
+let local_fv_embeddings : ref (list (Ident.lident & embedding_data)) = BU.mk_ref []
 let register_embedding (l: Ident.lident) (d: embedding_data) : unit =
-  known_fv_embeddings := (l,d) :: !known_fv_embeddings
+  if Options.debug_at_level_no_module (Options.Other "Plugins") then
+    BU.print1 "Registering local embedding for %s\n" (Ident.string_of_lid l);
+  local_fv_embeddings := (l,d) :: !local_fv_embeddings
+
+let list_local () = !local_fv_embeddings
 
 let find_fv_embedding' (l: Ident.lident) : option embedding_data =
-  match List.find (fun (l', _) -> Ident.lid_equals l l') !known_fv_embeddings with
+  match List.find (fun (l', _) -> Ident.lid_equals l l')
+        (!local_fv_embeddings @ builtin_embeddings)
+  with
   | Some (_, data) -> Some data
   | None -> None
 
@@ -192,7 +199,6 @@ let find_fv_embedding (l: Ident.lident) : embedding_data =
 
 (*** /List of registered embeddings ***)
 
-// TODO: these should disappear
 let as_name mlp       = with_ty MLTY_Top <| MLE_Name mlp
 
 type embedding_kind =
@@ -270,6 +276,22 @@ let rec embedding_for (tcenv:Env.env) (k: embedding_kind) (env:list (bv * string
         // FIXME: generate NBE embeddings, or at least show a proper error
         ml_magic
       end
+    end
+
+  (*
+   * An fv which we do not have registered, but has the plugin
+   * attribute. We assume it must have had an embedding generated
+   * right next to it in its same module.
+   *)
+  | Tm_fvar fv when Env.fv_has_attr tcenv fv PC.plugin_attr ->
+    begin match k with
+    | SyntaxTerm ->
+      let lid = fv.fv_name.v in
+      as_name (List.map Ident.string_of_id (Ident.ns_of_lid lid),
+               "e_" ^ Ident.string_of_id (Ident.ident_of_lid lid))
+    | NBETerm ->
+      // FIXME: generate NBE embeddings, or at least show a proper error
+      ml_magic
     end
 
   (* An fv which we do not have registered, and did not unfold *)
