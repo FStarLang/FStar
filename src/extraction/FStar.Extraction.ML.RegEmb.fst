@@ -691,7 +691,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
       let ml_name = mk (MLE_Const (MLC_String (Ident.string_of_lid tlid))) in
 
       let record_fields =
-        match List.find (function RecordType _ -> true | _ -> false) se.sigquals with
+        match List.find (function RecordType _ -> true | _ -> false) typ_sigelt.sigquals with
         | Some (RecordType (_, b)) ->
           (* Extraction may change the names of fields to disambiguate them,
            * query the environment for the extracted names. *)
