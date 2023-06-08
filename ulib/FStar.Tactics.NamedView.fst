@@ -33,7 +33,6 @@ with clients. *)
 private
 let print (s:string) : Tac unit = ()
 
-(** FIXME: needs named version. *)
 noeq
 type pattern =
  // A built-in constant
@@ -580,6 +579,7 @@ let pack (tv:named_term_view) : Tot term =
 let notAscription (tv:named_term_view) : bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
 
+[@@plugin]
 noeq
 type letbinding = {
   lb_fv : fv;
