@@ -92,7 +92,7 @@ RUN mkdir $HOME/bin
 RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 
 # Install runlim
-RUN git clone --depth 1 https://github.com/arminbiere/runlim
+RUN git clone --depth 1 https://github.com/mtzguido/runlim
 RUN (cd runlim && ./configure.sh --prefix=$HOME/bin && make && make install)
 RUN rm -rf runlim
 

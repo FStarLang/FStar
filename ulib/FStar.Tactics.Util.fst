@@ -16,7 +16,7 @@
 module FStar.Tactics.Util
 
 open FStar.Tactics.Effect
-open FStar.List.Tot
+open FStar.List.Tot.Base
 
 (* Tac list functions, since there's no effect polymorphism *)
 val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)

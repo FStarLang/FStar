@@ -19,8 +19,8 @@ build_fstar $target
 
 # If RESOURCEMONITOR is defined, then make an rmon/ directory with
 # resource usage information
-echo "Saving runlim files into rmon/"
 if [ -n "$RESOURCEMONITOR" ]; then
+	echo "Saving runlim files into rmon/"
 	mkdir -p rmon
 	.scripts/res_summary.sh > rmon/res_summary.txt
 	# Copy all .runlim files into a tar archive

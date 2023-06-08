@@ -182,6 +182,7 @@ let op_Modulus         = pconst "op_Modulus"
 let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
+let subtype_of_lid     = pconst "subtype_of"
 
 let real_const  s        = p2l ["FStar";"Real";s]
 let real_op_LT           = real_const "op_Less_Dot"

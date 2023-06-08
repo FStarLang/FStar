@@ -23,7 +23,7 @@ open FStar.Tactics.SyntaxHelpers
 open FStar.Tactics.Derived
 open FStar.Tactics.NamedView
 
-let (@) = FStar.List.Tot.append
+module L = FStar.List.Tot.Base
 
 (* The attribute that marks classes *)
 irreducible
@@ -51,7 +51,7 @@ let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
         fail "out of fuel";
     debug ("fuel = " ^ string_of_int fuel);
     let g = cur_goal () in
-    if FStar.List.Tot.Base.existsb (term_eq g) seen then
+    if L.existsb (term_eq g) seen then
       fail "loop";
     let seen = g :: seen in
     local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail ("could not solve constraint: " ^ term_to_string g)))
@@ -118,9 +118,9 @@ let filter_no_method_binders (bs:binders)
               n = `%no_method
             | _ -> false
         in
-        List.Tot.existsb is_no_method attrs
+        L.existsb is_no_method attrs
     in
-    List.Tot.filter (fun b -> not (has_no_method_attr b)) bs
+    L.filter (fun b -> not (has_no_method_attr b)) bs
 
 (* GGG FIXME move *)
 let named_binder_to_term (nb : binder) : term =
@@ -136,7 +136,7 @@ let mk_class (nm:string) : Tac decls =
     let r = lookup_typ (top_env ()) ns in
     guard (Some? r);
     let Some se = r in
-    let to_propagate = List.Tot.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
+    let to_propagate = L.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive {nm=name;univs=us;params;typ=ity;ctors} = sv in
@@ -145,7 +145,7 @@ let mk_class (nm:string) : Tac decls =
     (* print ("got it, ity = " ^ term_to_string ity); *)
     let ctor_name = last name in
     // Must have a single constructor
-    guard (List.Tot.Base.length ctors = 1);
+    guard (L.length ctors = 1);
     let [(c_name, ty)] = ctors in
     (* print ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty); *)
     let bs, cod = collect_arr_bs ty in
