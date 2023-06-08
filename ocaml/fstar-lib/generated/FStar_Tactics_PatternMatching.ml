@@ -6,22 +6,33 @@ let (fetch_eq_side :
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (63)) (Prims.of_int (10)) (Prims.of_int (63))
-         (Prims.of_int (21)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (64)) (Prims.of_int (2)) (Prims.of_int (88))
-         (Prims.of_int (39))) (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (63)) (Prims.of_int (10)) (Prims.of_int (63))
+               (Prims.of_int (21)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (64)) (Prims.of_int (2)) (Prims.of_int (88))
+               (Prims.of_int (39)))))
+      (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
       (fun uu___1 ->
          (fun g ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                    (Prims.of_int (64)) (Prims.of_int (8))
-                    (Prims.of_int (64)) (Prims.of_int (17)))
-                 (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                    (Prims.of_int (64)) (Prims.of_int (2))
-                    (Prims.of_int (88)) (Prims.of_int (39)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.Tactics.PatternMatching.fst"
+                          (Prims.of_int (64)) (Prims.of_int (8))
+                          (Prims.of_int (64)) (Prims.of_int (17)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.Tactics.PatternMatching.fst"
+                          (Prims.of_int (64)) (Prims.of_int (2))
+                          (Prims.of_int (88)) (Prims.of_int (39)))))
                  (Obj.magic (FStar_Tactics_NamedView.inspect g))
                  (fun uu___1 ->
                     (fun uu___1 ->
@@ -31,14 +42,22 @@ let (fetch_eq_side :
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range
-                                      "FStar.Tactics.PatternMatching.fst"
-                                      (Prims.of_int (66)) (Prims.of_int (11))
-                                      (Prims.of_int (66)) (Prims.of_int (25)))
-                                   (FStar_Range.mk_range
-                                      "FStar.Tactics.PatternMatching.fst"
-                                      (Prims.of_int (66)) (Prims.of_int (4))
-                                      (Prims.of_int (87)) (Prims.of_int (51)))
+                                   (FStar_Sealed.seal
+                                      (Obj.magic
+                                         (FStar_Range.mk_range
+                                            "FStar.Tactics.PatternMatching.fst"
+                                            (Prims.of_int (66))
+                                            (Prims.of_int (11))
+                                            (Prims.of_int (66))
+                                            (Prims.of_int (25)))))
+                                   (FStar_Sealed.seal
+                                      (Obj.magic
+                                         (FStar_Range.mk_range
+                                            "FStar.Tactics.PatternMatching.fst"
+                                            (Prims.of_int (66))
+                                            (Prims.of_int (4))
+                                            (Prims.of_int (87))
+                                            (Prims.of_int (51)))))
                                    (Obj.magic
                                       (FStar_Tactics_NamedView.inspect squash))
                                    (fun uu___3 ->
@@ -57,18 +76,22 @@ let (fetch_eq_side :
                                                    then
                                                      Obj.repr
                                                        (FStar_Tactics_Effect.tac_bind
-                                                          (FStar_Range.mk_range
-                                                             "FStar.Tactics.PatternMatching.fst"
-                                                             (Prims.of_int (70))
-                                                             (Prims.of_int (16))
-                                                             (Prims.of_int (70))
-                                                             (Prims.of_int (25)))
-                                                          (FStar_Range.mk_range
-                                                             "FStar.Tactics.PatternMatching.fst"
-                                                             (Prims.of_int (70))
-                                                             (Prims.of_int (9))
-                                                             (Prims.of_int (85))
-                                                             (Prims.of_int (48)))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "FStar.Tactics.PatternMatching.fst"
+                                                                   (Prims.of_int (70))
+                                                                   (Prims.of_int (16))
+                                                                   (Prims.of_int (70))
+                                                                   (Prims.of_int (25)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "FStar.Tactics.PatternMatching.fst"
+                                                                   (Prims.of_int (70))
+                                                                   (Prims.of_int (9))
+                                                                   (Prims.of_int (85))
+                                                                   (Prims.of_int (48)))))
                                                           (Obj.magic
                                                              (FStar_Tactics_NamedView.inspect
                                                                 g1))
@@ -84,18 +107,22 @@ let (fetch_eq_side :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (72))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (72))
-                                                                    (Prims.of_int (36)))
+                                                                    (Prims.of_int (36)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (72))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (84))
-                                                                    (Prims.of_int (39)))
+                                                                    (Prims.of_int (39)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.inspect
                                                                     eq_type_x))
@@ -114,18 +141,22 @@ let (fetch_eq_side :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (74))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (74))
-                                                                    (Prims.of_int (37)))
+                                                                    (Prims.of_int (37)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (74))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (83))
-                                                                    (Prims.of_int (42)))
+                                                                    (Prims.of_int (42)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.inspect
                                                                     eq_type))
@@ -144,18 +175,22 @@ let (fetch_eq_side :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (76))
                                                                     (Prims.of_int (25))
                                                                     (Prims.of_int (76))
-                                                                    (Prims.of_int (35)))
+                                                                    (Prims.of_int (35)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (76))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (82))
-                                                                    (Prims.of_int (55)))
+                                                                    (Prims.of_int (55)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.inspect
                                                                     eq))
@@ -241,18 +276,22 @@ let (fetch_eq_side :
                                                    then
                                                      Obj.repr
                                                        (FStar_Tactics_Effect.tac_bind
-                                                          (FStar_Range.mk_range
-                                                             "FStar.Tactics.PatternMatching.fst"
-                                                             (Prims.of_int (70))
-                                                             (Prims.of_int (16))
-                                                             (Prims.of_int (70))
-                                                             (Prims.of_int (25)))
-                                                          (FStar_Range.mk_range
-                                                             "FStar.Tactics.PatternMatching.fst"
-                                                             (Prims.of_int (70))
-                                                             (Prims.of_int (9))
-                                                             (Prims.of_int (85))
-                                                             (Prims.of_int (48)))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "FStar.Tactics.PatternMatching.fst"
+                                                                   (Prims.of_int (70))
+                                                                   (Prims.of_int (16))
+                                                                   (Prims.of_int (70))
+                                                                   (Prims.of_int (25)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "FStar.Tactics.PatternMatching.fst"
+                                                                   (Prims.of_int (70))
+                                                                   (Prims.of_int (9))
+                                                                   (Prims.of_int (85))
+                                                                   (Prims.of_int (48)))))
                                                           (Obj.magic
                                                              (FStar_Tactics_NamedView.inspect
                                                                 g1))
@@ -268,18 +307,22 @@ let (fetch_eq_side :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (72))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (72))
-                                                                    (Prims.of_int (36)))
+                                                                    (Prims.of_int (36)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (72))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (84))
-                                                                    (Prims.of_int (39)))
+                                                                    (Prims.of_int (39)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.inspect
                                                                     eq_type_x))
@@ -298,18 +341,22 @@ let (fetch_eq_side :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (74))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (74))
-                                                                    (Prims.of_int (37)))
+                                                                    (Prims.of_int (37)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (74))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (83))
-                                                                    (Prims.of_int (42)))
+                                                                    (Prims.of_int (42)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.inspect
                                                                     eq_type))
@@ -328,18 +375,22 @@ let (fetch_eq_side :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (76))
                                                                     (Prims.of_int (25))
                                                                     (Prims.of_int (76))
-                                                                    (Prims.of_int (35)))
+                                                                    (Prims.of_int (35)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (76))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (82))
-                                                                    (Prims.of_int (55)))
+                                                                    (Prims.of_int (55)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.inspect
                                                                     eq))
@@ -431,12 +482,17 @@ let mustfail :
   fun t ->
     fun message ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (130)) (Prims.of_int (10)) (Prims.of_int (130))
-           (Prims.of_int (18)))
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (130)) (Prims.of_int (4)) (Prims.of_int (132))
-           (Prims.of_int (16))) (Obj.magic (FStar_Tactics_Derived.trytac t))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (130)) (Prims.of_int (10))
+                 (Prims.of_int (130)) (Prims.of_int (18)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (130)) (Prims.of_int (4)) (Prims.of_int (132))
+                 (Prims.of_int (16)))))
+        (Obj.magic (FStar_Tactics_Derived.trytac t))
         (fun uu___ ->
            match uu___ with
            | FStar_Pervasives_Native.Some uu___1 ->
@@ -446,12 +502,16 @@ let mustfail :
 let (implies_intro' : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (138)) (Prims.of_int (10)) (Prims.of_int (138))
-         (Prims.of_int (26)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (138)) (Prims.of_int (30)) (Prims.of_int (138))
-         (Prims.of_int (32)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (138)) (Prims.of_int (10)) (Prims.of_int (138))
+               (Prims.of_int (26)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (138)) (Prims.of_int (30)) (Prims.of_int (138))
+               (Prims.of_int (32)))))
       (Obj.magic (FStar_Tactics_Logic.implies_intro ()))
       (fun uu___1 -> FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> ()))
 let repeat' :
@@ -461,50 +521,73 @@ let repeat' :
   =
   fun f ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (141)) (Prims.of_int (10)) (Prims.of_int (141))
-         (Prims.of_int (18)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (141)) (Prims.of_int (22)) (Prims.of_int (141))
-         (Prims.of_int (24))) (Obj.magic (FStar_Tactics_Derived.repeat f))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (141)) (Prims.of_int (10)) (Prims.of_int (141))
+               (Prims.of_int (18)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (141)) (Prims.of_int (22)) (Prims.of_int (141))
+               (Prims.of_int (24)))))
+      (Obj.magic (FStar_Tactics_Derived.repeat f))
       (fun uu___ -> FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))
 let (and_elim' :
   FStar_Reflection_Data.binding -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun h ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (144)) (Prims.of_int (2)) (Prims.of_int (144))
-         (Prims.of_int (48)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (145)) (Prims.of_int (2)) (Prims.of_int (145))
-         (Prims.of_int (9)))
-      (Obj.magic
-         (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-               (Prims.of_int (144)) (Prims.of_int (11)) (Prims.of_int (144))
-               (Prims.of_int (48)))
+      (FStar_Sealed.seal
+         (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                (Prims.of_int (144)) (Prims.of_int (2)) (Prims.of_int (144))
-               (Prims.of_int (48)))
-            (Obj.magic
-               (FStar_Tactics_Effect.tac_bind
-                  (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                     (Prims.of_int (144)) (Prims.of_int (17))
-                     (Prims.of_int (144)) (Prims.of_int (47)))
+               (Prims.of_int (48)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (145)) (Prims.of_int (2)) (Prims.of_int (145))
+               (Prims.of_int (9)))))
+      (Obj.magic
+         (FStar_Tactics_Effect.tac_bind
+            (FStar_Sealed.seal
+               (Obj.magic
                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                      (Prims.of_int (144)) (Prims.of_int (11))
-                     (Prims.of_int (144)) (Prims.of_int (48)))
-                  (Obj.magic
-                     (FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (144)) (Prims.of_int (25))
-                           (Prims.of_int (144)) (Prims.of_int (46)))
+                     (Prims.of_int (144)) (Prims.of_int (48)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                     (Prims.of_int (144)) (Prims.of_int (2))
+                     (Prims.of_int (144)) (Prims.of_int (48)))))
+            (Obj.magic
+               (FStar_Tactics_Effect.tac_bind
+                  (FStar_Sealed.seal
+                     (Obj.magic
                         (FStar_Range.mk_range
                            "FStar.Tactics.PatternMatching.fst"
                            (Prims.of_int (144)) (Prims.of_int (17))
-                           (Prims.of_int (144)) (Prims.of_int (47)))
+                           (Prims.of_int (144)) (Prims.of_int (47)))))
+                  (FStar_Sealed.seal
+                     (Obj.magic
+                        (FStar_Range.mk_range
+                           "FStar.Tactics.PatternMatching.fst"
+                           (Prims.of_int (144)) (Prims.of_int (11))
+                           (Prims.of_int (144)) (Prims.of_int (48)))))
+                  (Obj.magic
+                     (FStar_Tactics_Effect.tac_bind
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (144)) (Prims.of_int (25))
+                                 (Prims.of_int (144)) (Prims.of_int (46)))))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (144)) (Prims.of_int (17))
+                                 (Prims.of_int (144)) (Prims.of_int (47)))))
                         (Obj.magic
                            (FStar_Tactics_Derived.binding_to_namedv h))
                         (fun uu___ ->
@@ -526,12 +609,16 @@ let exact_hyp :
   =
   fun h ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (149)) (Prims.of_int (11)) (Prims.of_int (149))
-         (Prims.of_int (48)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (150)) (Prims.of_int (2)) (Prims.of_int (150))
-         (Prims.of_int (53)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (149)) (Prims.of_int (11)) (Prims.of_int (149))
+               (Prims.of_int (48)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (150)) (Prims.of_int (2)) (Prims.of_int (150))
+               (Prims.of_int (53)))))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ ->
             (fun uu___ ->
@@ -641,12 +728,17 @@ let (term_head :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (203)) (Prims.of_int (8)) (Prims.of_int (203))
-         (Prims.of_int (17)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (203)) (Prims.of_int (2)) (Prims.of_int (220))
-         (Prims.of_int (28))) (Obj.magic (FStar_Tactics_NamedView.inspect t))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (203)) (Prims.of_int (8)) (Prims.of_int (203))
+               (Prims.of_int (17)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (203)) (Prims.of_int (2)) (Prims.of_int (220))
+               (Prims.of_int (28)))))
+      (Obj.magic (FStar_Tactics_NamedView.inspect t))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 ->
@@ -690,30 +782,47 @@ let (string_of_match_exception :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (228)) (Prims.of_int (4))
-                      (Prims.of_int (228)) (Prims.of_int (54)))
-                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                      (Prims.of_int (19)) (Prims.of_int (590))
-                      (Prims.of_int (31)))
-                   (Obj.magic
-                      (FStar_Tactics_Effect.tac_bind
+                   (FStar_Sealed.seal
+                      (Obj.magic
                          (FStar_Range.mk_range
                             "FStar.Tactics.PatternMatching.fst"
-                            (Prims.of_int (228)) (Prims.of_int (26))
-                            (Prims.of_int (228)) (Prims.of_int (54)))
+                            (Prims.of_int (228)) (Prims.of_int (4))
+                            (Prims.of_int (228)) (Prims.of_int (54)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
                             (Prims.of_int (590)) (Prims.of_int (19))
-                            (Prims.of_int (590)) (Prims.of_int (31)))
-                         (Obj.magic
-                            (FStar_Tactics_Effect.tac_bind
+                            (Prims.of_int (590)) (Prims.of_int (31)))))
+                   (Obj.magic
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.Tactics.PatternMatching.fst"
-                                  (Prims.of_int (228)) (Prims.of_int (37))
-                                  (Prims.of_int (228)) (Prims.of_int (54)))
+                                  (Prims.of_int (228)) (Prims.of_int (26))
+                                  (Prims.of_int (228)) (Prims.of_int (54)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
                                (FStar_Range.mk_range "prims.fst"
                                   (Prims.of_int (590)) (Prims.of_int (19))
-                                  (Prims.of_int (590)) (Prims.of_int (31)))
+                                  (Prims.of_int (590)) (Prims.of_int (31)))))
+                         (Obj.magic
+                            (FStar_Tactics_Effect.tac_bind
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "FStar.Tactics.PatternMatching.fst"
+                                        (Prims.of_int (228))
+                                        (Prims.of_int (37))
+                                        (Prims.of_int (228))
+                                        (Prims.of_int (54)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range "prims.fst"
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (19))
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (31)))))
                                (Obj.magic
                                   (FStar_Tactics_Builtins.term_to_string tm))
                                (fun uu___1 ->
@@ -734,44 +843,65 @@ let (string_of_match_exception :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (230)) (Prims.of_int (54))
-                      (Prims.of_int (232)) (Prims.of_int (33)))
-                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                      (Prims.of_int (19)) (Prims.of_int (590))
-                      (Prims.of_int (31)))
-                   (Obj.magic
-                      (FStar_Tactics_Effect.tac_bind
+                   (FStar_Sealed.seal
+                      (Obj.magic
                          (FStar_Range.mk_range
                             "FStar.Tactics.PatternMatching.fst"
-                            (Prims.of_int (231)) (Prims.of_int (4))
-                            (Prims.of_int (232)) (Prims.of_int (33)))
+                            (Prims.of_int (230)) (Prims.of_int (54))
+                            (Prims.of_int (232)) (Prims.of_int (33)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
                             (Prims.of_int (590)) (Prims.of_int (19))
-                            (Prims.of_int (590)) (Prims.of_int (31)))
-                         (Obj.magic
-                            (FStar_Tactics_Effect.tac_bind
+                            (Prims.of_int (590)) (Prims.of_int (31)))))
+                   (Obj.magic
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.Tactics.PatternMatching.fst"
-                                  (Prims.of_int (231)) (Prims.of_int (30))
-                                  (Prims.of_int (232)) (Prims.of_int (33)))
+                                  (Prims.of_int (231)) (Prims.of_int (4))
+                                  (Prims.of_int (232)) (Prims.of_int (33)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
                                (FStar_Range.mk_range "prims.fst"
                                   (Prims.of_int (590)) (Prims.of_int (19))
-                                  (Prims.of_int (590)) (Prims.of_int (31)))
-                               (Obj.magic
-                                  (FStar_Tactics_Effect.tac_bind
-                                     (FStar_Range.mk_range
-                                        "FStar.Tactics.PatternMatching.fst"
-                                        (Prims.of_int (231))
-                                        (Prims.of_int (30))
-                                        (Prims.of_int (231))
-                                        (Prims.of_int (49)))
+                                  (Prims.of_int (590)) (Prims.of_int (31)))))
+                         (Obj.magic
+                            (FStar_Tactics_Effect.tac_bind
+                               (FStar_Sealed.seal
+                                  (Obj.magic
                                      (FStar_Range.mk_range
                                         "FStar.Tactics.PatternMatching.fst"
                                         (Prims.of_int (231))
                                         (Prims.of_int (30))
                                         (Prims.of_int (232))
-                                        (Prims.of_int (33)))
+                                        (Prims.of_int (33)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range "prims.fst"
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (19))
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (31)))))
+                               (Obj.magic
+                                  (FStar_Tactics_Effect.tac_bind
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.Tactics.PatternMatching.fst"
+                                              (Prims.of_int (231))
+                                              (Prims.of_int (30))
+                                              (Prims.of_int (231))
+                                              (Prims.of_int (49)))))
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.Tactics.PatternMatching.fst"
+                                              (Prims.of_int (231))
+                                              (Prims.of_int (30))
+                                              (Prims.of_int (232))
+                                              (Prims.of_int (33)))))
                                      (Obj.magic
                                         (FStar_Tactics_Builtins.term_to_string
                                            t1))
@@ -779,32 +909,40 @@ let (string_of_match_exception :
                                         (fun uu___1 ->
                                            Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
-                                                (FStar_Range.mk_range
-                                                   "FStar.Tactics.PatternMatching.fst"
-                                                   (Prims.of_int (232))
-                                                   (Prims.of_int (4))
-                                                   (Prims.of_int (232))
-                                                   (Prims.of_int (33)))
-                                                (FStar_Range.mk_range
-                                                   "prims.fst"
-                                                   (Prims.of_int (590))
-                                                   (Prims.of_int (19))
-                                                   (Prims.of_int (590))
-                                                   (Prims.of_int (31)))
-                                                (Obj.magic
-                                                   (FStar_Tactics_Effect.tac_bind
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "FStar.Tactics.PatternMatching.fst"
                                                          (Prims.of_int (232))
-                                                         (Prims.of_int (14))
+                                                         (Prims.of_int (4))
                                                          (Prims.of_int (232))
-                                                         (Prims.of_int (33)))
+                                                         (Prims.of_int (33)))))
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "prims.fst"
                                                          (Prims.of_int (590))
                                                          (Prims.of_int (19))
                                                          (Prims.of_int (590))
-                                                         (Prims.of_int (31)))
+                                                         (Prims.of_int (31)))))
+                                                (Obj.magic
+                                                   (FStar_Tactics_Effect.tac_bind
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "FStar.Tactics.PatternMatching.fst"
+                                                               (Prims.of_int (232))
+                                                               (Prims.of_int (14))
+                                                               (Prims.of_int (232))
+                                                               (Prims.of_int (33)))))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "prims.fst"
+                                                               (Prims.of_int (590))
+                                                               (Prims.of_int (19))
+                                                               (Prims.of_int (590))
+                                                               (Prims.of_int (31)))))
                                                       (Obj.magic
                                                          (FStar_Tactics_Builtins.term_to_string
                                                             t2))
@@ -837,66 +975,88 @@ let (string_of_match_exception :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (235)) (Prims.of_int (4))
-                      (Prims.of_int (235)) (Prims.of_int (49)))
-                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                      (Prims.of_int (19)) (Prims.of_int (590))
-                      (Prims.of_int (31)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.PatternMatching.fst"
+                            (Prims.of_int (235)) (Prims.of_int (4))
+                            (Prims.of_int (235)) (Prims.of_int (49)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range "prims.fst"
+                            (Prims.of_int (590)) (Prims.of_int (19))
+                            (Prims.of_int (590)) (Prims.of_int (31)))))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range
-                            "FStar.Tactics.PatternMatching.fst"
-                            (Prims.of_int (235)) (Prims.of_int (4))
-                            (Prims.of_int (235)) (Prims.of_int (21)))
-                         (FStar_Range.mk_range
-                            "FStar.Tactics.PatternMatching.fst"
-                            (Prims.of_int (235)) (Prims.of_int (4))
-                            (Prims.of_int (235)) (Prims.of_int (49)))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.Tactics.PatternMatching.fst"
+                                  (Prims.of_int (235)) (Prims.of_int (4))
+                                  (Prims.of_int (235)) (Prims.of_int (21)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.Tactics.PatternMatching.fst"
+                                  (Prims.of_int (235)) (Prims.of_int (4))
+                                  (Prims.of_int (235)) (Prims.of_int (49)))))
                          (Obj.magic
                             (FStar_Tactics_Builtins.term_to_string tm))
                          (fun uu___1 ->
                             (fun uu___1 ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (FStar_Range.mk_range
-                                       "FStar.Tactics.PatternMatching.fst"
-                                       (Prims.of_int (235))
-                                       (Prims.of_int (24))
-                                       (Prims.of_int (235))
-                                       (Prims.of_int (49)))
-                                    (FStar_Range.mk_range "prims.fst"
-                                       (Prims.of_int (590))
-                                       (Prims.of_int (19))
-                                       (Prims.of_int (590))
-                                       (Prims.of_int (31)))
-                                    (Obj.magic
-                                       (FStar_Tactics_Effect.tac_bind
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
                                           (FStar_Range.mk_range
                                              "FStar.Tactics.PatternMatching.fst"
                                              (Prims.of_int (235))
-                                             (Prims.of_int (31))
+                                             (Prims.of_int (24))
                                              (Prims.of_int (235))
-                                             (Prims.of_int (49)))
+                                             (Prims.of_int (49)))))
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
                                           (FStar_Range.mk_range "prims.fst"
                                              (Prims.of_int (590))
                                              (Prims.of_int (19))
                                              (Prims.of_int (590))
-                                             (Prims.of_int (31)))
-                                          (Obj.magic
-                                             (FStar_Tactics_Effect.tac_bind
+                                             (Prims.of_int (31)))))
+                                    (Obj.magic
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "FStar.Tactics.PatternMatching.fst"
                                                    (Prims.of_int (235))
                                                    (Prims.of_int (31))
                                                    (Prims.of_int (235))
-                                                   (Prims.of_int (43)))
+                                                   (Prims.of_int (49)))))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "prims.fst"
                                                    (Prims.of_int (590))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (590))
-                                                   (Prims.of_int (31)))
+                                                   (Prims.of_int (31)))))
+                                          (Obj.magic
+                                             (FStar_Tactics_Effect.tac_bind
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "FStar.Tactics.PatternMatching.fst"
+                                                         (Prims.of_int (235))
+                                                         (Prims.of_int (31))
+                                                         (Prims.of_int (235))
+                                                         (Prims.of_int (43)))))
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "prims.fst"
+                                                         (Prims.of_int (590))
+                                                         (Prims.of_int (19))
+                                                         (Prims.of_int (590))
+                                                         (Prims.of_int (31)))))
                                                 (Obj.magic (term_head tm))
                                                 (fun uu___2 ->
                                                    FStar_Tactics_Effect.lift_div_tac
@@ -922,21 +1082,30 @@ let (string_of_match_exception :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (238)) (Prims.of_int (4))
-                      (Prims.of_int (238)) (Prims.of_int (74)))
-                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                      (Prims.of_int (19)) (Prims.of_int (590))
-                      (Prims.of_int (31)))
-                   (Obj.magic
-                      (FStar_Tactics_Effect.tac_bind
+                   (FStar_Sealed.seal
+                      (Obj.magic
                          (FStar_Range.mk_range
                             "FStar.Tactics.PatternMatching.fst"
                             (Prims.of_int (238)) (Prims.of_int (4))
-                            (Prims.of_int (238)) (Prims.of_int (22)))
+                            (Prims.of_int (238)) (Prims.of_int (74)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
                             (Prims.of_int (590)) (Prims.of_int (19))
-                            (Prims.of_int (590)) (Prims.of_int (31)))
+                            (Prims.of_int (590)) (Prims.of_int (31)))))
+                   (Obj.magic
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.Tactics.PatternMatching.fst"
+                                  (Prims.of_int (238)) (Prims.of_int (4))
+                                  (Prims.of_int (238)) (Prims.of_int (22)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range "prims.fst"
+                                  (Prims.of_int (590)) (Prims.of_int (19))
+                                  (Prims.of_int (590)) (Prims.of_int (31)))))
                          (Obj.magic
                             (FStar_Tactics_Builtins.term_to_string typ))
                          (fun uu___1 ->
@@ -997,14 +1166,18 @@ let lift_exn_tac :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range
-                          "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (269)) (Prims.of_int (31))
-                          (Prims.of_int (269)) (Prims.of_int (61)))
-                       (FStar_Range.mk_range
-                          "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (269)) (Prims.of_int (18))
-                          (Prims.of_int (269)) (Prims.of_int (61)))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.Tactics.PatternMatching.fst"
+                                (Prims.of_int (269)) (Prims.of_int (31))
+                                (Prims.of_int (269)) (Prims.of_int (61)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.Tactics.PatternMatching.fst"
+                                (Prims.of_int (269)) (Prims.of_int (18))
+                                (Prims.of_int (269)) (Prims.of_int (61)))))
                        (Obj.magic (string_of_match_exception ex))
                        (fun uu___ -> FStar_Tactics_Derived.fail uu___))))
         uu___1 uu___
@@ -1025,14 +1198,18 @@ let lift_exn_tactic :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range
-                          "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (274)) (Prims.of_int (31))
-                          (Prims.of_int (274)) (Prims.of_int (61)))
-                       (FStar_Range.mk_range
-                          "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (274)) (Prims.of_int (18))
-                          (Prims.of_int (274)) (Prims.of_int (61)))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.Tactics.PatternMatching.fst"
+                                (Prims.of_int (274)) (Prims.of_int (31))
+                                (Prims.of_int (274)) (Prims.of_int (61)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.Tactics.PatternMatching.fst"
+                                (Prims.of_int (274)) (Prims.of_int (18))
+                                (Prims.of_int (274)) (Prims.of_int (61)))))
                        (Obj.magic (string_of_match_exception ex))
                        (fun uu___ -> FStar_Tactics_Derived.fail uu___))))
         uu___1 uu___
@@ -1041,43 +1218,63 @@ let (string_of_bindings :
   bindings -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun bindings1 ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (286)) (Prims.of_int (4)) (Prims.of_int (287))
-         (Prims.of_int (27)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (285)) (Prims.of_int (2)) (Prims.of_int (287))
-         (Prims.of_int (27)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (286)) (Prims.of_int (4)) (Prims.of_int (287))
+               (Prims.of_int (27)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (285)) (Prims.of_int (2)) (Prims.of_int (287))
+               (Prims.of_int (27)))))
       (Obj.magic
          (FStar_Tactics_Util.map
             (fun uu___ ->
                match uu___ with
                | (nm, tm) ->
                    FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range
-                        "FStar.Tactics.PatternMatching.fst"
-                        (Prims.of_int (286)) (Prims.of_int (35))
-                        (Prims.of_int (286)) (Prims.of_int (64)))
-                     (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                        (Prims.of_int (19)) (Prims.of_int (590))
-                        (Prims.of_int (31)))
-                     (Obj.magic
-                        (FStar_Tactics_Effect.tac_bind
+                     (FStar_Sealed.seal
+                        (Obj.magic
                            (FStar_Range.mk_range
                               "FStar.Tactics.PatternMatching.fst"
-                              (Prims.of_int (286)) (Prims.of_int (40))
-                              (Prims.of_int (286)) (Prims.of_int (64)))
+                              (Prims.of_int (286)) (Prims.of_int (35))
+                              (Prims.of_int (286)) (Prims.of_int (64)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
                            (FStar_Range.mk_range "prims.fst"
                               (Prims.of_int (590)) (Prims.of_int (19))
-                              (Prims.of_int (590)) (Prims.of_int (31)))
-                           (Obj.magic
-                              (FStar_Tactics_Effect.tac_bind
+                              (Prims.of_int (590)) (Prims.of_int (31)))))
+                     (Obj.magic
+                        (FStar_Tactics_Effect.tac_bind
+                           (FStar_Sealed.seal
+                              (Obj.magic
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.PatternMatching.fst"
-                                    (Prims.of_int (286)) (Prims.of_int (47))
-                                    (Prims.of_int (286)) (Prims.of_int (64)))
+                                    (Prims.of_int (286)) (Prims.of_int (40))
+                                    (Prims.of_int (286)) (Prims.of_int (64)))))
+                           (FStar_Sealed.seal
+                              (Obj.magic
                                  (FStar_Range.mk_range "prims.fst"
                                     (Prims.of_int (590)) (Prims.of_int (19))
-                                    (Prims.of_int (590)) (Prims.of_int (31)))
+                                    (Prims.of_int (590)) (Prims.of_int (31)))))
+                           (Obj.magic
+                              (FStar_Tactics_Effect.tac_bind
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range
+                                          "FStar.Tactics.PatternMatching.fst"
+                                          (Prims.of_int (286))
+                                          (Prims.of_int (47))
+                                          (Prims.of_int (286))
+                                          (Prims.of_int (64)))))
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range "prims.fst"
+                                          (Prims.of_int (590))
+                                          (Prims.of_int (19))
+                                          (Prims.of_int (590))
+                                          (Prims.of_int (31)))))
                                  (Obj.magic
                                     (FStar_Tactics_Builtins.term_to_string tm))
                                  (fun uu___1 ->
@@ -1103,12 +1300,16 @@ let rec (interp_pattern_aux :
     fun cur_bindings ->
       fun tm ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-             (Prims.of_int (295)) (Prims.of_int (4)) (Prims.of_int (298))
-             (Prims.of_int (46)))
-          (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-             (Prims.of_int (298)) (Prims.of_int (49)) (Prims.of_int (321))
-             (Prims.of_int (62)))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                   (Prims.of_int (295)) (Prims.of_int (4))
+                   (Prims.of_int (298)) (Prims.of_int (46)))))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                   (Prims.of_int (298)) (Prims.of_int (49))
+                   (Prims.of_int (321)) (Prims.of_int (62)))))
           (FStar_Tactics_Effect.lift_div_tac
              (fun uu___ ->
                 fun v ->
@@ -1125,31 +1326,40 @@ let rec (interp_pattern_aux :
              (fun interp_var ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range
-                        "FStar.Tactics.PatternMatching.fst"
-                        (Prims.of_int (300)) (Prims.of_int (4))
-                        (Prims.of_int (305)) (Prims.of_int (43)))
-                     (FStar_Range.mk_range
-                        "FStar.Tactics.PatternMatching.fst"
-                        (Prims.of_int (305)) (Prims.of_int (46))
-                        (Prims.of_int (321)) (Prims.of_int (62)))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.Tactics.PatternMatching.fst"
+                              (Prims.of_int (300)) (Prims.of_int (4))
+                              (Prims.of_int (305)) (Prims.of_int (43)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.Tactics.PatternMatching.fst"
+                              (Prims.of_int (305)) (Prims.of_int (46))
+                              (Prims.of_int (321)) (Prims.of_int (62)))))
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___ ->
                            fun qn1 ->
                              fun cur_bindings1 ->
                                fun tm1 ->
                                  FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range
-                                      "FStar.Tactics.PatternMatching.fst"
-                                      (Prims.of_int (300))
-                                      (Prims.of_int (10))
-                                      (Prims.of_int (300))
-                                      (Prims.of_int (20)))
-                                   (FStar_Range.mk_range
-                                      "FStar.Tactics.PatternMatching.fst"
-                                      (Prims.of_int (300)) (Prims.of_int (4))
-                                      (Prims.of_int (305))
-                                      (Prims.of_int (43)))
+                                   (FStar_Sealed.seal
+                                      (Obj.magic
+                                         (FStar_Range.mk_range
+                                            "FStar.Tactics.PatternMatching.fst"
+                                            (Prims.of_int (300))
+                                            (Prims.of_int (10))
+                                            (Prims.of_int (300))
+                                            (Prims.of_int (20)))))
+                                   (FStar_Sealed.seal
+                                      (Obj.magic
+                                         (FStar_Range.mk_range
+                                            "FStar.Tactics.PatternMatching.fst"
+                                            (Prims.of_int (300))
+                                            (Prims.of_int (4))
+                                            (Prims.of_int (305))
+                                            (Prims.of_int (43)))))
                                    (Obj.magic
                                       (FStar_Tactics_NamedView.inspect tm1))
                                    (fun uu___1 ->
@@ -1189,31 +1399,43 @@ let rec (interp_pattern_aux :
                         (fun interp_qn ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range
-                                   "FStar.Tactics.PatternMatching.fst"
-                                   (Prims.of_int (307)) (Prims.of_int (4))
-                                   (Prims.of_int (309)) (Prims.of_int (43)))
-                                (FStar_Range.mk_range
-                                   "FStar.Tactics.PatternMatching.fst"
-                                   (Prims.of_int (309)) (Prims.of_int (46))
-                                   (Prims.of_int (321)) (Prims.of_int (62)))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.Tactics.PatternMatching.fst"
+                                         (Prims.of_int (307))
+                                         (Prims.of_int (4))
+                                         (Prims.of_int (309))
+                                         (Prims.of_int (43)))))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.Tactics.PatternMatching.fst"
+                                         (Prims.of_int (309))
+                                         (Prims.of_int (46))
+                                         (Prims.of_int (321))
+                                         (Prims.of_int (62)))))
                                 (FStar_Tactics_Effect.lift_div_tac
                                    (fun uu___ ->
                                       fun cur_bindings1 ->
                                         fun tm1 ->
                                           FStar_Tactics_Effect.tac_bind
-                                            (FStar_Range.mk_range
-                                               "FStar.Tactics.PatternMatching.fst"
-                                               (Prims.of_int (307))
-                                               (Prims.of_int (10))
-                                               (Prims.of_int (307))
-                                               (Prims.of_int (20)))
-                                            (FStar_Range.mk_range
-                                               "FStar.Tactics.PatternMatching.fst"
-                                               (Prims.of_int (307))
-                                               (Prims.of_int (4))
-                                               (Prims.of_int (309))
-                                               (Prims.of_int (43)))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.Tactics.PatternMatching.fst"
+                                                     (Prims.of_int (307))
+                                                     (Prims.of_int (10))
+                                                     (Prims.of_int (307))
+                                                     (Prims.of_int (20)))))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.Tactics.PatternMatching.fst"
+                                                     (Prims.of_int (307))
+                                                     (Prims.of_int (4))
+                                                     (Prims.of_int (309))
+                                                     (Prims.of_int (43)))))
                                             (Obj.magic
                                                (FStar_Tactics_NamedView.inspect
                                                   tm1))
@@ -1232,18 +1454,22 @@ let rec (interp_pattern_aux :
                                    (fun interp_type ->
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
-                                           (FStar_Range.mk_range
-                                              "FStar.Tactics.PatternMatching.fst"
-                                              (Prims.of_int (311))
-                                              (Prims.of_int (4))
-                                              (Prims.of_int (316))
-                                              (Prims.of_int (43)))
-                                           (FStar_Range.mk_range
-                                              "FStar.Tactics.PatternMatching.fst"
-                                              (Prims.of_int (317))
-                                              (Prims.of_int (4))
-                                              (Prims.of_int (321))
-                                              (Prims.of_int (62)))
+                                           (FStar_Sealed.seal
+                                              (Obj.magic
+                                                 (FStar_Range.mk_range
+                                                    "FStar.Tactics.PatternMatching.fst"
+                                                    (Prims.of_int (311))
+                                                    (Prims.of_int (4))
+                                                    (Prims.of_int (316))
+                                                    (Prims.of_int (43)))))
+                                           (FStar_Sealed.seal
+                                              (Obj.magic
+                                                 (FStar_Range.mk_range
+                                                    "FStar.Tactics.PatternMatching.fst"
+                                                    (Prims.of_int (317))
+                                                    (Prims.of_int (4))
+                                                    (Prims.of_int (321))
+                                                    (Prims.of_int (62)))))
                                            (FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___ ->
                                                  fun p_hd ->
@@ -1251,18 +1477,22 @@ let rec (interp_pattern_aux :
                                                      fun cur_bindings1 ->
                                                        fun tm1 ->
                                                          FStar_Tactics_Effect.tac_bind
-                                                           (FStar_Range.mk_range
-                                                              "FStar.Tactics.PatternMatching.fst"
-                                                              (Prims.of_int (311))
-                                                              (Prims.of_int (10))
-                                                              (Prims.of_int (311))
-                                                              (Prims.of_int (20)))
-                                                           (FStar_Range.mk_range
-                                                              "FStar.Tactics.PatternMatching.fst"
-                                                              (Prims.of_int (311))
-                                                              (Prims.of_int (4))
-                                                              (Prims.of_int (316))
-                                                              (Prims.of_int (43)))
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (311))
+                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (311))
+                                                                    (Prims.of_int (20)))))
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (311))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (316))
+                                                                    (Prims.of_int (43)))))
                                                            (Obj.magic
                                                               (FStar_Tactics_NamedView.inspect
                                                                  tm1))
@@ -1278,18 +1508,22 @@ let rec (interp_pattern_aux :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (313))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (313))
-                                                                    (Prims.of_int (60)))
+                                                                    (Prims.of_int (60)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (313))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (315))
-                                                                    (Prims.of_int (21)))
+                                                                    (Prims.of_int (21)))))
                                                                     (Obj.magic
                                                                     (interp_pattern_aux
                                                                     p_hd
@@ -1306,18 +1540,22 @@ let rec (interp_pattern_aux :
                                                                     with_hd
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (314))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (314))
-                                                                    (Prims.of_int (58)))
+                                                                    (Prims.of_int (58)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (314))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (315))
-                                                                    (Prims.of_int (21)))
+                                                                    (Prims.of_int (21)))))
                                                                     (Obj.magic
                                                                     (interp_pattern_aux
                                                                     p_arg
@@ -1393,12 +1631,17 @@ let (interp_pattern :
   fun pat ->
     fun tm ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (327)) (Prims.of_int (24)) (Prims.of_int (327))
-           (Prims.of_int (52)))
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (327)) (Prims.of_int (4)) (Prims.of_int (328))
-           (Prims.of_int (43))) (Obj.magic (interp_pattern_aux pat [] tm))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (327)) (Prims.of_int (24))
+                 (Prims.of_int (327)) (Prims.of_int (52)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (327)) (Prims.of_int (4)) (Prims.of_int (328))
+                 (Prims.of_int (43)))))
+        (Obj.magic (interp_pattern_aux pat [] tm))
         (fun uu___ ->
            (fun uu___ ->
               Obj.magic
@@ -1419,20 +1662,28 @@ let (match_term :
   fun pat ->
     fun tm ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (334)) (Prims.of_int (10)) (Prims.of_int (334))
-           (Prims.of_int (46)))
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (334)) (Prims.of_int (4)) (Prims.of_int (336))
-           (Prims.of_int (63)))
-        (Obj.magic
-           (FStar_Tactics_Effect.tac_bind
-              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                 (Prims.of_int (334)) (Prims.of_int (29))
-                 (Prims.of_int (334)) (Prims.of_int (46)))
+        (FStar_Sealed.seal
+           (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                  (Prims.of_int (334)) (Prims.of_int (10))
-                 (Prims.of_int (334)) (Prims.of_int (46)))
+                 (Prims.of_int (334)) (Prims.of_int (46)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (334)) (Prims.of_int (4)) (Prims.of_int (336))
+                 (Prims.of_int (63)))))
+        (Obj.magic
+           (FStar_Tactics_Effect.tac_bind
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                       (Prims.of_int (334)) (Prims.of_int (29))
+                       (Prims.of_int (334)) (Prims.of_int (46)))))
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                       (Prims.of_int (334)) (Prims.of_int (10))
+                       (Prims.of_int (334)) (Prims.of_int (46)))))
               (Obj.magic (FStar_Tactics_Derived.norm_term [] tm))
               (fun uu___ ->
                  (fun uu___ -> Obj.magic (interp_pattern pat uu___)) uu___)))
@@ -1447,14 +1698,18 @@ let (match_term :
                   Obj.magic
                     (Obj.repr
                        (FStar_Tactics_Effect.tac_bind
-                          (FStar_Range.mk_range
-                             "FStar.Tactics.PatternMatching.fst"
-                             (Prims.of_int (336)) (Prims.of_int (33))
-                             (Prims.of_int (336)) (Prims.of_int (63)))
-                          (FStar_Range.mk_range
-                             "FStar.Tactics.PatternMatching.fst"
-                             (Prims.of_int (336)) (Prims.of_int (20))
-                             (Prims.of_int (336)) (Prims.of_int (63)))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.PatternMatching.fst"
+                                   (Prims.of_int (336)) (Prims.of_int (33))
+                                   (Prims.of_int (336)) (Prims.of_int (63)))))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.PatternMatching.fst"
+                                   (Prims.of_int (336)) (Prims.of_int (20))
+                                   (Prims.of_int (336)) (Prims.of_int (63)))))
                           (Obj.magic (string_of_match_exception ex))
                           (fun uu___1 -> FStar_Tactics_Derived.fail uu___1))))
              uu___)
@@ -1517,42 +1772,62 @@ let (string_of_matching_solution :
   matching_solution -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun ms ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (383)) (Prims.of_int (4)) (Prims.of_int (385))
-         (Prims.of_int (57)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (385)) (Prims.of_int (60)) (Prims.of_int (391))
-         (Prims.of_int (26)))
-      (Obj.magic
-         (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-               (Prims.of_int (384)) (Prims.of_int (6)) (Prims.of_int (385))
-               (Prims.of_int (57)))
+      (FStar_Sealed.seal
+         (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                (Prims.of_int (383)) (Prims.of_int (4)) (Prims.of_int (385))
-               (Prims.of_int (57)))
+               (Prims.of_int (57)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (385)) (Prims.of_int (60)) (Prims.of_int (391))
+               (Prims.of_int (26)))))
+      (Obj.magic
+         (FStar_Tactics_Effect.tac_bind
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                     (Prims.of_int (384)) (Prims.of_int (6))
+                     (Prims.of_int (385)) (Prims.of_int (57)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                     (Prims.of_int (383)) (Prims.of_int (4))
+                     (Prims.of_int (385)) (Prims.of_int (57)))))
             (Obj.magic
                (FStar_Tactics_Util.map
                   (fun uu___ ->
                      match uu___ with
                      | (varname1, tm) ->
                          FStar_Tactics_Effect.tac_bind
-                           (FStar_Range.mk_range
-                              "FStar.Tactics.PatternMatching.fst"
-                              (Prims.of_int (385)) (Prims.of_int (18))
-                              (Prims.of_int (385)) (Prims.of_int (44)))
-                           (FStar_Range.mk_range "prims.fst"
-                              (Prims.of_int (590)) (Prims.of_int (19))
-                              (Prims.of_int (590)) (Prims.of_int (31)))
-                           (Obj.magic
-                              (FStar_Tactics_Effect.tac_bind
+                           (FStar_Sealed.seal
+                              (Obj.magic
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.PatternMatching.fst"
-                                    (Prims.of_int (385)) (Prims.of_int (25))
-                                    (Prims.of_int (385)) (Prims.of_int (44)))
+                                    (Prims.of_int (385)) (Prims.of_int (18))
+                                    (Prims.of_int (385)) (Prims.of_int (44)))))
+                           (FStar_Sealed.seal
+                              (Obj.magic
                                  (FStar_Range.mk_range "prims.fst"
                                     (Prims.of_int (590)) (Prims.of_int (19))
-                                    (Prims.of_int (590)) (Prims.of_int (31)))
+                                    (Prims.of_int (590)) (Prims.of_int (31)))))
+                           (Obj.magic
+                              (FStar_Tactics_Effect.tac_bind
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range
+                                          "FStar.Tactics.PatternMatching.fst"
+                                          (Prims.of_int (385))
+                                          (Prims.of_int (25))
+                                          (Prims.of_int (385))
+                                          (Prims.of_int (44)))))
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range "prims.fst"
+                                          (Prims.of_int (590))
+                                          (Prims.of_int (19))
+                                          (Prims.of_int (590))
+                                          (Prims.of_int (31)))))
                                  (Obj.magic
                                     (FStar_Tactics_Builtins.term_to_string tm))
                                  (fun uu___1 ->
@@ -1569,52 +1844,70 @@ let (string_of_matching_solution :
          (fun vars ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                    (Prims.of_int (387)) (Prims.of_int (4))
-                    (Prims.of_int (389)) (Prims.of_int (60)))
-                 (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                    (Prims.of_int (19)) (Prims.of_int (590))
-                    (Prims.of_int (31)))
-                 (Obj.magic
-                    (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range
-                          "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (388)) (Prims.of_int (6))
-                          (Prims.of_int (389)) (Prims.of_int (60)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
                        (FStar_Range.mk_range
                           "FStar.Tactics.PatternMatching.fst"
                           (Prims.of_int (387)) (Prims.of_int (4))
-                          (Prims.of_int (389)) (Prims.of_int (60)))
+                          (Prims.of_int (389)) (Prims.of_int (60)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
+                          (Prims.of_int (19)) (Prims.of_int (590))
+                          (Prims.of_int (31)))))
+                 (Obj.magic
+                    (FStar_Tactics_Effect.tac_bind
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.Tactics.PatternMatching.fst"
+                                (Prims.of_int (388)) (Prims.of_int (6))
+                                (Prims.of_int (389)) (Prims.of_int (60)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.Tactics.PatternMatching.fst"
+                                (Prims.of_int (387)) (Prims.of_int (4))
+                                (Prims.of_int (389)) (Prims.of_int (60)))))
                        (Obj.magic
                           (FStar_Tactics_Util.map
                              (fun uu___ ->
                                 match uu___ with
                                 | (nm, binding) ->
                                     FStar_Tactics_Effect.tac_bind
-                                      (FStar_Range.mk_range
-                                         "FStar.Tactics.PatternMatching.fst"
-                                         (Prims.of_int (389))
-                                         (Prims.of_int (13))
-                                         (Prims.of_int (389))
-                                         (Prims.of_int (47)))
-                                      (FStar_Range.mk_range "prims.fst"
-                                         (Prims.of_int (590))
-                                         (Prims.of_int (19))
-                                         (Prims.of_int (590))
-                                         (Prims.of_int (31)))
-                                      (Obj.magic
-                                         (FStar_Tactics_Effect.tac_bind
+                                      (FStar_Sealed.seal
+                                         (Obj.magic
                                             (FStar_Range.mk_range
                                                "FStar.Tactics.PatternMatching.fst"
                                                (Prims.of_int (389))
-                                               (Prims.of_int (20))
+                                               (Prims.of_int (13))
                                                (Prims.of_int (389))
-                                               (Prims.of_int (47)))
+                                               (Prims.of_int (47)))))
+                                      (FStar_Sealed.seal
+                                         (Obj.magic
                                             (FStar_Range.mk_range "prims.fst"
                                                (Prims.of_int (590))
                                                (Prims.of_int (19))
                                                (Prims.of_int (590))
-                                               (Prims.of_int (31)))
+                                               (Prims.of_int (31)))))
+                                      (Obj.magic
+                                         (FStar_Tactics_Effect.tac_bind
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.Tactics.PatternMatching.fst"
+                                                     (Prims.of_int (389))
+                                                     (Prims.of_int (20))
+                                                     (Prims.of_int (389))
+                                                     (Prims.of_int (47)))))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "prims.fst"
+                                                     (Prims.of_int (590))
+                                                     (Prims.of_int (19))
+                                                     (Prims.of_int (590))
+                                                     (Prims.of_int (31)))))
                                             (Obj.magic
                                                (FStar_Tactics_Derived.binding_to_string
                                                   binding))
@@ -1667,12 +1960,16 @@ let ms_locate_var :
   fun solution ->
     fun name ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (406)) (Prims.of_int (13)) (Prims.of_int (406))
-           (Prims.of_int (55)))
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (406)) (Prims.of_int (2)) (Prims.of_int (406))
-           (Prims.of_int (55)))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (406)) (Prims.of_int (13))
+                 (Prims.of_int (406)) (Prims.of_int (55)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (406)) (Prims.of_int (2)) (Prims.of_int (406))
+                 (Prims.of_int (55)))))
         (Obj.magic (assoc_varname_fail name solution.ms_vars))
         (fun uu___ ->
            (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.unquote uu___))
@@ -1717,32 +2014,40 @@ let rec solve_mp_for_single_hyp :
                                 (FStar_Tactics_Derived.or_else
                                    (fun uu___ ->
                                       FStar_Tactics_Effect.tac_bind
-                                        (FStar_Range.mk_range
-                                           "FStar.Tactics.PatternMatching.fst"
-                                           (Prims.of_int (446))
-                                           (Prims.of_int (15))
-                                           (Prims.of_int (446))
-                                           (Prims.of_int (74)))
-                                        (FStar_Range.mk_range
-                                           "FStar.Tactics.PatternMatching.fst"
-                                           (Prims.of_int (446))
-                                           (Prims.of_int (9))
-                                           (Prims.of_int (451))
-                                           (Prims.of_int (73)))
-                                        (Obj.magic
-                                           (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.Tactics.PatternMatching.fst"
-                                                 (Prims.of_int (446))
-                                                 (Prims.of_int (55))
-                                                 (Prims.of_int (446))
-                                                 (Prims.of_int (74)))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
                                               (FStar_Range.mk_range
                                                  "FStar.Tactics.PatternMatching.fst"
                                                  (Prims.of_int (446))
                                                  (Prims.of_int (15))
                                                  (Prims.of_int (446))
-                                                 (Prims.of_int (74)))
+                                                 (Prims.of_int (74)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.Tactics.PatternMatching.fst"
+                                                 (Prims.of_int (446))
+                                                 (Prims.of_int (9))
+                                                 (Prims.of_int (451))
+                                                 (Prims.of_int (73)))))
+                                        (Obj.magic
+                                           (FStar_Tactics_Effect.tac_bind
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.Tactics.PatternMatching.fst"
+                                                       (Prims.of_int (446))
+                                                       (Prims.of_int (55))
+                                                       (Prims.of_int (446))
+                                                       (Prims.of_int (74)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.Tactics.PatternMatching.fst"
+                                                       (Prims.of_int (446))
+                                                       (Prims.of_int (15))
+                                                       (Prims.of_int (446))
+                                                       (Prims.of_int (74)))))
                                               (Obj.magic
                                                  (FStar_Tactics_Derived.type_of_binding
                                                     h))
@@ -1758,32 +2063,40 @@ let rec solve_mp_for_single_hyp :
                                               | Failure ex ->
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Range.mk_range
-                                                          "FStar.Tactics.PatternMatching.fst"
-                                                          (Prims.of_int (448))
-                                                          (Prims.of_int (16))
-                                                          (Prims.of_int (448))
-                                                          (Prims.of_int (74)))
-                                                       (FStar_Range.mk_range
-                                                          "FStar.Tactics.PatternMatching.fst"
-                                                          (Prims.of_int (448))
-                                                          (Prims.of_int (11))
-                                                          (Prims.of_int (448))
-                                                          (Prims.of_int (74)))
-                                                       (Obj.magic
-                                                          (FStar_Tactics_Effect.tac_bind
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "FStar.Tactics.PatternMatching.fst"
                                                                 (Prims.of_int (448))
-                                                                (Prims.of_int (43))
+                                                                (Prims.of_int (16))
                                                                 (Prims.of_int (448))
-                                                                (Prims.of_int (73)))
+                                                                (Prims.of_int (74)))))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
                                                              (FStar_Range.mk_range
-                                                                "prims.fst"
-                                                                (Prims.of_int (590))
-                                                                (Prims.of_int (19))
-                                                                (Prims.of_int (590))
-                                                                (Prims.of_int (31)))
+                                                                "FStar.Tactics.PatternMatching.fst"
+                                                                (Prims.of_int (448))
+                                                                (Prims.of_int (11))
+                                                                (Prims.of_int (448))
+                                                                (Prims.of_int (74)))))
+                                                       (Obj.magic
+                                                          (FStar_Tactics_Effect.tac_bind
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (43))
+                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (73)))))
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))))
                                                              (Obj.magic
                                                                 (string_of_match_exception
                                                                    ex))
@@ -1800,18 +2113,22 @@ let rec solve_mp_for_single_hyp :
                                               | Success bindings1 ->
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Range.mk_range
-                                                          "FStar.Tactics.PatternMatching.fst"
-                                                          (Prims.of_int (450))
-                                                          (Prims.of_int (25))
-                                                          (Prims.of_int (450))
-                                                          (Prims.of_int (54)))
-                                                       (FStar_Range.mk_range
-                                                          "FStar.Tactics.PatternMatching.fst"
-                                                          (Prims.of_int (451))
-                                                          (Prims.of_int (11))
-                                                          (Prims.of_int (451))
-                                                          (Prims.of_int (73)))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "FStar.Tactics.PatternMatching.fst"
+                                                                (Prims.of_int (450))
+                                                                (Prims.of_int (25))
+                                                                (Prims.of_int (450))
+                                                                (Prims.of_int (54)))))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "FStar.Tactics.PatternMatching.fst"
+                                                                (Prims.of_int (451))
+                                                                (Prims.of_int (11))
+                                                                (Prims.of_int (451))
+                                                                (Prims.of_int (73)))))
                                                        (FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___2 ->
                                                              (name, h) ::
@@ -1859,12 +2176,16 @@ let solve_mp :
       fun goal ->
         fun body ->
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-               (Prims.of_int (479)) (Prims.of_int (4)) (Prims.of_int (484))
-               (Prims.of_int (64)))
-            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-               (Prims.of_int (485)) (Prims.of_int (2)) (Prims.of_int (485))
-               (Prims.of_int (62)))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                     (Prims.of_int (479)) (Prims.of_int (4))
+                     (Prims.of_int (484)) (Prims.of_int (64)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                     (Prims.of_int (485)) (Prims.of_int (2))
+                     (Prims.of_int (485)) (Prims.of_int (62)))))
             (match problem.mp_goal with
              | FStar_Pervasives_Native.None ->
                  Obj.magic
@@ -1875,14 +2196,18 @@ let solve_mp :
                  Obj.magic
                    (Obj.repr
                       (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range
-                            "FStar.Tactics.PatternMatching.fst"
-                            (Prims.of_int (482)) (Prims.of_int (12))
-                            (Prims.of_int (482)) (Prims.of_int (35)))
-                         (FStar_Range.mk_range
-                            "FStar.Tactics.PatternMatching.fst"
-                            (Prims.of_int (482)) (Prims.of_int (6))
-                            (Prims.of_int (484)) (Prims.of_int (64)))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.Tactics.PatternMatching.fst"
+                                  (Prims.of_int (482)) (Prims.of_int (12))
+                                  (Prims.of_int (482)) (Prims.of_int (35)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.Tactics.PatternMatching.fst"
+                                  (Prims.of_int (482)) (Prims.of_int (6))
+                                  (Prims.of_int (484)) (Prims.of_int (64)))))
                          (Obj.magic (interp_pattern pat goal))
                          (fun uu___ ->
                             (fun uu___ ->
@@ -1891,32 +2216,40 @@ let solve_mp :
                                    Obj.magic
                                      (Obj.repr
                                         (FStar_Tactics_Effect.tac_bind
-                                           (FStar_Range.mk_range
-                                              "FStar.Tactics.PatternMatching.fst"
-                                              (Prims.of_int (483))
-                                              (Prims.of_int (27))
-                                              (Prims.of_int (483))
-                                              (Prims.of_int (86)))
-                                           (FStar_Range.mk_range
-                                              "FStar.Tactics.PatternMatching.fst"
-                                              (Prims.of_int (483))
-                                              (Prims.of_int (22))
-                                              (Prims.of_int (483))
-                                              (Prims.of_int (86)))
-                                           (Obj.magic
-                                              (FStar_Tactics_Effect.tac_bind
+                                           (FStar_Sealed.seal
+                                              (Obj.magic
                                                  (FStar_Range.mk_range
                                                     "FStar.Tactics.PatternMatching.fst"
                                                     (Prims.of_int (483))
-                                                    (Prims.of_int (55))
+                                                    (Prims.of_int (27))
                                                     (Prims.of_int (483))
-                                                    (Prims.of_int (85)))
+                                                    (Prims.of_int (86)))))
+                                           (FStar_Sealed.seal
+                                              (Obj.magic
                                                  (FStar_Range.mk_range
-                                                    "prims.fst"
-                                                    (Prims.of_int (590))
-                                                    (Prims.of_int (19))
-                                                    (Prims.of_int (590))
-                                                    (Prims.of_int (31)))
+                                                    "FStar.Tactics.PatternMatching.fst"
+                                                    (Prims.of_int (483))
+                                                    (Prims.of_int (22))
+                                                    (Prims.of_int (483))
+                                                    (Prims.of_int (86)))))
+                                           (Obj.magic
+                                              (FStar_Tactics_Effect.tac_bind
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "FStar.Tactics.PatternMatching.fst"
+                                                          (Prims.of_int (483))
+                                                          (Prims.of_int (55))
+                                                          (Prims.of_int (483))
+                                                          (Prims.of_int (85)))))
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "prims.fst"
+                                                          (Prims.of_int (590))
+                                                          (Prims.of_int (19))
+                                                          (Prims.of_int (590))
+                                                          (Prims.of_int (31)))))
                                                  (Obj.magic
                                                     (string_of_match_exception
                                                        ex))
@@ -1956,12 +2289,16 @@ let rec (pattern_of_term_ex :
   =
   fun tm ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (508)) (Prims.of_int (8)) (Prims.of_int (508))
-         (Prims.of_int (18)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (508)) (Prims.of_int (2)) (Prims.of_int (521))
-         (Prims.of_int (44)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (508)) (Prims.of_int (8)) (Prims.of_int (508))
+               (Prims.of_int (18)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (508)) (Prims.of_int (2)) (Prims.of_int (521))
+               (Prims.of_int (44)))))
       (Obj.magic (FStar_Tactics_NamedView.inspect tm))
       (fun uu___ ->
          (fun uu___ ->
@@ -1970,24 +2307,36 @@ let rec (pattern_of_term_ex :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (510)) (Prims.of_int (11))
-                           (Prims.of_int (510)) (Prims.of_int (37)))
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (510)) (Prims.of_int (4))
-                           (Prims.of_int (510)) (Prims.of_int (37)))
-                        (Obj.magic
-                           (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "FStar.Tactics.PatternMatching.fst"
-                                 (Prims.of_int (510)) (Prims.of_int (17))
-                                 (Prims.of_int (510)) (Prims.of_int (36)))
+                        (FStar_Sealed.seal
+                           (Obj.magic
                               (FStar_Range.mk_range
                                  "FStar.Tactics.PatternMatching.fst"
                                  (Prims.of_int (510)) (Prims.of_int (11))
-                                 (Prims.of_int (510)) (Prims.of_int (37)))
+                                 (Prims.of_int (510)) (Prims.of_int (37)))))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (510)) (Prims.of_int (4))
+                                 (Prims.of_int (510)) (Prims.of_int (37)))))
+                        (Obj.magic
+                           (FStar_Tactics_Effect.tac_bind
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.PatternMatching.fst"
+                                       (Prims.of_int (510))
+                                       (Prims.of_int (17))
+                                       (Prims.of_int (510))
+                                       (Prims.of_int (36)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.PatternMatching.fst"
+                                       (Prims.of_int (510))
+                                       (Prims.of_int (11))
+                                       (Prims.of_int (510))
+                                       (Prims.of_int (37)))))
                               (Obj.magic (name_of_namedv bv))
                               (fun uu___1 ->
                                  FStar_Tactics_Effect.lift_div_tac
@@ -2018,14 +2367,18 @@ let rec (pattern_of_term_ex :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (518)) (Prims.of_int (17))
-                           (Prims.of_int (518)) (Prims.of_int (37)))
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (518)) (Prims.of_int (5))
-                           (Prims.of_int (520)) (Prims.of_int (28)))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (518)) (Prims.of_int (17))
+                                 (Prims.of_int (518)) (Prims.of_int (37)))))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (518)) (Prims.of_int (5))
+                                 (Prims.of_int (520)) (Prims.of_int (28)))))
                         (Obj.magic (pattern_of_term_ex f))
                         (fun uu___2 ->
                            (fun uu___2 ->
@@ -2033,18 +2386,22 @@ let rec (pattern_of_term_ex :
                                 (op_let_Question uu___2
                                    (fun fpat ->
                                       FStar_Tactics_Effect.tac_bind
-                                        (FStar_Range.mk_range
-                                           "FStar.Tactics.PatternMatching.fst"
-                                           (Prims.of_int (519))
-                                           (Prims.of_int (17))
-                                           (Prims.of_int (519))
-                                           (Prims.of_int (37)))
-                                        (FStar_Range.mk_range
-                                           "FStar.Tactics.PatternMatching.fst"
-                                           (Prims.of_int (519))
-                                           (Prims.of_int (5))
-                                           (Prims.of_int (520))
-                                           (Prims.of_int (28)))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.Tactics.PatternMatching.fst"
+                                                 (Prims.of_int (519))
+                                                 (Prims.of_int (17))
+                                                 (Prims.of_int (519))
+                                                 (Prims.of_int (37)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.Tactics.PatternMatching.fst"
+                                                 (Prims.of_int (519))
+                                                 (Prims.of_int (5))
+                                                 (Prims.of_int (520))
+                                                 (Prims.of_int (28)))))
                                         (Obj.magic (pattern_of_term_ex x))
                                         (fun uu___3 ->
                                            (fun uu___3 ->
@@ -2077,12 +2434,16 @@ let (pattern_of_term :
   =
   fun tm ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (531)) (Prims.of_int (10)) (Prims.of_int (531))
-         (Prims.of_int (31)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (531)) (Prims.of_int (4)) (Prims.of_int (533))
-         (Prims.of_int (63))) (Obj.magic (pattern_of_term_ex tm))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (531)) (Prims.of_int (10)) (Prims.of_int (531))
+               (Prims.of_int (31)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (531)) (Prims.of_int (4)) (Prims.of_int (533))
+               (Prims.of_int (63))))) (Obj.magic (pattern_of_term_ex tm))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -2094,14 +2455,18 @@ let (pattern_of_term :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (533)) (Prims.of_int (33))
-                           (Prims.of_int (533)) (Prims.of_int (63)))
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (533)) (Prims.of_int (20))
-                           (Prims.of_int (533)) (Prims.of_int (63)))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (533)) (Prims.of_int (33))
+                                 (Prims.of_int (533)) (Prims.of_int (63)))))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (533)) (Prims.of_int (20))
+                                 (Prims.of_int (533)) (Prims.of_int (63)))))
                         (Obj.magic (string_of_match_exception ex))
                         (fun uu___1 -> FStar_Tactics_Derived.fail uu___1))))
            uu___)
@@ -2148,37 +2513,51 @@ let (classify_abspat_binder :
   =
   fun b ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (588)) (Prims.of_int (16)) (Prims.of_int (588))
-         (Prims.of_int (19)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (588)) (Prims.of_int (22)) (Prims.of_int (600))
-         (Prims.of_int (34)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (588)) (Prims.of_int (16)) (Prims.of_int (588))
+               (Prims.of_int (19)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (588)) (Prims.of_int (22)) (Prims.of_int (600))
+               (Prims.of_int (34)))))
       (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "v"))
       (fun uu___ ->
          (fun varname1 ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                    (Prims.of_int (589)) (Prims.of_int (16))
-                    (Prims.of_int (589)) (Prims.of_int (48)))
-                 (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                    (Prims.of_int (589)) (Prims.of_int (51))
-                    (Prims.of_int (600)) (Prims.of_int (34)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.Tactics.PatternMatching.fst"
+                          (Prims.of_int (589)) (Prims.of_int (16))
+                          (Prims.of_int (589)) (Prims.of_int (48)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.Tactics.PatternMatching.fst"
+                          (Prims.of_int (589)) (Prims.of_int (51))
+                          (Prims.of_int (600)) (Prims.of_int (34)))))
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ -> PApp ((PQn hyp_qn), (PVar varname1))))
                  (fun uu___ ->
                     (fun hyp_pat ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.PatternMatching.fst"
-                               (Prims.of_int (590)) (Prims.of_int (17))
-                               (Prims.of_int (590)) (Prims.of_int (50)))
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.PatternMatching.fst"
-                               (Prims.of_int (590)) (Prims.of_int (53))
-                               (Prims.of_int (600)) (Prims.of_int (34)))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.PatternMatching.fst"
+                                     (Prims.of_int (590)) (Prims.of_int (17))
+                                     (Prims.of_int (590)) (Prims.of_int (50)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.PatternMatching.fst"
+                                     (Prims.of_int (590)) (Prims.of_int (53))
+                                     (Prims.of_int (600)) (Prims.of_int (34)))))
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___ ->
                                   PApp ((PQn goal_qn), (PVar varname1))))
@@ -2186,18 +2565,22 @@ let (classify_abspat_binder :
                                (fun goal_pat ->
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.PatternMatching.fst"
-                                          (Prims.of_int (592))
-                                          (Prims.of_int (12))
-                                          (Prims.of_int (592))
-                                          (Prims.of_int (34)))
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.PatternMatching.fst"
-                                          (Prims.of_int (593))
-                                          (Prims.of_int (2))
-                                          (Prims.of_int (600))
-                                          (Prims.of_int (34)))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.PatternMatching.fst"
+                                                (Prims.of_int (592))
+                                                (Prims.of_int (12))
+                                                (Prims.of_int (592))
+                                                (Prims.of_int (34)))))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.PatternMatching.fst"
+                                                (Prims.of_int (593))
+                                                (Prims.of_int (2))
+                                                (Prims.of_int (600))
+                                                (Prims.of_int (34)))))
                                        (FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___ ->
                                              type_of_named_binder b))
@@ -2205,18 +2588,22 @@ let (classify_abspat_binder :
                                           (fun typ ->
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
-                                                  (FStar_Range.mk_range
-                                                     "FStar.Tactics.PatternMatching.fst"
-                                                     (Prims.of_int (593))
-                                                     (Prims.of_int (8))
-                                                     (Prims.of_int (593))
-                                                     (Prims.of_int (34)))
-                                                  (FStar_Range.mk_range
-                                                     "FStar.Tactics.PatternMatching.fst"
-                                                     (Prims.of_int (593))
-                                                     (Prims.of_int (2))
-                                                     (Prims.of_int (600))
-                                                     (Prims.of_int (34)))
+                                                  (FStar_Sealed.seal
+                                                     (Obj.magic
+                                                        (FStar_Range.mk_range
+                                                           "FStar.Tactics.PatternMatching.fst"
+                                                           (Prims.of_int (593))
+                                                           (Prims.of_int (8))
+                                                           (Prims.of_int (593))
+                                                           (Prims.of_int (34)))))
+                                                  (FStar_Sealed.seal
+                                                     (Obj.magic
+                                                        (FStar_Range.mk_range
+                                                           "FStar.Tactics.PatternMatching.fst"
+                                                           (Prims.of_int (593))
+                                                           (Prims.of_int (2))
+                                                           (Prims.of_int (600))
+                                                           (Prims.of_int (34)))))
                                                   (Obj.magic
                                                      (interp_pattern hyp_pat
                                                         typ))
@@ -2245,19 +2632,23 @@ let (classify_abspat_binder :
                                                               (Obj.repr
                                                                  (FStar_Tactics_Effect.tac_bind
                                                                     (
-                                                                    FStar_Range.mk_range
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (597))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (597))
-                                                                    (Prims.of_int (37)))
+                                                                    (Prims.of_int (37)))))
                                                                     (
-                                                                    FStar_Range.mk_range
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (597))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (600))
-                                                                    (Prims.of_int (34)))
+                                                                    (Prims.of_int (34)))))
                                                                     (
                                                                     Obj.magic
                                                                     (interp_pattern
@@ -2302,12 +2693,16 @@ let rec (binders_and_body_of_abs :
   =
   fun tm ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (604)) (Prims.of_int (8)) (Prims.of_int (604))
-         (Prims.of_int (18)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (604)) (Prims.of_int (2)) (Prims.of_int (608))
-         (Prims.of_int (15)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (604)) (Prims.of_int (8)) (Prims.of_int (604))
+               (Prims.of_int (18)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (604)) (Prims.of_int (2)) (Prims.of_int (608))
+               (Prims.of_int (15)))))
       (Obj.magic (FStar_Tactics_NamedView.inspect tm))
       (fun uu___ ->
          (fun uu___ ->
@@ -2316,14 +2711,18 @@ let rec (binders_and_body_of_abs :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (606)) (Prims.of_int (24))
-                           (Prims.of_int (606)) (Prims.of_int (50)))
-                        (FStar_Range.mk_range
-                           "FStar.Tactics.PatternMatching.fst"
-                           (Prims.of_int (605)) (Prims.of_int (23))
-                           (Prims.of_int (607)) (Prims.of_int (27)))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (606)) (Prims.of_int (24))
+                                 (Prims.of_int (606)) (Prims.of_int (50)))))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.PatternMatching.fst"
+                                 (Prims.of_int (605)) (Prims.of_int (23))
+                                 (Prims.of_int (607)) (Prims.of_int (27)))))
                         (Obj.magic (binders_and_body_of_abs tm1))
                         (fun uu___1 ->
                            FStar_Tactics_Effect.lift_div_tac
@@ -2351,20 +2750,29 @@ let (matching_problem_of_abs :
   =
   fun tm ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (634)) (Prims.of_int (22)) (Prims.of_int (634))
-         (Prims.of_int (65)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (632)) (Prims.of_int (52)) (Prims.of_int (673))
-         (Prims.of_int (18)))
-      (Obj.magic
-         (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-               (Prims.of_int (634)) (Prims.of_int (46)) (Prims.of_int (634))
-               (Prims.of_int (65)))
+      (FStar_Sealed.seal
+         (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                (Prims.of_int (634)) (Prims.of_int (22)) (Prims.of_int (634))
-               (Prims.of_int (65))) (Obj.magic (cleanup_abspat tm))
+               (Prims.of_int (65)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (632)) (Prims.of_int (52)) (Prims.of_int (673))
+               (Prims.of_int (18)))))
+      (Obj.magic
+         (FStar_Tactics_Effect.tac_bind
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                     (Prims.of_int (634)) (Prims.of_int (46))
+                     (Prims.of_int (634)) (Prims.of_int (65)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                     (Prims.of_int (634)) (Prims.of_int (22))
+                     (Prims.of_int (634)) (Prims.of_int (65)))))
+            (Obj.magic (cleanup_abspat tm))
             (fun uu___ ->
                (fun uu___ -> Obj.magic (binders_and_body_of_abs uu___)) uu___)))
       (fun uu___ ->
@@ -2373,47 +2781,67 @@ let (matching_problem_of_abs :
             | (binders, body) ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range
-                        "FStar.Tactics.PatternMatching.fst"
-                        (Prims.of_int (635)) (Prims.of_int (2))
-                        (Prims.of_int (636)) (Prims.of_int (72)))
-                     (FStar_Range.mk_range
-                        "FStar.Tactics.PatternMatching.fst"
-                        (Prims.of_int (636)) (Prims.of_int (73))
-                        (Prims.of_int (673)) (Prims.of_int (18)))
-                     (Obj.magic
-                        (FStar_Tactics_Effect.tac_bind
-                           (FStar_Range.mk_range
-                              "FStar.Tactics.PatternMatching.fst"
-                              (Prims.of_int (635)) (Prims.of_int (8))
-                              (Prims.of_int (636)) (Prims.of_int (72)))
+                     (FStar_Sealed.seal
+                        (Obj.magic
                            (FStar_Range.mk_range
                               "FStar.Tactics.PatternMatching.fst"
                               (Prims.of_int (635)) (Prims.of_int (2))
-                              (Prims.of_int (636)) (Prims.of_int (72)))
-                           (Obj.magic
-                              (FStar_Tactics_Effect.tac_bind
+                              (Prims.of_int (636)) (Prims.of_int (72)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.Tactics.PatternMatching.fst"
+                              (Prims.of_int (636)) (Prims.of_int (73))
+                              (Prims.of_int (673)) (Prims.of_int (18)))))
+                     (Obj.magic
+                        (FStar_Tactics_Effect.tac_bind
+                           (FStar_Sealed.seal
+                              (Obj.magic
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.PatternMatching.fst"
-                                    (Prims.of_int (635)) (Prims.of_int (27))
-                                    (Prims.of_int (636)) (Prims.of_int (71)))
-                                 (FStar_Range.mk_range "prims.fst"
-                                    (Prims.of_int (590)) (Prims.of_int (19))
-                                    (Prims.of_int (590)) (Prims.of_int (31)))
-                                 (Obj.magic
-                                    (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.PatternMatching.fst"
-                                          (Prims.of_int (636))
-                                          (Prims.of_int (9))
-                                          (Prims.of_int (636))
-                                          (Prims.of_int (70)))
+                                    (Prims.of_int (635)) (Prims.of_int (8))
+                                    (Prims.of_int (636)) (Prims.of_int (72)))))
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "FStar.Tactics.PatternMatching.fst"
+                                    (Prims.of_int (635)) (Prims.of_int (2))
+                                    (Prims.of_int (636)) (Prims.of_int (72)))))
+                           (Obj.magic
+                              (FStar_Tactics_Effect.tac_bind
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
                                        (FStar_Range.mk_range
                                           "FStar.Tactics.PatternMatching.fst"
                                           (Prims.of_int (635))
                                           (Prims.of_int (27))
                                           (Prims.of_int (636))
-                                          (Prims.of_int (71)))
+                                          (Prims.of_int (71)))))
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range "prims.fst"
+                                          (Prims.of_int (590))
+                                          (Prims.of_int (19))
+                                          (Prims.of_int (590))
+                                          (Prims.of_int (31)))))
+                                 (Obj.magic
+                                    (FStar_Tactics_Effect.tac_bind
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.PatternMatching.fst"
+                                                (Prims.of_int (636))
+                                                (Prims.of_int (9))
+                                                (Prims.of_int (636))
+                                                (Prims.of_int (70)))))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.PatternMatching.fst"
+                                                (Prims.of_int (635))
+                                                (Prims.of_int (27))
+                                                (Prims.of_int (636))
+                                                (Prims.of_int (71)))))
                                        (Obj.magic
                                           (FStar_Tactics_Util.map
                                              (fun b -> name_of_named_binder b)
@@ -2433,104 +2861,136 @@ let (matching_problem_of_abs :
                         (fun uu___1 ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range
-                                   "FStar.Tactics.PatternMatching.fst"
-                                   (Prims.of_int (639)) (Prims.of_int (4))
-                                   (Prims.of_int (645)) (Prims.of_int (13)))
-                                (FStar_Range.mk_range
-                                   "FStar.Tactics.PatternMatching.fst"
-                                   (Prims.of_int (645)) (Prims.of_int (16))
-                                   (Prims.of_int (673)) (Prims.of_int (18)))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.Tactics.PatternMatching.fst"
+                                         (Prims.of_int (639))
+                                         (Prims.of_int (4))
+                                         (Prims.of_int (645))
+                                         (Prims.of_int (13)))))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.Tactics.PatternMatching.fst"
+                                         (Prims.of_int (645))
+                                         (Prims.of_int (16))
+                                         (Prims.of_int (673))
+                                         (Prims.of_int (18)))))
                                 (Obj.magic
                                    (FStar_Tactics_Util.map
                                       (fun binder ->
                                          FStar_Tactics_Effect.tac_bind
-                                           (FStar_Range.mk_range
-                                              "FStar.Tactics.PatternMatching.fst"
-                                              (Prims.of_int (640))
-                                              (Prims.of_int (22))
-                                              (Prims.of_int (640))
-                                              (Prims.of_int (49)))
-                                           (FStar_Range.mk_range
-                                              "FStar.Tactics.PatternMatching.fst"
-                                              (Prims.of_int (641))
-                                              (Prims.of_int (8))
-                                              (Prims.of_int (644))
-                                              (Prims.of_int (43)))
+                                           (FStar_Sealed.seal
+                                              (Obj.magic
+                                                 (FStar_Range.mk_range
+                                                    "FStar.Tactics.PatternMatching.fst"
+                                                    (Prims.of_int (640))
+                                                    (Prims.of_int (22))
+                                                    (Prims.of_int (640))
+                                                    (Prims.of_int (49)))))
+                                           (FStar_Sealed.seal
+                                              (Obj.magic
+                                                 (FStar_Range.mk_range
+                                                    "FStar.Tactics.PatternMatching.fst"
+                                                    (Prims.of_int (641))
+                                                    (Prims.of_int (8))
+                                                    (Prims.of_int (644))
+                                                    (Prims.of_int (43)))))
                                            (Obj.magic
                                               (name_of_named_binder binder))
                                            (fun uu___2 ->
                                               (fun bv_name ->
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
-                                                      (FStar_Range.mk_range
-                                                         "FStar.Tactics.PatternMatching.fst"
-                                                         (Prims.of_int (641))
-                                                         (Prims.of_int (8))
-                                                         (Prims.of_int (642))
-                                                         (Prims.of_int (60)))
-                                                      (FStar_Range.mk_range
-                                                         "FStar.Tactics.PatternMatching.fst"
-                                                         (Prims.of_int (642))
-                                                         (Prims.of_int (61))
-                                                         (Prims.of_int (644))
-                                                         (Prims.of_int (43)))
-                                                      (Obj.magic
-                                                         (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.PatternMatching.fst"
-                                                               (Prims.of_int (641))
-                                                               (Prims.of_int (14))
-                                                               (Prims.of_int (642))
-                                                               (Prims.of_int (60)))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
                                                             (FStar_Range.mk_range
                                                                "FStar.Tactics.PatternMatching.fst"
                                                                (Prims.of_int (641))
                                                                (Prims.of_int (8))
                                                                (Prims.of_int (642))
-                                                               (Prims.of_int (60)))
+                                                               (Prims.of_int (60)))))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "FStar.Tactics.PatternMatching.fst"
+                                                               (Prims.of_int (642))
+                                                               (Prims.of_int (61))
+                                                               (Prims.of_int (644))
+                                                               (Prims.of_int (43)))))
+                                                      (Obj.magic
+                                                         (FStar_Tactics_Effect.tac_bind
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (641))
+                                                                    (Prims.of_int (14))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (60)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (641))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (60)))))
                                                             (Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
-                                                                  (FStar_Range.mk_range
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (641))
                                                                     (Prims.of_int (32))
                                                                     (Prims.of_int (642))
-                                                                    (Prims.of_int (59)))
-                                                                  (FStar_Range.mk_range
+                                                                    (Prims.of_int (59)))))
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                   (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (641))
                                                                     (Prims.of_int (42))
                                                                     (Prims.of_int (642))
-                                                                    (Prims.of_int (59)))
+                                                                    (Prims.of_int (59)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (642))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (642))
-                                                                    (Prims.of_int (59)))
+                                                                    (Prims.of_int (59)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
                                                                     (type_of_named_binder
@@ -2570,18 +3030,24 @@ let (matching_problem_of_abs :
                                                          (fun uu___2 ->
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
-                                                                 (FStar_Range.mk_range
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (643))
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (643))
-                                                                    (Prims.of_int (60)))
-                                                                 (FStar_Range.mk_range
+                                                                    (Prims.of_int (60)))))
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (642))
                                                                     (Prims.of_int (61))
                                                                     (Prims.of_int (644))
-                                                                    (Prims.of_int (43)))
+                                                                    (Prims.of_int (43)))))
                                                                  (Obj.magic
                                                                     (
                                                                     classify_abspat_binder
@@ -2606,18 +3072,22 @@ let (matching_problem_of_abs :
                                    (fun classified_binders ->
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
-                                           (FStar_Range.mk_range
-                                              "FStar.Tactics.PatternMatching.fst"
-                                              (Prims.of_int (648))
-                                              (Prims.of_int (4))
-                                              (Prims.of_int (659))
-                                              (Prims.of_int (24)))
-                                           (FStar_Range.mk_range
-                                              "FStar.Tactics.PatternMatching.fst"
-                                              (Prims.of_int (659))
-                                              (Prims.of_int (27))
-                                              (Prims.of_int (673))
-                                              (Prims.of_int (18)))
+                                           (FStar_Sealed.seal
+                                              (Obj.magic
+                                                 (FStar_Range.mk_range
+                                                    "FStar.Tactics.PatternMatching.fst"
+                                                    (Prims.of_int (648))
+                                                    (Prims.of_int (4))
+                                                    (Prims.of_int (659))
+                                                    (Prims.of_int (24)))))
+                                           (FStar_Sealed.seal
+                                              (Obj.magic
+                                                 (FStar_Range.mk_range
+                                                    "FStar.Tactics.PatternMatching.fst"
+                                                    (Prims.of_int (659))
+                                                    (Prims.of_int (27))
+                                                    (Prims.of_int (673))
+                                                    (Prims.of_int (18)))))
                                            (Obj.magic
                                               (FStar_Tactics_Util.fold_left
                                                  (fun problem ->
@@ -2626,60 +3096,76 @@ let (matching_problem_of_abs :
                                                       | (binder, bv_name,
                                                          binder_kind, typ) ->
                                                           FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.PatternMatching.fst"
-                                                               (Prims.of_int (650))
-                                                               (Prims.of_int (9))
-                                                               (Prims.of_int (652))
-                                                               (Prims.of_int (52)))
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.PatternMatching.fst"
-                                                               (Prims.of_int (653))
-                                                               (Prims.of_int (9))
-                                                               (Prims.of_int (657))
-                                                               (Prims.of_int (75)))
-                                                            (Obj.magic
-                                                               (FStar_Tactics_Effect.tac_bind
-                                                                  (FStar_Range.mk_range
-                                                                    "FStar.Tactics.PatternMatching.fst"
-                                                                    (Prims.of_int (650))
-                                                                    (Prims.of_int (15))
-                                                                    (Prims.of_int (652))
-                                                                    (Prims.of_int (52)))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (650))
                                                                     (Prims.of_int (9))
                                                                     (Prims.of_int (652))
-                                                                    (Prims.of_int (52)))
+                                                                    (Prims.of_int (52)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (653))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (657))
+                                                                    (Prims.of_int (75)))))
+                                                            (Obj.magic
+                                                               (FStar_Tactics_Effect.tac_bind
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (650))
+                                                                    (Prims.of_int (15))
+                                                                    (Prims.of_int (652))
+                                                                    (Prims.of_int (52)))))
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (650))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (652))
+                                                                    (Prims.of_int (52)))))
                                                                   (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (650))
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (652))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (650))
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (650))
-                                                                    (Prims.of_int (65)))
+                                                                    (Prims.of_int (65)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (650))
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (652))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (51)))))
                                                                     (Obj.magic
                                                                     (name_of_named_binder
                                                                     binder))
@@ -2689,60 +3175,76 @@ let (matching_problem_of_abs :
                                                                     uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (651))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (652))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (651))
                                                                     (Prims.of_int (37))
                                                                     (Prims.of_int (652))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (652))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (652))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (652))
                                                                     (Prims.of_int (33))
                                                                     (Prims.of_int (652))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
                                                                     typ))
@@ -2821,46 +3323,58 @@ let (matching_problem_of_abs :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (655))
                                                                     (Prims.of_int (46))
                                                                     (Prims.of_int (656))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (655))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (656))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (63)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (655))
                                                                     (Prims.of_int (46))
                                                                     (Prims.of_int (655))
-                                                                    (Prims.of_int (78)))
+                                                                    (Prims.of_int (78)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (655))
                                                                     (Prims.of_int (46))
                                                                     (Prims.of_int (656))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (63)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (655))
                                                                     (Prims.of_int (56))
                                                                     (Prims.of_int (655))
-                                                                    (Prims.of_int (77)))
+                                                                    (Prims.of_int (77)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (655))
                                                                     (Prims.of_int (46))
                                                                     (Prims.of_int (655))
-                                                                    (Prims.of_int (78)))
+                                                                    (Prims.of_int (78)))))
                                                                     (Obj.magic
                                                                     (pattern_of_term
                                                                     typ))
@@ -2896,32 +3410,40 @@ let (matching_problem_of_abs :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (657))
                                                                     (Prims.of_int (47))
                                                                     (Prims.of_int (657))
-                                                                    (Prims.of_int (73)))
+                                                                    (Prims.of_int (73)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (657))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (657))
-                                                                    (Prims.of_int (73)))
+                                                                    (Prims.of_int (73)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (657))
                                                                     (Prims.of_int (52))
                                                                     (Prims.of_int (657))
-                                                                    (Prims.of_int (73)))
+                                                                    (Prims.of_int (73)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (657))
                                                                     (Prims.of_int (47))
                                                                     (Prims.of_int (657))
-                                                                    (Prims.of_int (73)))
+                                                                    (Prims.of_int (73)))))
                                                                     (Obj.magic
                                                                     (pattern_of_term
                                                                     typ))
@@ -2956,32 +3478,40 @@ let (matching_problem_of_abs :
                                               (fun problem ->
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
-                                                      (FStar_Range.mk_range
-                                                         "FStar.Tactics.PatternMatching.fst"
-                                                         (Prims.of_int (661))
-                                                         (Prims.of_int (20))
-                                                         (Prims.of_int (665))
-                                                         (Prims.of_int (57)))
-                                                      (FStar_Range.mk_range
-                                                         "FStar.Tactics.PatternMatching.fst"
-                                                         (Prims.of_int (665))
-                                                         (Prims.of_int (60))
-                                                         (Prims.of_int (673))
-                                                         (Prims.of_int (18)))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "FStar.Tactics.PatternMatching.fst"
+                                                               (Prims.of_int (661))
+                                                               (Prims.of_int (20))
+                                                               (Prims.of_int (665))
+                                                               (Prims.of_int (57)))))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "FStar.Tactics.PatternMatching.fst"
+                                                               (Prims.of_int (665))
+                                                               (Prims.of_int (60))
+                                                               (Prims.of_int (673))
+                                                               (Prims.of_int (18)))))
                                                       (Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.PatternMatching.fst"
-                                                               (Prims.of_int (663))
-                                                               (Prims.of_int (4))
-                                                               (Prims.of_int (664))
-                                                               (Prims.of_int (69)))
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.PatternMatching.fst"
-                                                               (Prims.of_int (665))
-                                                               (Prims.of_int (4))
-                                                               (Prims.of_int (665))
-                                                               (Prims.of_int (57)))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (663))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (664))
+                                                                    (Prims.of_int (69)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (57)))))
                                                             (FStar_Tactics_Effect.lift_div_tac
                                                                (fun uu___3 ->
                                                                   fun uu___2
@@ -3018,18 +3548,22 @@ let (matching_problem_of_abs :
                                                                   Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (665))
                                                                     (Prims.of_int (5))
                                                                     (Prims.of_int (665))
-                                                                    (Prims.of_int (52)))
+                                                                    (Prims.of_int (52)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (665))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (665))
-                                                                    (Prims.of_int (57)))
+                                                                    (Prims.of_int (57)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Util.map
                                                                     abspat_argspec_of_binder
@@ -3046,18 +3580,24 @@ let (matching_problem_of_abs :
                                                          (fun continuation ->
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
-                                                                 (FStar_Range.mk_range
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (668))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (670))
-                                                                    (Prims.of_int (31)))
-                                                                 (FStar_Range.mk_range
+                                                                    (Prims.of_int (31)))))
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (672))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (673))
-                                                                    (Prims.of_int (18)))
+                                                                    (Prims.of_int (18)))))
                                                                  (FStar_Tactics_Effect.lift_div_tac
                                                                     (
                                                                     fun
@@ -3078,18 +3618,22 @@ let (matching_problem_of_abs :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (672))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (672))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (68)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (673))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (673))
-                                                                    (Prims.of_int (18)))
+                                                                    (Prims.of_int (18)))))
                                                                     (Obj.magic
                                                                     (debug
                                                                     (Prims.strcat
@@ -3154,58 +3698,84 @@ let (abspat_arg_of_abspat_argspec :
   fun solution_term ->
     fun argspec ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (700)) (Prims.of_int (15)) (Prims.of_int (700))
-           (Prims.of_int (56)))
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (700)) (Prims.of_int (59)) (Prims.of_int (704))
-           (Prims.of_int (27)))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (700)) (Prims.of_int (15))
+                 (Prims.of_int (700)) (Prims.of_int (56)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (700)) (Prims.of_int (59))
+                 (Prims.of_int (704)) (Prims.of_int (27)))))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> locate_fn_of_binder_kind argspec.asa_kind))
         (fun uu___ ->
            (fun loc_fn ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (701)) (Prims.of_int (16))
-                      (Prims.of_int (701)) (Prims.of_int (75)))
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (701)) (Prims.of_int (78))
-                      (Prims.of_int (704)) (Prims.of_int (27)))
-                   (Obj.magic
-                      (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range
-                            "FStar.Tactics.PatternMatching.fst"
-                            (Prims.of_int (701)) (Prims.of_int (21))
-                            (Prims.of_int (701)) (Prims.of_int (75)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
                          (FStar_Range.mk_range
                             "FStar.Tactics.PatternMatching.fst"
                             (Prims.of_int (701)) (Prims.of_int (16))
-                            (Prims.of_int (701)) (Prims.of_int (75)))
-                         (Obj.magic
-                            (FStar_Tactics_Effect.tac_bind
-                               (FStar_Range.mk_range
-                                  "FStar.Tactics.PatternMatching.fst"
-                                  (Prims.of_int (701)) (Prims.of_int (31))
-                                  (Prims.of_int (701)) (Prims.of_int (74)))
+                            (Prims.of_int (701)) (Prims.of_int (75)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.PatternMatching.fst"
+                            (Prims.of_int (701)) (Prims.of_int (78))
+                            (Prims.of_int (704)) (Prims.of_int (27)))))
+                   (Obj.magic
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.Tactics.PatternMatching.fst"
                                   (Prims.of_int (701)) (Prims.of_int (21))
-                                  (Prims.of_int (701)) (Prims.of_int (75)))
-                               (Obj.magic
-                                  (FStar_Tactics_Effect.tac_bind
-                                     (FStar_Range.mk_range
-                                        "FStar.Tactics.PatternMatching.fst"
-                                        (Prims.of_int (701))
-                                        (Prims.of_int (41))
-                                        (Prims.of_int (701))
-                                        (Prims.of_int (73)))
+                                  (Prims.of_int (701)) (Prims.of_int (75)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.Tactics.PatternMatching.fst"
+                                  (Prims.of_int (701)) (Prims.of_int (16))
+                                  (Prims.of_int (701)) (Prims.of_int (75)))))
+                         (Obj.magic
+                            (FStar_Tactics_Effect.tac_bind
+                               (FStar_Sealed.seal
+                                  (Obj.magic
                                      (FStar_Range.mk_range
                                         "FStar.Tactics.PatternMatching.fst"
                                         (Prims.of_int (701))
                                         (Prims.of_int (31))
                                         (Prims.of_int (701))
-                                        (Prims.of_int (74)))
+                                        (Prims.of_int (74)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "FStar.Tactics.PatternMatching.fst"
+                                        (Prims.of_int (701))
+                                        (Prims.of_int (21))
+                                        (Prims.of_int (701))
+                                        (Prims.of_int (75)))))
+                               (Obj.magic
+                                  (FStar_Tactics_Effect.tac_bind
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.Tactics.PatternMatching.fst"
+                                              (Prims.of_int (701))
+                                              (Prims.of_int (41))
+                                              (Prims.of_int (701))
+                                              (Prims.of_int (73)))))
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.Tactics.PatternMatching.fst"
+                                              (Prims.of_int (701))
+                                              (Prims.of_int (31))
+                                              (Prims.of_int (701))
+                                              (Prims.of_int (74)))))
                                      (Obj.magic
                                         (FStar_Tactics_Builtins.unseal
                                            (argspec.asa_name).FStar_Reflection_Data.ppname3))
@@ -3226,42 +3796,58 @@ let (abspat_arg_of_abspat_argspec :
                       (fun name_tm ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "FStar.Tactics.PatternMatching.fst"
-                                 (Prims.of_int (702)) (Prims.of_int (20))
-                                 (Prims.of_int (703)) (Prims.of_int (72)))
-                              (FStar_Range.mk_range
-                                 "FStar.Tactics.PatternMatching.fst"
-                                 (Prims.of_int (704)) (Prims.of_int (2))
-                                 (Prims.of_int (704)) (Prims.of_int (27)))
-                              (Obj.magic
-                                 (FStar_Tactics_Effect.tac_bind
-                                    (FStar_Range.mk_range
-                                       "FStar.Tactics.PatternMatching.fst"
-                                       (Prims.of_int (702))
-                                       (Prims.of_int (21))
-                                       (Prims.of_int (702))
-                                       (Prims.of_int (75)))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.PatternMatching.fst"
                                        (Prims.of_int (702))
                                        (Prims.of_int (20))
                                        (Prims.of_int (703))
-                                       (Prims.of_int (72)))
-                                    (Obj.magic
-                                       (FStar_Tactics_Effect.tac_bind
-                                          (FStar_Range.mk_range
-                                             "FStar.Tactics.PatternMatching.fst"
-                                             (Prims.of_int (702))
-                                             (Prims.of_int (22))
-                                             (Prims.of_int (702))
-                                             (Prims.of_int (62)))
+                                       (Prims.of_int (72)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.PatternMatching.fst"
+                                       (Prims.of_int (704))
+                                       (Prims.of_int (2))
+                                       (Prims.of_int (704))
+                                       (Prims.of_int (27)))))
+                              (Obj.magic
+                                 (FStar_Tactics_Effect.tac_bind
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
                                           (FStar_Range.mk_range
                                              "FStar.Tactics.PatternMatching.fst"
                                              (Prims.of_int (702))
                                              (Prims.of_int (21))
                                              (Prims.of_int (702))
-                                             (Prims.of_int (75)))
+                                             (Prims.of_int (75)))))
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "FStar.Tactics.PatternMatching.fst"
+                                             (Prims.of_int (702))
+                                             (Prims.of_int (20))
+                                             (Prims.of_int (703))
+                                             (Prims.of_int (72)))))
+                                    (Obj.magic
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.PatternMatching.fst"
+                                                   (Prims.of_int (702))
+                                                   (Prims.of_int (22))
+                                                   (Prims.of_int (702))
+                                                   (Prims.of_int (62)))))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.PatternMatching.fst"
+                                                   (Prims.of_int (702))
+                                                   (Prims.of_int (21))
+                                                   (Prims.of_int (702))
+                                                   (Prims.of_int (75)))))
                                           (Obj.magic
                                              (arg_type_of_binder_kind
                                                 argspec.asa_kind))
@@ -3307,14 +3893,18 @@ let rec (hoist_and_apply :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.tac_bind
-                           (FStar_Range.mk_range
-                              "FStar.Tactics.PatternMatching.fst"
-                              (Prims.of_int (715)) (Prims.of_int (12))
-                              (Prims.of_int (715)) (Prims.of_int (40)))
-                           (FStar_Range.mk_range
-                              "FStar.Tactics.PatternMatching.fst"
-                              (Prims.of_int (715)) (Prims.of_int (43))
-                              (Prims.of_int (725)) (Prims.of_int (132)))
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "FStar.Tactics.PatternMatching.fst"
+                                    (Prims.of_int (715)) (Prims.of_int (12))
+                                    (Prims.of_int (715)) (Prims.of_int (40)))))
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "FStar.Tactics.PatternMatching.fst"
+                                    (Prims.of_int (715)) (Prims.of_int (43))
+                                    (Prims.of_int (725)) (Prims.of_int (132)))))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___ ->
                                  FStar_List_Tot_Base.length hoisted_args))
@@ -3322,32 +3912,40 @@ let rec (hoist_and_apply :
                               (fun n ->
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
-                                      (FStar_Range.mk_range
-                                         "FStar.Tactics.PatternMatching.fst"
-                                         (Prims.of_int (718))
-                                         (Prims.of_int (6))
-                                         (Prims.of_int (722))
-                                         (Prims.of_int (18)))
-                                      (FStar_Range.mk_range
-                                         "FStar.Tactics.PatternMatching.fst"
-                                         (Prims.of_int (725))
-                                         (Prims.of_int (4))
-                                         (Prims.of_int (725))
-                                         (Prims.of_int (132)))
-                                      (Obj.magic
-                                         (FStar_Tactics_Effect.tac_bind
-                                            (FStar_Range.mk_range
-                                               "FStar.Tactics.PatternMatching.fst"
-                                               (Prims.of_int (720))
-                                               (Prims.of_int (13))
-                                               (Prims.of_int (720))
-                                               (Prims.of_int (21)))
+                                      (FStar_Sealed.seal
+                                         (Obj.magic
                                             (FStar_Range.mk_range
                                                "FStar.Tactics.PatternMatching.fst"
                                                (Prims.of_int (718))
                                                (Prims.of_int (6))
                                                (Prims.of_int (722))
-                                               (Prims.of_int (18)))
+                                               (Prims.of_int (18)))))
+                                      (FStar_Sealed.seal
+                                         (Obj.magic
+                                            (FStar_Range.mk_range
+                                               "FStar.Tactics.PatternMatching.fst"
+                                               (Prims.of_int (725))
+                                               (Prims.of_int (4))
+                                               (Prims.of_int (725))
+                                               (Prims.of_int (132)))))
+                                      (Obj.magic
+                                         (FStar_Tactics_Effect.tac_bind
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.Tactics.PatternMatching.fst"
+                                                     (Prims.of_int (720))
+                                                     (Prims.of_int (13))
+                                                     (Prims.of_int (720))
+                                                     (Prims.of_int (21)))))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.Tactics.PatternMatching.fst"
+                                                     (Prims.of_int (718))
+                                                     (Prims.of_int (6))
+                                                     (Prims.of_int (722))
+                                                     (Prims.of_int (18)))))
                                             (Obj.magic
                                                (FStar_Tactics_Builtins.fresh
                                                   ()))
@@ -3377,32 +3975,40 @@ let rec (hoist_and_apply :
                                          (fun nb ->
                                             Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
-                                                 (FStar_Range.mk_range
-                                                    "FStar.Tactics.PatternMatching.fst"
-                                                    (Prims.of_int (725))
-                                                    (Prims.of_int (9))
-                                                    (Prims.of_int (725))
-                                                    (Prims.of_int (132)))
-                                                 (FStar_Range.mk_range
-                                                    "FStar.Tactics.PatternMatching.fst"
-                                                    (Prims.of_int (725))
-                                                    (Prims.of_int (4))
-                                                    (Prims.of_int (725))
-                                                    (Prims.of_int (132)))
-                                                 (Obj.magic
-                                                    (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Range.mk_range
-                                                          "FStar.Tactics.PatternMatching.fst"
-                                                          (Prims.of_int (725))
-                                                          (Prims.of_int (38))
-                                                          (Prims.of_int (725))
-                                                          (Prims.of_int (131)))
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "FStar.Tactics.PatternMatching.fst"
                                                           (Prims.of_int (725))
                                                           (Prims.of_int (9))
                                                           (Prims.of_int (725))
-                                                          (Prims.of_int (132)))
+                                                          (Prims.of_int (132)))))
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "FStar.Tactics.PatternMatching.fst"
+                                                          (Prims.of_int (725))
+                                                          (Prims.of_int (4))
+                                                          (Prims.of_int (725))
+                                                          (Prims.of_int (132)))))
+                                                 (Obj.magic
+                                                    (FStar_Tactics_Effect.tac_bind
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "FStar.Tactics.PatternMatching.fst"
+                                                                (Prims.of_int (725))
+                                                                (Prims.of_int (38))
+                                                                (Prims.of_int (725))
+                                                                (Prims.of_int (131)))))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "FStar.Tactics.PatternMatching.fst"
+                                                                (Prims.of_int (725))
+                                                                (Prims.of_int (9))
+                                                                (Prims.of_int (725))
+                                                                (Prims.of_int (132)))))
                                                        (Obj.magic
                                                           (hoist_and_apply
                                                              head rest
@@ -3434,12 +4040,16 @@ let (specialize_abspat_continuation' :
   fun continuation ->
     fun solution_term ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (731)) (Prims.of_int (4)) (Prims.of_int (731))
-           (Prims.of_int (54)))
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (731)) (Prims.of_int (57)) (Prims.of_int (733))
-           (Prims.of_int (52)))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (731)) (Prims.of_int (4)) (Prims.of_int (731))
+                 (Prims.of_int (54)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (731)) (Prims.of_int (57))
+                 (Prims.of_int (733)) (Prims.of_int (52)))))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ ->
               fun argspec ->
@@ -3448,12 +4058,18 @@ let (specialize_abspat_continuation' :
            (fun mk_arg_term ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (732)) (Prims.of_int (23))
-                      (Prims.of_int (732)) (Prims.of_int (35)))
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (731)) (Prims.of_int (57))
-                      (Prims.of_int (733)) (Prims.of_int (52)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.PatternMatching.fst"
+                            (Prims.of_int (732)) (Prims.of_int (23))
+                            (Prims.of_int (732)) (Prims.of_int (35)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.PatternMatching.fst"
+                            (Prims.of_int (731)) (Prims.of_int (57))
+                            (Prims.of_int (733)) (Prims.of_int (52)))))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ -> continuation))
                    (fun uu___ ->
@@ -3462,14 +4078,22 @@ let (specialize_abspat_continuation' :
                          | (argspecs, body) ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range
-                                     "FStar.Tactics.PatternMatching.fst"
-                                     (Prims.of_int (733)) (Prims.of_int (23))
-                                     (Prims.of_int (733)) (Prims.of_int (49)))
-                                  (FStar_Range.mk_range
-                                     "FStar.Tactics.PatternMatching.fst"
-                                     (Prims.of_int (733)) (Prims.of_int (2))
-                                     (Prims.of_int (733)) (Prims.of_int (52)))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.Tactics.PatternMatching.fst"
+                                           (Prims.of_int (733))
+                                           (Prims.of_int (23))
+                                           (Prims.of_int (733))
+                                           (Prims.of_int (49)))))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.Tactics.PatternMatching.fst"
+                                           (Prims.of_int (733))
+                                           (Prims.of_int (2))
+                                           (Prims.of_int (733))
+                                           (Prims.of_int (52)))))
                                   (Obj.magic
                                      (FStar_Tactics_Util.map mk_arg_term
                                         argspecs))
@@ -3484,12 +4108,16 @@ let (specialize_abspat_continuation :
   =
   fun continuation ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (740)) (Prims.of_int (24)) (Prims.of_int (740))
-         (Prims.of_int (57)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (740)) (Prims.of_int (60)) (Prims.of_int (747))
-         (Prims.of_int (9)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (740)) (Prims.of_int (24)) (Prims.of_int (740))
+               (Prims.of_int (57)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (740)) (Prims.of_int (60)) (Prims.of_int (747))
+               (Prims.of_int (9)))))
       (Obj.magic
          (FStar_Tactics_Derived.fresh_binder
             (FStar_Reflection_Builtins.pack_ln
@@ -3503,12 +4131,18 @@ let (specialize_abspat_continuation :
          (fun solution_binder ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                    (Prims.of_int (741)) (Prims.of_int (22))
-                    (Prims.of_int (741)) (Prims.of_int (70)))
-                 (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                    (Prims.of_int (741)) (Prims.of_int (73))
-                    (Prims.of_int (747)) (Prims.of_int (9)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.Tactics.PatternMatching.fst"
+                          (Prims.of_int (741)) (Prims.of_int (22))
+                          (Prims.of_int (741)) (Prims.of_int (70)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.Tactics.PatternMatching.fst"
+                          (Prims.of_int (741)) (Prims.of_int (73))
+                          (Prims.of_int (747)) (Prims.of_int (9)))))
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
                        FStar_Tactics_NamedView.pack
@@ -3519,14 +4153,18 @@ let (specialize_abspat_continuation :
                     (fun solution_term ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.PatternMatching.fst"
-                               (Prims.of_int (742)) (Prims.of_int (16))
-                               (Prims.of_int (742)) (Prims.of_int (74)))
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.PatternMatching.fst"
-                               (Prims.of_int (742)) (Prims.of_int (77))
-                               (Prims.of_int (747)) (Prims.of_int (9)))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.PatternMatching.fst"
+                                     (Prims.of_int (742)) (Prims.of_int (16))
+                                     (Prims.of_int (742)) (Prims.of_int (74)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.PatternMatching.fst"
+                                     (Prims.of_int (742)) (Prims.of_int (77))
+                                     (Prims.of_int (747)) (Prims.of_int (9)))))
                             (Obj.magic
                                (specialize_abspat_continuation' continuation
                                   solution_term))
@@ -3534,18 +4172,22 @@ let (specialize_abspat_continuation :
                                (fun applied ->
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.PatternMatching.fst"
-                                          (Prims.of_int (743))
-                                          (Prims.of_int (16))
-                                          (Prims.of_int (743))
-                                          (Prims.of_int (53)))
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.PatternMatching.fst"
-                                          (Prims.of_int (744))
-                                          (Prims.of_int (2))
-                                          (Prims.of_int (747))
-                                          (Prims.of_int (9)))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.PatternMatching.fst"
+                                                (Prims.of_int (743))
+                                                (Prims.of_int (16))
+                                                (Prims.of_int (743))
+                                                (Prims.of_int (53)))))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.PatternMatching.fst"
+                                                (Prims.of_int (744))
+                                                (Prims.of_int (2))
+                                                (Prims.of_int (747))
+                                                (Prims.of_int (9)))))
                                        (FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___ ->
                                              FStar_Tactics_NamedView.pack
@@ -3555,46 +4197,60 @@ let (specialize_abspat_continuation :
                                           (fun thunked ->
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
-                                                  (FStar_Range.mk_range
-                                                     "FStar.Tactics.PatternMatching.fst"
-                                                     (Prims.of_int (744))
-                                                     (Prims.of_int (2))
-                                                     (Prims.of_int (744))
-                                                     (Prims.of_int (56)))
-                                                  (FStar_Range.mk_range
-                                                     "FStar.Tactics.PatternMatching.fst"
-                                                     (Prims.of_int (744))
-                                                     (Prims.of_int (57))
-                                                     (Prims.of_int (747))
-                                                     (Prims.of_int (9)))
-                                                  (Obj.magic
-                                                     (FStar_Tactics_Effect.tac_bind
-                                                        (FStar_Range.mk_range
-                                                           "FStar.Tactics.PatternMatching.fst"
-                                                           (Prims.of_int (744))
-                                                           (Prims.of_int (8))
-                                                           (Prims.of_int (744))
-                                                           (Prims.of_int (56)))
+                                                  (FStar_Sealed.seal
+                                                     (Obj.magic
                                                         (FStar_Range.mk_range
                                                            "FStar.Tactics.PatternMatching.fst"
                                                            (Prims.of_int (744))
                                                            (Prims.of_int (2))
                                                            (Prims.of_int (744))
-                                                           (Prims.of_int (56)))
-                                                        (Obj.magic
-                                                           (FStar_Tactics_Effect.tac_bind
+                                                           (Prims.of_int (56)))))
+                                                  (FStar_Sealed.seal
+                                                     (Obj.magic
+                                                        (FStar_Range.mk_range
+                                                           "FStar.Tactics.PatternMatching.fst"
+                                                           (Prims.of_int (744))
+                                                           (Prims.of_int (57))
+                                                           (Prims.of_int (747))
+                                                           (Prims.of_int (9)))))
+                                                  (Obj.magic
+                                                     (FStar_Tactics_Effect.tac_bind
+                                                        (FStar_Sealed.seal
+                                                           (Obj.magic
                                                               (FStar_Range.mk_range
                                                                  "FStar.Tactics.PatternMatching.fst"
                                                                  (Prims.of_int (744))
-                                                                 (Prims.of_int (31))
+                                                                 (Prims.of_int (8))
                                                                  (Prims.of_int (744))
-                                                                 (Prims.of_int (55)))
+                                                                 (Prims.of_int (56)))))
+                                                        (FStar_Sealed.seal
+                                                           (Obj.magic
                                                               (FStar_Range.mk_range
-                                                                 "prims.fst"
-                                                                 (Prims.of_int (590))
-                                                                 (Prims.of_int (19))
-                                                                 (Prims.of_int (590))
-                                                                 (Prims.of_int (31)))
+                                                                 "FStar.Tactics.PatternMatching.fst"
+                                                                 (Prims.of_int (744))
+                                                                 (Prims.of_int (2))
+                                                                 (Prims.of_int (744))
+                                                                 (Prims.of_int (56)))))
+                                                        (Obj.magic
+                                                           (FStar_Tactics_Effect.tac_bind
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (744))
+                                                                    (Prims.of_int (31))
+                                                                    (Prims.of_int (744))
+                                                                    (Prims.of_int (55)))))
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))))
                                                               (Obj.magic
                                                                  (FStar_Tactics_Builtins.term_to_string
                                                                     thunked))
@@ -3614,18 +4270,22 @@ let (specialize_abspat_continuation :
                                                      (fun uu___ ->
                                                         Obj.magic
                                                           (FStar_Tactics_Effect.tac_bind
-                                                             (FStar_Range.mk_range
-                                                                "FStar.Tactics.PatternMatching.fst"
-                                                                (Prims.of_int (745))
-                                                                (Prims.of_int (19))
-                                                                (Prims.of_int (745))
-                                                                (Prims.of_int (38)))
-                                                             (FStar_Range.mk_range
-                                                                "FStar.Tactics.PatternMatching.fst"
-                                                                (Prims.of_int (746))
-                                                                (Prims.of_int (2))
-                                                                (Prims.of_int (747))
-                                                                (Prims.of_int (9)))
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (745))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (745))
+                                                                    (Prims.of_int (38)))))
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Range.mk_range
+                                                                    "FStar.Tactics.PatternMatching.fst"
+                                                                    (Prims.of_int (746))
+                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int (747))
+                                                                    (Prims.of_int (9)))))
                                                              (Obj.magic
                                                                 (beta_reduce
                                                                    thunked))
@@ -3635,46 +4295,58 @@ let (specialize_abspat_continuation :
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (746))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (746))
-                                                                    (Prims.of_int (61)))
+                                                                    (Prims.of_int (61)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (743))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (743))
-                                                                    (Prims.of_int (13)))
+                                                                    (Prims.of_int (13)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (746))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (746))
-                                                                    (Prims.of_int (61)))
+                                                                    (Prims.of_int (61)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (746))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (746))
-                                                                    (Prims.of_int (61)))
+                                                                    (Prims.of_int (61)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.PatternMatching.fst"
                                                                     (Prims.of_int (746))
                                                                     (Prims.of_int (33))
                                                                     (Prims.of_int (746))
-                                                                    (Prims.of_int (60)))
+                                                                    (Prims.of_int (60)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.term_to_string
                                                                     normalized))
@@ -3711,12 +4383,16 @@ let interp_abspat_continuation :
   =
   fun continuation ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (754)) (Prims.of_int (16)) (Prims.of_int (754))
-         (Prims.of_int (59)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (755)) (Prims.of_int (2)) (Prims.of_int (755))
-         (Prims.of_int (47)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (754)) (Prims.of_int (16)) (Prims.of_int (754))
+               (Prims.of_int (59)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (755)) (Prims.of_int (2)) (Prims.of_int (755))
+               (Prims.of_int (47)))))
       (Obj.magic (specialize_abspat_continuation continuation))
       (fun uu___ ->
          (fun applied -> Obj.magic (FStar_Tactics_Builtins.unquote applied))
@@ -3729,12 +4405,16 @@ let interp_abspat :
   =
   fun abspat ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (765)) (Prims.of_int (26)) (Prims.of_int (765))
-         (Prims.of_int (40)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (765)) (Prims.of_int (2)) (Prims.of_int (765))
-         (Prims.of_int (40)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (765)) (Prims.of_int (26)) (Prims.of_int (765))
+               (Prims.of_int (40)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (765)) (Prims.of_int (2)) (Prims.of_int (765))
+               (Prims.of_int (40)))))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ ->
             (fun uu___ ->
@@ -3754,33 +4434,47 @@ let match_abspat :
   fun abspat ->
     fun k ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (773)) (Prims.of_int (13)) (Prims.of_int (773))
-           (Prims.of_int (24)))
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (773)) (Prims.of_int (27)) (Prims.of_int (776))
-           (Prims.of_int (51)))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (773)) (Prims.of_int (13))
+                 (Prims.of_int (773)) (Prims.of_int (24)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (773)) (Prims.of_int (27))
+                 (Prims.of_int (776)) (Prims.of_int (51)))))
         (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
         (fun uu___ ->
            (fun goal ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (774)) (Prims.of_int (19))
-                      (Prims.of_int (774)) (Prims.of_int (43)))
-                   (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-                      (Prims.of_int (774)) (Prims.of_int (46))
-                      (Prims.of_int (776)) (Prims.of_int (51)))
-                   (Obj.magic
-                      (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range
-                            "FStar.Tactics.PatternMatching.fst"
-                            (Prims.of_int (774)) (Prims.of_int (31))
-                            (Prims.of_int (774)) (Prims.of_int (43)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
                          (FStar_Range.mk_range
                             "FStar.Tactics.PatternMatching.fst"
                             (Prims.of_int (774)) (Prims.of_int (19))
-                            (Prims.of_int (774)) (Prims.of_int (43)))
+                            (Prims.of_int (774)) (Prims.of_int (43)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.Tactics.PatternMatching.fst"
+                            (Prims.of_int (774)) (Prims.of_int (46))
+                            (Prims.of_int (776)) (Prims.of_int (51)))))
+                   (Obj.magic
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.Tactics.PatternMatching.fst"
+                                  (Prims.of_int (774)) (Prims.of_int (31))
+                                  (Prims.of_int (774)) (Prims.of_int (43)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.Tactics.PatternMatching.fst"
+                                  (Prims.of_int (774)) (Prims.of_int (19))
+                                  (Prims.of_int (774)) (Prims.of_int (43)))))
                          (Obj.magic (FStar_Tactics_Derived.cur_env ()))
                          (fun uu___ ->
                             FStar_Tactics_Effect.lift_div_tac
@@ -3790,14 +4484,22 @@ let match_abspat :
                       (fun hypotheses ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "FStar.Tactics.PatternMatching.fst"
-                                 (Prims.of_int (775)) (Prims.of_int (30))
-                                 (Prims.of_int (775)) (Prims.of_int (50)))
-                              (FStar_Range.mk_range
-                                 "FStar.Tactics.PatternMatching.fst"
-                                 (Prims.of_int (774)) (Prims.of_int (46))
-                                 (Prims.of_int (776)) (Prims.of_int (51)))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.PatternMatching.fst"
+                                       (Prims.of_int (775))
+                                       (Prims.of_int (30))
+                                       (Prims.of_int (775))
+                                       (Prims.of_int (50)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.PatternMatching.fst"
+                                       (Prims.of_int (774))
+                                       (Prims.of_int (46))
+                                       (Prims.of_int (776))
+                                       (Prims.of_int (51)))))
                               (Obj.magic (interp_abspat abspat))
                               (fun uu___ ->
                                  (fun uu___ ->
@@ -3805,18 +4507,22 @@ let match_abspat :
                                     | (problem, continuation) ->
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
-                                             (FStar_Range.mk_range
-                                                "FStar.Tactics.PatternMatching.fst"
-                                                (Prims.of_int (776))
-                                                (Prims.of_int (35))
-                                                (Prims.of_int (776))
-                                                (Prims.of_int (51)))
-                                             (FStar_Range.mk_range
-                                                "FStar.Tactics.PatternMatching.fst"
-                                                (Prims.of_int (776))
-                                                (Prims.of_int (2))
-                                                (Prims.of_int (776))
-                                                (Prims.of_int (51)))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
+                                                   (FStar_Range.mk_range
+                                                      "FStar.Tactics.PatternMatching.fst"
+                                                      (Prims.of_int (776))
+                                                      (Prims.of_int (35))
+                                                      (Prims.of_int (776))
+                                                      (Prims.of_int (51)))))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
+                                                   (FStar_Range.mk_range
+                                                      "FStar.Tactics.PatternMatching.fst"
+                                                      (Prims.of_int (776))
+                                                      (Prims.of_int (2))
+                                                      (Prims.of_int (776))
+                                                      (Prims.of_int (51)))))
                                              (Obj.magic (k continuation))
                                              (fun uu___1 ->
                                                 (fun uu___1 ->
@@ -3829,12 +4535,16 @@ let inspect_abspat_problem :
   'a . 'a -> (matching_problem, unit) FStar_Tactics_Effect.tac_repr =
   fun abspat ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (780)) (Prims.of_int (6)) (Prims.of_int (780))
-         (Prims.of_int (31)))
-      (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-         (Prims.of_int (780)) (Prims.of_int (2)) (Prims.of_int (780))
-         (Prims.of_int (31))) (Obj.magic (interp_abspat abspat))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (780)) (Prims.of_int (6)) (Prims.of_int (780))
+               (Prims.of_int (31)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+               (Prims.of_int (780)) (Prims.of_int (2)) (Prims.of_int (780))
+               (Prims.of_int (31))))) (Obj.magic (interp_abspat abspat))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 -> FStar_Pervasives_Native.fst uu___))
@@ -3875,26 +4585,35 @@ let gpm : 'b 'a . 'a -> unit -> ('b, unit) FStar_Tactics_Effect.tac_repr =
   fun abspat ->
     fun uu___ ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (804)) (Prims.of_int (31)) (Prims.of_int (804))
-           (Prims.of_int (56)))
-        (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
-           (Prims.of_int (803)) (Prims.of_int (38)) (Prims.of_int (805))
-           (Prims.of_int (52))) (Obj.magic (match_abspat abspat tpair))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (804)) (Prims.of_int (31))
+                 (Prims.of_int (804)) (Prims.of_int (56)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
+                 (Prims.of_int (803)) (Prims.of_int (38))
+                 (Prims.of_int (805)) (Prims.of_int (52)))))
+        (Obj.magic (match_abspat abspat tpair))
         (fun uu___1 ->
            (fun uu___1 ->
               match uu___1 with
               | (continuation, solution) ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range
-                          "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (805)) (Prims.of_int (2))
-                          (Prims.of_int (805)) (Prims.of_int (52)))
-                       (FStar_Range.mk_range
-                          "FStar.Tactics.PatternMatching.fst"
-                          (Prims.of_int (805)) (Prims.of_int (2))
-                          (Prims.of_int (805)) (Prims.of_int (52)))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.Tactics.PatternMatching.fst"
+                                (Prims.of_int (805)) (Prims.of_int (2))
+                                (Prims.of_int (805)) (Prims.of_int (52)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.Tactics.PatternMatching.fst"
+                                (Prims.of_int (805)) (Prims.of_int (2))
+                                (Prims.of_int (805)) (Prims.of_int (52)))))
                        (Obj.magic (interp_abspat_continuation continuation))
                        (fun uu___2 ->
                           (fun uu___2 -> Obj.magic (uu___2 solution)) uu___2)))
@@ -3911,14 +4630,18 @@ let fetch_eq_side' :
                fun right ->
                  fun g ->
                    FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range
-                        "FStar.Tactics.PatternMatching.fst"
-                        (Prims.of_int (828)) (Prims.of_int (10))
-                        (Prims.of_int (828)) (Prims.of_int (20)))
-                     (FStar_Range.mk_range
-                        "FStar.Tactics.PatternMatching.fst"
-                        (Prims.of_int (828)) (Prims.of_int (9))
-                        (Prims.of_int (828)) (Prims.of_int (34)))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.Tactics.PatternMatching.fst"
+                              (Prims.of_int (828)) (Prims.of_int (10))
+                              (Prims.of_int (828)) (Prims.of_int (20)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.Tactics.PatternMatching.fst"
+                              (Prims.of_int (828)) (Prims.of_int (9))
+                              (Prims.of_int (828)) (Prims.of_int (34)))))
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 ->
                            (fun uu___1 ->
@@ -3930,14 +4653,22 @@ let fetch_eq_side' :
                         (fun uu___1 ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range
-                                   "FStar.Tactics.PatternMatching.fst"
-                                   (Prims.of_int (828)) (Prims.of_int (22))
-                                   (Prims.of_int (828)) (Prims.of_int (33)))
-                                (FStar_Range.mk_range
-                                   "FStar.Tactics.PatternMatching.fst"
-                                   (Prims.of_int (828)) (Prims.of_int (9))
-                                   (Prims.of_int (828)) (Prims.of_int (34)))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.Tactics.PatternMatching.fst"
+                                         (Prims.of_int (828))
+                                         (Prims.of_int (22))
+                                         (Prims.of_int (828))
+                                         (Prims.of_int (33)))))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.Tactics.PatternMatching.fst"
+                                         (Prims.of_int (828))
+                                         (Prims.of_int (9))
+                                         (Prims.of_int (828))
+                                         (Prims.of_int (34)))))
                                 (FStar_Tactics_Effect.lift_div_tac
                                    (fun uu___2 ->
                                       (fun uu___2 ->

@@ -19,12 +19,16 @@ let (is_true :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (159)) (Prims.of_int (16)) (Prims.of_int (159))
-         (Prims.of_int (34)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (159)) (Prims.of_int (10)) (Prims.of_int (172))
-         (Prims.of_int (14)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (159)) (Prims.of_int (16)) (Prims.of_int (159))
+               (Prims.of_int (34)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (159)) (Prims.of_int (10)) (Prims.of_int (172))
+               (Prims.of_int (14)))))
       (Obj.magic (FStar_Reflection_Formula.term_as_formula' t))
       (fun uu___ ->
          (fun uu___ ->
@@ -37,12 +41,18 @@ let (is_true :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                           (Prims.of_int (161)) (Prims.of_int (23))
-                           (Prims.of_int (161)) (Prims.of_int (32)))
-                        (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                           (Prims.of_int (161)) (Prims.of_int (17))
-                           (Prims.of_int (171)) (Prims.of_int (23)))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.Simplifier.fst"
+                                 (Prims.of_int (161)) (Prims.of_int (23))
+                                 (Prims.of_int (161)) (Prims.of_int (32)))))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.Simplifier.fst"
+                                 (Prims.of_int (161)) (Prims.of_int (17))
+                                 (Prims.of_int (171)) (Prims.of_int (23)))))
                         (Obj.magic (FStar_Tactics_NamedView.inspect t))
                         (fun uu___2 ->
                            (fun uu___2 ->
@@ -51,18 +61,22 @@ let (is_true :
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Tactics_Effect.tac_bind
-                                          (FStar_Range.mk_range
-                                             "FStar.Tactics.Simplifier.fst"
-                                             (Prims.of_int (163))
-                                             (Prims.of_int (24))
-                                             (Prims.of_int (163))
-                                             (Prims.of_int (33)))
-                                          (FStar_Range.mk_range
-                                             "FStar.Tactics.Simplifier.fst"
-                                             (Prims.of_int (163))
-                                             (Prims.of_int (18))
-                                             (Prims.of_int (169))
-                                             (Prims.of_int (24)))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.Simplifier.fst"
+                                                   (Prims.of_int (163))
+                                                   (Prims.of_int (24))
+                                                   (Prims.of_int (163))
+                                                   (Prims.of_int (33)))))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.Simplifier.fst"
+                                                   (Prims.of_int (163))
+                                                   (Prims.of_int (18))
+                                                   (Prims.of_int (169))
+                                                   (Prims.of_int (24)))))
                                           (Obj.magic
                                              (FStar_Tactics_NamedView.inspect
                                                 l))
@@ -74,18 +88,22 @@ let (is_true :
                                                     Obj.magic
                                                       (Obj.repr
                                                          (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.Simplifier.fst"
-                                                               (Prims.of_int (165))
-                                                               (Prims.of_int (28))
-                                                               (Prims.of_int (165))
-                                                               (Prims.of_int (46)))
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.Simplifier.fst"
-                                                               (Prims.of_int (165))
-                                                               (Prims.of_int (22))
-                                                               (Prims.of_int (167))
-                                                               (Prims.of_int (28)))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (165))
+                                                                    (Prims.of_int (28))
+                                                                    (Prims.of_int (165))
+                                                                    (Prims.of_int (46)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (165))
+                                                                    (Prims.of_int (22))
+                                                                    (Prims.of_int (167))
+                                                                    (Prims.of_int (28)))))
                                                             (Obj.magic
                                                                (FStar_Reflection_Formula.term_as_formula'
                                                                   t1))
@@ -120,12 +138,16 @@ let (is_false :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (177)) (Prims.of_int (16)) (Prims.of_int (177))
-         (Prims.of_int (34)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (177)) (Prims.of_int (10)) (Prims.of_int (190))
-         (Prims.of_int (14)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (177)) (Prims.of_int (16)) (Prims.of_int (177))
+               (Prims.of_int (34)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (177)) (Prims.of_int (10)) (Prims.of_int (190))
+               (Prims.of_int (14)))))
       (Obj.magic (FStar_Reflection_Formula.term_as_formula' t))
       (fun uu___ ->
          (fun uu___ ->
@@ -138,12 +160,18 @@ let (is_false :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                           (Prims.of_int (179)) (Prims.of_int (23))
-                           (Prims.of_int (179)) (Prims.of_int (32)))
-                        (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                           (Prims.of_int (179)) (Prims.of_int (17))
-                           (Prims.of_int (189)) (Prims.of_int (23)))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.Simplifier.fst"
+                                 (Prims.of_int (179)) (Prims.of_int (23))
+                                 (Prims.of_int (179)) (Prims.of_int (32)))))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.Tactics.Simplifier.fst"
+                                 (Prims.of_int (179)) (Prims.of_int (17))
+                                 (Prims.of_int (189)) (Prims.of_int (23)))))
                         (Obj.magic (FStar_Tactics_NamedView.inspect t))
                         (fun uu___2 ->
                            (fun uu___2 ->
@@ -152,18 +180,22 @@ let (is_false :
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Tactics_Effect.tac_bind
-                                          (FStar_Range.mk_range
-                                             "FStar.Tactics.Simplifier.fst"
-                                             (Prims.of_int (181))
-                                             (Prims.of_int (24))
-                                             (Prims.of_int (181))
-                                             (Prims.of_int (33)))
-                                          (FStar_Range.mk_range
-                                             "FStar.Tactics.Simplifier.fst"
-                                             (Prims.of_int (181))
-                                             (Prims.of_int (18))
-                                             (Prims.of_int (187))
-                                             (Prims.of_int (24)))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.Simplifier.fst"
+                                                   (Prims.of_int (181))
+                                                   (Prims.of_int (24))
+                                                   (Prims.of_int (181))
+                                                   (Prims.of_int (33)))))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "FStar.Tactics.Simplifier.fst"
+                                                   (Prims.of_int (181))
+                                                   (Prims.of_int (18))
+                                                   (Prims.of_int (187))
+                                                   (Prims.of_int (24)))))
                                           (Obj.magic
                                              (FStar_Tactics_NamedView.inspect
                                                 l))
@@ -175,18 +207,22 @@ let (is_false :
                                                     Obj.magic
                                                       (Obj.repr
                                                          (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.Simplifier.fst"
-                                                               (Prims.of_int (183))
-                                                               (Prims.of_int (28))
-                                                               (Prims.of_int (183))
-                                                               (Prims.of_int (46)))
-                                                            (FStar_Range.mk_range
-                                                               "FStar.Tactics.Simplifier.fst"
-                                                               (Prims.of_int (183))
-                                                               (Prims.of_int (22))
-                                                               (Prims.of_int (185))
-                                                               (Prims.of_int (28)))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (183))
+                                                                    (Prims.of_int (28))
+                                                                    (Prims.of_int (183))
+                                                                    (Prims.of_int (46)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (183))
+                                                                    (Prims.of_int (22))
+                                                                    (Prims.of_int (185))
+                                                                    (Prims.of_int (28)))))
                                                             (Obj.magic
                                                                (FStar_Reflection_Formula.term_as_formula'
                                                                   t1))
@@ -218,22 +254,31 @@ let (is_false :
 let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (195)) (Prims.of_int (12)) (Prims.of_int (195))
-         (Prims.of_int (23)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (196)) (Prims.of_int (4)) (Prims.of_int (203))
-         (Prims.of_int (18))) (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (195)) (Prims.of_int (12)) (Prims.of_int (195))
+               (Prims.of_int (23)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (196)) (Prims.of_int (4)) (Prims.of_int (203))
+               (Prims.of_int (18)))))
+      (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
       (fun uu___1 ->
          (fun t ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                    (Prims.of_int (196)) (Prims.of_int (10))
-                    (Prims.of_int (196)) (Prims.of_int (19)))
-                 (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                    (Prims.of_int (196)) (Prims.of_int (4))
-                    (Prims.of_int (203)) (Prims.of_int (18)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                          (Prims.of_int (196)) (Prims.of_int (10))
+                          (Prims.of_int (196)) (Prims.of_int (19)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                          (Prims.of_int (196)) (Prims.of_int (4))
+                          (Prims.of_int (203)) (Prims.of_int (18)))))
                  (Obj.magic (FStar_Tactics_NamedView.inspect t))
                  (fun uu___1 ->
                     (fun uu___1 ->
@@ -242,18 +287,22 @@ let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                            Obj.magic
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Range.mk_range
-                                      "FStar.Tactics.Simplifier.fst"
-                                      (Prims.of_int (198))
-                                      (Prims.of_int (17))
-                                      (Prims.of_int (198))
-                                      (Prims.of_int (30)))
-                                   (FStar_Range.mk_range
-                                      "FStar.Tactics.Simplifier.fst"
-                                      (Prims.of_int (199))
-                                      (Prims.of_int (13))
-                                      (Prims.of_int (202))
-                                      (Prims.of_int (20)))
+                                   (FStar_Sealed.seal
+                                      (Obj.magic
+                                         (FStar_Range.mk_range
+                                            "FStar.Tactics.Simplifier.fst"
+                                            (Prims.of_int (198))
+                                            (Prims.of_int (17))
+                                            (Prims.of_int (198))
+                                            (Prims.of_int (30)))))
+                                   (FStar_Sealed.seal
+                                      (Obj.magic
+                                         (FStar_Range.mk_range
+                                            "FStar.Tactics.Simplifier.fst"
+                                            (Prims.of_int (199))
+                                            (Prims.of_int (13))
+                                            (Prims.of_int (202))
+                                            (Prims.of_int (20)))))
                                    (FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___2 ->
                                          FStar_Reflection_Builtins.inspect_fv
@@ -306,52 +355,68 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (209)) (Prims.of_int (4)) (Prims.of_int (209))
-         (Prims.of_int (14)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (210)) (Prims.of_int (4)) (Prims.of_int (264))
-         (Prims.of_int (81))) (Obj.magic (recurse ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (209)) (Prims.of_int (4)) (Prims.of_int (209))
+               (Prims.of_int (14)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (210)) (Prims.of_int (4)) (Prims.of_int (264))
+               (Prims.of_int (81))))) (Obj.magic (recurse ()))
       (fun uu___1 ->
          (fun uu___1 ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                    (Prims.of_int (210)) (Prims.of_int (4))
-                    (Prims.of_int (210)) (Prims.of_int (11)))
-                 (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                    (Prims.of_int (210)) (Prims.of_int (12))
-                    (Prims.of_int (264)) (Prims.of_int (81)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                          (Prims.of_int (210)) (Prims.of_int (4))
+                          (Prims.of_int (210)) (Prims.of_int (11)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                          (Prims.of_int (210)) (Prims.of_int (12))
+                          (Prims.of_int (264)) (Prims.of_int (81)))))
                  (Obj.magic (FStar_Tactics_Builtins.norm []))
                  (fun uu___2 ->
                     (fun uu___2 ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.Simplifier.fst"
-                               (Prims.of_int (211)) (Prims.of_int (12))
-                               (Prims.of_int (211)) (Prims.of_int (23)))
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.Simplifier.fst"
-                               (Prims.of_int (211)) (Prims.of_int (26))
-                               (Prims.of_int (264)) (Prims.of_int (81)))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Simplifier.fst"
+                                     (Prims.of_int (211)) (Prims.of_int (12))
+                                     (Prims.of_int (211)) (Prims.of_int (23)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Simplifier.fst"
+                                     (Prims.of_int (211)) (Prims.of_int (26))
+                                     (Prims.of_int (264)) (Prims.of_int (81)))))
                             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
                             (fun uu___3 ->
                                (fun g ->
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.Simplifier.fst"
-                                          (Prims.of_int (212))
-                                          (Prims.of_int (12))
-                                          (Prims.of_int (212))
-                                          (Prims.of_int (29)))
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.Simplifier.fst"
-                                          (Prims.of_int (213))
-                                          (Prims.of_int (4))
-                                          (Prims.of_int (264))
-                                          (Prims.of_int (81)))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.Simplifier.fst"
+                                                (Prims.of_int (212))
+                                                (Prims.of_int (12))
+                                                (Prims.of_int (212))
+                                                (Prims.of_int (29)))))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.Simplifier.fst"
+                                                (Prims.of_int (213))
+                                                (Prims.of_int (4))
+                                                (Prims.of_int (264))
+                                                (Prims.of_int (81)))))
                                        (Obj.magic
                                           (FStar_Reflection_Formula.term_as_formula
                                              g))
@@ -363,18 +428,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                  Obj.magic
                                                    (Obj.repr
                                                       (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "FStar.Tactics.Simplifier.fst"
-                                                            (Prims.of_int (215))
-                                                            (Prims.of_int (20))
-                                                            (Prims.of_int (215))
-                                                            (Prims.of_int (38)))
-                                                         (FStar_Range.mk_range
-                                                            "FStar.Tactics.Simplifier.fst"
-                                                            (Prims.of_int (215))
-                                                            (Prims.of_int (14))
-                                                            (Prims.of_int (262))
-                                                            (Prims.of_int (22)))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.Tactics.Simplifier.fst"
+                                                                  (Prims.of_int (215))
+                                                                  (Prims.of_int (20))
+                                                                  (Prims.of_int (215))
+                                                                  (Prims.of_int (38)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.Tactics.Simplifier.fst"
+                                                                  (Prims.of_int (215))
+                                                                  (Prims.of_int (14))
+                                                                  (Prims.of_int (262))
+                                                                  (Prims.of_int (22)))))
                                                          (Obj.magic
                                                             (FStar_Reflection_Formula.term_as_formula'
                                                                l))
@@ -386,18 +455,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                    (p, q) ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (217))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (217))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (217))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (221))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     p))
@@ -419,18 +492,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (218))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (218))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (218))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (221))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     q))
@@ -452,18 +529,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (219))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (219))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (219))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (221))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     p))
@@ -485,18 +566,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (220))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (220))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (220))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (221))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     q))
@@ -529,18 +614,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                    (p, q) ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (224))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (224))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (224))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (228))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     p))
@@ -562,18 +651,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (225))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (225))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (225))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (228))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     q))
@@ -595,18 +688,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (226))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (226))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (226))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (228))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     p))
@@ -628,18 +725,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (227))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (227))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (227))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (228))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     q))
@@ -672,18 +773,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                    (p, q) ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (231))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (231))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (231))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     p))
@@ -705,18 +810,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (232))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (232))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (232))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     q))
@@ -738,18 +847,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (233))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (233))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (233))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     p))
@@ -780,18 +893,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (237))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (237))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (237))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (239))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     p))
@@ -813,18 +930,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (238))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (238))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (238))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (239))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     p))
@@ -839,18 +960,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (fun
                                                                     uu___7 ->
                                                                     FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (238))
                                                                     (Prims.of_int (55))
                                                                     (Prims.of_int (238))
-                                                                    (Prims.of_int (82)))
+                                                                    (Prims.of_int (82)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (238))
                                                                     (Prims.of_int (84))
                                                                     (Prims.of_int (238))
-                                                                    (Prims.of_int (94)))
+                                                                    (Prims.of_int (94)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.apply_lemma
                                                                     (FStar_Reflection_Builtins.pack_ln
@@ -880,18 +1005,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (242))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (242))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (242))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (244))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     p))
@@ -913,18 +1042,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (243))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (243))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (243))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (244))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     p))
@@ -939,18 +1072,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (fun
                                                                     uu___7 ->
                                                                     FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (243))
                                                                     (Prims.of_int (55))
                                                                     (Prims.of_int (243))
-                                                                    (Prims.of_int (81)))
+                                                                    (Prims.of_int (81)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (243))
                                                                     (Prims.of_int (83))
                                                                     (Prims.of_int (243))
-                                                                    (Prims.of_int (93)))
+                                                                    (Prims.of_int (93)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.apply_lemma
                                                                     (FStar_Reflection_Builtins.pack_ln
@@ -978,18 +1115,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                    p ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (247))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (247))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (247))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (249))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     p))
@@ -1011,18 +1152,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (248))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (248))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (248))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (249))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     p))
@@ -1050,18 +1195,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                    (p, q) ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (254))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (254))
-                                                                    (Prims.of_int (19)))
+                                                                    (Prims.of_int (19)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (255))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (260))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (step ()))
                                                                     (fun
@@ -1070,32 +1219,40 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     uu___4 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (255))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (260))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (260))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (255))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (255))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (255))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     p))
@@ -1117,18 +1274,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (256))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (256))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (256))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_true
                                                                     q))
@@ -1150,18 +1311,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (257))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (257))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (257))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     p))
@@ -1183,18 +1348,22 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (258))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (258))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (258))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))
+                                                                    (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (is_false
                                                                     q))
@@ -1246,52 +1415,68 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
 and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (267)) (Prims.of_int (4)) (Prims.of_int (267))
-         (Prims.of_int (11)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (268)) (Prims.of_int (4)) (Prims.of_int (302))
-         (Prims.of_int (74))) (Obj.magic (step ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (267)) (Prims.of_int (4)) (Prims.of_int (267))
+               (Prims.of_int (11)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (268)) (Prims.of_int (4)) (Prims.of_int (302))
+               (Prims.of_int (74))))) (Obj.magic (step ()))
       (fun uu___1 ->
          (fun uu___1 ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                    (Prims.of_int (268)) (Prims.of_int (4))
-                    (Prims.of_int (268)) (Prims.of_int (11)))
-                 (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-                    (Prims.of_int (268)) (Prims.of_int (12))
-                    (Prims.of_int (302)) (Prims.of_int (74)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                          (Prims.of_int (268)) (Prims.of_int (4))
+                          (Prims.of_int (268)) (Prims.of_int (11)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+                          (Prims.of_int (268)) (Prims.of_int (12))
+                          (Prims.of_int (302)) (Prims.of_int (74)))))
                  (Obj.magic (FStar_Tactics_Builtins.norm []))
                  (fun uu___2 ->
                     (fun uu___2 ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.Simplifier.fst"
-                               (Prims.of_int (269)) (Prims.of_int (12))
-                               (Prims.of_int (269)) (Prims.of_int (23)))
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.Simplifier.fst"
-                               (Prims.of_int (269)) (Prims.of_int (26))
-                               (Prims.of_int (302)) (Prims.of_int (74)))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Simplifier.fst"
+                                     (Prims.of_int (269)) (Prims.of_int (12))
+                                     (Prims.of_int (269)) (Prims.of_int (23)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.Simplifier.fst"
+                                     (Prims.of_int (269)) (Prims.of_int (26))
+                                     (Prims.of_int (302)) (Prims.of_int (74)))))
                             (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
                             (fun uu___3 ->
                                (fun g ->
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.Simplifier.fst"
-                                          (Prims.of_int (270))
-                                          (Prims.of_int (12))
-                                          (Prims.of_int (270))
-                                          (Prims.of_int (29)))
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.Simplifier.fst"
-                                          (Prims.of_int (271))
-                                          (Prims.of_int (4))
-                                          (Prims.of_int (302))
-                                          (Prims.of_int (74)))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.Simplifier.fst"
+                                                (Prims.of_int (270))
+                                                (Prims.of_int (12))
+                                                (Prims.of_int (270))
+                                                (Prims.of_int (29)))))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.Tactics.Simplifier.fst"
+                                                (Prims.of_int (271))
+                                                (Prims.of_int (4))
+                                                (Prims.of_int (302))
+                                                (Prims.of_int (74)))))
                                        (Obj.magic
                                           (FStar_Reflection_Formula.term_as_formula
                                              g))
@@ -1303,18 +1488,22 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                  Obj.magic
                                                    (Obj.repr
                                                       (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "FStar.Tactics.Simplifier.fst"
-                                                            (Prims.of_int (273))
-                                                            (Prims.of_int (20))
-                                                            (Prims.of_int (273))
-                                                            (Prims.of_int (38)))
-                                                         (FStar_Range.mk_range
-                                                            "FStar.Tactics.Simplifier.fst"
-                                                            (Prims.of_int (273))
-                                                            (Prims.of_int (14))
-                                                            (Prims.of_int (300))
-                                                            (Prims.of_int (22)))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.Tactics.Simplifier.fst"
+                                                                  (Prims.of_int (273))
+                                                                  (Prims.of_int (20))
+                                                                  (Prims.of_int (273))
+                                                                  (Prims.of_int (38)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.Tactics.Simplifier.fst"
+                                                                  (Prims.of_int (273))
+                                                                  (Prims.of_int (14))
+                                                                  (Prims.of_int (300))
+                                                                  (Prims.of_int (22)))))
                                                          (Obj.magic
                                                             (FStar_Reflection_Formula.term_as_formula'
                                                                l))
@@ -1380,18 +1569,22 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (284))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (284))
-                                                                    (Prims.of_int (34)))
+                                                                    (Prims.of_int (34)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (284))
                                                                     (Prims.of_int (35))
                                                                     (Prims.of_int (286))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.apply_lemma
                                                                     (FStar_Reflection_Builtins.pack_ln
@@ -1407,18 +1600,22 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     uu___7 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (285))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (285))
-                                                                    (Prims.of_int (28)))
+                                                                    (Prims.of_int (28)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (286))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (286))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.intro
                                                                     ()))
@@ -1438,18 +1635,22 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (289))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (289))
-                                                                    (Prims.of_int (34)))
+                                                                    (Prims.of_int (34)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (289))
                                                                     (Prims.of_int (35))
                                                                     (Prims.of_int (291))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.apply_lemma
                                                                     (FStar_Reflection_Builtins.pack_ln
@@ -1465,18 +1666,22 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     uu___7 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (290))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (290))
-                                                                    (Prims.of_int (28)))
+                                                                    (Prims.of_int (28)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (291))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (291))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.intro
                                                                     ()))
@@ -1493,18 +1698,22 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                    uu___4 ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (294))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (294))
-                                                                    (Prims.of_int (35)))
+                                                                    (Prims.of_int (35)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Simplifier.fst"
                                                                     (Prims.of_int (295))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (295))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Derived.apply_lemma
                                                                     (FStar_Reflection_Builtins.pack_ln
@@ -1553,12 +1762,16 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
 let (simplify : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (308)) (Prims.of_int (4)) (Prims.of_int (308))
-         (Prims.of_int (24)))
-      (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
-         (Prims.of_int (309)) (Prims.of_int (4)) (Prims.of_int (309))
-         (Prims.of_int (21)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (308)) (Prims.of_int (4)) (Prims.of_int (308))
+               (Prims.of_int (24)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
+               (Prims.of_int (309)) (Prims.of_int (4)) (Prims.of_int (309))
+               (Prims.of_int (21)))))
       (Obj.magic
          (FStar_Tactics_Derived.apply_lemma
             (FStar_Reflection_Builtins.pack_ln

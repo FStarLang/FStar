@@ -1361,34 +1361,6 @@ let (e_norm_step :
                          (FStar_Pervasives.UnfoldNamespace ss))
               | uu___2 -> FStar_Pervasives_Native.None)) in
   FStar_Syntax_Embeddings_Base.mk_emb_full em un typ printer1 emb_t_norm_step
-let (e_range :
-  FStar_Compiler_Range_Type.range FStar_Syntax_Embeddings_Base.embedding) =
-  let em r rng _shadow _norm =
-    FStar_Syntax_Syntax.mk
-      (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r)) rng in
-  let un t _norm =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) ->
-        FStar_Pervasives_Native.Some r
-    | uu___1 -> FStar_Pervasives_Native.None in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.range_lid
-          FStar_Ident.string_of_lid in
-      (uu___2, []) in
-    FStar_Syntax_Syntax.ET_app uu___1 in
-  FStar_Syntax_Embeddings_Base.mk_emb_full em un
-    FStar_Syntax_Syntax.t___range FStar_Compiler_Range_Ops.string_of_range
-    uu___
-let (e_issue : FStar_Errors.issue FStar_Syntax_Embeddings_Base.embedding) =
-  let uu___ =
-    FStar_Syntax_Syntax.fvar FStar_Parser_Const.issue_lid
-      FStar_Pervasives_Native.None in
-  FStar_Syntax_Embeddings_Base.e_lazy FStar_Syntax_Syntax.Lazy_issue uu___
 let (e_vconfig :
   FStar_VConfig.vconfig FStar_Syntax_Embeddings_Base.embedding) =
   let em vcfg rng _shadow norm =
@@ -2256,6 +2228,37 @@ let e_sealed :
        Obj.magic
          (FStar_Syntax_Embeddings_Base.mk_emb_full (Obj.magic em) un typ
             (fun uu___ -> (Obj.magic printer1) uu___) emb_ty_a)) uu___
+let (e___range :
+  FStar_Compiler_Range_Type.range FStar_Syntax_Embeddings_Base.embedding) =
+  let em r rng _shadow _norm =
+    FStar_Syntax_Syntax.mk
+      (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r)) rng in
+  let un t _norm =
+    let uu___ =
+      let uu___1 = FStar_Syntax_Subst.compress t in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) ->
+        FStar_Pervasives_Native.Some r
+    | uu___1 -> FStar_Pervasives_Native.None in
+  let uu___ =
+    let uu___1 =
+      let uu___2 =
+        FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.range_lid
+          FStar_Ident.string_of_lid in
+      (uu___2, []) in
+    FStar_Syntax_Syntax.ET_app uu___1 in
+  FStar_Syntax_Embeddings_Base.mk_emb_full em un
+    FStar_Syntax_Syntax.t___range FStar_Compiler_Range_Ops.string_of_range
+    uu___
+let (e_range :
+  FStar_Compiler_Range_Type.range FStar_Syntax_Embeddings_Base.embedding) =
+  e_sealed e___range
+let (e_issue : FStar_Errors.issue FStar_Syntax_Embeddings_Base.embedding) =
+  let uu___ =
+    FStar_Syntax_Syntax.fvar FStar_Parser_Const.issue_lid
+      FStar_Pervasives_Native.None in
+  FStar_Syntax_Embeddings_Base.e_lazy FStar_Syntax_Syntax.Lazy_issue uu___
 let arrow_as_prim_step_1 :
   'a 'b .
     'a FStar_Syntax_Embeddings_Base.embedding ->
