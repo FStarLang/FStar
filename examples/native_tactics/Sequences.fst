@@ -16,14 +16,13 @@
 module Sequences
 
 open FStar.Tactics
-open FStar.Reflection
 open FStar.Seq
 
 let is_seq_t (t:term) : Tac bool =
     let hd, args = collect_app t in
     is_fvar hd (`%seq)
 
-let clear_hypothesis (b:binder) : Tac unit = ()
+let clear_hypothesis (b:binding) : Tac unit = ()
 
 let retain_only (nss:list string) : Tac unit =
   prune ""; //removes every top-level assertion which "" as a prefix; so prune everything
@@ -54,7 +53,7 @@ let try_unref_eq () : Tac unit =
   match f with
   | Comp (Eq (Some t)) l r ->
     begin match inspect t with
-    | Tv_Refine _ _ _ ->
+    | Tv_Refine _ _ ->
         apply_lemma (`unrefine_eq_lem);
         norm []
     | _ ->

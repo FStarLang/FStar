@@ -44,8 +44,8 @@ let binder_plugin: binder -> binder = id
 [@@plugin]
 let binders_plugin: binders -> binders = id
 
-[@@plugin]
-let norm_step_plugin: norm_step -> norm_step = id
+(* [@@plugin] *)
+(* let norm_step_plugin: norm_step -> norm_step = id *)
 
 [@@plugin]
 let fv_plugin: fv -> fv = id

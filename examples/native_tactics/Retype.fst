@@ -37,7 +37,7 @@ let tau () : Tac unit =
     let _ = implies_intro () in
     let b = implies_intro () in
 
-    binder_retype b; // call retype, get a goal `p == ?u`
+    var_retype b; // call retype, get a goal `p == ?u`
     let pp = `p in
     let rr = `r in
     grewrite pp rr; // rewrite p to q, get `q == ?u`
