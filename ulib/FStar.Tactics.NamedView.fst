@@ -33,6 +33,7 @@ with clients. *)
 private
 let print (s:string) : Tac unit = ()
 
+[@@plugin]
 noeq
 type pattern =
  // A built-in constant
@@ -61,10 +62,6 @@ type pattern =
 
 type branch = pattern & term
 
-
-// TODO: Can we do the same in pure reflection? Do we need
-// access to the _actual_ binder type?
-
 [@@plugin]
 noeq
 type binder = {
@@ -91,6 +88,7 @@ type simple_binder = b:binder{is_simple_binder b}
 
 type match_returns_ascription = binder & (either term comp & option term & bool)
 
+[@@plugin]
 noeq
 type named_term_view =
   | Tv_Var    : v:namedv -> named_term_view
@@ -162,6 +160,7 @@ let binding_to_simple_binder (b:binding) : simple_binder = {
   qual = Q_Explicit;
   attrs = [];
 }
+
 let simple_binder_to_binding (b:simple_binder) : binding = {
   uniq = b.uniq;
   sort = b.sort;
@@ -566,11 +565,13 @@ let close_view (tv : named_term_view) : Tot term_view =
     let ret = FStar.Option.mapTot close_match_returns_ascription ret in
     RD.Tv_Match scrutinee ret brs
 
+[@@plugin]
 let inspect (t:term) : Tac named_term_view =
   let t = compress t in
   let tv = inspect_ln t in
   open_view tv
 
+[@@plugin]
 let pack (tv:named_term_view) : Tot term =
   let tv = close_view tv in
   pack_ln tv
@@ -588,6 +589,7 @@ type letbinding = {
   lb_def : term;
 }
 
+[@@plugin]
 noeq
 type named_sigelt_view =
   | Sg_Let {
@@ -647,11 +649,11 @@ let rec open_n_binders_from_arrow (bs : binders) (t : term) : Tac term =
     | Tv_Arrow b' c ->
       begin match inspect_comp c with
       | C_Total t' ->
-        print ("t' = " ^ term_to_string t);
-        print ("sub " ^ binder_to_string b' ^ " for " ^ binder_to_string b);
-        print ("substituting " ^ term_to_string t');
+        (* print ("t' = " ^ term_to_string t); *)
+        (* print ("sub " ^ binder_to_string b' ^ " for " ^ binder_to_string b); *)
+        (* print ("substituting " ^ term_to_string t'); *)
         let t' = subst_term [NT (binder_to_namedv b') (pack (Tv_Var (binder_to_namedv b)))] t' in
-        print ("got " ^ term_to_string t');
+        (* print ("got " ^ term_to_string t'); *)
         open_n_binders_from_arrow bs t'
       | _ -> raise NotTot
       end
@@ -738,11 +740,13 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
     let typ = subst_term s typ in
     RD.Sg_Val nm univs typ
 
+[@@plugin]
 let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
   let sv = R.inspect_sigelt s in
   (* dump ("sv orig = " ^ term_to_string (quote sv)); *)
   open_sigelt_view sv
 
+[@@plugin]
 let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tac sigelt =
   let sv = close_sigelt_view sv in
   R.pack_sigelt sv
