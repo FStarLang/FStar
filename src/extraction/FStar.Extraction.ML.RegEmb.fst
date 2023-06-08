@@ -78,7 +78,7 @@ let ml_some : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "Some"))
 
 let tm_fvar_lid    = Ident.lid_of_str "FStar.Syntax.Syntax.Tm_fvar"
 let fv_eq_lid_lid  = Ident.lid_of_str "FStar.Syntax.Syntax.fv_eq_lid"
-let s_fvar_lid     = Ident.lid_of_str "FStar.Syntax.Syntax.fvar"
+let s_tdataconstr_lid = Ident.lid_of_str "FStar.Syntax.Syntax.tdataconstr"
 let lid_of_str_lid = Ident.lid_of_str "FStar.Ident.lid_of_str" // :^)
 let mk_app_lid     = Ident.lid_of_str "FStar.Syntax.Util.mk_app"
 let nil_lid        = Ident.lid_of_str "Prims.Nil"
@@ -628,11 +628,10 @@ let mk_embed
         | None ->
           MLP_CTor (splitlast (Ident.path_of_lid lid), List.map (fun v -> MLP_Var (fst v)) vs)
       in
-      let fvar = ml_name s_fvar_lid in
+      let fvar = ml_name s_tdataconstr_lid in
       let lid_of_str = ml_name lid_of_str_lid in
       let head = mk (MLE_App (fvar, [
-                    mk (MLE_App (lid_of_str, [mk (MLE_Const (MLC_String (Ident.string_of_lid lid)))]));
-                    ml_none]))
+                    mk (MLE_App (lid_of_str, [mk (MLE_Const (MLC_String (Ident.string_of_lid lid)))]))]))
       in
       let mk_mk_app t ts =
         // FIXME: all explicit
