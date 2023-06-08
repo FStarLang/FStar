@@ -2677,7 +2677,10 @@ let (should_unfold :
                      "Unexpected unfolding result: %s" uu___3 in
                  FStar_Compiler_Effect.op_Less_Bar failwith uu___2 in
            (let uu___2 =
-              (((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
+              ((((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
+                   &&
+                   (let uu___3 = FStar_Options.no_plugins () in
+                    Prims.op_Negation uu___3))
                   && (r <> Should_unfold_no))
                  &&
                  (FStar_Compiler_Util.for_some

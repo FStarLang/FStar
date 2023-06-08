@@ -482,10 +482,8 @@ let rec (mk_abs :
                                 (Prims.of_int (99)) (Prims.of_int (47)))))
                        (FStar_Sealed.seal
                           (Obj.magic
-                             (FStar_Range.mk_range
-                                "FStar.Tactics.Typeclasses.fst"
-                                (Prims.of_int (99)) (Prims.of_int (15))
-                                (Prims.of_int (99)) (Prims.of_int (47)))))
+                             (FStar_Range.mk_range " dummy" Prims.int_zero
+                                Prims.int_zero Prims.int_zero Prims.int_zero)))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal

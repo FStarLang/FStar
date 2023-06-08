@@ -345,7 +345,7 @@ let (e_subst :
   FStar_Syntax_Syntax.subst_elt Prims.list
     FStar_TypeChecker_NBETerm.embedding)
   = FStar_TypeChecker_NBETerm.e_list e_subst_elt
-let (e_const :
+let (e_vconst :
   FStar_Reflection_Data.vconst FStar_TypeChecker_NBETerm.embedding) =
   let embed_const cb c =
     match c with
@@ -902,7 +902,7 @@ let (e_term_view_aq :
       | FStar_Reflection_Data.Tv_Const c ->
           let uu___ =
             let uu___1 =
-              let uu___2 = FStar_TypeChecker_NBETerm.embed e_const cb c in
+              let uu___2 = FStar_TypeChecker_NBETerm.embed e_vconst cb c in
               FStar_TypeChecker_NBETerm.as_arg uu___2 in
             [uu___1] in
           mkConstruct
@@ -1182,7 +1182,7 @@ let (e_term_view_aq :
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Constants.ref_Tv_Const.FStar_Reflection_Constants.lid
           ->
-          let uu___2 = FStar_TypeChecker_NBETerm.unembed e_const cb c in
+          let uu___2 = FStar_TypeChecker_NBETerm.unembed e_vconst cb c in
           FStar_Compiler_Util.bind_opt uu___2
             (fun c1 ->
                FStar_Compiler_Effect.op_Less_Bar

@@ -1984,32 +1984,10 @@ let rec solve_mp_for_single_hyp :
                                                  (Prims.of_int (451))
                                                  (Prims.of_int (73)))))
                                         (Obj.magic
-                                           (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Sealed.seal
-                                                 (Obj.magic
-                                                    (FStar_Range.mk_range
-                                                       "FStar.Tactics.PatternMatching.fst"
-                                                       (Prims.of_int (446))
-                                                       (Prims.of_int (55))
-                                                       (Prims.of_int (446))
-                                                       (Prims.of_int (74)))))
-                                              (FStar_Sealed.seal
-                                                 (Obj.magic
-                                                    (FStar_Range.mk_range
-                                                       "FStar.Tactics.PatternMatching.fst"
-                                                       (Prims.of_int (446))
-                                                       (Prims.of_int (15))
-                                                       (Prims.of_int (446))
-                                                       (Prims.of_int (74)))))
-                                              (Obj.magic
-                                                 (FStar_Tactics_Derived.type_of_binding
-                                                    h))
-                                              (fun uu___1 ->
-                                                 (fun uu___1 ->
-                                                    Obj.magic
-                                                      (interp_pattern_aux pat
-                                                         part_sol.ms_vars
-                                                         uu___1)) uu___1)))
+                                           (interp_pattern_aux pat
+                                              part_sol.ms_vars
+                                              (FStar_Tactics_Derived.type_of_binding
+                                                 h)))
                                         (fun uu___1 ->
                                            (fun uu___1 ->
                                               match uu___1 with
@@ -3689,10 +3667,9 @@ let (abspat_arg_of_abspat_argspec :
                                   (Prims.of_int (701)) (Prims.of_int (75)))))
                          (FStar_Sealed.seal
                             (Obj.magic
-                               (FStar_Range.mk_range
-                                  "FStar.Tactics.PatternMatching.fst"
-                                  (Prims.of_int (701)) (Prims.of_int (16))
-                                  (Prims.of_int (701)) (Prims.of_int (75)))))
+                               (FStar_Range.mk_range " dummy" Prims.int_zero
+                                  Prims.int_zero Prims.int_zero
+                                  Prims.int_zero)))
                          (Obj.magic
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -3916,8 +3893,8 @@ let rec (hoist_and_apply :
                                                                  n)));
                                                       FStar_Tactics_NamedView.sort1
                                                         =
-                                                        (FStar_Tactics_NamedView.pack
-                                                           FStar_Tactics_NamedView.Tv_Unknown);
+                                                        (FStar_Reflection_Builtins.pack_ln
+                                                           FStar_Reflection_Data.Tv_Unknown);
                                                       FStar_Tactics_NamedView.qual
                                                         =
                                                         FStar_Reflection_Data.Q_Explicit;
@@ -3939,11 +3916,11 @@ let rec (hoist_and_apply :
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
-                                                          "FStar.Tactics.PatternMatching.fst"
-                                                          (Prims.of_int (725))
-                                                          (Prims.of_int (4))
-                                                          (Prims.of_int (725))
-                                                          (Prims.of_int (132)))))
+                                                          " dummy"
+                                                          Prims.int_zero
+                                                          Prims.int_zero
+                                                          Prims.int_zero
+                                                          Prims.int_zero)))
                                                  (Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (FStar_Sealed.seal

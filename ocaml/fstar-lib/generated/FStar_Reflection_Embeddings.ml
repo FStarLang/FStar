@@ -424,7 +424,7 @@ let (e_universe_view :
                          else FStar_Pervasives_Native.None) in
   mk_emb embed_universe_view unembed_universe_view
     FStar_Reflection_Constants.fstar_refl_universe_view
-let (e_const :
+let (e_vconst :
   FStar_Reflection_Data.vconst FStar_Syntax_Embeddings_Base.embedding) =
   let embed_const rng c =
     let r =
@@ -579,7 +579,7 @@ let rec e_pattern_aq :
       | FStar_Reflection_Data.Pat_Constant c ->
           let uu___ =
             let uu___1 =
-              let uu___2 = embed e_const rng c in
+              let uu___2 = embed e_vconst rng c in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
@@ -654,7 +654,8 @@ let rec e_pattern_aq :
                     let uu___3 =
                       FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
                         (fun uu___4 ->
-                           FStar_Reflection_Data.Pat_Constant uu___4) e_const in
+                           FStar_Reflection_Data.Pat_Constant uu___4)
+                        e_vconst in
                     FStar_Syntax_Embeddings_AppEmb.run args uu___3
                 | uu___2 when
                     FStar_Syntax_Syntax.fv_eq_lid fv
@@ -877,7 +878,7 @@ let (e_term_view_aq :
       | FStar_Reflection_Data.Tv_Const c ->
           let uu___ =
             let uu___1 =
-              let uu___2 = embed e_const rng c in
+              let uu___2 = embed e_vconst rng c in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
@@ -1172,7 +1173,7 @@ let (e_term_view_aq :
                                       FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
                                         (fun uu___3 ->
                                            FStar_Reflection_Data.Tv_Const
-                                             uu___3) e_const in
+                                             uu___3) e_vconst in
                                     FStar_Syntax_Embeddings_AppEmb.run args
                                       uu___2)
                                  else

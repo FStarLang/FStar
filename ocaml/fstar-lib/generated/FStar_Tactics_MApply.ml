@@ -534,7 +534,15 @@ let (termable_term : FStar_Reflection_Types.term termable) =
            uu___)
   }
 let (termable_binding : FStar_Reflection_Data.binding termable) =
-  { to_term = FStar_Tactics_Derived.binding_to_term }
+  {
+    to_term =
+      (fun uu___ ->
+         (fun b ->
+            Obj.magic
+              (FStar_Tactics_Effect.lift_div_tac
+                 (fun uu___ -> FStar_Tactics_Derived.binding_to_term b)))
+           uu___)
+  }
 let (mapply0 :
   FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   = fun t -> apply_squash_or_lem (Prims.of_int (10)) t

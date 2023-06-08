@@ -377,8 +377,9 @@ let lazy_unembed :
 let op_let_Question :
   'uuuuu 'uuuuu1 .
     'uuuuu FStar_Pervasives_Native.option ->
-      ('uuuuu -> 'uuuuu1) -> 'uuuuu1 FStar_Pervasives_Native.option
-  = fun o -> fun f -> FStar_Compiler_Util.map_opt o f
+      ('uuuuu -> 'uuuuu1 FStar_Pervasives_Native.option) ->
+        'uuuuu1 FStar_Pervasives_Native.option
+  = fun o -> fun f -> FStar_Compiler_Util.bind_opt o f
 let mk_extracted_embedding :
   'a .
     Prims.string ->
@@ -404,16 +405,15 @@ let mk_extracted_embedding :
                     FStar_Pervasives_Native.Some
                       ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                 | uu___3 -> FStar_Pervasives_Native.None in
-              Obj.magic
-                (op_let_Question uu___1
-                   (fun hd_lid ->
-                      let uu___2 =
-                        let uu___3 = FStar_Ident.string_of_lid hd_lid in
-                        let uu___4 =
-                          FStar_Compiler_List.map FStar_Pervasives_Native.fst
-                            args in
-                        (uu___3, uu___4) in
-                      u uu___2)) in
+              op_let_Question uu___1
+                (fun hd_lid ->
+                   let uu___2 =
+                     let uu___3 = FStar_Ident.string_of_lid hd_lid in
+                     let uu___4 =
+                       FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                         args in
+                     (uu___3, uu___4) in
+                   u uu___2) in
         let ee x rng _topt _norm = e x in
         let uu___ =
           let uu___1 = FStar_Ident.lid_of_str name in
@@ -429,4 +429,4 @@ let extracted_unembed :
   'a .
     'a embedding ->
       FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
-  = fun e -> fun t -> unembed e t id_norm_cb
+  = fun e -> fun t -> try_unembed e t id_norm_cb
