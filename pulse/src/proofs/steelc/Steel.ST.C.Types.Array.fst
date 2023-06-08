@@ -66,9 +66,7 @@ let base_array_index_t'_eq
   (n: array_size_t)
 : Lemma
   (base_array_index_t n == base_array_index_t' n)
-  [SMTPat (base_array_index_t n)]
-= // syntactic equality of refinement types
-  assert (base_array_index_t n == base_array_index_t' n) by (FStar.Tactics.trefl ())
+= ()
 
 let array_index_as_field_marker
   (n: Ghost.erased array_size_t)

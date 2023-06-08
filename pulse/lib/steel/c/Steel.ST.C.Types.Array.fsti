@@ -11,8 +11,9 @@ module SZ = FStar.SizeT
 inline_for_extraction [@@noextract_to "krml"]
 let array_size_t = (n: SZ.t { SZ.v n > 0 })
 val base_array_t ([@@@strictly_positive] t: Type0) (tn: Type0 (* using Typenat (or Typestring for `#define`d constants) *)) (n: array_size_t) : Type0
-inline_for_extraction [@@noextract_to "krml"] // MUST be syntactically equal to Steel.C.Model.Array.array_domain
-let base_array_index_t (n: array_size_t) : Tot eqtype = (i: SZ.t { SZ.v i < SZ.v n })
+inline_for_extraction [@@noextract_to "krml"]
+let base_array_index_t (n: array_size_t) : Tot eqtype =
+  Steel.ST.C.Types.Array.Base.array_domain (Ghost.hide n)
 [@@noextract_to "krml"]
 val base_array0 (#t: Type0) (tn: Type0) (td: typedef t) (n: array_size_t) : Tot (typedef (base_array_t t tn n))
 
