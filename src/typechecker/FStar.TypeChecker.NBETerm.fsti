@@ -264,7 +264,7 @@ val mk_any_emb : t -> embedding t
 val e_range  : embedding Range.range
 val e_issue  : embedding FStar.Errors.issue
 val e_vconfig  : embedding vconfig
-val e_norm_step : embedding Syntax.Embeddings.norm_step
+val e_norm_step : embedding Pervasives.norm_step
 val e_list   : embedding 'a -> embedding (list 'a)
 val e_option : embedding 'a -> embedding (option 'a)
 val e_tuple2 : embedding 'a -> embedding 'b -> embedding ('a * 'b)

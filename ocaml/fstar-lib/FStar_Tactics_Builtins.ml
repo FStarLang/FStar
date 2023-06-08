@@ -24,53 +24,6 @@ let interpret_tac (t: 'a TM.tac) (ps: proofstate): 'a __result =
 let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a __result =
   t ps
 
-let tr1 = function
-          | Simpl          -> EMB.Simpl
-          | Weak           -> EMB.Weak
-          | HNF            -> EMB.HNF
-          | Primops        -> EMB.Primops
-          | Delta          -> EMB.Delta
-          | Zeta           -> EMB.Zeta
-          | ZetaFull       -> EMB.ZetaFull
-          | Iota           -> EMB.Iota
-          | Unascribe      -> EMB.Unascribe
-          | NBE            -> EMB.NBE
-          | Unmeta         -> EMB.Unmeta
-          | Reify          -> EMB.Reify
-          | UnfoldOnly  ss -> EMB.UnfoldOnly ss
-          | UnfoldFully ss -> EMB.UnfoldFully ss
-          | UnfoldAttr  ss -> EMB.UnfoldAttr  ss
-          | UnfoldQual  ss -> EMB.UnfoldQual  ss
-          | UnfoldNamespace  ss -> EMB.UnfoldNamespace  ss
-let rt1 = function
-          | EMB.Simpl          -> Simpl
-          | EMB.Weak           -> Weak
-          | EMB.HNF            -> HNF
-          | EMB.Primops        -> Primops
-          | EMB.Delta          -> Delta
-          | EMB.Zeta           -> Zeta
-          | EMB.ZetaFull       -> ZetaFull
-          | EMB.Iota           -> Iota
-          | EMB.Unascribe      -> Unascribe
-          | EMB.NBE            -> NBE
-          | EMB.Unmeta         -> Unmeta
-          | EMB.Reify          -> Reify
-          | EMB.UnfoldOnly  ss -> UnfoldOnly ss
-          | EMB.UnfoldFully ss -> UnfoldFully ss
-          | EMB.UnfoldAttr  ss -> UnfoldAttr  ss
-          | EMB.UnfoldQual  ss -> UnfoldQual  ss
-          | EMB.UnfoldNamespace  ss -> UnfoldNamespace  ss
-
-(* the one plugins actually use *)
-let e_norm_step' : norm_step EMB_Base.embedding =
-    EMB_Base.embed_as EMB.e_norm_step rt1 tr1 None
-
-let e_norm_step_nbe' : norm_step NBET.embedding =
-    NBET.embed_as NBET.e_norm_step rt1 tr1 None
-
-let tr_repr_steps =
-    List.map tr1
-
 let to_tac_0 (t: 'a __tac): 'a TM.tac =
   (fun (ps: proofstate) ->
     uninterpret_tac t ps) |> TM.mk_tac
@@ -122,9 +75,9 @@ let tc                      = from_tac_2 B.tc
 let tcc                     = from_tac_2 B.tcc
 let unshelve                = from_tac_1 B.unshelve
 let unquote                 = fun t -> failwith "Sorry, unquote does not work in compiled tactics"
-let norm                    = fun s ->   from_tac_1 B.norm (tr_repr_steps s) (* TODO: somehow avoid translating steps? *)
-let norm_term_env           = fun e s -> from_tac_3 B.norm_term_env e (tr_repr_steps s)
-let norm_binder_type        = fun s ->   from_tac_2 B.norm_binder_type (tr_repr_steps s)
+let norm                    = fun s ->   from_tac_1 B.norm s
+let norm_term_env           = fun e s -> from_tac_3 B.norm_term_env e s
+let norm_binder_type        = fun s ->   from_tac_2 B.norm_binder_type s
 let intro                   = from_tac_1 B.intro
 let intro_rec               = from_tac_1 B.intro_rec
 let rename_to               = from_tac_2 B.rename_to

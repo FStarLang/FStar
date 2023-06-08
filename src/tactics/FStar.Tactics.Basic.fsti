@@ -30,7 +30,6 @@ open FStar.Tactics.Types
 open FStar.Tactics.Monad
 
 module BU     = FStar.Compiler.Util
-module EMB    = FStar.Syntax.Embeddings
 module O      = FStar.Options
 module Range  = FStar.Compiler.Range
 module Z      = FStar.BigInt
@@ -61,9 +60,9 @@ val tc                     : env -> term -> tac typ
 val tcc                    : env -> term -> tac comp
 val unshelve               : term -> tac unit
 val unquote                : typ -> term -> tac term
-val norm                   : list EMB.norm_step -> tac unit
-val norm_term_env          : env -> list EMB.norm_step -> term -> tac term
-val norm_binder_type       : list EMB.norm_step -> RD.binding -> tac unit
+val norm                   : list Pervasives.norm_step -> tac unit
+val norm_term_env          : env -> list Pervasives.norm_step -> term -> tac term
+val norm_binder_type       : list Pervasives.norm_step -> RD.binding -> tac unit
 val intro                  : unit -> tac RD.binding
 val intro_rec              : unit -> tac (RD.binding * RD.binding)
 val rename_to              : RD.binding -> string -> tac RD.binding

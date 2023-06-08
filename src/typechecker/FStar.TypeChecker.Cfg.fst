@@ -22,6 +22,8 @@ module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module NBE = FStar.TypeChecker.NBETerm
 
+friend FStar.Pervasives (* to expose norm_step *)
+
 let steps_to_string f =
   let format_opt (f:'a -> string) (o:option 'a) =
     match o with
@@ -1463,28 +1465,28 @@ let should_reduce_local_let cfg lb =
          not (cfg.steps.pure_subterms_within_computations)
 
 let translate_norm_step = function
-    | EMB.Zeta ->    [Zeta]
-    | EMB.ZetaFull -> [ZetaFull]
-    | EMB.Iota ->    [Iota]
-    | EMB.Delta ->   [UnfoldUntil delta_constant]
-    | EMB.Simpl ->   [Simplify]
-    | EMB.Weak ->    [Weak]
-    | EMB.HNF  ->    [HNF]
-    | EMB.Primops -> [Primops]
-    | EMB.Reify ->   [Reify]
-    | EMB.UnfoldOnly names ->
+    | Pervasives.Zeta ->    [Zeta]
+    | Pervasives.ZetaFull -> [ZetaFull]
+    | Pervasives.Iota ->    [Iota]
+    | Pervasives.Delta ->   [UnfoldUntil delta_constant]
+    | Pervasives.Simpl ->   [Simplify]
+    | Pervasives.Weak ->    [Weak]
+    | Pervasives.HNF  ->    [HNF]
+    | Pervasives.Primops -> [Primops]
+    | Pervasives.Reify ->   [Reify]
+    | Pervasives.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
-    | EMB.UnfoldFully names ->
+    | Pervasives.UnfoldFully names ->
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | EMB.UnfoldAttr names ->
+    | Pervasives.UnfoldAttr names ->
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
-    | EMB.UnfoldQual names ->
+    | Pervasives.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
-    | EMB.UnfoldNamespace names ->
+    | Pervasives.UnfoldNamespace names ->
         [UnfoldUntil delta_constant; UnfoldNamespace names]
-    | EMB.Unascribe -> [Unascribe]
-    | EMB.NBE -> [NBE]
-    | EMB.Unmeta -> [Unmeta]
+    | Pervasives.Unascribe -> [Unascribe]
+    | Pervasives.NBE -> [NBE]
+    | Pervasives.Unmeta -> [Unmeta]
 
 let translate_norm_steps s =
     let s = List.concatMap translate_norm_step s in

@@ -30,44 +30,6 @@ module Range = FStar.Compiler.Range
 module Z = FStar.BigInt
 module BU = FStar.Compiler.Util
 
-(* TODO: Find a better home for these *)
-type norm_step =
-    | Simpl
-    | Weak
-    | HNF
-    | Primops
-    | Delta
-    | Zeta
-    | ZetaFull
-    | Iota
-    | Reify
-    | UnfoldOnly  of list string
-    | UnfoldFully of list string
-    | UnfoldAttr  of list string
-    | UnfoldQual  of list string
-    | UnfoldNamespace of list string
-    | Unascribe
-    | NBE
-    | Unmeta
-type this_norm_step = norm_step (* to work around interleaving in .fst *)
-
-
-val steps_Simpl         : term
-val steps_Weak          : term
-val steps_HNF           : term
-val steps_Primops       : term
-val steps_Delta         : term
-val steps_Zeta          : term
-val steps_ZetaFull      : term
-val steps_Iota          : term
-val steps_Reify         : term
-val steps_UnfoldOnly    : term
-val steps_UnfoldFully   : term
-val steps_UnfoldAttr    : term
-val steps_Unascribe     : term
-val steps_NBE           : term
-val steps_Unmeta        : term
-
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding term // an identity
 val e_unit        : embedding unit
@@ -76,7 +38,7 @@ val e_char        : embedding char
 val e_int         : embedding Z.t
 val e_fsint       : embedding int
 val e_string      : embedding string
-val e_norm_step   : embedding norm_step
+val e_norm_step   : embedding Pervasives.norm_step
 val e_range       : embedding Range.range
 val e_vconfig     : embedding vconfig
 val e_issue       : embedding FStar.Errors.issue

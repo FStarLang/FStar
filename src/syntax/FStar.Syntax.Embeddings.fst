@@ -39,6 +39,8 @@ module Z     = FStar.BigInt
 open FStar.Syntax.Embeddings.Base
 module AE = FStar.Syntax.Embeddings.AppEmb
 
+friend FStar.Pervasives (* To expose norm_step *)
+
 (*********************************************************************
 
              A NOTE ON FUNCTIONS AND SHADOW TERMS
@@ -675,11 +677,11 @@ let steps_Unascribe     = tconst PC.steps_unascribe
 let steps_NBE           = tconst PC.steps_nbe
 let steps_Unmeta        = tconst PC.steps_unmeta
 
-let e_norm_step : embedding this_norm_step =
+let e_norm_step : embedding Pervasives.norm_step =
     let typ = S.t_norm_step in
     let emb_t_norm_step = ET_app (PC.norm_step_lid |> Ident.string_of_lid, []) in
     let printer _ = "norm_step" in
-    let em (n:this_norm_step) (rng:range) _shadow norm : term =
+    let em (n:Pervasives.norm_step) (rng:range) _shadow norm : term =
         lazy_embed
             printer
             emb_t_norm_step
@@ -731,7 +733,7 @@ let e_norm_step : embedding this_norm_step =
 
                 )
     in
-    let un (t:term) norm : option this_norm_step =
+    let un (t:term) norm : option Pervasives.norm_step =
         lazy_unembed
             printer
             emb_t_norm_step

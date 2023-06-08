@@ -33,9 +33,10 @@ open FStar.Tactics.Printing
 open FStar.Syntax.Syntax
 open FStar.VConfig
 
+friend FStar.Pervasives (* to expose norm_step *)
+
 module BU     = FStar.Compiler.Util
 module Cfg    = FStar.TypeChecker.Cfg
-module EMB    = FStar.Syntax.Embeddings
 module Env    = FStar.TypeChecker.Env
 module Err    = FStar.Errors
 module N      = FStar.TypeChecker.Normalize
@@ -801,7 +802,7 @@ let intro_rec () : tac (RD.binding & RD.binding) =
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
 
-let norm (s : list EMB.norm_step) : tac unit =
+let norm (s : list Pervasives.norm_step) : tac unit =
     let! goal = cur_goal in
     if_verbose (fun () -> BU.print1 "norm: witness = %s\n" (Print.term_to_string (goal_witness goal))) ;!
     // Translate to actual normalizer steps
@@ -811,7 +812,7 @@ let norm (s : list EMB.norm_step) : tac unit =
     replace_cur (goal_with_type goal t)
 
 
-let norm_term_env (e : env) (s : list EMB.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
+let norm_term_env (e : env) (s : list Pervasives.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
     let! ps = get in
     if_verbose (fun () -> BU.print1 "norm_term_env: t = %s\n" (Print.term_to_string t)) ;!
     // only for elaborating lifts and all that, we don't care if it's actually well-typed
@@ -879,7 +880,7 @@ let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <| (
     | Inl e when not (try_refine) -> traise e
     | Inl e ->
       if_verbose (fun () -> BU.print_string "__exact_now failed, trying refine...\n") ;!
-      match! catch (norm [EMB.Delta] ;! refine_intro () ;! __exact_now set_expected_typ tm) with
+      match! catch (norm [Pervasives.Delta] ;! refine_intro () ;! __exact_now set_expected_typ tm) with
       | Inr r ->
         if_verbose (fun () -> BU.print_string "__exact_now: failed after refining too\n") ;!
         ret r
@@ -1283,7 +1284,7 @@ let var_retype (b : RD.binding) : tac unit = wrap_err "binder_retype" <| (
     )
 
 (* TODO: move to bv *)
-let norm_binder_type (s : list EMB.norm_step) (b : RD.binding) : tac unit = wrap_err "norm_binder_type" <| (
+let norm_binder_type (s : list Pervasives.norm_step) (b : RD.binding) : tac unit = wrap_err "norm_binder_type" <| (
     let! goal = cur_goal in
     let bv = binding_to_bv b in
     match split_env bv (goal_env goal) with
