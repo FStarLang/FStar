@@ -790,28 +790,6 @@ let e_norm_step : embedding Pervasives.norm_step =
         printer
         emb_t_norm_step
 
-(*
- * Embed a range as a FStar.Range.__range
- * The user usually manipulates a FStar.Range.range = sealed __range
- *)
-let e_range =
-    let em (r:range) (rng:range) _shadow _norm : term =
-        S.mk (Tm_constant (C.Const_range r)) rng
-    in
-    let un (t:term) _norm : option range =
-        match (SS.compress t).n with
-        | Tm_constant (C.Const_range r) -> Some r
-        | _ -> None
-    in
-    mk_emb_full
-        em
-        un
-        S.t___range
-        Range.string_of_range
-        (ET_app (PC.range_lid |> Ident.string_of_lid, []))
-
-let e_issue : embedding Err.issue = e_lazy Lazy_issue (S.fvar PC.issue_lid None)
-
 let e_vconfig =
     let em (vcfg:vconfig) (rng:Range.range) _shadow norm : term =
       (* The order is very important here, even if this is a record. *)
@@ -1068,6 +1046,31 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
         typ
         printer
         emb_ty_a
+
+(*
+ * Embed a range as a FStar.Range.__range
+ * The user usually manipulates a FStar.Range.range = sealed __range
+ * See also e_range below.
+ *)
+let e___range =
+    let em (r:range) (rng:range) _shadow _norm : term =
+        S.mk (Tm_constant (C.Const_range r)) rng
+    in
+    let un (t:term) _norm : option range =
+        match (SS.compress t).n with
+        | Tm_constant (C.Const_range r) -> Some r
+        | _ -> None
+    in
+    mk_emb_full
+        em
+        un
+        S.t___range
+        Range.string_of_range
+        (ET_app (PC.range_lid |> Ident.string_of_lid, []))
+
+let e_range = e_sealed e___range
+
+let e_issue : embedding Err.issue = e_lazy Lazy_issue (S.fvar PC.issue_lid None)
 
  /////////////////////////////////////////////////////////////////////
  //Registering top-level functions

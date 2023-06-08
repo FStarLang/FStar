@@ -39,9 +39,7 @@ val e_int         : embedding Z.t
 val e_fsint       : embedding int
 val e_string      : embedding string
 val e_norm_step   : embedding Pervasives.norm_step
-val e_range       : embedding Range.range
 val e_vconfig     : embedding vconfig
-val e_issue       : embedding FStar.Errors.issue
 
 val e_option      : embedding 'a -> embedding (option 'a)
 val e_list        : embedding 'a -> embedding (list 'a)
@@ -51,6 +49,10 @@ val e_either      : embedding 'a -> embedding 'b -> embedding (either 'a 'b)
 val e_string_list : embedding (list string)
 val e_arrow       : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
 val e_sealed      : embedding 'a -> embedding 'a
+
+val e___range     : embedding Range.range (* unsealed *)
+val e_range       : embedding Range.range (* sealed *)
+val e_issue       : embedding FStar.Errors.issue
 
 val mk_any_emb : typ -> embedding term
 
