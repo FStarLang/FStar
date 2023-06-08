@@ -24,6 +24,7 @@ open FStar.Tactics.Derived
 open FStar.Tactics.NamedView
 
 module L = FStar.List.Tot.Base
+let (@) = L.op_At
 
 (* The attribute that marks classes *)
 irreducible
