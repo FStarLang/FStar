@@ -225,70 +225,68 @@ let (known_fv_embeddings :
               let uu___12 =
                 let uu___13 =
                   let uu___14 =
-                    let uu___15 = syn_emb_lid "e_list" in
+                    let uu___15 = syn_emb_lid "e_vconfig" in
                     let uu___16 =
-                      let uu___17 = nbe_emb_lid "e_list" in
+                      let uu___17 = nbe_emb_lid "e_vconfig" in
                       FStar_Pervasives_Native.Some uu___17 in
                     {
-                      arity = Prims.int_one;
+                      arity = Prims.int_zero;
                       syn_emb = uu___15;
                       nbe_emb = uu___16
                     } in
-                  (FStar_Parser_Const.list_lid, uu___14) in
+                  (FStar_Parser_Const.vconfig_lid, uu___14) in
                 let uu___14 =
                   let uu___15 =
                     let uu___16 =
-                      let uu___17 = syn_emb_lid "e_option" in
+                      let uu___17 = syn_emb_lid "e_list" in
                       let uu___18 =
-                        let uu___19 = nbe_emb_lid "e_option" in
+                        let uu___19 = nbe_emb_lid "e_list" in
                         FStar_Pervasives_Native.Some uu___19 in
                       {
                         arity = Prims.int_one;
                         syn_emb = uu___17;
                         nbe_emb = uu___18
                       } in
-                    (FStar_Parser_Const.option_lid, uu___16) in
+                    (FStar_Parser_Const.list_lid, uu___16) in
                   let uu___16 =
                     let uu___17 =
                       let uu___18 =
-                        let uu___19 = syn_emb_lid "e_sealed" in
+                        let uu___19 = syn_emb_lid "e_option" in
                         let uu___20 =
-                          let uu___21 = nbe_emb_lid "e_sealed" in
+                          let uu___21 = nbe_emb_lid "e_option" in
                           FStar_Pervasives_Native.Some uu___21 in
                         {
                           arity = Prims.int_one;
                           syn_emb = uu___19;
                           nbe_emb = uu___20
                         } in
-                      (FStar_Parser_Const.sealed_lid, uu___18) in
+                      (FStar_Parser_Const.option_lid, uu___18) in
                     let uu___18 =
                       let uu___19 =
                         let uu___20 =
-                          FStar_Parser_Const.mk_tuple_lid (Prims.of_int (2))
-                            FStar_Compiler_Range_Type.dummyRange in
-                        let uu___21 =
-                          let uu___22 = syn_emb_lid "e_tuple2" in
-                          let uu___23 =
-                            let uu___24 = nbe_emb_lid "e_tuple2" in
-                            FStar_Pervasives_Native.Some uu___24 in
+                          let uu___21 = syn_emb_lid "e_sealed" in
+                          let uu___22 =
+                            let uu___23 = nbe_emb_lid "e_sealed" in
+                            FStar_Pervasives_Native.Some uu___23 in
                           {
                             arity = Prims.int_one;
-                            syn_emb = uu___22;
-                            nbe_emb = uu___23
+                            syn_emb = uu___21;
+                            nbe_emb = uu___22
                           } in
-                        (uu___20, uu___21) in
+                        (FStar_Parser_Const.sealed_lid, uu___20) in
                       let uu___20 =
                         let uu___21 =
                           let uu___22 =
-                            FStar_Reflection_Constants.fstar_refl_types_lid
-                              "term" in
+                            FStar_Parser_Const.mk_tuple_lid
+                              (Prims.of_int (2))
+                              FStar_Compiler_Range_Type.dummyRange in
                           let uu___23 =
-                            let uu___24 = refl_emb_lid "e_term" in
+                            let uu___24 = syn_emb_lid "e_tuple2" in
                             let uu___25 =
-                              let uu___26 = nbe_refl_emb_lid "e_term" in
+                              let uu___26 = nbe_emb_lid "e_tuple2" in
                               FStar_Pervasives_Native.Some uu___26 in
                             {
-                              arity = Prims.int_zero;
+                              arity = (Prims.of_int (2));
                               syn_emb = uu___24;
                               nbe_emb = uu___25
                             } in
@@ -296,28 +294,25 @@ let (known_fv_embeddings :
                         let uu___22 =
                           let uu___23 =
                             let uu___24 =
-                              FStar_Reflection_Constants.fstar_refl_types_lid
-                                "fv" in
-                            let uu___25 =
-                              let uu___26 = refl_emb_lid "e_fv" in
-                              let uu___27 =
-                                let uu___28 = nbe_refl_emb_lid "e_fv" in
-                                FStar_Pervasives_Native.Some uu___28 in
+                              let uu___25 = syn_emb_lid "e_either" in
+                              let uu___26 =
+                                let uu___27 = nbe_emb_lid "e_either" in
+                                FStar_Pervasives_Native.Some uu___27 in
                               {
-                                arity = Prims.int_zero;
-                                syn_emb = uu___26;
-                                nbe_emb = uu___27
+                                arity = (Prims.of_int (2));
+                                syn_emb = uu___25;
+                                nbe_emb = uu___26
                               } in
-                            (uu___24, uu___25) in
+                            (FStar_Parser_Const.either_lid, uu___24) in
                           let uu___24 =
                             let uu___25 =
                               let uu___26 =
                                 FStar_Reflection_Constants.fstar_refl_types_lid
-                                  "sigelt" in
+                                  "namedv" in
                               let uu___27 =
-                                let uu___28 = refl_emb_lid "e_sigelt" in
+                                let uu___28 = refl_emb_lid "e_namedv" in
                                 let uu___29 =
-                                  let uu___30 = nbe_refl_emb_lid "e_sigelt" in
+                                  let uu___30 = nbe_refl_emb_lid "e_namedv" in
                                   FStar_Pervasives_Native.Some uu___30 in
                                 {
                                   arity = Prims.int_zero;
@@ -329,11 +324,11 @@ let (known_fv_embeddings :
                               let uu___27 =
                                 let uu___28 =
                                   FStar_Reflection_Constants.fstar_refl_types_lid
-                                    "env" in
+                                    "bv" in
                                 let uu___29 =
-                                  let uu___30 = refl_emb_lid "e_env" in
+                                  let uu___30 = refl_emb_lid "e_bv" in
                                   let uu___31 =
-                                    let uu___32 = nbe_refl_emb_lid "e_env" in
+                                    let uu___32 = nbe_refl_emb_lid "e_bv" in
                                     FStar_Pervasives_Native.Some uu___32 in
                                   {
                                     arity = Prims.int_zero;
@@ -345,11 +340,12 @@ let (known_fv_embeddings :
                                 let uu___29 =
                                   let uu___30 =
                                     FStar_Reflection_Constants.fstar_refl_types_lid
-                                      "bv" in
+                                      "binder" in
                                   let uu___31 =
-                                    let uu___32 = refl_emb_lid "e_bv" in
+                                    let uu___32 = refl_emb_lid "e_binder" in
                                     let uu___33 =
-                                      let uu___34 = nbe_refl_emb_lid "e_bv" in
+                                      let uu___34 =
+                                        nbe_refl_emb_lid "e_binder" in
                                       FStar_Pervasives_Native.Some uu___34 in
                                     {
                                       arity = Prims.int_zero;
@@ -361,12 +357,12 @@ let (known_fv_embeddings :
                                   let uu___31 =
                                     let uu___32 =
                                       FStar_Reflection_Constants.fstar_refl_types_lid
-                                        "namedv" in
+                                        "term" in
                                     let uu___33 =
-                                      let uu___34 = refl_emb_lid "e_namedv" in
+                                      let uu___34 = refl_emb_lid "e_term" in
                                       let uu___35 =
                                         let uu___36 =
-                                          nbe_refl_emb_lid "e_namedv" in
+                                          nbe_refl_emb_lid "e_term" in
                                         FStar_Pervasives_Native.Some uu___36 in
                                       {
                                         arity = Prims.int_zero;
@@ -378,12 +374,12 @@ let (known_fv_embeddings :
                                     let uu___33 =
                                       let uu___34 =
                                         FStar_Reflection_Constants.fstar_refl_types_lid
-                                          "binder" in
+                                          "env" in
                                       let uu___35 =
-                                        let uu___36 = refl_emb_lid "e_binder" in
+                                        let uu___36 = refl_emb_lid "e_env" in
                                         let uu___37 =
                                           let uu___38 =
-                                            nbe_refl_emb_lid "e_binder" in
+                                            nbe_refl_emb_lid "e_env" in
                                           FStar_Pervasives_Native.Some
                                             uu___38 in
                                         {
@@ -396,13 +392,12 @@ let (known_fv_embeddings :
                                       let uu___35 =
                                         let uu___36 =
                                           FStar_Reflection_Constants.fstar_refl_types_lid
-                                            "binders" in
+                                            "fv" in
                                         let uu___37 =
-                                          let uu___38 =
-                                            refl_emb_lid "e_binders" in
+                                          let uu___38 = refl_emb_lid "e_fv" in
                                           let uu___39 =
                                             let uu___40 =
-                                              nbe_refl_emb_lid "e_binders" in
+                                              nbe_refl_emb_lid "e_fv" in
                                             FStar_Pervasives_Native.Some
                                               uu___40 in
                                           {
@@ -414,14 +409,14 @@ let (known_fv_embeddings :
                                       let uu___36 =
                                         let uu___37 =
                                           let uu___38 =
-                                            FStar_Reflection_Constants.fstar_refl_data_lid
-                                              "aqualv" in
+                                            FStar_Reflection_Constants.fstar_refl_types_lid
+                                              "comp" in
                                           let uu___39 =
                                             let uu___40 =
-                                              refl_emb_lid "e_aqualv" in
+                                              refl_emb_lid "e_comp" in
                                             let uu___41 =
                                               let uu___42 =
-                                                nbe_refl_emb_lid "e_aqualv" in
+                                                nbe_refl_emb_lid "e_comp" in
                                               FStar_Pervasives_Native.Some
                                                 uu___42 in
                                             {
@@ -430,7 +425,544 @@ let (known_fv_embeddings :
                                               nbe_emb = uu___41
                                             } in
                                           (uu___38, uu___39) in
-                                        [uu___37] in
+                                        let uu___38 =
+                                          let uu___39 =
+                                            let uu___40 =
+                                              FStar_Reflection_Constants.fstar_refl_types_lid
+                                                "sigelt" in
+                                            let uu___41 =
+                                              let uu___42 =
+                                                refl_emb_lid "e_sigelt" in
+                                              let uu___43 =
+                                                let uu___44 =
+                                                  nbe_refl_emb_lid "e_sigelt" in
+                                                FStar_Pervasives_Native.Some
+                                                  uu___44 in
+                                              {
+                                                arity = Prims.int_zero;
+                                                syn_emb = uu___42;
+                                                nbe_emb = uu___43
+                                              } in
+                                            (uu___40, uu___41) in
+                                          let uu___40 =
+                                            let uu___41 =
+                                              let uu___42 =
+                                                FStar_Reflection_Constants.fstar_refl_types_lid
+                                                  "ctx_uvar_and_subst" in
+                                              let uu___43 =
+                                                let uu___44 =
+                                                  refl_emb_lid
+                                                    "e_ctx_uvar_and_subst" in
+                                                let uu___45 =
+                                                  let uu___46 =
+                                                    nbe_refl_emb_lid
+                                                      "e_ctx_uvar_and_subst" in
+                                                  FStar_Pervasives_Native.Some
+                                                    uu___46 in
+                                                {
+                                                  arity = Prims.int_zero;
+                                                  syn_emb = uu___44;
+                                                  nbe_emb = uu___45
+                                                } in
+                                              (uu___42, uu___43) in
+                                            let uu___42 =
+                                              let uu___43 =
+                                                let uu___44 =
+                                                  FStar_Reflection_Constants.fstar_refl_types_lid
+                                                    "letbinding" in
+                                                let uu___45 =
+                                                  let uu___46 =
+                                                    refl_emb_lid
+                                                      "e_letbinding" in
+                                                  let uu___47 =
+                                                    let uu___48 =
+                                                      nbe_refl_emb_lid
+                                                        "e_letbinding" in
+                                                    FStar_Pervasives_Native.Some
+                                                      uu___48 in
+                                                  {
+                                                    arity = Prims.int_zero;
+                                                    syn_emb = uu___46;
+                                                    nbe_emb = uu___47
+                                                  } in
+                                                (uu___44, uu___45) in
+                                              let uu___44 =
+                                                let uu___45 =
+                                                  let uu___46 =
+                                                    FStar_Reflection_Constants.fstar_refl_types_lid
+                                                      "__ident" in
+                                                  let uu___47 =
+                                                    let uu___48 =
+                                                      refl_emb_lid
+                                                        "e___ident" in
+                                                    let uu___49 =
+                                                      let uu___50 =
+                                                        nbe_refl_emb_lid
+                                                          "e___ident" in
+                                                      FStar_Pervasives_Native.Some
+                                                        uu___50 in
+                                                    {
+                                                      arity = Prims.int_zero;
+                                                      syn_emb = uu___48;
+                                                      nbe_emb = uu___49
+                                                    } in
+                                                  (uu___46, uu___47) in
+                                                let uu___46 =
+                                                  let uu___47 =
+                                                    let uu___48 =
+                                                      FStar_Reflection_Constants.fstar_refl_types_lid
+                                                        "universe_uvar" in
+                                                    let uu___49 =
+                                                      let uu___50 =
+                                                        refl_emb_lid
+                                                          "e_universe_uvar" in
+                                                      let uu___51 =
+                                                        let uu___52 =
+                                                          nbe_refl_emb_lid
+                                                            "e_universe_uvar" in
+                                                        FStar_Pervasives_Native.Some
+                                                          uu___52 in
+                                                      {
+                                                        arity =
+                                                          Prims.int_zero;
+                                                        syn_emb = uu___50;
+                                                        nbe_emb = uu___51
+                                                      } in
+                                                    (uu___48, uu___49) in
+                                                  let uu___48 =
+                                                    let uu___49 =
+                                                      let uu___50 =
+                                                        FStar_Reflection_Constants.fstar_refl_types_lid
+                                                          "universe" in
+                                                      let uu___51 =
+                                                        let uu___52 =
+                                                          refl_emb_lid
+                                                            "e_universe" in
+                                                        let uu___53 =
+                                                          let uu___54 =
+                                                            nbe_refl_emb_lid
+                                                              "e_universe" in
+                                                          FStar_Pervasives_Native.Some
+                                                            uu___54 in
+                                                        {
+                                                          arity =
+                                                            Prims.int_zero;
+                                                          syn_emb = uu___52;
+                                                          nbe_emb = uu___53
+                                                        } in
+                                                      (uu___50, uu___51) in
+                                                    let uu___50 =
+                                                      let uu___51 =
+                                                        let uu___52 =
+                                                          FStar_Reflection_Constants.fstar_refl_data_lid
+                                                            "vconst" in
+                                                        let uu___53 =
+                                                          let uu___54 =
+                                                            refl_emb_lid
+                                                              "e_vconst" in
+                                                          let uu___55 =
+                                                            let uu___56 =
+                                                              nbe_refl_emb_lid
+                                                                "e_vconst" in
+                                                            FStar_Pervasives_Native.Some
+                                                              uu___56 in
+                                                          {
+                                                            arity =
+                                                              Prims.int_zero;
+                                                            syn_emb = uu___54;
+                                                            nbe_emb = uu___55
+                                                          } in
+                                                        (uu___52, uu___53) in
+                                                      let uu___52 =
+                                                        let uu___53 =
+                                                          let uu___54 =
+                                                            FStar_Reflection_Constants.fstar_refl_data_lid
+                                                              "aqualv" in
+                                                          let uu___55 =
+                                                            let uu___56 =
+                                                              refl_emb_lid
+                                                                "e_aqualv" in
+                                                            let uu___57 =
+                                                              let uu___58 =
+                                                                nbe_refl_emb_lid
+                                                                  "e_aqualv" in
+                                                              FStar_Pervasives_Native.Some
+                                                                uu___58 in
+                                                            {
+                                                              arity =
+                                                                Prims.int_zero;
+                                                              syn_emb =
+                                                                uu___56;
+                                                              nbe_emb =
+                                                                uu___57
+                                                            } in
+                                                          (uu___54, uu___55) in
+                                                        let uu___54 =
+                                                          let uu___55 =
+                                                            let uu___56 =
+                                                              FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                "pattern" in
+                                                            let uu___57 =
+                                                              let uu___58 =
+                                                                refl_emb_lid
+                                                                  "e_pattern" in
+                                                              let uu___59 =
+                                                                let uu___60 =
+                                                                  nbe_refl_emb_lid
+                                                                    "e_pattern" in
+                                                                FStar_Pervasives_Native.Some
+                                                                  uu___60 in
+                                                              {
+                                                                arity =
+                                                                  Prims.int_zero;
+                                                                syn_emb =
+                                                                  uu___58;
+                                                                nbe_emb =
+                                                                  uu___59
+                                                              } in
+                                                            (uu___56,
+                                                              uu___57) in
+                                                          let uu___56 =
+                                                            let uu___57 =
+                                                              let uu___58 =
+                                                                FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                  "namedv_view" in
+                                                              let uu___59 =
+                                                                let uu___60 =
+                                                                  refl_emb_lid
+                                                                    "e_namedv_view" in
+                                                                let uu___61 =
+                                                                  let uu___62
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_namedv_view" in
+                                                                  FStar_Pervasives_Native.Some
+                                                                    uu___62 in
+                                                                {
+                                                                  arity =
+                                                                    Prims.int_zero;
+                                                                  syn_emb =
+                                                                    uu___60;
+                                                                  nbe_emb =
+                                                                    uu___61
+                                                                } in
+                                                              (uu___58,
+                                                                uu___59) in
+                                                            let uu___58 =
+                                                              let uu___59 =
+                                                                let uu___60 =
+                                                                  FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "bv_view" in
+                                                                let uu___61 =
+                                                                  let uu___62
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_bv_view" in
+                                                                  let uu___63
+                                                                    =
+                                                                    let uu___64
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_bv_view" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___64 in
+                                                                  {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___62;
+                                                                    nbe_emb =
+                                                                    uu___63
+                                                                  } in
+                                                                (uu___60,
+                                                                  uu___61) in
+                                                              let uu___60 =
+                                                                let uu___61 =
+                                                                  let uu___62
+                                                                    =
+                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "binder_view" in
+                                                                  let uu___63
+                                                                    =
+                                                                    let uu___64
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_binder_view" in
+                                                                    let uu___65
+                                                                    =
+                                                                    let uu___66
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_binder_view" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___66 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___64;
+                                                                    nbe_emb =
+                                                                    uu___65
+                                                                    } in
+                                                                  (uu___62,
+                                                                    uu___63) in
+                                                                let uu___62 =
+                                                                  let uu___63
+                                                                    =
+                                                                    let uu___64
+                                                                    =
+                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "binding" in
+                                                                    let uu___65
+                                                                    =
+                                                                    let uu___66
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_binding" in
+                                                                    let uu___67
+                                                                    =
+                                                                    let uu___68
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_binding" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___68 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___66;
+                                                                    nbe_emb =
+                                                                    uu___67
+                                                                    } in
+                                                                    (uu___64,
+                                                                    uu___65) in
+                                                                  let uu___64
+                                                                    =
+                                                                    let uu___65
+                                                                    =
+                                                                    let uu___66
+                                                                    =
+                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "universe_view" in
+                                                                    let uu___67
+                                                                    =
+                                                                    let uu___68
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_universe_view" in
+                                                                    let uu___69
+                                                                    =
+                                                                    let uu___70
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_universe_view" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___70 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___68;
+                                                                    nbe_emb =
+                                                                    uu___69
+                                                                    } in
+                                                                    (uu___66,
+                                                                    uu___67) in
+                                                                    let uu___66
+                                                                    =
+                                                                    let uu___67
+                                                                    =
+                                                                    let uu___68
+                                                                    =
+                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "term_view" in
+                                                                    let uu___69
+                                                                    =
+                                                                    let uu___70
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_term_view" in
+                                                                    let uu___71
+                                                                    =
+                                                                    let uu___72
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_term_view" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___72 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___70;
+                                                                    nbe_emb =
+                                                                    uu___71
+                                                                    } in
+                                                                    (uu___68,
+                                                                    uu___69) in
+                                                                    let uu___68
+                                                                    =
+                                                                    let uu___69
+                                                                    =
+                                                                    let uu___70
+                                                                    =
+                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "comp_view" in
+                                                                    let uu___71
+                                                                    =
+                                                                    let uu___72
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_comp_view" in
+                                                                    let uu___73
+                                                                    =
+                                                                    let uu___74
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_comp_view" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___74 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___72;
+                                                                    nbe_emb =
+                                                                    uu___73
+                                                                    } in
+                                                                    (uu___70,
+                                                                    uu___71) in
+                                                                    let uu___70
+                                                                    =
+                                                                    let uu___71
+                                                                    =
+                                                                    let uu___72
+                                                                    =
+                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "lb_view" in
+                                                                    let uu___73
+                                                                    =
+                                                                    let uu___74
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_lb_view" in
+                                                                    let uu___75
+                                                                    =
+                                                                    let uu___76
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_lb_view" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___76 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___74;
+                                                                    nbe_emb =
+                                                                    uu___75
+                                                                    } in
+                                                                    (uu___72,
+                                                                    uu___73) in
+                                                                    let uu___72
+                                                                    =
+                                                                    let uu___73
+                                                                    =
+                                                                    let uu___74
+                                                                    =
+                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "sigelt_view" in
+                                                                    let uu___75
+                                                                    =
+                                                                    let uu___76
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_sigelt_view" in
+                                                                    let uu___77
+                                                                    =
+                                                                    let uu___78
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_sigelt_view" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___78 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___76;
+                                                                    nbe_emb =
+                                                                    uu___77
+                                                                    } in
+                                                                    (uu___74,
+                                                                    uu___75) in
+                                                                    let uu___74
+                                                                    =
+                                                                    let uu___75
+                                                                    =
+                                                                    let uu___76
+                                                                    =
+                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    "qualifier" in
+                                                                    let uu___77
+                                                                    =
+                                                                    let uu___78
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_qualifier" in
+                                                                    let uu___79
+                                                                    =
+                                                                    let uu___80
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_qualifier" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___80 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___78;
+                                                                    nbe_emb =
+                                                                    uu___79
+                                                                    } in
+                                                                    (uu___76,
+                                                                    uu___77) in
+                                                                    [uu___75] in
+                                                                    uu___73
+                                                                    ::
+                                                                    uu___74 in
+                                                                    uu___71
+                                                                    ::
+                                                                    uu___72 in
+                                                                    uu___69
+                                                                    ::
+                                                                    uu___70 in
+                                                                    uu___67
+                                                                    ::
+                                                                    uu___68 in
+                                                                    uu___65
+                                                                    ::
+                                                                    uu___66 in
+                                                                  uu___63 ::
+                                                                    uu___64 in
+                                                                uu___61 ::
+                                                                  uu___62 in
+                                                              uu___59 ::
+                                                                uu___60 in
+                                                            uu___57 ::
+                                                              uu___58 in
+                                                          uu___55 :: uu___56 in
+                                                        uu___53 :: uu___54 in
+                                                      uu___51 :: uu___52 in
+                                                    uu___49 :: uu___50 in
+                                                  uu___47 :: uu___48 in
+                                                uu___45 :: uu___46 in
+                                              uu___43 :: uu___44 in
+                                            uu___41 :: uu___42 in
+                                          uu___39 :: uu___40 in
+                                        uu___37 :: uu___38 in
                                       uu___35 :: uu___36 in
                                     uu___33 :: uu___34 in
                                   uu___31 :: uu___32 in
