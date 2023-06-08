@@ -444,26 +444,14 @@ val subset_bool (#a:eqtype) (s1 s2:Set.set a)
   : Tot (b:bool { b ==> Set.subset s1 s2 })
 
 #push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 1"
-let intro_exists_step (#preamble:_) (p:prover_state preamble)
+let intro_exists_sub_prover_state (#preamble:_) (p:prover_state preamble)
   (u:universe) (t:term) (body:vprop)
   (unmatched':list vprop)
   (_:squash (p.unmatched == (Tm_ExistsSL u t body)::unmatched'))
+  (y:var {y == fresh preamble.g})
+  : preamble_sub:prover_state_preamble &
+    prover_state preamble_sub =
   
-  //
-  // CHEATING:
-  //   This is a Tac function, but with that calling it in the body
-  //   makes verification time unbearable for development
-  //
-  // See comment below in the body
-  //
-  (prover:(#(preamble:_) ->
-           p:prover_state preamble ->
-           (option (p':prover_state preamble { p'.unmatched == [] /\
-                                               p'.ss `ss_extends` p.ss }))))
-
-  : T.Tac (option (p':prover_state preamble { p'.ss `ss_extends` p.ss })) =
-  
-  let y = fresh preamble.g in
   let g' = extend y (Inl t) preamble.g in
   assume (g' `env_extends` preamble.g);
 
@@ -556,7 +544,28 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
     veq = veq_sub;
     props = ();
   } in
-  /////
+
+  (| preamble_sub, prover_state_sub |)
+
+
+
+let intro_exists_step (#preamble:_) (p:prover_state preamble)
+  (u:universe) (t:term) (body:vprop)
+  (unmatched':list vprop)
+  (_:squash (p.unmatched == (Tm_ExistsSL u t body)::unmatched'))
+  (prover:(#(preamble:_) ->
+           p:prover_state preamble ->
+           T.Tac (option (p':prover_state preamble { p'.unmatched == [] /\
+                                                     p'.ss `ss_extends` p.ss }))))
+
+  : T.Tac (option (p':prover_state preamble { p'.ss `ss_extends` p.ss })) =
+  
+  let y = fresh preamble.g in
+  let (| preamble_sub, prover_state_sub |) =
+    intro_exists_sub_prover_state p u t body unmatched' () y in
+  let t_sub = preamble_sub.t in
+  let c_sub = preamble_sub.c in
+  let t_typing_sub = preamble_sub.t_typing in
 
   // the function before this is Pure,
   //   and it goes through quickly
@@ -633,18 +642,68 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
       assert (well_typed_substitution preamble.g0 preamble.uvs ss_new);
 
       extends_apply preamble.g0 preamble.uvs ss_new p.ss p.matched;
-      assert (apply_ss p.ss p.matched == apply_ss ss_new p.matched);
 
-      // let psteps_typing : st_typing preamble.g0 p.steps
-      //   (ghost_comp preamble.ctxt
-      //               (Tm_Star (list_as_vprop p.remaining)
-      //                        (apply_ss ss_new p.matched))) = coerce_eq psteps_typing () in
+      let psteps_typing : st_typing preamble.g0 p.steps
+        (ghost_comp preamble.ctxt
+                    (Tm_Star (list_as_vprop p.remaining)
+                             (apply_ss ss_new p.matched))) = coerce_eq psteps_typing () in
 
-      // let psteps_typing : st_typing preamble.g0 p.steps
-      //   (ghost_comp preamble.ctxt
-      //               (Tm_Star (list_as_vprop p.remaining)
-      //                        (apply_ss psub.ss p.matched))) = psteps_typing in
-      admit ()
+      // ss_new = psub.ss - y, and y does not occur free in Tm_ExistsSL u t body
+      assume (apply_ss psub.ss (Tm_ExistsSL u t body) ==
+              apply_ss ss_new (Tm_ExistsSL u t body));
+      let steps_typing : st_typing preamble.g0 steps
+        (ghost_comp (list_as_vprop p.remaining)
+                    (Tm_Star (list_as_vprop psub.remaining)
+                             (apply_ss ss_new (Tm_ExistsSL u t body)))) = steps_typing in
+
+      // g0 |- { preamble.ctxt } p.steps { p.remaining * apply_ss ss_new p.matched }
+      // g0 |- { p.remaining } steps { psub.remaining * apply_ss ss_new (Tm_ExistsSL u t body) }
+      //
+      // bind them
+      let steps_new : st_term = magic () in
+      let steps_typing_new : st_typing preamble.g0 steps_new
+        (ghost_comp preamble.ctxt
+                    (Tm_Star (list_as_vprop psub.remaining)
+                             (apply_ss ss_new (Tm_Star (Tm_ExistsSL u t body) p.matched)))) =
+        magic () in
+
+      let matched_new = Tm_Star (Tm_ExistsSL u t body) p.matched in
+      let unmatched_new = unmatched' in
+      let remaining_new = psub.remaining in
+      let steps_new = steps_new in
+      let ss_new = ss_new in
+
+      let remaining_typing_new : vprop_typing preamble.g0 (list_as_vprop remaining_new) =
+        psub.remaining_typing in
+
+      // unmatched' is the left component of star term,
+      // whose typing came in to us
+      let unmatched_typing : vprop_typing preamble.g (list_as_vprop unmatched') = magic () in
+
+      let steps_typing_new : st_typing preamble.g0 steps_new
+        (ghost_comp preamble.ctxt
+                    (Tm_Star (list_as_vprop remaining_new)
+                             (apply_ss ss_new matched_new))) = steps_typing_new in
+
+      // move Tm_ExistsSL from unmatched to matched
+      let veq : vprop_equiv preamble.g (comp_pre preamble.c)
+                                       (Tm_Star (list_as_vprop unmatched_new) matched_new) = magic () in
+
+      assert (well_typed_substitution preamble.g0 preamble.uvs ss_new);
+      assert (uvars matched_new preamble.uvs `Set.subset` Map.domain ss_new);
+
+      Some {
+        matched = matched_new;
+        unmatched = unmatched_new;
+        remaining = remaining_new;
+        steps = steps_new;
+        ss = ss_new;
+        remaining_typing = remaining_typing_new;
+        unmatched_typing;
+        steps_typing = steps_typing_new;
+        veq;
+        props = ();
+      }
     end
     else None
 
