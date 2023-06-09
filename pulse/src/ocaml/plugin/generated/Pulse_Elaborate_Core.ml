@@ -398,10 +398,12 @@ let rec (elab_st_typing :
               let inv1 = Pulse_Elaborate_Pure.elab_term inv in
               let cond =
                 elab_st_typing uu___ uu___1
-                  (Pulse_Typing.comp_while_cond inv) cond_typing in
+                  (Pulse_Typing.comp_while_cond
+                     Pulse_Syntax_Base.ppname_default inv) cond_typing in
               let body =
                 elab_st_typing uu___ uu___2
-                  (Pulse_Typing.comp_while_body inv) body_typing in
+                  (Pulse_Typing.comp_while_body
+                     Pulse_Syntax_Base.ppname_default inv) body_typing in
               Pulse_Reflection_Util.mk_while
                 (Pulse_Reflection_Util.mk_abs Pulse_Reflection_Util.bool_tm
                    FStar_Reflection_Data.Q_Explicit inv1) cond body

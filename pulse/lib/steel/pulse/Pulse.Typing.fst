@@ -392,30 +392,32 @@ let comp_intro_exists_erased (u:universe) (t:term) (p:term) (e:term)
                 post=Tm_ExistsSL u (as_binder t) p
               }
 
-let comp_while_cond (inv:term)
+let named_binder (x:ppname) (t:term) = { binder_ppname = x; binder_ty = t}
+
+let comp_while_cond (x:ppname) (inv:term)
   : comp
   = C_ST {
            u=u0;
            res=tm_bool;
-           pre=Tm_ExistsSL u0 (as_binder tm_bool) inv;
+           pre=Tm_ExistsSL u0 (named_binder x tm_bool) inv;
            post=inv
          }
 
-let comp_while_body (inv:term)
+let comp_while_body (x:ppname) (inv:term)
   : comp
   = C_ST {
            u=u0;
            res=tm_unit;
            pre=open_term' inv tm_true 0;
-           post=Tm_ExistsSL u0 (as_binder tm_bool) inv
+           post=Tm_ExistsSL u0 (named_binder x tm_bool) inv
          }
 
-let comp_while (inv:term)
+let comp_while (x:ppname) (inv:term)
   : comp
   = C_ST {
            u=u0;
            res=tm_unit;
-           pre=Tm_ExistsSL u0 (as_binder tm_bool) inv;
+           pre=Tm_ExistsSL u0 (named_binder x tm_bool) inv;
            post=open_term' inv tm_false 0
          }
 
@@ -803,13 +805,13 @@ type st_typing : env -> st_term -> comp -> Type =
       cond:st_term ->
       body:st_term ->
       tot_typing g (Tm_ExistsSL u0 (as_binder tm_bool) inv) Tm_VProp ->
-      st_typing g cond (comp_while_cond inv) ->
-      st_typing g body (comp_while_body inv) ->
+      st_typing g cond (comp_while_cond ppname_default inv) ->
+      st_typing g body (comp_while_body ppname_default inv) ->
       st_typing g (wr (Tm_While { invariant = inv;
                                   condition = cond;
                                   body;
                                   condition_var = ppname_default } ))
-                  (comp_while inv)
+                  (comp_while ppname_default inv)
 
   | T_Par:
       g:env ->

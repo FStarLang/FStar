@@ -453,44 +453,61 @@ let (comp_intro_exists_erased :
                   (Pulse_Syntax_Base.Tm_ExistsSL
                      (u, (Pulse_Syntax_Base.as_binder t), p))
               })
-let (comp_while_cond : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
-  fun inv ->
-    Pulse_Syntax_Base.C_ST
-      {
-        Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
-        Pulse_Syntax_Base.res = tm_bool;
-        Pulse_Syntax_Base.pre =
-          (Pulse_Syntax_Base.Tm_ExistsSL
-             (Pulse_Syntax_Pure.u0, (Pulse_Syntax_Base.as_binder tm_bool),
-               inv));
-        Pulse_Syntax_Base.post = inv
+let (named_binder :
+  Pulse_Syntax_Base.ppname ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder)
+  =
+  fun x ->
+    fun t ->
+      { Pulse_Syntax_Base.binder_ty = t; Pulse_Syntax_Base.binder_ppname = x
       }
-let (comp_while_body : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
-  fun inv ->
-    Pulse_Syntax_Base.C_ST
-      {
-        Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
-        Pulse_Syntax_Base.res = tm_unit;
-        Pulse_Syntax_Base.pre =
-          (Pulse_Syntax_Naming.open_term' inv tm_true Prims.int_zero);
-        Pulse_Syntax_Base.post =
-          (Pulse_Syntax_Base.Tm_ExistsSL
-             (Pulse_Syntax_Pure.u0, (Pulse_Syntax_Base.as_binder tm_bool),
-               inv))
-      }
-let (comp_while : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
-  fun inv ->
-    Pulse_Syntax_Base.C_ST
-      {
-        Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
-        Pulse_Syntax_Base.res = tm_unit;
-        Pulse_Syntax_Base.pre =
-          (Pulse_Syntax_Base.Tm_ExistsSL
-             (Pulse_Syntax_Pure.u0, (Pulse_Syntax_Base.as_binder tm_bool),
-               inv));
-        Pulse_Syntax_Base.post =
-          (Pulse_Syntax_Naming.open_term' inv tm_false Prims.int_zero)
-      }
+let (comp_while_cond :
+  Pulse_Syntax_Base.ppname ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
+  =
+  fun x ->
+    fun inv ->
+      Pulse_Syntax_Base.C_ST
+        {
+          Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
+          Pulse_Syntax_Base.res = tm_bool;
+          Pulse_Syntax_Base.pre =
+            (Pulse_Syntax_Base.Tm_ExistsSL
+               (Pulse_Syntax_Pure.u0, (named_binder x tm_bool), inv));
+          Pulse_Syntax_Base.post = inv
+        }
+let (comp_while_body :
+  Pulse_Syntax_Base.ppname ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
+  =
+  fun x ->
+    fun inv ->
+      Pulse_Syntax_Base.C_ST
+        {
+          Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
+          Pulse_Syntax_Base.res = tm_unit;
+          Pulse_Syntax_Base.pre =
+            (Pulse_Syntax_Naming.open_term' inv tm_true Prims.int_zero);
+          Pulse_Syntax_Base.post =
+            (Pulse_Syntax_Base.Tm_ExistsSL
+               (Pulse_Syntax_Pure.u0, (named_binder x tm_bool), inv))
+        }
+let (comp_while :
+  Pulse_Syntax_Base.ppname ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
+  =
+  fun x ->
+    fun inv ->
+      Pulse_Syntax_Base.C_ST
+        {
+          Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
+          Pulse_Syntax_Base.res = tm_unit;
+          Pulse_Syntax_Base.pre =
+            (Pulse_Syntax_Base.Tm_ExistsSL
+               (Pulse_Syntax_Pure.u0, (named_binder x tm_bool), inv));
+          Pulse_Syntax_Base.post =
+            (Pulse_Syntax_Naming.open_term' inv tm_false Prims.int_zero)
+        }
 let (mk_tuple2 :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.universe ->

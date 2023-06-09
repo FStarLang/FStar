@@ -2390,7 +2390,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                    "At "
                                                                    (Prims.strcat
                                                                     uu___2
-                                                                    ": precondition is {\n"))
+                                                                    ": context is {\n"))
                                                                 (Prims.strcat
                                                                    x "\n}")))))
                                               (fun uu___2 ->
