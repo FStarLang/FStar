@@ -76,9 +76,9 @@ let (check_withlocal :
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.WithLocal.fst"
                                            (Prims.of_int (40))
-                                           (Prims.of_int (46))
+                                           (Prims.of_int (54))
                                            (Prims.of_int (40))
-                                           (Prims.of_int (52)))
+                                           (Prims.of_int (60)))
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.WithLocal.fst"
                                            (Prims.of_int (39))
@@ -94,7 +94,7 @@ let (check_withlocal :
                                               | Pulse_Syntax_Base.Tm_WithLocal
                                                   {
                                                     Pulse_Syntax_Base.binder1
-                                                      = uu___1;
+                                                      = binder;
                                                     Pulse_Syntax_Base.initializer1
                                                       = init;
                                                     Pulse_Syntax_Base.body4 =
@@ -111,15 +111,15 @@ let (check_withlocal :
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.WithLocal.fst"
                                                           (Prims.of_int (40))
-                                                          (Prims.of_int (55))
+                                                          (Prims.of_int (63))
                                                           (Prims.of_int (87))
                                                           (Prims.of_int (57)))
                                                        (Obj.magic
                                                           (Pulse_Checker_Pure.check_term_and_type
                                                              g1 init))
-                                                       (fun uu___2 ->
-                                                          (fun uu___2 ->
-                                                             match uu___2
+                                                       (fun uu___1 ->
+                                                          (fun uu___1 ->
+                                                             match uu___1
                                                              with
                                                              | FStar_Pervasives.Mkdtuple5
                                                                  (init1,
@@ -150,11 +150,11 @@ let (check_withlocal :
                                                                     (Prims.of_int (10)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___2 ->
                                                                     Pulse_Typing.fresh
                                                                     g1))
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___2 ->
                                                                     (fun x ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -163,7 +163,7 @@ let (check_withlocal :
                                                                     (Prims.of_int (45))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (25)))
+                                                                    (Prims.of_int (39)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
                                                                     (Prims.of_int (46))
@@ -172,11 +172,11 @@ let (check_withlocal :
                                                                     (Prims.of_int (10)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___3 ->
-                                                                    Pulse_Syntax_Base.v_as_nv
-                                                                    x))
+                                                                    uu___2 ->
+                                                                    ((binder.Pulse_Syntax_Base.binder_ppname),
+                                                                    x)))
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___2 ->
                                                                     (fun px
                                                                     ->
                                                                     if
@@ -198,20 +198,20 @@ let (check_withlocal :
                                                                     (Prims.of_int (49))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (49))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (35)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
                                                                     (Prims.of_int (49))
-                                                                    (Prims.of_int (33))
+                                                                    (Prims.of_int (38))
                                                                     (Prims.of_int (86))
                                                                     (Prims.of_int (10)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    Pulse_Syntax_Pure.null_var
-                                                                    x))
+                                                                    uu___3 ->
+                                                                    Pulse_Syntax_Pure.term_of_nvar
+                                                                    px))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     (fun x_tm
                                                                     ->
                                                                     Obj.magic
@@ -230,7 +230,7 @@ let (check_withlocal :
                                                                     (Prims.of_int (10)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     Pulse_Typing.extend
                                                                     x
                                                                     (FStar_Pervasives.Inl
@@ -238,7 +238,7 @@ let (check_withlocal :
                                                                     init_t))
                                                                     g1))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     (fun
                                                                     g_extended
                                                                     ->
@@ -258,14 +258,14 @@ let (check_withlocal :
                                                                     (Prims.of_int (10)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     Pulse_Typing.comp_withlocal_body_pre
                                                                     pre
                                                                     init_t
                                                                     x_tm
                                                                     init1))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     (fun
                                                                     body_pre
                                                                     ->
@@ -285,10 +285,10 @@ let (check_withlocal :
                                                                     (Prims.of_int (10)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     ()))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     (fun
                                                                     body_pre_typing
                                                                     ->
@@ -313,7 +313,7 @@ let (check_withlocal :
                                                                     post ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     post)
                                                                     | 
                                                                     FStar_Pervasives_Native.None
@@ -321,7 +321,7 @@ let (check_withlocal :
                                                                     FStar_Tactics_Derived.fail
                                                                     "withlocal: no post_hint!")
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___3 ->
                                                                     (fun post
                                                                     ->
                                                                     if
@@ -352,12 +352,12 @@ let (check_withlocal :
                                                                     (Prims.of_int (29)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___4 ->
                                                                     extend_post_hint_for_local
                                                                     g1 post
                                                                     init_t x))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___4 ->
                                                                     (fun
                                                                     body_post
                                                                     ->
@@ -386,10 +386,10 @@ let (check_withlocal :
                                                                     (FStar_Pervasives_Native.Some
                                                                     body_post)))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___4 ->
                                                                     (fun
-                                                                    uu___5 ->
-                                                                    match uu___5
+                                                                    uu___4 ->
+                                                                    match uu___4
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives.Mkdtuple3
@@ -424,12 +424,12 @@ let (check_withlocal :
                                                                     (Prims.of_int (29)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     Pulse_Syntax_Naming.close_st_term
                                                                     opened_body
                                                                     x))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     (fun
                                                                     body1 ->
                                                                     Obj.magic
@@ -448,7 +448,7 @@ let (check_withlocal :
                                                                     (Prims.of_int (29)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     Pulse_Syntax_Base.C_ST
                                                                     {
                                                                     Pulse_Syntax_Base.u
@@ -466,7 +466,7 @@ let (check_withlocal :
                                                                     (post.Pulse_Checker_Common.post)
                                                                     }))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     (fun c ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -498,11 +498,11 @@ let (check_withlocal :
                                                                     (Prims.of_int (108)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     Pulse_Checker_Common.post_hint_typing
                                                                     g1 post x))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     (fun
                                                                     post_typing_rec
                                                                     ->
@@ -510,13 +510,13 @@ let (check_withlocal :
                                                                     (Pulse_Checker_Common.intro_comp_typing
                                                                     g1 c ()
                                                                     () x ()))
-                                                                    uu___7)))
+                                                                    uu___6)))
                                                                     (fun
                                                                     c_typing
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ((Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_WithLocal
@@ -540,21 +540,21 @@ let (check_withlocal :
                                                                     (),
                                                                     c_typing,
                                                                     body_typing)))))))
-                                                                    uu___7)))
-                                                                    uu___7))))
-                                                                    uu___5)))
-                                                                    uu___5))))
-                                                                    uu___4)))
-                                                                    uu___4)))
-                                                                    uu___4)))
+                                                                    uu___6)))
+                                                                    uu___6))))
                                                                     uu___4)))
                                                                     uu___4))))
                                                                     uu___3)))
                                                                     uu___3)))
+                                                                    uu___3)))
+                                                                    uu___3)))
+                                                                    uu___3))))
+                                                                    uu___2)))
+                                                                    uu___2)))
                                                                  else
                                                                    Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Derived.fail
                                                                     "withlocal: init type is not universe zero")))
-                                                            uu___2))) uu___)))
+                                                            uu___1))) uu___)))
                                   uu___))) uu___)
