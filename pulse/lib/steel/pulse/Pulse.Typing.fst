@@ -9,14 +9,6 @@ module L = FStar.List.Tot
 module FTB = FStar.Tactics
 include Pulse.Typing.Env
 
-// let fstar_env =
-//   g:R.env { 
-//     RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
-//     RT.lookup_fvar g vprop_fv == Some (RT.tm_type (elab_universe (U_succ (U_succ U_zero)))) /\
-//     (forall (u1 u2:R.universe). RT.lookup_fvar_uinst g bind_fv [u1; u2] == Some (bind_type u1 u2))
-//     ///\ star etc
-//   }
-
 let tm_unit = tm_fvar (as_fv unit_lid)
 let tm_bool = tm_fvar (as_fv bool_lid)
 let tm_true = tm_constant R.C_True
@@ -85,28 +77,6 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
 
-
-
-//
-// THIS IS BROKEN:
-//
-// It is always setting universe to 0
-// But we are also not using it currently
-//
-// let elab_eqn (e:eqn)
-//   : R.term
-//   = let ty, l, r = e in
-//     let ty = elab_term ty in
-//     let l = elab_term l in
-//     let r = elab_term r in
-//     RT.eq2 (R.pack_universe R.Uv_Zero) ty l r
-
-// let elab_binding (b:binding)
-//   : R.term 
-//   = match b with
-//     | Inl t -> elab_term t
-//     | Inr eqn -> elab_eqn eqn
-
 module L = FStar.List.Tot
 let extend_env_l (f:R.env) (g:env_bindings) : R.env = 
   L.fold_right 
@@ -120,71 +90,6 @@ let elab_env (e:env) : R.env = extend_env_l (fstar_env e) (bindings e)
 let elab_push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (elab_env (push_binding g x t) ==
            RT.extend_env (elab_env g) x (elab_term t)) = ()
-
-// let rec lookup_binding (e:list (var & 'a)) (x:var)
-//   : option 'a
-//   = match e with
-//     | [] -> None
-//     | (y, v) :: tl -> if x = y then Some v else lookup_binding tl x
-
-// let lookup (e:env) (x:var)
-//   : option binding
-//   = lookup_binding e.g x
-
-// let lookup_ty (e:env) (x:var)
-//   : option term
-//   = match lookup e x with
-//     | Some (Inl t) -> Some t
-//     | _ -> None
-
-// let extend (x:var) (b:binding) (e:env) : env =
-//   { e with g = (x, b) :: e.g }
-
-// let max (n1 n2:nat) = if n1 < n2 then n2 else n1
-
-// let rec fresh_wrt_bindings (e:list (var & 'a))
-//   : var
-//   = match e with
-//     | [] -> 0
-//     | (y, _) :: tl ->  max (fresh_wrt_bindings tl) y + 1
-//     | _ :: tl -> fresh_wrt_bindings tl
-
-// let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
-//   : Lemma (ensures L.memP elt e ==> fresh_wrt_bindings e > fst elt)
-//   = match e with
-//     | [] -> ()
-//     | hd :: tl -> fresh_not_mem tl elt
-  
-// let rec lookup_mem (e:list (var & 'a)) (x:var)
-//   : Lemma
-//     (requires Some? (lookup_binding e x))
-//     (ensures exists elt. L.memP elt e /\ fst elt == x)
-//   = match e with
-//     | [] -> ()
-//     | hd :: tl -> 
-//       match lookup_binding tl x with
-//       | None -> assert (L.memP hd e)
-//       | _ -> 
-//         lookup_mem tl x;
-//         eliminate exists elt. L.memP elt tl /\ fst elt == x
-//         returns _
-//         with _ . ( 
-//           introduce exists elt. L.memP elt e /\ fst elt == x
-//           with elt
-//           and ()
-//         )
-// let fresh (e:env)
-//   : var
-//   = fresh_wrt_bindings e.g
-
-// let fresh_is_fresh (e:env)
-//   : Lemma (None? (lookup e (fresh e)))
-//           [SMTPat (lookup e (fresh e))]
-//   =  match lookup e (fresh e) with
-//      | None -> ()
-//      | Some _ ->
-//        lookup_mem e.g (fresh e);
-//        FStar.Classical.forall_intro (fresh_not_mem e.g)
 
 [@@ erasable; no_auto_projectors]
 noeq
