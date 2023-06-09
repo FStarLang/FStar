@@ -429,12 +429,6 @@ let reflection_primops : list Cfg.primitive_step = [
     e_string e_string
     e_int;
 
-  mk2 "push_binder"
-    RB.push_binder
-    e_env
-    e_binder
-    e_env;
-
   mk2 "push_namedv"
     RB.push_namedv
     e_env

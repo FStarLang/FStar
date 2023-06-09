@@ -140,14 +140,6 @@ val term_eq               : term -> term -> bool
 (** FIXME *)
 val env_open_modules      : env -> list name
 
-(** [push_binder] extends the environment with a single binder.
-    This is useful as one traverses the syntax of a term,
-    pushing binders as one traverses a binder in a lambda,
-    match, etc. FIXME: Should be push_binding
-    TODO: Should this really be push_bv? *)
-[@@deprecated "Use push_binding instead"]
-val push_binder           : env -> binder -> env
-
 (** [push_binding] extends the environment with a single binding.
 This is useful as one traverses the syntax of a term,
 pushing bindings as one traverses (and opens) a binder in a lambda,
