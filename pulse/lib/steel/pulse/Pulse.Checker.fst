@@ -310,11 +310,9 @@ let elim_then_check (#g:env) (#ctxt:term)
                     (post_hint: post_hint_opt g)
                     (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint)
-  = if RU.debug_at_level g "proof_states"
-    then ( T.print "Unprotected node: Elim exists and pure \n" );
-    let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
+  = let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
     let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimPure.elim_pure ctxt'_typing in
-    if RU.debug_at_level g "proof_states"
+    if RU.debug_at_level g "inference"
     then ( T.print (Printf.sprintf "Eliminated context from\n\t%s\n\tto %s\n"
                 (P.term_to_string ctxt)
                 (P.term_to_string ctxt'') )) ;
@@ -342,7 +340,7 @@ let rec check' : bool -> check_t =
   else begin
     if RU.debug_at_level g "proof_states"
     then (
-      T.print (Printf.sprintf "At %s: precondition is %s\n"
+      T.print (Printf.sprintf "At %s: context is {\n%s\n}"
                             (T.range_to_string t.range)
                             (P.term_to_string pre))
     );

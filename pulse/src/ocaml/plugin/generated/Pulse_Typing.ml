@@ -369,22 +369,22 @@ let (elim_exists_post :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term)
+        Pulse_Syntax_Base.nvar -> Pulse_Syntax_Base.term)
   =
   fun u ->
     fun t ->
       fun p ->
         fun x ->
-          let x_tm = Pulse_Syntax_Pure.null_var x in
+          let x_tm = Pulse_Syntax_Pure.term_of_nvar x in
           let p1 =
             Pulse_Syntax_Naming.open_term' p (mk_reveal u t x_tm)
               Prims.int_zero in
-          Pulse_Syntax_Naming.close_term p1 x
+          Pulse_Syntax_Naming.close_term p1 (FStar_Pervasives_Native.snd x)
 let (comp_elim_exists :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        Pulse_Syntax_Base.var -> Pulse_Syntax_Base.comp)
+        Pulse_Syntax_Base.nvar -> Pulse_Syntax_Base.comp)
   =
   fun u ->
     fun t ->

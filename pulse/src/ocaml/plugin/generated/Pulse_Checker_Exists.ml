@@ -328,8 +328,9 @@ let (check_elim_exists :
                                                                     })) pre
                                                                     ()
                                                                     (Pulse_Typing.comp_elim_exists
-                                                                    u ty p x)
-                                                                    d))
+                                                                    u ty p
+                                                                    (Pulse_Syntax_Base.v_as_nv
+                                                                    x)) d))
                                                                     (fun
                                                                     uu___4 ->
                                                                     (fun

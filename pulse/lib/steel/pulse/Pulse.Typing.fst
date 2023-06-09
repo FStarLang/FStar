@@ -347,13 +347,13 @@ let non_informative_witness_t (u:universe) (t:term)
                None
                t
 
-let elim_exists_post (u:universe) (t:term) (p:term) (x:var)
+let elim_exists_post (u:universe) (t:term) (p:term) (x:nvar)
   : term
-  = let x_tm = null_var x in
+  = let x_tm = term_of_nvar x in
     let p = open_term' p (mk_reveal u t x_tm) 0 in
-    close_term p x
+    close_term p (snd x)
 
-let comp_elim_exists (u:universe) (t:term) (p:term) (x:var)
+let comp_elim_exists (u:universe) (t:term) (p:term) (x:nvar)
   : comp
   = C_STGhost Tm_EmpInames 
               {
@@ -765,7 +765,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g t (tm_type u) ->
       tot_typing g (Tm_ExistsSL u (as_binder t) p) Tm_VProp ->
       st_typing g (wr (Tm_ElimExists { p = Tm_ExistsSL u (as_binder t) p }))
-                    (comp_elim_exists u t p x)
+                  (comp_elim_exists u t p (v_as_nv x))
 
   | T_IntroExists:
       g:env ->
