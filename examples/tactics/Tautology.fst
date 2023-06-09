@@ -16,7 +16,7 @@
 module Tautology
 module P = FStar.Tactics.PatternMatching
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 // Note: putting ``qed ()`` inside each call to ``gpm`` would give early
 // errors, at the price of verbosity.

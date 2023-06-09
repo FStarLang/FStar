@@ -15,7 +15,7 @@
 *)
 module Destruct
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let intros' () = let _ = intros () in ()
 let destruct tm = let _ = t_destruct tm in ()

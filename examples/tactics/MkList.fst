@@ -17,8 +17,7 @@ module MkList
 open FStar.List.Tot
 (* Makes top-level list definitions annotated by their length *)
 
-open FStar.Tactics
-open FStar.Tactics.Derived
+open FStar.Tactics.V2
 
 let constant_list (name: string) (l: list UInt8.t): Tac decls =
   let len = FStar.List.length l in

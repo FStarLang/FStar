@@ -1,6 +1,6 @@
 module Preprocess
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let incr_lits_by_1 (t:term) : Tac term =
     match inspect t with

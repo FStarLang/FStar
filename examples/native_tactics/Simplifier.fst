@@ -19,7 +19,7 @@ open FStar.TSet
 open FStar.Heap
 open FStar.Preorder
 open FStar.ST
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.Simplifier
 
 let goal_is_true () : Tac unit =

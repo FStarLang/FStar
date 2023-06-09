@@ -1,6 +1,6 @@
 module Bug2756
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 val arrow_to_forall: #a:Type -> p:(a -> Type0) -> squash (forall (x:a). p x) -> (x:a -> squash (p x))
 let arrow_to_forall #a p _ x = ()

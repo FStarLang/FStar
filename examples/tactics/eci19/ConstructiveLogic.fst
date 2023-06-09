@@ -1,6 +1,6 @@
 module ConstructiveLogic
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (*
 As you probably know by now, verification in F* works by first computing

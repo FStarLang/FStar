@@ -1,6 +1,6 @@
 module SigeltOpts
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 #set-options "--max_fuel 0"
 

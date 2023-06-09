@@ -1,6 +1,6 @@
 module Bug1680
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 

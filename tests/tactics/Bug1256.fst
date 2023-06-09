@@ -15,13 +15,13 @@
 *)
 module Bug1256
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Squash
 
 let ddump m = if debugging () then dump m
 
 let my_cut (t:term) : Tac unit =
-    let qq = pack (Tv_FVar (pack_fv ["FStar";"Tactics";"Derived";"__cut"])) in
+    let qq = pack (Tv_FVar (pack_fv ["FStar";"Tactics";"V2";"Derived";"__cut"])) in
     let tt = pack (Tv_App qq (t, Q_Explicit)) in
     apply tt
 

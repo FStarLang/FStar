@@ -49,7 +49,7 @@ they do not have to be recursive, but they do. *)
  * is also tail-recursive (and the trace is "backwards").
  *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type mynat =
     | Z

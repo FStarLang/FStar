@@ -1,7 +1,7 @@
 module Bug2882
 
-open FStar.Tactics
-module R = FStar.Reflection
+open FStar.Tactics.V2
+module R = FStar.Reflection.V2
 
 let univ_uvar_to_term () : Tac unit =
   let t = fresh_uvar (Some (`unit)) in

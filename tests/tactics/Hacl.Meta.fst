@@ -4,7 +4,7 @@ module Hacl.Meta
 here to test that it does not regress, including when using it as a
 plugin. *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List.Tot
 
 let tm_unit = `()

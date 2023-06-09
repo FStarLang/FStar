@@ -71,7 +71,7 @@ sub_effect PURE ~> ID = lift_pure_nd
 val test_f : unit -> ID int (as_pure_wp (fun p -> p 5 /\ p 3))
 let test_f () = 3
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let l () : int =
   reify (test_f ())

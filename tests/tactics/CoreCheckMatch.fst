@@ -1,6 +1,6 @@
 module CoreCheckMatch
 //Thanks to Theophile Wallez for this example
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type simple_record = {
   f1: int;

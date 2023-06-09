@@ -16,7 +16,7 @@
 module StringPrinter.Rec
 include StringPrinter.Base
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 module Ca = FStar.Int.Cast
 module U32 = FStar.UInt32

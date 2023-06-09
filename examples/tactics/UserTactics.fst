@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module UserTactics
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test_print_goal =
   assert (forall (y:int). y==0 ==> 0==y)

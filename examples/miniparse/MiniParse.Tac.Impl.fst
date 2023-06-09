@@ -20,7 +20,7 @@ include MiniParse.Impl.Int
 include MiniParse.Impl.List
 include MiniParse.Spec.TEnum
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module L = FStar.List.Tot
 module TS = MiniParse.Tac.Spec
 module U32 = FStar.UInt32

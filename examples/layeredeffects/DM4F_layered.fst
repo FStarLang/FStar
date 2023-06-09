@@ -19,7 +19,7 @@ module DM4F_layered
 (* Same as DM4F, but layered over a layered PURE *)
 open DM4F_Utils
 open ID2
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 

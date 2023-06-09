@@ -15,7 +15,7 @@
 *)
 module Synthesis
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let a : unit = synth (fun () -> exact (`()))
 

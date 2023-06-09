@@ -17,7 +17,7 @@ module LN
 
 (* Making sure that LN violations don't explode the engine *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let badtm () : Tac term =
     pack (Tv_BVar (pack_bv ({ index  = 0;

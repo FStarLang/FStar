@@ -15,7 +15,7 @@
 *)
 module EExists
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Classical
 open FStar.Squash
 

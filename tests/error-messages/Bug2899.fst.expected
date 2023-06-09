@@ -25,7 +25,7 @@ Goal 1/1:
 
 >> Got issues: [
 Bug2899.fst(13,12-13,18): (Error 228) user tactic failed: `Tactic got stuck!
-Reduction stopped at: FStar.Tactics.Builtins.dump (Prims.admit ()) "(((proofstate)))"
+Reduction stopped at: FStar.Tactics.V2.Builtins.dump (Prims.admit ()) "(((proofstate)))"
 The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?`
 >>]
 proof-state: State dump @ depth 0 (at the time of failure):

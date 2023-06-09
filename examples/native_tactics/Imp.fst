@@ -15,7 +15,7 @@
 *)
 module Imp
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Testing that intro works on implicits seamlessly *)
 

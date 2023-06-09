@@ -2,7 +2,7 @@ module TestSealed
 
 open FStar.Mul
 open FStar.Sealed
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test1 (x y : int) =
   sealed_singl (seal x) (seal y);

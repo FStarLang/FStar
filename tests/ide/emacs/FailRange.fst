@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FailRange
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let a : unit =
   assert_by_tactic (True /\ True)

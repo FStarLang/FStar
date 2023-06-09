@@ -15,7 +15,7 @@
 *)
 module Bug1571
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type t : eqtype = | V of nat | W
 

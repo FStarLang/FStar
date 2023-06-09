@@ -1,6 +1,6 @@
 module PackInd
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let tau () : Tac (list sigelt) =
   let myty : term = pack (Tv_FVar (pack_fv (explode_qn "PackInd.myty"))) in

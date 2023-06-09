@@ -3,7 +3,7 @@ module RunST
 (* Similar to LatticeAlg, but ignoring exceptions to start with
 a simpler example. The interaction between state+exn can be tricky. *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List.Tot
 open FStar.Universe
 open FStar.Ghost

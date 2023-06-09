@@ -258,7 +258,7 @@ let state_eq (s0 s1:state) : Pure Type0
   s0 Rcx == s1 Rcx /\
   s0 Rdx == s1 Rdx
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let lemma_Triple_opt (s0:state)
   : Pure (state & fuel)

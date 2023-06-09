@@ -1,7 +1,7 @@
 module Bug2806c
 
-open FStar.Tactics
-module R = FStar.Reflection
+open FStar.Tactics.V2
+module R = FStar.Reflection.V2
 
 let dom (t:term{exists b c. inspect_ln t == R.Tv_Arrow b c}) : R.binder =
   match inspect_ln t with

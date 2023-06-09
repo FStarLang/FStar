@@ -1,5 +1,5 @@
 module Bug2636
-open FStar.Tactics
+open FStar.Tactics.V2
 
 
 type prop_with_pre (p : Type0) (pf : squash p) : Type0

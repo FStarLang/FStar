@@ -1,7 +1,7 @@
 module Param
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type bvmap = list (namedv & (binder & binder & binder))
 let fvmap =  list (fv * fv)
@@ -38,7 +38,7 @@ let fresh_binder_named (nm:string) (t:typ) : Tac binder =
   // useful?
   //let n = fresh () in
   //let nm = nm ^ "_" ^ string_of_int n in
-  Tactics.fresh_binder_named nm t
+  Tactics.V2.fresh_binder_named nm t
 
 let app_binders (t:term) (bs:list binder) : Tac term =
   mk_e_app t (List.Tot.map binder_to_term bs)
@@ -337,7 +337,7 @@ let param_inductive (se:sigelt) (fv0 fv1 : fv) : Tac decls =
     //Tactics.Util.iter (fun bv -> dump ("param bv = " ^ binder_to_string bv)) param_bs;
     let typ = mk_e_app (param' s typ) [replace_by s false orig; replace_by s true orig] in
     (* dump ("new typ = " ^ term_to_string typ); *)
-    let ctors = Tactics.map (param_ctor nm s) ctors in
+    let ctors = Tactics.V2.map (param_ctor nm s) ctors in
     let se = Sg_Inductive {nm=inspect_fv fv1; univs; params=param_bs; typ; ctors} in
     (* dump ("param_ind : " ^ term_to_string (quote se)); *)
     [pack_sigelt se]

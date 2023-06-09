@@ -15,7 +15,7 @@
 *)
 module WeakVsHNF
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Testing weak reduction vs. HNF *)
 

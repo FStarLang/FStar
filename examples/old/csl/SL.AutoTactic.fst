@@ -16,12 +16,12 @@
 module SL.AutoTactic
 
 open FStar.Algebra.CommMonoid
-open FStar.Tactics
-module T = FStar.Tactics
+open FStar.Tactics.V2
+module T = FStar.Tactics.V2
 
 open FStar.Tactics.PatternMatching
 open FStar.Tactics.CanonCommMonoid
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.List
 
 open SL.Base

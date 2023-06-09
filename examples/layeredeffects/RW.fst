@@ -3,7 +3,7 @@ module RW
 #set-options "--print_effect_args"
 
 module H = FStar.Heap
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Universe
 open FStar.ST
 

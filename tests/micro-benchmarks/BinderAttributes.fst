@@ -1,7 +1,7 @@
 module BinderAttributes
 
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 open FStar.List.Tot
 
 let default_to (def : 'a) (x : option 'a) : Tot 'a =

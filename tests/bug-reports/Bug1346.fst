@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Bug1346
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p1 (x:int) : Type0
 

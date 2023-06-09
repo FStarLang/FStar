@@ -1,6 +1,6 @@
 module BoolRefinement
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 open FStar.List.Tot
 #push-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
@@ -487,7 +487,7 @@ and t_height #f (#g:src_env) (#t:s_ty) (d:src_ty_ok f g t)
     | OK_TArrow _ _ _ d0 d1 -> max (t_height d0) (t_height d1) + 1
     | OK_TRefine _ _ d -> height d + 1
 
-module FTB = FStar.Tactics.Builtins
+module FTB = FStar.Tactics.V2.Builtins
 
 let check_sub_typing (f:RT.fstar_top_env)
                      (sg:src_env)

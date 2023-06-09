@@ -1,6 +1,6 @@
 module Bug1840
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Simpler repro *)
 let resolve bs : Tac unit =

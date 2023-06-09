@@ -15,7 +15,7 @@
 *)
 module NormBinderType
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : int
 assume val q : int

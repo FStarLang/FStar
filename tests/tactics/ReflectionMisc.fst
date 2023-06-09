@@ -15,7 +15,7 @@
 *)
 module ReflectionMisc
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let mk (#a: Type u#a) (u: universe_view) (#[exact (pack (Tv_Type (pack_universe u)))]r: a) (): a = r
 

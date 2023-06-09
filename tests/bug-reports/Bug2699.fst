@@ -17,7 +17,7 @@ let works_get_length_f32 (i:UInt32.t{ UInt32.v i < 128 }) (n:UInt32.t{UInt32.v n
 
 let works_length_f32 : _ = works_get_length_f32 24ul 4ul
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let testu8_add_mod = assert FStar.UInt8.(250uy `add_mod` 6uy == 0uy)
             by (norm [primops]; trefl(); qed())

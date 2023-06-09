@@ -15,7 +15,7 @@
 *)
 module Bug1270
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 [@@plugin]
 let mytac =

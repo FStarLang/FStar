@@ -1,7 +1,7 @@
 module Bug2597
 
-open FStar.Reflection
-open FStar.Tactics
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 
 let _ = run_tactic (fun () ->
   let ascribed_return: match_returns_ascription = (fresh_binder (`int), (Inl (`int), None, false)) in

@@ -1,6 +1,6 @@
 module Metaprogramming
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (*
 Now, we shall turn to the automated generation of programs. Meta-F*

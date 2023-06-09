@@ -15,7 +15,7 @@
 *)
 module Clear
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val phi : Type
 assume val psi : Type

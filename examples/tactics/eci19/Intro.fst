@@ -4,7 +4,7 @@ module Intro
 really to teach you how to use it. That's what the next files are for! *)
 
 (* We always need this module to use Meta-F* *)
-open FStar.Tactics
+open FStar.Tactics.V2
 
 
 (*

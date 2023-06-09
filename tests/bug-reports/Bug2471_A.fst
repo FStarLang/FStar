@@ -1,7 +1,7 @@
 module Bug2471_A
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* FIXME Temporarily disabled *)
 (* let id_tac (x:'a): Tac 'a = x *)

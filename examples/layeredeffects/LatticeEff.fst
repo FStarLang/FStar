@@ -1,6 +1,6 @@
 module LatticeEff
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List.Tot
 open FStar.All
 module H = FStar.Heap

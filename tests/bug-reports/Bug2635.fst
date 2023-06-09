@@ -1,5 +1,5 @@
 module Bug2635
-open FStar.Tactics
+open FStar.Tactics.V2
 
 //Original report by Benjamin Bonneau
 let prove_False

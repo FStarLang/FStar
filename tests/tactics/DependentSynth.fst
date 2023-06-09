@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module DependentSynth
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let myty b = if b then int else unit
 

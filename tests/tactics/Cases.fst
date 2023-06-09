@@ -17,7 +17,7 @@ module Cases
 
 (* *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Mul
 
 assume val p : Type0

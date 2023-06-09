@@ -1,6 +1,6 @@
 module Bug2515
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let match_term (t: term) : Tac term =
     match inspect t with

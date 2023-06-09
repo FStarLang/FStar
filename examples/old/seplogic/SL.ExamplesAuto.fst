@@ -21,10 +21,10 @@ module SLHeap = SL.Heap
 open SL.Heap
 open SL.Effect
 open FStar.Algebra.CommMonoid
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.PatternMatching
 open FStar.Tactics.CanonCommMonoid
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.List
 
 // --using_facts_from '* -FStar.Tactics -FStar.Reflection'

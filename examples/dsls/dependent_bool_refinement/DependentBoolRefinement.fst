@@ -1,6 +1,6 @@
 module DependentBoolRefinement
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 open FStar.List.Tot
 module L = FStar.List.Tot
 #push-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"

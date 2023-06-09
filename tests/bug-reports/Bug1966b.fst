@@ -1,6 +1,6 @@
 module Bug1966b
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val t : int -> Type
 assume val lem : x:int -> y:(t x) -> Lemma (y == y)

@@ -15,7 +15,7 @@
 *)
 module Normalization
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* A tactic that returns its argument after some steps of normalization *)
 (* NOTE: This is relying on our unusual quote, which can inspect the shape of `x`

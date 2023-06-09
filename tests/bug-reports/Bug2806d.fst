@@ -4,7 +4,7 @@ module Bug2806d
 a bv or an index in them, not even a sealed one. *)
 
 (*
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let dom (t:term{exists b c. inspect_ln t == Tv_Arrow b c}) =
   match inspect_ln t with

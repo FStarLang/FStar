@@ -1,6 +1,6 @@
 module MultiStage
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let tau1 () : Tac decls =
   let lb = {

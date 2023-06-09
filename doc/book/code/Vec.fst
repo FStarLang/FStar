@@ -135,7 +135,7 @@ let rec fold_right (f:'b -> 'a -> 'a) (l:list 'b) (x:'a) =
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 //SNIPPET_START: trefl
 let partially_reduce_fold_right f more
@@ -155,7 +155,7 @@ let lem #a #b (f:a -> b) : (a ==> b) =
   let x : squash (a ==> b) = () in
   FStar.Squash.join_squash x
 
-open FStar.Tactics
+open FStar.Tactics.V2
 let implies_intro () : Tac binding =
   apply (`lem);
   intro()

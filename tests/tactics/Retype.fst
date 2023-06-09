@@ -17,7 +17,7 @@ module Retype
 
 // Changing the type of a binder
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : prop
 assume val q : prop

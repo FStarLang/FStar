@@ -1,7 +1,7 @@
 module Bug1902
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 // a few helpers
 let fvOf (t: term) = match inspect t with

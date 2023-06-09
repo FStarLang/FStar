@@ -1,6 +1,6 @@
 module Bug2684b
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val nat_dep: nat -> Type0
 

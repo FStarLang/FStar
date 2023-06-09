@@ -14,6 +14,6 @@
    limitations under the License.
 *)
 module FStarMode_GH73
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let x: bool = synth_by_tactic (fun () -> exact (quote 1))

@@ -46,7 +46,7 @@ val enc_entry_st : e:entry_st -> h:mem{forall b. TSet.mem b (entry_st_bufs e) ==
 let enc_entry_st (e:entry_st) h =
     enc_u16_array_st e.key_st h `append` enc_u32_array_st e.val_st h
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let ser_entry (e:entry_st) : 
   Tot (serializer_any (hide (entry_st_bufs e)) (fun h -> enc_entry_st e h))

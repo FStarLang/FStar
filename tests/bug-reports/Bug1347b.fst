@@ -15,7 +15,7 @@
 *)
 module Bug1347B
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test (x : int) =
     assert True

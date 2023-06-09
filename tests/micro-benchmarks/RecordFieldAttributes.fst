@@ -1,6 +1,6 @@
 module RecordFieldAttributes
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 type description (d : string) = ()
 

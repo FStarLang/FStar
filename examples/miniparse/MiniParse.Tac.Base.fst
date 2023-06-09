@@ -15,7 +15,7 @@
 *)
 module MiniParse.Tac.Base
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module L = FStar.List.Tot
 
 let pack_nat (n: nat) : T.Tac T.term =

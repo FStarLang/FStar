@@ -18,7 +18,7 @@ include MiniParse.Spec.Combinators
 include MiniParse.Tac.Base
 include MiniParse.Spec.Int
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module U16 = FStar.UInt16
 
 let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.branch) (l: list T.name) : T.Tac (list T.branch) =

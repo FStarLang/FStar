@@ -26,7 +26,7 @@ module IteSoundness
  *   effects if-then-else combinator using a tactic
  *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let unit : Type0 = unit
 irreducible let an_attr : unit = ()

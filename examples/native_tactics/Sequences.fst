@@ -15,7 +15,7 @@
 *)
 module Sequences
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Seq
 
 let is_seq_t (t:term) : Tac bool =

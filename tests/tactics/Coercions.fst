@@ -1,6 +1,6 @@
 module Coercions
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 // Disabling this whole file until we get user-level coercions.
 // Then, we can just set pack/inspect to be coercions.

@@ -15,7 +15,7 @@
 *)
 module Div
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec f0 (x : int) : Dv int = f0 x
 let g0 (x : int) : Tac int = f0 x

@@ -15,7 +15,7 @@
 *)
 module DeltaDepth
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 #set-options "--ugly"
 

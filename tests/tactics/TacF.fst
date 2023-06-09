@@ -15,7 +15,7 @@
 *)
 module TacF
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Not exhaustive! But we're in TacF, so it's accepted *)
 let tau i : TacF unit =

@@ -1,6 +1,6 @@
 module MultipleAttributesBinder
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 
 type attr_value =

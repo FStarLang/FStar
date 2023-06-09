@@ -27,7 +27,7 @@ module HST = FStar.HyperStack.ST
 
 irreducible let refl_implicit : unit = ()
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 noeq
 [@erasable]

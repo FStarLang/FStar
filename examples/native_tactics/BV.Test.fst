@@ -16,7 +16,7 @@
 module BV.Test
 
 open FStar.UInt
-open FStar.Tactics
+open FStar.Tactics.V2
 open BV
 module U64 = FStar.UInt64
 

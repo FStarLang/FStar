@@ -15,8 +15,8 @@
 *)
 module SyntaxBasics
 
-open FStar.Tactics
-open FStar.Reflection.Arith
+open FStar.Tactics.V2
+open FStar.Reflection.V2.Arith
 
 exception Oops
 
@@ -101,7 +101,7 @@ let _ = assert True
                 | Tv_Const (C_Int 5) -> fail "Quoted term got reduced!"
                 | _ -> fail "What?")
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let arith_test1 =
     assert True

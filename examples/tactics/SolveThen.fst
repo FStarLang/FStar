@@ -15,7 +15,7 @@
 *)
 module SolveThen
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec fib n : Tac unit = if n < 2 then exact (`1) else (apply (`(+)); fib (n - 1); fib (n - 2))
 

@@ -3,8 +3,8 @@ module ReduceRecUnderMatch
 (** An example adapted from one provided by Son Ho
     Demonstrates the use of the [zeta_full] option of the normalizer *)
 
-module T = FStar.Tactics
-open FStar.Tactics
+module T = FStar.Tactics.V2
+open FStar.Tactics.V2
 
 (** A check to make sure that [t0] doesn't appear in the goal
     and to catch regressions.

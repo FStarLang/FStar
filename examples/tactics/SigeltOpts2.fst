@@ -5,7 +5,7 @@ was being taken from the optionstate in the check_with, causing the
 definitions to be lax-checked if the check_with moved across modules. *)
 
 open SigeltOpts
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let tau () : Tac decls =
   match lookup_typ (top_env ()) ["SigeltOpts"; "sp1"] with

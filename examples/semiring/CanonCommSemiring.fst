@@ -44,7 +44,7 @@ module CanonCommSemiring
 ///  - http://www.cs.ru.nl/~freek/courses/tt-2014/read/10.1.1.61.3041.pdf
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Algebra.CommMonoid
 
 (** An attribute for marking definitions to unfold by the tactic *)

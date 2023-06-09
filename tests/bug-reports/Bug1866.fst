@@ -1,6 +1,6 @@
 module Bug1866
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec not_do_much e: Tac term =
   match inspect e with
