@@ -113,7 +113,7 @@ let rec (apply_squash_or_lem :
                                                       (Prims.of_int (89))
                                                       (Prims.of_int (41)))))
                                              (Obj.magic
-                                                (FStar_Tactics_SyntaxHelpers.collect_arr
+                                                (FStar_Tactics_V2_SyntaxHelpers.collect_arr
                                                    ty))
                                              (fun uu___4 ->
                                                 (fun uu___4 ->

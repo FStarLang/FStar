@@ -3,7 +3,7 @@ let (term_eq :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term ->
       (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
-  = FStar_Tactics_V2_Builtins.term_eq_old
+  = FStar_Tactics_V1_Builtins.term_eq_old
 type atom = Prims.int
 type exp =
   | Unit 
@@ -258,7 +258,7 @@ let rec (reification_aux :
                        "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                        (Prims.of_int (287)) (Prims.of_int (82))
                        (Prims.of_int (299)) (Prims.of_int (22)))))
-              (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
+              (Obj.magic (FStar_Tactics_V2_SyntaxHelpers.collect_app t))
               (fun uu___ ->
                  (fun uu___ ->
                     match uu___ with
@@ -1192,7 +1192,8 @@ let (canon_monoid :
                                        (Prims.of_int (391))
                                        (Prims.of_int (68)))))
                               (Obj.magic
-                                 (FStar_Tactics_SyntaxHelpers.collect_app t))
+                                 (FStar_Tactics_V2_SyntaxHelpers.collect_app
+                                    t))
                               (fun uu___1 ->
                                  (fun uu___1 ->
                                     match uu___1 with
@@ -1219,7 +1220,7 @@ let (canon_monoid :
                                                               (Prims.of_int (390))
                                                               (Prims.of_int (6)))))
                                                      (Obj.magic
-                                                        (FStar_Tactics_SyntaxHelpers.collect_app
+                                                        (FStar_Tactics_V2_SyntaxHelpers.collect_app
                                                            rel_xy1))
                                                      (fun uu___3 ->
                                                         (fun uu___3 ->

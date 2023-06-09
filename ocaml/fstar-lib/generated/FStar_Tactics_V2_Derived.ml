@@ -4534,7 +4534,7 @@ let rec (destruct_list :
             (FStar_Range.mk_range "FStar.Tactics.V2.Derived.fst"
                (Prims.of_int (824)) (Prims.of_int (52)) (Prims.of_int (837))
                (Prims.of_int (27)))))
-      (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t))
+      (Obj.magic (FStar_Tactics_V2_SyntaxHelpers.collect_app t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -4721,7 +4721,8 @@ let (get_match_body :
                                  (Prims.of_int (842)) (Prims.of_int (14))
                                  (Prims.of_int (844)) (Prims.of_int (46)))))
                         (Obj.magic
-                           (FStar_Tactics_SyntaxHelpers.inspect_unascribe t))
+                           (FStar_Tactics_V2_SyntaxHelpers.inspect_unascribe
+                              t))
                         (fun uu___2 ->
                            match uu___2 with
                            | FStar_Tactics_NamedView.Tv_Match

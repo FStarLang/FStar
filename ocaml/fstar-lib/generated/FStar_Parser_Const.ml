@@ -534,7 +534,7 @@ let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
 let (universe_uvar_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 let (check_with_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Builtins"; "check_with"]
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "check_with"]
     FStar_Compiler_Range_Type.dummyRange
 let (term_view_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]

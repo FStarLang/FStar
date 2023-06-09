@@ -391,11 +391,7 @@ let (add_check_with :
              ((FStar_Reflection_V2_Builtins.pack_ln
                  (FStar_Reflection_V2_Data.Tv_FVar
                     (FStar_Reflection_V2_Builtins.pack_fv
-                       ["FStar";
-                       "Reflection";
-                       "V2";
-                       "Builtins";
-                       "check_with"]))),
+                       ["FStar"; "Reflection"; "Types"; "check_with"]))),
                (vcfg_t, FStar_Reflection_V2_Data.Q_Explicit))) in
       FStar_Reflection_V2_Builtins.set_sigelt_attrs (t :: attrs) se
 let (un_uinst : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =

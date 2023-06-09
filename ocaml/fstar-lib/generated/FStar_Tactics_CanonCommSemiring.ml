@@ -3,7 +3,7 @@ let (term_eq :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term ->
       (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
-  = FStar_Tactics_V2_Builtins.term_eq_old
+  = FStar_Tactics_V1_Builtins.term_eq_old
 type ('a, 'cmuadd, 'cmumult) distribute_left_lemma = unit
 type ('a, 'cmuadd, 'cmumult) distribute_right_lemma = unit
 type ('a, 'cmuadd, 'cmumult) mult_zero_l_lemma = unit

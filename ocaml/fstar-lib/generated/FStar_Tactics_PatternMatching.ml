@@ -1134,7 +1134,7 @@ let lift_exn_tac :
                                 (Prims.of_int (269)) (Prims.of_int (18))
                                 (Prims.of_int (269)) (Prims.of_int (61)))))
                        (Obj.magic (string_of_match_exception ex))
-                       (fun uu___ -> FStar_Tactics_V2_Derived.fail uu___))))
+                       (fun uu___ -> FStar_Tactics_V1_Derived.fail uu___))))
         uu___1 uu___
 let lift_exn_tactic :
   'a 'b .
@@ -1166,7 +1166,7 @@ let lift_exn_tactic :
                                 (Prims.of_int (274)) (Prims.of_int (18))
                                 (Prims.of_int (274)) (Prims.of_int (61)))))
                        (Obj.magic (string_of_match_exception ex))
-                       (fun uu___ -> FStar_Tactics_V2_Derived.fail uu___))))
+                       (fun uu___ -> FStar_Tactics_V1_Derived.fail uu___))))
         uu___1 uu___
 type bindings = (varname * FStar_Reflection_Types.term) Prims.list
 let (string_of_bindings :
@@ -1667,7 +1667,7 @@ let (match_term :
                                    (Prims.of_int (336)) (Prims.of_int (20))
                                    (Prims.of_int (336)) (Prims.of_int (63)))))
                           (Obj.magic (string_of_match_exception ex))
-                          (fun uu___1 -> FStar_Tactics_V2_Derived.fail uu___1))))
+                          (fun uu___1 -> FStar_Tactics_V1_Derived.fail uu___1))))
              uu___)
 let debug : 'uuuuu . 'uuuuu -> (unit, unit) FStar_Tactics_Effect.tac_repr =
   fun uu___ ->
@@ -2406,7 +2406,7 @@ let (pattern_of_term :
                                  (Prims.of_int (533)) (Prims.of_int (20))
                                  (Prims.of_int (533)) (Prims.of_int (63)))))
                         (Obj.magic (string_of_match_exception ex))
-                        (fun uu___1 -> FStar_Tactics_V2_Derived.fail uu___1))))
+                        (fun uu___1 -> FStar_Tactics_V1_Derived.fail uu___1))))
            uu___)
 type 'a hyp = FStar_Reflection_V2_Data.binding
 type 'a pm_goal = unit

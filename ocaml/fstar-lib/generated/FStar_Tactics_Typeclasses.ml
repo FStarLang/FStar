@@ -890,7 +890,7 @@ let (mk_class :
                                                                     (Prims.of_int (224))
                                                                     (Prims.of_int (35)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_SyntaxHelpers.collect_arr_bs
+                                                                    (FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
                                                                     ty))
                                                                     (fun
                                                                     uu___6 ->
@@ -1423,7 +1423,7 @@ let (mk_class :
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_SyntaxHelpers.lookup_lb
+                                                                    (FStar_Tactics_V2_SyntaxHelpers.lookup_lb
                                                                     lbs
                                                                     proj_name))
                                                                     | 
@@ -1477,7 +1477,7 @@ let (mk_class :
                                                                     (Prims.of_int (200))
                                                                     (Prims.of_int (49)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_SyntaxHelpers.collect_arr_bs
+                                                                    (FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
                                                                     proj_lb.FStar_Tactics_NamedView.lb_typ))
                                                                     (fun
                                                                     uu___9 ->
@@ -1567,7 +1567,7 @@ let (mk_class :
                                                                     (fun b11
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_SyntaxHelpers.mk_arr
+                                                                    (FStar_Tactics_V2_SyntaxHelpers.mk_arr
                                                                     ((op_At
                                                                     ()) ps
                                                                     (b11 ::
@@ -1617,7 +1617,7 @@ let (mk_class :
                                                                     (Prims.of_int (209))
                                                                     (Prims.of_int (50)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_SyntaxHelpers.collect_abs
+                                                                    (FStar_Tactics_V2_SyntaxHelpers.collect_abs
                                                                     proj_lb.FStar_Tactics_NamedView.lb_def))
                                                                     (fun
                                                                     uu___9 ->
