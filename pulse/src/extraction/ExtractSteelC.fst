@@ -220,6 +220,19 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
         translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
+      _ (* typedef *);
+      _ (* source value *);
+      _ (* source perm *);
+      _ (* dest perm *);
+      src;
+      dst
+    ])
+    when string_of_mlpath p = "Steel.ST.C.Types.Base.copy" ->
+      EAssign (
+        EBufRead (translate_expr env dst, EQualified (["C"], "_zero_for_deref")),
+        EBufRead (translate_expr env src, EQualified (["C"], "_zero_for_deref")))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
       _ (* opened *);
       _ (* n *);
       _ (* typedef *);

@@ -76,6 +76,32 @@ let struct_uninitialized
     (ensures (fun y -> p_refine (struct_pcm fields) y))
 = FX.on_dom field_t (fun f -> (fields.fd_typedef f).uninitialized <: fields.fd_type f)
 
+#restart-solver
+
+[@@noextract_to "krml"] // proof-only
+let struct_extract_full
+  (#field_t: eqtype) (fields: field_description_gen_t field_t)
+  (x: struct_t1 fields)
+  (x0: Ghost.erased (option (struct_t1 fields & P.perm)))
+: Pure (struct_t1 fields)
+    (requires (
+      match Ghost.reveal x0 with
+      | None -> x == one (struct_pcm fields)
+      | Some (x1, p) -> exclusive (struct_pcm fields) x1 /\ p_refine (struct_pcm fields) x1 /\ struct_fractionable x1 /\ compatible (struct_pcm fields) (struct_mk_fraction x1 p) x
+    ))
+    (ensures (fun x' -> 
+      match Ghost.reveal x0 with
+      | None -> x' == one (struct_pcm fields)
+      | Some (x1, _) -> x' == x1
+    ))
+= let x' = FX.on_dom field_t (fun f -> (fields.fd_typedef f).extract_full (x f) (match Ghost.reveal x0 with None -> None | Some (x1, p) -> Some (x1 f, p)) <: fields.fd_type f) in
+  assert (
+      match Ghost.reveal x0 with
+      | None -> x' `FX.feq` one (struct_pcm fields)
+      | Some (x1, _) -> x' `FX.feq` x1
+  );
+  x'
+
 let struct1
   (#field_t: eqtype)
   (fields: field_description_gen_t field_t)
@@ -125,7 +151,8 @@ let struct1
     struct_eq_intro v1 v2 (fun f ->
       (fields.fd_typedef f).mk_fraction_full_composable (v1 f) p1 (v2 f) p2
     )
-  );    
+  );
+  extract_full = struct_extract_full fields;
 }
 
 [@@__reduce__]
