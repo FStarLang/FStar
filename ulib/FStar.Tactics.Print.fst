@@ -6,8 +6,8 @@ open FStar.Tactics.V2.Builtins
 open FStar.Tactics.V2.Derived
 open FStar.Tactics.NamedView
 
-(* FIXME *)
-let namedv_to_string x = "namedv_to_string IOU"
+let namedv_to_string (x:namedv) : Tac string=
+  unseal x.ppname ^ "#" ^ string_of_int x.uniq
 
 private
 let paren (s:string) : string = "(" ^ s ^ ")"
@@ -77,9 +77,8 @@ and match_returns_to_string (ret_opt:option match_returns_ascription) : Tac stri
   match ret_opt with
   | None -> ""
   | Some (b, asc) ->
-     "GGG FIXME BINDER" ^
-//    (binder_to_string b ^ " ")
-//      ^
+    (binder_to_string b ^ " ")
+      ^
     (match asc with
      | Inl t, tacopt, _ -> (term_to_ast_string t) ^ (tacopt_to_string tacopt)
      | Inr c, tacopt, _ -> (comp_to_ast_string c) ^ (tacopt_to_string tacopt))
