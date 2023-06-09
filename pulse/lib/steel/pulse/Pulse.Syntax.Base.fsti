@@ -72,6 +72,8 @@ type term =
 
 and vprop = term
 
+and typ = term
+
 noeq
 type binder = {
   binder_ty     : term;
