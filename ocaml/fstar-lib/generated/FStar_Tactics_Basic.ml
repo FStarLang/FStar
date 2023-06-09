@@ -6876,10 +6876,9 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                                      solve g FStar_Syntax_Util.exp_unit)
                                   else
                                     failwith
-                                      "internal error: _t_refl: guard is not trivial"
-                              | uu___7 ->
-                                  FStar_Tactics_Monad.fail
-                                    "lhs is not a match")))
+                                      "internal error: _t_refl: guard is not trivial")
+                     | uu___5 ->
+                         FStar_Tactics_Monad.fail "lhs is not a match"))
            | FStar_Pervasives_Native.None ->
                FStar_Tactics_Monad.fail "not an equality") in
     FStar_Compiler_Effect.op_Less_Bar
