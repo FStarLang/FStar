@@ -10,6 +10,18 @@ include gmake/fstar.mk
 DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(realpath $(FSTAR_HOME)/ocaml))
 OUTPUT_DIRECTORY=$(DUNE_SNAPSHOT)/fstar-lib/generated
 
+NOEXTRACT_FILES+=$(wildcard extra/*.fst extra/*.fsti)
+NOEXTRACT_FILES+=$(wildcard LowStar*.fst)
+NOEXTRACT_FILES+=$(wildcard LowStar*.fsti)
+NOEXTRACT_FILES+=FStar.Modifies.fst FStar.Modifies.fsti
+NOEXTRACT_FILES+=FStar.ModifiesGen.fsti
+NOEXTRACT_FILES+=FStar.Bytes.fsti
+
+NOEXTRACT_ML:=$(subst .,_, $(NOEXTRACT_FILES))
+NOEXTRACT_ML:=$(patsubst %_fst,%.ml,$(NOEXTRACT_ML))
+NOEXTRACT_ML:=$(patsubst extra/%,%,$(NOEXTRACT_ML))
+NOEXTRACT_ML:=$(foreach f,$(NOEXTRACT_ML),$(OUTPUT_DIRECTORY)/$(shell basename $(f)))
+
 FSTAR_FILES:=
 FSTAR_FILES+=$(wildcard *.fst *.fsti)
 FSTAR_FILES+=$(wildcard experimental/*.fst experimental/*.fsti)
@@ -55,7 +67,7 @@ include $(DEPEND)
 
 # Prims is the only .fst (not fsti) with an Ocaml implementation
 # so we do not need to extract it.
-all-ml: $(filter-out %/prims.ml, $(ALL_ML_FILES))
+all-ml: $(filter-out %/prims.ml $(NOEXTRACT_ML), $(ALL_ML_FILES))
 
 intfiles:
 	+$(MAKE) -C ml intfiles
