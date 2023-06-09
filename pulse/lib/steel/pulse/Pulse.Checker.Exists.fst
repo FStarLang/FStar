@@ -132,8 +132,6 @@ let check_intro_exists
         check_term_with_expected_type g witness ty in
     let d = T_IntroExists g u ty p witness ty_typing t_typing (E witness_typing) in
     let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
-    T.print (Printf.sprintf "Intro exists with witness, got: %s\n"
-                     (P.comp_to_string c));
     repack (try_frame_pre pre_typing d) post_hint
   | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
 

@@ -689,7 +689,7 @@ let (check_intro_exists :
                    (Prims.of_int (117)) (Prims.of_int (73)))
                 (FStar_Range.mk_range "Pulse.Checker.Exists.fst"
                    (Prims.of_int (115)) (Prims.of_int (46))
-                   (Prims.of_int (138)) (Prims.of_int (56)))
+                   (Prims.of_int (136)) (Prims.of_int (56)))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ -> st.Pulse_Syntax_Base.term1))
                 (fun uu___ ->
@@ -710,7 +710,7 @@ let (check_intro_exists :
                                (FStar_Range.mk_range
                                   "Pulse.Checker.Exists.fst"
                                   (Prims.of_int (117)) (Prims.of_int (76))
-                                  (Prims.of_int (138)) (Prims.of_int (56)))
+                                  (Prims.of_int (136)) (Prims.of_int (56)))
                                (match vprop_typing with
                                 | FStar_Pervasives_Native.Some typing ->
                                     Obj.magic
@@ -800,7 +800,7 @@ let (check_intro_exists :
                                                          "Pulse.Checker.Exists.fst"
                                                          (Prims.of_int (129))
                                                          (Prims.of_int (49))
-                                                         (Prims.of_int (137))
+                                                         (Prims.of_int (135))
                                                          (Prims.of_int (49)))
                                                       (FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___4 ->
@@ -825,7 +825,7 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (130))
                                                                     (Prims.of_int (88))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (49)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_term_with_expected_type
@@ -854,7 +854,7 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (133))
                                                                     (Prims.of_int (83))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (49)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -880,7 +880,7 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (133))
                                                                     (Prims.of_int (83))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (49)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -906,13 +906,13 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (135))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (49)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (135))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (49)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -927,82 +927,14 @@ let (check_intro_exists :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (135))
-                                                                    (Prims.of_int (4))
-                                                                    (Prims.of_int (136))
-                                                                    (Prims.of_int (42)))
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (137))
-                                                                    (Prims.of_int (4))
-                                                                    (Prims.of_int (137))
-                                                                    (Prims.of_int (49)))
-                                                                    (Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (135))
-                                                                    (Prims.of_int (12))
-                                                                    (Prims.of_int (136))
-                                                                    (Prims.of_int (42)))
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (135))
-                                                                    (Prims.of_int (4))
-                                                                    (Prims.of_int (136))
-                                                                    (Prims.of_int (42)))
-                                                                    (Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (136))
-                                                                    (Prims.of_int (21))
-                                                                    (Prims.of_int (136))
-                                                                    (Prims.of_int (41)))
-                                                                    (FStar_Range.mk_range
-                                                                    "prims.fst"
-                                                                    (Prims.of_int (590))
-                                                                    (Prims.of_int (19))
-                                                                    (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
-                                                                    (Obj.magic
-                                                                    (Pulse_Syntax_Printer.comp_to_string
-                                                                    c))
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___10
-                                                                    ->
-                                                                    Prims.strcat
-                                                                    "Intro exists with witness, got: "
-                                                                    (Prims.strcat
-                                                                    uu___9
-                                                                    "\n")))))
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Builtins.print
-                                                                    uu___9))
-                                                                    uu___9)))
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (137))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (39)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (49)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Common.try_frame_pre
@@ -1027,11 +959,9 @@ let (check_intro_exists :
                                                                     })) pre
                                                                     () c d1))
                                                                     (fun
-                                                                    uu___10
-                                                                    ->
+                                                                    uu___9 ->
                                                                     (fun
-                                                                    uu___10
-                                                                    ->
+                                                                    uu___9 ->
                                                                     Obj.magic
                                                                     (Pulse_Checker_Common.repack
                                                                     g pre
@@ -1053,9 +983,8 @@ let (check_intro_exists :
                                                                     =
                                                                     Pulse_Syntax_Base.should_check_true
                                                                     }))
-                                                                    uu___10
+                                                                    uu___9
                                                                     post_hint))
-                                                                    uu___10)))
                                                                     uu___9)))
                                                                     uu___8)))
                                                                     uu___7)))
