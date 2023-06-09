@@ -119,8 +119,7 @@ let elab_env (e:env) : R.env = extend_env_l (fstar_env e) (bindings e)
 
 let elab_push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (elab_env (push_binding g x t) ==
-           RT.extend_env (elab_env g) x (elab_term t))
-          [SMTPat (elab_env (push_binding g x t))] = admit ()  // TODO: FIXME
+           RT.extend_env (elab_env g) x (elab_term t)) = ()
 
 // let rec lookup_binding (e:list (var & 'a)) (x:var)
 //   : option 'a

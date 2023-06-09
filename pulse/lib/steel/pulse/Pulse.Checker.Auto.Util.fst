@@ -293,14 +293,11 @@ let rec elim_all (#g:env)
                 elim_all #g' f mk ctxt_typing' in
               true, (| g'', ctxt'', ctxt_typing'', k_elab_trans k k' |)
             | None ->
-              assume (g `env_extends` g);  // TODO: FIX ME
               false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
        else begin
-         assume (g `env_extends` g);  // TODO: FIX ME
          false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
        end
      | _ ->
-       assume (g `env_extends` g);  // TODO: FIX ME
        false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
 
 let add_elims_aux (#g:env) (#ctxt:term)
@@ -315,7 +312,6 @@ let add_elims_aux (#g:env) (#ctxt:term)
    = let (| ctxt', ctxt'_typing, k |) = canon_right ctxt_typing f in
      let progress, (| g', ctxt'', ctxt''_typing, k' |) =
          elim_all f mk ctxt'_typing in
-      assume (g `env_extends` g);  // TODO: FIX ME
       progress, (| g', ctxt'', ctxt''_typing, k_elab_trans k k' |)
 
   let rec add_elims (#g:env) (#ctxt:term)

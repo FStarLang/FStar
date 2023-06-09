@@ -29,7 +29,6 @@ let intro_post_hint g ret_ty_opt post =
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
   assume (open_term post' x == post);
-  assume (g `env_extends` g);  // TODO: FIX ME
   { g; ret_ty; u; ty_typing; post=post'; post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
 
 
@@ -43,7 +42,6 @@ let post_hint_from_comp_typing #g #c ct =
       post=comp_post c;
       post_typing=post_typing_as_abstraction post_typing }
   in
-  assume (g `env_extends` g);  // TODO: FIX ME
   p
 
 let try_frame_pre (#g:env)
