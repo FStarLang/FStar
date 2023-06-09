@@ -89,9 +89,10 @@ let rec freevars_st (t:st_term)
                    (Set.union (freevars_st body2)
                               (freevars post2)))
 
-    | Tm_WithLocal { initializer; body } ->
-      Set.union (freevars initializer)
-                (freevars_st body)
+    | Tm_WithLocal { binder; initializer; body } ->
+      Set.union (freevars binder.binder_ty)
+                (Set.union (freevars initializer)
+                           (freevars_st body))
 
     | Tm_Rewrite { t1; t2 } ->
       Set.union (freevars t1) (freevars t2)
@@ -204,7 +205,8 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' body2 i &&
       ln' post2 (i + 1)
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      ln' binder.binder_ty i &&
       ln' initializer i &&
       ln_st' body (i + 1)
 
@@ -356,8 +358,9 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
                body2=open_st_term' body2 v i;
                post2=open_term' post2 v (i + 1) }
 
-    | Tm_WithLocal { initializer; body } ->
-      Tm_WithLocal { initializer = open_term' initializer v i;
+    | Tm_WithLocal { binder; initializer; body } ->
+      Tm_WithLocal { binder = open_binder binder v i;
+                     initializer = open_term' initializer v i;
                      body = open_st_term' body v (i + 1) }
 
     | Tm_Rewrite { t1; t2 } ->
@@ -519,8 +522,9 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
                body2 = close_st_term' body2 v i;
                post2 = close_term' post2 v (i + 1) }
 
-    | Tm_WithLocal { initializer; body } ->
-      Tm_WithLocal { initializer = close_term' initializer v i;
+    | Tm_WithLocal { binder; initializer; body } ->
+      Tm_WithLocal { binder = close_binder binder v i;
+                     initializer = close_term' initializer v i;
                      body = close_st_term' body v (i + 1) }
 
     | Tm_Rewrite { t1; t2 } ->

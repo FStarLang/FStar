@@ -178,6 +178,7 @@ type st_term' =
       post2:term;
     }  
   | Tm_WithLocal {
+      binder:binder;
       initializer:term;
       body:st_term;
     }

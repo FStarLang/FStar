@@ -148,7 +148,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' t1 x i;
       freevars_close_term' t2 x i
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      freevars_close_term' binder.binder_ty x i;
       freevars_close_term' initializer x i;
       freevars_close_st_term' body x (i + 1)
 
@@ -360,6 +361,10 @@ let freevars_mk_tuple2 (u:universe) (aL aR:term)
            Set.union (freevars aL) (freevars aR)) =
   admit ()
 
+let freevars_ref (t:term)
+  : Lemma (freevars (mk_ref t) == freevars t)
+  = admit()
+
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
@@ -546,11 +551,13 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      vprop_equiv_freevars equiv_p_q
 
 
-   | T_WithLocal _ init body _ c x init_typing _ c_typing body_typing ->
+   | T_WithLocal _ init body init_t c x init_typing u_typing c_typing body_typing ->
      tot_typing_freevars init_typing;
      st_typing_freevars body_typing;
      freevars_open_st_term_inv body x;
-     comp_typing_freevars c_typing
+     comp_typing_freevars c_typing;
+     tot_typing_freevars u_typing;
+     freevars_ref init_t
 
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
      tot_typing_freevars t_typing;

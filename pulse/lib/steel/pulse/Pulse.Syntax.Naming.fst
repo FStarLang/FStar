@@ -133,7 +133,8 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' body2 x i;
       close_open_inverse' post2 x (i + 1)
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      close_open_inverse' binder.binder_ty x i; 
       close_open_inverse' initializer x i;
       close_open_inverse_st' body x (i + 1)
 

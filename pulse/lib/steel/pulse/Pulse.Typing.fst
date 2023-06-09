@@ -840,7 +840,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (extend x (Inl (mk_ref init_t)) g)
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
-      st_typing g (wr (Tm_WithLocal { initializer=init; body } )) c
+      st_typing g (wr (Tm_WithLocal { binder=as_binder (mk_ref init_t); initializer=init; body } )) c
 
   | T_Rewrite:
       g:env ->

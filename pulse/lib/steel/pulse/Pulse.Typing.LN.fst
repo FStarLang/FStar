@@ -164,7 +164,8 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      open_term_ln' binder.binder_ty x i;
       open_term_ln' initializer x i;
       open_st_term_ln' body x (i + 1)
 
@@ -482,7 +483,8 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' t1 x i;
       open_term_ln_inv' t2 x i
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv' initializer x i;
       open_term_ln_inv_st' body x (i + 1)
 
@@ -632,7 +634,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' t1 x i;
       close_term_ln' t2 x i
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      close_term_ln' binder.binder_ty x i;
       close_term_ln' initializer x i;
       close_st_term_ln' body x (i + 1)
 
@@ -758,6 +761,12 @@ let ln_mk_snd (u:universe) (aL aR e:term) (n:int)
       (ensures ln' (mk_snd u u aL aR e) n) =
   admit ()
 
+let ln_mk_ref (t:term) (n:int)
+  : Lemma
+      (requires ln' t n)
+      (ensures ln' (mk_ref t) n) =
+  admit ()
+
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 1"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
@@ -881,7 +890,9 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln init_typing;
       st_typing_ln body_typing;
       open_st_term_ln' body (null_var x) 0;
-      comp_typing_ln c_typing
+      comp_typing_ln c_typing;
+      tot_typing_ln init_t_typing;
+      ln_mk_ref init_t (-1)
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_typing_ln t_typing;
