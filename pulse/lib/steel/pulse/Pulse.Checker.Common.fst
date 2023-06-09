@@ -12,7 +12,7 @@ let post_hint_typing g p x = {
 }
 
 let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { Metatheory.fresh_wrt x g (freevars t) })
-                               (_:tot_typing (extend x (Inl ty) g) (open_term t x) Tm_VProp)
+                               (_:tot_typing (push_binding g x ty) (open_term t x) Tm_VProp)
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty Tm_VProp))                                 
   = admit()
 
@@ -25,11 +25,11 @@ let intro_post_hint g ret_ty_opt post =
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty in
   let (| u, ty_typing |) = CP.check_universe g ret_ty in
-  let (| post, post_typing |) = CP.check_vprop (extend x (Inl ret_ty) g) (open_term_nv post (v_as_nv x)) in 
+  let (| post, post_typing |) = CP.check_vprop (push_binding g x ret_ty) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
   assume (open_term post' x == post);
-  extends_env_refl g;
+  assume (g `env_extends` g);  // TODO: FIX ME
   { g; ret_ty; u; ty_typing; post=post'; post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
 
 
@@ -43,7 +43,7 @@ let post_hint_from_comp_typing #g #c ct =
       post=comp_post c;
       post_typing=post_typing_as_abstraction post_typing }
   in
-  extends_env_refl g;
+  assume (g `env_extends` g);  // TODO: FIX ME
   p
 
 let try_frame_pre (#g:env)
@@ -55,7 +55,7 @@ let try_frame_pre (#g:env)
   : T.Tac (c':comp_st { comp_pre c' == pre } &
            st_typing g t c')
   = let g = CP.push_context "try_frame_pre" g in
-    if RU.debug_at_level g "try_frame"
+    if RU.debug_at_level (fstar_env g) "try_frame"
     then T.print (Printf.sprintf "(Try frame@%s) with %s\n\tcomp=%s,\n\tpre=%s\n"
                                  (T.range_to_string t.range)
                                  (Pulse.Checker.Pure.print_context g)
@@ -79,7 +79,7 @@ let replace_equiv_post
     let st_typing = Metatheory.comp_typing_inversion ct in
     let (| res_c_typing, pre_c_typing, x, post_c_typing |) = Metatheory.st_comp_typing_inversion st_typing in
     let px = v_as_nv x in
-    let g_post = extend x (Inl res_c) g in
+    let g_post = push_binding g x res_c in
     let post_c_opened = open_term_nv post_c px in
     match post_hint with
     | None ->
@@ -145,7 +145,7 @@ let intro_comp_typing (g:env)
                       (pre_typing:tot_typing g (comp_pre c) Tm_VProp)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
                       (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:tot_typing (extend x (Inl (comp_res c)) g) (open_term (comp_post c) x) Tm_VProp)
+                      (post_typing:tot_typing (push_binding g x (comp_res c)) (open_term (comp_post c) x) Tm_VProp)
   : T.Tac (comp_typing g c (comp_u c))
   = let intro_st_comp_typing (st:st_comp { comp_u c == st.u /\
                                            comp_pre c == st.pre /\

@@ -189,23 +189,6 @@ let (comp_return :
                                Prims.int_zero);
                           Pulse_Syntax_Base.post = post_maybe_eq
                         })
-let (elab_eqn : Pulse_Typing_Env.eqn -> FStar_Reflection_Types.term) =
-  fun e ->
-    let uu___ = e in
-    match uu___ with
-    | (ty, l, r) ->
-        let ty1 = Pulse_Elaborate_Pure.elab_term ty in
-        let l1 = Pulse_Elaborate_Pure.elab_term l in
-        let r1 = Pulse_Elaborate_Pure.elab_term r in
-        FStar_Reflection_Typing.eq2
-          (FStar_Reflection_Builtins.pack_universe
-             FStar_Reflection_Data.Uv_Zero) ty1 l1 r1
-let (elab_binding : Pulse_Typing_Env.binding -> FStar_Reflection_Types.term)
-  =
-  fun b ->
-    match b with
-    | FStar_Pervasives.Inl t -> Pulse_Elaborate_Pure.elab_term t
-    | FStar_Pervasives.Inr eqn -> elab_eqn eqn
 let (extend_env_l :
   FStar_Reflection_Types.env ->
     Pulse_Typing_Env.env_bindings -> FStar_Reflection_Types.env)
@@ -217,62 +200,11 @@ let (extend_env_l :
            fun g1 ->
              match uu___ with
              | (x, b) ->
-                 let t = elab_binding b in
+                 let t = Pulse_Elaborate_Pure.elab_term b in
                  FStar_Reflection_Typing.extend_env g1 x t) g f
 let (elab_env : Pulse_Typing_Env.env -> FStar_Reflection_Types.env) =
-  fun e -> extend_env_l e.Pulse_Typing_Env.f e.Pulse_Typing_Env.g
-let rec lookup_binding :
-  'a .
-    (Pulse_Syntax_Base.var * 'a) Prims.list ->
-      Pulse_Syntax_Base.var -> 'a FStar_Pervasives_Native.option
-  =
   fun e ->
-    fun x ->
-      match e with
-      | [] -> FStar_Pervasives_Native.None
-      | (y, v)::tl ->
-          if x = y
-          then FStar_Pervasives_Native.Some v
-          else lookup_binding tl x
-let (lookup :
-  Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.var ->
-      Pulse_Typing_Env.binding FStar_Pervasives_Native.option)
-  = fun e -> fun x -> lookup_binding e.Pulse_Typing_Env.g x
-let (lookup_ty :
-  Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.var ->
-      Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
-  =
-  fun e ->
-    fun x ->
-      match lookup e x with
-      | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl t) ->
-          FStar_Pervasives_Native.Some t
-      | uu___ -> FStar_Pervasives_Native.None
-let (extend :
-  Pulse_Syntax_Base.var ->
-    Pulse_Typing_Env.binding -> Pulse_Typing_Env.env -> Pulse_Typing_Env.env)
-  =
-  fun x ->
-    fun b ->
-      fun e ->
-        {
-          Pulse_Typing_Env.f = (e.Pulse_Typing_Env.f);
-          Pulse_Typing_Env.g = ((x, b) :: (e.Pulse_Typing_Env.g));
-          Pulse_Typing_Env.ctxt = (e.Pulse_Typing_Env.ctxt)
-        }
-let (max : Prims.nat -> Prims.nat -> Prims.nat) =
-  fun n1 -> fun n2 -> if n1 < n2 then n2 else n1
-let rec fresh_wrt_bindings :
-  'a . (Pulse_Syntax_Base.var * 'a) Prims.list -> Pulse_Syntax_Base.var =
-  fun e ->
-    match e with
-    | [] -> Prims.int_zero
-    | (y, uu___)::tl -> (max (fresh_wrt_bindings tl) y) + Prims.int_one
-    | uu___::tl -> fresh_wrt_bindings tl
-let (fresh : Pulse_Typing_Env.env -> Pulse_Syntax_Base.var) =
-  fun e -> fresh_wrt_bindings e.Pulse_Typing_Env.g
+    extend_env_l (Pulse_Typing_Env.fstar_env e) (Pulse_Typing_Env.bindings e)
 let (add_frame :
   Pulse_Syntax_Base.comp_st ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp_st)

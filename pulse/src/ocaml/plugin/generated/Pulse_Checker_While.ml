@@ -129,7 +129,8 @@ let (check_while :
                                                               (Prims.of_int (59)))
                                                            (if
                                                               Pulse_RuntimeUtils.debug_at_level
-                                                                g1
+                                                                (Pulse_Typing_Env.fstar_env
+                                                                   g1)
                                                                 "inference"
                                                             then
                                                               Obj.magic

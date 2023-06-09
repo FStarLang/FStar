@@ -1,7 +1,7 @@
 module Pulse.RuntimeUtils
 open FStar.Tactics
-open Pulse.Typing.Env
 module T = FStar.Tactics
+type context = FStar.Sealed.Inhabited.sealed #(list string) []
 val extend_context (tag:string) (ctx:context) : context
 val debug_at_level (g:env) (s:string) : bool
 val print_exn (e:exn) : string

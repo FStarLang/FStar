@@ -97,7 +97,7 @@ let st_equiv_soundness (g:stt_env)
           = RT.open_term_spec e x
       in
       let pre_equiv = VPropEquiv.vprop_equiv_unit_soundness pre_typing eq_pre in
-      let g' = extend x (Inl (comp_res c0)) g in
+      let g' = push_binding g x (comp_res c0) in
       elab_open_commute (comp_post c0) x;
       elab_open_commute (comp_post c1) x;      
       let post_equiv

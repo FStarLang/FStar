@@ -440,7 +440,9 @@ let (maybe_infer_intro_exists :
                      (FStar_Range.mk_range "Pulse.Checker.fst"
                         (Prims.of_int (145)) (Prims.of_int (6))
                         (Prims.of_int (228)) (Prims.of_int (10)))
-                     (if Pulse_RuntimeUtils.debug_at_level g "inference"
+                     (if
+                        Pulse_RuntimeUtils.debug_at_level
+                          (Pulse_Typing_Env.fstar_env g) "inference"
                       then
                         Obj.magic
                           (Obj.repr
@@ -781,7 +783,8 @@ let (maybe_infer_intro_exists :
                                                                     (Prims.of_int (10)))
                                                                     (if
                                                                     Pulse_RuntimeUtils.debug_at_level
-                                                                    g
+                                                                    (Pulse_Typing_Env.fstar_env
+                                                                    g)
                                                                     "inference"
                                                                     then
                                                                     Obj.magic
@@ -1461,7 +1464,8 @@ let (maybe_infer_intro_exists :
                                                                     (Prims.of_int (14)))
                                                                     (if
                                                                     Pulse_RuntimeUtils.debug_at_level
-                                                                    g
+                                                                    (Pulse_Typing_Env.fstar_env
+                                                                    g)
                                                                     "inference"
                                                                     then
                                                                     Obj.magic
@@ -1588,8 +1592,8 @@ let (handle_framing_failure :
                                 (Prims.of_int (249)) (Prims.of_int (6))
                                 (Prims.of_int (290)) (Prims.of_int (30)))
                              (if
-                                Pulse_RuntimeUtils.debug_at_level g
-                                  "inference"
+                                Pulse_RuntimeUtils.debug_at_level
+                                  (Pulse_Typing_Env.fstar_env g) "inference"
                               then
                                 Obj.magic
                                   (Obj.repr
@@ -2145,7 +2149,8 @@ let (elim_then_check :
                                                  (Prims.of_int (44)))
                                               (if
                                                  Pulse_RuntimeUtils.debug_at_level
-                                                   g "inference"
+                                                   (Pulse_Typing_Env.fstar_env
+                                                      g) "inference"
                                                then
                                                  Obj.magic
                                                    (Obj.repr
@@ -2322,7 +2327,9 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                   (FStar_Range.mk_range "Pulse.Checker.fst"
                      (Prims.of_int (346)) (Prims.of_int (6))
                      (Prims.of_int (424)) (Prims.of_int (20)))
-                  (if Pulse_RuntimeUtils.debug_at_level g "proof_states"
+                  (if
+                     Pulse_RuntimeUtils.debug_at_level
+                       (Pulse_Typing_Env.fstar_env g) "proof_states"
                    then
                      Obj.magic
                        (Obj.repr

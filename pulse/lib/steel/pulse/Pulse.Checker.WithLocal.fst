@@ -13,13 +13,13 @@ module FV = Pulse.Typing.FV
 #push-options "--z3rlimit_factor 4"
 let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
                                (init_t:term) (x:var)
-  : post_hint_for_env (extend x (Inl init_t) g)
+  : post_hint_for_env (push_binding g x init_t)
   = { p with post = comp_withlocal_body_post p.post init_t (null_var x);
              post_typing = admit() } //star typing intro
 
 let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre Tm_VProp)
                           (init_t:term) (x:var) (i:term)
-  : tot_typing (extend x (Inl (mk_ref init_t)) g)
+  : tot_typing (push_binding g x (mk_ref init_t))
                (comp_withlocal_body_pre pre init_t (null_var x) i)
                Tm_VProp
   = admit()
@@ -47,7 +47,7 @@ let check_withlocal
        then T.fail "withlocal: x is free in body"
        else
          let x_tm = term_of_nvar px in
-         let g_extended = extend x (Inl (mk_ref init_t)) g in
+         let g_extended = push_binding g x (mk_ref init_t) in
          let body_pre = comp_withlocal_body_pre pre init_t x_tm init in
          let body_pre_typing = with_local_pre_typing pre_typing init_t x init in
          // elaborating this post here,

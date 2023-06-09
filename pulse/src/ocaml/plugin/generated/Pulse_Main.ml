@@ -29,7 +29,9 @@ let (main' :
                            (FStar_Range.mk_range "Pulse.Main.fst"
                               (Prims.of_int (25)) (Prims.of_int (8))
                               (Prims.of_int (34)) (Prims.of_int (66)))
-                           (if Pulse_RuntimeUtils.debug_at_level g1 "Pulse"
+                           (if
+                              Pulse_RuntimeUtils.debug_at_level
+                                (Pulse_Typing_Env.fstar_env g1) "Pulse"
                             then
                               Obj.magic
                                 (Obj.repr

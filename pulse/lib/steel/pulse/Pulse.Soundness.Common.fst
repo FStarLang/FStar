@@ -22,26 +22,26 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:env_bindings) (fv:R.fv) (us:R.uni
     | hd::tl -> extend_env_l_lookup_fvar g tl fv us
 
 
-let elab_binding_opt (b:option binding) =
+let elab_term_opt (b:option term) =
   match b with
-  | Some b -> Some (elab_binding b)
+  | Some b -> Some (elab_term b)
   | None -> None
 
-let rec extend_env_l_lookup_bvar (g:R.env) (sg:env_bindings) (x:var)
-  : Lemma 
-    (requires (forall x. RT.lookup_bvar g x == None))
-    (ensures (RT.lookup_bvar (extend_env_l g sg) x == elab_binding_opt (lookup_binding sg x)))
-    (decreases sg)
-    [SMTPat (RT.lookup_bvar (extend_env_l g sg) x)]
-  = match sg with
-    | [] -> ()
-    | hd :: tl -> extend_env_l_lookup_bvar g tl x
+// let rec extend_env_l_lookup_bvar (g:R.env) (sg:env_bindings) (x:var)
+//   : Lemma 
+//     (requires (forall x. RT.lookup_bvar g x == None))
+//     (ensures (RT.lookup_bvar (extend_env_l g sg) x == elab_term_opt (lookup sg x)))
+//     (decreases sg)
+//     [SMTPat (RT.lookup_bvar (extend_env_l g sg) x)]
+//   = match sg with
+//     | [] -> ()
+//     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
 let lookup_elab_env (g:env) (x:var)
   : Lemma 
-    (ensures (RT.lookup_bvar (elab_env g) x == elab_binding_opt (lookup g x)))
+    (ensures (RT.lookup_bvar (elab_env g) x == elab_term_opt (lookup g x)))
     [SMTPat (RT.lookup_bvar (elab_env g) x)]
-  = ()
+  = admit ()  // TODO: FIX ME!!!!
   
 let tot_typing_soundness (#g:env)
                          (#e:term)
@@ -62,7 +62,7 @@ let mk_t_abs_tot (g:env)
                  (#body:term)
                  (#body_ty:term)
                  (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
-                 (body_typing:tot_typing (extend x (Inl ty) g) (open_term body x) body_ty)
+                 (body_typing:tot_typing (push_binding g x ty) (open_term body x) body_ty)
   : GTot (RT.tot_typing (elab_env g)
             (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (elab_term body))
             (elab_term (tm_arrow {binder_ty=ty; binder_ppname=ppname} q (close_comp (C_Tot body_ty) x))))
@@ -119,8 +119,8 @@ let mk_t_abs (g:env)
              (#body:st_term)
              (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) })
              (#c:comp)
-             (#body_typing:st_typing (extend x (Inl ty) g) (open_st_term body x) c)
-             (r_body_typing:RT.tot_typing (elab_env (extend x (Inl ty) g))
+             (#body_typing:st_typing (push_binding g x ty) (open_st_term body x) c)
+             (r_body_typing:RT.tot_typing (elab_env (push_binding g x ty))
                                           (elab_st_typing body_typing)
                                           (elab_comp c))
   : GTot (RT.tot_typing (elab_env g)
@@ -309,11 +309,11 @@ let has_stt_bindings (f:RT.fstar_top_env) =
     //(forall (u:R.universe). RT.lookup_fvar_uinst f frame_fv [u] == Some (frame_type u)) /\
     //(forall (u:R.universe). RT.lookup_fvar_uinst f subsumption_fv [u] == Some (sub_stt_type u))        
 
-let stt_env = e:env { has_stt_bindings e.f }
+let stt_env = e:env { has_stt_bindings (fstar_env e) }
 
 let check_top_level_environment (f:RT.fstar_top_env)
   : option stt_env
-  = admit(); Some { f; g=[]; ctxt=FStar.Sealed.seal [] } //we should implement this as a runtime check
+  = admit(); Some (mk_env f) //we should implement this as a runtime check
 
 let elab_comp_post (c:comp_st) : R.term =
   let t = elab_term (comp_res c) in

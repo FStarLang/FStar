@@ -413,12 +413,12 @@ let rec (mk_bind :
                                                                     c2))),
                                                                     d_e1, (),
                                                                     (Pulse_Typing.T_Lift
-                                                                    ((Pulse_Typing.extend
+                                                                    ((Pulse_Typing_Env.push_binding
+                                                                    g
                                                                     (FStar_Pervasives_Native.snd
                                                                     px)
-                                                                    (FStar_Pervasives.Inl
                                                                     (Pulse_Syntax_Base.comp_res
-                                                                    c1)) g),
+                                                                    c1)),
                                                                     (Pulse_Syntax_Naming.open_st_term_nv
                                                                     e2 px),
                                                                     c2,
@@ -427,13 +427,12 @@ let rec (mk_bind :
                                                                     c2)),
                                                                     d_e2,
                                                                     (Pulse_Typing.Lift_STAtomic_ST
-                                                                    ((Pulse_Typing.extend
+                                                                    ((Pulse_Typing_Env.push_binding
+                                                                    g
                                                                     (FStar_Pervasives_Native.snd
                                                                     px)
-                                                                    (FStar_Pervasives.Inl
                                                                     (Pulse_Syntax_Base.comp_res
-                                                                    c1)) g),
-                                                                    c2)))),
+                                                                    c1)), c2)))),
                                                                     (Pulse_Typing.Bind_comp
                                                                     (g, x,
                                                                     c1,
@@ -578,11 +577,10 @@ let rec (mk_bind :
                                                                   (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
+                                                                    Pulse_Typing_Env.push_binding
+                                                                    g x
                                                                     (Pulse_Syntax_Base.comp_res
-                                                                    c1)) g))
+                                                                    c1)))
                                                                   (fun uu___4
                                                                     ->
                                                                     (fun g'
@@ -655,12 +653,12 @@ let rec (mk_bind :
                                                                     (fun
                                                                     uu___4 ->
                                                                     Pulse_Typing.T_Lift
-                                                                    ((Pulse_Typing.extend
+                                                                    ((Pulse_Typing_Env.push_binding
+                                                                    g
                                                                     (FStar_Pervasives_Native.snd
                                                                     px)
-                                                                    (FStar_Pervasives.Inl
                                                                     (Pulse_Syntax_Base.comp_res
-                                                                    c1)) g),
+                                                                    c1)),
                                                                     (Pulse_Syntax_Naming.open_st_term_nv
                                                                     e2 px),
                                                                     c2,
@@ -957,11 +955,9 @@ let (bind_res_and_post_typing :
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_vprop_with_core
-                                                                    (Pulse_Typing.extend
-                                                                    y
-                                                                    (FStar_Pervasives.Inl
-                                                                    (s2.Pulse_Syntax_Base.res))
-                                                                    g)
+                                                                    (Pulse_Typing_Env.push_binding
+                                                                    g y
+                                                                    s2.Pulse_Syntax_Base.res)
                                                                     s2_post_opened))
                                                                     (fun
                                                                     post_typing
@@ -1367,11 +1363,9 @@ let (check_bind :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
-                                                                    (s1.Pulse_Syntax_Base.res))
-                                                                    g))
+                                                                    Pulse_Typing_Env.push_binding
+                                                                    g x
+                                                                    s1.Pulse_Syntax_Base.res))
                                                                     (fun
                                                                     uu___5 ->
                                                                     (fun g'
@@ -1581,7 +1575,7 @@ let (check_tot_bind :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Typing.fresh
+                                                                    Pulse_Typing_Env.fresh
                                                                     g))
                                                                     (fun
                                                                     uu___3 ->
@@ -1626,10 +1620,8 @@ let (check_tot_bind :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
-                                                                    t11) g))
+                                                                    Pulse_Typing_Env.push_binding
+                                                                    g x t11))
                                                                     (fun
                                                                     uu___3 ->
                                                                     (fun g'

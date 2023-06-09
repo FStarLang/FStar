@@ -109,7 +109,7 @@ let (check_abs :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Typing.fresh
+                                                                    Pulse_Typing_Env.fresh
                                                                     g))
                                                                     (fun
                                                                     uu___5 ->
@@ -154,10 +154,8 @@ let (check_abs :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
-                                                                    t2) g))
+                                                                    Pulse_Typing_Env.push_binding
+                                                                    g x t2))
                                                                     (fun
                                                                     uu___5 ->
                                                                     (fun g'

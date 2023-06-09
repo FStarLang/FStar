@@ -19,7 +19,7 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
     match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->
-      if RU.debug_at_level g "Pulse"
+      if RU.debug_at_level (fstar_env g) "Pulse"
       then (
         T.print (Printf.sprintf "About to check pulse term:\n%s\n" (P.st_term_to_string t))
       );

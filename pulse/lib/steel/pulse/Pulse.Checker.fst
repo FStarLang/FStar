@@ -137,7 +137,7 @@ let maybe_infer_intro_exists
     (* Weird: defining prepare_instantiations here causes extraction to crash with
        Failure("This should not happen (should have been handled at Tm_abs level)")
      *)
-    if RU.debug_at_level g "inference"
+    if RU.debug_at_level (fstar_env g) "inference"
     then (      
       T.print (Printf.sprintf "At %s: infer_intro_exists for %s\n"
                   (T.range_to_string st.range)
@@ -164,7 +164,7 @@ let maybe_infer_intro_exists
       | _ -> solutions
     in
     let solutions = T.fold_left maybe_solve_pure solutions pure_conjuncts in
-    if RU.debug_at_level g "inference"
+    if RU.debug_at_level (fstar_env g) "inference"
     then (      
       T.print
         (Printf.sprintf
@@ -220,7 +220,7 @@ let maybe_infer_intro_exists
        pure_conjuncts
     in
     let result = List.Tot.fold_left (add_intro_pure intro_exists_chain.range) intro_exists_chain pure_conjuncts in
-    if RU.debug_at_level g "inference"
+    if RU.debug_at_level (fstar_env g) "inference"
     then (      
       T.print (Printf.sprintf "Inferred pure and exists:{\n\t %s\n\t}"
                 (P.st_term_to_string result))
@@ -238,7 +238,7 @@ let handle_framing_failure
     (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
   = let wr t = { term = t; range = t0.range } in
-    if RU.debug_at_level g "inference"
+    if RU.debug_at_level (fstar_env g) "inference"
     then (      
       T.print (Printf.sprintf
                       "Handling framing failure in term:\n%s\n\
@@ -312,7 +312,7 @@ let elim_then_check (#g:env) (#ctxt:term)
   : T.Tac (checker_result_t g ctxt post_hint)
   = let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
     let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimPure.elim_pure ctxt'_typing in
-    if RU.debug_at_level g "inference"
+    if RU.debug_at_level (fstar_env g) "inference"
     then ( T.print (Printf.sprintf "Eliminated context from\n\t%s\n\tto %s\n"
                 (P.term_to_string ctxt)
                 (P.term_to_string ctxt'') )) ;
@@ -338,7 +338,7 @@ let rec check' : bool -> check_t =
   if not (Tm_Protect? t.term)
   then elim_then_check pre_typing t post_hint (check' allow_inst)
   else begin
-    if RU.debug_at_level g "proof_states"
+    if RU.debug_at_level (fstar_env g) "proof_states"
     then (
       T.print (Printf.sprintf "At %s: context is {\n%s\n}"
                             (T.range_to_string t.range)

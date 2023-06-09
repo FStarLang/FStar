@@ -5,7 +5,8 @@ let (admit_st_comp_typing :
     Pulse_Syntax_Base.st_comp -> (unit, unit) Pulse_Typing.st_comp_typing)
   =
   fun g ->
-    fun st -> Pulse_Typing.STC (g, st, (Pulse_Typing.fresh g), (), (), ())
+    fun st ->
+      Pulse_Typing.STC (g, st, (Pulse_Typing_Env.fresh g), (), (), ())
 let (admit_comp_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st -> (unit, unit) comp_typing_u)

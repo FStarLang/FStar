@@ -90,6 +90,7 @@ let uu___is_Tm_FStar uu___ =
 let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
 type vprop = term
+type typ = term
 type st_comp = {
   u: universe ;
   res: term ;

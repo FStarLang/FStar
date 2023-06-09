@@ -24,10 +24,10 @@ let check_return
   let (| t, u, ty, uty, d |) = check_term_and_type g t in
   let x = fresh g in
   let px = v_as_nv x in
-  let (| post_opened, post_typing |) : t:term & tot_typing (extend x (Inl ty) g)  t Tm_VProp =
+  let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x ty)  t Tm_VProp =
       match post_hint with
       | None -> 
-        let (| t, ty |) = check_term_with_expected_type (extend x (Inl ty) g) Tm_Emp Tm_VProp in
+        let (| t, ty |) = check_term_with_expected_type (push_binding g x ty) Tm_Emp Tm_VProp in
         (| t, E ty |)
         
       | Some post ->

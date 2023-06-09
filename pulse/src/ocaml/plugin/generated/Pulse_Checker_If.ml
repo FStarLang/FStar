@@ -399,7 +399,7 @@ let (check_if :
                                                  (Prims.of_int (78)))
                                               (FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___1 ->
-                                                    Pulse_Typing.fresh g))
+                                                    Pulse_Typing_Env.fresh g))
                                               (fun uu___1 ->
                                                  (fun hyp ->
                                                     Obj.magic
@@ -419,14 +419,12 @@ let (check_if :
                                                          (FStar_Tactics_Effect.lift_div_tac
                                                             (fun uu___1 ->
                                                                fun eq_v ->
-                                                                 Pulse_Typing.extend
-                                                                   hyp
-                                                                   (FStar_Pervasives.Inl
-                                                                    (Pulse_Typing.mk_eq2
+                                                                 Pulse_Typing_Env.push_binding
+                                                                   g hyp
+                                                                   (Pulse_Typing.mk_eq2
                                                                     Pulse_Syntax_Pure.u0
                                                                     Pulse_Typing.tm_bool
-                                                                    b1 eq_v))
-                                                                   g))
+                                                                    b1 eq_v)))
                                                          (fun uu___1 ->
                                                             (fun g_with_eq ->
                                                                Obj.magic
@@ -683,7 +681,7 @@ let (check_if :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Typing.fresh
+                                                                    Pulse_Typing_Env.fresh
                                                                     g))
                                                                     (fun
                                                                     uu___4 ->

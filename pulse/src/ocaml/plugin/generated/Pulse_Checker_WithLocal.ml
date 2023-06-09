@@ -151,7 +151,7 @@ let (check_withlocal :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    Pulse_Typing.fresh
+                                                                    Pulse_Typing_Env.fresh
                                                                     g1))
                                                                     (fun
                                                                     uu___2 ->
@@ -231,12 +231,10 @@ let (check_withlocal :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
+                                                                    Pulse_Typing_Env.push_binding
+                                                                    g1 x
                                                                     (Pulse_Typing.mk_ref
-                                                                    init_t))
-                                                                    g1))
+                                                                    init_t)))
                                                                     (fun
                                                                     uu___3 ->
                                                                     (fun

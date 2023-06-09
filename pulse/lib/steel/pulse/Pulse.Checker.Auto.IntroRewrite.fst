@@ -15,6 +15,6 @@ open Pulse.Typing
 
 module Metatheory = Pulse.Typing.Metatheory
 
-let intro_rewrite =
-  fun #g p ->
-  None
+// let intro_rewrite =
+//   fun #g p ->
+//   None

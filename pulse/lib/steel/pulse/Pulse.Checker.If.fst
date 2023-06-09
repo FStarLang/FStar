@@ -86,7 +86,7 @@ let check_if (g:env)
     let post = post_hint.post in
     let hyp = fresh g in
     let g_with_eq (eq_v:term) =
-        extend hyp (Inl (mk_eq2 u0 tm_bool b eq_v)) g
+        push_binding g hyp (mk_eq2 u0 tm_bool b eq_v)
     in
     let check_branch (eq_v:term) (br:st_term)
       : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
@@ -95,7 +95,7 @@ let check_if (g:env)
       = let g_with_eq = g_with_eq eq_v in
         let pre_typing = 
             Metatheory.tot_typing_weakening hyp 
-                                            (Inl (mk_eq2 u0 tm_bool b eq_v))
+                                            (mk_eq2 u0 tm_bool b eq_v)
                                             pre_typing
         in
         let (| br, c, br_typing |) =

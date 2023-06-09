@@ -22,25 +22,25 @@ val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
      tot_typing g st.pre Tm_VProp &
      (x:var{fresh_wrt x g (freevars st.post)} -> //this part is tricky, to get the quantification on x
-       tot_typing (extend x (Inl st.res) g) (open_term st.post x) Tm_VProp))
+       tot_typing (push_binding g x st.res) (open_term st.post x) Tm_VProp))
 
 val st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
      tot_typing g st.pre Tm_VProp &
      x:var{fresh_wrt x g (freevars st.post)} &
-     tot_typing (extend x (Inl st.res) g) (open_term st.post x) Tm_VProp)
+     tot_typing (push_binding g x st.res) (open_term st.post x) Tm_VProp)
 
 val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
                         (_:tot_typing g (Tm_ExistsSL u (as_binder ty) p) Tm_VProp)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
-    tot_typing (extend x (Inl ty) g) p Tm_VProp
+    tot_typing (push_binding g x ty) p Tm_VProp
 
 val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
                          (x:var { fresh_wrt x g Set.empty })
-                         (b:binding)
+                         (x_t:typ)
                          (_:tot_typing g t ty)
-   : tot_typing (extend x b g) t ty
+   : tot_typing (push_binding g x x_t) t ty
 
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
    : tot_typing g p (Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0)
@@ -61,7 +61,7 @@ let comp_st_with_pre (c:comp_st) (pre:term) : comp_st =
 
 let vprop_equiv_x g t p1 p2 =
   x:var { fresh_wrt x g (freevars p1) } ->
-  vprop_equiv (extend x (Inl t) g) 
+  vprop_equiv (push_binding g x t)
               (open_term p1 x)
               (open_term p2 x)
 

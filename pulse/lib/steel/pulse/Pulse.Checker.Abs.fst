@@ -28,7 +28,7 @@ let check_abs
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let px = ppname, x in
-    let g' = extend x (Inl t) g in
+    let g' = push_binding g x t in
     let pre_opened = 
       match pre_hint with
       | None -> T.fail "Cannot typecheck an function without a precondition"

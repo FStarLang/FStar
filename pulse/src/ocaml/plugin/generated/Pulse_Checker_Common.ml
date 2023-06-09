@@ -43,7 +43,6 @@ let (__proj__Mkpost_hint_t__item__post :
   fun projectee ->
     match projectee with
     | { g; ret_ty; u; ty_typing; post; post_typing;_} -> post
-type ('gu, 'g) env_extends = unit
 type ('g, 'p) post_hint_for_env_p = unit
 type 'g post_hint_for_env = post_hint_t
 type 'g post_hint_opt = post_hint_t FStar_Pervasives_Native.option
@@ -75,7 +74,7 @@ let (intro_post_hint :
              (Prims.of_int (20)) (Prims.of_int (20)) (Prims.of_int (33))
              (Prims.of_int (109)))
           (FStar_Tactics_Effect.lift_div_tac
-             (fun uu___ -> Pulse_Typing.fresh g))
+             (fun uu___ -> Pulse_Typing_Env.fresh g))
           (fun uu___ ->
              (fun x ->
                 Obj.magic
@@ -152,11 +151,9 @@ let (intro_post_hint :
                                                               (Obj.magic
                                                                  (Pulse_Checker_Pure.check_vprop
                                                                     (
-                                                                    Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
+                                                                    Pulse_Typing_Env.push_binding
+                                                                    g x
                                                                     ret_ty1)
-                                                                    g)
                                                                     (
                                                                     Pulse_Syntax_Naming.open_term_nv
                                                                     post
@@ -260,8 +257,8 @@ let (try_frame_pre :
                               (Prims.of_int (64)) (Prims.of_int (4))
                               (Prims.of_int (66)) (Prims.of_int (48)))
                            (if
-                              Pulse_RuntimeUtils.debug_at_level g1
-                                "try_frame"
+                              Pulse_RuntimeUtils.debug_at_level
+                                (Pulse_Typing_Env.fstar_env g1) "try_frame"
                             then
                               Obj.magic
                                 (Obj.repr
@@ -625,10 +622,9 @@ let (replace_equiv_post :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
-                                                                    res_c) g1))
+                                                                    Pulse_Typing_Env.push_binding
+                                                                    g1 x
+                                                                    res_c))
                                                                     (fun
                                                                     uu___2 ->
                                                                     (fun

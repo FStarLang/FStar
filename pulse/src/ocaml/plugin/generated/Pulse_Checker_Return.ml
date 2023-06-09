@@ -83,7 +83,7 @@ let (check_return :
                                                             (Prims.of_int (68)))
                                                          (FStar_Tactics_Effect.lift_div_tac
                                                             (fun uu___2 ->
-                                                               Pulse_Typing.fresh
+                                                               Pulse_Typing_Env.fresh
                                                                  g1))
                                                          (fun uu___2 ->
                                                             (fun x ->
@@ -149,10 +149,8 @@ let (check_return :
                                                                     (Prims.of_int (21)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_term_with_expected_type
-                                                                    (Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
-                                                                    ty) g1)
+                                                                    (Pulse_Typing_Env.push_binding
+                                                                    g1 x ty)
                                                                     Pulse_Syntax_Base.Tm_Emp
                                                                     Pulse_Syntax_Base.Tm_VProp))
                                                                     (fun

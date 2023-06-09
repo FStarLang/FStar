@@ -58,7 +58,7 @@ let (check_comp :
                                            (Prims.of_int (11)))
                                         (FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___3 ->
-                                              Pulse_Typing.fresh g))
+                                              Pulse_Typing_Env.fresh g))
                                         (fun uu___3 ->
                                            (fun x ->
                                               Obj.magic
@@ -98,11 +98,9 @@ let (check_comp :
                                                               (FStar_Tactics_Effect.lift_div_tac
                                                                  (fun uu___3
                                                                     ->
-                                                                    Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
-                                                                    (st.Pulse_Syntax_Base.res))
-                                                                    g))
+                                                                    Pulse_Typing_Env.push_binding
+                                                                    g x
+                                                                    st.Pulse_Syntax_Base.res))
                                                               (fun uu___3 ->
                                                                  (fun gx ->
                                                                     Obj.magic

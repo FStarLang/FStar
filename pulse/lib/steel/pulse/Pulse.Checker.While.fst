@@ -39,7 +39,7 @@ let check_while
   let (| ex_inv, inv_typing |) =
     check_vprop (push_context "invariant" g) (Tm_ExistsSL u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv)
   in
-  if RU.debug_at_level g "inference"
+  if RU.debug_at_level (fstar_env g) "inference"
   then (
     T.print (Printf.sprintf "Checking precondition of while loop: %s\n" (P.term_to_string ex_inv))
   );

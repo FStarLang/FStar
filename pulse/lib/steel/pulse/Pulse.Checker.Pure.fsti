@@ -12,7 +12,7 @@ module RTB = FStar.Tactics.Builtins
 module RU = Pulse.RuntimeUtils
 
 let push_context (ctx:string) (g:env) : (g':env { g == g' })
-  = {g with ctxt = RU.extend_context ctx g.ctxt}
+  = push_context g ctx
 
 val print_context (g:env) : T.Tac string
 

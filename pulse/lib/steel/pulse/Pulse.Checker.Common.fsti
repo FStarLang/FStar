@@ -25,20 +25,20 @@ type post_hint_t = {
 
 let post_hint_for_env_p (g:env) (p:post_hint_t) = g `env_extends` p.g
 
-let post_hint_for_env_extends (g:env) (p:post_hint_t) (x:var) (b:binding)
+let post_hint_for_env_extends (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) (b:typ)
   : Lemma
     (requires post_hint_for_env_p g p)
-    (ensures post_hint_for_env_p (extend x b g) p)
-    [SMTPat (post_hint_for_env_p (extend x b g) p)]
-  = env_extends_one_trans g p.g x b
+    (ensures post_hint_for_env_p (push_binding g x b) p)
+    [SMTPat (post_hint_for_env_p (push_binding g x b) p)]
+  = env_extends_push g x b
   
 let post_hint_for_env (g:env) = p:post_hint_t { post_hint_for_env_p g p }
 let post_hint_opt (g:env) = o:option post_hint_t { None? o \/ post_hint_for_env_p g (Some?.v o) }
 
 noeq
-type post_hint_typing_t (g:env) (p:post_hint_t) (x:var) = {
+type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) = {
   ty_typing:universe_of g p.ret_ty p.u;
-  post_typing:tot_typing (extend x (Inl p.ret_ty) g) (open_term p.post x) Tm_VProp
+  post_typing:tot_typing (push_binding g x p.ret_ty) (open_term p.post x) Tm_VProp
 }
 
 val post_hint_typing (g:env)
@@ -94,5 +94,5 @@ val intro_comp_typing (g:env)
                       (pre_typing:tot_typing g (comp_pre c) Tm_VProp)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
                       (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:tot_typing (extend x (Inl (comp_res c)) g) (open_term (comp_post c) x) Tm_VProp)
+                      (post_typing:tot_typing (push_binding g x (comp_res c)) (open_term (comp_post c) x) Tm_VProp)
   : T.Tac (comp_typing g c (comp_u c))

@@ -270,7 +270,7 @@ let (check_elim_exists :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Typing.fresh
+                                                                    Pulse_Typing_Env.fresh
                                                                     g))
                                                                     (fun
                                                                     uu___4 ->
@@ -527,7 +527,7 @@ let (check_intro_exists_erased :
                                                               g u
                                                               b.Pulse_Syntax_Base.binder_ty
                                                               p ()
-                                                              (Pulse_Typing.fresh
+                                                              (Pulse_Typing_Env.fresh
                                                                  g)))
                                                       (fun uu___3 ->
                                                          (fun uu___3 ->
@@ -794,7 +794,7 @@ let (check_intro_exists :
                                                               g u
                                                               b.Pulse_Syntax_Base.binder_ty
                                                               p ()
-                                                              (Pulse_Typing.fresh
+                                                              (Pulse_Typing_Env.fresh
                                                                  g)))
                                                       (fun uu___3 ->
                                                          (fun uu___3 ->

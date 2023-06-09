@@ -18,11 +18,11 @@ let ctx_to_string c =
     | _ -> Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" c)
 
 let print_context (g:env) = 
-  ctx_to_string (T.unseal g.ctxt)
+  ctx_to_string (T.unseal (get_context g))
 
 let debug (g:env) (msg: unit -> T.Tac string) =
   let tac_debugging = T.debugging () in
-  if tac_debugging || RU.debug_at_level g "refl_tc_callbacks"
+  if tac_debugging || RU.debug_at_level (fstar_env g) "refl_tc_callbacks"
   then T.print (print_context g ^ "\n" ^ msg())
 
 let rtb_core_check_term g f e =
@@ -99,7 +99,7 @@ let print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string =
        (range_opt_to_string (range_of_issue i))
        (level_of_issue i)
        (message_of_issue i)
-       (ctx_to_string (T.unseal g.ctxt @ (context_of_issue i)))
+       (ctx_to_string (T.unseal (get_context g) @ (context_of_issue i)))
 
 let print_issues (g:env)
                  (i:list FStar.Issue.issue)
@@ -212,7 +212,7 @@ let check_term_with_expected_type (g:env) (e:term) (t:term)
   let re = elab_term e in
   let rt = elab_term t in
 
-  let topt, issues = catch_all (fun _ -> rtb_core_check_term_at_type (push_context "check_term_with_expected_type" g) fg re rt) in
+  let topt, issues = catch_all (fun _ -> rtb_core_check_term_at_type (push_context g "check_term_with_expected_type") fg re rt) in
   match topt with
   | None -> T.fail (Printf.sprintf "check_tot_with_expected_typ: %s not typeable at %s\n%s\n" 
                       (Pulse.Syntax.Printer.term_to_string e)
@@ -222,7 +222,7 @@ let check_term_with_expected_type (g:env) (e:term) (t:term)
 
 let tc_with_core g (f:R.env) (e:R.term) 
   : T.Tac (option (t:R.term & RT.tot_typing f e t) & issues)
-  = let ropt, issues = catch_all (fun _ -> rtb_core_check_term (push_context "tc_with_core" g) f e) in
+  = let ropt, issues = catch_all (fun _ -> rtb_core_check_term (push_context g "tc_with_core") f e) in
     match ropt with
     | None -> None, issues
     | Some (t) ->
@@ -233,7 +233,7 @@ let core_check_term (g:env) (t:term)
            typing g t ty)
   = let fg = elab_env g in
     let rt = elab_term t in
-    match tc_with_core (push_context "core_check_term" g) fg rt with
+    match tc_with_core (push_context g "core_check_term") fg rt with
     | None, issues -> 
         T.fail 
           (Printf.sprintf "check_tot: %s elaborated to %s Not typeable\n%s\n"
@@ -252,7 +252,7 @@ let core_check_term_with_expected_type g e t =
   let fg = elab_env g in
   let re = elab_term e in
   let rt = elab_term t in
-  let topt, issues = catch_all (fun _ -> rtb_core_check_term_at_type (push_context "core_check_term_with_expected_type" g) fg re rt) in
+  let topt, issues = catch_all (fun _ -> rtb_core_check_term_at_type (push_context g "core_check_term_with_expected_type") fg re rt) in
   match topt with
   | None -> T.fail (Printf.sprintf "core_check_term_with_expected_typ: %s not typeable at %s\n%s\n" 
                       (Pulse.Syntax.Printer.term_to_string e)
@@ -264,7 +264,7 @@ let check_vprop (g:env)
                 (t:term)
   : T.Tac (t:term & tot_typing g t Tm_VProp) =
 
-  let (| t, t_typing |) = check_term_with_expected_type (push_context "check_vprop" g) t Tm_VProp in
+  let (| t, t_typing |) = check_term_with_expected_type (push_context g "check_vprop") t Tm_VProp in
   (| t, E t_typing |)
 
 
@@ -272,7 +272,7 @@ let check_vprop_with_core (g:env)
                           (t:term)
   : T.Tac (tot_typing g t Tm_VProp) =
 
-  let t_typing = core_check_term_with_expected_type (push_context "check_vprop_with_core" g) t Tm_VProp in
+  let t_typing = core_check_term_with_expected_type (push_context g "check_vprop_with_core") t Tm_VProp in
   E t_typing
   
 let get_non_informative_witness g u t
@@ -303,7 +303,7 @@ let get_non_informative_witness g u t
     match eopt with
     | None -> err ()
     | Some e ->
-      let (| x, y |) = check_term_with_expected_type (push_context "get_noninformative_witness" g) e (non_informative_witness_t u t) in
+      let (| x, y |) = check_term_with_expected_type (push_context g "get_noninformative_witness") e (non_informative_witness_t u t) in
       (|x, E y|)
 
 let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)

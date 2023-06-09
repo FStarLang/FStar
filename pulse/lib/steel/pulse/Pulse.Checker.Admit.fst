@@ -34,7 +34,7 @@ let check_admit
        u:universe &
        universe_of g t u &
        post:vprop { post_hint_compatible post_hint x t u post } &
-       tot_typing (extend x (Inl t) g) post Tm_VProp)
+       tot_typing (push_binding g x t) post Tm_VProp)
     = match post, post_hint with
       | None, None
       | Some _, Some _ ->
@@ -44,7 +44,7 @@ let check_admit
         let (| u, t_typing |) = check_universe g t in    
         let post_opened = open_term_nv post px in      
         let (| post, post_typing |) = 
-            check_term_with_expected_type (extend x (Inl t) g) post_opened Tm_VProp
+            check_term_with_expected_type (push_binding g x t) post_opened Tm_VProp
         in
         (| t, u, t_typing, post, E post_typing |)
 

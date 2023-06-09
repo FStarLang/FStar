@@ -293,7 +293,7 @@ let (check_par :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Typing.fresh
+                                                                    Pulse_Typing_Env.fresh
                                                                     g1))
                                                                     (fun
                                                                     uu___5 ->

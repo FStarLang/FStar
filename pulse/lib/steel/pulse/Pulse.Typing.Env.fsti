@@ -12,10 +12,13 @@ val env : Type0
 
 val fstar_env (g:env) : RT.fstar_top_env
 
+type binding = var & typ
+type env_bindings = list binding
+
 //
 // most recent binding at the head of the list
 //
-val bindings (g:env) : list (var & typ)
+val bindings (g:env) : env_bindings
 
 val as_map (g:env) : Map.t var typ
 
@@ -78,3 +81,7 @@ val extends_with_push (g1 g2 g3:env)
   (x:var { ~ (Set.mem x (dom g1)) }) (t:typ)
   : Lemma (requires extends_with g1 g2 g3)
           (ensures extends_with (push_binding g1 x t) g2 (push_binding g3 x t))
+
+val push_context (g:env) (ctx:string) : g':env { g' == g }
+
+val get_context (g:env) : Pulse.RuntimeUtils.context

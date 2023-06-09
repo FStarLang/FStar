@@ -314,10 +314,10 @@ let freevars_open_st_term_inv (e:st_term)
 
 let vars_of_env_extend (g:env) (x:var) (t:term)
   : Lemma (requires True)
-          (ensures vars_of_env (extend x (Inl t) g) ==
+          (ensures vars_of_env (push_binding g x t) ==
                    vars_of_env g `Set.union` (Set.singleton x))
-          [SMTPat [vars_of_env (extend x (Inl t) g)]] =
-  assert (Set.equal (vars_of_env (extend x (Inl t) g))
+          [SMTPat [vars_of_env (push_binding g x t)]] =
+  assert (Set.equal (vars_of_env (push_binding g x t))
                     (vars_of_env g `Set.union` (Set.singleton x)))
 
 let freevars_tm_arrow (b:binder) (q:option qualifier) (c:comp)

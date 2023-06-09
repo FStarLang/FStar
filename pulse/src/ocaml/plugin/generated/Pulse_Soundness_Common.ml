@@ -1,13 +1,13 @@
 open Prims
 type ln_comp = Pulse_Syntax_Base.comp_st
-let (elab_binding_opt :
-  Pulse_Typing_Env.binding FStar_Pervasives_Native.option ->
+let (elab_term_opt :
+  Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
     FStar_Reflection_Types.term FStar_Pervasives_Native.option)
   =
   fun b ->
     match b with
     | FStar_Pervasives_Native.Some b1 ->
-        FStar_Pervasives_Native.Some (Pulse_Typing.elab_binding b1)
+        FStar_Pervasives_Native.Some (Pulse_Elaborate_Pure.elab_term b1)
     | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (bind_res :
   FStar_Reflection_Types.universe ->
@@ -431,14 +431,7 @@ type stt_env = Pulse_Typing_Env.env
 let (check_top_level_environment :
   FStar_Reflection_Typing.fstar_top_env ->
     stt_env FStar_Pervasives_Native.option)
-  =
-  fun f ->
-    FStar_Pervasives_Native.Some
-      {
-        Pulse_Typing_Env.f = f;
-        Pulse_Typing_Env.g = [];
-        Pulse_Typing_Env.ctxt = (FStar_Sealed.seal [])
-      }
+  = fun f -> FStar_Pervasives_Native.Some (Pulse_Typing_Env.mk_env f)
 let (elab_comp_post :
   Pulse_Syntax_Base.comp_st -> FStar_Reflection_Types.term) =
   fun c ->

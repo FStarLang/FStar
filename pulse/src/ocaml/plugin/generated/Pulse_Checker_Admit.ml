@@ -41,7 +41,7 @@ let (check_admit :
                                 (Prims.of_int (30)) (Prims.of_int (20))
                                 (Prims.of_int (71)) (Prims.of_int (4)))
                              (FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___2 -> Pulse_Typing.fresh g))
+                                (fun uu___2 -> Pulse_Typing_Env.fresh g))
                              (fun uu___2 ->
                                 (fun x ->
                                    Obj.magic
@@ -165,10 +165,8 @@ let (check_admit :
                                                                     (Prims.of_int (49)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_term_with_expected_type
-                                                                    (Pulse_Typing.extend
-                                                                    x
-                                                                    (FStar_Pervasives.Inl
-                                                                    t1) g)
+                                                                    (Pulse_Typing_Env.push_binding
+                                                                    g x t1)
                                                                     post_opened
                                                                     Pulse_Syntax_Base.Tm_VProp))
                                                                     (fun

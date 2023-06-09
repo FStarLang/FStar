@@ -8,6 +8,7 @@ open Pulse.Syntax
 module L = FStar.List.Tot
 module FTB = FStar.Tactics
 include Pulse.Typing.Env
+
 // let fstar_env =
 //   g:R.env { 
 //     RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
@@ -92,94 +93,94 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
 // It is always setting universe to 0
 // But we are also not using it currently
 //
-let elab_eqn (e:eqn)
-  : R.term
-  = let ty, l, r = e in
-    let ty = elab_term ty in
-    let l = elab_term l in
-    let r = elab_term r in
-    RT.eq2 (R.pack_universe R.Uv_Zero) ty l r
+// let elab_eqn (e:eqn)
+//   : R.term
+//   = let ty, l, r = e in
+//     let ty = elab_term ty in
+//     let l = elab_term l in
+//     let r = elab_term r in
+//     RT.eq2 (R.pack_universe R.Uv_Zero) ty l r
 
-let elab_binding (b:binding)
-  : R.term 
-  = match b with
-    | Inl t -> elab_term t
-    | Inr eqn -> elab_eqn eqn
+// let elab_binding (b:binding)
+//   : R.term 
+//   = match b with
+//     | Inl t -> elab_term t
+//     | Inr eqn -> elab_eqn eqn
 
 module L = FStar.List.Tot
 let extend_env_l (f:R.env) (g:env_bindings) : R.env = 
   L.fold_right 
     (fun (x, b) g ->  
-      let t = elab_binding b in
+      let t = elab_term b in
       RT.extend_env g x t)
      g
      f
-let elab_env (e:env) : R.env = extend_env_l e.f e.g
+let elab_env (e:env) : R.env = extend_env_l (fstar_env e) (bindings e)
 
-let rec lookup_binding (e:list (var & 'a)) (x:var)
-  : option 'a
-  = match e with
-    | [] -> None
-    | (y, v) :: tl -> if x = y then Some v else lookup_binding tl x
+// let rec lookup_binding (e:list (var & 'a)) (x:var)
+//   : option 'a
+//   = match e with
+//     | [] -> None
+//     | (y, v) :: tl -> if x = y then Some v else lookup_binding tl x
 
-let lookup (e:env) (x:var)
-  : option binding
-  = lookup_binding e.g x
+// let lookup (e:env) (x:var)
+//   : option binding
+//   = lookup_binding e.g x
 
-let lookup_ty (e:env) (x:var)
-  : option term
-  = match lookup e x with
-    | Some (Inl t) -> Some t
-    | _ -> None
+// let lookup_ty (e:env) (x:var)
+//   : option term
+//   = match lookup e x with
+//     | Some (Inl t) -> Some t
+//     | _ -> None
 
-let extend (x:var) (b:binding) (e:env) : env =
-  { e with g = (x, b) :: e.g }
+// let extend (x:var) (b:binding) (e:env) : env =
+//   { e with g = (x, b) :: e.g }
 
-let max (n1 n2:nat) = if n1 < n2 then n2 else n1
+// let max (n1 n2:nat) = if n1 < n2 then n2 else n1
 
-let rec fresh_wrt_bindings (e:list (var & 'a))
-  : var
-  = match e with
-    | [] -> 0
-    | (y, _) :: tl ->  max (fresh_wrt_bindings tl) y + 1
-    | _ :: tl -> fresh_wrt_bindings tl
+// let rec fresh_wrt_bindings (e:list (var & 'a))
+//   : var
+//   = match e with
+//     | [] -> 0
+//     | (y, _) :: tl ->  max (fresh_wrt_bindings tl) y + 1
+//     | _ :: tl -> fresh_wrt_bindings tl
 
-let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
-  : Lemma (ensures L.memP elt e ==> fresh_wrt_bindings e > fst elt)
-  = match e with
-    | [] -> ()
-    | hd :: tl -> fresh_not_mem tl elt
+// let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
+//   : Lemma (ensures L.memP elt e ==> fresh_wrt_bindings e > fst elt)
+//   = match e with
+//     | [] -> ()
+//     | hd :: tl -> fresh_not_mem tl elt
   
-let rec lookup_mem (e:list (var & 'a)) (x:var)
-  : Lemma
-    (requires Some? (lookup_binding e x))
-    (ensures exists elt. L.memP elt e /\ fst elt == x)
-  = match e with
-    | [] -> ()
-    | hd :: tl -> 
-      match lookup_binding tl x with
-      | None -> assert (L.memP hd e)
-      | _ -> 
-        lookup_mem tl x;
-        eliminate exists elt. L.memP elt tl /\ fst elt == x
-        returns _
-        with _ . ( 
-          introduce exists elt. L.memP elt e /\ fst elt == x
-          with elt
-          and ()
-        )
-let fresh (e:env)
-  : var
-  = fresh_wrt_bindings e.g
+// let rec lookup_mem (e:list (var & 'a)) (x:var)
+//   : Lemma
+//     (requires Some? (lookup_binding e x))
+//     (ensures exists elt. L.memP elt e /\ fst elt == x)
+//   = match e with
+//     | [] -> ()
+//     | hd :: tl -> 
+//       match lookup_binding tl x with
+//       | None -> assert (L.memP hd e)
+//       | _ -> 
+//         lookup_mem tl x;
+//         eliminate exists elt. L.memP elt tl /\ fst elt == x
+//         returns _
+//         with _ . ( 
+//           introduce exists elt. L.memP elt e /\ fst elt == x
+//           with elt
+//           and ()
+//         )
+// let fresh (e:env)
+//   : var
+//   = fresh_wrt_bindings e.g
 
-let fresh_is_fresh (e:env)
-  : Lemma (None? (lookup e (fresh e)))
-          [SMTPat (lookup e (fresh e))]
-  =  match lookup e (fresh e) with
-     | None -> ()
-     | Some _ ->
-       lookup_mem e.g (fresh e);
-       FStar.Classical.forall_intro (fresh_not_mem e.g)
+// let fresh_is_fresh (e:env)
+//   : Lemma (None? (lookup e (fresh e)))
+//           [SMTPat (lookup e (fresh e))]
+//   =  match lookup e (fresh e) with
+//      | None -> ()
+//      | Some _ ->
+//        lookup_mem e.g (fresh e);
+//        FStar.Classical.forall_intro (fresh_not_mem e.g)
 
 [@@ erasable; no_auto_projectors]
 noeq
@@ -527,9 +528,9 @@ type st_equiv : env -> comp -> comp -> Type =
               ~(x `Set.mem` freevars (comp_post c2)) } ->
       tot_typing g (comp_pre c1) Tm_VProp ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) ->
-      tot_typing (extend x (Inl (comp_res c1)) g) (open_term (comp_post c1) x) Tm_VProp ->
+      tot_typing (push_binding g x (comp_res c1)) (open_term (comp_post c1) x) Tm_VProp ->
       vprop_equiv g (comp_pre c1) (comp_pre c2) ->
-      vprop_equiv (extend x (Inl (comp_res c1)) g) 
+      vprop_equiv (push_binding g x (comp_res c1))
                   (open_term (comp_post c1) x)
                   (open_term (comp_post c2) x) ->      
       st_equiv g c1 c2
@@ -545,7 +546,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->      
-      tot_typing (extend y (Inl (comp_res c2)) g) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
       bind_comp g x c1 c2 (bind_comp_out c1 c2)
 
   | Bind_comp_ghost_l :  // (C_STGhost and C_STAtomic)
@@ -557,7 +558,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
-      tot_typing (extend y (Inl (comp_res c2)) g) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
       bind_comp g x c1 c2 (bind_comp_ghost_l_out c1 c2)
 
   | Bind_comp_ghost_r :  // (C_STAtomic and C_STGhost)
@@ -569,7 +570,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
-      tot_typing (extend y (Inl (comp_res c2)) g) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
       bind_comp g x c1 c2 (bind_comp_ghost_r_out c1 c2)
 
 [@@ no_auto_projectors]
@@ -597,7 +598,7 @@ type st_comp_typing : env -> st_comp -> Type =
       x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars st.post) } ->
       universe_of g st.res st.u ->
       tot_typing g st.pre Tm_VProp ->
-      tot_typing (extend x (Inl st.res) g) (open_term st.post x) Tm_VProp ->
+      tot_typing (push_binding g x st.res) (open_term st.post x) Tm_VProp ->
       st_comp_typing g st
 
 [@@ no_auto_projectors]
@@ -647,7 +648,7 @@ type st_typing : env -> st_term -> comp -> Type =
       body:st_term {~ (x `Set.mem` freevars_st body) } ->
       c:comp ->
       tot_typing g b.binder_ty (tm_type u) ->
-      st_typing (extend x (Inl b.binder_ty) g) (open_st_term_nv body (b.binder_ppname, x)) c ->
+      st_typing (push_binding g x b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
       st_typing g (wr (Tm_Abs { b; q; pre=None; body; ret_ty=None; post=None }))
                   (C_Tot (tm_arrow b q (close_comp c x)))
   | T_STApp :
@@ -673,7 +674,7 @@ type st_typing : env -> st_term -> comp -> Type =
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars post) } ->
       universe_of g t u ->
       tot_typing g e t ->
-      tot_typing (extend x (Inl t) g) (open_term post x) Tm_VProp ->
+      tot_typing (push_binding g x t) (open_term post x) Tm_VProp ->
       st_typing g (wr (Tm_Return { ctag=c; insert_eq=use_eq; term=e }))
                   (comp_return c use_eq u t e post x)
 
@@ -697,7 +698,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp ->
       st_typing g e1 c1 ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
-      st_typing (extend x (Inl (comp_res c1)) g) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
+      st_typing (push_binding g x (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       bind_comp g x c1 c2 c ->
       st_typing g (wr (Tm_Bind { binder=b; head=e1; body=e2 })) c
 
@@ -709,7 +710,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c2:comp_st ->
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
       tot_typing g e1 t1 ->
-      st_typing (extend x (Inl t1) g) (open_st_term_nv e2 (v_as_nv x)) c2 ->
+      st_typing (push_binding g x t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
       st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
                     (open_comp_with (close_comp c2 x) e1)
 
@@ -729,8 +730,8 @@ type st_typing : env -> st_term -> comp -> Type =
                ~(hyp `Set.mem` (freevars_st e1 `Set.union` freevars_st e2))
               } ->
       tot_typing g b tm_bool ->
-      st_typing (extend hyp (Inl (mk_eq2 u0 tm_bool b tm_true)) g) e1 c ->
-      st_typing (extend hyp (Inl (mk_eq2 u0 tm_bool b tm_false)) g) e2 c ->
+      st_typing (push_binding g hyp (mk_eq2 u0 tm_bool b tm_true)) e1 c ->
+      st_typing (push_binding g hyp (mk_eq2 u0 tm_bool b tm_false)) e2 c ->
       my_erased (comp_typing g c uc) ->
       st_typing g (wr (Tm_If { b; then_=e1; else_=e2; post=None })) c
 
@@ -841,7 +842,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g init init_t ->
       universe_of g init_t u0 ->
       comp_typing g c (comp_u c) ->
-      st_typing (extend x (Inl (mk_ref init_t)) g)
+      st_typing (push_binding g x (mk_ref init_t))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
       st_typing g (wr (Tm_WithLocal { binder=as_binder (mk_ref init_t); initializer=init; body } )) c
