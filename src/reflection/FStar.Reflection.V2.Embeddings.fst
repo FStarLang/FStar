@@ -84,6 +84,7 @@ let e_env                : embedding env                = EMB.e_lazy Lazy_env fs
 let e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
 let e_sigelt             : embedding sigelt             = EMB.e_lazy Lazy_sigelt fstar_refl_sigelt
 let e_letbinding         : embedding letbinding         = EMB.e_lazy Lazy_letbinding fstar_refl_letbinding
+let e_universe_uvar      : embedding universe_uvar      = EMB.e_lazy Lazy_universe_uvar fstar_refl_universe_uvar
 
 let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
@@ -180,7 +181,7 @@ let e_universe_view =
     | Uv_Unif u ->
       S.mk_Tm_app
         ref_Uv_Unif.t
-        [S.as_arg (U.mk_lazy u U.t_universe_uvar Lazy_universe_uvar None)]
+        [S.as_arg (embed e_universe_uvar rng u)]
         rng
     | Uv_Unk ->
       ref_Uv_Unk.t in
@@ -193,16 +194,7 @@ let e_universe_view =
     | _ when S.fv_eq_lid fv ref_Uv_Max.lid   -> run args (Uv_Max <$$> e_list e_universe)
     | _ when S.fv_eq_lid fv ref_Uv_BVar.lid  -> run args (Uv_BVar <$$> e_int)
     | _ when S.fv_eq_lid fv ref_Uv_Name.lid  -> run args (Uv_Name <$$> e_ident)
-
-    (* no actual embedding, hack it. *)
-    | _ when S.fv_eq_lid fv ref_Uv_Unif.lid ->
-      let unemb_uuvar : appemb universe_uvar =
-        function [] -> None | (t,_)::xs ->
-          let u : universe_uvar = U.unlazy_as_t Lazy_universe_uvar t in
-          Some (u, xs)
-      in
-      run args (Uv_Unif <$> unemb_uuvar)
-
+    | _ when S.fv_eq_lid fv ref_Uv_Unif.lid  -> run args (Uv_Unif <$$> e_universe_uvar)
     | _ when S.fv_eq_lid fv ref_Uv_Unk.lid -> run args (pure Uv_Unk)
     | _ -> None
   in

@@ -123,6 +123,8 @@ let fstar_refl_optionstate      = mk_refl_types_lid_as_term "optionstate"
 let fstar_refl_optionstate_fv   = mk_refl_types_lid_as_fv   "optionstate"
 let fstar_refl_universe         = mk_refl_types_lid_as_term "universe"
 let fstar_refl_universe_fv      = mk_refl_types_lid_as_fv   "universe"
+let fstar_refl_universe_uvar          = mk_refl_types_lid_as_term "universe_uvar"
+let fstar_refl_universe_uvar_fv       = mk_refl_types_lid_as_fv   "universe_uvar"
 let fstar_refl_ctx_uvar_and_subst     = mk_refl_types_lid_as_term "ctx_uvar_and_subst"
 let fstar_refl_ctx_uvar_and_subst_fv  = mk_refl_types_lid_as_fv   "ctx_uvar_and_subst"
 
