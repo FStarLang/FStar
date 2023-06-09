@@ -115,16 +115,10 @@ let (e_aqualv :
          | uu___2 -> FStar_Pervasives_Native.None) in
   mk_emb embed_aqualv unembed_aqualv
     FStar_Reflection_V1_Constants.fstar_refl_aqualv
-let (e_ident : FStar_Ident.ident FStar_Syntax_Embeddings_Base.embedding) =
-  let repr =
-    FStar_Syntax_Embeddings.e_tuple2 FStar_Syntax_Embeddings.e_string
-      FStar_Syntax_Embeddings.e_range in
-  FStar_Syntax_Embeddings_Base.embed_as repr FStar_Ident.mk_ident
-    (fun i ->
-       let uu___ = FStar_Ident.string_of_id i in
-       let uu___1 = FStar_Ident.range_of_id i in (uu___, uu___1))
-    (FStar_Pervasives_Native.Some
-       FStar_Reflection_V1_Constants.fstar_refl_ident)
+let (e_ident :
+  FStar_Reflection_V1_Data.ident FStar_Syntax_Embeddings_Base.embedding) =
+  FStar_Syntax_Embeddings.e_tuple2 FStar_Syntax_Embeddings.e_string
+    FStar_Syntax_Embeddings.e_range
 let (e_universe_view :
   FStar_Reflection_V1_Data.universe_view
     FStar_Syntax_Embeddings_Base.embedding)
@@ -1581,11 +1575,12 @@ let (e_sigelt :
   mk_emb embed_sigelt unembed_sigelt
     FStar_Reflection_V1_Constants.fstar_refl_sigelt
 let (e_univ_name :
-  FStar_Syntax_Syntax.univ_name FStar_Syntax_Embeddings_Base.embedding) =
+  FStar_Reflection_V1_Data.univ_name FStar_Syntax_Embeddings_Base.embedding)
+  =
   FStar_Syntax_Embeddings_Base.set_type
     FStar_Reflection_V1_Constants.fstar_refl_univ_name e_ident
 let (e_univ_names :
-  FStar_Syntax_Syntax.univ_name Prims.list
+  FStar_Reflection_V1_Data.univ_name Prims.list
     FStar_Syntax_Embeddings_Base.embedding)
   = FStar_Syntax_Embeddings.e_list e_univ_name
 let (e_ctor :

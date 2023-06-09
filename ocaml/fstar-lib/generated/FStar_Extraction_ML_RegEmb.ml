@@ -500,15 +500,14 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                 let uu___46 =
                                                   let uu___47 =
                                                     FStar_Reflection_V2_Constants.fstar_refl_types_lid
-                                                      "__ident" in
+                                                      "ident" in
                                                   let uu___48 =
                                                     let uu___49 =
-                                                      refl_emb_lid
-                                                        "e___ident" in
+                                                      refl_emb_lid "e_ident" in
                                                     let uu___50 =
                                                       let uu___51 =
                                                         nbe_refl_emb_lid
-                                                          "e___ident" in
+                                                          "e_ident" in
                                                       FStar_Pervasives_Native.Some
                                                         uu___51 in
                                                     {

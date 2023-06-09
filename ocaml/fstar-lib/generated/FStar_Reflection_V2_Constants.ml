@@ -218,6 +218,10 @@ let (fstar_refl_universe : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "universe"
 let (fstar_refl_universe_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_types_lid_as_fv "universe"
+let (fstar_refl_universe_uvar : FStar_Syntax_Syntax.term) =
+  mk_refl_types_lid_as_term "universe_uvar"
+let (fstar_refl_universe_uvar_fv : FStar_Syntax_Syntax.fv) =
+  mk_refl_types_lid_as_fv "universe_uvar"
 let (fstar_refl_ctx_uvar_and_subst : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "ctx_uvar_and_subst"
 let (fstar_refl_ctx_uvar_and_subst_fv : FStar_Syntax_Syntax.fv) =

@@ -588,15 +588,6 @@ let unlazy_as_t :
           FStar_Compiler_Dyn.undyn v
       | uu___ -> failwith "Not a Lazy of the expected kind (NBE)"
 let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
-  let uu___ =
-    FStar_TypeChecker_NBETerm.e_tuple2 FStar_TypeChecker_NBETerm.e_string
-      FStar_TypeChecker_NBETerm.e_range in
-  FStar_TypeChecker_NBETerm.embed_as uu___ FStar_Ident.mk_ident
-    (fun i ->
-       let uu___1 = FStar_Ident.string_of_id i in
-       let uu___2 = FStar_Ident.range_of_id i in (uu___1, uu___2))
-    FStar_Pervasives_Native.None
-let (e___ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
   let embed_ident cb se =
     mk_lazy cb se FStar_Reflection_V2_Constants.fstar_refl_ident
       FStar_Syntax_Syntax.Lazy_ident in
@@ -665,12 +656,7 @@ let (e_universe_view :
     | FStar_Reflection_V2_Data.Uv_Name i ->
         let uu___ =
           let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStar_TypeChecker_NBETerm.e_tuple2
-                  FStar_TypeChecker_NBETerm.e_string
-                  FStar_TypeChecker_NBETerm.e_range in
-              FStar_TypeChecker_NBETerm.embed uu___3 cb i in
+            let uu___2 = FStar_TypeChecker_NBETerm.embed e_ident cb i in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           [uu___1] in
         mkConstruct
@@ -741,12 +727,7 @@ let (e_universe_view :
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_V2_Constants.ref_Uv_Name.FStar_Reflection_V2_Constants.lid
         ->
-        let uu___2 =
-          let uu___3 =
-            FStar_TypeChecker_NBETerm.e_tuple2
-              FStar_TypeChecker_NBETerm.e_string
-              FStar_TypeChecker_NBETerm.e_range in
-          FStar_TypeChecker_NBETerm.unembed uu___3 cb i in
+        let uu___2 = FStar_TypeChecker_NBETerm.unembed e_ident cb i in
         FStar_Compiler_Util.bind_opt uu___2
           (fun i1 ->
              let uu___3 =
@@ -1821,13 +1802,10 @@ let (e_sigelt :
   mk_emb' embed_sigelt unembed_sigelt
     FStar_Reflection_V2_Constants.fstar_refl_sigelt_fv
 let (e_univ_name :
-  (Prims.string * FStar_Compiler_Range_Type.range)
-    FStar_TypeChecker_NBETerm.embedding)
-  =
-  FStar_TypeChecker_NBETerm.e_tuple2 FStar_TypeChecker_NBETerm.e_string
-    FStar_TypeChecker_NBETerm.e_range
+  FStar_Syntax_Syntax.univ_name FStar_TypeChecker_NBETerm.embedding) =
+  e_ident
 let (e_univ_names :
-  (Prims.string * FStar_Compiler_Range_Type.range) Prims.list
+  FStar_Syntax_Syntax.univ_name Prims.list
     FStar_TypeChecker_NBETerm.embedding)
   = FStar_TypeChecker_NBETerm.e_list e_univ_name
 let (e_string_list :

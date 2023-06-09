@@ -375,9 +375,6 @@ let nbe_dummy : 'a . unit -> 'a FStar_TypeChecker_NBETerm.embedding =
       FStar_Syntax_Syntax.ET_abstract
 let (e_ident : FStar_Ident.ident dualemb) =
   let uu___ = nbe_dummy () in (FStar_Reflection_V2_Embeddings.e_ident, uu___)
-let (e___ident : FStar_Ident.ident dualemb) =
-  let uu___ = nbe_dummy () in
-  (FStar_Reflection_V2_Embeddings.e___ident, uu___)
 let (e_subst : FStar_Syntax_Syntax.subst_elt Prims.list dualemb) =
   (FStar_Reflection_V2_Embeddings.e_subst,
     FStar_Reflection_V2_NBEEmbeddings.e_subst)
@@ -769,7 +766,7 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     mk1
                                                                     "inspect_ident"
                                                                     FStar_Reflection_V2_Builtins.inspect_ident
-                                                                    e___ident
+                                                                    e_ident
                                                                     uu___85 in
                                                                     let uu___85
                                                                     =
@@ -784,7 +781,7 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     "pack_ident"
                                                                     FStar_Reflection_V2_Builtins.pack_ident
                                                                     uu___87
-                                                                    e___ident in
+                                                                    e_ident in
                                                                     [uu___86] in
                                                                     uu___84
                                                                     ::

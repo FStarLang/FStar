@@ -64,9 +64,14 @@ let (compare_ident :
   =
   fun i1 ->
     fun i2 ->
-      FStar_Order.order_from_int
-        (FStar_Reflection_V2_Builtins.compare_string
-           (FStar_Pervasives_Native.fst i1) (FStar_Pervasives_Native.fst i2))
+      let uu___ = FStar_Reflection_V2_Builtins.inspect_ident i1 in
+      match uu___ with
+      | (nm1, uu___1) ->
+          let uu___2 = FStar_Reflection_V2_Builtins.inspect_ident i2 in
+          (match uu___2 with
+           | (nm2, uu___3) ->
+               FStar_Order.order_from_int
+                 (FStar_Reflection_V2_Builtins.compare_string nm1 nm2))
 let rec (compare_universe :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe -> FStar_Order.order)

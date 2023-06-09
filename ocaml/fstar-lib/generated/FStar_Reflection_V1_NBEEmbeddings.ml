@@ -693,54 +693,10 @@ let unlazy_as_t :
           when FStar_Syntax_Util.eq_lazy_kind k k' ->
           FStar_Compiler_Dyn.undyn v
       | uu___ -> failwith "Not a Lazy of the expected kind (NBE)"
-let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
-  let repr =
-    FStar_TypeChecker_NBETerm.e_tuple2 FStar_TypeChecker_NBETerm.e_range
-      FStar_TypeChecker_NBETerm.e_string in
-  let embed_ident cb i =
-    let uu___ =
-      let uu___1 = FStar_Ident.range_of_id i in
-      let uu___2 = FStar_Ident.string_of_id i in (uu___1, uu___2) in
-    FStar_TypeChecker_NBETerm.embed repr cb uu___ in
-  let unembed_ident cb t =
-    let uu___ = FStar_TypeChecker_NBETerm.unembed repr cb t in
-    match uu___ with
-    | FStar_Pervasives_Native.Some (rng, s) ->
-        let uu___1 = FStar_Ident.mk_ident (s, rng) in
-        FStar_Pervasives_Native.Some uu___1
-    | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
-  let range_fv =
-    FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.range_lid
-      FStar_Pervasives_Native.None in
-  let string_fv =
-    FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.string_lid
-      FStar_Pervasives_Native.None in
-  let et =
-    let uu___ =
-      let uu___1 = FStar_Ident.string_of_lid FStar_Parser_Const.lid_tuple2 in
-      let uu___2 =
-        let uu___3 = fv_as_emb_typ range_fv in
-        let uu___4 = let uu___5 = fv_as_emb_typ string_fv in [uu___5] in
-        uu___3 :: uu___4 in
-      (uu___1, uu___2) in
-    FStar_Syntax_Syntax.ET_app uu___ in
-  let uu___ =
-    let uu___1 =
-      FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.lid_tuple2
-        FStar_Pervasives_Native.None in
-    let uu___2 =
-      let uu___3 =
-        let uu___4 = mkFV range_fv [] [] in
-        FStar_TypeChecker_NBETerm.as_arg uu___4 in
-      let uu___4 =
-        let uu___5 =
-          let uu___6 = mkFV string_fv [] [] in
-          FStar_TypeChecker_NBETerm.as_arg uu___6 in
-        [uu___5] in
-      uu___3 :: uu___4 in
-    mkFV uu___1 [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero]
-      uu___2 in
-  FStar_TypeChecker_NBETerm.mk_emb embed_ident unembed_ident uu___ et
+let (e_ident :
+  FStar_Reflection_V1_Data.ident FStar_TypeChecker_NBETerm.embedding) =
+  FStar_TypeChecker_NBETerm.e_tuple2 FStar_TypeChecker_NBETerm.e_string
+    FStar_TypeChecker_NBETerm.e_range
 let (e_universe_view :
   FStar_Reflection_V1_Data.universe_view FStar_TypeChecker_NBETerm.embedding)
   =
@@ -1872,10 +1828,10 @@ let (e_sigelt :
   mk_emb' embed_sigelt unembed_sigelt
     FStar_Reflection_V1_Constants.fstar_refl_sigelt_fv
 let (e_univ_name :
-  FStar_Syntax_Syntax.univ_name FStar_TypeChecker_NBETerm.embedding) =
+  FStar_Reflection_V1_Data.univ_name FStar_TypeChecker_NBETerm.embedding) =
   e_ident
 let (e_univ_names :
-  FStar_Syntax_Syntax.univ_name Prims.list
+  FStar_Reflection_V1_Data.univ_name Prims.list
     FStar_TypeChecker_NBETerm.embedding)
   = FStar_TypeChecker_NBETerm.e_list e_univ_name
 let (e_string_list :

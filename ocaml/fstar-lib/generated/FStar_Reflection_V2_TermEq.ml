@@ -180,9 +180,11 @@ let (range_cmp : FStar_Range.range comparator_for) = fun r1 -> fun r2 -> Eq
 let (ident_cmp : FStar_Reflection_Types.ident comparator_for) =
   fun i1 ->
     fun i2 ->
+      let iv1 = FStar_Reflection_V2_Builtins.inspect_ident i1 in
+      let iv2 = FStar_Reflection_V2_Builtins.inspect_ident i2 in
       Obj.magic
-        (eq_cmp (FStar_Pervasives_Native.fst i1)
-           (FStar_Pervasives_Native.fst i2))
+        (eq_cmp (FStar_Pervasives_Native.fst iv1)
+           (FStar_Pervasives_Native.fst iv2))
 let rec (univ_cmp : FStar_Reflection_Types.universe comparator_for) =
   fun u1 ->
     fun u2 ->

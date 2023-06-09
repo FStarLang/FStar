@@ -2,6 +2,8 @@ open Prims
 type name = Prims.string Prims.list
 type typ = FStar_Syntax_Syntax.term
 type binders = FStar_Syntax_Syntax.binder Prims.list
+type ident = (Prims.string * FStar_Compiler_Range_Type.range)
+type univ_name = ident
 type vconst =
   | C_Unit 
   | C_Int of FStar_BigInt.t 
@@ -303,14 +305,13 @@ type ctor = (name * typ)
 type lb_view =
   {
   lb_fv: FStar_Syntax_Syntax.fv ;
-  lb_us: FStar_Syntax_Syntax.univ_name Prims.list ;
+  lb_us: univ_name Prims.list ;
   lb_typ: typ ;
   lb_def: FStar_Syntax_Syntax.term }
 let (__proj__Mklb_view__item__lb_fv : lb_view -> FStar_Syntax_Syntax.fv) =
   fun projectee ->
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_fv
-let (__proj__Mklb_view__item__lb_us :
-  lb_view -> FStar_Syntax_Syntax.univ_name Prims.list) =
+let (__proj__Mklb_view__item__lb_us : lb_view -> univ_name Prims.list) =
   fun projectee ->
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_us
 let (__proj__Mklb_view__item__lb_typ : lb_view -> typ) =
@@ -321,9 +322,9 @@ let (__proj__Mklb_view__item__lb_def : lb_view -> FStar_Syntax_Syntax.term) =
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_def
 type sigelt_view =
   | Sg_Let of (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list) 
-  | Sg_Inductive of (name * FStar_Syntax_Syntax.univ_name Prims.list *
-  FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
-  | Sg_Val of (name * FStar_Syntax_Syntax.univ_name Prims.list * typ) 
+  | Sg_Inductive of (name * univ_name Prims.list * FStar_Syntax_Syntax.binder
+  Prims.list * typ * ctor Prims.list) 
+  | Sg_Val of (name * univ_name Prims.list * typ) 
   | Unk 
 let (uu___is_Sg_Let : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Sg_Let _0 -> true | uu___ -> false
@@ -335,13 +336,13 @@ let (uu___is_Sg_Inductive : sigelt_view -> Prims.bool) =
     match projectee with | Sg_Inductive _0 -> true | uu___ -> false
 let (__proj__Sg_Inductive__item___0 :
   sigelt_view ->
-    (name * FStar_Syntax_Syntax.univ_name Prims.list *
-      FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list))
+    (name * univ_name Prims.list * FStar_Syntax_Syntax.binder Prims.list *
+      typ * ctor Prims.list))
   = fun projectee -> match projectee with | Sg_Inductive _0 -> _0
 let (uu___is_Sg_Val : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Sg_Val _0 -> true | uu___ -> false
 let (__proj__Sg_Val__item___0 :
-  sigelt_view -> (name * FStar_Syntax_Syntax.univ_name Prims.list * typ)) =
+  sigelt_view -> (name * univ_name Prims.list * typ)) =
   fun projectee -> match projectee with | Sg_Val _0 -> _0
 let (uu___is_Unk : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Unk -> true | uu___ -> false
@@ -362,11 +363,9 @@ type qualifier =
   | Reifiable 
   | Reflectable of FStar_Ident.lid 
   | Discriminator of FStar_Ident.lid 
-  | Projector of (FStar_Ident.lid * FStar_Ident.ident) 
-  | RecordType of (FStar_Ident.ident Prims.list * FStar_Ident.ident
-  Prims.list) 
-  | RecordConstructor of (FStar_Ident.ident Prims.list * FStar_Ident.ident
-  Prims.list) 
+  | Projector of (FStar_Ident.lid * ident) 
+  | RecordType of (ident Prims.list * ident Prims.list) 
+  | RecordConstructor of (ident Prims.list * ident Prims.list) 
   | Action of FStar_Ident.lid 
   | ExceptionConstructor 
   | HasMaskedEffect 
@@ -421,21 +420,20 @@ let (__proj__Discriminator__item___0 : qualifier -> FStar_Ident.lid) =
 let (uu___is_Projector : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | Projector _0 -> true | uu___ -> false
-let (__proj__Projector__item___0 :
-  qualifier -> (FStar_Ident.lid * FStar_Ident.ident)) =
+let (__proj__Projector__item___0 : qualifier -> (FStar_Ident.lid * ident)) =
   fun projectee -> match projectee with | Projector _0 -> _0
 let (uu___is_RecordType : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | RecordType _0 -> true | uu___ -> false
 let (__proj__RecordType__item___0 :
-  qualifier -> (FStar_Ident.ident Prims.list * FStar_Ident.ident Prims.list))
-  = fun projectee -> match projectee with | RecordType _0 -> _0
+  qualifier -> (ident Prims.list * ident Prims.list)) =
+  fun projectee -> match projectee with | RecordType _0 -> _0
 let (uu___is_RecordConstructor : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | RecordConstructor _0 -> true | uu___ -> false
 let (__proj__RecordConstructor__item___0 :
-  qualifier -> (FStar_Ident.ident Prims.list * FStar_Ident.ident Prims.list))
-  = fun projectee -> match projectee with | RecordConstructor _0 -> _0
+  qualifier -> (ident Prims.list * ident Prims.list)) =
+  fun projectee -> match projectee with | RecordConstructor _0 -> _0
 let (uu___is_Action : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Action _0 -> true | uu___ -> false
 let (__proj__Action__item___0 : qualifier -> FStar_Ident.lid) =

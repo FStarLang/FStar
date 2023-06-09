@@ -70,8 +70,8 @@ let (compare_binder :
         bview1.FStar_Reflection_V1_Data.binder_bv
         bview2.FStar_Reflection_V1_Data.binder_bv
 let (compare_ident :
-  FStar_Reflection_Types.ident ->
-    FStar_Reflection_Types.ident -> FStar_Order.order)
+  FStar_Reflection_V1_Data.ident ->
+    FStar_Reflection_V1_Data.ident -> FStar_Order.order)
   =
   fun i1 ->
     fun i2 ->

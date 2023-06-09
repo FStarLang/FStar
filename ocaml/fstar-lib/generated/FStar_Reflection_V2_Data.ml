@@ -93,7 +93,6 @@ let (uu___is_Q_Meta : aqualv -> Prims.bool) =
 let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Q_Meta _0 -> _0
 type argv = (FStar_Syntax_Syntax.term * aqualv)
-type xxuniv_name = (Prims.string * FStar_Compiler_Range_Type.range)
 type ppname_t = Prims.string
 let (as_ppname : Prims.string -> Prims.string) = fun x -> x
 type namedv_view = {
@@ -166,7 +165,7 @@ type universe_view =
   | Uv_Succ of FStar_Syntax_Syntax.universe 
   | Uv_Max of universes 
   | Uv_BVar of FStar_BigInt.t 
-  | Uv_Name of (Prims.string * FStar_Compiler_Range_Type.range) 
+  | Uv_Name of FStar_Syntax_Syntax.univ_name 
   | Uv_Unif of FStar_Syntax_Syntax.universe_uvar 
   | Uv_Unk 
 let (uu___is_Uv_Zero : universe_view -> Prims.bool) =
@@ -187,7 +186,7 @@ let (__proj__Uv_BVar__item___0 : universe_view -> FStar_BigInt.t) =
 let (uu___is_Uv_Name : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Name _0 -> true | uu___ -> false
 let (__proj__Uv_Name__item___0 :
-  universe_view -> (Prims.string * FStar_Compiler_Range_Type.range)) =
+  universe_view -> FStar_Syntax_Syntax.univ_name) =
   fun projectee -> match projectee with | Uv_Name _0 -> _0
 let (uu___is_Uv_Unif : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Unif _0 -> true | uu___ -> false
@@ -348,13 +347,14 @@ type ctor = (name * typ)
 type lb_view =
   {
   lb_fv: FStar_Syntax_Syntax.fv ;
-  lb_us: xxuniv_name Prims.list ;
+  lb_us: FStar_Syntax_Syntax.univ_name Prims.list ;
   lb_typ: typ ;
   lb_def: FStar_Syntax_Syntax.term }
 let (__proj__Mklb_view__item__lb_fv : lb_view -> FStar_Syntax_Syntax.fv) =
   fun projectee ->
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_fv
-let (__proj__Mklb_view__item__lb_us : lb_view -> xxuniv_name Prims.list) =
+let (__proj__Mklb_view__item__lb_us :
+  lb_view -> FStar_Syntax_Syntax.univ_name Prims.list) =
   fun projectee ->
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_us
 let (__proj__Mklb_view__item__lb_typ : lb_view -> typ) =
@@ -365,9 +365,9 @@ let (__proj__Mklb_view__item__lb_def : lb_view -> FStar_Syntax_Syntax.term) =
     match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_def
 type sigelt_view =
   | Sg_Let of (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list) 
-  | Sg_Inductive of (name * xxuniv_name Prims.list *
+  | Sg_Inductive of (name * FStar_Syntax_Syntax.univ_name Prims.list *
   FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
-  | Sg_Val of (name * xxuniv_name Prims.list * typ) 
+  | Sg_Val of (name * FStar_Syntax_Syntax.univ_name Prims.list * typ) 
   | Unk 
 let (uu___is_Sg_Let : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Sg_Let _0 -> true | uu___ -> false
@@ -379,13 +379,13 @@ let (uu___is_Sg_Inductive : sigelt_view -> Prims.bool) =
     match projectee with | Sg_Inductive _0 -> true | uu___ -> false
 let (__proj__Sg_Inductive__item___0 :
   sigelt_view ->
-    (name * xxuniv_name Prims.list * FStar_Syntax_Syntax.binder Prims.list *
-      typ * ctor Prims.list))
+    (name * FStar_Syntax_Syntax.univ_name Prims.list *
+      FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list))
   = fun projectee -> match projectee with | Sg_Inductive _0 -> _0
 let (uu___is_Sg_Val : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Sg_Val _0 -> true | uu___ -> false
 let (__proj__Sg_Val__item___0 :
-  sigelt_view -> (name * xxuniv_name Prims.list * typ)) =
+  sigelt_view -> (name * FStar_Syntax_Syntax.univ_name Prims.list * typ)) =
   fun projectee -> match projectee with | Sg_Val _0 -> _0
 let (uu___is_Unk : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Unk -> true | uu___ -> false
