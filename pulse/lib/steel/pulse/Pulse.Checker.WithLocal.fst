@@ -12,13 +12,13 @@ module FV = Pulse.Typing.FV
 
 #push-options "--z3rlimit_factor 4"
 let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
-                               (init_t:term) (x:var)
+                               (init_t:term) (x:var { ~ (Set.mem x (dom g)) })
   : post_hint_for_env (push_binding g x init_t)
   = { p with post = comp_withlocal_body_post p.post init_t (null_var x);
              post_typing = admit() } //star typing intro
 
 let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre Tm_VProp)
-                          (init_t:term) (x:var) (i:term)
+                          (init_t:term) (x:var { ~ (Set.mem x (dom g)) }) (i:term)
   : tot_typing (push_binding g x (mk_ref init_t))
                (comp_withlocal_body_pre pre init_t (null_var x) i)
                Tm_VProp

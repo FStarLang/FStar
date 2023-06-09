@@ -4,6 +4,9 @@ let (contains : Pulse_Typing_Env.env -> Pulse_Syntax_Base.var -> Prims.bool)
   fun g ->
     fun x ->
       FStar_Pervasives_Native.uu___is_Some (Pulse_Typing_Env.lookup g x)
+let (vars_of_env :
+  Pulse_Typing_Env.env -> Pulse_Syntax_Base.var FStar_Set.set) =
+  fun g -> Pulse_Typing_Env.dom g
 let set_minus : 'a . 'a FStar_Set.set -> 'a -> 'a FStar_Set.set =
   fun s ->
     fun x ->

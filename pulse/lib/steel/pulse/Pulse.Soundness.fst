@@ -183,6 +183,7 @@ let if_soundness
                                 RT.bool_ty =
     tot_typing_soundness b_typing in
   let g_then = push_binding g hyp (mk_eq2 u0 tm_bool b tm_true) in
+  elab_push_binding g hyp (mk_eq2 u0 tm_bool b tm_true);
   let re1_typing
 
     : RT.tot_typing (RT.extend_env (elab_env g)
@@ -195,6 +196,7 @@ let if_soundness
                 (elab_comp c) =
     soundness g_then e1 c e1_typing in
   let g_else = push_binding g hyp (mk_eq2 u0 tm_bool b tm_false) in
+  elab_push_binding g hyp (mk_eq2 u0 tm_bool b tm_false);
   let re2_typing
     : RT.tot_typing (RT.extend_env (elab_env g)
                                hyp

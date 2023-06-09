@@ -14,7 +14,7 @@ let mem_intension_pat (#a:eqtype) (x:a) (f:(a -> Tot bool))
   = Set.mem_intension x f
 
 let contains (g:env) (x:var) = Some? (lookup g x)
-let vars_of_env (g:env) = Set.intension (contains g)
+let vars_of_env (g:env) = dom g
 
 let set_minus (#a:eqtype) (s:Set.set a) (x:a) =
   Set.intersect s (Set.complement (Set.singleton x))
