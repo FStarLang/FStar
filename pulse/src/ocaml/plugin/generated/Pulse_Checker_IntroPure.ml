@@ -1,6 +1,6 @@
 open Prims
 let (check_prop :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.term, unit) Prims.dtuple2, unit)
         FStar_Tactics_Effect.tac_repr)
@@ -25,7 +25,7 @@ let (check_prop :
                       (fun uu___1 -> Prims.Mkdtuple2 (pp, ()))
                 | uu___1 -> FStar_Tactics_Derived.fail "Unexpected prop"))
 let (check_prop_validity :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
         ((unit, unit) Pulse_Typing.prop_validity, unit)
@@ -34,7 +34,7 @@ let (check_prop_validity :
   fun g ->
     fun p -> fun typing -> Pulse_Checker_Pure.check_prop_validity g p ()
 let (check_intro_pure :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->

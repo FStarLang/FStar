@@ -49,7 +49,7 @@ let (elim_pure_comp : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.comp)
       } in
     Pulse_Syntax_Base.C_STGhost (Pulse_Syntax_Base.Tm_EmpInames, st)
 let (elim_pure_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.host_term ->
       unit -> (unit, unit, unit) Pulse_Typing.st_typing)
   =
@@ -77,7 +77,7 @@ let (is_elim_pure :
                    (uu___1, uu___2)) -> true
                | uu___1 -> false))) uu___
 let (mk :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->
       unit ->
         ((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
@@ -105,10 +105,10 @@ let (mk :
                        | uu___1 -> FStar_Pervasives_Native.None))) uu___2
           uu___1 uu___
 let (elim_pure :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
-        ((Pulse_Typing.env, Pulse_Syntax_Base.term, unit,
+        ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
            (unit, unit, unit, unit)
              Pulse_Checker_Auto_Util.continuation_elaborator)
            FStar_Pervasives.dtuple4,

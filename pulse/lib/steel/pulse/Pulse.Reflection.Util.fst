@@ -2,7 +2,7 @@ module Pulse.Reflection.Util
 
 module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
-
+module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 
 let tun = R.pack_ln R.Tv_Unknown
@@ -171,7 +171,11 @@ let mk_arrow_with_name (s:RT.pp_name_t) (f:arrow_dom) (out:R.term) : R.term =
   R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_total out)))
 let mk_abs ty qual t : R.term = RT.mk_abs ty qual t
 let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
-
+let mk_abs_with_name_and_range s r ty qual t : R.term = 
+  let b = (binder_of_t_q_s ty qual s) in
+  let b = RU.binder_set_range b r in
+  R.pack_ln (R.Tv_Abs b t)
+  
 let mk_erased (u:R.universe) (t:R.term) : R.term =
   let hd = R.pack_ln (R.Tv_UInst (R.pack_fv erased_lid) [u]) in
   R.pack_ln (R.Tv_App hd (t, R.Q_Explicit))

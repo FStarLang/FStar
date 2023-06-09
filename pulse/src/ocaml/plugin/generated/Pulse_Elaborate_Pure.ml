@@ -44,30 +44,40 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
     | Pulse_Syntax_Base.Tm_Star (l, r) ->
         let l1 = elab_term l in
         let r1 = elab_term r in Pulse_Reflection_Util.mk_star l1 r1
-    | Pulse_Syntax_Base.Tm_ExistsSL (u, t, body) ->
-        let t1 = elab_term t in
-        let b = elab_term body in
+    | Pulse_Syntax_Base.Tm_ExistsSL (u, b, body) ->
+        let t = elab_term b.Pulse_Syntax_Base.binder_ty in
+        let body1 = elab_term body in
+        let t1 = t in
         if Pulse_Syntax_Base.uu___is_Tm_ExistsSL top
         then
           Pulse_Reflection_Util.mk_exists u t1
-            (Pulse_Reflection_Util.mk_abs t1 FStar_Reflection_Data.Q_Explicit
-               b)
+            (Pulse_Reflection_Util.mk_abs_with_name_and_range
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t1
+               FStar_Reflection_Data.Q_Explicit body1)
         else
           Pulse_Reflection_Util.mk_forall u t1
-            (Pulse_Reflection_Util.mk_abs t1 FStar_Reflection_Data.Q_Explicit
-               b)
-    | Pulse_Syntax_Base.Tm_ForallSL (u, t, body) ->
-        let t1 = elab_term t in
-        let b = elab_term body in
+            (Pulse_Reflection_Util.mk_abs_with_name_and_range
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t1
+               FStar_Reflection_Data.Q_Explicit body1)
+    | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
+        let t = elab_term b.Pulse_Syntax_Base.binder_ty in
+        let body1 = elab_term body in
+        let t1 = t in
         if Pulse_Syntax_Base.uu___is_Tm_ExistsSL top
         then
           Pulse_Reflection_Util.mk_exists u t1
-            (Pulse_Reflection_Util.mk_abs t1 FStar_Reflection_Data.Q_Explicit
-               b)
+            (Pulse_Reflection_Util.mk_abs_with_name_and_range
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t1
+               FStar_Reflection_Data.Q_Explicit body1)
         else
           Pulse_Reflection_Util.mk_forall u t1
-            (Pulse_Reflection_Util.mk_abs t1 FStar_Reflection_Data.Q_Explicit
-               b)
+            (Pulse_Reflection_Util.mk_abs_with_name_and_range
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+               (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t1
+               FStar_Reflection_Data.Q_Explicit body1)
     | Pulse_Syntax_Base.Tm_Inames ->
         FStar_Reflection_Builtins.pack_ln
           (FStar_Reflection_Data.Tv_FVar

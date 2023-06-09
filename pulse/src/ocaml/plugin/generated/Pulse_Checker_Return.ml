@@ -1,7 +1,7 @@
 open Prims
 let (check_return :
   Prims.bool ->
-    Pulse_Typing.env ->
+    Pulse_Typing_Env.env ->
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.term ->
           unit ->
@@ -300,7 +300,7 @@ let (check_return :
                                                                     (Prims.of_int (44)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.range_to_string
-                                                                    st.Pulse_Syntax_Base.range))
+                                                                    st.Pulse_Syntax_Base.range1))
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

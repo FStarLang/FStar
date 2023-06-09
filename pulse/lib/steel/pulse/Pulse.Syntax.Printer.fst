@@ -51,15 +51,17 @@ let rec term_to_string' (level:string) (t:term)
         level
         (term_to_string' level p2)
                           
-    | Tm_ExistsSL _ t body ->
-      sprintf "(exists (_:%s).\n%s%s)"
-              (term_to_string' (indent level) t)
+    | Tm_ExistsSL _ b body ->
+      sprintf "(exists (%s:%s).\n%s%s)"
+              (T.unseal b.binder_ppname.name)
+              (term_to_string' (indent level) b.binder_ty)
               level
               (term_to_string' (indent level) body)
 
-    | Tm_ForallSL u t body ->
-      sprintf "(forall (_:%s).\n%s%s)"
-              (term_to_string' (indent level) t)
+    | Tm_ForallSL u b body ->
+      sprintf "(forall (%s:%s).\n%s%s)"
+              (T.unseal b.binder_ppname.name)
+              (term_to_string' (indent level) b.binder_ty)
               level
               (term_to_string' (indent level) body)
                           
@@ -74,7 +76,7 @@ let term_to_string t = term_to_string' "" t
 let binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s:%s" 
-            (T.unseal b.binder_ppname)
+            (T.unseal b.binder_ppname.name)
             (term_to_string b.binder_ty)
 
 let comp_to_string (c:comp)
@@ -133,7 +135,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (term_to_string arg)
         
     | Tm_Bind { binder; head; body } ->
-      if T.unseal binder.binder_ppname = "_"
+      if T.unseal binder.binder_ppname.name = "_"
       then sprintf "%s;\n%s%s" 
                    (st_term_to_string' level head)
                    level

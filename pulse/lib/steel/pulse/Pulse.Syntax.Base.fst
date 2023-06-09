@@ -38,7 +38,7 @@ let rec eq_tm (t1 t2:term)
     | Tm_ForallSL u1 t1 b1, Tm_ForallSL u2 t2 b2 ->
       univ_equality u1 u2;
       eq_univ u1 u2 &&
-      eq_tm t1 t2 &&
+      eq_tm t1.binder_ty t2.binder_ty &&
       eq_tm b1 b2
     | Tm_FStar t1 r, Tm_FStar t2 _ ->
       host_term_equality t1 t2;
@@ -152,8 +152,9 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term eR1 eR2 &&
       eq_tm postR1 postR2
 
-    | Tm_WithLocal { initializer=e1; body=b1 },
-      Tm_WithLocal { initializer=e2; body=b2 } ->
+    | Tm_WithLocal { binder=x1; initializer=e1; body=b1 },
+      Tm_WithLocal { binder=x2; initializer=e2; body=b2 } ->
+      eq_tm x1.binder_ty x2.binder_ty &&
       eq_tm e1 e2 &&
       eq_st_term b1 b2
 

@@ -3,35 +3,42 @@ type constant = FStar_Reflection_Data.vconst
 type var = Prims.nat
 type index = Prims.nat
 type universe = FStar_Reflection_Types.universe
-type ppname = FStar_Reflection_Typing.pp_name_t
 type 'r range_singleton_trigger = unit
 type range = FStar_Range.range
+type ppname = {
+  name: FStar_Reflection_Typing.pp_name_t ;
+  range: range }
+let (__proj__Mkppname__item__name :
+  ppname -> FStar_Reflection_Typing.pp_name_t) =
+  fun projectee -> match projectee with | { name; range = range1;_} -> name
+let (__proj__Mkppname__item__range : ppname -> range) =
+  fun projectee -> match projectee with | { name; range = range1;_} -> range1
+let (ppname_default : ppname) =
+  {
+    name = FStar_Reflection_Typing.pp_name_default;
+    range = FStar_Range.range_0
+  }
+let (mk_ppname :
+  FStar_Reflection_Typing.pp_name_t -> FStar_Range.range -> ppname) =
+  fun name -> fun range1 -> { name; range = range1 }
 type bv = {
   bv_index: index ;
-  bv_ppname: ppname ;
-  bv_range: range }
+  bv_ppname: ppname }
 let (__proj__Mkbv__item__bv_index : bv -> index) =
   fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_index
+    match projectee with | { bv_index; bv_ppname;_} -> bv_index
 let (__proj__Mkbv__item__bv_ppname : bv -> ppname) =
   fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_ppname
-let (__proj__Mkbv__item__bv_range : bv -> range) =
-  fun projectee ->
-    match projectee with | { bv_index; bv_ppname; bv_range;_} -> bv_range
+    match projectee with | { bv_index; bv_ppname;_} -> bv_ppname
 type nm = {
   nm_index: var ;
-  nm_ppname: ppname ;
-  nm_range: range }
+  nm_ppname: ppname }
 let (__proj__Mknm__item__nm_index : nm -> var) =
   fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_index
+    match projectee with | { nm_index; nm_ppname;_} -> nm_index
 let (__proj__Mknm__item__nm_ppname : nm -> ppname) =
   fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_ppname
-let (__proj__Mknm__item__nm_range : nm -> range) =
-  fun projectee ->
-    match projectee with | { nm_index; nm_ppname; nm_range;_} -> nm_range
+    match projectee with | { nm_index; nm_ppname;_} -> nm_ppname
 type qualifier =
   | Implicit 
 let (uu___is_Implicit : qualifier -> Prims.bool) = fun projectee -> true
@@ -55,13 +62,16 @@ type term =
   | Tm_Emp 
   | Tm_Pure of term 
   | Tm_Star of term * term 
-  | Tm_ExistsSL of universe * term * term 
-  | Tm_ForallSL of universe * term * term 
+  | Tm_ExistsSL of universe * binder * term 
+  | Tm_ForallSL of universe * binder * term 
   | Tm_VProp 
   | Tm_Inames 
   | Tm_EmpInames 
   | Tm_FStar of host_term * range 
   | Tm_Unknown 
+and binder = {
+  binder_ty: term ;
+  binder_ppname: ppname }
 let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
 let uu___is_Tm_Pure uu___ = match uu___ with | Tm_Pure _ -> true | _ -> false
 let uu___is_Tm_Star uu___ = match uu___ with | Tm_Star _ -> true | _ -> false
@@ -80,15 +90,6 @@ let uu___is_Tm_FStar uu___ =
 let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
 type vprop = term
-type binder = {
-  binder_ty: term ;
-  binder_ppname: ppname }
-let (__proj__Mkbinder__item__binder_ty : binder -> term) =
-  fun projectee ->
-    match projectee with | { binder_ty; binder_ppname;_} -> binder_ty
-let (__proj__Mkbinder__item__binder_ppname : binder -> ppname) =
-  fun projectee ->
-    match projectee with | { binder_ty; binder_ppname;_} -> binder_ppname
 type st_comp = {
   u: universe ;
   res: term ;
@@ -188,6 +189,7 @@ and st_term'__Tm_While__payload =
   {
   invariant: term ;
   condition: st_term ;
+  condition_var: ppname ;
   body3: st_term }
 and st_term'__Tm_Par__payload =
   {
@@ -197,7 +199,9 @@ and st_term'__Tm_Par__payload =
   pre2: term ;
   body21: st_term ;
   post21: term }
-and st_term'__Tm_WithLocal__payload = {
+and st_term'__Tm_WithLocal__payload =
+  {
+  binder1: binder ;
   initializer1: term ;
   body4: st_term }
 and st_term'__Tm_Rewrite__payload = {
@@ -229,7 +233,7 @@ and st_term' =
   | Tm_Protect of st_term'__Tm_Protect__payload 
 and st_term = {
   term1: st_term' ;
-  range: range }
+  range1: range }
 let uu___is_Tm_Return uu___ =
   match uu___ with | Tm_Return _ -> true | _ -> false
 let uu___is_Tm_Abs uu___ = match uu___ with | Tm_Abs _ -> true | _ -> false
@@ -257,16 +261,16 @@ let uu___is_Tm_Admit uu___ =
 let uu___is_Tm_Protect uu___ =
   match uu___ with | Tm_Protect _ -> true | _ -> false
 let (null_binder : term -> binder) =
-  fun t ->
-    { binder_ty = t; binder_ppname = FStar_Reflection_Typing.pp_name_default
-    }
-let (mk_binder : Prims.string -> term -> binder) =
+  fun t -> { binder_ty = t; binder_ppname = ppname_default }
+let (mk_binder : Prims.string -> range -> term -> binder) =
   fun s ->
-    fun t ->
-      {
-        binder_ty = t;
-        binder_ppname = (FStar_Reflection_Typing.seal_pp_name s)
-      }
+    fun r ->
+      fun t ->
+        {
+          binder_ty = t;
+          binder_ppname =
+            (mk_ppname (FStar_Reflection_Typing.seal_pp_name s) r)
+        }
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 ->
     fun u2 ->
@@ -286,9 +290,11 @@ let rec (eq_tm : term -> term -> Prims.bool) =
           (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Pure p1, Tm_Pure p2) -> eq_tm p1 p2
       | (Tm_ExistsSL (u1, t11, b1), Tm_ExistsSL (u2, t21, b2)) ->
-          ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
+          ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
+            (eq_tm b1 b2)
       | (Tm_ForallSL (u1, t11, b1), Tm_ForallSL (u2, t21, b2)) ->
-          ((eq_univ u1 u2) && (eq_tm t11 t21)) && (eq_tm b1 b2)
+          ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
+            (eq_tm b1 b2)
       | (Tm_FStar (t11, r), Tm_FStar (t21, uu___)) ->
           FStar_Reflection_Builtins.term_eq t11 t21
       | uu___ -> false
@@ -367,8 +373,13 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
           (((eq_tm g1 g2) && (eq_st_term ethen1 ethen2)) &&
              (eq_st_term eelse1 eelse2))
             && (eq_tm_opt p1 p2)
-      | (Tm_While { invariant = inv1; condition = cond1; body3 = body1;_},
-         Tm_While { invariant = inv2; condition = cond2; body3 = body2;_}) ->
+      | (Tm_While
+         { invariant = inv1; condition = cond1; condition_var = uu___;
+           body3 = body1;_},
+         Tm_While
+         { invariant = inv2; condition = cond2; condition_var = uu___1;
+           body3 = body2;_})
+          ->
           ((eq_tm inv1 inv2) && (eq_st_term cond1 cond2)) &&
             (eq_st_term body1 body2)
       | (Tm_Par
@@ -383,9 +394,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
               && (eq_tm preR1 preR2))
              && (eq_st_term eR1 eR2))
             && (eq_tm postR1 postR2)
-      | (Tm_WithLocal { initializer1 = e1; body4 = b1;_}, Tm_WithLocal
-         { initializer1 = e2; body4 = b2;_}) ->
-          (eq_tm e1 e2) && (eq_st_term b1 b2)
+      | (Tm_WithLocal { binder1 = x1; initializer1 = e1; body4 = b1;_},
+         Tm_WithLocal { binder1 = x2; initializer1 = e2; body4 = b2;_}) ->
+          ((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
+            (eq_st_term b1 b2)
       | (Tm_Rewrite { t1 = l1; t2 = r1;_}, Tm_Rewrite { t1 = l2; t2 = r2;_})
           -> (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Admit { ctag1 = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
@@ -442,5 +454,6 @@ let (comp_inames : comp -> term) =
     | C_STAtomic (inames, uu___) -> inames
     | C_STGhost (inames, uu___) -> inames
 type nvar = (ppname * var)
-let v_as_nv : 'uuuuu . 'uuuuu -> (FStar_Reflection_Typing.pp_name_t * 'uuuuu)
-  = fun x -> (FStar_Reflection_Typing.pp_name_default, x)
+let (v_as_nv : var -> nvar) = fun x -> (ppname_default, x)
+let (as_binder : term -> binder) =
+  fun t -> { binder_ty = t; binder_ppname = ppname_default }

@@ -37,16 +37,16 @@ let check_withlocal
   : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "check_withlocal" g in
   let wr t0 = { term = t0; range = t.range } in
-  let Tm_WithLocal {initializer=init; body} = t.term in
+  let Tm_WithLocal {binder; initializer=init; body} = t.term in
   let (| init, init_u, init_t, init_t_typing, init_typing |) =
     check_term_and_type g init in
   if eq_univ init_u u0
   then let x = fresh g in
-       let px = v_as_nv x in
+       let px = binder.binder_ppname, x in
        if x `Set.mem` freevars_st body
        then T.fail "withlocal: x is free in body"
        else
-         let x_tm = null_var x in
+         let x_tm = term_of_nvar px in
          let g_extended = extend x (Inl (mk_ref init_t)) g in
          let body_pre = comp_withlocal_body_pre pre init_t x_tm init in
          let body_pre_typing = with_local_pre_typing pre_typing init_t x init in

@@ -1,7 +1,7 @@
 open Prims
 let (check_stapp :
   Prims.bool ->
-    Pulse_Typing.env ->
+    Pulse_Typing_Env.env ->
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.term ->
           unit ->
@@ -25,7 +25,7 @@ let (check_stapp :
                      (Prims.of_int (25)) (Prims.of_int (24))
                      (Prims.of_int (97)) (Prims.of_int (112)))
                   (FStar_Tactics_Effect.lift_div_tac
-                     (fun uu___ -> t.Pulse_Syntax_Base.range))
+                     (fun uu___ -> t.Pulse_Syntax_Base.range1))
                   (fun uu___ ->
                      (fun range ->
                         Obj.magic
@@ -1015,7 +1015,7 @@ let (check_stapp :
                                                                     (Prims.of_int (44)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.range_to_string
-                                                                    t.Pulse_Syntax_Base.range))
+                                                                    t.Pulse_Syntax_Base.range1))
                                                                     (fun
                                                                     uu___7 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

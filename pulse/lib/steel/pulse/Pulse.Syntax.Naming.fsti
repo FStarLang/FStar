@@ -15,10 +15,11 @@ let rec freevars (t:term)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> Set.empty
-    | Tm_Star  t1 t2
+    | Tm_Star t1 t2 ->
+      Set.union (freevars t1) (freevars t2)
     | Tm_ExistsSL _ t1 t2
     | Tm_ForallSL _ t1 t2 ->
-      Set.union (freevars t1) (freevars t2)
+      Set.union (freevars t1.binder_ty) (freevars t2)
     | Tm_Pure p -> freevars p
     | Tm_FStar t _ -> RT.freevars t
 
@@ -88,9 +89,10 @@ let rec freevars_st (t:st_term)
                    (Set.union (freevars_st body2)
                               (freevars post2)))
 
-    | Tm_WithLocal { initializer; body } ->
-      Set.union (freevars initializer)
-                (freevars_st body)
+    | Tm_WithLocal { binder; initializer; body } ->
+      Set.union (freevars binder.binder_ty)
+                (Set.union (freevars initializer)
+                           (freevars_st body))
 
     | Tm_Rewrite { t1; t2 } ->
       Set.union (freevars t1) (freevars t2)
@@ -118,7 +120,7 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
 
   | Tm_ExistsSL _ t body
   | Tm_ForallSL _ t body ->
-    ln' t i &&
+    ln' t.binder_ty i &&
     ln' body (i + 1)
     
   | Tm_FStar t _ ->
@@ -203,7 +205,8 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' body2 i &&
       ln' post2 (i + 1)
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      ln' binder.binder_ty i &&
       ln' initializer i &&
       ln_st' body (i + 1)
 
@@ -242,12 +245,12 @@ let rec open_term' (t:term) (v:term) (i:index)
       Tm_Star (open_term' l v i)
               (open_term' r v i)
               
-    | Tm_ExistsSL u t body ->
-      Tm_ExistsSL u (open_term' t v i)
+    | Tm_ExistsSL u b body ->
+      Tm_ExistsSL u { b with binder_ty = open_term' b.binder_ty v i }
                     (open_term' body v (i + 1))
                   
-    | Tm_ForallSL u t body ->
-      Tm_ForallSL u (open_term' t v i)
+    | Tm_ForallSL u b body ->
+      Tm_ForallSL u { b with binder_ty = open_term' b.binder_ty v i }
                     (open_term' body v (i + 1))
     
     | Tm_FStar t r ->
@@ -341,10 +344,11 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
                        witnesses = open_term_list' witnesses v i;
                        should_check }                             
 
-    | Tm_While { invariant; condition; body } ->
+    | Tm_While { invariant; condition; body; condition_var } ->
       Tm_While { invariant = open_term' invariant v (i + 1);
                  condition = open_st_term' condition v i;
-                 body = open_st_term' body v i }
+                 body = open_st_term' body v i;
+                 condition_var }
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       Tm_Par { pre1=open_term' pre1 v i;
@@ -354,8 +358,9 @@ let rec open_st_term' (t:st_term) (v:term) (i:index)
                body2=open_st_term' body2 v i;
                post2=open_term' post2 v (i + 1) }
 
-    | Tm_WithLocal { initializer; body } ->
-      Tm_WithLocal { initializer = open_term' initializer v i;
+    | Tm_WithLocal { binder; initializer; body } ->
+      Tm_WithLocal { binder = open_binder binder v i;
+                     initializer = open_term' initializer v i;
                      body = open_st_term' body v (i + 1) }
 
     | Tm_Rewrite { t1; t2 } ->
@@ -405,12 +410,12 @@ let rec close_term' (t:term) (v:var) (i:index)
       Tm_Star (close_term' l v i)
               (close_term' r v i)
               
-    | Tm_ExistsSL u t body ->
-      Tm_ExistsSL u (close_term' t v i)
+    | Tm_ExistsSL u b body ->
+      Tm_ExistsSL u { b with binder_ty = close_term' b.binder_ty v i }
                     (close_term' body v (i + 1))
                   
-    | Tm_ForallSL u t body ->
-      Tm_ForallSL u (close_term' t v i)
+    | Tm_ForallSL u b body ->
+      Tm_ForallSL u { b with binder_ty = close_term' b.binder_ty v i }
                     (close_term' body v (i + 1))
     
     | Tm_FStar t r ->
@@ -503,10 +508,11 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
                        witnesses = close_term_list' witnesses v i;
                        should_check }
 
-    | Tm_While { invariant; condition; body } ->
+    | Tm_While { invariant; condition; body; condition_var } ->
       Tm_While { invariant = close_term' invariant v (i + 1);
                  condition = close_st_term' condition v i;
-                 body = close_st_term' body v i }
+                 body = close_st_term' body v i;
+                 condition_var }
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       Tm_Par { pre1 = close_term' pre1 v i;
@@ -516,8 +522,9 @@ let rec close_st_term' (t:st_term) (v:var) (i:index)
                body2 = close_st_term' body2 v i;
                post2 = close_term' post2 v (i + 1) }
 
-    | Tm_WithLocal { initializer; body } ->
-      Tm_WithLocal { initializer = close_term' initializer v i;
+    | Tm_WithLocal { binder; initializer; body } ->
+      Tm_WithLocal { binder = close_binder binder v i;
+                     initializer = close_term' initializer v i;
                      body = close_st_term' body v (i + 1) }
 
     | Tm_Rewrite { t1; t2 } ->

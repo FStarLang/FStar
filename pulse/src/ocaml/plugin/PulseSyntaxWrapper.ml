@@ -15,11 +15,13 @@ type qualifier = Pulse_Syntax_Base.qualifier
 let as_qual (imp:bool) = if imp then Some Pulse_Syntax_Base.Implicit else None
 type bv = Pulse_Syntax_Base.bv
 let mk_bv (i:index) (name:string) (r:range) : bv =
- { bv_index = i; bv_ppname=name; bv_range=r }
+ let pp = { name; range=r} in
+ { bv_index = i; bv_ppname=pp }
 
 type nm = Pulse_Syntax_Base.nm
 let mk_nm (i:index) (name:string) (r:range) : nm =
- { nm_index = i; nm_ppname=name; nm_range= r}
+ let pp = { name; range=r} in
+ { nm_index = i; nm_ppname=pp }
 
 
 type fv = Pulse_Syntax_Base.fv
@@ -32,9 +34,11 @@ type binder = Pulse_Syntax_Base.binder
 type comp = Pulse_Syntax_Base.comp
 type vprop = term
 
+let ppname_of_id (i:ident) : ppname = { name = FStar_Ident.string_of_id i; range = i.idRange }
+
 let mk_binder (x:ident) (t:term) : binder =
   { binder_ty = t;
-    binder_ppname=FStar_Ident.string_of_id x }
+    binder_ppname=ppname_of_id x}
 
 
 let tm_bvar (bv:bv) : term = U.tm_bvar bv
@@ -44,7 +48,7 @@ let tm_uinst (l:fv) (us:universe list) : term = U.tm_uinst l us
 let tm_emp : term = Tm_Emp
 let tm_pure (p:term) : term = Tm_Pure p
 let tm_star (p0:term) (p1:term) : term = Tm_Star (p0, p1)
-let tm_exists (b:binder) (body:vprop) : term = Tm_ExistsSL (U_unknown, b.binder_ty, body)
+let tm_exists (b:binder) (body:vprop) : term = Tm_ExistsSL (U_unknown, b, body)
 let map_aqual (q:S.aqual) =
   match q with
   | Some { S.aqual_implicit = true } -> Some Implicit
@@ -94,11 +98,11 @@ let tm_bind (x:binder) (e1:st_term) (e2:st_term) r : st_term =
 let tm_totbind (x:binder) (e1:term) (e2:st_term) r : st_term =
   PSB.(with_range (tm_totbind x e1 e2) r)
 
-let tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) r : st_term =
-  PSB.(with_range (tm_with_local v k) r)
+let tm_let_mut (x:binder) (v:term) (k:st_term) r : st_term =
+  PSB.(with_range (tm_with_local x v k) r)
    
 let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) r : st_term =
-  PSB.(with_range (tm_while (snd invariant) head body) r)
+  PSB.(with_range (tm_while (snd invariant) head (ppname_of_id (fst invariant)) body) r)
    
 let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_term) r : st_term =
   PSB.(with_range (tm_if head then_ else_ returns_annot) r)
@@ -111,7 +115,7 @@ let is_tm_intro_exists (s:st_term) : bool =
   | Tm_IntroExists _ -> true
   | _ -> false
 
-let tm_protect (s:st_term) : st_term = PSB.(with_range (tm_protect s) s.range)
+let tm_protect (s:st_term) : st_term = PSB.(with_range (tm_protect s) s.range1)
 
 let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
   PSB.(with_range (tm_par p1 b1 q1 p2 b2 q2) r)

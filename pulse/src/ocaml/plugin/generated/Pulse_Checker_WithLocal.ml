@@ -1,6 +1,6 @@
 open Prims
 let (extend_post_hint_for_local :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     unit Pulse_Checker_Common.post_hint_for_env ->
       Pulse_Syntax_Base.term ->
         Pulse_Syntax_Base.var -> unit Pulse_Checker_Common.post_hint_for_env)
@@ -23,7 +23,7 @@ let (extend_post_hint_for_local :
 
 let (check_withlocal :
   Prims.bool ->
-    Pulse_Typing.env ->
+    Pulse_Typing_Env.env ->
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.term ->
           unit ->
@@ -66,8 +66,8 @@ let (check_withlocal :
                                    fun t0 ->
                                      {
                                        Pulse_Syntax_Base.term1 = t0;
-                                       Pulse_Syntax_Base.range =
-                                         (t.Pulse_Syntax_Base.range)
+                                       Pulse_Syntax_Base.range1 =
+                                         (t.Pulse_Syntax_Base.range1)
                                      }))
                              (fun uu___ ->
                                 (fun wr ->
@@ -76,9 +76,9 @@ let (check_withlocal :
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.WithLocal.fst"
                                            (Prims.of_int (40))
-                                           (Prims.of_int (46))
+                                           (Prims.of_int (54))
                                            (Prims.of_int (40))
-                                           (Prims.of_int (52)))
+                                           (Prims.of_int (60)))
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.WithLocal.fst"
                                            (Prims.of_int (39))
@@ -93,6 +93,8 @@ let (check_withlocal :
                                               match uu___ with
                                               | Pulse_Syntax_Base.Tm_WithLocal
                                                   {
+                                                    Pulse_Syntax_Base.binder1
+                                                      = binder;
                                                     Pulse_Syntax_Base.initializer1
                                                       = init;
                                                     Pulse_Syntax_Base.body4 =
@@ -109,7 +111,7 @@ let (check_withlocal :
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.WithLocal.fst"
                                                           (Prims.of_int (40))
-                                                          (Prims.of_int (55))
+                                                          (Prims.of_int (63))
                                                           (Prims.of_int (87))
                                                           (Prims.of_int (57)))
                                                        (Obj.magic
@@ -161,7 +163,7 @@ let (check_withlocal :
                                                                     (Prims.of_int (45))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (25)))
+                                                                    (Prims.of_int (39)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
                                                                     (Prims.of_int (46))
@@ -171,8 +173,8 @@ let (check_withlocal :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    Pulse_Syntax_Base.v_as_nv
-                                                                    x))
+                                                                    ((binder.Pulse_Syntax_Base.binder_ppname),
+                                                                    x)))
                                                                     (fun
                                                                     uu___2 ->
                                                                     (fun px
@@ -196,18 +198,18 @@ let (check_withlocal :
                                                                     (Prims.of_int (49))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (49))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (35)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
                                                                     (Prims.of_int (49))
-                                                                    (Prims.of_int (33))
+                                                                    (Prims.of_int (38))
                                                                     (Prims.of_int (86))
                                                                     (Prims.of_int (10)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Syntax_Pure.null_var
-                                                                    x))
+                                                                    Pulse_Syntax_Pure.term_of_nvar
+                                                                    px))
                                                                     (fun
                                                                     uu___3 ->
                                                                     (fun x_tm
@@ -519,6 +521,11 @@ let (check_withlocal :
                                                                     ((Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_WithLocal
                                                                     {
+                                                                    Pulse_Syntax_Base.binder1
+                                                                    =
+                                                                    (Pulse_Typing.as_binder
+                                                                    (Pulse_Typing.mk_ref
+                                                                    init_t));
                                                                     Pulse_Syntax_Base.initializer1
                                                                     = init1;
                                                                     Pulse_Syntax_Base.body4

@@ -68,7 +68,7 @@ let (elab_sub :
              Pulse_Reflection_Util.mk_sub_stt_ghost u ty opened pre1 pre2
                post1 post2 e)
 let (elab_bind :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.comp ->
         Pulse_Syntax_Base.comp ->
@@ -167,7 +167,7 @@ let (elab_bind :
                               (Pulse_Syntax_Base.comp_post c2))) e1 e2
                         (Pulse_Elaborate_Pure.elab_term reveal_b)
 let (elab_lift :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp ->
       Pulse_Syntax_Base.comp ->
         (unit, unit, unit) Pulse_Typing.lift_comp ->
@@ -227,7 +227,7 @@ let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
                        FStar_Reflection_Data.C_Unit)), FStar_Range.range_0))
          })
 let rec (elab_st_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.comp ->
         (unit, unit, unit) Pulse_Typing.st_typing ->
@@ -242,7 +242,8 @@ let rec (elab_st_typing :
               (uu___, x, qual, b, _u, body, _c, ty_typing, body_typing) ->
               let ty =
                 Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty in
-              let ppname = b.Pulse_Syntax_Base.binder_ppname in
+              let ppname =
+                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name in
               let body1 =
                 elab_st_typing
                   (Pulse_Typing.extend x
@@ -304,8 +305,8 @@ let rec (elab_st_typing :
                   (Pulse_Syntax_Base.comp_res c1) in
               elab_bind uu___ x c1 c2 c3 bc e11
                 (Pulse_Reflection_Util.mk_abs_with_name
-                   b.Pulse_Syntax_Base.binder_ppname ty1
-                   FStar_Reflection_Data.Q_Explicit
+                   (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+                   ty1 FStar_Reflection_Data.Q_Explicit
                    (FStar_Reflection_Typing.close_term e21 x))
           | Pulse_Typing.T_TotBind
               (uu___, e1, e2, t1, uu___1, x, uu___2, e2_typing) ->
@@ -374,18 +375,20 @@ let rec (elab_st_typing :
                 (Pulse_Reflection_Util.mk_abs rt
                    FStar_Reflection_Data.Q_Explicit rp)
           | Pulse_Typing.T_IntroExists
-              (uu___, u, t1, p, e, uu___1, uu___2, uu___3) ->
+              (uu___, u, b, p, e, uu___1, uu___2, uu___3) ->
               let ru = u in
-              let rt = Pulse_Elaborate_Pure.elab_term t1 in
+              let rt =
+                Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty in
               let rp = Pulse_Elaborate_Pure.elab_term p in
               let re = Pulse_Elaborate_Pure.elab_term e in
               Pulse_Reflection_Util.mk_intro_exists ru rt
                 (Pulse_Reflection_Util.mk_abs rt
                    FStar_Reflection_Data.Q_Explicit rp) re
           | Pulse_Typing.T_IntroExistsErased
-              (uu___, u, t1, p, e, uu___1, uu___2, uu___3) ->
+              (uu___, u, b, p, e, uu___1, uu___2, uu___3) ->
               let ru = u in
-              let rt = Pulse_Elaborate_Pure.elab_term t1 in
+              let rt =
+                Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty in
               let rp = Pulse_Elaborate_Pure.elab_term p in
               let re = Pulse_Elaborate_Pure.elab_term e in
               Pulse_Reflection_Util.mk_intro_exists_erased ru rt
@@ -397,10 +400,12 @@ let rec (elab_st_typing :
               let inv1 = Pulse_Elaborate_Pure.elab_term inv in
               let cond =
                 elab_st_typing uu___ uu___1
-                  (Pulse_Typing.comp_while_cond inv) cond_typing in
+                  (Pulse_Typing.comp_while_cond
+                     Pulse_Syntax_Base.ppname_default inv) cond_typing in
               let body =
                 elab_st_typing uu___ uu___2
-                  (Pulse_Typing.comp_while_body inv) body_typing in
+                  (Pulse_Typing.comp_while_body
+                     Pulse_Syntax_Base.ppname_default inv) body_typing in
               Pulse_Reflection_Util.mk_while
                 (Pulse_Reflection_Util.mk_abs Pulse_Reflection_Util.bool_tm
                    FStar_Reflection_Data.Q_Explicit inv1) cond body

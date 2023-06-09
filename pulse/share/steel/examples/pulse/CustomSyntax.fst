@@ -10,6 +10,7 @@ open Pulse.Steel.Wrapper
 
 
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
+
 ```pulse
 fn test_write_10 (x:ref U32.t)
                  (#n:erased U32.t)
@@ -387,3 +388,15 @@ fn test_tot_let (r:ref U32.t)
 //   r := U32.add x 1ul
 // }
 // ```
+
+
+```pulse
+fn incr (x:nat)
+  requires emp
+  returns r : (r:nat { r > x })
+  ensures emp
+{
+  let y = x + 1;
+  ( y <: r:nat { r > x } )
+}
+```

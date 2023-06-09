@@ -105,14 +105,14 @@ let print_issues (g:env)
                  (i:list FStar.Issue.issue)
    = String.concat "\n" (T.map (print_issue g) i)
 
-let instantiate_term_implicits (g:env) (t:term) =
+let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
-  let rt = elab_term t in
+  let rt = elab_term t0 in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f rt) in
   match topt with
   | None -> 
     T.fail (Printf.sprintf "%s elaborated to %s; Could not instantiate implicits\n%s\n"
-                       (P.term_to_string t)
+                       (P.term_to_string t0)
                        (T.term_to_string rt)
                        (print_issues g issues))
   | Some (t, ty) ->

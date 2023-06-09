@@ -31,154 +31,15 @@ module Rewrite = Pulse.Checker.Rewrite
 module ElimPure = Pulse.Checker.Auto.ElimPure
 module ElimExists = Pulse.Checker.Auto.ElimExists
 
-let ( * ) (t1 t2:term) : term = Tm_Star t1 t2
-
-noeq
-type framing_st (g:env) (original_ctxt:term) = {
-    t:st_term;
-    c: c:comp { stateful_comp c };
-    t_typing:st_typing g t c;
-
-    ctxt:term;
-    matched_pre:term;
-    unmatched_pre:term;
-    ctxt_eq:vprop_equiv g original_ctxt (ctxt * matched_pre);
-    pre_eq:vprop_equiv g (comp_pre c) (unmatched_pre * matched_pre);
-}
-
-assume val intro_vp:
-  g:env ->
-  ctxt:term -> tot_typing g ctxt Tm_VProp ->
-  v:vprop -> tot_typing g v Tm_VProp ->
-  option (ctxt':term &
-          t:st_term &
-          c:comp { stateful_comp c /\ comp_post c == v} &
-          st_typing g t c &
-          vprop_equiv g ctxt (ctxt' * comp_pre c))
-
-assume val add_frame (#g:env) (#t:st_term) (#c:comp { stateful_comp c }) (t_typing:st_typing g t c)
-  (frame:term)
-  : c':comp { stateful_comp c' /\
-              comp_pre c' == comp_pre c * frame /\
-              comp_post c' == comp_post c * frame } &
-    st_typing g t c'
-
-assume val c_equiv_post (#g:env) (#t:st_term) (#c:comp { stateful_comp c /\ ln (comp_post c)}) (t_typing:st_typing g t c)
-  (post:term {ln post}) (_:vprop_equiv g post (comp_post c))
-  : c':comp { stateful_comp c' /\
-              comp_pre c' == comp_pre c /\
-              comp_post c' == post } &
-    st_typing g t c'
-
-assume val c_equiv_pre (#g:env) (#t:st_term) (#c:comp { stateful_comp c }) (t_typing:st_typing g t c)
-  (pre:term) (_:vprop_equiv g pre (comp_pre c))
-  : c':comp { stateful_comp c' /\
-              comp_pre c' == comp_pre c /\
-              comp_post c' == comp_post c } &
-    st_typing g t c'
-
-#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 2"
-let rec handle_framing_failure_experimental (#g:env) (#ctxt:term)
-  (ctxt_typing:tot_typing g ctxt Tm_VProp)
-  (s:framing_st g ctxt)
-  : T.Tac (t:st_term &
-           c:comp { stateful_comp c /\ comp_pre c == ctxt } &
-           st_typing g t c) =
-
-  // we have typing of ctxt, eq of ctxt with comp_pre c * s.ctxt
-  // so with inversion of vprop_equiv and Tm_Star typing w.r.t. typing
-  let s_ctxt_typing : tot_typing g s.ctxt Tm_VProp = magic () in
-
-  match vprop_as_list s.unmatched_pre with
-  | [] ->
-    // from s.pre_eq, we should get this, since s.unmatched_pre is emp
-    let pre_eq : vprop_equiv g (comp_pre s.c) s.matched_pre = magic () in
-    // from s.ctxt_eq
-    let ctxt_eq : vprop_equiv g ctxt (s.matched_pre * s.ctxt) = magic () in
-    // using pre_eq and ctxt_eq above
-    let ctxt_eq : vprop_equiv g (comp_pre s.c * s.ctxt)
-                                ctxt = magic () in
-    let f : frame_for_req_in_ctxt g ctxt (comp_pre s.c) =
-      (| s.ctxt, s_ctxt_typing, ctxt_eq |) in
-    let (| c', t_typing |) = apply_frame ctxt_typing s.t_typing f in
-    (| s.t, c', t_typing |)
-
-  | hd::tl ->
-    // in s.pre_eq we have s.unmatched_pre in vprop_equiv relation
-    //   with comp_pre c, from that we should be able to derive it
-    let hd_typing : tot_typing g hd Tm_VProp = magic () in
-    assume (ln hd);
-    match intro_vp g s.ctxt s_ctxt_typing hd hd_typing with
-    | Some (| ctxt', t, c, t_typing, veq |) ->
-      // we now need to create the new framing_st
-
-      // commutation of list_as_vprop and vprop_as_list
-      assume (s.unmatched_pre == hd * (list_as_vprop tl));
-
-      // the term that we create for the next framing state is:
-      //   bind (add_frame (tl * s.matched) t) s.t
-      let c_pre = comp_pre c in
-      let veq : vprop_equiv g s.ctxt (ctxt' * c_pre) = veq in
-      assume (ln (list_as_vprop tl) /\ ln s.matched_pre);
-      let (| c, t_typing |) = add_frame t_typing (list_as_vprop tl * s.matched_pre) in
-      assert (comp_pre c == c_pre * (list_as_vprop tl * s.matched_pre));
-      assert (comp_post c == hd * (list_as_vprop tl * s.matched_pre));
-        
-      let (| c, t_typing |) = c_equiv_post t_typing
-        (s.unmatched_pre * s.matched_pre) (magic ()) in
-      assert (ln (comp_post c));
-
-      let (| s_c, s_t_typing |) = c_equiv_pre s.t_typing
-        (s.unmatched_pre * s.matched_pre) (magic ()) in
-        
-      let x = fresh g in
-      admit ();
-      let (| t, c, t_typing |) = Pulse.Checker.Bind.mk_bind
-        g
-        (comp_pre c)  // c_pre * (tl * s.matched_pre)
-        t
-        s.t
-        c
-        s_c
-        (v_as_nv x)
-        t_typing
-        (magic ())  // typing of c's return type, from inversion?
-        s_t_typing
-        (magic ())  // typing of s_c's return type, from inversion?
-        (magic ())  // post typing for s_c ... from inversion and then weakening
-      in
-      
-
-      admit ()
-      
-
-    | _ ->
-      T.fail (Printf.sprintf "Cannot match the precondition %s"
-                (P.term_to_string hd))
-
-
-
-
-
-
-
-
-
-
-
-
-
 let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
-
-#push-options "--query_stats"
 
 let has_pure_vprops (pre:term) = L.existsb Tm_Pure? (vprop_as_list pre)
 let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit"
 
 let default_binder_annot = {
-    binder_ppname = RT.pp_name_default;
+    binder_ppname = ppname_default;
     binder_ty = Tm_Unknown
 }
    
@@ -196,31 +57,31 @@ let add_intro_pure rng (continuation:st_term) (p:term) =
                                       body = continuation }) }
     )
 
-#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 10"
-let uvar_tys = list (Pulse.Checker.Inference.uvar_id & term)
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10"
+let uvar_tys = list (Pulse.Checker.Inference.uvar & term)
 let rec prepare_instantiations
-  (out:list (vprop & either term term))
-  (out_uvars: uvar_tys)
-  goal_vprop
-  witnesses
+          (out:list (vprop & either term term))
+          (out_uvars: uvar_tys)
+          goal_vprop
+          witnesses
   : T.Tac (vprop & list (vprop & either term term) & uvar_tys)
   = match witnesses, goal_vprop with
-    | [], Tm_ExistsSL u ty p ->  
+    | [], Tm_ExistsSL u b p ->
       let next_goal_vprop, inst, uv =
-          let uv, t = Pulse.Checker.Inference.gen_uvar () in
+          let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
           open_term' p t 0, Inr t, uv
       in
-      prepare_instantiations ((goal_vprop, inst)::out) ((uv,ty)::out_uvars) next_goal_vprop []
+      prepare_instantiations ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop []
 
     | [], _ -> 
       goal_vprop, out, out_uvars
 
-    | t :: witnesses, Tm_ExistsSL u ty p ->
+    | t :: witnesses, Tm_ExistsSL u b p ->
       let next_goal_vprop, inst, uvs =
           match t with
           | Tm_Unknown ->
-            let uv, t = Pulse.Checker.Inference.gen_uvar () in
-            open_term' p t 0, Inr t, [(uv,ty)]
+            let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
+            open_term' p t 0, Inr t, [(uv,b.binder_ty)]
           | _ ->
             open_term' p t 0, Inl t, []
       in
@@ -317,7 +178,11 @@ let maybe_infer_intro_exists
         | None -> tm_pureapp hd None e
         | Some ty -> tm_pureapp (tm_pureapp hd (Some Implicit) ty) None e
     in
-    let type_of_uvar uv = List.Tot.assoc uv uvs in
+    let type_of_uvar uv =
+      match List.Tot.tryFind (fun (u, _) -> Pulse.Checker.Inference.uvar_eq u uv) uvs with
+      | None -> None
+      | Some (_, ty) -> Some ty
+    in
     let solutions = 
       List.Tot.map
         (fun (u, v) -> 
@@ -329,11 +194,19 @@ let maybe_infer_intro_exists
     in
     let _ =
       match List.Tot.tryFind (fun (u, _u_ty) ->
-           None? ((List.Tot.tryFind (fun (u', _) -> u = u') solutions))
+           None? (Pulse.Checker.Inference.find_solution solutions u)
          ) uvs with
       | Some (u, _) ->
+        let i = FStar.Issue.mk_issue "Error" 
+                    (Printf.sprintf "Could not instantiate existential variable %s introduced at %s\n"
+                                    (Pulse.Checker.Inference.uvar_to_string u)
+                                    (T.range_to_string (Pulse.Checker.Inference.range_of_uvar u)))
+                    (Some st.range)
+                    (Some (RU.error_code_uninstantiated_variable()))
+                    [print_context g] in
+        T.log_issues [i];
         T.fail (Printf.sprintf "maybe_infer_intro_exists: unification failed for uvar %s\n"
-                  (Pulse.Checker.Inference.uvar_id_to_string u))
+                               (Pulse.Checker.Inference.uvar_to_string u))
       | None -> ()
     in
     let wr t = { term = t; range = st.range } in
@@ -437,11 +310,9 @@ let elim_then_check (#g:env) (#ctxt:term)
                     (post_hint: post_hint_opt g)
                     (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint)
-  = if RU.debug_at_level g "proof_states"
-    then ( T.print "Unprotected node: Elim exists and pure \n" );
-    let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
+  = let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
     let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimPure.elim_pure ctxt'_typing in
-    if RU.debug_at_level g "proof_states"
+    if RU.debug_at_level g "inference"
     then ( T.print (Printf.sprintf "Eliminated context from\n\t%s\n\tto %s\n"
                 (P.term_to_string ctxt)
                 (P.term_to_string ctxt'') )) ;
@@ -469,10 +340,8 @@ let rec check' : bool -> check_t =
   else begin
     if RU.debug_at_level g "proof_states"
     then (
-      T.print (Printf.sprintf "At %s: (%s) %s\n\tprecondition is %s\n"
+      T.print (Printf.sprintf "At %s: context is {\n%s\n}"
                             (T.range_to_string t.range)
-                            (P.tag_of_st_term t)
-                            (P.st_term_to_string t)
                             (P.term_to_string pre))
     );
     let t = unprotect t in

@@ -1,12 +1,13 @@
 open Prims
-let (push_context : Prims.string -> Pulse_Typing.env -> Pulse_Typing.env) =
+let (push_context :
+  Prims.string -> Pulse_Typing_Env.env -> Pulse_Typing_Env.env) =
   fun ctx ->
     fun g ->
       {
-        Pulse_Typing.f = (g.Pulse_Typing.f);
-        Pulse_Typing.g = (g.Pulse_Typing.g);
-        Pulse_Typing.ctxt =
-          (Pulse_RuntimeUtils.extend_context ctx g.Pulse_Typing.ctxt)
+        Pulse_Typing_Env.f = (g.Pulse_Typing_Env.f);
+        Pulse_Typing_Env.g = (g.Pulse_Typing_Env.g);
+        Pulse_Typing_Env.ctxt =
+          (Pulse_RuntimeUtils.extend_context ctx g.Pulse_Typing_Env.ctxt)
       }
 let (ctx_to_string : Prims.string Prims.list -> Prims.string) =
   fun c ->
@@ -16,19 +17,20 @@ let (ctx_to_string : Prims.string Prims.list -> Prims.string) =
         Prims.strcat "\n\tContext:\n\t"
           (Prims.strcat (FStar_String.concat "\n\t" c) "")
 let (print_context :
-  Pulse_Typing.env -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
+  Pulse_Typing_Env.env -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
+  =
   fun g ->
     FStar_Tactics_Effect.tac_bind
       (FStar_Range.mk_range "Pulse.Checker.Pure.fst" (Prims.of_int (21))
          (Prims.of_int (16)) (Prims.of_int (21)) (Prims.of_int (33)))
       (FStar_Range.mk_range "Pulse.Checker.Pure.fst" (Prims.of_int (21))
          (Prims.of_int (2)) (Prims.of_int (21)) (Prims.of_int (33)))
-      (Obj.magic (FStar_Tactics_Builtins.unseal g.Pulse_Typing.ctxt))
+      (Obj.magic (FStar_Tactics_Builtins.unseal g.Pulse_Typing_Env.ctxt))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 -> ctx_to_string uu___))
 let (debug :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     (unit -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) ->
       (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -114,7 +116,7 @@ let (debug :
                      (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))))
              uu___)
 let (rtb_core_check_term :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         ((FStar_Reflection_Types.typ FStar_Pervasives_Native.option *
@@ -162,7 +164,7 @@ let (rtb_core_check_term :
                         FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> res))))
                uu___)
 let (rtb_tc_term :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         (((FStar_Reflection_Types.term * FStar_Reflection_Types.typ)
@@ -210,7 +212,7 @@ let (rtb_tc_term :
                         FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> res))))
                uu___)
 let (rtb_universe_of :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         ((FStar_Reflection_Types.universe FStar_Pervasives_Native.option *
@@ -256,7 +258,7 @@ let (rtb_universe_of :
                         FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> res))))
                uu___)
 let (rtb_check_subtyping :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         FStar_Reflection_Types.term ->
@@ -345,7 +347,7 @@ let (rtb_check_subtyping :
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 -> res)))) uu___)
 let (rtb_instantiate_implicits :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         (((FStar_Reflection_Types.term * FStar_Reflection_Types.typ)
@@ -413,7 +415,7 @@ let (rtb_instantiate_implicits :
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___2 -> res)))) uu___1))) uu___)
 let (rtb_core_check_term_at_type :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         FStar_Reflection_Types.term ->
@@ -518,7 +520,7 @@ let (squash_prop_validity_token :
         (unit, unit) FStar_Tactics_Builtins.prop_validity_token)
   = fun f -> fun p -> fun t -> t
 let (rtb_check_prop_validity :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         (((unit, unit) FStar_Tactics_Builtins.prop_validity_token
@@ -620,7 +622,7 @@ let catch_all :
                   (FStar_Pervasives_Native.None, [exn_as_issue exn])
               | FStar_Pervasives.Inr v -> v))
 let (print_issue :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Issue.issue -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -674,7 +676,7 @@ let (print_issue :
                                   (Prims.of_int (102)) (Prims.of_int (62)))
                                (Obj.magic
                                   (FStar_Tactics_Builtins.unseal
-                                     g.Pulse_Typing.ctxt))
+                                     g.Pulse_Typing_Env.ctxt))
                                (fun uu___ ->
                                   FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___1 ->
@@ -773,7 +775,7 @@ let (print_issue :
                                    (fun uu___2 -> uu___1 uu___)))) uu___)))
              uu___)
 let (print_issues :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Issue.issue Prims.list ->
       (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -789,13 +791,13 @@ let (print_issues :
            FStar_Tactics_Effect.lift_div_tac
              (fun uu___1 -> FStar_String.concat "\n" uu___))
 let (instantiate_term_implicits :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.term * Pulse_Syntax_Base.term), unit)
         FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
-    fun t ->
+    fun t0 ->
       FStar_Tactics_Effect.tac_bind
         (FStar_Range.mk_range "Pulse.Checker.Pure.fst" (Prims.of_int (109))
            (Prims.of_int (10)) (Prims.of_int (109)) (Prims.of_int (20)))
@@ -809,12 +811,12 @@ let (instantiate_term_implicits :
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                       (Prims.of_int (110)) (Prims.of_int (11))
-                      (Prims.of_int (110)) (Prims.of_int (22)))
+                      (Prims.of_int (110)) (Prims.of_int (23)))
                    (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
-                      (Prims.of_int (110)) (Prims.of_int (25))
+                      (Prims.of_int (110)) (Prims.of_int (26))
                       (Prims.of_int (123)) (Prims.of_int (84)))
                    (FStar_Tactics_Effect.lift_div_tac
-                      (fun uu___ -> Pulse_Elaborate_Pure.elab_term t))
+                      (fun uu___ -> Pulse_Elaborate_Pure.elab_term t0))
                    (fun uu___ ->
                       (fun rt ->
                          Obj.magic
@@ -823,7 +825,7 @@ let (instantiate_term_implicits :
                                  (Prims.of_int (111)) (Prims.of_int (21))
                                  (Prims.of_int (111)) (Prims.of_int (74)))
                               (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
-                                 (Prims.of_int (110)) (Prims.of_int (25))
+                                 (Prims.of_int (110)) (Prims.of_int (26))
                                  (Prims.of_int (123)) (Prims.of_int (84)))
                               (Obj.magic
                                  (catch_all
@@ -924,7 +926,7 @@ let (instantiate_term_implicits :
                                                                     (Prims.of_int (115))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (115))
-                                                                    (Prims.of_int (43)))
+                                                                    (Prims.of_int (44)))
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Printf.fst"
                                                                     (Prims.of_int (121))
@@ -933,7 +935,7 @@ let (instantiate_term_implicits :
                                                                     (Prims.of_int (44)))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
-                                                                    t))
+                                                                    t0))
                                                                     (fun
                                                                     uu___3 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -973,7 +975,7 @@ let (instantiate_term_implicits :
                                                      FStar_Tactics_Derived.fail
                                                        uu___1))
                                          | FStar_Pervasives_Native.Some
-                                             (t1, ty) ->
+                                             (t, ty) ->
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
                                                   (FStar_Range.mk_range
@@ -991,7 +993,7 @@ let (instantiate_term_implicits :
                                                   (FStar_Tactics_Effect.lift_div_tac
                                                      (fun uu___1 ->
                                                         Pulse_Readback.readback_ty
-                                                          t1))
+                                                          t))
                                                   (fun uu___1 ->
                                                      (fun topt1 ->
                                                         Obj.magic
@@ -1019,20 +1021,20 @@ let (instantiate_term_implicits :
                                                                     tyopt)
                                                                 with
                                                                 | (FStar_Pervasives_Native.Some
-                                                                   t2,
+                                                                   t1,
                                                                    FStar_Pervasives_Native.Some
                                                                    ty1) ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
-                                                                    (t2, ty1))
+                                                                    (t1, ty1))
                                                                 | uu___1 ->
                                                                     FStar_Tactics_Derived.fail
                                                                     "instantiate_implicits: could not readback the resulting term/typ")))
                                                        uu___1)))) uu___)))
                         uu___))) uu___)
 let (check_universe :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.universe, unit) Prims.dtuple2, unit)
         FStar_Tactics_Effect.tac_repr)
@@ -1224,7 +1226,7 @@ let (check_universe :
                                                           (ru, ())))))) uu___)))
                         uu___))) uu___)
 let (tc_meta_callback :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         (((FStar_Reflection_Types.term, FStar_Reflection_Types.term,
@@ -1266,7 +1268,7 @@ let (tc_meta_callback :
                                           ()))))), issues)))))
           (fun res -> FStar_Tactics_Effect.lift_div_tac (fun uu___ -> res))
 let (check_term :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.term, Pulse_Syntax_Base.term,
          (unit, unit, unit) Pulse_Typing.typing) FStar_Pervasives.dtuple3,
@@ -1568,7 +1570,7 @@ let (check_term :
                                               uu___1))) uu___))) uu___)))
              uu___)
 let (check_term_and_type :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.term, Pulse_Syntax_Base.universe,
          Pulse_Syntax_Base.term, unit,
@@ -1807,7 +1809,7 @@ let (check_term_and_type :
                                                                     tok)))))))
                                    uu___))) uu___))) uu___)
 let (check_term_with_expected_type :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
         ((Pulse_Syntax_Base.term, (unit, unit, unit) Pulse_Typing.typing)
@@ -2071,7 +2073,7 @@ let (check_term_with_expected_type :
                                                     uu___2))) uu___2)))
                               uu___2))) uu___)
 let (tc_with_core :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         (((FStar_Reflection_Types.term,
@@ -2109,7 +2111,7 @@ let (tc_with_core :
                                          (FStar_Tactics_Types.E_Total, t),
                                          ()))))), issues))))
 let (core_check_term :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.term, (unit, unit, unit) Pulse_Typing.typing)
          Prims.dtuple2,
@@ -2402,7 +2404,7 @@ let (core_check_term :
                                                             (ty, tok))))))
                                    uu___))) uu___))) uu___)
 let (core_check_term_with_expected_type :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
         ((unit, unit, unit) Pulse_Typing.typing, unit)
@@ -2633,7 +2635,7 @@ let (core_check_term_with_expected_type :
                                                 uu___))) uu___))) uu___)))
                uu___)
 let (check_vprop :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.term, unit) Prims.dtuple2, unit)
         FStar_Tactics_Effect.tac_repr)
@@ -2654,7 +2656,7 @@ let (check_vprop :
                 match uu___ with
                 | Prims.Mkdtuple2 (t1, t_typing) -> Prims.Mkdtuple2 (t1, ())))
 let (check_vprop_with_core :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -2670,7 +2672,7 @@ let (check_vprop_with_core :
               Pulse_Syntax_Base.Tm_VProp))
         (fun t_typing -> FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
 let (get_non_informative_witness :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.universe ->
       Pulse_Syntax_Base.term ->
         ((unit, unit, unit) Pulse_Typing.non_informative_t, unit)
@@ -2810,7 +2812,7 @@ let (get_non_informative_witness :
                                                 Prims.Mkdtuple2 (x, ())))))
                           uu___))) uu___)
 let (check_prop_validity :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
         ((unit, unit) Pulse_Typing.prop_validity, unit)

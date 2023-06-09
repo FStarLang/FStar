@@ -28,7 +28,7 @@ let rec close_open_inverse' (t:term)
 
     | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
-      close_open_inverse' t x i;    
+      close_open_inverse' t.binder_ty x i;    
       close_open_inverse' b x (i + 1)
 
     | Tm_FStar t _ ->
@@ -133,7 +133,8 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' body2 x i;
       close_open_inverse' post2 x (i + 1)
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      close_open_inverse' binder.binder_ty x i; 
       close_open_inverse' initializer x i;
       close_open_inverse_st' body x (i + 1)
 
@@ -175,7 +176,7 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
     open_with_gt_ln e2 i t j
   | Tm_ExistsSL _ t1 body
   | Tm_ForallSL _ t1 body ->
-    open_with_gt_ln t1 i t j;
+    open_with_gt_ln t1.binder_ty i t j;
     open_with_gt_ln body (i + 1) t (j + 1)
   | Tm_FStar _ _ -> admit()
 
@@ -216,7 +217,7 @@ let rec close_with_non_freevar (e:term) (x:var) (i:nat)
   | Tm_Pure p -> close_with_non_freevar p x i
   | Tm_ExistsSL _ t1 body
   | Tm_ForallSL _ t1 body ->
-    close_with_non_freevar t1 x i;
+    close_with_non_freevar t1.binder_ty x i;
     close_with_non_freevar body x (i + 1)
   | Tm_FStar _ _ -> admit()
 

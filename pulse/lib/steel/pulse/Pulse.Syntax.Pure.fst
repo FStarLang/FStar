@@ -28,12 +28,12 @@ let u_max (u0 u1:universe) : universe =
 let u_unknown : universe = R.pack_universe R.Uv_Unk
 
 let tm_bvar (bv:bv) : term =
-  Tm_FStar (R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv_with_name bv.bv_ppname bv.bv_index))))
-           bv.bv_range
+  Tm_FStar (R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv_with_name bv.bv_ppname.name bv.bv_index))))
+           bv.bv_ppname.range
 
 let tm_var (nm:nm) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv_with_name nm.nm_ppname nm.nm_index))))
-           nm.nm_range
+  Tm_FStar (R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv_with_name nm.nm_ppname.name nm.nm_index))))
+           nm.nm_ppname.range
 
 let tm_fvar (l:fv) : term =
   Tm_FStar (R.pack_ln (R.Tv_FVar (R.pack_fv l.fv_name)))
@@ -47,7 +47,7 @@ let tm_constant (c:constant) : term =
   Tm_FStar (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
 
 let tm_refine (b:binder) (t:term) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Refine (R.pack_bv (RT.make_bv_with_name b.binder_ppname 0))
+  Tm_FStar (R.pack_ln (R.Tv_Refine (R.pack_bv (RT.make_bv_with_name b.binder_ppname.name 0))
                                    (elab_term b.binder_ty)
                                    (elab_term t)))
            FStar.Range.range_0
@@ -66,24 +66,24 @@ let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
            FStar.Range.range_0
 
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
-  Tm_FStar (mk_arrow_with_name b.binder_ppname (elab_term b.binder_ty, elab_qual q)
-                                               (elab_comp c))
+  Tm_FStar (mk_arrow_with_name b.binder_ppname.name (elab_term b.binder_ty, elab_qual q)
+                                                    (elab_comp c))
            FStar.Range.range_0
 
 let tm_type (u:universe) : term =
   Tm_FStar (R.pack_ln (R.Tv_Type u)) FStar.Range.range_0
 
 let mk_bvar (s:string) (r:Range.range) (i:index) : term =
-  tm_bvar {bv_index=i;bv_ppname=RT.seal_pp_name s;bv_range=r}
+  tm_bvar {bv_index=i;bv_ppname=mk_ppname (RT.seal_pp_name s) r}
 
 let null_var (v:var) : term =
-  tm_var {nm_index=v;nm_ppname=RT.pp_name_default;nm_range=Range.range_0}
+  tm_var {nm_index=v;nm_ppname=ppname_default}
 
 let null_bvar (i:index) : term =
-  tm_bvar {bv_index=i;bv_ppname=RT.pp_name_default;bv_range=Range.range_0}
+  tm_bvar {bv_index=i;bv_ppname=ppname_default}
 
 let term_of_nvar (x:nvar) : term =
-  tm_var { nm_ppname=fst x; nm_index=snd x; nm_range=FStar.Range.range_0}
+  tm_var { nm_index=snd x; nm_ppname=fst x}
 let term_of_no_name_var (x:var) : term =
   term_of_nvar (v_as_nv x)
 
@@ -95,8 +95,7 @@ let is_var (t:term) : option nm =
           | R.Tv_Var bv ->
             let bv_view = R.inspect_bv bv in
             Some {nm_index=bv_view.bv_index;
-                  nm_ppname=bv_view.bv_ppname;
-                  nm_range=r}
+                  nm_ppname=mk_ppname (bv_view.bv_ppname) r}
           | _ -> None
     end
   | _ -> None
@@ -183,7 +182,7 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
                               | Some c -> Some c <: option Pulse.Syntax.Base.comp
                               | None -> None in
                             Some ({binder_ty;
-                                   binder_ppname=bv_view.bv_ppname},
+                                   binder_ppname=mk_ppname (bv_view.bv_ppname) (T.range_of_term host_term)},
                                   q,
                                   c)
                           | _ -> None

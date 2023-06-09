@@ -234,18 +234,40 @@ let rec (readback_ty :
                          op_let_Question
                            (match FStar_Reflection_Builtins.inspect_ln a2
                             with
-                            | FStar_Reflection_Data.Tv_Abs (uu___3, body) ->
+                            | FStar_Reflection_Data.Tv_Abs (b, body) ->
                                 op_let_Question (readback_ty body)
-                                  (fun p -> FStar_Pervasives_Native.Some p)
+                                  (fun p ->
+                                     let bview =
+                                       FStar_Reflection_Builtins.inspect_binder
+                                         b in
+                                     let bv =
+                                       FStar_Reflection_Builtins.inspect_bv
+                                         bview.FStar_Reflection_Data.binder_bv in
+                                     FStar_Pervasives_Native.Some
+                                       ((bv.FStar_Reflection_Data.bv_ppname),
+                                         (Pulse_RuntimeUtils.binder_range b),
+                                         p))
                             | uu___3 -> FStar_Pervasives_Native.None)
-                           (fun p ->
-                              let pulse_t =
-                                if
-                                  (FStar_Reflection_Builtins.inspect_fv fv) =
-                                    Pulse_Reflection_Util.exists_lid
-                                then Pulse_Syntax_Base.Tm_ExistsSL (u, ty, p)
-                                else Pulse_Syntax_Base.Tm_ForallSL (u, ty, p) in
-                              FStar_Pervasives_Native.Some pulse_t))
+                           (fun uu___3 ->
+                              match uu___3 with
+                              | (ppname, range, p) ->
+                                  let b =
+                                    {
+                                      Pulse_Syntax_Base.binder_ty = ty;
+                                      Pulse_Syntax_Base.binder_ppname =
+                                        (Pulse_Syntax_Base.mk_ppname ppname
+                                           range)
+                                    } in
+                                  let pulse_t =
+                                    if
+                                      (FStar_Reflection_Builtins.inspect_fv
+                                         fv)
+                                        = Pulse_Reflection_Util.exists_lid
+                                    then
+                                      Pulse_Syntax_Base.Tm_ExistsSL (u, b, p)
+                                    else
+                                      Pulse_Syntax_Base.Tm_ForallSL (u, b, p) in
+                                  FStar_Pervasives_Native.Some pulse_t))
                   else aux ()
               | (FStar_Reflection_Data.Tv_FVar fv, (a1, uu___1)::[]) ->
                   if

@@ -39,7 +39,7 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
 
     | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
-      freevars_close_term' t x i;    
+      freevars_close_term' t.binder_ty x i;    
       freevars_close_term' b x (i + 1)
 
     | Tm_FStar t _ ->
@@ -148,7 +148,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' t1 x i;
       freevars_close_term' t2 x i
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      freevars_close_term' binder.binder_ty x i;
       freevars_close_term' initializer x i;
       freevars_close_st_term' body x (i + 1)
 
@@ -360,6 +361,10 @@ let freevars_mk_tuple2 (u:universe) (aL aR:term)
            Set.union (freevars aL) (freevars aR)) =
   admit ()
 
+let freevars_ref (t:term)
+  : Lemma (freevars (mk_ref t) == freevars t)
+  = admit()
+
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
@@ -441,7 +446,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      tot_typing_freevars prop_typing
 
    | T_ElimExists _ u t p x dt dv ->
-     let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
+     let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
      tot_typing_freevars dt;
      tot_typing_freevars dv;
      freevars_mk_reveal u t x_tm;
@@ -463,7 +468,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      freevars_mk_erased u t
 
 
-   | T_IntroExists _ u tt p w dt dv dw ->
+   | T_IntroExists _ u b p w dt dv dw ->
      tot_typing_freevars dt;
      tot_typing_freevars dv;
      tot_typing_freevars dw;
@@ -471,15 +476,15 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      calc (Set.subset) {
         freevars_comp c;
       (Set.equal) {}
-        freevars_comp (comp_intro_exists u tt p w);
+        freevars_comp (comp_intro_exists u b p w);
       (Set.equal) {}
         freevars Tm_EmpInames `Set.union`
         (freevars tm_unit `Set.union`
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p)));
+         freevars (Tm_ExistsSL u b p)));
       (Set.equal) {} 
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p));
+         freevars (Tm_ExistsSL u b p));
       (Set.subset) { freevars_open_term p w 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`
@@ -487,25 +492,25 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
          freevars p);
      }
 
-   | T_IntroExistsErased _ u tt p w dt dv dw ->
+   | T_IntroExistsErased _ u b p w dt dv dw ->
      tot_typing_freevars dt;
      tot_typing_freevars dv;
      tot_typing_freevars dw;
      assert (freevars_st t `Set.subset` vars_of_env g);
-     freevars_mk_reveal u tt w;
+     freevars_mk_reveal u b.binder_ty w;
      calc (Set.subset) {
         freevars_comp c;
       (Set.equal) {}
-        freevars_comp (comp_intro_exists_erased u tt p w);
+        freevars_comp (comp_intro_exists_erased u b p w);
       (Set.equal) {}
         freevars Tm_EmpInames `Set.union`
         (freevars tm_unit `Set.union`
-        (freevars (open_term' p (Pulse.Typing.mk_reveal u tt w) 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p)));
+        (freevars (open_term' p (Pulse.Typing.mk_reveal u b.binder_ty w) 0) `Set.union`
+         freevars (Tm_ExistsSL u b p)));
       (Set.equal) {} 
-        (freevars (open_term' p (Pulse.Typing.mk_reveal u tt w) 0) `Set.union`
-         freevars (Tm_ExistsSL u tt p));
-      (Set.subset) { freevars_open_term p (Pulse.Typing.mk_reveal u tt w) 0 }
+        (freevars (open_term' p (Pulse.Typing.mk_reveal u b.binder_ty w) 0) `Set.union`
+         freevars (Tm_ExistsSL u b p));
+      (Set.subset) { freevars_open_term p (Pulse.Typing.mk_reveal u b.binder_ty w) 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`
          freevars_st t `Set.union`
@@ -546,11 +551,13 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      vprop_equiv_freevars equiv_p_q
 
 
-   | T_WithLocal _ init body _ c x init_typing _ c_typing body_typing ->
+   | T_WithLocal _ init body init_t c x init_typing u_typing c_typing body_typing ->
      tot_typing_freevars init_typing;
      st_typing_freevars body_typing;
      freevars_open_st_term_inv body x;
-     comp_typing_freevars c_typing
+     comp_typing_freevars c_typing;
+     tot_typing_freevars u_typing;
+     freevars_ref init_t
 
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
      tot_typing_freevars t_typing;

@@ -12,43 +12,54 @@ module P = Pulse.Syntax.Printer
 module RT = FStar.Reflection.Typing
 module RUtil = Pulse.Reflection.Util
 
-type uvar_id = nat
+let uvar_id = nat
+let uvar = uvar_id & ppname
 
-let uvar_id_to_string n = FStar.Printf.sprintf "?u_%d" n
+let uvar_eq (u1 u2:uvar) : b:bool { b <==> (u1 == u2)} =
+  fst u1 = fst u2
 
-let embedded_uvar_lid = ["__pulse_embedded_uvar__"]
+let uvar_to_string (num, pp) =
+  FStar.Printf.sprintf "?%s_%d" (T.unseal pp.name) num
 
-let is_uvar_r (t:R.term) : option uvar_id = 
+let range_of_uvar (u:uvar) : range = (snd u).range
+
+let embedded_uvar_prefix = "__pulse_embedded_uvar__"
+
+let is_uvar_r (t:R.term) : option uvar = 
     match R.inspect_ln t with
-    | R.Tv_UInst fv [u] ->
-      if R.inspect_fv fv = embedded_uvar_lid
-      then match R.inspect_universe u with
-           | R.Uv_BVar n -> Some n
-            | _ -> None
-      else None
+    | R.Tv_UInst fv [u] -> (
+      match R.inspect_fv fv with
+      | [prefix; name] -> 
+        if prefix = embedded_uvar_prefix
+        then match R.inspect_universe u with
+              | R.Uv_BVar n -> Some (n, mk_ppname (T.seal name) (T.range_of_term t))
+              | _ -> None
+        else None
+      | _ -> None
+    )
     | _ -> None
 
-let is_uvar (t:term) : option uvar_id =
+let is_uvar (t:term) : option uvar =
   match t with
   | Tm_FStar r _ -> is_uvar_r r
   | _ -> None
 
+let wrap_nat_to_uvar (name:string) (r:range) (n:nat) : term =
+  let tm = R.pack_ln (R.Tv_UInst (R.pack_fv [embedded_uvar_prefix; name]) [R.pack_universe (R.Uv_BVar n)]) in
+  let tm = set_range_of tm r in
+  Tm_FStar tm r
 
-let wrap_nat_to_uvar (n:nat) : term =
-  Tm_FStar 
-    (R.pack_ln (R.Tv_UInst (R.pack_fv embedded_uvar_lid) [R.pack_universe (R.Uv_BVar n)]))
-    FStar.Range.range_0
-
-let gen_uvar () =
+let gen_uvar (name:ppname) =
   let n = T.fresh () in
   assume (n >= 0);  // TODO: relying on the implementation of fresh in the typechecker
-  n, wrap_nat_to_uvar n
+  let nm = T.unseal name.name in
+  (n, name), wrap_nat_to_uvar nm name.range n
 
-let rec gen_uvars (t_head:term) : T.Tac (list uvar_id & comp) =
+let rec gen_uvars (t_head:term) : T.Tac (list uvar & comp) =
   let ropt = is_arrow t_head in
   match ropt with
-  | Some (_, Some Implicit, c_rest) -> (
-    let n, tm = gen_uvar () in
+  | Some (b, Some Implicit, c_rest) -> (
+    let n, tm = gen_uvar b.binder_ppname in
     let c_rest = open_comp_with c_rest tm in
     match c_rest with
     | C_ST c
@@ -63,18 +74,18 @@ let rec gen_uvars (t_head:term) : T.Tac (list uvar_id & comp) =
    T.fail (FStar.Printf.sprintf "gen_uvars: unexpected t_head: %s"
                                   (P.term_to_string t_head))
 
-let rec check_valid_solution (n:uvar_id) (t:term) (uv_sols:list (uvar_id & term))
-  : T.Tac (list (uvar_id & term)) =
+let rec check_valid_solution (n:uvar) (t:term) (uv_sols:solution)
+  : T.Tac solution =
 
   match uv_sols with
   | [] -> [n, t]
   | (n', t')::tl ->
-    if n = n'
+    if uvar_eq n n'
     then if eq_tm t t' then uv_sols
          else T.fail "check_valid_solution failed"
     else (n', t')::(check_valid_solution n t tl)
 
-let uvar_index (t:term{Some? (is_uvar t)}) : uvar_id =
+let uvar_index (t:term{Some? (is_uvar t)}) : uvar =
   Some?.v (is_uvar t)
 
 let is_reveal_uvar (t:term) : option (universe & term & term) =
@@ -101,8 +112,8 @@ let is_reveal (t:term) : bool =
      | _ -> false)
   | _ -> false
 
-let rec match_typ (t1 t2:term) (uv_sols:list (uvar_id & term))
-  : T.Tac (list (uvar_id & term)) =
+let rec match_typ (t1 t2:term) (uv_sols:solution)
+  : T.Tac solution =
 
   match is_reveal_uvar t1, is_reveal t2 with
   | Some (u, ty, t), false ->
@@ -155,8 +166,8 @@ let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
            atomic_vprops_may_match arg1 arg2
          | _, _ -> eq_tm t1 t2
 
-let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (uvar_id & term))
-  : T.Tac (list (uvar_id & term)) =
+let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:solution)
+  : T.Tac solution =
 
   if atomic_vprop_has_uvar t
   then
@@ -180,16 +191,16 @@ let infer_one_atomic_vprop (t:term) (ctxt:list term) (uv_sols:list (uvar_id & te
 let union_ranges (r0 r1:range) : T.Tac range = r0
 let with_range (t:st_term') (r:range) : st_term = { term = t; range = r}
 
-let rec rebuild_head (head:term) (uvs:list uvar_id) (uv_sols:list (uvar_id & term)) (r:range)
+let rec rebuild_head (head:term) (uvs:list uvar) (uv_sols:solution) (r:range)
   : T.TacH st_term (requires fun _ -> List.Tot.length uvs > 0)
                    (ensures fun _ _ -> True) =
   let hd::tl = uvs in
-  let ropt = List.Tot.find (fun (n1, _) -> hd = n1) uv_sols in
+  let ropt = List.Tot.find (fun (n1, _) -> uvar_eq hd n1) uv_sols in
   match ropt with
   | None ->
     T.fail (FStar.Printf.sprintf
-              "inference failed in building head, no solution for %d\n"
-              hd)
+              "inference failed in building head, no solution for %s\n"
+              (uvar_to_string hd))
   | Some (_, t2) ->
     match tl with
     | [] -> with_range (Tm_STApp { head; arg_qual= Some Implicit; arg=t2 })
@@ -199,19 +210,28 @@ let rec rebuild_head (head:term) (uvs:list uvar_id) (uv_sols:list (uvar_id & ter
       rebuild_head app_node tl uv_sols r
 
 
-let print_solutions (l:list (uvar_id & term))
+let print_solutions (l:solution)
   : T.Tac string
   = String.concat "\n"
-      (T.map #(uvar_id & term) #string
+      (T.map #(uvar & term) #string
         (fun (u, t) ->
-          Printf.sprintf "%d := %s" 
-                       u
+          Printf.sprintf "%s := %s" 
+                       (uvar_to_string u)
                        (P.term_to_string t))
         l)
 
+
+let find_solution (sol:solution) (t:uvar)
+  : option term
+  = let r = List.Tot.find (fun (u, _) -> uvar_eq u t) sol in
+    match r with
+    | None -> None
+    | Some (_, t) -> Some t
+
+
 let try_inst_uvs_in_goal (ctxt:term)
                          (goal:vprop)
-  : T.Tac (list (uvar_id & term))
+  : T.Tac solution
   = let uv_sols = [] in
     let goal_list = vprop_as_list goal in
     let ctxt_list = vprop_as_list ctxt in
@@ -259,13 +279,6 @@ let infer
     head
   end
 
-let find_solution (sol:list (uvar_id * term)) (t:uvar_id)
-  : option term
-  = let r = List.Tot.find (fun (u, _) -> u = t) sol in
-    match r with
-    | None -> None
-    | Some (_, t) -> Some t
-
 let solutions_to_string sol = print_solutions sol
 
 let rec apply_sol (sol:solution) (t:R.term) =
@@ -284,7 +297,7 @@ let rec apply_sol (sol:solution) (t:R.term) =
     | Some (Tm_FStar t _) -> t
     | Some t -> Pulse.Elaborate.Pure.elab_term t
     
-let rec apply_solution (sol:list (uvar_id * term)) (t:term)
+let rec apply_solution (sol:solution) (t:term)
   : term
   = match t with
     | Tm_Emp
@@ -314,12 +327,12 @@ let rec apply_solution (sol:list (uvar_id * term)) (t:term)
       Tm_Star (apply_solution sol l)
               (apply_solution sol r)
               
-    | Tm_ExistsSL u t body ->
-      Tm_ExistsSL u (apply_solution sol t)
+    | Tm_ExistsSL u b body ->
+      Tm_ExistsSL u { b with binder_ty = apply_solution sol b.binder_ty }
                     (apply_solution sol body)
        
-    | Tm_ForallSL u t body ->
-      Tm_ForallSL u (apply_solution sol t)
+    | Tm_ForallSL u b body ->
+      Tm_ForallSL u { b with binder_ty = apply_solution sol b.binder_ty }
                     (apply_solution sol body)
 
 let rec contains_uvar_r (t:R.term) =
@@ -348,11 +361,11 @@ let rec contains_uvar (t:term)
       (contains_uvar r)
               
     | Tm_ExistsSL u t body ->
-      (contains_uvar t) ||
+      (contains_uvar t.binder_ty) ||
       (contains_uvar body)
        
     | Tm_ForallSL u t body ->
-      (contains_uvar t) ||
+      (contains_uvar t.binder_ty) ||
       (contains_uvar body)
                     
     | Tm_FStar t _ ->
@@ -399,4 +412,3 @@ let try_solve_pure_equalities (p:term) : T.Tac solution =
   match p with
   | Tm_FStar t r -> aux [] t
   | _ -> []
-

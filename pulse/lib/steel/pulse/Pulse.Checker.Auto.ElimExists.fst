@@ -18,10 +18,10 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v Tm_VProp)
                    st_typing g t c)) =
 
   match v with
-  | Tm_ExistsSL u t p ->
+  | Tm_ExistsSL u { binder_ppname=nm; binder_ty = t } p ->
     if true then //T.unseal s then
       let x = fresh g in
-      let c = Pulse.Typing.comp_elim_exists u t p x in
+      let c = Pulse.Typing.comp_elim_exists u t p (nm, x) in
       let tm_typing : st_typing g _ c =
           T_ElimExists g (comp_u c) t p x (magic()) (magic())
       in

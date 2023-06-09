@@ -49,7 +49,7 @@ val tm_abs (b:binder) (q:option qualifier) (pre:term) (body:st_term) (ret_ty:opt
 val tm_st_app (head:term) (q:FStar.Syntax.Syntax.aqual) (arg:term) (_:range) : st_term
 val tm_bind (x:binder) (e1:st_term) (e2:st_term) (_:range) : st_term
 val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term
-val tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) (_:range) : st_term
+val tm_let_mut (x:binder) (v:term) (k:st_term) (_:range) : st_term
 val tm_while (head:st_term) (invariant: (ident & vprop)) (body:st_term) (_:range) : st_term 
 val tm_if (head:term) (returns_annot:option vprop) (then_ else_:st_term) (_:range) : st_term
 val tm_intro_exists (erased:bool) (vp:vprop) (witnesses:list term) (_:range) : st_term

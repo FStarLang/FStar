@@ -114,17 +114,20 @@ let (tm_intro_exists :
 let (tm_while :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
-      Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
+      Pulse_Syntax_Base.ppname ->
+        Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
   fun invariant ->
     fun condition ->
-      fun body ->
-        Pulse_Syntax_Base.Tm_While
-          {
-            Pulse_Syntax_Base.invariant = invariant;
-            Pulse_Syntax_Base.condition = condition;
-            Pulse_Syntax_Base.body3 = body
-          }
+      fun condition_var ->
+        fun body ->
+          Pulse_Syntax_Base.Tm_While
+            {
+              Pulse_Syntax_Base.invariant = invariant;
+              Pulse_Syntax_Base.condition = condition;
+              Pulse_Syntax_Base.condition_var = condition_var;
+              Pulse_Syntax_Base.body3 = body
+            }
 let (tm_par :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
@@ -149,16 +152,19 @@ let (tm_par :
                   Pulse_Syntax_Base.post21 = post2
                 }
 let (tm_with_local :
-  Pulse_Syntax_Base.term ->
-    Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
+  Pulse_Syntax_Base.binder ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
-  fun initializer1 ->
-    fun body ->
-      Pulse_Syntax_Base.Tm_WithLocal
-        {
-          Pulse_Syntax_Base.initializer1 = initializer1;
-          Pulse_Syntax_Base.body4 = body
-        }
+  fun binder ->
+    fun initializer1 ->
+      fun body ->
+        Pulse_Syntax_Base.Tm_WithLocal
+          {
+            Pulse_Syntax_Base.binder1 = binder;
+            Pulse_Syntax_Base.initializer1 = initializer1;
+            Pulse_Syntax_Base.body4 = body
+          }
 let (tm_rewrite :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term')
@@ -192,4 +198,4 @@ let (with_range :
     Pulse_Syntax_Base.range -> Pulse_Syntax_Base.st_term)
   =
   fun t ->
-    fun r -> { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range = r }
+    fun r -> { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range1 = r }

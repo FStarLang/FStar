@@ -40,7 +40,7 @@ let while_soundness
   let rcond_typing
     : RT.tot_typing _ (elab_st_typing cond_typing)
         (mk_stt_comp uzero bool_tm (mk_exists uzero bool_tm rinv) rinv) =
-    soundness g cond (comp_while_cond inv) cond_typing in
+    soundness g cond (comp_while_cond ppname_default inv) cond_typing in
 
   elab_open_commute' inv tm_true 0;
 
@@ -50,7 +50,7 @@ let while_soundness
            (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
            (mk_abs unit_tm R.Q_Explicit (mk_exists uzero bool_tm rinv))) =
     
-    let d = soundness g body (comp_while_body inv) body_typing in
+    let d = soundness g body (comp_while_body ppname_default inv) body_typing in
     let pre_eq : RT.equiv (elab_env g)
                           (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
                           (RT.open_or_close_term' (elab_term inv) (RT.OpenWith true_tm) 0)

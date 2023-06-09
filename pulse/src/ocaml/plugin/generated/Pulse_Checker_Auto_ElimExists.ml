@@ -12,7 +12,7 @@ let (should_elim_exists :
                    true
                | uu___1 -> false))) uu___
 let (mk :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->
       unit ->
         ((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
@@ -30,7 +30,12 @@ let (mk :
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
                        match v with
-                       | Pulse_Syntax_Base.Tm_ExistsSL (u, t, p) ->
+                       | Pulse_Syntax_Base.Tm_ExistsSL
+                           (u,
+                            { Pulse_Syntax_Base.binder_ty = t;
+                              Pulse_Syntax_Base.binder_ppname = nm;_},
+                            p)
+                           ->
                            FStar_Pervasives_Native.Some
                              (FStar_Pervasives.Mkdtuple3
                                 ((Pulse_Typing.wr
@@ -41,24 +46,26 @@ let (mk :
                                               ((Pulse_Syntax_Base.comp_u
                                                   (Pulse_Typing.comp_elim_exists
                                                      u t p
-                                                     (Pulse_Typing.fresh g))),
-                                                t, p))
+                                                     (nm,
+                                                       (Pulse_Typing.fresh g)))),
+                                                (Pulse_Typing.as_binder t),
+                                                p))
                                        })),
                                   (Pulse_Typing.comp_elim_exists u t p
-                                     (Pulse_Typing.fresh g)),
+                                     (nm, (Pulse_Typing.fresh g))),
                                   (Pulse_Typing.T_ElimExists
                                      (g,
                                        (Pulse_Syntax_Base.comp_u
                                           (Pulse_Typing.comp_elim_exists u t
-                                             p (Pulse_Typing.fresh g))), t,
-                                       p, (Pulse_Typing.fresh g), (), ()))))
+                                             p (nm, (Pulse_Typing.fresh g)))),
+                                       t, p, (Pulse_Typing.fresh g), (), ()))))
                        | uu___1 -> FStar_Pervasives_Native.None))) uu___2
           uu___1 uu___
 let (elim_exists :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
-        ((Pulse_Typing.env, Pulse_Syntax_Base.term, unit,
+        ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
            (unit, unit, unit, unit)
              Pulse_Checker_Auto_Util.continuation_elaborator)
            FStar_Pervasives.dtuple4,

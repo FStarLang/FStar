@@ -64,7 +64,7 @@ let mk_t_abs_tot (g:env)
                  (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
                  (body_typing:tot_typing (extend x (Inl ty) g) (open_term body x) body_ty)
   : GTot (RT.tot_typing (elab_env g)
-            (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (elab_term body))
+            (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (elab_term body))
             (elab_term (tm_arrow {binder_ty=ty; binder_ppname=ppname} q (close_comp (C_Tot body_ty) x))))
   = let c = C_Tot body_ty in
     let r_ty = elab_term ty in
@@ -80,7 +80,7 @@ let mk_t_abs_tot (g:env)
     assume (~ (x `Set.mem` RT.freevars (RT.close_term r_body x)));
     RT.close_term_spec (elab_comp c) x;
     let d : RT.tot_typing (elab_env g)
-              (mk_abs_with_name ppname (elab_term ty) (elab_qual q)
+              (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q)
                  (RT.close_term (elab_term (open_term body x)) x))
               (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp (C_Tot body_ty) x)))
           = 
@@ -89,7 +89,7 @@ let mk_t_abs_tot (g:env)
              r_ty
              (RT.close_term r_body x)
              (T.E_Total, r_c)
-             u ppname (elab_qual q)
+             u ppname.name (elab_qual q)
              _
              r_t_typing
              r_body_typing
@@ -99,7 +99,7 @@ let mk_t_abs_tot (g:env)
     assert (elab_term (open_term body x) ==
             RT.open_term (elab_term body) x);
     let d : RT.typing _
-                      (mk_abs_with_name ppname (elab_term ty) (elab_qual q)
+                      (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q)
                               (RT.close_term (RT.open_term (elab_term body) x) x))
                       _
           = d 
@@ -124,7 +124,7 @@ let mk_t_abs (g:env)
                                           (elab_st_typing body_typing)
                                           (elab_comp c))
   : GTot (RT.tot_typing (elab_env g)
-            (mk_abs_with_name ppname (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+            (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
             (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
   = let r_ty = elab_term ty in
     let r_body = elab_st_typing body_typing in
@@ -139,7 +139,7 @@ let mk_t_abs (g:env)
              r_ty
              (RT.close_term r_body x)
              (T.E_Total, r_c)
-             u ppname (elab_qual q)
+             u ppname.name (elab_qual q)
              _
              r_t_typing
              r_body_typing

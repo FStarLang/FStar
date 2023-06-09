@@ -53,7 +53,7 @@ let rec open_term_ln' (e:term)
 
     | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
-      open_term_ln' t x i;    
+      open_term_ln' t.binder_ty x i;    
       open_term_ln' b x (i + 1)
 
     | Tm_FStar t _ ->
@@ -164,7 +164,8 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      open_term_ln' binder.binder_ty x i;
       open_term_ln' initializer x i;
       open_st_term_ln' body x (i + 1)
 
@@ -217,7 +218,7 @@ let rec ln_weakening (e:term) (i j:int)
 
     | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
-      ln_weakening t i j;    
+      ln_weakening t.binder_ty i j;    
       ln_weakening b (i + 1) (j + 1)
 
     | Tm_FStar t _ ->
@@ -366,7 +367,7 @@ let rec open_term_ln_inv' (e:term)
 
     | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
-      open_term_ln_inv' t x i;    
+      open_term_ln_inv' t.binder_ty x i;    
       open_term_ln_inv' b x (i + 1)
 
     | Tm_FStar t _ ->
@@ -482,7 +483,8 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' t1 x i;
       open_term_ln_inv' t2 x i
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv' initializer x i;
       open_term_ln_inv_st' body x (i + 1)
 
@@ -523,7 +525,7 @@ let rec close_term_ln' (e:term)
 
     | Tm_ExistsSL _ t b
     | Tm_ForallSL _ t b ->
-      close_term_ln' t x i;    
+      close_term_ln' t.binder_ty x i;    
       close_term_ln' b x (i + 1)
 
     | Tm_FStar t _ ->
@@ -632,7 +634,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' t1 x i;
       close_term_ln' t2 x i
 
-    | Tm_WithLocal { initializer; body } ->
+    | Tm_WithLocal { binder; initializer; body } ->
+      close_term_ln' binder.binder_ty x i;
       close_term_ln' initializer x i;
       close_st_term_ln' body x (i + 1)
 
@@ -758,7 +761,13 @@ let ln_mk_snd (u:universe) (aL aR e:term) (n:int)
       (ensures ln' (mk_snd u u aL aR e) n) =
   admit ()
 
-#push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 1"
+let ln_mk_ref (t:term) (n:int)
+  : Lemma
+      (requires ln' t n)
+      (ensures ln' (mk_ref t) n) =
+  admit ()
+
+#push-options "--z3rlimit_factor 6 --fuel 4 --ifuel 1"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
   : Lemma 
@@ -830,7 +839,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
     | T_ElimExists _ u t p x dt dv ->
       tot_typing_ln dt;
       tot_typing_ln dv;
-      let x_tm = tm_var {nm_index=x;nm_ppname=RT.pp_name_default;nm_range=Range.range_0} in
+      let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
       ln_mk_reveal u t x_tm (-1);
       open_term_ln_inv' p (Pulse.Typing.mk_reveal u t x_tm) 0;
       close_term_ln' (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0) x 0
@@ -842,12 +851,12 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln dw;
       open_term_ln_inv' p e 0
 
-    | T_IntroExistsErased _ u t p e dt dv dw ->
+    | T_IntroExistsErased _ u b p e dt dv dw ->
       tot_typing_ln dt;
       tot_typing_ln dv;
       tot_typing_ln dw;
-      ln_mk_reveal u t e (-1);
-      open_term_ln_inv' p (Pulse.Typing.mk_reveal u t e) 0
+      ln_mk_reveal u b.binder_ty e (-1);
+      open_term_ln_inv' p (Pulse.Typing.mk_reveal u b.binder_ty e) 0
 
     | T_Equiv _ _ _ _ d2 deq ->
       st_typing_ln d2;
@@ -881,7 +890,9 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln init_typing;
       st_typing_ln body_typing;
       open_st_term_ln' body (null_var x) 0;
-      comp_typing_ln c_typing
+      comp_typing_ln c_typing;
+      tot_typing_ln init_t_typing;
+      ln_mk_ref init_t (-1)
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_typing_ln t_typing;

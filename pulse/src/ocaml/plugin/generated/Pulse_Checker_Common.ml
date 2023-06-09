@@ -17,13 +17,13 @@ let (mk_arrow :
         FStar_Reflection_Data.Q_Explicit (Pulse_Elaborate_Pure.elab_term t)
 type post_hint_t =
   {
-  g: Pulse_Typing.env ;
+  g: Pulse_Typing_Env.env ;
   ret_ty: Pulse_Syntax_Base.term ;
   u: Pulse_Syntax_Base.universe ;
   ty_typing: unit ;
   post: Pulse_Syntax_Base.term ;
   post_typing: unit }
-let (__proj__Mkpost_hint_t__item__g : post_hint_t -> Pulse_Typing.env) =
+let (__proj__Mkpost_hint_t__item__g : post_hint_t -> Pulse_Typing_Env.env) =
   fun projectee ->
     match projectee with
     | { g; ret_ty; u; ty_typing; post; post_typing;_} -> g
@@ -54,12 +54,12 @@ type ('g, 'p, 'x) post_hint_typing_t =
 
 
 let (post_hint_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     unit post_hint_for_env ->
       Pulse_Syntax_Base.var -> (unit, unit, unit) post_hint_typing_t)
   = fun g -> fun p -> fun x -> { ty_typing1 = (); post_typing1 = () }
 let (intro_post_hint :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
       Pulse_Syntax_Base.term ->
         (unit post_hint_for_env, unit) FStar_Tactics_Effect.tac_repr)
@@ -189,7 +189,7 @@ let (intro_post_hint :
                                                     uu___2))) uu___))) uu___)))
                uu___)
 let (post_hint_from_comp_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
       (unit, unit) Pulse_Typing_Metatheory.comp_typing_u ->
         unit post_hint_for_env)
@@ -223,7 +223,7 @@ let (__proj__Framing_failure__item__uu___ :
   Prims.exn -> Pulse_Checker_Framing.framing_failure) =
   fun projectee -> match projectee with | Framing_failure uu___ -> uu___
 let (try_frame_pre :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
@@ -396,7 +396,7 @@ let (try_frame_pre :
                                                                     (Prims.of_int (44)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.range_to_string
-                                                                    t.Pulse_Syntax_Base.range))
+                                                                    t.Pulse_Syntax_Base.range1))
                                                                     (fun
                                                                     uu___3 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -485,7 +485,7 @@ type ('g, 'ctxt, 'postuhint) checker_result_t =
   (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
     (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3
 type check_t =
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
@@ -494,7 +494,7 @@ type check_t =
               FStar_Tactics_Effect.tac_repr
 let (replace_equiv_post :
   Pulse_Syntax_Base.range ->
-    Pulse_Typing.env ->
+    Pulse_Typing_Env.env ->
       Pulse_Syntax_Base.comp ->
         (unit, unit) Pulse_Typing_Metatheory.comp_typing_u ->
           unit post_hint_opt ->
@@ -937,7 +937,7 @@ let (replace_equiv_post :
                                                         uu___1))) uu___1)))
                               uu___))) uu___)
 let (repack :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.st_term ->
         (Pulse_Syntax_Base.comp_st,
@@ -979,7 +979,7 @@ let (repack :
                                      (Prims.of_int (139)) (Prims.of_int (46)))
                                   (Obj.magic
                                      (replace_equiv_post
-                                        t.Pulse_Syntax_Base.range g c
+                                        t.Pulse_Syntax_Base.range1 g c
                                         (Pulse_Typing_Metatheory.st_typing_correctness
                                            g t c d_c) post_hint))
                                   (fun uu___1 ->
@@ -1000,7 +1000,7 @@ let (repack :
                                      FStar_Pervasives.Mkdtuple3 (t, c, d_c)))))
                    uu___)
 let (intro_comp_typing :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
       unit ->
         unit ->

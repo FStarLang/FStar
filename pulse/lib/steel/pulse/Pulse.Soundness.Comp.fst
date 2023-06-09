@@ -38,7 +38,7 @@ let stc_soundness
             }
     elab_term st.post;
   };
-  let post_typing  = mk_t_abs_tot g RT.pp_name_default dres dpost in
+  let post_typing  = mk_t_abs_tot g ppname_default dres dpost in
   res_typing, pre_typing, post_typing
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"

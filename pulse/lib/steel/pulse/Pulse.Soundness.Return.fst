@@ -36,7 +36,7 @@ let return_soundess
   let rpost_abs_typing
     : RT.tot_typing _ rpost_abs
                       (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
-    mk_t_abs_tot g RT.pp_name_default t_typing post_typing in
+    mk_t_abs_tot g ppname_default t_typing post_typing in
   
   let rx_tm = RT.var_as_term x in
   let elab_c_pre = RT.open_or_close_term' rpost (RT.OpenWith re) 0 in

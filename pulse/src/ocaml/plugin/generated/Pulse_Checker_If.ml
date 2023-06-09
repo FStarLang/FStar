@@ -1,10 +1,10 @@
 open Prims
 let rec (combine_if_branches :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.comp_st ->
         (unit, unit, unit) Pulse_Typing.st_typing ->
-          Pulse_Typing.env ->
+          Pulse_Typing_Env.env ->
             Pulse_Syntax_Base.st_term ->
               Pulse_Syntax_Base.comp_st ->
                 (unit, unit, unit) Pulse_Typing.st_typing ->
@@ -334,7 +334,7 @@ let rec (combine_if_branches :
                                              "Cannot combine then and else branches (different st_comp)")))
                     uu___7 uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
 let (check_if :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.st_term ->

@@ -1,7 +1,7 @@
 open Prims
 type ('p, 'x, 't, 'u, 'post) post_hint_compatible = Obj.t
 let (check_admit :
-  Pulse_Typing.env ->
+  Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->

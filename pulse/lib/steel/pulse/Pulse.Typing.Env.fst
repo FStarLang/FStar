@@ -23,11 +23,14 @@ let related (bs:list (var & typ)) (m:Map.t var typ) =
   
   (forall (x:var). Map.contains m x ==> (List.Tot.memP (x, Map.sel m x) bs))
 
+type context = FStar.Sealed.Inhabited.sealed #(list string) []
+
 noeq
 type env = {
   f : RT.fstar_top_env;
   bs : list (var & typ);
-  m : m:bmap { related bs m }
+  m : m:bmap { related bs m };
+  ctxt: context
 }
 
 let fstar_env g = g.f

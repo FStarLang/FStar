@@ -7,8 +7,7 @@ open Pulse.Syntax
 
 module L = FStar.List.Tot
 module FTB = FStar.Tactics
-
-
+include Pulse.Typing.Env
 // let fstar_env =
 //   g:R.env { 
 //     RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
@@ -84,16 +83,6 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
     C_STGhost Tm_EmpInames
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
-let eqn = term & term & term
-let binding = either term eqn
-let env_bindings = list (var & binding)
-let context = FStar.Sealed.Inhabited.sealed #(list string) []
-noeq
-type env = {
-  f: RT.fstar_top_env;
-  g: env_bindings;
-  ctxt: context
-}
 
 
 
@@ -359,19 +348,19 @@ let non_informative_witness_t (u:universe) (t:term)
                None
                t
 
-let elim_exists_post (u:universe) (t:term) (p:term) (x:var)
+let elim_exists_post (u:universe) (t:term) (p:term) (x:nvar)
   : term
-  = let x_tm = null_var x in
+  = let x_tm = term_of_nvar x in
     let p = open_term' p (mk_reveal u t x_tm) 0 in
-    close_term p x
+    close_term p (snd x)
 
-let comp_elim_exists (u:universe) (t:term) (p:term) (x:var)
+let comp_elim_exists (u:universe) (t:term) (p:term) (x:nvar)
   : comp
   = C_STGhost Tm_EmpInames 
               {
                 u=u;
                 res=mk_erased u t;
-                pre=Tm_ExistsSL u t p;
+                pre=Tm_ExistsSL u (as_binder t) p;
                 post=elim_exists_post u t p x
               }
 
@@ -384,50 +373,53 @@ let comp_intro_pure (p:term) =
               post=Tm_Pure p
             }
 
-let comp_intro_exists (u:universe) (t:term) (p:term) (e:term)
+let named_binder (x:ppname) (t:term) = { binder_ppname = x; binder_ty = t}
+
+let comp_intro_exists (u:universe) (b:binder) (p:term) (e:term)
   : comp
   = C_STGhost Tm_EmpInames
               {
                 u=u0;
                 res=tm_unit;
                 pre=open_term' p e 0;
-                post=Tm_ExistsSL u t p
+                post=Tm_ExistsSL u b p
               }
 
-let comp_intro_exists_erased (u:universe) (t:term) (p:term) (e:term)
+let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
   : comp
   = C_STGhost Tm_EmpInames
               {
                 u=u0;
                 res=tm_unit;
-                pre=open_term' p (mk_reveal u t e) 0;
-                post=Tm_ExistsSL u t p
+                pre=open_term' p (mk_reveal u b.binder_ty e) 0;
+                post=Tm_ExistsSL u b p
               }
 
-let comp_while_cond (inv:term)
+
+let comp_while_cond (x:ppname) (inv:term)
   : comp
   = C_ST {
            u=u0;
            res=tm_bool;
-           pre=Tm_ExistsSL u0 tm_bool inv;
+           pre=Tm_ExistsSL u0 (named_binder x tm_bool) inv;
            post=inv
          }
 
-let comp_while_body (inv:term)
+let comp_while_body (x:ppname) (inv:term)
   : comp
   = C_ST {
            u=u0;
            res=tm_unit;
            pre=open_term' inv tm_true 0;
-           post=Tm_ExistsSL u0 tm_bool inv
+           post=Tm_ExistsSL u0 (named_binder x tm_bool) inv
          }
 
-let comp_while (inv:term)
+let comp_while (x:ppname) (inv:term)
   : comp
   = C_ST {
            u=u0;
            res=tm_unit;
-           pre=Tm_ExistsSL u0 tm_bool inv;
+           pre=Tm_ExistsSL u0 (named_binder x tm_bool) inv;
            post=open_term' inv tm_false 0
          }
 
@@ -476,7 +468,7 @@ let comp_withlocal_body_pre (pre:vprop) (init_t:term) (r:term) (init:term) : vpr
   Tm_Star pre (mk_pts_to init_t r init)
 
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
-  Tm_Star post (Tm_ExistsSL u0 init_t (mk_pts_to init_t r (null_bvar 0)))  
+  Tm_Star post (Tm_ExistsSL u0 (as_binder init_t) (mk_pts_to init_t r (null_bvar 0)))  
 
 let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in
@@ -521,7 +513,7 @@ let non_informative_t (g:env) (u:universe) (t:term) =
 let non_informative_c (g:env) (c:comp_st) =
     non_informative_t g (comp_u c) (comp_res c)
 
-let as_binder t = { binder_ty = t; binder_ppname = RT.pp_name_default }
+let as_binder t = { binder_ty = t; binder_ppname = ppname_default }
 
 [@@ no_auto_projectors]
 noeq
@@ -775,52 +767,53 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       x:var { None? (lookup g x) } ->
       tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u t p) Tm_VProp ->
-      st_typing g (wr (Tm_ElimExists { p = Tm_ExistsSL u t p }))
-                    (comp_elim_exists u t p x)
+      tot_typing g (Tm_ExistsSL u (as_binder t) p) Tm_VProp ->
+      st_typing g (wr (Tm_ElimExists { p = Tm_ExistsSL u (as_binder t) p }))
+                  (comp_elim_exists u t p (v_as_nv x))
 
   | T_IntroExists:
       g:env ->
       u:universe ->
-      t:term ->
+      b:binder ->
       p:term ->
       e:term ->
-      tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u t p) Tm_VProp ->
-      tot_typing g e t ->
+      tot_typing g b.binder_ty (tm_type u) ->
+      tot_typing g (Tm_ExistsSL u b p) Tm_VProp ->
+      tot_typing g e b.binder_ty ->
       st_typing g (wr (Tm_IntroExists { erased = false;
-                                        p = Tm_ExistsSL u t p;
+                                        p = Tm_ExistsSL u b p;
                                         witnesses= [e];
                                         should_check=should_check_true }))
-                  (comp_intro_exists u t p e)
+                  (comp_intro_exists u b p e)
       
   | T_IntroExistsErased:
       g:env ->
       u:universe ->
-      t:term ->
+      b:binder ->
       p:term ->
       e:term ->
-      tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u t p) Tm_VProp ->
-      tot_typing g e (mk_erased u t)  ->
+      tot_typing g b.binder_ty (tm_type u) ->
+      tot_typing g (Tm_ExistsSL u b p) Tm_VProp ->
+      tot_typing g e (mk_erased u b.binder_ty)  ->
       st_typing g (wr (Tm_IntroExists { erased = true;
-                                        p = Tm_ExistsSL u t p;
+                                        p = Tm_ExistsSL u b p;
                                         witnesses= [e];
                                         should_check=should_check_true }))
-                  (comp_intro_exists_erased u t p e)
+                  (comp_intro_exists_erased u b p e)
 
   | T_While:
       g:env ->
       inv:term ->
       cond:st_term ->
       body:st_term ->
-      tot_typing g (Tm_ExistsSL u0 tm_bool inv) Tm_VProp ->
-      st_typing g cond (comp_while_cond inv) ->
-      st_typing g body (comp_while_body inv) ->
+      tot_typing g (Tm_ExistsSL u0 (as_binder tm_bool) inv) Tm_VProp ->
+      st_typing g cond (comp_while_cond ppname_default inv) ->
+      st_typing g body (comp_while_body ppname_default inv) ->
       st_typing g (wr (Tm_While { invariant = inv;
                                   condition = cond;
-                                  body } ))
-                  (comp_while inv)
+                                  body;
+                                  condition_var = ppname_default } ))
+                  (comp_while ppname_default inv)
 
   | T_Par:
       g:env ->
@@ -851,7 +844,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (extend x (Inl (mk_ref init_t)) g)
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
-      st_typing g (wr (Tm_WithLocal { initializer=init; body } )) c
+      st_typing g (wr (Tm_WithLocal { binder=as_binder (mk_ref init_t); initializer=init; body } )) c
 
   | T_Rewrite:
       g:env ->

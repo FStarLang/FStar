@@ -15,8 +15,6 @@ let index = nat
 type universe = R.universe
 
 (* locally nameless. *)
-let ppname = RT.pp_name_t
-
 let range_singleton_trigger (r:FStar.Range.range) = True
 let range = r:FStar.Range.range { range_singleton_trigger r }
 let range_singleton (r:FStar.Range.range)
@@ -26,17 +24,31 @@ let range_singleton (r:FStar.Range.range)
   = FStar.Sealed.sealed_singl r FStar.Range.range_0
 
 noeq
+type ppname = {
+  name : RT.pp_name_t;
+  range : range
+}
+
+let ppname_default =  {
+    name = RT.pp_name_default;
+    range = FStar.Range.range_0
+}
+
+let mk_ppname (name:RT.pp_name_t) (range:FStar.Range.range) : ppname = {
+    name = name;
+    range = range
+}
+
+noeq
 type bv = {
   bv_index  : index;
   bv_ppname : ppname;
-  bv_range  : range;
 }
 
 noeq
 type nm = {
   nm_index  : var;
   nm_ppname : ppname;
-  nm_range  : range;
 }
 
 type qualifier =
@@ -56,14 +68,15 @@ let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
 let not_tv_unknown (t:R.term) = R.inspect_ln t =!= R.Tv_Unknown
 let host_term = t:R.term { not_tv_unknown t }
 
+
 [@@ no_auto_projectors]
 noeq
 type term =
   | Tm_Emp        : term
   | Tm_Pure       : p:term -> term
   | Tm_Star       : l:vprop -> r:vprop -> term
-  | Tm_ExistsSL   : u:universe -> t:term -> body:vprop -> term
-  | Tm_ForallSL   : u:universe -> t:term -> body:vprop -> term
+  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term
+  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term
   | Tm_VProp      : term
   | Tm_Inames     : term  // type inames
   | Tm_EmpInames  : term
@@ -74,8 +87,7 @@ and vprop = term
 
 and typ = term
 
-noeq
-type binder = {
+and binder = {
   binder_ty     : term;
   binder_ppname : ppname;
 }
@@ -156,6 +168,7 @@ type st_term' =
   | Tm_While {
       invariant:term;
       condition:st_term;
+      condition_var: ppname;
       body:st_term;
     }
   | Tm_Par {
@@ -167,6 +180,7 @@ type st_term' =
       post2:term;
     }  
   | Tm_WithLocal {
+      binder:binder;
       initializer:term;
       body:st_term;
     }
@@ -191,10 +205,10 @@ and st_term = {
 } 
 
 let null_binder (t:term) : binder =
-  {binder_ty=t;binder_ppname=RT.pp_name_default}
+  {binder_ty=t;binder_ppname=ppname_default}
 
-let mk_binder (s:string) (t:term) : binder =
-  {binder_ty=t;binder_ppname=RT.seal_pp_name s}
+let mk_binder (s:string) (r:range) (t:term) : binder =
+  {binder_ty=t;binder_ppname=mk_ppname (RT.seal_pp_name s) r }
 
 val eq_univ (u1 u2:universe)
   : b:bool { b <==> (u1 == u2) }
@@ -263,4 +277,5 @@ let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
   | C_STGhost inames _ -> inames
 
 let nvar = ppname & var 
-let v_as_nv x = RT.pp_name_default, x
+let v_as_nv x : nvar = ppname_default, x
+let as_binder (t:term) = { binder_ty=t; binder_ppname=ppname_default}
