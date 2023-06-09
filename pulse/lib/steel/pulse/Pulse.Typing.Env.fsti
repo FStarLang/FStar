@@ -12,6 +12,9 @@ val env : Type0
 
 val fstar_env (g:env) : RT.fstar_top_env
 
+//
+// most recent binding at the head of the list
+//
 val bindings (g:env) : list (var & typ)
 
 val as_map (g:env) : Map.t var typ
@@ -66,6 +69,7 @@ val env_extends_refl (g:env) : Lemma (g `env_extends` g)
 val env_extends_trans (g1 g2 g3:env)
   : Lemma (requires g1 `env_extends` g2 /\ g2 `env_extends` g3)
           (ensures g1 `env_extends` g3)
+          [SMTPat (g1 `env_extends` g3); SMTPat (g1 `env_extends` g2)]
 
 val env_extends_push (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (push_binding g x t `env_extends` g)

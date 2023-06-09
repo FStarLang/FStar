@@ -23,46 +23,6 @@ type post_hint_t = {
   post_typing:FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ret_ty post) (mk_arrow ret_ty Tm_VProp))
 }
 
-
-let env_extends (g' g:env) = 
-  g'.f == g.f /\
-  (exists suffix. suffix @ g.g == g'.g)
-
-let extends_env_trans (g2 g1 g:env) 
-  : Lemma 
-    (requires g2 `env_extends` g1 /\ 
-              g1 `env_extends` g)
-    (ensures g2 `env_extends` g)
-    [SMTPat (g2 `env_extends` g);
-     SMTPat (g2 `env_extends` g1)]
-  = eliminate exists suffix2. suffix2 @ g1.g == g2.g
-    returns _
-    with _. (
-      eliminate exists suffix1. suffix1 @ g.g == g1.g
-      returns exists suffix. suffix @ g.g == g2.g
-      with _. (
-        assert (suffix2@(suffix1@g.g) == g2.g);
-        List.Tot.Properties.append_assoc suffix2 suffix1 g.g
-      )
-    )
-
-let extends_extends_env (g:env) (x:var) (b:binding)
-  : Lemma 
-    (ensures (extend x b g) `env_extends` g)
-  = assert ([x,b]@g.g == (extend x b g).g)
-
-let extends_env_refl (g:env)
-  : Lemma 
-    (ensures g `env_extends` g)
-  = assert ([]@g.g == g.g)
-  
-let env_extends_one_trans (g' g:env) (x:var) (b:binding)
-  : Lemma 
-    (requires g' `env_extends` g)
-    (ensures (extend x b g') `env_extends` g)
-  = extends_extends_env g' x b;
-    extends_env_trans (extend x b g') g' g
-
 let post_hint_for_env_p (g:env) (p:post_hint_t) = g `env_extends` p.g
 
 let post_hint_for_env_extends (g:env) (p:post_hint_t) (x:var) (b:binding)
