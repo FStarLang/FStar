@@ -37,6 +37,8 @@ type vconst =
 
 type universes = list universe
 
+type ident_view = string & range
+
 noeq
 type pattern =
  // A built-in constant

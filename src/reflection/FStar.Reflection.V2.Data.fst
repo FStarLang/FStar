@@ -28,9 +28,6 @@ module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 open FStar.Ident
 
-// HACK
-let xxuniv_name = string & Range.range
-
 (* These two functions are in ulib/FStar.Reflection.V2.Data.fsti
    But, they are not extracted from there.
 

@@ -79,7 +79,7 @@ let e_binder             : embedding binder             = EMB.e_lazy Lazy_binder
 let e_fv                 : embedding fv                 = EMB.e_lazy Lazy_fvar fstar_refl_fv
 let e_comp               : embedding comp               = EMB.e_lazy Lazy_comp fstar_refl_comp
 let e_universe           : embedding universe           = EMB.e_lazy Lazy_universe fstar_refl_universe
-let e___ident            : embedding I.ident            = EMB.e_lazy Lazy_ident fstar_refl_ident
+let e_ident              : embedding I.ident            = EMB.e_lazy Lazy_ident fstar_refl_ident
 let e_env                : embedding env                = EMB.e_lazy Lazy_env fstar_refl_env
 let e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
 let e_sigelt             : embedding sigelt             = EMB.e_lazy Lazy_sigelt fstar_refl_sigelt
@@ -153,14 +153,6 @@ let e_aqualv =
 
 let e_binders = e_list e_binder
 
-(* This is a fake inspecting embedding *)
-let e_ident : embedding I.ident =
-    let repr = e_tuple2 e_string e_range in
-    embed_as repr
-             I.mk_ident
-             (fun i -> I.string_of_id i, I.range_of_id i)
-             (Some fstar_refl_ident)
-
 let e_universe_view =
   let embed_universe_view (rng:Range.range) (uv:universe_view) : term =
     match uv with
@@ -183,7 +175,7 @@ let e_universe_view =
     | Uv_Name i ->
       S.mk_Tm_app
         ref_Uv_Name.t
-        [S.as_arg (embed (e_tuple2 e_string e_range) rng i)]
+        [S.as_arg (embed e_ident rng i)]
         rng
     | Uv_Unif u ->
       S.mk_Tm_app
@@ -200,7 +192,7 @@ let e_universe_view =
     | _ when S.fv_eq_lid fv ref_Uv_Succ.lid  -> run args (Uv_Succ <$$> e_universe)
     | _ when S.fv_eq_lid fv ref_Uv_Max.lid   -> run args (Uv_Max <$$> e_list e_universe)
     | _ when S.fv_eq_lid fv ref_Uv_BVar.lid  -> run args (Uv_BVar <$$> e_int)
-    | _ when S.fv_eq_lid fv ref_Uv_Name.lid  -> run args (Uv_Name <$$> e_tuple2 e_string e_range)
+    | _ when S.fv_eq_lid fv ref_Uv_Name.lid  -> run args (Uv_Name <$$> e_ident)
 
     (* no actual embedding, hack it. *)
     | _ when S.fv_eq_lid fv ref_Uv_Unif.lid ->
@@ -577,9 +569,7 @@ let e_order =
     in
     mk_emb embed_order unembed_order S.t_order
 
-let e_univ_name =
-    set_type fstar_refl_univ_name (e_tuple2 e_string e_range)
-
+let e_univ_name = e_ident
 let e_univ_names = e_list e_univ_name
 
 let e_subst_elt =
@@ -615,7 +605,7 @@ let e_subst_elt =
 
         | UD (u, i) ->
             S.mk_Tm_app ref_UD.t [
-                S.as_arg (embed e___ident rng u);
+                S.as_arg (embed e_ident rng u);
                 S.as_arg (embed e_fsint rng i);
                ]
                rng
@@ -632,7 +622,7 @@ let e_subst_elt =
         | _ when S.fv_eq_lid fv ref_UN.lid ->
             run args (curry UN <$$> e_fsint <**> e_universe)
         | _ when S.fv_eq_lid fv ref_UD.lid ->
-            run args (curry UD <$$> e___ident <**> e_fsint)
+            run args (curry UD <$$> e_ident <**> e_fsint)
         | _ -> None
     in
     mk_emb ee uu fstar_refl_subst_elt

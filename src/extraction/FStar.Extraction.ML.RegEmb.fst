@@ -157,7 +157,7 @@ let builtin_embeddings : list (Ident.lident & embedding_data) =
     (RC.fstar_refl_types_lid "sigelt",    {arity=0; syn_emb=refl_emb_lid "e_sigelt";    nbe_emb=Some(nbe_refl_emb_lid "e_sigelt")});
     (RC.fstar_refl_types_lid "ctx_uvar_and_subst", {arity=0; syn_emb=refl_emb_lid "e_ctx_uvar_and_subst"; nbe_emb=Some(nbe_refl_emb_lid "e_ctx_uvar_and_subst")});
     (RC.fstar_refl_types_lid "letbinding",{arity=0; syn_emb=refl_emb_lid "e_letbinding";nbe_emb=Some(nbe_refl_emb_lid "e_letbinding")});
-    (RC.fstar_refl_types_lid "__ident",   {arity=0; syn_emb=refl_emb_lid "e___ident";  nbe_emb=Some(nbe_refl_emb_lid "e___ident")});
+    (RC.fstar_refl_types_lid "ident",     {arity=0; syn_emb=refl_emb_lid "e_ident";     nbe_emb=Some(nbe_refl_emb_lid "e_ident")});
     (RC.fstar_refl_types_lid "universe_uvar", {arity=0; syn_emb=refl_emb_lid "e_universe_uvar"; nbe_emb=Some(nbe_refl_emb_lid "e_universe_uvar")});
     (RC.fstar_refl_types_lid "universe",  {arity=0; syn_emb=refl_emb_lid "e_universe";  nbe_emb=Some(nbe_refl_emb_lid "e_universe")});
 

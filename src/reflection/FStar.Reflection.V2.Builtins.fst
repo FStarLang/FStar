@@ -163,7 +163,7 @@ let inspect_universe u =
   | U_succ u -> Uv_Succ u
   | U_max us -> Uv_Max us
   | U_bvar n -> Uv_BVar (Z.of_int_fs n)
-  | U_name i -> Uv_Name (Ident.string_of_id i, Ident.range_of_id i)
+  | U_name i -> Uv_Name i
   | U_unif u -> Uv_Unif u
   | U_unknown -> Uv_Unk
 
@@ -173,7 +173,7 @@ let pack_universe uv =
   | Uv_Succ u -> U_succ u
   | Uv_Max us -> U_max us
   | Uv_BVar n -> U_bvar (Z.to_int_fs n)
-  | Uv_Name i -> U_name (Ident.mk_ident i)
+  | Uv_Name i -> U_name i
   | Uv_Unif u -> U_unif u
   | Uv_Unk -> U_unknown
 
@@ -562,11 +562,11 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
           | _ ->
             failwith "impossible: inspect_sigelt: did not find ctor"
         in
-        Sg_Inductive (nm, List.map inspect_ident us, param_bs, ty, List.map inspect_ctor c_lids)
+        Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
 
     | Sig_declare_typ {lid; us; t=ty} ->
         let nm = Ident.path_of_lid lid in
-        Sg_Val (nm, List.map inspect_ident us, ty)
+        Sg_Val (nm, us, ty)
 
     | _ ->
         Unk
@@ -602,7 +602,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
-        mk_sigelt <| Sig_datacon {lid; us=List.map pack_ident us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
+        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in
@@ -612,7 +612,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         //We can't trust the assignment of num uniform binders from the reflection API
         //So, set it to None; it has to be checked and recomputed
         mk_sigelt <| Sig_inductive_typ {lid=ind_lid;
-                                        us=List.map pack_ident us_names;
+                                        us=us_names;
                                         params=param_bs;
                                         num_uniform_params=None;
                                         t=ty;
@@ -625,23 +625,23 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
         check_lid val_lid;
-        mk_sigelt <| Sig_declare_typ {lid=val_lid; us=List.map pack_ident us_names; t=ty}
+        mk_sigelt <| Sig_declare_typ {lid=val_lid; us=us_names; t=ty}
 
     | Unk -> failwith "packing Unk, this should never happen"
 
 let inspect_lb (lb:letbinding) : lb_view =
     let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos}
         = lb in
+    // FIXME: remove
     let s, us = SS.univ_var_opening us in
     let typ = SS.subst s typ in
     let def = SS.subst s def in
     match nm with
-    | Inr fv -> {lb_fv = fv; lb_us = List.map inspect_ident us; lb_typ = typ; lb_def = def}
+    | Inr fv -> {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def}
     | _ -> failwith "Impossible: bv in top-level let binding"
 
 let pack_lb (lbv:lb_view) : letbinding =
     let {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def} = lbv in
-    let us = List.map pack_ident us in
     let s = SS.univ_var_closing us in
     let typ = SS.subst s typ in
     let def = SS.subst s def in

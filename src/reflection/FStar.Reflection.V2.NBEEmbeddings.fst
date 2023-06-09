@@ -350,13 +350,7 @@ let unlazy_as_t k t =
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
 
-let e_ident : embedding I.ident = (* fake *)
-    embed_as (e_tuple2 e_string e_range)
-             I.mk_ident
-             (fun i -> (I.string_of_id i, I.range_of_id i))
-             None // fixme?
-
-let e___ident : embedding I.ident = (* real *)
+let e_ident : embedding I.ident =
     let embed_ident cb (se:I.ident) : t =
         mk_lazy cb se fstar_refl_ident Lazy_ident
     in
@@ -369,8 +363,6 @@ let e___ident : embedding I.ident = (* real *)
             None
     in
     mk_emb' embed_ident unembed_ident fstar_refl_ident_fv
-
-
 
 let e_universe_view =
   let embed_universe_view cb (uv:universe_view) : t =
@@ -395,7 +387,7 @@ let e_universe_view =
       mkConstruct
         ref_Uv_Name.fv
         []
-        [as_arg (embed (e_tuple2 e_string e_range) cb i)]
+        [as_arg (embed e_ident cb i)]
     | Uv_Unif u ->
       mkConstruct
         ref_Uv_Unif.fv
@@ -413,7 +405,7 @@ let e_universe_view =
     | Construct (fv, _, [n, _]) when S.fv_eq_lid fv ref_Uv_BVar.lid ->
       BU.bind_opt (unembed e_int cb n) (fun n -> n |> Uv_BVar |> Some)
     | Construct (fv, _, [i, _]) when S.fv_eq_lid fv ref_Uv_Name.lid ->
-      BU.bind_opt (unembed (e_tuple2 e_string e_range) cb i) (fun i -> i |> Uv_Name |> Some)
+      BU.bind_opt (unembed e_ident cb i) (fun i -> i |> Uv_Name |> Some)
     | Construct (fv, _, [u, _]) when S.fv_eq_lid fv ref_Uv_Unif.lid ->
       let u : universe_uvar = unlazy_as_t Lazy_universe_uvar u in
       u |> Uv_Unif |> Some
@@ -766,9 +758,7 @@ let e_sigelt =
     in
     mk_emb' embed_sigelt unembed_sigelt fstar_refl_sigelt_fv
 
-let e_univ_name =
-    e_tuple2 e_string e_range
-
+let e_univ_name = e_ident
 let e_univ_names = e_list e_univ_name
 let e_string_list = e_list e_string
 

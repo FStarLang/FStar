@@ -481,6 +481,9 @@ let sigelt_attrs (se : sigelt) : list attribute =
 let set_sigelt_attrs (attrs : list attribute) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
 
+let inspect_ident (i:Ident.ident) : ident = Reflection.V2.Builtins.inspect_ident i
+let pack_ident (i:ident) : Ident.ident = Reflection.V2.Builtins.pack_ident i
+
 (* PRIVATE, and hacky :-( *)
 let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.Assumption -> Assumption
@@ -498,9 +501,9 @@ let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.Reifiable -> Reifiable
   | RD.Reflectable l -> Reflectable l
   | RD.Discriminator l -> Discriminator l
-  | RD.Projector (l, i) -> Projector (l, i)
-  | RD.RecordType (l1, l2) -> RecordType (l1, l2)
-  | RD.RecordConstructor (l1, l2) -> RecordConstructor (l1, l2)
+  | RD.Projector (l, i) -> Projector (l, pack_ident i)
+  | RD.RecordType (l1, l2) -> RecordType (List.map pack_ident l1, List.map pack_ident l2)
+  | RD.RecordConstructor (l1, l2) -> RecordConstructor (List.map pack_ident l1, List.map pack_ident l2)
   | RD.Action l -> Action l
   | RD.ExceptionConstructor -> ExceptionConstructor
   | RD.HasMaskedEffect -> HasMaskedEffect
@@ -523,9 +526,9 @@ let syntax_to_rd_qual = function
   | Reifiable -> RD.Reifiable
   | Reflectable l -> RD.Reflectable l
   | Discriminator l -> RD.Discriminator l
-  | Projector (l, i) -> RD.Projector (l, i)
-  | RecordType (l1, l2) -> RD.RecordType (l1, l2)
-  | RecordConstructor (l1, l2) -> RD.RecordConstructor (l1, l2)
+  | Projector (l, i) -> RD.Projector (l, inspect_ident i)
+  | RecordType (l1, l2) -> RD.RecordType (List.map inspect_ident l1, List.map inspect_ident l2)
+  | RecordConstructor (l1, l2) -> RD.RecordConstructor (List.map inspect_ident l1, List.map inspect_ident l2)
   | Action l -> RD.Action l
   | ExceptionConstructor -> RD.ExceptionConstructor
   | HasMaskedEffect -> RD.HasMaskedEffect
@@ -592,12 +595,12 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
           | _ ->
             failwith "impossible: inspect_sigelt: did not find ctor"
         in
-        Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
+        Sg_Inductive (nm, List.map inspect_ident us, param_bs, ty, List.map inspect_ctor c_lids)
 
     | Sig_declare_typ {lid; us; t=ty} ->
         let nm = Ident.path_of_lid lid in
         let us, ty = SS.open_univ_vars us ty in
-        Sg_Val (nm, us, ty)
+        Sg_Val (nm, List.map inspect_ident us, ty)
 
     | _ ->
         Unk
@@ -605,14 +608,14 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 let pack_sigelt (sv:sigelt_view) : sigelt =
     let check_lid lid =
         if List.length (Ident.path_of_lid lid) <= 1
-	then failwith ("pack_sigelt: invalid long identifier \""
-	              ^ Ident.string_of_lid lid
-		      ^ "\" (did you forget a module path?)")
+    then failwith ("pack_sigelt: invalid long identifier \""
+                  ^ Ident.string_of_lid lid
+              ^ "\" (did you forget a module path?)")
     in
     match sv with
     | Sg_Let (r, lbs) ->
         let pack_letbinding (lb:letbinding) =
-	    let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos} = lb in
+        let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos} = lb in
             let lid = match nm with
                       | Inr fv -> lid_of_fv fv
                       | _ -> failwith
@@ -625,12 +628,13 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
             let lb = U.mk_letbinding nm us typ eff def attrs pos in
             (lid, lb)
         in
-	let packed = List.map pack_letbinding lbs in
-	let lbs = List.map snd packed in
-	let lids = List.map fst packed in
+        let packed = List.map pack_letbinding lbs in
+        let lbs = List.map snd packed in
+        let lids = List.map fst packed in
         mk_sigelt <| Sig_let {lbs=(r, lbs); lids}
 
     | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
+      let us_names = List.map pack_ident us_names in
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
       check_lid ind_lid;
       let s = SS.univ_var_closing us_names in
@@ -667,6 +671,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       { se with sigquals = Noeq::se.sigquals }
 
     | Sg_Val (nm, us_names, ty) ->
+        let us_names = List.map pack_ident us_names in
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
         check_lid val_lid;
         let typ = SS.close_univ_vars us_names ty in
@@ -681,12 +686,14 @@ let inspect_lb (lb:letbinding) : lb_view =
     let s, us = SS.univ_var_opening us in
     let typ = SS.subst s typ in
     let def = SS.subst s def in
+    let us = List.map inspect_ident us in
     match nm with
     | Inr fv -> {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def}
     | _ -> failwith "Impossible: bv in top-level let binding"
 
 let pack_lb (lbv:lb_view) : letbinding =
     let {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def} = lbv in
+    let us = List.map pack_ident us in
     let s = SS.univ_var_closing us in
     let typ = SS.subst s typ in
     let def = SS.subst s def in

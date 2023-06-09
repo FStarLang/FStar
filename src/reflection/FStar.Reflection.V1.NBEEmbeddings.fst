@@ -324,33 +324,7 @@ let unlazy_as_t k t =
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
 
-// TODO: It would be nice to have a
-// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding 'a -> embedding 'b
-// so we don't write these things
-let e_ident : embedding I.ident =
-    let repr = e_tuple2 e_range e_string in
-    let embed_ident cb (i:I.ident) : t =
-        embed repr cb (I.range_of_id i, I.string_of_id i)
-    in
-    let unembed_ident cb (t:t) : option I.ident =
-        match unembed repr cb t with
-        | Some (rng, s) -> Some (I.mk_ident (s, rng))
-        | None -> None
-    in
-    let range_fv = (lid_as_fv PC.range_lid  None) in
-    let string_fv = (lid_as_fv PC.string_lid None) in
-    let et =
-      ET_app (FStar.Ident.string_of_lid PC.lid_tuple2,
-              [fv_as_emb_typ range_fv;
-               fv_as_emb_typ string_fv])
-    in
-    mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 None)
-                                           [U_zero;U_zero]
-                                           [as_arg (mkFV range_fv [] []);
-                                            as_arg (mkFV string_fv [] [])]) et
-    // TODO: again a delta depth issue, should be this
-    (* fstar_refl_ident *)
-
+let e_ident : embedding RD.ident = e_tuple2 e_string e_range
 
 let e_universe_view =
   let embed_universe_view cb (uv:universe_view) : t =

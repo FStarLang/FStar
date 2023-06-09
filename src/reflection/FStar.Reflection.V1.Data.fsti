@@ -31,6 +31,8 @@ open FStar.Ident
 type name = list string
 type typ  = term
 type binders = list binder
+type ident = string & Range.range
+type univ_name = ident
 
 type vconst =
     | C_Unit

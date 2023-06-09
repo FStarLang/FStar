@@ -23,6 +23,11 @@ module X = FStar.Reflection.V2.Builtins
 
 open FStar.Reflection.Types
 
+(* V1 does not really use the primitive ident type, but this
+explicit pair of string & range *)
+type ident = string & range
+type univ_name = ident
+
 noeq
 type vconst =
   | C_Unit      : vconst

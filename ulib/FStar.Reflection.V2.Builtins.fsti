@@ -71,9 +71,8 @@ val pack_binder    : binder_view -> binder
 val inspect_universe : u:universe -> uv:universe_view{uv << u}
 val pack_universe    : universe_view -> universe
 
-(* hacky.. *)
-val inspect_ident : i:__ident -> iv:ident{iv << i}
-val pack_ident    : ident -> __ident
+val inspect_ident : i:ident -> iv:ident_view{iv << i}
+val pack_ident    : ident_view -> ident
 
 (* The bijection lemmas: the view exposes all details of terms. *)
 val pack_inspect_inv : (t:term) -> Lemma (~(Tv_Unsupp? (inspect_ln t)) ==> pack_ln (inspect_ln t) == t)
@@ -96,6 +95,9 @@ val inspect_pack_fv (nm:name) : Lemma (ensures inspect_fv (pack_fv nm) == nm)
 
 val pack_inspect_universe (u:universe) : Lemma (pack_universe (inspect_universe u) == u)
 val inspect_pack_universe (uv:universe_view) : Lemma (inspect_universe (pack_universe uv) == uv)
+
+val pack_inspect_ident (u:ident) : Lemma (pack_ident (inspect_ident u) == u)
+val inspect_pack_ident (uv:ident_view) : Lemma (inspect_ident (pack_ident uv) == uv)
 
 val simple_binder_defn (b:binder) :
   Lemma (binder_is_simple b <==> 

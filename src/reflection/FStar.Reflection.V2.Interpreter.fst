@@ -168,7 +168,6 @@ let nbe_dummy #a : NBET.embedding a =
     ET_abstract
 
 let e_ident           : dualemb Ident.ident            = (RE.e_ident, nbe_dummy #Ident.ident)
-let e___ident         : dualemb Ident.ident            = (RE.e___ident, nbe_dummy #Ident.ident)
 
 let e_subst           : dualemb (list subst_elt)   = (RE.e_subst, NRE.e_subst)
 
@@ -447,13 +446,13 @@ let reflection_primops : list Cfg.primitive_step = [
 
   mk1 "inspect_ident"
     RB.inspect_ident
-    e___ident
+    e_ident
     (e_tuple2 e_string e_range);
 
   mk1 "pack_ident"
     RB.pack_ident
     (e_tuple2 e_string e_range)
-    e___ident;
+    e_ident;
 ]
 
 let _ = List.iter FStar.TypeChecker.Cfg.register_extra_step reflection_primops

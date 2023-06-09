@@ -47,7 +47,9 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Reflect _, _ -> Lt   | _, C_Reflect _ -> Gt
 
 let compare_ident (i1 i2:ident) : order =
-  order_from_int (compare_string (fst i1) (fst i2))
+  let nm1, _ = inspect_ident i1 in
+  let nm2, _ = inspect_ident i2 in
+  order_from_int (compare_string nm1 nm2)
 
 let rec compare_universe (u1 u2:universe) : order =
   match inspect_universe u1, inspect_universe u2 with
