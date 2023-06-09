@@ -214,6 +214,35 @@ let gshare r = fun _ -> GR.share r
 let ggather r = fun _ -> let _ = GR.gather r in ()
 let gfree r = fun _ -> GR.free r
 
+//Arrays
+
+let new_array
+  (#elt: Type)
+  (x: elt)
+  (n: US.t) = admit()
+(* 
+   a: array int |- 
+    { A.pts a q sq }
+      index a 0ul : #s -> #p -> stt t (A.pts_to a p s `star` ...) (...)
+*)
+let op_Array_Access
+  (#t: Type)
+  (a: A.array t)
+  (i: US.t)
+  (#s: Ghost.erased (Seq.seq t))
+  (#p: perm) = admit()
+
+let op_Array_Assignment
+  (#t: Type)
+  (a: A.array t)
+  (i: US.t)
+  (v: t)
+  (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s}) = admit()
+
+let free_array
+      (#elt: Type)
+      (a: A.array elt) = admit()
+
 module Lock = Steel.ST.SpinLock
 
 let new_lock p = fun _ -> Lock.new_lock p

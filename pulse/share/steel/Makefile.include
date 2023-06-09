@@ -55,7 +55,7 @@ MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND")
 	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
-	$(Q)$(MY_FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp > $@.tmp
+	$(Q)$(MY_FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp --output_deps_to $@.tmp
 	mv $@.tmp $@
 
 include .depend

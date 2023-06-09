@@ -3,8 +3,13 @@ module Pulse.Steel.Wrapper
 open Steel.ST.Effect
 open Steel.Memory
 open Steel.ST.Util
-
 module U32 = FStar.UInt32
+module G = FStar.Ghost
+module A = Steel.ST.Array
+module R = Steel.ST.Reference
+module GR = Steel.ST.GhostReference
+module Lock = Steel.ST.SpinLock
+module US = FStar.SizeT
 
 (***** begin vprop_equiv *****)
 
@@ -56,12 +61,29 @@ val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
 
 val emp_inames : inames
 
+(* stt a pre post: The type of a pulse computation
+   that when run in a state satisfying `pre`
+   may loop forever
+   but if it returns, it returns `x:a`
+   such that the final state satisfies `post x` *)
 inline_for_extraction
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
+(* stt_atomic a opened pre post: The type of a pulse computation
+   that when run in a state satisfying `pre`
+   takes a single concrete atomic step
+   while relying on the ghost invariant names in `opened` 
+   and returns `x:a`
+   such that the final state satisfies `post x` *)
 inline_for_extraction
 val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
+(* stt_ghost a opened pre post: The type of a pulse computation
+   that when run in a state satisfying `pre`
+   takes a single ghost atomic step (i.e. a step that does not modify the heap, and does not get extracted)
+   while relying on the ghost invariant names in `opened` 
+   and returns `x:a`
+   such that the final state satisfies `post x` *)
 inline_for_extraction
 val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
@@ -219,8 +241,6 @@ let squash_non_informative (a:Type u#a) : non_informative_witness (squash  u#a a
 val rewrite (p:vprop) (q:vprop) (_:vprop_equiv p q)
   : stt_ghost unit emp_inames p (fun _ -> q)
 
-module G = FStar.Ghost
-module R = Steel.ST.Reference
 
 open FStar.Ghost
 
@@ -260,7 +280,6 @@ val write_atomic (r:R.ref U32.t) (x:U32.t) (#n:erased U32.t)
 
 (***** begin ghost ref ******)
 
-module GR = Steel.ST.GhostReference
 
 val galloc (#a:Type0) (x:erased a)
   : stt_ghost (GR.ref a) emp_inames emp (fun r -> GR.pts_to r full_perm x)
@@ -294,9 +313,59 @@ val gfree (#a:Type0) (r:GR.ref a) (#v:erased a)
 
 (***** end ghost ref *****)
 
+(***** begin array ******)
+
+val new_array
+  (#elt: Type)
+  (x: elt)
+  (n: US.t)
+: stt (A.array elt) 
+     (requires emp)
+     (ensures fun a ->
+        A.pts_to a full_perm (Seq.create (US.v n) x) `star`
+        pure (A.length a == US.v n /\ A.is_full_array a))
+
+(* 
+   a: array int |- 
+    { A.pts a q sq }
+      index a 0ul : #s -> #p -> stt t (A.pts_to a p s `star` ...) (...)
+*)
+val op_Array_Access
+  (#t: Type)
+  (a: A.array t)
+  (i: US.t)
+  (#s: Ghost.erased (Seq.seq t))
+  (#p: perm)
+: stt t
+    (requires
+      A.pts_to a p s `star`
+      pure (US.v i < A.length a \/ US.v i < Seq.length s))
+    (ensures fun res ->
+      A.pts_to a p s `star`
+      pure (Seq.length s == A.length a /\
+            US.v i < Seq.length s /\
+            res == Seq.index s (US.v i)))
+
+val op_Array_Assignment
+  (#t: Type)
+  (a: A.array t)
+  (i: US.t)
+  (v: t)
+  (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s})
+: stt unit
+    (requires A.pts_to a full_perm s)
+    (ensures fun res -> A.pts_to a full_perm (Seq.upd s (US.v i) v))
+
+
+val free_array
+      (#elt: Type)
+      (a: A.array elt)
+: stt unit
+    (exists_ (A.pts_to a full_perm) `star` pure (A.is_full_array a))
+    (fun _ -> emp)
+
 (***** begin spinlock *****)
 
-module Lock = Steel.ST.SpinLock
 
 val new_lock (p:vprop) : stt (Lock.lock p) p (fun _ -> emp)
 
