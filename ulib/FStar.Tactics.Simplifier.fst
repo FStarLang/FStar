@@ -15,8 +15,8 @@
 *)
 module FStar.Tactics.Simplifier
 
-open FStar.Tactics
-open FStar.Reflection.Formula
+open FStar.Tactics.V2
+open FStar.Reflection.V2.Formula
 open FStar.Reflection.Const
 
 (* A correct-by-construction logical simplifier

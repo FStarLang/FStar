@@ -15,7 +15,7 @@
 *)
 module FStar.ReflexiveTransitiveClosure
 
-open FStar.Tactics
+open FStar.Tactics.V2
 #set-options "--max_ifuel 1 --max_fuel 0"
 
 noeq

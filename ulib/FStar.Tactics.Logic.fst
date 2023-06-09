@@ -16,11 +16,11 @@
 module FStar.Tactics.Logic
 
 open FStar.Tactics.Effect
-open FStar.Tactics.Builtins
-open FStar.Tactics.Derived
+open FStar.Tactics.V2.Builtins
+open FStar.Tactics.V2.Derived
 open FStar.Tactics.Util
-open FStar.Reflection
-open FStar.Reflection.Formula
+open FStar.Reflection.V2
+open FStar.Reflection.V2.Formula
 
 (** Returns the current goal as a [formula]. *)
 let cur_formula () : Tac formula = term_as_formula (cur_goal ())

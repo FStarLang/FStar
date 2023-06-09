@@ -122,12 +122,12 @@ let rec (universe_to_ast_string :
   =
   fun uu___ ->
     (fun u ->
-       match FStar_Reflection_Builtins.inspect_universe u with
-       | FStar_Reflection_Data.Uv_Zero ->
+       match FStar_Reflection_V2_Builtins.inspect_universe u with
+       | FStar_Reflection_V2_Data.Uv_Zero ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "Uv_Zero")))
-       | FStar_Reflection_Data.Uv_Succ u1 ->
+       | FStar_Reflection_V2_Data.Uv_Succ u1 ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
@@ -162,7 +162,7 @@ let rec (universe_to_ast_string :
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 -> Prims.strcat "Uv_Succ" uu___))))
-       | FStar_Reflection_Data.Uv_Max us ->
+       | FStar_Reflection_V2_Data.Uv_Max us ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
@@ -180,30 +180,30 @@ let rec (universe_to_ast_string :
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 -> Prims.strcat "Uv_Max" uu___))))
-       | FStar_Reflection_Data.Uv_BVar n ->
+       | FStar_Reflection_V2_Data.Uv_BVar n ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
                       Prims.strcat "Uv_BVar" (paren (Prims.string_of_int n)))))
-       | FStar_Reflection_Data.Uv_Name i ->
+       | FStar_Reflection_V2_Data.Uv_Name i ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
                       Prims.strcat "Uv_Name"
                         (paren (FStar_Pervasives_Native.fst i)))))
-       | FStar_Reflection_Data.Uv_Unif uu___ ->
+       | FStar_Reflection_V2_Data.Uv_Unif uu___ ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Uv_Unif")))
-       | FStar_Reflection_Data.Uv_Unk ->
+       | FStar_Reflection_V2_Data.Uv_Unk ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "Uv_Unk"))))
       uu___
 let (universes_to_ast_string :
-  FStar_Reflection_Data.universes ->
+  FStar_Reflection_V2_Data.universes ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   = fun us -> print_list universe_to_ast_string us
 let rec (term_to_ast_string :
@@ -246,7 +246,7 @@ let rec (term_to_ast_string :
                               (FStar_Range.mk_range "prims.fst"
                                  (Prims.of_int (590)) (Prims.of_int (19))
                                  (Prims.of_int (590)) (Prims.of_int (31)))))
-                        (Obj.magic (FStar_Tactics_Derived.bv_to_string bv))
+                        (Obj.magic (FStar_Tactics_V2_Derived.bv_to_string bv))
                         (fun uu___1 ->
                            FStar_Tactics_Effect.lift_div_tac
                              (fun uu___2 -> Prims.strcat "Tv_BVar " uu___1))))
@@ -256,7 +256,7 @@ let rec (term_to_ast_string :
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 ->
                            Prims.strcat "Tv_FVar "
-                             (FStar_Reflection_Derived.fv_to_string fv))))
+                             (FStar_Reflection_V2_Derived.fv_to_string fv))))
             | FStar_Tactics_NamedView.Tv_UInst (fv, us) ->
                 Obj.magic
                   (Obj.repr
@@ -334,7 +334,7 @@ let rec (term_to_ast_string :
                                        FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___2 ->
                                             Prims.strcat
-                                              (FStar_Reflection_Derived.fv_to_string
+                                              (FStar_Reflection_V2_Derived.fv_to_string
                                                  fv) uu___1))))
                               (fun uu___1 ->
                                  FStar_Tactics_Effect.lift_div_tac
@@ -1766,8 +1766,8 @@ and (comp_to_ast_string :
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun c ->
-    match FStar_Reflection_Builtins.inspect_comp c with
-    | FStar_Reflection_Data.C_Total t ->
+    match FStar_Reflection_V2_Builtins.inspect_comp c with
+    | FStar_Reflection_V2_Data.C_Total t ->
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -1782,7 +1782,7 @@ and (comp_to_ast_string :
           (fun uu___ ->
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___1 -> Prims.strcat "Tot " uu___))
-    | FStar_Reflection_Data.C_GTotal t ->
+    | FStar_Reflection_V2_Data.C_GTotal t ->
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -1797,7 +1797,7 @@ and (comp_to_ast_string :
           (fun uu___ ->
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___1 -> Prims.strcat "GTot " uu___))
-    | FStar_Reflection_Data.C_Lemma (pre, post, uu___) ->
+    | FStar_Reflection_V2_Data.C_Lemma (pre, post, uu___) ->
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -1865,7 +1865,7 @@ and (comp_to_ast_string :
           (fun uu___1 ->
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___2 -> Prims.strcat "Lemma " uu___1))
-    | FStar_Reflection_Data.C_Eff (us, eff, res, uu___, uu___1) ->
+    | FStar_Reflection_V2_Data.C_Eff (us, eff, res, uu___, uu___1) ->
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -2006,7 +2006,7 @@ and (comp_to_ast_string :
                                                       FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___4 ->
                                                            Prims.strcat
-                                                             (FStar_Reflection_Builtins.implode_qn
+                                                             (FStar_Reflection_V2_Builtins.implode_qn
                                                                 eff) uu___3))))
                                              (fun uu___3 ->
                                                 FStar_Tactics_Effect.lift_div_tac
@@ -2027,7 +2027,7 @@ and (comp_to_ast_string :
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___3 -> Prims.strcat "Effect" uu___2))
 and (const_to_ast_string :
-  FStar_Reflection_Data.vconst ->
+  FStar_Reflection_V2_Data.vconst ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
@@ -2036,15 +2036,15 @@ and (const_to_ast_string :
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
                match c with
-               | FStar_Reflection_Data.C_Unit -> "C_Unit"
-               | FStar_Reflection_Data.C_Int i ->
+               | FStar_Reflection_V2_Data.C_Unit -> "C_Unit"
+               | FStar_Reflection_V2_Data.C_Int i ->
                    Prims.strcat "C_Int " (Prims.string_of_int i)
-               | FStar_Reflection_Data.C_True -> "C_True"
-               | FStar_Reflection_Data.C_False -> "C_False"
-               | FStar_Reflection_Data.C_String s ->
+               | FStar_Reflection_V2_Data.C_True -> "C_True"
+               | FStar_Reflection_V2_Data.C_False -> "C_False"
+               | FStar_Reflection_V2_Data.C_String s ->
                    Prims.strcat "C_String " s
-               | FStar_Reflection_Data.C_Range uu___1 -> "C_Range _"
-               | FStar_Reflection_Data.C_Reify -> "C_Reify"
-               | FStar_Reflection_Data.C_Reflect name ->
+               | FStar_Reflection_V2_Data.C_Range uu___1 -> "C_Range _"
+               | FStar_Reflection_V2_Data.C_Reify -> "C_Reify"
+               | FStar_Reflection_V2_Data.C_Reflect name ->
                    Prims.strcat "C_Reflect "
-                     (FStar_Reflection_Builtins.implode_qn name)))) uu___
+                     (FStar_Reflection_V2_Builtins.implode_qn name)))) uu___

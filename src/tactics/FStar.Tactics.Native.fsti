@@ -19,7 +19,6 @@ module FStar.Tactics.Native
 open FStar.Compiler.Range
 open FStar.Syntax.Syntax
 open FStar.Tactics.Types
-open FStar.Tactics.Basic
 
 module Cfg   = FStar.TypeChecker.Cfg
 module N     = FStar.TypeChecker.Normalize

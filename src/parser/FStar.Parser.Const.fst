@@ -497,11 +497,14 @@ let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
-let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
-let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
-let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
+let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "check_with"]) FStar.Compiler.Range.dummyRange
+
+(* term_view_lid: only used for primitive coercions, only in V1 *)
+let term_view_lid  = p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
+(* decls = list sigelt, matches exactly in V1/V2 *)
+let decls_lid      = p2l ["FStar"; "Reflection"; "V2"; "Data"; "decls"]
 
 // meta dsl constants
 let dsl_typing_builtin s = lid_of_path (["FStar"; "Reflection"; "Typing"; "Builtins"]@[s]) FStar.Compiler.Range.dummyRange

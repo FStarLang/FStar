@@ -19,7 +19,7 @@ open FStar.Algebra.CommMonoid.Equiv
 open FStar.List
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let term_eq = FStar.Tactics.term_eq_old
 

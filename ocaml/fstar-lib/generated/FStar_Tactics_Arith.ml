@@ -13,7 +13,7 @@ let (is_arith_goal :
             (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                (Prims.of_int (25)) (Prims.of_int (4)) (Prims.of_int (27))
                (Prims.of_int (16)))))
-      (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+      (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
       (fun uu___1 ->
          (fun g ->
             Obj.magic
@@ -29,8 +29,8 @@ let (is_arith_goal :
                           (Prims.of_int (25)) (Prims.of_int (4))
                           (Prims.of_int (27)) (Prims.of_int (16)))))
                  (Obj.magic
-                    (FStar_Reflection_Arith.run_tm
-                       (FStar_Reflection_Arith.is_arith_prop g)))
+                    (FStar_Reflection_V2_Arith.run_tm
+                       (FStar_Reflection_V2_Arith.is_arith_prop g)))
                  (fun uu___1 ->
                     FStar_Tactics_Effect.lift_div_tac
                       (fun uu___2 ->
@@ -66,7 +66,7 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                          (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                             (Prims.of_int (34)) (Prims.of_int (8))
                             (Prims.of_int (35)) (Prims.of_int (14)))))
-                   (Obj.magic (FStar_Tactics_Builtins.prune ""))
+                   (Obj.magic (FStar_Tactics_V2_Builtins.prune ""))
                    (fun uu___2 ->
                       (fun uu___2 ->
                          Obj.magic
@@ -86,10 +86,11 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                        (Prims.of_int (35))
                                        (Prims.of_int (14)))))
                               (Obj.magic
-                                 (FStar_Tactics_Builtins.addns "Prims"))
+                                 (FStar_Tactics_V2_Builtins.addns "Prims"))
                               (fun uu___3 ->
                                  (fun uu___3 ->
-                                    Obj.magic (FStar_Tactics_Derived.smt ()))
+                                    Obj.magic
+                                      (FStar_Tactics_V2_Derived.smt ()))
                                    uu___3))) uu___2))
             else
               Obj.magic
@@ -104,7 +105,7 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                          (FStar_Range.mk_range "FStar.Tactics.Arith.fst"
                             (Prims.of_int (39)) (Prims.of_int (8))
                             (Prims.of_int (51)) (Prims.of_int (14)))))
-                   (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+                   (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
                    (fun uu___3 ->
                       (fun g ->
                          Obj.magic
@@ -125,22 +126,24 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                        (Prims.of_int (51))
                                        (Prims.of_int (14)))))
                               (Obj.magic
-                                 (FStar_Reflection_Formula.term_as_formula g))
+                                 (FStar_Reflection_V2_Formula.term_as_formula
+                                    g))
                               (fun uu___3 ->
                                  (fun uu___3 ->
                                     match uu___3 with
-                                    | FStar_Reflection_Formula.True_ ->
+                                    | FStar_Reflection_V2_Formula.True_ ->
                                         Obj.magic
                                           (Obj.repr
-                                             (FStar_Tactics_Derived.trivial
+                                             (FStar_Tactics_V2_Derived.trivial
                                                 ()))
-                                    | FStar_Reflection_Formula.And (l, r) ->
+                                    | FStar_Reflection_V2_Formula.And 
+                                        (l, r) ->
                                         Obj.magic
                                           (Obj.repr
-                                             (FStar_Tactics_Derived.seq
+                                             (FStar_Tactics_V2_Derived.seq
                                                 FStar_Tactics_Logic.split
                                                 split_arith))
-                                    | FStar_Reflection_Formula.Implies 
+                                    | FStar_Reflection_V2_Formula.Implies
                                         (p, q) ->
                                         Obj.magic
                                           (Obj.repr
@@ -167,11 +170,11 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                 (fun uu___4 ->
                                                    (fun uu___4 ->
                                                       Obj.magic
-                                                        (FStar_Tactics_Derived.seq
+                                                        (FStar_Tactics_V2_Derived.seq
                                                            split_arith
                                                            FStar_Tactics_Logic.l_revert))
                                                      uu___4)))
-                                    | FStar_Reflection_Formula.Forall
+                                    | FStar_Reflection_V2_Formula.Forall
                                         (_x, _sort, _p) ->
                                         Obj.magic
                                           (Obj.repr
@@ -198,7 +201,7 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                 (fun uu___4 ->
                                                    (fun bs ->
                                                       Obj.magic
-                                                        (FStar_Tactics_Derived.seq
+                                                        (FStar_Tactics_V2_Derived.seq
                                                            split_arith
                                                            (fun uu___4 ->
                                                               FStar_Tactics_Logic.l_revert_all

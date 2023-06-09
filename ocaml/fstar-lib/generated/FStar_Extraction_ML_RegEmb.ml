@@ -153,10 +153,10 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
     FStar_Ident.lid_of_path ["FStar"; "TypeChecker"; "NBETerm"; s]
       FStar_Compiler_Range_Type.dummyRange in
   let refl_emb_lid s =
-    FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Embeddings"; s]
+    FStar_Ident.lid_of_path ["FStar"; "Reflection"; "V2"; "Embeddings"; s]
       FStar_Compiler_Range_Type.dummyRange in
   let nbe_refl_emb_lid s =
-    FStar_Ident.lid_of_path ["FStar"; "Reflection"; "NBEEmbeddings"; s]
+    FStar_Ident.lid_of_path ["FStar"; "Reflection"; "V2"; "NBEEmbeddings"; s]
       FStar_Compiler_Range_Type.dummyRange in
   let uu___ =
     let uu___1 =
@@ -317,7 +317,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                           let uu___25 =
                             let uu___26 =
                               let uu___27 =
-                                FStar_Reflection_Constants.fstar_refl_types_lid
+                                FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                   "namedv" in
                               let uu___28 =
                                 let uu___29 = refl_emb_lid "e_namedv" in
@@ -333,7 +333,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                             let uu___27 =
                               let uu___28 =
                                 let uu___29 =
-                                  FStar_Reflection_Constants.fstar_refl_types_lid
+                                  FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                     "bv" in
                                 let uu___30 =
                                   let uu___31 = refl_emb_lid "e_bv" in
@@ -349,7 +349,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                               let uu___29 =
                                 let uu___30 =
                                   let uu___31 =
-                                    FStar_Reflection_Constants.fstar_refl_types_lid
+                                    FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                       "binder" in
                                   let uu___32 =
                                     let uu___33 = refl_emb_lid "e_binder" in
@@ -366,7 +366,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                 let uu___31 =
                                   let uu___32 =
                                     let uu___33 =
-                                      FStar_Reflection_Constants.fstar_refl_types_lid
+                                      FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                         "term" in
                                     let uu___34 =
                                       let uu___35 = refl_emb_lid "e_term" in
@@ -383,7 +383,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                   let uu___33 =
                                     let uu___34 =
                                       let uu___35 =
-                                        FStar_Reflection_Constants.fstar_refl_types_lid
+                                        FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                           "env" in
                                       let uu___36 =
                                         let uu___37 = refl_emb_lid "e_env" in
@@ -401,7 +401,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                     let uu___35 =
                                       let uu___36 =
                                         let uu___37 =
-                                          FStar_Reflection_Constants.fstar_refl_types_lid
+                                          FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                             "fv" in
                                         let uu___38 =
                                           let uu___39 = refl_emb_lid "e_fv" in
@@ -419,7 +419,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                       let uu___37 =
                                         let uu___38 =
                                           let uu___39 =
-                                            FStar_Reflection_Constants.fstar_refl_types_lid
+                                            FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                               "comp" in
                                           let uu___40 =
                                             let uu___41 =
@@ -438,7 +438,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                         let uu___39 =
                                           let uu___40 =
                                             let uu___41 =
-                                              FStar_Reflection_Constants.fstar_refl_types_lid
+                                              FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                                 "sigelt" in
                                             let uu___42 =
                                               let uu___43 =
@@ -457,7 +457,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                           let uu___41 =
                                             let uu___42 =
                                               let uu___43 =
-                                                FStar_Reflection_Constants.fstar_refl_types_lid
+                                                FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                                   "ctx_uvar_and_subst" in
                                               let uu___44 =
                                                 let uu___45 =
@@ -478,7 +478,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                             let uu___43 =
                                               let uu___44 =
                                                 let uu___45 =
-                                                  FStar_Reflection_Constants.fstar_refl_types_lid
+                                                  FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                                     "letbinding" in
                                                 let uu___46 =
                                                   let uu___47 =
@@ -499,7 +499,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                               let uu___45 =
                                                 let uu___46 =
                                                   let uu___47 =
-                                                    FStar_Reflection_Constants.fstar_refl_types_lid
+                                                    FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                                       "__ident" in
                                                   let uu___48 =
                                                     let uu___49 =
@@ -520,7 +520,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                 let uu___47 =
                                                   let uu___48 =
                                                     let uu___49 =
-                                                      FStar_Reflection_Constants.fstar_refl_types_lid
+                                                      FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                                         "universe_uvar" in
                                                     let uu___50 =
                                                       let uu___51 =
@@ -542,7 +542,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                   let uu___49 =
                                                     let uu___50 =
                                                       let uu___51 =
-                                                        FStar_Reflection_Constants.fstar_refl_types_lid
+                                                        FStar_Reflection_V2_Constants.fstar_refl_types_lid
                                                           "universe" in
                                                       let uu___52 =
                                                         let uu___53 =
@@ -564,7 +564,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                     let uu___51 =
                                                       let uu___52 =
                                                         let uu___53 =
-                                                          FStar_Reflection_Constants.fstar_refl_data_lid
+                                                          FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                             "vconst" in
                                                         let uu___54 =
                                                           let uu___55 =
@@ -586,7 +586,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                       let uu___53 =
                                                         let uu___54 =
                                                           let uu___55 =
-                                                            FStar_Reflection_Constants.fstar_refl_data_lid
+                                                            FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                               "aqualv" in
                                                           let uu___56 =
                                                             let uu___57 =
@@ -610,7 +610,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                         let uu___55 =
                                                           let uu___56 =
                                                             let uu___57 =
-                                                              FStar_Reflection_Constants.fstar_refl_data_lid
+                                                              FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                 "pattern" in
                                                             let uu___58 =
                                                               let uu___59 =
@@ -635,7 +635,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                           let uu___57 =
                                                             let uu___58 =
                                                               let uu___59 =
-                                                                FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                   "namedv_view" in
                                                               let uu___60 =
                                                                 let uu___61 =
@@ -661,7 +661,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                             let uu___59 =
                                                               let uu___60 =
                                                                 let uu___61 =
-                                                                  FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                  FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "bv_view" in
                                                                 let uu___62 =
                                                                   let uu___63
@@ -690,7 +690,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                                 let uu___62 =
                                                                   let uu___63
                                                                     =
-                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "binder_view" in
                                                                   let uu___64
                                                                     =
@@ -721,7 +721,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                                     =
                                                                     let uu___65
                                                                     =
-                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "binding" in
                                                                     let uu___66
                                                                     =
@@ -753,7 +753,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                                     =
                                                                     let uu___67
                                                                     =
-                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "universe_view" in
                                                                     let uu___68
                                                                     =
@@ -785,7 +785,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                                     =
                                                                     let uu___69
                                                                     =
-                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "term_view" in
                                                                     let uu___70
                                                                     =
@@ -817,7 +817,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                                     =
                                                                     let uu___71
                                                                     =
-                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "comp_view" in
                                                                     let uu___72
                                                                     =
@@ -849,7 +849,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                                     =
                                                                     let uu___73
                                                                     =
-                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "lb_view" in
                                                                     let uu___74
                                                                     =
@@ -881,7 +881,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                                     =
                                                                     let uu___75
                                                                     =
-                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "sigelt_view" in
                                                                     let uu___76
                                                                     =
@@ -913,7 +913,7 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
                                                                     =
                                                                     let uu___77
                                                                     =
-                                                                    FStar_Reflection_Constants.fstar_refl_data_lid
+                                                                    FStar_Reflection_V2_Constants.fstar_refl_data_lid
                                                                     "qualifier" in
                                                                     let uu___78
                                                                     =
@@ -1291,7 +1291,7 @@ let (interpret_plugin_as_term_fun :
                 (FStar_Extraction_ML_Syntax.with_ty
                    FStar_Extraction_ML_Syntax.MLTY_Top) uu___ in
             let mk_tactic_interpretation l arity =
-              if arity > FStar_Tactics_InterpFuns.max_tac_arity
+              if arity > FStar_Tactics_V2_InterpFuns.max_tac_arity
               then
                 FStar_Compiler_Effect.raise
                   (NoEmbedding
@@ -1302,7 +1302,7 @@ let (interpret_plugin_as_term_fun :
                    | SyntaxTerm -> "mk_tactic_interpretation_"
                    | NBETerm -> "mk_nbe_tactic_interpretation_" in
                  as_name1
-                   (["FStar_Tactics_InterpFuns"],
+                   (["FStar_Tactics_V2_InterpFuns"],
                      (Prims.op_Hat idroot (Prims.string_of_int arity)))) in
             let mk_from_tactic l arity =
               let idroot =

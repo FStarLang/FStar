@@ -529,10 +529,6 @@ let (postprocess_extr_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let (term_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "term"]
-let (term_view_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Data"; "term_view"]
-let (decls_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Data"; "decls"]
 let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let (universe_uvar_lid : FStar_Ident.lident) =
@@ -540,6 +536,10 @@ let (universe_uvar_lid : FStar_Ident.lident) =
 let (check_with_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Builtins"; "check_with"]
     FStar_Compiler_Range_Type.dummyRange
+let (term_view_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
+let (decls_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "V2"; "Data"; "decls"]
 let (dsl_typing_builtin : Prims.string -> FStar_Ident.lident) =
   fun s ->
     FStar_Ident.lid_of_path

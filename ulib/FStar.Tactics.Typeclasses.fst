@@ -15,12 +15,12 @@
 *)
 module FStar.Tactics.Typeclasses
 
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.Tactics.Common
 open FStar.Tactics.Effect
-open FStar.Tactics.Builtins
-open FStar.Tactics.SyntaxHelpers
-open FStar.Tactics.Derived
+open FStar.Tactics.V2.Builtins
+open FStar.Tactics.V2.SyntaxHelpers
+open FStar.Tactics.V2.Derived
 open FStar.Tactics.NamedView
 
 module L = FStar.List.Tot.Base
@@ -70,7 +70,7 @@ private
 let rec maybe_intros () : Tac unit =
   let g = cur_goal () in
   match inspect_ln g with
-  | Reflection.Tv_Arrow _ _ ->
+  | Reflection.V2.Tv_Arrow _ _ ->
     ignore (intro ());
     maybe_intros ()
   | _ -> ()
@@ -114,7 +114,7 @@ let filter_no_method_binders (bs:binders)
         let is_no_method (t:term)
           : bool
           = match inspect_ln t with
-            | Reflection.Tv_FVar fv  ->
+            | Reflection.V2.Tv_FVar fv  ->
               let n = flatten_name (inspect_fv fv) in
               n = `%no_method
             | _ -> false

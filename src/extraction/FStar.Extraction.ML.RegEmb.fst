@@ -35,7 +35,7 @@ module N     = FStar.TypeChecker.Normalize
 module NBET  = FStar.TypeChecker.NBETerm
 module PC    = FStar.Parser.Const
 module Print = FStar.Syntax.Print
-module RC    = FStar.Reflection.Constants
+module RC    = FStar.Reflection.V2.Constants
 module S     = FStar.Syntax.Syntax
 module SS    = FStar.Syntax.Subst
 module Term  = FStar.Extraction.ML.Term
@@ -126,8 +126,8 @@ type embedding_data = {
 let builtin_embeddings : list (Ident.lident & embedding_data) =
   let syn_emb_lid s      = Ident.lid_of_path ["FStar"; "Syntax"; "Embeddings"; s] Range.dummyRange in
   let nbe_emb_lid s      = Ident.lid_of_path ["FStar"; "TypeChecker"; "NBETerm"; s] Range.dummyRange in
-  let refl_emb_lid s     = Ident.lid_of_path ["FStar"; "Reflection"; "Embeddings"; s] Range.dummyRange in
-  let nbe_refl_emb_lid s = Ident.lid_of_path ["FStar"; "Reflection"; "NBEEmbeddings"; s] Range.dummyRange in
+  let refl_emb_lid s     = Ident.lid_of_path ["FStar"; "Reflection"; "V2"; "Embeddings"; s] Range.dummyRange in
+  let nbe_refl_emb_lid s = Ident.lid_of_path ["FStar"; "Reflection"; "V2"; "NBEEmbeddings"; s] Range.dummyRange in
   [
     (PC.int_lid,                          {arity=0; syn_emb=syn_emb_lid  "e_int";        nbe_emb=Some(nbe_emb_lid "e_int")});
     (PC.bool_lid,                         {arity=0; syn_emb=syn_emb_lid  "e_bool";       nbe_emb=Some(nbe_emb_lid "e_bool")});
@@ -345,7 +345,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                      [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid))])
     in
     let mk_tactic_interpretation l arity =
-      if arity > FStar.Tactics.InterpFuns.max_tac_arity then
+      if arity > FStar.Tactics.V2.InterpFuns.max_tac_arity then
         raise (NoEmbedding("tactic plugins can only take up to 20 arguments"))
       else
       let idroot =
@@ -353,7 +353,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "mk_tactic_interpretation_"
         | NBETerm    -> "mk_nbe_tactic_interpretation_"
       in
-      as_name (["FStar_Tactics_InterpFuns"], idroot^string_of_int arity)
+      as_name (["FStar_Tactics_V2_InterpFuns"], idroot^string_of_int arity)
     in
     let mk_from_tactic l arity =
       let idroot =

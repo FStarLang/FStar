@@ -26,11 +26,11 @@ module FStar.Reflection.Typing
   *)
 
 open FStar.List.Tot
-open FStar.Reflection
+open FStar.Reflection.V2
 
-module R = FStar.Reflection
-module T = FStar.Tactics
-module FTB = FStar.Tactics.Builtins
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
+module FTB = FStar.Tactics.V2.Builtins
 module RTB = FStar.Reflection.Typing.Builtins
 
 let inspect_pack = R.inspect_pack_inv

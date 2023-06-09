@@ -28,10 +28,10 @@ module FStar.Reflection.Typing
   *)
 
 open FStar.List.Tot
-open FStar.Reflection
-module R = FStar.Reflection
-module T = FStar.Tactics
-module FTB = FStar.Tactics.Builtins
+open FStar.Reflection.V2
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
+module FTB = FStar.Tactics.V2.Builtins
 
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))

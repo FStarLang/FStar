@@ -1,12 +1,13 @@
 module FStar.Tactics.MApply
 
-open FStar.Reflection
-open FStar.Reflection.Formula
+open FStar.Reflection.V2
+open FStar.Reflection.V2.Formula
+
 open FStar.Tactics.Effect
-open FStar.Tactics.Builtins
+open FStar.Tactics.V2.Builtins
 open FStar.Tactics.NamedView
-open FStar.Tactics.SyntaxHelpers
-open FStar.Tactics.Derived
+open FStar.Tactics.V2.SyntaxHelpers
+open FStar.Tactics.V2.Derived
 
 open FStar.Tactics.Typeclasses
 

@@ -28,6 +28,7 @@ let tau () : Tac decls =
       let se : sigelt = pack_sigelt (Sg_Let {isrec=false;lbs=[lb]}) in
       let se = add_check_with opts se in
       [se]
+
 (* Splice `blah`, using the options for sp1, i.e. --max_fuel 2 *)
 %splice[blah] (tau ())
 

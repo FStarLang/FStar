@@ -18,15 +18,17 @@ module FStar.Tactics.NamedView
 (* inner let bindings not encoded, OK *)
 #set-options "--warn_error -242"
 
-open FStar.Reflection
+(* This file is part of the tactics core, we open only what's needed. *)
 open FStar.Tactics.Effect
-open FStar.Tactics.Builtins
 open FStar.Tactics.Util
+open FStar.Tactics.V2.Builtins
 
 exception LengthMismatch
 
-module R = FStar.Reflection
-module RD = FStar.Reflection.Data
+(* We work with reflection V2. *)
+open FStar.Reflection.V2
+module R = FStar.Reflection.V2
+module RD = FStar.Reflection.V2.Data
 
 (* Disable printing, but mark private so we don't mess
 with clients. *)

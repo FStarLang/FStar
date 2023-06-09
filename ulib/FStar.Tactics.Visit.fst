@@ -17,7 +17,7 @@ module FStar.Tactics.Visit
 
 (* Visit a term and transform it step by step. *)
 
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.Tactics.Effect
 open FStar.Tactics.Types
 open FStar.Tactics.Util

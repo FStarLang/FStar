@@ -15,6 +15,7 @@
 *)
 
 module FStar.Tactics.Embedding
+
 open FStar
 open FStar.Compiler
 open FStar.Pervasives
@@ -24,28 +25,18 @@ open FStar.Syntax.Embeddings
 open FStar.Compiler.Util
 
 open FStar.Tactics.Common
-module S = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module PC = FStar.Parser.Const
-module Env = FStar.TypeChecker.Env
-module BU = FStar.Compiler.Util
-module C = FStar.Const
-module U = FStar.Syntax.Util
-module Rel = FStar.TypeChecker.Rel
-module Print = FStar.Syntax.Print
-module TcUtil = FStar.TypeChecker.Util
-module N = FStar.TypeChecker.Normalize
-module Err = FStar.Errors
-module NBETerm = FStar.TypeChecker.NBETerm
-module NBET    = FStar.TypeChecker.NBETerm
-module NBE = FStar.TypeChecker.NBE
-
 open FStar.Tactics.Types
 open FStar.Tactics.Result
-open FStar.Tactics.Basic
 
-open FStar.Reflection.Basic
-open FStar.Reflection.Data
+module BU      = FStar.Compiler.Util
+module Err     = FStar.Errors
+module NBE     = FStar.TypeChecker.NBE
+module NBETerm = FStar.TypeChecker.NBETerm
+module NBET    = FStar.TypeChecker.NBETerm
+module PC      = FStar.Parser.Const
+module S       = FStar.Syntax.Syntax
+module SS      = FStar.Syntax.Subst
+module U       = FStar.Syntax.Util
 
 type name = bv
 

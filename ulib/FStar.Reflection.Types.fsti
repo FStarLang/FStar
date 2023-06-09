@@ -42,6 +42,10 @@ type univ_name = ident
 type typ     = term
 type binders = list binder
 
+(** Marker to check a sigelt with a particular vconfig *)
+irreducible
+let check_with (vcfg : vconfig) : unit = ()
+
 (*
  * match e as binder returns t|C
  *

@@ -10,8 +10,8 @@ let rec (collect_arr' :
     fun uu___ ->
       (fun bs ->
          fun c ->
-           match FStar_Reflection_Builtins.inspect_comp c with
-           | FStar_Reflection_Data.C_Total t ->
+           match FStar_Reflection_V2_Builtins.inspect_comp c with
+           | FStar_Reflection_V2_Data.C_Total t ->
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
@@ -64,8 +64,8 @@ let (collect_arr_bs :
                (Prims.of_int (29)))))
       (Obj.magic
          (collect_arr' []
-            (FStar_Reflection_Builtins.pack_comp
-               (FStar_Reflection_Data.C_Total t))))
+            (FStar_Reflection_V2_Builtins.pack_comp
+               (FStar_Reflection_V2_Data.C_Total t))))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 ->
@@ -89,8 +89,8 @@ let (collect_arr :
                (Prims.of_int (29)))))
       (Obj.magic
          (collect_arr' []
-            (FStar_Reflection_Builtins.pack_comp
-               (FStar_Reflection_Data.C_Total t))))
+            (FStar_Reflection_V2_Builtins.pack_comp
+               (FStar_Reflection_V2_Data.C_Total t))))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 ->
@@ -246,12 +246,12 @@ let rec (mk_arr :
                                          (fun uu___ ->
                                             FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___1 ->
-                                                 FStar_Reflection_Data.C_Total
+                                                 FStar_Reflection_V2_Data.C_Total
                                                    uu___))))
                                    (fun uu___ ->
                                       FStar_Tactics_Effect.lift_div_tac
                                         (fun uu___1 ->
-                                           FStar_Reflection_Builtins.pack_comp
+                                           FStar_Reflection_V2_Builtins.pack_comp
                                              uu___))))
                              (fun uu___ ->
                                 FStar_Tactics_Effect.lift_div_tac
@@ -344,12 +344,12 @@ let rec (mk_tot_arr :
                                          (fun uu___ ->
                                             FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___1 ->
-                                                 FStar_Reflection_Data.C_Total
+                                                 FStar_Reflection_V2_Data.C_Total
                                                    uu___))))
                                    (fun uu___ ->
                                       FStar_Tactics_Effect.lift_div_tac
                                         (fun uu___1 ->
-                                           FStar_Reflection_Builtins.pack_comp
+                                           FStar_Reflection_V2_Builtins.pack_comp
                                              uu___))))
                              (fun uu___ ->
                                 FStar_Tactics_Effect.lift_div_tac
@@ -383,7 +383,7 @@ let (lookup_lb :
            (fun uu___ ->
               FStar_List_Tot_Base.find
                 (fun lb ->
-                   (FStar_Reflection_Builtins.inspect_fv
+                   (FStar_Reflection_V2_Builtins.inspect_fv
                       lb.FStar_Tactics_NamedView.lb_fv)
                      = nm) lbs))
         (fun uu___ ->
@@ -430,9 +430,10 @@ let rec (inspect_unascribe :
                      (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> tv))))
            uu___)
 let rec (collect_app' :
-  FStar_Reflection_Data.argv Prims.list ->
+  FStar_Reflection_V2_Data.argv Prims.list ->
     FStar_Reflection_Types.term ->
-      ((FStar_Reflection_Types.term * FStar_Reflection_Data.argv Prims.list),
+      ((FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv
+         Prims.list),
         unit) FStar_Tactics_Effect.tac_repr)
   =
   fun args ->
@@ -460,6 +461,6 @@ let rec (collect_app' :
                           (fun uu___2 -> (t, args))))) uu___)
 let (collect_app :
   FStar_Reflection_Types.term ->
-    ((FStar_Reflection_Types.term * FStar_Reflection_Data.argv Prims.list),
+    ((FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv Prims.list),
       unit) FStar_Tactics_Effect.tac_repr)
   = collect_app' []

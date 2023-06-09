@@ -1,9 +1,9 @@
 module FStar.Tactics.Print
 
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.Tactics.Effect
-open FStar.Tactics.Builtins
-open FStar.Tactics.Derived
+open FStar.Tactics.V2.Builtins
+open FStar.Tactics.V2.Derived
 open FStar.Tactics.NamedView
 
 (* FIXME *)

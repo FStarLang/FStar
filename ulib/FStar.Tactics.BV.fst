@@ -15,9 +15,9 @@
 *)
 module FStar.Tactics.BV
 
-open FStar.Tactics
-open FStar.Reflection.Formula
-open FStar.Reflection.Arith
+open FStar.Tactics.V2
+open FStar.Reflection.V2.Formula
+open FStar.Reflection.V2.Arith
 open FStar.BV
 open FStar.UInt
 

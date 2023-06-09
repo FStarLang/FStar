@@ -23,7 +23,7 @@
 
 module FStar.Tactics.PatternMatching
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 /// Contents
 /// ========

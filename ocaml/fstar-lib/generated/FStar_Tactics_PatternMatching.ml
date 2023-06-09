@@ -16,7 +16,7 @@ let (fetch_eq_side :
             (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                (Prims.of_int (64)) (Prims.of_int (2)) (Prims.of_int (88))
                (Prims.of_int (39)))))
-      (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+      (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
       (fun uu___1 ->
          (fun g ->
             Obj.magic
@@ -68,10 +68,10 @@ let (fetch_eq_side :
                                              Obj.magic
                                                (Obj.repr
                                                   (if
-                                                     (FStar_Reflection_Derived.fv_to_string
+                                                     (FStar_Reflection_V2_Derived.fv_to_string
                                                         squash1)
                                                        =
-                                                       (FStar_Reflection_Derived.flatten_name
+                                                       (FStar_Reflection_V2_Derived.flatten_name
                                                           FStar_Reflection_Const.squash_qn)
                                                    then
                                                      Obj.repr
@@ -205,9 +205,9 @@ let (fetch_eq_side :
                                                                     uu___12)
                                                                     ->
                                                                     if
-                                                                    (FStar_Reflection_Derived.fv_to_string
+                                                                    (FStar_Reflection_V2_Derived.fv_to_string
                                                                     eq1) =
-                                                                    (FStar_Reflection_Derived.flatten_name
+                                                                    (FStar_Reflection_V2_Derived.flatten_name
                                                                     FStar_Reflection_Const.eq2_qn)
                                                                     then
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -215,15 +215,15 @@ let (fetch_eq_side :
                                                                     uu___13
                                                                     -> (x, y))
                                                                     else
-                                                                    FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_V2_Derived.fail
                                                                     "not an equality"
                                                                     | 
                                                                     FStar_Tactics_NamedView.Tv_FVar
                                                                     eq1 ->
                                                                     if
-                                                                    (FStar_Reflection_Derived.fv_to_string
+                                                                    (FStar_Reflection_V2_Derived.fv_to_string
                                                                     eq1) =
-                                                                    (FStar_Reflection_Derived.flatten_name
+                                                                    (FStar_Reflection_V2_Derived.flatten_name
                                                                     FStar_Reflection_Const.eq2_qn)
                                                                     then
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -231,47 +231,47 @@ let (fetch_eq_side :
                                                                     uu___12
                                                                     -> (x, y))
                                                                     else
-                                                                    FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_V2_Derived.fail
                                                                     "not an equality"
                                                                     | 
                                                                     uu___12
                                                                     ->
-                                                                    FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_V2_Derived.fail
                                                                     "not an app2 of fvar: ")))
                                                                     | 
                                                                     uu___10
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    (FStar_Tactics_V2_Derived.fail
                                                                     "not an app3")))
                                                                     uu___9)))
                                                                     | 
                                                                     uu___8 ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    (FStar_Tactics_V2_Derived.fail
                                                                     "not an app2")))
                                                                     uu___7)))
                                                                 | uu___6 ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    (FStar_Tactics_V2_Derived.fail
                                                                     "not an app under squash")))
                                                                uu___5))
                                                    else
                                                      Obj.repr
-                                                       (FStar_Tactics_Derived.fail
+                                                       (FStar_Tactics_V2_Derived.fail
                                                           "not a squash")))
                                          | FStar_Tactics_NamedView.Tv_FVar
                                              squash1 ->
                                              Obj.magic
                                                (Obj.repr
                                                   (if
-                                                     (FStar_Reflection_Derived.fv_to_string
+                                                     (FStar_Reflection_V2_Derived.fv_to_string
                                                         squash1)
                                                        =
-                                                       (FStar_Reflection_Derived.flatten_name
+                                                       (FStar_Reflection_V2_Derived.flatten_name
                                                           FStar_Reflection_Const.squash_qn)
                                                    then
                                                      Obj.repr
@@ -405,9 +405,9 @@ let (fetch_eq_side :
                                                                     uu___11)
                                                                     ->
                                                                     if
-                                                                    (FStar_Reflection_Derived.fv_to_string
+                                                                    (FStar_Reflection_V2_Derived.fv_to_string
                                                                     eq1) =
-                                                                    (FStar_Reflection_Derived.flatten_name
+                                                                    (FStar_Reflection_V2_Derived.flatten_name
                                                                     FStar_Reflection_Const.eq2_qn)
                                                                     then
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -415,15 +415,15 @@ let (fetch_eq_side :
                                                                     uu___12
                                                                     -> (x, y))
                                                                     else
-                                                                    FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_V2_Derived.fail
                                                                     "not an equality"
                                                                     | 
                                                                     FStar_Tactics_NamedView.Tv_FVar
                                                                     eq1 ->
                                                                     if
-                                                                    (FStar_Reflection_Derived.fv_to_string
+                                                                    (FStar_Reflection_V2_Derived.fv_to_string
                                                                     eq1) =
-                                                                    (FStar_Reflection_Derived.flatten_name
+                                                                    (FStar_Reflection_V2_Derived.flatten_name
                                                                     FStar_Reflection_Const.eq2_qn)
                                                                     then
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -431,47 +431,47 @@ let (fetch_eq_side :
                                                                     uu___11
                                                                     -> (x, y))
                                                                     else
-                                                                    FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_V2_Derived.fail
                                                                     "not an equality"
                                                                     | 
                                                                     uu___11
                                                                     ->
-                                                                    FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_V2_Derived.fail
                                                                     "not an app2 of fvar: ")))
                                                                     | 
                                                                     uu___9 ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    (FStar_Tactics_V2_Derived.fail
                                                                     "not an app3")))
                                                                     uu___8)))
                                                                     | 
                                                                     uu___7 ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    (FStar_Tactics_V2_Derived.fail
                                                                     "not an app2")))
                                                                     uu___6)))
                                                                 | uu___5 ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    (FStar_Tactics_V2_Derived.fail
                                                                     "not an app under squash")))
                                                                uu___4))
                                                    else
                                                      Obj.repr
-                                                       (FStar_Tactics_Derived.fail
+                                                       (FStar_Tactics_V2_Derived.fail
                                                           "not a squash")))
                                          | uu___4 ->
                                              Obj.magic
                                                (Obj.repr
-                                                  (FStar_Tactics_Derived.fail
+                                                  (FStar_Tactics_V2_Derived.fail
                                                      "not an app of fvar at top level")))
                                         uu___3)))
                        | uu___2 ->
                            Obj.magic
                              (Obj.repr
-                                (FStar_Tactics_Derived.fail
+                                (FStar_Tactics_V2_Derived.fail
                                    "not an app at top level"))) uu___1)))
            uu___1)
 let mustfail :
@@ -492,11 +492,11 @@ let mustfail :
               (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                  (Prims.of_int (130)) (Prims.of_int (4)) (Prims.of_int (132))
                  (Prims.of_int (16)))))
-        (Obj.magic (FStar_Tactics_Derived.trytac t))
+        (Obj.magic (FStar_Tactics_V2_Derived.trytac t))
         (fun uu___ ->
            match uu___ with
            | FStar_Pervasives_Native.Some uu___1 ->
-               FStar_Tactics_Derived.fail message
+               FStar_Tactics_V2_Derived.fail message
            | FStar_Pervasives_Native.None ->
                FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))
 let (implies_intro' : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
@@ -531,10 +531,11 @@ let repeat' :
             (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                (Prims.of_int (141)) (Prims.of_int (22)) (Prims.of_int (141))
                (Prims.of_int (24)))))
-      (Obj.magic (FStar_Tactics_Derived.repeat f))
+      (Obj.magic (FStar_Tactics_V2_Derived.repeat f))
       (fun uu___ -> FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))
 let (and_elim' :
-  FStar_Reflection_Data.binding -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+  FStar_Reflection_V2_Data.binding ->
+    (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun h ->
     FStar_Tactics_Effect.tac_bind
@@ -552,9 +553,9 @@ let (and_elim' :
          (FStar_Tactics_Logic.and_elim
             (FStar_Tactics_NamedView.pack
                (FStar_Tactics_NamedView.Tv_Var
-                  (FStar_Tactics_Derived.binding_to_namedv h)))))
+                  (FStar_Tactics_V2_Derived.binding_to_namedv h)))))
       (fun uu___ ->
-         (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.clear h)) uu___)
+         (fun uu___ -> Obj.magic (FStar_Tactics_V2_Builtins.clear h)) uu___)
 let exact_hyp :
   'a .
     FStar_Reflection_Types.namedv ->
@@ -581,16 +582,16 @@ let exact_hyp :
       (fun uu___ ->
          (fun hd ->
             Obj.magic
-              (FStar_Tactics_Derived.exact
-                 (FStar_Reflection_Derived.mk_app hd
+              (FStar_Tactics_V2_Derived.exact
+                 (FStar_Reflection_V2_Derived.mk_app hd
                     [((FStar_Tactics_NamedView.pack
                          (FStar_Tactics_NamedView.Tv_Var h)),
-                       FStar_Reflection_Data.Q_Explicit)]))) uu___)
+                       FStar_Reflection_V2_Data.Q_Explicit)]))) uu___)
 let (exact_hyp' :
   FStar_Reflection_Types.namedv -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun h ->
-    FStar_Tactics_Derived.exact
+    FStar_Tactics_V2_Derived.exact
       (FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_Var h))
 type varname = Prims.string
 type qn = Prims.string
@@ -777,7 +778,8 @@ let (string_of_match_exception :
                                         (Prims.of_int (590))
                                         (Prims.of_int (31)))))
                                (Obj.magic
-                                  (FStar_Tactics_Builtins.term_to_string tm))
+                                  (FStar_Tactics_V2_Builtins.term_to_string
+                                     tm))
                                (fun uu___1 ->
                                   FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___2 ->
@@ -856,7 +858,7 @@ let (string_of_match_exception :
                                               (Prims.of_int (232))
                                               (Prims.of_int (33)))))
                                      (Obj.magic
-                                        (FStar_Tactics_Builtins.term_to_string
+                                        (FStar_Tactics_V2_Builtins.term_to_string
                                            t1))
                                      (fun uu___1 ->
                                         (fun uu___1 ->
@@ -897,7 +899,7 @@ let (string_of_match_exception :
                                                                (Prims.of_int (590))
                                                                (Prims.of_int (31)))))
                                                       (Obj.magic
-                                                         (FStar_Tactics_Builtins.term_to_string
+                                                         (FStar_Tactics_V2_Builtins.term_to_string
                                                             t2))
                                                       (fun uu___2 ->
                                                          FStar_Tactics_Effect.lift_div_tac
@@ -954,7 +956,7 @@ let (string_of_match_exception :
                                   (Prims.of_int (235)) (Prims.of_int (4))
                                   (Prims.of_int (235)) (Prims.of_int (49)))))
                          (Obj.magic
-                            (FStar_Tactics_Builtins.term_to_string tm))
+                            (FStar_Tactics_V2_Builtins.term_to_string tm))
                          (fun uu___1 ->
                             (fun uu___1 ->
                                Obj.magic
@@ -1060,7 +1062,7 @@ let (string_of_match_exception :
                                   (Prims.of_int (590)) (Prims.of_int (19))
                                   (Prims.of_int (590)) (Prims.of_int (31)))))
                          (Obj.magic
-                            (FStar_Tactics_Builtins.term_to_string typ))
+                            (FStar_Tactics_V2_Builtins.term_to_string typ))
                          (fun uu___1 ->
                             FStar_Tactics_Effect.lift_div_tac
                               (fun uu___2 ->
@@ -1132,7 +1134,7 @@ let lift_exn_tac :
                                 (Prims.of_int (269)) (Prims.of_int (18))
                                 (Prims.of_int (269)) (Prims.of_int (61)))))
                        (Obj.magic (string_of_match_exception ex))
-                       (fun uu___ -> FStar_Tactics_Derived.fail uu___))))
+                       (fun uu___ -> FStar_Tactics_V2_Derived.fail uu___))))
         uu___1 uu___
 let lift_exn_tactic :
   'a 'b .
@@ -1164,7 +1166,7 @@ let lift_exn_tactic :
                                 (Prims.of_int (274)) (Prims.of_int (18))
                                 (Prims.of_int (274)) (Prims.of_int (61)))))
                        (Obj.magic (string_of_match_exception ex))
-                       (fun uu___ -> FStar_Tactics_Derived.fail uu___))))
+                       (fun uu___ -> FStar_Tactics_V2_Derived.fail uu___))))
         uu___1 uu___
 type bindings = (varname * FStar_Reflection_Types.term) Prims.list
 let (string_of_bindings :
@@ -1229,7 +1231,8 @@ let (string_of_bindings :
                                           (Prims.of_int (590))
                                           (Prims.of_int (31)))))
                                  (Obj.magic
-                                    (FStar_Tactics_Builtins.term_to_string tm))
+                                    (FStar_Tactics_V2_Builtins.term_to_string
+                                       tm))
                                  (fun uu___1 ->
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___2 -> Prims.strcat ": " uu___1))))
@@ -1270,7 +1273,7 @@ let rec (interp_pattern_aux :
                     fun tm1 ->
                       match FStar_List_Tot_Base.assoc v cur_bindings1 with
                       | FStar_Pervasives_Native.Some tm' ->
-                          if FStar_Reflection_Builtins.term_eq tm1 tm'
+                          if FStar_Reflection_V2_Builtins.term_eq tm1 tm'
                           then return cur_bindings1
                           else raise (NonLinearMismatch (v, tm1, tm'))
                       | FStar_Pervasives_Native.None ->
@@ -1322,7 +1325,7 @@ let rec (interp_pattern_aux :
                                            | FStar_Tactics_NamedView.Tv_UInst
                                                (fv, uu___3) ->
                                                if
-                                                 (FStar_Reflection_Derived.fv_to_string
+                                                 (FStar_Reflection_V2_Derived.fv_to_string
                                                     fv)
                                                    = qn1
                                                then return cur_bindings1
@@ -1330,12 +1333,12 @@ let rec (interp_pattern_aux :
                                                  raise
                                                    (NameMismatch
                                                       (qn1,
-                                                        (FStar_Reflection_Derived.fv_to_string
+                                                        (FStar_Reflection_V2_Derived.fv_to_string
                                                            fv)))
                                            | FStar_Tactics_NamedView.Tv_FVar
                                                fv ->
                                                if
-                                                 (FStar_Reflection_Derived.fv_to_string
+                                                 (FStar_Reflection_V2_Derived.fv_to_string
                                                     fv)
                                                    = qn1
                                                then return cur_bindings1
@@ -1343,7 +1346,7 @@ let rec (interp_pattern_aux :
                                                  raise
                                                    (NameMismatch
                                                       (qn1,
-                                                        (FStar_Reflection_Derived.fv_to_string
+                                                        (FStar_Reflection_V2_Derived.fv_to_string
                                                            fv)))
                                            | uu___3 ->
                                                raise
@@ -1637,7 +1640,7 @@ let (match_term :
                     (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                        (Prims.of_int (334)) (Prims.of_int (10))
                        (Prims.of_int (334)) (Prims.of_int (46)))))
-              (Obj.magic (FStar_Tactics_Derived.norm_term [] tm))
+              (Obj.magic (FStar_Tactics_V2_Derived.norm_term [] tm))
               (fun uu___ ->
                  (fun uu___ -> Obj.magic (interp_pattern pat uu___)) uu___)))
         (fun uu___ ->
@@ -1664,14 +1667,14 @@ let (match_term :
                                    (Prims.of_int (336)) (Prims.of_int (20))
                                    (Prims.of_int (336)) (Prims.of_int (63)))))
                           (Obj.magic (string_of_match_exception ex))
-                          (fun uu___1 -> FStar_Tactics_Derived.fail uu___1))))
+                          (fun uu___1 -> FStar_Tactics_V2_Derived.fail uu___1))))
              uu___)
 let debug : 'uuuuu . 'uuuuu -> (unit, unit) FStar_Tactics_Effect.tac_repr =
   fun uu___ ->
     (fun msg ->
        Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))) uu___
-type absvar = FStar_Reflection_Data.binding
-type hypothesis = FStar_Reflection_Data.binding
+type absvar = FStar_Reflection_V2_Data.binding
+type hypothesis = FStar_Reflection_V2_Data.binding
 type matching_problem =
   {
   mp_vars: varname Prims.list ;
@@ -1782,7 +1785,8 @@ let (string_of_matching_solution :
                                           (Prims.of_int (590))
                                           (Prims.of_int (31)))))
                                  (Obj.magic
-                                    (FStar_Tactics_Builtins.term_to_string tm))
+                                    (FStar_Tactics_V2_Builtins.term_to_string
+                                       tm))
                                  (fun uu___1 ->
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___2 -> Prims.strcat ": " uu___1))))
@@ -1862,7 +1866,7 @@ let (string_of_matching_solution :
                                                      (Prims.of_int (590))
                                                      (Prims.of_int (31)))))
                                             (Obj.magic
-                                               (FStar_Tactics_Derived.binding_to_string
+                                               (FStar_Tactics_V2_Derived.binding_to_string
                                                   binding))
                                             (fun uu___1 ->
                                                FStar_Tactics_Effect.lift_div_tac
@@ -1897,7 +1901,8 @@ let assoc_varname_fail :
            match FStar_List_Tot_Base.assoc key ls with
            | FStar_Pervasives_Native.None ->
                Obj.magic
-                 (FStar_Tactics_Derived.fail (Prims.strcat "Not found: " key))
+                 (FStar_Tactics_V2_Derived.fail
+                    (Prims.strcat "Not found: " key))
            | FStar_Pervasives_Native.Some x ->
                Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> x)))
         uu___1 uu___
@@ -1925,7 +1930,7 @@ let ms_locate_var :
                  (Prims.of_int (55)))))
         (Obj.magic (assoc_varname_fail name solution.ms_vars))
         (fun uu___ ->
-           (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.unquote uu___))
+           (fun uu___ -> Obj.magic (FStar_Tactics_V2_Builtins.unquote uu___))
              uu___)
 let ms_locate_unit :
   'uuuuu 'uuuuu1 'a .
@@ -1959,12 +1964,12 @@ let rec solve_mp_for_single_hyp :
                        | [] ->
                            Obj.magic
                              (Obj.repr
-                                (FStar_Tactics_Derived.fail
+                                (FStar_Tactics_V2_Derived.fail
                                    "No matching hypothesis"))
                        | h::hs ->
                            Obj.magic
                              (Obj.repr
-                                (FStar_Tactics_Derived.or_else
+                                (FStar_Tactics_V2_Derived.or_else
                                    (fun uu___ ->
                                       FStar_Tactics_Effect.tac_bind
                                         (FStar_Sealed.seal
@@ -1986,7 +1991,7 @@ let rec solve_mp_for_single_hyp :
                                         (Obj.magic
                                            (interp_pattern_aux pat
                                               part_sol.ms_vars
-                                              (FStar_Tactics_Derived.type_of_binding
+                                              (FStar_Tactics_V2_Derived.type_of_binding
                                                  h)))
                                         (fun uu___1 ->
                                            (fun uu___1 ->
@@ -2039,7 +2044,7 @@ let rec solve_mp_for_single_hyp :
                                                                     "Failed to match hyp: "
                                                                     uu___2))))
                                                        (fun uu___2 ->
-                                                          FStar_Tactics_Derived.fail
+                                                          FStar_Tactics_V2_Derived.fail
                                                             uu___2))
                                               | Success bindings1 ->
                                                   Obj.magic
@@ -2191,7 +2196,7 @@ let solve_mp :
                                                            "Failed to match goal: "
                                                            uu___1))))
                                            (fun uu___1 ->
-                                              FStar_Tactics_Derived.fail
+                                              FStar_Tactics_V2_Derived.fail
                                                 uu___1)))
                                | Success bindings1 ->
                                    Obj.magic
@@ -2212,8 +2217,8 @@ let (name_of_namedv :
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun x ->
-    FStar_Tactics_Builtins.unseal
-      (FStar_Reflection_Builtins.inspect_namedv x).FStar_Reflection_Data.ppname
+    FStar_Tactics_V2_Builtins.unseal
+      (FStar_Reflection_V2_Builtins.inspect_namedv x).FStar_Reflection_V2_Data.ppname
 let rec (pattern_of_term_ex :
   FStar_Reflection_Types.term ->
     (pattern match_res, unit) FStar_Tactics_Effect.tac_repr)
@@ -2281,14 +2286,16 @@ let rec (pattern_of_term_ex :
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 ->
                            return
-                             (PQn (FStar_Reflection_Derived.fv_to_string fv)))))
+                             (PQn
+                                (FStar_Reflection_V2_Derived.fv_to_string fv)))))
             | FStar_Tactics_NamedView.Tv_UInst (fv, uu___1) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 ->
                            return
-                             (PQn (FStar_Reflection_Derived.fv_to_string fv)))))
+                             (PQn
+                                (FStar_Reflection_V2_Derived.fv_to_string fv)))))
             | FStar_Tactics_NamedView.Tv_Type uu___1 ->
                 Obj.magic
                   (Obj.repr
@@ -2358,7 +2365,7 @@ let rec (pattern_of_term_ex :
 let (beta_reduce :
   FStar_Reflection_Types.term ->
     (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
-  = fun tm -> FStar_Tactics_Derived.norm_term [] tm
+  = fun tm -> FStar_Tactics_V2_Derived.norm_term [] tm
 let (pattern_of_term :
   FStar_Reflection_Types.term ->
     (pattern, unit) FStar_Tactics_Effect.tac_repr)
@@ -2399,9 +2406,9 @@ let (pattern_of_term :
                                  (Prims.of_int (533)) (Prims.of_int (20))
                                  (Prims.of_int (533)) (Prims.of_int (63)))))
                         (Obj.magic (string_of_match_exception ex))
-                        (fun uu___1 -> FStar_Tactics_Derived.fail uu___1))))
+                        (fun uu___1 -> FStar_Tactics_V2_Derived.fail uu___1))))
            uu___)
-type 'a hyp = FStar_Reflection_Data.binding
+type 'a hyp = FStar_Reflection_V2_Data.binding
 type 'a pm_goal = unit
 let (hyp_qn : Prims.string) = "FStar.Tactics.PatternMatching.hyp"
 let (goal_qn : Prims.string) = "FStar.Tactics.PatternMatching.pm_goal"
@@ -2556,7 +2563,7 @@ let (classify_abspat_binder :
                                                         | Success uu___1 ->
                                                             Obj.magic
                                                               (Obj.repr
-                                                                 (FStar_Tactics_Derived.fail
+                                                                 (FStar_Tactics_V2_Derived.fail
                                                                     "classifiy_abspat_binder: impossible (1)"))
                                                         | Failure uu___1 ->
                                                             Obj.magic
@@ -2603,7 +2610,7 @@ let (classify_abspat_binder :
                                                                     | 
                                                                     Success
                                                                     uu___3 ->
-                                                                    FStar_Tactics_Derived.fail
+                                                                    FStar_Tactics_V2_Derived.fail
                                                                     "classifiy_abspat_binder: impossible (2)"
                                                                     | 
                                                                     Failure
@@ -2669,11 +2676,13 @@ let rec (binders_and_body_of_abs :
 let (cleanup_abspat :
   FStar_Reflection_Types.term ->
     (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
-  = fun t -> FStar_Tactics_Derived.norm_term [] t
+  = fun t -> FStar_Tactics_V2_Derived.norm_term [] t
 let (name_of_named_binder :
   FStar_Tactics_NamedView.binder ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
-  = fun nb -> FStar_Tactics_Builtins.unseal nb.FStar_Tactics_NamedView.ppname
+  =
+  fun nb ->
+    FStar_Tactics_V2_Builtins.unseal nb.FStar_Tactics_NamedView.ppname
 let (matching_problem_of_abs :
   FStar_Reflection_Types.term ->
     ((matching_problem * abspat_continuation), unit)
@@ -2923,7 +2932,7 @@ let (matching_problem_of_abs :
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V2_Builtins.term_to_string
                                                                     (type_of_named_binder
                                                                     binder)))
                                                                     (fun
@@ -3177,7 +3186,7 @@ let (matching_problem_of_abs :
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V2_Builtins.term_to_string
                                                                     typ))
                                                                     (fun
                                                                     uu___4 ->
@@ -3593,33 +3602,33 @@ let (arg_type_of_binder_kind :
                match binder_kind with
                | ABKVar typ -> typ
                | ABKHyp ->
-                   FStar_Reflection_Builtins.pack_ln
-                     (FStar_Reflection_Data.Tv_FVar
-                        (FStar_Reflection_Builtins.pack_fv
+                   FStar_Reflection_V2_Builtins.pack_ln
+                     (FStar_Reflection_V2_Data.Tv_FVar
+                        (FStar_Reflection_V2_Builtins.pack_fv
                            ["FStar"; "Tactics"; "NamedView"; "binder"]))
                | ABKGoal ->
-                   FStar_Reflection_Builtins.pack_ln
-                     (FStar_Reflection_Data.Tv_FVar
-                        (FStar_Reflection_Builtins.pack_fv ["Prims"; "unit"])))))
-      uu___
+                   FStar_Reflection_V2_Builtins.pack_ln
+                     (FStar_Reflection_V2_Data.Tv_FVar
+                        (FStar_Reflection_V2_Builtins.pack_fv
+                           ["Prims"; "unit"]))))) uu___
 let (locate_fn_of_binder_kind :
   abspat_binder_kind -> FStar_Reflection_Types.term) =
   fun binder_kind ->
     match binder_kind with
     | ABKVar uu___ ->
-        FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
                 ["FStar"; "Tactics"; "PatternMatching"; "ms_locate_var"]))
     | ABKHyp ->
-        FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
                 ["FStar"; "Tactics"; "PatternMatching"; "ms_locate_hyp"]))
     | ABKGoal ->
-        FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
                 ["FStar"; "Tactics"; "PatternMatching"; "ms_locate_unit"]))
 let (abspat_arg_of_abspat_argspec :
   FStar_Reflection_Types.term ->
@@ -3707,12 +3716,12 @@ let (abspat_arg_of_abspat_argspec :
                                               (Prims.of_int (701))
                                               (Prims.of_int (74)))))
                                      (Obj.magic
-                                        (FStar_Tactics_Builtins.unseal
-                                           (argspec.asa_name).FStar_Reflection_Data.ppname3))
+                                        (FStar_Tactics_V2_Builtins.unseal
+                                           (argspec.asa_name).FStar_Reflection_V2_Data.ppname3))
                                      (fun uu___ ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___1 ->
-                                             FStar_Reflection_Data.C_String
+                                             FStar_Reflection_V2_Data.C_String
                                                uu___))))
                                (fun uu___ ->
                                   FStar_Tactics_Effect.lift_div_tac
@@ -3785,24 +3794,24 @@ let (abspat_arg_of_abspat_argspec :
                                              FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___1 ->
                                                   (uu___,
-                                                    FStar_Reflection_Data.Q_Explicit)))))
+                                                    FStar_Reflection_V2_Data.Q_Explicit)))))
                                     (fun uu___ ->
                                        FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___1 ->
                                             [uu___;
                                             (solution_term,
-                                              FStar_Reflection_Data.Q_Explicit);
+                                              FStar_Reflection_V2_Data.Q_Explicit);
                                             (name_tm,
-                                              FStar_Reflection_Data.Q_Explicit)]))))
+                                              FStar_Reflection_V2_Data.Q_Explicit)]))))
                               (fun locate_args ->
                                  FStar_Tactics_Effect.lift_div_tac
                                    (fun uu___ ->
-                                      FStar_Reflection_Derived.mk_app loc_fn
-                                        locate_args)))) uu___))) uu___)
+                                      FStar_Reflection_V2_Derived.mk_app
+                                        loc_fn locate_args)))) uu___))) uu___)
 let rec (hoist_and_apply :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term Prims.list ->
-      FStar_Reflection_Data.argv Prims.list ->
+      FStar_Reflection_V2_Data.argv Prims.list ->
         (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___2 ->
@@ -3817,7 +3826,7 @@ let rec (hoist_and_apply :
                      (Obj.repr
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___ ->
-                              FStar_Reflection_Derived.mk_app head
+                              FStar_Reflection_V2_Derived.mk_app head
                                 (FStar_List_Tot_Base.rev hoisted_args))))
                | arg_term::rest ->
                    Obj.magic
@@ -3877,7 +3886,7 @@ let rec (hoist_and_apply :
                                                      (Prims.of_int (722))
                                                      (Prims.of_int (18)))))
                                             (Obj.magic
-                                               (FStar_Tactics_Builtins.fresh
+                                               (FStar_Tactics_V2_Builtins.fresh
                                                   ()))
                                             (fun uu___ ->
                                                FStar_Tactics_Effect.lift_div_tac
@@ -3893,11 +3902,11 @@ let rec (hoist_and_apply :
                                                                  n)));
                                                       FStar_Tactics_NamedView.sort1
                                                         =
-                                                        (FStar_Reflection_Builtins.pack_ln
-                                                           FStar_Reflection_Data.Tv_Unknown);
+                                                        (FStar_Reflection_V2_Builtins.pack_ln
+                                                           FStar_Reflection_V2_Data.Tv_Unknown);
                                                       FStar_Tactics_NamedView.qual
                                                         =
-                                                        FStar_Reflection_Data.Q_Explicit;
+                                                        FStar_Reflection_V2_Data.Q_Explicit;
                                                       FStar_Tactics_NamedView.attrs
                                                         = []
                                                     }))))
@@ -3946,7 +3955,7 @@ let rec (hoist_and_apply :
                                                                   (FStar_Tactics_NamedView.Tv_Var
                                                                     (FStar_Tactics_NamedView.binder_to_namedv
                                                                     nb))),
-                                                                FStar_Reflection_Data.Q_Explicit)
+                                                                FStar_Reflection_V2_Data.Q_Explicit)
                                                              :: hoisted_args)))
                                                        (fun uu___ ->
                                                           FStar_Tactics_Effect.lift_div_tac
@@ -4049,10 +4058,10 @@ let (specialize_abspat_continuation :
                (Prims.of_int (740)) (Prims.of_int (60)) (Prims.of_int (747))
                (Prims.of_int (9)))))
       (Obj.magic
-         (FStar_Tactics_Derived.fresh_binder
-            (FStar_Reflection_Builtins.pack_ln
-               (FStar_Reflection_Data.Tv_FVar
-                  (FStar_Reflection_Builtins.pack_fv
+         (FStar_Tactics_V2_Derived.fresh_binder
+            (FStar_Reflection_V2_Builtins.pack_ln
+               (FStar_Reflection_V2_Data.Tv_FVar
+                  (FStar_Reflection_V2_Builtins.pack_fv
                      ["FStar";
                      "Tactics";
                      "PatternMatching";
@@ -4182,7 +4191,7 @@ let (specialize_abspat_continuation :
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (31)))))
                                                               (Obj.magic
-                                                                 (FStar_Tactics_Builtins.term_to_string
+                                                                 (FStar_Tactics_V2_Builtins.term_to_string
                                                                     thunked))
                                                               (fun uu___ ->
                                                                  FStar_Tactics_Effect.lift_div_tac
@@ -4278,7 +4287,7 @@ let (specialize_abspat_continuation :
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V2_Builtins.term_to_string
                                                                     normalized))
                                                                     (fun
                                                                     uu___1 ->
@@ -4325,8 +4334,8 @@ let interp_abspat_continuation :
                (Prims.of_int (47)))))
       (Obj.magic (specialize_abspat_continuation continuation))
       (fun uu___ ->
-         (fun applied -> Obj.magic (FStar_Tactics_Builtins.unquote applied))
-           uu___)
+         (fun applied ->
+            Obj.magic (FStar_Tactics_V2_Builtins.unquote applied)) uu___)
 let interp_abspat :
   'a .
     'a ->
@@ -4374,7 +4383,7 @@ let match_abspat :
               (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                  (Prims.of_int (773)) (Prims.of_int (27))
                  (Prims.of_int (776)) (Prims.of_int (51)))))
-        (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+        (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
         (fun uu___ ->
            (fun goal ->
               Obj.magic
@@ -4405,11 +4414,12 @@ let match_abspat :
                                   "FStar.Tactics.PatternMatching.fst"
                                   (Prims.of_int (774)) (Prims.of_int (19))
                                   (Prims.of_int (774)) (Prims.of_int (43)))))
-                         (Obj.magic (FStar_Tactics_Derived.cur_env ()))
+                         (Obj.magic (FStar_Tactics_V2_Derived.cur_env ()))
                          (fun uu___ ->
                             FStar_Tactics_Effect.lift_div_tac
                               (fun uu___1 ->
-                                 FStar_Reflection_Builtins.vars_of_env uu___))))
+                                 FStar_Reflection_V2_Builtins.vars_of_env
+                                   uu___))))
                    (fun uu___ ->
                       (fun hypotheses ->
                          Obj.magic

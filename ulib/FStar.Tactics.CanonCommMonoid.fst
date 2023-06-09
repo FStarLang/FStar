@@ -17,8 +17,8 @@ module FStar.Tactics.CanonCommMonoid
 
 open FStar.Algebra.CommMonoid
 open FStar.List
-open FStar.Reflection
-open FStar.Tactics
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 
@@ -399,7 +399,7 @@ let canon_monoid_aux
                             "SL.AutoTactic.compare_b";
                             "SL.AutoTactic.compare_v";
                             `%FStar.Order.int_of_order;
-                            `%FStar.Reflection.compare_term;
+                            `%FStar.Reflection.V2.compare_term;
                             `%FStar.List.Tot.sortWith;
                             `%FStar.List.Tot.partition;
                             `%FStar.List.Tot.bool_of_compare;

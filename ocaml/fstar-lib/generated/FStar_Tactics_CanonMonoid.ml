@@ -12,11 +12,11 @@ let (dump : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
             (FStar_Range.mk_range "FStar.Tactics.CanonMonoid.fst"
                (Prims.of_int (24)) (Prims.of_int (13)) (Prims.of_int (24))
                (Prims.of_int (40)))))
-      (Obj.magic (FStar_Tactics_Builtins.debugging ()))
+      (Obj.magic (FStar_Tactics_V2_Builtins.debugging ()))
       (fun uu___ ->
          (fun uu___ ->
             if uu___
-            then Obj.magic (Obj.repr (FStar_Tactics_Builtins.dump m))
+            then Obj.magic (Obj.repr (FStar_Tactics_V2_Builtins.dump m))
             else
               Obj.magic
                 (Obj.repr
@@ -97,7 +97,8 @@ let rec reification_aux :
                    (Prims.of_int (83)) (Prims.of_int (71))
                    (Prims.of_int (94)) (Prims.of_int (25)))))
           (FStar_Tactics_Effect.lift_div_tac
-             (fun uu___ -> FStar_Reflection_Derived_Lemmas.collect_app_ref me))
+             (fun uu___ ->
+                FStar_Reflection_V2_Derived_Lemmas.collect_app_ref me))
           (fun uu___ ->
              (fun uu___ ->
                 match uu___ with
@@ -168,9 +169,9 @@ let rec reification_aux :
                                           | (FStar_Tactics_NamedView.Tv_FVar
                                              fv,
                                              (me1,
-                                              FStar_Reflection_Data.Q_Explicit)::
+                                              FStar_Reflection_V2_Data.Q_Explicit)::
                                              (me2,
-                                              FStar_Reflection_Data.Q_Explicit)::[])
+                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
                                               ->
                                               Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
@@ -191,7 +192,7 @@ let rec reification_aux :
                                                             (Prims.of_int (90))
                                                             (Prims.of_int (25)))))
                                                    (Obj.magic
-                                                      (FStar_Tactics_Builtins.term_eq_old
+                                                      (FStar_Tactics_V2_Builtins.term_eq_old
                                                          (FStar_Tactics_NamedView.pack
                                                             (FStar_Tactics_NamedView.Tv_FVar
                                                                fv)) mult))
@@ -276,7 +277,7 @@ let rec reification_aux :
                                                                     (Prims.of_int (90))
                                                                     (Prims.of_int (25)))))
                                                                 (Obj.magic
-                                                                   (FStar_Tactics_Builtins.unquote
+                                                                   (FStar_Tactics_V2_Builtins.unquote
                                                                     me))
                                                                 (fun uu___4
                                                                    ->
@@ -306,7 +307,7 @@ let rec reification_aux :
                                                             (Prims.of_int (94))
                                                             (Prims.of_int (25)))))
                                                    (Obj.magic
-                                                      (FStar_Tactics_Builtins.term_eq_old
+                                                      (FStar_Tactics_V2_Builtins.term_eq_old
                                                          me unit))
                                                    (fun uu___4 ->
                                                       (fun uu___4 ->
@@ -339,7 +340,7 @@ let rec reification_aux :
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (25)))))
                                                                    (Obj.magic
-                                                                    (FStar_Tactics_Builtins.unquote
+                                                                    (FStar_Tactics_V2_Builtins.unquote
                                                                     me))
                                                                    (fun
                                                                     uu___6 ->
@@ -391,7 +392,7 @@ let reification :
               (fun uu___ ->
                  (fun uu___ ->
                     Obj.magic
-                      (FStar_Tactics_Derived.norm_term
+                      (FStar_Tactics_V2_Derived.norm_term
                          [FStar_Pervasives.delta;
                          FStar_Pervasives.zeta;
                          FStar_Pervasives.iota] uu___)) uu___)))
@@ -435,7 +436,7 @@ let reification :
                          (fun uu___ ->
                             (fun uu___ ->
                                Obj.magic
-                                 (FStar_Tactics_Derived.norm_term
+                                 (FStar_Tactics_V2_Derived.norm_term
                                     [FStar_Pervasives.delta;
                                     FStar_Pervasives.zeta;
                                     FStar_Pervasives.iota] uu___)) uu___)))
@@ -460,7 +461,7 @@ let reification :
                                        (Prims.of_int (103))
                                        (Prims.of_int (32)))))
                               (Obj.magic
-                                 (FStar_Tactics_Derived.norm_term
+                                 (FStar_Tactics_V2_Derived.norm_term
                                     [FStar_Pervasives.delta;
                                     FStar_Pervasives.zeta;
                                     FStar_Pervasives.iota] me))
@@ -485,7 +486,7 @@ let canon_monoid :
             (FStar_Range.mk_range "FStar.Tactics.CanonMonoid.fst"
                (Prims.of_int (106)) (Prims.of_int (10)) (Prims.of_int (120))
                (Prims.of_int (42)))))
-      (Obj.magic (FStar_Tactics_Builtins.norm []))
+      (Obj.magic (FStar_Tactics_V2_Builtins.norm []))
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic
@@ -500,7 +501,7 @@ let canon_monoid :
                        (FStar_Range.mk_range "FStar.Tactics.CanonMonoid.fst"
                           (Prims.of_int (108)) (Prims.of_int (2))
                           (Prims.of_int (120)) (Prims.of_int (42)))))
-                 (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+                 (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
                  (fun uu___1 ->
                     (fun g ->
                        Obj.magic
@@ -518,12 +519,12 @@ let canon_monoid :
                                      (Prims.of_int (108)) (Prims.of_int (2))
                                      (Prims.of_int (120)) (Prims.of_int (42)))))
                             (Obj.magic
-                               (FStar_Reflection_Formula.term_as_formula g))
+                               (FStar_Reflection_V2_Formula.term_as_formula g))
                             (fun uu___1 ->
                                (fun uu___1 ->
                                   match uu___1 with
-                                  | FStar_Reflection_Formula.Comp
-                                      (FStar_Reflection_Formula.Eq
+                                  | FStar_Reflection_V2_Formula.Comp
+                                      (FStar_Reflection_V2_Formula.Eq
                                        (FStar_Pervasives_Native.Some t), me1,
                                        me2)
                                       ->
@@ -574,7 +575,7 @@ let canon_monoid :
                                                     (fun uu___2 ->
                                                        (fun uu___2 ->
                                                           Obj.magic
-                                                            (FStar_Tactics_Builtins.term_eq_old
+                                                            (FStar_Tactics_V2_Builtins.term_eq_old
                                                                t uu___2))
                                                          uu___2)))
                                               (fun uu___2 ->
@@ -682,7 +683,7 @@ let canon_monoid :
                                                                     (fun
                                                                     uu___3 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Derived.change_sq
+                                                                    (FStar_Tactics_V2_Derived.change_sq
                                                                     uu___3))
                                                                     uu___3)))
                                                                     (fun
@@ -708,10 +709,10 @@ let canon_monoid :
                                                                     (Prims.of_int (118))
                                                                     (Prims.of_int (51)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Derived.apply
-                                                                    (FStar_Reflection_Builtins.pack_ln
-                                                                    (FStar_Reflection_Data.Tv_FVar
-                                                                    (FStar_Reflection_Builtins.pack_fv
+                                                                    (FStar_Tactics_V2_Derived.apply
+                                                                    (FStar_Reflection_V2_Builtins.pack_ln
+                                                                    (FStar_Reflection_V2_Data.Tv_FVar
+                                                                    (FStar_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "CanonMonoid";
@@ -721,7 +722,7 @@ let canon_monoid :
                                                                     (fun
                                                                     uu___4 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Builtins.norm
+                                                                    (FStar_Tactics_V2_Builtins.norm
                                                                     [
                                                                     FStar_Pervasives.delta_only
                                                                     ["FStar.Tactics.CanonMonoid.mldenote";
@@ -735,12 +736,12 @@ let canon_monoid :
                                                     else
                                                       Obj.magic
                                                         (Obj.repr
-                                                           (FStar_Tactics_Derived.fail
+                                                           (FStar_Tactics_V2_Derived.fail
                                                               "Goal should be an equality at the right monoid type")))
                                                    uu___2)))
                                   | uu___2 ->
                                       Obj.magic
                                         (Obj.repr
-                                           (FStar_Tactics_Derived.fail
+                                           (FStar_Tactics_V2_Derived.fail
                                               "Goal should be an equality")))
                                  uu___1))) uu___1))) uu___)
