@@ -66,10 +66,6 @@ let lemma_queue_seq_bij (#a:Type) (q:queue a)
 		lemma_queue_list_bij q;
 		lemma_list_seq_bij l
 
-let lemma_seq_to_list_empty (#a:Type) (s:seq a)
-	: Lemma (s == Seq.empty ==> seq_to_list s == [])
-	= lemma_list_seq_bij (seq_to_list s)
-
 (* write comment *)
 let enqueue (#a:Type) (x:a) (q:queue a) 
 	: queue a
@@ -80,7 +76,7 @@ let enqueue (#a:Type) (x:a) (q:queue a)
 (* write comment *)
 let dequeue (#a:Type) (q:queue a{not_empty q}) 
 	: a & queue a
-	= lemma_seq_to_list_empty (queue_to_seq q);
+	= lemma_seq_of_list_induction (queue_to_list q);
 		let hd :: tl = fst q in
 	  match tl with
 		| [] -> hd, (L.rev (snd q), [])
@@ -89,7 +85,7 @@ let dequeue (#a:Type) (q:queue a{not_empty q})
 (* write comment *)
 let peek (#a:Type) (q:queue a{not_empty q}) 
 	: a
-	= lemma_seq_to_list_empty (queue_to_seq q);
+	= lemma_seq_of_list_induction (queue_to_list q);
 		L.hd (fst q)
 
 (* write comment *)
@@ -106,20 +102,23 @@ let lemma_enqueue_ok_list (#a:Type) (x:a) (q:queue a)
 		L.rev_append [x] (snd q)
 	  )
 
-let lemma_seq_to_list_dist_append (#a:Type) (s1 s2:seq a)
-	: Lemma (seq_to_list (Seq.append s1 s2) == L.append (seq_to_list s1) (seq_to_list s2))
-	= admit()
-
-let lemma_snoc_seq_list (#a:Type) (x:a) (q:queue a)
-	: Lemma (L.snoc ((queue_to_list q),x) == (seq_to_list (Seq.snoc (queue_to_seq q) x)))
-	= let l = (queue_to_list q) in 
-		lemma_seq_to_list_dist_append (seq_of_list l) (Seq.create 1 x);
-		lemma_list_seq_bij l
+let rec lemma_append_seq_of_list_dist (#a:Type) (l1 l2:list a) 
+	: Lemma (ensures Seq.equal (seq_of_list (L.append l1 l2)) (Seq.append (seq_of_list l1) (seq_of_list l2)))
+	= match l1 with 
+		| [] -> L.append_nil_l l2
+		| hd :: tl -> 
+		(
+			lemma_seq_of_list_induction (hd :: (L.append tl l2));
+			lemma_append_seq_of_list_dist tl l2;
+			Seq.append_cons hd (seq_of_list tl) (seq_of_list l2);
+			lemma_seq_of_list_induction (hd :: tl)
+		)
 
 let lemma_snoc_list_seq (#a:Type) (x:a) (q:queue a)
 	: Lemma (seq_of_list (L.snoc ((queue_to_list q),x)) == Seq.snoc (queue_to_seq q) x)
-	= lemma_snoc_seq_list x q;
-		lemma_seq_list_bij (Seq.snoc (queue_to_seq q) x)
+	= let l = (queue_to_list q) in 
+		lemma_append_seq_of_list_dist l [x];
+		lemma_seq_list_bij (Seq.create 1 x)
 
 (* write comment *)
 let lemma_enqueue_ok (#a:Type) (x:a) (q:queue a)
@@ -129,22 +128,17 @@ let lemma_enqueue_ok (#a:Type) (x:a) (q:queue a)
 
 let lemma_dequeue_ok_list (#a:Type) (q:queue a{not_empty q}) 
 	: Lemma (fst (dequeue q) :: queue_to_list (snd (dequeue q)) == queue_to_list q)
-	= lemma_seq_to_list_empty (queue_to_seq q);
+	= lemma_seq_of_list_induction (queue_to_list q);
 		let hd :: tl = fst q in
 	  match tl with
 	  | [] -> L.append_l_nil (L.rev (snd q))
 	  | _ -> L.append_assoc [hd] tl (L.rev (snd q))
-
-let lemma_cons_seq_list (#a:Type) (x:a) (q:queue a)
-	: Lemma (x :: (queue_to_list q) == seq_to_list (Seq.cons x (queue_to_seq q)))
-	= let l = (queue_to_list q) in
-		lemma_seq_to_list_dist_append (Seq.create 1 x) (seq_of_list l);
-		lemma_list_seq_bij l
 	
 let lemma_cons_list_seq (#a:Type) (x:a) (q:queue a)
 	: Lemma (seq_of_list (x :: (queue_to_list q)) == Seq.cons x (queue_to_seq q))
-	= lemma_cons_seq_list x q;
-		lemma_seq_list_bij (Seq.cons x (queue_to_seq q))
+	= let l = (queue_to_list q) in
+		lemma_append_seq_of_list_dist [x] l;
+		lemma_seq_list_bij (Seq.create 1 x)
 
 (* write comment *)
 let lemma_dequeue_ok (#a:Type) (q:queue a{not_empty q})
