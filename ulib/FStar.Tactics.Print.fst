@@ -30,7 +30,7 @@ let rec universe_to_ast_string (u:universe) : Tac string =
   | Uv_Succ u -> "Uv_Succ" ^ paren (universe_to_ast_string u)
   | Uv_Max us -> "Uv_Max" ^ print_list universe_to_ast_string us
   | Uv_BVar n -> "Uv_BVar" ^ paren (string_of_int n)
-  | Uv_Name i -> "Uv_Name" ^ paren (fst (inspect_ident i))
+  | Uv_Name i -> "Uv_Name" ^ paren (fst i)
   | Uv_Unif _ -> "Uv_Unif"
   | Uv_Unk -> "Uv_Unk"
 

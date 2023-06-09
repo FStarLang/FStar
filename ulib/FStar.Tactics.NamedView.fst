@@ -62,6 +62,19 @@ type binders = list binder
 let is_simple_binder (b:binder) = Q_Explicit? b.qual /\ Nil? b.attrs
 type simple_binder = b:binder{is_simple_binder b}
 
+type univ_name = string & Range.range
+
+[@@plugin]
+noeq
+type universe_view =
+  | Uv_Zero : universe_view
+  | Uv_Succ : universe -> universe_view
+  | Uv_Max  : universes -> universe_view
+  | Uv_BVar : nat -> universe_view
+  | Uv_Name : univ_name -> universe_view
+  | Uv_Unif : universe_uvar -> universe_view
+  | Uv_Unk  : universe_view
+
 [@@plugin]
 noeq
 type pattern =
@@ -169,6 +182,34 @@ let simple_binder_to_binding (b:simple_binder) : binding = {
   sort   = b.sort;
   ppname = b.ppname;
 }
+
+let open_universe_view (v:RD.universe_view) : universe_view =
+  match v with
+  | R.Uv_Zero -> Uv_Zero
+  | R.Uv_Succ u -> Uv_Succ u
+  | R.Uv_Max us -> Uv_Max us
+  | R.Uv_BVar n -> Uv_BVar n
+  | R.Uv_Name i -> Uv_Name (inspect_ident i)
+  | R.Uv_Unif uvar -> Uv_Unif uvar
+  | R.Uv_Unk -> Uv_Unk
+
+let inspect_universe (u:universe) : universe_view =
+  let v = R.inspect_universe u in
+  open_universe_view v
+
+let close_universe_view (v:universe_view) : R.universe_view =
+  match v with
+  | Uv_Zero -> R.Uv_Zero
+  | Uv_Succ u -> R.Uv_Succ u
+  | Uv_Max us -> R.Uv_Max us
+  | Uv_BVar n -> R.Uv_BVar n
+  | Uv_Name i -> R.Uv_Name (pack_ident i)
+  | Uv_Unif uvar -> R.Uv_Unif uvar
+  | Uv_Unk -> R.Uv_Unk
+
+let pack_universe (uv:universe_view) : universe =
+  let uv = close_universe_view uv in
+  R.pack_universe uv
 
 private
 let open_binder (b : R.binder) : Tac binder =
@@ -384,18 +425,6 @@ let rec close_term_n_simple (bs : list simple_binder) (t : term) : list R.simple
     let bs', t' = close_term_n_simple bs t in
     let b', t'' = close_term_simple b t' in
     (b'::bs', t'')
-
-private
-let open_univ_s (us : list univ_name) : Tac (list univ_name & subst_t) =
-  let n = List.Tot.length us in
-  let s = mapi (fun i u -> UN (n-1-i) (pack_universe (Uv_Name u))) us in
-  us, s
-
-private
-let close_univ_s (us : list univ_name) : list univ_name & subst_t =
-  let n = List.Tot.length us in
-  let s = List.Tot.mapi (fun i u -> UD u (n-i-1)) us in
-  us, s
 
 private
 let rec open_pat (p : R.pattern) (s : subst_t) : Tac (pattern & subst_t) =
@@ -661,6 +690,19 @@ type named_sigelt_view =
   | Unk
 
 private
+let open_univ_s (us : list R.univ_name) : Tac (list univ_name & subst_t) =
+  let n = List.Tot.length us in
+  let s = mapi (fun i u -> UN (n-1-i) (R.pack_universe (R.Uv_Name u))) us in
+  Util.map (fun i -> inspect_ident i) us, s
+
+private
+let close_univ_s (us : list univ_name) : list R.univ_name & subst_t =
+  let n = List.Tot.length us in
+  let us = List.Tot.map (fun i -> pack_ident i) us in
+  let s = List.Tot.mapi (fun i u -> UD u (n-i-1)) us in
+  us, s
+
+private
 let open_lb (lb : R.letbinding) : Tac letbinding =
   let {lb_fv; lb_us; lb_typ; lb_def} = inspect_lb lb in
   let lb_us, s = open_univ_s lb_us in
@@ -703,7 +745,7 @@ let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
     let nparams = List.Tot.length params in
 
     (* Open universes everywhere *)
-    let us, s = open_univ_s univs in
+    let univs, s = open_univ_s univs in
     let params = subst_r_binders s params in
     let typ = subst_term (shift_subst nparams s) typ in
     let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
@@ -762,7 +804,7 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
     let params, typ = close_term_n params typ in
 
     (* close univs *)
-    let us, s = close_univ_s univs in
+    let univs, s = close_univ_s univs in
     let params = subst_r_binders s params in
     let typ = subst_term (shift_subst nparams s) typ in
     let ctors = map (fun (nm, ty) -> nm, subst_term s ty) ctors in
