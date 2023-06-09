@@ -77,9 +77,9 @@ let rec flatten : 'a . 'a exp -> 'a Prims.list =
     | Mult (e1, e2) -> FStar_List_Tot_Base.op_At (flatten e1) (flatten e2)
 let rec reification_aux :
   'a .
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term ->
+        FStar_Tactics_NamedView.term ->
           ('a exp, unit) FStar_Tactics_Effect.tac_repr
   =
   fun mult ->
@@ -354,7 +354,7 @@ let rec reification_aux :
 let reification :
   'a .
     'a FStar_Algebra_Monoid.monoid ->
-      FStar_Reflection_Types.term ->
+      FStar_Tactics_NamedView.term ->
         ('a exp, unit) FStar_Tactics_Effect.tac_repr
   =
   fun m ->

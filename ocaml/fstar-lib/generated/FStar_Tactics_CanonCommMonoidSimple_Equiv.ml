@@ -93,8 +93,8 @@ let (sort : permute) =
 let (canon : exp -> atom Prims.list) = fun e -> sort (flatten e)
 let rec (where_aux :
   Prims.nat ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term Prims.list ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term Prims.list ->
         (Prims.nat FStar_Pervasives_Native.option, unit)
           FStar_Tactics_Effect.tac_repr)
   =
@@ -142,17 +142,17 @@ let rec (where_aux :
                                         (where_aux (n + Prims.int_one) x xs')))
                                 uu___)))) uu___2 uu___1 uu___
 let (where :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term Prims.list ->
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term Prims.list ->
       (Prims.nat FStar_Pervasives_Native.option, unit)
         FStar_Tactics_Effect.tac_repr)
   = where_aux Prims.int_zero
 let (fatom :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term Prims.list ->
-      FStar_Reflection_Types.term amap ->
-        ((exp * FStar_Reflection_Types.term Prims.list *
-           FStar_Reflection_Types.term amap),
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term Prims.list ->
+      FStar_Tactics_NamedView.term amap ->
+        ((exp * FStar_Tactics_NamedView.term Prims.list *
+           FStar_Tactics_NamedView.term amap),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -231,13 +231,13 @@ let (fatom :
                                                  (update vfresh t1 am))))))
                                  uu___1)))) uu___)
 let rec (reification_aux :
-  FStar_Reflection_Types.term Prims.list ->
-    FStar_Reflection_Types.term amap ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term ->
-          FStar_Reflection_Types.term ->
-            ((exp * FStar_Reflection_Types.term Prims.list *
-               FStar_Reflection_Types.term amap),
+  FStar_Tactics_NamedView.term Prims.list ->
+    FStar_Tactics_NamedView.term amap ->
+      FStar_Tactics_NamedView.term ->
+        FStar_Tactics_NamedView.term ->
+          FStar_Tactics_NamedView.term ->
+            ((exp * FStar_Tactics_NamedView.term Prims.list *
+               FStar_Tactics_NamedView.term amap),
               unit) FStar_Tactics_Effect.tac_repr)
   =
   fun ts ->
@@ -441,13 +441,13 @@ let rec (reification_aux :
                                                          (fatom t ts am)))
                                                  uu___4))) uu___1))) uu___)
 let (reification :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term Prims.list ->
-        FStar_Reflection_Types.term amap ->
-          FStar_Reflection_Types.term ->
-            ((exp * FStar_Reflection_Types.term Prims.list *
-               FStar_Reflection_Types.term amap),
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term Prims.list ->
+        FStar_Tactics_NamedView.term amap ->
+          FStar_Tactics_NamedView.term ->
+            ((exp * FStar_Tactics_NamedView.term Prims.list *
+               FStar_Tactics_NamedView.term amap),
               unit) FStar_Tactics_Effect.tac_repr)
   =
   fun eq ->
@@ -547,8 +547,9 @@ let (reification :
                                             (reification_aux ts am mult unit
                                                t1)) uu___))) uu___))) uu___)
 let rec (repeat_cong_right_identity :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term ->
+      (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun eq ->
     fun m ->
@@ -647,8 +648,8 @@ let rec (repeat_cong_right_identity :
                                            (repeat_cong_right_identity eq m))
                                         uu___3))) uu___2))) uu___1))
 let rec (convert_map :
-  (atom * FStar_Reflection_Types.term) Prims.list ->
-    FStar_Reflection_Types.term)
+  (atom * FStar_Tactics_NamedView.term) Prims.list ->
+    FStar_Tactics_NamedView.term)
   =
   fun m ->
     match m with
@@ -689,7 +690,7 @@ let rec (convert_map :
                         FStar_Reflection_V2_Data.Q_Explicit)))),
                (uu___, FStar_Reflection_V2_Data.Q_Explicit)))
 let (convert_am :
-  FStar_Reflection_Types.term amap -> FStar_Reflection_Types.term) =
+  FStar_Tactics_NamedView.term amap -> FStar_Tactics_NamedView.term) =
   fun am ->
     let uu___ = am in
     match uu___ with
@@ -706,7 +707,7 @@ let (convert_am :
                               ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))),
                       (uu___2, FStar_Reflection_V2_Data.Q_Explicit)))),
                (uu___1, FStar_Reflection_V2_Data.Q_Explicit)))
-let rec (quote_exp : exp -> FStar_Reflection_Types.term) =
+let rec (quote_exp : exp -> FStar_Tactics_NamedView.term) =
   fun e ->
     match e with
     | Unit ->
@@ -751,10 +752,10 @@ let rec (quote_exp : exp -> FStar_Reflection_Types.term) =
                        "Equiv";
                        "Atom"]))), (nt, FStar_Reflection_V2_Data.Q_Explicit)))
 let (canon_lhs_rhs :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term ->
+        FStar_Tactics_NamedView.term ->
           (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun eq ->
@@ -1133,8 +1134,9 @@ let (canon_lhs_rhs :
                                                       uu___1))) uu___)))
                             uu___))) uu___)
 let (canon_monoid :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term ->
+      (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun eq ->
     fun m ->

@@ -118,8 +118,8 @@ let canon : 'a 'b . ('a, 'b) vmap -> 'b permute -> exp -> var Prims.list =
   fun vm -> fun p -> fun e -> p () (Obj.magic vm) (flatten e)
 let rec (where_aux :
   Prims.nat ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term Prims.list ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term Prims.list ->
         (Prims.nat FStar_Pervasives_Native.option, unit)
           FStar_Tactics_Effect.tac_repr)
   =
@@ -168,25 +168,25 @@ let rec (where_aux :
                                         (where_aux (n + Prims.int_one) x xs')))
                                 uu___)))) uu___2 uu___1 uu___
 let (where :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term Prims.list ->
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term Prims.list ->
       (Prims.nat FStar_Pervasives_Native.option, unit)
         FStar_Tactics_Effect.tac_repr)
   = where_aux Prims.int_zero
 let rec reification_aux :
   'a 'b .
-    (FStar_Reflection_Types.term -> ('a, unit) FStar_Tactics_Effect.tac_repr)
+    (FStar_Tactics_NamedView.term -> ('a, unit) FStar_Tactics_Effect.tac_repr)
       ->
-      FStar_Reflection_Types.term Prims.list ->
+      FStar_Tactics_NamedView.term Prims.list ->
         ('a, 'b) vmap ->
-          (FStar_Reflection_Types.term ->
+          (FStar_Tactics_NamedView.term ->
              ('b, unit) FStar_Tactics_Effect.tac_repr)
             ->
-            FStar_Reflection_Types.term ->
-              FStar_Reflection_Types.term ->
-                FStar_Reflection_Types.term ->
-                  ((exp * FStar_Reflection_Types.term Prims.list * ('a, 
-                     'b) vmap),
+            FStar_Tactics_NamedView.term ->
+              FStar_Tactics_NamedView.term ->
+                FStar_Tactics_NamedView.term ->
+                  ((exp * FStar_Tactics_NamedView.term Prims.list * (
+                     'a, 'b) vmap),
                     unit) FStar_Tactics_Effect.tac_repr
   =
   fun unquotea ->
@@ -590,21 +590,21 @@ let rec reification_aux :
                                                  uu___1))) uu___1))) uu___)
 let reification :
   'b .
-    (FStar_Reflection_Types.term -> ('b, unit) FStar_Tactics_Effect.tac_repr)
+    (FStar_Tactics_NamedView.term -> ('b, unit) FStar_Tactics_Effect.tac_repr)
       ->
       'b ->
         unit ->
-          (FStar_Reflection_Types.term ->
+          (FStar_Tactics_NamedView.term ->
              (Obj.t, unit) FStar_Tactics_Effect.tac_repr)
             ->
             (Obj.t ->
-               (FStar_Reflection_Types.term, unit)
+               (FStar_Tactics_NamedView.term, unit)
                  FStar_Tactics_Effect.tac_repr)
               ->
-              FStar_Reflection_Types.term ->
-                FStar_Reflection_Types.term ->
+              FStar_Tactics_NamedView.term ->
+                FStar_Tactics_NamedView.term ->
                   Obj.t ->
-                    FStar_Reflection_Types.term Prims.list ->
+                    FStar_Tactics_NamedView.term Prims.list ->
                       ((exp Prims.list * (Obj.t, 'b) vmap), unit)
                         FStar_Tactics_Effect.tac_repr
   =
@@ -765,8 +765,8 @@ let reification :
                                                                     es), vm)))))
                                                  uu___))) uu___))) uu___)
 let rec (term_mem :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term Prims.list ->
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term Prims.list ->
       (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___1 ->
@@ -807,7 +807,7 @@ let rec (term_mem :
                              else Obj.magic (Obj.repr (term_mem x tl)))
                             uu___1)))) uu___1 uu___
 let (unfold_topdown :
-  FStar_Reflection_Types.term Prims.list ->
+  FStar_Tactics_NamedView.term Prims.list ->
     (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun ts ->
@@ -889,12 +889,12 @@ let (unfold_topdown :
                             should_rewrite rewrite)) uu___))) uu___)
 let rec quote_list :
   'a .
-    FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
       ('a ->
-         (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+         (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
         ->
         'a Prims.list ->
-          (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr
+          (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
   =
   fun uu___2 ->
     fun uu___1 ->
@@ -1083,17 +1083,17 @@ let rec quote_list :
           uu___2 uu___1 uu___
 let quote_vm :
   'a 'b .
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term ->
         ('a ->
-           (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+           (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
           ->
           ('b ->
-             (FStar_Reflection_Types.term, unit)
+             (FStar_Tactics_NamedView.term, unit)
                FStar_Tactics_Effect.tac_repr)
             ->
             ('a, 'b) vmap ->
-              (FStar_Reflection_Types.term, unit)
+              (FStar_Tactics_NamedView.term, unit)
                 FStar_Tactics_Effect.tac_repr
   =
   fun ta ->
@@ -1642,7 +1642,8 @@ let quote_vm :
                                                                uu___))) uu___)))
                                          uu___))) uu___))) uu___)
 let rec (quote_exp :
-  exp -> (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr) =
+  exp -> (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
+  =
   fun uu___ ->
     (fun e ->
        match e with
@@ -1761,28 +1762,28 @@ let rec (quote_exp :
                                       "Mult"]))) uu___))))) uu___
 let canon_monoid_aux :
   'a 'b .
-    FStar_Reflection_Types.term ->
-      (FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
+      (FStar_Tactics_NamedView.term ->
          ('a, unit) FStar_Tactics_Effect.tac_repr)
         ->
         ('a ->
-           (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+           (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
           ->
-          FStar_Reflection_Types.term ->
-            FStar_Reflection_Types.term ->
-              FStar_Reflection_Types.term ->
+          FStar_Tactics_NamedView.term ->
+            FStar_Tactics_NamedView.term ->
+              FStar_Tactics_NamedView.term ->
                 'a ->
-                  FStar_Reflection_Types.term ->
+                  FStar_Tactics_NamedView.term ->
                     ('b ->
-                       (FStar_Reflection_Types.term, unit)
+                       (FStar_Tactics_NamedView.term, unit)
                          FStar_Tactics_Effect.tac_repr)
                       ->
-                      (FStar_Reflection_Types.term ->
+                      (FStar_Tactics_NamedView.term ->
                          ('b, unit) FStar_Tactics_Effect.tac_repr)
                         ->
                         'b ->
-                          FStar_Reflection_Types.term ->
-                            FStar_Reflection_Types.term ->
+                          FStar_Tactics_NamedView.term ->
+                            FStar_Tactics_NamedView.term ->
                               (unit, unit) FStar_Tactics_Effect.tac_repr
   =
   fun ta ->
@@ -2261,7 +2262,7 @@ let canon_monoid_aux :
                                               uu___1))) uu___)
 let canon_monoid_with :
   'b .
-    (FStar_Reflection_Types.term -> ('b, unit) FStar_Tactics_Effect.tac_repr)
+    (FStar_Tactics_NamedView.term -> ('b, unit) FStar_Tactics_Effect.tac_repr)
       ->
       'b ->
         'b permute ->
@@ -2523,7 +2524,7 @@ let canon_monoid :
             Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ())))
            uu___) () (fun a1 -> sort ()) () () (Obj.magic cm)
 let (is_const :
-  FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -2563,8 +2564,8 @@ let canon_monoid_const :
     canon_monoid_with is_const false (fun a1 -> const_last) () ()
       (Obj.magic cm)
 let (is_special :
-  FStar_Reflection_Types.term Prims.list ->
-    FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term Prims.list ->
+    FStar_Tactics_NamedView.term ->
       (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   = fun ts -> fun t -> term_mem t ts
 let special_compare : 'a . ('a, Prims.bool) vmap -> var -> var -> Prims.int =
@@ -2582,7 +2583,7 @@ let special_first :
 
 let canon_monoid_special :
   'uuuuu .
-    FStar_Reflection_Types.term Prims.list ->
+    FStar_Tactics_NamedView.term Prims.list ->
       'uuuuu FStar_Algebra_CommMonoid.cm ->
         (unit, unit) FStar_Tactics_Effect.tac_repr
   =

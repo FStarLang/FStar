@@ -23,7 +23,7 @@ let (step :
                      ["FStar"; "Tactics"; "Canon"; "trans"])))))
       (fun uu___ -> (fun uu___ -> Obj.magic (t ())) uu___)
 let (step_lemma :
-  FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+  FStar_Tactics_NamedView.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   = fun lem -> step (fun uu___ -> FStar_Tactics_V2_Derived.apply_lemma lem)
 let rec (canon_point :
   FStar_Reflection_V2_Arith.expr ->

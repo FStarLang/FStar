@@ -106,8 +106,8 @@ let (sort : permute) =
 let (canon : exp -> atom Prims.list) = fun e -> sort (flatten e)
 let rec (where_aux :
   Prims.nat ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term Prims.list ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term Prims.list ->
         (Prims.nat FStar_Pervasives_Native.option, unit)
           FStar_Tactics_Effect.tac_repr)
   =
@@ -155,19 +155,19 @@ let rec (where_aux :
                                         (where_aux (n + Prims.int_one) x xs')))
                                 uu___)))) uu___2 uu___1 uu___
 let (where :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term Prims.list ->
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term Prims.list ->
       (Prims.nat FStar_Pervasives_Native.option, unit)
         FStar_Tactics_Effect.tac_repr)
   = where_aux Prims.int_zero
 let rec reification_aux :
   'a .
-    FStar_Reflection_Types.term Prims.list ->
+    FStar_Tactics_NamedView.term Prims.list ->
       'a amap ->
-        FStar_Reflection_Types.term ->
-          FStar_Reflection_Types.term ->
-            FStar_Reflection_Types.term ->
-              ((exp * FStar_Reflection_Types.term Prims.list * 'a amap),
+        FStar_Tactics_NamedView.term ->
+          FStar_Tactics_NamedView.term ->
+            FStar_Tactics_NamedView.term ->
+              ((exp * FStar_Tactics_NamedView.term Prims.list * 'a amap),
                 unit) FStar_Tactics_Effect.tac_repr
   =
   fun ts ->
@@ -515,10 +515,10 @@ let rec reification_aux :
 let reification :
   'a .
     'a FStar_Algebra_CommMonoid.cm ->
-      FStar_Reflection_Types.term Prims.list ->
+      FStar_Tactics_NamedView.term Prims.list ->
         'a amap ->
-          FStar_Reflection_Types.term ->
-            ((exp * FStar_Reflection_Types.term Prims.list * 'a amap), 
+          FStar_Tactics_NamedView.term ->
+            ((exp * FStar_Tactics_NamedView.term Prims.list * 'a amap), 
               unit) FStar_Tactics_Effect.tac_repr
   =
   fun m ->

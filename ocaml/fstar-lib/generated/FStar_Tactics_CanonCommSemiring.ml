@@ -313,12 +313,12 @@ let update : 'a . FStar_Reflection_V2_Data.var -> 'a -> 'a vmap -> 'a vmap =
         let uu___ = vm in match uu___ with | (l, y) -> (((x, xa) :: l), y)
 let rec quote_list :
   'a .
-    FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
       ('a ->
-         (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+         (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
         ->
         'a Prims.list ->
-          (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr
+          (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
   =
   fun uu___2 ->
     fun uu___1 ->
@@ -507,12 +507,12 @@ let rec quote_list :
           uu___2 uu___1 uu___
 let quote_vm :
   'a .
-    FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
       ('a ->
-         (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+         (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
         ->
         'a vmap ->
-          (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr
+          (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
   =
   fun ta ->
     fun quotea ->
@@ -1109,8 +1109,8 @@ let (ddump : Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
            uu___)
 let rec (find_aux :
   Prims.nat ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term Prims.list ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term Prims.list ->
         (Prims.nat FStar_Pervasives_Native.option, unit)
           FStar_Tactics_Effect.tac_repr)
   =
@@ -1158,20 +1158,20 @@ let rec (find_aux :
                                         (find_aux (n + Prims.int_one) x xs')))
                                 uu___)))) uu___2 uu___1 uu___
 let (find :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term Prims.list ->
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term Prims.list ->
       (Prims.nat FStar_Pervasives_Native.option, unit)
         FStar_Tactics_Effect.tac_repr)
   = find_aux Prims.int_zero
 let make_fvar :
   'a .
-    FStar_Reflection_Types.term ->
-      (FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
+      (FStar_Tactics_NamedView.term ->
          ('a, unit) FStar_Tactics_Effect.tac_repr)
         ->
-        FStar_Reflection_Types.term Prims.list ->
+        FStar_Tactics_NamedView.term Prims.list ->
           'a vmap ->
-            (('a polynomial * FStar_Reflection_Types.term Prims.list * 'a
+            (('a polynomial * FStar_Tactics_NamedView.term Prims.list * 'a
                vmap),
               unit) FStar_Tactics_Effect.tac_repr
   =
@@ -1252,16 +1252,16 @@ let make_fvar :
                                    uu___1)))) uu___)
 let rec reification_aux :
   'a .
-    (FStar_Reflection_Types.term -> ('a, unit) FStar_Tactics_Effect.tac_repr)
+    (FStar_Tactics_NamedView.term -> ('a, unit) FStar_Tactics_Effect.tac_repr)
       ->
-      FStar_Reflection_Types.term Prims.list ->
+      FStar_Tactics_NamedView.term Prims.list ->
         'a vmap ->
-          FStar_Reflection_Types.term ->
-            FStar_Reflection_Types.term ->
-              FStar_Reflection_Types.term ->
-                FStar_Reflection_Types.term ->
-                  FStar_Reflection_Types.term ->
-                    (('a polynomial * FStar_Reflection_Types.term Prims.list
+          FStar_Tactics_NamedView.term ->
+            FStar_Tactics_NamedView.term ->
+              FStar_Tactics_NamedView.term ->
+                FStar_Tactics_NamedView.term ->
+                  FStar_Tactics_NamedView.term ->
+                    (('a polynomial * FStar_Tactics_NamedView.term Prims.list
                        * 'a vmap),
                       unit) FStar_Tactics_Effect.tac_repr
   =
@@ -1700,17 +1700,17 @@ let (canon_norm : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ -> FStar_Tactics_V2_Builtins.norm steps
 let reification :
   'a .
-    (FStar_Reflection_Types.term -> ('a, unit) FStar_Tactics_Effect.tac_repr)
+    (FStar_Tactics_NamedView.term -> ('a, unit) FStar_Tactics_Effect.tac_repr)
       ->
       ('a ->
-         (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+         (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
         ->
-        FStar_Reflection_Types.term ->
-          FStar_Reflection_Types.term ->
-            FStar_Reflection_Types.term ->
-              FStar_Reflection_Types.term ->
+        FStar_Tactics_NamedView.term ->
+          FStar_Tactics_NamedView.term ->
+            FStar_Tactics_NamedView.term ->
+              FStar_Tactics_NamedView.term ->
                 'a ->
-                  FStar_Reflection_Types.term Prims.list ->
+                  FStar_Tactics_NamedView.term Prims.list ->
                     (('a polynomial Prims.list * 'a vmap), unit)
                       FStar_Tactics_Effect.tac_repr
   =
@@ -1915,12 +1915,12 @@ let reification :
                                     uu___))) uu___)
 let rec quote_polynomial :
   'a .
-    FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
       ('a ->
-         (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+         (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
         ->
         'a polynomial ->
-          (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr
+          (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
   =
   fun uu___2 ->
     fun uu___1 ->
@@ -2283,18 +2283,18 @@ let rec quote_polynomial :
           uu___1 uu___
 let canon_semiring_aux :
   'a .
-    FStar_Reflection_Types.term ->
-      (FStar_Reflection_Types.term ->
+    FStar_Tactics_NamedView.term ->
+      (FStar_Tactics_NamedView.term ->
          ('a, unit) FStar_Tactics_Effect.tac_repr)
         ->
         ('a ->
-           (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+           (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
           ->
-          FStar_Reflection_Types.term ->
-            FStar_Reflection_Types.term ->
-              FStar_Reflection_Types.term ->
-                FStar_Reflection_Types.term ->
-                  FStar_Reflection_Types.term ->
+          FStar_Tactics_NamedView.term ->
+            FStar_Tactics_NamedView.term ->
+              FStar_Tactics_NamedView.term ->
+                FStar_Tactics_NamedView.term ->
+                  FStar_Tactics_NamedView.term ->
                     'a -> (unit, unit) FStar_Tactics_Effect.tac_repr
   =
   fun ta ->

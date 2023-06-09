@@ -117,7 +117,7 @@ let print_list :
            FStar_Tactics_Effect.lift_div_tac
              (fun uu___1 -> Prims.strcat "[" uu___))
 let rec (universe_to_ast_string :
-  FStar_Reflection_Types.universe ->
+  FStar_Tactics_NamedView.universe ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
@@ -207,7 +207,7 @@ let (universes_to_ast_string :
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   = fun us -> print_list universe_to_ast_string us
 let rec (term_to_ast_string :
-  FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -500,7 +500,7 @@ let rec (term_to_ast_string :
                                              (Prims.of_int (48))
                                              (Prims.of_int (86)))))
                                     (Obj.magic
-                                       (FStar_Tactics_NamedView.binder_to_string
+                                       (FStar_Tactics_V2_Derived.binder_to_string
                                           x))
                                     (fun uu___1 ->
                                        (fun uu___1 ->
@@ -609,7 +609,7 @@ let rec (term_to_ast_string :
                                              (Prims.of_int (49))
                                              (Prims.of_int (90)))))
                                     (Obj.magic
-                                       (FStar_Tactics_NamedView.binder_to_string
+                                       (FStar_Tactics_V2_Derived.binder_to_string
                                           x))
                                     (fun uu___1 ->
                                        (fun uu___1 ->
@@ -757,7 +757,7 @@ let rec (term_to_ast_string :
                                              (Prims.of_int (51))
                                              (Prims.of_int (92)))))
                                     (Obj.magic
-                                       (FStar_Tactics_NamedView.binder_to_string
+                                       (FStar_Tactics_V2_Derived.binder_to_string
                                           x))
                                     (fun uu___1 ->
                                        (fun uu___1 ->
@@ -909,7 +909,7 @@ let rec (term_to_ast_string :
                                                          (Prims.of_int (58))
                                                          (Prims.of_int (51)))))
                                                 (Obj.magic
-                                                   (FStar_Tactics_NamedView.binder_to_string
+                                                   (FStar_Tactics_V2_Derived.binder_to_string
                                                       x))
                                                 (fun uu___2 ->
                                                    (fun uu___2 ->
@@ -1762,11 +1762,11 @@ and (branch_to_ast_string :
                         FStar_Tactics_Effect.lift_div_tac
                           (fun uu___2 -> paren uu___1)))) uu___)
 and (comp_to_ast_string :
-  FStar_Reflection_Types.comp ->
+  FStar_Tactics_NamedView.comp ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun c ->
-    match FStar_Reflection_V2_Builtins.inspect_comp c with
+    match FStar_Tactics_NamedView.inspect_comp c with
     | FStar_Reflection_V2_Data.C_Total t ->
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal

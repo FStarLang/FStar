@@ -734,39 +734,43 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     let uu___78
                                                                     =
                                                                     mk2
-                                                                    "push_binder"
-                                                                    FStar_Reflection_V2_Builtins.push_binder
-                                                                    e_env
-                                                                    e_binder
-                                                                    e_env in
-                                                                    let uu___79
-                                                                    =
-                                                                    let uu___80
-                                                                    =
-                                                                    mk2
                                                                     "push_namedv"
                                                                     FStar_Reflection_V2_Builtins.push_namedv
                                                                     e_env
                                                                     e_namedv
                                                                     e_env in
-                                                                    let uu___81
+                                                                    let uu___79
                                                                     =
-                                                                    let uu___82
+                                                                    let uu___80
                                                                     =
                                                                     mk1
                                                                     "range_of_term"
                                                                     FStar_Reflection_V2_Builtins.range_of_term
                                                                     e_term
                                                                     e_range in
-                                                                    let uu___83
+                                                                    let uu___81
                                                                     =
-                                                                    let uu___84
+                                                                    let uu___82
                                                                     =
                                                                     mk1
                                                                     "range_of_sigelt"
                                                                     FStar_Reflection_V2_Builtins.range_of_sigelt
                                                                     e_sigelt
                                                                     e_range in
+                                                                    let uu___83
+                                                                    =
+                                                                    let uu___84
+                                                                    =
+                                                                    let uu___85
+                                                                    =
+                                                                    e_tuple2
+                                                                    e_string
+                                                                    e_range in
+                                                                    mk1
+                                                                    "inspect_ident"
+                                                                    FStar_Reflection_V2_Builtins.inspect_ident
+                                                                    e___ident
+                                                                    uu___85 in
                                                                     let uu___85
                                                                     =
                                                                     let uu___86
@@ -777,28 +781,11 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     e_string
                                                                     e_range in
                                                                     mk1
-                                                                    "inspect_ident"
-                                                                    FStar_Reflection_V2_Builtins.inspect_ident
-                                                                    e___ident
-                                                                    uu___87 in
-                                                                    let uu___87
-                                                                    =
-                                                                    let uu___88
-                                                                    =
-                                                                    let uu___89
-                                                                    =
-                                                                    e_tuple2
-                                                                    e_string
-                                                                    e_range in
-                                                                    mk1
                                                                     "pack_ident"
                                                                     FStar_Reflection_V2_Builtins.pack_ident
-                                                                    uu___89
+                                                                    uu___87
                                                                     e___ident in
-                                                                    [uu___88] in
-                                                                    uu___86
-                                                                    ::
-                                                                    uu___87 in
+                                                                    [uu___86] in
                                                                     uu___84
                                                                     ::
                                                                     uu___85 in

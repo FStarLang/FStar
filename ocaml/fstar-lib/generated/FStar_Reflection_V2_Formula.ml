@@ -1,6 +1,6 @@
 open Prims
 let rec (inspect_unascribe :
-  FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
     (FStar_Tactics_NamedView.term_view, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -32,8 +32,8 @@ let rec (inspect_unascribe :
            uu___)
 let rec (collect_app' :
   FStar_Reflection_V2_Data.argv Prims.list ->
-    FStar_Reflection_Types.term ->
-      ((FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv
+    FStar_Tactics_NamedView.term ->
+      ((FStar_Tactics_NamedView.term * FStar_Reflection_V2_Data.argv
          Prims.list),
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -61,8 +61,9 @@ let rec (collect_app' :
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___2 -> (t, args))))) uu___)
 let (collect_app :
-  FStar_Reflection_Types.term ->
-    ((FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv Prims.list),
+  FStar_Tactics_NamedView.term ->
+    ((FStar_Tactics_NamedView.term * FStar_Reflection_V2_Data.argv
+       Prims.list),
       unit) FStar_Tactics_Effect.tac_repr)
   = collect_app' []
 type comparison =
@@ -154,19 +155,19 @@ let (uu___is_Ge : comparison -> Prims.bool) =
 type formula =
   | True_ 
   | False_ 
-  | Comp of comparison * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term 
-  | And of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Or of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Not of FStar_Reflection_Types.term 
-  | Implies of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Iff of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Forall of FStar_Reflection_Types.bv * FStar_Reflection_Types.typ *
-  FStar_Reflection_Types.term 
-  | Exists of FStar_Reflection_Types.bv * FStar_Reflection_Types.typ *
-  FStar_Reflection_Types.term 
-  | App of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Name of FStar_Reflection_Types.namedv 
+  | Comp of comparison * FStar_Tactics_NamedView.term *
+  FStar_Tactics_NamedView.term 
+  | And of FStar_Tactics_NamedView.term * FStar_Tactics_NamedView.term 
+  | Or of FStar_Tactics_NamedView.term * FStar_Tactics_NamedView.term 
+  | Not of FStar_Tactics_NamedView.term 
+  | Implies of FStar_Tactics_NamedView.term * FStar_Tactics_NamedView.term 
+  | Iff of FStar_Tactics_NamedView.term * FStar_Tactics_NamedView.term 
+  | Forall of FStar_Tactics_NamedView.bv * FStar_Reflection_Types.typ *
+  FStar_Tactics_NamedView.term 
+  | Exists of FStar_Tactics_NamedView.bv * FStar_Reflection_Types.typ *
+  FStar_Tactics_NamedView.term 
+  | App of FStar_Tactics_NamedView.term * FStar_Tactics_NamedView.term 
+  | Name of FStar_Tactics_NamedView.namedv 
   | FV of FStar_Reflection_Types.fv 
   | IntLit of Prims.int 
   | F_Unknown 
@@ -242,7 +243,7 @@ let rec __knot_e_formula _ =
        | ("FStar.Reflection.V2.Formula.Forall", _0_40::_1_41::_2_42::[]) ->
            FStar_Compiler_Util.bind_opt
              (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_bv _0_40)
+                FStar_Reflection_V2_Embeddings.e_bv_view _0_40)
              (fun _0_40 ->
                 FStar_Compiler_Util.bind_opt
                   (FStar_Syntax_Embeddings_Base.extracted_unembed
@@ -257,7 +258,7 @@ let rec __knot_e_formula _ =
        | ("FStar.Reflection.V2.Formula.Exists", _0_44::_1_45::_2_46::[]) ->
            FStar_Compiler_Util.bind_opt
              (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_bv _0_44)
+                FStar_Reflection_V2_Embeddings.e_bv_view _0_44)
              (fun _0_44 ->
                 FStar_Compiler_Util.bind_opt
                   (FStar_Syntax_Embeddings_Base.extracted_unembed
@@ -282,7 +283,7 @@ let rec __knot_e_formula _ =
        | ("FStar.Reflection.V2.Formula.Name", _0_51::[]) ->
            FStar_Compiler_Util.bind_opt
              (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_namedv _0_51)
+                FStar_Reflection_V2_Embeddings.e_namedv_view _0_51)
              (fun _0_51 -> FStar_Pervasives_Native.Some (Name _0_51))
        | ("FStar.Reflection.V2.Formula.FV", _0_53::[]) ->
            FStar_Compiler_Util.bind_opt
@@ -373,7 +374,7 @@ let rec __knot_e_formula _ =
              (FStar_Syntax_Syntax.tdataconstr
                 (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Forall"))
              [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_bv _0_79),
+                  FStar_Reflection_V2_Embeddings.e_bv_view _0_79),
                 FStar_Pervasives_Native.None);
              ((FStar_Syntax_Embeddings_Base.extracted_embed
                  FStar_Reflection_V2_Embeddings.e_term _1_80),
@@ -386,7 +387,7 @@ let rec __knot_e_formula _ =
              (FStar_Syntax_Syntax.tdataconstr
                 (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Exists"))
              [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_bv _0_83),
+                  FStar_Reflection_V2_Embeddings.e_bv_view _0_83),
                 FStar_Pervasives_Native.None);
              ((FStar_Syntax_Embeddings_Base.extracted_embed
                  FStar_Reflection_V2_Embeddings.e_term _1_84),
@@ -409,7 +410,7 @@ let rec __knot_e_formula _ =
              (FStar_Syntax_Syntax.tdataconstr
                 (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Name"))
              [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_namedv _0_90),
+                  FStar_Reflection_V2_Embeddings.e_namedv_view _0_90),
                 FStar_Pervasives_Native.None)]
        | FV _0_92 ->
            FStar_Syntax_Util.mk_app
@@ -440,70 +441,70 @@ let (uu___is_Comp : formula -> Prims.bool) =
     match projectee with | Comp (_0, _1, _2) -> true | uu___ -> false
 let (__proj__Comp__item___0 : formula -> comparison) =
   fun projectee -> match projectee with | Comp (_0, _1, _2) -> _0
-let (__proj__Comp__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Comp__item___1 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Comp (_0, _1, _2) -> _1
-let (__proj__Comp__item___2 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Comp__item___2 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Comp (_0, _1, _2) -> _2
 let (uu___is_And : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | And (_0, _1) -> true | uu___ -> false
-let (__proj__And__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__And__item___0 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | And (_0, _1) -> _0
-let (__proj__And__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__And__item___1 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | And (_0, _1) -> _1
 let (uu___is_Or : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Or (_0, _1) -> true | uu___ -> false
-let (__proj__Or__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Or__item___0 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Or (_0, _1) -> _0
-let (__proj__Or__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Or__item___1 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Or (_0, _1) -> _1
 let (uu___is_Not : formula -> Prims.bool) =
   fun projectee -> match projectee with | Not _0 -> true | uu___ -> false
-let (__proj__Not__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Not__item___0 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Not _0 -> _0
 let (uu___is_Implies : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Implies (_0, _1) -> true | uu___ -> false
-let (__proj__Implies__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Implies__item___0 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Implies (_0, _1) -> _0
-let (__proj__Implies__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Implies__item___1 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Implies (_0, _1) -> _1
 let (uu___is_Iff : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Iff (_0, _1) -> true | uu___ -> false
-let (__proj__Iff__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Iff__item___0 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Iff (_0, _1) -> _0
-let (__proj__Iff__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Iff__item___1 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Iff (_0, _1) -> _1
 let (uu___is_Forall : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Forall (_0, _1, _2) -> true | uu___ -> false
-let (__proj__Forall__item___0 : formula -> FStar_Reflection_Types.bv) =
+let (__proj__Forall__item___0 : formula -> FStar_Tactics_NamedView.bv) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _0
 let (__proj__Forall__item___1 : formula -> FStar_Reflection_Types.typ) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _1
-let (__proj__Forall__item___2 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Forall__item___2 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _2
 let (uu___is_Exists : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Exists (_0, _1, _2) -> true | uu___ -> false
-let (__proj__Exists__item___0 : formula -> FStar_Reflection_Types.bv) =
+let (__proj__Exists__item___0 : formula -> FStar_Tactics_NamedView.bv) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _0
 let (__proj__Exists__item___1 : formula -> FStar_Reflection_Types.typ) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _1
-let (__proj__Exists__item___2 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Exists__item___2 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _2
 let (uu___is_App : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | App (_0, _1) -> true | uu___ -> false
-let (__proj__App__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__App__item___0 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | App (_0, _1) -> _0
-let (__proj__App__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__App__item___1 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | App (_0, _1) -> _1
 let (uu___is_Name : formula -> Prims.bool) =
   fun projectee -> match projectee with | Name _0 -> true | uu___ -> false
-let (__proj__Name__item___0 : formula -> FStar_Reflection_Types.namedv) =
+let (__proj__Name__item___0 : formula -> FStar_Tactics_NamedView.namedv) =
   fun projectee -> match projectee with | Name _0 -> _0
 let (uu___is_FV : formula -> Prims.bool) =
   fun projectee -> match projectee with | FV _0 -> true | uu___ -> false
@@ -516,11 +517,11 @@ let (__proj__IntLit__item___0 : formula -> Prims.int) =
 let (uu___is_F_Unknown : formula -> Prims.bool) =
   fun projectee -> match projectee with | F_Unknown -> true | uu___ -> false
 let (mk_Forall :
-  FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> formula) =
+  FStar_Tactics_NamedView.term -> FStar_Tactics_NamedView.term -> formula) =
   fun typ ->
     fun pred ->
       let b =
-        FStar_Reflection_V2_Builtins.pack_bv
+        FStar_Tactics_NamedView.pack_bv
           {
             FStar_Reflection_V2_Data.index = Prims.int_zero;
             FStar_Reflection_V2_Data.sort1 = (FStar_Sealed.seal typ);
@@ -536,11 +537,11 @@ let (mk_Forall :
                       (FStar_Tactics_NamedView.Tv_BVar b)),
                     FStar_Reflection_V2_Data.Q_Explicit)))))
 let (mk_Exists :
-  FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> formula) =
+  FStar_Tactics_NamedView.term -> FStar_Tactics_NamedView.term -> formula) =
   fun typ ->
     fun pred ->
       let b =
-        FStar_Reflection_V2_Builtins.pack_bv
+        FStar_Tactics_NamedView.pack_bv
           {
             FStar_Reflection_V2_Data.index = Prims.int_zero;
             FStar_Reflection_V2_Data.sort1 = (FStar_Sealed.seal typ);
@@ -556,7 +557,7 @@ let (mk_Exists :
                       (FStar_Tactics_NamedView.Tv_BVar b)),
                     FStar_Reflection_V2_Data.Q_Explicit)))))
 let (term_as_formula' :
-  FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
     (formula, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -995,7 +996,7 @@ let _ =
              (FStar_Tactics_Native.from_tactic_1 term_as_formula')
              FStar_Reflection_V2_Embeddings.e_term e_formula psc ncb args)
 let (term_as_formula :
-  FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
     (formula, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
@@ -1008,7 +1009,7 @@ let (term_as_formula :
        | FStar_Pervasives_Native.Some t1 ->
            Obj.magic (Obj.repr (term_as_formula' t1))) uu___
 let (term_as_formula_total :
-  FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
     (formula, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -1107,10 +1108,10 @@ let (formula_as_term_view : formula -> FStar_Tactics_NamedView.term_view) =
     | IntLit i1 ->
         FStar_Tactics_NamedView.Tv_Const (FStar_Reflection_V2_Data.C_Int i1)
     | F_Unknown -> FStar_Tactics_NamedView.Tv_Unknown
-let (formula_as_term : formula -> FStar_Reflection_Types.term) =
+let (formula_as_term : formula -> FStar_Tactics_NamedView.term) =
   fun f -> FStar_Tactics_NamedView.pack (formula_as_term_view f)
 let (namedv_to_string :
-  FStar_Reflection_Types.namedv ->
+  FStar_Tactics_NamedView.namedv ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun namedv ->
@@ -1126,7 +1127,7 @@ let (namedv_to_string :
                (Prims.of_int (220)) (Prims.of_int (4)) (Prims.of_int (220))
                (Prims.of_int (25)))))
       (FStar_Tactics_Effect.lift_div_tac
-         (fun uu___ -> FStar_Reflection_V2_Builtins.inspect_namedv namedv))
+         (fun uu___ -> FStar_Tactics_NamedView.inspect_namedv namedv))
       (fun uu___ ->
          (fun namedvv ->
             Obj.magic

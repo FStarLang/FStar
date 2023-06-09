@@ -14,7 +14,7 @@ let (step : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
             (FStar_Reflection_V2_Builtins.pack_fv
                ["FStar"; "Tactics"; "Simplifier"; "lem_iff_trans"])))
 let (is_true :
-  FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -133,7 +133,7 @@ let (is_true :
                                           (fun uu___4 -> false)))) uu___2))))
            uu___)
 let (is_false :
-  FStar_Reflection_Types.term ->
+  FStar_Tactics_NamedView.term ->
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->

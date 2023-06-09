@@ -1,7 +1,8 @@
 open Prims
 let rec (apply_squash_or_lem :
   Prims.nat ->
-    FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+    FStar_Tactics_NamedView.term ->
+      (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun d ->
     fun t ->
@@ -119,7 +120,7 @@ let rec (apply_squash_or_lem :
                                                 (fun uu___4 ->
                                                    match uu___4 with
                                                    | (tys, c) ->
-                                                       (match FStar_Reflection_V2_Builtins.inspect_comp
+                                                       (match FStar_Tactics_NamedView.inspect_comp
                                                                 c
                                                         with
                                                         | FStar_Reflection_V2_Data.C_Lemma
@@ -515,19 +516,21 @@ let rec (apply_squash_or_lem :
 type 'a termable =
   {
   to_term:
-    'a -> (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr }
+    'a -> (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr }
 let __proj__Mktermable__item__to_term :
   'a .
     'a termable ->
-      'a -> (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr
+      'a ->
+        (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
   = fun projectee -> match projectee with | { to_term;_} -> to_term
 let to_term :
   'a .
     'a termable ->
-      'a -> (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr
+      'a ->
+        (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
   =
   fun projectee -> match projectee with | { to_term = to_term1;_} -> to_term1
-let (termable_term : FStar_Reflection_Types.term termable) =
+let (termable_term : FStar_Tactics_NamedView.term termable) =
   {
     to_term =
       (fun uu___ ->
@@ -535,7 +538,7 @@ let (termable_term : FStar_Reflection_Types.term termable) =
             Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> t)))
            uu___)
   }
-let (termable_binding : FStar_Reflection_V2_Data.binding termable) =
+let (termable_binding : FStar_Tactics_NamedView.binding termable) =
   {
     to_term =
       (fun uu___ ->
@@ -546,7 +549,7 @@ let (termable_binding : FStar_Reflection_V2_Data.binding termable) =
            uu___)
   }
 let (mapply0 :
-  FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+  FStar_Tactics_NamedView.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   = fun t -> apply_squash_or_lem (Prims.of_int (10)) t
 let mapply :
   'ty . 'ty termable -> 'ty -> (unit, unit) FStar_Tactics_Effect.tac_repr =
