@@ -45,15 +45,18 @@ CACHE_DIR	= .cache
 OUTPUT_DIR	= .output
 HINTS_DIR	= .hints
 
-FSTAR		= $(FSTAR_EXE) --cache_checked_modules \
+FSTAR_OPTIONS = --cache_checked_modules \
   --cache_dir $(CACHE_DIR) --odir $(OUTPUT_DIR) \
   --include $(KRML_HOME)/krmllib/compat --include $(KRML_HOME)/krmllib/obj \
   --include $(KRML_HOME)/krmllib --include $(KRML_HOME)/runtime \
   --include $(STEEL_HOME)/lib/steel --load_cmxs steel \
   --use_hints --record_hints \
-  --already_cached 'Prims FStar C TestLib Spec.Loops -C.Compat -C.Nullity LowStar WasmSupport Steel' \
+  --already_cached 'Prims,FStar,C,TestLib,Spec.Loops,-C.Compat,-C.Nullity,LowStar,WasmSupport,Steel' \
   --trivial_pre_for_unannotated_effectful_fns false \
-  --cmi --warn_error -274
+  --cmi --warn_error -274 \
+  $(OTHERFLAGS)
+
+FSTAR		= $(FSTAR_EXE) $(FSTAR_OPTIONS)
 
 all: world
 
@@ -96,11 +99,11 @@ $(HINTS_DIR):
 	mkdir -p $@
 
 $(CACHE_DIR)/%.checked: | .depend $(HINTS_DIR)
-	$(FSTAR) $(OTHERFLAGS) --hint_file $(HINTS_DIR)/$*.hints $< && \
+	$(FSTAR) --hint_file $(HINTS_DIR)/$*.hints $< && \
 	touch $@
 
 $(OUTPUT_DIR)/%.krml: | .depend
-	$(FSTAR) $(OTHERFLAGS) --codegen krml \
+	$(FSTAR) --codegen krml \
 	  --extract_module $(basename $(notdir $(subst .checked,,$<))) \
 	  $(notdir $(subst .checked,,$<))
 
@@ -143,3 +146,6 @@ clean:
 
 distclean: clean
 	rm -rf .cache
+
+%.fst-in %.fsti-in:
+	@echo $(FSTAR_OPTIONS)
