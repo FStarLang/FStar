@@ -16,3 +16,4 @@
 module FStar.Tactics
 
 include FStar.Tactics.V1
+include FStar.Tactics.SMT (* Version agnostic *)

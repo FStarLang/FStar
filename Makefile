@@ -137,8 +137,8 @@ output:
 # snapshot, nor run the build-standalone script.
 .PHONY: ci
 ci:
-	+$(Q)FSTAR_HOME=$(CURDIR) $(MAKE) ci-pre
-	+$(Q)FSTAR_HOME=$(CURDIR) $(MAKE) ci-post
+	+$(Q)OTHERFLAGS="--use_hints" FSTAR_HOME=$(CURDIR)$(MAKE) ci-pre
+	+$(Q)OTHERFLAGS="--use_hints" FSTAR_HOME=$(CURDIR)$(MAKE) ci-post
 
 # This rule runs a CI job in a local container, exactly like is done for
 # CI.
