@@ -119,9 +119,12 @@ let rec (freevars_st :
           (FStar_Set.union (freevars pre2)
              (FStar_Set.union (freevars_st body2) (freevars post2)))
     | Pulse_Syntax_Base.Tm_WithLocal
-        { Pulse_Syntax_Base.initializer1 = initializer1;
+        { Pulse_Syntax_Base.binder1 = binder;
+          Pulse_Syntax_Base.initializer1 = initializer1;
           Pulse_Syntax_Base.body4 = body;_}
-        -> FStar_Set.union (freevars initializer1) (freevars_st body)
+        ->
+        FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
+          (FStar_Set.union (freevars initializer1) (freevars_st body))
     | Pulse_Syntax_Base.Tm_Rewrite
         { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
         FStar_Set.union (freevars t1) (freevars t2)
@@ -251,9 +254,12 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
              && (ln_st' body2 i))
             && (ln' post2 (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_WithLocal
-          { Pulse_Syntax_Base.initializer1 = initializer1;
+          { Pulse_Syntax_Base.binder1 = binder;
+            Pulse_Syntax_Base.initializer1 = initializer1;
             Pulse_Syntax_Base.body4 = body;_}
-          -> (ln' initializer1 i) && (ln_st' body (i + Prims.int_one))
+          ->
+          ((ln' binder.Pulse_Syntax_Base.binder_ty i) && (ln' initializer1 i))
+            && (ln_st' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_Rewrite
           { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
           (ln' t1 i) && (ln' t2 i)
@@ -528,11 +534,13 @@ let rec (open_st_term' :
                     (open_term' post2 v (i + Prims.int_one))
                 }
           | Pulse_Syntax_Base.Tm_WithLocal
-              { Pulse_Syntax_Base.initializer1 = initializer1;
+              { Pulse_Syntax_Base.binder1 = binder;
+                Pulse_Syntax_Base.initializer1 = initializer1;
                 Pulse_Syntax_Base.body4 = body;_}
               ->
               Pulse_Syntax_Base.Tm_WithLocal
                 {
+                  Pulse_Syntax_Base.binder1 = (open_binder binder v i);
                   Pulse_Syntax_Base.initializer1 =
                     (open_term' initializer1 v i);
                   Pulse_Syntax_Base.body4 =
@@ -839,11 +847,13 @@ let rec (close_st_term' :
                     (close_term' post2 v (i + Prims.int_one))
                 }
           | Pulse_Syntax_Base.Tm_WithLocal
-              { Pulse_Syntax_Base.initializer1 = initializer1;
+              { Pulse_Syntax_Base.binder1 = binder;
+                Pulse_Syntax_Base.initializer1 = initializer1;
                 Pulse_Syntax_Base.body4 = body;_}
               ->
               Pulse_Syntax_Base.Tm_WithLocal
                 {
+                  Pulse_Syntax_Base.binder1 = (close_binder binder v i);
                   Pulse_Syntax_Base.initializer1 =
                     (close_term' initializer1 v i);
                   Pulse_Syntax_Base.body4 =

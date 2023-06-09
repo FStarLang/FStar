@@ -98,8 +98,8 @@ let tm_bind (x:binder) (e1:st_term) (e2:st_term) r : st_term =
 let tm_totbind (x:binder) (e1:term) (e2:st_term) r : st_term =
   PSB.(with_range (tm_totbind x e1 e2) r)
 
-let tm_let_mut (x:ident) (t:term) (v:term) (k:st_term) r : st_term =
-  PSB.(with_range (tm_with_local v k) r)
+let tm_let_mut (x:binder) (v:term) (k:st_term) r : st_term =
+  PSB.(with_range (tm_with_local x v k) r)
    
 let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) r : st_term =
   PSB.(with_range (tm_while (snd invariant) head (ppname_of_id (fst invariant)) body) r)

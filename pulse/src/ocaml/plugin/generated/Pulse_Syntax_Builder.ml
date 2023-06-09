@@ -152,16 +152,19 @@ let (tm_par :
                   Pulse_Syntax_Base.post21 = post2
                 }
 let (tm_with_local :
-  Pulse_Syntax_Base.term ->
-    Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
+  Pulse_Syntax_Base.binder ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
-  fun initializer1 ->
-    fun body ->
-      Pulse_Syntax_Base.Tm_WithLocal
-        {
-          Pulse_Syntax_Base.initializer1 = initializer1;
-          Pulse_Syntax_Base.body4 = body
-        }
+  fun binder ->
+    fun initializer1 ->
+      fun body ->
+        Pulse_Syntax_Base.Tm_WithLocal
+          {
+            Pulse_Syntax_Base.binder1 = binder;
+            Pulse_Syntax_Base.initializer1 = initializer1;
+            Pulse_Syntax_Base.body4 = body
+          }
 let (tm_rewrite :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term')

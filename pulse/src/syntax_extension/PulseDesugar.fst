@@ -380,7 +380,8 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
       | Some MUT //these are handled the same for now
       | Some REF -> 
         let? e1 = desugar_term env e1 in 
-        return (SW.tm_let_mut lb.id annot e1 s2 r)
+        let b = SW.mk_binder lb.id annot in
+        return (SW.tm_let_mut b e1 s2 r)
     )
 
 and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r

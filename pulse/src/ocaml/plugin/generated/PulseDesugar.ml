@@ -789,17 +789,21 @@ and (desugar_bind :
                              let uu___2 = desugar_term env e1 in
                              op_let_Question uu___2
                                (fun e11 ->
+                                  let b =
+                                    PulseSyntaxWrapper.mk_binder
+                                      lb.PulseSugar.id1 annot in
                                   let uu___3 =
-                                    PulseSyntaxWrapper.tm_let_mut
-                                      lb.PulseSugar.id1 annot e11 s21 r in
+                                    PulseSyntaxWrapper.tm_let_mut b e11 s21 r in
                                   return uu___3)
                          | FStar_Pervasives_Native.Some (PulseSugar.REF) ->
                              let uu___2 = desugar_term env e1 in
                              op_let_Question uu___2
                                (fun e11 ->
+                                  let b =
+                                    PulseSyntaxWrapper.mk_binder
+                                      lb.PulseSugar.id1 annot in
                                   let uu___3 =
-                                    PulseSyntaxWrapper.tm_let_mut
-                                      lb.PulseSugar.id1 annot e11 s21 r in
+                                    PulseSyntaxWrapper.tm_let_mut b e11 s21 r in
                                   return uu___3))))
 and (desugar_sequence :
   env_t ->

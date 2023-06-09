@@ -2368,7 +2368,8 @@ let rec (st_term_to_string' :
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___2 -> uu___1 uu___)))) uu___)
       | Pulse_Syntax_Base.Tm_WithLocal
-          { Pulse_Syntax_Base.initializer1 = initializer1;
+          { Pulse_Syntax_Base.binder1 = uu___;
+            Pulse_Syntax_Base.initializer1 = initializer1;
             Pulse_Syntax_Base.body4 = body;_}
           ->
           FStar_Tactics_Effect.tac_bind
@@ -2379,8 +2380,8 @@ let rec (st_term_to_string' :
                (Prims.of_int (229)) (Prims.of_int (6)) (Prims.of_int (232))
                (Prims.of_int (39)))
             (Obj.magic (st_term_to_string' level body))
-            (fun uu___ ->
-               (fun uu___ ->
+            (fun uu___1 ->
+               (fun uu___1 ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
@@ -2409,25 +2410,25 @@ let rec (st_term_to_string' :
                                       (Prims.of_int (123))
                                       (Prims.of_int (44)))
                                    (Obj.magic (term_to_string initializer1))
-                                   (fun uu___1 ->
+                                   (fun uu___2 ->
                                       FStar_Tactics_Effect.lift_div_tac
-                                        (fun uu___2 ->
+                                        (fun uu___3 ->
                                            fun x ->
                                              fun x1 ->
                                                Prims.strcat
                                                  (Prims.strcat
                                                     (Prims.strcat
                                                        "let mut _ = "
-                                                       (Prims.strcat uu___1
+                                                       (Prims.strcat uu___2
                                                           ";\n"))
                                                     (Prims.strcat x ""))
                                                  (Prims.strcat x1 "")))))
-                             (fun uu___1 ->
+                             (fun uu___2 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___2 -> uu___1 level))))
-                       (fun uu___1 ->
+                                  (fun uu___3 -> uu___2 level))))
+                       (fun uu___2 ->
                           FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___2 -> uu___1 uu___)))) uu___)
+                            (fun uu___3 -> uu___2 uu___1)))) uu___1)
       | Pulse_Syntax_Base.Tm_Admit
           { Pulse_Syntax_Base.ctag1 = ctag; Pulse_Syntax_Base.u1 = u;
             Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}

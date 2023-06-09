@@ -199,7 +199,9 @@ and st_term'__Tm_Par__payload =
   pre2: term ;
   body21: st_term ;
   post21: term }
-and st_term'__Tm_WithLocal__payload = {
+and st_term'__Tm_WithLocal__payload =
+  {
+  binder1: binder ;
   initializer1: term ;
   body4: st_term }
 and st_term'__Tm_Rewrite__payload = {
@@ -392,9 +394,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
               && (eq_tm preR1 preR2))
              && (eq_st_term eR1 eR2))
             && (eq_tm postR1 postR2)
-      | (Tm_WithLocal { initializer1 = e1; body4 = b1;_}, Tm_WithLocal
-         { initializer1 = e2; body4 = b2;_}) ->
-          (eq_tm e1 e2) && (eq_st_term b1 b2)
+      | (Tm_WithLocal { binder1 = x1; initializer1 = e1; body4 = b1;_},
+         Tm_WithLocal { binder1 = x2; initializer1 = e2; body4 = b2;_}) ->
+          ((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
+            (eq_st_term b1 b2)
       | (Tm_Rewrite { t1 = l1; t2 = r1;_}, Tm_Rewrite { t1 = l2; t2 = r2;_})
           -> (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Admit { ctag1 = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
