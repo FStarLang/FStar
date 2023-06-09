@@ -24,9 +24,9 @@ let intro_exists_erased_soundness
                         (elab_st_typing d)
                         (elab_comp c)) =
   let t0 = t in
-  let T_IntroExistsErased _ u t p e t_typing p_typing e_typing = d in
+  let T_IntroExistsErased _ u b p e t_typing p_typing e_typing = d in
   let ru = u in
-  let rt = elab_term t in
+  let rt = elab_term b.binder_ty in
   let rp = elab_term p in
   let re = elab_term e in
   let rt_typing : RT.tot_typing _ rt (R.pack_ln (R.Tv_Type ru)) =
@@ -46,7 +46,7 @@ let intro_exists_erased_soundness
   let re_typing : RT.tot_typing _ re _ =
       tot_typing_soundness e_typing
   in
-  let reveal_re = elab_term (mk_reveal u t e) in
+  let reveal_re = elab_term (mk_reveal u b.binder_ty e) in
 
   let d = WT.intro_exists_erased_typing rt_typing rp_typing re_typing in
   assume (RT.ln' rp 0);
@@ -67,9 +67,9 @@ let intro_exists_soundness
                         (elab_comp c)) =
 
   let t0 = t in
-  let T_IntroExists _ u t p e t_typing p_typing e_typing = d in
+  let T_IntroExists _ u b p e t_typing p_typing e_typing = d in
   let ru = u in
-  let rt = elab_term t in
+  let rt = elab_term b.binder_ty in
   let rp = elab_term p in
   let re = elab_term e in
   let rt_typing : RT.tot_typing _ rt (R.pack_ln (R.Tv_Type ru)) =

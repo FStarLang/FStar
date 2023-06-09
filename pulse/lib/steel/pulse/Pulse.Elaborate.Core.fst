@@ -204,16 +204,16 @@ let rec elab_st_typing (#g:env)
       let rp = elab_term p in
       mk_elim_exists ru rt (mk_abs rt R.Q_Explicit rp)
 
-    | T_IntroExists _ u t p e _ _ _ ->
+    | T_IntroExists _ u b p e _ _ _ ->
       let ru = u in
-      let rt = elab_term t in
+      let rt = elab_term b.binder_ty in
       let rp = elab_term p in
       let re = elab_term e in
       mk_intro_exists ru rt (mk_abs rt R.Q_Explicit rp) re
 
-    | T_IntroExistsErased _ u t p e _ _ _ ->
+    | T_IntroExistsErased _ u b p e _ _ _ ->
       let ru = u in
-      let rt = elab_term t in
+      let rt = elab_term b.binder_ty in
       let rp = elab_term p in
       let re = elab_term e in
       mk_intro_exists_erased ru rt (mk_abs rt R.Q_Explicit rp) re

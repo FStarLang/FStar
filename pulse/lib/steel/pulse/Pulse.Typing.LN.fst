@@ -851,12 +851,12 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln dw;
       open_term_ln_inv' p e 0
 
-    | T_IntroExistsErased _ u t p e dt dv dw ->
+    | T_IntroExistsErased _ u b p e dt dv dw ->
       tot_typing_ln dt;
       tot_typing_ln dv;
       tot_typing_ln dw;
-      ln_mk_reveal u t e (-1);
-      open_term_ln_inv' p (Pulse.Typing.mk_reveal u t e) 0
+      ln_mk_reveal u b.binder_ty e (-1);
+      open_term_ln_inv' p (Pulse.Typing.mk_reveal u b.binder_ty e) 0
 
     | T_Equiv _ _ _ _ d2 deq ->
       st_typing_ln d2;

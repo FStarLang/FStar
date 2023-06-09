@@ -468,7 +468,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      freevars_mk_erased u t
 
 
-   | T_IntroExists _ u tt p w dt dv dw ->
+   | T_IntroExists _ u b p w dt dv dw ->
      tot_typing_freevars dt;
      tot_typing_freevars dv;
      tot_typing_freevars dw;
@@ -476,15 +476,15 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      calc (Set.subset) {
         freevars_comp c;
       (Set.equal) {}
-        freevars_comp (comp_intro_exists u tt p w);
+        freevars_comp (comp_intro_exists u b p w);
       (Set.equal) {}
         freevars Tm_EmpInames `Set.union`
         (freevars tm_unit `Set.union`
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u (as_binder tt) p)));
+         freevars (Tm_ExistsSL u b p)));
       (Set.equal) {} 
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u (as_binder tt) p));
+         freevars (Tm_ExistsSL u b p));
       (Set.subset) { freevars_open_term p w 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`
@@ -492,25 +492,25 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
          freevars p);
      }
 
-   | T_IntroExistsErased _ u tt p w dt dv dw ->
+   | T_IntroExistsErased _ u b p w dt dv dw ->
      tot_typing_freevars dt;
      tot_typing_freevars dv;
      tot_typing_freevars dw;
      assert (freevars_st t `Set.subset` vars_of_env g);
-     freevars_mk_reveal u tt w;
+     freevars_mk_reveal u b.binder_ty w;
      calc (Set.subset) {
         freevars_comp c;
       (Set.equal) {}
-        freevars_comp (comp_intro_exists_erased u tt p w);
+        freevars_comp (comp_intro_exists_erased u b p w);
       (Set.equal) {}
         freevars Tm_EmpInames `Set.union`
         (freevars tm_unit `Set.union`
-        (freevars (open_term' p (Pulse.Typing.mk_reveal u tt w) 0) `Set.union`
-         freevars (Tm_ExistsSL u (as_binder tt) p)));
+        (freevars (open_term' p (Pulse.Typing.mk_reveal u b.binder_ty w) 0) `Set.union`
+         freevars (Tm_ExistsSL u b p)));
       (Set.equal) {} 
-        (freevars (open_term' p (Pulse.Typing.mk_reveal u tt w) 0) `Set.union`
-         freevars (Tm_ExistsSL u (as_binder tt) p));
-      (Set.subset) { freevars_open_term p (Pulse.Typing.mk_reveal u tt w) 0 }
+        (freevars (open_term' p (Pulse.Typing.mk_reveal u b.binder_ty w) 0) `Set.union`
+         freevars (Tm_ExistsSL u b p));
+      (Set.subset) { freevars_open_term p (Pulse.Typing.mk_reveal u b.binder_ty w) 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`
          freevars_st t `Set.union`

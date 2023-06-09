@@ -410,14 +410,22 @@ let (comp_intro_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
           Pulse_Syntax_Base.pre = Pulse_Syntax_Base.Tm_Emp;
           Pulse_Syntax_Base.post = (Pulse_Syntax_Base.Tm_Pure p)
         })
+let (named_binder :
+  Pulse_Syntax_Base.ppname ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder)
+  =
+  fun x ->
+    fun t ->
+      { Pulse_Syntax_Base.binder_ty = t; Pulse_Syntax_Base.binder_ppname = x
+      }
 let (comp_intro_exists :
   Pulse_Syntax_Base.universe ->
-    Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.binder ->
       Pulse_Syntax_Base.term ->
         Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
   =
   fun u ->
-    fun t ->
+    fun b ->
       fun p ->
         fun e ->
           Pulse_Syntax_Base.C_STGhost
@@ -428,17 +436,16 @@ let (comp_intro_exists :
                 Pulse_Syntax_Base.pre =
                   (Pulse_Syntax_Naming.open_term' p e Prims.int_zero);
                 Pulse_Syntax_Base.post =
-                  (Pulse_Syntax_Base.Tm_ExistsSL
-                     (u, (Pulse_Syntax_Base.as_binder t), p))
+                  (Pulse_Syntax_Base.Tm_ExistsSL (u, b, p))
               })
 let (comp_intro_exists_erased :
   Pulse_Syntax_Base.universe ->
-    Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.binder ->
       Pulse_Syntax_Base.term ->
         Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
   =
   fun u ->
-    fun t ->
+    fun b ->
       fun p ->
         fun e ->
           Pulse_Syntax_Base.C_STGhost
@@ -447,20 +454,12 @@ let (comp_intro_exists_erased :
                 Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
                 Pulse_Syntax_Base.res = tm_unit;
                 Pulse_Syntax_Base.pre =
-                  (Pulse_Syntax_Naming.open_term' p (mk_reveal u t e)
+                  (Pulse_Syntax_Naming.open_term' p
+                     (mk_reveal u b.Pulse_Syntax_Base.binder_ty e)
                      Prims.int_zero);
                 Pulse_Syntax_Base.post =
-                  (Pulse_Syntax_Base.Tm_ExistsSL
-                     (u, (Pulse_Syntax_Base.as_binder t), p))
+                  (Pulse_Syntax_Base.Tm_ExistsSL (u, b, p))
               })
-let (named_binder :
-  Pulse_Syntax_Base.ppname ->
-    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder)
-  =
-  fun x ->
-    fun t ->
-      { Pulse_Syntax_Base.binder_ty = t; Pulse_Syntax_Base.binder_ppname = x
-      }
 let (comp_while_cond :
   Pulse_Syntax_Base.ppname ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
@@ -807,11 +806,11 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
   unit * unit 
   | T_IntroExists of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
-  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term *
-  unit * unit * unit 
-  | T_IntroExistsErased of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe
-  * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term
+  Pulse_Syntax_Base.binder * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term
   * unit * unit * unit 
+  | T_IntroExistsErased of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe
+  * Pulse_Syntax_Base.binder * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.term * unit * unit * unit 
   | T_While of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term * unit * (unit, 
   unit, unit) st_typing * (unit, unit, unit) st_typing 

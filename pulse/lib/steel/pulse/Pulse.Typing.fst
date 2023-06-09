@@ -372,27 +372,28 @@ let comp_intro_pure (p:term) =
               post=Tm_Pure p
             }
 
-let comp_intro_exists (u:universe) (t:term) (p:term) (e:term)
+let named_binder (x:ppname) (t:term) = { binder_ppname = x; binder_ty = t}
+
+let comp_intro_exists (u:universe) (b:binder) (p:term) (e:term)
   : comp
   = C_STGhost Tm_EmpInames
               {
                 u=u0;
                 res=tm_unit;
                 pre=open_term' p e 0;
-                post=Tm_ExistsSL u (as_binder t) p
+                post=Tm_ExistsSL u b p
               }
 
-let comp_intro_exists_erased (u:universe) (t:term) (p:term) (e:term)
+let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
   : comp
   = C_STGhost Tm_EmpInames
               {
                 u=u0;
                 res=tm_unit;
-                pre=open_term' p (mk_reveal u t e) 0;
-                post=Tm_ExistsSL u (as_binder t) p
+                pre=open_term' p (mk_reveal u b.binder_ty e) 0;
+                post=Tm_ExistsSL u b p
               }
 
-let named_binder (x:ppname) (t:term) = { binder_ppname = x; binder_ty = t}
 
 let comp_while_cond (x:ppname) (inv:term)
   : comp
@@ -772,32 +773,32 @@ type st_typing : env -> st_term -> comp -> Type =
   | T_IntroExists:
       g:env ->
       u:universe ->
-      t:term ->
+      b:binder ->
       p:term ->
       e:term ->
-      tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u (as_binder t) p) Tm_VProp ->
-      tot_typing g e t ->
+      tot_typing g b.binder_ty (tm_type u) ->
+      tot_typing g (Tm_ExistsSL u b p) Tm_VProp ->
+      tot_typing g e b.binder_ty ->
       st_typing g (wr (Tm_IntroExists { erased = false;
-                                        p = Tm_ExistsSL u (as_binder t) p;
+                                        p = Tm_ExistsSL u b p;
                                         witnesses= [e];
                                         should_check=should_check_true }))
-                  (comp_intro_exists u t p e)
+                  (comp_intro_exists u b p e)
       
   | T_IntroExistsErased:
       g:env ->
       u:universe ->
-      t:term ->
+      b:binder ->
       p:term ->
       e:term ->
-      tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u (as_binder t) p) Tm_VProp ->
-      tot_typing g e (mk_erased u t)  ->
+      tot_typing g b.binder_ty (tm_type u) ->
+      tot_typing g (Tm_ExistsSL u b p) Tm_VProp ->
+      tot_typing g e (mk_erased u b.binder_ty)  ->
       st_typing g (wr (Tm_IntroExists { erased = true;
-                                        p = Tm_ExistsSL u (as_binder t) p;
+                                        p = Tm_ExistsSL u b p;
                                         witnesses= [e];
                                         should_check=should_check_true }))
-                  (comp_intro_exists_erased u t p e)
+                  (comp_intro_exists_erased u b p e)
 
   | T_While:
       g:env ->
