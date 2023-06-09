@@ -123,10 +123,6 @@ let filter_no_method_binders (bs:binders)
     in
     L.filter (fun b -> not (has_no_method_attr b)) bs
 
-(* GGG FIXME move *)
-let named_binder_to_term (nb : binder) : term =
-  pack (Tv_Var (binder_to_namedv nb))
-
 private
 let binder_set_meta (b : binder) (t : term) : binder =
   { b with qual = Q_Meta t }

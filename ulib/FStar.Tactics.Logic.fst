@@ -15,12 +15,13 @@
 *)
 module FStar.Tactics.Logic
 
+open FStar.Reflection.V2
+open FStar.Reflection.V2.Formula
 open FStar.Tactics.Effect
 open FStar.Tactics.V2.Builtins
 open FStar.Tactics.V2.Derived
+open FStar.Tactics.NamedView
 open FStar.Tactics.Util
-open FStar.Reflection.V2
-open FStar.Reflection.V2.Formula
 
 (** Returns the current goal as a [formula]. *)
 let cur_formula () : Tac formula = term_as_formula (cur_goal ())
@@ -109,7 +110,7 @@ let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires r
 let pose_lemma (t : term) : Tac binding =
   let c = tcc (cur_env ()) t in
   let pre, post =
-    match inspect_comp c with
+    match c with
     | C_Lemma pre post _ -> pre, post
     | _ -> fail ""
   in
@@ -206,7 +207,7 @@ let unsquash (t : term) : Tac term =
     let v = `vbind in
     apply_lemma (mk_e_app v [t]);
     let b = intro () in
-    pack_ln (Tv_Var (binding_to_namedv b))
+    pack (Tv_Var (binding_to_namedv b))
 
 private val or_ind : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                      (p \/ q) ->
