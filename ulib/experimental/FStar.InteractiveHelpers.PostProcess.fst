@@ -1,7 +1,7 @@
 module FStar.InteractiveHelpers.PostProcess
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V1
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
 open FStar.InteractiveHelpers.ExploreTerm
@@ -104,7 +104,7 @@ let find_predicated_term_explorer #a pred dbg acc ge pl opt_c t =
   if Some? acc then mfail "find_focused_term_explorer: non empty accumulator";
   if dbg then
     begin
-    print ("[> find_focused_term_explorer: " ^ term_view_construct t ^ ":\n" ^ term_to_string t)
+    print ("[> find_focused_term_explorer: " ^ term_view_construct t ^ ":\n" ^ term_to_string (pack_ln t))
     end;
   match pred ge pl opt_c t with
   | Some ft -> Some (mk_exploration_result ge pl opt_c ft), Abort
@@ -507,7 +507,7 @@ let rec find_context_equality_aux dbg ge0 tm (opt_bv : option bv)
   | tv :: parents' ->
     print_dbg dbg ("[> find_context_equality:\n" ^
                    "- term  : " ^ term_to_string tm ^ "\n" ^
-                   "- parent: " ^ term_to_string tv);
+                   "- parent: " ^ term_to_string (pack_ln tv));
     (* We only consider let-bindings *)
     match tv with
     | Tv_Let _ _ bv' ty def _ ->

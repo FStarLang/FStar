@@ -3,7 +3,7 @@ module FStar.InteractiveHelpers.Effectful
 module HS = FStar.HyperStack
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V1
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
 open FStar.InteractiveHelpers.ExploreTerm
@@ -525,7 +525,7 @@ let is_st_get dbg t : Tac bool =
     false
 
 let is_let_st_get dbg (t : term_view) =
-  print_dbg dbg ("[> is_let_st_get:\n" ^ term_to_string t);
+  print_dbg dbg ("[> is_let_st_get:\n" ^ term_to_string (pack_ln t));
   match t with
   | Tv_Let recf attrs bv ty def body ->
     print_dbg dbg "The term is a let expression";
@@ -606,7 +606,7 @@ let rec find_mem_in_related dbg ge tms =
   match tms with
   | [] -> None
   | tv :: tms' ->
-    print_dbg dbg ("[> find_mem_in_related:\n" ^ term_to_string tv);
+    print_dbg dbg ("[> find_mem_in_related:\n" ^ term_to_string (pack_ln tv));
     match is_let_st_get dbg tv with
     | Some bvt ->
       print_dbg dbg "Term is of the form `let x = FStar.HyperStack.ST.get ()`: success";
