@@ -182,6 +182,7 @@ let rec close_exp_ln (e:src_exp) (v:var) (n:nat)
     | ELam _ e -> close_exp_ln e v (n + 1)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
 
+#push-options "--z3rlimit 15"
 let rec open_exp_freevars (e:src_exp) (v:var) (n:nat)
   : Lemma ((freevars e `Set.subset` freevars (open_exp' e v n))  /\
            (freevars (open_exp' e v n) `Set.subset` (freevars e `Set.union` Set.singleton v)))
@@ -199,7 +200,8 @@ let rec open_exp_freevars (e:src_exp) (v:var) (n:nat)
       open_exp_freevars e2 v n
     | ELam t e ->
       open_exp_freevars e v (n + 1)
-      
+#pop-options
+
 let minus (s:Set.set 'a) (x:'a) = Set.intersect s (Set.complement (Set.singleton x))
 
 let rec close_exp_freevars (m:int) (e:src_exp { ln' e m } ) (v:var) (n:nat)
