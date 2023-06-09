@@ -11,8 +11,9 @@ module SZ = FStar.SizeT
 inline_for_extraction [@@noextract_to "krml"]
 let array_size_t = (n: SZ.t { SZ.v n > 0 })
 val base_array_t ([@@@strictly_positive] t: Type0) (tn: Type0 (* using Typenat (or Typestring for `#define`d constants) *)) (n: array_size_t) : Type0
-inline_for_extraction [@@noextract_to "krml"] // MUST be syntactically equal to Steel.C.Model.Array.array_domain
-let base_array_index_t (n: array_size_t) : Tot eqtype = (i: SZ.t { SZ.v i < SZ.v n })
+inline_for_extraction [@@noextract_to "krml"]
+let base_array_index_t (n: array_size_t) : Tot eqtype =
+  Steel.ST.C.Types.Array.Base.array_domain (Ghost.hide n)
 [@@noextract_to "krml"]
 val base_array0 (#t: Type0) (tn: Type0) (td: typedef t) (n: array_size_t) : Tot (typedef (base_array_t t tn n))
 
@@ -167,14 +168,18 @@ val has_base_array_cell_equiv_to
 // ghost length of an array.
 
 [@@noextract_to "krml"] // primitive
-val array_ptr_gen ([@@@strictly_positive] t: Type0) : Tot Type0
+val array_void_ptr : Type0
+[@@noextract_to "krml"] // primitive
+let array_ptr_gen ([@@@unused] t: Type0) : Tot Type0 = array_void_ptr
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let array_ptr (#t: Type) (td: typedef t) = array_ptr_gen t
 [@@noextract_to "krml"] // primitive
-val null_array_ptr (#t: Type) (td: typedef t) : Tot (array_ptr td)
+val null_array_void_ptr: array_void_ptr
+[@@noextract_to "krml"] // primitive
+let null_array_ptr (#t: Type) (td: typedef t) : Tot (array_ptr td) = null_array_void_ptr
 val g_array_ptr_is_null (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost bool
   (requires True)
-  (ensures (fun y -> y == true <==> a == null_array_ptr _))
+  (ensures (fun y -> y == true <==> a == null_array_ptr td))
 inline_for_extraction [@@noextract_to "krml"]
 let array_ref (#t: Type) (td: typedef t) = (a: array_ptr td { g_array_ptr_is_null a == false })
 
@@ -183,7 +188,7 @@ val array_ref_base_size_type (#t: Type) (#td: typedef t) (a: array_ref td) : GTo
 *)
 val array_ref_base_size (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost SZ.t
   (requires True)
-  (ensures (fun y -> SZ.v y == 0 <==> a == null_array_ptr _))
+  (ensures (fun y -> SZ.v y == 0 <==> a == null_array_ptr td))
 val has_array_ref_base (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r: ref (base_array0 ty td (array_ref_base_size a))) : GTot prop
 val has_array_ref_base_inj (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r1 r2: ref (base_array0 ty td (array_ref_base_size a))) : Lemma
   (requires (has_array_ref_base a r1 /\ has_array_ref_base a r2))

@@ -1,4 +1,5 @@
 module Steel.ST.C.Model.Array
+include Steel.ST.C.Types.Array.Base
 open Steel.ST.Util
 
 open Steel.C.Model.PCM
@@ -12,11 +13,6 @@ module SZ = FStar.SizeT
 
 let size_t = SZ.t
 let size_v = SZ.v
-
-let array_domain
-  (n: Ghost.erased size_t)
-: Tot Type0
-= (x: size_t { size_v x < size_v n })
 
 let array_range
   (t: Type u#0)

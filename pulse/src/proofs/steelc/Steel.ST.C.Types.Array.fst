@@ -66,9 +66,7 @@ let base_array_index_t'_eq
   (n: array_size_t)
 : Lemma
   (base_array_index_t n == base_array_index_t' n)
-  [SMTPat (base_array_index_t n)]
-= // syntactic equality of refinement types
-  assert (base_array_index_t n == base_array_index_t' n) by (FStar.Tactics.trefl ())
+= ()
 
 let array_index_as_field_marker
   (n: Ghost.erased array_size_t)
@@ -124,6 +122,23 @@ let has_base_array_cell0
     has_base_array_cell_as_struct_field r i j r' `star`
     pure (i == j)
   )
+
+let has_base_array_cell0_intro
+  (#opened: _)
+  (#t: Type)
+  (#n: Ghost.erased array_size_t)
+  (#td: typedef t)
+  (r: ref (base_array1 td n))
+  (i: SZ.t)
+  (r': ref td)
+  (j: _)
+: STGhost unit opened
+    (has_base_array_cell_as_struct_field r i j r')
+    (fun _ -> has_base_array_cell0 r i r')
+    (i == j)
+    (fun _ -> True)
+= noop ();
+  noop ()
 
 let has_base_array_cell1
   (#t: Type)
@@ -234,22 +249,30 @@ let has_base_array_cell_equiv_to
 
 /// Array pointers (with decay)
 
-noeq
-type array_ptr_gen t = {
-  ar_is_null: Ghost.erased bool;
-  ar_base_size: Ghost.erased array_size_t;
-  ar_base: ptr_gen (base_array_t' t ar_base_size);
-  ar_offset: SZ.t;
-  ar_prf: squash (
+let array_void_ptr_prf
+  (ar_is_null: Ghost.erased bool)
+  (ar_base_size: Ghost.erased array_size_t)
+  (ar_base: void_ptr)
+  (ar_offset: SZ.t)
+: GTot prop
+=
     SZ.v ar_offset <= SZ.v ar_base_size /\
     (Ghost.reveal ar_is_null == true <==> ar_base == void_null) /\
     (ar_base == void_null ==> (SZ.v ar_base_size == 1 /\ SZ.v ar_offset == 0))
-  );
+  
+
+noeq
+type array_void_ptr = {
+  ar_is_null: Ghost.erased bool;
+  ar_base_size: Ghost.erased array_size_t;
+  ar_base: void_ptr;
+  ar_offset: SZ.t;
+  ar_prf: squash (array_void_ptr_prf ar_is_null ar_base_size ar_base ar_offset);
 }
-let null_array_ptr td = {
+let null_array_void_ptr = {
   ar_is_null = true;
   ar_base_size = 1sz;
-  ar_base = null_gen _;
+  ar_base = void_null;
   ar_offset = 0sz;
   ar_prf = ();
 }
@@ -549,7 +572,7 @@ let freeable_array0
   (#t: Type) (#td: typedef t) (a: array td)
 : Tot vprop
 = freeable #_ #(base_array1 #t td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base `star`
-  pure (has_array_of_base' (array_ptr_of a).ar_base a)
+  pure (has_array_of_base' #_ #(array_ptr_of a).ar_base_size (array_ptr_of a).ar_base a)
 
 let freeable_array
   a
@@ -683,7 +706,7 @@ let has_array_cell0
   (r: ref td)
 : Tot vprop
 = exists_ (fun (j: SZ.t) ->
-    has_base_array_cell1 (array_ptr_of a).ar_base (array_index_as_base_array_index_marker i j) r `star`
+    has_base_array_cell1 #_ #(array_ptr_of a).ar_base_size (array_ptr_of a).ar_base (array_index_as_base_array_index_marker i j) r `star`
     pure (
       SZ.v j == SZ.v ((array_ptr_of a).ar_offset) + SZ.v i /\
       SZ.v i < SZ.v (dsnd a)
@@ -720,7 +743,7 @@ let has_array_cell_has_base_array_cell
 let has_base_array_cell_has_array_cell
   a i r br
 = let j : Ghost.erased SZ.t = Ghost.hide (i `SZ.sub` (array_ptr_of a).ar_offset) in
-  rewrite (has_base_array_cell br i r) (has_base_array_cell1 (array_ptr_of a).ar_base (array_index_as_base_array_index_marker j i) r);
+  rewrite (has_base_array_cell br i r) (has_base_array_cell1 #_ #(array_ptr_of a).ar_base_size (array_ptr_of a).ar_base (array_index_as_base_array_index_marker j i) r);
   rewrite (has_array_cell0 a j r) (has_array_cell a j r);
   j
 
@@ -822,23 +845,25 @@ let has_array_cell_drop
       HR.pts_to r p' b'
     )
     (fun _ -> has_array_cell1 a i r)
-= rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
+=
+  let base : ref (base_array1 td (array_ptr_of a).ar_base_size) = (array_ptr_of a).ar_base in
+  rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
   let _ = gen_elim () in
-  let j = vpattern_replace (fun j -> has_base_array_cell1 _ j _) in
-  rewrite (has_base_array_cell1 (array_ptr_of a).ar_base j r) (has_base_array_cell0 (array_ptr_of a).ar_base j r);
+  let j = vpattern_replace (fun j -> has_base_array_cell1 #_ #(array_ptr_of a).ar_base_size _ j _) in
+  rewrite (has_base_array_cell1 _ j r) (has_base_array_cell0 base j r);
   let _ = gen_elim () in
   let j' : base_array_index_t' (array_ptr_of a).ar_base_size = vpattern_replace (fun j' -> has_base_array_cell_as_struct_field _ _ j' _) in
-  rewrite (has_base_array_cell_as_struct_field (array_ptr_of a).ar_base j j' r) (has_struct_field0 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base j' r);
+  rewrite (has_base_array_cell_as_struct_field _ j j' r) (has_struct_field0 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) base j' r);
   let _ = gen_elim () in
   HR.gather p' r;
   has_struct_field1_intro
-    #_ #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base j' r _ _ _ _ ();
+    #_ #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) base j' r _ _ _ _ ();
   rewrite
-    (has_struct_field1 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base j' r)
-    (has_base_array_cell_as_struct_field (array_ptr_of a).ar_base j j' r);
+    (has_struct_field1 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) base j' r)
+    (has_base_array_cell_as_struct_field base j j' r);
   rewrite
-    (has_base_array_cell0 (array_ptr_of a).ar_base j r)
-    (has_base_array_cell1 (array_ptr_of a).ar_base (array_index_as_base_array_index_marker i j) r);
+    (has_base_array_cell0 base j r)
+    (has_base_array_cell1 #_ #(array_ptr_of a).ar_base_size (array_ptr_of a).ar_base (array_index_as_base_array_index_marker i j) r);
   rewrite
     (has_array_cell0 a i r)
     (has_array_cell a i r)
@@ -873,28 +898,31 @@ let has_array_cell_elim
       end
     )
 = 
+  let base : ref (base_array1 td (array_ptr_of a).ar_base_size) = (array_ptr_of a).ar_base in
+  rewrite (HR.pts_to _ _ _) (HR.pts_to base p b);
   rewrite (has_array_cell1 a i r) (has_array_cell0 a i r);
   let _ = gen_elim () in
   let j = vpattern_replace (fun j -> has_base_array_cell1 _ j _) in
-  rewrite (has_base_array_cell1 (array_ptr_of a).ar_base j r) (has_base_array_cell0 (array_ptr_of a).ar_base j r);
+  rewrite (has_base_array_cell1 _ j r) (has_base_array_cell0 base j r);
   let _ = gen_elim () in
   let j' : base_array_index_t' (array_ptr_of a).ar_base_size = vpattern_replace (fun j' -> has_base_array_cell_as_struct_field _ _ j' _) in
-  rewrite (has_base_array_cell_as_struct_field (array_ptr_of a).ar_base j j' r) (has_struct_field0 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base j' r);
+  rewrite (has_base_array_cell_as_struct_field base j j' r) (has_struct_field0 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) base j' r);
   let _ = gen_elim () in
-  hr_gather b (array_ptr_of a).ar_base;
+  hr_gather b base;
   HR.share r;
-  HR.share (array_ptr_of a).ar_base;
-  has_struct_field1_intro #_ #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base j' r _ _ _ _ ();
-  rewrite (has_struct_field1 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base j' r) (has_base_array_cell_as_struct_field (array_ptr_of a).ar_base j j' r);
+  HR.share base;
+  has_struct_field1_intro #_ #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) base j' r _ _ _ _ ();
+  rewrite (has_struct_field1 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) base j' r) (has_base_array_cell_as_struct_field base j j' r);
   rewrite
-    (has_base_array_cell0 (array_ptr_of a).ar_base j r)
-    (has_base_array_cell1 (array_ptr_of a).ar_base (array_index_as_base_array_index_marker i j) r);
+    (has_base_array_cell0 base j r)
+    (has_base_array_cell1 #_ #(array_ptr_of a).ar_base_size (array_ptr_of a).ar_base (array_index_as_base_array_index_marker i j) r);
   rewrite
     (has_array_cell0 a i r)
     (has_array_cell a i r);
   A.ref_of_array_eq (model_array_of_array a b) i;
   struct_field_eq_cell td (array_ptr_of a).ar_base_size j';
   let b' = vpattern_replace_erased (HR.pts_to r _) in
+  vpattern_rewrite #_ #_ #base (fun r' -> HR.pts_to r' _ _) (array_ptr_of a).ar_base;
   noop ();
   b'
 
@@ -910,6 +938,19 @@ let ghost_array_cell_focus
   rewrite (A.pts_to _ _) (A.pts_to (model_array_of_array a b) (Seq.upd s (SZ.v i) (unknown td)));
   array_pts_to_intro a (Seq.upd s (SZ.v i) (unknown td)) _ _ ()
 
+let array_offset_shift
+  (#t: Type)
+  (#td: typedef t)
+  (a: array td)
+  (i: SZ.t)
+: Pure (base_array_index_t (array_ptr_of a).ar_base_size)
+    (requires (SZ.v i < array_length a))
+    (ensures (fun _ -> True))
+= (array_ptr_of a).ar_offset `SZ.add` i
+
+#push-options "--z3rlimit 16"
+
+#restart-solver
 let has_array_cell_intro
   (#opened: _)
   (#t: Type)
@@ -939,16 +980,22 @@ let has_array_cell_intro
     (fun _ -> True)
 = 
   A.ref_of_array_eq (model_array_of_array a b) i;
-  let j : base_array_index_t' (array_ptr_of a).ar_base_size = (array_ptr_of a).ar_offset `SZ.add` i in
+  let base : ref (struct1 (base_array_fd td (array_ptr_of a).ar_base_size)) = (array_ptr_of a).ar_base in
+  rewrite (HR.pts_to (array_ptr_of a).ar_base p b) (HR.pts_to base p b);
+  let j : base_array_index_t (array_ptr_of a).ar_base_size = array_offset_shift a i in
+  let j' : base_array_index_t' (array_ptr_of a).ar_base_size = coerce_eq () j in
   struct_field_eq_cell td (array_ptr_of a).ar_base_size j;
-  has_struct_field1_intro #_ #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base j r _ _ _ _ ();
-  rewrite (has_struct_field1 #(base_array_index_t' (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) (array_ptr_of a).ar_base j r) (has_base_array_cell_as_struct_field (array_ptr_of a).ar_base j j r);
+  has_struct_field1_intro #_ #(base_array_index_t (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) base j r _ _ _ _ ();
+  rewrite (has_struct_field1 #(base_array_index_t (array_ptr_of a).ar_base_size) #(base_array_fd td (array_ptr_of a).ar_base_size) base j r) (has_base_array_cell_as_struct_field base j' j' r);
+  has_base_array_cell0_intro base j' r j';
   rewrite
-    (has_base_array_cell0 (array_ptr_of a).ar_base j r)
-    (has_base_array_cell1 (array_ptr_of a).ar_base (array_index_as_base_array_index_marker i j) r);
+    (has_base_array_cell0 base j' r)
+    (has_base_array_cell1 #_ #(array_ptr_of a).ar_base_size (array_ptr_of a).ar_base (array_index_as_base_array_index_marker i j') r);
   rewrite
     (has_array_cell0 a i r)
     (has_array_cell a i r)
+
+#pop-options
 
 let ghost_array_cell
   #_ #_ #td #s a i
