@@ -218,11 +218,23 @@ let array_ptr_of (#t: Type) (#td: typedef t) (ar: array_or_null td) : Tot (array
   match ar with
   | (| a, _ |) -> a
 
+let array_len_of (#t: Type) (#td: typedef t) (ar: array_or_null td) : Tot (array_len_t (array_ptr_of ar)) =
+  match ar with
+  | (| _, a |) -> a
+
 let g_array_is_null (#t: Type) (#td: typedef t) (a: array_or_null td) : GTot bool =
   g_array_ptr_is_null (array_ptr_of a)
 
 inline_for_extraction [@@noextract_to "krml"]
 let array (#t: Type) (td: typedef t) : Tot Type0 = (a: array_or_null td { g_array_is_null a == false })
+
+inline_for_extraction [@@noextract_to "krml"]
+let array_ref_of (#t: Type) (#td: typedef t) (ar: array td) : Tot (array_ref td) =
+  array_ptr_of ar
+
+inline_for_extraction [@@noextract_to "krml"]
+let mk_array (#t: Type) (#td: typedef t) (a: array_ref td) (len: array_len_t a) : Tot (array td) =
+  (| a, len |)
 
 let array_length
   (#t: Type)
@@ -980,3 +992,106 @@ val array_fractional_permissions_theorem
     (fun _ -> array_pts_to r (mk_fraction_seq td v1 p1) `star` array_pts_to r (mk_fraction_seq td v2 p2))
     (full_seq td v1 /\ full_seq td v2)
     (fun _ -> v1 == v2 /\ (array_length r > 0 ==> (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm))
+
+let array_blit_post
+  (#t:_) (#td: typedef t) (s0 s1:Ghost.erased (Seq.seq t))
+  (src:array td)
+  (idx_src: SZ.t)
+  (dst:array td)
+  (idx_dst: SZ.t)
+  (len: SZ.t)
+  (s1' : Ghost.erased (Seq.seq t))
+: GTot prop
+=
+  SZ.v idx_src + SZ.v len <= array_length src /\
+  SZ.v idx_dst + SZ.v len <= array_length dst /\
+  array_length src == Seq.length s0 /\
+  array_length dst == Seq.length s1 /\
+  Seq.length s1' == Seq.length s1 /\
+  Seq.slice s1' (SZ.v idx_dst) (SZ.v idx_dst + SZ.v len) `Seq.equal`
+    Seq.slice s0 (SZ.v idx_src) (SZ.v idx_src + SZ.v len) /\
+  Seq.slice s1' 0 (SZ.v idx_dst) `Seq.equal`
+    Seq.slice s1 0 (SZ.v idx_dst) /\
+  Seq.slice s1' (SZ.v idx_dst + SZ.v len) (array_length dst) `Seq.equal`
+    Seq.slice s1 (SZ.v idx_dst + SZ.v len) (array_length dst)
+
+[@@noextract_to "krml"] //primitive
+val array_blit_ptr
+  (#t: Type)
+  (#td: typedef t)
+  (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
+  (#p_src: P.perm)
+  (#v_dst: Ghost.erased (Seq.seq t) { full_seq td v_dst })
+  (src_ptr: array_ref td)
+  (src_len: array_len_t src_ptr)
+  (idx_src: SZ.t)
+  (dst_ptr: array_ref td)
+  (dst_len: array_len_t dst_ptr)
+  (idx_dst: SZ.t)
+  (len: SZ.t)
+: ST (Ghost.erased (Seq.seq t))
+    (array_pts_to (mk_array src_ptr src_len) (mk_fraction_seq td v_src p_src) `star` array_pts_to (mk_array dst_ptr dst_len) v_dst)
+    (fun v_dst' -> array_pts_to (mk_array src_ptr src_len) (mk_fraction_seq td v_src p_src) `star`
+      array_pts_to (mk_array dst_ptr dst_len) v_dst'
+    )
+    (
+        SZ.v idx_src + SZ.v len <= SZ.v src_len /\
+        SZ.v idx_dst + SZ.v len <= SZ.v dst_len
+    )
+    (fun v_dst' -> 
+      array_blit_post v_src v_dst (mk_array src_ptr src_len) idx_src (mk_array dst_ptr dst_len) idx_dst len v_dst'
+    )
+
+inline_for_extraction [@@noextract_to "krml"]
+let array_blit
+  (#t: Type)
+  (#td: typedef t)
+  (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
+  (#p_src: P.perm)
+  (#v_dst: Ghost.erased (Seq.seq t) { full_seq td v_dst })
+  (src: array td)
+  (idx_src: SZ.t)
+  (dst: array td)
+  (idx_dst: SZ.t)
+  (len: SZ.t)
+: ST (Ghost.erased (Seq.seq t))
+    (array_pts_to src (mk_fraction_seq td v_src p_src) `star` array_pts_to dst v_dst)
+    (fun v_dst' -> array_pts_to src (mk_fraction_seq td v_src p_src) `star`
+      array_pts_to dst v_dst'
+    )
+    (
+        SZ.v idx_src + SZ.v len <= array_length src /\
+        SZ.v idx_dst + SZ.v len <= array_length dst
+    )
+    (fun v_dst' ->
+      array_blit_post v_src v_dst src idx_src dst idx_dst len v_dst'
+    )
+= [@@inline_let]
+  let p_src = array_ref_of src in
+  let len_src : array_len_t p_src = array_len_of src in
+  vpattern_rewrite #_ #_ #src (fun src -> array_pts_to src _) (mk_array p_src len_src);
+  [@@inline_let]
+  let p_dst = array_ref_of dst in
+  let len_dst : array_len_t p_dst = array_len_of dst in
+  vpattern_rewrite #_ #_ #dst (fun dst -> array_pts_to dst _) (mk_array p_dst len_dst);
+  let v_dst' = array_blit_ptr p_src len_src idx_src p_dst len_dst idx_dst len in
+  vpattern_rewrite #_ #_ #(mk_array p_src _) (fun src -> array_pts_to src _) src;
+  vpattern_rewrite #_ #_ #(mk_array p_dst _) (fun dst -> array_pts_to dst _) dst;
+  return v_dst'
+
+inline_for_extraction [@@noextract_to "krml"]
+let array_memcpy
+  (#t: Type)
+  (#td: typedef t)
+  (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
+  (#p_src: P.perm)
+  (#v_dst: Ghost.erased (Seq.seq t) { full_seq td v_dst })
+  (src: array td)
+  (dst: array td)
+  (len: SZ.t { SZ.v len == array_length src /\ array_length src == array_length dst })
+: STT unit
+    (array_pts_to src (mk_fraction_seq td v_src p_src) `star` array_pts_to dst v_dst)
+    (fun _ -> array_pts_to src (mk_fraction_seq td v_src p_src) `star` array_pts_to dst v_src)
+= let _ = array_blit src 0sz dst 0sz len in
+  vpattern_rewrite (array_pts_to dst) v_src;
+  return ()

@@ -255,6 +255,23 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
     ->
       EBufSub (translate_expr env a, translate_expr env i)
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [
+      _ (* typedef *);
+      _ (* source value *);
+      _ (* source perm *);
+      _ (* dest value *);
+      e1 (* source ptr *);
+      _ (* source length *);
+      e2 (* source index *);
+      e3 (* dest ptr *);
+      _ (* dest len *);
+      e4 (* dest index *);
+      e5 (* length *)
+    ]) when (
+      string_of_mlpath p = "Steel.ST.C.Types.Array.array_blit_ptr"
+    ) ->
+      EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+
   | _ -> raise NotSupportedByKrmlExtension
 end
 
