@@ -13,7 +13,7 @@
         "@query", "lemma_FStar.ImmutableArray.length_spec"
       ],
       0,
-      "99ceb9e7e026320c0a48bb1f06806969"
+      "f5c0bc5530221d6365295743f222b935"
     ],
     [
       "FStar.ImmutableArray.of_list_precedes",
@@ -22,7 +22,7 @@
       1,
       [ "@query", "lemma_FStar.ImmutableArray.to_list_of_list" ],
       0,
-      "90e59bfe87632897740c995950bb002e"
+      "4a653b043a4f8836705babaa3f4c1e03"
     ],
     [
       "FStar.ImmutableArray.elem_precedes",
@@ -49,7 +49,7 @@
         "typing_FStar.ImmutableArray.to_list"
       ],
       0,
-      "ec4c8edfafd5262efe853e1dfa959bad"
+      "4b67622680e650898d673365d93efb7f"
     ]
   ]
 ]

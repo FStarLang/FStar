@@ -1,5 +1,5 @@
 [
-  "çÕè~.\"\u0005ŒŸ¯C˛{`Äs",
+  "√\u007f+Ä\u001f¥}$›/\u0006ÙXjê´",
   [
     [
       "Bug1866.not_do_much",
@@ -25,6 +25,7 @@
         "disc_equation_FStar.Reflection.Data.Tv_Type",
         "disc_equation_FStar.Reflection.Data.Tv_UInst",
         "disc_equation_FStar.Reflection.Data.Tv_Unknown",
+        "disc_equation_FStar.Reflection.Data.Tv_Unsupp",
         "disc_equation_FStar.Reflection.Data.Tv_Uvar",
         "disc_equation_FStar.Reflection.Data.Tv_Var",
         "fuel_guarded_inversion_FStar.Reflection.Data.term_view",
@@ -32,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d1f314a9ac7cab81c29148d94237c033"
+      "7285667eacbd11721ea3cfe7f44da525"
     ],
     [
       "Bug1866.traverse",
@@ -64,7 +65,7 @@
         "typing_FStar.Reflection.Builtins.lookup_typ"
       ],
       0,
-      "fca17e28064d285d4f984c9520f9b1bb"
+      "666b8193c695bbed66b9085935b953a4"
     ]
   ]
 ]
