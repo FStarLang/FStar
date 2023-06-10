@@ -1173,7 +1173,7 @@ let t_array_split_r
 let array_ref_split
   #_ #td #s al len i
 = let _ = ghost_array_split (| al, len |) i in
-  let ar: (ar: array_ref td { SZ.v i <= SZ.v len /\ Seq.length s == SZ.v len}) = t_array_ref_shift al i in
+  let ar = t_array_ref_shift al i in
   return ar
 
 let hr_gather_by_perm

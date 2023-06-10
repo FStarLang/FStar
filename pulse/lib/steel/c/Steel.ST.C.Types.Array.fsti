@@ -884,6 +884,18 @@ val ghost_array_split
     (SZ.v i <= SZ.v (dsnd a) \/ SZ.v i <= Seq.length s)
     (fun _ -> True)
 
+let array_ref_split_post
+  (#t: Type)
+  (#td: typedef t)
+  (s: Ghost.erased (Seq.seq t))
+  (a: array td)
+  (i: SZ.t)
+  (sl sr: Ghost.erased (Seq.seq t))
+: GTot prop
+= SZ.v i <= array_length a /\ Seq.length s == array_length a /\
+  Ghost.reveal sl == Seq.slice s 0 (SZ.v i) /\
+  Ghost.reveal sr == Seq.slice s (SZ.v i) (Seq.length s)
+
 [@@noextract_to "krml"] // primitive
 val array_ref_split
   (#t: Type)
@@ -891,13 +903,19 @@ val array_ref_split
   (#s: Ghost.erased (Seq.seq t))
   (al: array_ref td)
   (len: array_len_t al)
-  (i: SZ.t)
-: ST (ar: array_ref td { SZ.v i <= SZ.v len /\ Seq.length s == SZ.v len})
-    (array_pts_to (| al, len |) s)
-    (fun _ -> array_pts_to (array_split_l (| al, len |) i) (Seq.slice s 0 (SZ.v i)) `star`
-      array_pts_to (array_split_r (| al, len |) i) (Seq.slice s (SZ.v i) (Seq.length s)))
-    (SZ.v i <= SZ.v len \/ SZ.v i <= Seq.length s)
-    (fun ar -> ar == array_ptr_of (array_split_r (| al, len |) i))
+  (i: SZ.t { SZ.v i <= SZ.v len })
+: ST (array_ref td)
+    (array_pts_to (mk_array al len) s)
+    (fun ar -> exists_ (fun sl -> exists_ (fun sr ->
+      array_pts_to (array_split_l (mk_array al len) i) sl `star`
+      array_pts_to (array_split_r (mk_array al len) i) sr `star`
+      pure (array_ref_split_post s (mk_array al len) i sl sr)
+    )))
+    True
+    (fun ar ->
+      SZ.v i <= SZ.v len /\ SZ.v i <= Seq.length s /\
+      ar == array_ptr_of (array_split_r (mk_array al len) i)
+    )
 
 inline_for_extraction [@@noextract_to "krml"]
 let array_split
@@ -905,19 +923,29 @@ let array_split
   (#td: typedef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
-  (i: SZ.t)
-: ST (a': array td {SZ.v i <= SZ.v (dsnd a) /\ Seq.length s == SZ.v (dsnd a)})
+  (i: SZ.t { SZ.v i <= array_length a })
+: ST (array td)
     (array_pts_to a s)
-    (fun a' -> array_pts_to (array_split_l a i) (Seq.slice s 0 (SZ.v i)) `star`
-      array_pts_to a' (Seq.slice s (SZ.v i) (Seq.length s)))
-    (SZ.v i <= SZ.v (dsnd a) \/ SZ.v i <= Seq.length s)
-    (fun a' -> a' == array_split_r a i)
+    (fun a' -> exists_ (fun sl -> exists_ (fun sr ->
+      array_pts_to (array_split_l a i) sl `star`
+      array_pts_to a' sr `star`
+      pure (array_ref_split_post s a i sl sr)
+    )))
+    True
+    (fun a' ->
+      SZ.v i <= array_length a /\ SZ.v i <= Seq.length s /\
+      a' == array_split_r a i
+    )
 = let (| al, len |) = a in
   rewrite (array_pts_to _ _) (array_pts_to _ s);
   let ar = array_ref_split al len i in
-  let a' = (| ar, Ghost.hide (len `SZ.sub` i) |) in
-  rewrite (array_pts_to (array_split_l _ _) _) (array_pts_to (array_split_l a _) _);
-  rewrite (array_pts_to (array_split_r _ _) _) (array_pts_to a' _);
+  let _ = elim_exists () in
+  let _ = elim_exists () in
+  elim_pure _;
+  [@@inline_let]
+  let a' = mk_array ar (Ghost.hide (len `SZ.sub` i)) in
+  vpattern_rewrite #_ #_ #(array_split_l _ _) (fun a -> array_pts_to a _) (array_split_l a i);
+  vpattern_rewrite #_ #_ #(array_split_r _ _) (fun a -> array_pts_to a _) a';
   return a'
 
 val array_join
