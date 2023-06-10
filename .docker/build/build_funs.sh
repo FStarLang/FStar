@@ -41,7 +41,7 @@ function fetch_karamel() {
 
     # Install the Karamel dependencies
     pushd $KRML_HOME
-    .docker/build/install-other-deps.sh
+    OPAMYES=true .docker/build/install-other-deps.sh
     popd
 }
 
