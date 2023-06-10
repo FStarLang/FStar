@@ -1021,6 +1021,14 @@ val array_fractional_permissions_theorem
     (full_seq td v1 /\ full_seq td v2)
     (fun _ -> v1 == v2 /\ (array_length r > 0 ==> (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm))
 
+let fractionable_seq_seq_of_base_array
+  (#t: Type0) (tn: Type0) (td: typedef t) (#n: array_size_t)
+  (b: base_array_t t tn n)
+: Lemma
+  (ensures (fractionable_seq td (seq_of_base_array b) <==> fractionable (base_array0 tn td n) b))
+  [SMTPat (fractionable_seq td (seq_of_base_array b))]
+= assert (forall (i: base_array_index_t n) . base_array_index b i == Seq.index (seq_of_base_array b) (SZ.v i))
+
 let array_blit_post
   (#t:_) (#td: typedef t) (s0 s1:Ghost.erased (Seq.seq t))
   (src:array td)
