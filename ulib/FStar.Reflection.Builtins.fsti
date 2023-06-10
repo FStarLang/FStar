@@ -18,6 +18,7 @@ module FStar.Reflection.Builtins
 open FStar.Order
 open FStar.Reflection.Types
 open FStar.Reflection.Data
+open FStar.VConfig
 
 (*** Views ***)
 
