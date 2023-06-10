@@ -45,7 +45,7 @@ function fetch_karamel() {
     popd
 }
 
-function make_karamel() {
+function make_karamel_pre() {
     # Default build target is minimal, unless specified otherwise
     local localTarget
     if [[ $1 == "" ]]; then
@@ -56,6 +56,9 @@ function make_karamel() {
 
     make -C karamel -j $threads $localTarget ||
         (cd karamel && git clean -fdx && make -j $threads $localTarget)
+}
+
+function make_karamel_post() {
     OTHERFLAGS='--admit_smt_queries true' make -C karamel/krmllib -j $threads
     export PATH="$(pwd)/karamel:$PATH"
 }
@@ -75,9 +78,10 @@ function fstar_default_build () {
         export OTHERFLAGS="--record_hints $OTHERFLAGS"
     fi
 
-    # Start fetching while we build F*
+    # Start fetching and building karamel while we build F*
     if [[ -z "$CI_NO_KARAMEL" ]] ; then
         fetch_karamel
+        make_karamel_pre
     fi &
 
     # Build F*, along with fstarlib
@@ -95,13 +99,15 @@ function fstar_default_build () {
 
     wait # for fetches above
 
-    # Build karamel if enabled
+    # Build the rest of karamel if enabled (i.e. verify krmllib)
     if [[ -z "$CI_NO_KARAMEL" ]] ; then
         # The commands above were executed in sub-shells and their EXPORTs are not
         # propagated to the current shell. Re-do.
         export_home KRML "$(pwd)/karamel"
-        make_karamel
+        make_karamel_post
     fi
+    # NOTE: We cannot run this in parallel with F* regressions as some
+    # examples depend on having krmllib checked.
 
     # Once F* is built, run its main regression suite.
     $gnutime make -j $threads -k ci-$localTarget && echo true >$status_file
