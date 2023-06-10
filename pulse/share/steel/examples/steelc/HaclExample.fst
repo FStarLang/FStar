@@ -64,9 +64,11 @@ let do_something_with_limbs
     (fun v' -> array_pts_to a v')
     (requires
       array_length a == 5 /\
+      fractionable_seq (scalar U64.t) v /\
       full_seq (scalar U64.t) v
     )
     (ensures (fun v' ->
+      fractionable_seq (scalar U64.t) v' /\
       full_seq (scalar U64.t) v'
     ))
 = let p = array_cell a 2sz in
@@ -80,19 +82,28 @@ let do_something_with_precomp
   (a: array (scalar U64.t))
 : ST (ptr (scalar U64.t))
     (array_pts_to a v)
-    (fun _ -> exists_ (fun (v': Seq.seq (scalar_t U64.t)) ->
+    (fun _ -> exists_ (fun (v': Ghost.erased (Seq.seq (scalar_t U64.t))) ->
       array_pts_to a v' `star`
-      pure (full_seq (scalar U64.t) v')
+      pure (full_seq (scalar U64.t) v' /\ fractionable_seq (scalar U64.t) v')
     ))
     (requires
       array_length a == 20 /\
+      fractionable_seq (scalar U64.t) v /\
       full_seq (scalar U64.t) v
     )
     (ensures fun _ -> True)
-= let p = array_cell a 19sz in
+= 
+  let ar = array_split a 10sz in
+  let _ = gen_elim () in
+  let vr = vpattern (array_pts_to ar) in
+  vpattern_rewrite (array_pts_to ar) (Ghost.hide (mk_fraction_seq (scalar U64.t) (Ghost.reveal vr) full_perm));
+  array_memcpy ar (array_split_l a 10sz) 10sz;
+  let _ = array_join a _ ar 10sz in
+  let p = array_cell a 19sz in
   write p 0uL;
   unarray_cell _ _ _;
   drop (has_array_cell _ _ _);
+  let _ = vpattern_replace (array_pts_to a) in
   noop ();
   return (null _)
 
@@ -125,8 +136,9 @@ let test
 : ST (Ghost.erased (typeof comp))
     (p `pts_to` v)
     (fun v' -> p `pts_to` v')
-    (full comp v)
-    (fun v' -> full comp v')
+    (full comp v /\ fractionable comp v)
+    (fun v' -> full comp v' /\
+      fractionable comp v')
 = let q = p `struct_field` "limbs" in
   let a = array_of_base q in
   let r = p `struct_field` "precomp" in
@@ -141,6 +153,7 @@ let test
   let _ = unstruct_field p "limbs" q in
   drop (has_struct_field p "limbs" q);
   drop (has_struct_field p "precomp" r);
+  noop ();
   return _
 
 #pop-options

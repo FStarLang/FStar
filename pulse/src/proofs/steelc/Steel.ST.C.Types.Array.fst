@@ -1173,7 +1173,7 @@ let t_array_split_r
 let array_ref_split
   #_ #td #s al len i
 = let _ = ghost_array_split (| al, len |) i in
-  let ar: (ar: array_ref td { SZ.v i <= SZ.v len /\ Seq.length s == SZ.v len}) = t_array_ref_shift al i in
+  let ar = t_array_ref_shift al i in
   return ar
 
 let hr_gather_by_perm
@@ -1367,3 +1367,130 @@ let array_fractional_permissions_theorem
   HR.share _;
   array_pts_to_intro r (mk_fraction_seq td v1 p1) _ _ ();
   array_pts_to_intro r (mk_fraction_seq td v2 p2) _ _ ()
+
+let array_update_at_post
+  (#t: Type)
+  (v_src: Ghost.erased (Seq.seq t))
+  (v_dst: Ghost.erased (Seq.seq t))
+  (idx_src: SZ.t)
+  (idx_dst: SZ.t)
+  (v_dst': Ghost.erased (Seq.seq t))
+: GTot prop
+= SZ.v idx_src < Seq.length v_src /\
+  SZ.v idx_dst < Seq.length v_dst /\
+  Seq.length v_dst' == Seq.length v_dst /\
+  (forall (i: nat { i < Seq.length v_dst' }) .
+    Seq.index v_dst' i == (
+      if i = SZ.v idx_dst
+      then Seq.index v_src (SZ.v idx_src)
+      else Seq.index v_dst i
+  ))
+
+[@@noextract_to "krml"]
+let array_update_at
+  (#t: Type)
+  (#td: typedef t)
+  (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
+  (#p_src: P.perm)
+  (#v_dst: Ghost.erased (Seq.seq t) { full_seq td v_dst })
+  (src: array td)
+  (idx_src: SZ.t)
+  (dst: array td)
+  (idx_dst: SZ.t)
+: ST (Ghost.erased (Seq.seq t))
+    (array_pts_to src (mk_fraction_seq td v_src p_src) `star` array_pts_to dst v_dst)
+    (fun v_dst' -> array_pts_to src (mk_fraction_seq td v_src p_src) `star` array_pts_to dst v_dst')
+    (
+      SZ.v idx_src < array_length src /\
+      SZ.v idx_dst < array_length dst
+    )
+    (fun v_dst' -> array_update_at_post v_src v_dst idx_src idx_dst v_dst')
+= let c_src = array_cell src idx_src in
+  let c_dst = array_cell dst idx_dst in
+  rewrite (pts_to c_src _) (pts_to c_src _);
+  copy #t #td #(Seq.index v_src (SZ.v idx_src)) #p_src c_src c_dst;
+  let _ = unarray_cell src idx_src c_src in
+  let _ = unarray_cell dst idx_dst c_dst in
+  drop (has_array_cell src idx_src c_src);
+  drop (has_array_cell dst idx_dst c_dst);
+  let v_src2 = vpattern (array_pts_to src) in
+  assert (Ghost.reveal v_src2 `Seq.equal` mk_fraction_seq td v_src p_src);
+  noop ();
+  vpattern_rewrite (array_pts_to src) _;
+  return _
+
+let array_blit1_post
+  (#t:_) (#td: typedef t) (s0 s1:Ghost.erased (Seq.seq t))
+  (src:array td)
+  (idx_src: SZ.t)
+  (dst:array td)
+  (idx_dst: SZ.t)
+  (len: SZ.t)
+  (s1' : Ghost.erased (Seq.seq t))
+: GTot prop
+=
+  SZ.v idx_src + SZ.v len <= array_length src /\
+  SZ.v idx_dst + SZ.v len <= array_length dst /\
+  array_length src == Seq.length s0 /\
+  array_length dst == Seq.length s1 /\
+  Seq.length s1' == Seq.length s1 /\
+  (forall (i: nat { i < array_length dst }) .
+    Seq.index s1' i == (
+      if i < SZ.v idx_dst || i >= SZ.v idx_dst + SZ.v len
+      then Seq.index s1 i
+      else Seq.index s0 (SZ.v idx_src + (i - SZ.v idx_dst))
+  ))
+
+let array_blit1_post_correct
+  (#t:_) (#td: typedef t) (s0 s1:Ghost.erased (Seq.seq t))
+  (src:array td)
+  (idx_src: SZ.t)
+  (dst:array td)
+  (idx_dst: SZ.t)
+  (len: SZ.t)
+  (s1' : Ghost.erased (Seq.seq t))
+: Lemma
+  (requires (array_blit1_post s0 s1 src idx_src dst idx_dst len s1'))
+  (ensures (array_blit_post s0 s1 src idx_src dst idx_dst len s1'))
+= ()
+
+#restart-solver
+[@@noextract_to "krml"]
+let rec array_blit1
+  (#t: Type)
+  (#td: typedef t)
+  (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
+  (#p_src: P.perm)
+  (#v_dst: Ghost.erased (Seq.seq t) { full_seq td v_dst })
+  (src: array td)
+  (idx_src: SZ.t)
+  (dst: array td)
+  (idx_dst: SZ.t)
+  (len: SZ.t)
+: ST (Ghost.erased (Seq.seq t))
+    (array_pts_to src (mk_fraction_seq td v_src p_src) `star` array_pts_to dst v_dst)
+    (fun v_dst' -> array_pts_to src (mk_fraction_seq td v_src p_src) `star`
+      array_pts_to dst v_dst'
+    )
+    (
+        SZ.v idx_src + SZ.v len <= array_length src /\
+        SZ.v idx_dst + SZ.v len <= array_length dst
+    )
+    (fun v_dst' ->
+      array_blit1_post v_src v_dst src idx_src dst idx_dst len v_dst'
+    )
+= array_pts_to_length src _;
+  array_pts_to_length dst _;
+  if len = 0sz
+  then begin
+    noop ();
+    return v_dst
+  end else begin
+    let len' = len `SZ.sub` 1sz in
+    let _ = array_blit1 src idx_src dst idx_dst len' in
+    array_update_at src (idx_src `SZ.add` len') dst (idx_dst `SZ.add` len')
+  end
+
+let array_blit_ptr
+  src_ptr src_len idx_src dst_ptr dst_len idx_dst len
+= array_blit1 (mk_array src_ptr src_len) idx_src (mk_array dst_ptr dst_len) idx_dst len

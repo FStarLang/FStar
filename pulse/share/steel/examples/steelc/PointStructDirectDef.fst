@@ -53,3 +53,17 @@ let swap_struct (p: ref point) (v: Ghost.erased (typeof point))
   return _
 
 #pop-options
+
+let copy_struct (p: ref point) (v: Ghost.erased (typeof point))
+  (q: ref point) (w: Ghost.erased (typeof point))
+: ST unit
+    ((p `pts_to` v) `star` (q `pts_to` w))
+    (fun v' -> (p `pts_to` w) `star` (q `pts_to` w))
+    (requires
+      (exists (vx vy: U32.t) . struct_get_field v "x" == mk_scalar vx /\ struct_get_field v "y" == mk_scalar vy) /\
+      (exists (vx vy: U32.t) . struct_get_field w "x" == mk_scalar vx /\ struct_get_field w "y" == mk_scalar vy)
+    )
+    (ensures fun _ -> True)
+= vpattern_rewrite (pts_to q) (Ghost.hide (mk_fraction point w full_perm));
+  copy q p;
+  vpattern_rewrite (pts_to q) w

@@ -151,6 +151,101 @@ let union_uninitialized
 #push-options "--z3rlimit 16"
 
 #restart-solver
+let union_compatible_same_field
+  (#tn: Type0) (#tf: Type0) (#n: string) (#fields: field_description_t tf)
+  (x x1: union_t0 tn n fields) (p: P.perm)
+: Lemma
+  (requires (
+    p_refine (union_pcm tn n fields) x1 /\
+    exclusive (union_pcm tn n fields) x1 /\
+    union_fractionable x1 /\
+    compatible (union_pcm tn n fields) (union_mk_fraction x1 p) x
+  ))
+  (ensures (
+    union_fractionable x1 /\
+    union_get_case x == union_get_case (union_mk_fraction x1 p) /\
+    union_get_case x == union_get_case x1
+  ))
+= let Some f = U.case_of_union (union_field_pcm fields) x1 in
+  Classical.move_requires ((union_field_typedef fields f).mk_fraction_eq_one (x1 f)) p;
+  assert (U.case_of_union (union_field_pcm fields) (union_mk_fraction x1 p) == Some f)
+
+[@@noextract_to "krml"] // proof-only
+let extract_full_squash
+  (#t: Type)
+  (td: typedef t)
+  (x: t)
+  (x0: Ghost.erased (option (t & P.perm)))
+  (sq: squash (
+    match Ghost.reveal x0 with
+    | None -> x == one td.pcm
+    | Some (x1, p) -> exclusive td.pcm x1 /\ p_refine td.pcm x1 /\ fractionable td x1 /\ compatible td.pcm (mk_fraction td x1 p) x
+  ))
+: Pure t
+    (requires True)
+    (ensures (fun x' ->
+        match Ghost.reveal x0 with
+        | None -> x' == one td.pcm
+        | Some (x1, _) -> x' == x1
+    ))
+= td.extract_full x x0
+
+#restart-solver
+[@@noextract_to "krml"] // proof-only
+let union_extract_full
+  (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf)
+  (x: union_t0 tn n fields)
+  (x0: Ghost.erased (option (union_t0 tn n fields & P.perm)))
+: Pure (union_t0 tn n fields)
+    (requires (
+      match Ghost.reveal x0 with
+      | None -> x == one (union_pcm tn n fields)
+      | Some (x1, p) -> exclusive (union_pcm tn n fields) x1 /\ p_refine (union_pcm tn n fields) x1 /\ union_fractionable x1 /\ compatible (union_pcm tn n fields) (union_mk_fraction x1 p) x
+    ))
+    (ensures (fun x' -> 
+      match Ghost.reveal x0 with
+      | None -> x' == one (union_pcm tn n fields)
+      | Some (x1, _) -> x' == x1
+    ))
+=
+  let prf1 () : Lemma
+    (match Ghost.reveal x0 with
+    | None -> True
+    | Some (x1, p) ->
+      union_get_case x == union_get_case x1 /\
+      union_get_case x == union_get_case (union_mk_fraction x1 p)
+    )
+  = match Ghost.reveal x0 with
+    | None -> ()
+    | Some (x1, p) -> union_compatible_same_field x x1 p
+  in
+  prf1 ();
+  let x' : FX.restricted_t (union_field_t fields) (union_field_type fields) = FX.on_dom (union_field_t fields) (fun f ->
+    extract_full_squash (union_field_typedef fields f)
+      (x f)
+      (match Ghost.reveal x0 with
+      | None -> None
+      | Some (x1, p) -> if FStar.StrongExcludedMiddle.strong_excluded_middle (f == union_get_case x1) then Some (x1 f, p) else None
+      )
+      (match Ghost.reveal x0 with
+      | None -> ()
+      | Some (x1, p) ->
+        if FStar.StrongExcludedMiddle.strong_excluded_middle (f == union_get_case x1)
+        then ()
+        else ((union_field_typedef fields f).mk_fraction_eq_one (x1 f)) p
+      )
+      <: union_field_type fields f
+  )
+  in
+  assert (
+    match Ghost.reveal x0 with
+    | None -> x' `FX.feq` one (union_pcm tn n fields)
+    | Some (x1, p) -> x' `FX.feq` x1
+  );
+  assert (U.is_union (union_field_pcm fields) x');
+  x'
+
+#restart-solver
 let union0
   tn n fields
 = {
@@ -209,6 +304,7 @@ let union0
     (union_field_typedef fields c1).mk_fraction_full_composable (v1 c1) p1 (v2 c1) p2;
     assert (v1 `FX.feq` v2)
   );
+  extract_full = union_extract_full tn n fields;
 }
 
 #pop-options
