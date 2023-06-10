@@ -7,6 +7,7 @@ include Makefile.include
 
 # Scheduling these first as some files take very long.
 ALL_EXAMPLE_DIRS += layeredeffects
+ALL_EXAMPLE_DIRS += dsls
 ALL_EXAMPLE_DIRS += data_structures
 
 ALL_EXAMPLE_DIRS += algorithms
@@ -33,10 +34,6 @@ ALL_EXAMPLE_DIRS += tactics
 ALL_EXAMPLE_DIRS += termination
 ALL_EXAMPLE_DIRS += typeclasses
 ALL_EXAMPLE_DIRS += verifythis
-
-# FIXME: this seems to fail on CI if placed just after layered effects,
-# but spinning up the container and retrying works. Race?
-ALL_EXAMPLE_DIRS += dsls
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
