@@ -30,7 +30,7 @@ function fetch_karamel() {
     git fetch origin
     local ref=$(jq -c -r '.RepoVersions["karamel_version"]' "$rootPath/.docker/build/config.json" )
     if [[ $ref == "null" ]]; then
-        echo "Unale to find RepoVersions.karamel_version on $rootPath/.docker/build/config.json"
+        echo "Unable to find RepoVersions.karamel_version on $rootPath/.docker/build/config.json"
         return -1
     fi
 
