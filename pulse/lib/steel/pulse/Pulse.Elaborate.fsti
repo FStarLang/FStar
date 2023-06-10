@@ -14,13 +14,13 @@ val elab_open_commute' (e:term)
                        (v:term)
                        (n:index)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_term e) (RT.OpenWith (elab_term v)) n ==
+              RT.subst_term (elab_term e) [ RT.DT n (elab_term v) ] ==
               elab_term (open_term' e v n))
 
 val elab_close_commute' (e:term)
                         (v:var)
                         (n:index)
-  : Lemma (RT.open_or_close_term' (elab_term e) (RT.CloseVar v) n ==
+  : Lemma (RT.subst_term (elab_term e) [ RT.ND v n ] ==
            elab_term (close_term' e v n))
 
 val elab_open_commute (t:term) (x:var)

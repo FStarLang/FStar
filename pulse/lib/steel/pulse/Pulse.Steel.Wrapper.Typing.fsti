@@ -10,7 +10,7 @@ let return_post_with_eq (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
   let eq2_tm = mk_eq2 u a x_tm e in
   let p_app_x = pack_ln (Tv_App p (x_tm, Q_Explicit)) in  
   let star_tm = mk_star p_app_x (mk_pure eq2_tm) in
-  mk_abs a Q_Explicit (RT.open_or_close_term' star_tm (RT.CloseVar x) 0)
+  mk_abs a Q_Explicit (RT.subst_term star_tm [ RT.ND x 0 ])
 
 let return_stt_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
   mk_stt_comp u a
@@ -160,7 +160,7 @@ let par_post (u:universe) (aL aR:term) (postL postR:term) (x:var) : term =
   let postL = pack_ln (Tv_App postL (mk_fst u u aL aR x_tm, Q_Explicit)) in
   let postR = pack_ln (Tv_App postR (mk_snd u u aL aR x_tm, Q_Explicit)) in
   let post = mk_star postL postR in
-  RT.open_or_close_term' post (RT.CloseVar x) 0
+  RT.subst_term post [ RT.ND x 0 ]
 
 val par_typing
   (#g:env)
@@ -210,7 +210,7 @@ let elim_exists_post_body (u:universe) (a:term) (p:term) (x:var) =
   let x_tm = RT.var_as_term x in
   let reveal_x = mk_reveal u a x_tm in
   let post = pack_ln (Tv_App p (reveal_x, Q_Explicit)) in
-  RT.open_or_close_term' post (RT.CloseVar x) 0
+  RT.subst_term post [ RT.ND x 0 ]
 
 let elim_exists_post (u:universe) (a:term) (p:term) (x:var) =
   let erased_a = mk_erased u a in
@@ -360,7 +360,7 @@ let with_local_bodypost_body (post:term) (a:term) (x:var) : term =
       (mk_abs a Q_Explicit
          (mk_pts_to a (RT.bound_var 2) full_perm_tm (RT.bound_var 0))) in
   let star_tm = mk_star post_app exists_tm in
-  RT.open_or_close_term' star_tm (RT.CloseVar x) 0
+  RT.subst_term star_tm [ RT.ND x 0 ]
 
 let with_local_bodypost (post:term) (a:term) (ret_t:term) (x:var) : term =
   mk_abs ret_t Q_Explicit (with_local_bodypost_body post a x)

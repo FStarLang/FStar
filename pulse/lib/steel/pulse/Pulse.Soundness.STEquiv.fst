@@ -92,7 +92,7 @@ let st_equiv_soundness (g:stt_env)
       assume (~(x `Set.mem` RT.freevars (elab_term (comp_post c1))));      
       let open_term_spec (e:R.term) (x:var)
           : Lemma 
-            (RT.open_term e x == RT.open_or_close_term' e (RT.open_with_var x) 0)
+            (RT.open_term e x == RT.subst_term e (RT.open_with_var x 0))
             [SMTPat (RT.open_term e x)]
           = RT.open_term_spec e x
       in
@@ -119,11 +119,11 @@ let st_equiv_soundness (g:stt_env)
                                               (elab_term (comp_post c1))))
           = assume (stt_vprop_equiv (elab_term (comp_post c0))
                                     (elab_term (comp_post c1)) ==
-                    RT.open_or_close_term'
+                    RT.subst_term
                       (stt_vprop_equiv
                         (RT.open_term (elab_term (comp_post c0)) x)
                         (RT.open_term (elab_term (comp_post c1)) x))
-                      (RT.CloseVar x) 0);
+                      [ RT.ND x 0 ]);
             RT.T_Abs _ _ _ (`()) _ _ _ R.Q_Explicit _ r_res_typing post_equiv
       in
       let d = stt_vprop_equiv_abstract d in

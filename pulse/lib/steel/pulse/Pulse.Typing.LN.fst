@@ -27,7 +27,7 @@ val elab_ln_inverse (e:term)
 assume
 val open_term_ln_host' (t:host_term) (x:R.term) (i:index)
   : Lemma 
-    (requires RT.ln' (RT.open_or_close_term' t (RT.OpenWith x) i) (i - 1))
+    (requires RT.ln' (RT.subst_term t [ RT.DT i x ]) (i - 1))
     (ensures RT.ln' t i)
 
 let rec open_term_ln' (e:term)
@@ -340,7 +340,7 @@ assume
 val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
   : Lemma 
     (requires RT.ln' e i)
-    (ensures RT.ln' (RT.open_or_close_term' e (RT.OpenWith x) i) (i - 1))
+    (ensures RT.ln' (RT.subst_term e [ RT.DT i x ]) (i - 1))
 
 let rec open_term_ln_inv' (e:term)
                           (x:term { ln x })
@@ -500,7 +500,7 @@ assume
 val r_close_term_ln' (e:R.term) (x:var) (i:index)
   : Lemma 
     (requires RT.ln' e (i - 1))
-    (ensures RT.ln' (RT.open_or_close_term' e (RT.CloseVar x) i) i)
+    (ensures RT.ln' (RT.subst_term e [ RT.ND x i ]) i)
 
 let rec close_term_ln' (e:term)
                        (x:var)

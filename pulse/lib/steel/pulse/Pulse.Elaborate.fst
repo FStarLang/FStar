@@ -26,7 +26,7 @@ let rec elab_open_commute' (e:term)
                            (v:term)
                            (n:index)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_term e) (RT.OpenWith (elab_term v)) n ==
+              RT.subst_term (elab_term e) [ RT.DT n (elab_term v) ] ==
               elab_term (open_term' e v n))
           (decreases e)
   = match e with
@@ -51,7 +51,7 @@ let rec elab_open_commute' (e:term)
 
 let elab_comp_open_commute' (c:comp) (v:term) (n:index)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_comp c) (RT.OpenWith (elab_term v)) n ==
+              RT.subst_term (elab_comp c) [ RT.DT n (elab_term v) ] ==
               elab_comp (open_comp' c v n))
   = match c with
     | C_Tot t -> elab_open_commute' t v n
@@ -70,7 +70,7 @@ let rec elab_close_commute' (e:term)
                             (v:var)
                             (n:index)
   : Lemma (ensures (
-              RT.open_or_close_term' (elab_term e) (RT.CloseVar v) n ==
+              RT.subst_term (elab_term e) [ RT.ND v n ] ==
               elab_term (close_term' e v n)))
           (decreases e)
   = match e with
@@ -92,7 +92,7 @@ let rec elab_close_commute' (e:term)
     
 let elab_comp_close_commute' (c:comp) (v:var) (n:index)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_comp c) (RT.CloseVar v) n ==
+              RT.subst_term (elab_comp c) [ RT.ND v n ] ==
               elab_comp (close_comp' c v n))
           (decreases c)
   = match c with

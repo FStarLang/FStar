@@ -53,7 +53,7 @@ let while_soundness
     let d = soundness g body (comp_while_body ppname_default inv) body_typing in
     let pre_eq : RT.equiv (elab_env g)
                           (R.pack_ln (R.Tv_App rinv (true_tm, R.Q_Explicit)))
-                          (RT.open_or_close_term' (elab_term inv) (RT.OpenWith true_tm) 0)
+                          (RT.subst_term (elab_term inv) [ RT.DT 0 true_tm ])
       = assume (RT.ln' (elab_term inv) 0);
         assume (RT.ln true_tm);
         RT.EQ_Beta _ bool_tm R.Q_Explicit (elab_term inv) true_tm  in
@@ -69,7 +69,7 @@ let while_soundness
     (RT.mk_abs unit_tm R.Q_Explicit
        (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_term inv)) (false_tm, R.Q_Explicit))))
     (RT.mk_abs unit_tm R.Q_Explicit
-       (RT.open_or_close_term' (elab_term inv) (RT.OpenWith false_tm) 0))
+       (RT.subst_term (elab_term inv) [ RT.DT 0 false_tm ]))
     = magic () in
 
   let d = WT.while_typing rinv_typing rcond_typing rbody_typing in

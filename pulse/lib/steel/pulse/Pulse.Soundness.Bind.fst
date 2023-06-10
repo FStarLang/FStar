@@ -29,18 +29,18 @@ let inst_bind_t1 #u1 #u2 #g #head
                    (t1_typing: RT.tot_typing g t1 (RT.tm_type u1))
   : GTot (RT.tot_typing g (R.mk_app head [(t1, R.Q_Implicit)]) (bind_type_t1 u1 u2 t1))
   = let open_with_spec (t v:R.term)
-      : Lemma (RT.open_with t v == RT.open_or_close_term' t (RT.OpenWith v) 0)
+      : Lemma (RT.open_with t v == RT.subst_term t [ RT.DT 0 v ])
               [SMTPat (RT.open_with t v)]
       = RT.open_with_spec t v
     in
     let d : RT.tot_typing g (R.mk_app head [(t1, R.Q_Implicit)]) _ =
       RT.T_App _ _ _ _
-        (RT.open_or_close_term' (bind_type_t1 u1 u2 (mk_name 4)) (RT.CloseVar 4) 0)
+        (RT.subst_term (bind_type_t1 u1 u2 (mk_name 4)) [ RT.ND 4 0 ])
         _ head_typing t1_typing
     in
     assume (bind_type_t1 u1 u2 t1 ==
-            RT.open_with (RT.open_or_close_term' (bind_type_t1 u1 u2 (mk_name 4))
-                                                 (RT.CloseVar 4) 0)
+            RT.open_with (RT.subst_term (bind_type_t1 u1 u2 (mk_name 4))
+                                        [ RT.ND 4 0 ])
                          t1);
 
     d
@@ -88,7 +88,7 @@ let inst_bind_g #u1 #u2 #g #head #t1 #t2 #pre #post1 #post2
                   (g_typing: RT.tot_typing g gg (g_type_bind u2 t1 t2 post1 post2))
   : RT.tot_typing g (R.mk_app head [(gg, R.Q_Explicit)]) (bind_res u2 t2 pre post2)
   = let open_with_spec (t v:R.term)
-      : Lemma (RT.open_with t v == RT.open_or_close_term' t (RT.OpenWith v) 0)
+      : Lemma (RT.open_with t v == RT.subst_term t [ RT.DT 0 v ])
               [SMTPat (RT.open_with t v)]
       = RT.open_with_spec t v
     in
@@ -199,9 +199,9 @@ let tot_bind_typing #g #t #c d soundness =
   calc (==) {
     RT.open_term (RT.close_term re2 x) x;
        (==) { RT.open_term_spec (RT.close_term re2 x) x }
-    RT.open_or_close_term' (RT.close_term re2 x) (RT.open_with_var x) 0;
+    RT.subst_term (RT.close_term re2 x) (RT.open_with_var x 0);
        (==) { RT.close_term_spec re2 x }
-    RT.open_or_close_term' (RT.open_or_close_term' re2 (RT.CloseVar x) 0) (RT.open_with_var x) 0;
+    RT.subst_term (RT.subst_term re2 [ RT.ND x 0 ]) (RT.open_with_var x 0);
        (==) { RT.open_close_inverse' 0 re2 x }
     re2;
   };

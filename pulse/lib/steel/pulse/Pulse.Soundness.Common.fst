@@ -171,35 +171,40 @@ let bind_type_t1_t2_pre_post1 (u1 u2:R.universe) (t1 t2 pre post1:R.term) =
   let var = 0 in
   let post2 = mk_name var in
   mk_arrow (post2_type_bind t2, R.Q_Implicit)
-           (RT.open_or_close_term' (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1 post2) (RT.CloseVar var) 0)
+           (RT.subst_term (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1 post2)
+                          [ RT.ND var 0 ])
 
 let post1_type_bind t1 = mk_arrow (t1, R.Q_Explicit) vprop_tm
 let bind_type_t1_t2_pre (u1 u2:R.universe) (t1 t2 pre:R.term) =
   let var = 1 in
   let post1 = mk_name var in
   mk_arrow (post1_type_bind t1, R.Q_Implicit)
-           (RT.open_or_close_term' (bind_type_t1_t2_pre_post1 u1 u2 t1 t2 pre post1) (RT.CloseVar var) 0)
+           (RT.subst_term (bind_type_t1_t2_pre_post1 u1 u2 t1 t2 pre post1)
+                          [ RT.ND var 0 ])
 
 let bind_type_t1_t2 (u1 u2:R.universe) (t1 t2:R.term) =
   let var = 2 in
   let pre = mk_name var in
   let pre_type = vprop_tm in
   mk_arrow (pre_type, R.Q_Implicit)
-           (RT.open_or_close_term' (bind_type_t1_t2_pre u1 u2 t1 t2 pre) (RT.CloseVar var) 0)
+           (RT.subst_term (bind_type_t1_t2_pre u1 u2 t1 t2 pre)
+                          [ RT.ND var 0 ])
 
 let bind_type_t1 (u1 u2:R.universe) (t1:R.term) =
   let var = 3 in
   let t2 = mk_name var in
   let t2_type = RT.tm_type u2 in
   mk_arrow (t2_type, R.Q_Implicit)
-           (RT.open_or_close_term' (bind_type_t1_t2 u1 u2 t1 t2) (RT.CloseVar var) 0)
+           (RT.subst_term (bind_type_t1_t2 u1 u2 t1 t2)
+                          [ RT.ND var 0 ])
 
 let bind_type (u1 u2:R.universe) =
   let var = 4 in
   let t1 = mk_name var in
   let t1_type = RT.tm_type u1 in
   mk_arrow (t1_type, R.Q_Implicit)
-           (RT.open_or_close_term' (bind_type_t1 u1 u2 t1) (RT.CloseVar var) 0)
+           (RT.subst_term (bind_type_t1 u1 u2 t1)
+                          [ RT.ND var 0 ])
 
 (** Type of frame **)
 
@@ -353,14 +358,15 @@ let soundness_t (d:'a) =
 
 let elab_open_commute' (e:term) (v:term) (n:index)
   : Lemma (ensures
-             RT.open_or_close_term' (elab_term e) (RT.OpenWith (elab_term v)) n ==
+             RT.subst_term (elab_term e)
+                           [ RT.DT n (elab_term v)] ==
              elab_term (open_term' e v n))
           [SMTPat (elab_term (open_term' e v n))] =
 
   elab_open_commute' e v n
 
 let elab_close_commute' (e:term) (v:var) (n:index)
-  : Lemma (RT.open_or_close_term' (elab_term e) (RT.CloseVar v) n ==
+  : Lemma (RT.subst_term (elab_term e) [ RT.ND v n ] ==
            elab_term (close_term' e v n))
           [SMTPat (elab_term (close_term' e v n))] =
 

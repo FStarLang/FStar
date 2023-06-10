@@ -39,7 +39,7 @@ let return_soundess
     mk_t_abs_tot g ppname_default t_typing post_typing in
   
   let rx_tm = RT.var_as_term x in
-  let elab_c_pre = RT.open_or_close_term' rpost (RT.OpenWith re) 0 in
+  let elab_c_pre = RT.subst_term rpost [ RT.DT 0 re ] in
   let pre_eq
     : RT.equiv (elab_env g)
                (R.pack_ln (R.Tv_App rpost_abs (re, R.Q_Explicit)))
@@ -85,15 +85,16 @@ let return_soundess
     
     assert (elab_term (close_term' (Tm_Star (open_term' post (null_var x) 0)
                                             (Tm_Pure (mk_eq2_prop u t (null_var x) e))) x 0) ==
-            RT.open_or_close_term' (elab_term (Tm_Star (open_term' post (null_var x) 0)
-                                                       (Tm_Pure (mk_eq2_prop u t (null_var x) e))))
-                                   (RT.CloseVar x) 0);
+            RT.subst_term (elab_term (Tm_Star (open_term' post (null_var x) 0)
+                                              (Tm_Pure (mk_eq2_prop u t (null_var x) e))))
+                          [ RT. ND x 0 ]);
     let elab_c_post =
       mk_abs rt R.Q_Explicit
-        (RT.open_or_close_term'
+        (RT.subst_term
            (mk_star
-              (RT.open_or_close_term' rpost (RT.OpenWith rx_tm) 0)
-              (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re))) (RT.CloseVar x) 0) in
+              (RT.subst_term rpost [ RT.DT 0 rx_tm ])
+              (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re)))
+           [ RT.ND x 0 ]) in
 
     let post_body_eq
       : RT.equiv (RT.extend_env (elab_env g) x _)
@@ -101,7 +102,7 @@ let return_soundess
                     (R.pack_ln (R.Tv_App rpost_abs (rx_tm, R.Q_Explicit)))
                     (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re)))
                  (mk_star
-                    (RT.open_or_close_term' rpost (RT.OpenWith rx_tm) 0)
+                    (RT.subst_term rpost [ RT.DT 0 rx_tm ])
                     (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re)))
       = mk_star_equiv _ _ _ _ _ (RT.EQ_Beta _ rt _ _ _) (RT.EQ_Refl _ _) in
 

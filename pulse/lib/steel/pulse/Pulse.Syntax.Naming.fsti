@@ -226,7 +226,7 @@ let ln_st (t:st_term) = ln_st' t (-1)
 let ln_c (c:comp) = ln_c' c (-1)
 
 let open_or_close_host_term (t:host_term) (v:term) (i:index)
-  : Lemma (not_tv_unknown (RT.open_or_close_term' t (RT.OpenWith (E.elab_term v)) i))
+  : Lemma (not_tv_unknown (RT.subst_term t [ RT.DT i (E.elab_term v )]))
   = admit()
 
 let rec open_term' (t:term) (v:term) (i:index)
@@ -255,7 +255,7 @@ let rec open_term' (t:term) (v:term) (i:index)
     
     | Tm_FStar t r ->
       open_or_close_host_term t v i;
-      Tm_FStar (RT.open_or_close_term' t (RT.OpenWith (E.elab_term v)) i) r
+      Tm_FStar (RT.subst_term t [ RT.DT i (E.elab_term v )]) r
 
 let open_st_comp' (s:st_comp) (v:term) (i:index)
   : st_comp =
@@ -419,7 +419,7 @@ let rec close_term' (t:term) (v:var) (i:index)
                     (close_term' body v (i + 1))
     
     | Tm_FStar t r ->
-      Tm_FStar (RT.open_or_close_term' t (RT.CloseVar v) i) r
+      Tm_FStar (RT.subst_term t [ RT.ND v i ]) r
 
 let close_st_comp' (s:st_comp) (v:var) (i:index)
   : st_comp =
