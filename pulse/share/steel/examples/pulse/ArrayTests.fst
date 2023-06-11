@@ -11,7 +11,7 @@ module A = Steel.ST.Array
 module US = FStar.SizeT
 
 
-#push-options "--using_facts_from 'Prims FStar.Pervasives FStar.Ghost ArrayTests'"
+#push-options "--using_facts_from 'Prims FStar.Pervasives FStar.Ghost FStar.SizeT FStar.Seq -Pulse.Steel.Wrapper.Typing Pulse.Steel.Wrapper ArrayTests'"
 
 ```pulse
 fn array_of_zeroes (n:US.t)
@@ -185,4 +185,16 @@ fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.eras
                     US.v i < A.length a /\
                     x == Seq.index s (US.v i)}))
 } 
+```
+
+```pulse
+fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
+                   (#s:(s:Ghost.erased (Seq.seq t) {US.v i < Seq.length s}))
+   requires (A.pts_to a full_perm s)
+   ensures (
+      A.pts_to a full_perm (Seq.upd s (US.v i) v)
+   )
+{
+   (a.(i) <- v)
+}
 ```
