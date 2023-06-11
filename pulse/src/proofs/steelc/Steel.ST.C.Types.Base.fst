@@ -94,6 +94,21 @@ type typedef (t: Type0) : Type0 = {
       (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm
     ))
   );
+  extract_full: (
+    (x: t) ->
+    (x0: Ghost.erased (option (t & P.perm))) ->
+    Pure t
+      (requires (
+        match Ghost.reveal x0 with
+        | None -> x == one pcm
+        | Some (x1, p) -> exclusive pcm x1 /\ p_refine pcm x1 /\ fractionable x1 /\ compatible pcm (mk_fraction x1 p) x
+      ))
+      (ensures (fun x' ->
+        match Ghost.reveal x0 with
+        | None -> x' == one pcm
+        | Some (x1, _) -> x' == x1
+      ))
+  );
 }
 
 let fractionable td x = td.fractionable x == true
@@ -532,6 +547,30 @@ let fractional_permissions_theorem
   hr_share r;
   rewrite (pts_to0 r (mk_fraction td v2 p2)) (pts_to r (mk_fraction td v2 p2));
   rewrite (pts_to0 r (mk_fraction td v1 p1)) (pts_to r (mk_fraction td v1 p1))
+
+let copy
+  (#t: Type)
+  (#td: typedef t)
+  (#v_src: Ghost.erased t { full td v_src /\ fractionable td v_src })
+  (#p_src: P.perm)
+  (#v_dst: Ghost.erased t { full td v_dst })
+  (src: ref td)
+  (dst: ref td)
+: STT unit
+    (pts_to src (mk_fraction td v_src p_src) `star` pts_to dst v_dst)
+    (fun _ -> pts_to src (mk_fraction td v_src p_src) `star` pts_to dst v_src)
+= 
+  rewrite (pts_to src (mk_fraction td v_src p_src)) (pts_to0 src (mk_fraction td v_src p_src));
+  let _ = gen_elim () in
+  let src' = read_ref src in
+  let v_src' = R.ref_read src' in
+  let v_dst' = td.extract_full v_src' (Some (Ghost.reveal v_src, p_src)) in
+  pts_to_intro src _ _ src' _;
+  rewrite (pts_to dst v_dst) (pts_to0 dst v_dst);
+  let _ = gen_elim () in
+  let dst' = read_ref dst in
+  R.ref_upd dst' _ _ (R.base_fpu _ _ v_dst');
+  pts_to_intro_rewrite dst dst' _
 
 let r_unfocus (#opened:_)
   (#ta #ta' #tb #tc: Type)
@@ -1021,4 +1060,3 @@ let focus_ref_compose_12_13
   rewrite (has_focus_ref0 r1 (Conn.connection_compose c12 c23) r3) (has_focus_ref r1 (Conn.connection_compose c12 c23) r3);
   has_focus_ref_compose_12_13 r1 c12 r2 c23 r3;
   return r2
-

@@ -260,6 +260,19 @@ val fractional_permissions_theorem
     (full td v1 /\ full td v2)
     (fun _ -> v1 == v2 /\ (p1 `P.sum_perm` p2) `P.lesser_equal_perm` P.full_perm)
 
+[@@noextract_to "krml"] // primitive
+val copy
+  (#t: Type)
+  (#td: typedef t)
+  (#v_src: Ghost.erased t { full td v_src /\ fractionable td v_src })
+  (#p_src: P.perm)
+  (#v_dst: Ghost.erased t { full td v_dst })
+  (src: ref td)
+  (dst: ref td)
+: STT unit
+    (pts_to src (mk_fraction td v_src p_src) `star` pts_to dst v_dst)
+    (fun _ -> pts_to src (mk_fraction td v_src p_src) `star` pts_to dst v_src)
+
 val norm_field_attr : unit
 
 noextract

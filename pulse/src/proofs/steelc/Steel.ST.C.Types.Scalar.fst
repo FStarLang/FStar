@@ -77,6 +77,11 @@ let scalar t = {
   );
   mk_fraction_eq_one = (fun v p -> ());
   mk_fraction_full_composable = (fun _ _ _ _ -> ());
+  extract_full = (fun x x0 ->
+    match x with
+    | None -> None
+    | Some (v, _) -> Some (v, P.full_perm)
+  );
 }
 
 let mk_scalar v = (Some (Some v, P.full_perm))
