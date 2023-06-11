@@ -1,11 +1,5 @@
 open Prims
 type error = (Prims.string * FStar_Compiler_Range_Type.range)
-let (as_string :
-  (Prims.string, Prims.string) FStar_Pervasives.either -> Prims.string) =
-  fun s ->
-    match s with
-    | FStar_Pervasives.Inl s1 -> s1
-    | FStar_Pervasives.Inr s1 -> Prims.op_Hat "to_string failed: " s1
 type 'a err = ('a, error) FStar_Pervasives.either
 let op_let_Question :
   'a 'b . 'a err -> ('a -> 'b err) -> ('b, error) FStar_Pervasives.either =
@@ -858,21 +852,12 @@ let (desugar_binders :
                        (fun uu___3 ->
                           match uu___3 with
                           | (env3, bs3, bvs) ->
-                              let bs4 =
-                                FStar_Compiler_List.map
-                                  (fun uu___4 ->
-                                     match uu___4 with
-                                     | (aq1, x, t2) ->
-                                         let uu___5 =
-                                           PulseSyntaxWrapper.close_term t2
-                                             bv.FStar_Syntax_Syntax.index in
-                                         (aq1, x, uu___5)) bs3 in
                               let uu___4 =
                                 let uu___5 =
                                   let uu___6 =
                                     let uu___7 = as_qual aq in
                                     (uu___7, b, t1) in
-                                  uu___6 :: bs4 in
+                                  uu___6 :: bs3 in
                                 (env3, uu___5, (bv :: bvs)) in
                               return uu___4)) in
       let uu___ = aux env bs in

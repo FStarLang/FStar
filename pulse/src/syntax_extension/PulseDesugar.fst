@@ -16,11 +16,6 @@ module BU = FStar.Compiler.Util
 module P =  FStar.Syntax.Print
 type error = string & R.range
 
-let as_string (s:either string string) : string =
-   match s with
-   | Inl s -> s
-   | Inr s -> "to_string failed: " ^ s
-
 let err a = either a error
 
 let (let?) (f:err 'a) (g: 'a -> ML (err 'b)) =
@@ -411,7 +406,6 @@ let desugar_binders (env:env_t) (bs:Sugar.binders)
           let? t = desugar_term env t in
           let env, bv = push_bv env b in
           let? env, bs, bvs = aux env bs in
-          let bs = L.map (fun (aq, x, t) -> aq, x, SW.close_term t bv.index) bs in
           return (env, (as_qual aq, b, t)::bs, bv::bvs)
     in
     let? env, bs, bvs = aux env bs in
