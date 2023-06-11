@@ -11,7 +11,7 @@ module A = Steel.ST.Array
 module US = FStar.SizeT
 
 
-#push-options "--using_facts_from 'Prims FStar.Pervasives FStar.Ghost FStar.SizeT FStar.Seq -Pulse.Steel.Wrapper.Typing Pulse.Steel.Wrapper ArrayTests'"
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection -Steel.ST.Effect'"
 
 ```pulse
 fn array_of_zeroes (n:US.t)
@@ -196,5 +196,77 @@ fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
    )
 {
    (a.(i) <- v)
+}
+```
+
+let sorted (s0 s:Seq.seq U32.t) =
+   (forall (i:nat). i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
+   (forall (i:nat). i < Seq.length s0 ==> (exists (j:nat). j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
+
+
+open FStar.UInt32
+#push-options "--query_stats"
+
+```pulse
+fn sort3 (a:array U32.t)
+         (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
+   requires (A.pts_to a full_perm s)
+   ensures 
+      exists (s':Seq.seq (U32.t)). (
+         A.pts_to a full_perm s' `star`
+         pure (sorted s s')
+      )
+{
+   let x = a.(0sz);
+   let y = a.(1sz);
+   let z = a.(2sz);
+   if (x >^ y) 
+   {
+      if (y >^ z)
+      {
+         (a.(0sz) <- z);
+         (a.(1sz) <- y);
+         (a.(2sz) <- x);
+         ()
+      }
+      else {
+         if (x >^ z)
+         {
+            (a.(0sz) <- y);
+            (a.(1sz) <- z);
+            (a.(2sz) <- x);
+            ()
+         }
+         else
+         {
+            (a.(0sz) <- y);
+            (a.(1sz) <- x);
+            (a.(2sz) <- z);
+            ()  
+         }     
+      }
+   }
+   else {
+      if (y >^ z) {
+         if (x >^ z) {
+            (a.(0sz) <- z);
+            (a.(1sz) <- x);
+            (a.(2sz) <- y);
+            ()
+         }
+         else {
+            (a.(0sz) <- x);
+            (a.(1sz) <- z);
+            (a.(2sz) <- y);
+            ()
+         }
+      }
+      else {
+         (a.(0sz) <- x);
+         (a.(1sz) <- y);
+         (a.(2sz) <- z);
+         ()
+      }
+   }
 }
 ```
