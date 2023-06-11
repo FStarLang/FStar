@@ -27,10 +27,9 @@ fn array_of_zeroes (n:US.t)
 }
 ```
 
-//this fails due to some reveal/hide confusion on the precondition of a.(i)
-[@@expect_failure]
+//this is not a recommended way to do this, since s is not erased, but it works
 ```pulse
-fn read_at_offset (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
+fn read_at_offset_0 (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
    requires (A.pts_to a p s `star`
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:t
@@ -46,8 +45,23 @@ fn read_at_offset (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
 } 
 ```
 
-//this fails due to a weird core typing error Seq.seq U32.t </: Seq.seq U32.t
-[@@expect_failure]
+```pulse
+fn read_at_offset_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
+   requires (A.pts_to a p s `star`
+             pure (US.v i < A.length a \/ US.v i < Seq.length s))
+   returns x:t
+   ensures (
+      A.pts_to a p s `star`
+      pure (Seq.length s == A.length a /\
+            US.v i < Seq.length s /\
+            x == Seq.index s (US.v i))
+   )
+{
+   let x = a.(i);
+   x
+} 
+```
+
 ```pulse
 fn read_at_offset (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
    requires (A.pts_to a p s `star`
@@ -82,7 +96,7 @@ val test_array_access
             res == Seq.index s (US.v i)))
 
 ```pulse
-fn read_at_offset (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
+fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
    requires (A.pts_to a p s `star`
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:U32.t
@@ -101,7 +115,7 @@ fn read_at_offset (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U
 
 
 ```pulse
-fn read_at_offset_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
+fn read_at_offset_refine_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
    requires (A.pts_to a p s `star`
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:t
@@ -142,7 +156,7 @@ fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Se
 
 //But if we hoist the pure payload into a refinement, then it can be used for typing throughout the spec & body
 ```pulse
-fn read_at_offset_refine (a:array U32.t) (i:(i:US.t { US.v i < A.length a})) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
+fn read_at_offset_refine_post (a:array U32.t) (i:(i:US.t { US.v i < A.length a})) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
    requires (A.pts_to a p s)
    returns x: (x:U32.t { Seq.length s == A.length a /\
                          x == Seq.index s (US.v i)})
@@ -157,7 +171,7 @@ fn read_at_offset_refine (a:array U32.t) (i:(i:US.t { US.v i < A.length a})) (#p
 ```
 
 ```pulse
-fn read_at_offset_refine2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
+fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
    requires (A.pts_to a p s `star` pure (US.v i < A.length a))
    returns x: (x:U32.t { Seq.length s == A.length a /\
                          US.v i < A.length a /\
