@@ -700,11 +700,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   if debug env Options.Medium then
     BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
   match top.n with
+  | Tm_bvar _
   | Tm_delayed _ -> failwith "Impossible"
 
   | Tm_uinst _
   | Tm_uvar _
-  | Tm_bvar _
   | Tm_name _
   | Tm_fvar _
   | Tm_constant _

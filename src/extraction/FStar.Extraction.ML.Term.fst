@@ -31,23 +31,22 @@ open FStar.Extraction.ML.Util
 open FStar.Syntax.Syntax
 open FStar.Errors
 
-module Code = FStar.Extraction.ML.Code
-module BU = FStar.Compiler.Util
-module S  = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module U  = FStar.Syntax.Util
-module N  = FStar.TypeChecker.Normalize
-module PC = FStar.Parser.Const
-module TcEnv = FStar.TypeChecker.Env
+module BU     = FStar.Compiler.Util
+module Code   = FStar.Extraction.ML.Code
+module EMB    = FStar.Syntax.Embeddings
+module Env    = FStar.TypeChecker.Env
+module N      = FStar.TypeChecker.Normalize
+module PC     = FStar.Parser.Const
+module RC     = FStar.Reflection.V2.Constants
+module RD     = FStar.Reflection.V2.Data
+module RE     = FStar.Reflection.V2.Embeddings
+module R      = FStar.Reflection.V2.Builtins
+module S      = FStar.Syntax.Syntax
+module SS     = FStar.Syntax.Subst
+module TcEnv  = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
-module R  = FStar.Reflection.Basic
-module RD = FStar.Reflection.Data
-module EMB = FStar.Syntax.Embeddings
-module RE = FStar.Reflection.Embeddings
-module Env = FStar.TypeChecker.Env
-
-module RC = FStar.Reflection.Constants
+module U      = FStar.Syntax.Util
 
 exception Un_extractable
 

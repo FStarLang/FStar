@@ -14,37 +14,40 @@
    limitations under the License.
 *)
 module FStar.Extraction.ML.Modul
-open FStar.Pervasives
-open FStar.Compiler.Effect
-open FStar.Compiler.List
+
 open FStar
 open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Compiler.Util
-open FStar.Syntax.Syntax
 open FStar.Const
 open FStar.Extraction.ML
-open FStar.Extraction.ML.Syntax
+open FStar.Extraction.ML.RegEmb
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
 open FStar.Ident
+open FStar.Pervasives
 open FStar.Syntax
 
-module Term = FStar.Extraction.ML.Term
-module Print = FStar.Syntax.Print
-module MLS = FStar.Extraction.ML.Syntax
-module BU = FStar.Compiler.Util
-module S  = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module UF = FStar.Syntax.Unionfind
-module U  = FStar.Syntax.Util
-module TC = FStar.TypeChecker.Tc
-module N  = FStar.TypeChecker.Normalize
-module PC = FStar.Parser.Const
-module Util = FStar.Extraction.ML.Util
-module Env = FStar.TypeChecker.Env
+open FStar.Syntax.Syntax
+open FStar.Extraction.ML.Syntax (* Intentionally shadows part of Syntax.Syntax *)
+
+module Term   = FStar.Extraction.ML.Term
+module Print  = FStar.Syntax.Print
+module MLS    = FStar.Extraction.ML.Syntax
+module BU     = FStar.Compiler.Util
+module S      = FStar.Syntax.Syntax
+module SS     = FStar.Syntax.Subst
+module UF     = FStar.Syntax.Unionfind
+module U      = FStar.Syntax.Util
+module TC     = FStar.TypeChecker.Tc
+module N      = FStar.TypeChecker.Normalize
+module PC     = FStar.Parser.Const
+module Util   = FStar.Extraction.ML.Util
+module Env    = FStar.TypeChecker.Env
 module TcUtil = FStar.TypeChecker.Util
-module EMB=FStar.Syntax.Embeddings
-module Cfg = FStar.TypeChecker.Cfg
+module EMB    = FStar.Syntax.Embeddings
+module Cfg    = FStar.TypeChecker.Cfg
 
 type env_t = UEnv.uenv
 
@@ -83,10 +86,10 @@ let as_pair = function
    | [a;b] -> (a,b)
    | _ -> failwith "Expected a list with 2 elements"
 
-let flag_of_qual = function
-  | Assumption -> Some Assumed
-  | S.Private -> Some Private
-  | S.NoExtract -> Some NoExtract
+let flag_of_qual : S.qualifier -> option meta = function
+  | S.Assumption -> Some Assumed
+  | S.Private    -> Some Private
+  | S.NoExtract  -> Some NoExtract
   | _ -> None
 
 (*****************************************************************************)
@@ -96,7 +99,7 @@ let flag_of_qual = function
 // So far, we recognize only a couple special attributes; they are encoded as
 // type constructors for an inductive defined in Pervasives, to provide a minimal
 // amount of typo-checking via desugaring.
-let rec extract_meta x =
+let rec extract_meta x : option meta =
   match SS.compress x with
   | { n = Tm_fvar fv } ->
       begin match string_of_lid (lid_of_fv fv) with
@@ -326,7 +329,7 @@ let extract_typ_abbrev env quals attrs lb
     * list mlmodule1 =
     let tcenv, (lbdef, lbtyp) =
         let tcenv, _, def_typ =
-          FStar.TypeChecker.Env.open_universes_in (tcenv_of_uenv env) lb.lbunivs [lb.lbdef; lb.lbtyp]
+          Env.open_universes_in (tcenv_of_uenv env) lb.lbunivs [lb.lbdef; lb.lbtyp]
         in
         tcenv, as_pair def_typ
     in
@@ -924,56 +927,6 @@ let extract_bundle env se =
 
     | _ -> failwith "Unexpected signature element"
 
-
-
-(* When extracting a plugin, each top-level definition marked with a `@plugin` attribute
-   is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
-   which installs the compiled term as a primitive step in the normalizer
- *)
-let maybe_register_plugin (g:env_t) (se:sigelt) : list mlmodule1 =
-    let w = with_ty MLTY_Top in
-    let plugin_with_arity attrs =
-        BU.find_map attrs (fun t ->
-              let head, args = U.head_and_args t in
-              if not (U.is_fvar PC.plugin_attr head)
-              then None
-              else match args with
-                   | [({n=Tm_constant (Const_int(s, _))}, _)] ->
-                     Some (Some (BU.int_of_string s))
-                   | _ -> Some None)
-    in
-    if Options.codegen() <> Some Options.Plugin then []
-    else match plugin_with_arity se.sigattrs with
-         | None -> []
-         | Some arity_opt ->
-           // BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
-           //          (List.map Print.term_to_string se.sigattrs |> String.concat " ")
-           //          (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
-           begin
-           match se.sigel with
-           | Sig_let {lbs} ->
-               let mk_registration lb : list mlmodule1 =
-                  let fv = right lb.lbname in
-                  let fv_lid = fv.fv_name.v in
-                  let fv_t = lb.lbtyp in
-                  let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
-                  match Util.interpret_plugin_as_term_fun g fv fv_t arity_opt ml_name_str with
-                  | Some (interp, nbe_interp, arity, plugin) ->
-                      let register, args =
-                        if plugin
-                        then (["FStar_Tactics_Native"], "register_plugin"), [interp; nbe_interp]
-                        else (["FStar_Tactics_Native"], "register_tactic"), [interp]
-                      in
-                      let h = with_ty MLTY_Top <| MLE_Name register in
-                      let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
-                      let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity] @ args) in
-                      [MLM_Top app]
-                  | None -> []
-               in
-               List.collect mk_registration (snd lbs)
-           | _ -> []
-           end
-
 let lb_irrelevant (g:env_t) (lb:letbinding) : bool =
     Env.non_informative (tcenv_of_uenv g) lb.lbtyp && // result type is non informative
     not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
@@ -996,7 +949,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
         | Sig_bundle _
         | Sig_inductive_typ _
         | Sig_datacon _ ->
-          extract_bundle g se
+          let g, ses = extract_bundle g se in
+          g, ses @ maybe_register_plugin g se
 
         | Sig_new_effect ed when Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname ->
           let env, _iface, impl =

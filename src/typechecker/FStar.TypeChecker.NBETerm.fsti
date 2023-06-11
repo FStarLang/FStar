@@ -264,7 +264,7 @@ val mk_any_emb : t -> embedding t
 val e_range  : embedding Range.range
 val e_issue  : embedding FStar.Errors.issue
 val e_vconfig  : embedding vconfig
-val e_norm_step : embedding Syntax.Embeddings.norm_step
+val e_norm_step : embedding Pervasives.norm_step
 val e_list   : embedding 'a -> embedding (list 'a)
 val e_option : embedding 'a -> embedding (option 'a)
 val e_tuple2 : embedding 'a -> embedding 'b -> embedding ('a * 'b)
@@ -273,6 +273,9 @@ val e_either : embedding 'a -> embedding 'b -> embedding (either 'a 'b)
 val e_sealed : embedding 'a -> embedding 'a
 val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
+
+(* Unconditionally fails raising an exception when called *)
+val e_unsupported : embedding t
 
 (* Arity specific raw_embeddings of arrows; used to generate top-level
    registrations of compiled functions in FStar.Extraction.ML.Util *)

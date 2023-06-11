@@ -22,8 +22,10 @@ open FStar.Ident
 open FStar.CheckedFiles
 open FStar.Universal
 open FStar.Compiler
+
 module E = FStar.Errors
 module UF = FStar.Syntax.Unionfind
+module RE = FStar.Reflection.V2.Embeddings
 
 let _ = FStar.Version.dummy ()
 

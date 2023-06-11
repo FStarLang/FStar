@@ -468,6 +468,7 @@ let unlazy_emb t =
         end
     | _ -> t
 
+(* NOTE: Lazy_embedding compares false to itself, by design. *)
 let eq_lazy_kind k k' =
     match k, k' with
      | BadLazy, BadLazy
@@ -481,9 +482,15 @@ let eq_lazy_kind k k' =
      | Lazy_goal, Lazy_goal
      | Lazy_sigelt, Lazy_sigelt
      | Lazy_letbinding, Lazy_letbinding
-     | Lazy_uvar, Lazy_uvar -> true
-     | Lazy_issue, Lazy_issue -> true
-     | _ -> false
+     | Lazy_uvar, Lazy_uvar
+     | Lazy_universe, Lazy_universe
+     | Lazy_universe_uvar, Lazy_universe_uvar
+     | Lazy_issue, Lazy_issue
+     | Lazy_ident, Lazy_ident
+       -> true
+     | Lazy_embedding _, _
+     | _, Lazy_embedding _ -> false
+     | _ -> failwith "FIXME! eq_lazy_kind must be complete"
 
 let lazy_kind_to_string k = 
     match k with
@@ -499,8 +506,12 @@ let lazy_kind_to_string k =
     | Lazy_sigelt -> "Lazy_sigelt"
     | Lazy_letbinding -> "Lazy_letbinding"
     | Lazy_uvar -> "Lazy_uvar"
+    | Lazy_universe -> "Lazy_universe"
+    | Lazy_universe_uvar -> "Lazy_universe_uvar"
     | Lazy_issue -> "Lazy_issue"
-    | _ -> "Unknown"
+    | Lazy_ident -> "Lazy_ident"
+    | Lazy_embedding _ -> "Lazy_embedding _"
+     | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
 
 let unlazy_as_t k t =
     match (compress t).n with
@@ -517,7 +528,7 @@ let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option range) : term =
     let i = {
         lkind = k;
         blob  = mkdyn t;
-        ltyp   = typ;
+        ltyp  = typ;
         rng   = rng;
       } in
     mk (Tm_lazy i) rng

@@ -597,7 +597,7 @@ let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 let unembed_binder_knot : ref (option (EMB.embedding binder)) = BU.mk_ref None
 let unembed_binder (t : term) : option S.binder =
     match !unembed_binder_knot with
-    | Some e -> EMB.unembed e t false EMB.id_norm_cb
+    | Some e -> EMB.try_unembed e t EMB.id_norm_cb
     | None ->
         Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
         None
@@ -1011,6 +1011,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
     in
     if cfg.steps.unfold_tac                             // If running a tactic,
+       && not (Options.no_plugins ())                   // haven't explicitly disabled plugins
        && (r <> Should_unfold_no)                       // actually unfolding this fvar
        && BU.for_some (U.is_fvar PC.plugin_attr) attrs  // it is a plugin
        && !plugin_unfold_warn_ctr > 0                   // and we haven't raised too many warnings
