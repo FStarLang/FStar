@@ -5160,7 +5160,7 @@ let (maybe_coerce_lc :
                        ->
                        let uu___4 =
                          coerce_with env e lc FStar_Syntax_Syntax.t_term_view
-                           FStar_Parser_Const.inspect [] []
+                           FStar_Parser_Const.inspect_v1 [] []
                            FStar_Syntax_Syntax.mk_Tac in
                        (match uu___4 with
                         | (e1, lc1) ->
@@ -5172,7 +5172,7 @@ let (maybe_coerce_lc :
                        ->
                        let uu___4 =
                          coerce_with env e lc FStar_Syntax_Syntax.t_term
-                           FStar_Parser_Const.pack [] []
+                           FStar_Parser_Const.pack_v1 [] []
                            FStar_Syntax_Syntax.mk_Tac in
                        (match uu___4 with
                         | (e1, lc1) ->
@@ -5184,7 +5184,7 @@ let (maybe_coerce_lc :
                        ->
                        let uu___4 =
                          coerce_with env e lc FStar_Syntax_Syntax.t_term
-                           FStar_Parser_Const.binder_to_term [] []
+                           FStar_Parser_Const.binder_to_term_v1 [] []
                            FStar_Syntax_Syntax.mk_Tac in
                        (match uu___4 with
                         | (e1, lc1) ->
@@ -5258,7 +5258,7 @@ let (coerce_views :
                  ->
                  let uu___2 =
                    coerce_with env e lc FStar_Syntax_Syntax.t_term_view
-                     FStar_Parser_Const.inspect [] []
+                     FStar_Parser_Const.inspect_v1 [] []
                      FStar_Syntax_Syntax.mk_Tac in
                  FStar_Compiler_Effect.op_Less_Bar
                    (fun uu___3 -> FStar_Pervasives_Native.Some uu___3) uu___2

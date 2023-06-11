@@ -2,34 +2,48 @@ open Prims
 let (smt_sync : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (8))
-         (Prims.of_int (40)) (Prims.of_int (8)) (Prims.of_int (56)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (8))
-         (Prims.of_int (29)) (Prims.of_int (8)) (Prims.of_int (56)))
-      (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (8))
+               (Prims.of_int (40)) (Prims.of_int (8)) (Prims.of_int (56)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (8))
+               (Prims.of_int (29)) (Prims.of_int (8)) (Prims.of_int (56)))))
+      (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
       (fun uu___1 ->
-         (fun uu___1 -> Obj.magic (FStar_Tactics_Builtins.t_smt_sync uu___1))
-           uu___1)
+         (fun uu___1 ->
+            Obj.magic (FStar_Tactics_V2_Builtins.t_smt_sync uu___1)) uu___1)
 let (smt_sync' :
   Prims.nat -> Prims.nat -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun fuel ->
     fun ifuel ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (12))
-           (Prims.of_int (15)) (Prims.of_int (12)) (Prims.of_int (29)))
-        (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (12))
-           (Prims.of_int (32)) (Prims.of_int (16)) (Prims.of_int (20)))
-        (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                 (Prims.of_int (12)) (Prims.of_int (15)) (Prims.of_int (12))
+                 (Prims.of_int (29)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                 (Prims.of_int (12)) (Prims.of_int (32)) (Prims.of_int (16))
+                 (Prims.of_int (20)))))
+        (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
         (fun uu___ ->
            (fun vcfg ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
-                      (Prims.of_int (13)) (Prims.of_int (18))
-                      (Prims.of_int (14)) (Prims.of_int (68)))
-                   (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
-                      (Prims.of_int (16)) (Prims.of_int (4))
-                      (Prims.of_int (16)) (Prims.of_int (20)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                            (Prims.of_int (13)) (Prims.of_int (18))
+                            (Prims.of_int (14)) (Prims.of_int (68)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                            (Prims.of_int (16)) (Prims.of_int (4))
+                            (Prims.of_int (16)) (Prims.of_int (20)))))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ ->
                          {
@@ -83,33 +97,48 @@ let (smt_sync' :
                          }))
                    (fun uu___ ->
                       (fun vcfg' ->
-                         Obj.magic (FStar_Tactics_Builtins.t_smt_sync vcfg'))
+                         Obj.magic
+                           (FStar_Tactics_V2_Builtins.t_smt_sync vcfg'))
                         uu___))) uu___)
 let (get_rlimit : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (20))
-         (Prims.of_int (45)) (Prims.of_int (20)) (Prims.of_int (60)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (20))
-         (Prims.of_int (45)) (Prims.of_int (20)) (Prims.of_int (69)))
-      (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (20))
+               (Prims.of_int (45)) (Prims.of_int (20)) (Prims.of_int (60)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (20))
+               (Prims.of_int (45)) (Prims.of_int (20)) (Prims.of_int (69)))))
+      (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.z3rlimit))
 let (set_rlimit : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (21))
-         (Prims.of_int (59)) (Prims.of_int (21)) (Prims.of_int (91)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (21))
-         (Prims.of_int (45)) (Prims.of_int (21)) (Prims.of_int (93)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (21))
+               (Prims.of_int (59)) (Prims.of_int (21)) (Prims.of_int (91)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (21))
+               (Prims.of_int (45)) (Prims.of_int (21)) (Prims.of_int (93)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (21))
-               (Prims.of_int (59)) (Prims.of_int (21)) (Prims.of_int (73)))
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (21))
-               (Prims.of_int (59)) (Prims.of_int (21)) (Prims.of_int (91)))
-            (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (21)) (Prims.of_int (59))
+                     (Prims.of_int (21)) (Prims.of_int (73)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (21)) (Prims.of_int (59))
+                     (Prims.of_int (21)) (Prims.of_int (91)))))
+            (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
             (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___1 ->
@@ -161,17 +190,21 @@ let (set_rlimit : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                         (uu___.FStar_VConfig.reuse_hint_for)
                     }))))
       (fun uu___ ->
-         (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.set_vconfig uu___))
-           uu___)
+         (fun uu___ ->
+            Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
 let (get_initial_fuel :
   unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (23))
-         (Prims.of_int (45)) (Prims.of_int (23)) (Prims.of_int (61)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (23))
-         (Prims.of_int (45)) (Prims.of_int (23)) (Prims.of_int (74)))
-      (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (23))
+               (Prims.of_int (45)) (Prims.of_int (23)) (Prims.of_int (61)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (23))
+               (Prims.of_int (45)) (Prims.of_int (23)) (Prims.of_int (74)))))
+      (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.initial_fuel))
@@ -179,11 +212,15 @@ let (get_initial_ifuel :
   unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (24))
-         (Prims.of_int (45)) (Prims.of_int (24)) (Prims.of_int (61)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (24))
-         (Prims.of_int (45)) (Prims.of_int (24)) (Prims.of_int (75)))
-      (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (24))
+               (Prims.of_int (45)) (Prims.of_int (24)) (Prims.of_int (61)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (24))
+               (Prims.of_int (45)) (Prims.of_int (24)) (Prims.of_int (75)))))
+      (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.initial_ifuel))
@@ -191,11 +228,15 @@ let (get_max_fuel : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (25))
-         (Prims.of_int (45)) (Prims.of_int (25)) (Prims.of_int (61)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (25))
-         (Prims.of_int (45)) (Prims.of_int (25)) (Prims.of_int (70)))
-      (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (25))
+               (Prims.of_int (45)) (Prims.of_int (25)) (Prims.of_int (61)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (25))
+               (Prims.of_int (45)) (Prims.of_int (25)) (Prims.of_int (70)))))
+      (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.max_fuel))
@@ -203,11 +244,15 @@ let (get_max_ifuel : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (26))
-         (Prims.of_int (45)) (Prims.of_int (26)) (Prims.of_int (61)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (26))
-         (Prims.of_int (45)) (Prims.of_int (26)) (Prims.of_int (71)))
-      (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (26))
+               (Prims.of_int (45)) (Prims.of_int (26)) (Prims.of_int (61)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (26))
+               (Prims.of_int (45)) (Prims.of_int (26)) (Prims.of_int (71)))))
+      (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.max_ifuel))
@@ -215,17 +260,27 @@ let (set_initial_fuel :
   Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (28))
-         (Prims.of_int (59)) (Prims.of_int (28)) (Prims.of_int (96)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (28))
-         (Prims.of_int (45)) (Prims.of_int (28)) (Prims.of_int (98)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (28))
+               (Prims.of_int (59)) (Prims.of_int (28)) (Prims.of_int (96)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (28))
+               (Prims.of_int (45)) (Prims.of_int (28)) (Prims.of_int (98)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (28))
-               (Prims.of_int (59)) (Prims.of_int (28)) (Prims.of_int (73)))
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (28))
-               (Prims.of_int (59)) (Prims.of_int (28)) (Prims.of_int (96)))
-            (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (28)) (Prims.of_int (59))
+                     (Prims.of_int (28)) (Prims.of_int (73)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (28)) (Prims.of_int (59))
+                     (Prims.of_int (28)) (Prims.of_int (96)))))
+            (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
             (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___1 ->
@@ -276,23 +331,33 @@ let (set_initial_fuel :
                         (uu___.FStar_VConfig.reuse_hint_for)
                     }))))
       (fun uu___ ->
-         (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.set_vconfig uu___))
-           uu___)
+         (fun uu___ ->
+            Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
 let (set_initial_ifuel :
   Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (29))
-         (Prims.of_int (59)) (Prims.of_int (29)) (Prims.of_int (96)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (29))
-         (Prims.of_int (45)) (Prims.of_int (29)) (Prims.of_int (98)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (29))
+               (Prims.of_int (59)) (Prims.of_int (29)) (Prims.of_int (96)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (29))
+               (Prims.of_int (45)) (Prims.of_int (29)) (Prims.of_int (98)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (29))
-               (Prims.of_int (59)) (Prims.of_int (29)) (Prims.of_int (73)))
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (29))
-               (Prims.of_int (59)) (Prims.of_int (29)) (Prims.of_int (96)))
-            (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (29)) (Prims.of_int (59))
+                     (Prims.of_int (29)) (Prims.of_int (73)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (29)) (Prims.of_int (59))
+                     (Prims.of_int (29)) (Prims.of_int (96)))))
+            (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
             (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___1 ->
@@ -343,23 +408,33 @@ let (set_initial_ifuel :
                         (uu___.FStar_VConfig.reuse_hint_for)
                     }))))
       (fun uu___ ->
-         (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.set_vconfig uu___))
-           uu___)
+         (fun uu___ ->
+            Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
 let (set_max_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun v ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (30))
-         (Prims.of_int (59)) (Prims.of_int (30)) (Prims.of_int (96)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (30))
-         (Prims.of_int (45)) (Prims.of_int (30)) (Prims.of_int (98)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (30))
+               (Prims.of_int (59)) (Prims.of_int (30)) (Prims.of_int (96)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (30))
+               (Prims.of_int (45)) (Prims.of_int (30)) (Prims.of_int (98)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (30))
-               (Prims.of_int (59)) (Prims.of_int (30)) (Prims.of_int (73)))
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (30))
-               (Prims.of_int (59)) (Prims.of_int (30)) (Prims.of_int (96)))
-            (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (30)) (Prims.of_int (59))
+                     (Prims.of_int (30)) (Prims.of_int (73)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (30)) (Prims.of_int (59))
+                     (Prims.of_int (30)) (Prims.of_int (96)))))
+            (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
             (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___1 ->
@@ -411,23 +486,33 @@ let (set_max_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                         (uu___.FStar_VConfig.reuse_hint_for)
                     }))))
       (fun uu___ ->
-         (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.set_vconfig uu___))
-           uu___)
+         (fun uu___ ->
+            Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
 let (set_max_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun v ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (31))
-         (Prims.of_int (59)) (Prims.of_int (31)) (Prims.of_int (96)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (31))
-         (Prims.of_int (45)) (Prims.of_int (31)) (Prims.of_int (98)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (31))
+               (Prims.of_int (59)) (Prims.of_int (31)) (Prims.of_int (96)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (31))
+               (Prims.of_int (45)) (Prims.of_int (31)) (Prims.of_int (98)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (31))
-               (Prims.of_int (59)) (Prims.of_int (31)) (Prims.of_int (73)))
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (31))
-               (Prims.of_int (59)) (Prims.of_int (31)) (Prims.of_int (96)))
-            (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (31)) (Prims.of_int (59))
+                     (Prims.of_int (31)) (Prims.of_int (73)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (31)) (Prims.of_int (59))
+                     (Prims.of_int (31)) (Prims.of_int (96)))))
+            (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
             (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___1 ->
@@ -478,22 +563,32 @@ let (set_max_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                         (uu___.FStar_VConfig.reuse_hint_for)
                     }))))
       (fun uu___ ->
-         (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.set_vconfig uu___))
-           uu___)
+         (fun uu___ ->
+            Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
 let (set_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (34))
-         (Prims.of_int (59)) (Prims.of_int (34)) (Prims.of_int (111)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (34))
-         (Prims.of_int (45)) (Prims.of_int (34)) (Prims.of_int (113)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (34))
+               (Prims.of_int (59)) (Prims.of_int (34)) (Prims.of_int (111)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (34))
+               (Prims.of_int (45)) (Prims.of_int (34)) (Prims.of_int (113)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (34))
-               (Prims.of_int (59)) (Prims.of_int (34)) (Prims.of_int (73)))
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (34))
-               (Prims.of_int (59)) (Prims.of_int (34)) (Prims.of_int (111)))
-            (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (34)) (Prims.of_int (59))
+                     (Prims.of_int (34)) (Prims.of_int (73)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (34)) (Prims.of_int (59))
+                     (Prims.of_int (34)) (Prims.of_int (111)))))
+            (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
             (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___1 ->
@@ -544,22 +639,32 @@ let (set_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                         (uu___.FStar_VConfig.reuse_hint_for)
                     }))))
       (fun uu___ ->
-         (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.set_vconfig uu___))
-           uu___)
+         (fun uu___ ->
+            Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
 let (set_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (35))
-         (Prims.of_int (59)) (Prims.of_int (35)) (Prims.of_int (111)))
-      (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (35))
-         (Prims.of_int (45)) (Prims.of_int (35)) (Prims.of_int (113)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (35))
+               (Prims.of_int (59)) (Prims.of_int (35)) (Prims.of_int (111)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (35))
+               (Prims.of_int (45)) (Prims.of_int (35)) (Prims.of_int (113)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (35))
-               (Prims.of_int (59)) (Prims.of_int (35)) (Prims.of_int (73)))
-            (FStar_Range.mk_range "FStar.Tactics.SMT.fst" (Prims.of_int (35))
-               (Prims.of_int (59)) (Prims.of_int (35)) (Prims.of_int (111)))
-            (Obj.magic (FStar_Tactics_Builtins.get_vconfig ()))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (35)) (Prims.of_int (59))
+                     (Prims.of_int (35)) (Prims.of_int (73)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "FStar.Tactics.SMT.fst"
+                     (Prims.of_int (35)) (Prims.of_int (59))
+                     (Prims.of_int (35)) (Prims.of_int (111)))))
+            (Obj.magic (FStar_Tactics_V2_Builtins.get_vconfig ()))
             (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___1 ->
@@ -609,5 +714,5 @@ let (set_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                         (uu___.FStar_VConfig.reuse_hint_for)
                     }))))
       (fun uu___ ->
-         (fun uu___ -> Obj.magic (FStar_Tactics_Builtins.set_vconfig uu___))
-           uu___)
+         (fun uu___ ->
+            Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
