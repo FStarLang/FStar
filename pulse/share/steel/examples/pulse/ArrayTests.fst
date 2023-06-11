@@ -11,7 +11,7 @@ module A = Steel.ST.Array
 module US = FStar.SizeT
 
 
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection -Steel.ST.Effect'"
+#push-options "--using_facts_from '* ArrayTests -Steel Steel.ST.Array -FStar.Tactics -FStar.Reflection'"
 
 ```pulse
 fn array_of_zeroes (n:US.t)
@@ -268,5 +268,48 @@ fn sort3 (a:array U32.t)
          ()
       }
    }
+}
+```
+
+//Pulse does not yet implement join point inference
+[@@expect_failure [228]]
+```pulse
+fn sort3_alt (a:array U32.t)
+             (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
+   requires (A.pts_to a full_perm s)
+   ensures 
+      exists s'. (
+         A.pts_to a full_perm s' `star`
+         pure (sorted s s')
+      )
+{
+   let mut x = a.(0sz);
+   let mut y = a.(1sz);
+   let mut z = a.(2sz);
+   let vx = !x;
+   let vy = !y;
+   if (vy <^ vx) 
+   {
+      x := vy;
+      y := vx;
+   };
+   let vx = !x;
+   let vz = !z;
+   if (vz <^ vx)
+   {
+      x := vz;
+      z := vx;
+   };
+   let vy = !y;
+   let vz = !z;
+   if (vz <^ vy)
+   {
+      y := vz;
+      z := vy;
+   };
+   (a.(0sz) <- x);
+   (a.(1sz) <- y);
+   (a.(2sz) <- z);
+   ()
 }
 ```
