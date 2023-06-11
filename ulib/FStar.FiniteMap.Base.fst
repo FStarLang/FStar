@@ -40,7 +40,7 @@ open FStar.FunctionalExtensionality
 module FLT = FStar.List.Tot
 module FSet = FStar.FiniteSet.Base
 open FStar.FiniteSet.Ambient
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 // Finite maps
 type map (a: eqtype) (b: Type u#b) = (keys: FSet.set a) & (setfun_t a b keys)

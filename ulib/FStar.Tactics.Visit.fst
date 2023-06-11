@@ -17,14 +17,21 @@ module FStar.Tactics.Visit
 
 (* Visit a term and transform it step by step. *)
 
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.Tactics.Effect
 open FStar.Tactics.Types
 open FStar.Tactics.Util
 
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
   let bview = inspect_binder b in
-  let bview = { bview with binder_sort = f bview.binder_sort } in
+  let bview = { bview with sort = f bview.sort } in
+  pack_binder bview
+
+(* Same *)
+let on_sort_simple_binder (f : term -> Tac term) (b:simple_binder) : Tac simple_binder =
+  let bview = inspect_binder b in
+  let bview = { bview with sort = f bview.sort } in
+  inspect_pack_binder bview;
   pack_binder bview
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
@@ -53,15 +60,15 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
          let l = visit_tm ff l in
          let r = visit_tm ff r in
          Tv_App l (r, q)
-    | Tv_Refine b sort r ->
-        let sort = visit_tm ff sort in
+    | Tv_Refine b r ->
+        let b = on_sort_simple_binder (visit_tm ff) b in
         let r = visit_tm ff r in
-        Tv_Refine b sort r
-    | Tv_Let r attrs b ty def t ->
-        let ty = visit_tm ff ty in
+        Tv_Refine b r
+    | Tv_Let r attrs b def t ->
+        let b = on_sort_simple_binder (visit_tm ff) b in
         let def = visit_tm ff def in
         let t = visit_tm ff t in
-        Tv_Let r attrs b ty def t
+        Tv_Let r attrs b def t
     | Tv_Match sc ret_opt brs ->
         let sc = visit_tm ff sc in
         let ret_opt = map_opt (fun (b, asc) ->
@@ -91,13 +98,15 @@ and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
   (p, t)
 and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   match p with
-  | Pat_Constant c -> p
-  | Pat_Cons fv us l ->
-      let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
-      Pat_Cons fv us l
-  | Pat_Var bv st -> Pat_Var bv st
-  | Pat_Dot_Term eopt ->
-      Pat_Dot_Term (map_opt (visit_tm ff) eopt)
+  | Pat_Constant _ -> p
+  | Pat_Var v s -> Pat_Var v s
+  | Pat_Cons head univs subpats  ->
+      let subpats = (map (fun(p,b) -> (visit_pat ff p, b)) subpats) in
+      Pat_Cons head univs subpats
+  | Pat_Dot_Term t ->
+      let t = map_opt (visit_tm ff) t in
+      Pat_Dot_Term t
+
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
