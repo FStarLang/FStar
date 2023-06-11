@@ -1,11 +1,16 @@
 module Pulse.Syntax.Naming
+
+open FStar.List.Tot
+open Pulse.Syntax.Base
+
+module L = FStar.List.Tot
+
+module R = FStar.Reflection
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
-open FStar.List.Tot
-module E = Pulse.Elaborate.Pure
-open Pulse.Syntax.Base
+
 module U = Pulse.Syntax.Pure
+module E = Pulse.Elaborate.Pure
 
 let rec freevars (t:term) 
   : Set.set var
@@ -225,11 +230,35 @@ let ln (t:term) = ln' t (-1)
 let ln_st (t:st_term) = ln_st' t (-1)
 let ln_c (c:comp) = ln_c' c (-1)
 
-let open_or_close_host_term (t:host_term) (v:term) (i:index)
-  : Lemma (not_tv_unknown (RT.subst_term t [ RT.DT i (E.elab_term v )]))
+noeq
+type subst_elt =
+  | DT : nat -> term -> subst_elt
+  | NT : var -> term -> subst_elt
+  | ND : var -> nat -> subst_elt
+
+let shift_subst_elt (n:nat) = function
+  | DT i t -> DT (i + n) t
+  | NT x t -> NT x t
+  | ND x i -> ND x (i + n)
+
+let subst = list subst_elt
+
+let shift_subst_n (n:nat) = L.map (shift_subst_elt n)
+
+let shift_subst = shift_subst_n 1
+
+let rt_subst_elt = function
+  | DT i t -> RT.DT i (E.elab_term t)
+  | NT x t -> RT.NT x (E.elab_term t)
+  | ND x i -> RT.ND x i
+
+let rt_subst = L.map rt_subst_elt
+
+let open_or_close_host_term (t:host_term) (ss:subst)
+  : Lemma (not_tv_unknown (RT.subst_term t (rt_subst ss)))
   = admit()
 
-let rec open_term' (t:term) (v:term) (i:index)
+let rec subst_term (t:term) (ss:subst)
   : Tot term (decreases t)
   = match t with
     | Tm_VProp
@@ -239,144 +268,163 @@ let rec open_term' (t:term) (v:term) (i:index)
     | Tm_Unknown -> t
                  
     | Tm_Pure p ->
-      Tm_Pure (open_term' p v i)
+      Tm_Pure (subst_term p ss)
       
     | Tm_Star l r ->
-      Tm_Star (open_term' l v i)
-              (open_term' r v i)
+      Tm_Star (subst_term l ss)
+              (subst_term r ss)
               
     | Tm_ExistsSL u b body ->
-      Tm_ExistsSL u { b with binder_ty = open_term' b.binder_ty v i }
-                    (open_term' body v (i + 1))
+      Tm_ExistsSL u { b with binder_ty = subst_term b.binder_ty ss }
+                    (subst_term body (shift_subst ss))
                   
     | Tm_ForallSL u b body ->
-      Tm_ForallSL u { b with binder_ty = open_term' b.binder_ty v i }
-                    (open_term' body v (i + 1))
+      Tm_ForallSL u { b with binder_ty = subst_term b.binder_ty ss }
+                    (subst_term body (shift_subst ss))
     
     | Tm_FStar t r ->
-      open_or_close_host_term t v i;
-      Tm_FStar (RT.subst_term t [ RT.DT i (E.elab_term v )]) r
+      open_or_close_host_term t ss;
+      Tm_FStar (RT.subst_term t (rt_subst ss)) r
 
-let open_st_comp' (s:st_comp) (v:term) (i:index)
-  : st_comp =
+let open_term' (t:term) (v:term) (i:index) =
+  subst_term t [ DT i v ]
 
-  { s with res = open_term' s.res v i;
-           pre = open_term' s.pre v i;
-           post = open_term' s.post v (i + 1) }
+let subst_st_comp (s:st_comp) (ss:subst)
+ : st_comp =
 
+ { s with res = subst_term s.res ss;
+          pre = subst_term s.pre ss;
+          post = subst_term s.post (shift_subst ss) }
 
-let open_comp' (c:comp) (v:term) (i:index)
+let open_st_comp' (s:st_comp) (v:term) (i:index) : st_comp =
+  subst_st_comp s [ DT i v ]
+
+let subst_comp (c:comp) (ss:subst)
   : comp
   = match c with
     | C_Tot t ->
-      C_Tot (open_term' t v i)
+      C_Tot (subst_term t ss)
 
-    | C_ST s -> C_ST (open_st_comp' s v i)
+    | C_ST s -> C_ST (subst_st_comp s ss)
 
     | C_STAtomic inames s ->
-      C_STAtomic (open_term' inames v i)
-                 (open_st_comp' s v i)
+      C_STAtomic (subst_term inames ss)
+                 (subst_st_comp s ss)
 
     | C_STGhost inames s ->
-      C_STGhost (open_term' inames v i)
-                (open_st_comp' s v i)
+      C_STGhost (subst_term inames ss)
+                (subst_st_comp s ss)
 
-let open_term_opt' (t:option term) (v:term) (i:index)
+let open_comp' (c:comp) (v:term) (i:index) : comp =
+  subst_comp c [ DT i v ]
+
+let subst_term_opt (t:option term) (ss:subst)
   : Tot (option term)
   = match t with
     | None -> None
-    | Some t -> Some (open_term' t v i)
+    | Some t -> Some (subst_term t ss)
 
+let open_term_opt' (t:option term) (v:term) (i:index)
+  : Tot (option term) = subst_term_opt t [ DT i v ]
 
-let rec open_term_list' (t:list term) (v:term) (i:index)
+let rec subst_term_list (t:list term) (ss:subst)
   : Tot (list term)
   = match t with
     | [] -> []
-    | hd::tl -> open_term' hd v i :: open_term_list' tl v i
+    | hd::tl -> subst_term hd ss :: subst_term_list tl ss
+
+let open_term_list' (t:list term) (v:term) (i:index)
+  : Tot (list term) = subst_term_list t [ DT i v ]
+
+let subst_binder b ss = 
+  {b with binder_ty=subst_term b.binder_ty ss}
 
 let open_binder b v i = 
   {b with binder_ty=open_term' b.binder_ty v i}
-             
-let rec open_st_term' (t:st_term) (v:term) (i:index)
+
+let rec subst_st_term (t:st_term) (ss:subst)
   : Tot st_term (decreases t)
   = let t' =
     match t.term with
     | Tm_Return { ctag; insert_eq; term } ->
-      Tm_Return { ctag; insert_eq; term=open_term' term v i }
+      Tm_Return { ctag; insert_eq; term=subst_term term ss }
 
     | Tm_Abs { b; q; pre; body; ret_ty; post } ->
-      Tm_Abs { b=open_binder b v i;
+      Tm_Abs { b=subst_binder b ss;
                q;
-               pre=open_term_opt' pre v (i + 1);
-               body=open_st_term' body v (i + 1);
-               ret_ty=open_term_opt' ret_ty v (i + 1);               
-               post=open_term_opt' post v (i + 2) }
+               pre=subst_term_opt pre (shift_subst ss);
+               body=subst_st_term body (shift_subst ss);
+               ret_ty=subst_term_opt ret_ty (shift_subst ss);               
+               post=subst_term_opt post (shift_subst_n 2 ss) }
 
     | Tm_STApp { head; arg_qual; arg } ->
-      Tm_STApp { head = open_term' head v i;
+      Tm_STApp { head = subst_term head ss;
                  arg_qual;
-                 arg=open_term' arg v i }
+                 arg=subst_term arg ss }
 
     | Tm_Bind { binder; head; body } ->
-      Tm_Bind { binder = open_binder binder v i;
-                head = open_st_term' head v i;
-                body = open_st_term' body v (i + 1) }
+      Tm_Bind { binder = subst_binder binder ss;
+                head = subst_st_term head ss;
+                body = subst_st_term body (shift_subst ss) }
 
     | Tm_TotBind { head; body } ->
-      Tm_TotBind { head = open_term' head v i; 
-                   body = open_st_term' body v (i + 1) }
+      Tm_TotBind { head = subst_term head ss; 
+                   body = subst_st_term body (shift_subst ss) }
 
     | Tm_If { b; then_; else_; post } ->
-      Tm_If { b = open_term' b v i;
-              then_ = open_st_term' then_ v i;
-              else_ = open_st_term' else_ v i;
-              post = open_term_opt' post v (i + 1) }
+      Tm_If { b = subst_term b ss;
+              then_ = subst_st_term then_ ss;
+              else_ = subst_st_term else_ ss;
+              post = subst_term_opt post (shift_subst ss) }
 
     | Tm_IntroPure { p; should_check } ->
-      Tm_IntroPure { p = open_term' p v i; should_check }
+      Tm_IntroPure { p = subst_term p ss; should_check }
 
     | Tm_ElimExists { p } ->
-      Tm_ElimExists { p = open_term' p v i }
+      Tm_ElimExists { p = subst_term p ss }
       
     | Tm_IntroExists { erased; p; witnesses; should_check } ->
       Tm_IntroExists { erased; 
-                       p = open_term' p v i;
-                       witnesses = open_term_list' witnesses v i;
+                       p = subst_term p ss;
+                       witnesses = subst_term_list witnesses ss;
                        should_check }                             
 
     | Tm_While { invariant; condition; body; condition_var } ->
-      Tm_While { invariant = open_term' invariant v (i + 1);
-                 condition = open_st_term' condition v i;
-                 body = open_st_term' body v i;
+      Tm_While { invariant = subst_term invariant (shift_subst ss);
+                 condition = subst_st_term condition ss;
+                 body = subst_st_term body ss;
                  condition_var }
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      Tm_Par { pre1=open_term' pre1 v i;
-               body1=open_st_term' body1 v i;
-               post1=open_term' post1 v (i + 1);
-               pre2=open_term' pre2 v i;
-               body2=open_st_term' body2 v i;
-               post2=open_term' post2 v (i + 1) }
+      Tm_Par { pre1=subst_term pre1 ss;
+               body1=subst_st_term body1 ss;
+               post1=subst_term post1 (shift_subst ss);
+               pre2=subst_term pre2 ss;
+               body2=subst_st_term body2 ss;
+               post2=subst_term post2 (shift_subst ss) }
 
     | Tm_WithLocal { binder; initializer; body } ->
-      Tm_WithLocal { binder = open_binder binder v i;
-                     initializer = open_term' initializer v i;
-                     body = open_st_term' body v (i + 1) }
+      Tm_WithLocal { binder = subst_binder binder ss;
+                     initializer = subst_term initializer ss;
+                     body = subst_st_term body (shift_subst ss) }
 
     | Tm_Rewrite { t1; t2 } ->
-      Tm_Rewrite { t1 = open_term' t1 v i;
-                   t2 = open_term' t2 v i }
+      Tm_Rewrite { t1 = subst_term t1 ss;
+                   t2 = subst_term t2 ss }
 
     | Tm_Admit { ctag; u; typ; post } ->
       Tm_Admit { ctag;
                  u; 
-                 typ=open_term' typ v i;
-                 post=open_term_opt' post v (i + 1) }
+                 typ=subst_term typ ss;
+                 post=subst_term_opt post (shift_subst ss) }
 
     | Tm_Protect { t } ->
-      Tm_Protect { t = open_st_term' t v i }
+      Tm_Protect { t = subst_st_term t ss }
     in
     { t with term = t' }
+
+let open_st_term' (t:st_term) (v:term) (i:index) : st_term =
+  subst_st_term t [ DT i v ]
 
 let open_term_nv t nv =
     open_term' t (U.term_of_nvar nv) 0
@@ -394,153 +442,26 @@ let open_st_term t v : GTot st_term =
 
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
 
-let rec close_term' (t:term) (v:var) (i:index)
-  : Tot term (decreases t)
-  = match t with
-    | Tm_VProp
-    | Tm_Emp
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_Unknown -> t
+let close_term' (t:term) (v:var) (i:index) : term =
+  subst_term t [ ND v i ]
 
-    | Tm_Pure p ->
-      Tm_Pure (close_term' p v i)
-      
-    | Tm_Star l r ->
-      Tm_Star (close_term' l v i)
-              (close_term' r v i)
-              
-    | Tm_ExistsSL u b body ->
-      Tm_ExistsSL u { b with binder_ty = close_term' b.binder_ty v i }
-                    (close_term' body v (i + 1))
-                  
-    | Tm_ForallSL u b body ->
-      Tm_ForallSL u { b with binder_ty = close_term' b.binder_ty v i }
-                    (close_term' body v (i + 1))
-    
-    | Tm_FStar t r ->
-      Tm_FStar (RT.subst_term t [ RT.ND v i ]) r
+let close_st_comp' (s:st_comp) (v:var) (i:index) : st_comp =
+  subst_st_comp s [ ND v i ]
 
-let close_st_comp' (s:st_comp) (v:var) (i:index)
-  : st_comp =
+let close_comp' (c:comp) (v:var) (i:index) : comp =
+  subst_comp c [ ND v i ]
 
-  { s with res = close_term' s.res v i;
-           pre = close_term' s.pre v i;
-           post = close_term' s.post v (i + 1) }
+let close_term_opt' (t:option term) (v:var) (i:index) : option term =
+  subst_term_opt t [ ND v i ]
 
-let close_comp' (c:comp) (v:var) (i:index)
-  : comp
-  = match c with
-    | C_Tot t ->
-      C_Tot (close_term' t v i)
-
-    | C_ST s -> C_ST (close_st_comp' s v i)
-
-    | C_STAtomic inames s ->
-      C_STAtomic (close_term' inames v i)
-                 (close_st_comp' s v i)
-
-    | C_STGhost inames s ->
-      C_STGhost (close_term' inames v i)
-                (close_st_comp' s v i)
-
-
-let close_term_opt' (t:option term) (v:var) (i:index)
-  : Tot (option term)
-  = match t with
-    | None -> None
-    | Some t -> Some (close_term' t v i)
-
-
-let rec close_term_list' (t:list term) (v:var) (i:index)
-  : Tot (list term)
-  = match t with
-    | [] -> []
-    | hd::tl -> close_term' hd v i :: close_term_list' tl v i
+let  close_term_list' (t:list term) (v:var) (i:index) : list term =
+  subst_term_list t [ ND v i ]
 
 let close_binder b v i =
-  {b with binder_ty=close_term' b.binder_ty v i}
+  subst_binder b [ ND v i ]
              
-let rec close_st_term' (t:st_term) (v:var) (i:index)
-  : Tot st_term (decreases t)
-  = let t' = 
-    match t.term with
-    | Tm_Return { ctag; insert_eq; term } ->
-      Tm_Return { ctag; insert_eq; term=close_term' term v i }
-
-    | Tm_Abs { b; q; pre; body; ret_ty; post } ->
-      Tm_Abs { b = close_binder b v i;
-               q;
-               pre=close_term_opt' pre v (i + 1);
-               body=close_st_term' body v (i + 1);
-               ret_ty=close_term_opt' ret_ty v (i + 1);
-               post=close_term_opt' post v (i + 2) }
-
-    | Tm_STApp { head; arg_qual; arg } ->
-      Tm_STApp { head = close_term' head v i;
-                 arg_qual;
-                 arg = close_term' arg v i }
-
-    | Tm_Bind { binder; head; body } ->
-      Tm_Bind { binder = close_binder binder v i;
-                head = close_st_term' head v i;
-                body = close_st_term' body v (i + 1) }
-
-    | Tm_TotBind { head; body } ->
-      Tm_TotBind { head = close_term' head v i;
-                   body = close_st_term' body v (i + 1) }
-
-    | Tm_If { b; then_; else_; post } ->
-      Tm_If { b = close_term' b v i;
-              then_ = close_st_term' then_ v i;
-              else_ = close_st_term' else_ v i;
-              post = close_term_opt' post v (i + 1) }
-
-    | Tm_IntroPure { p; should_check } ->
-      Tm_IntroPure { p = close_term' p v i; should_check }
-      
-    | Tm_ElimExists { p } ->
-      Tm_ElimExists { p = close_term' p v i }
-      
-    | Tm_IntroExists { erased; p; witnesses; should_check } ->
-      Tm_IntroExists { erased;
-                       p = close_term' p v i;
-                       witnesses = close_term_list' witnesses v i;
-                       should_check }
-
-    | Tm_While { invariant; condition; body; condition_var } ->
-      Tm_While { invariant = close_term' invariant v (i + 1);
-                 condition = close_st_term' condition v i;
-                 body = close_st_term' body v i;
-                 condition_var }
-
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      Tm_Par { pre1 = close_term' pre1 v i;
-               body1 = close_st_term' body1 v i;
-               post1 = close_term' post1 v (i + 1);
-               pre2 = close_term' pre2 v i;
-               body2 = close_st_term' body2 v i;
-               post2 = close_term' post2 v (i + 1) }
-
-    | Tm_WithLocal { binder; initializer; body } ->
-      Tm_WithLocal { binder = close_binder binder v i;
-                     initializer = close_term' initializer v i;
-                     body = close_st_term' body v (i + 1) }
-
-    | Tm_Rewrite { t1; t2 } ->
-      Tm_Rewrite { t1 = close_term' t1 v i;
-                   t2 = close_term' t2 v i }
-
-    | Tm_Admit { ctag; u; typ; post } ->
-      Tm_Admit { ctag;
-                 u;
-                 typ = close_term' typ v i;
-                 post = close_term_opt' post v (i + 1) }
-
-    | Tm_Protect { t } ->
-      Tm_Protect { t = close_st_term' t v i }
-    in
-    { t with term = t' }
+let close_st_term' (t:st_term) (v:var) (i:index) : st_term =
+  subst_st_term t [ ND v i ]
       
 let close_term t v = close_term' t v 0
 let close_st_term t v = close_st_term' t v 0
