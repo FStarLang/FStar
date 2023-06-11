@@ -16,7 +16,6 @@
 module FStar.Tactics.Effect
 
 open FStar.Monotonic.Pure
-open FStar.Calc
 
 open FStar.Reflection.Types
 open FStar.Tactics.Types

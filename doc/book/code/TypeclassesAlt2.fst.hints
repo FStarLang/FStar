@@ -8,20 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "d04c99a62239822c82d2c5c220fe7d9b"
-    ],
-    [
-      "TypeclassesAlt2.fits",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "673abcb077054e7b0a2f72e8415dd443"
+      "79130251ddf6d924aaccdc23e7c19c95"
     ],
     [
       "TypeclassesAlt2.related_ops",
@@ -30,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "a3ab14088f8411a13f3f2b05bc5ad2ca"
+      "71cd48567b5cf52ff7e4cdbf0ea2bd62"
     ],
     [
       "TypeclassesAlt2.try_sub",
@@ -48,7 +35,7 @@
         "refinement_interpretation_Tm_refine_50e6ea6e9727dfa5ba1ef704d5717e6c"
       ],
       0,
-      "062e95200cad4df884c18ab9053f702b"
+      "05c627747b4750448ed941cfe18594b2"
     ],
     [
       "TypeclassesAlt2.u32_instance_base",
@@ -74,7 +61,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "db37b6563f388c1b3697b772cb2c0e9d"
+      "19754030a86bbd16f8ec693551ada60e"
     ],
     [
       "TypeclassesAlt2.u32_instance_add",
@@ -121,7 +108,7 @@
         "typing_TypeclassesAlt2.u32_instance_base"
       ],
       0,
-      "620905e4327d853124e3f82c423f36e6"
+      "0be361ff99603371a1cfee19fc818030"
     ],
     [
       "TypeclassesAlt2.u32_instance_sub",
@@ -165,7 +152,7 @@
         "typing_FStar.UInt32.v", "typing_TypeclassesAlt2.u32_instance_base"
       ],
       0,
-      "b0182e5d4cc07ffefd3beeddee77c12a"
+      "568aa0c816a36141b11e3a9df534c312"
     ],
     [
       "TypeclassesAlt2.u32_instance_cmp",
@@ -185,7 +172,7 @@
         "token_correspondence_TypeclassesAlt2.as_nat"
       ],
       0,
-      "9633f930ef148aaec102706243423635"
+      "f5565e95b5d74e7b67db5b0e1c755727"
     ],
     [
       "TypeclassesAlt2.u64_instance_base",
@@ -211,7 +198,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "e0d7165b8cf03301385f614760a0f714"
+      "aa49edf69a393a5b7baff69b0ec65b29"
     ],
     [
       "TypeclassesAlt2.u64_instance_add",
@@ -258,7 +245,7 @@
         "typing_TypeclassesAlt2.u64_instance_base"
       ],
       0,
-      "98b698c4bd12819b527ce25aa40b2e8c"
+      "ef3a9cacccbc457739959649ecd4c5d0"
     ],
     [
       "TypeclassesAlt2.u64_instance_sub",
@@ -302,7 +289,7 @@
         "typing_FStar.UInt64.v", "typing_TypeclassesAlt2.u64_instance_base"
       ],
       0,
-      "0d5bf42b3d850b1c4cd0059111168893"
+      "dcbbc18d5f182d6b69ef3309ff039419"
     ],
     [
       "TypeclassesAlt2.u64_instance_cmp",
@@ -322,7 +309,7 @@
         "token_correspondence_TypeclassesAlt2.as_nat"
       ],
       0,
-      "84e07333a9787c5527ef76d74e53eca3"
+      "bc5a328006c2bce0970bd546b8e17a2f"
     ],
     [
       "TypeclassesAlt2.sum",
@@ -374,7 +361,7 @@
         "typing_TypeclassesAlt2.__proj__Mksubtractable_bounded_unsigned_int__item__base"
       ],
       0,
-      "128e9f2ae50400765d89d237704cd8e0"
+      "ea922aeaab05fd8d235e45f104d41c6f"
     ],
     [
       "TypeclassesAlt2.testsum32",
@@ -393,7 +380,7 @@
         "projection_inverse_TypeclassesAlt2.Mksubtractable_bounded_unsigned_int_base"
       ],
       0,
-      "6c9caf0d4011e34510f20d505359845e"
+      "d855d39d344f6c3de08be7e147e0de61"
     ],
     [
       "TypeclassesAlt2.testsum64",
@@ -412,7 +399,7 @@
         "projection_inverse_TypeclassesAlt2.Mksubtractable_bounded_unsigned_int_base"
       ],
       0,
-      "a90121379fe11c1da814a6dfdc1aede4"
+      "4528ed67e3889b6fe9a866587eb28d20"
     ],
     [
       "TypeclassesAlt2.try_sub3",
@@ -431,7 +418,7 @@
         "typing_TypeclassesAlt2.__base_sub"
       ],
       0,
-      "521bb83616063178c7bf2746cfa5d9f9"
+      "2e12cabe3dc7b8ca890894cc2042137e"
     ]
   ]
 ]
