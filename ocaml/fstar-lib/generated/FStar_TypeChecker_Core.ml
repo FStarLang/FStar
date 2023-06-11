@@ -831,8 +831,32 @@ let (check_aqual :
          FStar_Pervasives_Native.Some
          { FStar_Syntax_Syntax.aqual_implicit = b1;
            FStar_Syntax_Syntax.aqual_attributes = uu___1;_})
-          -> if b0 = b1 then return () else fail "Unequal arg qualifiers"
-      | uu___ -> fail "Unequal arg qualifiers"
+          ->
+          if b0 = b1
+          then return ()
+          else
+            (let uu___3 =
+               let uu___4 = FStar_Compiler_Util.string_of_bool b0 in
+               let uu___5 = FStar_Compiler_Util.string_of_bool b1 in
+               FStar_Compiler_Util.format2
+                 "Unequal arg qualifiers: lhs implicit=%s and rhs implicit=%s"
+                 uu___4 uu___5 in
+             fail uu___3)
+      | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
+         { FStar_Syntax_Syntax.aqual_implicit = false;
+           FStar_Syntax_Syntax.aqual_attributes = uu___;_})
+          -> return ()
+      | (FStar_Pervasives_Native.Some
+         { FStar_Syntax_Syntax.aqual_implicit = false;
+           FStar_Syntax_Syntax.aqual_attributes = uu___;_},
+         FStar_Pervasives_Native.None) -> return ()
+      | uu___ ->
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Print.aqual_to_string a0 in
+            let uu___3 = FStar_Syntax_Print.aqual_to_string a1 in
+            FStar_Compiler_Util.format2
+              "Unequal arg qualifiers: lhs %s and rhs %s" uu___2 uu___3 in
+          fail uu___1
 let (check_positivity_qual :
   relation ->
     FStar_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option
