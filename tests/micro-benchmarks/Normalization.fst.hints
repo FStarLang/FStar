@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "766c9d0ffffa027acbebe1893f2300ae"
+      "227716db46916d8d90bd0d8f0ca7c43d"
     ],
     [
       "Normalization.id",
@@ -24,7 +24,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7fd78a9a09594def37e30e0f770a6495"
+      "4f536671c15b3f8a3d77f6306e7fc90f"
     ],
     [
       "Normalization.test2",
@@ -33,7 +33,7 @@
       0,
       [ "@query" ],
       0,
-      "37cd0a0d0878c247c4eac57890ec1545"
+      "4b8da9dc8e3d45d9fbd61eabc4211499"
     ],
     [
       "Normalization.pow2_values",
@@ -42,7 +42,7 @@
       0,
       [ "@query" ],
       0,
-      "3e2da6658d462035843929d8a02ae143"
+      "c92dce04e29baf48d2665a33960b819c"
     ],
     [
       "Normalization.test_sort",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c7b31b004aa2ee4952e8de24d595ba02"
+      "b6a36f384c8b11fb8691c711d23bbd01"
     ],
     [
       "Normalization.test_sort1",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9a4097446257f41e2f875ecfbb1d86f1"
+      "205ee14c49548794167183ac5bfc6bb3"
     ],
     [
       "Normalization.f_1529_3",
@@ -82,7 +82,7 @@
         "interpretation_Tm_abs_8284a06c98cf4d08ee876bb3cd7024dc"
       ],
       0,
-      "efe01d98f8d9753d7bb45da9382039b7"
+      "6a80c9fb29ed88e9c272bc659416736d"
     ]
   ]
 ]

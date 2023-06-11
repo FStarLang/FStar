@@ -955,14 +955,3 @@ let lem_trans #a #x #z #y e1 e2 = ()
 
 (** Transivity of equality: reduce [x == z] to [x == ?u] and [?u == z].  *)
 let trans () : Tac unit = apply_lemma (`lem_trans)
-
-(* Alias to just use the current vconfig *)
-let smt_sync () : Tac unit = t_smt_sync (get_vconfig ())
-
-(* smt_sync': as smt_sync, but using a particular fuel/ifuel *)
-let smt_sync' (fuel ifuel : nat) : Tac unit =
-    let vcfg = get_vconfig () in
-    let vcfg' = { vcfg with initial_fuel = fuel; max_fuel = fuel
-                          ; initial_ifuel = ifuel; max_ifuel = ifuel }
-    in
-    t_smt_sync vcfg'
