@@ -464,11 +464,13 @@ let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
-(* tactic constants *)
-let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
-let pack           = p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
-let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
+(* tactic coercions: only V1 (for now?) *)
+let inspect_v1        = p2l ["FStar"; "Tactics"; "V1"; "Builtins"; "inspect"]
+let pack_v1           = p2l ["FStar"; "Tactics"; "V1"; "Builtins"; "pack"]
+let binder_to_term_v1 = p2l ["FStar"; "Tactics"; "V1"; "Derived"; "binder_to_term"]
+let term_view_lid  = p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
 
+(* tactic constants *)
 let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Compiler.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
@@ -497,11 +499,12 @@ let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
-let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
-let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
-let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
+let check_with_lid = lid_of_path (["FStar"; "VConfig"; "check_with"]) FStar.Compiler.Range.dummyRange
+
+(* decls = list sigelt, matches exactly in V1/V2 *)
+let decls_lid      = p2l ["FStar"; "Reflection"; "V2"; "Data"; "decls"]
 
 // meta dsl constants
 let dsl_typing_builtin s = lid_of_path (["FStar"; "Reflection"; "Typing"; "Builtins"]@[s]) FStar.Compiler.Range.dummyRange

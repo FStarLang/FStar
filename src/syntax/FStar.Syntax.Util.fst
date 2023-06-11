@@ -473,6 +473,7 @@ let eq_lazy_kind k k' =
     match k, k' with
      | BadLazy, BadLazy
      | Lazy_bv, Lazy_bv
+     | Lazy_namedv, Lazy_namedv
      | Lazy_binder, Lazy_binder
      | Lazy_optionstate, Lazy_optionstate
      | Lazy_fvar, Lazy_fvar
@@ -496,6 +497,7 @@ let lazy_kind_to_string k =
     match k with
     | BadLazy -> "BadLazy"
     | Lazy_bv -> "Lazy_bv"
+    | Lazy_namedv -> "Lazy_namedv"
     | Lazy_binder -> "Lazy_binder"
     | Lazy_optionstate -> "Lazy_optionstate"
     | Lazy_fvar -> "Lazy_fvar"

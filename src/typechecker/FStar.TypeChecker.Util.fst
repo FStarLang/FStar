@@ -2372,15 +2372,15 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
 
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view exp_t ->
-        let e, lc = coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac in
+        let e, lc = coerce_with env e lc S.t_term_view C.inspect_v1 [] [] S.mk_Tac in
         e, lc, Env.trivial_guard
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term exp_t ->
-        let e, lc = coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac in
+        let e, lc = coerce_with env e lc S.t_term C.pack_v1 [] [] S.mk_Tac in
         e, lc, Env.trivial_guard
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term exp_t ->
-        let e, lc = coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac in
+        let e, lc = coerce_with env e lc S.t_term C.binder_to_term_v1 [] [] S.mk_Tac in
         e, lc, Env.trivial_guard
 
     | _ ->
@@ -2413,7 +2413,7 @@ let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option (term * lcomp) =
     let hd, args = U.head_and_args rt in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid ->
-        Some <| coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
+        Some <| coerce_with env e lc S.t_term_view C.inspect_v1 [] [] S.mk_Tac
     | _ ->
         None
 

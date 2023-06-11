@@ -395,6 +395,7 @@ and lazyinfo = {
 and lazy_kind =
   | BadLazy
   | Lazy_bv
+  | Lazy_namedv
   | Lazy_binder
   | Lazy_optionstate
   | Lazy_fvar

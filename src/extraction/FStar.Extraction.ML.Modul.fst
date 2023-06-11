@@ -675,7 +675,7 @@ let get_noextract_to (se:sigelt) (backend:option Options.codegen_t) : bool =
     let hd, args = U.head_and_args attr in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
-        begin match EMB.unembed EMB.e_string a false EMB.id_norm_cb with
+        begin match EMB.try_unembed EMB.e_string a EMB.id_norm_cb with
         | Some s ->
           Option.isSome backend && Options.parse_codegen s = backend
         | None ->
