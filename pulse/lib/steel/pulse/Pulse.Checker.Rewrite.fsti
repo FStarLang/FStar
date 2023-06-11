@@ -1,6 +1,6 @@
 module Pulse.Checker.Rewrite
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 open Pulse.Syntax
 open Pulse.Typing

@@ -1,7 +1,7 @@
 module Pulse.Syntax.Pure
 
-module R = FStar.Reflection
-module T = FStar.Tactics
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax.Base
@@ -22,7 +22,7 @@ let u_zero = u0
 let u_succ (u:universe) : universe =
   R.pack_universe (R.Uv_Succ u)
 let u_var (s:string) : universe =
-  R.pack_universe (R.Uv_Name (s, FStar.Range.range_0)) 
+  R.pack_universe (R.Uv_Name (R.pack_ident (s, FStar.Range.range_0)))
 let u_max (u0 u1:universe) : universe =
   R.pack_universe (R.Uv_Max [u0; u1])
 let u_unknown : universe = R.pack_universe R.Uv_Unk
@@ -32,7 +32,7 @@ let tm_bvar (bv:bv) : term =
            bv.bv_ppname.range
 
 let tm_var (nm:nm) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv_with_name nm.nm_ppname.name nm.nm_index))))
+  Tm_FStar (R.pack_ln (R.Tv_Var (R.pack_namedv (RT.make_namedv_with_name nm.nm_ppname.name nm.nm_index))))
            nm.nm_ppname.range
 
 let tm_fvar (l:fv) : term =
@@ -47,16 +47,15 @@ let tm_constant (c:constant) : term =
   Tm_FStar (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
 
 let tm_refine (b:binder) (t:term) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Refine (R.pack_bv (RT.make_bv_with_name b.binder_ppname.name 0))
-                                   (elab_term b.binder_ty)
-                                   (elab_term t)))
+  let rb : R.simple_binder = RT.mk_simple_binder b.binder_ppname.name (elab_term b.binder_ty) in
+  Tm_FStar (R.pack_ln (R.Tv_Refine rb (elab_term t)))
            FStar.Range.range_0
 
 let tm_let (t e1 e2:term) : term =
+  let rb : R.simple_binder = RT.mk_simple_binder RT.pp_name_default (elab_term t) in
   Tm_FStar (R.pack_ln (R.Tv_Let false
                                 []
-                                (R.pack_bv (RT.make_bv 0))
-                                (elab_term t)
+                                rb
                                 (elab_term e1)
                                 (elab_term e2)))
            FStar.Range.range_0
@@ -92,10 +91,10 @@ let is_var (t:term) : option nm =
   match t with
   | Tm_FStar host_term r ->
     begin match R.inspect_ln host_term with
-          | R.Tv_Var bv ->
-            let bv_view = R.inspect_bv bv in
-            Some {nm_index=bv_view.bv_index;
-                  nm_ppname=mk_ppname (bv_view.bv_ppname) r}
+          | R.Tv_Var nv ->
+            let nv_view = R.inspect_namedv nv in
+            Some {nm_index=nv_view.uniq;
+                  nm_ppname=mk_ppname (nv_view.ppname) r}
           | _ -> None
     end
   | _ -> None
@@ -166,23 +165,21 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
   | Tm_FStar host_term _ ->
     begin match R.inspect_ln host_term with
           | R.Tv_Arrow b c ->
-            let {binder_bv;binder_qual;binder_sort} =
-              R.inspect_binder b in
-            begin match binder_qual with
+            let {ppname;qual;sort} = R.inspect_binder b in
+            begin match qual with
                   | R.Q_Meta _ -> None
                   | _ ->
-                    let q = readback_qual binder_qual in
-                    let bv_view = R.inspect_bv binder_bv in
+                    let q = readback_qual qual in
                     let c_view = R.inspect_comp c in
                     begin match c_view with
                           | R.C_Total c_t ->
-                            let? binder_ty = readback_ty binder_sort in
+                            let? binder_ty = readback_ty sort in
                             let? c =
                               match readback_comp c_t with
                               | Some c -> Some c <: option Pulse.Syntax.Base.comp
                               | None -> None in
                             Some ({binder_ty;
-                                   binder_ppname=mk_ppname (bv_view.bv_ppname) (T.range_of_term host_term)},
+                                   binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
                                   q,
                                   c)
                           | _ -> None

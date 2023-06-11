@@ -1,11 +1,11 @@
 module Pulse.Syntax.Base
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 open FStar.List.Tot
 
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 type constant = R.vconst
 

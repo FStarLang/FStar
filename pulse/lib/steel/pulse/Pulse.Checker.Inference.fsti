@@ -3,8 +3,8 @@ module Pulse.Checker.Inference
 open Pulse.Syntax
 open Pulse.Typing
 
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 
 val uvar : Type0

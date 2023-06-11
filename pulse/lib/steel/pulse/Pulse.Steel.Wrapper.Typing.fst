@@ -1,6 +1,6 @@
 module Pulse.Steel.Wrapper.Typing
 
-open FStar.Reflection
+open FStar.Reflection.V2
 open Pulse.Reflection.Util
 
 module RT = FStar.Reflection.Typing

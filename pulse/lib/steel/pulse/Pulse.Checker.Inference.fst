@@ -1,7 +1,7 @@
 module Pulse.Checker.Inference
 
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
@@ -365,7 +365,7 @@ let rec contains_uvar (t:term)
 
 let try_unify (g:env) (l r:term) = match_typ g l r []
 
-module RF = FStar.Reflection.Formula
+module RF = FStar.Reflection.V2.Formula
 
 let is_eq2 (t:R.term) : option (R.term & R.term) =
   let head, args = R.collect_app_ln t in

@@ -1,5 +1,5 @@
 module Pulse.Readback
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 open Pulse.Syntax.Base
 open Pulse.Reflection.Util
 module RU = Pulse.RuntimeUtils
@@ -29,14 +29,12 @@ let try_readback_st_comp
          | [res; pre; post] ->
            (match inspect_ln (fst post) with
             | Tv_Abs b body ->
-              let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs; binder_sort=sort } =
+              let { qual=aq; attrs=attrs; sort=sort } =
                   inspect_binder b
               in    
-              let bv_view = inspect_bv bv in
               assume (fv == stt_fv);
               assume (aq == Q_Explicit           /\
                       attrs == []                /\
-                      bv_view.bv_index == 0      /\
                       sort == fst res /\
                       snd res == Q_Explicit      /\
                       snd pre == Q_Explicit      /\
@@ -55,10 +53,9 @@ let try_readback_st_comp
          | [res; opened; pre; post] ->
            (match inspect_ln (fst post) with
             | Tv_Abs b body ->
-              let { binder_bv=bv; binder_qual=aq; binder_attrs=attrs }
+              let { qual=aq; attrs=attrs }
                   = inspect_binder b
               in    
-              let bv_view = inspect_bv bv in
               let? res' = readback_ty (fst res) in
               let? opened' = readback_ty (fst opened) in
               let? pre' = readback_ty (fst pre) in
@@ -154,8 +151,7 @@ let rec readback_ty (t:R.term)
           | Tv_Abs b body ->
             let? p = readback_ty body in
             let bview = inspect_binder b in
-            let bv = inspect_bv bview.binder_bv in
-            Some (bv.bv_ppname, RU.binder_range b, p) <: option (ppname_t & range & term)
+            Some (bview.ppname, RU.binder_range b, p) <: option (ppname_t & range & term)
           | _ -> None in  // TODO: FIXME: provide error from this function?
         let b = { binder_ty = ty; binder_ppname = mk_ppname ppname range } in
         let pulse_t : (t':Pulse.Syntax.Base.term{elab_term t' == t}) =
@@ -176,11 +172,11 @@ let rec readback_ty (t:R.term)
     | _ -> aux ()
     end
   
-  | Tv_Refine _ _ _
+  | Tv_Refine _ _
   | Tv_Arrow _ _
   | Tv_Type _
   | Tv_Const _
-  | Tv_Let _ _ _ _ _ _
+  | Tv_Let _ _ _ _ _
   | Tv_Var _
   | Tv_BVar _
   | Tv_UInst _ _

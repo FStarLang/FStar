@@ -1,8 +1,8 @@
 module Pulse.Soundness.VPropEquiv
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
@@ -110,8 +110,9 @@ let vprop_equiv_ext_type : R.term =
   let open R in
   let v_typ = pack_ln (Tv_FVar  (pack_fv vprop_lid)) in
   let mk_bv index = pack_ln (Tv_BVar (pack_bv {
-    bv_ppname = RT.pp_name_default;
-    bv_index = index;
+    ppname = RT.pp_name_default;
+    index = index;
+    sort = Sealed.seal tun;
   })) in
 
   mk_arrow
