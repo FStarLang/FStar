@@ -102,9 +102,10 @@ let (bind_type_t1_t2_pre_post1 :
               let post2 = Pulse_Reflection_Util.mk_name var in
               Pulse_Reflection_Util.mk_arrow
                 ((post2_type_bind t2), FStar_Reflection_Data.Q_Implicit)
-               (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1
+                (FStar_Reflection_Typing.subst_term
+                   (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1
                       post2)
-               
+                   [FStar_Reflection_Typing.ND (var, Prims.int_zero)])
 let (post1_type_bind :
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
   fun t1 ->
@@ -126,9 +127,9 @@ let (bind_type_t1_t2_pre :
             let post1 = Pulse_Reflection_Util.mk_name var in
             Pulse_Reflection_Util.mk_arrow
               ((post1_type_bind t1), FStar_Reflection_Data.Q_Implicit)
-              
+              (FStar_Reflection_Typing.subst_term
                  (bind_type_t1_t2_pre_post1 u1 u2 t1 t2 pre post1)
-                 
+                 [FStar_Reflection_Typing.ND (var, Prims.int_zero)])
 let (bind_type_t1_t2 :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe ->
@@ -144,9 +145,9 @@ let (bind_type_t1_t2 :
           let pre_type = Pulse_Reflection_Util.vprop_tm in
           Pulse_Reflection_Util.mk_arrow
             (pre_type, FStar_Reflection_Data.Q_Implicit)
-            
+            (FStar_Reflection_Typing.subst_term
                (bind_type_t1_t2_pre u1 u2 t1 t2 pre)
-               
+               [FStar_Reflection_Typing.ND (var, Prims.int_zero)])
 let (bind_type_t1 :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe ->
@@ -160,9 +161,8 @@ let (bind_type_t1 :
         let t2_type = FStar_Reflection_Typing.tm_type u2 in
         Pulse_Reflection_Util.mk_arrow
           (t2_type, FStar_Reflection_Data.Q_Implicit)
-          
-             (bind_type_t1_t2 u1 u2 t1 t2)
-             
+          (FStar_Reflection_Typing.subst_term (bind_type_t1_t2 u1 u2 t1 t2)
+             [FStar_Reflection_Typing.ND (var, Prims.int_zero)])
 let (bind_type :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe -> FStar_Reflection_Types.term)
@@ -174,8 +174,8 @@ let (bind_type :
       let t1_type = FStar_Reflection_Typing.tm_type u1 in
       Pulse_Reflection_Util.mk_arrow
         (t1_type, FStar_Reflection_Data.Q_Implicit)
-        (bind_type_t1 u1 u2 t1)
-           
+        (FStar_Reflection_Typing.subst_term (bind_type_t1 u1 u2 t1)
+           [FStar_Reflection_Typing.ND (var, Prims.int_zero)])
 let (mk_star :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)

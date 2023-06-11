@@ -313,8 +313,10 @@ let rec (open_term' :
                     (b.Pulse_Syntax_Base.binder_ppname)
                 }, (open_term' body v (i + Prims.int_one)))
         | Pulse_Syntax_Base.Tm_FStar (t1, r) ->
-            Pulse_Syntax_Base.Tm_FStar (t1, r)
-              
+            Pulse_Syntax_Base.Tm_FStar
+              ((FStar_Reflection_Typing.subst_term t1
+                  [FStar_Reflection_Typing.DT
+                     (i, (Pulse_Elaborate_Pure.elab_term v))]), r)
 let (open_st_comp' :
   Pulse_Syntax_Base.st_comp ->
     Pulse_Syntax_Base.term ->
@@ -623,8 +625,10 @@ let rec (close_term' :
                   Pulse_Syntax_Base.binder_ppname =
                     (b.Pulse_Syntax_Base.binder_ppname)
                 }, (close_term' body v (i + Prims.int_one)))
-        | Pulse_Syntax_Base.Tm_FStar (t1, r) -> Pulse_Syntax_Base.Tm_FStar (t1, r)
-            
+        | Pulse_Syntax_Base.Tm_FStar (t1, r) ->
+            Pulse_Syntax_Base.Tm_FStar
+              ((FStar_Reflection_Typing.subst_term t1
+                  [FStar_Reflection_Typing.ND (v, i)]), r)
 let (close_st_comp' :
   Pulse_Syntax_Base.st_comp ->
     Pulse_Syntax_Base.var ->
