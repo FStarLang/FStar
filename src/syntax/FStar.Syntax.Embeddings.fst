@@ -146,7 +146,7 @@ let lazy_embed (pa:printer 'a) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
          U.mk_lazy x S.tun (Lazy_embedding (et, thunk)) (Some rng)
 
 let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> option 'a) : option 'a =
-    let x = SS.compress x in
+    let x = unmeta_div_results x in
     match x.n with
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
       if et <> et'

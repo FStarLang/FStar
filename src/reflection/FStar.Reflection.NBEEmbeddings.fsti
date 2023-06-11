@@ -16,24 +16,26 @@
 
 module FStar.Reflection.NBEEmbeddings
 
-open FStar open FStar.Compiler
-open FStar.Syntax.Syntax
+open FStar
+open FStar.Compiler
 open FStar.TypeChecker.NBETerm
+open FStar.Syntax.Syntax
 open FStar.Order
 open FStar.TypeChecker.Env
-open FStar.Reflection.Data
-module O = FStar.Options
-module RD = FStar.Reflection.Data
+open FStar.Reflection.V2.Data
+
+module RD = FStar.Reflection.V2.Data
+module S  = FStar.Syntax.Syntax
 
 (* Embeddings *)
 val e_bv            : embedding bv
 val e_binder        : embedding binder
 val e_binder_view   : embedding binder_view
 val e_binders       : embedding binders
-val e_term          : embedding term
+val e_term          : embedding S.term
 val e_term_view     : embedding term_view
 val e_fv            : embedding fv
-val e_comp          : embedding FStar.Syntax.Syntax.comp
+val e_comp          : embedding S.comp
 val e_comp_view     : embedding comp_view
 val e_const         : embedding vconst
 val e_env           : embedding FStar.TypeChecker.Env.env

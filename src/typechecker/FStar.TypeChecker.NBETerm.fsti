@@ -275,7 +275,7 @@ val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
 
 (* Unconditionally fails raising an exception when called *)
-val e_unsupported : embedding t
+val e_unsupported : #a:Type -> embedding a
 
 (* Arity specific raw_embeddings of arrows; used to generate top-level
    registrations of compiled functions in FStar.Extraction.ML.Util *)

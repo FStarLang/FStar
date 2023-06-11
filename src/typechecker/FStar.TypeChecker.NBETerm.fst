@@ -540,7 +540,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb))) etyp
 
-let e_unsupported : embedding t =
+let e_unsupported #a : embedding a =
     let em = (fun _cb a -> failwith "Unsupported NBE embedding") in
     let un = (fun _cb t -> failwith "Unsupported NBE embedding") in
     mk_emb em un (lid_as_typ PC.term_lid [] []) ET_abstract

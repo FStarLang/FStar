@@ -90,6 +90,8 @@ val e_lazy        : lazy_kind ->
                     embedding 'a
 
 
+(* used from Syntax.Embeddings *)
+val unmeta_div_results : term -> term
 
 (* Helpers for extracted embeddings of inductive types.
 Do not use internally. *)

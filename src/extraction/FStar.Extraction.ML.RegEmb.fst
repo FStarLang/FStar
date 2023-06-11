@@ -90,7 +90,9 @@ let unembed_lid    = Ident.lid_of_str "FStar.Syntax.Embeddings.Base.extracted_un
 let bind_opt_lid   = Ident.lid_of_str "FStar.Compiler.Util.bind_opt"
 
 let ml_nbe_unsupported : mlexpr =
-  mk (MLE_Name (["FStar"; "TypeChecker"; "NBETerm"], "e_unsupported"))
+  (* extraction thunks this definition *)
+  let hd = mk (MLE_Name (["FStar"; "TypeChecker"; "NBETerm"], "e_unsupported")) in
+  mk (MLE_App (hd, [ml_unit]))
 
 let ml_magic : mlexpr =
   mk (MLE_Coerce (ml_unit, MLTY_Top, MLTY_Top))

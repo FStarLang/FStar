@@ -191,9 +191,9 @@ let set_type ty  (e:embedding 'a) = { e with typ = ty }
 let embed        (e:embedding 'a) = e.em
 let try_unembed  (e:embedding 'a) t n =
   (* Unembed always receives a term without the meta_monadics above,
-  strip it here. TODO: maybe also compress? *)
+  and also already compressed. *)
   let t = unmeta_div_results t in
-  e.un t n
+  e.un (SS.compress t) n
 
 let unembed (e:embedding 'a) t n =
   let r = try_unembed e t n in
