@@ -212,7 +212,7 @@ fn sort3 (a:array U32.t)
          (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a full_perm s)
    ensures 
-      exists (s':Seq.seq (U32.t)). (
+      exists s'. (
          A.pts_to a full_perm s' `star`
          pure (sorted s s')
       )
