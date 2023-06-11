@@ -16,7 +16,7 @@
 module MiniParseExample2
 open MiniParse.Spec.TSum
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module U8 = FStar.UInt8
 
 noeq

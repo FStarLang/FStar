@@ -1,6 +1,6 @@
 module UnicodeOperators
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 // Unicode symbols that belongs to the 
 // [Math Symbol](compart.com/unicode/category/sm)

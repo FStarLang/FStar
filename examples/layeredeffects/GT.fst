@@ -1,6 +1,6 @@
 module GT
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Universe
 
 type idx =
@@ -93,7 +93,7 @@ let app #a #b #i (f : a -> GTD b i) (x : a) : GTD b i = f x
 
 // todo: use map/app from tot context and prove that it does what it's meant to do
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec appn #a #i (n:nat) (f : a -> GTD a i) (x : a) : GTD a i =
   match n with

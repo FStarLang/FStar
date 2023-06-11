@@ -17,7 +17,7 @@
 module DijkstraStateMonad
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 /// This example illustrates how to derive a WP-indexed state monad
 /// from a free state monad, parametric in the type of the state

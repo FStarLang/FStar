@@ -16,7 +16,7 @@
 module MiniParseExample3
 open MiniParse.Tac.Spec
 open MiniParse.Tac.Impl
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let ps = _ by (gen_package Goal (`palette))
 

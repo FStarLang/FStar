@@ -61,7 +61,7 @@ open FStar.OrdSet
 open FStar.OrdSetProps
 open FStar.PredicateExtensionality
 open FStar.PropositionalExtensionality
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.Seq
 open FStar.Seq.Base
 open FStar.Seq.Properties
@@ -71,7 +71,7 @@ open FStar.SquashProperties
 open FStar.ST
 open FStar.String
 open FStar.StrongExcludedMiddle
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tcp
 open FStar.TSet
 open FStar.All

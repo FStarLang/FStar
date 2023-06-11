@@ -18,7 +18,7 @@ include StringPrinter.RecC
 
 module Ca = FStar.Int.Cast
 module U32 = FStar.UInt32
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module HST = FStar.HyperStack.ST
 module B = FStar.Buffer
 

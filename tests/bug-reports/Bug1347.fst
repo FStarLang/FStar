@@ -15,7 +15,7 @@
 *)
 module Bug1347
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let t1 (): Tac unit =
   dump "Before";

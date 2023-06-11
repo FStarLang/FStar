@@ -155,7 +155,7 @@ let rec progress #e #t h =
      | _          -> let ExIntro e1' h1' = progress h1 in
                      ExIntro (EApp e1' e2) (SApp1 e2 h1')
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 (* Substitution extensional - used by substitution lemma below *)
 val subst_extensional: s1:sub -> s2:sub{feq s1 s2} -> e:exp ->

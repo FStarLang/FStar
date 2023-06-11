@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module MApply
+module TestMApply
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : Type0
 assume val q : Type0

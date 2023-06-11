@@ -15,7 +15,7 @@
 *)
 module Bug1479
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.Result
 
 assume val fail : #a:Type -> m:string -> TAC a (fun ps post -> post (Failed m ps))

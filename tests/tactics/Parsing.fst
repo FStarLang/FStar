@@ -1,8 +1,6 @@
 module Parsing
 
-open FStar.Tactics
-open FStar.Reflection
-open FStar.Reflection.Builtins
+open FStar.Tactics.V2
 
 let term_to_string_to_term (value: 'a): Tac unit
   = let t: term = quote value in

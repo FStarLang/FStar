@@ -114,7 +114,7 @@ effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let br (n:nat) : I bool =
  if n = 0 then true else false

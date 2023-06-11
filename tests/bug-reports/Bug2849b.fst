@@ -8,7 +8,7 @@ let pure () : int =
 
 let _ = assert_norm (pure () == 1)
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let t1 () : T.Tac unit =
   let rec f (): T.Tac unit = T.fail "fail_f"

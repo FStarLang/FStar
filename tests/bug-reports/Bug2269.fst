@@ -1,6 +1,6 @@
 module Bug2269
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let a: string =
   _ by (let dtup = (|1, 4|) = (|1, 4|) in // does not reduce

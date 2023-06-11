@@ -1,6 +1,6 @@
 module RevealHide
 open FStar.Ghost
-open FStar.Tactics
+open FStar.Tactics.V2
 
 #push-options "--no_smt"
 

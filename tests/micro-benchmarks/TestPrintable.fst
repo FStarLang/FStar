@@ -19,7 +19,7 @@
 (* Sanity tests for Printable by type. *)
 
 module TestPrintable
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Seq
 
 open FStar.Printable 

@@ -15,7 +15,7 @@
 *)
 module UnifyMatch
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 noeq
 type t =

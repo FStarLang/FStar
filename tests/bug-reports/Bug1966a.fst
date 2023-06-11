@@ -1,6 +1,6 @@
 module Bug1966a
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Squash
 
 let conversion a (x y : a) (h:(x == y)) : Tot (equals x y) = Refl
@@ -31,8 +31,8 @@ let fun_ext' #a (#b:a -> Type) (f g: (x:a -> b x)) :
     let p = forall_intro_as "p" in
     let h = implies_intro() in
     let u = forall_intro() in
-    let (h1, h2) = destruct_and h in    
-    let h2' = instantiate h2 u in
+    let (h1, h2) = destruct_and (binding_to_term h) in
+    let h2' = instantiate (binding_to_term h2) (binding_to_term u) in
     mapply h2'; clear h2'; clear h2; clear h;
     (* so far it was all boilerplate *)
     mapply (`conversion);
@@ -43,6 +43,6 @@ let fun_ext' #a (#b:a -> Type) (f g: (x:a -> b x)) :
     let x = forall_intro_as "X" in
     mapply (`return_squash);
     norm [delta];
-    let h1' = instantiate h1 x in (* used to fail for no apparent reason *)
+    let h1' = instantiate (binding_to_term h1) (binding_to_term x) in (* used to fail for no apparent reason *)
     ()
   ) = ()

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module UserTactics
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test_print_goal =
   assert (forall (y:int). y==0 ==> 0==y)
@@ -126,7 +126,7 @@ let test_inspect =
           | Tv_Type _ -> debug "type"
           | Tv_Var _ -> debug "var"
           | Tv_FVar _ -> debug "fvar"
-          | Tv_Refine _ _ _ -> debug "refinement"
+          | Tv_Refine _ _ -> debug "refinement"
           | Tv_Const C_Unit -> debug "unit"
           | Tv_Const (C_Int i) -> debug ("int: " ^ string_of_int i)
           | _ -> fail "unknown")

@@ -15,7 +15,7 @@
 *)
 module VC
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Testing that all VCs needed here are trivial by normalization/simplification *)
 #set-options "--no_smt"

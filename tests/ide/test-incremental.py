@@ -20,6 +20,9 @@ def is_comment(str):
         return True
     lines = str.splitlines()
     for line in lines:
+        line = line.strip()
+        if not line: # empty lines
+            continue
         if (line.startswith("(*") and line.endswith("*)")):
             continue
         if not line.startswith("//"):

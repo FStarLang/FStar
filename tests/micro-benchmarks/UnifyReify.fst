@@ -1,6 +1,6 @@
 module UnifyReify
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test1 tb  : Tac unit =
     let (t1, t2, b) = tb in

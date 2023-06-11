@@ -24,7 +24,7 @@ open PureEncoder
 open Serializer
 open Slice
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Ghost
 open FStar.Seq
 open FStar.HyperStack

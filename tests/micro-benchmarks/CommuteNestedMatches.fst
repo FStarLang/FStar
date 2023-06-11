@@ -1,6 +1,6 @@
 module CommuteNestedMatches
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 [@@ commute_nested_matches ]
 type t =
