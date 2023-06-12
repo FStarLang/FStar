@@ -161,23 +161,37 @@ let maybe_index_of_term (x:term) =
   | Tv_Var bv -> Some (bv_index bv)
   | _ -> None
 
+let rec find_matching_subst_elt_bv (s:subst) (bv:bv) : option subst_elt =
+  match s with
+  | [] -> None
+  | (DT j t)::ss ->
+    if j = bv_index bv
+    then Some (DT j t)
+    else find_matching_subst_elt_bv ss bv
+  | _::ss -> find_matching_subst_elt_bv ss bv
+
 let subst_db (bv:bv) (s:subst) : term =
-  match L.find (function
-                | DT j _ -> j = bv_index bv
-                | _ -> false) s with
+  match find_matching_subst_elt_bv s bv with
   | Some (DT _ t) ->
     (match maybe_index_of_term t with
      | None -> t
      | Some k ->
        //if we're substituting a name j for a name k, retain the pp_name of j
        pack_ln (Tv_Var (pack_bv { inspect_bv bv with bv_index = k })))
-  | None -> pack_ln (Tv_BVar bv)
+  | _ -> pack_ln (Tv_BVar bv)
+
+let rec find_matching_subst_elt_var (s:subst) (bv:bv) : option subst_elt =
+  match s with
+  | [] -> None
+  | (NT y _)::rest 
+  | (ND y _)::rest ->
+    if y = bv_index bv
+    then Some (L.hd s)
+    else find_matching_subst_elt_var rest bv
+  | _::rest -> find_matching_subst_elt_var rest bv
 
 let subst_var (bv:bv) (s:subst) : term =
-  match L.find (function
-          | NT y _
-          | ND y _ -> y = bv_index bv
-          | _ -> false) s with
+  match find_matching_subst_elt_var s bv with
   | Some (NT _ t) ->
     (match maybe_index_of_term t with
      | None -> t
@@ -185,7 +199,7 @@ let subst_var (bv:bv) (s:subst) : term =
        pack_ln (Tv_Var (pack_bv { inspect_bv bv with bv_index = k })))
   | Some (ND _ i) ->
     pack_ln (Tv_BVar (pack_bv { inspect_bv bv with bv_index = i }))
-  | None -> pack_ln (Tv_Var bv)
+  | _ -> pack_ln (Tv_Var bv)
 
 let make_bv_with_name (s:pp_name_t) (n:nat) = {
   bv_ppname = s;
@@ -206,8 +220,9 @@ let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i)))
 let mk_let ppname (e1 t1 e2:R.term) =
   R.pack_ln (R.Tv_Let false [] (R.pack_bv (make_bv_with_name ppname 0)) t1 e1 e2)
 
-let open_with_var (x:var) (i:nat) : subst =
-  [ DT i (pack_ln (Tv_Var (var_as_bv x))) ]
+let open_with_var_elt (x:var) (i:nat) : subst_elt =
+  DT i (pack_ln (Tv_Var (var_as_bv x)))
+let open_with_var (x:var) (i:nat) : subst = [open_with_var_elt x i]
 
 val subst_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (ss:subst) 
   : ctx_uvar_and_subst
