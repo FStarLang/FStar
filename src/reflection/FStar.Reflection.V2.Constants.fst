@@ -236,6 +236,7 @@ let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
 
 (* subst_elt *)
 let ref_DB          = fstar_syntax_syntax_const ["DB"]
+let ref_DT          = fstar_syntax_syntax_const ["DT"]
 let ref_NM          = fstar_syntax_syntax_const ["NM"]
 let ref_NT          = fstar_syntax_syntax_const ["NT"]
 let ref_UN          = fstar_syntax_syntax_const ["UN"]

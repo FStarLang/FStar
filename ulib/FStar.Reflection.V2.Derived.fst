@@ -30,6 +30,7 @@ let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv
 
 let shift n s = match s with
     | DB i t -> DB (i+n) t
+    | DT i t -> DT (i+n) t
     | UN i t -> UN (i+n) t
     | NM x i -> NM x (i+n)
     | UD x i -> UD x (i+n)

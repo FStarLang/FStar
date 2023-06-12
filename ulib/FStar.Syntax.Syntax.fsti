@@ -4,6 +4,7 @@ open FStar.Reflection.Types
 noeq
 type subst_elt =
   | DB : int -> namedv -> subst_elt
+  | DT : int -> term -> subst_elt
   | NM : namedv -> int -> subst_elt
   | NT : namedv -> term -> subst_elt
   | UN : int -> universe -> subst_elt

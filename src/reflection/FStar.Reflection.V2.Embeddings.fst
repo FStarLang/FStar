@@ -574,6 +574,13 @@ let e_subst_elt =
                ]
                rng
 
+        | DT (i, t) ->
+            S.mk_Tm_app ref_DT.t [
+                S.as_arg (embed e_fsint rng i);
+                S.as_arg (embed e_term rng t);
+               ]
+               rng
+
         | NM (x, i) ->
             S.mk_Tm_app ref_NM.t [
                 S.as_arg (embed e_namedv rng x);
@@ -607,6 +614,8 @@ let e_subst_elt =
         match () with
         | _ when S.fv_eq_lid fv ref_DB.lid ->
             run args (curry DB <$$> e_fsint <**> e_namedv)
+        | _ when S.fv_eq_lid fv ref_DT.lid ->
+            run args (curry DT <$$> e_fsint <**> e_term)
         | _ when S.fv_eq_lid fv ref_NM.lid ->
             run args (curry NM <$$> e_namedv <**> e_fsint)
         | _ when S.fv_eq_lid fv ref_NT.lid ->
