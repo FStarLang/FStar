@@ -581,7 +581,7 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
 #push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
 let rec elab_open_commute' (n:nat) (e:src_exp) (x:src_exp) 
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.OpenWith (elab_exp x)) n ==
+              RT.subst_term (elab_exp e) [ RT.DT n (elab_exp x) ] ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -602,7 +602,7 @@ let rec elab_open_commute' (n:nat) (e:src_exp) (x:src_exp)
 and elab_ty_open_commute' (n:nat) (e:src_ty) (x:src_exp)
   : Lemma
     (ensures
-      RT.open_or_close_term' (elab_ty e) (RT.OpenWith (elab_exp x)) n ==
+      RT.subst_term (elab_ty e) [ RT.DT n (elab_exp x) ] ==
       elab_ty (open_ty' e x n))
     (decreases e)
   = match e with
@@ -646,10 +646,10 @@ let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0
     | S_Refl _ _ -> RT.Rel_equiv _ _ _ _ (RT.EQ_Refl _ _)
     | S_ELab _ _ _ d -> d
 
-#push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 4"
 let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.CloseVar x) n ==
+              RT.subst_term (elab_exp e) [ RT.ND x n ] ==
               elab_exp (close_exp' e x n))
           (decreases e)
   = match e with
@@ -670,7 +670,7 @@ let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)
 and elab_ty_close_commute' (n:nat) (e:src_ty) (x:var)
   : Lemma
     (ensures
-      RT.open_or_close_term' (elab_ty e) (RT.CloseVar x) n ==
+      RT.subst_term (elab_ty e) [ RT.ND x n ] ==
       elab_ty (close_ty' e x n))
     (decreases e)
   = match e with
@@ -748,7 +748,7 @@ let rec soundness (#f:fstar_top_env)
                         (elab_ty (TArrow t (close_ty t' x)))
         = RT.close_term_spec (elab_ty t') x;
           assert (elab_ty (close_ty t' x) ==
-                  RT.open_or_close_term' (elab_ty t') (RT.CloseVar x) 0);
+                  RT.subst_term (elab_ty t') [ RT.ND x 0 ]);
           RT.T_Abs (extend_env_l f sg)
                    x
                    (elab_ty t) 
