@@ -2543,9 +2543,10 @@ let (close_view : named_term_view -> FStar_Reflection_V2_Data.term_view) =
         let brs1 = FStar_List_Tot_Base.map close_branch brs in
         let ret1 =
           match ret with
-          | FStar_Pervasives_Native.Some x ->
-              FStar_Pervasives_Native.Some (close_match_returns_ascription x)
-          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
+          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+          | FStar_Pervasives_Native.Some asc ->
+              FStar_Pervasives_Native.Some
+                (close_match_returns_ascription asc) in
         FStar_Reflection_V2_Data.Tv_Match (scrutinee, ret1, brs1)
 let (inspect : term -> (named_term_view, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -2554,12 +2555,12 @@ let (inspect : term -> (named_term_view, unit) FStar_Tactics_Effect.tac_repr)
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (640)) (Prims.of_int (10)) (Prims.of_int (640))
+               (Prims.of_int (646)) (Prims.of_int (10)) (Prims.of_int (646))
                (Prims.of_int (20)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (640)) (Prims.of_int (23)) (Prims.of_int (642))
+               (Prims.of_int (646)) (Prims.of_int (23)) (Prims.of_int (648))
                (Prims.of_int (14)))))
       (Obj.magic (FStar_Tactics_V2_Builtins.compress t))
       (fun uu___ ->
@@ -2569,13 +2570,13 @@ let (inspect : term -> (named_term_view, unit) FStar_Tactics_Effect.tac_repr)
                  (FStar_Sealed.seal
                     (Obj.magic
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (641)) (Prims.of_int (11))
-                          (Prims.of_int (641)) (Prims.of_int (23)))))
+                          (Prims.of_int (647)) (Prims.of_int (11))
+                          (Prims.of_int (647)) (Prims.of_int (23)))))
                  (FStar_Sealed.seal
                     (Obj.magic
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (642)) (Prims.of_int (2))
-                          (Prims.of_int (642)) (Prims.of_int (14)))))
+                          (Prims.of_int (648)) (Prims.of_int (2))
+                          (Prims.of_int (648)) (Prims.of_int (14)))))
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ -> FStar_Reflection_V2_Builtins.inspect_ln t1))
                  (fun uu___ -> (fun tv -> Obj.magic (open_view tv)) uu___)))
@@ -3014,12 +3015,12 @@ let (open_univ_s :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (692)) (Prims.of_int (10)) (Prims.of_int (692))
+               (Prims.of_int (698)) (Prims.of_int (10)) (Prims.of_int (698))
                (Prims.of_int (28)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (692)) (Prims.of_int (31)) (Prims.of_int (694))
+               (Prims.of_int (698)) (Prims.of_int (31)) (Prims.of_int (700))
                (Prims.of_int (43)))))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_List_Tot_Base.length us))
@@ -3030,13 +3031,13 @@ let (open_univ_s :
                  (FStar_Sealed.seal
                     (Obj.magic
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (693)) (Prims.of_int (10))
-                          (Prims.of_int (693)) (Prims.of_int (73)))))
+                          (Prims.of_int (699)) (Prims.of_int (10))
+                          (Prims.of_int (699)) (Prims.of_int (73)))))
                  (FStar_Sealed.seal
                     (Obj.magic
                        (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                          (Prims.of_int (694)) (Prims.of_int (2))
-                          (Prims.of_int (694)) (Prims.of_int (43)))))
+                          (Prims.of_int (700)) (Prims.of_int (2))
+                          (Prims.of_int (700)) (Prims.of_int (43)))))
                  (Obj.magic
                     (FStar_Tactics_Util.mapi
                        (fun uu___1 ->
@@ -3059,14 +3060,14 @@ let (open_univ_s :
                                (Obj.magic
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (694)) (Prims.of_int (2))
-                                     (Prims.of_int (694)) (Prims.of_int (40)))))
+                                     (Prims.of_int (700)) (Prims.of_int (2))
+                                     (Prims.of_int (700)) (Prims.of_int (40)))))
                             (FStar_Sealed.seal
                                (Obj.magic
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.NamedView.fst"
-                                     (Prims.of_int (694)) (Prims.of_int (2))
-                                     (Prims.of_int (694)) (Prims.of_int (43)))))
+                                     (Prims.of_int (700)) (Prims.of_int (2))
+                                     (Prims.of_int (700)) (Prims.of_int (43)))))
                             (Obj.magic
                                (FStar_Tactics_Util.map
                                   (fun uu___ ->
@@ -3104,12 +3105,12 @@ let (open_lb :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (705)) (Prims.of_int (39)) (Prims.of_int (705))
+               (Prims.of_int (711)) (Prims.of_int (39)) (Prims.of_int (711))
                (Prims.of_int (52)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (704)) (Prims.of_int (50)) (Prims.of_int (709))
+               (Prims.of_int (710)) (Prims.of_int (50)) (Prims.of_int (715))
                (Prims.of_int (34)))))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_V2_Builtins.inspect_lb lb))
@@ -3126,14 +3127,14 @@ let (open_lb :
                         (Obj.magic
                            (FStar_Range.mk_range
                               "FStar.Tactics.NamedView.fst"
-                              (Prims.of_int (706)) (Prims.of_int (17))
-                              (Prims.of_int (706)) (Prims.of_int (34)))))
+                              (Prims.of_int (712)) (Prims.of_int (17))
+                              (Prims.of_int (712)) (Prims.of_int (34)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range
                               "FStar.Tactics.NamedView.fst"
-                              (Prims.of_int (705)) (Prims.of_int (55))
-                              (Prims.of_int (709)) (Prims.of_int (34)))))
+                              (Prims.of_int (711)) (Prims.of_int (55))
+                              (Prims.of_int (715)) (Prims.of_int (34)))))
                      (Obj.magic (open_univ_s lb_us))
                      (fun uu___1 ->
                         FStar_Tactics_Effect.lift_div_tac
@@ -3198,14 +3199,14 @@ let rec (open_n_binders_from_arrow :
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "FStar.Tactics.NamedView.fst"
-                                (Prims.of_int (728)) (Prims.of_int (10))
-                                (Prims.of_int (728)) (Prims.of_int (19)))))
+                                (Prims.of_int (734)) (Prims.of_int (10))
+                                (Prims.of_int (734)) (Prims.of_int (19)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "FStar.Tactics.NamedView.fst"
-                                (Prims.of_int (728)) (Prims.of_int (4))
-                                (Prims.of_int (732)) (Prims.of_int (33)))))
+                                (Prims.of_int (734)) (Prims.of_int (4))
+                                (Prims.of_int (738)) (Prims.of_int (33)))))
                        (Obj.magic (inspect t))
                        (fun uu___ ->
                           (fun uu___ ->
@@ -3219,17 +3220,17 @@ let rec (open_n_binders_from_arrow :
                                             (Obj.magic
                                                (FStar_Range.mk_range
                                                   "FStar.Tactics.NamedView.fst"
-                                                  (Prims.of_int (730))
+                                                  (Prims.of_int (736))
                                                   (Prims.of_int (15))
-                                                  (Prims.of_int (730))
+                                                  (Prims.of_int (736))
                                                   (Prims.of_int (113)))))
                                          (FStar_Sealed.seal
                                             (Obj.magic
                                                (FStar_Range.mk_range
                                                   "FStar.Tactics.NamedView.fst"
-                                                  (Prims.of_int (731))
+                                                  (Prims.of_int (737))
                                                   (Prims.of_int (6))
-                                                  (Prims.of_int (731))
+                                                  (Prims.of_int (737))
                                                   (Prims.of_int (37)))))
                                          (FStar_Tactics_Effect.lift_div_tac
                                             (fun uu___1 ->
@@ -3266,13 +3267,13 @@ let (open_sigelt_view :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                            (Prims.of_int (738)) (Prims.of_int (14))
-                            (Prims.of_int (738)) (Prims.of_int (29)))))
+                            (Prims.of_int (744)) (Prims.of_int (14))
+                            (Prims.of_int (744)) (Prims.of_int (29)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                            (Prims.of_int (740)) (Prims.of_int (4))
-                            (Prims.of_int (740)) (Prims.of_int (25)))))
+                            (Prims.of_int (746)) (Prims.of_int (4))
+                            (Prims.of_int (746)) (Prims.of_int (25)))))
                    (Obj.magic (FStar_Tactics_Util.map open_lb lbs))
                    (fun lbs1 ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -3285,13 +3286,13 @@ let (open_sigelt_view :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                            (Prims.of_int (743)) (Prims.of_int (18))
-                            (Prims.of_int (743)) (Prims.of_int (40)))))
+                            (Prims.of_int (749)) (Prims.of_int (18))
+                            (Prims.of_int (749)) (Prims.of_int (40)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                            (Prims.of_int (743)) (Prims.of_int (43))
-                            (Prims.of_int (766)) (Prims.of_int (48)))))
+                            (Prims.of_int (749)) (Prims.of_int (43))
+                            (Prims.of_int (772)) (Prims.of_int (48)))))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ -> FStar_List_Tot_Base.length params))
                    (fun uu___ ->
@@ -3302,17 +3303,17 @@ let (open_sigelt_view :
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.NamedView.fst"
-                                       (Prims.of_int (746))
+                                       (Prims.of_int (752))
                                        (Prims.of_int (19))
-                                       (Prims.of_int (746))
+                                       (Prims.of_int (752))
                                        (Prims.of_int (36)))))
                               (FStar_Sealed.seal
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.NamedView.fst"
-                                       (Prims.of_int (743))
+                                       (Prims.of_int (749))
                                        (Prims.of_int (43))
-                                       (Prims.of_int (766))
+                                       (Prims.of_int (772))
                                        (Prims.of_int (48)))))
                               (Obj.magic (open_univ_s univs))
                               (fun uu___ ->
@@ -3325,17 +3326,17 @@ let (open_sigelt_view :
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.NamedView.fst"
-                                                      (Prims.of_int (747))
+                                                      (Prims.of_int (753))
                                                       (Prims.of_int (17))
-                                                      (Prims.of_int (747))
+                                                      (Prims.of_int (753))
                                                       (Prims.of_int (41)))))
                                              (FStar_Sealed.seal
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.NamedView.fst"
-                                                      (Prims.of_int (747))
+                                                      (Prims.of_int (753))
                                                       (Prims.of_int (44))
-                                                      (Prims.of_int (766))
+                                                      (Prims.of_int (772))
                                                       (Prims.of_int (48)))))
                                              (FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___1 ->
@@ -3348,17 +3349,17 @@ let (open_sigelt_view :
                                                            (Obj.magic
                                                               (FStar_Range.mk_range
                                                                  "FStar.Tactics.NamedView.fst"
-                                                                 (Prims.of_int (748))
+                                                                 (Prims.of_int (754))
                                                                  (Prims.of_int (14))
-                                                                 (Prims.of_int (748))
+                                                                 (Prims.of_int (754))
                                                                  (Prims.of_int (52)))))
                                                         (FStar_Sealed.seal
                                                            (Obj.magic
                                                               (FStar_Range.mk_range
                                                                  "FStar.Tactics.NamedView.fst"
-                                                                 (Prims.of_int (748))
+                                                                 (Prims.of_int (754))
                                                                  (Prims.of_int (55))
-                                                                 (Prims.of_int (766))
+                                                                 (Prims.of_int (772))
                                                                  (Prims.of_int (48)))))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___1 ->
@@ -3374,17 +3375,17 @@ let (open_sigelt_view :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (749))
+                                                                    (Prims.of_int (755))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (749))
+                                                                    (Prims.of_int (755))
                                                                     (Prims.of_int (63)))))
                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (749))
+                                                                    (Prims.of_int (755))
                                                                     (Prims.of_int (66))
-                                                                    (Prims.of_int (766))
+                                                                    (Prims.of_int (772))
                                                                     (Prims.of_int (48)))))
                                                                    (Obj.magic
                                                                     (FStar_Tactics_Util.map
@@ -3416,17 +3417,17 @@ let (open_sigelt_view :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (752))
+                                                                    (Prims.of_int (758))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (752))
+                                                                    (Prims.of_int (758))
                                                                     (Prims.of_int (44)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (749))
+                                                                    (Prims.of_int (755))
                                                                     (Prims.of_int (66))
-                                                                    (Prims.of_int (766))
+                                                                    (Prims.of_int (772))
                                                                     (Prims.of_int (48)))))
                                                                     (Obj.magic
                                                                     (open_term_n
@@ -3447,17 +3448,17 @@ let (open_sigelt_view :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (760))
+                                                                    (Prims.of_int (766))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (763))
+                                                                    (Prims.of_int (769))
                                                                     (Prims.of_int (13)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (766))
+                                                                    (Prims.of_int (772))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (766))
+                                                                    (Prims.of_int (772))
                                                                     (Prims.of_int (48)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Util.map
@@ -3473,17 +3474,17 @@ let (open_sigelt_view :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (761))
+                                                                    (Prims.of_int (767))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (761))
+                                                                    (Prims.of_int (767))
                                                                     (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (762))
+                                                                    (Prims.of_int (768))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (762))
+                                                                    (Prims.of_int (768))
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     (open_n_binders_from_arrow
@@ -3524,13 +3525,13 @@ let (open_sigelt_view :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                            (Prims.of_int (769)) (Prims.of_int (19))
-                            (Prims.of_int (769)) (Prims.of_int (36)))))
+                            (Prims.of_int (775)) (Prims.of_int (19))
+                            (Prims.of_int (775)) (Prims.of_int (36)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                            (Prims.of_int (768)) (Prims.of_int (29))
-                            (Prims.of_int (771)) (Prims.of_int (27)))))
+                            (Prims.of_int (774)) (Prims.of_int (29))
+                            (Prims.of_int (777)) (Prims.of_int (27)))))
                    (Obj.magic (open_univ_s univs))
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -3568,8 +3569,8 @@ let rec (mk_arr :
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "FStar.Tactics.NamedView.fst"
-                                (Prims.of_int (780)) (Prims.of_int (13))
-                                (Prims.of_int (780)) (Prims.of_int (37)))))
+                                (Prims.of_int (786)) (Prims.of_int (13))
+                                (Prims.of_int (786)) (Prims.of_int (37)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range " dummy" Prims.int_zero
@@ -3580,17 +3581,17 @@ let rec (mk_arr :
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.NamedView.fst"
-                                      (Prims.of_int (780))
+                                      (Prims.of_int (786))
                                       (Prims.of_int (21))
-                                      (Prims.of_int (780))
+                                      (Prims.of_int (786))
                                       (Prims.of_int (37)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.NamedView.fst"
-                                      (Prims.of_int (780))
+                                      (Prims.of_int (786))
                                       (Prims.of_int (13))
-                                      (Prims.of_int (780))
+                                      (Prims.of_int (786))
                                       (Prims.of_int (37)))))
                              (Obj.magic (mk_arr args' t))
                              (fun uu___ ->
@@ -3623,13 +3624,13 @@ let (close_sigelt_view :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                            (Prims.of_int (791)) (Prims.of_int (18))
-                            (Prims.of_int (791)) (Prims.of_int (40)))))
+                            (Prims.of_int (797)) (Prims.of_int (18))
+                            (Prims.of_int (797)) (Prims.of_int (40)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                            (Prims.of_int (791)) (Prims.of_int (43))
-                            (Prims.of_int (810)) (Prims.of_int (45)))))
+                            (Prims.of_int (797)) (Prims.of_int (43))
+                            (Prims.of_int (816)) (Prims.of_int (45)))))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___ -> FStar_List_Tot_Base.length params))
                    (fun uu___ ->
@@ -3640,17 +3641,17 @@ let (close_sigelt_view :
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.NamedView.fst"
-                                       (Prims.of_int (795))
+                                       (Prims.of_int (801))
                                        (Prims.of_int (8))
-                                       (Prims.of_int (798))
+                                       (Prims.of_int (804))
                                        (Prims.of_int (13)))))
                               (FStar_Sealed.seal
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.NamedView.fst"
-                                       (Prims.of_int (799))
+                                       (Prims.of_int (805))
                                        (Prims.of_int (6))
-                                       (Prims.of_int (810))
+                                       (Prims.of_int (816))
                                        (Prims.of_int (45)))))
                               (Obj.magic
                                  (FStar_Tactics_Util.map
@@ -3662,17 +3663,17 @@ let (close_sigelt_view :
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.NamedView.fst"
-                                                      (Prims.of_int (796))
+                                                      (Prims.of_int (802))
                                                       (Prims.of_int (22))
-                                                      (Prims.of_int (796))
+                                                      (Prims.of_int (802))
                                                       (Prims.of_int (38)))))
                                              (FStar_Sealed.seal
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.NamedView.fst"
-                                                      (Prims.of_int (797))
+                                                      (Prims.of_int (803))
                                                       (Prims.of_int (12))
-                                                      (Prims.of_int (797))
+                                                      (Prims.of_int (803))
                                                       (Prims.of_int (19)))))
                                              (Obj.magic (mk_arr params ty))
                                              (fun ty' ->
@@ -3687,17 +3688,17 @@ let (close_sigelt_view :
                                             (Obj.magic
                                                (FStar_Range.mk_range
                                                   "FStar.Tactics.NamedView.fst"
-                                                  (Prims.of_int (802))
+                                                  (Prims.of_int (808))
                                                   (Prims.of_int (22))
-                                                  (Prims.of_int (802))
+                                                  (Prims.of_int (808))
                                                   (Prims.of_int (45)))))
                                          (FStar_Sealed.seal
                                             (Obj.magic
                                                (FStar_Range.mk_range
                                                   "FStar.Tactics.NamedView.fst"
-                                                  (Prims.of_int (799))
+                                                  (Prims.of_int (805))
                                                   (Prims.of_int (6))
-                                                  (Prims.of_int (810))
+                                                  (Prims.of_int (816))
                                                   (Prims.of_int (45)))))
                                          (FStar_Tactics_Effect.lift_div_tac
                                             (fun uu___ ->
@@ -3712,17 +3713,17 @@ let (close_sigelt_view :
                                                            (Obj.magic
                                                               (FStar_Range.mk_range
                                                                  "FStar.Tactics.NamedView.fst"
-                                                                 (Prims.of_int (805))
+                                                                 (Prims.of_int (811))
                                                                  (Prims.of_int (19))
-                                                                 (Prims.of_int (805))
+                                                                 (Prims.of_int (811))
                                                                  (Prims.of_int (37)))))
                                                         (FStar_Sealed.seal
                                                            (Obj.magic
                                                               (FStar_Range.mk_range
                                                                  "FStar.Tactics.NamedView.fst"
-                                                                 (Prims.of_int (802))
+                                                                 (Prims.of_int (808))
                                                                  (Prims.of_int (48))
-                                                                 (Prims.of_int (810))
+                                                                 (Prims.of_int (816))
                                                                  (Prims.of_int (45)))))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___1 ->
@@ -3741,17 +3742,17 @@ let (close_sigelt_view :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (806))
+                                                                    (Prims.of_int (812))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (806))
+                                                                    (Prims.of_int (812))
                                                                     (Prims.of_int (41)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (806))
+                                                                    (Prims.of_int (812))
                                                                     (Prims.of_int (44))
-                                                                    (Prims.of_int (810))
+                                                                    (Prims.of_int (816))
                                                                     (Prims.of_int (45)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3769,17 +3770,17 @@ let (close_sigelt_view :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (807))
+                                                                    (Prims.of_int (813))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (807))
+                                                                    (Prims.of_int (813))
                                                                     (Prims.of_int (52)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (807))
+                                                                    (Prims.of_int (813))
                                                                     (Prims.of_int (55))
-                                                                    (Prims.of_int (810))
+                                                                    (Prims.of_int (816))
                                                                     (Prims.of_int (45)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3798,17 +3799,17 @@ let (close_sigelt_view :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (808))
+                                                                    (Prims.of_int (814))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (808))
+                                                                    (Prims.of_int (814))
                                                                     (Prims.of_int (63)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.NamedView.fst"
-                                                                    (Prims.of_int (810))
+                                                                    (Prims.of_int (816))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (810))
+                                                                    (Prims.of_int (816))
                                                                     (Prims.of_int (45)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Util.map
@@ -3865,12 +3866,12 @@ let (inspect_sigelt :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (819)) (Prims.of_int (11)) (Prims.of_int (819))
+               (Prims.of_int (825)) (Prims.of_int (11)) (Prims.of_int (825))
                (Prims.of_int (29)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (821)) (Prims.of_int (2)) (Prims.of_int (821))
+               (Prims.of_int (827)) (Prims.of_int (2)) (Prims.of_int (827))
                (Prims.of_int (21)))))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___ -> FStar_Reflection_V2_Builtins.inspect_sigelt s))
@@ -3894,12 +3895,12 @@ let (pack_sigelt :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (825)) (Prims.of_int (11)) (Prims.of_int (825))
+               (Prims.of_int (831)) (Prims.of_int (11)) (Prims.of_int (831))
                (Prims.of_int (31)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-               (Prims.of_int (826)) (Prims.of_int (2)) (Prims.of_int (826))
+               (Prims.of_int (832)) (Prims.of_int (2)) (Prims.of_int (832))
                (Prims.of_int (18))))) (Obj.magic (close_sigelt_view sv))
       (fun sv1 ->
          FStar_Tactics_Effect.lift_div_tac
@@ -3932,12 +3933,12 @@ let (tcc :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                 (Prims.of_int (842)) (Prims.of_int (19))
-                 (Prims.of_int (842)) (Prims.of_int (38)))))
+                 (Prims.of_int (848)) (Prims.of_int (19))
+                 (Prims.of_int (848)) (Prims.of_int (38)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.NamedView.fst"
-                 (Prims.of_int (843)) (Prims.of_int (2)) (Prims.of_int (843))
+                 (Prims.of_int (849)) (Prims.of_int (2)) (Prims.of_int (849))
                  (Prims.of_int (18)))))
         (Obj.magic (FStar_Tactics_V2_Builtins.tcc e t))
         (fun c ->
