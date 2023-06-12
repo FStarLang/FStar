@@ -141,7 +141,7 @@ let rec open_close_inverse' (i:nat) (t:term { ln' t (i - 1) }) (x:var)
     | Tv_Unsupp
     | Tv_Unknown
     | Tv_BVar _ -> ()
-    | Tv_Var _  -> admit() // FIXME
+    | Tv_Var _  -> ()
     | Tv_App t1 a ->
       open_close_inverse' i t1 x;
       open_close_inverse' i (fst a) x
@@ -370,8 +370,8 @@ let rec close_open_inverse' (i:nat)
     | Tv_Const _
     | Tv_Unsupp
     | Tv_Unknown -> ()
-    | Tv_BVar _ -> admit() // FIXME
-    | Tv_Var _ -> admit() // FIXME
+    | Tv_BVar _ -> ()
+    | Tv_Var _ -> ()
     | Tv_App t1 a ->
       close_open_inverse' i t1 x;
       close_open_inverse' i (fst a) x
