@@ -128,16 +128,24 @@ let (maybe_index_of_term :
     | FStar_Reflection_Data.Tv_Var bv ->
         FStar_Pervasives_Native.Some (bv_index bv)
     | uu___ -> FStar_Pervasives_Native.None
+let rec (find_matching_subst_elt_bv :
+  subst ->
+    FStar_Reflection_Types.bv -> subst_elt FStar_Pervasives_Native.option)
+  =
+  fun s ->
+    fun bv ->
+      match s with
+      | [] -> FStar_Pervasives_Native.None
+      | (DT (j, t))::ss ->
+          if j = (bv_index bv)
+          then FStar_Pervasives_Native.Some (DT (j, t))
+          else find_matching_subst_elt_bv ss bv
+      | uu___::ss -> find_matching_subst_elt_bv ss bv
 let (subst_db :
   FStar_Reflection_Types.bv -> subst -> FStar_Reflection_Types.term) =
   fun bv ->
     fun s ->
-      match FStar_List_Tot_Base.find
-              (fun uu___ ->
-                 match uu___ with
-                 | DT (j, uu___1) -> j = (bv_index bv)
-                 | uu___1 -> false) s
-      with
+      match find_matching_subst_elt_bv s bv with
       | FStar_Pervasives_Native.Some (DT (uu___, t)) ->
           (match maybe_index_of_term t with
            | FStar_Pervasives_Native.None -> t
@@ -151,20 +159,31 @@ let (subst_db :
                             (uu___1.FStar_Reflection_Data.bv_ppname);
                           FStar_Reflection_Data.bv_index = k
                         }))))
-      | FStar_Pervasives_Native.None ->
+      | uu___ ->
           FStar_Reflection_Builtins.pack_ln
             (FStar_Reflection_Data.Tv_BVar bv)
+let rec (find_matching_subst_elt_var :
+  subst ->
+    FStar_Reflection_Types.bv -> subst_elt FStar_Pervasives_Native.option)
+  =
+  fun s ->
+    fun bv ->
+      match s with
+      | [] -> FStar_Pervasives_Native.None
+      | (NT (y, uu___))::rest ->
+          if y = (bv_index bv)
+          then FStar_Pervasives_Native.Some (FStar_List_Tot_Base.hd s)
+          else find_matching_subst_elt_var rest bv
+      | (ND (y, uu___))::rest ->
+          if y = (bv_index bv)
+          then FStar_Pervasives_Native.Some (FStar_List_Tot_Base.hd s)
+          else find_matching_subst_elt_var rest bv
+      | uu___::rest -> find_matching_subst_elt_var rest bv
 let (subst_var :
   FStar_Reflection_Types.bv -> subst -> FStar_Reflection_Types.term) =
   fun bv ->
     fun s ->
-      match FStar_List_Tot_Base.find
-              (fun uu___ ->
-                 match uu___ with
-                 | NT (y, uu___1) -> y = (bv_index bv)
-                 | ND (y, uu___1) -> y = (bv_index bv)
-                 | uu___1 -> false) s
-      with
+      match find_matching_subst_elt_var s bv with
       | FStar_Pervasives_Native.Some (NT (uu___, t)) ->
           (match maybe_index_of_term t with
            | FStar_Pervasives_Native.None -> t
@@ -188,7 +207,7 @@ let (subst_var :
                        (uu___1.FStar_Reflection_Data.bv_ppname);
                      FStar_Reflection_Data.bv_index = i
                    })))
-      | FStar_Pervasives_Native.None ->
+      | uu___ ->
           FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Var bv)
 let (make_bv_with_name :
   pp_name_t -> Prims.nat -> FStar_Reflection_Data.bv_view) =
@@ -267,13 +286,16 @@ let (mk_let :
                (false, [],
                  (FStar_Reflection_Builtins.pack_bv
                     (make_bv_with_name ppname Prims.int_zero)), t1, e1, e2))
-let (open_with_var : FStar_Reflection_Data.var -> Prims.nat -> subst) =
+let (open_with_var_elt : FStar_Reflection_Data.var -> Prims.nat -> subst_elt)
+  =
   fun x ->
     fun i ->
-      [DT
-         (i,
-           (FStar_Reflection_Builtins.pack_ln
-              (FStar_Reflection_Data.Tv_Var (var_as_bv x))))]
+      DT
+        (i,
+          (FStar_Reflection_Builtins.pack_ln
+             (FStar_Reflection_Data.Tv_Var (var_as_bv x))))
+let (open_with_var : FStar_Reflection_Data.var -> Prims.nat -> subst) =
+  fun x -> fun i -> [open_with_var_elt x i]
 let (subst_ctx_uvar_and_subst :
   FStar_Reflection_Types.ctx_uvar_and_subst ->
     subst -> FStar_Reflection_Types.ctx_uvar_and_subst)
