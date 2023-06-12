@@ -420,7 +420,7 @@ let rec open_term_ln_inv_list' (t:list term)
       open_term_ln_inv' hd x i;
       open_term_ln_inv_list' tl x i      
 
-#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 2"
+#push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 2"
 let rec open_term_ln_inv_st' (t:st_term)
                              (x:term { ln x })
                              (i:index)
@@ -435,7 +435,7 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       open_term_ln_inv' p x i
-      
+
     | Tm_IntroExists { p; witnesses } ->
       open_term_ln_inv' p x i;
       open_term_ln_inv_list' witnesses x i

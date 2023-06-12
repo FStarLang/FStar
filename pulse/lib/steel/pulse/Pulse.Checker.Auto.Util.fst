@@ -177,7 +177,7 @@ let canon_right (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
     // in
     (| _, VP.vprop_equiv_typing_fwd ctxt_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 8"
+#push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 10"
 let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})
   (#e1:st_term)

@@ -34,6 +34,7 @@ let (as_map :
 type ('bs, 'm) is_related_to = unit
 let (dom : env -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun g -> FStar_Map.domain (as_map g)
+type ('g1, 'g2) equal = unit
 let (empty_bmap : bmap) =
   FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Base.Tm_Unknown
 let (mk_env : FStar_Reflection_Typing.fstar_top_env -> env) =
@@ -79,17 +80,17 @@ let (fresh : env -> Pulse_Syntax_Base.var) =
 let (contains : env -> Pulse_Syntax_Base.var -> Prims.bool) =
   fun g -> fun x -> FStar_Map.contains (as_map g) x
 type ('g1, 'g2) disjoint = unit
-type ('g1, 'g2, 'g3) extends_with = unit
-type ('g1, 'g2) env_extends = unit
-let (join : env -> env -> env) =
+let (push_env : env -> env -> env) =
   fun g1 ->
     fun g2 ->
       {
         f = (g1.f);
-        bs = (FStar_List_Tot_Base.op_At g1.bs g2.bs);
-        m = (FStar_Map.concat g1.m g2.m);
-        ctxt = (FStar_Sealed.seal [])
+        bs = (FStar_List_Tot_Base.op_At g2.bs g1.bs);
+        m = (FStar_Map.concat g2.m g1.m);
+        ctxt = (g1.ctxt)
       }
+type ('g1, 'g2, 'g3) extends_with = unit
+type ('g1, 'g2) env_extends = unit
 let (push_context : env -> Prims.string -> env) =
   fun g ->
     fun ctx ->
