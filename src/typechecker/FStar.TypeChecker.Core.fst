@@ -417,9 +417,14 @@ let check_aqual (a0 a1:aqual)
     | Some ({aqual_implicit=b0}), Some ({aqual_implicit=b1}) ->
       if b0 = b1
       then return ()
-      else fail "Unequal arg qualifiers"
+      else fail (BU.format2 "Unequal arg qualifiers: lhs implicit=%s and rhs implicit=%s"
+                    (string_of_bool b0) (string_of_bool b1))
+    | None, Some { aqual_implicit=false }
+    | Some { aqual_implicit=false }, None ->
+      return ()
     | _ ->
-      fail "Unequal arg qualifiers"
+      fail (BU.format2 "Unequal arg qualifiers: lhs %s and rhs %s"
+              (P.aqual_to_string a0) (P.aqual_to_string a1))
 
 let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
   : result unit

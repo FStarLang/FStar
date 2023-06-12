@@ -137,8 +137,8 @@ output:
 # snapshot, nor run the build-standalone script.
 .PHONY: ci
 ci:
-	+$(Q)OTHERFLAGS="--use_hints" FSTAR_HOME=$(CURDIR)$(MAKE) ci-pre
-	+$(Q)OTHERFLAGS="--use_hints" FSTAR_HOME=$(CURDIR)$(MAKE) ci-post
+	+$(Q)OTHERFLAGS="--use_hints" FSTAR_HOME=$(CURDIR) $(MAKE) ci-pre
+	+$(Q)OTHERFLAGS="--use_hints" FSTAR_HOME=$(CURDIR) $(MAKE) ci-post
 
 # This rule runs a CI job in a local container, exactly like is done for
 # CI.
@@ -147,22 +147,22 @@ docker-ci:
 	docker build -f .docker/standalone.Dockerfile --build-arg CI_THREADS=$(shell nproc) .
 
 .PHONY: ci-pre
-ci-pre: ci-rebootstrap ci-ocaml-test ci-ulib-in-fsharp
+ci-pre: ci-rebootstrap
 
 .PHONY: ci-rebootstrap
 ci-rebootstrap:
 	+$(Q)$(MAKE) full-bootstrap FSTAR_BUILD_PROFILE=test
 
 .PHONY: ci-ocaml-test
-ci-ocaml-test: ci-rebootstrap
+ci-ocaml-test:
 	+$(Q)$(MAKE) -C src ocaml-unit-tests
 
 .PHONY: ci-ulib-in-fsharp
-ci-ulib-in-fsharp: ci-rebootstrap
+ci-ulib-in-fsharp:
 	+$(Q)$(MAKE) -C ulib ulib-in-fsharp
 
 .PHONY: ci-post
-ci-post: ci-uregressions
+ci-post: ci-ulib-in-fsharp ci-ocaml-test ci-uregressions
 
 .PHONY: ci-uregressions
 ci-uregressions:

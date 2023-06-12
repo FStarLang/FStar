@@ -1,5 +1,5 @@
 [
-  "’è¡|˛%U7ÕíE˝à”ëL",
+  "Ç1\u001e&¥˚6e˝.¿¢\u0004˜±T",
   [
     [
       "FStar.Tactics.Visit.visit_tm",
@@ -27,6 +27,7 @@
         "disc_equation_FStar.Reflection.Data.Tv_Type",
         "disc_equation_FStar.Reflection.Data.Tv_UInst",
         "disc_equation_FStar.Reflection.Data.Tv_Unknown",
+        "disc_equation_FStar.Reflection.Data.Tv_Unsupp",
         "disc_equation_FStar.Reflection.Data.Tv_Uvar",
         "disc_equation_FStar.Reflection.Data.Tv_Var",
         "equation_Prims.eqtype",
@@ -51,7 +52,7 @@
         "typing_FStar.Reflection.Builtins.inspect_ln"
       ],
       0,
-      "f4262f62903bbbe0f171dd3c60bca068"
+      "c3e261d050bec16fa73dce91493601ca"
     ],
     [
       "FStar.Tactics.Visit.visit_tm",
@@ -69,7 +70,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "4d608a1016522cfd227513f9bc8466c3"
+      "2b5932f15b16df004f6d21b3680ec218"
     ],
     [
       "FStar.Tactics.Visit.visit_tm",
@@ -88,7 +89,7 @@
         "typing_FStar.Reflection.Builtins.inspect_comp"
       ],
       0,
-      "81cfc3da6b2e52d43cc1f405ff3f936b"
+      "548577d7966e10916f38d330054cc3d1"
     ]
   ]
 ]
