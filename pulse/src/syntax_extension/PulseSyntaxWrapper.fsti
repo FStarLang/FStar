@@ -66,6 +66,7 @@ val comp_res (c:comp) : term
 val comp_post (c:comp) : term
 
 val print_exn (e:exn) : string
-val term_to_string (env:FStar.TypeChecker.Env.env) (_:term) : either string string
-val st_term_to_string (env:FStar.TypeChecker.Env.env) (_:st_term) : either string string
-val comp_to_string (env:FStar.TypeChecker.Env.env) (_:comp) : either string string
+val binder_to_string (env:FStar.TypeChecker.Env.env) (b:binder) : string
+val term_to_string (env:FStar.TypeChecker.Env.env) (_:term) : string
+val st_term_to_string (env:FStar.TypeChecker.Env.env) (_:st_term) : string
+val comp_to_string (env:FStar.TypeChecker.Env.env) (_:comp) : string

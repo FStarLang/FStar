@@ -160,15 +160,18 @@ let tac_to_string (env:Env.env) f =
                 []
     in
     match f ps with
-    | FStar_Tactics_Result.Success (x, _) -> Inl x
-    | FStar_Tactics_Result.Failed (exn, _) -> Inr (print_exn exn)
+    | FStar_Tactics_Result.Success (x, _) -> x
+    | FStar_Tactics_Result.Failed (exn, _) -> failwith (print_exn exn)
 
+let binder_to_string (env:Env.env) (b:binder)
+  : string
+  = tac_to_string env (Pulse_Syntax_Printer.binder_to_string b)
 let term_to_string (env:Env.env) (t:term)
-  : (string, string) either
+  : string
   = tac_to_string env (Pulse_Syntax_Printer.term_to_string t)
 let st_term_to_string (env:Env.env) (t:st_term)
-  : (string, string) either
+  : string
   = tac_to_string env (Pulse_Syntax_Printer.st_term_to_string t)
 let comp_to_string (env:Env.env) (t:comp)
-  : (string, string) either
+  : string
   = tac_to_string env (Pulse_Syntax_Printer.comp_to_string t)  
