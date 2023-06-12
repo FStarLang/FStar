@@ -58,12 +58,12 @@ let check_stapp
 
   T.or_else
     (fun _ -> 
-      let g = push_context "pure_app" g in    
+      let g = push_context "pure_app" t.range g in    
       let pure_app = tm_pureapp head qual arg in
       let t, ty = instantiate_term_implicits g pure_app in
       infer_logical_implicits_and_check t (C_Tot ty))
     (fun _ ->
-      let g = push_context "st_app" g in        
+      let g = push_context "st_app" t.range g in        
       let (| head, ty_head, dhead |) = check_term g head in
       match is_arrow ty_head with
       | Some ({binder_ty=formal;binder_ppname=ppname}, bqual, comp_typ) ->

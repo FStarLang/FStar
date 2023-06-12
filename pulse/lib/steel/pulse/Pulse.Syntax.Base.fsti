@@ -92,6 +92,12 @@ and binder = {
   binder_ppname : ppname;
 }
 
+
+let term_range (t:term) =
+  match t with
+  | Tm_FStar _ r -> r
+  | _ -> FStar.Range.range_0
+  
 noeq
 type st_comp = { (* ST pre (x:res) post ... x is free in post *)
   u:universe;

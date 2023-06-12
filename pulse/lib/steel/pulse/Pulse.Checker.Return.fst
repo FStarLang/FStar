@@ -19,7 +19,7 @@ let check_return
   (pre_typing:tot_typing g pre Tm_VProp)
   (post_hint:post_hint_opt g)
   : T.Tac (checker_result_t g pre post_hint) =
-  let g = push_context "check_return" g in
+  let g = push_context "check_return" st.range g in
   let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = st.term in
   let (| t, u, ty, uty, d |) = check_term_and_type g t in
   let x = fresh g in

@@ -52,7 +52,7 @@ let try_frame_pre (#g:env)
                   (t_typing: st_typing g t c)
   : T.Tac (c':comp_st { comp_pre c' == pre } &
            st_typing g t c')
-  = let g = CP.push_context "try_frame_pre" g in
+  = let g = CP.push_context "try_frame_pre" t.range g in
     if RU.debug_at_level (fstar_env g) "try_frame"
     then T.print (Printf.sprintf "(Try frame@%s) with %s\n\tcomp=%s,\n\tpre=%s\n"
                                  (T.range_to_string t.range)
@@ -72,7 +72,7 @@ let replace_equiv_post
       (post_hint:post_hint_opt g)
   : T.Tac (c1:comp { stateful_comp c1 /\ comp_pre c1 == comp_pre c /\ comp_post_matches_hint c1 post_hint } &
            st_equiv g c c1)
-  = let g = CP.push_context "replace_equiv_post" g in
+  = let g = CP.push_context "replace_equiv_post" r g in
     let {u=u_c;res=res_c;pre=pre_c;post=post_c} = st_comp_of_comp c in
     let st_typing = Metatheory.comp_typing_inversion ct in
     let (| res_c_typing, pre_c_typing, x, post_c_typing |) = Metatheory.st_comp_typing_inversion st_typing in
@@ -103,7 +103,7 @@ let replace_equiv_post
         let post_c_post_eq
           : vprop_equiv g_post post_c_opened post_opened
           = Pulse.Checker.Framing.check_vprop_equiv
-              (CP.push_context "check_vprop_equiv" g_post)
+              (CP.push_context "check_vprop_equiv" r g_post)
               post_c_opened
               post_opened
               post_c_typing

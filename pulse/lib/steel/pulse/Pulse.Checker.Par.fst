@@ -21,7 +21,7 @@ let check_par
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (checker_result_t g pre post_hint) =
-  let g = push_context "check_par" g in
+  let g = push_context "check_par" t.range g in
   let Tm_Par {pre1=preL; body1=eL; post1=postL;
               pre2=preR; body2=eR; post2=postR} = t.term in
   let (| preL, preL_typing |) =

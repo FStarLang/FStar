@@ -345,7 +345,7 @@ let rec check' : bool -> check_t =
                             (P.term_to_string pre))
     );
     let t = unprotect t in
-    let g = push_context (P.tag_of_st_term t) g in
+    let g = push_context (P.tag_of_st_term t) t.range g in
     try 
       match t.term with
       | Tm_Protect _ -> T.fail "Protect should have been removed"

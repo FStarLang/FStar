@@ -43,7 +43,9 @@ let empty_bmap : bmap = Map.const_on Set.empty Tm_Unknown
 
 let equal_elim g1 g2 = assert (Map.equal g1.m g2.m)
 
-let mk_env (f:RT.fstar_top_env) : env = { f; bs = []; m = empty_bmap; ctxt = FStar.Sealed.seal [] }
+let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal []
+
+let mk_env (f:RT.fstar_top_env) : env = { f; bs = []; m = empty_bmap; ctxt = default_context }
 
 let mk_env_bs _ = ()
 
@@ -126,6 +128,14 @@ let extends_with_push (g1 g2 g3:env)
   assert (equal (push_binding g1 x t)
                 (push_env g2 (push_binding g3 x t)))
 
-let push_context g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx g.ctxt }
+let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
+let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }
 
 let get_context g = g.ctxt
+
+let range_of_env (g:env) = 
+    let ctx = T.unseal g.ctxt in
+    match FStar.List.Tot.tryFind (fun (_, r) -> Some? r) ctx with
+    | Some (_, Some r) -> r
+    | _ -> FStar.Range.range_0
+  
