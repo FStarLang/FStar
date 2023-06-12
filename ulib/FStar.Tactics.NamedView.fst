@@ -632,7 +632,13 @@ let close_view (tv : named_term_view) : Tot term_view =
 
   | Tv_Match scrutinee ret brs ->
     let brs = List.Tot.map close_branch brs in
-    let ret = FStar.Option.mapTot close_match_returns_ascription ret in
+    (* NOTE: this used to use FStar.Option.mapTot, but that brings
+    in way too many dependencies. *)
+    let ret =
+      match ret with
+      | None -> None
+      | Some asc -> Some (close_match_returns_ascription asc)
+    in
     RD.Tv_Match scrutinee ret brs
 
 [@@plugin]
