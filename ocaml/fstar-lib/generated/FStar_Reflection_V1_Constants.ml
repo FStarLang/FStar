@@ -218,10 +218,6 @@ let (fstar_refl_sigelt_view : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "sigelt_view"
 let (fstar_refl_sigelt_view_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_data_lid_as_fv "sigelt_view"
-let (fstar_refl_exp : FStar_Syntax_Syntax.term) =
-  mk_refl_data_lid_as_term "exp"
-let (fstar_refl_exp_fv : FStar_Syntax_Syntax.fv) =
-  mk_refl_data_lid_as_fv "exp"
 let (fstar_refl_qualifier : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "qualifier"
 let (fstar_refl_qualifier_fv : FStar_Syntax_Syntax.fv) =
@@ -394,14 +390,6 @@ let (ref_qual_HasMaskedEffect : refl_constant) =
   fstar_refl_data_const "HasMaskedEffect"
 let (ref_qual_Effect : refl_constant) = fstar_refl_data_const "Effect"
 let (ref_qual_OnlyName : refl_constant) = fstar_refl_data_const "OnlyName"
-let (ref_E_Unit : refl_constant) = fstar_refl_data_const "Unit"
-let (ref_E_Var : refl_constant) = fstar_refl_data_const "Var"
-let (ref_E_Mult : refl_constant) = fstar_refl_data_const "Mult"
-let (t_exp : FStar_Syntax_Syntax.term) =
-  let uu___ =
-    FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"]
-      FStar_Compiler_Range_Type.dummyRange in
-  FStar_Syntax_Syntax.tconst uu___
 let (ord_Lt_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"]
     FStar_Compiler_Range_Type.dummyRange
