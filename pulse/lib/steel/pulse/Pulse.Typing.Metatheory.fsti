@@ -113,7 +113,7 @@ let well_typed_ss (g:env) (g':env) (ss:nt_subst) =
   L.memP elt ss ==> (let NT x e = elt in
                      x `Set.mem` dom g' /\
                      (let Some t = lookup g' x in
-                      tot_typing g e t))
+                      tot_typing g e (subst_term t ss)))
 
 let ss_covers_g' (ss:nt_subst) (g':env) =
   forall (x:var). x `Set.mem` dom g' ==> Some? (lookup_nt_subst ss x)

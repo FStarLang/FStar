@@ -68,6 +68,51 @@ val add_elims (#g:env) (#ctxt:term)
             tot_typing g' ctxt' Tm_VProp &
             continuation_elaborator g ctxt g' ctxt')
 
+open Pulse.Checker.VPropEquiv
+
+noeq
+type prover_state_preamble = {
+  g0 : env;
+  ctxt : vprop;
+  ctxt_typing : tot_typing g0 ctxt Tm_VProp;
+  t : st_term;
+  c : comp_st
+}
+
+let ghost_comp pre post = 
+  C_STGhost Tm_EmpInames { u=u_zero; res=tm_unit; pre; post }
+
+noeq
+type prover_state (preamble:prover_state_preamble) = {
+  uvs : uvs:env { disjoint uvs preamble.g0 };
+  ss : ss:nt_subst { well_typed_ss preamble.g0 uvs ss };
+
+  matched : term;
+  unmatched : list term;
+  remaining : list term;
+
+  steps : st_term;
+
+  t_typing
+    : st_typing (push_env preamble.g0 uvs) preamble.t preamble.c;
+  
+  unmatched_typing
+    : tot_typing (push_env preamble.g0 uvs) (list_as_vprop unmatched) Tm_VProp;
+  
+  // this could be typed in preamble.g0?
+  remaining_typing
+    : tot_typing (push_env preamble.g0 uvs) (list_as_vprop remaining) Tm_VProp;
+  
+  steps_typing
+    : st_typing (push_env preamble.g0 uvs) steps
+        (ghost_comp preamble.ctxt
+                    (Tm_Star (list_as_vprop remaining) matched));
+
+  veq : vprop_equiv (push_env preamble.g0 uvs)
+                    (comp_pre preamble.c)
+                    (Tm_Star (list_as_vprop unmatched) matched);
+}
+
 
 // let vprop_typing g v = tot_typing g v Tm_VProp
 
