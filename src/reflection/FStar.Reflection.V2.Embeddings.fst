@@ -682,31 +682,6 @@ let e_sigelt_view =
     in
     mk_emb embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view
 
-let e_exp =
-    let rec embed_exp (rng:Range.range) (e:exp) : term =
-        let r =
-        match e with
-        | Unit    -> ref_E_Unit.t
-        | Var i ->
-            S.mk_Tm_app ref_E_Var.t [S.as_arg (U.exp_int (Z.string_of_big_int i))]
-                        Range.dummyRange
-        | Mult (e1, e2) ->
-            S.mk_Tm_app ref_E_Mult.t [S.as_arg (embed_exp rng e1); S.as_arg (embed_exp rng e2)]
-                        Range.dummyRange
-        in { r with pos = rng }
-    in
-    let rec unembed_exp (t: term) : option exp =
-      let? fv, args = head_fv_and_args t in
-        match () with
-        | _ when S.fv_eq_lid fv ref_E_Unit.lid -> run args (pure Unit)
-        | _ when S.fv_eq_lid fv ref_E_Var.lid ->
-            run args (Var <$$> e_int)
-        | _ when S.fv_eq_lid fv ref_E_Mult.lid ->
-            run args (curry Mult <$> wrap unembed_exp <*> wrap unembed_exp)
-        | _ -> None
-    in
-    mk_emb embed_exp unembed_exp fstar_refl_exp
-
 let e_qualifier =
     let embed (rng:Range.range) (q:RD.qualifier) : term =
         let r =

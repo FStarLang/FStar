@@ -195,11 +195,7 @@ type qualifier =
   | Effect
   | OnlyName
 
+(* Should remove, but there are clients using it. *)
 let var : eqtype = nat
-
-type exp : Type =
-  | Unit : exp
-  | Var : var -> exp
-  | Mult : exp -> exp -> exp
 
 type decls = list sigelt

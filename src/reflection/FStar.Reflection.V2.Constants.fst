@@ -151,8 +151,6 @@ let fstar_refl_lb_view          = mk_refl_data_lid_as_term "lb_view"
 let fstar_refl_lb_view_fv       = mk_refl_data_lid_as_fv   "lb_view"
 let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
 let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv   "sigelt_view"
-let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
-let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv   "exp"
 let fstar_refl_qualifier        = mk_refl_data_lid_as_term "qualifier"
 let fstar_refl_qualifier_fv     = mk_refl_data_lid_as_fv   "qualifier"
 let fstar_refl_universe_view    = mk_refl_data_lid_as_term "universe_view"
@@ -324,12 +322,6 @@ let ref_qual_ExceptionConstructor             = fstar_refl_data_const "Exception
 let ref_qual_HasMaskedEffect                  = fstar_refl_data_const "HasMaskedEffect"
 let ref_qual_Effect                           = fstar_refl_data_const "Effect"
 let ref_qual_OnlyName                         = fstar_refl_data_const "OnlyName"
-
-(* exp *)
-let ref_E_Unit = fstar_refl_data_const "Unit"
-let ref_E_Var = fstar_refl_data_const "Var"
-let ref_E_Mult = fstar_refl_data_const "Mult"
-let t_exp = tconst (Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"] Range.dummyRange)
 
 (* Should not be here *)
 let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange

@@ -796,32 +796,6 @@ let e_sigelt_view =
     in
     mk_emb' embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view_fv
 
-let e_exp =
-    let rec embed_exp cb (e:exp) : t =
-        match e with
-        | Data.Unit  ->         mkConstruct ref_E_Unit.fv [] []
-        | Data.Var i ->         mkConstruct ref_E_Var.fv  [] [as_arg (mk_t (Constant (Int i)))]
-        | Data.Mult (e1, e2) -> mkConstruct ref_E_Mult.fv [] [as_arg (embed_exp cb e1); as_arg (embed_exp cb e2)]
-    in
-    let rec unembed_exp cb (t: t) : option exp =
-        match t.nbe_t with
-        | Construct (fv, _, []) when S.fv_eq_lid fv ref_E_Unit.lid ->
-            Some Data.Unit
-
-        | Construct (fv, _, [(i, _)]) when S.fv_eq_lid fv ref_E_Var.lid ->
-            BU.bind_opt (unembed e_int cb i) (fun i ->
-            Some <| Data.Var i)
-
-        | Construct (fv, _, [(e2, _); (e1, _)]) when S.fv_eq_lid fv ref_E_Mult.lid ->
-            BU.bind_opt (unembed_exp cb e1) (fun e1 ->
-            BU.bind_opt (unembed_exp cb e2) (fun e2 ->
-            Some <| Data.Mult (e1, e2)))
-        | _ ->
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded exp: %s" (t_to_string t)));
-            None
-    in
-    mk_emb' embed_exp unembed_exp fstar_refl_exp_fv
-
 let e_qualifier =
     let embed cb (q:RD.qualifier) : t =
         match q with
