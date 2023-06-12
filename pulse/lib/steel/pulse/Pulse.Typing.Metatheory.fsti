@@ -89,8 +89,10 @@ let map_opt (#a #b:Type) (f:a -> b) (x:option a) : option b =
 let subst_flip (ss:subst) (t:term) = subst_term t ss
 
 let subst_env (en:env) (ss:subst)
-  : en':env { forall (x:var). lookup en' x ==
-                              map_opt (subst_flip ss) (lookup en x) }
+  : en':env { fstar_env en == fstar_env en' /\
+              dom en == dom en' /\
+              (forall (x:var). lookup en' x ==
+                               map_opt (subst_flip ss) (lookup en x)) }
   = admit ()
 
 type nt_subst = s:subst {
@@ -120,13 +122,13 @@ let tot_typing_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' })
   (#e1:term) (#t1:typ)
   (e1_typing:tot_typing (push_env g (push_env g' g'')) e1 t1)
   (ss:nt_subst { well_typed_ss g g' ss /\ ss_covers_g' ss g' })
-  : tot_typing (push_env g g'') (subst_term e1 ss) (subst_term t1 ss) = admit ()
+  : tot_typing (push_env g (subst_env g'' ss)) (subst_term e1 ss) (subst_term t1 ss) = admit ()
   
 let rec st_typing_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' })
   (#e1:st_term) (#c1:comp_st)
   (e1_typing:st_typing (push_env g (push_env g' g'')) e1 c1)
   (ss:nt_subst { well_typed_ss g g' ss /\ ss_covers_g' ss g' })
-  : st_typing (push_env g g'') (subst_st_term e1 ss) (subst_comp c1 ss) =
+  : st_typing (push_env g (subst_env g'' ss)) (subst_st_term e1 ss) (subst_comp c1 ss) =
 
   match e1_typing with
   | T_Abs _ x q b u body c b_ty_typing body_typing ->
@@ -143,7 +145,7 @@ let rec st_typing_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' }
       : st_typing g1 (open_st_term_nv (subst_st_term body ss) (b.binder_ppname, x)) (subst_comp c ss)
       = st_typing_subst g g' (push_binding g'' x (subst_term b.binder_ty ss)) body_typing ss in
 
-    T_Abs (push_env g g') x q (subst_binder b ss) u (subst_st_term body ss) (subst_comp c ss)
+    T_Abs _ x q (subst_binder b ss) u (subst_st_term body ss) (subst_comp c ss)
           b_ty_typing body_typing
 
   | T_STApp _ head ty q res arg head_typing arg_typing ->
@@ -151,9 +153,9 @@ let rec st_typing_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' }
             tm_arrow (as_binder (subst_term ty ss)) q (subst_comp res ss));
     assume (subst_comp (open_comp_with res arg) ss ==
             open_comp_with (subst_comp res ss) (subst_term arg ss));
-    T_STApp (push_env g g'') (subst_term head ss) (subst_term ty ss) q
-            (subst_comp res ss) (subst_term arg ss)
-            (tot_typing_subst g g' g'' head_typing ss)
-            (tot_typing_subst g g' g'' arg_typing ss)
+    T_STApp _ (subst_term head ss) (subst_term ty ss) q
+              (subst_comp res ss) (subst_term arg ss)
+              (tot_typing_subst g g' g'' head_typing ss)
+              (tot_typing_subst g g' g'' arg_typing ss)
 
   | _ -> admit ()
