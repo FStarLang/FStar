@@ -15,6 +15,7 @@ let (shift :
     fun s ->
       match s with
       | FStar_Syntax_Syntax.DB (i, t) -> FStar_Syntax_Syntax.DB ((i + n), t)
+      | FStar_Syntax_Syntax.DT (i, t) -> FStar_Syntax_Syntax.DT ((i + n), t)
       | FStar_Syntax_Syntax.UN (i, t) -> FStar_Syntax_Syntax.UN ((i + n), t)
       | FStar_Syntax_Syntax.NM (x, i) -> FStar_Syntax_Syntax.NM (x, (i + n))
       | FStar_Syntax_Syntax.UD (x, i) -> FStar_Syntax_Syntax.UD (x, (i + n))
