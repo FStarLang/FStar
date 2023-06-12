@@ -41,6 +41,8 @@ let bindings_as_map _ = ()
 
 let empty_bmap : bmap = Map.const_on Set.empty Tm_Unknown
 
+let equal_elim g1 g2 = assert (Map.equal g1.m g2.m)
+
 let mk_env (f:RT.fstar_top_env) : env = { f; bs = []; m = empty_bmap; ctxt = FStar.Sealed.seal [] }
 
 let mk_env_bs _ = ()
@@ -77,8 +79,18 @@ let rec append_memP (#a:Type) (l1 l2:list a) (x:a)
   | [] -> ()
   | _::tl -> append_memP tl l2 x
 
-let join (g1:env) (g2:env { disjoint g1 g2 }) : env =
-  { f = g1.f; bs = g1.bs @ g2.bs; m = Map.concat g1.m g2.m; ctxt = FStar.Sealed.seal [] }
+let push_env (g1:env) (g2:env { disjoint g1 g2 }) : env =
+  { f = g1.f; bs = g2.bs @ g1.bs; m = Map.concat g2.m g1.m; ctxt = g1.ctxt }
+
+let push_env_fstar_env _ _ = ()
+
+let push_env_bindings _ _ = ()
+
+let push_env_as_map _ _ = ()
+
+let push_env_assoc g1 g2 g3 =
+  L.append_assoc g3.bs g2.bs g1.bs;
+  assert (equal (push_env g1 (push_env g2 g3)) (push_env (push_env g1 g2) g3))
 
 let intro_env_extends (g1 g2 g3:env)
   : Lemma (requires extends_with g1 g2 g3)
@@ -90,6 +102,7 @@ let elim_env_extends (g1:env) (g2:env { g1 `env_extends` g2 })
     env (fun g3 -> extends_with g1 g2 g3)
 
 let env_extends_refl (g:env) : Lemma (g `env_extends` g) =
+  assert (equal g (push_env g (mk_env g.f)));
   intro_env_extends g g (mk_env g.f)
 
 let env_extends_trans (g1 g2 g3:env)
@@ -98,19 +111,21 @@ let env_extends_trans (g1 g2 g3:env)
   let g12 = elim_env_extends g1 g2 in
   let g23 = elim_env_extends g2 g3 in
   L.append_assoc g12.bs g23.bs g3.bs;
-  intro_env_extends g1 g3 (join g12 g23)
+  assert (equal g1 (push_env g3 (push_env g23 g12)));
+  intro_env_extends g1 g3 (push_env g23 g12)
 
 let env_extends_push (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (push_binding g x t `env_extends` g) =
+  assert (equal (push_binding g x t) (push_env g (push_binding (mk_env g.f) x t)));
   intro_env_extends (push_binding g x t) g (push_binding (mk_env g.f) x t)
 
 let extends_with_push (g1 g2 g3:env)
   (x:var { ~ (Set.mem x (dom g1)) }) (t:typ)
   : Lemma (requires extends_with g1 g2 g3)
           (ensures extends_with (push_binding g1 x t) g2 (push_binding g3 x t)) =
-  ()
+  assert (equal (push_binding g1 x t)
+                (push_env g2 (push_binding g3 x t)))
 
 let push_context g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx g.ctxt }
 
 let get_context g = g.ctxt
-

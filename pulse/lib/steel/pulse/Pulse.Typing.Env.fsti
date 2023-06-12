@@ -35,6 +35,15 @@ val bindings_as_map (g:env)
 
 let dom (g:env) : Set.set var = Map.domain (as_map g)
 
+let equal (g1 g2:env) =
+  fstar_env g1 == fstar_env g2 /\
+  bindings g1 == bindings g2
+
+val equal_elim (g1 g2:env)
+  : Lemma (requires equal g1 g2)
+          (ensures g1 == g2)
+          [SMTPat (equal g1 g2)]
+
 val mk_env (f:RT.fstar_top_env) : g:env { fstar_env g == f }
 
 val mk_env_bs (f:RT.fstar_top_env)
@@ -64,12 +73,34 @@ let disjoint (g1 g2:env) =
   fstar_env g1 == fstar_env g2 /\
   Set.disjoint (dom g1) (dom g2)
 
+let disjoint_dom (g1 g2:env)
+  : Lemma (requires disjoint g1 g2)
+          (ensures dom g1 `Set.disjoint` dom g2) = ()
+
+val push_env (g1:env) (g2:env { disjoint g1 g2 }) : env
+
+val push_env_fstar_env (g1:env) (g2:env { disjoint g1 g2 })
+  : Lemma (fstar_env (push_env g1 g2) == fstar_env g1)
+          [SMTPat (fstar_env (push_env g1 g2))]
+
+val push_env_bindings (g1 g2:env)
+  : Lemma (requires disjoint g1 g2)
+          (ensures bindings (push_env g1 g2) == bindings g2 @ bindings g1)
+          [SMTPat (bindings (push_env g1 g2))]
+
+val push_env_as_map (g1 g2:env)
+  : Lemma (requires disjoint g1 g2)
+          (ensures as_map (push_env g1 g2) == Map.concat (as_map g2) (as_map g1))
+          [SMTPat (as_map (push_env g1 g2))]
+
+val push_env_assoc (g1 g2 g3:env)
+  : Lemma (requires disjoint g1 g2 /\ disjoint g2 g3 /\ disjoint g3 g1)
+          (ensures push_env g1 (push_env g2 g3) == push_env (push_env g1 g2) g3)
+
 // g1 extends g2 with g3, i.e. g1.bs == g3.bs @ g2.bs (recall most recent binding at the head)
 let extends_with (g1 g2 g3:env) =
   disjoint g2 g3 /\
-  fstar_env g1 == fstar_env g2 /\
-  bindings g1 == bindings g3 @ bindings g2 /\
-  Map.equal (as_map g1) (Map.concat (as_map g3) (as_map g2))
+  g1 == push_env g2 g3
 
 let env_extends (g1 g2:env) =
   exists g3. extends_with g1 g2 g3
