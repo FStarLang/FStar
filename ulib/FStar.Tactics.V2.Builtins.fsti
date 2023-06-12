@@ -29,8 +29,7 @@ open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.VConfig
 
-(** Observe a sealed value. See Sealed.seal too. *)
-val unseal : #a:Type -> sealed a -> Tac a
+include FStar.Tactics.Unseal
 
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> Tac term

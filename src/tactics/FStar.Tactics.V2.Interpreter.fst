@@ -248,6 +248,15 @@ let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embe
 (* Takes a `sealed a`, but that's just a userspace abstraction. *)
 let unseal (_typ:_) (x:'a) : tac 'a = ret x
 
+let unseal_step =
+  (* Unseal is not in builtins. *)
+  let s =
+    mk_tac_step_2 1 "unseal"
+      unseal e_any      (e_sealed      e_any)      e_any
+      unseal NBET.e_any (NBET.e_sealed NBET.e_any) NBET.e_any
+  in
+  { s with name = PC.unseal_lid }
+
 (* Set the primitive steps ref *)
 let () =
     (* NB: We need a PRECISE number for the universe arguments or NBE will
@@ -258,9 +267,7 @@ let () =
      * like which embeddings are needed for the arguments, but more annoyingly the underlying
      * implementation. Would be nice to have something better in the not-so-long run. *)
     List.iter register_tactic_primitive_step
-    [ mk_tac_step_2 1 "unseal"
-        unseal e_any      (e_sealed      e_any)      e_any
-        unseal NBET.e_any (NBET.e_sealed NBET.e_any) NBET.e_any;
+    [ unseal_step;
 
       mk_tac_step_1 0 "compress"
         compress RE.e_term RE.e_term

@@ -28,8 +28,7 @@ open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.VConfig
 
-(** Observe a sealed value. See Sealed.seal too. *)
-val unseal : #a:Type -> sealed a -> Tac a
+include FStar.Tactics.Unseal
 
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)

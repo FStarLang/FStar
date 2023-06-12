@@ -62,8 +62,6 @@ let from_tac_4 (t: 'a -> 'b -> 'c -> 'd -> 'e TM.tac): 'a  -> 'b -> 'c -> 'd -> 
   let m = t x y z w in
   interpret_tac m ps
 
-let unseal x = E.tac_return x
-
 (* Pointing to the internal primitives *)
 let compress                = from_tac_1 B.compress
 let set_goals               = from_tac_1 TM.set_goals

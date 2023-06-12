@@ -558,6 +558,6 @@ let fext_on_dom_g_lid = fext_lid "on_dom_g"
 
 let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
 let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
-let unseal_lid      = p2l ["FStar"; "Tactics"; "Builtins"; "unseal"]
+let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
 
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]
