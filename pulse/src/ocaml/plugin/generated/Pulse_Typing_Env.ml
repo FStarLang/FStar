@@ -37,8 +37,9 @@ let (dom : env -> Pulse_Syntax_Base.var FStar_Set.set) =
 type ('g1, 'g2) equal = unit
 let (empty_bmap : bmap) =
   FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Base.Tm_Unknown
+let (default_context : Pulse_RuntimeUtils.context) = FStar_Sealed.seal []
 let (mk_env : FStar_Reflection_Typing.fstar_top_env -> env) =
-  fun f -> { f; bs = []; m = empty_bmap; ctxt = (FStar_Sealed.seal []) }
+  fun f -> { f; bs = []; m = empty_bmap; ctxt = default_context }
 let (push_binding :
   env -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.typ -> env) =
   fun g ->
@@ -91,13 +92,48 @@ let (push_env : env -> env -> env) =
       }
 type ('g1, 'g2, 'g3) extends_with = unit
 type ('g1, 'g2) env_extends = unit
-let (push_context : env -> Prims.string -> env) =
+let (push_context : env -> Prims.string -> Pulse_Syntax_Base.range -> env) =
+  fun g ->
+    fun ctx ->
+      fun r ->
+        {
+          f = (g.f);
+          bs = (g.bs);
+          m = (g.m);
+          ctxt =
+            (Pulse_RuntimeUtils.extend_context ctx
+               (FStar_Pervasives_Native.Some r) g.ctxt)
+        }
+let (push_context_no_range : env -> Prims.string -> env) =
   fun g ->
     fun ctx ->
       {
         f = (g.f);
         bs = (g.bs);
         m = (g.m);
-        ctxt = (Pulse_RuntimeUtils.extend_context ctx g.ctxt)
+        ctxt =
+          (Pulse_RuntimeUtils.extend_context ctx FStar_Pervasives_Native.None
+             g.ctxt)
       }
 let (get_context : env -> Pulse_RuntimeUtils.context) = fun g -> g.ctxt
+let (range_of_env :
+  env -> (Pulse_Syntax_Base.range, unit) FStar_Tactics_Effect.tac_repr) =
+  fun g ->
+    FStar_Tactics_Effect.tac_bind
+      (FStar_Range.mk_range "Pulse.Typing.Env.fst" (Prims.of_int (137))
+         (Prims.of_int (14)) (Prims.of_int (137)) (Prims.of_int (29)))
+      (FStar_Range.mk_range "Pulse.Typing.Env.fst" (Prims.of_int (138))
+         (Prims.of_int (4)) (Prims.of_int (140)) (Prims.of_int (30)))
+      (Obj.magic (FStar_Tactics_Builtins.unseal g.ctxt))
+      (fun ctx ->
+         FStar_Tactics_Effect.lift_div_tac
+           (fun uu___ ->
+              match FStar_List_Tot_Base.tryFind
+                      (fun uu___1 ->
+                         match uu___1 with
+                         | (uu___2, r) ->
+                             FStar_Pervasives_Native.uu___is_Some r) ctx
+              with
+              | FStar_Pervasives_Native.Some
+                  (uu___1, FStar_Pervasives_Native.Some r) -> r
+              | uu___1 -> FStar_Range.range_0))

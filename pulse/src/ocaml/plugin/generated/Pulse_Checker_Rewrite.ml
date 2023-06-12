@@ -16,13 +16,14 @@ let (check_rewrite :
             FStar_Tactics_Effect.tac_bind
               (FStar_Range.mk_range "Pulse.Checker.Rewrite.fst"
                  (Prims.of_int (20)) (Prims.of_int (10)) (Prims.of_int (20))
-                 (Prims.of_int (40)))
+                 (Prims.of_int (48)))
               (FStar_Range.mk_range "Pulse.Checker.Rewrite.fst"
-                 (Prims.of_int (20)) (Prims.of_int (43)) (Prims.of_int (33))
+                 (Prims.of_int (20)) (Prims.of_int (51)) (Prims.of_int (33))
                  (Prims.of_int (72)))
               (FStar_Tactics_Effect.lift_div_tac
                  (fun uu___ ->
-                    Pulse_Checker_Pure.push_context "check_rewrite" g))
+                    Pulse_Checker_Pure.push_context "check_rewrite"
+                      t.Pulse_Syntax_Base.range1 g))
               (fun uu___ ->
                  (fun g1 ->
                     Obj.magic
@@ -31,7 +32,7 @@ let (check_rewrite :
                             (Prims.of_int (21)) (Prims.of_int (32))
                             (Prims.of_int (21)) (Prims.of_int (38)))
                          (FStar_Range.mk_range "Pulse.Checker.Rewrite.fst"
-                            (Prims.of_int (20)) (Prims.of_int (43))
+                            (Prims.of_int (20)) (Prims.of_int (51))
                             (Prims.of_int (33)) (Prims.of_int (72)))
                          (FStar_Tactics_Effect.lift_div_tac
                             (fun uu___ -> t.Pulse_Syntax_Base.term1))

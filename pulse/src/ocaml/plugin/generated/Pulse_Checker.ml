@@ -2436,7 +2436,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                            (Prims.of_int (348))
                                            (Prims.of_int (12))
                                            (Prims.of_int (348))
-                                           (Prims.of_int (47)))
+                                           (Prims.of_int (55)))
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.fst"
                                            (Prims.of_int (349))
@@ -2447,7 +2447,8 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                            (fun uu___2 ->
                                               Pulse_Checker_Pure.push_context
                                                 (Pulse_Syntax_Printer.tag_of_st_term
-                                                   t1) g))
+                                                   t1)
+                                                t1.Pulse_Syntax_Base.range1 g))
                                         (fun uu___2 ->
                                            (fun g1 ->
                                               Obj.magic

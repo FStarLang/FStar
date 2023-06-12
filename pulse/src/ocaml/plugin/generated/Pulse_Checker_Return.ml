@@ -18,13 +18,14 @@ let (check_return :
               FStar_Tactics_Effect.tac_bind
                 (FStar_Range.mk_range "Pulse.Checker.Return.fst"
                    (Prims.of_int (22)) (Prims.of_int (10))
-                   (Prims.of_int (22)) (Prims.of_int (39)))
+                   (Prims.of_int (22)) (Prims.of_int (48)))
                 (FStar_Range.mk_range "Pulse.Checker.Return.fst"
-                   (Prims.of_int (22)) (Prims.of_int (42))
+                   (Prims.of_int (22)) (Prims.of_int (51))
                    (Prims.of_int (49)) (Prims.of_int (68)))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
-                      Pulse_Checker_Pure.push_context "check_return" g))
+                      Pulse_Checker_Pure.push_context "check_return"
+                        st.Pulse_Syntax_Base.range1 g))
                 (fun uu___ ->
                    (fun g1 ->
                       Obj.magic
@@ -33,7 +34,7 @@ let (check_return :
                               (Prims.of_int (23)) (Prims.of_int (53))
                               (Prims.of_int (23)) (Prims.of_int (60)))
                            (FStar_Range.mk_range "Pulse.Checker.Return.fst"
-                              (Prims.of_int (22)) (Prims.of_int (42))
+                              (Prims.of_int (22)) (Prims.of_int (51))
                               (Prims.of_int (49)) (Prims.of_int (68)))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___ -> st.Pulse_Syntax_Base.term1))

@@ -239,13 +239,14 @@ let (try_frame_pre :
               FStar_Tactics_Effect.tac_bind
                 (FStar_Range.mk_range "Pulse.Checker.Common.fst"
                    (Prims.of_int (55)) (Prims.of_int (12))
-                   (Prims.of_int (55)) (Prims.of_int (45)))
+                   (Prims.of_int (55)) (Prims.of_int (53)))
                 (FStar_Range.mk_range "Pulse.Checker.Common.fst"
                    (Prims.of_int (56)) (Prims.of_int (4)) (Prims.of_int (64))
                    (Prims.of_int (48)))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
-                      Pulse_Checker_Pure.push_context "try_frame_pre" g))
+                      Pulse_Checker_Pure.push_context "try_frame_pre"
+                        t.Pulse_Syntax_Base.range1 g))
                 (fun uu___ ->
                    (fun g1 ->
                       Obj.magic
@@ -507,13 +508,13 @@ let (replace_equiv_post :
             FStar_Tactics_Effect.tac_bind
               (FStar_Range.mk_range "Pulse.Checker.Common.fst"
                  (Prims.of_int (75)) (Prims.of_int (12)) (Prims.of_int (75))
-                 (Prims.of_int (50)))
+                 (Prims.of_int (52)))
               (FStar_Range.mk_range "Pulse.Checker.Common.fst"
-                 (Prims.of_int (75)) (Prims.of_int (53)) (Prims.of_int (125))
+                 (Prims.of_int (75)) (Prims.of_int (55)) (Prims.of_int (125))
                  (Prims.of_int (7)))
               (FStar_Tactics_Effect.lift_div_tac
                  (fun uu___ ->
-                    Pulse_Checker_Pure.push_context "replace_equiv_post" g))
+                    Pulse_Checker_Pure.push_context "replace_equiv_post" r g))
               (fun uu___ ->
                  (fun g1 ->
                     Obj.magic
@@ -522,7 +523,7 @@ let (replace_equiv_post :
                             (Prims.of_int (76)) (Prims.of_int (50))
                             (Prims.of_int (76)) (Prims.of_int (67)))
                          (FStar_Range.mk_range "Pulse.Checker.Common.fst"
-                            (Prims.of_int (75)) (Prims.of_int (53))
+                            (Prims.of_int (75)) (Prims.of_int (55))
                             (Prims.of_int (125)) (Prims.of_int (7)))
                          (FStar_Tactics_Effect.lift_div_tac
                             (fun uu___ -> Pulse_Syntax_Base.st_comp_of_comp c))
@@ -880,7 +881,7 @@ let (replace_equiv_post :
                                                                     (Pulse_Checker_Framing.check_vprop_equiv
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "check_vprop_equiv"
-                                                                    g_post)
+                                                                    r g_post)
                                                                     post_c_opened
                                                                     post_opened
                                                                     ()))

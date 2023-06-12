@@ -91,6 +91,9 @@ let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
 type vprop = term
 type typ = term
+let (term_range : term -> FStar_Range.range) =
+  fun t ->
+    match t with | Tm_FStar (uu___, r) -> r | uu___ -> FStar_Range.range_0
 type st_comp = {
   u: universe ;
   res: term ;
