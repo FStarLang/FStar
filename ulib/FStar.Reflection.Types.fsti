@@ -46,3 +46,5 @@ type binders = list binder
  * the bool says whether returns (bool = false) or returns$ (bool = true, use type equality
  *)
 type match_returns_ascription = binder & (either term comp & option term & bool)
+
+type decls = list sigelt

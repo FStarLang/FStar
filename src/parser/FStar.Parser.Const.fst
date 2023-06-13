@@ -503,8 +503,7 @@ let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_
 let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 let check_with_lid = lid_of_path (["FStar"; "VConfig"; "check_with"]) FStar.Compiler.Range.dummyRange
 
-(* decls = list sigelt, matches exactly in V1/V2 *)
-let decls_lid      = p2l ["FStar"; "Reflection"; "V2"; "Data"; "decls"]
+let decls_lid      = p2l ["FStar"; "Reflection"; "Types"; "decls"]
 
 // meta dsl constants
 let dsl_typing_builtin s = lid_of_path (["FStar"; "Reflection"; "Typing"; "Builtins"]@[s]) FStar.Compiler.Range.dummyRange

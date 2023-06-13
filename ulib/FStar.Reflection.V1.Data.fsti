@@ -197,5 +197,3 @@ type qualifier =
 
 (* Should remove, but there are clients using it. *)
 let var : eqtype = nat
-
-type decls = list sigelt
