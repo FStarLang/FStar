@@ -54,7 +54,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp g x c1 c2 res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose two stghost computations with different opened invariants"
+    else fail g None "Cannot compose two stghost computations with different opened invariants"
   | C_STAtomic inames _, C_ST _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -64,7 +64,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp g x c1lifted c2 res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose atomic with non-emp opened invariants with stt"
+    else fail g None "Cannot compose atomic with non-emp opened invariants with stt"
   | C_STGhost inames1 _, C_STAtomic inames2 _ ->
     if eq_tm inames1 inames2
     then begin
@@ -72,7 +72,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose ghost and atomic with different opened invariants"
+    else fail g None "Cannot compose ghost and atomic with different opened invariants"
   | C_STAtomic inames1 _, C_STGhost inames2 _ ->
     if eq_tm inames1 inames2
     then begin
@@ -80,7 +80,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose atomic and ghost with different opened invariants"
+    else fail g None "Cannot compose atomic and ghost with different opened invariants"
   | C_ST _, C_STAtomic inames _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -91,7 +91,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose stt with atomic with non-emp opened invariants"
+    else fail g None "Cannot compose stt with atomic with non-emp opened invariants"
   | C_STGhost inames _, C_ST _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -101,7 +101,7 @@ let rec mk_bind (g:env)
         T_Lift _ _ _ c1lifted d_e1 (Lift_STGhost_STAtomic g c1 w) in
       mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
     end
-    else T.fail "Cannot compose ghost with stt with non-emp opened invariants"
+    else fail g None "Cannot compose ghost with stt with non-emp opened invariants"
   | C_ST _, C_STGhost inames _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -113,7 +113,7 @@ let rec mk_bind (g:env)
       let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing in
       (| t, c, d |)
     end
-    else T.fail "Cannot compose stt with ghost with non-emp opened invariants"
+    else fail g None "Cannot compose stt with ghost with non-emp opened invariants"
   | C_STAtomic inames _, C_STAtomic _ _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -122,8 +122,8 @@ let rec mk_bind (g:env)
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
       mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
     end
-    else T.fail "Cannot compose statomics with non-emp opened invariants"
-  | _, _ -> T.fail "bind either not implemented (e.g. ghost) or not possible"
+    else fail g None "Cannot compose statomics with non-emp opened invariants"
+  | _, _ -> fail g None "bind either not implemented (e.g. ghost) or not possible"
 #pop-options
 
 
@@ -137,9 +137,9 @@ let bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { Metatheory.fresh_wrt 
       (* since we need to type the result in a smaller env g *)          
       let (| u, res_typing |) = check_universe g s2.res in 
       if not (eq_univ u s2.u)
-      then T.fail "Unexpected universe for result type"
+      then fail g None "Unexpected universe for result type"
       else if x `Set.mem` freevars s2.post
-      then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
+      then fail g None (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
       else (
         let y = x in //fresh g in
         let s2_post_opened = open_term_nv s2.post (v_as_nv y) in
@@ -148,7 +148,7 @@ let bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { Metatheory.fresh_wrt 
       )
     | Some post -> 
       if x `Set.mem` freevars s2.post
-      then T.fail "Unexpected mismatched postcondition in bind" //exclude with a stronger type on check'
+      then fail g None "Unexpected mismatched postcondition in bind" //exclude with a stronger type on check'
       else (
          let pr = Pulse.Checker.Common.post_hint_typing g post x in
          pr.ty_typing, pr.post_typing
@@ -176,7 +176,7 @@ let  mk_bind' (g:env)
    =  let _,x  = px in
       let s2 = st_comp_of_comp c2 in
       if x `Set.mem` freevars s2.post
-      then T.fail (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
+      then fail g None (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
       else ( 
         let res_typing, post_typing = bind_res_and_post_typing g s2 x post_hint  in
         let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing in
@@ -198,7 +198,7 @@ let check_bind
   let Tm_Bind { binder=b; head=e1; body=e2 } = t.term in
   let (| e1, c1, d1 |) = check g e1 pre pre_typing None in
   if not (stateful_comp c1)
-  then T.fail "Bind: c1 is not st"
+  then fail g None "Bind: c1 is not st"
   else 
     let s1 = st_comp_of_comp c1 in
     let t = s1.res in
@@ -210,7 +210,7 @@ let check_bind
     let (| e2', c2, d2 |) = check g' (open_st_term_nv e2 px) next_pre next_pre_typing post_hint in
     FV.st_typing_freevars d2;
     if not (stateful_comp c2)
-    then T.fail "Bind: c2 is not st"
+    then fail g None "Bind: c2 is not st"
     else ( 
       let e2_closed = close_st_term e2' x in
       assume (open_st_term e2_closed x == e2');
@@ -240,7 +240,7 @@ let check_tot_bind g t pre pre_typing post_hint check =
   let (| e2, c2, e2_typing |) =
     check g' (open_st_term_nv e2 px) pre pre_typing' post_hint in
   if not (stateful_comp c2)
-  then T.fail "Tm_TotBind: e2 is not a stateful computation"
+  then fail g (Some e2.range) "Tm_TotBind: e2 is not a stateful computation"
   else
     let e2_closed = close_st_term e2 x in
     assume (open_st_term_nv e2_closed (v_as_nv x) == e2);

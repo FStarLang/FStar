@@ -20,7 +20,8 @@ let check_abs
   (post_hint:post_hint_opt g)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
-  if Some? post_hint then T.fail "Unexpected post-condition annotation from context for an abstraction" else 
+  if Some? post_hint then fail g None "Unexpected post-condition annotation from context for an abstraction" else 
+  let range = t.range in
   match t.term with  
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; pre=pre_hint; body; ret_ty; post=post_hint_body } ->
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
@@ -31,7 +32,7 @@ let check_abs
     let g' = push_binding g x t in
     let pre_opened = 
       match pre_hint with
-      | None -> T.fail "Cannot typecheck an function without a precondition"
+      | None -> fail g None "Cannot typecheck an function without a precondition"
       | Some pre_hint -> open_term_nv pre_hint px in
     match check_term g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
@@ -43,7 +44,10 @@ let check_abs
         match post_hint_body with
         | None -> None
         | Some post ->
-          let post_hint_typing : post_hint_t = Pulse.Checker.Common.intro_post_hint (push_context "post_hint_typing" g') ret_ty post in
+          let post_hint_typing
+            : post_hint_t
+            = Pulse.Checker.Common.intro_post_hint (push_context "post_hint_typing" range g') ret_ty post
+          in
           Some post_hint_typing
       in
       let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened (E pre_typing) post in
@@ -56,4 +60,4 @@ let check_abs
       (| _,
          C_Tot tres,
          tt |)
-    | _ -> T.fail "bad hint"
+    | _ -> fail g None "bad hint"

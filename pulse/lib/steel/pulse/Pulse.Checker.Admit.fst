@@ -38,7 +38,7 @@ let check_admit
     = match post, post_hint with
       | None, None
       | Some _, Some _ ->
-        T.fail "T_Admit: either no post or two posts"
+        fail g None "T_Admit: either no post or two posts"
       
       | Some post, _ ->
         let (| u, t_typing |) = check_universe g t in    
@@ -51,7 +51,7 @@ let check_admit
       | _, Some post ->
         let post : post_hint_t = post in
         if x `Set.mem` freevars post.post
-        then T.fail "Unexpected freevar clash in Tm_Admit"
+        then fail g None "Unexpected freevar clash in Tm_Admit"
         else (
           let post_typing_rec = post_hint_typing g post x in
           let post_opened = open_term_nv post.post px in              

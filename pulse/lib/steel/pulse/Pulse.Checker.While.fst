@@ -24,7 +24,7 @@ let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:
   : Metatheory.comp_typing_u g (comp_while_body x inv_body)
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
-#push-options "--ifuel 2 --z3rlimit_factor 4"
+#push-options "--ifuel 2 --z3rlimit_factor 8 --split_queries no --query_stats"
 let check_while
   (allow_inst:bool)
   (g:env)
@@ -34,10 +34,11 @@ let check_while
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (checker_result_t g pre post_hint) =
-  let g = push_context "while loop" g in
+  let g = push_context "while loop" t.range g in
   let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
   let (| ex_inv, inv_typing |) =
-    check_vprop (push_context "invariant" g) (Tm_ExistsSL u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv)
+    check_vprop (push_context "invariant" (term_range inv) g) 
+                (Tm_ExistsSL u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv)
   in
   if RU.debug_at_level (fstar_env g) "inference"
   then (
@@ -49,8 +50,8 @@ let check_while
     match ex_inv with
     | Tm_ExistsSL u {binder_ppname=nm; binder_ty=ty} inv ->
       if not (eq_tm ty tm_bool) ||
-        not (eq_univ u u0)
-      then T.fail "While loop invariant is exists but its witness type is not bool"
+         not (eq_univ u u0)
+      then fail g (Some nm.range) "While loop invariant exists but its witness type is not bool"
       else begin
         let while_cond_comp_typing = while_cond_comp_typing u nm ty inv inv_typing in
         let (| res_typing, cond_pre_typing, x, post_typing |) =
@@ -62,7 +63,7 @@ let check_while
         in
         let (| cond, cond_comp, cond_typing |) =
           check' allow_inst
-                 (push_context "while condition" g)
+                 (push_context "while condition" cond.range g)
                  cond
                  (comp_pre (comp_while_cond nm inv))
                  cond_pre_typing
@@ -80,7 +81,7 @@ let check_while
           in
           let (| body, body_comp, body_typing |) =
               check' allow_inst
-                     (push_context "while body" g)
+                     (push_context "while body" body.range g)
                      body
                      (comp_pre (comp_while_body nm inv))
                      body_pre_typing
@@ -91,18 +92,18 @@ let check_while
                let (| c, st_d |) = Framing.apply_frame pre_typing d framing_token in
                repack (| c, st_d |) post_hint
           else 
-            T.fail
+            fail g None
               (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
                                      Inferred type = %s\n\
                                      Annotated type = %s\n"
                                      (P.comp_to_string body_comp)
                                      (P.comp_to_string (comp_while_body nm inv)))
       end
-      else T.fail 
+      else fail g None 
 (Printf.sprintf "Could not prove that the inferred type of the while condition matches the annotation\n\
                                  Inferred type = %s\n\
                                  Annotated type = %s\n"
                                  (P.comp_to_string cond_comp)
                                  (P.comp_to_string (comp_while_cond nm inv)))
                 end
-     | _ -> T.fail "Typechecked invariant is not an exists"
+     | _ -> fail g None "Typechecked invariant is not an exists"

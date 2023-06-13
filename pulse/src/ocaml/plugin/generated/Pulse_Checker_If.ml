@@ -14,207 +14,206 @@ let rec (combine_if_branches :
                      FStar_Pervasives.dtuple3,
                     unit) FStar_Tactics_Effect.tac_repr)
   =
-  fun uu___7 ->
-    fun uu___6 ->
-      fun uu___5 ->
-        fun uu___4 ->
-          fun uu___3 ->
-            fun uu___2 ->
-              fun uu___1 ->
-                fun uu___ ->
-                  (fun g_then ->
-                     fun e_then ->
-                       fun c_then ->
-                         fun e_then_typing ->
-                           fun g_else ->
-                             fun e_else ->
-                               fun c_else ->
-                                 fun e_else_typing ->
-                                   if
-                                     Pulse_Syntax_Base.eq_st_comp
-                                       (Pulse_Syntax_Base.st_comp_of_comp
-                                          c_then)
-                                       (Pulse_Syntax_Base.st_comp_of_comp
-                                          c_else)
-                                   then
-                                     Obj.magic
-                                       (Obj.repr
-                                          (match (c_then, c_else) with
-                                           | (Pulse_Syntax_Base.C_ST uu___,
-                                              Pulse_Syntax_Base.C_ST uu___1)
-                                               ->
-                                               Obj.repr
-                                                 (FStar_Tactics_Effect.lift_div_tac
-                                                    (fun uu___2 ->
-                                                       FStar_Pervasives.Mkdtuple3
-                                                         (c_then,
-                                                           e_then_typing,
-                                                           e_else_typing)))
-                                           | (Pulse_Syntax_Base.C_STAtomic
-                                              (inames1, uu___),
-                                              Pulse_Syntax_Base.C_STAtomic
-                                              (inames2, uu___1)) ->
-                                               Obj.repr
-                                                 (if
-                                                    Pulse_Syntax_Base.eq_tm
-                                                      inames1 inames2
-                                                  then
-                                                    FStar_Tactics_Effect.lift_div_tac
-                                                      (fun uu___2 ->
-                                                         FStar_Pervasives.Mkdtuple3
-                                                           (c_then,
-                                                             e_then_typing,
-                                                             e_else_typing))
-                                                  else
-                                                    FStar_Tactics_Derived.fail
-                                                      "Cannot combine then and else branches (different inames)")
-                                           | (Pulse_Syntax_Base.C_STGhost
-                                              (inames1, uu___),
-                                              Pulse_Syntax_Base.C_STGhost
-                                              (inames2, uu___1)) ->
-                                               Obj.repr
-                                                 (if
-                                                    Pulse_Syntax_Base.eq_tm
-                                                      inames1 inames2
-                                                  then
-                                                    FStar_Tactics_Effect.lift_div_tac
-                                                      (fun uu___2 ->
-                                                         FStar_Pervasives.Mkdtuple3
-                                                           (c_then,
-                                                             e_then_typing,
-                                                             e_else_typing))
-                                                  else
-                                                    FStar_Tactics_Derived.fail
-                                                      "Cannot combine then and else branches (different inames)")
-                                           | (Pulse_Syntax_Base.C_ST uu___,
-                                              Pulse_Syntax_Base.C_STAtomic
-                                              (inames, uu___1)) ->
-                                               Obj.repr
-                                                 (if
-                                                    Pulse_Syntax_Base.eq_tm
-                                                      inames
-                                                      Pulse_Syntax_Base.Tm_EmpInames
-                                                  then
-                                                    FStar_Tactics_Effect.lift_div_tac
-                                                      (fun uu___2 ->
-                                                         FStar_Pervasives.Mkdtuple3
-                                                           (c_then,
-                                                             e_then_typing,
-                                                             (Pulse_Typing.T_Lift
-                                                                (g_else,
-                                                                  e_else,
-                                                                  c_else,
-                                                                  c_then,
-                                                                  e_else_typing,
-                                                                  (Pulse_Typing.Lift_STAtomic_ST
-                                                                    (g_else,
-                                                                    c_else))))))
-                                                  else
-                                                    FStar_Tactics_Derived.fail
-                                                      "Cannot lift STAtomic else branch to match then")
-                                           | (Pulse_Syntax_Base.C_STAtomic
-                                              (inames, uu___),
-                                              Pulse_Syntax_Base.C_ST uu___1)
-                                               ->
-                                               Obj.repr
-                                                 (if
-                                                    Pulse_Syntax_Base.eq_tm
-                                                      inames
-                                                      Pulse_Syntax_Base.Tm_EmpInames
-                                                  then
-                                                    FStar_Tactics_Effect.lift_div_tac
-                                                      (fun uu___2 ->
-                                                         FStar_Pervasives.Mkdtuple3
-                                                           (c_else,
-                                                             (Pulse_Typing.T_Lift
-                                                                (g_then,
-                                                                  e_then,
-                                                                  c_then,
-                                                                  c_else,
-                                                                  e_then_typing,
-                                                                  (Pulse_Typing.Lift_STAtomic_ST
-                                                                    (g_then,
-                                                                    c_then)))),
-                                                             e_else_typing))
-                                                  else
-                                                    FStar_Tactics_Derived.fail
-                                                      "Cannot lift STAtomic else branch to match then")
-                                           | (Pulse_Syntax_Base.C_STGhost
-                                              (uu___, uu___1), uu___2) ->
-                                               Obj.repr
-                                                 (FStar_Tactics_Effect.tac_bind
-                                                    (FStar_Range.mk_range
-                                                       "Pulse.Checker.If.fst"
-                                                       (Prims.of_int (59))
-                                                       (Prims.of_int (14))
-                                                       (Prims.of_int (59))
-                                                       (Prims.of_int (82)))
-                                                    (FStar_Range.mk_range
-                                                       "Pulse.Checker.If.fst"
-                                                       (Prims.of_int (59))
-                                                       (Prims.of_int (85))
-                                                       (Prims.of_int (64))
-                                                       (Prims.of_int (35)))
-                                                    (Obj.magic
-                                                       (Pulse_Checker_Pure.get_non_informative_witness
-                                                          g_then
-                                                          (Pulse_Syntax_Base.comp_u
-                                                             c_then)
-                                                          (Pulse_Syntax_Base.comp_res
-                                                             c_then)))
-                                                    (fun uu___3 ->
-                                                       (fun w ->
-                                                          Obj.magic
-                                                            (FStar_Tactics_Effect.tac_bind
-                                                               (FStar_Range.mk_range
-                                                                  "Pulse.Checker.If.fst"
-                                                                  (Prims.of_int (61))
-                                                                  (Prims.of_int (8))
-                                                                  (Prims.of_int (61))
-                                                                  (Prims.of_int (66)))
-                                                               (FStar_Range.mk_range
-                                                                  "Pulse.Checker.If.fst"
-                                                                  (Prims.of_int (61))
-                                                                  (Prims.of_int (69))
-                                                                  (Prims.of_int (64))
-                                                                  (Prims.of_int (35)))
-                                                               (FStar_Tactics_Effect.lift_div_tac
-                                                                  (fun uu___3
-                                                                    ->
-                                                                    Pulse_Typing.T_Lift
-                                                                    (g_then,
-                                                                    e_then,
-                                                                    c_then,
-                                                                    (Pulse_Syntax_Base.C_STAtomic
-                                                                    ((Pulse_Syntax_Base.comp_inames
+  fun g_then ->
+    fun e_then ->
+      fun c_then ->
+        fun e_then_typing ->
+          fun g_else ->
+            fun e_else ->
+              fun c_else ->
+                fun e_else_typing ->
+                  FStar_Tactics_Effect.tac_bind
+                    (FStar_Range.mk_range "Pulse.Checker.If.fst"
+                       (Prims.of_int (30)) (Prims.of_int (10))
+                       (Prims.of_int (30)) (Prims.of_int (16)))
+                    (FStar_Range.mk_range "Pulse.Checker.If.fst"
+                       (Prims.of_int (31)) (Prims.of_int (2))
+                       (Prims.of_int (72)) (Prims.of_int (78)))
+                    (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> g_then))
+                    (fun uu___ ->
+                       (fun g ->
+                          if
+                            Pulse_Syntax_Base.eq_st_comp
+                              (Pulse_Syntax_Base.st_comp_of_comp c_then)
+                              (Pulse_Syntax_Base.st_comp_of_comp c_else)
+                          then
+                            Obj.magic
+                              (Obj.repr
+                                 (match (c_then, c_else) with
+                                  | (Pulse_Syntax_Base.C_ST uu___,
+                                     Pulse_Syntax_Base.C_ST uu___1) ->
+                                      Obj.repr
+                                        (FStar_Tactics_Effect.lift_div_tac
+                                           (fun uu___2 ->
+                                              FStar_Pervasives.Mkdtuple3
+                                                (c_then, e_then_typing,
+                                                  e_else_typing)))
+                                  | (Pulse_Syntax_Base.C_STAtomic
+                                     (inames1, uu___),
+                                     Pulse_Syntax_Base.C_STAtomic
+                                     (inames2, uu___1)) ->
+                                      Obj.repr
+                                        (if
+                                           Pulse_Syntax_Base.eq_tm inames1
+                                             inames2
+                                         then
+                                           Obj.repr
+                                             (FStar_Tactics_Effect.lift_div_tac
+                                                (fun uu___2 ->
+                                                   FStar_Pervasives.Mkdtuple3
+                                                     (c_then, e_then_typing,
+                                                       e_else_typing)))
+                                         else
+                                           Obj.repr
+                                             (Pulse_Typing_Env.fail g
+                                                FStar_Pervasives_Native.None
+                                                "Cannot combine then and else branches (different inames)"))
+                                  | (Pulse_Syntax_Base.C_STGhost
+                                     (inames1, uu___),
+                                     Pulse_Syntax_Base.C_STGhost
+                                     (inames2, uu___1)) ->
+                                      Obj.repr
+                                        (if
+                                           Pulse_Syntax_Base.eq_tm inames1
+                                             inames2
+                                         then
+                                           Obj.repr
+                                             (FStar_Tactics_Effect.lift_div_tac
+                                                (fun uu___2 ->
+                                                   FStar_Pervasives.Mkdtuple3
+                                                     (c_then, e_then_typing,
+                                                       e_else_typing)))
+                                         else
+                                           Obj.repr
+                                             (Pulse_Typing_Env.fail g
+                                                FStar_Pervasives_Native.None
+                                                "Cannot combine then and else branches (different inames)"))
+                                  | (Pulse_Syntax_Base.C_ST uu___,
+                                     Pulse_Syntax_Base.C_STAtomic
+                                     (inames, uu___1)) ->
+                                      Obj.repr
+                                        (if
+                                           Pulse_Syntax_Base.eq_tm inames
+                                             Pulse_Syntax_Base.Tm_EmpInames
+                                         then
+                                           Obj.repr
+                                             (FStar_Tactics_Effect.lift_div_tac
+                                                (fun uu___2 ->
+                                                   FStar_Pervasives.Mkdtuple3
+                                                     (c_then, e_then_typing,
+                                                       (Pulse_Typing.T_Lift
+                                                          (g_else, e_else,
+                                                            c_else, c_then,
+                                                            e_else_typing,
+                                                            (Pulse_Typing.Lift_STAtomic_ST
+                                                               (g_else,
+                                                                 c_else)))))))
+                                         else
+                                           Obj.repr
+                                             (Pulse_Typing_Env.fail g
+                                                FStar_Pervasives_Native.None
+                                                "Cannot lift STAtomic else branch to match then"))
+                                  | (Pulse_Syntax_Base.C_STAtomic
+                                     (inames, uu___), Pulse_Syntax_Base.C_ST
+                                     uu___1) ->
+                                      Obj.repr
+                                        (if
+                                           Pulse_Syntax_Base.eq_tm inames
+                                             Pulse_Syntax_Base.Tm_EmpInames
+                                         then
+                                           Obj.repr
+                                             (FStar_Tactics_Effect.lift_div_tac
+                                                (fun uu___2 ->
+                                                   FStar_Pervasives.Mkdtuple3
+                                                     (c_else,
+                                                       (Pulse_Typing.T_Lift
+                                                          (g_then, e_then,
+                                                            c_then, c_else,
+                                                            e_then_typing,
+                                                            (Pulse_Typing.Lift_STAtomic_ST
+                                                               (g_then,
+                                                                 c_then)))),
+                                                       e_else_typing)))
+                                         else
+                                           Obj.repr
+                                             (Pulse_Typing_Env.fail g
+                                                FStar_Pervasives_Native.None
+                                                "Cannot lift STAtomic else branch to match then"))
+                                  | (Pulse_Syntax_Base.C_STGhost
+                                     (uu___, uu___1), uu___2) ->
+                                      Obj.repr
+                                        (FStar_Tactics_Effect.tac_bind
+                                           (FStar_Range.mk_range
+                                              "Pulse.Checker.If.fst"
+                                              (Prims.of_int (59))
+                                              (Prims.of_int (14))
+                                              (Prims.of_int (59))
+                                              (Prims.of_int (82)))
+                                           (FStar_Range.mk_range
+                                              "Pulse.Checker.If.fst"
+                                              (Prims.of_int (59))
+                                              (Prims.of_int (85))
+                                              (Prims.of_int (64))
+                                              (Prims.of_int (35)))
+                                           (Obj.magic
+                                              (Pulse_Checker_Pure.get_non_informative_witness
+                                                 g_then
+                                                 (Pulse_Syntax_Base.comp_u
+                                                    c_then)
+                                                 (Pulse_Syntax_Base.comp_res
+                                                    c_then)))
+                                           (fun uu___3 ->
+                                              (fun w ->
+                                                 Obj.magic
+                                                   (FStar_Tactics_Effect.tac_bind
+                                                      (FStar_Range.mk_range
+                                                         "Pulse.Checker.If.fst"
+                                                         (Prims.of_int (61))
+                                                         (Prims.of_int (8))
+                                                         (Prims.of_int (61))
+                                                         (Prims.of_int (66)))
+                                                      (FStar_Range.mk_range
+                                                         "Pulse.Checker.If.fst"
+                                                         (Prims.of_int (61))
+                                                         (Prims.of_int (69))
+                                                         (Prims.of_int (64))
+                                                         (Prims.of_int (35)))
+                                                      (FStar_Tactics_Effect.lift_div_tac
+                                                         (fun uu___3 ->
+                                                            Pulse_Typing.T_Lift
+                                                              (g_then,
+                                                                e_then,
+                                                                c_then,
+                                                                (Pulse_Syntax_Base.C_STAtomic
+                                                                   ((Pulse_Syntax_Base.comp_inames
                                                                     c_then),
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     c_then))),
-                                                                    e_then_typing,
-                                                                    (Pulse_Typing.Lift_STGhost_STAtomic
-                                                                    (g_then,
+                                                                e_then_typing,
+                                                                (Pulse_Typing.Lift_STGhost_STAtomic
+                                                                   (g_then,
                                                                     c_then,
                                                                     w)))))
-                                                               (fun uu___3 ->
-                                                                  (fun
-                                                                    e_then_typing1
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
+                                                      (fun uu___3 ->
+                                                         (fun e_then_typing1
+                                                            ->
+                                                            Obj.magic
+                                                              (FStar_Tactics_Effect.tac_bind
+                                                                 (FStar_Range.mk_range
                                                                     "Pulse.Checker.If.fst"
                                                                     (Prims.of_int (63))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (63))
                                                                     (Prims.of_int (67)))
-                                                                    (FStar_Range.mk_range
+                                                                 (FStar_Range.mk_range
                                                                     "Pulse.Checker.If.fst"
                                                                     (Prims.of_int (61))
                                                                     (Prims.of_int (69))
                                                                     (Prims.of_int (64))
                                                                     (Prims.of_int (35)))
-                                                                    (Obj.magic
-                                                                    (combine_if_branches
+                                                                 (Obj.magic
+                                                                    (
+                                                                    combine_if_branches
                                                                     g_then
                                                                     e_then
                                                                     (Pulse_Syntax_Base.C_STAtomic
@@ -227,8 +226,8 @@ let rec (combine_if_branches :
                                                                     e_else
                                                                     c_else
                                                                     e_else_typing))
-                                                                    (fun
-                                                                    uu___3 ->
+                                                                 (fun uu___3
+                                                                    ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
@@ -244,95 +243,92 @@ let rec (combine_if_branches :
                                                                     (c,
                                                                     e1_typing,
                                                                     e2_typing)))))
-                                                                    uu___3)))
-                                                         uu___3))
-                                           | (uu___,
-                                              Pulse_Syntax_Base.C_STGhost
-                                              (uu___1, uu___2)) ->
-                                               Obj.repr
-                                                 (FStar_Tactics_Effect.tac_bind
-                                                    (FStar_Range.mk_range
-                                                       "Pulse.Checker.If.fst"
-                                                       (Prims.of_int (66))
-                                                       (Prims.of_int (14))
-                                                       (Prims.of_int (66))
-                                                       (Prims.of_int (82)))
-                                                    (FStar_Range.mk_range
-                                                       "Pulse.Checker.If.fst"
-                                                       (Prims.of_int (66))
-                                                       (Prims.of_int (85))
-                                                       (Prims.of_int (69))
-                                                       (Prims.of_int (65)))
-                                                    (Obj.magic
-                                                       (Pulse_Checker_Pure.get_non_informative_witness
-                                                          g_else
-                                                          (Pulse_Syntax_Base.comp_u
-                                                             c_else)
-                                                          (Pulse_Syntax_Base.comp_res
-                                                             c_else)))
-                                                    (fun uu___3 ->
-                                                       (fun w ->
-                                                          Obj.magic
-                                                            (FStar_Tactics_Effect.tac_bind
-                                                               (FStar_Range.mk_range
-                                                                  "Pulse.Checker.If.fst"
-                                                                  (Prims.of_int (68))
-                                                                  (Prims.of_int (8))
-                                                                  (Prims.of_int (68))
-                                                                  (Prims.of_int (66)))
-                                                               (FStar_Range.mk_range
-                                                                  "Pulse.Checker.If.fst"
-                                                                  (Prims.of_int (69))
-                                                                  (Prims.of_int (6))
-                                                                  (Prims.of_int (69))
-                                                                  (Prims.of_int (65)))
-                                                               (FStar_Tactics_Effect.lift_div_tac
-                                                                  (fun uu___3
-                                                                    ->
-                                                                    Pulse_Typing.T_Lift
-                                                                    (g_else,
-                                                                    e_else,
-                                                                    c_else,
-                                                                    (Pulse_Syntax_Base.C_STAtomic
-                                                                    ((Pulse_Syntax_Base.comp_inames
+                                                           uu___3))) uu___3))
+                                  | (uu___, Pulse_Syntax_Base.C_STGhost
+                                     (uu___1, uu___2)) ->
+                                      Obj.repr
+                                        (FStar_Tactics_Effect.tac_bind
+                                           (FStar_Range.mk_range
+                                              "Pulse.Checker.If.fst"
+                                              (Prims.of_int (66))
+                                              (Prims.of_int (14))
+                                              (Prims.of_int (66))
+                                              (Prims.of_int (82)))
+                                           (FStar_Range.mk_range
+                                              "Pulse.Checker.If.fst"
+                                              (Prims.of_int (66))
+                                              (Prims.of_int (85))
+                                              (Prims.of_int (69))
+                                              (Prims.of_int (65)))
+                                           (Obj.magic
+                                              (Pulse_Checker_Pure.get_non_informative_witness
+                                                 g_else
+                                                 (Pulse_Syntax_Base.comp_u
+                                                    c_else)
+                                                 (Pulse_Syntax_Base.comp_res
+                                                    c_else)))
+                                           (fun uu___3 ->
+                                              (fun w ->
+                                                 Obj.magic
+                                                   (FStar_Tactics_Effect.tac_bind
+                                                      (FStar_Range.mk_range
+                                                         "Pulse.Checker.If.fst"
+                                                         (Prims.of_int (68))
+                                                         (Prims.of_int (8))
+                                                         (Prims.of_int (68))
+                                                         (Prims.of_int (66)))
+                                                      (FStar_Range.mk_range
+                                                         "Pulse.Checker.If.fst"
+                                                         (Prims.of_int (69))
+                                                         (Prims.of_int (6))
+                                                         (Prims.of_int (69))
+                                                         (Prims.of_int (65)))
+                                                      (FStar_Tactics_Effect.lift_div_tac
+                                                         (fun uu___3 ->
+                                                            Pulse_Typing.T_Lift
+                                                              (g_else,
+                                                                e_else,
+                                                                c_else,
+                                                                (Pulse_Syntax_Base.C_STAtomic
+                                                                   ((Pulse_Syntax_Base.comp_inames
                                                                     c_else),
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     c_else))),
-                                                                    e_else_typing,
-                                                                    (Pulse_Typing.Lift_STGhost_STAtomic
-                                                                    (g_else,
+                                                                e_else_typing,
+                                                                (Pulse_Typing.Lift_STGhost_STAtomic
+                                                                   (g_else,
                                                                     c_else,
                                                                     w)))))
-                                                               (fun uu___3 ->
-                                                                  (fun
-                                                                    e_else_typing1
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (combine_if_branches
-                                                                    g_then
-                                                                    e_then
-                                                                    c_then
-                                                                    e_then_typing
-                                                                    g_else
-                                                                    e_else
-                                                                    (Pulse_Syntax_Base.C_STAtomic
+                                                      (fun uu___3 ->
+                                                         (fun e_else_typing1
+                                                            ->
+                                                            Obj.magic
+                                                              (combine_if_branches
+                                                                 g_then
+                                                                 e_then
+                                                                 c_then
+                                                                 e_then_typing
+                                                                 g_else
+                                                                 e_else
+                                                                 (Pulse_Syntax_Base.C_STAtomic
                                                                     ((Pulse_Syntax_Base.comp_inames
                                                                     c_else),
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     c_else)))
-                                                                    e_else_typing1))
-                                                                    uu___3)))
-                                                         uu___3))
-                                           | (uu___, uu___1) ->
-                                               Obj.repr
-                                                 (FStar_Tactics_Derived.fail
-                                                    "Cannot combine then and else branches (incompatible effects)")))
-                                   else
-                                     Obj.magic
-                                       (Obj.repr
-                                          (FStar_Tactics_Derived.fail
-                                             "Cannot combine then and else branches (different st_comp)")))
-                    uu___7 uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
+                                                                 e_else_typing1))
+                                                           uu___3))) uu___3))
+                                  | (uu___, uu___1) ->
+                                      Obj.repr
+                                        (Pulse_Typing_Env.fail g
+                                           FStar_Pervasives_Native.None
+                                           "Cannot combine then and else branches (incompatible effects)")))
+                          else
+                            Obj.magic
+                              (Obj.repr
+                                 (Pulse_Typing_Env.fail g
+                                    FStar_Pervasives_Native.None
+                                    "Cannot combine then and else branches (different st_comp)")))
+                         uu___)
 let (check_if :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
@@ -518,6 +514,8 @@ let (check_if :
                                                                     post_hint)))
                                                                     (fun
                                                                     uu___2 ->
+                                                                    (fun
+                                                                    uu___2 ->
                                                                     match uu___2
                                                                     with
                                                                     | 
@@ -531,23 +529,36 @@ let (check_if :
                                                                     (Pulse_Syntax_Naming.freevars_st
                                                                     br1)
                                                                     then
-                                                                    FStar_Tactics_Derived.fail
-                                                                    "Illegal use of control-flow hypothesis in branch"
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (br1.Pulse_Syntax_Base.range1))
+                                                                    "Illegal use of control-flow hypothesis in branch"))
                                                                     else
-                                                                    if
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (if
                                                                     Prims.op_Negation
                                                                     (Pulse_Syntax_Base.stateful_comp
                                                                     c)
                                                                     then
-                                                                    FStar_Tactics_Derived.fail
-                                                                    "Branch computation type not st"
+                                                                    Obj.repr
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (br1.Pulse_Syntax_Base.range1))
+                                                                    "Branch computation type not st")
                                                                     else
-                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    Obj.repr
+                                                                    (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     (br1, c,
-                                                                    br_typing)))))
+                                                                    br_typing))))))
+                                                                    uu___2)))
                                                                     uu___2)))
                                                                     uu___2)))
                                                                     (
@@ -693,13 +704,12 @@ let (check_if :
                                                                     post)
                                                                     then
                                                                     Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "Unexpected name clash"))
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g
+                                                                    FStar_Pervasives_Native.None
+                                                                    "Unexpected name clash")
                                                                     else
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (if
+                                                                    if
                                                                     Prims.op_Negation
                                                                     (((Pulse_Syntax_Base.eq_tm
                                                                     (Pulse_Syntax_Base.comp_res
@@ -716,11 +726,13 @@ let (check_if :
                                                                     c)
                                                                     post_hint.Pulse_Checker_Common.post))
                                                                     then
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
+                                                                    Obj.magic
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g
+                                                                    FStar_Pervasives_Native.None
                                                                     "Unexpected result type in branches")
                                                                     else
-                                                                    Obj.repr
+                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.If.fst"
@@ -750,7 +762,7 @@ let (check_if :
                                                                     (Pulse_Checker_Common.intro_comp_typing
                                                                     g c () ()
                                                                     x ()))
-                                                                    uu___6)))))
+                                                                    uu___6)))
                                                                     uu___4)))
                                                                     (fun
                                                                     c_typing

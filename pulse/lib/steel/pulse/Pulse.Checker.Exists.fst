@@ -43,7 +43,7 @@ let check_elim_exists
           assume (one `List.Tot.memP` ts);
           (| one, vprop_as_list_typing pre_typing one |) //shouldn't need to check this again
         | _ -> 
-          T.fail 
+          fail g None 
             (Printf.sprintf "Could not decide which exists term to eliminate: choices are\n%s"
                (terms_to_string exist_tms))
         )
@@ -66,8 +66,8 @@ let check_elim_exists
     then let x = fresh g in
          let d = T_ElimExists g u ty p x ty_typing t_typing in
          repack (try_frame_pre pre_typing d) post_hint
-    else T.fail "Universe checking failed in elim_exists"
-  | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
+    else fail g None "Universe checking failed in elim_exists"
+  | _ -> fail g None "elim_exists argument not a Tm_ExistsSL"
 
 let is_intro_exists_erased (st:st_term) = 
   match st.term with
@@ -102,7 +102,7 @@ let check_intro_exists_erased
         check_term_with_expected_type g e (mk_erased u b.binder_ty) in
     let d = T_IntroExistsErased g u b p e ty_typing t_typing (E e_typing) in
     repack (try_frame_pre pre_typing d) post_hint
-  | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
+  | _ -> fail g None "elim_exists argument not a Tm_ExistsSL"
 
 
 let check_intro_exists
@@ -133,7 +133,7 @@ let check_intro_exists
     let d = T_IntroExists g u b p witness ty_typing t_typing (E witness_typing) in
     let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
     repack (try_frame_pre pre_typing d) post_hint
-  | _ -> T.fail "elim_exists argument not a Tm_ExistsSL"
+  | _ -> fail g None "elim_exists argument not a Tm_ExistsSL"
 
 let check_intro_exists_either
   (g:env)

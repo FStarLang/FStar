@@ -11,14 +11,8 @@ open Pulse.Readback
 module RTB = FStar.Tactics.Builtins
 module RU = Pulse.RuntimeUtils
 
-let push_context (ctx:string) (g:env) : (g':env { g == g' })
-  = push_context g ctx
-
-val print_context (g:env) : T.Tac string
-
-val print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string
-
-val print_issues (g:env) (i:list FStar.Issue.issue) : T.Tac string
+let push_context (ctx:string) (r:range) (g:env) : (g':env { g == g' })
+  = push_context g ctx r
 
 val instantiate_term_implicits (g:env) (t:term)
   : T.Tac (term & term)

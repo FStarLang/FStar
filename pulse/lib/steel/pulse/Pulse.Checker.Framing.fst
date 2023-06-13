@@ -215,7 +215,7 @@ let check_vprop_equiv
 
   match split_vprop g vp1 vp1_typing vp2 with
   | Inr failure ->
-    T.fail (Printf.sprintf
+    fail g None (Printf.sprintf
               "check_vprop_equiv: %s and %s are not equivalent; missing preconditions:\n%s\n"
                 (P.term_to_string vp1)
                 (P.term_to_string vp2)
@@ -236,7 +236,7 @@ let check_vprop_equiv
       let d' : vprop_equiv g (Tm_Star Tm_Emp vp2) vp2 = VE_Unit _ _ in
       VE_Trans _ _ _ _ d d'
     | None ->
-      T.fail (Printf.sprintf "check_vprop_equiv: %s and %s are not equivalent, frame: %s\n"
+      fail g None (Printf.sprintf "check_vprop_equiv: %s and %s are not equivalent, frame: %s\n"
                              (P.term_to_string vp1)
                              (P.term_to_string vp2)
                              (P.term_to_string frame))

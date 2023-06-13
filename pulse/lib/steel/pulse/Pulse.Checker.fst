@@ -60,6 +60,7 @@ let add_intro_pure rng (continuation:st_term) (p:term) =
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10"
 let uvar_tys = list (Pulse.Checker.Inference.uvar & term)
 let rec prepare_instantiations
+          (g:env)
           (out:list (vprop & either term term))
           (out_uvars: uvar_tys)
           goal_vprop
@@ -71,7 +72,7 @@ let rec prepare_instantiations
           let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
           open_term' p t 0, Inr t, uv
       in
-      prepare_instantiations ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop []
+      prepare_instantiations g ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop []
 
     | [], _ -> 
       goal_vprop, out, out_uvars
@@ -85,10 +86,10 @@ let rec prepare_instantiations
           | _ ->
             open_term' p t 0, Inl t, []
       in
-      prepare_instantiations ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses
+      prepare_instantiations g ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses
 
     |  _ ->
-       T.fail "Unexpected number of instantiations in intro"
+       fail g None "Unexpected number of instantiations in intro"
 
  let rec build_instantiations solutions insts
       : T.Tac st_term 
@@ -145,9 +146,9 @@ let maybe_infer_intro_exists
     );
     let Tm_IntroExists {erased; p=t; witnesses} = st.term in
     let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
-    let goal_vprop, insts, uvs = prepare_instantiations [] [] t witnesses in
+    let goal_vprop, insts, uvs = prepare_instantiations g [] [] t witnesses in
     let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
-    let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal pre goal_vprop in
+    let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre goal_vprop in
     // T.print
     //   (Printf.sprintf
     //      "maybe_infer_intro_exists: solutions after trying inst with pre: %s, goal: %s: %s\n"
@@ -158,7 +159,7 @@ let maybe_infer_intro_exists
       let p = Pulse.Checker.Inference.apply_solution solutions p in
       match p with
       | Tm_Pure p -> (
-        let sols = Pulse.Checker.Inference.try_solve_pure_equalities p in
+        let sols = Pulse.Checker.Inference.try_solve_pure_equalities g p in
         sols @ solutions
         )
       | _ -> solutions
@@ -281,7 +282,7 @@ let handle_framing_failure
           in
           handle_intro_exists rest (wr t)
         | _ ->
-          T.fail (Printf.sprintf 
+         fail g (Some t0.range) (Printf.sprintf 
                       "Failed to satisfy the following preconditions:\n%s\nContext has\n%s\nat command %s\n"
                        (terms_to_string rest)
                        (terms_to_string failure.remaining_context)
@@ -345,7 +346,7 @@ let rec check' : bool -> check_t =
                             (P.term_to_string pre))
     );
     let t = unprotect t in
-    let g = push_context (P.tag_of_st_term t) g in
+    let g = push_context (P.tag_of_st_term t) t.range g in
     try 
       match t.term with
       | Tm_Protect _ -> T.fail "Protect should have been removed"
@@ -372,7 +373,7 @@ let rec check' : bool -> check_t =
           | None, Some p -> p
           | Some p, None ->
             Checker.Common.intro_post_hint g None p
-          | _, _ -> T.fail "Either two annotations for if post or none"
+          | _, _ -> Pulse.Typing.Env.fail g (Some t.range) "Either two annotations for if post or none"
         in
         let (| t, c, d |) = If.check_if g b e1 e2 pre pre_typing post (check' true) in
         ( (| t, c, d |) <: checker_result_t g pre post_hint)

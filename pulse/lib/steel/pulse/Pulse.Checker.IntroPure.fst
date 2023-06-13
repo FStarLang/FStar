@@ -15,7 +15,7 @@ let check_prop (g:env) (p:term)
     | Tm_Pure pp ->
       let prop_typing = Pulse.Typing.Metatheory.pure_typing_inversion #_ #pp p_typing in
       (| pp, prop_typing |)
-    | _ -> T.fail "Unexpected prop"
+    | _ -> fail g None "Unexpected prop"
 
 let check_prop_validity (g:env) (p:term) (typing:tot_typing g p tm_prop): T.Tac (prop_validity g p) =
     Pulse.Checker.Pure.check_prop_validity g p typing

@@ -37,33 +37,23 @@ let check_stapp
       begin match is_arrow ty with
             | Some (_, Some Implicit, _) -> 
               //Some implicits to follow
-              let t = Pulse.Checker.Inference.infer t ty pre range in
+              let t = Pulse.Checker.Inference.infer g t ty pre range in
               check' false g t pre pre_typing post_hint
             | _ ->
-              T.fail
-                (Printf.sprintf
-                   "Unexpected c in infer_logical_implicits_and_check (head: %s, comp_typ: %s, and arg: %s)"
-                   (P.term_to_string head)
-                   (P.comp_to_string c)
-                   (P.term_to_string arg))
+              T.fail "Unexpected c in infer_logical_implicits_and_check"
       end
 
     | _ ->
-      T.fail
-        (Printf.sprintf
-           "Unexpected c in infer_logical_implicits_and_check (head: %s, comp_typ: %s, and arg: %s)"
-           (P.term_to_string head)
-           (P.comp_to_string c)
-           (P.term_to_string arg)) in
+      T.fail "Unexpected c in infer_logical_implicits_and_check" in
 
   T.or_else
     (fun _ -> 
-      let g = push_context "pure_app" g in    
+      let g = push_context "pure_app" t.range g in    
       let pure_app = tm_pureapp head qual arg in
       let t, ty = instantiate_term_implicits g pure_app in
       infer_logical_implicits_and_check t (C_Tot ty))
     (fun _ ->
-      let g = push_context "st_app" g in        
+      let g = push_context "st_app" t.range g in        
       let (| head, ty_head, dhead |) = check_term g head in
       match is_arrow ty_head with
       | Some ({binder_ty=formal;binder_ppname=ppname}, bqual, comp_typ) ->
@@ -88,10 +78,10 @@ let check_stapp
            let comp_typ = open_comp_with comp_typ arg in
            infer_logical_implicits_and_check t comp_typ
         else 
-         T.fail (Printf.sprintf "(%s) Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
+         fail g None (Printf.sprintf "(%s) Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
                                 (T.range_to_string t.range)
                                 (P.term_to_string ty_head)
                                 (P.term_to_string head)
                                 (P.term_to_string arg))
     
-     | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head)))
+     | _ -> fail g None (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head)))

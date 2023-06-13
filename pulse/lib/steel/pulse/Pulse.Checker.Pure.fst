@@ -12,14 +12,6 @@ module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module RU = Pulse.RuntimeUtils
 
-let ctx_to_string c =
-    match c with
-    | [] -> ""
-    | _ -> Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" c)
-
-let print_context (g:env) = 
-  ctx_to_string (T.unseal (get_context g))
-
 let debug (g:env) (msg: unit -> T.Tac string) =
   let tac_debugging = T.debugging () in
   if tac_debugging || RU.debug_at_level (fstar_env g) "refl_tc_callbacks"
@@ -89,29 +81,13 @@ let catch_all (f:unit -> Tac (option 'a & issues))
       None, [exn_as_issue exn]
     | Inr v -> v
 
-let print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string = 
-    let open FStar.Issue in
-    let range_opt_to_string = function
-      | None -> "Unknown range"
-      | Some r -> T.range_to_string r
-    in
-    Printf.sprintf "%s (%s): %s%s"
-       (range_opt_to_string (range_of_issue i))
-       (level_of_issue i)
-       (message_of_issue i)
-       (ctx_to_string (T.unseal (get_context g) @ (context_of_issue i)))
-
-let print_issues (g:env)
-                 (i:list FStar.Issue.issue)
-   = String.concat "\n" (T.map (print_issue g) i)
-
 let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
   let rt = elab_term t0 in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f rt) in
   match topt with
   | None -> 
-    T.fail (Printf.sprintf "%s elaborated to %s; Could not instantiate implicits\n%s\n"
+    fail g None (Printf.sprintf "%s elaborated to %s; Could not instantiate implicits\n%s\n"
                        (P.term_to_string t0)
                        (T.term_to_string rt)
                        (print_issues g issues))
@@ -120,7 +96,7 @@ let instantiate_term_implicits (g:env) (t0:term) =
     let tyopt = readback_ty ty in
     match topt, tyopt with
     | Some t, Some ty -> t, ty
-    | _ -> T.fail "instantiate_implicits: could not readback the resulting term/typ"
+    | _ -> fail g None "instantiate_implicits: could not readback the resulting term/typ"
 
 let check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
@@ -129,7 +105,7 @@ let check_universe (g:env) (t:term)
     let ru_opt, issues = catch_all (fun _ -> rtb_universe_of g f rt) in
     match ru_opt with
     | None -> 
-      T.fail (Printf.sprintf "%s elaborated to %s; Not typable as a universe\n%s\n"
+      fail g None (Printf.sprintf "%s elaborated to %s; Not typable as a universe\n%s\n"
                          (P.term_to_string t)
                          (T.term_to_string rt)
                          (print_issues g issues))
@@ -165,7 +141,7 @@ let check_term (g:env) (t:term)
                       (T.term_to_string rt));
     match tc_meta_callback g fg rt with
     | None, issues -> 
-        T.fail 
+        fail g None 
           (Printf.sprintf "check_tot : %s elaborated to %s Not typeable\n%s\n"
             (P.term_to_string t)
             (T.term_to_string rt)
@@ -174,7 +150,7 @@ let check_term (g:env) (t:term)
       match readback_ty rt, readback_ty ty' with
       | None, _
       | _, None ->
-        T.fail "Inexpressible type/term"
+        fail g None "Inexpressible type/term"
       | Some t, Some ty -> 
         (| t, ty, tok |)
 
@@ -189,7 +165,7 @@ let check_term_and_type (g:env) (t:term)
     let rt = elab_term t in
     match tc_meta_callback g fg rt with
     | None, issues -> 
-        T.fail
+        fail g None
           (Printf.sprintf "check_tot_univ: %s elaborated to %s Not typeable\n%s\n"
                           (P.term_to_string t)
                           (T.term_to_string rt)
@@ -197,7 +173,7 @@ let check_term_and_type (g:env) (t:term)
     | Some (| rt, ty', tok |), _ ->
       match readback_ty rt, readback_ty ty' with
       | None, _
-      | _, None -> T.fail "Inexpressible type/term"
+      | _, None -> fail g None "Inexpressible type/term"
       | Some t, Some ty -> 
         let (| u, uty |) = check_universe g ty in
         (| t, u, ty, uty, tok |)
@@ -212,9 +188,13 @@ let check_term_with_expected_type (g:env) (e:term) (t:term)
   let re = elab_term e in
   let rt = elab_term t in
 
-  let topt, issues = catch_all (fun _ -> rtb_core_check_term_at_type (push_context g "check_term_with_expected_type") fg re rt) in
+  let topt, issues =
+    catch_all (fun _ -> 
+    rtb_core_check_term_at_type 
+      (push_context g "check_term_with_expected_type" (range_of_term rt))
+       fg re rt) in
   match topt with
-  | None -> T.fail (Printf.sprintf "check_tot_with_expected_typ: %s not typeable at %s\n%s\n" 
+  | None -> fail g None (Printf.sprintf "check_tot_with_expected_typ: %s not typeable at %s\n%s\n" 
                       (Pulse.Syntax.Printer.term_to_string e)
                       (Pulse.Syntax.Printer.term_to_string t)
                       (print_issues g issues))
@@ -222,7 +202,7 @@ let check_term_with_expected_type (g:env) (e:term) (t:term)
 
 let tc_with_core g (f:R.env) (e:R.term) 
   : T.Tac (option (t:R.term & RT.tot_typing f e t) & issues)
-  = let ropt, issues = catch_all (fun _ -> rtb_core_check_term (push_context g "tc_with_core") f e) in
+  = let ropt, issues = catch_all (fun _ -> rtb_core_check_term (push_context g "tc_with_core" (range_of_term e)) f e) in
     match ropt with
     | None -> None, issues
     | Some (t) ->
@@ -233,16 +213,16 @@ let core_check_term (g:env) (t:term)
            typing g t ty)
   = let fg = elab_env g in
     let rt = elab_term t in
-    match tc_with_core (push_context g "core_check_term") fg rt with
+    match tc_with_core (push_context g "core_check_term" (range_of_term rt)) fg rt with
     | None, issues -> 
-        T.fail 
+        fail g None 
           (Printf.sprintf "check_tot: %s elaborated to %s Not typeable\n%s\n"
             (P.term_to_string t)
             (T.term_to_string rt)
             (print_issues g issues))
     | Some (| ty', tok |), _ ->
         match readback_ty ty' with
-        | None -> T.fail (Printf.sprintf "Inexpressible type %s for term %s"
+        | None -> fail g None (Printf.sprintf "Inexpressible type %s for term %s"
                                         (T.term_to_string ty')
                                         (P.term_to_string t))
         | Some ty -> 
@@ -252,9 +232,13 @@ let core_check_term_with_expected_type g e t =
   let fg = elab_env g in
   let re = elab_term e in
   let rt = elab_term t in
-  let topt, issues = catch_all (fun _ -> rtb_core_check_term_at_type (push_context g "core_check_term_with_expected_type") fg re rt) in
+  let topt, issues =
+    catch_all (fun _ ->
+     rtb_core_check_term_at_type
+      (push_context g "core_check_term_with_expected_type" (range_of_term rt))
+       fg re rt) in
   match topt with
-  | None -> T.fail (Printf.sprintf "core_check_term_with_expected_typ: %s not typeable at %s\n%s\n" 
+  | None -> fail g None (Printf.sprintf "core_check_term_with_expected_typ: %s not typeable at %s\n%s\n" 
                       (Pulse.Syntax.Printer.term_to_string e)
                       (Pulse.Syntax.Printer.term_to_string t)
                       (print_issues g issues))
@@ -264,7 +248,8 @@ let check_vprop (g:env)
                 (t:term)
   : T.Tac (t:term & tot_typing g t Tm_VProp) =
 
-  let (| t, t_typing |) = check_term_with_expected_type (push_context g "check_vprop") t Tm_VProp in
+  let (| t, t_typing |) =
+    check_term_with_expected_type (push_context_no_range g "check_vprop") t Tm_VProp in
   (| t, E t_typing |)
 
 
@@ -272,13 +257,13 @@ let check_vprop_with_core (g:env)
                           (t:term)
   : T.Tac (tot_typing g t Tm_VProp) =
 
-  let t_typing = core_check_term_with_expected_type (push_context g "check_vprop_with_core") t Tm_VProp in
+  let t_typing = core_check_term_with_expected_type (push_context_no_range g "check_vprop_with_core") t Tm_VProp in
   E t_typing
   
 let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
   = let err () =
-        T.fail (Printf.sprintf "non_informative_witness not supported for %s"        
+        fail g None (Printf.sprintf "non_informative_witness not supported for %s"        
                                (P.term_to_string t)) in
     let eopt =
       let ropt = is_fvar_app t in
@@ -303,14 +288,15 @@ let get_non_informative_witness g u t
     match eopt with
     | None -> err ()
     | Some e ->
-      let (| x, y |) = check_term_with_expected_type (push_context g "get_noninformative_witness") e (non_informative_witness_t u t) in
+      let (| x, y |) =
+        check_term_with_expected_type (push_context_no_range g "get_noninformative_witness") e (non_informative_witness_t u t) in
       (|x, E y|)
 
 let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)
   = let t_opt, issues = rtb_check_prop_validity g (elab_env g) (elab_term p) in
     match t_opt with
-    | None -> T.fail (Printf.sprintf "check_prop_validity failed: %s\n%s\n" 
+    | None -> fail g None (Printf.sprintf "check_prop_validity failed: %s\n%s\n" 
                       (Pulse.Syntax.Printer.term_to_string p)
                       (print_issues g issues))
    | Some tok -> tok

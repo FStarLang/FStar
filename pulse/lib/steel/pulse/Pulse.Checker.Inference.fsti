@@ -26,11 +26,11 @@ val gen_uvar (name:ppname)
 
 val find_solution (sol:solution) (u:uvar) : option term
 
-val try_inst_uvs_in_goal (ctxt:term)
+val try_inst_uvs_in_goal (g:env) (ctxt:term)
                          (goal:vprop)
   : T.Tac solution
 
-val infer (head:term) (t_head:term) (ctxt_pre:term) (r:range)
+val infer (g:env) (head:term) (t_head:term) (ctxt_pre:term) (r:range)
   : T.Tac st_term
 
 val solutions_to_string (sol:solution)
@@ -42,8 +42,8 @@ val apply_solution (sol:solution) (t:term)
 val contains_uvar (t:term)
   : bool
 
-val try_unify (l r:term)
+val try_unify (g:env) (l r:term)
   : T.Tac solution
 
-val try_solve_pure_equalities (p:term)
+val try_solve_pure_equalities (g:env) (p:term)
   : T.Tac solution

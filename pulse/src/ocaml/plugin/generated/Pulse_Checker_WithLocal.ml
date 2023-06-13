@@ -42,13 +42,14 @@ let (check_withlocal :
                 FStar_Tactics_Effect.tac_bind
                   (FStar_Range.mk_range "Pulse.Checker.WithLocal.fst"
                      (Prims.of_int (38)) (Prims.of_int (10))
-                     (Prims.of_int (38)) (Prims.of_int (42)))
+                     (Prims.of_int (38)) (Prims.of_int (50)))
                   (FStar_Range.mk_range "Pulse.Checker.WithLocal.fst"
-                     (Prims.of_int (38)) (Prims.of_int (45))
-                     (Prims.of_int (87)) (Prims.of_int (57)))
+                     (Prims.of_int (38)) (Prims.of_int (53))
+                     (Prims.of_int (87)) (Prims.of_int (80)))
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
-                        Pulse_Checker_Pure.push_context "check_withlocal" g))
+                        Pulse_Checker_Pure.push_context "check_withlocal"
+                          t.Pulse_Syntax_Base.range1 g))
                   (fun uu___ ->
                      (fun g1 ->
                         Obj.magic
@@ -60,7 +61,7 @@ let (check_withlocal :
                              (FStar_Range.mk_range
                                 "Pulse.Checker.WithLocal.fst"
                                 (Prims.of_int (39)) (Prims.of_int (47))
-                                (Prims.of_int (87)) (Prims.of_int (57)))
+                                (Prims.of_int (87)) (Prims.of_int (80)))
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___ ->
                                    fun t0 ->
@@ -84,7 +85,7 @@ let (check_withlocal :
                                            (Prims.of_int (39))
                                            (Prims.of_int (47))
                                            (Prims.of_int (87))
-                                           (Prims.of_int (57)))
+                                           (Prims.of_int (80)))
                                         (FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___ ->
                                               t.Pulse_Syntax_Base.term1))
@@ -113,7 +114,7 @@ let (check_withlocal :
                                                           (Prims.of_int (40))
                                                           (Prims.of_int (63))
                                                           (Prims.of_int (87))
-                                                          (Prims.of_int (57)))
+                                                          (Prims.of_int (80)))
                                                        (Obj.magic
                                                           (Pulse_Checker_Pure.check_term_and_type
                                                              g1 init))
@@ -134,7 +135,6 @@ let (check_withlocal :
                                                                     Pulse_Syntax_Pure.u0
                                                                  then
                                                                    Obj.magic
-                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
@@ -186,12 +186,59 @@ let (check_withlocal :
                                                                     body)
                                                                     then
                                                                     Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "withlocal: x is free in body"))
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.WithLocal.fst"
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (37))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (122)))
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.WithLocal.fst"
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (12))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (122)))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.WithLocal.fst"
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (85))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (121)))
+                                                                    (FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Builtins.unseal
+                                                                    (binder.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name))
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    Prims.strcat
+                                                                    "withlocal: "
+                                                                    (Prims.strcat
+                                                                    uu___2
+                                                                    " is free in body")))))
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    Obj.magic
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (body.Pulse_Syntax_Base.range1))
+                                                                    uu___2))
+                                                                    uu___2))
                                                                     else
                                                                     Obj.magic
-                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
@@ -297,7 +344,7 @@ let (check_withlocal :
                                                                     (Prims.of_int (57))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (59))
-                                                                    (Prims.of_int (56)))
+                                                                    (Prims.of_int (108)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
                                                                     (Prims.of_int (61))
@@ -309,15 +356,21 @@ let (check_withlocal :
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
                                                                     post ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    post)
+                                                                    post)))
                                                                     | 
                                                                     FStar_Pervasives_Native.None
                                                                     ->
-                                                                    FStar_Tactics_Derived.fail
-                                                                    "withlocal: no post_hint!")
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    FStar_Pervasives_Native.None
+                                                                    "Allocating a mutable local variable expects an annotated post-condition")))
                                                                     (fun
                                                                     uu___3 ->
                                                                     (fun post
@@ -329,12 +382,12 @@ let (check_withlocal :
                                                                     post.Pulse_Checker_Common.post)
                                                                     then
                                                                     Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "Unexpected name clash in with_local"))
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    FStar_Pervasives_Native.None
+                                                                    "Unexpected name clash in with_local")
                                                                     else
                                                                     Obj.magic
-                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
@@ -401,12 +454,13 @@ let (check_withlocal :
                                                                     c_body)
                                                                     then
                                                                     Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "withlocal: body is not stt or postcondition mismatch"))
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (body.Pulse_Syntax_Base.range1))
+                                                                    "withlocal: body is not stt or postcondition mismatch")
                                                                     else
                                                                     Obj.magic
-                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
@@ -539,20 +593,21 @@ let (check_withlocal :
                                                                     c_typing,
                                                                     body_typing)))))))
                                                                     uu___6)))
-                                                                    uu___6))))
+                                                                    uu___6)))
                                                                     uu___4)))
-                                                                    uu___4))))
+                                                                    uu___4)))
                                                                     uu___3)))
                                                                     uu___3)))
                                                                     uu___3)))
                                                                     uu___3)))
-                                                                    uu___3))))
+                                                                    uu___3)))
                                                                     uu___2)))
-                                                                    uu___2)))
+                                                                    uu___2))
                                                                  else
                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "withlocal: init type is not universe zero")))
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    FStar_Pervasives_Native.None
+                                                                    "Allocating a local variable: init type is not universe zero"))
                                                             uu___1))) uu___)))
                                   uu___))) uu___)
