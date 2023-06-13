@@ -86,9 +86,6 @@ let tcresolve () : Tac unit =
     | TacticFailure s -> fail ("Typeclass resolution failed: " ^ s)
     | e -> raise e
 
-(* Solve an explicit argument by typeclass resolution *)
-unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev
-
 (**** Generating methods from a class ****)
 
 (* In TAC, not Tot *)
