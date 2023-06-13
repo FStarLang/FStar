@@ -165,3 +165,30 @@ let veq_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' })
   (veq:vprop_equiv (push_env g (push_env g' g'')) p1 p2)
   (ss:nt_subst { well_typed_ss g g' ss /\ ss_covers_g' ss g' })
   : vprop_equiv (push_env g (subst_env g'' ss)) (subst_term p1 ss) (subst_term p2 ss) = admit ()
+
+
+let st_subst_partial (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' })
+  (#e1:st_term) (#c1:comp_st)
+  (e1_typing:st_typing (push_env g (push_env g' g'')) e1 c1)
+  (ss:nt_subst { well_typed_ss g g' ss })
+  : st_typing (push_env g (push_env g' (subst_env g'' ss))) (subst_st_term e1 ss) (subst_comp c1 ss) =
+  admit ()
+
+let veq_subst_partial (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' })
+  (#p1 #p2:vprop)
+  (veq:vprop_equiv (push_env g (push_env g' g'')) p1 p2)
+  (ss:nt_subst { well_typed_ss g g' ss })
+  : vprop_equiv (push_env g (push_env g' (subst_env g'' ss))) (subst_term p1 ss) (subst_term p2 ss) = admit ()
+
+val ss_extends (s1 s2:nt_subst) : bool
+
+val ss_extends_subst (g:env) (g':env) (g'':env { g'' `env_extends` g' /\
+                                                 disjoint g g' /\
+                                                 disjoint g g'' })
+  (s':nt_subst)
+  (s'':nt_subst { s'' `ss_extends` s' /\
+                  well_typed_ss g g' s' /\
+                  well_typed_ss g g'' s'' })
+  (t:term { freevars (subst_term t s') `Set.subset` dom g })
+  : Lemma (subst_term t s' == subst_term t s'')
+
