@@ -21,3 +21,4 @@ type univ_name   = ident
 type typ         = term
 type binders     = binder list
 type match_returns_ascription = FStar_Syntax_Syntax.match_returns_ascription
+type decls = sigelt list
