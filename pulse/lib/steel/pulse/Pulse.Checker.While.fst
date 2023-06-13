@@ -49,7 +49,7 @@ let check_while
     match ex_inv with
     | Tm_ExistsSL u {binder_ppname=nm; binder_ty=ty} inv ->
       if not (eq_tm ty tm_bool) ||
-        not (eq_univ u u0)
+         not (eq_univ u u0)
       then T.fail "While loop invariant is exists but its witness type is not bool"
       else begin
         let while_cond_comp_typing = while_cond_comp_typing u nm ty inv inv_typing in
