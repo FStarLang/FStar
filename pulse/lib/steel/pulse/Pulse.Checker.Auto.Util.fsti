@@ -106,12 +106,184 @@ type prover_state (preamble:prover_state_preamble) = {
   steps_typing
     : st_typing (push_env preamble.g0 uvs) steps
         (ghost_comp preamble.ctxt
-                    (Tm_Star (list_as_vprop remaining) matched));
+                    (Tm_Star (list_as_vprop remaining) (subst_term matched ss)));
 
   veq : vprop_equiv (push_env preamble.g0 uvs)
                     (comp_pre preamble.c)
                     (Tm_Star (list_as_vprop unmatched) matched);
+
+  ss_closes_matched_uvs : squash (freevars (subst_term matched ss) `Set.disjoint` dom uvs);
 }
+
+type prover_step_t = #preamble:_ -> prover_state preamble -> prover_state preamble
+
+type prover_t =
+  #preamble:_ ->
+  prover_state preamble ->
+  p:prover_state preamble { p.unmatched == [] }
+
+let idem_steps (g:env) (ctxt:vprop)
+  : t:st_term &
+    st_typing g t (ghost_comp ctxt (Tm_Star (list_as_vprop (vprop_as_list ctxt))
+                                            Tm_Emp)) = magic ()
+
+val vprop_as_list_of_list_as_vprop (l:list vprop)
+  : Lemma (vprop_as_list (list_as_vprop l) == l)
+          [SMTPat (vprop_as_list (list_as_vprop l))]
+
+val list_as_vprop_of_vprop_as_list (p:vprop)
+  : Lemma (list_as_vprop (vprop_as_list p) == p)
+          [SMTPat (list_as_vprop (vprop_as_list p))]
+
+let check_ss_covers_g' (ss:nt_subst) (g':env)
+  : b:bool { b ==> ss_covers_g' ss g' } = admit ()
+
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y === x} = x
+
+#push-options "--z3rlimit_factor 8 --fuel 4 --ifuel 2"
+let prove_precondition (#g:env) (#ctxt:term)
+  (ctxt_typing:tot_typing g ctxt Tm_VProp)
+  (#t:st_term) (#c:comp_st)
+  (t_typing:st_typing g t c)
+  (prover:prover_t)
+  : T.Tac (option (t:st_term &
+                   c:comp_st { comp_pre c == ctxt } &
+                   st_typing g t c)) =
+
+  let preamble = {
+    g0 = g;
+    ctxt;
+    ctxt_typing;
+    t;
+    c
+  } in
+
+  let uvs = mk_env (fstar_env g) in
+  let ss : nt_subst = [] in
+  let matched = Tm_Emp in
+  let unmatched = vprop_as_list (comp_pre c) in
+  let remaining = vprop_as_list ctxt in
+
+  let (| steps, steps_typing |) = idem_steps g ctxt in
+
+  assert (equal (push_env preamble.g0 uvs) g);
+
+  let t_typing : st_typing (push_env preamble.g0 uvs) t c = t_typing in
+  
+  // invert t_typing to get c typing to get c pre typing
+  let unmatched_typing : tot_typing (push_env preamble.g0 uvs) (comp_pre c) Tm_VProp =
+    magic () in
+  let unmatched_typing : tot_typing (push_env preamble.g0 uvs) (list_as_vprop unmatched) Tm_VProp =
+    unmatched_typing in
+
+  let remaining_typing : tot_typing (push_env preamble.g0 uvs) (list_as_vprop remaining) Tm_VProp =
+    ctxt_typing in
+
+  let steps_typing : st_typing (push_env preamble.g0 uvs) steps
+    (ghost_comp preamble.ctxt (Tm_Star (list_as_vprop remaining) (subst_term matched ss))) =
+    steps_typing in
+
+  // matched is empty  
+  let veq : vprop_equiv (push_env preamble.g0 uvs) (comp_pre preamble.c)
+                        (Tm_Star (list_as_vprop unmatched) matched) =
+    magic () in
+
+  let ss_closes_matched_uvs : squash (freevars (subst_term matched ss) `Set.disjoint` dom uvs) =
+    () in
+
+  let p = {uvs;ss;matched;unmatched;remaining;steps;
+           t_typing;unmatched_typing;remaining_typing;steps_typing;
+           veq;ss_closes_matched_uvs} in
+
+  let p = prover p in
+  assert (p.unmatched == []);
+
+  let psteps_typing : st_typing (push_env preamble.g0 p.uvs) p.steps
+    (ghost_comp preamble.ctxt
+                (Tm_Star (list_as_vprop p.remaining) (subst_term p.matched p.ss))) = p.steps_typing in
+  assert (well_typed_ss preamble.g0 p.uvs p.ss);
+  if check_ss_covers_g' p.ss p.uvs
+  then begin
+    assert (equal p.uvs (push_env p.uvs (mk_env (fstar_env preamble.g0))));
+    let psteps_typing : st_typing
+      (push_env preamble.g0 (push_env p.uvs (mk_env (fstar_env preamble.g0))))
+      p.steps
+      (ghost_comp preamble.ctxt
+                  (Tm_Star (list_as_vprop p.remaining) (subst_term p.matched p.ss))) =
+      coerce_eq psteps_typing () in
+    // apply substitution lemma
+    let psteps_typing : st_typing
+      (push_env preamble.g0 (subst_env (mk_env (fstar_env preamble.g0)) p.ss))
+      (subst_st_term p.steps p.ss)
+      (subst_comp (ghost_comp preamble.ctxt
+                              (Tm_Star (list_as_vprop p.remaining) (subst_term p.matched p.ss))) p.ss) =
+      st_typing_subst preamble.g0 p.uvs (mk_env (fstar_env preamble.g0))
+        psteps_typing
+        p.ss in
+    // substituting in an empty env returns an empty env
+    assume (equal (subst_env (mk_env (fstar_env preamble.g0)) p.ss)
+                  (mk_env (fstar_env preamble.g0)));
+    assert (equal (push_env preamble.g0 (subst_env (mk_env (fstar_env preamble.g0)) p.ss))
+            preamble.g0);
+    // NT substitutions remain invariant under shifting
+    assume (shift_subst p.ss == p.ss);
+
+    // if no free uvs, substitution is an identity
+    assert (freevars (subst_term p.matched p.ss) `Set.disjoint` dom uvs);
+    assume (subst_term (subst_term p.matched p.ss) p.ss ==
+            subst_term p.matched p.ss);
+
+    // preamble.ctxt is well-typed in g0
+    assume (freevars preamble.ctxt `Set.subset` (dom preamble.g0));
+    assert (freevars preamble.ctxt `Set.disjoint` dom uvs);
+    assume (subst_term preamble.ctxt p.ss == preamble.ctxt);
+
+    let psteps_typing : st_typing
+      preamble.g0
+      (subst_st_term p.steps p.ss)
+      (ghost_comp preamble.ctxt
+                  (Tm_Star (subst_term (list_as_vprop p.remaining) p.ss)
+                           (subst_term p.matched p.ss))) = psteps_typing in
+
+    let veq : vprop_equiv (push_env preamble.g0 p.uvs)
+                          (comp_pre preamble.c)
+                          (Tm_Star (list_as_vprop []) p.matched) = p.veq in
+    // simplify veq by normalizing list_as_vprop []
+    let veq : vprop_equiv (push_env preamble.g0 p.uvs)
+                          (comp_pre preamble.c)
+                          p.matched = magic () in
+    // apply substitution lemma to veq
+    let veq : vprop_equiv preamble.g0 (subst_term (comp_pre preamble.c) p.ss)
+                                      (subst_term p.matched p.ss) =
+      veq_subst preamble.g0 p.uvs (mk_env (fstar_env preamble.g0)) veq p.ss in
+
+    // in psteps typing, replace subst_term p.matched p.ss with subst_term (comp_pre preamble.c) p.ss
+    let psteps_typing : st_typing
+      preamble.g0
+      (subst_st_term p.steps p.ss)
+      (ghost_comp preamble.ctxt
+                  (Tm_Star (subst_term (list_as_vprop p.remaining) p.ss)
+                           (subst_term (comp_pre preamble.c) p.ss))) = magic () in
+
+    let t_typing : st_typing (push_env preamble.g0 p.uvs) preamble.t preamble.c =
+      p.t_typing in
+
+    // apply substitution lemma
+    let t_typing : st_typing preamble.g0
+                             (subst_st_term preamble.t p.ss)
+                             (subst_comp preamble.c p.ss) =
+      st_typing_subst preamble.g0 p.uvs (mk_env (fstar_env preamble.g0))
+        t_typing
+        p.ss in
+
+    assert (comp_pre (subst_comp preamble.c p.ss) == subst_term (comp_pre preamble.c) p.ss);
+ 
+    // bind psteps and t
+
+    admit ()
+  end
+  else None
+
 
 
 // let vprop_typing g v = tot_typing g v Tm_VProp
@@ -370,13 +542,6 @@ type prover_state (preamble:prover_state_preamble) = {
 // val empty_uvs : uvs:uvs_t { Map.domain uvs == Set.empty }
 // val empty_ss : ss:substitution { Map.domain ss == Set.empty }
 
-// val vprop_as_list_of_list_as_vprop (l:list vprop)
-//   : Lemma (vprop_as_list (list_as_vprop l) == l)
-//           [SMTPat (vprop_as_list (list_as_vprop l))]
-
-// val list_as_vprop_of_vprop_as_list (p:vprop)
-//   : Lemma (list_as_vprop (vprop_as_list p) == p)
-//           [SMTPat (list_as_vprop (vprop_as_list p))]
 
 // let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt Tm_VProp)
 //   (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)

@@ -50,6 +50,10 @@ val mk_env_bs (f:RT.fstar_top_env)
   : Lemma (bindings (mk_env f) == [])
           [SMTPat (bindings (mk_env f))]
 
+val mk_env_dom (f:RT.fstar_top_env)
+  : Lemma (dom (mk_env f) == Set.empty)
+          [SMTPat (dom (mk_env f))]
+
 val push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : g':env { fstar_env g' == fstar_env g }
 

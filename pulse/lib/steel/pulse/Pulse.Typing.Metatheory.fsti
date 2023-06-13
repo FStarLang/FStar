@@ -159,3 +159,9 @@ let rec st_typing_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' }
               (tot_typing_subst g g' g'' arg_typing ss)
 
   | _ -> admit ()
+
+let veq_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' })
+  (#p1 #p2:vprop)
+  (veq:vprop_equiv (push_env g (push_env g' g'')) p1 p2)
+  (ss:nt_subst { well_typed_ss g g' ss /\ ss_covers_g' ss g' })
+  : vprop_equiv (push_env g (subst_env g'' ss)) (subst_term p1 ss) (subst_term p2 ss) = admit ()
