@@ -44,7 +44,7 @@ let check_withlocal
   then let x = fresh g in
        let px = binder.binder_ppname, x in
        if x `Set.mem` freevars_st body
-       then T.fail "withlocal: x is free in body"
+       then fail g (Some body.range) (Printf.sprintf "withlocal: %s is free in body" (T.unseal binder.binder_ppname.name))
        else
          let x_tm = term_of_nvar px in
          let g_extended = push_binding g x (mk_ref init_t) in
@@ -56,10 +56,10 @@ let check_withlocal
            // let post =
              match post_hint with
              | Some post -> post
-             | None -> T.fail "withlocal: no post_hint!"
+             | None -> fail g None "Allocating a mutable local variable expects an annotated post-condition"
          in
          if x `Set.mem` freevars post.post
-         then T.fail "Unexpected name clash in with_local"
+         then fail g None "Unexpected name clash in with_local"
          else (
            let body_post = extend_post_hint_for_local g post init_t x in
            let (| opened_body, c_body, body_typing |) =
@@ -68,7 +68,7 @@ let check_withlocal
            // Checking post equality here to match the typing rule
            // 
            if not (C_ST? c_body)
-           then T.fail "withlocal: body is not stt or postcondition mismatch"
+           then fail g (Some body.range) "withlocal: body is not stt or postcondition mismatch"
            else let body = close_st_term opened_body x in
                 assume (open_st_term (close_st_term opened_body x) x == opened_body);
                 let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
@@ -84,5 +84,5 @@ let check_withlocal
                 in
                 (| _, _, d |)
          )
-  else T.fail "withlocal: init type is not universe zero"
+  else fail g None "Allocating a local variable: init type is not universe zero"
 #pop-options

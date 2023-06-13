@@ -179,7 +179,7 @@ let print_issues (g:env)
                  (i:list FStar.Issue.issue)
    = String.concat "\n" (T.map (print_issue g) i)
 
-let fail (#a:_) (g:env) (r:option range) (msg:string) : T.Tac a =
+let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   let r = 
     match r with
     | None -> range_of_env g

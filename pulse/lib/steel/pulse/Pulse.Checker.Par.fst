@@ -46,5 +46,5 @@ let check_par
       let x = fresh g in
       let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
       repack (try_frame_pre pre_typing d) post_hint
-    else T.fail "par: cR is not stt"
-  else T.fail "par: cL is not stt"
+    else fail g (Some eR.range) "par: cR is not stt"
+  else fail g (Some eL.range) "par: cL is not stt"

@@ -33,12 +33,12 @@ let check_return
       | Some post ->
         let post : post_hint_t = post in
         if not (eq_tm post.ret_ty ty)
-        then T.fail (Printf.sprintf "(%s) Expected return type %s, got %s\n"
+        then fail g None (Printf.sprintf "(%s) Expected return type %s, got %s\n"
                                     (T.range_to_string st.range)
                                     (P.term_to_string post.ret_ty)
                                     (P.term_to_string ty))
         else if x `Set.mem` (freevars post.post)
-        then T.fail "Unexpected variable clash in return"
+        then fail g None "Unexpected variable clash in return"
         else 
          let ty_rec = post_hint_typing g post x in
          (| open_term_nv post.post px, ty_rec.post_typing |)

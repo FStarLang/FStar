@@ -51,7 +51,7 @@ let check_while
     | Tm_ExistsSL u {binder_ppname=nm; binder_ty=ty} inv ->
       if not (eq_tm ty tm_bool) ||
         not (eq_univ u u0)
-      then T.fail "While loop invariant is exists but its witness type is not bool"
+      then fail g (Some nm.range) "While loop invariant is exists but its witness type is not bool"
       else begin
         let while_cond_comp_typing = while_cond_comp_typing u nm ty inv inv_typing in
         let (| res_typing, cond_pre_typing, x, post_typing |) =
@@ -92,18 +92,18 @@ let check_while
                let (| c, st_d |) = Framing.apply_frame pre_typing d framing_token in
                repack (| c, st_d |) post_hint
           else 
-            T.fail
+            fail g None
               (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
                                      Inferred type = %s\n\
                                      Annotated type = %s\n"
                                      (P.comp_to_string body_comp)
                                      (P.comp_to_string (comp_while_body nm inv)))
       end
-      else T.fail 
+      else fail g None 
 (Printf.sprintf "Could not prove that the inferred type of the while condition matches the annotation\n\
                                  Inferred type = %s\n\
                                  Annotated type = %s\n"
                                  (P.comp_to_string cond_comp)
                                  (P.comp_to_string (comp_while_cond nm inv)))
                 end
-     | _ -> T.fail "Typechecked invariant is not an exists"
+     | _ -> fail g None "Typechecked invariant is not an exists"

@@ -133,4 +133,5 @@ val range_of_env (g:env) : T.Tac range
 val print_context (g:env) : T.Tac string
 val print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string 
 val print_issues (g:env) (i:list FStar.Issue.issue) : T.Tac string
-val fail (g:env) (r:option range) (msg:string) : T.Tac 'a
+val fail (#a:Type) (g:env) (r:option range) (msg:string) 
+  : T.TAC a (fun _ post -> forall ex ps. post FStar.Tactics.Result.(Failed ex ps))

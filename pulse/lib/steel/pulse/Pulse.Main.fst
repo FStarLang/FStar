@@ -31,7 +31,7 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
            let refl_t = elab_comp c in
            soundness_lemma g t c t_typing;
            (refl_e, refl_t)
-      else T.fail "pulse main: cannot typecheck pre at type vprop"
+      else fail g (Some t.range) "pulse main: cannot typecheck pre at type vprop"
 
 let main t pre : RT.dsl_tac_t = main' t pre
   
@@ -47,6 +47,6 @@ let check_pulse (namespaces:list string)
       | Inl st_term ->
         main st_term Tm_Emp env
       | Inr (msg, range) ->
-        T.fail (Printf.sprintf "Error @ %s: %s"
+        T.fail (Printf.sprintf "%s: %s"
                   (T.range_to_string range)
                   msg)

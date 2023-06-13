@@ -37,10 +37,10 @@ let check_stapp
       begin match is_arrow ty with
             | Some (_, Some Implicit, _) -> 
               //Some implicits to follow
-              let t = Pulse.Checker.Inference.infer t ty pre range in
+              let t = Pulse.Checker.Inference.infer g t ty pre range in
               check' false g t pre pre_typing post_hint
             | _ ->
-              T.fail
+              fail g None
                 (Printf.sprintf
                    "Unexpected c in infer_logical_implicits_and_check (head: %s, comp_typ: %s, and arg: %s)"
                    (P.term_to_string head)
@@ -49,7 +49,7 @@ let check_stapp
       end
 
     | _ ->
-      T.fail
+      fail g None
         (Printf.sprintf
            "Unexpected c in infer_logical_implicits_and_check (head: %s, comp_typ: %s, and arg: %s)"
            (P.term_to_string head)
@@ -88,10 +88,10 @@ let check_stapp
            let comp_typ = open_comp_with comp_typ arg in
            infer_logical_implicits_and_check t comp_typ
         else 
-         T.fail (Printf.sprintf "(%s) Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
+         fail g None (Printf.sprintf "(%s) Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
                                 (T.range_to_string t.range)
                                 (P.term_to_string ty_head)
                                 (P.term_to_string head)
                                 (P.term_to_string arg))
     
-     | _ -> T.fail (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head)))
+     | _ -> fail g None (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head)))
