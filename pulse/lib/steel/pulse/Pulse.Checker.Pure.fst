@@ -12,20 +12,6 @@ module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
 module RU = Pulse.RuntimeUtils
 
-let ctxt_elt_to_string (c : (string & option range)) : T.Tac string = 
-  match snd c with
-  | None -> fst c
-  | Some r -> Printf.sprintf ("%s @ %s") (fst c) (T.range_to_string r)
-
-let ctx_to_string (c:list (string & option range)) : T.Tac string =
-    match c with
-    | [] -> ""
-    | _ -> 
-      Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" (T.map ctxt_elt_to_string c))
-
-let print_context (g:env) = 
-  ctx_to_string  (T.unseal (get_context g))
-
 let debug (g:env) (msg: unit -> T.Tac string) =
   let tac_debugging = T.debugging () in
   if tac_debugging || RU.debug_at_level (fstar_env g) "refl_tc_callbacks"
@@ -94,22 +80,6 @@ let catch_all (f:unit -> Tac (option 'a & issues))
     | Inl exn ->
       None, [exn_as_issue exn]
     | Inr v -> v
-
-let print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string = 
-    let open FStar.Issue in
-    let range_opt_to_string = function
-      | None -> "Unknown range"
-      | Some r -> T.range_to_string r
-    in
-    Printf.sprintf "%s (%s): %s%s"
-       (range_opt_to_string (range_of_issue i))
-       (level_of_issue i)
-       (message_of_issue i)
-       (ctx_to_string (T.unseal (get_context g) @ (T.map (fun i -> (i, None)) (context_of_issue i))))
-
-let print_issues (g:env)
-                 (i:list FStar.Issue.issue)
-   = String.concat "\n" (T.map (print_issue g) i)
 
 let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in

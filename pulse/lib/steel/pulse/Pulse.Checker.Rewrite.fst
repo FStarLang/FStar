@@ -26,8 +26,8 @@ let check_rewrite
       then VE_Refl g p
       else match T.check_equiv (elab_env g) (elab_term p) (elab_term q) with
            | None, issues -> 
-             T.fail (Printf.sprintf "rewrite: p and q elabs are not equiv\n%s" 
-                          (Pulse.Checker.Pure.print_issues g issues))
+             fail g None (Printf.sprintf "rewrite: p and q elabs are not equiv\n%s" 
+                          (print_issues g issues))
            | Some token, _ -> VE_Ext g p q token in
 	     let d = T_Rewrite _ p q p_typing equiv_p_q in
 	     repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint

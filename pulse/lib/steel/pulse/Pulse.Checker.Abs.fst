@@ -20,7 +20,7 @@ let check_abs
   (post_hint:post_hint_opt g)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
-  if Some? post_hint then T.fail "Unexpected post-condition annotation from context for an abstraction" else 
+  if Some? post_hint then fail g None "Unexpected post-condition annotation from context for an abstraction" else 
   let range = t.range in
   match t.term with  
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; pre=pre_hint; body; ret_ty; post=post_hint_body } ->
@@ -32,7 +32,7 @@ let check_abs
     let g' = push_binding g x t in
     let pre_opened = 
       match pre_hint with
-      | None -> T.fail "Cannot typecheck an function without a precondition"
+      | None -> fail g None "Cannot typecheck an function without a precondition"
       | Some pre_hint -> open_term_nv pre_hint px in
     match check_term g' pre_opened with
     | (| pre_opened, Tm_VProp, pre_typing |) ->
@@ -60,4 +60,4 @@ let check_abs
       (| _,
          C_Tot tres,
          tt |)
-    | _ -> T.fail "bad hint"
+    | _ -> fail g None "bad hint"

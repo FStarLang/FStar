@@ -56,7 +56,7 @@ let try_frame_pre (#g:env)
     if RU.debug_at_level (fstar_env g) "try_frame"
     then T.print (Printf.sprintf "(Try frame@%s) with %s\n\tcomp=%s,\n\tpre=%s\n"
                                  (T.range_to_string t.range)
-                                 (Pulse.Checker.Pure.print_context g)
+                                 (print_context g)
                                  (P.comp_to_string c)
                                  (P.term_to_string pre));
     match Pulse.Checker.Framing.try_frame_pre #g pre_typing t_typing with
@@ -89,7 +89,7 @@ let replace_equiv_post
     | Some post ->
       if not (eq_univ u_c post.u &&
               eq_tm res_c post.ret_ty)
-      then T.fail 
+      then fail g None 
             (Printf.sprintf "(%s) Inferred result type does not match annotation.\n\
                              Expected type %s\n\
                              Got type %s\n"
@@ -97,7 +97,7 @@ let replace_equiv_post
                   (P.term_to_string post.ret_ty)
                   (P.term_to_string res_c))
       else if (x `Set.mem` freevars post.post)
-      then T.fail "Unexpected variable clash with annotated postcondition"
+      then fail g None "Unexpected variable clash with annotated postcondition"
       else (
         let post_opened = open_term_nv post.post px in
         let post_c_post_eq
@@ -160,11 +160,11 @@ let intro_comp_typing (g:env)
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_check_term g i in
       if not (eq_tm ty Tm_Inames)
-      then T.fail "Ill-typed inames"
+      then fail g None "Ill-typed inames"
       else CT_STAtomic _ _ _ (E i_typing) stc
     | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_check_term g i in
       if not (eq_tm ty Tm_Inames)
-      then T.fail "Ill-typed inames"
+      then fail g None "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc

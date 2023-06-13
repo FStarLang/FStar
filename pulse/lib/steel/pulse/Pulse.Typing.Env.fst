@@ -139,3 +139,52 @@ let range_of_env (g:env) =
     | Some (_, Some r) -> r
     | _ -> FStar.Range.range_0
   
+
+
+let ctxt_elt_to_string (c : (string & option range)) : T.Tac string = 
+  match snd c with
+  | None -> fst c
+  | Some r -> Printf.sprintf ("%s @ %s") (fst c) (T.range_to_string r)
+
+let ctx_to_string (c:list (string & option range)) : T.Tac string =
+    match c with
+    | [] -> ""
+    | _ -> 
+      Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" (T.map ctxt_elt_to_string c))
+
+let ctxt_to_list (g:env) : T.Tac (list string) =
+  let ctx = T.unseal g.ctxt in
+  T.map ctxt_elt_to_string ctx
+
+let print_context (g:env) : T.Tac string = 
+  let ctx = T.unseal g.ctxt in
+  match ctx with
+  | [] -> ""
+  | _ -> 
+    Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" (ctxt_to_list g))
+
+let print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string = 
+    let open FStar.Issue in
+    let range_opt_to_string = function
+      | None -> "Unknown range"
+      | Some r -> T.range_to_string r
+    in
+    Printf.sprintf "%s (%s): %s%s"
+       (range_opt_to_string (range_of_issue i))
+       (level_of_issue i)
+       (message_of_issue i)
+       (ctx_to_string (T.unseal (get_context g) @ (T.map (fun i -> (i, None)) (context_of_issue i))))
+
+let print_issues (g:env)
+                 (i:list FStar.Issue.issue)
+   = String.concat "\n" (T.map (print_issue g) i)
+
+let fail (#a:_) (g:env) (r:option range) (msg:string) : T.Tac a =
+  let r = 
+    match r with
+    | None -> range_of_env g
+    | Some r -> r
+  in
+  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
+  FStar.Tactics.log_issues [issue];
+  T.fail "Pulse checker failed"

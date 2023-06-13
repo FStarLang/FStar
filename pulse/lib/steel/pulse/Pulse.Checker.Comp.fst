@@ -21,7 +21,7 @@ let check_comp (g:env)
       : T.Tac (st_comp_typing g st)
       = let (| u, t_u |) = check_universe g st.res in 
         if not (eq_univ u (comp_u c))
-        then T.fail "Unexpected universe"
+        then fail g None "Unexpected universe"
         else (
           let x = fresh g in
           let px = v_as_nv x in
@@ -29,7 +29,7 @@ let check_comp (g:env)
           let gx = push_binding g x st.res in
           let (| ty, post_typing |) = core_check_term gx (open_term_nv (comp_post c) px) in
           if not (eq_tm ty Tm_VProp)
-          then T.fail "Ill-typed postcondition"
+          then fail g None "Ill-typed postcondition"
           else (
             assert (ty == Tm_VProp);
             STC g st x t_u pre_typing (E post_typing)
@@ -44,11 +44,11 @@ let check_comp (g:env)
       let stc = check_st_comp st in
       let (| ty, i_typing |) = core_check_term g i in
       if not (eq_tm ty Tm_Inames)
-      then T.fail "Ill-typed inames"
+      then fail g None "Ill-typed inames"
       else CT_STAtomic _ _ _ (E i_typing) stc
     | C_STGhost i st -> 
       let stc = check_st_comp st in
       let (| ty, i_typing |) = core_check_term g i in
       if not (eq_tm ty Tm_Inames)
-      then T.fail "Ill-typed inames"
+      then fail g None "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc

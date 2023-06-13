@@ -54,7 +54,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp g x c1 c2 res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose two stghost computations with different opened invariants"
+    else fail g None "Cannot compose two stghost computations with different opened invariants"
   | C_STAtomic inames _, C_ST _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -64,7 +64,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp g x c1lifted c2 res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose atomic with non-emp opened invariants with stt"
+    else fail g None "Cannot compose atomic with non-emp opened invariants with stt"
   | C_STGhost inames1 _, C_STAtomic inames2 _ ->
     if eq_tm inames1 inames2
     then begin
@@ -72,7 +72,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose ghost and atomic with different opened invariants"
+    else fail g None "Cannot compose ghost and atomic with different opened invariants"
   | C_STAtomic inames1 _, C_STGhost inames2 _ ->
     if eq_tm inames1 inames2
     then begin
@@ -80,7 +80,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose atomic and ghost with different opened invariants"
+    else fail g None "Cannot compose atomic and ghost with different opened invariants"
   | C_ST _, C_STAtomic inames _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -91,7 +91,7 @@ let rec mk_bind (g:env)
       let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
     end
-    else T.fail "Cannot compose stt with atomic with non-emp opened invariants"
+    else fail g None "Cannot compose stt with atomic with non-emp opened invariants"
   | C_STGhost inames _, C_ST _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -101,7 +101,7 @@ let rec mk_bind (g:env)
         T_Lift _ _ _ c1lifted d_e1 (Lift_STGhost_STAtomic g c1 w) in
       mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
     end
-    else T.fail "Cannot compose ghost with stt with non-emp opened invariants"
+    else fail g None "Cannot compose ghost with stt with non-emp opened invariants"
   | C_ST _, C_STGhost inames _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -113,7 +113,7 @@ let rec mk_bind (g:env)
       let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing in
       (| t, c, d |)
     end
-    else T.fail "Cannot compose stt with ghost with non-emp opened invariants"
+    else fail g None "Cannot compose stt with ghost with non-emp opened invariants"
   | C_STAtomic inames _, C_STAtomic _ _ ->
     if eq_tm inames Tm_EmpInames
     then begin
@@ -122,8 +122,8 @@ let rec mk_bind (g:env)
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
       mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
     end
-    else T.fail "Cannot compose statomics with non-emp opened invariants"
-  | _, _ -> T.fail "bind either not implemented (e.g. ghost) or not possible"
+    else fail g None "Cannot compose statomics with non-emp opened invariants"
+  | _, _ -> fail g None "bind either not implemented (e.g. ghost) or not possible"
 #pop-options
 
 

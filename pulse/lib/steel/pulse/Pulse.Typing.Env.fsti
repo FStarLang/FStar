@@ -130,3 +130,7 @@ val push_context (g:env) (ctx:string) (r:range) : g':env { g' == g }
 val push_context_no_range (g:env) (ctx:string) : g':env { g' == g }
 val get_context (g:env) : Pulse.RuntimeUtils.context
 val range_of_env (g:env) : T.Tac range
+val print_context (g:env) : T.Tac string
+val print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string 
+val print_issues (g:env) (i:list FStar.Issue.issue) : T.Tac string
+val fail (g:env) (r:option range) (msg:string) : T.Tac 'a
