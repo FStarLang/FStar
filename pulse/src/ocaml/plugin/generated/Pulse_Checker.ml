@@ -1219,7 +1219,7 @@ let (maybe_infer_intro_exists :
                                                                     (Prims.of_int (206))
                                                                     (Prims.of_int (37)))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.print_context
+                                                                    (Pulse_Typing_Env.print_context
                                                                     g))
                                                                     (fun
                                                                     uu___10

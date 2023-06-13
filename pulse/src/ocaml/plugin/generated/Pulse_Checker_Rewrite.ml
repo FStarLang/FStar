@@ -154,15 +154,15 @@ let (check_rewrite :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Rewrite.fst"
                                                                     (Prims.of_int (29))
-                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (25))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (69)))
+                                                                    (Prims.of_int (50)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Rewrite.fst"
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (69)))
+                                                                    (Prims.of_int (50)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -170,7 +170,7 @@ let (check_rewrite :
                                                                     (Prims.of_int (30))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (49)))
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
@@ -178,7 +178,7 @@ let (check_rewrite :
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (31)))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.print_issues
+                                                                    (Pulse_Typing_Env.print_issues
                                                                     g1 issues))
                                                                     (fun
                                                                     uu___5 ->
@@ -191,7 +191,13 @@ let (check_rewrite :
                                                                     uu___5 "")))))
                                                                     (fun
                                                                     uu___5 ->
-                                                                    FStar_Tactics_Derived.fail
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    Obj.magic
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    FStar_Pervasives_Native.None
+                                                                    uu___5))
                                                                     uu___5)))
                                                                     | 
                                                                     (FStar_Pervasives_Native.Some
