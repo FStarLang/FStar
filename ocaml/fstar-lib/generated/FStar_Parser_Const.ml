@@ -539,7 +539,7 @@ let (check_with_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "VConfig"; "check_with"]
     FStar_Compiler_Range_Type.dummyRange
 let (decls_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "V2"; "Data"; "decls"]
+  p2l ["FStar"; "Reflection"; "Types"; "decls"]
 let (dsl_typing_builtin : Prims.string -> FStar_Ident.lident) =
   fun s ->
     FStar_Ident.lid_of_path
