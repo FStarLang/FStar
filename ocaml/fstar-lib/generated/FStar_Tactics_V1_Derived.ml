@@ -8,7 +8,7 @@ let (name_of_bv :
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun bv ->
-    FStar_Tactics_V1_Builtins.unseal
+    FStar_Tactics_Unseal.unseal
       (FStar_Reflection_V1_Builtins.inspect_bv bv).FStar_Reflection_V1_Data.bv_ppname
 let (bv_to_string :
   FStar_Reflection_Types.bv ->

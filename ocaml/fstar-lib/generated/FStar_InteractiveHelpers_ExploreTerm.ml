@@ -4723,8 +4723,7 @@ and (explore_pattern :
                                                    (Prims.of_int (565))
                                                    (Prims.of_int (56)))))
                                           (Obj.magic
-                                             (FStar_Tactics_V1_Builtins.unseal
-                                                st))
+                                             (FStar_Tactics_Unseal.unseal st))
                                           (fun uu___1 ->
                                              (fun uu___1 ->
                                                 Obj.magic

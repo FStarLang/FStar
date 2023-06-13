@@ -1537,7 +1537,7 @@ let rec bind_map_get_from_name :
                                                  (Prims.of_int (210))
                                                  (Prims.of_int (34)))))
                                         (Obj.magic
-                                           (FStar_Tactics_V1_Builtins.unseal
+                                           (FStar_Tactics_Unseal.unseal
                                               b'v.FStar_Reflection_V1_Data.bv_ppname))
                                         (fun uu___ ->
                                            FStar_Tactics_Effect.lift_div_tac
@@ -4691,8 +4691,7 @@ and (deep_apply_subst_in_pattern :
                                                 (Prims.of_int (571))
                                                 (Prims.of_int (63)))))
                                        (Obj.magic
-                                          (FStar_Tactics_V1_Builtins.unseal
-                                             st))
+                                          (FStar_Tactics_Unseal.unseal st))
                                        (fun uu___ ->
                                           (fun uu___ ->
                                              Obj.magic
@@ -4967,7 +4966,7 @@ let rec (_generate_shadowed_subst :
                                                                     (Prims.of_int (623))
                                                                     (Prims.of_int (42)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V1_Builtins.unseal
+                                                                    (FStar_Tactics_Unseal.unseal
                                                                     bvv.FStar_Reflection_V1_Data.bv_ppname))
                                                                     (fun
                                                                     uu___2 ->

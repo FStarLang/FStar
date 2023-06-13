@@ -8,7 +8,7 @@ let (name_of_bv :
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun bv ->
-    FStar_Tactics_V2_Builtins.unseal
+    FStar_Tactics_Unseal.unseal
       (FStar_Tactics_NamedView.inspect_bv bv).FStar_Reflection_V2_Data.ppname1
 let (bv_to_string :
   FStar_Tactics_NamedView.bv ->
@@ -17,8 +17,7 @@ let (bv_to_string :
 let (name_of_binder :
   FStar_Tactics_NamedView.binder ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
-  =
-  fun b -> FStar_Tactics_V2_Builtins.unseal b.FStar_Tactics_NamedView.ppname
+  = fun b -> FStar_Tactics_Unseal.unseal b.FStar_Tactics_NamedView.ppname
 let (binder_to_string :
   FStar_Tactics_NamedView.binder ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
@@ -139,15 +138,13 @@ let (binder_to_string :
 let (binding_to_string :
   FStar_Tactics_NamedView.binding ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
-  =
-  fun b ->
-    FStar_Tactics_V2_Builtins.unseal b.FStar_Reflection_V2_Data.ppname3
+  = fun b -> FStar_Tactics_Unseal.unseal b.FStar_Reflection_V2_Data.ppname3
 let (type_of_var :
   FStar_Tactics_NamedView.namedv ->
     (FStar_Reflection_Types.typ, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun x ->
-    FStar_Tactics_V2_Builtins.unseal
+    FStar_Tactics_Unseal.unseal
       (FStar_Tactics_NamedView.inspect_namedv x).FStar_Reflection_V2_Data.sort
 let (type_of_binding :
   FStar_Tactics_NamedView.binding -> FStar_Reflection_Types.typ) =
@@ -5119,7 +5116,7 @@ let (namedv_to_simple_binder :
                           (Prims.of_int (908)) (Prims.of_int (4))
                           (Prims.of_int (912)) (Prims.of_int (16)))))
                  (Obj.magic
-                    (FStar_Tactics_V2_Builtins.unseal
+                    (FStar_Tactics_Unseal.unseal
                        nv.FStar_Reflection_V2_Data.sort))
                  (fun uu___ ->
                     FStar_Tactics_Effect.lift_div_tac

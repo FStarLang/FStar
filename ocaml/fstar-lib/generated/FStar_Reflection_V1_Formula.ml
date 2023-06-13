@@ -20,7 +20,7 @@ let (bv_to_string :
       (fun uu___ ->
          (fun bvv ->
             Obj.magic
-              (FStar_Tactics_V1_Builtins.unseal
+              (FStar_Tactics_Unseal.unseal
                  bvv.FStar_Reflection_V1_Data.bv_ppname)) uu___)
 let rec (inspect_unascribe :
   FStar_Reflection_Types.term ->

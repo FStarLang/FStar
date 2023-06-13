@@ -1131,7 +1131,7 @@ let (namedv_to_string :
       (fun uu___ ->
          (fun namedvv ->
             Obj.magic
-              (FStar_Tactics_V2_Builtins.unseal
+              (FStar_Tactics_Unseal.unseal
                  namedvv.FStar_Reflection_V2_Data.ppname)) uu___)
 let (formula_to_string :
   formula -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =

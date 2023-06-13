@@ -15,7 +15,7 @@ let (namedv_to_string :
             (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
                (Prims.of_int (19)) (Prims.of_int (590)) (Prims.of_int (31)))))
       (Obj.magic
-         (FStar_Tactics_V2_Builtins.unseal x.FStar_Reflection_V2_Data.ppname))
+         (FStar_Tactics_Unseal.unseal x.FStar_Reflection_V2_Data.ppname))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 ->

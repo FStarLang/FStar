@@ -1803,7 +1803,7 @@ let rec (open_pat :
                                 "FStar.Tactics.NamedView.fst"
                                 (Prims.of_int (434)) (Prims.of_int (30))
                                 (Prims.of_int (443)) (Prims.of_int (65)))))
-                       (Obj.magic (FStar_Tactics_V2_Builtins.unseal ssort))
+                       (Obj.magic (FStar_Tactics_Unseal.unseal ssort))
                        (fun uu___ ->
                           (fun sort ->
                              Obj.magic
