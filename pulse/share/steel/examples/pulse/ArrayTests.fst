@@ -165,9 +165,8 @@ fn read_at_offset_refine_post (a:array U32.t) (i:(i:US.t { US.v i < A.length a})
    )
 { 
    let x = test_array_access a i;
-   (x <: (x:U32.t { Seq.length s == A.length a /\
-                         x == Seq.index s (US.v i)}))
-} 
+   x
+}
 ```
 
 ```pulse
@@ -181,9 +180,7 @@ fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.eras
    )
 { 
    let x = test_array_access a i;
-   (x <: (x:U32.t { Seq.length s == A.length a /\
-                    US.v i < A.length a /\
-                    x == Seq.index s (US.v i)}))
+   x
 } 
 ```
 

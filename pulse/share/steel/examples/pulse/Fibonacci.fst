@@ -78,7 +78,7 @@ fn fibo2 (n:pos)
      ()
   };
   let r = !j;
-  ( r <: nat )
+  r
 }
 ```
 
@@ -112,6 +112,6 @@ fn fibo3 (n:pos)
      ()
   };
   let r = !j;
-  ( r <: (r:nat { r == fib n} ) )
+  r
 }
 ```
