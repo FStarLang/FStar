@@ -40,21 +40,11 @@ let check_stapp
               let t = Pulse.Checker.Inference.infer g t ty pre range in
               check' false g t pre pre_typing post_hint
             | _ ->
-              fail g None
-                (Printf.sprintf
-                   "Unexpected c in infer_logical_implicits_and_check (head: %s, comp_typ: %s, and arg: %s)"
-                   (P.term_to_string head)
-                   (P.comp_to_string c)
-                   (P.term_to_string arg))
+              T.fail "Unexpected c in infer_logical_implicits_and_check"
       end
 
     | _ ->
-      fail g None
-        (Printf.sprintf
-           "Unexpected c in infer_logical_implicits_and_check (head: %s, comp_typ: %s, and arg: %s)"
-           (P.term_to_string head)
-           (P.comp_to_string c)
-           (P.term_to_string arg)) in
+      T.fail "Unexpected c in infer_logical_implicits_and_check" in
 
   T.or_else
     (fun _ -> 

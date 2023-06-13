@@ -21,7 +21,23 @@ let check_return
   : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "check_return" st.range g in
   let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = st.term in
-  let (| t, u, ty, uty, d |) = check_term_and_type g t in
+  let (| t, u, ty, uty, d |) :
+    t:term &
+    u:universe &
+    ty:term &
+    universe_of g ty u &
+    typing g t ty =
+    match post_hint with
+    | None -> check_term_and_type g t
+    | Some post ->
+      let (| t, d |) = check_term_with_expected_type g t post.ret_ty in
+      assert (g `env_extends` post.g);
+      let ty_typing : universe_of post.g post.ret_ty post.u =
+        post.ty_typing in
+      // weakening of post.g to g
+      let ty_typing : universe_of g post.ret_ty post.u = magic () in
+      (| t, post.u, post.ret_ty, ty_typing, d |)
+  in
   let x = fresh g in
   let px = v_as_nv x in
   let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x ty)  t Tm_VProp =
@@ -31,13 +47,9 @@ let check_return
         (| t, E ty |)
         
       | Some post ->
+        // we already checked for the return type
         let post : post_hint_t = post in
-        if not (eq_tm post.ret_ty ty)
-        then fail g None (Printf.sprintf "(%s) Expected return type %s, got %s\n"
-                                    (T.range_to_string st.range)
-                                    (P.term_to_string post.ret_ty)
-                                    (P.term_to_string ty))
-        else if x `Set.mem` (freevars post.post)
+        if x `Set.mem` (freevars post.post)
         then fail g None "Unexpected variable clash in return"
         else 
          let ty_rec = post_hint_typing g post x in
