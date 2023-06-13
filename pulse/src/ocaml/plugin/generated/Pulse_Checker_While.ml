@@ -55,7 +55,7 @@ let (check_while :
                      (Prims.of_int (37)) (Prims.of_int (45)))
                   (FStar_Range.mk_range "Pulse.Checker.While.fst"
                      (Prims.of_int (37)) (Prims.of_int (48))
-                     (Prims.of_int (109)) (Prims.of_int (59)))
+                     (Prims.of_int (109)) (Prims.of_int (64)))
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Checker_Pure.push_context "while loop"
@@ -69,7 +69,7 @@ let (check_while :
                                 (Prims.of_int (38)) (Prims.of_int (78)))
                              (FStar_Range.mk_range "Pulse.Checker.While.fst"
                                 (Prims.of_int (37)) (Prims.of_int (48))
-                                (Prims.of_int (109)) (Prims.of_int (59)))
+                                (Prims.of_int (109)) (Prims.of_int (64)))
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___ -> t.Pulse_Syntax_Base.term1))
                              (fun uu___ ->
@@ -95,7 +95,7 @@ let (check_while :
                                                (Prims.of_int (38))
                                                (Prims.of_int (81))
                                                (Prims.of_int (109))
-                                               (Prims.of_int (59)))
+                                               (Prims.of_int (64)))
                                             (Obj.magic
                                                (Pulse_Checker_Pure.check_vprop
                                                   (Pulse_Checker_Pure.push_context
@@ -129,7 +129,7 @@ let (check_while :
                                                               (Prims.of_int (47))
                                                               (Prims.of_int (2))
                                                               (Prims.of_int (109))
-                                                              (Prims.of_int (59)))
+                                                              (Prims.of_int (64)))
                                                            (if
                                                               Pulse_RuntimeUtils.debug_at_level
                                                                 (Pulse_Typing_Env.fstar_env
@@ -208,7 +208,7 @@ let (check_while :
                                                                     (Prims.of_int (47))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (109))
-                                                                    (Prims.of_int (59)))
+                                                                    (Prims.of_int (64)))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Framing.check_frameable
                                                                     g pre ()
@@ -244,8 +244,7 @@ let (check_while :
                                                                     Pulse_Syntax_Base.binder_ppname
                                                                     = nm;_},
                                                                     inv1) ->
-                                                                    Obj.repr
-                                                                    (if
+                                                                    if
                                                                     (Prims.op_Negation
                                                                     (Pulse_Syntax_Base.eq_tm
                                                                     ty
@@ -256,12 +255,13 @@ let (check_while :
                                                                     u
                                                                     Pulse_Syntax_Pure.u0))
                                                                     then
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "While loop invariant is exists but its witness type is not bool")
+                                                                    Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (nm.Pulse_Syntax_Base.range))
+                                                                    "While loop invariant exists but its witness type is not bool"
                                                                     else
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.While.fst"
                                                                     (Prims.of_int (56))
@@ -755,7 +755,14 @@ let (check_while :
                                                                     (fun
                                                                     uu___10
                                                                     ->
-                                                                    FStar_Tactics_Derived.fail
+                                                                    (fun
+                                                                    uu___10
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    FStar_Pervasives_Native.None
+                                                                    uu___10))
                                                                     uu___10)))
                                                                     uu___8)))
                                                                     uu___8)))
@@ -855,17 +862,24 @@ let (check_while :
                                                                     uu___8)))
                                                                     (fun
                                                                     uu___8 ->
-                                                                    FStar_Tactics_Derived.fail
+                                                                    (fun
+                                                                    uu___8 ->
+                                                                    Obj.magic
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    FStar_Pervasives_Native.None
+                                                                    uu___8))
                                                                     uu___8)))
                                                                     uu___6)))
                                                                     uu___6)))
                                                                     uu___5)))
-                                                                    uu___5)))
+                                                                    uu___5)
                                                                     | 
                                                                     uu___4 ->
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Derived.fail
-                                                                    "Typechecked invariant is not an exists"))))
+                                                                    Pulse_Typing_Env.fail
+                                                                    g1
+                                                                    FStar_Pervasives_Native.None
+                                                                    "Typechecked invariant is not an exists")))
                                                                     uu___3)))
                                                                 uu___2)))
                                                  uu___1))) uu___))) uu___)

@@ -28,7 +28,7 @@ let (main' :
                               (Prims.of_int (25)) (Prims.of_int (7)))
                            (FStar_Range.mk_range "Pulse.Main.fst"
                               (Prims.of_int (25)) (Prims.of_int (8))
-                              (Prims.of_int (34)) (Prims.of_int (66)))
+                              (Prims.of_int (34)) (Prims.of_int (81)))
                            (if
                               Pulse_RuntimeUtils.debug_at_level
                                 (Pulse_Typing_Env.fstar_env g1) "Pulse"
@@ -92,7 +92,7 @@ let (main' :
                                          (Prims.of_int (25))
                                          (Prims.of_int (8))
                                          (Prims.of_int (34))
-                                         (Prims.of_int (66)))
+                                         (Prims.of_int (81)))
                                       (Obj.magic
                                          (Pulse_Checker_Pure.check_term g1
                                             pre))
@@ -106,47 +106,44 @@ let (main' :
                                                     Pulse_Syntax_Base.Tm_VProp
                                                 then
                                                   Obj.magic
-                                                    (Obj.repr
-                                                       (FStar_Tactics_Effect.tac_bind
-                                                          (FStar_Range.mk_range
-                                                             "Pulse.Main.fst"
-                                                             (Prims.of_int (28))
-                                                             (Prims.of_int (56))
-                                                             (Prims.of_int (28))
-                                                             (Prims.of_int (68)))
-                                                          (FStar_Range.mk_range
-                                                             "Pulse.Main.fst"
-                                                             (Prims.of_int (28))
-                                                             (Prims.of_int (71))
-                                                             (Prims.of_int (33))
-                                                             (Prims.of_int (27)))
-                                                          (FStar_Tactics_Effect.lift_div_tac
-                                                             (fun uu___2 ->
-                                                                ()))
-                                                          (fun uu___2 ->
-                                                             (fun pre_typing1
-                                                                ->
-                                                                Obj.magic
-                                                                  (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
+                                                    (FStar_Tactics_Effect.tac_bind
+                                                       (FStar_Range.mk_range
+                                                          "Pulse.Main.fst"
+                                                          (Prims.of_int (28))
+                                                          (Prims.of_int (56))
+                                                          (Prims.of_int (28))
+                                                          (Prims.of_int (68)))
+                                                       (FStar_Range.mk_range
+                                                          "Pulse.Main.fst"
+                                                          (Prims.of_int (28))
+                                                          (Prims.of_int (71))
+                                                          (Prims.of_int (33))
+                                                          (Prims.of_int (27)))
+                                                       (FStar_Tactics_Effect.lift_div_tac
+                                                          (fun uu___2 -> ()))
+                                                       (fun uu___2 ->
+                                                          (fun pre_typing1 ->
+                                                             Obj.magic
+                                                               (FStar_Tactics_Effect.tac_bind
+                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Main.fst"
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (67)))
-                                                                    (FStar_Range.mk_range
+                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Main.fst"
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (71))
                                                                     (Prims.of_int (33))
                                                                     (Prims.of_int (27)))
-                                                                    (Obj.magic
+                                                                  (Obj.magic
                                                                     (Pulse_Checker.check
                                                                     g1 t pre1
                                                                     ()
                                                                     FStar_Pervasives_Native.None))
-                                                                    (fun
-                                                                    uu___2 ->
+                                                                  (fun uu___2
+                                                                    ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -162,12 +159,13 @@ let (main' :
                                                                     t_typing),
                                                                     (Pulse_Elaborate_Pure.elab_comp
                                                                     c))))))
-                                                               uu___2)))
+                                                            uu___2))
                                                 else
                                                   Obj.magic
-                                                    (Obj.repr
-                                                       (FStar_Tactics_Derived.fail
-                                                          "pulse main: cannot typecheck pre at type vprop")))
+                                                    (Pulse_Typing_Env.fail g1
+                                                       (FStar_Pervasives_Native.Some
+                                                          (t.Pulse_Syntax_Base.range1))
+                                                       "pulse main: cannot typecheck pre at type vprop"))
                                            uu___1))) uu___)))) uu___2 uu___1
           uu___
 let (main :
@@ -248,8 +246,7 @@ let (check_pulse :
                                                   (fun uu___2 ->
                                                      fun x ->
                                                        Prims.strcat
-                                                         (Prims.strcat
-                                                            "Error @ "
+                                                         (Prims.strcat ""
                                                             (Prims.strcat
                                                                uu___1 ": "))
                                                          (Prims.strcat x "")))))

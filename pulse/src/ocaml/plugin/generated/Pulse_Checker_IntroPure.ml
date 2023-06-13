@@ -13,17 +13,25 @@ let (check_prop :
            (Prims.of_int (72)))
         (FStar_Range.mk_range "Pulse.Checker.IntroPure.fst"
            (Prims.of_int (13)) (Prims.of_int (3)) (Prims.of_int (18))
-           (Prims.of_int (35)))
+           (Prims.of_int (40)))
         (Obj.magic
            (Pulse_Checker_Pure.check_vprop g (Pulse_Syntax_Base.Tm_Pure p)))
         (fun uu___ ->
-           match uu___ with
-           | Prims.Mkdtuple2 (p1, p_typing) ->
-               (match p1 with
-                | Pulse_Syntax_Base.Tm_Pure pp ->
-                    FStar_Tactics_Effect.lift_div_tac
-                      (fun uu___1 -> Prims.Mkdtuple2 (pp, ()))
-                | uu___1 -> FStar_Tactics_Derived.fail "Unexpected prop"))
+           (fun uu___ ->
+              match uu___ with
+              | Prims.Mkdtuple2 (p1, p_typing) ->
+                  (match p1 with
+                   | Pulse_Syntax_Base.Tm_Pure pp ->
+                       Obj.magic
+                         (Obj.repr
+                            (FStar_Tactics_Effect.lift_div_tac
+                               (fun uu___1 -> Prims.Mkdtuple2 (pp, ()))))
+                   | uu___1 ->
+                       Obj.magic
+                         (Obj.repr
+                            (Pulse_Typing_Env.fail g
+                               FStar_Pervasives_Native.None "Unexpected prop"))))
+             uu___)
 let (check_prop_validity :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
