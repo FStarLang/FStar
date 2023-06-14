@@ -224,8 +224,7 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t)
     free_array uds_digest;
     free_array uds;
     disable_uds();
-    let x = ((assume false) <: (squash false));
-    ()
+    admit()
 }
 ```
 

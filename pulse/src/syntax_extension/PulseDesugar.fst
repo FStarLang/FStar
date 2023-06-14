@@ -65,6 +65,7 @@ let push_namespace env lid =
   env
   
 let r_ = FStar.Compiler.Range.dummyRange
+let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
 let star_lid = Ident.lid_of_path ["Steel"; "Effect"; "Common"; "star"] r_
 let emp_lid = Ident.lid_of_path ["Steel"; "Effect"; "Common"; "emp"] r_
 let pure_lid = Ident.lid_of_path ["Steel"; "ST"; "Util"; "pure"] r_
@@ -105,12 +106,12 @@ let pulse_arrow_formals (t:S.term) =
 let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
 
 type stapp_or_return_t =
-  | STApp  : SW.st_term -> stapp_or_return_t
+  | STTerm : SW.st_term -> stapp_or_return_t
   | Return : S.term -> stapp_or_return_t
 
 let st_term_of_stapp_or_return (t:stapp_or_return_t) : SW.st_term =
   match t with
-  | STApp t -> t
+  | STTerm t -> t
   | Return t -> ret t
 
 let stapp_or_return (env:env_t) (s:S.term)
@@ -119,6 +120,9 @@ let stapp_or_return (env:env_t) (s:S.term)
     let head, args = U.head_and_args_full s in
     match head.n with
     | S.Tm_fvar fv -> (
+      if S.fv_eq_lid fv admit_lid
+      then STTerm (SW.tm_admit r) 
+      else
       match TcEnv.try_lookup_lid env.tcenv fv.fv_name.v with
       | None -> Return s
       | Some ((_, t), _) ->
@@ -165,7 +169,7 @@ let stapp_or_return (env:env_t) (s:S.term)
             then ( //this is an st app
               let head = S.mk_Tm_app head (L.init args) s.pos in
               let last, q = L.last args in
-              STApp SW.(tm_st_app (tm_expr head) q (as_term last) r)
+              STTerm SW.(tm_st_app (tm_expr head) q (as_term last) r)
             )
             else (
               //partial app of a stateful function
@@ -366,7 +370,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         let b = SW.mk_binder lb.id annot in
         let t =
           match stapp_or_return env s1 with
-          | STApp s1 ->
+          | STTerm s1 ->
             mk_bind b s1 s2 r
           | Return s1 ->
             mk_totbind b (as_term s1) s2 r
