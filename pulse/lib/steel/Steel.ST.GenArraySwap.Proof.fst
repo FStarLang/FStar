@@ -22,17 +22,21 @@ let bezout_prop
   l == b.d * b.q_l /\
   b.d == n * b.u_n + l * b.u_l
 
+let bezout
+  (n: nat)
+  (l: nat)
+: Tot Type
+= (b: bezout_t { bezout_prop n l b })
+
 #push-options "--z3rlimit 32"
 
 #restart-solver
 let rec mk_bezout
   (n: pos)
   (l: nat)
-: Ghost bezout_t
+: Ghost (bezout n l)
   (requires (l < n))
-  (ensures (fun b ->
-    bezout_prop n l b 
-  ))
+  (ensures (fun _ -> True))
   (decreases l)
 = if l = 0
   then {
@@ -72,11 +76,14 @@ let rec mk_bezout
 
 #pop-options
 
-let bezout
+let bezout_q_eq
   (n: nat)
   (l: nat)
-: Tot Type
-= (b: bezout_t { bezout_prop n l b })
+  (bz: bezout n l)
+: Lemma
+  (bz.q_n == n / bz.d)
+  [SMTPat (bezout_prop n l bz); SMTPat bz.q_n]
+= cancel_mul_div bz.q_n bz.d
 
 let rec iter_fun
   (#t: Type)
@@ -159,7 +166,7 @@ let rec jump_iter
     lemma_mod_add_distr (k' * l) (x + l) n
   end
 
-#push-options "--z3rlimit 64"
+#push-options "--z3rlimit 128"
 
 #restart-solver
 [@@"opaque_to_smt"]
@@ -475,4 +482,5 @@ let jump_jump_iter_pred_q
   (ensures (
     jump n l (iter_fun (jump n l) (b.q_n - 1) x) == x
   ))
+  [SMTPat (jump n l (iter_fun (jump n l) (b.q_n - 1) x))]
 = jump_iter_q n l b x
