@@ -1,6 +1,6 @@
 module DICEEngineCore
-module A = Steel.ST.Array
 module R = Steel.ST.Reference
+module A = Steel.ST.Array
 module T = FStar.Tactics
 module PM = Pulse.Main
 open Steel.ST.Util 
@@ -20,10 +20,10 @@ assume
 val digest_len (_:alg_t) : US.t
 
 assume
-val spec_hash (a:alg_t) (s:Seq.seq U8.t) : Ghost.erased (Seq.lseq U8.t (US.v (digest_len a)))
+val spec_hash (a:alg_t) (s:Seq.seq U8.t) : Seq.lseq U8.t (US.v (digest_len a))
 
 assume
-val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : Ghost.erased (Seq.lseq U8.t (US.v (digest_len a)))
+val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : Seq.lseq U8.t (US.v (digest_len a))
 
 assume
 val is_hashable_len (_:US.t) : prop
@@ -41,8 +41,8 @@ val hacl_hash (alg:alg_t)
               (src_len: hashable_len { US.v src_len == A.length src })
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (#psrc:perm)
-              (#src_seq:Ghost.erased (Seq.lseq U8.t (US.v src_len)))
-              (#dst_seq:Ghost.erased (Seq.lseq U8.t (US.v (digest_len alg))))
+              (#src_seq:Ghost.erased (Seq.seq U8.t))
+              (#dst_seq:Ghost.erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to dst full_perm dst_seq `star`
      A.pts_to src psrc src_seq)
@@ -53,14 +53,14 @@ val hacl_hash (alg:alg_t)
 assume
 val hacl_hmac (alg:alg_t)
               (dst:A.larray U8.t (US.v (digest_len alg)))
-              (key_len: key_len)
-              (key:A.larray U8.t (US.v key_len))
-              (msg_len: hashable_len)
-              (msg:A.larray U8.t (US.v msg_len))
+              (key:A.array U8.t)
+              (key_len: key_len { US.v key_len == A.length key })
+              (msg:A.array U8.t)
+              (msg_len: hashable_len { US.v msg_len == A.length msg })
               (#pkey #pmsg:perm)
-              (#dst_seq:Ghost.erased (Seq.lseq U8.t (US.v (digest_len alg))))
-              (#key_seq:Ghost.erased (Seq.lseq U8.t (US.v key_len)))
-              (#msg_seq:Ghost.erased (Seq.lseq U8.t (US.v msg_len)))
+              (#dst_seq:Ghost.erased (Seq.seq U8.t))
+              (#key_seq:Ghost.erased (Seq.seq U8.t))
+              (#msg_seq:Ghost.erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to dst full_perm dst_seq `star`
      A.pts_to key pkey key_seq `star`
@@ -86,10 +86,6 @@ assume
 val dice_digest_len_is_hashable 
   : is_hashable_len dice_digest_len
 
-assume
-val uds_len_dice_digest_len_equiv
-  : uds_len == dice_digest_len
-  
 type dice_return_code = | DICE_SUCCESS | DICE_ERROR
 
 let cdi_t = A.larray U8.t (US.v (digest_len dice_hash_alg))
@@ -115,22 +111,27 @@ let l0_perm (l0:l0_image_t) (vl0: l0_repr) : vprop =
     A.pts_to l0.l0_binary full_perm vl0.l0_binary
 
 assume
-// val uds_bytes : v:(Ghost.erased (Seq.seq U8.t)){ Seq.length v = US.v uds_len }
-val uds_bytes : Ghost.erased (Seq.lseq U8.t (US.v uds_len))
+val uds_bytes : v:(Ghost.erased (Seq.seq U8.t)){ Seq.length v = US.v uds_len }
 
-(* currently not using *)
-// assume
-// val stack_is_erased : vprop
+assume
+val stack_is_erased : vprop
 
 assume
 val l0_is_authentic (vl0:l0_repr) : prop
 
+assume 
 val cdi_functional_correctness 
   (cdi:cdi_t) 
-  (l0:l0_image_t) 
-  (#c0:(c0:Ghost.erased (Seq.lseq U8.t (US.v uds_len)){uds_len == dice_digest_len}))
-  (#vl0:Ghost.erased l0_repr)
-  : c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg vl0.l0_binary)
+  (l0:l0_image_t)
+  : prop
+
+// val cdi_functional_correctness 
+//   (cdi:cdi_t) 
+//   (l0:l0_image_t) 
+//   (#c0:(c0:Ghost.erased (Seq.lseq U8.t (US.v uds_len)){uds_len == dice_digest_len}))
+//   (#vl0:Ghost.erased l0_repr)
+//   : c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg vl0.l0_binary)
+
 
 ```pulse
 fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
@@ -226,24 +227,20 @@ val free_array_u8
     (fun _ -> emp)
 
 ```pulse
-fn compute_cdi (cdi:cdi_t) (l0:l0_image_t) 
+fn compute_cdi (c:cdi_t) (l0:l0_image_t) 
                (#vl0:Ghost.erased l0_repr)
-               (#c0:Ghost.erased (Seq.lseq U8.t (US.v uds_len)))
-               (#c1:Ghost.erased (Seq.lseq U8.t (US.v uds_len)))
- requires (
+               (#c0:Ghost.erased (Seq.seq U8.t))
+  requires (
     uds_is_enabled `star`
-    A.pts_to cdi full_perm c0 `star`
+    A.pts_to c full_perm c0 `star`
     l0_perm l0 vl0 (* should CDI only be computed on authentic l0 images? *)
- )
- ensures (
-  l0_perm l0 vl0 `star`
-  A.pts_to cdi full_perm c1 //`star`
-  (* cdi_functional_correctness cdi l0 #c1 #vl0 *)
-
-  // (exists_ (fun (c1:Seq.lseq U8.t (US.v uds_len)) -> (
-  //   A.pts_to cdi full_perm c1 `star`
-  //   cdi_functional_correctness cdi l0 #c1 #vl0)))
- )
+  )
+  ensures (
+    l0_perm l0 vl0 `star`
+    (exists_ (fun (c1:Seq.seq U8.t) ->
+      A.pts_to c full_perm c1 `star`
+      pure (cdi_functional_correctness c l0)))
+  )
 {
     let uds = new_array 0uy uds_len;
     let uds_digest = new_array 0uy dice_digest_len;
@@ -261,13 +258,9 @@ fn compute_cdi (cdi:cdi_t) (l0:l0_image_t)
 
     dice_digest_len_is_hashable;
 
-    uds_len_dice_digest_len_equiv;
-
-    hacl_hmac dice_hash_alg cdi
-      dice_digest_len uds_digest
-      dice_digest_len l0_digest;
-
-    // cdi_functional_correctness cdi l0 #c1 #vl0;
+    hacl_hmac dice_hash_alg c 
+      uds_digest dice_digest_len
+      l0_digest dice_digest_len;
 
     zeroize_uds uds uds_len;
 
@@ -275,25 +268,24 @@ fn compute_cdi (cdi:cdi_t) (l0:l0_image_t)
     free_array uds_digest;
     free_array uds;
     disable_uds();
-    // admit()
+    admit()
 }
 ```
 
 ```pulse
 fn dice_main (c:cdi_t) (l0:l0_image_t)
              (#vl0:Ghost.erased l0_repr)
-             (#c0:Ghost.erased Seq.lseq U8.t (US.v uds_len))
+             (#c0:Ghost.erased (Seq.seq U8.t))
   requires (
     uds_is_enabled `star`
     A.pts_to c full_perm c0 `star`
     l0_perm l0 vl0
   )
   returns r: dice_return_code
-  ensures exists (c1:Seq.lseq U8.t (US.v uds_len)). (
+  ensures exists (c1:Seq.seq U8.t). (
       A.pts_to c full_perm c1 `star`
       l0_perm l0 vl0 `star`
-      cdi_functional_correctness c l0 `star`
-      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0)
+      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c l0)
   )
 {
   let b = authenticate_l0_image l0;
@@ -310,7 +302,7 @@ fn dice_main (c:cdi_t) (l0:l0_image_t)
 }
 ```
 
-(*
+
 ```pulse
 fn compute_cdi_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
  requires exists (c0: Seq.seq U8.t). (
@@ -321,7 +313,7 @@ fn compute_cdi_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
  ensures exists (c1:Seq.seq U8.t). (
     A.pts_to c full_perm c1 `star`
     l0_perm l0 vl0 `star`
-    pure (cdi_functional_correctness c1 vl0)
+    pure (cdi_functional_correctness c l0)
  )
 {
     disable_uds();
@@ -341,7 +333,7 @@ fn dice_main_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
   ensures exists (c1:Seq.seq U8.t). (
       A.pts_to c full_perm c1 `star`
       l0_perm l0 vl0 `star`
-      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c1 vl0)
+      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c l0)
   )
 {
   let b = authenticate_l0_image l0;
@@ -361,4 +353,3 @@ fn dice_main_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
   }
 }
 ```
-*)
