@@ -20,10 +20,10 @@ assume
 val digest_len (_:alg_t) : US.t
 
 assume
-val spec_hash (a:alg_t) (s:Seq.seq U8.t) : Seq.lseq U8.t (US.v (digest_len a))
+val spec_hash (a:alg_t) (s:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
-val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : Seq.lseq U8.t (US.v (digest_len a))
+val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
 val is_hashable_len (_:US.t) : prop
@@ -119,19 +119,17 @@ val stack_is_erased : vprop
 assume
 val l0_is_authentic (vl0:l0_repr) : prop
 
-assume 
-val cdi_functional_correctness 
-  (cdi:cdi_t) 
-  (l0:l0_image_t)
-  : prop
-
+// assume 
 // val cdi_functional_correctness 
 //   (cdi:cdi_t) 
-//   (l0:l0_image_t) 
-//   (#c0:(c0:Ghost.erased (Seq.lseq U8.t (US.v uds_len)){uds_len == dice_digest_len}))
-//   (#vl0:Ghost.erased l0_repr)
-//   : c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg vl0.l0_binary)
+//   (l0:l0_image_t)
+//   : prop
 
+let cdi_functional_correctness
+  (c0:Seq.seq U8.t)
+  (vl0:l0_repr)
+  : prop 
+  = c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg vl0.l0_binary)
 
 ```pulse
 fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
@@ -239,7 +237,7 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t)
     l0_perm l0 vl0 `star`
     (exists_ (fun (c1:Seq.seq U8.t) ->
       A.pts_to c full_perm c1 `star`
-      pure (cdi_functional_correctness c l0)))
+      pure (cdi_functional_correctness c1 vl0)))
   )
 {
     let uds = new_array 0uy uds_len;
@@ -268,7 +266,7 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t)
     free_array uds_digest;
     free_array uds;
     disable_uds();
-    admit()
+    ()
 }
 ```
 
@@ -285,7 +283,7 @@ fn dice_main (c:cdi_t) (l0:l0_image_t)
   ensures exists (c1:Seq.seq U8.t). (
       A.pts_to c full_perm c1 `star`
       l0_perm l0 vl0 `star`
-      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c l0)
+      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c1 vl0)
   )
 {
   let b = authenticate_l0_image l0;
@@ -313,7 +311,7 @@ fn compute_cdi_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
  ensures exists (c1:Seq.seq U8.t). (
     A.pts_to c full_perm c1 `star`
     l0_perm l0 vl0 `star`
-    pure (cdi_functional_correctness c l0)
+    pure (cdi_functional_correctness c1 vl0)
  )
 {
     disable_uds();
@@ -333,7 +331,7 @@ fn dice_main_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
   ensures exists (c1:Seq.seq U8.t). (
       A.pts_to c full_perm c1 `star`
       l0_perm l0 vl0 `star`
-      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c l0)
+      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c1 vl0)
   )
 {
   let b = authenticate_l0_image l0;
