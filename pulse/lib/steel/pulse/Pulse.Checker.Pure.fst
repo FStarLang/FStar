@@ -85,11 +85,6 @@ let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
   let rt = elab_term t0 in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f rt) in
-  T.print
-   (Printf.sprintf "instantiate_term_implicits (Some? res = %b): issues [%s]\n" 
-              (Some? topt)
-              (String.concat "\n" (L.map FStar.Issue.message_of_issue issues)));
-  FStar.Tactics.log_issues issues;
   match topt with
   | None -> 
     fail g None (Printf.sprintf "%s elaborated to %s; Could not instantiate implicits\n%s\n"

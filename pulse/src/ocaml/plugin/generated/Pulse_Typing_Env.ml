@@ -474,7 +474,7 @@ let fail :
           (FStar_Range.mk_range "Pulse.Typing.Env.fst" (Prims.of_int (184))
              (Prims.of_int (4)) (Prims.of_int (186)) (Prims.of_int (17)))
           (FStar_Range.mk_range "Pulse.Typing.Env.fst" (Prims.of_int (187))
-             (Prims.of_int (4)) (Prims.of_int (191)) (Prims.of_int (31)))
+             (Prims.of_int (4)) (Prims.of_int (190)) (Prims.of_int (31)))
           (match r with
            | FStar_Pervasives_Native.None ->
                Obj.magic (Obj.repr (range_of_env g))
@@ -491,7 +491,7 @@ let fail :
                         (Prims.of_int (188)) (Prims.of_int (77)))
                      (FStar_Range.mk_range "Pulse.Typing.Env.fst"
                         (Prims.of_int (189)) (Prims.of_int (2))
-                        (Prims.of_int (191)) (Prims.of_int (31)))
+                        (Prims.of_int (190)) (Prims.of_int (31)))
                      (Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Range.mk_range "Pulse.Typing.Env.fst"
@@ -516,29 +516,9 @@ let fail :
                                    (Prims.of_int (189)) (Prims.of_int (34)))
                                 (FStar_Range.mk_range "Pulse.Typing.Env.fst"
                                    (Prims.of_int (190)) (Prims.of_int (2))
-                                   (Prims.of_int (191)) (Prims.of_int (31)))
+                                   (Prims.of_int (190)) (Prims.of_int (31)))
                                 (Obj.magic
                                    (FStar_Tactics_Builtins.log_issues [issue]))
                                 (fun uu___ ->
-                                   (fun uu___ ->
-                                      Obj.magic
-                                        (FStar_Tactics_Effect.tac_bind
-                                           (FStar_Range.mk_range
-                                              "Pulse.Typing.Env.fst"
-                                              (Prims.of_int (190))
-                                              (Prims.of_int (2))
-                                              (Prims.of_int (190))
-                                              (Prims.of_int (30)))
-                                           (FStar_Range.mk_range
-                                              "Pulse.Typing.Env.fst"
-                                              (Prims.of_int (191))
-                                              (Prims.of_int (2))
-                                              (Prims.of_int (191))
-                                              (Prims.of_int (31)))
-                                           (Obj.magic
-                                              (FStar_Tactics_Builtins.print
-                                                 "About to fail ... "))
-                                           (fun uu___1 ->
-                                              FStar_Tactics_Derived.fail
-                                                "Pulse checker failed")))
-                                     uu___))) uu___))) uu___)
+                                   FStar_Tactics_Derived.fail
+                                     "Pulse checker failed"))) uu___))) uu___)

@@ -185,7 +185,7 @@ let maybe_infer_intro_exists
       | Some (_, ty) -> Some ty
     in
     let solutions = 
-      List.Tot.map
+      T.map
         (fun (u, v) -> 
           let sol = Pulse.Checker.Inference.apply_solution solutions v in
           match unreveal sol with
@@ -213,13 +213,14 @@ let maybe_infer_intro_exists
     let wr t = { term = t; range = st.range } in
     let intro_exists_chain = build_instantiations solutions insts in
     let pure_conjuncts =
-      List.Tot.collect 
+      T.map 
        (fun vp -> 
           match Pulse.Checker.Inference.apply_solution solutions vp with
           | Tm_Pure p -> [p]
           | p -> [])
        pure_conjuncts
     in
+    let pure_conjuncts = L.flatten pure_conjuncts in
     let result = List.Tot.fold_left (add_intro_pure intro_exists_chain.range) intro_exists_chain pure_conjuncts in
     if RU.debug_at_level (fstar_env g) "inference"
     then (      

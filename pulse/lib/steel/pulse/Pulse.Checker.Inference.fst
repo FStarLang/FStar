@@ -283,7 +283,7 @@ let infer
 
 let solutions_to_string sol = print_solutions sol
 
-let apply_sol_deep (sol:solution) (t:R.term) =
+let apply_sol (sol:solution) (t:R.term) =
   let solve_uvar (t:R.term) : T.Tac R.term = 
     match is_uvar_r t with
     | None -> t
@@ -294,26 +294,9 @@ let apply_sol_deep (sol:solution) (t:R.term) =
       | Some t -> Pulse.Elaborate.Pure.elab_term t
   in
   FStar.Tactics.Visit.visit_tm solve_uvar t
-    
-let rec apply_sol (sol:solution) (t:R.term) =
-  match is_uvar_r t with
-  | None -> (
-    match R.inspect_ln t with
-    | R.Tv_App hd (arg, q) ->
-      let hd = apply_sol sol hd in
-      let arg = apply_sol sol arg in
-      R.pack_ln (R.Tv_App hd (arg, q))
-    | _ -> t
-  )
-  | Some n ->
-    match find_solution sol n with
-    | None -> t
-    | Some (Tm_FStar t _) -> t
-    | Some t -> Pulse.Elaborate.Pure.elab_term t
-
-
+ 
 let rec apply_solution (sol:solution) (t:term)
-  : term
+  : T.Tac term
   = match t with
     | Tm_Emp
     | Tm_VProp
@@ -321,20 +304,10 @@ let rec apply_solution (sol:solution) (t:term)
     | Tm_EmpInames
     | Tm_Unknown -> t
 
-    | Tm_FStar _ _ ->
-      if Some? (is_uvar t)
-      then let n = uvar_index t in
-            match find_solution sol n with
-            | None -> t
-            | Some t -> t
-      else (match is_pure_app t with
-            | Some (head, q, arg) ->
-              assume (head << t);
-              assume (arg << t);
-              tm_pureapp (apply_solution sol head)
-                         q
-                         (apply_solution sol arg)
-            | _ -> t)
+    | Tm_FStar t r ->
+      let t = apply_sol sol t in
+      assume (not_tv_unknown t);
+      Tm_FStar t r
 
     | Tm_Pure p ->
       Tm_Pure (apply_solution sol p)
@@ -350,7 +323,7 @@ let rec apply_solution (sol:solution) (t:term)
       Tm_ForallSL u { b with binder_ty = apply_solution sol b.binder_ty }
                     (apply_solution sol body)
 
-let contains_uvar_r_deep (t:R.term) =
+let contains_uvar_r (t:R.term) =
     let is_uvar (t:R.term) : T.Tac R.term = 
       if Some? (is_uvar_r t)
       then T.fail "found uvar"
@@ -362,13 +335,6 @@ let contains_uvar_r_deep (t:R.term) =
           false)
       (fun _ -> true)
 
-let rec contains_uvar_r (t:R.term) =
-    Some? (is_uvar_r t) ||
-    (match R.inspect_ln t with
-     | R.Tv_App hd (arg, _) ->
-      contains_uvar_r hd ||
-      contains_uvar_r arg
-     | _ -> false)
 
 let rec contains_uvar (t:term)
   : T.Tac bool
