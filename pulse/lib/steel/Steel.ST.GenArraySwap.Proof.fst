@@ -34,7 +34,7 @@ let bezout
 let rec mk_bezout
   (n: pos)
   (l: nat)
-: Ghost (bezout n l)
+: Pure (bezout n l)
   (requires (l < n))
   (ensures (fun _ -> True))
   (decreases l)
