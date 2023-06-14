@@ -576,10 +576,9 @@ let rec __assumption_aux (xs : list binding) : Tac unit =
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = binding_to_term b in
-        try exact t with | _ ->
+        try exact b with | _ ->
         try (apply (`FStar.Squash.return_squash);
-             exact t) with | _ ->
+             exact b) with | _ ->
         __assumption_aux bs
 
 let assumption () : Tac unit =
@@ -665,7 +664,7 @@ let mk_sq_eq (t1 t2 : term) : Tot term =
 Creates a new goal for [t1 == t2]. *)
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    let e = pack (Tv_Var (binding_to_namedv e)) in
+    let e = pack (Tv_Var e) in
     pointwise (fun () ->
       (* If the LHS is a uvar, do nothing, so we do not instantiate it. *)
       let is_uvar =
@@ -688,13 +687,13 @@ let grewrite_eq (b:binding) : Tac unit =
   match term_as_formula (type_of_binding b) with
   | Comp (Eq _) l r ->
     grewrite l r;
-    iseq [idtac; (fun () -> exact (binding_to_term b))]
+    iseq [idtac; (fun () -> exact b)]
   | _ ->
     begin match term_as_formula' (type_of_binding b) with
     | Comp (Eq _) l r ->
       grewrite l r;
       iseq [idtac; (fun () -> apply_lemma (`__un_sq_eq);
-                              exact (binding_to_term b))]
+                              exact b)]
     | _ ->
       fail "grewrite_eq: binder type is not an equality"
     end
@@ -890,6 +889,7 @@ let namedv_to_simple_binder (n : namedv) : Tac simple_binder =
     attrs  = [];
   }
 
+[@@coercion]
 let binding_to_simple_binder (b : binding) : Tot simple_binder =
   {
     ppname = b.ppname;
@@ -905,15 +905,15 @@ let binding_to_simple_binder (b : binding) : Tot simple_binder =
 let string_to_term_with_lb
   (letbindings: list (string * term))
   (e: env) (t: string): Tac term
-  = let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->
-        let e, bv = push_bv_dsenv e i in
-        e, (v,bv)::lb_bvs
+  = let e, lb_bindings : env * list (term & binding) =
+      fold_left (fun (e, lb_bvs) (i, v) ->
+        let e, b = push_bv_dsenv e i in
+        e, (v, b)::lb_bvs
       ) (e, []) letbindings in
     let t = string_to_term e t in
-    fold_left (fun t (i, bv) ->
-          let nb = binding_to_simple_binder bv in
-          pack (Tv_Let false [] nb i t))
-        t lb_bvs
+    fold_left (fun t (i, b) ->
+          pack (Tv_Let false [] (binding_to_simple_binder b) i t))
+        t lb_bindings
 
 private
 val lem_trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->

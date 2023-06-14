@@ -124,7 +124,7 @@ let pose_lemma (t : term) : Tac binding =
   | _ ->
     let reqb = tcut (`squash (`#pre)) in
 
-    let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(binding_to_term reqb)) (fun () -> (`#t)))) in
+    let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(reqb <: term)) (fun () -> (`#t)))) in
     flip ();
     ignore (trytac trivial);
     b
@@ -206,7 +206,7 @@ let unsquash (t : term) : Tac term =
     let v = `vbind in
     apply_lemma (mk_e_app v [t]);
     let b = intro () in
-    pack (Tv_Var (binding_to_namedv b))
+    pack (Tv_Var b)
 
 private val or_ind : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                      (p \/ q) ->
@@ -308,7 +308,7 @@ private
 let rec sk_binder' (acc:list binding) (b:binding) : Tac (list binding & binding) =
   focus (fun () ->
     try
-      apply_lemma (`(sklem0 (`#(binding_to_term b))));
+      apply_lemma (`(sklem0 (`#b)));
       if ngoals () <> 1 then fail "no";
       clear b;
       let bx = forall_intro () in

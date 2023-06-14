@@ -141,7 +141,7 @@ let repeat' #a (f: unit -> Tac a) : Tac unit =
   let _ = repeat f in ()
 
 let and_elim' (h: binding) : Tac unit =
-  and_elim (pack (Tv_Var (binding_to_namedv h)));
+  and_elim (pack (Tv_Var h));
   clear h
 
 (** Use a hypothesis at type a to satisfy a goal at type squash a *)

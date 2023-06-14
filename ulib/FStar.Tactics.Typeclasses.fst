@@ -59,7 +59,7 @@ let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
     local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail ("could not solve constraint: " ^ term_to_string g)))
 and local (seen:list term) (fuel:int) () : Tac unit =
     let bs = vars_of_env (cur_env ()) in
-    first (fun b -> trywith seen fuel (pack (Tv_Var (binding_to_namedv b)))) bs
+    first (fun (b:binding) -> trywith seen fuel (pack (Tv_Var b))) bs
 and global (seen:list term) (fuel:int) () : Tac unit =
     let cands = lookup_attr (`tcinstance) (cur_env ()) in
     first (fun fv -> trywith seen fuel (pack (Tv_FVar fv))) cands
