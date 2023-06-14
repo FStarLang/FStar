@@ -13,10 +13,6 @@ module R = Steel.ST.Reference
 
 #push-options "--using_facts_from '* ArrayTests -Steel Steel.ST.Array -FStar.Tactics -FStar.Reflection'"
 
-//inlining this leads to unresolved uvar under the quantifier
-let seq_constant_until (#t:Type) (s:Seq.seq t) (v:t) (n:nat) =
-    forall (i:nat). i < n /\ i < Seq.length s ==> Seq.index s i == v
-
 ```pulse
 fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:t)
               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == A.length a }))
@@ -24,7 +20,7 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
    ensures 
       exists (s:Seq.seq t). (
          A.pts_to a full_perm s `star`
-         pure (seq_constant_until s v (US.v l))
+         pure (s `Seq.equal` Seq.create (US.v l) v)
       )
 {
    let mut i = 0sz;
@@ -35,7 +31,7 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
       pure ((b == US.(vi <^ l)) /\
             US.v vi <= US.v l /\
             Seq.length s == A.length a /\
-            seq_constant_until s v (US.v vi))
+            (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
    )
    {
       let vi = !i; 

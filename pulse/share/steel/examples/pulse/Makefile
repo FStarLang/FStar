@@ -1,4 +1,6 @@
 all: verify
+	$(MAKE) -C bug-reports
+	$(MAKE) -C dice
 
 # assuming share/steel/examples/pulse
 STEEL_HOME ?= ../../../..
