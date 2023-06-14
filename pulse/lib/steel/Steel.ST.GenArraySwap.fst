@@ -139,16 +139,7 @@ let array_swap_inner_invariant_prop
   (idx: nat)
   (b: bool)
 : GTot prop
-=
-  array_swap_partial_invariant n l bz s0 s i /\
-  i < bz.d /\
-  bz.d < n /\
-  j <= bz.q_n - 1 /\
-  idx == Prf.iter_fun #(Prf.nat_up_to n) (Prf.jump n l) j i /\
-  (forall (j': Prf.nat_up_to bz.q_n) .
-      let idx = Prf.iter_fun #(Prf.nat_up_to n) (Prf.jump n l) j' i in
-      Seq.index s idx == Seq.index s0 (if j' < j then Prf.jump n l idx else idx)
-  ) /\
+= Prf.array_swap_inner_invariant s0 n l bz s i j idx /\
   (b == (j < bz.q_n - 1))
 
 let array_swap_outer_invariant_prop
@@ -161,13 +152,7 @@ let array_swap_outer_invariant_prop
   (i: nat)
   (b: bool)
 : GTot prop
-= array_swap_partial_invariant n l bz s0 s i /\
-  bz.d < n /\
-  (forall (j: Prf.nat_up_to bz.q_n) .
-    (i < bz.d) ==> (
-    let idx = Prf.iter_fun #(Prf.nat_up_to n) (Prf.jump n l) j i in
-    Seq.index s idx == Seq.index s0 idx
-  )) /\
+= Prf.array_swap_outer_invariant s0 n l bz s i /\
   (b == (i < bz.d))
 
 [@@__reduce__]
@@ -408,7 +393,7 @@ let impl_jump
   then idx `SZ.sub` nl
   else idx `SZ.add` l
 
-#push-options "--z3rlimit 128"
+#push-options "--z3rlimit 32"
 
 #restart-solver
 inline_for_extraction
@@ -475,10 +460,6 @@ let array_swap_outer_body
     intro_array_swap_outer_invariant pts_to n l bz s0 pi (i' `SZ.lt` d) _ _;
     noop ()
   ))
-
-#pop-options
-
-#push-options "--z3rlimit 256 --split_queries always" // WHY WHY WHY is the pattern on array_as_ring_buffer_swap SO hard to trigger?
 
 #restart-solver
 inline_for_extraction

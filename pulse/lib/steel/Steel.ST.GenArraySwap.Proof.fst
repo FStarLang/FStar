@@ -529,3 +529,35 @@ let array_as_ring_buffer_swap
   = Seq.index s idx == Seq.index s0 (jump n l idx)
   in
   jump_iter_elim n p l bz
+
+let array_swap_outer_invariant // hoisting necessary because "Let binding is effectful"
+  (#t: Type0) (s0: Seq.seq t) (n: nat) (l: nat) (bz: bezout (n) (l))
+  (s: Seq.seq t) (i: nat)
+: Tot prop
+= 0 < l /\
+  l < n /\
+  i <= bz.d /\
+  n == Seq.length s0 /\
+  n == Seq.length s /\
+  (forall (i': nat_up_to bz.d) .
+     (forall (j: nat_up_to bz.q_n) .
+        let idx = iter_fun #(nat_up_to (n)) (jump (n) (l)) j i' in
+        Seq.index s idx == Seq.index s0 (if i' < i then jump (n) (l) idx else idx)
+  ))
+
+let array_swap_inner_invariant
+  (#t: Type0) (s0: Seq.seq t) (n: nat) (l: nat) (bz: bezout (n) (l))
+  (s: Seq.seq t) (i: nat) (j: nat) (idx: nat)
+: Tot prop
+= 0 < l /\
+  l < n /\
+  n == Seq.length s0 /\
+  i < bz.d /\
+  j < bz.q_n /\
+  idx == iter_fun #(nat_up_to (n)) (jump (n) (l)) (j) (i) /\
+  n == Seq.length s /\
+  (forall (i': nat_up_to bz.d) .
+     (forall (j': nat_up_to bz.q_n) .
+        let idx = iter_fun #(nat_up_to (n)) (jump (n) (l)) j' i' in
+        Seq.index s idx == Seq.index s0 (if i' < i || (i' = i && j' < j) then jump (n) (l) idx else idx)
+  ))
