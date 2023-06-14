@@ -129,7 +129,6 @@ val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> bool -> term * 
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
 
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp * guard_t
-val coerce_views    : env -> term -> lcomp -> option (term * lcomp)
 
 //misc.
 val label: string -> Range.range -> typ -> typ

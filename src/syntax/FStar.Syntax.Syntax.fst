@@ -175,9 +175,12 @@ let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) dummyRange
 let teff : term = mk (Tm_constant Const_effect) dummyRange
+
+(* no compress call? *)
 let is_teff (t:term) = match t.n with
     | Tm_constant Const_effect -> true
     | _ -> false
+(* no compress call? *)
 let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false

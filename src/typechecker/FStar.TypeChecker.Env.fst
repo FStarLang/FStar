@@ -148,6 +148,7 @@ let initial_env deps
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;
+    intactics=false;
 
     tc_term=tc_term;
     typeof_tot_or_gtot_term=typeof_tot_or_gtot_term;

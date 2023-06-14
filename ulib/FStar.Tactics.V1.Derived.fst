@@ -534,9 +534,12 @@ let rec revert_all (bs:binders) : Tac unit =
 
 (* Some syntax utility functions *)
 let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
+
+[@@coercion]
 let binder_to_term (b : binder) : Tac term =
   let bview = inspect_binder b in
   bv_to_term bview.binder_bv
+
 let binder_sort (b : binder) : Tac typ =
   (inspect_binder b).binder_sort
 

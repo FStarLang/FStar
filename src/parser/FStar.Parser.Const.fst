@@ -464,10 +464,6 @@ let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
-(* tactic coercions: only V1 (for now?) *)
-let inspect_v1        = p2l ["FStar"; "Tactics"; "V1"; "Builtins"; "inspect"]
-let pack_v1           = p2l ["FStar"; "Tactics"; "V1"; "Builtins"; "pack"]
-let binder_to_term_v1 = p2l ["FStar"; "Tactics"; "V1"; "Derived"; "binder_to_term"]
 let term_view_lid  = p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
 
 (* tactic constants *)
