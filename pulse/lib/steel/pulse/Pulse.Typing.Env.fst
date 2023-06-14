@@ -187,4 +187,5 @@ let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   in
   let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
   FStar.Tactics.log_issues [issue];
+  T.print "About to fail ... ";
   T.fail "Pulse checker failed"

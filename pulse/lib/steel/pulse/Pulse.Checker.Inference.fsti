@@ -40,7 +40,7 @@ val apply_solution (sol:solution) (t:term)
   : term
 
 val contains_uvar (t:term)
-  : bool
+  : T.Tac bool
 
 val try_unify (g:env) (l r:term)
   : T.Tac solution

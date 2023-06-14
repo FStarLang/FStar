@@ -33,40 +33,6 @@ module R = Steel.ST.Reference
 //Also strange, if I put the [expect_failure] on it, that actually fails, saying the definition succeeded
 //so something is going wrong there too with the way the error is being reported
 // [@@expect_failure]
-// ```pulse
-// fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:t)
-//               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == A.length a }))
-//    requires (A.pts_to a full_perm s)
-//    ensures 
-//       exists (s:Seq.seq t). (
-//          A.pts_to a full_perm s `star`
-//          pure (s `Seq.equal` Seq.create (US.v l) v)
-//       )
-// {
-//    let mut i = 0sz;
-//    while (let vi = !i; US.(vi <^ l))
-//    invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
-//       A.pts_to a full_perm s `star`
-//       R.pts_to i full_perm vi `star`
-//       pure ((b == US.(vi <^ l)) /\
-//             US.v vi <= US.v l /\
-//             Seq.length s == A.length a /\
-//             (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
-//    )
-//    {
-//       let vi = !i; 
-//       (a.(vi) <- v);
-//       i := US.(vi +^ 1sz);
-//       ()
-//    };
-//    ()
-// }
-// ```
-
-//Writing it this way and hoising the forall out of the invariant works
-let seq_constant_until (#t:Type) (s:Seq.seq t) (v:t) (n:nat) =
-    forall (i:nat). i < n /\ i < Seq.length s ==> Seq.index s i == v
-
 ```pulse
 fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:t)
               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == A.length a }))
@@ -85,7 +51,7 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
       pure ((b == US.(vi <^ l)) /\
             US.v vi <= US.v l /\
             Seq.length s == A.length a /\
-            seq_constant_until s v (US.v vi))
+            (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
    )
    {
       let vi = !i; 
@@ -96,3 +62,37 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
    ()
 }
 ```
+
+// //Writing it this way and hoising the forall out of the invariant works
+// let seq_constant_until (#t:Type) (s:Seq.seq t) (v:t) (n:nat) =
+//     forall (i:nat). i < n /\ i < Seq.length s ==> Seq.index s i == v
+
+// ```pulse
+// fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:t)
+//               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == A.length a }))
+//    requires (A.pts_to a full_perm s)
+//    ensures 
+//       exists (s:Seq.seq t). (
+//          A.pts_to a full_perm s `star`
+//          pure (s `Seq.equal` Seq.create (US.v l) v)
+//       )
+// {
+//    let mut i = 0sz;
+//    while (let vi = !i; US.(vi <^ l))
+//    invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
+//       A.pts_to a full_perm s `star`
+//       R.pts_to i full_perm vi `star`
+//       pure ((b == US.(vi <^ l)) /\
+//             US.v vi <= US.v l /\
+//             Seq.length s == A.length a /\
+//             seq_constant_until s v (US.v vi))
+//    )
+//    {
+//       let vi = !i; 
+//       (a.(vi) <- v);
+//       i := US.(vi +^ 1sz);
+//       ()
+//    };
+//    ()
+// }
+// ```
