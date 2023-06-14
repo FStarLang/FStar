@@ -1458,6 +1458,8 @@ and (encode_term :
                               (uu___6.FStar_TypeChecker_Env.nosynth);
                             FStar_TypeChecker_Env.uvar_subtyping =
                               (uu___6.FStar_TypeChecker_Env.uvar_subtyping);
+                            FStar_TypeChecker_Env.intactics =
+                              (uu___6.FStar_TypeChecker_Env.intactics);
                             FStar_TypeChecker_Env.tc_term =
                               (uu___6.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

@@ -543,7 +543,7 @@ let (and_elim' :
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
                (Prims.of_int (144)) (Prims.of_int (2)) (Prims.of_int (144))
-               (Prims.of_int (48)))))
+               (Prims.of_int (28)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.PatternMatching.fst"
@@ -553,7 +553,7 @@ let (and_elim' :
          (FStar_Tactics_V2_Logic.and_elim
             (FStar_Tactics_NamedView.pack
                (FStar_Tactics_NamedView.Tv_Var
-                  (FStar_Tactics_V2_Derived.binding_to_namedv h)))))
+                  (FStar_Tactics_V2_SyntaxCoercions.binding_to_namedv h)))))
       (fun uu___ ->
          (fun uu___ -> Obj.magic (FStar_Tactics_V2_Builtins.clear h)) uu___)
 let exact_hyp :
@@ -3952,7 +3952,7 @@ let rec (hoist_and_apply :
                                                              head rest
                                                              (((FStar_Tactics_NamedView.pack
                                                                   (FStar_Tactics_NamedView.Tv_Var
-                                                                    (FStar_Tactics_V2_Derived.binder_to_namedv
+                                                                    (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv
                                                                     nb))),
                                                                 FStar_Reflection_V2_Data.Q_Explicit)
                                                              :: hoisted_args)))
@@ -4085,7 +4085,7 @@ let (specialize_abspat_continuation :
                     (fun uu___ ->
                        FStar_Tactics_NamedView.pack
                          (FStar_Tactics_NamedView.Tv_Var
-                            (FStar_Tactics_V2_Derived.binder_to_namedv
+                            (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv
                                solution_binder))))
                  (fun uu___ ->
                     (fun solution_term ->

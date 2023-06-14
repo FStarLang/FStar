@@ -471,12 +471,6 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
         FStar_Ident.string_of_id uu___1 in
       FStar_Compiler_Util.char_at uu___ Prims.int_zero in
     FStar_Compiler_Util.is_upper c
-let (inspect_v1 : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "V1"; "Builtins"; "inspect"]
-let (pack_v1 : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "V1"; "Builtins"; "pack"]
-let (binder_to_term_v1 : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "V1"; "Derived"; "binder_to_term"]
 let (term_view_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
 let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =

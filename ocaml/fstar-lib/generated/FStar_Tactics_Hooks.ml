@@ -895,6 +895,8 @@ let rec (traverse_for_spinoff :
                                (env2.FStar_TypeChecker_Env.nosynth);
                              FStar_TypeChecker_Env.uvar_subtyping =
                                (env2.FStar_TypeChecker_Env.uvar_subtyping);
+                             FStar_TypeChecker_Env.intactics =
+                               (env2.FStar_TypeChecker_Env.intactics);
                              FStar_TypeChecker_Env.tc_term =
                                (env2.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -1847,6 +1849,8 @@ let (splice :
                                        (env.FStar_TypeChecker_Env.nosynth);
                                      FStar_TypeChecker_Env.uvar_subtyping =
                                        (env.FStar_TypeChecker_Env.uvar_subtyping);
+                                     FStar_TypeChecker_Env.intactics =
+                                       (env.FStar_TypeChecker_Env.intactics);
                                      FStar_TypeChecker_Env.tc_term =
                                        (env.FStar_TypeChecker_Env.tc_term);
                                      FStar_TypeChecker_Env.typeof_tot_or_gtot_term

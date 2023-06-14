@@ -8929,6 +8929,8 @@ let (eta_expand :
                                     (env1.FStar_TypeChecker_Env.nosynth);
                                   FStar_TypeChecker_Env.uvar_subtyping =
                                     (env1.FStar_TypeChecker_Env.uvar_subtyping);
+                                  FStar_TypeChecker_Env.intactics =
+                                    (env1.FStar_TypeChecker_Env.intactics);
                                   FStar_TypeChecker_Env.tc_term =
                                     (env1.FStar_TypeChecker_Env.tc_term);
                                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -9041,6 +9043,8 @@ let (eta_expand :
                             (env1.FStar_TypeChecker_Env.nosynth);
                           FStar_TypeChecker_Env.uvar_subtyping =
                             (env1.FStar_TypeChecker_Env.uvar_subtyping);
+                          FStar_TypeChecker_Env.intactics =
+                            (env1.FStar_TypeChecker_Env.intactics);
                           FStar_TypeChecker_Env.tc_term =
                             (env1.FStar_TypeChecker_Env.tc_term);
                           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
