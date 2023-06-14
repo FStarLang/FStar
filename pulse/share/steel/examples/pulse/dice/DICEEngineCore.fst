@@ -30,6 +30,11 @@ val is_hashable_len (_:US.t) : prop
 
 let hashable_len = v:US.t{ is_hashable_len v }
 
+assume
+val is_signable_len (_:US.t) : prop
+
+let signable_len = v:US.t{ is_signable_len v }
+
 // assume
 // val is_key_len (_:US.t) : prop
 
@@ -70,6 +75,25 @@ val hacl_hmac (alg:alg_t)
        A.pts_to msg pmsg msg_seq `star`
        A.pts_to dst full_perm (spec_hmac alg key_seq msg_seq))
 
+assume
+val ed25519_verify 
+  (pubk:A.larray U8.t 32)
+  (hdr:A.array U8.t)
+  (hdr_len:signable_len { US.v hdr_len == A.length hdr })
+  (sig:A.larray U8.t 64)
+  (#ppubk #phdr #psig:perm)
+  (#pubk_seq:Ghost.erased (Seq.seq U8.t))
+  (#hdr_seq:Ghost.erased (Seq.seq U8.t))
+  (#sig_seq:Ghost.erased (Seq.seq U8.t))
+  : stt bool
+    (A.pts_to pubk ppubk pubk_seq `star`
+     A.pts_to hdr phdr hdr_seq `star`
+     A.pts_to sig psig sig_seq)
+    (fun _ ->
+      A.pts_to pubk ppubk pubk_seq `star`
+      A.pts_to hdr phdr hdr_seq `star`
+      A.pts_to sig psig sig_seq)
+
 // DICE constants
 assume
 val uds_is_enabled : vprop
@@ -92,23 +116,34 @@ let cdi_t = A.larray U8.t (US.v (digest_len dice_hash_alg))
 
 noeq
 type l0_image_t = {
-//   l0_image_header_size : signable_len;
-//   l0_image_header      : A.larray U8.t (v l0_image_header_size);
-//   l0_image_header_sig  : mbuffer byte_sec 64;
-   l0_binary_size : hashable_len;
-   l0_binary      : A.larray U8.t (US.v l0_binary_size);
-//   l0_binary_hash       : mbuffer byte_sec (v digest_len);
-//   l0_image_auth_pubkey : b:mbuffer byte_sec 32
+  l0_image_header_size : signable_len;
+  l0_image_header      : A.larray U8.t (US.v l0_image_header_size);
+  l0_image_header_sig  : A.larray U8.t 64; (* should be secret bytes *)
+  l0_binary_size       : hashable_len;
+  l0_binary            : A.larray U8.t (US.v l0_binary_size);
+  l0_binary_hash       : A.larray U8.t (US.v dice_digest_len); (* should be secret bytes, digest len should be poly in alg *)
+  l0_image_auth_pubkey : A.larray U8.t 32; (* should be secret bytes *)
 }
 
 //[@@erasable] Could we make l0_repr erasable from the get go?
 type l0_repr = {
-    l0_binary      : Seq.seq U8.t;
+    l0_image_header      : Seq.seq U8.t;
+    l0_image_header_sig  : Seq.seq U8.t;
+    l0_binary            : Seq.seq U8.t;
+    l0_binary_hash       : Seq.seq U8.t;
+    l0_image_auth_pubkey : Seq.seq U8.t;
 }
 
 // Maybe a version that doesn't give us full permission to l0?
 let l0_perm (l0:l0_image_t) (vl0: l0_repr) : vprop = 
-    A.pts_to l0.l0_binary full_perm vl0.l0_binary
+  A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+  A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+  A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+  A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+  A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey
+
+// let get_l0_binary_perm (l0:l0_image_t) (vl0: l0_repr)
+//   = l0_perm l0 vl0 ==> A.pts_to l0.l0_binary full_perm vl0.l0_binary
 
 assume
 val uds_bytes : v:(Ghost.erased (Seq.seq U8.t)){ Seq.length v = US.v uds_len }
@@ -118,12 +153,6 @@ val stack_is_erased : vprop
 
 assume
 val l0_is_authentic (vl0:l0_repr) : prop
-
-// assume 
-// val cdi_functional_correctness 
-//   (cdi:cdi_t) 
-//   (l0:l0_image_t)
-//   : prop
 
 let cdi_functional_correctness
   (c0:Seq.seq U8.t)
@@ -140,7 +169,40 @@ fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
         pure (b ==> l0_is_authentic vl0)
     )
 {
-  admit()
+  rewrite (l0_perm l0 vl0)
+    as (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+      A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+      A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+      A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+      A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey);
+
+  let valid_header_sig = ed25519_verify
+                          l0.l0_image_auth_pubkey
+                          l0.l0_image_header l0.l0_image_header_size
+                          l0.l0_image_header_sig;
+  
+  let mut b = false;
+  // if valid_header_sig
+  // {
+    let hash_buf = new_array 0uy dice_digest_len;
+    hacl_hash dice_hash_alg l0.l0_binary l0.l0_binary_size hash_buf;
+    // if (hash_buf == l0.l0_binary_hash)
+    // {
+      // b := true;
+      l0_is_authentic vl0;
+    // };
+    free_array hash_buf;
+  // };
+
+  rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+      A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+      A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+      A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+      A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
+    as (l0_perm l0 vl0);
+
+  let vb = !b;
+  vb
 }
 ```
 
@@ -249,9 +311,17 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t)
     //It would be nice if it could say what it tried to match and why it didn't actually match
     //the problem was that an implicit argument of reveal was in one case an seq and another an lseq
     rewrite (l0_perm l0 vl0)
-         as (A.pts_to l0.l0_binary full_perm vl0.l0_binary);
+         as (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+            A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+            A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+            A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+            A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey);
     hacl_hash dice_hash_alg l0.l0_binary l0.l0_binary_size l0_digest;
-    rewrite (A.pts_to l0.l0_binary full_perm vl0.l0_binary)
+    rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+            A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+            A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+            A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+            A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
          as (l0_perm l0 vl0);
 
     dice_digest_len_is_hashable;
