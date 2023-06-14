@@ -360,8 +360,9 @@ val op_Array_Assignment
 val free_array
       (#elt: Type)
       (a: A.array elt)
+      (#s: Ghost.erased (Seq.seq elt))
 : stt unit
-    (exists_ (A.pts_to a full_perm) `star` pure (A.is_full_array a))
+    (A.pts_to a full_perm s `star` pure (A.is_full_array a))
     (fun _ -> emp)
 
 (***** begin spinlock *****)

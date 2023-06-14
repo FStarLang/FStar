@@ -10,15 +10,6 @@ open Pulse.Steel.Wrapper
 module A = Steel.ST.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-// module ST = FStar.HyperStack.ST
-
-// unfold let all_heap_buffers_except_cdi_and_ghost_state_remain_same (h0 h1:HS.mem) =
-//   let s = st () in
-//   ∀ (a:Type0) (b:B.buffer a).
-//     (ST.is_eternal_region (B.frameOf b) ∧
-//      B.disjoint b s.ghost_state ∧
-//      B.disjoint b s.cdi ∧
-//      B.live h0 b) ⟹ (B.as_seq h0 b == B.as_seq h1 b ∧ B.live h1 b)
 
 (* a tiny model of HACL* hashes *)
 assume
@@ -148,21 +139,23 @@ fn disable_uds (_:unit)
 
 assume
 val read_uds (uds:A.larray U8.t (US.v uds_len))
-    : stt unit 
-      (exists_ (fun s -> A.pts_to uds full_perm s) `star` uds_is_enabled)
+             (#s:Ghost.erased (Seq.seq U8.t))
+  : stt unit 
+      (A.pts_to uds full_perm s `star` uds_is_enabled)
       (fun _ -> A.pts_to uds full_perm uds_bytes `star` uds_is_enabled)
 
 (* Pulse desugaring seems to allow the val to be in scope, even though it is not assumed *)
 (* Also the polymorphic version doesn't work *)
-val free_array
-    //   (#elt: Type)
+val free_array_u8
       (a: A.array U8.t)
 : stt unit
     (exists_ (fun (x:Seq.seq U8.t) -> A.pts_to a full_perm x) `star` pure (A.is_full_array a))
     (fun _ -> emp)
 
 ```pulse
-fn compute_cdi (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr) (#c0:Ghost.erased (Seq.seq U8.t))
+fn compute_cdi (c:cdi_t) (l0:l0_image_t) 
+               (#vl0:Ghost.erased l0_repr)
+               (#c0:Ghost.erased (Seq.seq U8.t))
  requires (
     uds_is_enabled `star`
     A.pts_to c full_perm c0 `star`
@@ -179,7 +172,7 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr) (#c0:Ghost.
     let l0_digest = new_array 0uy (digest_len dice_hash_alg);
     read_uds uds;
     hacl_hash dice_hash_alg uds uds_len uds_digest;
-    //Mysterious error when trying to instantiate an implicit argument
+    //Mysterious error above when trying to instantiate an implicit argument
     //It would be nice if it could say what it tried to match and why it didn't actually match
     //the problem was that an implicit argument of reveal was in one case an seq and another an lseq
     rewrite (l0_perm l0 vl0)
@@ -203,41 +196,11 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr) (#c0:Ghost.
 }
 ```
 
-//  = recall_st_liveness st;
-
-//     let h0 = get () in
-//     HST.push_frame ();
-
-//     let uds = B.alloca (u8 0x00) HW.uds_len in
-
-//     let h1 = get () in
-//     frame_ghost_state B.loc_none h0 h1;
-
-//     read_uds uds;
-
-//     let uds_digest = B.alloca (u8 0x00) digest_len in
-//     let l0_digest = B.alloca (u8 0x00) digest_len in
-
-//     dice_hash alg uds uds_len uds_digest;
-//     dice_hash alg st.l0.l0_binary st.l0.l0_binary_size l0_digest;
-
-//     (* Prf *) lemma_hmac_preconditions ();
-
-//     dice_hmac alg
-//       (* dst *) st.cdi
-//       (* key *) uds_digest digest_len
-//       (* msg *) l0_digest digest_len;
-
-//     zeroize uds_len uds;
-
-//     HST.pop_frame ()
-
-
-
-// #push-options "--fuel 0 --ifuel 1"
 ```pulse
-fn dice_main (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
-  requires exists (c0:Seq.seq U8.t). (
+fn dice_main (c:cdi_t) (l0:l0_image_t)
+             (#vl0:Ghost.erased l0_repr)
+             (#c0:Ghost.erased (Seq.seq U8.t))
+  requires (
     uds_is_enabled `star`
     A.pts_to c full_perm c0 `star`
     l0_perm l0 vl0
