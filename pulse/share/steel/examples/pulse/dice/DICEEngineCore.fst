@@ -272,11 +272,8 @@ fn compute_cdi_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
     pure (cdi_functional_correctness c1 vl0)
  )
 {
-    // admit() // can we have syntax for admit?
     disable_uds();
-    // NB: let _ = ... does not work; you need to name the variable
-    ( (assume false)  <: (squash (false)));
-    ()
+    admit() //NB: let _ does not work
 }
 ```
 
