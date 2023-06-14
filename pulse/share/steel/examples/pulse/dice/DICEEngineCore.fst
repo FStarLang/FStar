@@ -15,7 +15,6 @@ module U8 = FStar.UInt8
 assume
 val alg_t : Type0
 
-
 assume
 val digest_len (_:alg_t) : US.t
 
@@ -23,9 +22,17 @@ assume
 val spec_hash (a:alg_t) (s:Seq.seq U8.t) : Seq.lseq U8.t (US.v (digest_len a))
 
 assume
+val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : Seq.lseq U8.t (US.v (digest_len a))
+
+assume
 val is_hashable_len (_:US.t) : prop
 
 let hashable_len = v:US.t{ is_hashable_len v }
+
+// assume
+// val is_key_len (_:US.t) : prop
+
+let key_len = v:US.t{ is_hashable_len v }
 
 assume
 val hacl_hash (alg:alg_t)
@@ -42,6 +49,25 @@ val hacl_hash (alg:alg_t)
        A.pts_to src psrc src_seq `star`
        A.pts_to dst full_perm (spec_hash alg src_seq))
 
+assume
+val hacl_hmac (alg:alg_t)
+              (dst:A.larray U8.t (US.v (digest_len alg)))
+              (key:A.array U8.t)
+              (key_len: key_len { US.v key_len == A.length key })
+              (msg:A.array U8.t)
+              (msg_len: hashable_len { US.v msg_len == A.length msg })
+              (#pkey #pmsg:perm)
+              (#dst_seq:Ghost.erased (Seq.seq U8.t))
+              (#key_seq:Ghost.erased (Seq.seq U8.t))
+              (#msg_seq:Ghost.erased (Seq.seq U8.t))
+  : stt unit
+    (A.pts_to dst full_perm dst_seq `star`
+     A.pts_to key pkey key_seq `star`
+     A.pts_to msg pmsg msg_seq)
+    (fun _ ->
+       A.pts_to key pkey key_seq `star`
+       A.pts_to msg pmsg msg_seq `star`
+       A.pts_to dst full_perm (spec_hmac alg key_seq msg_seq))
 
 // DICE constants
 assume
@@ -53,6 +79,11 @@ val uds_len : hashable_len
 assume
 val dice_hash_alg : alg_t
 
+let dice_digest_len : US.t = (digest_len dice_hash_alg)
+
+assume 
+val dice_digest_len_is_hashable 
+  : is_hashable_len dice_digest_len
 
 type dice_return_code = | DICE_SUCCESS | DICE_ERROR
 
@@ -168,8 +199,8 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t)
  )
 {
     let uds = new_array 0uy uds_len;
-    let uds_digest = new_array 0uy (digest_len dice_hash_alg);
-    let l0_digest = new_array 0uy (digest_len dice_hash_alg);
+    let uds_digest = new_array 0uy dice_digest_len;
+    let l0_digest = new_array 0uy dice_digest_len;
     read_uds uds;
     hacl_hash dice_hash_alg uds uds_len uds_digest;
     //Mysterious error above when trying to instantiate an implicit argument
@@ -180,10 +211,12 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t)
     hacl_hash dice_hash_alg l0.l0_binary l0.l0_binary_size l0_digest;
     rewrite (A.pts_to l0.l0_binary full_perm vl0.l0_binary)
          as (l0_perm l0 vl0);
-    // dice_hmac alg
-    //   (* dst *) st.cdi
-    //   (* key *) uds_digest digest_len
-    //   (* msg *) l0_digest digest_len;
+
+    dice_digest_len_is_hashable;
+
+    hacl_hmac dice_hash_alg c 
+      uds_digest dice_digest_len
+      l0_digest dice_digest_len;
 
     // zeroize uds_len uds;
 
