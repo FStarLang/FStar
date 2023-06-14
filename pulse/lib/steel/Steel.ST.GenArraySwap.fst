@@ -170,42 +170,6 @@ let array_swap_outer_invariant_prop
   )) /\
   (b == (i < bz.d))
 
-#restart-solver
-let array_swap_outer_invariant_prop_end
-  (#t: Type)
-  (n: nat)
-  (l: nat)
-  (bz: Prf.bezout n l)
-  (s0: Ghost.erased (Seq.seq t))
-  (s: Ghost.erased (Seq.seq t))
-  (i: nat)
-  (b: bool)
-: Lemma
-  (requires (
-    array_swap_outer_invariant_prop n l bz s0 s i b /\
-    b == false
-  ))
-  (ensures (
-    array_swap_outer_invariant_prop n l bz s0 s i false /\
-    Ghost.reveal s `Seq.equal` (Seq.slice s0 l n `Seq.append` Seq.slice s0 0 l)
-  ))
-  [SMTPat (array_swap_outer_invariant_prop n l bz s0 s i b)]
-= Classical.forall_intro (Prf.jump_if n l ());
-  let p
-    (idx: Prf.nat_up_to n)
-  : Tot prop
-  = Seq.index s idx == Seq.index s0 (Prf.jump n l idx)
-  in
-  assert (i == bz.d);
-   assert (forall (i': Prf.nat_up_to bz.d) .
-    (forall (j: Prf.nat_up_to bz.q_n) .
-      (i' < i) ==> (
-      let idx = Prf.iter_fun #(Prf.nat_up_to n) (Prf.jump n l) j i' in
-      Seq.index s idx == Seq.index s0 (Prf.jump n l idx)
-  )));
-  assert (forall (i: Prf.nat_up_to bz.d) (k: Prf.nat_up_to bz.q_n) . p (Prf.iter_fun #(Prf.nat_up_to n) (Prf.jump n l) k i));
-  Prf.jump_iter_elim n p l bz
-
 [@@__reduce__]
 let array_swap_outer_invariant_body0
   (#t: Type)
@@ -444,19 +408,6 @@ let impl_jump
   then idx `SZ.sub` nl
   else idx `SZ.add` l
 
-let array_swap_aux_post
-  (#t: Type)
-  (s0: Ghost.erased (Seq.seq t))
-  (n: SZ.t)
-  (l: SZ.t)
-  (s: Ghost.erased (Seq.seq t))
-: Tot prop
-=
-      SZ.v n == Seq.length s0 /\
-      SZ.v l > 0 /\
-      SZ.v l < SZ.v n /\
-      Ghost.reveal s == Seq.slice s0 (SZ.v l) (SZ.v n) `Seq.append` Seq.slice s0 0 (SZ.v l)
-
 #push-options "--z3rlimit 128"
 
 #restart-solver
@@ -527,7 +478,7 @@ let array_swap_outer_body
 
 #pop-options
 
-#push-options "--z3rlimit 128 --split_queries always" // WHY WHY WHY is the pattern on array_swap_outer_invariant_prop_end SO hard to trigger?
+#push-options "--z3rlimit 256 --split_queries always" // WHY WHY WHY is the pattern on array_as_ring_buffer_swap SO hard to trigger?
 
 #restart-solver
 inline_for_extraction
@@ -547,11 +498,11 @@ let array_swap_aux
       SZ.v l > 0 /\
       SZ.v l < SZ.v n
     )
-    (fun s -> array_swap_aux_post s0 n l s)
+    (fun s -> Prf.array_swap_post s0 (SZ.v n) (SZ.v l) s)
 = let bz = Prf.mk_bezout (SZ.v n) (SZ.v l) in
   let d = gcd n l in
   let q = n `SZ.div` d in
-  let s = R.with_local 0sz (fun pi ->
+  let s = R.with_local #_ 0sz #_ #(Ghost.erased (Seq.seq t)) #(fun s -> pts_to s `star` pure (Prf.array_swap_post s0 (SZ.v n) (SZ.v l) s)) (fun pi ->
     intro_array_swap_outer_invariant pts_to n l bz s0 pi true _ _;
     Steel.ST.Loops.while_loop
       (array_swap_outer_invariant pts_to n l bz s0 pi)
@@ -567,7 +518,7 @@ let array_swap_aux
       (array_swap_outer_body index upd s0 n l bz d q pi ());
     let _ = elim_array_swap_outer_invariant pts_to n l bz s0 pi false in
     return _
-  ) <: STT (Ghost.erased (Seq.seq t)) _ (fun s -> pts_to s `star` pure (array_swap_aux_post s0 n l s))
+  )
   in
   elim_pure _;
   return s

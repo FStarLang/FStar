@@ -484,3 +484,48 @@ let jump_jump_iter_pred_q
   ))
   [SMTPat (jump n l (iter_fun (jump n l) (b.q_n - 1) x))]
 = jump_iter_q n l b x
+
+let array_swap_post
+  (#t: Type)
+  (s0: Seq.seq t)
+  (n: nat)
+  (l: nat)
+  (s: Seq.seq t)
+: Tot prop
+=
+    n == Seq.length s0 /\
+    0 <= l /\
+    l <= n /\
+    s `Seq.equal` (Seq.slice s0 l n `Seq.append` Seq.slice s0 0 l)
+
+let array_as_ring_buffer_swap
+  (#t: Type)
+  (n: nat)
+  (l: nat)
+  (bz: bezout n l)
+  (s0: Seq.seq t)
+  (s: Seq.seq t)
+: Lemma
+  (requires (
+    n == Seq.length s0 /\
+    n == Seq.length s /\
+    0 < l /\
+    l < n /\
+    (forall (i': nat_up_to bz.d) .
+      (forall (j: nat_up_to bz.q_n) .
+        (i' < bz.d) ==> (
+        let idx = iter_fun #(nat_up_to n) (jump n l) j i' in
+        Seq.index s idx == Seq.index s0 (jump n l idx)
+    )))
+  ))
+  (ensures (
+    array_swap_post s0 n l s
+  ))
+  [SMTPat (array_swap_post s0 n l s); SMTPat (bezout_prop n l bz)]
+= Classical.forall_intro (jump_if n l ());
+  let p
+    (idx: nat_up_to n)
+  : Tot prop
+  = Seq.index s idx == Seq.index s0 (jump n l idx)
+  in
+  jump_iter_elim n p l bz
