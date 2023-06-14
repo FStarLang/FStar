@@ -641,13 +641,13 @@ let close_view (tv : named_term_view) : Tot term_view =
     in
     RD.Tv_Match scrutinee ret brs
 
-[@@plugin]
+[@@plugin; coercion]
 let inspect (t:term) : Tac named_term_view =
   let t = compress t in
   let tv = inspect_ln t in
   open_view tv
 
-[@@plugin]
+[@@plugin; coercion]
 let pack (tv:named_term_view) : Tot term =
   let tv = close_view tv in
   pack_ln tv
