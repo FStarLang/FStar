@@ -20,6 +20,7 @@ open FStar.Reflection.V2.Formula
 open FStar.Tactics.Effect
 open FStar.Tactics.V2.Builtins
 open FStar.Tactics.V2.Derived
+open FStar.Tactics.V2.SyntaxCoercions
 open FStar.Tactics.NamedView
 open FStar.Tactics.Util
 

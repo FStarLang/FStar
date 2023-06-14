@@ -21,6 +21,7 @@ open FStar.Tactics.Effect
 open FStar.Tactics.V2.Builtins
 open FStar.Tactics.V2.SyntaxHelpers
 open FStar.Tactics.V2.Derived
+open FStar.Tactics.V2.SyntaxCoercions
 open FStar.Tactics.NamedView
 
 module L = FStar.List.Tot.Base

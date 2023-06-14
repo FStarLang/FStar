@@ -28,6 +28,7 @@ include FStar.Tactics.V2.Builtins
 include FStar.Tactics.V2.Derived
 include FStar.Tactics.V2.SyntaxHelpers
 include FStar.Tactics.V2.Logic
+include FStar.Tactics.V2.SyntaxCoercions
 include FStar.Tactics.Util
 include FStar.Tactics.Print
 include FStar.Tactics.Visit

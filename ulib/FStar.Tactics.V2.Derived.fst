@@ -25,6 +25,7 @@ open FStar.Tactics.Util
 open FStar.Tactics.V2.SyntaxHelpers
 open FStar.VConfig
 open FStar.Tactics.NamedView
+open FStar.Tactics.V2.SyntaxCoercions
 
 module L = FStar.List.Tot.Base
 module V = FStar.Tactics.Visit
@@ -565,29 +566,6 @@ let rec revert_all (bs:list binding) : Tac unit =
     | [] -> ()
     | _::tl -> revert ();
              revert_all tl
-
-let namedv_to_term (x : namedv) : Tot term =
-  pack (Tv_Var x)
-
-let binder_to_namedv (b : binder) : Tot namedv =
-  pack_namedv {
-    ppname = b.ppname;
-    uniq   = b.uniq;
-    sort   = seal b.sort;
-  }
-
-let binder_to_term (b : binder) : Tot term =
-  pack (Tv_Var (binder_to_namedv b))
-
-let binding_to_namedv (b : binding) : Tot namedv =
-  pack_namedv {
-    ppname = b.ppname;
-    sort   = seal b.sort;
-    uniq   = b.uniq
-  }
-
-let binding_to_term (x : binding) : Tot term =
-  namedv_to_term (binding_to_namedv x)
 
 let binder_sort (b : binder) : Tot typ = b.sort
 

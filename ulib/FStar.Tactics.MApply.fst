@@ -8,6 +8,7 @@ open FStar.Tactics.V2.Builtins
 open FStar.Tactics.NamedView
 open FStar.Tactics.V2.SyntaxHelpers
 open FStar.Tactics.V2.Derived
+open FStar.Tactics.V2.SyntaxCoercions
 
 open FStar.Tactics.Typeclasses
 
