@@ -33,12 +33,13 @@ let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
 //   while (let vi = !i; let v1 = a1.(vi); let v2 = a2.(vi); (US.(vi <^ l) && v1 = v2))
 //   invariant b. exists (vi:US.t). ( 
 //     R.pts_to i full_perm vi `star`
-//     A.pts_to a1 #p1 s1 `star`
-//     A.pts_to a2 #p2 s2 `star`
+//     A.pts_to a1 p1 s1 `star`
+//     A.pts_to a2 p2 s2 `star`
 //     pure (
-//       (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi)) /\
+//       (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
 //       US.v vi <= US.v l /\
-//       (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)))
+//       (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
+//     )
 //   )
 //   {
 //     let vi = !i; 
