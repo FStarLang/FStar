@@ -2,7 +2,6 @@ module Q
 
 open FStar.Ghost
 open FStar.Tactics
-open FStar.Tactics.V2.Coercions
 
 let test0 (b:bool) : prop = b
 
