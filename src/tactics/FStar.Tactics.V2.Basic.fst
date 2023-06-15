@@ -2087,7 +2087,18 @@ let dbg_refl (g:env) (msg:unit -> string) =
 let issues = list Errors.issue
 let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a & issues) =
   let tx = UF.new_transaction () in
-  let errs, r = Errors.catch_errors_and_ignore_rest f in
+  let errs, r = 
+    try Errors.catch_errors_and_ignore_rest f
+    with exn -> //catch everything
+      let issue = FStar.Errors.({
+        issue_msg = BU.print_exn exn;
+        issue_level = EError;
+        issue_range = None;
+        issue_number = (Some 17);
+        issue_ctx = get_ctx ()
+      }) in
+      [issue], None
+  in
   UF.rollback tx;
   if List.length errs > 0
   then ret (None, errs)
