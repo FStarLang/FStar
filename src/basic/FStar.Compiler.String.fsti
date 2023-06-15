@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.String
+module FStar.Compiler.String
 
 open FStar.Compiler.Effect
 open FStar.Char
@@ -31,6 +31,8 @@ val length:  string -> Tot nat
 val lowercase: string -> Tot string
 val uppercase: string -> Tot string
 val escaped: string -> Tot string
+
+val string_of_char : char -> Tot string
 
 (* may fail with index out of bounds *)
 val substring: string -> start:int -> len:int -> string

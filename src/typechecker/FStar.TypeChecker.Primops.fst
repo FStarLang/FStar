@@ -509,12 +509,12 @@ let built_in_primitive_steps_list : list primitive_step =
                    (fun (x:arg) -> arg_as_int x <: option Z.t)
                    (fun (x:arg) -> arg_as_char x <: option char)
                    (fun (r:Range.range) (s:string) -> embed_simple EMB.e_string r s)
-                   (fun (r:Range.range) _us (x:BigInt.t) (y:char) -> Some (FStar.String.make (BigInt.to_int_fs x) y)),
+                   (fun (r:Range.range) _us (x:BigInt.t) (y:char) -> Some (String.make (BigInt.to_int_fs x) y)),
              NBETerm.mixed_binary_op
                    NBETerm.arg_as_int
                    NBETerm.arg_as_char
                    (NBETerm.embed NBETerm.e_string bogus_cbs)
-                   (fun _us (x:BigInt.t) (y:char) -> Some (FStar.String.make (BigInt.to_int_fs x) y)));
+                   (fun _us (x:BigInt.t) (y:char) -> Some (String.make (BigInt.to_int_fs x) y)));
          (PC.string_split_lid,
              2,
              0,

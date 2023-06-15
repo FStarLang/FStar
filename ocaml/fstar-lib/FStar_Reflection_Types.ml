@@ -1,5 +1,7 @@
 open FStar_All
 
+(* TODO: make this an F* module, no need to drop to OCaml for this *)
+
 type binder  = FStar_Syntax_Syntax.binder
 type bv      = FStar_Syntax_Syntax.bv
 type namedv  = bv

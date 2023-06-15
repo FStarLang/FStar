@@ -36,9 +36,9 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 # TODO: Do we really need this anymore? Which (implementation) modules
 # from src/basic are *not* extracted?
 EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Thunk		\
-		FStar.VConfig FStar.Options FStar.Ident FStar.Errors FStar.Errors.Codes \
-		FStar.Errors.Msg FStar.Errors.Raise FStar.Const	\
-		FStar.Order FStar.Dependencies		\
+		FStar.VConfig FStar.Options FStar.Ident FStar.Errors FStar.Errors.Codes	\
+		FStar.Errors.Msg FStar.Errors.Raise FStar.Const				\
+		FStar.Compiler.Order FStar.Order FStar.Dependencies			\
 		FStar.Interactive.CompletionTable			\
 		FStar.Interactive.JsonHelper FStar.Interactive.QueryHelper \
 		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\

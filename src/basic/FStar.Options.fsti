@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.Options
+open FStar.All
 open FStar.Compiler.Effect
 open FStar.Getopt
 open FStar.BaseTypes

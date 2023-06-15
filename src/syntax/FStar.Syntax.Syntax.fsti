@@ -26,6 +26,7 @@ open FStar.Compiler.Dyn
 open FStar.Const
 module O = FStar.Options
 open FStar.VConfig
+open FStar.Class.Printable
 
 (* Objects with metadata *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]

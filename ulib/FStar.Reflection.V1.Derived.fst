@@ -15,10 +15,10 @@
 *)
 module FStar.Reflection.V1.Derived
 
-open FStar.Reflection.Types
+open FStar.Stubs.Reflection.Types
 open FStar.Reflection.Const
-open FStar.Reflection.V1.Builtins
-open FStar.Reflection.V1.Data
+open FStar.Stubs.Reflection.V1.Builtins
+open FStar.Stubs.Reflection.V1.Data
 open FStar.Order
 open FStar.VConfig
 

@@ -13,12 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Reflection.V2.Builtins
+module FStar.Stubs.Reflection.V2.Builtins
 
 open FStar.Order
-open FStar.Reflection.Types
-open FStar.Reflection.V2.Data
+open FStar.Stubs.Syntax.Syntax
 open FStar.VConfig
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Reflection.V2.Data
 
 (*** Views ***)
 

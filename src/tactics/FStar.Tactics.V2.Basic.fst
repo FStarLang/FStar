@@ -58,6 +58,11 @@ module Z      = FStar.BigInt
 module Core   = FStar.TypeChecker.Core
 module PO     = FStar.TypeChecker.Primops
 
+(* Internal, repeated from V2 too. Could be in Types, but that
+constrains dependencies and F* claims a cycle. *)
+let get_phi (g:goal) : option term = U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
+let is_irrelevant (g:goal) : bool = Option.isSome (get_phi g)
+
 let compress (t:term) : tac term =
   idtac ;!
   ret (SS.compress t)

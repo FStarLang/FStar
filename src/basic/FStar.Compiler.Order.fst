@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module FStar.Order
+module FStar.Compiler.Order
 open FStar.Compiler.Effect
 module List = FStar.Compiler.List
 

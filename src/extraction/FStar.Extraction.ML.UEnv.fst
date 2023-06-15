@@ -271,7 +271,9 @@ let lookup_record_field_name g (type_name, fn) =
     let key = Ident.lid_of_ids (ids_of_lid type_name @ [fn]) in
     match BU.psmap_try_find g.mlpath_of_fieldname (string_of_lid key) with
     | None -> failwith ("Field name not found: " ^ string_of_lid key)
-    | Some mlp -> mlp
+    | Some mlp -> 
+      let ns, id = mlp in
+      List.filter (fun s -> s <> "Stubs") ns, id
 
 (**** Naming conventions and freshness (internal) *)
 

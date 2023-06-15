@@ -17,7 +17,6 @@ module FStar.Tactics.NamedView
 
 open FStar.Tactics.Effect
 open FStar.Reflection.V2
-open FStar.Reflection.V2.Data
 module R = FStar.Reflection.V2
 
 (* Re export the syntax types. Expose variables as their views, users do

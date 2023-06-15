@@ -14,15 +14,16 @@
    limitations under the License.
 *)
 module FStar.Options
-open FStar.Compiler
-open FStar.Compiler.List
-open FStar.Pervasives
-open FStar.String
-open FStar.Compiler.Effect
+
 open FStar
+open FStar.BaseTypes
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.String
 open FStar.Compiler.Util
 open FStar.Getopt
-open FStar.BaseTypes
+open FStar.Pervasives
 open FStar.VConfig
 
 module Option = FStar.Compiler.Option
@@ -2217,11 +2218,11 @@ let ext_getv (k:string) : string =
 (* Get a list of all KV pairs that "begin" with k, considered
 as a namespace. *)
 let ext_getns (ns:string) : list (string & string) =
-  let is_prefix s1 s2 =
-    let open FStar.String in
+  let is_prefix s1 s2 : ML bool =
     let l1 = length s1 in
     let l2 = length s2 in
-    l2 >= l1 && substring s2 0 l1 = s1
+    l2 >= l1 &&
+    substring s2 0 l1 = s1
   in
   let exts = all_ext_options () in
   exts |>

@@ -4,7 +4,7 @@ open FStar.Reflection.V2
 open FStar.Reflection.V2.Formula
 
 open FStar.Tactics.Effect
-open FStar.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Tactics.NamedView
 open FStar.Tactics.V2.SyntaxHelpers
 open FStar.Tactics.V2.Derived

@@ -1,25 +1,26 @@
 module FStar.TypeChecker.Cfg
+
+open FStar
+open FStar.Char
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.List
-open FStar
-open FStar.Compiler
-open FStar.String
+open FStar.Compiler.String
 open FStar.Const
-open FStar.Char
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 
-module S  = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module BU = FStar.Compiler.Util
-module FC = FStar.Const
-module PC = FStar.Parser.Const
-module U  = FStar.Syntax.Util
-module I  = FStar.Ident
+module S   = FStar.Syntax.Syntax
+module SS  = FStar.Syntax.Subst
+module BU  = FStar.Compiler.Util
+module FC  = FStar.Const
+module PC  = FStar.Parser.Const
+module U   = FStar.Syntax.Util
+module I   = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
-module Z = FStar.BigInt
+module Z   = FStar.BigInt
 module NBE = FStar.TypeChecker.NBETerm
 
 friend FStar.Pervasives (* to expose norm_step *)

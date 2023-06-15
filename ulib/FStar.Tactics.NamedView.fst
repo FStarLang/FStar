@@ -21,14 +21,14 @@ module FStar.Tactics.NamedView
 (* This file is part of the tactics core, we open only what's needed. *)
 open FStar.Tactics.Effect
 open FStar.Tactics.Util
-open FStar.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.V2.Builtins
 
 exception LengthMismatch
 exception NotEnoughBinders
 
 (* We work with reflection V2. *)
 module R = FStar.Reflection.V2
-module RD = FStar.Reflection.V2.Data
+module RD = FStar.Stubs.Reflection.V2.Data
 
 let open_universe_view (v:RD.universe_view) : named_universe_view =
   match v with
@@ -656,7 +656,7 @@ let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tac sigelt =
   R.pack_sigelt sv
 
 let tcc (e:env) (t:term) : Tac comp =
-  let c : R.comp = V2.Builtins.tcc e t in
+  let c : R.comp = Stubs.Tactics.V2.Builtins.tcc e t in
   R.inspect_comp c
 
-let comp_to_string (c:comp) : Tac string = V2.Builtins.comp_to_string (R.pack_comp c)
+let comp_to_string (c:comp) : Tac string = Stubs.Tactics.V2.Builtins.comp_to_string (R.pack_comp c)

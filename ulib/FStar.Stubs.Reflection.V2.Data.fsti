@@ -13,20 +13,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Reflection.V1.Data
+module FStar.Stubs.Reflection.V2.Data
 
-(* What's this!? Well, the compiler now works fully with V2, so whenever
-we need to reason/extract a term, we need things like V2.Tv_App and V2.pack_ln
-in scope. So, force them into scope here. *)
-module X = FStar.Reflection.V2.Data
-module X = FStar.Reflection.V2.Builtins
+include FStar.Stubs.Syntax.Syntax
+open FStar.Stubs.Reflection.Types
 
-open FStar.Reflection.Types
-
-(* V1 does not really use the primitive ident type, but this
-explicit pair of string & range *)
-type ident = string & range
-type univ_name = ident
+(* The type of a string observable only with a tactic.
+   All values of type ppname_t are provably equal *)
+let ppname_t = FStar.Sealed.Inhabited.sealed ""
+let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
 
 noeq
 type vconst =
@@ -42,45 +37,92 @@ type vconst =
 
 type universes = list universe
 
-// This is shadowing `pattern` from Prims (for smt_pats)
+type ident_view = string & range
+
 noeq
 type pattern =
-    | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> option universes -> list (pattern * bool) -> pattern
-                                                    // A fully applied constructor, each boolean marks
-                                                    // whether the argument was an explicitly-provided
-                                                    // implicit argument
-    | Pat_Var      : bv -> sealed typ -> pattern    // Pattern bound variable
-    | Pat_Dot_Term : option term -> pattern         // Dot pattern: resolved by other elements in the pattern and type
+ // A built-in constant
+ | Pat_Constant :
+     c : vconst ->
+     pattern
+
+ // A fully applied constructor, each boolean marks whether the
+ // argument was an explicitly-provided implicit argument
+ | Pat_Cons :
+     head    : fv ->
+     univs   : option universes ->
+     subpats : list (pattern * bool) ->
+     pattern
+
+ // A pattern-bound variable. It has a sealed sort in it.
+ // This sort is ignored by the typechecker, but may be useful
+ // for metaprogram to look at heuristically. There is nothing
+ // else here but a ppname, the variable is referred to by its DB index.
+ // This means all Pat_Var are provably equal.
+ | Pat_Var :
+     sort   : sealed term ->
+     ppname : ppname_t ->
+     pattern
+
+ // Dot pattern: resolved by other elements in the pattern and type
+ | Pat_Dot_Term :
+     t : option term ->
+     pattern
 
 type branch = pattern * term  // | pattern -> term
 
 noeq
 type aqualv =
-    | Q_Implicit
-    | Q_Explicit
-    | Q_Meta of term
+  | Q_Implicit
+  | Q_Explicit
+  | Q_Meta of term
 
 type argv = term * aqualv
 
-(* The type of a string observable only with a tactic.
-   All values of type ppname_t are provably equal *)
-let ppname_t = FStar.Sealed.Inhabited.sealed ""
-let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
+(* A named variable, with a unique identifier *)
+noeq
+type namedv_view = {
+  uniq   : nat;
+  sort   : sealed typ; // REMOVE?
+  ppname : ppname_t;
+}
 
+(* A bound variable, with a de Bruijn index *)
 noeq
 type bv_view = {
-    bv_ppname : ppname_t;
-    bv_index : nat;
+  index  : nat;
+  sort   : sealed typ; // REMOVE?
+  ppname : ppname_t;
 }
 
+(* Binders consist of a type, qualifiers, and attributes. There is also
+a sealed name. *)
 noeq
 type binder_view = {
-  binder_bv : bv;
-  binder_qual : aqualv;
-  binder_attrs : list term;
-  binder_sort : typ;
+  sort   : typ;
+  qual   : aqualv;
+  attrs  : list term;
+  ppname : ppname_t;
 }
+
+(* A binding is a variable in the environment. It is like a namedv, but has
+an explicit (unsealed) sort *)
+noeq
+type binding = {
+  uniq   : nat;
+  sort   : typ;
+  ppname : ppname_t;
+}
+type bindings = list binding
+
+(** We use the binder type for letbindings and refinements,
+but no qualifiers nor attributes can appear there. We call these
+binders simple. This module assumes an abstract predicate
+for them, which is later assumed to be equivalent to being a binder
+without qualifiers nor attributes (once inspect_binder is in scope). *)
+val binder_is_simple : binder -> Tot bool
+
+type simple_binder = b:binder{binder_is_simple b}
 
 noeq
 type universe_view =
@@ -94,7 +136,7 @@ type universe_view =
 
 noeq
 type term_view =
-  | Tv_Var    : v:bv -> term_view
+  | Tv_Var    : v:namedv -> term_view
   | Tv_BVar   : v:bv -> term_view
   | Tv_FVar   : v:fv -> term_view
   | Tv_UInst  : v:fv -> us:universes -> term_view
@@ -102,10 +144,10 @@ type term_view =
   | Tv_Abs    : bv:binder -> body:term -> term_view
   | Tv_Arrow  : bv:binder -> c:comp -> term_view
   | Tv_Type   : universe -> term_view
-  | Tv_Refine : bv:bv -> sort:typ -> ref:term -> term_view
+  | Tv_Refine : b:simple_binder -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : nat -> ctx_uvar_and_subst -> term_view
-  | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> ty:typ -> def:term -> body:term -> term_view
+  | Tv_Let    : recf:bool -> attrs:(list term) -> b:simple_binder -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> term_view

@@ -38,6 +38,7 @@ module Core   = FStar.TypeChecker.Core
 module RD     = FStar.Reflection.V2.Data
 
 (* Internal utilities *)
+val is_irrelevant : goal -> bool
 val goal_typedness_deps : goal -> list ctx_uvar
 
 val proofstate_of_goals : Range.range -> env -> list goal -> list implicit -> proofstate

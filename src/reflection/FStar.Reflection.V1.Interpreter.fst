@@ -128,7 +128,7 @@ type dualemb 'a = (EMB.embedding 'a & NBET.embedding 'a)
 let e_int             : dualemb Z.t                = (EMB.e_int, NBET.e_int)
 let e_bool            : dualemb bool               = (EMB.e_bool, NBET.e_bool)
 let e_string          : dualemb string             = (EMB.e_string, NBET.e_string)
-let e_order           : dualemb Order.order        = (RE.e_order, NRE.e_order)
+let e_order           : dualemb FStar.Order.order  = (RE.e_order, NRE.e_order)
 
 let e_term            : dualemb term               = (RE.e_term, NRE.e_term)
 let e_term_view       : dualemb RD.term_view       = (RE.e_term_view, NRE.e_term_view)

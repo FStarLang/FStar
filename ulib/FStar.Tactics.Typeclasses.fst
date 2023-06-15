@@ -16,9 +16,9 @@
 module FStar.Tactics.Typeclasses
 
 open FStar.Reflection.V2
-open FStar.Tactics.Common
+open FStar.Stubs.Tactics.Common
 open FStar.Tactics.Effect
-open FStar.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Tactics.V2.SyntaxHelpers
 open FStar.Tactics.V2.Derived
 open FStar.Tactics.V2.SyntaxCoercions

@@ -14,11 +14,13 @@ See the License for the specific language governing permissions and
    limitations under the License.
 *)
 module FStar.Syntax.Print
+
 open FStar.Compiler.Effect
-open FStar.Syntax.Syntax
-open FStar.Ident
-open FStar.Const
 open FStar.Compiler.Util
+open FStar.Const
+open FStar.Ident
+open FStar.Syntax.Syntax
+(* open FStar.Class.Printable *)
 
 module DsEnv = FStar.Syntax.DsEnv
 module Json = FStar.Json

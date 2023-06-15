@@ -19,7 +19,6 @@ module FStar.Tactics.Visit
 
 open FStar.Reflection.V2
 open FStar.Tactics.Effect
-open FStar.Tactics.Types
 open FStar.Tactics.Util
 
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =

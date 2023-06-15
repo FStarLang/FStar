@@ -16,7 +16,7 @@
 module FStar.Tactics.Typeclasses
 
 open FStar.Tactics.Effect
-open FStar.Reflection.Types (* for `decls` *)
+open FStar.Stubs.Reflection.Types (* for `decls` *)
 
 (* The attribute that marks classes *)
 val tcclass : unit
