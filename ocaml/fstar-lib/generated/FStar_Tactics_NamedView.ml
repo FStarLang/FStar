@@ -1844,6 +1844,37 @@ let (close_term : binder -> term -> (FStar_Reflection_Types.binder * term)) =
             FStar_Reflection_V2_Data.ppname2 = (b.ppname)
           } in
       (b1, t')
+let _ =
+  FStar_Tactics_Native.register_plugin "FStar.Tactics.NamedView.close_term"
+    (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Tactics.NamedView.close_term"
+             (fun _ ->
+                (FStar_Syntax_Embeddings.arrow_as_prim_step_2 e_binder
+                   FStar_Reflection_V2_Embeddings.e_term
+                   (FStar_Syntax_Embeddings.e_tuple2
+                      FStar_Reflection_V2_Embeddings.e_binder
+                      FStar_Reflection_V2_Embeddings.e_term) close_term
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Tactics.NamedView.close_term") cb) args))
+    (fun cb ->
+       fun args ->
+         FStar_Syntax_Embeddings.debug_wrap
+           "FStar.Tactics.NamedView.close_term"
+           (fun _ ->
+              (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                 (FStar_TypeChecker_NBETerm.e_unsupported ())
+                 FStar_Reflection_V2_NBEEmbeddings.e_term
+                 (FStar_TypeChecker_NBETerm.e_tuple2
+                    FStar_Reflection_V2_NBEEmbeddings.e_binder
+                    FStar_Reflection_V2_NBEEmbeddings.e_term) close_term
+                 Prims.int_zero
+                 (FStar_Ident.lid_of_str "FStar.Tactics.NamedView.close_term")
+                 cb) args))
 let (close_comp : binder -> comp -> (FStar_Reflection_Types.binder * comp)) =
   fun b ->
     fun t ->
