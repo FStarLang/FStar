@@ -243,9 +243,9 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
           let uu___9 =
             let uu___10 =
               let uu___11 =
-                let uu___12 = syn_emb_lid "e_range" in
+                let uu___12 = syn_emb_lid "e___range" in
                 let uu___13 =
-                  let uu___14 = nbe_emb_lid "e_range" in
+                  let uu___14 = nbe_emb_lid "e___range" in
                   FStar_Pervasives_Native.Some uu___14 in
                 {
                   arity = Prims.int_zero;
