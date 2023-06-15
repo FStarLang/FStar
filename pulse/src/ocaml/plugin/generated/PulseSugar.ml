@@ -8,6 +8,7 @@ type vprop__VPropExists__payload = {
   body: vprop }
 and vprop =
   | VPropTerm of FStar_Parser_AST.term 
+  | VPropStar of (vprop * vprop) 
   | VPropExists of vprop__VPropExists__payload 
 let (__proj__Mkvprop__VPropExists__payload__item__binders :
   vprop__VPropExists__payload -> binders) =
@@ -22,6 +23,11 @@ let (uu___is_VPropTerm : vprop -> Prims.bool) =
     match projectee with | VPropTerm _0 -> true | uu___ -> false
 let (__proj__VPropTerm__item___0 : vprop -> FStar_Parser_AST.term) =
   fun projectee -> match projectee with | VPropTerm _0 -> _0
+let (uu___is_VPropStar : vprop -> Prims.bool) =
+  fun projectee ->
+    match projectee with | VPropStar _0 -> true | uu___ -> false
+let (__proj__VPropStar__item___0 : vprop -> (vprop * vprop)) =
+  fun projectee -> match projectee with | VPropStar _0 -> _0
 let (uu___is_VPropExists : vprop -> Prims.bool) =
   fun projectee ->
     match projectee with | VPropExists _0 -> true | uu___ -> false

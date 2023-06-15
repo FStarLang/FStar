@@ -37,10 +37,10 @@ val solutions_to_string (sol:solution)
   : T.Tac string
 
 val apply_solution (sol:solution) (t:term)
-  : term
+  : T.Tac term
 
 val contains_uvar (t:term)
-  : bool
+  : T.Tac bool
 
 val try_unify (g:env) (l r:term)
   : T.Tac solution

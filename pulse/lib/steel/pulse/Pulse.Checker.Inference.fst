@@ -283,24 +283,20 @@ let infer
 
 let solutions_to_string sol = print_solutions sol
 
-let rec apply_sol (sol:solution) (t:R.term) =
-  match is_uvar_r t with
-  | None -> (
-    match R.inspect_ln t with
-    | R.Tv_App hd (arg, q) ->
-      let hd = apply_sol sol hd in
-      let arg = apply_sol sol arg in
-      R.pack_ln (R.Tv_App hd (arg, q))
-    | _ -> t
-  )
-  | Some n ->
-    match find_solution sol n with
+let apply_sol (sol:solution) (t:R.term) =
+  let solve_uvar (t:R.term) : T.Tac R.term = 
+    match is_uvar_r t with
     | None -> t
-    | Some (Tm_FStar t _) -> t
-    | Some t -> Pulse.Elaborate.Pure.elab_term t
-    
+    | Some n ->
+      match find_solution sol n with
+      | None -> t
+      | Some (Tm_FStar t _) -> t
+      | Some t -> Pulse.Elaborate.Pure.elab_term t
+  in
+  FStar.Tactics.Visit.visit_tm solve_uvar t
+ 
 let rec apply_solution (sol:solution) (t:term)
-  : term
+  : T.Tac term
   = match t with
     | Tm_Emp
     | Tm_VProp
@@ -308,20 +304,10 @@ let rec apply_solution (sol:solution) (t:term)
     | Tm_EmpInames
     | Tm_Unknown -> t
 
-    | Tm_FStar _ _ ->
-      if Some? (is_uvar t)
-      then let n = uvar_index t in
-            match find_solution sol n with
-            | None -> t
-            | Some t -> t
-      else (match is_pure_app t with
-            | Some (head, q, arg) ->
-              assume (head << t);
-              assume (arg << t);
-              tm_pureapp (apply_solution sol head)
-                         q
-                         (apply_solution sol arg)
-            | _ -> t)
+    | Tm_FStar t r ->
+      let t = apply_sol sol t in
+      assume (not_tv_unknown t);
+      Tm_FStar t r
 
     | Tm_Pure p ->
       Tm_Pure (apply_solution sol p)
@@ -337,17 +323,21 @@ let rec apply_solution (sol:solution) (t:term)
       Tm_ForallSL u { b with binder_ty = apply_solution sol b.binder_ty }
                     (apply_solution sol body)
 
-let rec contains_uvar_r (t:R.term) =
-    
-    Some? (is_uvar_r t) ||
-    (match R.inspect_ln t with
-     | R.Tv_App hd (arg, _) ->
-      contains_uvar_r hd || 
-      contains_uvar_r arg
-     | _ -> false)
+let contains_uvar_r (t:R.term) =
+    let is_uvar (t:R.term) : T.Tac R.term = 
+      if Some? (is_uvar_r t)
+      then T.fail "found uvar"
+      else t
+    in
+    T.or_else
+      (fun _ -> 
+          let _ = T.visit_tm is_uvar t in
+          false)
+      (fun _ -> true)
+
 
 let rec contains_uvar (t:term)
-  : bool
+  : T.Tac bool
   = match t with
     | Tm_Emp
     | Tm_VProp
@@ -359,16 +349,16 @@ let rec contains_uvar (t:term)
       (contains_uvar p)
       
     | Tm_Star l r ->
-      (contains_uvar l) ||
-      (contains_uvar r)
+      if contains_uvar l then true
+      else contains_uvar r
               
     | Tm_ExistsSL u t body ->
-      (contains_uvar t.binder_ty) ||
-      (contains_uvar body)
+      if contains_uvar t.binder_ty then true
+      else contains_uvar body
        
     | Tm_ForallSL u t body ->
-      (contains_uvar t.binder_ty) ||
-      (contains_uvar body)
+      if contains_uvar t.binder_ty then true
+      else contains_uvar body
                     
     | Tm_FStar t _ ->
       contains_uvar_r t
@@ -395,8 +385,9 @@ let try_solve_pure_equalities (g:env) (p:term) : T.Tac solution =
     let t = apply_sol sol t in
     let f = RF.term_as_formula' t in
     let handle_eq (t0 t1:R.term) =
-      if contains_uvar_r t0
-      || contains_uvar_r t1
+      let contains0 = contains_uvar_r t0 in
+      let contains1 = contains_uvar_r t1 in
+      if contains0 || contains1
       then (
         assume (not_tv_unknown t0 /\ not_tv_unknown t1);
         try_unify g (Tm_FStar t0 FStar.Range.range_0) (Tm_FStar t1 FStar.Range.range_0) @ sol

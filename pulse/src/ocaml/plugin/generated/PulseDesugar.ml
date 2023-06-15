@@ -251,6 +251,8 @@ let (push_namespace : env_t -> FStar_Ident.lident -> env_t) =
       let env1 = { tcenv; local_refs = (env.local_refs) } in env1
 let (r_ : FStar_Compiler_Range_Type.range) =
   FStar_Compiler_Range_Type.dummyRange
+let (admit_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Prims"; "admit"] r_
 let (star_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Effect"; "Common"; "star"] r_
 let (emp_lid : FStar_Ident.lident) =
@@ -345,13 +347,13 @@ let (ret : FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.st_term) =
     let uu___ = as_term s in
     PulseSyntaxWrapper.tm_return uu___ s.FStar_Syntax_Syntax.pos
 type stapp_or_return_t =
-  | STApp of PulseSyntaxWrapper.st_term 
+  | STTerm of PulseSyntaxWrapper.st_term 
   | Return of FStar_Syntax_Syntax.term 
-let (uu___is_STApp : stapp_or_return_t -> Prims.bool) =
-  fun projectee -> match projectee with | STApp _0 -> true | uu___ -> false
-let (__proj__STApp__item___0 :
+let (uu___is_STTerm : stapp_or_return_t -> Prims.bool) =
+  fun projectee -> match projectee with | STTerm _0 -> true | uu___ -> false
+let (__proj__STTerm__item___0 :
   stapp_or_return_t -> PulseSyntaxWrapper.st_term) =
-  fun projectee -> match projectee with | STApp _0 -> _0
+  fun projectee -> match projectee with | STTerm _0 -> _0
 let (uu___is_Return : stapp_or_return_t -> Prims.bool) =
   fun projectee -> match projectee with | Return _0 -> true | uu___ -> false
 let (__proj__Return__item___0 :
@@ -359,7 +361,7 @@ let (__proj__Return__item___0 :
   fun projectee -> match projectee with | Return _0 -> _0
 let (st_term_of_stapp_or_return :
   stapp_or_return_t -> PulseSyntaxWrapper.st_term) =
-  fun t -> match t with | STApp t1 -> t1 | Return t1 -> ret t1
+  fun t -> match t with | STTerm t1 -> t1 | Return t1 -> ret t1
 let (stapp_or_return :
   env_t -> FStar_Syntax_Syntax.term -> stapp_or_return_t) =
   fun env ->
@@ -370,68 +372,75 @@ let (stapp_or_return :
       | (head, args) ->
           (match head.FStar_Syntax_Syntax.n with
            | FStar_Syntax_Syntax.Tm_fvar fv ->
-               let uu___1 =
-                 FStar_TypeChecker_Env.try_lookup_lid env.tcenv
-                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-               (match uu___1 with
-                | FStar_Pervasives_Native.None -> Return s
-                | FStar_Pervasives_Native.Some ((uu___2, t), uu___3) ->
-                    let uu___4 = pulse_arrow_formals t in
-                    (match uu___4 with
-                     | FStar_Pervasives_Native.None -> Return s
-                     | FStar_Pervasives_Native.Some formals ->
-                         let is_binder_implicit b =
-                           match b.FStar_Syntax_Syntax.binder_qual with
-                           | FStar_Pervasives_Native.Some
-                               (FStar_Syntax_Syntax.Implicit uu___5) -> true
-                           | uu___5 -> false in
-                         let is_arg_implicit aq =
-                           match FStar_Pervasives_Native.snd aq with
-                           | FStar_Pervasives_Native.Some
-                               { FStar_Syntax_Syntax.aqual_implicit = b;
-                                 FStar_Syntax_Syntax.aqual_attributes =
-                                   uu___5;_}
-                               -> b
-                           | uu___5 -> false in
-                         let rec uninst_formals formals1 args1 =
-                           match (formals1, args1) with
-                           | (uu___5, []) ->
-                               FStar_Pervasives_Native.Some formals1
-                           | ([], uu___5) -> FStar_Pervasives_Native.None
-                           | (f::formals2, a::args2) ->
-                               if is_binder_implicit f
-                               then
-                                 (if is_arg_implicit a
-                                  then uninst_formals formals2 args2
-                                  else uninst_formals formals2 (a :: args2))
-                               else
-                                 if is_arg_implicit a
-                                 then FStar_Pervasives_Native.None
-                                 else uninst_formals formals2 args2 in
-                         let uu___5 = uninst_formals formals args in
-                         (match uu___5 with
-                          | FStar_Pervasives_Native.None -> Return s
-                          | FStar_Pervasives_Native.Some formals1 ->
-                              let uu___6 =
-                                FStar_Compiler_List.for_all
-                                  is_binder_implicit formals1 in
-                              if uu___6
-                              then
-                                let head1 =
-                                  let uu___7 = FStar_Compiler_List.init args in
-                                  FStar_Syntax_Syntax.mk_Tm_app head uu___7
-                                    s.FStar_Syntax_Syntax.pos in
-                                let uu___7 = FStar_Compiler_List.last args in
-                                (match uu___7 with
-                                 | (last, q) ->
-                                     let uu___8 =
-                                       let uu___9 =
-                                         PulseSyntaxWrapper.tm_expr head1 in
-                                       let uu___10 = as_term last in
-                                       PulseSyntaxWrapper.tm_st_app uu___9 q
-                                         uu___10 r in
-                                     STApp uu___8)
-                              else Return s)))
+               let uu___1 = FStar_Syntax_Syntax.fv_eq_lid fv admit_lid in
+               if uu___1
+               then
+                 let uu___2 = PulseSyntaxWrapper.tm_admit r in STTerm uu___2
+               else
+                 (let uu___3 =
+                    FStar_TypeChecker_Env.try_lookup_lid env.tcenv
+                      (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                  match uu___3 with
+                  | FStar_Pervasives_Native.None -> Return s
+                  | FStar_Pervasives_Native.Some ((uu___4, t), uu___5) ->
+                      let uu___6 = pulse_arrow_formals t in
+                      (match uu___6 with
+                       | FStar_Pervasives_Native.None -> Return s
+                       | FStar_Pervasives_Native.Some formals ->
+                           let is_binder_implicit b =
+                             match b.FStar_Syntax_Syntax.binder_qual with
+                             | FStar_Pervasives_Native.Some
+                                 (FStar_Syntax_Syntax.Implicit uu___7) ->
+                                 true
+                             | uu___7 -> false in
+                           let is_arg_implicit aq =
+                             match FStar_Pervasives_Native.snd aq with
+                             | FStar_Pervasives_Native.Some
+                                 { FStar_Syntax_Syntax.aqual_implicit = b;
+                                   FStar_Syntax_Syntax.aqual_attributes =
+                                     uu___7;_}
+                                 -> b
+                             | uu___7 -> false in
+                           let rec uninst_formals formals1 args1 =
+                             match (formals1, args1) with
+                             | (uu___7, []) ->
+                                 FStar_Pervasives_Native.Some formals1
+                             | ([], uu___7) -> FStar_Pervasives_Native.None
+                             | (f::formals2, a::args2) ->
+                                 if is_binder_implicit f
+                                 then
+                                   (if is_arg_implicit a
+                                    then uninst_formals formals2 args2
+                                    else uninst_formals formals2 (a :: args2))
+                                 else
+                                   if is_arg_implicit a
+                                   then FStar_Pervasives_Native.None
+                                   else uninst_formals formals2 args2 in
+                           let uu___7 = uninst_formals formals args in
+                           (match uu___7 with
+                            | FStar_Pervasives_Native.None -> Return s
+                            | FStar_Pervasives_Native.Some formals1 ->
+                                let uu___8 =
+                                  FStar_Compiler_List.for_all
+                                    is_binder_implicit formals1 in
+                                if uu___8
+                                then
+                                  let head1 =
+                                    let uu___9 =
+                                      FStar_Compiler_List.init args in
+                                    FStar_Syntax_Syntax.mk_Tm_app head uu___9
+                                      s.FStar_Syntax_Syntax.pos in
+                                  let uu___9 = FStar_Compiler_List.last args in
+                                  (match uu___9 with
+                                   | (last, q) ->
+                                       let uu___10 =
+                                         let uu___11 =
+                                           PulseSyntaxWrapper.tm_expr head1 in
+                                         let uu___12 = as_term last in
+                                         PulseSyntaxWrapper.tm_st_app uu___11
+                                           q uu___12 r in
+                                       STTerm uu___10)
+                                else Return s)))
            | uu___1 -> Return s)
 let (tosyntax' :
   env_t -> FStar_Parser_AST.term -> FStar_Syntax_Syntax.term err) =
@@ -491,11 +500,6 @@ let rec (interpret_vprop_constructors :
       match uu___ with
       | (head, args) ->
           (match ((head.FStar_Syntax_Syntax.n), args) with
-           | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::(r, uu___2)::[])
-               when FStar_Syntax_Syntax.fv_eq_lid fv star_lid ->
-               let uu___3 = interpret_vprop_constructors env l in
-               let uu___4 = interpret_vprop_constructors env r in
-               PulseSyntaxWrapper.tm_star uu___3 uu___4
            | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
                FStar_Syntax_Syntax.fv_eq_lid fv pure_lid ->
                let res =
@@ -516,6 +520,15 @@ let rec (desugar_vprop :
             (fun t1 ->
                let uu___1 = interpret_vprop_constructors env t1 in
                return uu___1)
+      | PulseSugar.VPropStar (v1, v2) ->
+          let uu___ = desugar_vprop env v1 in
+          op_let_Question uu___
+            (fun v11 ->
+               let uu___1 = desugar_vprop env v2 in
+               op_let_Question uu___1
+                 (fun v21 ->
+                    let uu___2 = PulseSyntaxWrapper.tm_star v11 v21 in
+                    return uu___2))
       | PulseSugar.VPropExists
           { PulseSugar.binders = binders; PulseSugar.body = body;_} ->
           let rec aux env1 binders1 =
@@ -774,7 +787,7 @@ and (desugar_bind :
                                   let t =
                                     let uu___3 = stapp_or_return env s1 in
                                     match uu___3 with
-                                    | STApp s11 -> mk_bind b s11 s21 r
+                                    | STTerm s11 -> mk_bind b s11 s21 r
                                     | Return s11 ->
                                         let uu___4 = as_term s11 in
                                         mk_totbind b uu___4 s21 r in

@@ -9,9 +9,39 @@ module U32 = FStar.UInt32
 open Pulse.Steel.Wrapper
 module A = Steel.ST.Array
 module US = FStar.SizeT
-
+module R = Steel.ST.Reference
 
 #push-options "--using_facts_from '* ArrayTests -Steel Steel.ST.Array -FStar.Tactics -FStar.Reflection'"
+
+```pulse
+fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:t)
+              (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == A.length a }))
+   requires (A.pts_to a full_perm s)
+   ensures 
+      exists (s:Seq.seq t). (
+         A.pts_to a full_perm s `star`
+         pure (s `Seq.equal` Seq.create (US.v l) v)
+      )
+{
+   let mut i = 0sz;
+   while (let vi = !i; US.(vi <^ l))
+   invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
+      A.pts_to a full_perm s `star`
+      R.pts_to i full_perm vi `star`
+      pure ((b == US.(vi <^ l)) /\
+            US.v vi <= US.v l /\
+            Seq.length s == A.length a /\
+            (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
+   )
+   {
+      let vi = !i; 
+      (a.(vi) <- v);
+      i := US.(vi +^ 1sz);
+      ()
+   };
+   ()
+}
+```
 
 ```pulse
 fn array_of_zeroes (n:US.t)

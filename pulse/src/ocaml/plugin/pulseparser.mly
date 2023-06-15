@@ -28,8 +28,7 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-let do_notation_deprecation_warning =
-  "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
+let do_notation_deprecation_warning = "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
 
 let none_to_empty_list x =
   match x with
@@ -154,8 +153,33 @@ mutOrRefQualifier:
   | MUT { MUT }
   | REF { REF }
 
+maybeHash:
+  |      { Nothing }
+  | HASH { Hash }
+
+atomicVprop:
+  | LPAREN p=pulseVprop RPAREN
+    { p }
+  | BACKTICK_AT p=atomicTerm
+    { PulseSugar.VPropTerm p }
+  | head=qlident args=list(argTerm)
+    { 
+      let head = mk_term (Var head) (rr $loc(head)) Un in
+      let app = mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) in
+      PulseSugar.VPropTerm app
+    }
+
+%inline
+starOp:
+  | o=OPINFIX3
+    { if o = "**" then () else raise_error (Fatal_SyntaxError, "Unexpected infix operator; expected '**'") (rr $loc) }
+  | BACKTICK id=IDENT BACKTICK
+    { if id = "star" then () else raise_error (Fatal_SyntaxError, "Unexpected infix operator; expected '**'") (rr $loc) }
+  
 pulseVprop:
-  | t=appTermNoRecordExp
-    { PulseSugar.VPropTerm t }
+  | t=atomicVprop
+    { t }
   | EXISTS bs=nonempty_list(pulseMultiBinder) DOT body=pulseVprop
     { PulseSugar.mk_vprop_exists (List.flatten bs) body }
+  | l=pulseVprop starOp r=pulseVprop
+    {  PulseSugar.VPropStar (l, r) }
