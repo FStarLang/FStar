@@ -54,20 +54,44 @@ let impl_jump
   (n: SZ.t)
   (l: SZ.t)
   (idx: SZ.t)
-: Pure SZ.t
-    (requires (
+  (_: squash (
       SZ.v l < SZ.v n /\
       SZ.v idx < SZ.v n
-    ))
-    (ensures (fun idx' ->
+  ))
+: Tot (idx': SZ.t {
       SZ.v idx' == Prf.jump (SZ.v n) (SZ.v l) (SZ.v idx)
-    ))
+  })
 = Prf.jump_if (SZ.v n) (SZ.v l) () (SZ.v idx);
   [@@inline_let]
   let nl = n `SZ.sub` l in
   if idx `SZ.gte` nl
   then idx `SZ.sub` nl
   else idx `SZ.add` l
+
+inline_for_extraction
+let size_add
+  (a: SZ.t)
+  (b: SZ.t)
+  (_: squash (SZ.fits (SZ.v a + SZ.v b)))
+: Tot (c: SZ.t {
+    SZ.v c == SZ.v a + SZ.v b
+  })
+= a `SZ.add` b
+
+inline_for_extraction
+let size_lt
+  (a: SZ.t)
+  (b: SZ.t)
+: Tot (c: bool { c == (SZ.v a < SZ.v b) })
+= a `SZ.lt` b
+
+inline_for_extraction
+let size_sub
+  (a: SZ.t)
+  (b: SZ.t)
+  (_: squash (SZ.v a >= SZ.v b))
+: Tot (c: SZ.t { SZ.v c == (SZ.v a - SZ.v b) })
+= a `SZ.sub` b
 
 #push-options "--query_stats --z3rlimit 256"
 #restart-solver
@@ -91,7 +115,7 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
   )
 {
     let mut pi = 0sz;
-    while (let i = !pi; (i `SZ.lt` d))
+    while (let i = !pi; (i `size_lt` d))
     invariant b . exists s i . (
       A.pts_to a full_perm s `star`
       R.pts_to pi full_perm i `star`
@@ -104,7 +128,7 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
       let save_eq0 = magic () <: squash (save == Seq.index s0 (SZ.v i));
       let mut pj = 0sz;
       let mut pidx = i;
-      while (let j = !pj; (j `SZ.lt` (q `SZ.sub` 1sz)))
+      while (let j = !pj; (j `size_lt` (size_sub q 1sz ())))
       invariant b . exists s i j idx . (
         A.pts_to a full_perm s `star`
         R.pts_to pi full_perm i `star`
@@ -117,10 +141,9 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
       ) {
         let j = !pj;
         let idx = !pidx;
-        let idx' = impl_jump n l idx;
-        let idx'_eq = () <: squash (SZ.v idx' == Prf.jump (SZ.v n) (SZ.v l) (SZ.v idx));
+        let idx' = impl_jump n l idx ();
         let x = a.(idx');
-        let j' = j `SZ.add` 1sz;
+        let j' = size_add j 1sz ();
         (a.(idx) <- x);
         pj := j';
         pidx := idx';
@@ -128,8 +151,7 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
       };
       let idx = !pidx;
       (a.(idx) <- save);
-      let i' = i `SZ.add` 1sz;
-      let i'_eq = () <: squash (SZ.v i' == SZ.v i + 1);
+      let i' = size_add i 1sz ();
       pi := i';
       ()
     };
