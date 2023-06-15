@@ -6,7 +6,7 @@ module L = FStar.List.Tot
 
 module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
-
+module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 
 type bmap = m:Map.t var typ {
@@ -135,8 +135,14 @@ let get_context g = g.ctxt
 
 let range_of_env (g:env) = 
     let ctx = T.unseal g.ctxt in
-    match FStar.List.Tot.tryFind (fun (_, r) -> Some? r) ctx with
-    | Some (_, Some r) -> r
+    match 
+      T.tryPick
+        (fun (_, r) ->
+          match r with
+          | None -> None
+          | Some r -> 
+            if not (RU.is_range_zero r) then Some r else None) ctx with
+    | Some r -> r
     | _ -> FStar.Range.range_0
   
 
@@ -179,12 +185,20 @@ let print_issues (g:env)
                  (i:list FStar.Issue.issue)
    = String.concat "\n" (T.map (print_issue g) i)
 
+let env_to_string (e:env) : T.Tac string =
+  let bs = T.map (fun (x, t) -> Printf.sprintf "_ : %s" (Pulse.Syntax.Printer.term_to_string t)) e.bs in
+  Printf.sprintf "Env:\n\t%s\n" (String.concat "\n\t" bs)
+
 let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   let r = 
     match r with
     | None -> range_of_env g
-    | Some r -> r
+    | Some r -> 
+      if RU.is_range_zero r
+      then range_of_env g
+      else r
   in
-  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
+  let ctx = Printf.sprintf "Environment: %s\n"  (env_to_string g) in
+  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctx::ctxt_to_list g) in
   FStar.Tactics.log_issues [issue];
   T.fail "Pulse checker failed"
