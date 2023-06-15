@@ -500,11 +500,6 @@ let rec (interpret_vprop_constructors :
       match uu___ with
       | (head, args) ->
           (match ((head.FStar_Syntax_Syntax.n), args) with
-           | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::(r, uu___2)::[])
-               when FStar_Syntax_Syntax.fv_eq_lid fv star_lid ->
-               let uu___3 = interpret_vprop_constructors env l in
-               let uu___4 = interpret_vprop_constructors env r in
-               PulseSyntaxWrapper.tm_star uu___3 uu___4
            | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
                FStar_Syntax_Syntax.fv_eq_lid fv pure_lid ->
                let res =
@@ -525,6 +520,15 @@ let rec (desugar_vprop :
             (fun t1 ->
                let uu___1 = interpret_vprop_constructors env t1 in
                return uu___1)
+      | PulseSugar.VPropStar (v1, v2) ->
+          let uu___ = desugar_vprop env v1 in
+          op_let_Question uu___
+            (fun v11 ->
+               let uu___1 = desugar_vprop env v2 in
+               op_let_Question uu___1
+                 (fun v21 ->
+                    let uu___2 = PulseSyntaxWrapper.tm_star v11 v21 in
+                    return uu___2))
       | PulseSugar.VPropExists
           { PulseSugar.binders = binders; PulseSugar.body = body;_} ->
           let rec aux env1 binders1 =

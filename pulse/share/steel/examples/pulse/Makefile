@@ -1,6 +1,12 @@
-all: verify
-	$(MAKE) -C bug-reports
-	$(MAKE) -C dice
+all: verify verify-bug-reports verify-dice
+
+.PHONY: verify-bug-reports
+verify-bug-reports:
+	$(MAKE) -C bug-reports verify
+
+.PHONY: verify-dice
+verify-dice:
+	$(MAKE) -C dice verify
 
 # assuming share/steel/examples/pulse
 STEEL_HOME ?= ../../../..
