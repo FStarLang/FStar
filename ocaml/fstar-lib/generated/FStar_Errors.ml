@@ -785,19 +785,28 @@ let catch_errors_aux :
     let newh = mk_default_handler false in
     let old = FStar_Compiler_Effect.op_Bang current_handler in
     FStar_Compiler_Effect.op_Colon_Equals current_handler newh;
-    (let r =
+    (let finally_restore uu___1 =
+       let all_issues = newh.eh_report () in
+       FStar_Compiler_Effect.op_Colon_Equals current_handler old;
+       (let uu___3 =
+          FStar_Compiler_List.partition (fun i -> i.issue_level = EError)
+            all_issues in
+        match uu___3 with | (errs, rest) -> (errs, rest)) in
+     let r =
        try
          (fun uu___1 ->
             match () with
             | () -> let uu___2 = f () in FStar_Pervasives_Native.Some uu___2)
            ()
-       with | uu___1 -> (err_exn uu___1; FStar_Pervasives_Native.None) in
-     let all_issues = newh.eh_report () in
-     FStar_Compiler_Effect.op_Colon_Equals current_handler old;
-     (let uu___2 =
-        FStar_Compiler_List.partition (fun i -> i.issue_level = EError)
-          all_issues in
-      match uu___2 with | (errs, rest) -> (errs, rest, r)))
+       with
+       | uu___1 ->
+           if handleable uu___1
+           then (err_exn uu___1; FStar_Pervasives_Native.None)
+           else
+             (let uu___2 = finally_restore () in
+              FStar_Compiler_Effect.raise uu___1) in
+     let uu___1 = finally_restore () in
+     match uu___1 with | (errs, rest) -> (errs, rest, r))
 let no_ctx : 'a . (unit -> 'a) -> 'a =
   fun f ->
     let save = error_context.get () in
