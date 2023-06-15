@@ -13,9 +13,41 @@ module R = Steel.ST.Reference
 
 #push-options "--using_facts_from '* ArrayTests -Steel Steel.ST.Array -FStar.Tactics -FStar.Reflection'"
 
+// ```pulse
+// fn compare (#t:Type0) (l:US.t) (a1 a2:(a:A.array t{ US.v l == A.length a }))
+//            (#s1 #s2:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
+//   requires (
+//     A.pts_to a1 full_perm s1 `star`
+//     A.pts_to a2 full_perm s2
+//   )
+//   ensures (pure (Seq.equal s1 s2))
+// {
+//   let mut i = 0sz;
+//   while (let vi = !i; (US.(vi <^ l) /\ a1.(vi) = a2.(vi)))
+//   invariant b. exists (vi:US.t). ( 
+//     R.pts_to i full_perm vi `star`
+//     pure ((b == US.(vi <^ l) /\ a1.(vi) = a2.(vi)) /\
+//           US.v vi <= US.v l /\
+//           (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i))
+//   )
+//   {
+//     let vi = !i; 
+//     i := US.(vi +^ 1sz);
+//     ()
+//   };
+//   let vi = !i;
+//   if (vi = l) {
+//     // true
+//     false
+//   } else {
+//     false
+//   };
+// }
+// ```
+
 ```pulse
-fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:t)
-              (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == A.length a }))
+fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
+              (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
    requires (A.pts_to a full_perm s)
    ensures 
       exists (s:Seq.seq t). (

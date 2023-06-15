@@ -20,12 +20,6 @@ assume
 val digest_len (_:alg_t) : US.t
 
 assume
-val spec_hash (a:alg_t) (s:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
-
-assume
-val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
-
-assume
 val is_hashable_len (_:US.t) : prop
 
 let hashable_len = v:US.t{ is_hashable_len v }
@@ -35,10 +29,10 @@ val is_signable_len (_:US.t) : prop
 
 let signable_len = v:US.t{ is_signable_len v }
 
-// assume
-// val is_key_len (_:US.t) : prop
-
 let key_len = v:US.t{ is_hashable_len v }
+
+assume
+val spec_hash (a:alg_t) (s:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
 val hacl_hash (alg:alg_t)
@@ -54,6 +48,9 @@ val hacl_hash (alg:alg_t)
     (fun _ ->
        A.pts_to src psrc src_seq `star`
        A.pts_to dst full_perm (spec_hash alg src_seq))
+
+assume
+val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
 val hacl_hmac (alg:alg_t)
@@ -76,15 +73,16 @@ val hacl_hmac (alg:alg_t)
        A.pts_to dst full_perm (spec_hmac alg key_seq msg_seq))
 
 assume
+val spec_ed25519_verify (pubk hdr sig:Seq.seq U8.t) : prop 
+
+assume
 val ed25519_verify 
   (pubk:A.larray U8.t 32)
   (hdr:A.array U8.t)
   (hdr_len:signable_len { US.v hdr_len == A.length hdr })
   (sig:A.larray U8.t 64)
   (#ppubk #phdr #psig:perm)
-  (#pubk_seq:Ghost.erased (Seq.seq U8.t))
-  (#hdr_seq:Ghost.erased (Seq.seq U8.t))
-  (#sig_seq:Ghost.erased (Seq.seq U8.t))
+  (#pubk_seq #hdr_seq #sig_seq:Ghost.erased (Seq.seq U8.t))
   : stt bool
     (A.pts_to pubk ppubk pubk_seq `star`
      A.pts_to hdr phdr hdr_seq `star`
@@ -92,7 +90,8 @@ val ed25519_verify
     (fun _ ->
       A.pts_to pubk ppubk pubk_seq `star`
       A.pts_to hdr phdr hdr_seq `star`
-      A.pts_to sig psig sig_seq)
+      A.pts_to sig psig sig_seq `star`
+      pure (spec_ed25519_verify pubk_seq hdr_seq sig_seq))
 
 // DICE constants
 assume
@@ -151,12 +150,15 @@ val uds_bytes : v:(Ghost.erased (Seq.seq U8.t)){ Seq.length v = US.v uds_len }
 assume
 val stack_is_erased : vprop
 
-assume
-val l0_is_authentic (vl0:l0_repr) : prop
+let l0_is_authentic (vl0:l0_repr) 
+  : prop
+  = spec_ed25519_verify 
+      vl0.l0_image_auth_pubkey 
+      vl0.l0_image_header 
+      vl0.l0_image_header_sig /\
+    spec_hash dice_hash_alg vl0.l0_binary == vl0.l0_binary_hash
 
-let cdi_functional_correctness
-  (c0:Seq.seq U8.t)
-  (vl0:l0_repr)
+let cdi_functional_correctness (c0:Seq.seq U8.t) (vl0:l0_repr)
   : prop 
   = c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg vl0.l0_binary)
 
@@ -182,27 +184,39 @@ fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
                           l0.l0_image_header_sig;
   
   let mut b = false;
-  // if valid_header_sig
-  // {
+  if valid_header_sig {
     let hash_buf = new_array 0uy dice_digest_len;
     hacl_hash dice_hash_alg l0.l0_binary l0.l0_binary_size hash_buf;
-    // if (hash_buf == l0.l0_binary_hash)
-    // {
-      // b := true;
-      l0_is_authentic vl0;
-    // };
-    free_array hash_buf;
-  // };
-
-  rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-      A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-      A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-      A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-      A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
-    as (l0_perm l0 vl0);
-
-  let vb = !b;
-  vb
+    // let res = A.compare hash_buf l0.l0_binary_hash dice_digest_len;
+    if true {
+      free_array hash_buf;
+      rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+          A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+          A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+          A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+          A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
+        as (l0_perm l0 vl0);
+      // true
+      false
+    } else {
+      free_array hash_buf;
+      rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+          A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+          A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+          A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+          A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
+        as (l0_perm l0 vl0);
+      false
+    }
+  } else {
+    rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+        A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+        A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+        A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+        A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
+      as (l0_perm l0 vl0);
+    false
+  };
 }
 ```
 
@@ -370,7 +384,7 @@ fn dice_main (c:cdi_t) (l0:l0_image_t)
 }
 ```
 
-
+(*
 ```pulse
 fn compute_cdi_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
  requires exists (c0: Seq.seq U8.t). (
@@ -421,3 +435,4 @@ fn dice_main_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
   }
 }
 ```
+*)
