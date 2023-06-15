@@ -144,7 +144,6 @@ type prover_state (preamble:preamble) = {
 }
 
 let pst_extends (#preamble:_) (p1 p2:prover_state preamble) =
-  p2.uvs_all == p1.uvs_all /\
   p2.ss `Psubst.subst_extends` p1.ss
 
 type prover_t =
