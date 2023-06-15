@@ -202,6 +202,7 @@ let defaults =
       ("normalize_pure_terms_for_extraction"
                                       , Bool false);
       ("odir"                         , Unset);
+      ("output_deps_to"               , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
       ("prims_ref"                    , Unset);
@@ -384,6 +385,7 @@ let get_no_smt                  ()      = lookup_opt "no_smt"                   
 let get_normalize_pure_terms_for_extraction
                                 ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
+let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
@@ -963,6 +965,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "Place output in directory  dir");
 
        ( noshort,
+        "output_deps_to",
+        PathStr "file",
+        "Output the result of --dep into this file instead of to standard output.");
+
+       ( noshort,
         "prims",
         PathStr "file",
         "");
@@ -1276,7 +1283,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
         ( noshort,
         "warn_error",
-        Accumulated (SimpleStr ("")),
+        ReverseAccumulated (SimpleStr ("")),
         "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
@@ -1763,6 +1770,7 @@ let no_location_info             () = get_no_location_info            ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
 let output_dir                   () = get_odir                        ()
+let output_deps_to               () = get_output_deps_to              ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()

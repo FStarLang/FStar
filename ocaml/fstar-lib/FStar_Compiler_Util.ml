@@ -71,6 +71,19 @@ let with_sigint_handler handler f =
     (fun () -> set_sigint_handler handler; f ())
     ()
 
+(* Re export this type, it's mentioned in the interface for this module. *)
+type out_channel = Stdlib.out_channel
+
+let stderr = Stdlib.stderr
+let stdout = Stdlib.stdout
+
+let open_file_for_writing (fn : string) = Stdlib.open_out_bin fn
+let close_out_channel (c : out_channel) = Stdlib.close_out c
+
+let flush (c:out_channel) : unit = Stdlib.flush c
+
+let append_to_file (c:out_channel) s = Printf.fprintf c "%s\n" s; flush c
+
 type proc =
     {pid: int;
      inc : in_channel; (* in == where we read from, so the process's stdout *)
@@ -633,10 +646,7 @@ let print1_warning a b = print_warning (format1 a b)
 let print2_warning a b c = print_warning (format2 a b c)
 let print3_warning a b c d = print_warning (format3 a b c d)
 
-let stderr = stderr
-let stdout = stdout
-
-let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
+let fprint (oc:out_channel) fmt args : unit = Printf.fprintf oc "%s" (format fmt args)
 
 [@@deriving yojson,show]
 
@@ -852,14 +862,11 @@ let rec stfold (init:'b) (l:'a list) (f: 'b -> 'a -> ('s,'b) state) : ('s,'b) st
   | [] -> ret init
   | hd::tl -> (f init hd) >> (fun next -> stfold next tl f)
 
-type file_handle = out_channel
-let open_file_for_writing (fn:string) : file_handle = open_out_bin fn
-let append_to_file (fh:file_handle) s = fpr fh "%s\n" s; flush fh
-let close_file (fh:file_handle) = close_out fh
 let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;
-  close_file fh
+  close_out_channel fh
+
 let copy_file input_name output_name =
   (* see https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33 *)
   let open Unix in
@@ -875,7 +882,6 @@ let copy_file input_name output_name =
   copy_loop ();
   close fd_in;
   close fd_out
-let flush_file (fh:file_handle) = flush fh
 let delete_file (fn:string) = Sys.remove fn
 let file_get_contents f =
   let ic = open_in_bin f in

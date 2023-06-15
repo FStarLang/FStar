@@ -2,26 +2,13 @@
   "G\u001e„\u001e]Š\thŒgKF\\\u0013ìv",
   [
     [
-      "Bug2496.has_elements",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "488492435665c9f54e3682ab5b3ff670"
-    ],
-    [
       "Bug2496.intro_set",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "63f99abc912e76346094b44b10951596"
+      "97351214e7c51bf0bac946c556ea06bb"
     ],
     [
       "Bug2496.set_as_list",
@@ -33,7 +20,7 @@
         "refinement_interpretation_Tm_refine_ea7377a3fd2bd1599ea6567f21fbd5cb"
       ],
       0,
-      "4279a4ce2a665c1a2cb76ab34d4e899a"
+      "27f7ef5ad22e4836eafb064ca25599d0"
     ],
     [
       "Bug2496.empty",
@@ -60,7 +47,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "f4e19db165e828289db76ec93fc0fab9"
+      "2846fb2254059a7c271326283022e621"
     ],
     [
       "Bug2496.insert",
@@ -104,7 +91,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "090c32688b99b63fc32950facf870c5d"
+      "6e7d1789162cd8d47e38fc1038fbc24a"
     ],
     [
       "Bug2496.singleton_includes_argument_lemma",
@@ -133,7 +120,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "7e76be306fb6b528c3ff1f2cee4983f4"
+      "3691840f126ed56a7442eb867084e016"
     ],
     [
       "Bug2496.singleton_includes_argument_lemma_bad",
@@ -163,7 +150,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "2bf82408856490fb11ea85826f1b2646"
+      "789cbffede8669da15563f1b4980d454"
     ]
   ]
 ]

@@ -72,10 +72,14 @@ let update_flags (l:list (error_flag * string))
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot silence error %s"
                              (BU.string_of_int i)))
-      | (_, CFatal) ->
+      | (CSilent, CFatal)
+      | (CWarning, CFatal)
+      | (CError, CFatal) ->
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot change the error level of fatal error %s"
                              (BU.string_of_int i)))
+      | (CAlwaysError, CFatal) ->
+        CFatal
       | _ -> flag
    in
    let set_flag_for_range (flag, range) =
@@ -92,7 +96,9 @@ let update_flags (l:list (error_flag * string))
      in
      flag, (l, h)
   in
-  let error_range_settings = List.map compute_range l in
+  // NOTE: Rev below so when we handle things like '@0..100-50'
+  // the -50 overrides the @0..100.
+  let error_range_settings = List.map compute_range (List.rev l) in
   List.collect set_flag_for_range error_range_settings
   @ default_settings
 
@@ -466,14 +472,24 @@ let catch_errors_aux (f : unit -> 'a) : list issue & list issue & option 'a =
   let newh = mk_default_handler false in
   let old = !current_handler in
   current_handler := newh;
-  let r = try Some (f ())
-          with | ex -> err_exn ex; None
+  let finally_restore () =
+    let all_issues = newh.eh_report() in //de-duplicated already
+    current_handler := old;
+    let errs, rest = List.partition (fun i -> i.issue_level = EError) all_issues in
+    errs, rest
   in
-  let all_issues = newh.eh_report() in //de-duplicated already
-  current_handler := old;
-  let errs, rest = List.partition (fun i -> i.issue_level = EError) all_issues in
+  let r = try Some (f ())
+          with
+          | ex when handleable ex ->
+            err_exn ex;
+            None
+          | ex ->
+            let _ = finally_restore() in
+            raise ex
+  in
+  let errs, rest = finally_restore() in
   errs, rest, r
-
+ 
 let no_ctx (f : unit -> 'a) : 'a =
   let save = error_context.get () in
   error_context.clear ();

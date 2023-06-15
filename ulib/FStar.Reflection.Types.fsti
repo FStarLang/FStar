@@ -16,7 +16,6 @@
 module FStar.Reflection.Types
 
 include FStar.Range
-include FStar.VConfig
 include FStar.Sealed
 
 assume new type binder

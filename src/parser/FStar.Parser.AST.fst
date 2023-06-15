@@ -14,253 +14,19 @@
    limitations under the License.
 *)
 module FStar.Parser.AST
-open FStar.Pervasives
-open FStar.Compiler.Effect
-open FStar.Compiler.List
-open FStar.Errors
-module C = FStar.Parser.Const
-open FStar.Compiler.Range
-open FStar.Ident
+
 open FStar
 open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Range
 open FStar.Compiler.Util
 open FStar.Const
+open FStar.Errors
+open FStar.Ident
 
-(* AST produced by the parser, before desugaring
-   It is not stratified: a single type called "term" containing
-   expressions, formulas, types, and so on
- *)
-type level = | Un | Expr | Type_level | Kind | Formula
+module C = FStar.Parser.Const
 
-type let_qualifier =
-  | NoLetQualifier
-  | Rec
-
-type quote_kind =
-  | Static
-  | Dynamic
-
-type term' =
-  | Wild
-  | Const     of sconst
-  | Op        of ident * list term
-  | Tvar      of ident
-  | Uvar      of ident                                (* universe variable *)
-  | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
-  | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
-  | Projector of lid * ident (* a data constructor followed by one of
-                                its formal parameters, or an effect
-                                followed by one  of its actions or
-                                "fields" *)
-  | Construct of lid * list (term*imp)               (* data, type: bool in each arg records an implicit *)
-  | Abs       of list pattern * term
-  | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let       of let_qualifier * list (option attributes_ * (pattern * term)) * term
-  | LetOperator   of list (ident * pattern * term) * term
-  | LetOpen   of lid * term
-  | LetOpenRecord of term * term * term
-  | Seq       of term * term
-  | Bind      of ident * term * term
-  | If        of term * option ident (* is this a regular if or a if operator (i.e. [if*]) *)
-                      * option match_returns_annotation * term * term
-  | Match     of term * option ident (* is this a regular match or a match operator (i.e. [match*]) *)
-                      * option match_returns_annotation * list branch
-  | TryWith   of term * list branch
-  | Ascribed  of term * term * option term * bool  (* bool says whether equality ascription $: *)
-  | Record    of option term * list (lid * term)
-  | Project   of term * lid
-  | Product   of list binder * term                (* function space *)
-  | Sum       of list (either binder term) * term (* dependent tuple *)
-  | QForall   of list binder * patterns * term
-  | QExists   of list binder * patterns * term
-  | Refine    of binder * term
-  | NamedTyp  of ident * term
-  | Paren     of term
-  | Requires  of term * option string
-  | Ensures   of term * option string
-  | LexList   of list term  (* a decreases clause mentions either a lexicographically ordered list, *)
-  | WFOrder   of term * term  (* or a well-founded relation or some type and an expression of the same type *)
-  | Decreases of term * option string
-  | Labeled   of term * string * bool
-  | Discrim   of lid   (* Some?  (formerly is_Some) *)
-  | Attributes of list term   (* attributes decorating a term *)
-  | Antiquote of term  (* Antiquotation within a quoted term *)
-  | Quote     of term * quote_kind
-  | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
-  | CalcProof of term * term * list calc_step (* A calculational proof with relation, initial expression, and steps *)
-  | IntroForall of list binder * term * term                     (* intro_forall x1..xn. P with e *)
-  | IntroExists of list binder * term * list term * term        (* intro_exists x1...xn.P using v1..vn with e *)
-  | IntroImplies of term * term * binder * term                   (* intro_implies P Q with x. e *)
-  | IntroOr of bool * term * term * term                          (* intro_or_{left ,right} P Q with e *)
-  | IntroAnd of term * term * term * term                         (* intro_and P Q with e1 and e2 *)
-  | ElimForall  of list binder * term * list term               (* elim_forall x1..xn. P using v1..vn *)
-  | ElimExists  of list binder * term * term * binder * term     (* elim_exists x1...xn.P to Q with e *)
-  | ElimImplies of term * term * term                             (* elim_implies P Q with e *)
-  | ElimOr of term * term * term * binder * term * binder * term  (* elim_or P Q to R with x.e1 and y.e2 *)
-  | ElimAnd of term * term * term * binder * binder * term        (* elim_and P Q to R with x y. e *)
-and term = {tm:term'; range:range; level:level}
-
-(* (as y)? returns t *)
-and match_returns_annotation = option ident * term * bool
-
-and patterns = list ident * list (list term)
-
-and calc_step =
-  | CalcStep of term * term * term (* Relation, justification and next expression *)
-
-and attributes_ = list term
-
-and binder' =
-  | Variable of ident
-  | TVariable of ident
-  | Annotated of ident * term
-  | TAnnotated of ident * term
-  | NoName of term
-
-and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:attributes_}
-
-and pattern' =
-  | PatWild     of aqual * attributes_
-  | PatConst    of sconst
-  | PatApp      of pattern * list pattern
-  | PatVar      of ident * aqual * attributes_
-  | PatName     of lid
-  | PatTvar     of ident * aqual * attributes_
-  | PatList     of list pattern
-  | PatTuple    of list pattern * bool (* dependent if flag is set *)
-  | PatRecord   of list (lid * pattern)
-  | PatAscribed of pattern * (term * option term)
-  | PatOr       of list pattern
-  | PatOp       of ident
-  | PatVQuote   of term (* [`%foo], transformed into "X.Y.Z.foo" by the desugarer *)
-and pattern = {pat:pattern'; prange:range}
-
-and branch = (pattern * option term * term)
-and arg_qualifier =
-    | Implicit
-    | Equality
-    | Meta of term
-    | TypeClassArg
-and aqual = option arg_qualifier
-and imp =
-    | FsTypApp
-    | Hash
-    | UnivApp
-    | HashBrace of term
-    | Infix
-    | Nothing
-
-type knd = term
-type typ = term
-type expr = term
-
-type tycon_record = list (ident * aqual * attributes_ * term)
-
-(** The different kinds of payload a constructor can carry *)
-type constructor_payload
-  = (** constructor of arity 1 for a type of kind [Type] (e.g. [C of int]) *)
-    | VpOfNotation of typ
-    (** constructor of any arity & kind (e.g. [C:int->ind] or [C:'a->'b->ind 'c]) *)
-    | VpArbitrary of typ
-    (** constructor whose payload is a record (e.g. [C {a: int}] or [C {x: Type} -> ind x]) *)
-    | VpRecord of (tycon_record * option typ)
-
-(* TODO (KM) : it would be useful for the printer to have range information for those *)
-type tycon =
-  | TyconAbstract of ident * list binder * option knd
-  | TyconAbbrev   of ident * list binder * option knd * term
-  | TyconRecord   of ident * list binder * option knd * attributes_ * tycon_record
-  | TyconVariant  of ident * list binder * option knd * list (ident * option constructor_payload * attributes_)
-
-type qualifier =
-  | Private
-  | Noeq
-  | Unopteq
-  | Assumption
-  | DefaultEffect
-  | TotalEffect
-  | Effect_qual
-  | New
-  | Inline                                 //a definition that *should* always be unfolded by the normalizer
-  | Visible                                //a definition that may be unfolded by the normalizer, but only if necessary (default)
-  | Unfold_for_unification_and_vcgen       //a definition that will be unfolded by the normalizer, during unification and for SMT queries
-  | Inline_for_extraction                  //a definition that will be inlined only during compilation
-  | Irreducible                            //a definition that can never be unfolded by the normalizer
-  | NoExtract                              // a definition whose contents won't be extracted (currently, by KaRaMeL only)
-  | Reifiable
-  | Reflectable
-  //old qualifiers
-  | Opaque
-  | Logic
-
-type qualifiers = list qualifier
-
-type decoration =
-  | Qualifier of qualifier
-  | DeclAttributes of list term
-
-type lift_op =
-  | NonReifiableLift of term
-  | ReifiableLift    of term * term //lift_wp, lift
-  | LiftForFree      of term
-
-type lift = {
-  msource: lid;
-  mdest:   lid;
-  lift_op: lift_op;
-  braced: bool; //a detail: for incremental parsing, we need to know if it is delimited by bracces  
-}
-
-type pragma =
-  | SetOptions of string
-  | ResetOptions of option string
-  | PushOptions of option string
-  | PopOptions
-  | RestartSolver
-  | PrintEffectsGraph
-
-type decl' =
-  | TopLevelModule of lid
-  | Open of lid
-  | Friend of lid
-  | Include of lid
-  | ModuleAbbrev of ident * lid
-  | TopLevelLet of let_qualifier * list (pattern * term)
-  | Tycon of bool * bool * list tycon
-    (* first bool is for effect *)
-    (* second bool is for typeclass *)
-  | Val of ident * term  (* bool is for logic val *)
-  | Exception of ident * option term
-  | NewEffect of effect_decl
-  | LayeredEffect of effect_decl
-  | SubEffect of lift
-  | Polymonadic_bind of lid * lid * lid * term
-  | Polymonadic_subcomp of lid * lid * term
-  | Pragma of pragma
-  | Assume of ident * term
-  | Splice of bool * list ident * term  (* bool is true for a typed splice *)
-  | DeclSyntaxExtension of string * string * FStar.Compiler.Range.range
-
-and decl = {
-  d:decl';
-  drange:range;
-  quals: qualifiers;
-  attrs: attributes_
-}
-and effect_decl =
-  (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
-  | DefineEffect   of ident * list binder * term * list decl
-  | RedefineEffect of ident * list binder * term
-
-type modul =
-  | Module of lid * list decl
-  | Interface of lid * list decl * bool (* flag to mark admitted interfaces *)
-type file = modul
-type inputFragment = either file (list decl)
-
-let decl_drange decl = decl.drange
-
-(********************************************************************************)
 let check_id id =
     let first_char = String.substring (string_of_id id) 0 1 in
     if String.lowercase first_char = first_char
@@ -305,8 +71,6 @@ let mk_function branches r1 r2 =
 let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
     | _ -> None
-
-let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
@@ -998,17 +762,4 @@ let ident_of_binder r b =
     raise_error (Fatal_MissingQuantifierBinder,
                  "Wildcard binders in quantifiers are not allowed") r
 
-let idents_of_binders bs r =
-    bs |> List.map (ident_of_binder r)
-
-let decl_syntax_is_delimited (d:decl) = 
-  match d.d with
-  | Pragma (ResetOptions None) -> false
-  | Pragma (PushOptions None) -> false
-  | Pragma _
-  | NewEffect (DefineEffect _)
-  | LayeredEffect (DefineEffect _)
-  | SubEffect {braced=true} -> true
-  | Tycon(_, b, _) -> b
-  | _ -> false
-
+let idents_of_binders bs r = bs |> List.map (ident_of_binder r)

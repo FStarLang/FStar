@@ -210,59 +210,68 @@ let (hash_dependences :
 let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
   fun fn ->
     fun checked_fn ->
-      let elt =
-        FStar_Compiler_Effect.op_Bar_Greater checked_fn
-          (FStar_Compiler_Util.smap_try_find mcache) in
-      let uu___ =
-        FStar_Compiler_Effect.op_Bar_Greater elt FStar_Compiler_Util.is_some in
-      if uu___
-      then FStar_Compiler_Effect.op_Bar_Greater elt FStar_Compiler_Util.must
-      else
-        (let add_and_return elt1 =
-           FStar_Compiler_Util.smap_add mcache checked_fn elt1; elt1 in
-         if Prims.op_Negation (FStar_Compiler_Util.file_exists checked_fn)
-         then
-           let msg =
-             FStar_Compiler_Util.format1 "checked file %s does not exist"
-               checked_fn in
-           add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
-         else
-           (let entry = FStar_Compiler_Util.load_value_from_file checked_fn in
-            match entry with
-            | FStar_Pervasives_Native.None ->
-                let msg =
-                  FStar_Compiler_Util.format1 "checked file %s is corrupt"
-                    checked_fn in
-                add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
-            | FStar_Pervasives_Native.Some x ->
-                if x.version <> cache_version_number
-                then
-                  let msg =
-                    FStar_Compiler_Util.format1
-                      "checked file %s has incorrect version" checked_fn in
-                  add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
-                else
-                  (let current_digest = FStar_Compiler_Util.digest_of_file fn in
-                   if x.digest <> current_digest
-                   then
-                     ((let uu___5 =
-                         FStar_Options.debug_at_level_no_module
-                           (FStar_Options.Other "CheckedFiles") in
-                       if uu___5
-                       then
-                         FStar_Compiler_Util.print4
-                           "Checked file %s is stale since incorrect digest of %s, expected: %s, found: %s\n"
-                           checked_fn fn current_digest x.digest
-                       else ());
-                      (let msg =
-                         FStar_Compiler_Util.format2
-                           "checked file %s is stale (digest mismatch for %s)"
-                           checked_fn fn in
-                       add_and_return
-                         ((Invalid msg), (FStar_Pervasives.Inl msg))))
-                   else
-                     add_and_return
-                       (Unknown, (FStar_Pervasives.Inr (x.parsing_data))))))
+      (let uu___1 =
+         FStar_Options.debug_at_level_no_module
+           (FStar_Options.Other "CheckedFiles") in
+       if uu___1
+       then
+         FStar_Compiler_Util.print1 "Trying to load checked file result %s\n"
+           checked_fn
+       else ());
+      (let elt =
+         FStar_Compiler_Effect.op_Bar_Greater checked_fn
+           (FStar_Compiler_Util.smap_try_find mcache) in
+       let uu___1 =
+         FStar_Compiler_Effect.op_Bar_Greater elt FStar_Compiler_Util.is_some in
+       if uu___1
+       then FStar_Compiler_Effect.op_Bar_Greater elt FStar_Compiler_Util.must
+       else
+         (let add_and_return elt1 =
+            FStar_Compiler_Util.smap_add mcache checked_fn elt1; elt1 in
+          if Prims.op_Negation (FStar_Compiler_Util.file_exists checked_fn)
+          then
+            let msg =
+              FStar_Compiler_Util.format1 "checked file %s does not exist"
+                checked_fn in
+            add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
+          else
+            (let entry = FStar_Compiler_Util.load_value_from_file checked_fn in
+             match entry with
+             | FStar_Pervasives_Native.None ->
+                 let msg =
+                   FStar_Compiler_Util.format1 "checked file %s is corrupt"
+                     checked_fn in
+                 add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
+             | FStar_Pervasives_Native.Some x ->
+                 if x.version <> cache_version_number
+                 then
+                   let msg =
+                     FStar_Compiler_Util.format1
+                       "checked file %s has incorrect version" checked_fn in
+                   add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
+                 else
+                   (let current_digest =
+                      FStar_Compiler_Util.digest_of_file fn in
+                    if x.digest <> current_digest
+                    then
+                      ((let uu___6 =
+                          FStar_Options.debug_at_level_no_module
+                            (FStar_Options.Other "CheckedFiles") in
+                        if uu___6
+                        then
+                          FStar_Compiler_Util.print4
+                            "Checked file %s is stale since incorrect digest of %s, expected: %s, found: %s\n"
+                            checked_fn fn current_digest x.digest
+                        else ());
+                       (let msg =
+                          FStar_Compiler_Util.format2
+                            "checked file %s is stale (digest mismatch for %s)"
+                            checked_fn fn in
+                        add_and_return
+                          ((Invalid msg), (FStar_Pervasives.Inl msg))))
+                    else
+                      add_and_return
+                        (Unknown, (FStar_Pervasives.Inr (x.parsing_data)))))))
 let (load_checked_file_with_tc_result :
   FStar_Parser_Dep.deps ->
     Prims.string ->
@@ -271,136 +280,145 @@ let (load_checked_file_with_tc_result :
   fun deps ->
     fun fn ->
       fun checked_fn ->
-        let load_tc_result fn1 =
-          let entry = FStar_Compiler_Util.load_2values_from_file checked_fn in
-          match entry with
-          | FStar_Pervasives_Native.Some (uu___, s2) ->
-              ((s2.deps_dig), (s2.tc_res))
-          | uu___ ->
-              failwith
-                "Impossible! if first phase of loading was unknown, it should have succeeded" in
-        let elt = load_checked_file fn checked_fn in
-        match elt with
-        | (Invalid msg, uu___) -> FStar_Pervasives.Inl msg
-        | (Valid uu___, uu___1) ->
-            let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Effect.op_Bar_Greater checked_fn
-                  load_tc_result in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3
-                FStar_Pervasives_Native.snd in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              (fun uu___3 -> FStar_Pervasives.Inr uu___3)
-        | (Unknown, parsing_data) ->
-            let uu___ = hash_dependences deps fn in
-            (match uu___ with
-             | FStar_Pervasives.Inl msg ->
-                 let elt1 = ((Invalid msg), parsing_data) in
-                 (FStar_Compiler_Util.smap_add mcache checked_fn elt1;
-                  FStar_Pervasives.Inl msg)
-             | FStar_Pervasives.Inr deps_dig' ->
-                 let uu___1 =
-                   FStar_Compiler_Effect.op_Bar_Greater checked_fn
-                     load_tc_result in
-                 (match uu___1 with
-                  | (deps_dig, tc_result1) ->
-                      if deps_dig = deps_dig'
-                      then
-                        let elt1 =
-                          let uu___2 =
-                            let uu___3 =
-                              FStar_Compiler_Util.digest_of_file checked_fn in
-                            Valid uu___3 in
-                          (uu___2, parsing_data) in
-                        (FStar_Compiler_Util.smap_add mcache checked_fn elt1;
-                         (let validate_iface_cache uu___3 =
-                            let iface =
-                              let uu___4 =
-                                FStar_Compiler_Effect.op_Bar_Greater fn
-                                  FStar_Parser_Dep.lowercase_module_name in
-                              FStar_Compiler_Effect.op_Bar_Greater uu___4
-                                (FStar_Parser_Dep.interface_of deps) in
-                            match iface with
-                            | FStar_Pervasives_Native.None -> ()
-                            | FStar_Pervasives_Native.Some iface1 ->
-                                (try
-                                   (fun uu___4 ->
-                                      match () with
-                                      | () ->
-                                          let iface_checked_fn =
-                                            FStar_Compiler_Effect.op_Bar_Greater
-                                              iface1
-                                              FStar_Parser_Dep.cache_file_name in
-                                          let uu___5 =
-                                            FStar_Compiler_Util.smap_try_find
-                                              mcache iface_checked_fn in
-                                          (match uu___5 with
-                                           | FStar_Pervasives_Native.Some
-                                               (Unknown, parsing_data1) ->
-                                               let uu___6 =
-                                                 let uu___7 =
-                                                   let uu___8 =
-                                                     FStar_Compiler_Util.digest_of_file
-                                                       iface_checked_fn in
-                                                   Valid uu___8 in
-                                                 (uu___7, parsing_data1) in
-                                               FStar_Compiler_Util.smap_add
-                                                 mcache iface_checked_fn
-                                                 uu___6
-                                           | uu___6 -> ())) ()
-                                 with | uu___4 -> ()) in
-                          validate_iface_cache ();
-                          FStar_Pervasives.Inr tc_result1))
-                      else
-                        ((let uu___4 =
-                            FStar_Options.debug_at_level_no_module
-                              (FStar_Options.Other "CheckedFiles") in
-                          if uu___4
-                          then
-                            ((let uu___6 =
-                                FStar_Compiler_Util.string_of_int
-                                  (FStar_Compiler_List.length deps_dig') in
-                              let uu___7 =
-                                FStar_Parser_Dep.print_digest deps_dig' in
-                              let uu___8 =
-                                FStar_Compiler_Util.string_of_int
-                                  (FStar_Compiler_List.length deps_dig) in
-                              let uu___9 =
-                                FStar_Parser_Dep.print_digest deps_dig in
-                              FStar_Compiler_Util.print4
-                                "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
-                                uu___6 uu___7 uu___8 uu___9);
-                             if
-                               (FStar_Compiler_List.length deps_dig) =
-                                 (FStar_Compiler_List.length deps_dig')
-                             then
-                               FStar_Compiler_List.iter2
-                                 (fun uu___6 ->
-                                    fun uu___7 ->
-                                      match (uu___6, uu___7) with
-                                      | ((x, y), (x', y')) ->
-                                          if (x <> x') || (y <> y')
-                                          then
-                                            let uu___8 =
-                                              FStar_Parser_Dep.print_digest
-                                                [(x, y)] in
-                                            let uu___9 =
-                                              FStar_Parser_Dep.print_digest
-                                                [(x', y')] in
-                                            FStar_Compiler_Util.print2
-                                              "Differ at: Expected %s\n Got %s\n"
-                                              uu___8 uu___9
-                                          else ()) deps_dig deps_dig'
-                             else ())
-                          else ());
-                         (let msg =
-                            FStar_Compiler_Util.format1
-                              "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
-                              checked_fn in
-                          let elt1 =
-                            ((Invalid msg), (FStar_Pervasives.Inl msg)) in
-                          FStar_Compiler_Util.smap_add mcache checked_fn elt1;
-                          FStar_Pervasives.Inl msg))))
+        (let uu___1 =
+           FStar_Options.debug_at_level_no_module
+             (FStar_Options.Other "CheckedFiles") in
+         if uu___1
+         then
+           FStar_Compiler_Util.print1
+             "Trying to load checked file with tc result %s\n" checked_fn
+         else ());
+        (let load_tc_result fn1 =
+           let entry = FStar_Compiler_Util.load_2values_from_file checked_fn in
+           match entry with
+           | FStar_Pervasives_Native.Some (uu___1, s2) ->
+               ((s2.deps_dig), (s2.tc_res))
+           | uu___1 ->
+               failwith
+                 "Impossible! if first phase of loading was unknown, it should have succeeded" in
+         let elt = load_checked_file fn checked_fn in
+         match elt with
+         | (Invalid msg, uu___1) -> FStar_Pervasives.Inl msg
+         | (Valid uu___1, uu___2) ->
+             let uu___3 =
+               let uu___4 =
+                 FStar_Compiler_Effect.op_Bar_Greater checked_fn
+                   load_tc_result in
+               FStar_Compiler_Effect.op_Bar_Greater uu___4
+                 FStar_Pervasives_Native.snd in
+             FStar_Compiler_Effect.op_Bar_Greater uu___3
+               (fun uu___4 -> FStar_Pervasives.Inr uu___4)
+         | (Unknown, parsing_data) ->
+             let uu___1 = hash_dependences deps fn in
+             (match uu___1 with
+              | FStar_Pervasives.Inl msg ->
+                  let elt1 = ((Invalid msg), parsing_data) in
+                  (FStar_Compiler_Util.smap_add mcache checked_fn elt1;
+                   FStar_Pervasives.Inl msg)
+              | FStar_Pervasives.Inr deps_dig' ->
+                  let uu___2 =
+                    FStar_Compiler_Effect.op_Bar_Greater checked_fn
+                      load_tc_result in
+                  (match uu___2 with
+                   | (deps_dig, tc_result1) ->
+                       if deps_dig = deps_dig'
+                       then
+                         let elt1 =
+                           let uu___3 =
+                             let uu___4 =
+                               FStar_Compiler_Util.digest_of_file checked_fn in
+                             Valid uu___4 in
+                           (uu___3, parsing_data) in
+                         (FStar_Compiler_Util.smap_add mcache checked_fn elt1;
+                          (let validate_iface_cache uu___4 =
+                             let iface =
+                               let uu___5 =
+                                 FStar_Compiler_Effect.op_Bar_Greater fn
+                                   FStar_Parser_Dep.lowercase_module_name in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___5
+                                 (FStar_Parser_Dep.interface_of deps) in
+                             match iface with
+                             | FStar_Pervasives_Native.None -> ()
+                             | FStar_Pervasives_Native.Some iface1 ->
+                                 (try
+                                    (fun uu___5 ->
+                                       match () with
+                                       | () ->
+                                           let iface_checked_fn =
+                                             FStar_Compiler_Effect.op_Bar_Greater
+                                               iface1
+                                               FStar_Parser_Dep.cache_file_name in
+                                           let uu___6 =
+                                             FStar_Compiler_Util.smap_try_find
+                                               mcache iface_checked_fn in
+                                           (match uu___6 with
+                                            | FStar_Pervasives_Native.Some
+                                                (Unknown, parsing_data1) ->
+                                                let uu___7 =
+                                                  let uu___8 =
+                                                    let uu___9 =
+                                                      FStar_Compiler_Util.digest_of_file
+                                                        iface_checked_fn in
+                                                    Valid uu___9 in
+                                                  (uu___8, parsing_data1) in
+                                                FStar_Compiler_Util.smap_add
+                                                  mcache iface_checked_fn
+                                                  uu___7
+                                            | uu___7 -> ())) ()
+                                  with | uu___5 -> ()) in
+                           validate_iface_cache ();
+                           FStar_Pervasives.Inr tc_result1))
+                       else
+                         ((let uu___5 =
+                             FStar_Options.debug_at_level_no_module
+                               (FStar_Options.Other "CheckedFiles") in
+                           if uu___5
+                           then
+                             ((let uu___7 =
+                                 FStar_Compiler_Util.string_of_int
+                                   (FStar_Compiler_List.length deps_dig') in
+                               let uu___8 =
+                                 FStar_Parser_Dep.print_digest deps_dig' in
+                               let uu___9 =
+                                 FStar_Compiler_Util.string_of_int
+                                   (FStar_Compiler_List.length deps_dig) in
+                               let uu___10 =
+                                 FStar_Parser_Dep.print_digest deps_dig in
+                               FStar_Compiler_Util.print4
+                                 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+                                 uu___7 uu___8 uu___9 uu___10);
+                              if
+                                (FStar_Compiler_List.length deps_dig) =
+                                  (FStar_Compiler_List.length deps_dig')
+                              then
+                                FStar_Compiler_List.iter2
+                                  (fun uu___7 ->
+                                     fun uu___8 ->
+                                       match (uu___7, uu___8) with
+                                       | ((x, y), (x', y')) ->
+                                           if (x <> x') || (y <> y')
+                                           then
+                                             let uu___9 =
+                                               FStar_Parser_Dep.print_digest
+                                                 [(x, y)] in
+                                             let uu___10 =
+                                               FStar_Parser_Dep.print_digest
+                                                 [(x', y')] in
+                                             FStar_Compiler_Util.print2
+                                               "Differ at: Expected %s\n Got %s\n"
+                                               uu___9 uu___10
+                                           else ()) deps_dig deps_dig'
+                              else ())
+                           else ());
+                          (let msg =
+                             FStar_Compiler_Util.format1
+                               "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
+                               checked_fn in
+                           let elt1 =
+                             ((Invalid msg), (FStar_Pervasives.Inl msg)) in
+                           FStar_Compiler_Util.smap_add mcache checked_fn
+                             elt1;
+                           FStar_Pervasives.Inl msg)))))
 let (load_parsing_data_from_cache :
   Prims.string ->
     FStar_Parser_Dep.parsing_data FStar_Pervasives_Native.option)
@@ -571,3 +589,17 @@ let (store_module_to_cache :
                   (FStar_Errors_Codes.Warning_FileNotWritten, uu___3) in
                 FStar_Errors.log_issue uu___1 uu___2
           else ()
+let (unsafe_raw_load_checked_file :
+  Prims.string ->
+    (Prims.string Prims.list * tc_result) FStar_Pervasives_Native.option)
+  =
+  fun checked_fn ->
+    let entry = FStar_Compiler_Util.load_2values_from_file checked_fn in
+    match entry with
+    | FStar_Pervasives_Native.Some (s1, s2) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map FStar_Pervasives_Native.fst s2.deps_dig in
+          (uu___1, (s2.tc_res)) in
+        FStar_Pervasives_Native.Some uu___
+    | uu___ -> FStar_Pervasives_Native.None

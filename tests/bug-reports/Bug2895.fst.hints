@@ -1,0 +1,29 @@
+[
+  "åv‘\u001dD\ržæ\u0018š\"œI~!Š",
+  [
+    [
+      "Bug2895.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1fed8bfcb628a1b8643e0b5c3e256937"
+      ],
+      0,
+      "7712aa9768efc265ca1c0252c1f12e4f"
+    ],
+    [
+      "Bug2895.__proj__B__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fd3d8d8a88cb826e8869b4b90dd0a9ef"
+      ],
+      0,
+      "512105552e0c57e4c4b69666dd19c264"
+    ]
+  ]
+]

@@ -350,33 +350,33 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:stlc_env) (x:var)
 open FStar.Calc
 
 //key lemma about STLC types: Their elaborations are closed
-let rec stlc_types_are_closed_core (ty:stlc_ty) (x:RT.open_or_close) (n:nat)
-  : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
+let rec stlc_types_are_closed_core (ty:stlc_ty) (ss:RT.subst)
+  : Lemma (ensures RT.subst_term (elab_ty ty) ss == elab_ty ty)
           (decreases ty)
-          [SMTPat (RT.open_or_close_term' (elab_ty ty) x n)]
+          [SMTPat (RT.subst_term (elab_ty ty) ss)]
 
   = match ty with
     | TUnit -> ()
     | TArrow t1 t2 ->
-      stlc_types_are_closed_core t1 x n;
-      stlc_types_are_closed_core t2 x (n + 1)
+      stlc_types_are_closed_core t1 ss;
+      stlc_types_are_closed_core t2 (RT.shift_subst ss)
 
 let stlc_types_are_closed1 (ty:stlc_ty) (v:R.term)
   : Lemma (RT.open_with (elab_ty ty) v == elab_ty ty)
           [SMTPat (RT.open_with (elab_ty ty) v)]
-  = stlc_types_are_closed_core ty (RT.OpenWith v) 0;
+  = stlc_types_are_closed_core ty [ RT.DT 0 v ];
     RT.open_with_spec (elab_ty ty) v
 
 let stlc_types_are_closed2 (ty:stlc_ty) (x:R.var)
   : Lemma (RT.close_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.close_term (elab_ty ty) x)]
-  = stlc_types_are_closed_core ty (RT.CloseVar x) 0;
+  = stlc_types_are_closed_core ty [ RT.ND x 0 ];
     RT.close_term_spec (elab_ty ty) x
 
 let stlc_types_are_closed3 (ty:stlc_ty) (x:R.var)
   : Lemma (RT.open_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.open_term (elab_ty ty) x)]
-  = stlc_types_are_closed_core ty (RT.OpenWith (RT.var_as_term x)) 0;
+  = stlc_types_are_closed_core ty [ RT.DT 0 (RT.var_as_term x) ];
     RT.open_term_spec (elab_ty ty) x
 
 let rec elab_ty_freevars (ty:stlc_ty)
@@ -389,7 +389,7 @@ let rec elab_ty_freevars (ty:stlc_ty)
       
 let rec elab_open_commute' (e:stlc_exp) (x:var) (n:nat)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) n ==
+              RT.subst_term (elab_exp e) (RT.open_with_var x n) ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -408,12 +408,11 @@ let rec elab_open_commute' (e:stlc_exp) (x:var) (n:nat)
         R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
       (==) { elab_open_commute' e x (n + 1) } 
         R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
-                           (RT.open_or_close_term' (elab_exp e) RT.(open_with_var x) (n + 1))));
-      (==) { stlc_types_are_closed_core t (RT.open_with_var x) n }
-        RT.open_or_close_term'
+                           (RT.subst_term (elab_exp e) RT.(open_with_var x (n + 1)))));
+      (==) { stlc_types_are_closed_core t (RT.open_with_var x n) }
+        RT.subst_term
           R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-          RT.(open_with_var x)
-          n;
+          RT.(open_with_var x n);
       }
 
 let elab_open_commute (e:stlc_exp) (x:var)

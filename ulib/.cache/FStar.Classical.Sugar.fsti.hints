@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "8c5e8b4e292fd6020bb0b3019c837b0e"
+      "cdb3567931815fea223050bbb769435c"
     ],
     [
       "FStar.Classical.Sugar.or_elim",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "34bda81f84fd549f4cb8e16cb7e50fe1"
+      "bf9447666932892a6aae11767bc61cd1"
     ],
     [
       "FStar.Classical.Sugar.and_elim",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2bea63d23ea0f244a79dd256c88ba0d9"
+      "695f88e2696dfe371cd41526c32fd007"
     ],
     [
       "FStar.Classical.Sugar.implies_intro",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7b5ca9ff9b2e567c1543de7c08bdea4d"
+      "63a1f77bd80e2c9ca7a62168a31f8328"
     ],
     [
       "FStar.Classical.Sugar.or_intro_right",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "14e9f6e43b04d460b59fa41d239f1ae6"
+      "07d1d46a0c43fa02f44569285c01edf6"
     ],
     [
       "FStar.Classical.Sugar.and_intro",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ff42128f62a64ea6ce56b270f1b6dc15"
+      "24837dc29caa03db0cd84670ecd6d854"
     ]
   ]
 ]

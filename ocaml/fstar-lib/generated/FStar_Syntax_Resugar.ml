@@ -1237,10 +1237,11 @@ let rec (resugar_term' :
                                let uu___5 =
                                  match bnd.FStar_Syntax_Syntax.lbname with
                                  | FStar_Pervasives.Inr fv ->
-                                     ((mk_pat
+                                     let uu___6 =
+                                       mk_pat
                                          (FStar_Parser_AST.PatName
-                                            ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v))),
-                                       term)
+                                            ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)) in
+                                     (uu___6, term)
                                  | FStar_Pervasives.Inl bv ->
                                      let uu___6 =
                                        let uu___7 =
@@ -1286,10 +1287,12 @@ let rec (resugar_term' :
                                                        mk_pat uu___8))) in
                                         let uu___7 =
                                           let uu___8 =
-                                            resugar_term' env term1 in
-                                          ((mk_pat
+                                            mk_pat
                                               (FStar_Parser_AST.PatApp
-                                                 (pat, args))), uu___8) in
+                                                 (pat, args)) in
+                                          let uu___9 =
+                                            resugar_term' env term1 in
+                                          (uu___8, uu___9) in
                                         let uu___8 = universe_to_string univs in
                                         (uu___7, uu___8)
                                       else
@@ -1313,9 +1316,11 @@ let rec (resugar_term' :
                        if uu___3
                        then (attrs, pb)
                        else
-                         (attrs,
-                           ((FStar_Pervasives_Native.fst pb),
-                             (label univs (FStar_Pervasives_Native.snd pb)))) in
+                         (let uu___5 =
+                            let uu___6 =
+                              label univs (FStar_Pervasives_Native.snd pb) in
+                            ((FStar_Pervasives_Native.fst pb), uu___6) in
+                          (attrs, uu___5)) in
                  FStar_Compiler_List.map f r in
                let body2 = resugar_term' env body1 in
                mk
@@ -2039,12 +2044,15 @@ and (resugar_pat' :
                         is_implicit && might_be_used) args in
              Prims.op_Negation uu___) in
         let resugar_plain_pat_cons' fv args =
-          mk
-            (FStar_Parser_AST.PatApp
-               ((mk
-                   (FStar_Parser_AST.PatName
-                      ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v))),
-                 args)) in
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                mk
+                  (FStar_Parser_AST.PatName
+                     ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)) in
+              (uu___2, args) in
+            FStar_Parser_AST.PatApp uu___1 in
+          mk uu___ in
         let rec resugar_plain_pat_cons fv args =
           let args1 =
             let uu___ = may_drop_implicits args in
@@ -2162,12 +2170,13 @@ and (resugar_pat' :
                 | ([], []) -> []
                 | ([], hd::tl) -> []
                 | (hd::tl, []) ->
-                    let uu___3 = map2 tl [] in
-                    (hd,
-                      (mk
-                         (FStar_Parser_AST.PatWild
-                            (FStar_Pervasives_Native.None, []))))
-                      :: uu___3
+                    let uu___3 =
+                      let uu___4 =
+                        mk
+                          (FStar_Parser_AST.PatWild
+                             (FStar_Pervasives_Native.None, [])) in
+                      (hd, uu___4) in
+                    let uu___4 = map2 tl [] in uu___3 :: uu___4
                 | (hd1::tl1, hd2::tl2) ->
                     let uu___3 = map2 tl1 tl2 in (hd1, hd2) :: uu___3 in
               let args2 =

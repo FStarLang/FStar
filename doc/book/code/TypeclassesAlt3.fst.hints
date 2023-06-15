@@ -8,20 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "0c51e5d46b5b625e2bd42dc30a87ada8"
-    ],
-    [
-      "TypeclassesAlt3.fits",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "2b5b9e1997654de0f232e1ffbaff056e"
+      "c5f3d63c75bab1d4214bf8d58424b3a9"
     ],
     [
       "TypeclassesAlt3.related_ops",
@@ -30,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "ac5d57dd0a52abee9b4f5e4aff706db8"
+      "7425f146c95cd3274f15cfd3978b1e3a"
     ],
     [
       "TypeclassesAlt3.op_Plus_Hat",
@@ -39,7 +26,7 @@
       1,
       [ "@query", "equation_TypeclassesAlt3.ops_base" ],
       0,
-      "6a705e12e51731a0cad82c0d90ab1d33"
+      "c68b56dcf4a233a9d5e7ca3cace5dfc6"
     ],
     [
       "TypeclassesAlt3.op_Subtraction_Hat",
@@ -48,7 +35,7 @@
       1,
       [ "@query", "equation_TypeclassesAlt3.ops_base" ],
       0,
-      "fba0bdfc08eedbcbde79d34ffd152a4b"
+      "36b89da044d6ea3302fd942423970540"
     ],
     [
       "TypeclassesAlt3.bounded_unsigned_int_ops_eq",
@@ -85,7 +72,7 @@
         "typing_TypeclassesAlt3.op_Less_Hat"
       ],
       0,
-      "a63f2cfb76f863d559419b40e1456bf8"
+      "9ad14461d7e6b1e9b1a483751319e628"
     ],
     [
       "TypeclassesAlt3.u32_instance_base",
@@ -111,7 +98,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "e94b4cb30dfe7eb0367ee0ecc5d13287"
+      "bed5601522cff1a1ef586e0f6ab828c3"
     ],
     [
       "TypeclassesAlt3.u32_instance_ops",
@@ -169,7 +156,7 @@
         "typing_TypeclassesAlt3.u32_instance_base"
       ],
       0,
-      "f91f564f96dd01c364ced5ee1016726e"
+      "ac09c3474ee323d4491176affff176a5"
     ],
     [
       "TypeclassesAlt3.u64_instance_base",
@@ -195,7 +182,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "978d783208be13edfa596477a3034091"
+      "e0251fb4fc6676b70e57f640337860f7"
     ],
     [
       "TypeclassesAlt3.u64_instance_ops",
@@ -253,7 +240,7 @@
         "typing_TypeclassesAlt3.u64_instance_base"
       ],
       0,
-      "5adc99c9ac8de76934c621e2bd46e59d"
+      "50f33d2fc778700fcd64dff5dfee5034"
     ],
     [
       "TypeclassesAlt3.test32",
@@ -337,7 +324,7 @@
         "typing_TypeclassesAlt3.u32_instance_ops"
       ],
       0,
-      "9490a4cd5782612b6f265bc91b8848f6"
+      "e5e61e99d796a15e8106991e321fc687"
     ],
     [
       "TypeclassesAlt3.test64",
@@ -421,7 +408,7 @@
         "typing_TypeclassesAlt3.u64_instance_ops"
       ],
       0,
-      "45452e2785fc59edf751c82ece77d05d"
+      "0b06ce5bc287f7988ae5017c52d2b1b2"
     ],
     [
       "TypeclassesAlt3.sum",
@@ -474,7 +461,7 @@
         "typing_TypeclassesAlt3.__proj__Mkbounded_unsigned_int_ops__item__base"
       ],
       0,
-      "27d673b574705310178b0386ef61bf64"
+      "e18e94d351219642a34f0936343062bf"
     ],
     [
       "TypeclassesAlt3.testsum32",
@@ -601,7 +588,7 @@
         "typing_TypeclassesAlt3.u32_instance_ops"
       ],
       0,
-      "94e97ce6cb7f79e3f7172c5abbf68111"
+      "827260b92fa8918c2e4974f9ebbfa0d8"
     ],
     [
       "TypeclassesAlt3.testsum64",
@@ -728,7 +715,7 @@
         "typing_TypeclassesAlt3.u64_instance_ops"
       ],
       0,
-      "27b47e39bd735d046fa10f0276403206"
+      "13a07c06c4309865ed1a698ea919beca"
     ],
     [
       "TypeclassesAlt3.testsum32'",
@@ -737,7 +724,7 @@
       1,
       [ "@query" ],
       0,
-      "5303b766f64446b68e804515ec3b935f"
+      "b7a7ab4ebbeee2d0dc261916a0c0b279"
     ]
   ]
 ]

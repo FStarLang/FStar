@@ -6876,10 +6876,9 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                                      solve g FStar_Syntax_Util.exp_unit)
                                   else
                                     failwith
-                                      "internal error: _t_refl: guard is not trivial"
-                              | uu___7 ->
-                                  FStar_Tactics_Monad.fail
-                                    "lhs is not a match")))
+                                      "internal error: _t_refl: guard is not trivial")
+                     | uu___5 ->
+                         FStar_Tactics_Monad.fail "lhs is not a match"))
            | FStar_Pervasives_Native.None ->
                FStar_Tactics_Monad.fail "not an equality") in
     FStar_Compiler_Effect.op_Less_Bar
@@ -7163,7 +7162,25 @@ let refl_typing_builtin_wrapper :
   =
   fun f ->
     let tx = FStar_Syntax_Unionfind.new_transaction () in
-    let uu___ = FStar_Errors.catch_errors_and_ignore_rest f in
+    let uu___ =
+      try
+        (fun uu___1 ->
+           match () with | () -> FStar_Errors.catch_errors_and_ignore_rest f)
+          ()
+      with
+      | uu___1 ->
+          let issue =
+            let uu___2 = FStar_Compiler_Util.print_exn uu___1 in
+            let uu___3 = FStar_Errors.get_ctx () in
+            {
+              FStar_Errors.issue_msg = uu___2;
+              FStar_Errors.issue_level = FStar_Errors.EError;
+              FStar_Errors.issue_range = FStar_Pervasives_Native.None;
+              FStar_Errors.issue_number =
+                (FStar_Pervasives_Native.Some (Prims.of_int (17)));
+              FStar_Errors.issue_ctx = uu___3
+            } in
+          ([issue], FStar_Pervasives_Native.None) in
     match uu___ with
     | (errs, r) ->
         (FStar_Syntax_Unionfind.rollback tx;

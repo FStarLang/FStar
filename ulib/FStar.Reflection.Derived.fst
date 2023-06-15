@@ -216,7 +216,7 @@ let binder_set_qual (q:aqualv) (b:binder) : Tot binder =
   pack_binder {bview with binder_qual=q}
 
 (** Set a vconfig for a sigelt *)
-val add_check_with : vconfig -> sigelt -> Tot sigelt
+val add_check_with : VConfig.vconfig -> sigelt -> Tot sigelt
 let add_check_with vcfg se =
   let attrs = sigelt_attrs se in
   let vcfg_t = embed_vconfig vcfg in
