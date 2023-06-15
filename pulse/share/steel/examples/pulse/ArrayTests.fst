@@ -15,42 +15,42 @@ module R = Steel.ST.Reference
 
 let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
 
-// ```pulse
-// fn compare (#t:Type0) (l:US.t) (a1 a2:A.larray t (US.v l))
-//            (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
-//   requires (
-//     A.pts_to a1 p1 s1 `star`
-//     A.pts_to a2 p2 s2
-//   )
-//   returns res:bool
-//   ensures (
-//     A.pts_to a1 p1 s1 `star`
-//     A.pts_to a2 p2 s2 `star`
-//     (pure (res <==> Seq.equal s1 s2))
-//   )
-// {
-//   let mut i = 0sz;
-//   while (let vi = !i; let v1 = a1.(vi); let v2 = a2.(vi); (US.(vi <^ l) && v1 = v2))
-//   invariant b. exists (vi:US.t). ( 
-//     R.pts_to i full_perm vi `star`
-//     A.pts_to a1 p1 s1 `star`
-//     A.pts_to a2 p2 s2 `star`
-//     pure (
-//       (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
-//       US.v vi <= US.v l /\
-//       (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
-//     )
-//   )
-//   {
-//     let vi = !i; 
-//     i := US.(vi +^ 1sz);
-//     ()
-//   };
-//   let vi = !i;
-//   let res = vi = l;
-//   res
-// }
-// ```
+```pulse
+fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
+           (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
+  requires (
+    A.pts_to a1 p1 s1 `star`
+    A.pts_to a2 p2 s2
+  )
+  returns res:bool
+  ensures (
+    A.pts_to a1 p1 s1 `star`
+    A.pts_to a2 p2 s2 `star`
+    (pure (res <==> Seq.equal s1 s2))
+  )
+{
+  let mut i = 0sz;
+  while (let vi = !i; if US.(vi <^ l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
+  invariant b. exists (vi:US.t). ( 
+    R.pts_to i full_perm vi `star`
+    A.pts_to a1 p1 s1 `star`
+    A.pts_to a2 p2 s2 `star`
+    pure (
+      US.v vi <= US.v l /\
+      (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
+      (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
+    )
+  )
+  {
+    let vi = !i; 
+    i := US.(vi +^ 1sz);
+    ()
+  };
+  let vi = !i;
+  let res = vi = l;
+  res
+}
+```
 
 ```pulse
 fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
