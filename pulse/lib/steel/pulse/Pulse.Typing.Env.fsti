@@ -23,11 +23,11 @@ val bindings (g:env) : env_bindings
 val as_map (g:env) : Map.t var typ
 
 let is_related_to (bs:list (var & typ)) (m:Map.t var typ) =
-  (forall (b:var & typ).
+  (forall (b:var & typ).{:pattern L.memP b bs}
           L.memP b bs ==> (Map.contains m (fst b) /\
                            Map.sel m (fst b) == snd b)) /\
   
-  (forall (x:var). Map.contains m x ==> (L.memP (x, Map.sel m x) bs))
+  (forall (x:var).{:pattern Map.contains m x} Map.contains m x ==> (L.memP (x, Map.sel m x) bs))
 
 val bindings_as_map (g:env)
   : Lemma (bindings g `is_related_to` as_map g)
@@ -101,6 +101,26 @@ val push_env_assoc (g1 g2 g3:env)
   : Lemma (requires disjoint g1 g2 /\ disjoint g2 g3 /\ disjoint g3 g1)
           (ensures push_env g1 (push_env g2 g3) == push_env (push_env g1 g2) g3)
 
+// removes the binding that was added first
+// leftmost when we write env on paper
+val remove_binding (g:env { Cons? (bindings g) })
+  : Pure (var & typ & env)
+         (requires True)
+         (ensures fun r ->
+            let (x, t, g') = r in
+            fstar_env g' == fstar_env g /\
+            (~ (x `Set.mem` dom g')) /\
+            g == push_env (push_binding (mk_env (fstar_env g)) x t) g')
+
+val remove_latest_binding (g:env { Cons? (bindings g) })
+  : Pure (var & typ & env)
+         (requires True)
+         (ensures fun r ->
+            let (x, t, g') = r in
+            fstar_env g' == fstar_env g /\
+            (~ (x `Set.mem` dom g')) /\
+            g == push_binding g' x t)
+
 // g1 extends g2 with g3, i.e. g1.bs == g3.bs @ g2.bs (recall most recent binding at the head)
 let extends_with (g1 g2 g3:env) =
   disjoint g2 g3 /\
@@ -120,7 +140,7 @@ val env_extends_trans (g1 g2 g3:env)
 
 val env_extends_push (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (push_binding g x t `env_extends` g)
-          [SMTPat (push_binding g x t)]
+          [SMTPat ((push_binding g x t) `env_extends` g)]
 
 val extends_with_push (g1 g2 g3:env)
   (x:var { ~ (Set.mem x (dom g1)) }) (t:typ)
