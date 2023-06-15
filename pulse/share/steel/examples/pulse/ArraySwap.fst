@@ -12,7 +12,6 @@ module SZ = FStar.SizeT
 
 #set-options "--ide_id_info_off"
 
-#push-options "--query_stats --z3rlimit 32"
 #restart-solver
 
 ```pulse
@@ -50,8 +49,6 @@ fn gcd (n0: SZ.t) (l0: SZ.t)
 }
 ```
 
-#pop-options
-
 inline_for_extraction
 let impl_jump
   (n: SZ.t)
@@ -72,7 +69,7 @@ let impl_jump
   then idx `SZ.sub` nl
   else idx `SZ.add` l
 
-#push-options "--query_stats --z3rlimit 32 --split_queries always"
+#push-options "--query_stats --z3rlimit 256"
 #restart-solver
 
 ```pulse
@@ -104,6 +101,7 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
     )) {
       let i = !pi;
       let save = a.(i);
+      let save_eq0 = magic () <: squash (save == Seq.index s0 (SZ.v i));
       let mut pj = 0sz;
       let mut pidx = i;
       while (let j = !pj; (j `SZ.lt` (q `SZ.sub` 1sz)))
@@ -120,6 +118,7 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
         let j = !pj;
         let idx = !pidx;
         let idx' = impl_jump n l idx;
+        let idx'_eq = () <: squash (SZ.v idx' == Prf.jump (SZ.v n) (SZ.v l) (SZ.v idx));
         let x = a.(idx');
         let j' = j `SZ.add` 1sz;
         (a.(idx) <- x);
@@ -130,6 +129,7 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
       let idx = !pidx;
       (a.(idx) <- save);
       let i' = i `SZ.add` 1sz;
+      let i'_eq = () <: squash (SZ.v i' == SZ.v i + 1);
       pi := i';
       ()
     };

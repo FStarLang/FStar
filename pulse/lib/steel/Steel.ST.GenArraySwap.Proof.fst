@@ -478,11 +478,15 @@ let jump_jump_iter_pred_q
   (l: nat)
   (b: bezout n l)
   (x: nat_up_to n)
+  (j: nat_up_to b.q_n)
 : Lemma
-  (ensures (
-    jump n l (iter_fun (jump n l) (b.q_n - 1) x) == x
+  (requires (
+    j == b.q_n - 1
   ))
-  [SMTPat (jump n l (iter_fun (jump n l) (b.q_n - 1) x))]
+  (ensures (
+    jump n l (iter_fun (jump n l) j x) == x
+  ))
+  [SMTPat (jump n l (iter_fun (jump n l) j x)); SMTPat (bezout_prop n l b)]
 = jump_iter_q n l b x
 
 let array_swap_post
@@ -539,6 +543,9 @@ let array_swap_outer_invariant // hoisting necessary because "Let binding is eff
   i <= bz.d /\
   n == Seq.length s0 /\
   n == Seq.length s /\
+  (forall (i': nat_up_to bz.d) . // this is always true, but I need it here for the pattern
+    Seq.index s i' == Seq.index s (iter_fun #(nat_up_to (n)) (jump (n) (l)) 0 i')
+  ) /\ 
   (forall (i': nat_up_to bz.d) .
      (forall (j: nat_up_to bz.q_n) .
         let idx = iter_fun #(nat_up_to (n)) (jump (n) (l)) j i' in
@@ -561,3 +568,36 @@ let array_swap_inner_invariant
         let idx = iter_fun #(nat_up_to (n)) (jump (n) (l)) j' i' in
         Seq.index s idx == Seq.index s0 (if i' < i || (i' = i && j' < j) then jump (n) (l) idx else idx)
   ))
+
+let array_swap_inner_invariant_end
+  (#t: Type)
+  (n: nat)
+  (l: nat)
+  (bz: bezout (n) (l))
+  (s0: Seq.seq t)
+  (s: Seq.seq t)
+  (i: nat)
+  (j: nat)
+  (idx: nat)
+: Lemma
+  (requires (
+    array_swap_inner_invariant s0 n l bz s i j idx /\
+    (~ (j < bz.q_n - 1))
+  ))
+  (ensures (
+    let s' = Seq.upd s idx (Seq.index s0 i) in
+    array_swap_outer_invariant s0 n l bz s' (i + 1)
+  ))
+  [SMTPat (array_swap_inner_invariant s0 n l bz s i j idx)]
+= ()
+
+module SZ = FStar.SizeT
+
+let sz_rem_spec
+  (n: SZ.t)
+  (l: SZ.t)
+: Lemma
+  (requires (SZ.v l > 0))
+  (ensures (SZ.v (SZ.rem n l) == SZ.v n % SZ.v l))
+  [SMTPat (SZ.rem n l)]
+= ()
