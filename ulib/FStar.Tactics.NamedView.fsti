@@ -183,6 +183,9 @@ val inspect_universe (u:universe) : Tot named_universe_view
 [@@plugin; coercion]
 val pack_universe (uv:named_universe_view) : Tot universe
 
+[@@plugin]
+val close_term (b:binder) (t:term) : Tot (R.binder & term)
+
 [@@plugin; coercion]
 val inspect (t:term) : Tac named_term_view
 
