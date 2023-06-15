@@ -121,11 +121,11 @@ let nt (x:var) (t:term) = [ NT x t ]
 let st_typing_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
-  (e_typing:tot_typing g e t)
+(e_typing:tot_typing g e t)
   (#e1:st_term) (#c1:comp_st)
   (e1_typing:st_typing (push_env g (push_env (singleton_env (fstar_env g) x t) g')) e1 c1)
 
-  : st_typing (push_env g (subst_env g' (nt x t)))
+  : st_typing (push_env g (subst_env g' (nt x e)))
               (subst_st_term e1 (nt x e))
               (subst_comp c1 (nt x e)) =
   
@@ -155,6 +155,18 @@ let rec filter_ss (#g0:env) (g:env) (ss:Psubst.t g0)
     else push_binding g x t
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y === x} = x
+
+let push_subst_env (#g:_) (s1 s2:Psubst.t g) (g':env)
+  : Lemma (requires Set.disjoint (Psubst.dom s1) (Psubst.dom s2))
+          (ensures psubst_env g' (Psubst.push s1 s2) ==
+                   psubst_env (psubst_env g' s1) s2)
+          [SMTPat (psubst_env (psubst_env g' s1) s2)] = admit ()
+
+// let st_typing_subst_one (g0:env) (t:st_term) (c:comp_st) (uvs:env { disjoint uvs g0 })
+//   (x:var { Set.mem x (dom uvs) })
+//   (t:typ)
+//   (ss:Psubst.t g0 { well_typed_ss })
+
 
 // #push-options "--z3rlimit_factor 10 --fuel 2 --ifuel 2"
 // #push-options "--z3rlimit_factor 4"
@@ -235,6 +247,7 @@ let rec apply_partial_psubs (g0:env) (t:st_term) (c:comp_st)
     end
     else begin
       let e = Psubst.lookup ss_remaining x in
+      assume (freevars e `Set.subset` dom g0);
 
       assert (equal (psubst_env (push_env uvs_unresolved uvs_remaining) ss_consumed)
                     (psubst_env (push_env uvs_unresolved (push_env g_x_t uvs_remaining_new)) ss_consumed));
@@ -250,18 +263,33 @@ let rec apply_partial_psubs (g0:env) (t:st_term) (c:comp_st)
                         (push_env g_x_ss_t (psubst_env uvs_remaining_new ss_consumed));
 
       assert (equal (push_env g0 (psubst_env (push_env uvs_unresolved uvs_remaining) ss_consumed))
-                    (push_env (push_env g0 (psubst_env uvs_unresolved ss_consumed)) (push_env g_x_ss_t (psubst_env uvs_remaining_new ss_consumed))));
+                    (push_env (push_env g0 (psubst_env uvs_unresolved ss_consumed))
+                              (push_env g_x_ss_t (psubst_env uvs_remaining_new ss_consumed))));
 
-      let t_typing =
+      assert (equal g_x_ss_t (singleton_env (fstar_env g0) x (Psubst.subst_term ss_consumed ty)));
+
+      // Needs psubst enhancement
+      let s_x_e = Psubst.singleton g0 x e in
+      assume (Psubst.as_subst s_x_e == nt x e);
+
+      let t_typing:
+        st_typing (push_env (push_env g0 (psubst_env uvs_unresolved ss_consumed))
+                            (psubst_env (psubst_env uvs_remaining_new ss_consumed)
+                                        s_x_e))
+                  (Psubst.subst_st_term s_x_e (Psubst.subst_st_term ss_consumed t))
+                  (Psubst.subst_comp s_x_e (Psubst.subst_comp ss_consumed c)) =
         st_typing_subst (push_env g0 (psubst_env uvs_unresolved ss_consumed))
                         x
                         (Psubst.subst_term ss_consumed ty)
                         (psubst_env uvs_remaining_new ss_consumed)
                         #e
-                        (magic ())
-                        #t #c
-                        (magic ()) in
+                        (magic ())  // tricky, how do we know typedness of (ss_consumed ty)
+                                    // may be need a refined notion of well-typedness of substitution
+                        #(Psubst.subst_st_term ss_consumed t)
+                        #(Psubst.subst_comp ss_consumed c)
+                        (coerce_eq t_typing ()) in
 
+      
 
       // let t_typing = st_typing_subst (push_env g0 uvs_unresolved) x ty uvs_remaining_new
       //   #e
