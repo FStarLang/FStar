@@ -22,7 +22,7 @@ module TestPrintable
 open FStar.Tactics.V2
 open FStar.Seq
 
-open FStar.Printable 
+open FStar.Class.Printable
 
 open FStar.Seq.Base
 module Seq = FStar.Seq.Base
