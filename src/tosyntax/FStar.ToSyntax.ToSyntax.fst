@@ -2705,7 +2705,7 @@ let binder_ident (b:binder) : option ident =
 let binder_idents (bs:list binder) : list ident =
   List.collect (fun b -> FStar.Common.list_of_option (binder_ident b)) bs
 
-let mk_data_discriminators quals env datas =
+let mk_data_discriminators quals env datas attrs =
     let quals = quals |> List.filter (function
         | S.NoExtract
         | S.Private -> true
@@ -2722,7 +2722,7 @@ let mk_data_discriminators quals env datas =
           sigrng = range_of_lid disc_name;// FIXME: Isn't that range wrong?
           sigquals =  quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d];
           sigmeta = default_sigmeta;
-          sigattrs = [];
+          sigattrs = attrs;
           sigopts = None;
         })
 
@@ -2755,7 +2755,7 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
                      sigquals = quals;
                      sigrng = range_of_lid field_name;
                      sigmeta = default_sigmeta ;
-                     sigattrs = [];
+                     sigattrs = attrs;
                      sigopts = None; } in
         if only_decl
         then [decl] //only the signature
@@ -2775,7 +2775,7 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
                          sigquals = quals;
                          sigrng = p;
                          sigmeta = default_sigmeta;
-                         sigattrs = [];
+                         sigattrs = attrs;
                          sigopts = None; } in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
@@ -2821,7 +2821,7 @@ let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
       sigquals = quals;
       sigrng = rng;
       sigmeta = default_sigmeta ;
-      sigattrs = val_attrs @ attrs;
+      sigattrs = U.deduplicate_terms (val_attrs @ attrs);
       sigopts = None; }
 
 let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
@@ -3055,7 +3055,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           let data_tpars = List.map (fun tp -> { tp with S.binder_qual = Some (S.Implicit true) }) tps in
           let tot_tconstr = mk_tot tconstr in
           let attrs = List.map (desugar_term env) d.attrs in
-          let val_attrs = Env.lookup_letbinding_quals_and_attrs env tname |> snd in
+          let val_attrs = Env.lookup_letbinding_quals_and_attrs env0 tname |> snd in
           let constrNames, constrs = List.split <|
               (constrs |> List.map (fun (id, payload, cons_attrs) ->
                 let t = match payload with
@@ -3079,9 +3079,16 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                             sigquals = quals;
                                             sigrng = rng;
                                             sigmeta = default_sigmeta  ;
-                                            sigattrs = val_attrs @ attrs @ map (desugar_term env) cons_attrs;
+                                            sigattrs = U.deduplicate_terms (val_attrs @ attrs @ map (desugar_term env) cons_attrs);
                                             sigopts = None; }))))
           in
+          if Options.debug_at_level_no_module (Options.Other "attrs")
+          then (
+            BU.print3 "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n" 
+              (string_of_lid tname)
+              (String.concat ", " (List.map Print.term_to_string val_attrs))
+              (String.concat ", " (List.map Print.term_to_string attrs))
+          );
           ([], { sigel = Sig_inductive_typ {lid=tname;
                                             us=univs;
                                             params=tpars;
@@ -3092,12 +3099,17 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                  sigquals = tname_quals;
                                  sigrng = rng;
                                  sigmeta = default_sigmeta  ;
-                                 sigattrs = val_attrs @ attrs;
+                                 sigattrs = U.deduplicate_terms (val_attrs @ attrs);
                                  sigopts = None; })::constrs
         | _ -> failwith "impossible")
       in
       let sigelts = tps_sigelts |> List.map (fun (_, se) -> se) in
       let bundle, abbrevs = FStar.Syntax.MutRecTy.disentangle_abbrevs_from_bundle sigelts quals (List.collect U.lids_of_sigelt sigelts) rng in
+      if Options.debug_at_level_no_module (Options.Other "attrs")
+      then (
+        BU.print1 "After disentangling: %s\n"
+              (Print.sigelt_to_string bundle)
+      );      
       let env = push_sigelt env0 bundle in
       let env = List.fold_left push_sigelt env abbrevs in
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
@@ -3105,7 +3117,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ {lid=tname; params=tps; t=k; ds=constrs} ->
           let quals = se.sigquals in
-          mk_data_discriminators quals env
+          mk_data_discriminators quals env 
             (constrs |> List.filter (fun data_lid ->  //AR: create data discriminators only for non-record data constructors
                                      let data_quals =
                                        let data_se = sigelts |> List.find (fun se -> match se.sigel with
@@ -3113,6 +3125,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                                                                      | _ -> false) |> must in
                                        data_se.sigquals in
                                      not (data_quals |> List.existsb (function | RecordConstructor _ -> true | _ -> false))))
+            se.sigattrs
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in
@@ -3639,7 +3652,12 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
         else quals
     in
     let env, ses = desugar_tycon env d (List.map (trans_qual None) quals) tcs in
-
+    if Options.debug_at_level_no_module (Options.Other "attrs")
+    then (
+      BU.print2 "Desugared tycon from {%s} to {%s}\n"
+                (FStar.Parser.AST.decl_to_string d)
+                (String.concat "\n" (List.map FStar.Syntax.Print.sigelt_to_string ses))
+    );
     (* Handling typeclasses: we typecheck the tcs as usual, and then need to add
      * %splice[new_meth_lids] (mk_class type_lid)
      * where the tricky bit is getting the new_meth_lids. To do so,
@@ -3772,7 +3790,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
           let top_attrs = desugar_attrs d in
           let lbs =
             let (isrec, lbs0) = lbs in
-            let lbs0 = lbs0 |> List.map (fun lb -> { lb with lbattrs = lb.lbattrs @ val_attrs @ top_attrs }) in
+            let lbs0 = lbs0 |> List.map (fun lb -> { lb with lbattrs = U.deduplicate_terms (lb.lbattrs @ val_attrs @ top_attrs) }) in
             (isrec, lbs0)
           in
           // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
@@ -3795,7 +3813,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta;
-                    sigattrs = val_attrs @ top_attrs;
+                    sigattrs = U.deduplicate_terms (val_attrs @ top_attrs);
                     sigopts = None; } in
           let env = push_sigelt env s in
           env, [s]
@@ -3939,7 +3957,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                 sigopts = None; } in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projector_names [] env se in
-    let discs = mk_data_discriminators [] env [l] in
+    let discs = mk_data_discriminators [] env [l] top_attrs in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
 
