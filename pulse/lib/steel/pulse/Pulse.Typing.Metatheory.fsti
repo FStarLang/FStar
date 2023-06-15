@@ -272,24 +272,57 @@ let rec apply_partial_psubs (g0:env) (t:st_term) (c:comp_st)
       let s_x_e = Psubst.singleton g0 x e in
       assume (Psubst.as_subst s_x_e == nt x e);
 
-      let t_typing:
-        st_typing (push_env (push_env g0 (psubst_env uvs_unresolved ss_consumed))
-                            (psubst_env (psubst_env uvs_remaining_new ss_consumed)
-                                        s_x_e))
-                  (Psubst.subst_st_term s_x_e (Psubst.subst_st_term ss_consumed t))
-                  (Psubst.subst_comp s_x_e (Psubst.subst_comp ss_consumed c)) =
-        st_typing_subst (push_env g0 (psubst_env uvs_unresolved ss_consumed))
-                        x
-                        (Psubst.subst_term ss_consumed ty)
-                        (psubst_env uvs_remaining_new ss_consumed)
-                        #e
-                        (magic ())  // tricky, how do we know typedness of (ss_consumed ty)
-                                    // may be need a refined notion of well-typedness of substitution
-                        #(Psubst.subst_st_term ss_consumed t)
-                        #(Psubst.subst_comp ss_consumed c)
-                        (coerce_eq t_typing ()) in
+      // let t_typing:
+      //   st_typing (push_env (push_env g0 (psubst_env uvs_unresolved ss_consumed))
+      //                       (psubst_env (psubst_env uvs_remaining_new ss_consumed)
+      //                                   s_x_e))
+      //             (Psubst.subst_st_term s_x_e (Psubst.subst_st_term ss_consumed t))
+      //             (Psubst.subst_comp s_x_e (Psubst.subst_comp ss_consumed c)) =
+      //   st_typing_subst (push_env g0 (psubst_env uvs_unresolved ss_consumed))
+      //                   x
+      //                   (Psubst.subst_term ss_consumed ty)
+      //                   (psubst_env uvs_remaining_new ss_consumed)
+      //                   #e
+      //                   (magic ())  // tricky, how do we know typedness of (ss_consumed ty)
+      //                               // may be need a refined notion of well-typedness of substitution
+      //                   #(Psubst.subst_st_term ss_consumed t)
+      //                   #(Psubst.subst_comp ss_consumed c)
+      //                   (coerce_eq t_typing ()) in
 
+      assume (Set.disjoint (Psubst.dom s_x_e) (Psubst.dom ss_consumed));
+      let ss_consumed_new = Psubst.push ss_consumed s_x_e in
+
+      // // This requires some more work, we need to say prefix is closed
+      // assume (psubst_env uvs_unresolved ss_consumed ==
+      //         psubst_env uvs_unresolved ss_consumed_new);
+
+      // let t_typing:
+      //   st_typing (push_env (push_env g0 (psubst_env uvs_unresolved ss_consumed_new))
+      //                       (psubst_env uvs_remaining_new ss_consumed_new))
+      //             (Psubst.subst_st_term ss_consumed_new t)
+      //             (Psubst.subst_comp ss_consumed_new c) = coerce_eq t_typing () in
       
+      // push_env_assoc g0 (psubst_env uvs_unresolved ss_consumed_new)
+      //                   (psubst_env uvs_remaining_new ss_consumed_new);
+
+      assume (push_env (psubst_env uvs_unresolved ss_consumed_new)
+                       (psubst_env uvs_remaining_new ss_consumed_new) ==
+              psubst_env (push_env uvs_unresolved uvs_remaining) ss_consumed_new);
+
+      assert False;
+      // let t_typing:
+      //   st_typing (push_env g0 (psubst_env (push_env uvs_unresolved uvs_remaining_new) ss_consumed_new))
+      //             (Psubst.subst_st_term ss_consumed_new t)
+      //             (Psubst.subst_comp ss_consumed_new c) = coerce_eq t_typing () in
+      
+      // let ss_remaining_new = Psubst.diff ss_remaining s_x_e in
+
+      // assert (Set.disjoint (Psubst.dom ss_consumed_new) (Psubst.dom ss_remaining_new));
+      // assert (Psubst.equal ss (Psubst.push ss_consumed_new ss_remaining_new));
+      // assert (Psubst.dom ss_remaining_new `Set.subset` dom uvs_remaining_new);
+      // assert (equal uvs_unresolved (filter_ss uvs_seen_new ss_consumed_new));
+
+      // assert False;
 
       // let t_typing = st_typing_subst (push_env g0 uvs_unresolved) x ty uvs_remaining_new
       //   #e
