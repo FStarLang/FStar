@@ -233,20 +233,43 @@ let rec apply_partial_psubs (g0:env) (t:st_term) (c:comp_st)
       apply_partial_psubs g0 t c uvs ss ss_consumed ss_remaining
         uvs_seen_new uvs_remaining_new uvs_unresolved_new t_typing
     end
-    else admit ()
-    // let (x, ty, uvs_pending_suffix_tl ) = remove_binding uvs_pending_suffix in
-    // if not (x `Set.mem` Psubst.dom ss_remaining)
-    // then begin
-    //   push_env_assoc uvs_pending_prefix
-    //                  (push_binding (mk_env (fstar_env uvs_pending_suffix)) x ty)
-    //                  uvs_pending_suffix_tl;
-    //   assert (equal (push_env uvs_pending_prefix uvs_pending_suffix)
-    //                 (push_env (push_env uvs_pending_prefix
-    //                                     (push_binding (mk_env (fstar_env uvs_pending_suffix)) x ty))
-    //                           uvs_pending_suffix_tl));
-    //   admit ()
-    // end
-    // else admit ()
+    else begin
+      let e = Psubst.lookup ss_remaining x in
+
+      assert (equal (psubst_env (push_env uvs_unresolved uvs_remaining) ss_consumed)
+                    (psubst_env (push_env uvs_unresolved (push_env g_x_t uvs_remaining_new)) ss_consumed));
+
+      let g_x_ss_t =
+        push_binding (mk_env (fstar_env uvs_remaining)) x (Psubst.subst_term ss_consumed ty)  in
+
+      assume (psubst_env (push_env uvs_unresolved (push_env g_x_t uvs_remaining_new)) ss_consumed ==
+              push_env (psubst_env uvs_unresolved ss_consumed)
+                       (push_env g_x_ss_t (psubst_env uvs_remaining_new ss_consumed)));
+
+      push_env_assoc g0 (psubst_env uvs_unresolved ss_consumed)
+                        (push_env g_x_ss_t (psubst_env uvs_remaining_new ss_consumed));
+
+      assert (equal (push_env g0 (psubst_env (push_env uvs_unresolved uvs_remaining) ss_consumed))
+                    (push_env (push_env g0 (psubst_env uvs_unresolved ss_consumed)) (push_env g_x_ss_t (psubst_env uvs_remaining_new ss_consumed))));
+
+      let t_typing =
+        st_typing_subst (push_env g0 (psubst_env uvs_unresolved ss_consumed))
+                        x
+                        (Psubst.subst_term ss_consumed ty)
+                        (psubst_env uvs_remaining_new ss_consumed)
+                        #e
+                        (magic ())
+                        #t #c
+                        (magic ()) in
+
+
+      // let t_typing = st_typing_subst (push_env g0 uvs_unresolved) x ty uvs_remaining_new
+      //   #e
+      //   (magic ())
+      //   t_typing in
+
+      admit ()
+    end
 
 
 // let ss_covers_g' (ss:nt_subst) (g':env) =
