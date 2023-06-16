@@ -7,7 +7,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Common
-
+module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 
 module FV = Pulse.Typing.FV
@@ -55,6 +55,10 @@ let check_stapp
     (fun _ ->
       let g = push_context "st_app" t.range g in        
       let (| head, ty_head, dhead |) = check_term g head in
+      if RU.debug_at_level (fstar_env g) "st_app" then
+        T.print (Printf.sprintf "st_app: head = %s, ty_head = %s\n"
+                   (P.term_to_string head)
+                   (P.term_to_string ty_head));
       match is_arrow ty_head with
       | Some ({binder_ty=formal;binder_ppname=ppname}, bqual, comp_typ) ->
         is_arrow_tm_arrow ty_head;
