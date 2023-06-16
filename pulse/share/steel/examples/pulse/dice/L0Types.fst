@@ -1,4 +1,16 @@
 module L0Types
+module R = Steel.ST.Reference
+module A = Steel.ST.Array
+module T = FStar.Tactics
+module PM = Pulse.Main
+open Steel.ST.Util 
+open Steel.ST.Array
+open Steel.FractionalPermission
+open FStar.Ghost
+open Pulse.Steel.Wrapper
+module A = Steel.ST.Array
+module US = FStar.SizeT
+module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 
 assume
@@ -36,3 +48,57 @@ type aliasKeyCRT_ingredients_t = {
   // aliasKeyCrt_ku: key_usage_payload_t;
   // aliasKeyCrt_l0_version: datatype_of_asn1_type INTEGER;
 }
+
+noeq
+type l0_record = {
+(* Common Inputs *)
+  cdi: A.larray U8.t 32; (* secret bytes *)
+  fwid: A.larray U8.t 32; (* public bytes *)
+  deviceID_label_len: (v:US.t{ US.v v > 0 }); (* should be U32 *)
+  deviceID_label: A.larray U8.t (US.v deviceID_label_len); (* public bytes *)
+  aliasKey_label_len: (v:US.t{ US.v v > 0 }); (* should be U32 *)
+  aliasKey_label: A.larray U8.t (US.v aliasKey_label_len); (* public bytes *)
+(* DeviceID CSR Inputs*)
+  deviceIDCSR_ingredients:deviceIDCSR_ingredients_t;
+(* AliasKey Crt Inputs*)
+  aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t;
+(* Common Outputs *)
+  deviceID_pub: A.larray U8.t 32; (* public bytes *)
+  aliasKey_pub: A.larray U8.t 32; (* public bytes *)
+  aliasKey_priv: A.larray U8.t 32;
+(* DeviceID CSR Outputs *)
+  deviceIDCSR_len: US.t; (* should be U32 *)
+  deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len); (* public bytes *)
+(* AliasKey Crt Outputs *)
+  aliasKeyCRT_len: US.t; (* should be U32 *)
+  aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len); (* public bytes *)
+}
+
+type l0_repr = {
+  cdi: (Seq.seq U8.t);
+  fwid: (Seq.seq U8.t);
+  deviceID_label: (Seq.seq U8.t);
+  aliasKey_label: (Seq.seq U8.t);
+  deviceID_pub: (Seq.seq U8.t);
+  aliasKey_pub: (Seq.seq U8.t);
+  aliasKey_priv: (Seq.seq U8.t);
+  deviceIDCSR_buf: (Seq.seq U8.t);
+  aliasKeyCRT_buf: (Seq.seq U8.t);
+}
+
+let l0_perm (l0:l0_record) (vl0: l0_repr) 
+            // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
+  : vprop = 
+  // A.pts_to l0.cdi pcdi vl0.cdi `star`
+  // A.pts_to l0.fwid pfwid vl0.fwid `star`
+  // A.pts_to l0.deviceID_label pdeviceID_label vl0.deviceID_label `star`
+  // A.pts_to l0.aliasKey_label paliasKey_label vl0.aliasKey_label `star`
+  A.pts_to l0.cdi full_perm vl0.cdi `star`
+  A.pts_to l0.fwid full_perm vl0.fwid `star`
+  A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
+  A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
+  A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
+  A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
+  A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
+  A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+  A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf
