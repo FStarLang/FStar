@@ -10,7 +10,7 @@ open Pulse.Checker.Common
 open Pulse.Typing
 module Metatheory = Pulse.Typing.Metatheory
 open Pulse.Reflection.Util
-open Pulse.Checker.Auto.Util
+open Pulse.Checker.Auto.Elims
 
 let elim_pure_head =
     let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit" in

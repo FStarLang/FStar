@@ -4,7 +4,7 @@ open Pulse.Syntax
 open Pulse.Typing
 
 open Pulse.Checker.Common
-open Pulse.Checker.Auto.Util
+open Pulse.Checker.Auto.Elims
 
 module T = FStar.Tactics
 

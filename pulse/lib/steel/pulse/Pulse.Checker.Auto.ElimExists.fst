@@ -5,7 +5,7 @@ open Pulse.Typing
 
 module T = FStar.Tactics
 
-open Pulse.Checker.Auto.Util
+open Pulse.Checker.Auto.Elims
 
 let should_elim_exists (v:vprop) : T.Tac bool =
   match v with
