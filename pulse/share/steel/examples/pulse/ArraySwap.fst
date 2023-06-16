@@ -129,6 +129,16 @@ fn get_array_pts_to (#t: Type0) (a: A.array t) (#p: perm) (#s: Ghost.erased (Seq
   }
 ```
 
+```pulse
+fn get_pts_to (#t: Type0) (a: R.ref t) (#p: perm) (#s: Ghost.erased (t))
+  requires (R.pts_to a p s)
+  returns s': Ghost.erased (t)
+  ensures (R.pts_to a p s `star` pure (s' == s))
+  {
+    s
+  }
+```
+
 #push-options "--query_stats --z3rlimit 64"
 #restart-solver
 
@@ -185,12 +195,15 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
         pidx := idx';
         ()
       };
-      ();
+      let gj = get_pts_to pj;
       let s = get_array_pts_to a;
       let idx = !pidx;
+      ();
+      let prf = () <: squash (Prf.array_swap_inner_invariant s0 (SZ.v n) (SZ.v l) bz s (SZ.v i) (SZ.v gj) (SZ.v idx));
+//      Prf.array_swap_inner_invariant_end (SZ.v n) (SZ.v l) bz s0 s (SZ.v i) (SZ.v gj) (SZ.v idx);
+      ();
       (a.(idx) <- save);
       let i' = size_add i 1sz ();
-//      Prf.array_as_ring_buffer_swap (SZ.v n) (SZ.v l) bz s0 s;
       pi := i';
       ()
     };
