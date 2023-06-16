@@ -221,17 +221,20 @@ let rec (st_typing_subst :
                       Pulse_Typing_Env.push_binding
                         (Pulse_Typing_Env.push_env g
                            (Pulse_Typing_Env.push_env g' g'')) x
+                        Pulse_Syntax_Base.ppname_default
                         (Pulse_Syntax_Naming.subst_term
                            b.Pulse_Syntax_Base.binder_ty ss) in
                     let g2 =
                       Pulse_Typing_Env.push_env g
                         (Pulse_Typing_Env.push_env g'
                            (Pulse_Typing_Env.push_binding g'' x
+                              Pulse_Syntax_Base.ppname_default
                               (Pulse_Syntax_Naming.subst_term
                                  b.Pulse_Syntax_Base.binder_ty ss))) in
                     let body_typing1 =
                       st_typing_subst g g'
                         (Pulse_Typing_Env.push_binding g'' x
+                           Pulse_Syntax_Base.ppname_default
                            (Pulse_Syntax_Naming.subst_term
                               b.Pulse_Syntax_Base.binder_ty ss))
                         (Pulse_Syntax_Naming.open_st_term_nv body

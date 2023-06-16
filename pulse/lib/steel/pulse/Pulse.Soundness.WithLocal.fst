@@ -47,7 +47,7 @@ let withlocal_soundness #g #t #c d soundness =
   let elab_body_comp = elab_comp (comp_withlocal_body x init_t init c) in
 
   let rbody_typing
-    : RT.tot_typing (elab_env (push_binding g x (mk_ref init_t)))
+    : RT.tot_typing (elab_env (push_binding g x ppname_default (mk_ref init_t)))
                     (elab_st_typing body_typing)
                     elab_body_comp =
     soundness _ _ _ body_typing in
@@ -144,7 +144,7 @@ let withlocal_soundness #g #t #c d soundness =
            (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
            (RT.open_with_var y 0)) = RT.EQ_Refl _ _ in
 
-  let z = fresh (push_binding g y (mk_ref init_t)) in
+  let z = fresh (push_binding g y ppname_default (mk_ref init_t)) in
   let g_z = RT.extend_env g_y z (RT.subst_term rret_t (RT.open_with_var y 0)) in
   assume (None? (RT.lookup_bvar g_y z));
 

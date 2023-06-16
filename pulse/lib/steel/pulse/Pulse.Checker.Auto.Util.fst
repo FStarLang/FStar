@@ -35,7 +35,7 @@ let ve_unit_r g (p:term) : vprop_equiv g (Tm_Star p Tm_Emp) p =
 let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                   (post:term { freevars post `Set.subset` freevars (comp_post c)})
                   (veq: (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) } ->
-                         vprop_equiv (push_binding g x (comp_res c)) 
+                         vprop_equiv (push_binding g x ppname_default (comp_res c)) 
                                      (open_term (comp_post c) x)
                                      (open_term post x)))
   : st_typing g t (comp_st_with_post c post)
@@ -50,7 +50,7 @@ let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
 let simplify_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                   (post:term { comp_post c == Tm_Star post Tm_Emp})
   : st_typing g t (comp_st_with_post c post)
-  = st_equiv_post d post (fun x -> ve_unit_r (push_binding g x (comp_res c)) (open_term post x))
+  = st_equiv_post d post (fun x -> ve_unit_r (push_binding g x ppname_default (comp_res c)) (open_term post x))
 
 let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
   : Lemma
@@ -186,7 +186,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   : T.Tac (x:var { None? (lookup g x) } &
            continuation_elaborator
              g (Tm_Star ctxt (comp_pre c1))
-             (push_binding g x (comp_res c1)) (Tm_Star (open_term (comp_post c1) x) ctxt)) =
+             (push_binding g x ppname_default (comp_res c1)) (Tm_Star (open_term (comp_post c1) x) ctxt)) =
 
   let pre1 = comp_pre c1 in
   let res1 = comp_res c1 in
@@ -203,7 +203,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness e1_typing))) in
   let x = fresh g in
   let b = res1 in
-  let g' = push_binding g x b in
+  let g' = push_binding g x ppname_default b in
   
   let post1_opened = open_term_nv post1 (v_as_nv x) in
   let k : continuation_elaborator g (Tm_Star ctxt pre1) g' (Tm_Star post1_opened ctxt) =
@@ -259,7 +259,7 @@ let elim_one (#g:env)
   let ctxt_typing = star_typing_inversion_l ctxt_p_typing in
 
   let (| x, k |) = continuation_elaborator_with_bind ctxt e1_typing ctxt_p_typing in
-  let g' = push_binding g x (comp_res c1) in
+  let g' = push_binding g x ppname_default (comp_res c1) in
   let ctxt_g'_typing : tot_typing g' ctxt Tm_VProp =
     Metatheory.tot_typing_weakening x (comp_res c1) ctxt_typing in
   let ctxt' = Tm_Star (open_term_nv (comp_post c1) (v_as_nv x)) ctxt in
@@ -269,7 +269,7 @@ let elim_one (#g:env)
         g' ctxt' =
     k in
   let ctxt'_typing : tot_typing g' ctxt' Tm_VProp = magic () in
-  env_extends_push g x (comp_res c1);
+  env_extends_push g x ppname_default (comp_res c1);
   (| g', ctxt', ctxt'_typing, k |)
 
 let rec elim_all (#g:env)

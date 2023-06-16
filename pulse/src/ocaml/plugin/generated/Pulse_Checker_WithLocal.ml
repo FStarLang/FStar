@@ -268,11 +268,11 @@ let (check_withlocal :
                                                                     (Prims.of_int (50))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (58)))
+                                                                    (Prims.of_int (79)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithLocal.fst"
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (82))
                                                                     (Prims.of_int (86))
                                                                     (Prims.of_int (10)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -280,6 +280,7 @@ let (check_withlocal :
                                                                     uu___3 ->
                                                                     Pulse_Typing_Env.push_binding
                                                                     g1 x
+                                                                    binder.Pulse_Syntax_Base.binder_ppname
                                                                     (Pulse_Typing.mk_ref
                                                                     init_t)))
                                                                     (fun

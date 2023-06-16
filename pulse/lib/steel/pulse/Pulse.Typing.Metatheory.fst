@@ -45,7 +45,7 @@ let tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
                         (_:tot_typing g (Tm_ExistsSL u (as_binder ty) p) Tm_VProp)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
-    tot_typing (push_binding g x ty) p Tm_VProp
+    tot_typing (push_binding g x ppname_default ty) p Tm_VProp
   = admit(), admit()
 
 let tot_typing_weakening #g #t #ty x b d = admit()

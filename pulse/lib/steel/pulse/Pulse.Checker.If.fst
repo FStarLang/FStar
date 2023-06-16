@@ -86,7 +86,7 @@ let check_if (g:env)
     let post = post_hint.post in
     let hyp = fresh g in
     let g_with_eq (eq_v:term) =
-        push_binding g hyp (mk_eq2 u0 tm_bool b eq_v)
+        push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b eq_v)
     in
     let check_branch (eq_v:term) (br:st_term)
       : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &

@@ -26,7 +26,7 @@ let check_comp (g:env)
           let x = fresh g in
           let px = v_as_nv x in
           assume (~(x `Set.mem` freevars (comp_post c)));
-          let gx = push_binding g x st.res in
+          let gx = push_binding g x (fst px) st.res in
           let (| ty, post_typing |) = core_check_term gx (open_term_nv (comp_post c) px) in
           if not (eq_tm ty Tm_VProp)
           then fail g None "Ill-typed postcondition"

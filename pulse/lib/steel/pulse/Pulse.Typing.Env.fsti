@@ -8,12 +8,14 @@ module L = FStar.List.Tot
 
 module RT = FStar.Reflection.Typing
 module T = FStar.Tactics
+
+type binding = var & typ
+type env_bindings = list binding
+
 val env : Type0
 
 val fstar_env (g:env) : RT.fstar_top_env
 
-type binding = var & typ
-type env_bindings = list binding
 
 //
 // most recent binding at the head of the list
@@ -50,16 +52,16 @@ val mk_env_bs (f:RT.fstar_top_env)
   : Lemma (bindings (mk_env f) == [])
           [SMTPat (bindings (mk_env f))]
 
-val push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
+val push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
   : g':env { fstar_env g' == fstar_env g }
 
-val push_binding_bs (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
-  : Lemma (bindings (push_binding g x t) == (x, t) :: bindings g)
-          [SMTPat (bindings (push_binding g x t))]
+val push_binding_bs (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
+  : Lemma (bindings (push_binding g x n t) == (x, t) :: bindings g)
+          [SMTPat (bindings (push_binding g x n t))]
 
-val push_binding_as_map (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
-  : Lemma (as_map (push_binding g x t) == Map.upd (as_map g) x t)
-          [SMTPat (as_map (push_binding g x t))]
+val push_binding_as_map (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
+  : Lemma (as_map (push_binding g x n t) == Map.upd (as_map g) x t)
+          [SMTPat (as_map (push_binding g x n t))]
 
 let lookup (g:env) (x:var) : option typ =
   let m = as_map g in
@@ -114,17 +116,17 @@ val env_extends_trans (g1 g2 g3:env)
           (ensures g1 `env_extends` g3)
           [SMTPat (g1 `env_extends` g3); SMTPat (g1 `env_extends` g2)]
 
-val env_extends_push (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
-  : Lemma (push_binding g x t `env_extends` g)
-          [SMTPat (push_binding g x t)]
+val env_extends_push (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
+  : Lemma (push_binding g x n t `env_extends` g)
+          [SMTPat (push_binding g x n t)]
 
 val extends_with_push (g1 g2 g3:env)
-  (x:var { ~ (Set.mem x (dom g1)) }) (t:typ)
+  (x:var { ~ (Set.mem x (dom g1)) }) (n:ppname) (t:typ)
   : Lemma (requires extends_with g1 g2 g3)
-          (ensures extends_with (push_binding g1 x t) g2 (push_binding g3 x t))
+          (ensures extends_with (push_binding g1 x n t) g2 (push_binding g3 x n t))
           [SMTPat (extends_with g1 g2 g3);
-           SMTPat (push_binding g1 x t);
-           SMTPat (push_binding g3 x t)]
+           SMTPat (push_binding g1 x n t);
+           SMTPat (push_binding g3 x n t)]
 
 val push_context (g:env) (ctx:string) (r:range) : g':env { g' == g }
 val push_context_no_range (g:env) (ctx:string) : g':env { g' == g }

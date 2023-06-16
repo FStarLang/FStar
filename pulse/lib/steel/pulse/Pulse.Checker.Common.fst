@@ -12,7 +12,7 @@ let post_hint_typing g p x = {
 }
 
 let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { Metatheory.fresh_wrt x g (freevars t) })
-                               (_:tot_typing (push_binding g x ty) (open_term t x) Tm_VProp)
+                               (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) Tm_VProp)
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty Tm_VProp))                                 
   = admit()
 
@@ -25,7 +25,7 @@ let intro_post_hint g ret_ty_opt post =
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty in
   let (| u, ty_typing |) = CP.check_universe g ret_ty in
-  let (| post, post_typing |) = CP.check_vprop (push_binding g x ret_ty) (open_term_nv post (v_as_nv x)) in 
+  let (| post, post_typing |) = CP.check_vprop (push_binding g x ppname_default ret_ty) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
   assume (open_term post' x == post);
@@ -77,7 +77,7 @@ let replace_equiv_post
     let st_typing = Metatheory.comp_typing_inversion ct in
     let (| res_c_typing, pre_c_typing, x, post_c_typing |) = Metatheory.st_comp_typing_inversion st_typing in
     let px = v_as_nv x in
-    let g_post = push_binding g x res_c in
+    let g_post = push_binding g x (fst px) res_c in
     let post_c_opened = open_term_nv post_c px in
     match post_hint with
     | None ->
@@ -143,7 +143,7 @@ let intro_comp_typing (g:env)
                       (pre_typing:tot_typing g (comp_pre c) Tm_VProp)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
                       (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:tot_typing (push_binding g x (comp_res c)) (open_term (comp_post c) x) Tm_VProp)
+                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) Tm_VProp)
   : T.Tac (comp_typing g c (comp_u c))
   = let intro_st_comp_typing (st:st_comp { comp_u c == st.u /\
                                            comp_pre c == st.pre /\

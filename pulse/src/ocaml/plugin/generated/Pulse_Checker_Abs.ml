@@ -133,18 +133,19 @@ let (check_abs :
                                                                     (Prims.of_int (32))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (38)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (34))
+                                                                    (Prims.of_int (41))
                                                                     (Prims.of_int (63))
                                                                     (Prims.of_int (33)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
                                                                     Pulse_Typing_Env.push_binding
-                                                                    g x t2))
+                                                                    g x
+                                                                    ppname t2))
                                                                     (fun
                                                                     uu___5 ->
                                                                     (fun g'

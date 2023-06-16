@@ -247,6 +247,7 @@ let rec (elab_st_typing :
               let body1 =
                 elab_st_typing
                   (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default
                      b.Pulse_Syntax_Base.binder_ty)
                   (Pulse_Syntax_Naming.open_st_term_nv body
                      ((b.Pulse_Syntax_Base.binder_ppname), x)) _c body_typing in
@@ -295,6 +296,7 @@ let rec (elab_st_typing :
               let e21 =
                 elab_st_typing
                   (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default
                      (Pulse_Syntax_Base.comp_res c1))
                   (Pulse_Syntax_Naming.open_st_term_nv e2
                      ((b.Pulse_Syntax_Base.binder_ppname), x)) c2 e2_typing in
@@ -311,7 +313,9 @@ let rec (elab_st_typing :
               let re1 = Pulse_Elaborate_Pure.elab_term e1 in
               let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
               let re2 =
-                elab_st_typing (Pulse_Typing_Env.push_binding uu___ x t1)
+                elab_st_typing
+                  (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default t1)
                   (Pulse_Syntax_Naming.open_st_term_nv e2
                      (Pulse_Syntax_Base.v_as_nv x)) uu___1 e2_typing in
               FStar_Reflection_Typing.mk_let
@@ -335,12 +339,14 @@ let rec (elab_st_typing :
               let re1 =
                 elab_st_typing
                   (Pulse_Typing_Env.push_binding uu___ uu___5
+                     Pulse_Syntax_Base.ppname_default
                      (Pulse_Typing.mk_eq2 Pulse_Syntax_Pure.u0
                         Pulse_Typing.tm_bool b Pulse_Typing.tm_true)) uu___1
                   uu___3 e1_typing in
               let re2 =
                 elab_st_typing
                   (Pulse_Typing_Env.push_binding uu___ uu___5
+                     Pulse_Syntax_Base.ppname_default
                      (Pulse_Typing.mk_eq2 Pulse_Syntax_Pure.u0
                         Pulse_Typing.tm_bool b Pulse_Typing.tm_false)) uu___2
                   uu___3 e2_typing in
@@ -459,6 +465,7 @@ let rec (elab_st_typing :
               let rbody =
                 elab_st_typing
                   (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default
                      (Pulse_Typing.mk_ref init_t))
                   (Pulse_Syntax_Naming.open_st_term_nv uu___1
                      (Pulse_Syntax_Base.v_as_nv x))

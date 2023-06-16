@@ -40,7 +40,7 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
   : T.Tac (x:var { None? (lookup g x) } &
            continuation_elaborator
              g                                (Tm_Star ctxt (comp_pre c1))
-             (push_binding g x (comp_res c1)) (Tm_Star (open_term (comp_post c1) x) ctxt))
+             (push_binding g x ppname_default (comp_res c1)) (Tm_Star (open_term (comp_post c1) x) ctxt))
 
 //
 // Scaffolding for adding elims
