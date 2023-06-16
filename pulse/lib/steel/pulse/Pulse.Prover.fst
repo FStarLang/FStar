@@ -22,7 +22,7 @@ let list_as_vprop_of_vprop_as_list (p:vprop)
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y === x} = x
 
-let prover : prover_t = admit ()
+let prover : prover_t = fun #_ _ -> magic ()
 
 #push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 1"
 let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:vprop_typing g ctxt)

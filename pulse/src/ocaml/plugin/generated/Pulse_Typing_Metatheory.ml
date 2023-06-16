@@ -162,94 +162,37 @@ let (st_typing_equiv_pre :
           Pulse_Syntax_Base.term ->
             unit -> (unit, unit, unit) Pulse_Typing.st_typing)
   = fun g -> fun t -> fun c -> fun d -> fun pre -> fun veq -> Prims.admit ()
-let map_opt :
-  'a 'b .
-    ('a -> 'b) ->
-      'a FStar_Pervasives_Native.option -> 'b FStar_Pervasives_Native.option
+type ('g, 'gu, 'guu) pairwise_disjoint = unit
+let (singleton_env :
+  FStar_Reflection_Typing.fstar_top_env ->
+    Pulse_Syntax_Base.var -> Pulse_Syntax_Base.typ -> Pulse_Typing_Env.env)
   =
   fun f ->
     fun x ->
-      match x with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some x1 ->
-          FStar_Pervasives_Native.Some (f x1)
-let (subst_flip :
-  Pulse_Syntax_Naming.subst ->
-    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
-  = fun ss -> fun t -> Pulse_Syntax_Naming.subst_term t ss
+      fun t -> Pulse_Typing_Env.push_binding (Pulse_Typing_Env.mk_env f) x t
+let (nt :
+  Pulse_Syntax_Base.var ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Naming.subst_elt Prims.list)
+  = fun x -> fun t -> [Pulse_Syntax_Naming.NT (x, t)]
 let (subst_env :
   Pulse_Typing_Env.env -> Pulse_Syntax_Naming.subst -> Pulse_Typing_Env.env)
   = fun en -> fun ss -> Prims.admit ()
-type nt_subst = Pulse_Syntax_Naming.subst
-type ('g, 'gu, 'guu) pairwise_disjoint = unit
-let rec (lookup_nt_subst :
-  nt_subst ->
-    Pulse_Syntax_Base.var ->
-      Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
-  =
-  fun ss ->
-    fun x ->
-      match ss with
-      | [] -> FStar_Pervasives_Native.None
-      | (Pulse_Syntax_Naming.NT (y, t))::ss1 ->
-          if x = y
-          then FStar_Pervasives_Native.Some t
-          else lookup_nt_subst ss1 x
-type ('g, 'gu, 'ss) well_typed_ss = unit
-type ('ss, 'gu) ss_covers_g' = unit
-
-let rec (st_typing_subst :
+let (st_typing_subst :
   Pulse_Typing_Env.env ->
-    Pulse_Typing_Env.env ->
-      Pulse_Typing_Env.env ->
-        Pulse_Syntax_Base.st_term ->
-          Pulse_Syntax_Base.comp_st ->
-            (unit, unit, unit) Pulse_Typing.st_typing ->
-              nt_subst -> (unit, unit, unit) Pulse_Typing.st_typing)
+    Pulse_Syntax_Base.var ->
+      Pulse_Syntax_Base.typ ->
+        Pulse_Typing_Env.env ->
+          Pulse_Syntax_Base.term ->
+            unit ->
+              Pulse_Syntax_Base.st_term ->
+                Pulse_Syntax_Base.comp_st ->
+                  (unit, unit, unit) Pulse_Typing.st_typing ->
+                    (unit, unit, unit) Pulse_Typing.st_typing)
   =
   fun g ->
-    fun g' ->
-      fun g'' ->
-        fun e1 ->
-          fun c1 ->
-            fun e1_typing ->
-              fun ss ->
-                match e1_typing with
-                | Pulse_Typing.T_Abs
-                    (uu___, x, q, b, u, body, c, b_ty_typing, body_typing) ->
-                    let g1 =
-                      Pulse_Typing_Env.push_binding
-                        (Pulse_Typing_Env.push_env g
-                           (Pulse_Typing_Env.push_env g' g'')) x
-                        (Pulse_Syntax_Naming.subst_term
-                           b.Pulse_Syntax_Base.binder_ty ss) in
-                    let g2 =
-                      Pulse_Typing_Env.push_env g
-                        (Pulse_Typing_Env.push_env g'
-                           (Pulse_Typing_Env.push_binding g'' x
-                              (Pulse_Syntax_Naming.subst_term
-                                 b.Pulse_Syntax_Base.binder_ty ss))) in
-                    let body_typing1 =
-                      st_typing_subst g g'
-                        (Pulse_Typing_Env.push_binding g'' x
-                           (Pulse_Syntax_Naming.subst_term
-                              b.Pulse_Syntax_Base.binder_ty ss))
-                        (Pulse_Syntax_Naming.open_st_term_nv body
-                           ((b.Pulse_Syntax_Base.binder_ppname), x)) c
-                        body_typing ss in
-                    Pulse_Typing.T_Abs
-                      ((Pulse_Typing_Env.push_env g g'), x, q,
-                        (Pulse_Syntax_Naming.subst_binder b ss), u,
-                        (Pulse_Syntax_Naming.subst_st_term body ss),
-                        (Pulse_Syntax_Naming.subst_comp c ss), (),
-                        body_typing1)
-                | Pulse_Typing.T_STApp
-                    (uu___, head, ty, q, res, arg, head_typing, arg_typing)
-                    ->
-                    Pulse_Typing.T_STApp
-                      ((Pulse_Typing_Env.push_env g g''),
-                        (Pulse_Syntax_Naming.subst_term head ss),
-                        (Pulse_Syntax_Naming.subst_term ty ss), q,
-                        (Pulse_Syntax_Naming.subst_comp res ss),
-                        (Pulse_Syntax_Naming.subst_term arg ss), (), ())
-                | uu___ -> Prims.admit ()
+    fun x ->
+      fun t ->
+        fun g' ->
+          fun e ->
+            fun e_typing ->
+              fun e1 -> fun c1 -> fun e1_typing -> Prims.admit ()

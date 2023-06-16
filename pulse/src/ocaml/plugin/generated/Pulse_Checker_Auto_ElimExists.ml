@@ -70,11 +70,11 @@ let (elim_exists :
       unit ->
         ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
            (unit, unit, unit, unit)
-             Pulse_Checker_Auto_Util.continuation_elaborator)
+             Pulse_Checker_Auto_Elims.continuation_elaborator)
            FStar_Pervasives.dtuple4,
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun ctxt ->
       fun ctxt_typing ->
-        Pulse_Checker_Auto_Util.add_elims g ctxt should_elim_exists mk ()
+        Pulse_Checker_Auto_Elims.add_elims g ctxt should_elim_exists mk ()

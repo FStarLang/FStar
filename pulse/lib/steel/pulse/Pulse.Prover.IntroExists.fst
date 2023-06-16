@@ -336,4 +336,4 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
     else None
 #pop-options
 
-let intro_exists_prover_step = magic ()
+let intro_exists_prover_step = fun #_ _ -> magic ()
