@@ -139,6 +139,16 @@ fn get_pts_to (#t: Type0) (a: R.ref t) (#p: perm) (#s: Ghost.erased (t))
   }
 ```
 
+```pulse
+fn pulse_assert (p: prop)
+  requires (pure p)
+  returns res: squash p
+  ensures emp
+  {
+    ()
+  }
+```
+
 #push-options "--query_stats --z3rlimit 64"
 #restart-solver
 
@@ -171,11 +181,10 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
     )) {
       let i = !pi;
       let save = a.(i);
-      let save_eq0 = magic () <: squash (save == Seq.index s0 (SZ.v i));
       let mut pj = 0sz;
       let mut pidx = i;
       while (let j = !pj; (j `size_lt` (size_sub q 1sz ())))
-      invariant b . exists s i j idx . (
+      invariant b . exists s j idx . (
         A.pts_to a full_perm s `star`
         R.pts_to pi full_perm i `star`
         R.pts_to pj full_perm j `star`
@@ -195,13 +204,8 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
         pidx := idx';
         ()
       };
-      let gj = get_pts_to pj;
-      let s = get_array_pts_to a;
+      ();
       let idx = !pidx;
-      ();
-      let prf = () <: squash (Prf.array_swap_inner_invariant s0 (SZ.v n) (SZ.v l) bz s (SZ.v i) (SZ.v gj) (SZ.v idx));
-//      Prf.array_swap_inner_invariant_end (SZ.v n) (SZ.v l) bz s0 s (SZ.v i) (SZ.v gj) (SZ.v idx);
-      ();
       (a.(idx) <- save);
       let i' = size_add i 1sz ();
       pi := i';
