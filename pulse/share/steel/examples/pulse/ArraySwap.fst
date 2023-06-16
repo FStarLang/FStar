@@ -149,7 +149,6 @@ fn pulse_assert (p: prop)
   }
 ```
 
-#push-options "--query_stats --z3rlimit 64"
 #restart-solver
 
 ```pulse
@@ -214,5 +213,3 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
     ()
 }
 ```
-
-#pop-options

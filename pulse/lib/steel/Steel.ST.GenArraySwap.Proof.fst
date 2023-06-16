@@ -588,7 +588,7 @@ let array_swap_inner_invariant_end
     let s' = Seq.upd s idx (Seq.index s0 i) in
     array_swap_outer_invariant s0 n l bz s' (i + 1)
   ))
-  [SMTPat (array_swap_inner_invariant s0 n l bz s i j idx)]
+//  [SMTPat (array_swap_inner_invariant s0 n l bz s i j idx)]
 = ()
 
 module SZ = FStar.SizeT
