@@ -346,6 +346,16 @@ let apply_partial_subs (#g0:env) (#t:st_term) (#c:comp_st)
   apply_partial_psubs_aux g0 t c uvs ss ss_consumed ss_remaining
     uvs_seen uvs_remaining uvs_unresolved t_typing
 
+let apply_partial_subs_veq (#g0:env) (#p1 #p2:vprop)
+  (uvs:env { disjoint uvs g0 })
+  (ss:Psubst.t g0 { well_typed_ss uvs ss })
+  (veq:vprop_equiv (push_env g0 uvs) p1 p2)
+
+  : uvs_unresolved:env { uvs_unresolved == filter_ss uvs ss } &
+    vprop_equiv (push_env g0 (psubst_env uvs_unresolved ss))
+                (Psubst.subst_term ss p1)
+                (Psubst.subst_term ss p2) = admit ()
+
 
 // let ss_covers_g' (ss:nt_subst) (g':env) =
 //   forall (x:var). x `Set.mem` dom g' ==> Some? (lookup_nt_subst ss x)
