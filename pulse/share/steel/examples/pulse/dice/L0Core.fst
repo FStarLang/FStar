@@ -37,30 +37,11 @@ let l0_pre
 (* AliasKey Crt Outputs *)
   (aliasKeyCRT_len: US.t) (* should be U32 *)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len)) (* public bytes *)
-  : Type0
-= admit()
-  //   B.(all_live h [buf cdi;
-  //                  buf fwid;
-  //                  buf deviceID_label;
-  //                  buf aliasKey_label;
-  //                  buf deviceIDCSR_buf;
-  //                  buf aliasKeyCRT_buf;
-  //                  buf deviceID_pub;
-  //                  buf aliasKey_pub;
-  //                  buf aliasKey_priv]) /\
-  //   B.(all_disjoint [loc_buffer cdi;
-  //                    loc_buffer fwid;
-  //                    loc_buffer deviceID_label;
-  //                    loc_buffer aliasKey_label;
-  //                    loc_buffer deviceIDCSR_buf;
-  //                    loc_buffer aliasKeyCRT_buf;
-  //                    loc_buffer deviceID_pub;
-  //                    loc_buffer aliasKey_pub;
-  //                    loc_buffer aliasKey_priv]) /\
+  : vprop = 
+    admit()
   //  (* Pre: labels have enough length for HKDF *)
   //  valid_hkdf_lbl_len deviceID_label_len /\
   //  valid_hkdf_lbl_len aliasKey_label_len /\
-
   //  deviceIDCRI_pre deviceIDCSR_ingredients /\
   //  deviceIDCSR_pre deviceIDCSR_ingredients deviceIDCSR_len /\
   //  aliasKeyCRT_pre aliasKeyCRT_ingredients aliasKeyCRT_len
@@ -87,24 +68,16 @@ let l0_post
 (* AliasKey Crt Outputs *)
   (aliasKeyCRT_len: US.t) (* should be U32 *)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len)) (* public bytes *)
-  : Type0
+  : vprop
   = admit()
-//     B.(modifies (loc_buffer deviceID_pub    `loc_union`
-//                  loc_buffer aliasKey_pub    `loc_union`
-//                  loc_buffer aliasKey_priv   `loc_union`
-//                  loc_buffer deviceIDCSR_buf `loc_union`
-//                  loc_buffer aliasKeyCRT_buf) h0 h1) /\
-
 //     aliasKey_post cdi
 //       (B.as_seq h0 fwid)
 //       aliasKey_label_len
 //       (L0.Declassify.classify_public_bytes (B.as_seq h0 aliasKey_label))
 //       aliasKey_pub aliasKey_priv h0 h1 /\
-
 //     deviceIDCSR_post cdi deviceID_label_len
 //       (L0.Declassify.classify_public_bytes (B.as_seq h0 deviceID_label))
 //       deviceIDCSR_ingredients deviceIDCSR_len deviceIDCSR_buf h0 h1 /\
-
 //     aliasKeyCRT_post cdi
 //       (B.as_seq h0 fwid)
 //       deviceID_label_len
@@ -134,41 +107,35 @@ let l0_aux_post
 (* AliasKey Crt Outputs *)
   (aliasKeyCRT_len: US.t) (* should be U32 *)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len)) (* public bytes *)
-  : Type0
+  : vprop
   = admit()
-//     B.(modifies (loc_buffer deviceID_pub    `loc_union`
-//                  loc_buffer aliasKey_pub    `loc_union`
-//                  loc_buffer aliasKey_priv   `loc_union`
-//                  loc_buffer deviceIDCSR_buf `loc_union`
-//                  loc_buffer aliasKeyCRT_buf) h0 h1) /\
-
 //     aliasKey_post cdi (B.as_seq h0 fwid) aliasKey_label_len (B.as_seq h0 aliasKey_label) aliasKey_pub aliasKey_priv h0 h1 /\
-
 //     deviceIDCSR_post cdi deviceID_label_len (B.as_seq h0 deviceID_label)
 //       deviceIDCSR_ingredients deviceIDCSR_len deviceIDCSR_buf h0 h1 /\
-
 //     aliasKeyCRT_post cdi (B.as_seq h0 fwid) deviceID_label_len (B.as_seq h0 deviceID_label)
 //       aliasKeyCRT_ingredients aliasKeyCRT_len aliasKeyCRT_buf aliasKey_pub h0 h1 /\
 // True
 
-assume
-val classify_public_bytes
-  (pub: Ghost.erased (Seq.seq U8.t)) (* public bytes *)
-  : s:Ghost.erased (Seq.seq U8.t){ 
-          Seq.length s == Seq.length pub /\
-          Seq.equal s pub}
+// assume
+// val classify_public_bytes
+//   (pub: Ghost.erased (Seq.seq U8.t)) (* public bytes *)
+//   : s:Ghost.erased (Seq.seq U8.t){ 
+//           Seq.length s == Seq.length pub /\
+//           Seq.equal s pub}
 
 assume
 val classify_public_buffer
   (len: US.t)
   (src: A.larray U8.t (US.v len)) (* public bytes *)
   (dst: A.larray U8.t (US.v len))
-  (#p1 #p2:perm)
-  (#src_seq #dst_seq: Ghost.erased (Seq.seq U8.t))
+  (#p :perm)
+  (#src0 #dst0: Ghost.erased (Seq.seq U8.t))
 : stt unit
-  (A.pts_to src p1 src_seq `star`
-   A.pts_to dst p2 dst_seq)
-  (fun _ -> pure (dst_seq == classify_public_bytes src_seq))
+  (A.pts_to src p src0 `star`
+   A.pts_to dst full_perm dst0)
+  (fun _ -> A.pts_to src p src0 `star`
+            A.pts_to dst full_perm dst0 `star`
+            pure (Seq.equal src0 dst0))
 
 ```pulse
 fn l0_aux
@@ -193,7 +160,23 @@ fn l0_aux
 (* AliasKey Crt Outputs *)
   (aliasKeyCRT_len: US.t) (* should be U32 *)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len)) (* public bytes *)
-  requires (l0_pre (cdi) (fwid)
+(* Implicits *)
+  (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
+  (#cdi0 #fwid0 #deviceID_label0 
+   #aliasKey_label0 #deviceID_pub0 
+   #aliasKey_pub0 #aliasKey_priv0 
+   #deviceIDCSR_buf0 #aliasKeyCRT_buf0
+   : Ghost.erased (Seq.seq U8.t))
+  requires (A.pts_to cdi pcdi cdi0 `star`
+            A.pts_to fwid pfwid fwid0 `star`
+            A.pts_to deviceID_label pdeviceID_label deviceID_label0 `star`
+            A.pts_to aliasKey_label paliasKey_label aliasKey_label0 `star`
+            A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
+            A.pts_to aliasKey_pub full_perm aliasKey_pub0 `star`
+            A.pts_to aliasKey_priv full_perm aliasKey_priv0 `star`
+            A.pts_to deviceIDCSR_buf full_perm deviceIDCSR_buf0 `star`
+            A.pts_to aliasKeyCRT_buf full_perm aliasKeyCRT_buf0 `star`
+            l0_pre (cdi) (fwid)
                    (deviceID_label_len) (deviceID_label)
                    (aliasKey_label_len) (aliasKey_label)
                    (deviceIDCSR_ingredients)
@@ -201,17 +184,27 @@ fn l0_aux
                    (deviceID_pub) (aliasKey_pub) (aliasKey_priv)
                    (deviceIDCSR_len) (deviceIDCSR_buf)
                    (aliasKeyCRT_len) (aliasKeyCRT_buf))
-   ensures (l0_aux_post (cdi) (fwid)
-                        (deviceID_label_len) (deviceID_label)
-                        (aliasKey_label_len) (aliasKey_label)
-                        (deviceIDCSR_ingredients)
-                        (aliasKeyCRT_ingredients)
-                        (deviceID_pub) (aliasKey_pub) (aliasKey_priv)
-                        (deviceIDCSR_len) (deviceIDCSR_buf)
-                        (aliasKeyCRT_len) (aliasKeyCRT_buf))
+   ensures exists (deviceID_pub1 aliasKey_pub1 aliasKey_priv1 deviceIDCSR_buf1 aliasKeyCRT_buf1
+                  : Ghost.erased (Seq.seq U8.t)). (
+                      A.pts_to cdi pcdi cdi0 `star`
+                      A.pts_to fwid pfwid fwid0 `star`
+                      A.pts_to deviceID_label pdeviceID_label deviceID_label0 `star`
+                      A.pts_to aliasKey_label paliasKey_label aliasKey_label0 `star`
+                      A.pts_to deviceID_pub full_perm deviceID_pub1 `star`
+                      A.pts_to aliasKey_pub full_perm aliasKey_pub1 `star`
+                      A.pts_to aliasKey_priv full_perm aliasKey_priv1 `star`
+                      A.pts_to deviceIDCSR_buf full_perm deviceIDCSR_buf1 `star`
+                      A.pts_to aliasKeyCRT_buf full_perm aliasKeyCRT_buf1 `star`
+                      l0_post (cdi) (fwid)
+                              (deviceID_label_len) (deviceID_label)
+                              (aliasKey_label_len) (aliasKey_label)
+                              (deviceIDCSR_ingredients)
+                              (aliasKeyCRT_ingredients)
+                              (deviceID_pub) (aliasKey_pub) (aliasKey_priv)
+                              (deviceIDCSR_len) (deviceIDCSR_buf)
+                              (aliasKeyCRT_len) (aliasKeyCRT_buf))
 {
   admit()
-}
 //   (**) let h0 = HST.get () in
 //   HST.push_frame ();
 //   (**) let hs0 = HST.get () in
@@ -385,6 +378,7 @@ fn l0_aux
 //   //     (aliasKey_pub)
 //   //     (h0) (hf)
 //   // )
+}
 ```
 
 ```pulse
@@ -410,7 +404,23 @@ fn l0
 (* AliasKey Crt Outputs *)
   (aliasKeyCRT_len: US.t) (* should be U32 *)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len)) (* public bytes *)
-  requires (l0_pre (cdi) (fwid)
+(* Implicits *)
+  (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
+  (#cdi0 #fwid0 #deviceID_label0 
+   #aliasKey_label0 #deviceID_pub0 
+   #aliasKey_pub0 #aliasKey_priv0 
+   #deviceIDCSR_buf0 #aliasKeyCRT_buf0
+   : Ghost.erased (Seq.seq U8.t))
+  requires (A.pts_to cdi pcdi cdi0 `star`
+            A.pts_to fwid pfwid fwid0 `star`
+            A.pts_to deviceID_label pdeviceID_label deviceID_label0 `star`
+            A.pts_to aliasKey_label paliasKey_label aliasKey_label0 `star`
+            A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
+            A.pts_to aliasKey_pub full_perm aliasKey_pub0 `star`
+            A.pts_to aliasKey_priv full_perm aliasKey_priv0 `star`
+            A.pts_to deviceIDCSR_buf full_perm deviceIDCSR_buf0 `star`
+            A.pts_to aliasKeyCRT_buf full_perm aliasKeyCRT_buf0 `star`
+            l0_pre (cdi) (fwid)
                    (deviceID_label_len) (deviceID_label)
                    (aliasKey_label_len) (aliasKey_label)
                    (deviceIDCSR_ingredients)
@@ -418,23 +428,49 @@ fn l0
                    (deviceID_pub) (aliasKey_pub) (aliasKey_priv)
                    (deviceIDCSR_len) (deviceIDCSR_buf)
                    (aliasKeyCRT_len) (aliasKeyCRT_buf))
-   ensures (l0_post (cdi) (fwid)
-                    (deviceID_label_len) (deviceID_label)
-                    (aliasKey_label_len) (aliasKey_label)
-                    (deviceIDCSR_ingredients)
-                    (aliasKeyCRT_ingredients)
-                    (deviceID_pub) (aliasKey_pub) (aliasKey_priv)
-                    (deviceIDCSR_len) (deviceIDCSR_buf)
-                    (aliasKeyCRT_len) (aliasKeyCRT_buf))
-  = //let fwid_sec = B.alloca (u8 0x00) 32ul in  (* commented out in DICE* impl *)
-    let dk_label = new_array 0uy deviceID_label_len;
-    let ak_label = new_array 0uy aliasKey_label_len;
-    //classify_public_buffer 32ul fwid fwid_sec;  (* commented out in DICE* impl *)
-    classify_public_buffer deviceID_label_len deviceID_label dk_label;
-    classify_public_buffer aliasKey_label_len aliasKey_label ak_label;
-    l0_aux cdi fwid deviceID_label_len dk_label aliasKey_label_len ak_label
-      deviceIDCSR_ingredients aliasKeyCRT_ingredients
-      deviceID_pub aliasKey_pub aliasKey_priv
-      deviceIDCSR_len deviceIDCSR_buf
-      aliasKeyCRT_len aliasKeyCRT_buf;
+   ensures exists (deviceID_pub1 aliasKey_pub1 aliasKey_priv1 deviceIDCSR_buf1 aliasKeyCRT_buf1
+                  : Ghost.erased (Seq.seq U8.t)). (
+                      A.pts_to cdi pcdi cdi0 `star`
+                      A.pts_to fwid pfwid fwid0 `star`
+                      A.pts_to deviceID_label pdeviceID_label deviceID_label0 `star`
+                      A.pts_to aliasKey_label paliasKey_label aliasKey_label0 `star`
+                      A.pts_to deviceID_pub full_perm deviceID_pub1 `star`
+                      A.pts_to aliasKey_pub full_perm aliasKey_pub1 `star`
+                      A.pts_to aliasKey_priv full_perm aliasKey_priv1 `star`
+                      A.pts_to deviceIDCSR_buf full_perm deviceIDCSR_buf1 `star`
+                      A.pts_to aliasKeyCRT_buf full_perm aliasKeyCRT_buf1 `star`
+                      l0_post (cdi) (fwid)
+                              (deviceID_label_len) (deviceID_label)
+                              (aliasKey_label_len) (aliasKey_label)
+                              (deviceIDCSR_ingredients)
+                              (aliasKeyCRT_ingredients)
+                              (deviceID_pub) (aliasKey_pub) (aliasKey_priv)
+                              (deviceIDCSR_len) (deviceIDCSR_buf)
+                              (aliasKeyCRT_len) (aliasKeyCRT_buf))
+{
+  //let fwid_sec = B.alloca (u8 0x00) 32ul in  (* commented out in DICE* impl *)
+  let dk_label = new_array 0uy deviceID_label_len;
+  let ak_label = new_array 0uy aliasKey_label_len;
+  //classify_public_buffer 32ul fwid fwid_sec;  (* commented out in DICE* impl *)
+  classify_public_buffer deviceID_label_len deviceID_label dk_label;
+  classify_public_buffer aliasKey_label_len aliasKey_label ak_label;
+
+  introduce exists dk_label0 ak_label0. (  (* want to be able to reference these seqs later *)
+    A.pts_to dk_label full_perm dk_label0 `star`
+    A.pts_to ak_label full_perm ak_label0 `star`
+    pure (Seq.equal dk_label0 deviceID_label0 /\
+          Seq.equal ak_label0 aliasKey_label0)
+  ) with _;
+  
+  l0_aux cdi fwid deviceID_label_len dk_label aliasKey_label_len ak_label
+    deviceIDCSR_ingredients aliasKeyCRT_ingredients
+    deviceID_pub aliasKey_pub aliasKey_priv
+    deviceIDCSR_len deviceIDCSR_buf
+    aliasKeyCRT_len aliasKeyCRT_buf
+    (* implicits *)
+    pcdi pfwid full_perm full_perm
+    cdi0 fwid0 dk_label0 ak_label0 
+    deviceID_pub0 aliasKey_pub0 aliasKey_priv0 
+    deviceIDCSR_buf0 aliasKeyCRT_buf0
+}
 ```
