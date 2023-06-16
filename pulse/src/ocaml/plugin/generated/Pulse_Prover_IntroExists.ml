@@ -356,8 +356,4 @@ let (intro_exists_step :
                                                             FStar_Pervasives_Native.None))))
                                     uu___1))) uu___1)
 let (intro_exists_prover_step : Pulse_Prover_Common.prover_step_t) =
-  fun uu___ ->
-    fun uu___1 ->
-      fun uu___2 ->
-        Obj.magic
-          (FStar_Tactics_Effect.lift_div_tac (fun uu___3 -> Prims.magic ()))
+  fun uu___ -> fun uu___1 -> Prims.magic ()
