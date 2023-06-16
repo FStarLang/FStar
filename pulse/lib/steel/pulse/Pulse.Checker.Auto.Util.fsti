@@ -264,67 +264,102 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:vprop_typing g ctxt)
 
 let intro_exists_sub_prover_state (#preamble:_) (p:prover_state preamble)
   (u:universe) (b:binder) (body:vprop)
-  (exists_typing:tot_typing (push_env preamble.g0 p.uvs) (Tm_ExistsSL u b body) Tm_VProp)
+  (exists_typing:tot_typing (pst_env preamble.uvs p.ss) (Tm_ExistsSL u b body) Tm_VProp)
   : v:var &
-    p:prover_state_preamble &
-    prover_state p =
+    preamble:_ &
+    prover_state preamble =
+  
+  let g0 = preamble.g0 in
+  let x = fresh (push_env g0 preamble.uvs) in
 
-  let x = fresh (push_env preamble.g0 p.uvs) in
+  let uvs = psubst_env (filter_ss preamble.uvs p.ss) p.ss in
+  let uvs = push_binding uvs x b.binder_ty in
 
-  let preamble = {
-    g0 = preamble.g0;
-    ctxt = list_as_vprop p.remaining;
-    ctxt_typing = p.remaining_typing;
+  let preamble_sub = {
+    g0 = g0;
+    ctxt = list_as_vprop p.remaining_ctxt;
+    ctxt_typing = p.remaining_ctxt_typing;
+
     t = wr (Tm_IntroExists {
       erased=false;
       p=Tm_ExistsSL u b body;
       witnesses=[null_var x];
       should_check=should_check_false });
+    
     c = comp_intro_exists u b body (null_var x);
+    
+    uvs;
   } in
 
-  let uvs = push_binding p.uvs x b.binder_ty in
-  let ss = p.ss in
-  let matched = Tm_Emp in
-  let unmatched = [open_term' body (null_var x) 0] in
-  let remaining = p.remaining in
-  let (| steps, steps_typing |) = idem_steps (push_env preamble.g0 uvs) (list_as_vprop p.remaining) in
   
-  assert (equal (push_binding (push_env preamble.g0 p.uvs) x b.binder_ty)
-                (push_env preamble.g0 uvs));
-  let t_typing : st_typing (push_env preamble.g0 uvs) preamble.t preamble.c = T_IntroExists
-    (push_env preamble.g0 uvs)
-    u
-    b
-    body
-    (null_var x)
-    (magic ())
-    (tot_typing_weakening x b.binder_ty exists_typing)
-    (magic ()) in
+  let ss = Psubst.empty g0 in
 
-  let unmatched_typing : tot_typing (push_env preamble.g0 uvs) (list_as_vprop unmatched) Tm_VProp =
-    magic () in
+  calc (equal) {
+    pst_env preamble_sub.uvs ss;
+       (equal) { }
+    push_env g0 (psubst_env (filter_ss uvs ss) ss);
+       (equal) { assume (filter_ss uvs (Psubst.empty g0) == uvs) }
+    push_env g0 (psubst_env uvs ss);
+       (equal) { assume (psubst_env uvs (Psubst.empty g0) == uvs) }
+    push_env g0 uvs;
+       (equal) { }
+    push_env g0 (push_binding (psubst_env (filter_ss preamble.uvs p.ss) p.ss) x b.binder_ty);
+       (equal) { }
+    push_binding (pst_env preamble.uvs p.ss) x b.binder_ty;
+  };
 
-  let remaining_typing : tot_typing preamble.g0 (list_as_vprop remaining) Tm_VProp = p.remaining_typing in
+  let solved_goals = Tm_Emp in
+  let unsolved_goals = vprop_as_list (comp_pre preamble_sub.c) in
+  let remaining_ctxt = vprop_as_list preamble_sub.ctxt in
 
-  assume (subst_term matched ss == Tm_Emp);
-  let steps_typing : st_typing
-    (push_env preamble.g0 uvs)
-    steps
-    (ghost_comp preamble.ctxt
-                (Tm_Star (list_as_vprop remaining) (subst_term matched ss))) = steps_typing in
+  let t_typing
+    : st_typing (pst_env preamble_sub.uvs ss)
+                preamble_sub.t
+                preamble_sub.c =
+    T_IntroExists
+      (pst_env preamble_sub.uvs ss)
+      u b body (null_var x)
+      (magic ())  // binder typing in new env, weakening using the input exists typing and calc above
+      (magic ())  // similarly, exists typing in new env is weakening of the input exists typing
+      (magic ())  // x:t in gamma
+  in
 
-  let veq : vprop_equiv (push_env preamble.g0 uvs)
-                        (open_term' body (null_var x) 0)
-                        (Tm_Star (list_as_vprop unmatched) matched) = magic () in
+  // ss is empty
+  assume (Psubst.subst_st_term ss preamble_sub.t == preamble_sub.t);
+  assume (Psubst.subst_comp ss preamble_sub.c == preamble_sub.c);
 
+  let t_typing
+    : st_typing (pst_env preamble_sub.uvs ss)
+                (Psubst.subst_st_term ss preamble_sub.t)
+                (Psubst.subst_comp ss preamble_sub.c) = t_typing in
+
+  // inversion of t_typing to get comp typing,
+  // inversion of comp typing to get comp pre typing
+  let unsolved_goals_typing:
+    vprop_typing (pst_env preamble_sub.uvs ss)
+                 (list_as_vprop unsolved_goals) = magic () in
+
+  let remaining_ctxt_typing:
+    vprop_typing g0 (list_as_vprop remaining_ctxt) = p.remaining_ctxt_typing in
+
+  let (| steps, steps_typing |) = idem_steps (pst_env preamble_sub.uvs ss) (list_as_vprop remaining_ctxt) in
+  let steps_typing:
+    st_typing (pst_env preamble_sub.uvs ss)
+              steps
+              (ghost_comp preamble_sub.ctxt (Tm_Star (list_as_vprop remaining_ctxt) solved_goals)) = steps_typing in
+  
+  // solved_goals is Tm_Tmp, ss is empty, and unsolved_goals = comp_pre preamble_sub.c
+  let c_pre_inv:
+    vprop_equiv (pst_env preamble_sub.uvs ss)
+                (Psubst.subst_term ss (comp_pre preamble_sub.c))
+                (Tm_Star (list_as_vprop unsolved_goals) solved_goals) = magic () in
 
   (| x,
-     preamble, {
-    uvs; ss;
-    matched; unmatched; remaining; steps;
-    t_typing; unmatched_typing; remaining_typing; steps_typing; veq; ss_closes_matched_uvs = ()
-  } |)
+     preamble_sub, 
+    { ss; solved_goals; unsolved_goals; remaining_ctxt; steps;
+      t_typing; unsolved_goals_typing; remaining_ctxt_typing; steps_typing;
+      c_pre_inv; solved_goals_closed = () } |)
+
 
 #push-options "--z3rlimit_factor 10 --fuel 2 --ifuel 2"
 let intro_exists_step (#preamble:_) (p:prover_state preamble)
