@@ -361,7 +361,7 @@ let intro_exists_sub_prover_state (#preamble:_) (p:prover_state preamble)
       c_pre_inv; solved_goals_closed = () } |)
 
 
-#push-options "--fuel 2 --ifuel 2 --query_stats --using_facts_from '* -FStar.Reflection -Steel'"
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 2 --query_stats --using_facts_from '* -FStar.Reflection -Steel'"
 let intro_exists_step (#preamble:_) (p:prover_state preamble)
   (u:universe) (b:binder) (body:vprop) (unsolved_goals':list vprop)
   (_:squash (p.unsolved_goals == (Tm_ExistsSL u b body) :: unsolved_goals'))
@@ -565,6 +565,7 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
                        preamble.ctxt
                        (Tm_Star (list_as_vprop remaining_ctxt) solved_goals)) = steps_typing in
 
+      assume (well_typed_ss preamble.uvs ss);
 
       Some ({
         ss; solved_goals; unsolved_goals; remaining_ctxt; steps;
