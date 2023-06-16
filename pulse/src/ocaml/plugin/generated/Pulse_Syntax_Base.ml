@@ -14,10 +14,7 @@ let (__proj__Mkppname__item__name :
 let (__proj__Mkppname__item__range : ppname -> range) =
   fun projectee -> match projectee with | { name; range = range1;_} -> range1
 let (ppname_default : ppname) =
-  {
-    name = FStar_Reflection_Typing.pp_name_default;
-    range = FStar_Range.range_0
-  }
+  { name = (FStar_Sealed.seal "_"); range = FStar_Range.range_0 }
 let (mk_ppname :
   FStar_Reflection_Typing.pp_name_t -> FStar_Range.range -> ppname) =
   fun name -> fun range1 -> { name; range = range1 }

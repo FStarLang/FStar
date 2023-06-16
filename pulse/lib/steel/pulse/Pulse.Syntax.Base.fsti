@@ -30,7 +30,7 @@ type ppname = {
 }
 
 let ppname_default =  {
-    name = RT.pp_name_default;
+    name = FStar.Sealed.seal "_";
     range = FStar.Range.range_0
 }
 

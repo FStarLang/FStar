@@ -12,3 +12,4 @@ val binder_range (x:binder) : range
 val set_range (t:T.term) (r:range) : t':T.term{t == t'}
 val set_use_range (t:T.term) (r:range) : t':T.term{t == t'}
 val error_code_uninstantiated_variable (_:unit) : int
+val is_range_zero (r:range) : Dv bool

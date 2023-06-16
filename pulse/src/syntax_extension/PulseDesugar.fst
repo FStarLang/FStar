@@ -215,11 +215,6 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
   : SW.term
   = let head, args = U.head_and_args_full v in
     match head.n, args with
-    | S.Tm_fvar fv, [(l, _); (r, _)] 
-      when S.fv_eq_lid fv star_lid ->
-      SW.tm_star (interpret_vprop_constructors env l)
-                 (interpret_vprop_constructors env r)
-
     | S.Tm_fvar fv, [(l, _)]
       when S.fv_eq_lid fv pure_lid ->
       let res = SW.tm_pure (as_term l) in
@@ -238,6 +233,10 @@ let rec desugar_vprop (env:env_t) (v:Sugar.vprop)
     | Sugar.VPropTerm t -> 
       let? t = tosyntax env t in
       return (interpret_vprop_constructors env t)
+    | Sugar.VPropStar (v1, v2) ->
+      let? v1 = desugar_vprop env v1 in
+      let? v2 = desugar_vprop env v2 in
+      return (SW.tm_star v1 v2)
     | Sugar.VPropExists { binders; body } ->
       let rec aux env binders
         : err SW.vprop =

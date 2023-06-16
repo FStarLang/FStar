@@ -141,7 +141,7 @@ let (intro_post_hint :
                                                                  (Prims.of_int (28))
                                                                  (Prims.of_int (32))
                                                                  (Prims.of_int (28))
-                                                                 (Prims.of_int (104)))
+                                                                 (Prims.of_int (119)))
                                                               (FStar_Range.mk_range
                                                                  "Pulse.Checker.Common.fst"
                                                                  (Prims.of_int (27))
@@ -153,6 +153,7 @@ let (intro_post_hint :
                                                                     (
                                                                     Pulse_Typing_Env.push_binding
                                                                     g x
+                                                                    Pulse_Syntax_Base.ppname_default
                                                                     ret_ty1)
                                                                     (
                                                                     Pulse_Syntax_Naming.open_term_nv
@@ -613,11 +614,11 @@ let (replace_equiv_post :
                                                                     (Prims.of_int (80))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (80))
-                                                                    (Prims.of_int (39)))
+                                                                    (Prims.of_int (48)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Common.fst"
                                                                     (Prims.of_int (80))
-                                                                    (Prims.of_int (42))
+                                                                    (Prims.of_int (51))
                                                                     (Prims.of_int (125))
                                                                     (Prims.of_int (7)))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -625,7 +626,8 @@ let (replace_equiv_post :
                                                                     uu___2 ->
                                                                     Pulse_Typing_Env.push_binding
                                                                     g1 x
-                                                                    res_c))
+                                                                    (FStar_Pervasives_Native.fst
+                                                                    px) res_c))
                                                                     (fun
                                                                     uu___2 ->
                                                                     (fun

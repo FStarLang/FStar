@@ -197,7 +197,7 @@ let (check_return :
                                                                     (Prims.of_int (46))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (46))
-                                                                    (Prims.of_int (93)))
+                                                                    (Prims.of_int (102)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Return.fst"
                                                                     (Prims.of_int (45))
@@ -207,7 +207,9 @@ let (check_return :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_term_with_expected_type
                                                                     (Pulse_Typing_Env.push_binding
-                                                                    g1 x ty)
+                                                                    g1 x
+                                                                    (FStar_Pervasives_Native.fst
+                                                                    px) ty)
                                                                     Pulse_Syntax_Base.Tm_Emp
                                                                     Pulse_Syntax_Base.Tm_VProp))
                                                                     (fun

@@ -6,7 +6,7 @@ module L = FStar.List.Tot
 
 module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
-
+module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 
 type bmap = m:Map.t var typ {
@@ -27,7 +27,8 @@ noeq
 type env = {
   f : RT.fstar_top_env;
   bs : list (var & typ);
-  m : m:bmap { related bs m };
+  names : list ppname;
+  m : m:bmap { related bs m /\ L.length names == L.length bs };
   ctxt: Pulse.RuntimeUtils.context
 }
 
@@ -41,20 +42,34 @@ let bindings_as_map _ = ()
 
 let empty_bmap : bmap = Map.const_on Set.empty Tm_Unknown
 
-let equal_elim g1 g2 = assert (Map.equal g1.m g2.m)
+let rec equal_names (l1 l2:list ppname)
+  : Lemma 
+    (requires L.length l1 == L.length l2)
+    (ensures l1 == l2) =
+  match l1, l2 with
+  | [], [] -> ()
+  | n1::l1, n2::l2 ->
+    equal_names l1 l2
+
+let equal_elim g1 g2 =
+  equal_names g1.names g2.names;
+  assert (Map.equal g1.m g2.m)
 
 let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal []
 
-let mk_env (f:RT.fstar_top_env) : env = { f; bs = []; m = empty_bmap; ctxt = default_context }
+let mk_env (f:RT.fstar_top_env) : env =
+  { f; bs = []; names=[]; m = empty_bmap; ctxt = default_context }
 
 let mk_env_bs _ = ()
 
-let push_binding g x t =
-  { g with bs = (x, t)::g.bs; m = Map.upd g.m x t }
+let push_binding g x p t =
+  { g with bs = (x, t)::g.bs;
+           names = p::g.names;
+          m = Map.upd g.m x t }
 
-let push_binding_bs _ _ _ = ()
+let push_binding_bs _ _ _ _ = ()
 
-let push_binding_as_map _ _ _ = ()
+let push_binding_as_map _ _ _ _ = ()
 
 let rec max (bs:list (var & typ)) (current:var)
   : v:var { current <= v /\ (forall (b:var & typ). List.Tot.memP b bs ==> fst b <= v) } =
@@ -82,7 +97,8 @@ let rec append_memP (#a:Type) (l1 l2:list a) (x:a)
   | _::tl -> append_memP tl l2 x
 
 let push_env (g1:env) (g2:env { disjoint g1 g2 }) : env =
-  { f = g1.f; bs = g2.bs @ g1.bs; m = Map.concat g2.m g1.m; ctxt = g1.ctxt }
+  { f = g1.f; bs = g2.bs @ g1.bs; names= g2.names @ g1.names;
+    m = Map.concat g2.m g1.m; ctxt = g1.ctxt }
 
 let push_env_fstar_env _ _ = ()
 
@@ -116,17 +132,17 @@ let env_extends_trans (g1 g2 g3:env)
   assert (equal g1 (push_env g3 (push_env g23 g12)));
   intro_env_extends g1 g3 (push_env g23 g12)
 
-let env_extends_push (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
-  : Lemma (push_binding g x t `env_extends` g) =
-  assert (equal (push_binding g x t) (push_env g (push_binding (mk_env g.f) x t)));
-  intro_env_extends (push_binding g x t) g (push_binding (mk_env g.f) x t)
+let env_extends_push (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
+  : Lemma (push_binding g x n t `env_extends` g) =
+  assert (equal (push_binding g x n t) (push_env g (push_binding (mk_env g.f) x n t)));
+  intro_env_extends (push_binding g x n t) g (push_binding (mk_env g.f) x n t)
 
 let extends_with_push (g1 g2 g3:env)
-  (x:var { ~ (Set.mem x (dom g1)) }) (t:typ)
+  (x:var { ~ (Set.mem x (dom g1)) }) n (t:typ)
   : Lemma (requires extends_with g1 g2 g3)
-          (ensures extends_with (push_binding g1 x t) g2 (push_binding g3 x t)) =
-  assert (equal (push_binding g1 x t)
-                (push_env g2 (push_binding g3 x t)))
+          (ensures extends_with (push_binding g1 x n t) g2 (push_binding g3 x n t)) =
+  assert (equal (push_binding g1 x n t)
+                (push_env g2 (push_binding g3 x n t)))
 
 let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
 let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }
@@ -135,8 +151,14 @@ let get_context g = g.ctxt
 
 let range_of_env (g:env) = 
     let ctx = T.unseal g.ctxt in
-    match FStar.List.Tot.tryFind (fun (_, r) -> Some? r) ctx with
-    | Some (_, Some r) -> r
+    match 
+      T.tryPick
+        (fun (_, r) ->
+          match r with
+          | None -> None
+          | Some r -> 
+            if not (RU.is_range_zero r) then Some r else None) ctx with
+    | Some r -> r
     | _ -> FStar.Range.range_0
   
 
@@ -179,12 +201,22 @@ let print_issues (g:env)
                  (i:list FStar.Issue.issue)
    = String.concat "\n" (T.map (print_issue g) i)
 
+let env_to_string (e:env) : T.Tac string =
+  let bs = T.map
+    (fun ((_, t), x) -> Printf.sprintf "%s : %s" (T.unseal x.name) (Pulse.Syntax.Printer.term_to_string t))
+    (T.zip e.bs e.names) in
+  Printf.sprintf "Env:\n\t%s\n" (String.concat "\n\t" bs)
+
 let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   let r = 
     match r with
     | None -> range_of_env g
-    | Some r -> r
+    | Some r -> 
+      if RU.is_range_zero r
+      then range_of_env g
+      else r
   in
-  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
+  let ctx = Printf.sprintf "Environment: %s\n"  (env_to_string g) in
+  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctx::ctxt_to_list g) in
   FStar.Tactics.log_issues [issue];
   T.fail "Pulse checker failed"

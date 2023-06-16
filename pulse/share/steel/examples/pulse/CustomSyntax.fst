@@ -326,16 +326,16 @@ fn sum (r:ref nat) (n:nat)
 
 ```pulse
 fn sum2 (r:ref nat) (n:nat)
-   requires exists i. (pts_to r full_perm i)
-   ensures (pts_to r full_perm (sum_spec n))
+   requires exists i. pts_to r full_perm i
+   ensures pts_to r full_perm (sum_spec n)
 {
    let mut i = zero;
    let mut sum = zero;
    while (let m = !i; (m <> n))
-   invariant b . exists m s. (
-     pts_to i full_perm m `star`
-     pts_to sum full_perm s `star`
-     pure (s == sum_spec m /\ b == (m <> n)))
+   invariant b . exists m s.
+     pts_to i full_perm m  **
+     pts_to sum full_perm s **
+     pure (s == sum_spec m /\ b == (m <> n))
    {
      let m = !i;
      let s = !sum;
@@ -351,16 +351,16 @@ fn sum2 (r:ref nat) (n:nat)
 
 ```pulse
 fn if_then_else_in_specs (r:ref U32.t)
-  requires (if true
-            then pts_to r full_perm 0ul
-            else pts_to r full_perm 1ul)
-  ensures  (if true
-            then pts_to r full_perm 1ul
-            else pts_to r full_perm 0ul)
+  requires `@(if true
+              then pts_to r full_perm 0ul
+              else pts_to r full_perm 1ul)
+  ensures  `@(if true
+              then pts_to r full_perm 1ul
+              else pts_to r full_perm 0ul)
 {
   // need this for typechecking !r on the next line,
   //   with inference of implicits
-  rewrite (if true then pts_to r full_perm 0ul else pts_to r full_perm 1ul)
+  rewrite `@(if true then pts_to r full_perm 0ul else pts_to r full_perm 1ul)
        as (pts_to r full_perm 0ul);
   let x = !r;
   r := U32.add x 1ul

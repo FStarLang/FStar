@@ -183,7 +183,7 @@ let elab_bind_ghost_r_typing g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing 
 let tot_bind_typing #g #t #c d soundness =
   let T_TotBind _ e1 e2 t1 c2 x e1_typing e2_typing = d in
 
-  let g_x = push_binding g x t1 in
+  let g_x = push_binding g x ppname_default t1 in
 
   let re1 = elab_term e1 in
   let rt1 = elab_term t1 in

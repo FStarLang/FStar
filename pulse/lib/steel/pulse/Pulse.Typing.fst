@@ -88,7 +88,7 @@ let extend_env_l (f:R.env) (g:env_bindings) : R.env =
 let elab_env (e:env) : R.env = extend_env_l (fstar_env e) (bindings e)
 
 let elab_push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
-  : Lemma (elab_env (push_binding g x t) ==
+  : Lemma (elab_env (push_binding g x ppname_default t) ==
            RT.extend_env (elab_env g) x (elab_term t)) = ()
 
 [@@ erasable; no_auto_projectors]
@@ -437,9 +437,9 @@ type st_equiv : env -> comp -> comp -> Type =
               ~(x `Set.mem` freevars (comp_post c2)) } ->
       tot_typing g (comp_pre c1) Tm_VProp ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) ->
-      tot_typing (push_binding g x (comp_res c1)) (open_term (comp_post c1) x) Tm_VProp ->
+      tot_typing (push_binding g x ppname_default (comp_res c1)) (open_term (comp_post c1) x) Tm_VProp ->
       vprop_equiv g (comp_pre c1) (comp_pre c2) ->
-      vprop_equiv (push_binding g x (comp_res c1))
+      vprop_equiv (push_binding g x ppname_default (comp_res c1))
                   (open_term (comp_post c1) x)
                   (open_term (comp_post c2) x) ->      
       st_equiv g c1 c2
@@ -455,7 +455,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->      
-      tot_typing (push_binding g y (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
       bind_comp g x c1 c2 (bind_comp_out c1 c2)
 
   | Bind_comp_ghost_l :  // (C_STGhost and C_STAtomic)
@@ -467,7 +467,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
-      tot_typing (push_binding g y (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
       bind_comp g x c1 c2 (bind_comp_ghost_l_out c1 c2)
 
   | Bind_comp_ghost_r :  // (C_STAtomic and C_STGhost)
@@ -479,7 +479,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
-      tot_typing (push_binding g y (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
       bind_comp g x c1 c2 (bind_comp_ghost_r_out c1 c2)
 
 [@@ no_auto_projectors]
@@ -507,7 +507,7 @@ type st_comp_typing : env -> st_comp -> Type =
       x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars st.post) } ->
       universe_of g st.res st.u ->
       tot_typing g st.pre Tm_VProp ->
-      tot_typing (push_binding g x st.res) (open_term st.post x) Tm_VProp ->
+      tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) Tm_VProp ->
       st_comp_typing g st
 
 [@@ no_auto_projectors]
@@ -557,7 +557,7 @@ type st_typing : env -> st_term -> comp -> Type =
       body:st_term {~ (x `Set.mem` freevars_st body) } ->
       c:comp ->
       tot_typing g b.binder_ty (tm_type u) ->
-      st_typing (push_binding g x b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
+      st_typing (push_binding g x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
       st_typing g (wr (Tm_Abs { b; q; pre=None; body; ret_ty=None; post=None }))
                   (C_Tot (tm_arrow b q (close_comp c x)))
   | T_STApp :
@@ -583,7 +583,7 @@ type st_typing : env -> st_term -> comp -> Type =
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars post) } ->
       universe_of g t u ->
       tot_typing g e t ->
-      tot_typing (push_binding g x t) (open_term post x) Tm_VProp ->
+      tot_typing (push_binding g x ppname_default t) (open_term post x) Tm_VProp ->
       st_typing g (wr (Tm_Return { ctag=c; insert_eq=use_eq; term=e }))
                   (comp_return c use_eq u t e post x)
 
@@ -607,7 +607,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp ->
       st_typing g e1 c1 ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
-      st_typing (push_binding g x (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
+      st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       bind_comp g x c1 c2 c ->
       st_typing g (wr (Tm_Bind { binder=b; head=e1; body=e2 })) c
 
@@ -619,7 +619,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c2:comp_st ->
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
       tot_typing g e1 t1 ->
-      st_typing (push_binding g x t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
+      st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
       st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
                     (open_comp_with (close_comp c2 x) e1)
 
@@ -639,8 +639,8 @@ type st_typing : env -> st_term -> comp -> Type =
                ~(hyp `Set.mem` (freevars_st e1 `Set.union` freevars_st e2))
               } ->
       tot_typing g b tm_bool ->
-      st_typing (push_binding g hyp (mk_eq2 u0 tm_bool b tm_true)) e1 c ->
-      st_typing (push_binding g hyp (mk_eq2 u0 tm_bool b tm_false)) e2 c ->
+      st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e1 c ->
+      st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e2 c ->
       my_erased (comp_typing g c uc) ->
       st_typing g (wr (Tm_If { b; then_=e1; else_=e2; post=None })) c
 
@@ -751,7 +751,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g init init_t ->
       universe_of g init_t u0 ->
       comp_typing g c (comp_u c) ->
-      st_typing (push_binding g x (mk_ref init_t))
+      st_typing (push_binding g x ppname_default (mk_ref init_t))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
       st_typing g (wr (Tm_WithLocal { binder=as_binder (mk_ref init_t); initializer=init; body } )) c

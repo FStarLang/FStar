@@ -2215,7 +2215,7 @@ let (handle_framing_failure :
                                                                     Prims.strcat
                                                                     (Prims.strcat
                                                                     (Prims.strcat
-                                                                    "Failed to satisfy the following preconditions:\n"
+                                                                    "Failed to satisfy the following goals:\n"
                                                                     (Prims.strcat
                                                                     uu___5
                                                                     "\nContext has\n"))

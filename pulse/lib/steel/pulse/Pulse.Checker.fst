@@ -284,7 +284,7 @@ let handle_framing_failure
           handle_intro_exists rest (wr t)
         | _ ->
          fail g (Some t0.range) (Printf.sprintf 
-                      "Failed to satisfy the following preconditions:\n%s\nContext has\n%s\nat command %s\n"
+                      "Failed to satisfy the following goals:\n%s\nContext has\n%s\nat command %s\n"
                        (terms_to_string rest)
                        (terms_to_string failure.remaining_context)
                        (P.st_term_to_string t0))

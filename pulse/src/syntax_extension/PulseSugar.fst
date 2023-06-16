@@ -9,6 +9,7 @@ type binders = list binder
 
 type vprop =
   | VPropTerm of A.term
+  | VPropStar of vprop & vprop
   | VPropExists {
       binders:binders;
       body:vprop

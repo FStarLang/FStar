@@ -22,25 +22,25 @@ val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
      tot_typing g st.pre Tm_VProp &
      (x:var{fresh_wrt x g (freevars st.post)} -> //this part is tricky, to get the quantification on x
-       tot_typing (push_binding g x st.res) (open_term st.post x) Tm_VProp))
+       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) Tm_VProp))
 
 val st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
      tot_typing g st.pre Tm_VProp &
      x:var{fresh_wrt x g (freevars st.post)} &
-     tot_typing (push_binding g x st.res) (open_term st.post x) Tm_VProp)
+     tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) Tm_VProp)
 
 val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
                         (_:tot_typing g (Tm_ExistsSL u (as_binder ty) p) Tm_VProp)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
-    tot_typing (push_binding g x ty) p Tm_VProp
+    tot_typing (push_binding g x ppname_default ty) p Tm_VProp
 
 val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
                          (x:var { fresh_wrt x g Set.empty })
                          (x_t:typ)
                          (_:tot_typing g t ty)
-   : tot_typing (push_binding g x x_t) t ty
+   : tot_typing (push_binding g x ppname_default x_t) t ty
 
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
    : tot_typing g p (Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0)
@@ -61,7 +61,7 @@ let comp_st_with_pre (c:comp_st) (pre:term) : comp_st =
 
 let vprop_equiv_x g t p1 p2 =
   x:var { fresh_wrt x g (freevars p1) } ->
-  vprop_equiv (push_binding g x t)
+  vprop_equiv (push_binding g x ppname_default t)
               (open_term p1 x)
               (open_term p2 x)
 
@@ -135,13 +135,13 @@ let rec st_typing_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' }
                    (subst_term b.binder_ty ss)
                    (tm_type u) = tot_typing_subst g g' g'' b_ty_typing ss in
     
-    let g1 : env = push_binding (push_env g (push_env g' g'')) x (subst_term b.binder_ty ss) in
-    let g2 : env = push_env g (push_env g' (push_binding g'' x (subst_term b.binder_ty ss))) in
+    let g1 : env = push_binding (push_env g (push_env g' g'')) x ppname_default (subst_term b.binder_ty ss) in
+    let g2 : env = push_env g (push_env g' (push_binding g'' x ppname_default (subst_term b.binder_ty ss))) in
     assume (bindings g1 == bindings g2);
   
     let body_typing
       : st_typing g1 (open_st_term_nv (subst_st_term body ss) (b.binder_ppname, x)) (subst_comp c ss)
-      = st_typing_subst g g' (push_binding g'' x (subst_term b.binder_ty ss)) body_typing ss in
+      = st_typing_subst g g' (push_binding g'' x ppname_default (subst_term b.binder_ty ss)) body_typing ss in
 
     T_Abs (push_env g g') x q (subst_binder b ss) u (subst_st_term body ss) (subst_comp c ss)
           b_ty_typing body_typing
