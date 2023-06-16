@@ -1,4 +1,4 @@
-module Pulse.Checker.Auto.Util
+module Pulse.Checker.Auto.Elims
 
 module T = FStar.Tactics
 

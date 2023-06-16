@@ -13,9 +13,6 @@ type bmap = m:Map.t var typ {
   forall (x:var). (~ (Map.contains m x)) ==> (Map.sel m x == Tm_Unknown)
 }
 
-let remove_binding ((x, _):var & typ) (m:bmap) : bmap =
-  Map.restrict (Set.complement (Set.singleton x)) (Map.upd m x Tm_Unknown)
-
 let related (bs:list (var & typ)) (m:Map.t var typ) =
   (forall (b:var & typ).
           L.memP b bs ==> (Map.contains m (fst b) /\
@@ -48,6 +45,8 @@ let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal []
 let mk_env (f:RT.fstar_top_env) : env = { f; bs = []; m = empty_bmap; ctxt = default_context }
 
 let mk_env_bs _ = ()
+
+let mk_env_dom _ = assert (Set.equal (Map.domain empty_bmap) Set.empty)
 
 let push_binding g x t =
   { g with bs = (x, t)::g.bs; m = Map.upd g.m x t }
@@ -93,6 +92,45 @@ let push_env_as_map _ _ = ()
 let push_env_assoc g1 g2 g3 =
   L.append_assoc g3.bs g2.bs g1.bs;
   assert (equal (push_env g1 (push_env g2 g3)) (push_env (push_env g1 g2) g3))
+
+let rec remove_binding_aux (g:env)
+  (prefix:list (var & typ))
+  (suffix:list (var & typ) { Cons? suffix })
+  : Pure (var & typ & env)
+         (requires bindings g == prefix @ suffix)
+         (ensures fun r ->
+            let x, t, g' = r in
+            fstar_env g' == fstar_env g /\
+            (~ (x `Set.mem` dom g')) /\
+            g == push_env (push_binding (mk_env (fstar_env g)) x t) g')
+         (decreases List.Tot.length suffix) =
+  match suffix with
+  | [x, t] ->
+    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x Tm_Unknown) in
+    // we need uniqueness invariant in the representation
+    assume (forall (b:var & typ). List.Tot.memP b prefix <==> (List.Tot.memP b g.bs /\
+                                                               fst b =!= x));
+    let g' = {g with bs = prefix; m} in
+    assert (equal g (push_env (push_binding (mk_env (fstar_env g)) x t) g'));
+    x, t, g'
+  | (x, t)::suffix_rest ->
+    assume (prefix @ suffix == (prefix @ [x,t]) @ suffix_rest);
+    remove_binding_aux g (prefix @ [x, t]) suffix_rest
+
+let remove_binding g =
+  remove_binding_aux g [] g.bs
+
+let remove_latest_binding g =
+  match g.bs with
+  | (x, t)::rest ->
+    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x Tm_Unknown) in
+    // we need uniqueness invariant in the representation
+    assume (forall (b:var & typ). List.Tot.memP b rest <==> (List.Tot.memP b g.bs /\
+                                                             fst b =!= x));
+    let g' = {g with bs = rest; m} in
+    assert (equal g (push_binding g' x t));
+    x, t, g'    
+
 
 let intro_env_extends (g1 g2 g3:env)
   : Lemma (requires extends_with g1 g2 g3)
