@@ -93,7 +93,43 @@ let size_sub
 : Tot (c: SZ.t { SZ.v c == (SZ.v a - SZ.v b) })
 = a `SZ.sub` b
 
-#push-options "--query_stats --z3rlimit 256"
+(*
+```pulse
+fn get_array_pts_to (#t: Type0) (#p: perm) (#s: Ghost.erased (Seq.seq t)) (a: A.array t)
+  requires (A.pts_to a p s)
+  returns s': Ghost.erased (Seq.seq t)
+  ensures (A.pts_to a p s `star` pure (s' == s))
+  {
+    s
+  }
+```
+*)
+
+(*
+assume val get_array_pts_to (#opened: _) (#t: Type0) (#p: perm) (#s: Seq.seq t) (a: A.array t)
+: stt_ghost (Ghost.erased (Seq.seq t)) opened
+    (A.pts_to a p s)
+    (fun s' -> A.pts_to a p s `star` pure (Ghost.reveal s' == s))
+*)
+
+(*
+assume val get_array_pts_to (#t: Type0) (#p: perm) (#s: Ghost.erased (Seq.seq t)) (a: A.array t)
+: stt (Ghost.erased (Seq.seq t))
+    (A.pts_to a p s)
+    (fun s' -> A.pts_to a p s `star` pure (s' == s))
+*)
+
+```pulse
+fn get_array_pts_to (#t: Type0) (a: A.array t) (#p: perm) (#s: Ghost.erased (Seq.seq t))
+  requires (A.pts_to a p s)
+  returns s': Ghost.erased (Seq.seq t)
+  ensures (A.pts_to a p s `star` pure (s' == s))
+  {
+    s
+  }
+```
+
+#push-options "--query_stats --z3rlimit 64"
 #restart-solver
 
 ```pulse
@@ -149,9 +185,12 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
         pidx := idx';
         ()
       };
+      ();
+      let s = get_array_pts_to a;
       let idx = !pidx;
       (a.(idx) <- save);
       let i' = size_add i 1sz ();
+//      Prf.array_as_ring_buffer_swap (SZ.v n) (SZ.v l) bz s0 s;
       pi := i';
       ()
     };
