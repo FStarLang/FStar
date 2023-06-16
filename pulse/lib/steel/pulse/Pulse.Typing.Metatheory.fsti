@@ -316,7 +316,7 @@ let rec apply_partial_psubs_aux (g0:env) (t:st_term) (c:comp_st)
         ss_consumed_new ss_remaining_new uvs_seen_new uvs_remaining_new uvs_unresolved t_typing
     end
 
-let apply_partial_subs (g0:env) (t:st_term) (c:comp_st)
+let apply_partial_subs (#g0:env) (#t:st_term) (#c:comp_st)
   (uvs:env { disjoint uvs g0 })
   (ss:Psubst.t g0 { well_typed_ss uvs ss })
   (t_typing:st_typing (push_env g0 uvs) t c)

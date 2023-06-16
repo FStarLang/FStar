@@ -90,7 +90,7 @@ type preamble = {
   uvs : uvs:env { disjoint uvs g0 }
 }
 
-let ghost_comp pre post = 
+let ghost_comp pre post : c:comp_st { comp_pre c == pre /\ comp_post c == post } = 
   C_STGhost Tm_EmpInames { u=u_zero; res=tm_unit; pre; post }
 
 // let env_of (#g0:_) (uvs_pending:_) (ss:Psubst.t g0) =
@@ -110,8 +110,6 @@ type prover_state (preamble:preamble) = {
   unsolved_goals : list term;
 
   remaining_ctxt : list term;
-
-  used_ctxt : term;
 
   steps : st_term;
 
@@ -171,162 +169,97 @@ val list_as_vprop_of_vprop_as_list (p:vprop)
   : Lemma (list_as_vprop (vprop_as_list p) == p)
           [SMTPat (list_as_vprop (vprop_as_list p))]
 
-let check_ss_covers_g' (ss:nt_subst) (g':env)
-  : b:bool { b ==> ss_covers_g' ss g' } = admit ()
-
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y === x} = x
 
-#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 2"
-// let prove_precondition (#g:env) (#ctxt:term)
-//   (ctxt_typing:tot_typing g ctxt Tm_VProp)
-//   (#t:st_term) (#c:comp_st)
-//   (t_typing:st_typing g t c)
-//   (prover:prover_t)
-//   : T.Tac (option (t:st_term &
-//                    c:comp_st { comp_pre c == ctxt } &
-//                    st_typing g t c)) =
+let prover : prover_t = admit ()
 
-//   let preamble = {
-//     initial_env = g;
-//     initial_ctxt = ctxt;
-//     initial_ctxt_typing = ctxt_typing;
-//     t;
-//     c
-//   } in
-
-//   let uvs = mk_env (fstar_env g) in
-//   let ss : nt_subst = [] in
-//   let solved_goals = Tm_Emp in
-//   let remaining_goals = vprop_as_list (comp_pre c) in
-//   let remaining_ctxt = vprop_as_list ctxt in
-
-//   let (| proof_steps, proof_steps_typing |) = idem_steps g ctxt in
-
-//   assert (equal (push_env preamble.initial_env uvs) g);
-
-//   let t_typing : st_typing (push_env preamble.initial_env uvs) t c = t_typing in
+#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 1"
+let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:vprop_typing g ctxt)
+  (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
+  : T.Tac (option (t:st_term &
+                   c:comp_st { comp_pre c == ctxt } &
+                   st_typing g t c)) =
   
-//   // invert t_typing to get c typing to get c pre typing
-//   let remaining_goals_typing
-//     : vprop_typing (push_env preamble.initial_env uvs) (comp_pre c) =
-//     magic () in
-//   let remaining_goals_typing
-//     : vprop_typing (push_env preamble.initial_env uvs) (list_as_vprop remaining_goals) =
-//     remaining_goals_typing in
+  let preamble = {
+    g0 = g; ctxt; ctxt_typing; t; c; uvs = mk_env (fstar_env g)
+  } in
 
-//   let remaining_ctxt_typing
-//     : vprop_typing preamble.initial_env (list_as_vprop remaining_ctxt) =
-//     ctxt_typing in
+  let ss = Psubst.empty g in
+  let solved_goals = Tm_Emp in
+  let unsolved_goals = vprop_as_list (comp_pre c) in
+  let remaining_ctxt = vprop_as_list ctxt in
+  assert (equal (pst_env preamble.uvs ss) g);
+  assume (Psubst.subst_st_term ss preamble.t == preamble.t);
+  assume (Psubst.subst_comp ss preamble.c == preamble.c);
+  let t_typing:
+    st_typing (pst_env preamble.uvs ss)
+              (Psubst.subst_st_term ss preamble.t)
+              (Psubst.subst_comp ss preamble.c) = t_typing in
+  
+  // inversion of input t_typing to get comp_typing,
+  // followed by inversion of comp_typing
+  let unsolved_goals_typing:
+    vprop_typing g (comp_pre c) = magic () in
 
-//   let proof_steps_typing : st_typing
-//     (push_env preamble.initial_env uvs)
-//     proof_steps
-//     (ghost_comp
-//        preamble.initial_ctxt
-//        (Tm_Star (list_as_vprop remaining_ctxt) (subst_term solved_goals ss))) =
-//     proof_steps_typing in
+  let remaining_ctxt_typing:
+    vprop_typing preamble.g0 (list_as_vprop remaining_ctxt) = ctxt_typing in
 
-//   // matched is empty  
-//   let c_pre_invariant
-//     : vprop_equiv (push_env preamble.g0 uvs) (comp_pre preamble.c)
-//                         (Tm_Star (list_as_vprop unmatched) matched) =
-//     magic () in
+  let (| steps, steps_typing |) = idem_steps g ctxt in
+  let steps_typing:
+    st_typing (pst_env preamble.uvs ss)
+              steps
+              (ghost_comp preamble.ctxt (Tm_Star (list_as_vprop remaining_ctxt) solved_goals)) = steps_typing in
 
-//   let p = {uvs;ss;matched;unmatched;remaining;steps;
-//            t_typing;unmatched_typing;remaining_typing;steps_typing;
-//            veq;ss_closes_matched_uvs = ()} in
+  // some emp manipulation
+  let c_pre_inv:
+    vprop_equiv (pst_env preamble.uvs ss)
+                (Psubst.subst_term ss (comp_pre preamble.c))
+                (Tm_Star (list_as_vprop unsolved_goals) solved_goals) = magic () in
 
-//   let p = prover p in
-//   match p with
-//   | None -> None
-//   | Some p ->
-//     assert (p.unmatched == []);
+  let pst : prover_state preamble = {
+    ss; solved_goals; unsolved_goals; remaining_ctxt; steps;
+    t_typing; unsolved_goals_typing; remaining_ctxt_typing; steps_typing;
+    c_pre_inv; solved_goals_closed = ()
+  } in
 
-  //   let psteps_typing : st_typing (push_env preamble.g0 p.uvs) p.steps
-  //     (ghost_comp preamble.ctxt
-  //                 (Tm_Star (list_as_vprop p.remaining) (subst_term p.matched p.ss))) = p.steps_typing in
-  //   assert (well_typed_ss preamble.g0 p.uvs p.ss);
-  //   if check_ss_covers_g' p.ss p.uvs
-  //   then begin
-  //     assert (equal p.uvs (push_env p.uvs (mk_env (fstar_env preamble.g0))));
-  //     let psteps_typing : st_typing
-  //       (push_env preamble.g0 (push_env p.uvs (mk_env (fstar_env preamble.g0))))
-  //       p.steps
-  //       (ghost_comp preamble.ctxt
-  //                   (Tm_Star (list_as_vprop p.remaining) (subst_term p.matched p.ss))) =
-  //       coerce_eq psteps_typing () in
-  //     // apply substitution lemma
-  //     let psteps_typing : st_typing
-  //       (push_env preamble.g0 (subst_env (mk_env (fstar_env preamble.g0)) p.ss))
-  //       (subst_st_term p.steps p.ss)
-  //       (subst_comp (ghost_comp preamble.ctxt
-  //                               (Tm_Star (list_as_vprop p.remaining) (subst_term p.matched p.ss))) p.ss) =
-  //       st_typing_subst preamble.g0 p.uvs (mk_env (fstar_env preamble.g0))
-  //         psteps_typing
-  //         p.ss in
-  //     // substituting in an empty env returns an empty env
-  //     assume (equal (subst_env (mk_env (fstar_env preamble.g0)) p.ss)
-  //                   (mk_env (fstar_env preamble.g0)));
-  //     assert (equal (push_env preamble.g0 (subst_env (mk_env (fstar_env preamble.g0)) p.ss))
-  //             preamble.g0);
-  //     // NT substitutions remain invariant under shifting
-  //     assume (shift_subst p.ss == p.ss);
+  let pst = prover pst in
+  match pst with
+  | None -> None
+  | Some pst ->
+    let g0 = preamble.g0 in
+    assert (equal g0 (pst_env preamble.uvs pst.ss));
+    let c_pre_inv:
+      vprop_equiv g0 (Psubst.subst_term pst.ss (comp_pre preamble.c))
+                     (Tm_Star (list_as_vprop []) pst.solved_goals) = pst.c_pre_inv in
+    // normalize Tm_Star in the second vprop of vprop_equiv
+    let c_pre_inv:
+      vprop_equiv g0 (Psubst.subst_term pst.ss (comp_pre preamble.c))
+                     pst.solved_goals = magic () in
 
-  //     // if no free uvs, substitution is an identity
-  //     assert (freevars (subst_term p.matched p.ss) `Set.disjoint` dom uvs);
-  //     assume (subst_term (subst_term p.matched p.ss) p.ss ==
-  //             subst_term p.matched p.ss);
-
-  //     // preamble.ctxt is well-typed in g0
-  //     assume (freevars preamble.ctxt `Set.subset` (dom preamble.g0));
-  //     assert (freevars preamble.ctxt `Set.disjoint` dom uvs);
-  //     assume (subst_term preamble.ctxt p.ss == preamble.ctxt);
-
-  //     let psteps_typing : st_typing
-  //       preamble.g0
-  //       (subst_st_term p.steps p.ss)
-  //       (ghost_comp preamble.ctxt
-  //                   (Tm_Star (subst_term (list_as_vprop p.remaining) p.ss)
-  //                            (subst_term p.matched p.ss))) = psteps_typing in
-
-  //     let veq : vprop_equiv (push_env preamble.g0 p.uvs)
-  //                           (comp_pre preamble.c)
-  //                           (Tm_Star (list_as_vprop []) p.matched) = p.veq in
-  //     // simplify veq by normalizing list_as_vprop []
-  //     let veq : vprop_equiv (push_env preamble.g0 p.uvs)
-  //                           (comp_pre preamble.c)
-  //                           p.matched = magic () in
-  //     // apply substitution lemma to veq
-  //     let veq : vprop_equiv preamble.g0 (subst_term (comp_pre preamble.c) p.ss)
-  //                                       (subst_term p.matched p.ss) =
-  //       veq_subst preamble.g0 p.uvs (mk_env (fstar_env preamble.g0)) veq p.ss in
-
-  //     // in psteps typing, replace subst_term p.matched p.ss with subst_term (comp_pre preamble.c) p.ss
-  //     let psteps_typing : st_typing
-  //       preamble.g0
-  //       (subst_st_term p.steps p.ss)
-  //       (ghost_comp preamble.ctxt
-  //                   (Tm_Star (subst_term (list_as_vprop p.remaining) p.ss)
-  //                            (subst_term (comp_pre preamble.c) p.ss))) = magic () in
-
-  //     let t_typing : st_typing (push_env preamble.g0 p.uvs) preamble.t preamble.c =
-  //       p.t_typing in
-
-  //     // apply substitution lemma
-  //     let t_typing : st_typing preamble.g0
-  //                              (subst_st_term preamble.t p.ss)
-  //                              (subst_comp preamble.c p.ss) =
-  //       st_typing_subst preamble.g0 p.uvs (mk_env (fstar_env preamble.g0))
-  //         t_typing
-  //         p.ss in
-
-  //     assert (comp_pre (subst_comp preamble.c p.ss) == subst_term (comp_pre preamble.c) p.ss);
- 
-  //     // bind psteps and t
-
-  //     admit ()
-  //   end
-  // else None
+    let remaining_ctxt = list_as_vprop pst.remaining_ctxt in
+    let steps_typing:
+      st_typing g0 pst.steps
+        (ghost_comp preamble.ctxt (Tm_Star remaining_ctxt pst.solved_goals)) = pst.steps_typing in
+    // replace pst.solved_goals with equivalent (Psubst.subst_term pst.ss (comp_pre preamble.c))
+    //   from c_pre_inv
+    // note that all these postconditions are ln
+    let steps_typing:
+      st_typing g0 pst.steps
+        (ghost_comp preamble.ctxt
+                    (Tm_Star remaining_ctxt
+                             (Psubst.subst_term pst.ss (comp_pre preamble.c)))) = magic () in
+    let t_typing:
+      st_typing g0
+                (Psubst.subst_st_term pst.ss preamble.t)
+                (Psubst.subst_comp pst.ss preamble.c) = pst.t_typing in
+    assert (comp_pre (Psubst.subst_comp pst.ss preamble.c) ==
+            Psubst.subst_term pst.ss (comp_pre preamble.c));
+    // bind steps_typing and t_typing
+    let t : st_term = magic () in
+    let post : term = magic () in
+    let t_typing:
+      st_typing g0 t (ghost_comp preamble.ctxt post) = magic () in
+    Some (| t, ghost_comp preamble.ctxt post, t_typing |)
 #pop-options
 
 let intro_exists_sub_prover_state (#preamble:_) (p:prover_state preamble)
