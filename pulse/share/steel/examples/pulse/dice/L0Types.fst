@@ -59,19 +59,22 @@ type l0_record = {
   aliasKey_label_len: (v:US.t{ US.v v > 0 }); (* should be U32 *)
   aliasKey_label: A.larray U8.t (US.v aliasKey_label_len); (* public bytes *)
 (* DeviceID CSR Inputs*)
-  deviceIDCSR_ingredients:deviceIDCSR_ingredients_t;
+  deviceIDCSR_ingredients: deviceIDCSR_ingredients_t;
 (* AliasKey Crt Inputs*)
-  aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t;
+  aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t;
 (* Common Outputs *)
   deviceID_pub: A.larray U8.t 32; (* public bytes *)
+  deviceID_priv: A.larray U8.t 32; (* secret bytes *) (* needed in step1 *)
   aliasKey_pub: A.larray U8.t 32; (* public bytes *)
-  aliasKey_priv: A.larray U8.t 32;
+  aliasKey_priv: A.larray U8.t 32; (* secret bytes *)
 (* DeviceID CSR Outputs *)
   deviceIDCSR_len: US.t; (* should be U32 *)
   deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len); (* public bytes *)
 (* AliasKey Crt Outputs *)
   aliasKeyCRT_len: US.t; (* should be U32 *)
   aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len); (* public bytes *)
+(* AuthKey Outputs *)
+  authKeyID: A.larray U8.t 32;
 }
 
 type l0_repr = {
@@ -80,10 +83,12 @@ type l0_repr = {
   deviceID_label: (Seq.seq U8.t);
   aliasKey_label: (Seq.seq U8.t);
   deviceID_pub: (Seq.seq U8.t);
+  deviceID_priv: (Seq.seq U8.t);
   aliasKey_pub: (Seq.seq U8.t);
   aliasKey_priv: (Seq.seq U8.t);
   deviceIDCSR_buf: (Seq.seq U8.t);
   aliasKeyCRT_buf: (Seq.seq U8.t);
+  authKeyID: (Seq.seq U8.t);
 }
 
 let l0_perm (l0:l0_record) (vl0: l0_repr) 
@@ -98,7 +103,9 @@ let l0_perm (l0:l0_record) (vl0: l0_repr)
   A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
   A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
   A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
+  A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
   A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
   A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
   A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-  A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf
+  A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
+  A.pts_to l0.authKeyID full_perm vl0.authKeyID
