@@ -13,17 +13,12 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 
 (* a tiny model of HACL* hashes *)
+
 assume
 val alg_t : Type0
 
 assume
 val digest_len (_:alg_t) : US.t
-
-assume
-val spec_hash (a:alg_t) (s:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
-
-assume
-val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
 val is_hashable_len (_:US.t) : prop
@@ -35,10 +30,10 @@ val is_signable_len (_:US.t) : prop
 
 let signable_len = v:US.t{ is_signable_len v }
 
-// assume
-// val is_key_len (_:US.t) : prop
-
 let key_len = v:US.t{ is_hashable_len v }
+
+assume
+val spec_hash (a:alg_t) (s:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
 val hacl_hash (alg:alg_t)
@@ -54,6 +49,9 @@ val hacl_hash (alg:alg_t)
     (fun _ ->
        A.pts_to src psrc src_seq `star`
        A.pts_to dst full_perm (spec_hash alg src_seq))
+
+assume
+val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
 val hacl_hmac (alg:alg_t)
@@ -76,15 +74,16 @@ val hacl_hmac (alg:alg_t)
        A.pts_to dst full_perm (spec_hmac alg key_seq msg_seq))
 
 assume
+val spec_ed25519_verify (pubk hdr sig:Seq.seq U8.t) : prop 
+
+assume
 val ed25519_verify 
   (pubk:A.larray U8.t 32)
   (hdr:A.array U8.t)
   (hdr_len:signable_len { US.v hdr_len == A.length hdr })
   (sig:A.larray U8.t 64)
   (#ppubk #phdr #psig:perm)
-  (#pubk_seq:Ghost.erased (Seq.seq U8.t))
-  (#hdr_seq:Ghost.erased (Seq.seq U8.t))
-  (#sig_seq:Ghost.erased (Seq.seq U8.t))
+  (#pubk_seq #hdr_seq #sig_seq:Ghost.erased (Seq.seq U8.t))
   : stt bool
     (A.pts_to pubk ppubk pubk_seq `star`
      A.pts_to hdr phdr hdr_seq `star`
@@ -92,9 +91,11 @@ val ed25519_verify
     (fun _ ->
       A.pts_to pubk ppubk pubk_seq `star`
       A.pts_to hdr phdr hdr_seq `star`
-      A.pts_to sig psig sig_seq)
+      A.pts_to sig psig sig_seq `star`
+      pure (spec_ed25519_verify pubk_seq hdr_seq sig_seq))
 
 // DICE constants
+
 assume
 val uds_is_enabled : vprop
 
@@ -130,7 +131,7 @@ type l0_repr = {
     l0_image_header      : Seq.seq U8.t;
     l0_image_header_sig  : Seq.seq U8.t;
     l0_binary            : Seq.seq U8.t;
-    l0_binary_hash       : Seq.seq U8.t;
+    l0_binary_hash       : (s:Seq.seq U8.t{ Seq.length s = US.v dice_digest_len });
     l0_image_auth_pubkey : Seq.seq U8.t;
 }
 
@@ -142,23 +143,95 @@ let l0_perm (l0:l0_image_t) (vl0: l0_repr) : vprop =
   A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
   A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey
 
-// let get_l0_binary_perm (l0:l0_image_t) (vl0: l0_repr)
-//   = l0_perm l0 vl0 ==> A.pts_to l0.l0_binary full_perm vl0.l0_binary
-
 assume
 val uds_bytes : v:(Ghost.erased (Seq.seq U8.t)){ Seq.length v = US.v uds_len }
 
 assume
 val stack_is_erased : vprop
 
-assume
-val l0_is_authentic (vl0:l0_repr) : prop
+let l0_is_authentic (vl0:l0_repr) 
+  : prop
+  = spec_ed25519_verify 
+      vl0.l0_image_auth_pubkey 
+      vl0.l0_image_header 
+      vl0.l0_image_header_sig /\
+    spec_hash dice_hash_alg vl0.l0_binary == vl0.l0_binary_hash
 
-let cdi_functional_correctness
-  (c0:Seq.seq U8.t)
-  (vl0:l0_repr)
+let cdi_functional_correctness (c0:Seq.seq U8.t) (vl0:l0_repr)
   : prop 
   = c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg vl0.l0_binary)
+
+// array utilities
+
+let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
+```pulse
+fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
+           (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
+  requires (
+    A.pts_to a1 p1 s1 `star`
+    A.pts_to a2 p2 s2
+  )
+  returns res:bool
+  ensures (
+    A.pts_to a1 p1 s1 `star`
+    A.pts_to a2 p2 s2 `star`
+    (pure (res <==> Seq.equal s1 s2))
+  )
+{
+  let mut i = 0sz;
+  while (let vi = !i; if US.(vi <^ l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
+  invariant b. exists (vi:US.t). ( 
+    R.pts_to i full_perm vi `star`
+    A.pts_to a1 p1 s1 `star`
+    A.pts_to a2 p2 s2 `star`
+    pure (
+      US.v vi <= US.v l /\
+      (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
+      (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
+    )
+  )
+  {
+    let vi = !i; 
+    i := US.(vi +^ 1sz);
+    ()
+  };
+  let vi = !i;
+  let res = vi = l;
+  res
+}
+```
+
+```pulse
+fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
+              (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
+   requires (A.pts_to a full_perm s)
+   ensures 
+      exists (s:Seq.seq t). (
+         A.pts_to a full_perm s `star`
+         pure (s `Seq.equal` Seq.create (US.v l) v)
+      )
+{
+   let mut i = 0sz;
+   while (let vi = !i; US.(vi <^ l))
+   invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
+      A.pts_to a full_perm s `star`
+      R.pts_to i full_perm vi `star`
+      pure ((b == US.(vi <^ l)) /\
+            US.v vi <= US.v l /\
+            Seq.length s == A.length a /\
+            (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
+   )
+   {
+      let vi = !i; 
+      (a.(vi) <- v);
+      i := US.(vi +^ 1sz);
+      ()
+   };
+   ()
+}
+```
+
+// DICE engine functionality 
 
 ```pulse
 fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
@@ -182,27 +255,38 @@ fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
                           l0.l0_image_header_sig;
   
   let mut b = false;
-  // if valid_header_sig
-  // {
+  if valid_header_sig {
     let hash_buf = new_array 0uy dice_digest_len;
     hacl_hash dice_hash_alg l0.l0_binary l0.l0_binary_size hash_buf;
-    // if (hash_buf == l0.l0_binary_hash)
-    // {
-      // b := true;
-      l0_is_authentic vl0;
-    // };
-    free_array hash_buf;
-  // };
-
-  rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-      A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-      A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-      A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-      A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
-    as (l0_perm l0 vl0);
-
-  let vb = !b;
-  vb
+    let res = compare dice_digest_len hash_buf l0.l0_binary_hash;
+    if res {
+      free_array hash_buf;
+      rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+          A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+          A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+          A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+          A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
+        as (l0_perm l0 vl0);
+      true
+    } else {
+      free_array hash_buf;
+      rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+          A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+          A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+          A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+          A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
+        as (l0_perm l0 vl0);
+      false
+    }
+  } else {
+    rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
+        A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
+        A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
+        A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
+        A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
+      as (l0_perm l0 vl0);
+    false
+  };
 }
 ```
 
@@ -219,39 +303,6 @@ fn disable_uds (_:unit)
 }
 ```
 
-let seq_constant_until (#t:Type) (s:Seq.seq t) (v:t) (n:nat) =
-    forall (i:nat). i < n /\ i < Seq.length s ==> Seq.index s i == v
-
-```pulse
-fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:t)
-              (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == A.length a }))
-   requires (A.pts_to a full_perm s)
-   ensures 
-      exists (s:Seq.seq t). (
-         A.pts_to a full_perm s `star`
-         pure (seq_constant_until s v (US.v l))
-      )
-{
-   let mut i = 0sz;
-   while (let vi = !i; US.(vi <^ l))
-   invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
-      A.pts_to a full_perm s `star`
-      R.pts_to i full_perm vi `star`
-      pure ((b == US.(vi <^ l)) /\
-            US.v vi <= US.v l /\
-            Seq.length s == A.length a /\
-            seq_constant_until s v (US.v vi))
-   )
-   {
-      let vi = !i; 
-      (a.(vi) <- v);
-      i := US.(vi +^ 1sz);
-      ()
-   };
-   ()
-}
-```
-
 ```pulse
 fn zeroize_uds (uds:A.array U8.t) 
                (l:(l:US.t{ US.v l = A.length uds })) 
@@ -262,12 +313,12 @@ fn zeroize_uds (uds:A.array U8.t)
   )
   ensures (
     uds_is_enabled `star`
-    (exists_ (fun (uds':Seq.seq U8.t) ->   
-      A.pts_to uds full_perm uds' `star`
-      pure (seq_constant_until uds' 0uy (US.v l))))
+    (exists_ (fun (uds1:Seq.seq U8.t) ->   
+      A.pts_to uds full_perm uds1 `star`
+      pure (uds1 `Seq.equal` Seq.create (US.v l) 0uy)))
   )
 {
-  fill_array uds l 0uy;
+  fill_array l uds 0uy;
 }
 ```
 
@@ -280,9 +331,8 @@ val read_uds (uds:A.larray U8.t (US.v uds_len))
 
 (* Pulse desugaring seems to allow the val to be in scope, even though it is not assumed *)
 (* Also the polymorphic version doesn't work *)
-val free_array_u8
-      (a: A.array U8.t)
-: stt unit
+val free_array_u8 (a: A.array U8.t)
+  : stt unit
     (exists_ (fun (x:Seq.seq U8.t) -> A.pts_to a full_perm x) `star` pure (A.is_full_array a))
     (fun _ -> emp)
 
@@ -370,7 +420,7 @@ fn dice_main (c:cdi_t) (l0:l0_image_t)
 }
 ```
 
-
+(*
 ```pulse
 fn compute_cdi_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
  requires exists (c0: Seq.seq U8.t). (
@@ -421,3 +471,4 @@ fn dice_main_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
   }
 }
 ```
+*)
