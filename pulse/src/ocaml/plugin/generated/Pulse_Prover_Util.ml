@@ -28,7 +28,9 @@ let rec (filter_ss :
                  let g2 = filter_ss g0 g1 ss in
                  if FStar_Set.mem x (Pulse_Prover_Substs.dom g0 ss)
                  then g2
-                 else Pulse_Typing_Env.push_binding g2 x t)
+                 else
+                   Pulse_Typing_Env.push_binding g2 x
+                     Pulse_Syntax_Base.ppname_default t)
 let coerce_eq : 'a 'b . 'a -> unit -> 'b =
   fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___
 let rec (apply_partial_psubs_aux :
@@ -66,13 +68,13 @@ let rec (apply_partial_psubs_aux :
                             (match uu___1 with
                              | (x, ty, uvs_remaining_new) ->
                                  let g_x_t =
-                                   Pulse_Typing_Env.push_binding
+                                   Pulse_Typing_Env.push_binding_def
                                      (Pulse_Typing_Env.mk_env
                                         (Pulse_Typing_Env.fstar_env
                                            uvs_remaining)) x ty in
                                  let uvs_seen_new =
-                                   Pulse_Typing_Env.push_binding uvs_seen x
-                                     ty in
+                                   Pulse_Typing_Env.push_binding_def uvs_seen
+                                     x ty in
                                  if
                                    Prims.op_Negation
                                      (FStar_Set.mem x
@@ -80,7 +82,7 @@ let rec (apply_partial_psubs_aux :
                                            ss_remaining))
                                  then
                                    let uvs_unresolved_new =
-                                     Pulse_Typing_Env.push_binding
+                                     Pulse_Typing_Env.push_binding_def
                                        uvs_unresolved x ty in
                                    let t_typing1 = coerce_eq t_typing () in
                                    apply_partial_psubs_aux g0 t c uvs ss
@@ -92,7 +94,7 @@ let rec (apply_partial_psubs_aux :
                                       Pulse_Prover_Substs.lookup g0
                                         ss_remaining x in
                                     let g_x_ss_t =
-                                      Pulse_Typing_Env.push_binding
+                                      Pulse_Typing_Env.push_binding_def
                                         (Pulse_Typing_Env.mk_env
                                            (Pulse_Typing_Env.fstar_env
                                               uvs_remaining)) x

@@ -156,7 +156,7 @@ let (check_admit :
                                                                     (Prims.of_int (47))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (47))
-                                                                    (Prims.of_int (83)))
+                                                                    (Prims.of_int (92)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Admit.fst"
                                                                     (Prims.of_int (45))
@@ -166,7 +166,9 @@ let (check_admit :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_term_with_expected_type
                                                                     (Pulse_Typing_Env.push_binding
-                                                                    g x t1)
+                                                                    g x
+                                                                    (FStar_Pervasives_Native.fst
+                                                                    px) t1)
                                                                     post_opened
                                                                     Pulse_Syntax_Base.Tm_VProp))
                                                                     (fun

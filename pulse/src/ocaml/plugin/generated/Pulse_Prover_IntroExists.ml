@@ -28,7 +28,7 @@ let (intro_exists_sub_prover_state :
                      preamble.Pulse_Prover_Common.uvs
                      p.Pulse_Prover_Common.ss) p.Pulse_Prover_Common.ss in
               let uvs1 =
-                Pulse_Typing_Env.push_binding uvs x
+                Pulse_Typing_Env.push_binding_def uvs x
                   b.Pulse_Syntax_Base.binder_ty in
               let preamble_sub =
                 {

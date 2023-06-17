@@ -169,7 +169,9 @@ let (singleton_env :
   =
   fun f ->
     fun x ->
-      fun t -> Pulse_Typing_Env.push_binding (Pulse_Typing_Env.mk_env f) x t
+      fun t ->
+        Pulse_Typing_Env.push_binding (Pulse_Typing_Env.mk_env f) x
+          Pulse_Syntax_Base.ppname_default t
 let (nt :
   Pulse_Syntax_Base.var ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Naming.subst_elt Prims.list)
