@@ -405,7 +405,7 @@ let (check_if :
                                                             (Prims.of_int (89))
                                                             (Prims.of_int (8))
                                                             (Prims.of_int (89))
-                                                            (Prims.of_int (68)))
+                                                            (Prims.of_int (53)))
                                                          (FStar_Range.mk_range
                                                             "Pulse.Checker.If.fst"
                                                             (Prims.of_int (90))
@@ -417,7 +417,6 @@ let (check_if :
                                                                fun eq_v ->
                                                                  Pulse_Typing_Env.push_binding
                                                                    g hyp
-                                                                   Pulse_Syntax_Base.ppname_default
                                                                    (Pulse_Typing.mk_eq2
                                                                     Pulse_Syntax_Pure.u0
                                                                     Pulse_Typing.tm_bool

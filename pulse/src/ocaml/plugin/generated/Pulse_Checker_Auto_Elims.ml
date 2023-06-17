@@ -825,7 +825,6 @@ let (elim_one :
                                          FStar_Pervasives.Mkdtuple4
                                            ((Pulse_Typing_Env.push_binding g
                                                x
-                                               Pulse_Syntax_Base.ppname_default
                                                (Pulse_Syntax_Base.comp_res c1)),
                                              (Pulse_Syntax_Base.Tm_Star
                                                 ((Pulse_Syntax_Naming.open_term_nv

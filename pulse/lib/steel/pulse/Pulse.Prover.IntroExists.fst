@@ -32,7 +32,7 @@ let intro_exists_sub_prover_state (#preamble:_) (p:prover_state preamble)
   let x = fresh (push_env g0 preamble.uvs) in
 
   let uvs = psubst_env (filter_ss preamble.uvs p.ss) p.ss in
-  let uvs = push_binding uvs x b.binder_ty in
+  let uvs = push_binding_def uvs x b.binder_ty in
 
   let preamble_sub = {
     g0 = g0;
@@ -62,9 +62,9 @@ let intro_exists_sub_prover_state (#preamble:_) (p:prover_state preamble)
        (equal) { assume (psubst_env uvs (Psubst.empty g0) == uvs) }
     push_env g0 uvs;
        (equal) { }
-    push_env g0 (push_binding (psubst_env (filter_ss preamble.uvs p.ss) p.ss) x b.binder_ty);
+    push_env g0 (push_binding_def (psubst_env (filter_ss preamble.uvs p.ss) p.ss) x b.binder_ty);
        (equal) { }
-    push_binding (pst_env preamble.uvs p.ss) x b.binder_ty;
+    push_binding_def (pst_env preamble.uvs p.ss) x b.binder_ty;
   };
 
   let solved_goals = Tm_Emp in
@@ -187,7 +187,7 @@ let intro_exists_step (#preamble:_) (p:prover_state preamble)
       //   and have to find a way to combine the two
     
       let uvs = psubst_env (filter_ss preamble.uvs p.ss) p.ss in
-      let uvs = push_binding uvs x b.binder_ty in
+      let uvs = push_binding_def uvs x b.binder_ty in
 
 
       // target : pst_env preamble.uvs (ss + p.ss)

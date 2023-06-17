@@ -56,10 +56,10 @@ let rec apply_partial_psubs_aux (g0:env) (t:st_term) (c:comp_st)
     (| uvs_unresolved, t_typing |)
   | _ ->
     let (x, ty, uvs_remaining_new) = remove_binding uvs_remaining in
-    let g_x_t = push_binding (mk_env (fstar_env uvs_remaining)) x ty in
+    let g_x_t = push_binding_def (mk_env (fstar_env uvs_remaining)) x ty in
     // assert (uvs_remaining == push_env g_x_t uvs_remaining_new);
       
-    let uvs_seen_new = push_binding uvs_seen x ty in
+    let uvs_seen_new = push_binding_def uvs_seen x ty in
       
     push_env_assoc uvs_seen g_x_t uvs_remaining_new;
     assert (equal uvs (push_env uvs_seen_new uvs_remaining_new));
@@ -70,7 +70,7 @@ let rec apply_partial_psubs_aux (g0:env) (t:st_term) (c:comp_st)
 
     if not (x `Set.mem` Psubst.dom ss_remaining)
     then begin
-      let uvs_unresolved_new = push_binding uvs_unresolved x ty in
+      let uvs_unresolved_new = push_binding_def uvs_unresolved x ty in
 
       push_env_assoc uvs_unresolved g_x_t uvs_remaining_new;
       assert (equal (push_env uvs_unresolved uvs_remaining)
@@ -100,7 +100,7 @@ let rec apply_partial_psubs_aux (g0:env) (t:st_term) (c:comp_st)
                     (psubst_env (push_env uvs_unresolved (push_env g_x_t uvs_remaining_new)) ss_consumed));
 
       let g_x_ss_t =
-        push_binding (mk_env (fstar_env uvs_remaining)) x (Psubst.subst_term ss_consumed ty)  in
+        push_binding_def (mk_env (fstar_env uvs_remaining)) x (Psubst.subst_term ss_consumed ty)  in
 
       assume (psubst_env (push_env uvs_unresolved (push_env g_x_t uvs_remaining_new)) ss_consumed ==
               push_env (psubst_env uvs_unresolved ss_consumed)

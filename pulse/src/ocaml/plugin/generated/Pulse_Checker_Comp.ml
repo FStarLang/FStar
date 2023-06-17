@@ -87,19 +87,17 @@ let (check_comp :
                                                               (Prims.of_int (29))
                                                               (Prims.of_int (19))
                                                               (Prims.of_int (29))
-                                                              (Prims.of_int (51)))
+                                                              (Prims.of_int (42)))
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Comp.fst"
                                                               (Prims.of_int (29))
-                                                              (Prims.of_int (54))
+                                                              (Prims.of_int (45))
                                                               (Prims.of_int (36))
                                                               (Prims.of_int (11)))
                                                            (FStar_Tactics_Effect.lift_div_tac
                                                               (fun uu___3 ->
                                                                  Pulse_Typing_Env.push_binding
                                                                    g x
-                                                                   (FStar_Pervasives_Native.fst
-                                                                    px)
                                                                    st.Pulse_Syntax_Base.res))
                                                            (fun uu___3 ->
                                                               (fun gx ->
@@ -114,7 +112,7 @@ let (check_comp :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Comp.fst"
                                                                     (Prims.of_int (29))
-                                                                    (Prims.of_int (54))
+                                                                    (Prims.of_int (45))
                                                                     (Prims.of_int (36))
                                                                     (Prims.of_int (11)))
                                                                     (Obj.magic

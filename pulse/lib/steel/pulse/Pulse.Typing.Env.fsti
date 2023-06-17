@@ -59,6 +59,9 @@ val mk_env_dom (f:RT.fstar_top_env)
 val push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
   : g':env { fstar_env g' == fstar_env g }
 
+let push_binding_def (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
+  = push_binding g x ppname_default t
+
 val push_binding_bs (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
   : Lemma (bindings (push_binding g x n t) == (x, t) :: bindings g)
           [SMTPat (bindings (push_binding g x n t))]

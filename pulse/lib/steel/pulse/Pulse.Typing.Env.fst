@@ -111,30 +111,34 @@ let push_env_assoc g1 g2 g3 =
 
 let rec remove_binding_aux (g:env)
   (prefix:list (var & typ))
+  (prefix_names:list ppname { List.length prefix == List.length prefix_names})
   (suffix:list (var & typ) { Cons? suffix })
+  (suffix_names:list ppname { List.length suffix == List.length suffix_names })
   : Pure (var & typ & env)
-         (requires bindings g == prefix @ suffix)
+         (requires bindings g == prefix @ suffix /\
+                   g.names == prefix_names @ suffix_names)
          (ensures fun r ->
             let x, t, g' = r in
             fstar_env g' == fstar_env g /\
             (~ (x `Set.mem` dom g')) /\
-            g == push_env (push_binding (mk_env (fstar_env g)) x t) g')
+            g == push_env (push_binding (mk_env (fstar_env g)) x ppname_default t) g')
          (decreases List.Tot.length suffix) =
-  match suffix with
-  | [x, t] ->
+  match suffix, suffix_names with
+  | [x, t], _ ->
     let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x Tm_Unknown) in
     // we need uniqueness invariant in the representation
     assume (forall (b:var & typ). List.Tot.memP b prefix <==> (List.Tot.memP b g.bs /\
                                                                fst b =!= x));
-    let g' = {g with bs = prefix; m} in
-    assert (equal g (push_env (push_binding (mk_env (fstar_env g)) x t) g'));
+    let g' = {g with bs = prefix; names=prefix_names; m} in
+    assert (equal g (push_env (push_binding (mk_env (fstar_env g)) x ppname_default t) g'));
     x, t, g'
-  | (x, t)::suffix_rest ->
+  | (x, t)::suffix_rest, n::suffix_names_rest ->
     assume (prefix @ suffix == (prefix @ [x,t]) @ suffix_rest);
-    remove_binding_aux g (prefix @ [x, t]) suffix_rest
+    assume (prefix_names @ suffix_names == (prefix_names @ [n]) @ suffix_names_rest);
+    remove_binding_aux g (prefix @ [x, t]) (prefix_names @ [n]) suffix_rest suffix_names_rest
 
 let remove_binding g =
-  remove_binding_aux g [] g.bs
+  remove_binding_aux g [] [] g.bs g.names
 
 let remove_latest_binding g =
   match g.bs with
@@ -143,8 +147,8 @@ let remove_latest_binding g =
     // we need uniqueness invariant in the representation
     assume (forall (b:var & typ). List.Tot.memP b rest <==> (List.Tot.memP b g.bs /\
                                                              fst b =!= x));
-    let g' = {g with bs = rest; m} in
-    assert (equal g (push_binding g' x t));
+    let g' = {g with bs = rest; names=L.tl g.names; m} in
+    assert (equal g (push_binding g' x ppname_default t));
     x, t, g'    
 
 

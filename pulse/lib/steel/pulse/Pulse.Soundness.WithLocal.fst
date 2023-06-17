@@ -14,7 +14,8 @@ module WT = Pulse.Steel.Wrapper.Typing
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 
-#push-options "--z3rlimit_factor 20 --fuel 10"
+//TODO: this proof needs to be tamed
+#push-options "--z3rlimit_factor 40 --fuel 10"
 let withlocal_soundness #g #t #c d soundness =
   let T_WithLocal _ init body init_t c x init_typing init_t_typing c_typing body_typing = d in
   let CT_ST _ st st_typing = c_typing in

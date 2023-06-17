@@ -45,7 +45,7 @@ let rec filter_ss (#g0:env) (g:env) (ss:Psubst.t g0)
     let ( x, t, g ) = remove_latest_binding g in
     let g = filter_ss g ss in
     if Set.mem x (Psubst.dom ss) then g
-    else push_binding g x t
+    else push_binding g x ppname_default t
 
 val push_subst_env (#g:_) (s1 s2:Psubst.t g) (g':env)
   : Lemma (requires Set.disjoint (Psubst.dom s1) (Psubst.dom s2))
