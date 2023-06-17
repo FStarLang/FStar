@@ -986,3 +986,6 @@ let sigelt_to_doc t =
   if Options.ugly ()
   then Pprint.arbitrary_string (sigelt_to_string t)
   else Pretty.sigelt_to_doc t
+
+instance showable_sigelt : showable sigelt = { show = sigelt_to_string; }
+instance showable_term : showable term = { show = term_to_string; }

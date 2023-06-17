@@ -26,7 +26,8 @@ OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fst
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
 # were within, say, FStar.Compiler.*
-EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
+EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser			\
+		   FStar.Class						\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
 		   FStar.TypeChecker FStar.Profiling FStar.Compiler
