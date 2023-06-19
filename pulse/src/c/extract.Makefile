@@ -23,7 +23,7 @@ FSTAR = $(RUNLIM) $(FSTAR_EXE) --cache_checked_modules \
 ROOTS = $(LIB_STEEL)/Steel.SpinLock.fsti
 
 .depend: $(ROOTS)
-	$(FSTAR) $(OTHERFLAGS) --dep full $(ROOTS) > $@.tmp
+	$(FSTAR) $(OTHERFLAGS) --extract '* -FStar.Stubs' --dep full $(ROOTS) > $@.tmp
 	mv $@.tmp $@
 
 include .depend
