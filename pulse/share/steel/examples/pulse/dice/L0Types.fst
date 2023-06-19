@@ -12,6 +12,7 @@ module A = Steel.ST.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
+open HACL
 
 assume
 val valid_key_usage (i: U32.t) : Type0
@@ -54,9 +55,9 @@ type l0_record = {
 (* Common Inputs *)
   cdi: A.larray U8.t 32; (* secret bytes *)
   fwid: A.larray U8.t 32; (* public bytes *)
-  deviceID_label_len: (v:US.t{ US.v v > 0 }); (* should be U32 *)
+  deviceID_label_len: hkdf_lbl_len; (* should be U32 *)
   deviceID_label: A.larray U8.t (US.v deviceID_label_len); (* public bytes *)
-  aliasKey_label_len: (v:US.t{ US.v v > 0 }); (* should be U32 *)
+  aliasKey_label_len: hkdf_lbl_len; (* should be U32 *)
   aliasKey_label: A.larray U8.t (US.v aliasKey_label_len); (* public bytes *)
 (* DeviceID CSR Inputs*)
   deviceIDCSR_ingredients: deviceIDCSR_ingredients_t;

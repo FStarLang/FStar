@@ -30,66 +30,70 @@ val aliaskey_len_is_valid (len:US.t)
 
 assume
 val derive_key_pair_spec
-  // (ikm_len: hkdf_ikm_len)
-  (ikm_len: US.t)
+  (ikm_len: hkdf_ikm_len)
   // (ikm: Seq.lseq U8.t (US.v ikm_len))
   (ikm: Seq.seq U8.t)
-  // (lbl_len: hkdf_lbl_len)
-  (lbl_len: US.t)
+  (lbl_len: hkdf_lbl_len)
   // (lbl: Seq.lseq U8.t (US.v lbl_len))
   (lbl: Seq.seq U8.t)
   : Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
 
 let derive_AliasKey_spec
+  (alg:alg_t)
+  (dig_len:hkdf_ikm_len)
   (cdi: Seq.seq U8.t)  (* should be length 32 *)
   (fwid: Seq.seq U8.t) (* should be length 32 *)
-  // (l0_label_AliasKey_len: hkdf_lbl_len)
-  (l0_label_AliasKey_len: US.t)
+  (l0_label_AliasKey_len: hkdf_lbl_len)
   // (l0_label_AliasKey: Seq.lseq U8.t (US.v l0_label_AliasKey_len))
   (l0_label_AliasKey: Seq.seq U8.t)
 : Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
-= let cdigest = spec_hash dice_hash_alg cdi in
-  let adigest = spec_hmac dice_hash_alg cdigest fwid in
+= let cdigest = spec_hash alg cdi in
+  let adigest = spec_hmac alg cdigest fwid in
   derive_key_pair_spec
-    (* ikm *) dice_digest_len adigest
+    (* ikm *) dig_len adigest
     (* lbl *) l0_label_AliasKey_len l0_label_AliasKey
 
 let derive_DeviceID_spec
+  (alg:alg_t)
+  (dig_len:hkdf_ikm_len)
   (cdi: Seq.seq U8.t) (* should be length 32 *)
-  // (l0_label_DeviceID_len: hkdf_lbl_len)
-  (l0_label_DeviceID_len: US.t)
+  (l0_label_DeviceID_len: hkdf_lbl_len)
   // (l0_label_DeviceID: Seq.lseq U8.t (US.v l0_label_DeviceID_len))
   (l0_label_DeviceID: Seq.seq U8.t)
 : Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
-= let cdigest = spec_hash dice_hash_alg cdi in
+= let cdigest = spec_hash alg cdi in
   derive_key_pair_spec
-    (* ikm *) dice_digest_len cdigest
+    (* ikm *) dig_len cdigest
     (* lbl *) l0_label_DeviceID_len l0_label_DeviceID
 
 let derive_authKeyID_spec
+  (alg:alg_t)
   (deviceIDPub: Seq.seq U8.t) (* should be length 32 *)
 : Seq.seq U8.t (* should be length 20 *)
-= spec_hash dice_hash_alg deviceIDPub
+= spec_hash alg deviceIDPub
 
 let l0_core_step1_post
   (l0: l0_record)
   (vl0: l0_repr)
+  (alg:alg_t)
   : vprop = 
   pure (
-    derive_DeviceID_spec vl0.cdi l0.deviceID_label_len vl0.deviceID_label 
+    valid_hkdf_ikm_len (digest_len alg) /\
+    derive_DeviceID_spec alg (digest_len alg) vl0.cdi l0.deviceID_label_len vl0.deviceID_label
       == (vl0.deviceID_pub, vl0.deviceID_priv) /\
-    derive_AliasKey_spec vl0.cdi vl0.fwid l0.aliasKey_label_len vl0.aliasKey_label
+    derive_AliasKey_spec alg (digest_len alg) vl0.cdi vl0.fwid l0.aliasKey_label_len vl0.aliasKey_label
       == (vl0.aliasKey_pub, vl0.aliasKey_priv) /\
-    derive_authKeyID_spec vl0.deviceID_pub
+    derive_authKeyID_spec alg vl0.deviceID_pub
       == vl0.authKeyID 
   )
 
 ```pulse 
 fn derive_DeviceID
+  (alg:alg_t)
   (deviceID_pub: A.larray U8.t 32)
   (deviceID_priv: A.larray U8.t 32)
   (cdi: A.larray U8.t 32)
-  (deviceID_label_len: US.t)
+  (deviceID_label_len: hkdf_lbl_len)
   (deviceID_label: A.larray U8.t (US.v deviceID_label_len))
   (#cdi0 #deviceID_label0 #deviceID_pub0 #deviceID_priv0: Seq.seq U8.t)
   requires (
@@ -104,7 +108,8 @@ fn derive_DeviceID
     (exists (deviceID_pub1:Seq.seq U8.t) (deviceID_priv1:Seq.seq U8.t). (
         A.pts_to deviceID_pub full_perm deviceID_pub1 `star`
         A.pts_to deviceID_priv full_perm deviceID_priv1 `star`
-        pure (derive_DeviceID_spec cdi0 deviceID_label_len deviceID_label0 == (deviceID_pub1, deviceID_priv1))
+        pure (valid_hkdf_ikm_len (digest_len alg) /\
+              derive_DeviceID_spec alg (digest_len alg) cdi0 deviceID_label_len deviceID_label0 == (deviceID_pub1, deviceID_priv1))
       ))
   )
 {
@@ -118,16 +123,15 @@ fn l0_core_step1
   (vl0: l0_repr)
   requires (
     l0_perm l0 vl0 `star`
-    pure( valid_hkdf_lbl_len l0.deviceID_label_len /\
-          valid_hkdf_lbl_len l0.aliasKey_label_len)
+    pure(valid_hkdf_lbl_len l0.deviceID_label_len /\
+         valid_hkdf_lbl_len l0.aliasKey_label_len)
   )
   ensures (
     l0_perm l0 vl0 `star`
-    l0_core_step1_post l0 vl0
+    l0_core_step1_post l0 vl0 dice_hash_alg
   )
 {
-  // is_valid_hkdf_ikm_len dice_digest_len;
-  // is_valid_hkdf_lbl_len l0.deviceID_label_len;
+  dice_digest_len_is_hkdf_ikm;
 
   rewrite (l0_perm l0 vl0)
     as (
@@ -144,7 +148,7 @@ fn l0_core_step1
       A.pts_to l0.authKeyID full_perm vl0.authKeyID
     );
 
-  derive_DeviceID l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
+  derive_DeviceID dice_hash_alg l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
   
   // derive_AliasKey l0.aliasKey_pub l0.aliasKey_priv l0.cdi l0.fwid l0.aliasKey_label_len l0.aliasKey_label;
 
