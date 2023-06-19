@@ -855,6 +855,7 @@ let resugar_pat g q p = match p with
           | Some (Record_ctor (ty, fns)) ->
               let path = List.map string_of_id (ns_of_lid ty) in
               let fs = record_fields g ty fns pats in
+              let path = no_fstar_stubs_ns path in
               MLP_Record(path, fs)
           | _ -> p
       end
@@ -1101,6 +1102,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residual
       | MLE_CTor(_, args), Some (Record_ctor(tyname, fields)) ->
         let path = List.map string_of_id (ns_of_lid tyname) in
         let fields = record_fields g tyname fields args in
+        let path = no_fstar_stubs_ns path in
         with_ty e.mlty <| MLE_Record(path, fields)
       | _ -> e
      in
