@@ -1402,7 +1402,9 @@ let (resugar_pat :
                         FStar_Compiler_List.map FStar_Ident.string_of_id
                           uu___2 in
                       let fs = record_fields g ty fns pats in
-                      FStar_Extraction_ML_Syntax.MLP_Record (path, fs)
+                      let path1 =
+                        FStar_Extraction_ML_UEnv.no_fstar_stubs_ns path in
+                      FStar_Extraction_ML_Syntax.MLP_Record (path1, fs)
                   | uu___2 -> p))
         | uu___ -> p
 let rec (extract_one_pat :
@@ -1802,10 +1804,11 @@ let (maybe_eta_data_and_project_record :
                   let uu___1 = FStar_Ident.ns_of_lid tyname in
                   FStar_Compiler_List.map FStar_Ident.string_of_id uu___1 in
                 let fields1 = record_fields g tyname fields args in
+                let path1 = FStar_Extraction_ML_UEnv.no_fstar_stubs_ns path in
                 FStar_Compiler_Effect.op_Less_Bar
                   (FStar_Extraction_ML_Syntax.with_ty
                      e.FStar_Extraction_ML_Syntax.mlty)
-                  (FStar_Extraction_ML_Syntax.MLE_Record (path, fields1))
+                  (FStar_Extraction_ML_Syntax.MLE_Record (path1, fields1))
             | uu___ -> e in
           let resugar_and_maybe_eta qual1 e =
             let uu___ = eta_args g [] residualType in

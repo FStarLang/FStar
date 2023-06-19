@@ -19,7 +19,7 @@ let (fstar_syntax_syntax_lid : Prims.string Prims.list -> FStar_Ident.lident)
   =
   fun s ->
     FStar_Ident.lid_of_path
-      (FStar_Compiler_List.op_At ["FStar"; "Syntax"; "Syntax"] s)
+      (FStar_Compiler_List.op_At ["FStar"; "Stubs"; "Syntax"; "Syntax"] s)
       FStar_Compiler_Range_Type.dummyRange
 let (fstar_refl_lid : Prims.string Prims.list -> FStar_Ident.lident) =
   fun s ->
