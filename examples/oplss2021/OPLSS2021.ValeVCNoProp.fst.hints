@@ -1,5 +1,5 @@
 [
-  "kFÇ‘|ñð&ºG2«RÃ\u0007?",
+  "ú'\u0004,d›¶¶Ú\u001aûŽî\u000f·ü",
   [
     [
       "OPLSS2021.ValeVCNoProp.__proj__QProc__item__hasWp",
@@ -11,7 +11,7 @@
         "data_elim_OPLSS2021.ValeVCNoProp.QProc"
       ],
       0,
-      "1ad02fd114c870d3303e0f03298d6983"
+      "711570a36e1ff43bdec57c5e15674076"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__c",
@@ -166,10 +166,9 @@
         "binder_x_1ef0b435af407be38ebd773e60bcc6cb_3",
         "binder_x_385a8f11ae151c92dd8b0c0ad29fbf62_1",
         "binder_x_a87a45df515da4fa9d3b482260f0fa4f_2",
-        "binder_x_b2b7cde4456e5d6ed2fa059f2eafc491_0",
+        "binder_x_b2b7cde4456e5d6ed2fa059f2eafc491_0", "bool_inversion",
         "constructor_distinct_OPLSS2021.Vale.Block",
         "constructor_distinct_OPLSS2021.ValeVCNoProp.QEmpty",
-        "constructor_distinct_OPLSS2021.ValeVCNoProp.QLemma",
         "constructor_distinct_OPLSS2021.ValeVCNoProp.QSeq",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_OPLSS2021.ValeVCNoProp.QEmpty",
@@ -198,9 +197,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_OPLSS2021.Vale.Block_block",
-        "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma__3",
         "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma__4",
-        "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma_cs",
         "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma_post",
         "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma_pre",
         "projection_inverse_OPLSS2021.ValeVCNoProp.QSeq_c",
@@ -214,6 +211,7 @@
         "subterm_ordering_OPLSS2021.ValeVCNoProp.QLemma",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_OPLSS2021.ValeVCNoProp.vc_gen",
+        "typing_OPLSS2021.ValeVCNoProp.uu___is_QSeq",
         "typing_tok_OPLSS2021.ValeVCNoProp.QEmpty@tok"
       ],
       0,
@@ -319,7 +317,7 @@
         "equation_OPLSS2021.Vale.update_state",
         "equation_OPLSS2021.ValeVCNoProp.state_eq", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "int_inversion", "int_typing", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_b3c5a7af1b5524553dc82cef72baac45",
         "typing_OPLSS2021.ValeVCNoProp.state_eq",
         "typing_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63"

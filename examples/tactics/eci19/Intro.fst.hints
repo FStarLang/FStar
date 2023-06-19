@@ -1,5 +1,5 @@
 [
-  "\fø¡Çð}À&+\u001d\u001c‘cdí@",
+  "²ç[‚³\u00157ýÁ“AŒ €B*",
   [
     [
       "Intro.recursive_tac",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "adac85e3fd71aecba1b27450c462fe8e"
+      "b595348562f955b34291b737bcc3aad9"
     ],
     [
       "Intro.constr",
@@ -151,7 +151,7 @@
       "34794807bf8d2ee3ca1c58e3e0d6ce86"
     ],
     [
-      "Intro.uu___127",
+      "Intro.uu___128",
       1,
       2,
       1,
@@ -161,10 +161,10 @@
         "projection_inverse_BoxInt_proj_0", "typing_Intro.add_2"
       ],
       0,
-      "535f4e4d62b58158c328fe93d0294f35"
+      "e970123ef3124cdba7db789109f1fb62"
     ],
     [
-      "Intro.uu___128",
+      "Intro.uu___129",
       1,
       2,
       1,
@@ -174,10 +174,10 @@
         "projection_inverse_BoxInt_proj_0", "typing_Intro.add_3"
       ],
       0,
-      "6f63aebd940db1bdc290d92a5f4126ec"
+      "4cf8fa894db03e519ccc46a9ea1f6644"
     ],
     [
-      "Intro.uu___129",
+      "Intro.uu___130",
       1,
       2,
       1,
@@ -187,16 +187,7 @@
         "projection_inverse_BoxInt_proj_0", "typing_Intro.add_4"
       ],
       0,
-      "aed6371dd786bdc31930993be2712938"
-    ],
-    [
-      "Intro.uu___136",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Intro.diag" ],
-      0,
-      "1f3b4492c06aab3a65a65825aed44aaf"
+      "eaa2f4a16f38800dc6672021f91206d8"
     ],
     [
       "Intro.uu___137",
@@ -205,7 +196,16 @@
       1,
       [ "@query", "equation_Intro.diag" ],
       0,
-      "bc146355349971672d12e28e49e2512e"
+      "5e99c5a0bad2cce70d595762f68fd9cd"
+    ],
+    [
+      "Intro.uu___138",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Intro.diag" ],
+      0,
+      "0c2965c2560617dfd87c96e8e714033b"
     ],
     [
       "Intro.test_add",
@@ -217,9 +217,8 @@
         "equation_Intro.add_int", "equation_Intro.sum",
         "equation_Prims.eqtype", "function_token_typing_Prims.int",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_d7adb22b06ff9c59478be5520cee7396",
-        "primitive_Prims.op_Addition", "proj_equation_Intro.Mkadd_sum",
-        "projection_inverse_BoxInt_proj_0",
+        "interpretation_Tm_abs_a478e62d90b46c4566b41c0b5ee6c29c",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Intro.Mkadd_sum",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_Intro.sum",
@@ -227,7 +226,7 @@
         "typing_Intro.add_int"
       ],
       0,
-      "a200b38a9066799477c61f79955135af"
+      "02406bf99ef06b98d02a6a853ea46e24"
     ]
   ]
 ]

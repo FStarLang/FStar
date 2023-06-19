@@ -1,5 +1,5 @@
 [
-  "¸À¢i\u0019\u0004HXå»HñAmtH",
+  "²ª\u0011\u0001;Ê¨^x\u000f´î„2€\u001f",
   [
     [
       "GRewrite.test_grewrite2",
@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_acd7a24d6d89cb73c8b4e90eec847a37"
+        "@query", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "982ac57db0cc79bf3b0725ec48bd8a8d"
+      "b2f128ce3788cfd67c3048c6dc3e8c04"
     ],
     [
       "GRewrite.test_grewrite2",

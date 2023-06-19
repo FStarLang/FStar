@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "41c8ad2f8424fa9d311eed08deb46e87"
+      "12bc85005e820faf5458dbacab05191c"
     ],
     [
       "WorkingWithSquashedProofs.foo_implies_bar",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_460b166284656e401cd2507f30d7a622"
       ],
       0,
-      "e13926f409c35c1c2a5e45bacf514f32"
+      "dded818e2200430041bb315cc1c32dd8"
     ],
     [
       "WorkingWithSquashedProofs.valid_baz",
@@ -36,7 +36,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "85ef6be2942b8d960d230e221936d6d9"
+      "6e34df95c49d28dc5b7c1189527cfc1c"
     ],
     [
       "WorkingWithSquashedProofs.valid_baz_alt",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0f9b1a1e4516b4d23cf14510f644d53a"
+      "40ffd78aca300763c33c6a0d43fb86ce"
     ],
     [
       "WorkingWithSquashedProofs.elim_squash_or",
@@ -64,7 +64,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "284bec9b8272c815bcb71d31f6770ab0"
+      "7cc162e044a3657d2860a4c056f1b3fe"
     ]
   ]
 ]

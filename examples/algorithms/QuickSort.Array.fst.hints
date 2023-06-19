@@ -17,7 +17,7 @@
         "refinement_interpretation_Tm_refine_c7f248c50d182c40aac9022fc9a66edc"
       ],
       0,
-      "1f296ac5e68b7416ea07e26dd5eec8f7"
+      "d595b6957431b6ff04f0ed03a4c0d639"
     ],
     [
       "QuickSort.Array.partition_post",
@@ -36,7 +36,7 @@
         "refinement_interpretation_Tm_refine_c7f248c50d182c40aac9022fc9a66edc"
       ],
       0,
-      "7af26d850e5e8b7f01db66632e3d5800"
+      "ff8a08e07a81d6951ac256c8657e3982"
     ],
     [
       "QuickSort.Array.partition",
@@ -93,7 +93,7 @@
         "typing_FStar.Seq.Base.upd", "typing_FStar.Seq.Properties.mem"
       ],
       0,
-      "41697dd0b55db54b4755df123ca668de"
+      "14147c39ad103ffebe46712e017ffccb"
     ],
     [
       "QuickSort.Array.lemma_slice_cons_pv",
@@ -112,7 +112,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a69e69616c97d9eaea5ff82bdb2cdc92"
+      "710863ff590b18c3b1fa8a3f0105aea4"
     ],
     [
       "QuickSort.Array.lemma_slice_cons_pv",
@@ -149,7 +149,7 @@
         "typing_FStar.Seq.Properties.cons"
       ],
       0,
-      "0ec958208406e2885b1e3d452a8869a1"
+      "1ab30fe16654a1ab94a2226271230a85"
     ],
     [
       "QuickSort.Array.sort",
@@ -169,7 +169,7 @@
         "typing_FStar.Array.sel", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "f7fae19d8bbe01db4a5965d1c9b671f3"
+      "0675471b822c4fedc352dd2c9466ac96"
     ],
     [
       "QuickSort.Array.sort",
@@ -220,7 +220,7 @@
         "typing_FStar.Seq.Properties.mem"
       ],
       0,
-      "651f6d773e77d3642d4e0ae55b048570"
+      "4e64fadbdaf8a1c70efcdadc9545cec3"
     ],
     [
       "QuickSort.Array.qsort",
@@ -242,7 +242,7 @@
         "typing_FStar.Array.sel", "typing_FStar.Seq.Properties.sorted"
       ],
       0,
-      "a127e0988e227d77598d57d6d317b220"
+      "d3b2d9785898af35648e6fcfbd6de4ac"
     ]
   ]
 ]

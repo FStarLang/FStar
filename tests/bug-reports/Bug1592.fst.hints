@@ -115,7 +115,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union", "typing_Prims.pow2"
       ],
       0,
-      "5eb726fee41465515e57bb3ecbd0a04d"
+      "a9285fbd9530efbdf89ae18167eca679"
     ],
     [
       "Bug1592.example1",
@@ -200,7 +200,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "99813ce446db0667cf4e237c1da0a63d"
+      "a883880951f4b9717c2df77533cd7e79"
     ]
   ]
 ]

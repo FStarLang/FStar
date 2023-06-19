@@ -1,5 +1,5 @@
 [
-  "\t¡\u0004²Ñ\u000bñr†þ2éö¨,ê",
+  "Ö‡K’¿h›”Ô²0ÏU]á\u0011",
   [
     [
       "Arith.lem0",
@@ -12,7 +12,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e2f8b0a98e20c11ef3554533650b7b57"
+      "0738f6c926944d677778bba5ff6f3cfc"
     ],
     [
       "Arith.lem1",
@@ -84,7 +84,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ea09e62774e741d3c81c599a611c9557"
+      "cc3e1d4680e639456fbd32ea7854e3be"
     ],
     [
       "Arith.lem3",
@@ -99,7 +99,7 @@
         "projection_inverse_Prims.Cons_tl", "true_interp"
       ],
       0,
-      "99c4d24538d1598437067246672e0306"
+      "b5fe68dfda9394ab8105ea9f0235a7fd"
     ],
     [
       "Arith.lem3",
@@ -226,8 +226,8 @@
     [
       "Arith.lem4",
       5,
-      8,
       2,
+      1,
       [
         "@query", "b2t_def", "equation_Prims.l_and", "l_and-interp",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
@@ -235,7 +235,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0cdc2d17d5d6e139484d3da8ccd71af6"
+      "4f6006a22f7e0244c011783ba35414ef"
     ],
     [
       "Arith.lem4",

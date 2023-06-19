@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b9b85602c6ff9141f94159b99389317d"
+      "d5aa696142cab99a68a31afe948b74c4"
     ],
     [
       "Bug1533.elim2",
@@ -21,7 +21,7 @@
       1,
       [ "@query", "equation_Prims.op_Equals_Equals_Equals" ],
       0,
-      "9c7d5c37b5b8a2defb5c78408c378926"
+      "d1cbc9b3888eba27f91503d1e908dd4b"
     ],
     [
       "Bug1533.coerce",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Tm_refine_770aa551c1985581cf5d9ce92df5e8e5"
       ],
       0,
-      "0e1abd4425e550623efc89303b4132b7"
+      "b3bd3d6b4dfc4c102ce8e383d45fff3e"
     ]
   ]
 ]

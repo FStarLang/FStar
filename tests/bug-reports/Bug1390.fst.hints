@@ -1,5 +1,5 @@
 [
-  "ÁVK„¹b“YÚÊ»u\u0004ÖÃ9",
+  "ð¨\u000b²ÆO{áÔ)'XŸg½ý",
   [
     [
       "Bug1390.list_sum",
@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ffa7c5f5c311681383f726b75a4d8d87"
+      "cac0a074749eada01c410a9cb2281b1a"
     ],
     [
       "Bug1390.list_sum_lem",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "45dad44029a8e84e2025d7d6ed1402c8"
+      "3bf9b6aff4ef8ef9a237283151540d99"
     ],
     [
       "Bug1390.list_sum_lem",
@@ -50,7 +50,7 @@
         "typing_Bug1390.list_sum"
       ],
       0,
-      "b7d6742a5c479d5e61406f4b3e6fe2e3"
+      "4aa6fa699fc2b971439028c0acb13cff"
     ]
   ]
 ]

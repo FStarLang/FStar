@@ -1,5 +1,5 @@
 [
-  "ﬁd\u001a\r`x&≤)ÿ¬\u0017aRX™",
+  ".çV\u000e^ÌÍa\u0002nÑ;A“∏˝",
   [
     [
       "Bug1902.mk_abs",
@@ -12,7 +12,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "040c809ea853d8834daadf2023e3d473"
+      "7c33ca1dbcbd08ff0bc8304e2a1f3023"
     ],
     [
       "Bug1902.f",
@@ -30,7 +30,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "02f811a70b78c11896eecafedabf0140"
+      "8648adac45b251505212ba4ea7ff9d6d"
     ],
     [
       "Bug1902.mk_tot_arr_decr",
@@ -43,7 +43,39 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3542d007150d3768e423d1c50909f099"
+      "ecf020f082e2c0e42d5eb24e81756832"
+    ],
+    [
+      "Bug1902.craft_f'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "data_typing_intro_Prims.Nil@tok",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Reflection.Types.name",
+        "equation_FStar.Reflection.Types.typ",
+        "equation_FStar.Tactics.NamedView.branch",
+        "equation_FStar.Tactics.NamedView.namedv",
+        "equation_FStar.Tactics.NamedView.simple_binder",
+        "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Tactics.NamedView.branch",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v"
+      ],
+      0,
+      "533e89f75c98add56028afb3f2854c07"
     ],
     [
       "Bug1902.f'_using_f_type",
@@ -59,7 +91,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "23c0f1169759596c38f7c44aa790f731"
+      "ceacc7316a95a514428da33b05793eea"
     ]
   ]
 ]
