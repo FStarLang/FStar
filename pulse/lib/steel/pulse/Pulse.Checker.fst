@@ -229,6 +229,23 @@ let maybe_infer_intro_exists
     );
     result
       
+let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
+  let terms_to_strings (ts:list term)= T.map Pulse.Syntax.Printer.term_to_string ts in
+  let numbered_list ss = 
+       let _, s = T.fold_left (fun (i, acc) s -> (i+1, Printf.sprintf "%d. %s" i s :: acc)) (1, []) ss in
+       String.concat "\n  " (List.rev s)
+  in
+  let format_terms (ts:list term) = numbered_list (terms_to_strings ts) in
+  Printf.sprintf 
+    "Failed to prove the following goals:\n  \
+     %s\n\
+     The remaining conjuncts in the separation logic context are:\n  \
+     %s\n\
+     The typing context is:\n  \
+     %s\n"
+    (format_terms goal)
+    (format_terms ctxt)
+    (env_to_string g)
 
 let handle_framing_failure
     (g:env)
@@ -283,11 +300,7 @@ let handle_framing_failure
           in
           handle_intro_exists rest (wr t)
         | _ ->
-         fail g (Some t0.range) (Printf.sprintf 
-                      "Failed to satisfy the following goals:\n%s\nContext has\n%s\nat command %s\n"
-                       (terms_to_string rest)
-                       (terms_to_string failure.remaining_context)
-                       (P.st_term_to_string t0))
+         fail g (Some t0.range) (format_failed_goal g failure.remaining_context rest)
     in
     handle_intro_exists rest t
 
@@ -374,7 +387,19 @@ let rec check' : bool -> check_t =
           | None, Some p -> p
           | Some p, None ->
             Checker.Common.intro_post_hint g None p
-          | _, _ -> Pulse.Typing.Env.fail g (Some t.range) "Either two annotations for if post or none"
+          | Some p, Some q ->
+            Pulse.Typing.Env.fail g (Some t.range) 
+              (Printf.sprintf 
+                 "Multiple annotated postconditions---remove one of them.\n\
+                  The context expects the postcondition %s,\n\
+                  but this conditional was annotated with postcondition %s"
+                  (P.term_to_string (q <: post_hint_t).post)
+                  (P.term_to_string p))
+          | _, _ ->
+            Pulse.Typing.Env.fail g (Some t.range) 
+              (Printf.sprintf
+                 "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
+                  Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
         in
         let (| t, c, d |) = If.check_if g b e1 e2 pre pre_typing post (check' true) in
         ( (| t, c, d |) <: checker_result_t g pre post_hint)

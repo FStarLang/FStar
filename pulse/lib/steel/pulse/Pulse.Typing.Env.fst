@@ -247,7 +247,7 @@ let env_to_string (e:env) : T.Tac string =
   let bs = T.map
     (fun ((_, t), x) -> Printf.sprintf "%s : %s" (T.unseal x.name) (Pulse.Syntax.Printer.term_to_string t))
     (T.zip e.bs e.names) in
-  Printf.sprintf "Env:\n\t%s\n" (String.concat "\n\t" bs)
+  String.concat "\n  " bs
 
 let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   let r = 
@@ -258,7 +258,6 @@ let fail (#a:Type) (g:env) (r:option range) (msg:string) =
       then range_of_env g
       else r
   in
-  let ctx = Printf.sprintf "Environment: %s\n"  (env_to_string g) in
-  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctx::ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
   FStar.Tactics.log_issues [issue];
   T.fail "Pulse checker failed"
