@@ -44,7 +44,7 @@ type refl_constant = {
 let refl_constant_lid rc = rc.lid
 let refl_constant_term rc = rc.t
 
-let fstar_syntax_syntax_lid s = Ident.lid_of_path (["FStar"; "Syntax"; "Syntax"]@s) Range.dummyRange
+let fstar_syntax_syntax_lid s = Ident.lid_of_path (["FStar"; "Stubs"; "Syntax"; "Syntax"]@s) Range.dummyRange
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 

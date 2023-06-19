@@ -15,7 +15,7 @@
 *)
 module FStar.Reflection.V2.Data
 
-include FStar.Syntax.Syntax
+include FStar.Stubs.Syntax.Syntax
 open FStar.Reflection.Types
 
 (* The type of a string observable only with a tactic.
@@ -209,7 +209,7 @@ type sigelt_view =
 
   | Unk
 
-(* Qualifiers for sigelts, see FStar.Syntax.Syntax for an explanation. *)
+(* Qualifiers for sigelts, see src/FStar.Syntax.Syntax for an explanation. *)
 noeq
 type qualifier =
   | Assumption

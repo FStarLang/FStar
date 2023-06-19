@@ -1,4 +1,4 @@
-module FStar.Syntax.Syntax
+module FStar.Stubs.Syntax.Syntax
 open FStar.Reflection.Types
 
 noeq
