@@ -78,17 +78,17 @@ type l0_record = {
 }
 
 type l0_repr = {
-  cdi: (Seq.seq U8.t);
-  fwid: (Seq.seq U8.t);
-  deviceID_label: (Seq.seq U8.t);
-  aliasKey_label: (Seq.seq U8.t);
-  deviceID_pub: (Seq.seq U8.t);
-  deviceID_priv: (Seq.seq U8.t);
-  aliasKey_pub: (Seq.seq U8.t);
-  aliasKey_priv: (Seq.seq U8.t);
-  deviceIDCSR_buf: (Seq.seq U8.t);
-  aliasKeyCRT_buf: (Seq.seq U8.t);
-  authKeyID: (Seq.seq U8.t);
+  cdi: Seq.seq U8.t;
+  fwid: Seq.seq U8.t;
+  deviceID_label: Seq.seq U8.t;
+  aliasKey_label: Seq.seq U8.t;
+  deviceID_pub: Seq.seq U8.t;
+  deviceID_priv: Seq.seq U8.t;
+  aliasKey_pub: Seq.seq U8.t;
+  aliasKey_priv: Seq.seq U8.t;
+  deviceIDCSR_buf: Seq.seq U8.t;
+  aliasKeyCRT_buf: Seq.seq U8.t;
+  authKeyID: Seq.seq U8.t;
 }
 
 let l0_perm (l0:l0_record) (vl0: l0_repr) 
