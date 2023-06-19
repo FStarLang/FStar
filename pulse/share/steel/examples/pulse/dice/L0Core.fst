@@ -118,16 +118,31 @@ fn l0_core_step1
   (vl0: l0_repr)
   requires (
     l0_perm l0 vl0 `star`
-    valid_hkdf_lbl_len l0.deviceID_label_len `star`
-    valid_hkdf_lbl_len l0.aliasKey_label_len
+    pure( valid_hkdf_lbl_len l0.deviceID_label_len /\
+          valid_hkdf_lbl_len l0.aliasKey_label_len)
   )
   ensures (
     l0_perm l0 vl0 `star`
     l0_core_step1_post l0 vl0
   )
 {
-  is_valid_hkdf_ikm_len dice_digest_len;
-  is_valid_hkdf_lbl_len l0.deviceID_label_len;
+  // is_valid_hkdf_ikm_len dice_digest_len;
+  // is_valid_hkdf_lbl_len l0.deviceID_label_len;
+
+  rewrite (l0_perm l0 vl0)
+    as (
+      A.pts_to l0.cdi full_perm vl0.cdi `star`
+      A.pts_to l0.fwid full_perm vl0.fwid `star`
+      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
+      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
+      A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
+      A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
+      A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
+      A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
+      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
+      A.pts_to l0.authKeyID full_perm vl0.authKeyID
+    );
 
   derive_DeviceID l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
   
@@ -163,11 +178,11 @@ let l0_pre
   (l0: l0_record)
   (vl0: l0_repr)
   : vprop =
-  valid_hkdf_lbl_len l0.deviceID_label_len `star`
-  valid_hkdf_lbl_len l0.aliasKey_label_len `star`
   deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
   deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
-  aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len
+  aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
+  pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
+        valid_hkdf_lbl_len l0.aliasKey_label_len)
 
 assume
 val aliasKey_post 
@@ -229,11 +244,11 @@ fn l0
 (* Derive DeviceID *)
 
   rewrite (l0_pre l0 vl0)
-    as (valid_hkdf_lbl_len l0.deviceID_label_len `star`
-        valid_hkdf_lbl_len l0.aliasKey_label_len `star`
-        deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
+    as (deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
         deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
-        aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len);
+        aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
+        pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
+              valid_hkdf_lbl_len l0.aliasKey_label_len));
 
   l0_core_step1 l0 vl0;
 
