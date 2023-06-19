@@ -700,11 +700,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   if debug env Options.Medium then
     BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
   match top.n with
+  | Tm_bvar _
   | Tm_delayed _ -> failwith "Impossible"
 
   | Tm_uinst _
   | Tm_uvar _
-  | Tm_bvar _
   | Tm_name _
   | Tm_fvar _
   | Tm_constant _
@@ -1321,10 +1321,31 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
       (env |> Env.clear_expected_typ |> fst |> instantiate_both)
       e1 in
 
-    let e1, c1 =
-        match TcUtil.coerce_views env e1 c1 with
-        | Some (e1, c1) -> e1, c1
-        | None -> e1, c1 in
+    (* If there is a constructor in the first branch (not a variable),
+    then we grab the inductive type that we are matching on and use
+    that to maybe coerce the scrutinee. Hence `match t with | Tv_App ... ->`
+    will coerce the t. QUESTION: Why don't we do the same thing to get
+    a expected type to check the scrutinee with? *)
+    let e1, c1, g_c =
+      match eqns with
+      | (p, _, _)::_ ->
+        begin match p.v with
+        | Pat_cons (fv, _, _) ->
+          (* Wrapped in a try/catch, we may be looking up unresolved constructors. *)
+          let r = try Some (Env.lookup_datacon env fv.fv_name.v) with | _ -> None in
+          begin match r with
+          | Some (us, t) ->
+            let bs, c = U.arrow_formals_comp t in
+            let env' = Env.push_binders env bs in
+            TcUtil.maybe_coerce_lc env' e1 c1 (U.comp_result c)
+          | None ->
+            e1, c1, Env.trivial_guard
+          end
+        | _ ->
+          e1, c1, Env.trivial_guard
+        end
+      | _ -> e1, c1, Env.trivial_guard
+    in
 
     let env_branches, ret_opt, g1 =
       match ret_opt with
@@ -1422,7 +1443,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let g = TcComm.weaken_guard_formula g
           (U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name guard_x) e1) in
         //close guard_x
-        let g = Env.close_guard env [S.mk_binder guard_x] g in 
+        let g = Env.close_guard env [S.mk_binder guard_x] g in
         TcComm.lcomp_of_comp c,
         g,
         erasables |> List.fold_left (fun acc b -> acc || b) false
@@ -1522,7 +1543,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
     then BU.print2 "(%s) Typechecked Tm_match, comp type = %s\n"
                       (Range.string_of_range top.pos) (TcComm.lcomp_to_string cres);
 
-    e, cres, Env.conj_guards [g1; g_branches; g_expected_type]
+    e, cres, Env.conj_guards [g_c; g1; g_branches; g_expected_type]
 
   | _ ->
     failwith (BU.format1 "tc_match called on %s\n" (Print.tag_of_term top))

@@ -27,7 +27,7 @@ assume val foo:
   f:(dtuple2 toto tata -> test_sum bytes) -> g:(test_sum bytes -> dtuple2 toto tata) ->
   (x:dtuple2 toto tata -> squash (g (f x) == x)) ->
   unit
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let bla (bytes:Type0) {|bytes_like bytes|} =
   foo bytes

@@ -1,6 +1,6 @@
 module GTWP
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Universe
 open FStar.Monotonic.Pure
 
@@ -129,7 +129,7 @@ let rec map #a #b #i (f : a -> Gtd b i) (xs : list a) : Gtd (list b) i (* by (ex
 
 let app #a #b #i #wp (f : a -> GTD b i wp) (x : a) : GTD b i wp = f x
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec appn #a #i (n:nat) (f : a -> Gtd a i) (x : a) : Gtd a i =
   match n with

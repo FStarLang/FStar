@@ -1,5 +1,5 @@
 [
-  "≥˙õE\u001eÂà7îæ\u001cgI\bá\u0017",
+  "\u001f∆w*0”ÖØeêä\u001a&Øâ†",
   [
     [
       "SigeltOpts2.tau",
@@ -11,14 +11,18 @@
         "FStar.Reflection.Types_pretyping_84d6367db30bfa82d85949e1eb0c6daa",
         "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Tactics.Result.Success",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
         "equation_FStar.Reflection.Types.name", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.sigelt",
         "function_token_typing_Prims.string",
@@ -33,11 +37,11 @@
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "string_typing", "typing_FStar.Reflection.Builtins.lookup_typ",
-        "typing_FStar.Reflection.Builtins.sigelt_opts"
+        "string_typing", "typing_FStar.Reflection.V2.Builtins.lookup_typ",
+        "typing_FStar.Reflection.V2.Builtins.sigelt_opts"
       ],
       0,
-      "c7402aae6b2efdb3b5f04239c26d1565"
+      "d00033901a99f135c7e467e46df18a2c"
     ]
   ]
 ]

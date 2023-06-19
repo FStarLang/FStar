@@ -15,7 +15,7 @@
 *)
 module Examples
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.SL.Heap
 open Lang
 open SL.Tactics

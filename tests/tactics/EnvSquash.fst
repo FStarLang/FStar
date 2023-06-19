@@ -15,7 +15,7 @@
 *)
 module EnvSquash
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : int -> prop
 
@@ -25,12 +25,12 @@ assume val p : int -> prop
 
 let test () =
     let tau () : Tac unit =
-      let bs = binders_of_env (cur_env ()) in
+      let bs = vars_of_env (cur_env ()) in
       guard (Cons? (List.Tot.rev bs));
       let b = List.Tot.hd (List.Tot.rev bs) in
-      match term_as_formula' (type_of_binder b) with
+      match term_as_formula' (type_of_binding b) with
       | Exists _ _ _ -> ()
-      | _ -> fail ("unexpected type for last binder: " ^ term_to_string (type_of_binder b))
+      | _ -> fail ("unexpected type for last binder: " ^ term_to_string (type_of_binding b))
     in
     assume (exists x. p x);
     assert True by tau ()

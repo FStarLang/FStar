@@ -1,1 +1,16 @@
-[ "ØAÌ4e\u007f.e\u0005îıİítğ", [] ]
+[
+  "\u0005\u0015\u0002mXq´W«ˆŒL\bØ6Ğ",
+  [
+    [
+      "Bug1271.test",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "5e0707cced727663bfef7a020c5f4541"
+    ]
+  ]
+]

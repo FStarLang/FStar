@@ -15,14 +15,14 @@
 *)
 module Bug1270
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test =
   assert (True ==> True)
       by ((fun () ->
           let _ = forall_intros () in
           let env = cur_env () in
-          let hyps = binders_of_env env in
+          let hyps = vars_of_env env in
           match hyps with
           | [] -> ()
           | h :: _ -> ()) `or_else` trivial)

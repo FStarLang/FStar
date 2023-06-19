@@ -95,7 +95,7 @@ effect Id (a:Type) (pre:Type0) (post:a->Type0) =
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
  : Pure a (requires (wp p)) (ensures (fun r -> p r))

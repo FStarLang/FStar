@@ -1,6 +1,6 @@
 module HandleSmtGoal
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 [@@ handle_smt_goals]
 let tac () : Tac unit =

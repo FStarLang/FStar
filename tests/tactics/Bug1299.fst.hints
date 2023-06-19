@@ -1,5 +1,5 @@
 [
-  "®7È=6\u0003}\u0005|/|gK|u\\",
+  "Iê¡\u0005\\.9þæÕ\u001f\u0010\u0007ÎpI",
   [
     [
       "Bug1299.should_fail",
@@ -13,7 +13,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "071eb3962871216aea29825eabc97572"
+      "cbfeaec5304b1f92011853bcabc43f40"
     ],
     [
       "Bug1299.test",

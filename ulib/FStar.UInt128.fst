@@ -27,8 +27,8 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 
 open FStar.BV
-open FStar.Tactics
-module T = FStar.Tactics
+open FStar.Tactics.V2
+module T = FStar.Tactics.V2
 module TBV = FStar.Tactics.BV
 
 [@@ noextract_to "krml"]

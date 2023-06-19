@@ -1,6 +1,6 @@
 module Bug2596
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p: int -> int -> prop
 

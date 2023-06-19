@@ -447,6 +447,18 @@ let (is_fv_type : uenv -> FStar_Syntax_Syntax.fv -> Prims.bool) =
         (FStar_Compiler_Effect.op_Bar_Greater g.tydefs
            (FStar_Compiler_Util.for_some
               (fun tydef1 -> FStar_Syntax_Syntax.fv_eq fv tydef1.tydef_fv)))
+let (no_fstar_stubs_ns :
+  FStar_Extraction_ML_Syntax.mlsymbol Prims.list ->
+    FStar_Extraction_ML_Syntax.mlsymbol Prims.list)
+  =
+  fun ns ->
+    match ns with | "FStar"::"Stubs"::rest -> "FStar" :: rest | uu___ -> ns
+let (no_fstar_stubs :
+  FStar_Extraction_ML_Syntax.mlpath -> FStar_Extraction_ML_Syntax.mlpath) =
+  fun p ->
+    let uu___ = p in
+    match uu___ with
+    | (ns, id) -> let ns1 = no_fstar_stubs_ns ns in (ns1, id)
 let (lookup_record_field_name :
   uenv ->
     (FStar_Ident.lident * FStar_Ident.ident) ->
@@ -576,10 +588,13 @@ let (find_uniq :
             aux Prims.int_zero uu___1 in
           match uu___ with | (nm, map) -> ((Prims.op_Hat "'" nm), map)
         else aux Prims.int_zero mlident
-let (mlns_of_lid : FStar_Ident.lident -> Prims.string Prims.list) =
+let (mlns_of_lid :
+  FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlsymbol Prims.list) =
   fun x ->
-    let uu___ = FStar_Ident.ns_of_lid x in
-    FStar_Compiler_List.map FStar_Ident.string_of_id uu___
+    let uu___ =
+      let uu___1 = FStar_Ident.ns_of_lid x in
+      FStar_Compiler_List.map FStar_Ident.string_of_id uu___1 in
+    FStar_Compiler_Effect.op_Bar_Greater uu___ no_fstar_stubs_ns
 let (new_mlpath_of_lident :
   uenv -> FStar_Ident.lident -> (FStar_Extraction_ML_Syntax.mlpath * uenv)) =
   fun g ->
@@ -1041,11 +1056,12 @@ let (extend_record_field_name :
            | (name, fieldname_map) ->
                let ns = mlns_of_lid type_name in
                let mlp = (ns, name) in
+               let mlp1 = no_fstar_stubs mlp in
                let g1 =
                  let uu___2 =
                    let uu___3 = FStar_Ident.string_of_lid key in
                    FStar_Compiler_Util.psmap_add g.mlpath_of_fieldname uu___3
-                     mlp in
+                     mlp1 in
                  {
                    env_tcenv = (g.env_tcenv);
                    env_bindings = (g.env_bindings);

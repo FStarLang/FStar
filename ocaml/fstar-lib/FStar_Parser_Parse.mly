@@ -704,7 +704,6 @@ aqualifiedWithAttrs(X):
 /*                      Identifiers, module paths                             */
 /******************************************************************************/
 
-%public
 qlident:
   | ids=path(lident) { lid_of_ids ids }
 
@@ -1236,7 +1235,6 @@ refineOpt:
 %inline formula:
   | e=noSeqTerm { {e with level=Formula} }
 
-%public
 recordExp:
   | record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
       { mk_term (Record (None, record_fields)) (rr $loc(record_fields)) Expr }
@@ -1259,7 +1257,6 @@ appTerm:
 appTermNoRecordExp:
   | t=appTermCommon(argTerm) {t}
 
-%public
 argTerm:
   | x=pair(maybeHash, indexingTerm) { x }
   | u=universe { u }
@@ -1279,7 +1276,6 @@ indexingTerm:
   | e=atomicTerm
     { e }
 
-%public
 atomicTerm:
   | x=atomicTermNotQUident
     { x }

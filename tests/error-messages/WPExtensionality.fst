@@ -15,7 +15,7 @@
 *)
 module WPExtensionality
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val wp1 : (int -> Type0) -> Type0
 assume val wp2 : (int -> unit -> Type0) -> Type0

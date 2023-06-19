@@ -15,7 +15,7 @@
 *)
 module HoleBy
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let x : int = _ by (exact (`1))
 let _ = assert (x == 1)

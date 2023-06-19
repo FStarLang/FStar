@@ -1402,7 +1402,9 @@ let (resugar_pat :
                         FStar_Compiler_List.map FStar_Ident.string_of_id
                           uu___2 in
                       let fs = record_fields g ty fns pats in
-                      FStar_Extraction_ML_Syntax.MLP_Record (path, fs)
+                      let path1 =
+                        FStar_Extraction_ML_UEnv.no_fstar_stubs_ns path in
+                      FStar_Extraction_ML_Syntax.MLP_Record (path1, fs)
                   | uu___2 -> p))
         | uu___ -> p
 let rec (extract_one_pat :
@@ -1802,10 +1804,11 @@ let (maybe_eta_data_and_project_record :
                   let uu___1 = FStar_Ident.ns_of_lid tyname in
                   FStar_Compiler_List.map FStar_Ident.string_of_id uu___1 in
                 let fields1 = record_fields g tyname fields args in
+                let path1 = FStar_Extraction_ML_UEnv.no_fstar_stubs_ns path in
                 FStar_Compiler_Effect.op_Less_Bar
                   (FStar_Extraction_ML_Syntax.with_ty
                      e.FStar_Extraction_ML_Syntax.mlty)
-                  (FStar_Extraction_ML_Syntax.MLE_Record (path, fields1))
+                  (FStar_Extraction_ML_Syntax.MLE_Record (path1, fields1))
             | uu___ -> e in
           let resugar_and_maybe_eta qual1 e =
             let uu___ = eta_args g [] residualType in
@@ -2755,25 +2758,25 @@ and (term_as_mlexpr' :
             { FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_static;
               FStar_Syntax_Syntax.antiquotations = (shift, aqs);_})
            ->
-           let uu___1 = FStar_Reflection_Basic.inspect_ln qt in
+           let uu___1 = FStar_Reflection_V2_Builtins.inspect_ln qt in
            (match uu___1 with
-            | FStar_Reflection_Data.Tv_BVar bv ->
+            | FStar_Reflection_V2_Data.Tv_BVar bv ->
                 if bv.FStar_Syntax_Syntax.index < shift
                 then
-                  let tv' = FStar_Reflection_Data.Tv_BVar bv in
+                  let tv' = FStar_Reflection_V2_Data.Tv_BVar bv in
                   let tv =
                     let uu___2 =
-                      FStar_Syntax_Embeddings.embed
-                        FStar_Reflection_Embeddings.e_term_view tv' in
+                      FStar_Syntax_Embeddings_Base.embed
+                        FStar_Reflection_V2_Embeddings.e_term_view tv' in
                     uu___2 t.FStar_Syntax_Syntax.pos
                       FStar_Pervasives_Native.None
-                      FStar_Syntax_Embeddings.id_norm_cb in
+                      FStar_Syntax_Embeddings_Base.id_norm_cb in
                   let t1 =
                     let uu___2 =
                       let uu___3 = FStar_Syntax_Syntax.as_arg tv in [uu___3] in
                     FStar_Syntax_Util.mk_app
-                      (FStar_Reflection_Constants.refl_constant_term
-                         FStar_Reflection_Constants.fstar_refl_pack_ln)
+                      (FStar_Reflection_V2_Constants.refl_constant_term
+                         FStar_Reflection_V2_Constants.fstar_refl_pack_ln)
                       uu___2 in
                   term_as_mlexpr g t1
                 else
@@ -2783,17 +2786,19 @@ and (term_as_mlexpr' :
                 let tv1 =
                   let uu___2 =
                     let uu___3 =
-                      FStar_Reflection_Embeddings.e_term_view_aq (shift, aqs) in
-                    FStar_Syntax_Embeddings.embed uu___3 tv in
+                      FStar_Reflection_V2_Embeddings.e_term_view_aq
+                        (shift, aqs) in
+                    FStar_Syntax_Embeddings_Base.embed uu___3 tv in
                   uu___2 t.FStar_Syntax_Syntax.pos
                     FStar_Pervasives_Native.None
-                    FStar_Syntax_Embeddings.id_norm_cb in
+                    FStar_Syntax_Embeddings_Base.id_norm_cb in
                 let t1 =
                   let uu___2 =
                     let uu___3 = FStar_Syntax_Syntax.as_arg tv1 in [uu___3] in
                   FStar_Syntax_Util.mk_app
-                    (FStar_Reflection_Constants.refl_constant_term
-                       FStar_Reflection_Constants.fstar_refl_pack_ln) uu___2 in
+                    (FStar_Reflection_V2_Constants.refl_constant_term
+                       FStar_Reflection_V2_Constants.fstar_refl_pack_ln)
+                    uu___2 in
                 term_as_mlexpr g t1)
        | FStar_Syntax_Syntax.Tm_meta
            { FStar_Syntax_Syntax.tm2 = t1;

@@ -15,7 +15,7 @@
 *)
 module Bug1392
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let unsquash #a : a -> squash a =
   fun _ -> ()

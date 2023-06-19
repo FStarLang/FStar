@@ -175,9 +175,12 @@ let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) dummyRange
 let teff : term = mk (Tm_constant Const_effect) dummyRange
+
+(* no compress call? *)
 let is_teff (t:term) = match t.n with
     | Tm_constant Const_effect -> true
     | _ -> false
+(* no compress call? *)
 let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false
@@ -316,6 +319,7 @@ let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
+let t___range   = tconst PC.__range_lid
 let t_vconfig   = tconst PC.vconfig_lid
 let t_term      = tconst PC.term_lid
 let t_term_view = tabbrev PC.term_view_lid

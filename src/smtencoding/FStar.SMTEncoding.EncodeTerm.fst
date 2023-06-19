@@ -30,22 +30,21 @@ open FStar.Ident
 open FStar.Const
 open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
-module S = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module N = FStar.TypeChecker.Normalize
-module BU = FStar.Compiler.Util
-module U = FStar.Syntax.Util
-module TcUtil = FStar.TypeChecker.Util
-module Const = FStar.Parser.Const
-module R  = FStar.Reflection.Basic
-module RD = FStar.Reflection.Data
-module EMB = FStar.Syntax.Embeddings
-module RE = FStar.Reflection.Embeddings
-module Env = FStar.TypeChecker.Env
-module SE = FStar.Syntax.Embeddings
 open FStar.SMTEncoding.Env
 
-module RC = FStar.Reflection.Constants
+module BU     = FStar.Compiler.Util
+module Const  = FStar.Parser.Const
+module EMB    = FStar.Syntax.Embeddings
+module Env    = FStar.TypeChecker.Env
+module N      = FStar.TypeChecker.Normalize
+module RC     = FStar.Reflection.V2.Constants
+module RE     = FStar.Reflection.V2.Embeddings
+module R      = FStar.Reflection.V2.Builtins
+module SE     = FStar.Syntax.Embeddings
+module S      = FStar.Syntax.Syntax
+module SS     = FStar.Syntax.Subst
+module TcUtil = FStar.TypeChecker.Util
+module U      = FStar.Syntax.Util
 
 (*---------------------------------------------------------------------------------*)
 (*  <Utilities> *)
@@ -1502,8 +1501,8 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
-              begin match SE.unembed SE.e_range r false SE.id_norm_cb,
-                          SE.unembed SE.e_string msg false SE.id_norm_cb with
+              begin match SE.try_unembed SE.e_range r SE.id_norm_cb,
+                          SE.try_unembed SE.e_string msg SE.id_norm_cb with
               | Some r, Some s ->
                 let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, r, false)}) r in
                 fallback phi

@@ -142,6 +142,8 @@ let (init_once : unit -> unit) =
                (env.FStar_TypeChecker_Env.nosynth);
              FStar_TypeChecker_Env.uvar_subtyping =
                (env.FStar_TypeChecker_Env.uvar_subtyping);
+             FStar_TypeChecker_Env.intactics =
+               (env.FStar_TypeChecker_Env.intactics);
              FStar_TypeChecker_Env.tc_term =
                (env.FStar_TypeChecker_Env.tc_term);
              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -246,6 +248,8 @@ let (init_once : unit -> unit) =
                     (env2.FStar_TypeChecker_Env.nosynth);
                   FStar_TypeChecker_Env.uvar_subtyping =
                     (env2.FStar_TypeChecker_Env.uvar_subtyping);
+                  FStar_TypeChecker_Env.intactics =
+                    (env2.FStar_TypeChecker_Env.intactics);
                   FStar_TypeChecker_Env.tc_term =
                     (env2.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -397,6 +401,8 @@ let (tc' :
         FStar_TypeChecker_Env.nosynth = (tcenv.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (tcenv.FStar_TypeChecker_Env.intactics);
         FStar_TypeChecker_Env.tc_term = (tcenv.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (tcenv.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -494,6 +500,8 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.nosynth = (tcenv.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (tcenv.FStar_TypeChecker_Env.intactics);
         FStar_TypeChecker_Env.tc_term = (tcenv.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (tcenv.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);

@@ -1,11 +1,11 @@
 module GenericTotalDM4A
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Calc
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.Preorder
 
 // m is a monad.

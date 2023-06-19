@@ -15,7 +15,7 @@
 *)
 module SolvedWitness
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Error 217 is tactic left uninstantiated goals, so we're also checking that `qed` succeeds *)
 [@@ (expect_failure [217])]

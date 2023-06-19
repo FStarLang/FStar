@@ -2,7 +2,7 @@ module Alg
 
 (*** Algebraic effects. ***)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List.Tot
 open FStar.Universe
 //module WF = FStar.WellFounded

@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "387a418b5e12a34877dec859e6391f5a"
+      "2d4443eee72fd9a2156e44a19c13e535"
     ],
     [
       "FactorialTailRec.factorial_tail",
@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "73d0dbeaa94906fbc4f456693b9db4a3"
+      "4024cb5e0deb11e8630205a0cc8b4731"
     ],
     [
       "FactorialTailRec.fact",
@@ -57,7 +57,7 @@
         "typing_FactorialTailRec.factorial"
       ],
       0,
-      "f2a300f80f199b474b2074f6e541729d"
+      "46416a632da3ef5b7dc1a6f5b0f95856"
     ],
     [
       "FactorialTailRec.factorial_tail_alt",
@@ -81,7 +81,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "20dd5445f08eb7f5cbbd2a6f353aa072"
+      "a6f75af48853fb2e901668e56f7c3d35"
     ]
   ]
 ]

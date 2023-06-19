@@ -1249,11 +1249,11 @@ and (encode_term :
         | FStar_Syntax_Syntax.Tm_quoted (qt, uu___2) ->
             let tv =
               let uu___3 =
-                let uu___4 = FStar_Reflection_Basic.inspect_ln qt in
-                FStar_Syntax_Embeddings.embed
-                  FStar_Reflection_Embeddings.e_term_view uu___4 in
+                let uu___4 = FStar_Reflection_V2_Builtins.inspect_ln qt in
+                FStar_Syntax_Embeddings_Base.embed
+                  FStar_Reflection_V2_Embeddings.e_term_view uu___4 in
               uu___3 t1.FStar_Syntax_Syntax.pos FStar_Pervasives_Native.None
-                FStar_Syntax_Embeddings.id_norm_cb in
+                FStar_Syntax_Embeddings_Base.id_norm_cb in
             ((let uu___4 =
                 FStar_Compiler_Effect.op_Less_Bar
                   (FStar_TypeChecker_Env.debug
@@ -1270,8 +1270,8 @@ and (encode_term :
                 let uu___4 =
                   let uu___5 = FStar_Syntax_Syntax.as_arg tv in [uu___5] in
                 FStar_Syntax_Util.mk_app
-                  (FStar_Reflection_Constants.refl_constant_term
-                     FStar_Reflection_Constants.fstar_refl_pack_ln) uu___4 in
+                  (FStar_Reflection_V2_Constants.refl_constant_term
+                     FStar_Reflection_V2_Constants.fstar_refl_pack_ln) uu___4 in
               encode_term t2 env))
         | FStar_Syntax_Syntax.Tm_meta
             { FStar_Syntax_Syntax.tm2 = t2;
@@ -1458,6 +1458,8 @@ and (encode_term :
                               (uu___6.FStar_TypeChecker_Env.nosynth);
                             FStar_TypeChecker_Env.uvar_subtyping =
                               (uu___6.FStar_TypeChecker_Env.uvar_subtyping);
+                            FStar_TypeChecker_Env.intactics =
+                              (uu___6.FStar_TypeChecker_Env.intactics);
                             FStar_TypeChecker_Env.tc_term =
                               (uu___6.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -3850,15 +3852,13 @@ and (encode_formula :
                  ->
                  let uu___3 =
                    let uu___4 =
-                     let uu___5 =
-                       FStar_Syntax_Embeddings.unembed
-                         FStar_Syntax_Embeddings.e_range r in
-                     uu___5 false FStar_Syntax_Embeddings.id_norm_cb in
+                     FStar_Syntax_Embeddings_Base.try_unembed
+                       FStar_Syntax_Embeddings.e_range r
+                       FStar_Syntax_Embeddings_Base.id_norm_cb in
                    let uu___5 =
-                     let uu___6 =
-                       FStar_Syntax_Embeddings.unembed
-                         FStar_Syntax_Embeddings.e_string msg in
-                     uu___6 false FStar_Syntax_Embeddings.id_norm_cb in
+                     FStar_Syntax_Embeddings_Base.try_unembed
+                       FStar_Syntax_Embeddings.e_string msg
+                       FStar_Syntax_Embeddings_Base.id_norm_cb in
                    (uu___4, uu___5) in
                  (match uu___3 with
                   | (FStar_Pervasives_Native.Some r1,

@@ -10,3 +10,5 @@ fs/extracted
 dep.graph
 dep_simpl.graph
 depgraph.pdf
+
+depgraph-*

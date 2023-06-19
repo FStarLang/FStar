@@ -16,7 +16,7 @@
 module IntNormalization
 
 open FStar.UInt32
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Testing that the normalizer reduces these equalities *)
 

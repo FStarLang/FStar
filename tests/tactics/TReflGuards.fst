@@ -1,6 +1,6 @@
 module TReflGuards
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 [@@expect_failure]
 let _ = assert (x:int{0 <= x} == nat) by begin

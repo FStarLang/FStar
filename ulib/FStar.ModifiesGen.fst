@@ -1408,7 +1408,7 @@ let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
     end
     else begin
       assert (loc_disjoint (loc_union l (loc_addresses true r0 (Set.singleton a0))) (loc_of_aloc b))
-          by (let open FStar.Tactics.Builtins in
+          by (let open FStar.Tactics.V2.Builtins in
               let open FStar.Tactics.SMT in
               set_rlimit 64;
               set_options "--z3cliopt 'smt.qi.eager_threshold=5'";
@@ -1871,12 +1871,12 @@ let union_loc_of_loc_includes_elim
     (GSet.mem x auxs /\ GSet.mem x.addr (addrs_of_loc_weak smaller x.region)) ==>
     GSet.mem x (GSet.union auxl doml)
   ) by (
-    let open FStar.Tactics.Builtins in
+    let open FStar.Tactics.V2.Builtins in
     set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
     ()
   );
   assert (larger `loc_includes'` smaller) by (
-    let open FStar.Tactics.Builtins in
+    let open FStar.Tactics.V2.Builtins in
     let open FStar.Tactics.SMT in
     set_rlimit 75;
     set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
@@ -1926,7 +1926,7 @@ let union_loc_of_loc_disjoint_intro
     xs.addr `GSet.mem` addrs_of_loc smaller xs.region /\
     aloc_disjoint xl xs
   )) by (
-    let open FStar.Tactics.Builtins in
+    let open FStar.Tactics.V2.Builtins in
     let open FStar.Tactics.SMT in
     set_rlimit 64;
     set_options "--z3cliopt 'smt.qi.eager_threshold=1'";

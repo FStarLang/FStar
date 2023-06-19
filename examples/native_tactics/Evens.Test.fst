@@ -15,7 +15,7 @@
 *)
 module Evens.Test
 open Evens
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let even_test () =
  assert (even (nat2unary 1024))

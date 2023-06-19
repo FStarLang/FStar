@@ -15,7 +15,7 @@
 *)
 module LaxOn
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let a : int =
     synth_by_tactic (fun () -> guard (not (lax_on ()));

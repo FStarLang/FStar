@@ -1,6 +1,6 @@
 module Branch
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type abc = | A of int | B | C
 

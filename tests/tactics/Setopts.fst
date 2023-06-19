@@ -15,7 +15,7 @@
 *)
 module Setopts
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Mul
 
 let mult_ass (x y z : int) =

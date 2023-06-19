@@ -3135,8 +3135,32 @@ let (mk_discriminator_and_indexed_projectors :
                                                 else [decl; impl])))) in
                             FStar_Compiler_Effect.op_Bar_Greater uu___
                               FStar_Compiler_List.flatten in
-                          FStar_Compiler_List.op_At discriminator_ses
-                            projectors_ses
+                          let no_plugin se =
+                            let not_plugin_attr t =
+                              let h = FStar_Syntax_Util.head_of t in
+                              let uu___ =
+                                FStar_Syntax_Util.is_fvar
+                                  FStar_Parser_Const.plugin_attr h in
+                              Prims.op_Negation uu___ in
+                            let uu___ =
+                              FStar_Compiler_List.filter not_plugin_attr
+                                se.FStar_Syntax_Syntax.sigattrs in
+                            {
+                              FStar_Syntax_Syntax.sigel =
+                                (se.FStar_Syntax_Syntax.sigel);
+                              FStar_Syntax_Syntax.sigrng =
+                                (se.FStar_Syntax_Syntax.sigrng);
+                              FStar_Syntax_Syntax.sigquals =
+                                (se.FStar_Syntax_Syntax.sigquals);
+                              FStar_Syntax_Syntax.sigmeta =
+                                (se.FStar_Syntax_Syntax.sigmeta);
+                              FStar_Syntax_Syntax.sigattrs = uu___;
+                              FStar_Syntax_Syntax.sigopts =
+                                (se.FStar_Syntax_Syntax.sigopts)
+                            } in
+                          FStar_Compiler_List.map no_plugin
+                            (FStar_Compiler_List.op_At discriminator_ses
+                               projectors_ses)
 let (mk_data_operations :
   FStar_Syntax_Syntax.qualifier Prims.list ->
     FStar_Syntax_Syntax.attribute Prims.list ->

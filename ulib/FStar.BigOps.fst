@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.BigOps
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let normal_eq (#a:Type) (f:a)
   = ()

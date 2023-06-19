@@ -15,7 +15,7 @@
 *)
 module Unresolved
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let tau () : Tac unit =
     let w = cur_witness () in

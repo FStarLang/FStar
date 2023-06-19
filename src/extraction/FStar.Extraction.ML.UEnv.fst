@@ -246,6 +246,16 @@ let is_fv_type g fv =
     is_type_name g fv ||
     g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
 
+let no_fstar_stubs_ns (ns : list mlsymbol) : list mlsymbol =
+  match ns with
+  | "FStar"::"Stubs"::rest -> "FStar"::rest
+  | _ -> ns
+
+let no_fstar_stubs (p : mlpath) : mlpath =
+  let ns, id = p in
+  let ns = no_fstar_stubs_ns ns in
+  ns, id
+
 (** Find the ML counterpart of an F* record field identifier
 
     - F* Record field names are pairs of a fully qualified *type* name
@@ -362,7 +372,9 @@ let find_uniq ml_ident_map root_name is_local_type_variable =
 
 (** The ML namespace corresponding to an F* qualified name
     is just all the identifiers in the F* namespace (as strings) *)
-let mlns_of_lid (x:lident) = List.map string_of_id (ns_of_lid x)
+let mlns_of_lid (x:lident) =
+  List.map string_of_id (ns_of_lid x) |> no_fstar_stubs_ns
+
 
 (**** Extending context with identifiers *)
 
@@ -569,6 +581,7 @@ let extend_record_field_name g (type_name, fn) =
     let name, fieldname_map = find_uniq g.env_fieldname_map (string_of_id fn) false in
     let ns = mlns_of_lid type_name in
     let mlp = ns, name in
+    let mlp = no_fstar_stubs mlp in
     let g = { g with env_fieldname_map = fieldname_map;
                      mlpath_of_fieldname = BU.psmap_add g.mlpath_of_fieldname (string_of_lid key) mlp }
     in

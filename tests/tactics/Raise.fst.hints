@@ -1,5 +1,5 @@
 [
-  "b`Q\u0012¥!é·\u0001≈\u0014\u001aîj^\u0016",
+  "y›ÀL\u001aAVÃ‡\"YâùõÅá",
   [
     [
       "Raise.uu___0",
@@ -11,7 +11,7 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.Derived.Goal_not_trivial@tok",
+        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Tactics.Result.Success",
@@ -32,7 +32,7 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.Derived.Goal_not_trivial@tok",
+        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Tactics.Result.Success",
@@ -53,7 +53,7 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.Derived.Goal_not_trivial@tok",
+        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Tactics.Result.Success",

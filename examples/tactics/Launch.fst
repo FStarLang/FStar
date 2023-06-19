@@ -15,7 +15,7 @@
 *)
 module Launch
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* This file will only work if run with --unsafe_tactic_exec.
  * It CANNOT be set with #(re)set-options either

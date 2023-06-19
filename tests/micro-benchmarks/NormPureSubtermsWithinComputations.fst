@@ -3,7 +3,7 @@ open FStar.HyperStack.All
 open FStar.HyperStack
 module ST = FStar.HyperStack.ST
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 #set-options "--fuel 0 --ifuel 0 --z3rlimit 15"
 let pp1 () : Tac unit =

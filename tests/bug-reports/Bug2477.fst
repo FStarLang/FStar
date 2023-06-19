@@ -1,6 +1,6 @@
 module Bug2477
 
-open FStar.Reflection
+open FStar.Reflection.V2
 
 val my_mktuple2: #a:Type -> #b:Type -> a -> b -> tuple2 a b
 let my_mktuple2 #a #b x y = Mktuple2 x y

@@ -20,8 +20,8 @@ module Plugins
    Tactics should be generated without warnings and compile without errors.
 *)
 
-open FStar.Reflection
-open FStar.Tactics
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 
 [@@plugin]
 let int_plugin: int -> int = id

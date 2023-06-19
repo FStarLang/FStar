@@ -15,9 +15,9 @@
 *)
 module FStar.Tactics.BV
 
-open FStar.Tactics
-open FStar.Reflection.Formula
-open FStar.Reflection.Arith
+open FStar.Tactics.V2
+open FStar.Reflection.V2.Formula
+open FStar.Reflection.V2.Arith
 open FStar.BV
 open FStar.UInt
 
@@ -189,7 +189,7 @@ let bv_tac () = focus (fun () ->
 )
 
 let bv_tac_lt n = focus (fun () ->
-  let nn = pack_ln (Tv_Const (C_Int n)) in
+  let nn = pack (Tv_Const (C_Int n)) in
   let t = mk_app (`trans_lt2) [(nn, Q_Implicit)] in
   apply_lemma t;
   arith_to_bv_tac ();

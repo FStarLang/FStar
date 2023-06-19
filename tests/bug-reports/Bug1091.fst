@@ -78,7 +78,7 @@ let oct18_2017_xderef t pre m a = FStar.HyperStack.sel #t #pre m a
 ////////////////////////////////////////////////////////////////////////////////
 //April 19, 2017
 ////////////////////////////////////////////////////////////////////////////////
-open FStar.Tactics
+open FStar.Tactics.V2
 val apr19_2017_mem: #a:eqtype -> a -> list a -> Tot bool
 let rec apr19_2017_mem #a x xs =
         match xs with
