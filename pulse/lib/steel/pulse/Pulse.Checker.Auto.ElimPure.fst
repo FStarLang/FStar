@@ -70,14 +70,16 @@ let is_elim_pure (vp:term) : T.Tac bool =
   | _ -> false
 
 let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v Tm_VProp)
-  : T.Tac (option (t:st_term &
-           c:comp { stateful_comp c /\ comp_pre c == v } &
-           st_typing g t c)) =
+  : T.Tac (option (x:ppname &
+                   t:st_term &
+                   c:comp { stateful_comp c /\ comp_pre c == v } &
+                   st_typing g t c)) =
   match v with
   | Tm_Pure (Tm_FStar pp _) ->
     let p_typing =
       Metatheory.pure_typing_inversion #g #(tm_fstar pp) v_typing in
-    Some (| mk_elim_pure (tm_fstar pp),
+    Some (| ppname_default,
+            mk_elim_pure (tm_fstar pp),
             elim_pure_comp pp,
             elim_pure_typing g pp p_typing |)
   | _ -> None

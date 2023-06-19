@@ -249,7 +249,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
 let elim_one (#g:env)
   (ctxt:term) (p:vprop)
   (ctxt_p_typing:tot_typing g (Tm_Star ctxt p) Tm_VProp)
-  (e1:st_term) (c1:comp { stateful_comp c1 /\ comp_pre c1 == p })
+  (nx:ppname) (e1:st_term) (c1:comp { stateful_comp c1 /\ comp_pre c1 == p })
   (e1_typing:st_typing g e1 c1)
   : T.Tac (g':env { env_extends g' g } &
            ctxt':term &
@@ -259,7 +259,7 @@ let elim_one (#g:env)
   let ctxt_typing = star_typing_inversion_l ctxt_p_typing in
 
   let (| x, k |) = continuation_elaborator_with_bind ctxt e1_typing ctxt_p_typing in
-  let g' = push_binding g x ppname_default (comp_res c1) in
+  let g' = push_binding g x nx (comp_res c1) in
   let ctxt_g'_typing : tot_typing g' ctxt Tm_VProp =
     Metatheory.tot_typing_weakening x (comp_res c1) ctxt_typing in
   let ctxt' = Tm_Star (open_term_nv (comp_post c1) (v_as_nv x)) ctxt in
@@ -286,9 +286,9 @@ let rec elim_all (#g:env)
        let p_typing = star_typing_inversion_r #_ #ctxt' #p ctxt_typing in
        if f p
        then match mk #_ #p p_typing with
-            | Some (| e1, c1, e1_typing |) ->
+            | Some (| nx, e1, c1, e1_typing |) ->
               let (| g', _, ctxt_typing', k |) =
-                elim_one ctxt' p ctxt_typing e1 c1 e1_typing in
+                elim_one ctxt' p ctxt_typing nx e1 c1 e1_typing in
               let _, (| g'', ctxt'', ctxt_typing'', k' |) =
                 elim_all #g' f mk ctxt_typing' in
               true, (| g'', ctxt'', ctxt_typing'', k_elab_trans k k' |)

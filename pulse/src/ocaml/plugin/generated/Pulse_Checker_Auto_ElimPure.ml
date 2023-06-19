@@ -80,9 +80,9 @@ let (mk :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->
       unit ->
-        ((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
-           (unit, unit, unit) Pulse_Typing.st_typing)
-           FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option,
+        ((Pulse_Syntax_Base.ppname, Pulse_Syntax_Base.st_term,
+           Pulse_Syntax_Base.comp, (unit, unit, unit) Pulse_Typing.st_typing)
+           FStar_Pervasives.dtuple4 FStar_Pervasives_Native.option,
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___2 ->
@@ -98,8 +98,9 @@ let (mk :
                        | Pulse_Syntax_Base.Tm_Pure
                            (Pulse_Syntax_Base.Tm_FStar (pp, uu___1)) ->
                            FStar_Pervasives_Native.Some
-                             (FStar_Pervasives.Mkdtuple3
-                                ((mk_elim_pure (tm_fstar pp)),
+                             (FStar_Pervasives.Mkdtuple4
+                                (Pulse_Syntax_Base.ppname_default,
+                                  (mk_elim_pure (tm_fstar pp)),
                                   (elim_pure_comp pp),
                                   (elim_pure_typing g pp ())))
                        | uu___1 -> FStar_Pervasives_Native.None))) uu___2

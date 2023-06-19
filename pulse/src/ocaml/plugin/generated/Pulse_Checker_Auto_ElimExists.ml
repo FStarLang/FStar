@@ -15,9 +15,9 @@ let (mk :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->
       unit ->
-        ((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
-           (unit, unit, unit) Pulse_Typing.st_typing)
-           FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option,
+        ((Pulse_Syntax_Base.ppname, Pulse_Syntax_Base.st_term,
+           Pulse_Syntax_Base.comp, (unit, unit, unit) Pulse_Typing.st_typing)
+           FStar_Pervasives.dtuple4 FStar_Pervasives_Native.option,
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___2 ->
@@ -37,21 +37,22 @@ let (mk :
                             p)
                            ->
                            FStar_Pervasives_Native.Some
-                             (FStar_Pervasives.Mkdtuple3
-                                ((Pulse_Typing.wr
-                                    (Pulse_Syntax_Base.Tm_ElimExists
-                                       {
-                                         Pulse_Syntax_Base.p1 =
-                                           (Pulse_Syntax_Base.Tm_ExistsSL
-                                              ((Pulse_Syntax_Base.comp_u
-                                                  (Pulse_Typing.comp_elim_exists
-                                                     u t p
-                                                     (nm,
-                                                       (Pulse_Typing_Env.fresh
-                                                          g)))),
-                                                (Pulse_Typing.as_binder t),
-                                                p))
-                                       })),
+                             (FStar_Pervasives.Mkdtuple4
+                                (nm,
+                                  (Pulse_Typing.wr
+                                     (Pulse_Syntax_Base.Tm_ElimExists
+                                        {
+                                          Pulse_Syntax_Base.p1 =
+                                            (Pulse_Syntax_Base.Tm_ExistsSL
+                                               ((Pulse_Syntax_Base.comp_u
+                                                   (Pulse_Typing.comp_elim_exists
+                                                      u t p
+                                                      (nm,
+                                                        (Pulse_Typing_Env.fresh
+                                                           g)))),
+                                                 (Pulse_Typing.as_binder t),
+                                                 p))
+                                        })),
                                   (Pulse_Typing.comp_elim_exists u t p
                                      (nm, (Pulse_Typing_Env.fresh g))),
                                   (Pulse_Typing.T_ElimExists

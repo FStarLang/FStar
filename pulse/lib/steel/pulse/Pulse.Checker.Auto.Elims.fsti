@@ -55,7 +55,8 @@ type mk_t =
   #g:env ->
   #v:vprop ->
   tot_typing g v Tm_VProp ->
-  T.Tac (option (t:st_term &
+  T.Tac (option (x:ppname &
+                 t:st_term &
                  c:comp { stateful_comp c /\ comp_pre c == v } &
                  st_typing g t c))
 
