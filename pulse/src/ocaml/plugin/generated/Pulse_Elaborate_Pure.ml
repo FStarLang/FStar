@@ -12,35 +12,36 @@ let op_let_Bang :
       | FStar_Pervasives_Native.Some x -> g x
 let (elab_qual :
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
-    FStar_Reflection_Data.aqualv)
+    FStar_Reflection_V2_Data.aqualv)
   =
   fun uu___ ->
     match uu___ with
-    | FStar_Pervasives_Native.None -> FStar_Reflection_Data.Q_Explicit
+    | FStar_Pervasives_Native.None -> FStar_Reflection_V2_Data.Q_Explicit
     | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Implicit) ->
-        FStar_Reflection_Data.Q_Implicit
+        FStar_Reflection_V2_Data.Q_Implicit
 let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
   fun top ->
     match top with
     | Pulse_Syntax_Base.Tm_VProp ->
-        FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
                 Pulse_Reflection_Util.vprop_lid))
     | Pulse_Syntax_Base.Tm_Emp ->
-        FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv Pulse_Reflection_Util.emp_lid))
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
+                Pulse_Reflection_Util.emp_lid))
     | Pulse_Syntax_Base.Tm_Pure p ->
         let p1 = elab_term p in
         let head =
-          FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_FVar
-               (FStar_Reflection_Builtins.pack_fv
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_FVar
+               (FStar_Reflection_V2_Builtins.pack_fv
                   Pulse_Reflection_Util.pure_lid)) in
-        FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_App
-             (head, (p1, FStar_Reflection_Data.Q_Explicit)))
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_App
+             (head, (p1, FStar_Reflection_V2_Data.Q_Explicit)))
     | Pulse_Syntax_Base.Tm_Star (l, r) ->
         let l1 = elab_term l in
         let r1 = elab_term r in Pulse_Reflection_Util.mk_star l1 r1
@@ -54,13 +55,13 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
             (Pulse_Reflection_Util.mk_abs_with_name_and_range
                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t1
-               FStar_Reflection_Data.Q_Explicit body1)
+               FStar_Reflection_V2_Data.Q_Explicit body1)
         else
           Pulse_Reflection_Util.mk_forall u t1
             (Pulse_Reflection_Util.mk_abs_with_name_and_range
                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t1
-               FStar_Reflection_Data.Q_Explicit body1)
+               FStar_Reflection_V2_Data.Q_Explicit body1)
     | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
         let t = elab_term b.Pulse_Syntax_Base.binder_ty in
         let body1 = elab_term body in
@@ -71,21 +72,22 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
             (Pulse_Reflection_Util.mk_abs_with_name_and_range
                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t1
-               FStar_Reflection_Data.Q_Explicit body1)
+               FStar_Reflection_V2_Data.Q_Explicit body1)
         else
           Pulse_Reflection_Util.mk_forall u t1
             (Pulse_Reflection_Util.mk_abs_with_name_and_range
                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
                (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t1
-               FStar_Reflection_Data.Q_Explicit body1)
+               FStar_Reflection_V2_Data.Q_Explicit body1)
     | Pulse_Syntax_Base.Tm_Inames ->
-        FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
                 Pulse_Reflection_Util.inames_lid))
     | Pulse_Syntax_Base.Tm_EmpInames -> Pulse_Reflection_Util.emp_inames_tm
     | Pulse_Syntax_Base.Tm_Unknown ->
-        FStar_Reflection_Builtins.pack_ln FStar_Reflection_Data.Tv_Unknown
+        FStar_Reflection_V2_Builtins.pack_ln
+          FStar_Reflection_V2_Data.Tv_Unknown
     | Pulse_Syntax_Base.Tm_FStar (t, uu___) -> t
 let (elab_st_comp :
   Pulse_Syntax_Base.st_comp ->
@@ -107,7 +109,7 @@ let (elab_comp : Pulse_Syntax_Base.comp -> FStar_Reflection_Types.term) =
          | (u, res, pre, post) ->
              Pulse_Reflection_Util.mk_stt_comp u res pre
                (Pulse_Reflection_Util.mk_abs res
-                  FStar_Reflection_Data.Q_Explicit post))
+                  FStar_Reflection_V2_Data.Q_Explicit post))
     | Pulse_Syntax_Base.C_STAtomic (inames, c1) ->
         let inames1 = elab_term inames in
         let uu___ = elab_st_comp c1 in
@@ -115,7 +117,7 @@ let (elab_comp : Pulse_Syntax_Base.comp -> FStar_Reflection_Types.term) =
          | (u, res, pre, post) ->
              Pulse_Reflection_Util.mk_stt_atomic_comp u res inames1 pre
                (Pulse_Reflection_Util.mk_abs res
-                  FStar_Reflection_Data.Q_Explicit post))
+                  FStar_Reflection_V2_Data.Q_Explicit post))
     | Pulse_Syntax_Base.C_STGhost (inames, c1) ->
         let inames1 = elab_term inames in
         let uu___ = elab_st_comp c1 in
@@ -123,7 +125,7 @@ let (elab_comp : Pulse_Syntax_Base.comp -> FStar_Reflection_Types.term) =
          | (u, res, pre, post) ->
              Pulse_Reflection_Util.mk_stt_ghost_comp u res inames1 pre
                (Pulse_Reflection_Util.mk_abs res
-                  FStar_Reflection_Data.Q_Explicit post))
+                  FStar_Reflection_V2_Data.Q_Explicit post))
 let (elab_stt_equiv :
   FStar_Reflection_Types.env ->
     Pulse_Syntax_Base.comp ->
@@ -145,7 +147,7 @@ let (elab_stt_equiv :
                 (elab_term (Pulse_Syntax_Base.comp_pre c))
                 (Pulse_Reflection_Util.mk_abs
                    (elab_term (Pulse_Syntax_Base.comp_res c))
-                   FStar_Reflection_Data.Q_Explicit
+                   FStar_Reflection_V2_Data.Q_Explicit
                    (elab_term (Pulse_Syntax_Base.comp_post c))) eq_pre
                 eq_post
 let (elab_statomic_equiv :
@@ -173,7 +175,7 @@ let (elab_statomic_equiv :
                     (elab_term (Pulse_Syntax_Base.comp_pre c))
                     (Pulse_Reflection_Util.mk_abs
                        (elab_term (Pulse_Syntax_Base.comp_res c))
-                       FStar_Reflection_Data.Q_Explicit
+                       FStar_Reflection_V2_Data.Q_Explicit
                        (elab_term (Pulse_Syntax_Base.comp_post c))) eq_pre
                     eq_post
 let (elab_stghost_equiv :
@@ -201,6 +203,6 @@ let (elab_stghost_equiv :
                     (elab_term (Pulse_Syntax_Base.comp_pre c))
                     (Pulse_Reflection_Util.mk_abs
                        (elab_term (Pulse_Syntax_Base.comp_res c))
-                       FStar_Reflection_Data.Q_Explicit
+                       FStar_Reflection_V2_Data.Q_Explicit
                        (elab_term (Pulse_Syntax_Base.comp_post c))) eq_pre
                     eq_post

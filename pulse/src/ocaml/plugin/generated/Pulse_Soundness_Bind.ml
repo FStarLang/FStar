@@ -145,7 +145,7 @@ let (inst_bind_g :
                                 (Pulse_Reflection_Util.binder_of_t_q
                                    (Pulse_Soundness_Common.g_type_bind u2 t1
                                       t2 post1 post2)
-                                   FStar_Reflection_Data.Q_Explicit),
+                                   FStar_Reflection_V2_Data.Q_Explicit),
                                 (Pulse_Soundness_Common.bind_res u2 t2 pre
                                    post2), FStar_Tactics_Types.E_Total,
                                 head_typing, g_typing) in

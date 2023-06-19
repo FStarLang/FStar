@@ -1,6 +1,6 @@
 module Pulse.Soundness.Exists
 
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax
@@ -126,7 +126,7 @@ let elim_exists_soundness
   assert (~ (Set.mem x (freevars p)));
 
   let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
-  let rx_tm = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x))) in
+  let rx_tm = R.pack_ln (R.Tv_Var (R.pack_namedv (RT.make_namedv x))) in
 
   let rreveal_x = Pulse.Reflection.Util.mk_reveal ru rt rx_tm in
 

@@ -393,7 +393,7 @@ let impl_jump
   then idx `SZ.sub` nl
   else idx `SZ.add` l
 
-#push-options "--z3rlimit 32"
+#push-options "--z3rlimit 64"
 
 #restart-solver
 inline_for_extraction

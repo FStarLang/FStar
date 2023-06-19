@@ -1,15 +1,18 @@
 module Pulse.Checker.Pure
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module T = FStar.Tactics
-open FStar.Tactics
+module T = FStar.Tactics.V2
+open FStar.Tactics.V2
+open FStar.Reflection.V2 (* shadow named view *)
+
+open Pulse.Reflection
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Typing
 module P = Pulse.Syntax.Printer
-module RTB = FStar.Tactics.Builtins
+module RTB = FStar.Tactics.V2.Builtins
 module RU = Pulse.RuntimeUtils
 
 let debug (g:env) (msg: unit -> T.Tac string) =
@@ -54,8 +57,7 @@ let rtb_core_check_term_at_type g f e t =
   res
 
 let mk_squash t =
-  let open T in
-  let sq : term = pack_ln (Tv_UInst (pack_fv squash_qn) [u_zero ]) in
+  let sq : R.term = pack_ln (Tv_UInst (pack_fv squash_qn) [u_zero]) in
   mk_e_app sq [t]
 
 let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash p))
@@ -110,7 +112,7 @@ let check_universe (g:env) (t:term)
                          (T.term_to_string rt)
                          (print_issues g issues))
     | Some ru ->
-      let proof : squash (RTB.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
+      let proof : squash (T.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
           FStar.Squash.get_proof _
       in
       let proof : RT.typing f rt (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in

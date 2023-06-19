@@ -41,7 +41,7 @@ irreducible let ite_attr : unit = ()
 unfold
 let true_p : prop = True
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
@@ -360,7 +360,7 @@ let focus_rmem_refl (r:vprop) (h:rmem r)
   : Lemma (focus_rmem #r h r == h)
   = FStar.FunctionalExtensionality.extensionality_g _ _ (focus_rmem #r h r) h
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 /// State that all "atomic" subresources have the same selectors on both views.
 /// The predicate has the __steel_reduce__ attribute, ensuring that VC normalization
@@ -650,8 +650,7 @@ let vrewrite (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot vprop 
 exception Appears
 
 let on_sort_binder (f : term -> Tac unit) (b:binder) : Tac unit =
-  let bv = (inspect_binder b) in
-  f bv.binder_sort
+  f b.sort
 
 let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
   let tv = inspect t in
@@ -677,11 +676,12 @@ let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
        visit_tm ff l;
        visit_tm ff r
 
-  | Tv_Refine b sort r ->
-      visit_tm ff sort;
+  | Tv_Refine b r ->
+      on_sort_binder ff b;
       visit_tm ff r
 
-  | Tv_Let r attrs b ty def t ->
+  | Tv_Let r attrs b def t ->
+      on_sort_binder ff b;
       visit_tm ff def;
       visit_tm ff t
 
@@ -722,7 +722,7 @@ and visit_comp (ff : term -> Tac unit) (c : comp) : Tac unit =
 /// appears in the term [t].
 let name_appears_in (nm:name) (t:term) : Tac bool =
   let ff (t : term) : Tac unit =
-    match t with
+    match inspect t with
     | Tv_FVar fv -> if inspect_fv fv = nm then raise Appears
     | t -> ()
   in
@@ -785,11 +785,11 @@ let update (#a:Type) (x:atom) (xa:a) (am:amap a) : amap a =
 /// Check whether the current term is an unresolved vprop unification variable.
 /// This can happen if either it is a uvar, or it is an unresolved dependent
 /// vprop uvar which is applied to some argument
-let is_uvar (t:term) : Tac bool = match t with
+let is_uvar (t:term) : Tac bool = match inspect t with
   | Tv_Uvar _ _ -> true
   | Tv_App _ _ ->
       let hd, args = collect_app t in
-      Tv_Uvar? hd
+      Tv_Uvar? (inspect hd)
   | _ -> false
 
 /// For a given term t, collect all terms in the list l with the same head symbol
@@ -928,7 +928,7 @@ let rec try_unifying_remaining (l:list atom) (u:term) (am:amap term) : Tac unit 
 
 /// Is SMT rewriting enabled for this binder
 let is_smt_binder (b:binder) : Tac bool =
-  let l = (inspect_binder b).binder_attrs in
+  let l = b.attrs in
   not (List.Tot.isEmpty (filter (fun t -> is_fvar t (`%smt_fallback)) l))
 
 /// Creates a new term, where all arguments where SMT rewriting is enabled have been replaced
@@ -1105,7 +1105,7 @@ let equivalent_lists (use_smt:bool) (l1 l2:list atom) (am:amap term)
 
 (* Helpers to relate the actual terms to their representation as a list of atoms *)
 
-open FStar.Reflection.Derived.Lemmas
+open FStar.Reflection.V2.Derived.Lemmas
 
 let rec list_to_string (l:list term) : Tac string =
   match l with
@@ -1652,7 +1652,7 @@ let rec convert_map (m : list (atom * term)) : term =
   match m with
   | [] -> `[]
   | (a, t)::ps ->
-      let a = pack_ln (Tv_Const (C_Int a)) in
+      let a = pack (Tv_Const (C_Int a)) in
       (* let t = norm_term [delta] t in *)
       `((`#a, (`#t)) :: (`#(convert_map ps)))
 
@@ -1670,12 +1670,12 @@ let rec quote_exp (e:exp) : term =
     match e with
     | Unit -> (`Unit)
     | Mult e1 e2 -> (`Mult (`#(quote_exp e1)) (`#(quote_exp e2)))
-    | Atom n -> let nt = pack_ln (Tv_Const (C_Int n)) in
+    | Atom n -> let nt = pack (Tv_Const (C_Int n)) in
                 (`Atom (`#nt))
 
 let rec quote_atoms (l:list atom) = match l with
   | [] -> `[]
-  | hd::tl -> let nt = pack_ln (Tv_Const (C_Int hd)) in
+  | hd::tl -> let nt = pack (Tv_Const (C_Int hd)) in
               (`Cons (`#nt) (`#(quote_atoms tl)))
 
 /// Some internal normalization steps to make reflection of vprops into atoms and atom permutation go smoothly.
@@ -1842,7 +1842,7 @@ let rec set_abduction_variable_term (pr: term) : Tac term =
         raise (Postpone "set_abduction_variable_term: there are still uvars on both sides of l_and")
     | _ -> fail "set_abduction_variable: ill-formed /\\"
   else
-    match hd with
+    match inspect hd with
     | Tv_Uvar _ _ ->
       mk_app (`_return_squash) [`(), Q_Explicit]
     | _ -> fail "set_abduction_variable: cannot unify"
@@ -1851,7 +1851,7 @@ let set_abduction_variable () : Tac unit =
   let g = cur_goal () in
   match inspect_unascribe g with
   | Tv_Arrow b _ ->
-    let pr = (inspect_binder b).binder_sort in
+    let pr = b.sort in
     exact (set_abduction_variable_term pr)
   | _ -> fail "Not an arrow goal"
 
@@ -1895,8 +1895,8 @@ let canon_l_r (use_smt:bool)
   //Build an amap where atoms are mapped to names
   //The type of these names is carrier_t passed by the caller
 
-  let am_bv : list (atom & bv & typ) = mapi (fun i (a, _) ->
-    let x = fresh_bv_named ("x" ^ (string_of_int i)) in
+  let am_bv : list (atom & namedv & typ) = mapi (fun i (a, _) ->
+    let x = fresh_namedv_named ("x" ^ (string_of_int i)) in
     (a, x, carrier_t)) (fst am) in
 
   let am_bv_term : amap term = map (fun (a, bv, _sort) -> a, pack (Tv_Var bv)) am_bv, snd am in
@@ -1938,15 +1938,17 @@ let canon_l_r (use_smt:bool)
 
   //fold over names and quantify over them
 
-  let aux_goal = fold_right (fun (_, bv, sort) t ->
-    let b = pack_binder {
-      binder_bv=bv;
-      binder_qual=Q_Explicit;
-      binder_attrs=[];
-      binder_sort=sort;
+  let aux_goal = fold_right (fun (_, nv, sort) t ->
+    let nvv = inspect_namedv nv in
+    let b = {
+      ppname = nvv.ppname;
+      uniq   = nvv.uniq;
+      qual   = Q_Explicit;
+      attrs  = [];
+      sort   = sort;
     } in
-    let t = close_term b t in
-    let t = pack_ln (Tv_Abs b t) in
+    let _, t = close_term b t in
+    let t = pack (Tv_Abs b t) in
     mk_app (pack (Tv_FVar (pack_fv forall_qn))) [t, Q_Explicit]) am_bv imp in
 
 
@@ -1972,8 +1974,8 @@ let canon_l_r (use_smt:bool)
 
     let am = fold_left (fun am (a, _, _sort) ->
       let b = forall_intro () in
-      let bv = (inspect_binder b).binder_bv in
-      (a, pack (Tv_Var bv))::am) [] am_bv, snd am in
+      let v = binding_to_namedv b in
+      (a, pack (Tv_Var v))::am) [] am_bv, snd am in
 
     //Introduce the lhs of implication
 
@@ -2029,7 +2031,7 @@ let canon_l_r (use_smt:bool)
       //  that we have in our assumptions via b
 
       apply (`FStar.Squash.return_squash);
-      exact (binder_to_term b)
+      exact (binding_to_term b)
     end);
 
   dismiss_slprops();
@@ -2155,7 +2157,7 @@ let unfold_guard () : Tac bool =
   end else
     false
 
-let rec term_is_uvar (t: term) (i: int) : Tac bool = match t with
+let rec term_is_uvar (t: term) (i: int) : Tac bool = match inspect t with
   | Tv_Uvar i' _ -> i = i'
   | Tv_App _ _ ->
       let hd, args = collect_app t in
@@ -2285,7 +2287,7 @@ let rec extract_contexts
     then None
     else
       Some (fun _ ->
-        first (List.Tot.map (fun candidate _ -> apply_lemma (Tv_FVar candidate) <: Tac unit) candidates);
+        first (List.Tot.map (fun candidate _ -> apply_lemma (pack (Tv_FVar candidate)) <: Tac unit) candidates);
         dismiss_non_squash_goals ()
       )
 
@@ -2411,7 +2413,7 @@ let solve_can_be_split_dep (args:list argv) : Tac bool =
                      `%fst; `%snd];
                    delta_attr [`%__reduce__];
                    primops; iota; zeta];
-              canon' true p p_bind));
+              canon' true p (binding_to_term p_bind)));
 
         true
 
@@ -2537,7 +2539,7 @@ let rec solve_can_be_split_forall_dep (args:list argv) : Tac bool =
          focus (fun _ ->
           norm [];
           let x = forall_intro () in
-          let pr = mk_app pr [(binder_to_term x, Q_Explicit)] in
+          let pr = mk_app pr [(binding_to_term x, Q_Explicit)] in
           let p_bind = implies_intro () in
           apply_lemma (`equiv_can_be_split);
           or_else (fun _ -> flip()) (fun _ -> ());
@@ -2558,7 +2560,7 @@ let rec solve_can_be_split_forall_dep (args:list argv) : Tac bool =
                      `%fst; `%snd];
                    delta_attr [`%__reduce__];
                    primops; iota; zeta];
-              canon' true pr p_bind));
+              canon' true pr (binding_to_term p_bind)));
 
          true
        with

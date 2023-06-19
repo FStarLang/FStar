@@ -1,6 +1,6 @@
 module Pulse.Typing.LN
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 open FStar.List.Tot
 open Pulse.Syntax
@@ -10,7 +10,7 @@ open Pulse.Typing
 // TODO: this is needed only for the E_Total flag,
 //       may be the flag should move to reflection
 //
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (d:RT.tot_typing g e t)
   : Lemma (ensures RT.ln e /\ RT.ln t) =

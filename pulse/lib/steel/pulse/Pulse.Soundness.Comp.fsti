@@ -6,7 +6,7 @@ open Pulse.Typing
 open Pulse.Elaborate.Core
 open Pulse.Soundness.Common
 
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 
 val stc_soundness
