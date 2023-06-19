@@ -11,18 +11,20 @@ let (elim_pure_head_ty : FStar_Reflection_Types.term) =
     Pulse_Reflection_Util.mk_pure
       (FStar_Reflection_Typing.bound_var Prims.int_zero) in
   let post =
-    Pulse_Reflection_Util.mk_abs squash_p FStar_Reflection_Data.Q_Explicit
-      (FStar_Reflection_Builtins.pack_ln
-         (FStar_Reflection_Data.Tv_FVar
-            (FStar_Reflection_Builtins.pack_fv Pulse_Reflection_Util.emp_lid))) in
+    Pulse_Reflection_Util.mk_abs squash_p FStar_Reflection_V2_Data.Q_Explicit
+      (FStar_Reflection_V2_Builtins.pack_ln
+         (FStar_Reflection_V2_Data.Tv_FVar
+            (FStar_Reflection_V2_Builtins.pack_fv
+               Pulse_Reflection_Util.emp_lid))) in
   let cod =
     Pulse_Reflection_Util.mk_stt_ghost_comp Pulse_Syntax_Pure.u0 squash_p
       Pulse_Reflection_Util.emp_inames_tm pure_p post in
   Pulse_Reflection_Util.mk_arrow
-    ((FStar_Reflection_Builtins.pack_ln
-        (FStar_Reflection_Data.Tv_FVar
-           (FStar_Reflection_Builtins.pack_fv FStar_Reflection_Const.prop_qn))),
-      FStar_Reflection_Data.Q_Explicit) cod
+    ((FStar_Reflection_V2_Builtins.pack_ln
+        (FStar_Reflection_V2_Data.Tv_FVar
+           (FStar_Reflection_V2_Builtins.pack_fv
+              FStar_Reflection_Const.prop_qn))),
+      FStar_Reflection_V2_Data.Q_Explicit) cod
 let (tm_fstar : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.term) =
   fun t -> Pulse_Syntax_Base.Tm_FStar (t, FStar_Range.range_0)
 
@@ -59,9 +61,9 @@ let (elim_pure_typing :
         Pulse_Typing.T_STApp
           (g, elim_pure_head,
             (tm_fstar
-               (FStar_Reflection_Builtins.pack_ln
-                  (FStar_Reflection_Data.Tv_FVar
-                     (FStar_Reflection_Builtins.pack_fv ["Prims"; "prop"])))),
+               (FStar_Reflection_V2_Builtins.pack_ln
+                  (FStar_Reflection_V2_Data.Tv_FVar
+                     (FStar_Reflection_V2_Builtins.pack_fv ["Prims"; "prop"])))),
             FStar_Pervasives_Native.None, (elim_pure_comp p), (tm_fstar p),
             (), ())
 let (is_elim_pure :

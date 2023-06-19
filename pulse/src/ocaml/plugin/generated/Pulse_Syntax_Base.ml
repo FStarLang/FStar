@@ -1,5 +1,5 @@
 open Prims
-type constant = FStar_Reflection_Data.vconst
+type constant = FStar_Reflection_V2_Data.vconst
 type var = Prims.nat
 type index = Prims.nat
 type universe = FStar_Reflection_Types.universe
@@ -275,9 +275,11 @@ let (mk_binder : Prims.string -> range -> term -> binder) =
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 ->
     fun u2 ->
-      FStar_Reflection_Builtins.term_eq
-        (FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Type u1))
-        (FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Type u2))
+      FStar_Reflection_V2_Builtins.term_eq
+        (FStar_Reflection_V2_Builtins.pack_ln
+           (FStar_Reflection_V2_Data.Tv_Type u1))
+        (FStar_Reflection_V2_Builtins.pack_ln
+           (FStar_Reflection_V2_Data.Tv_Type u2))
 let rec (eq_tm : term -> term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
@@ -297,7 +299,7 @@ let rec (eq_tm : term -> term -> Prims.bool) =
           ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
             (eq_tm b1 b2)
       | (Tm_FStar (t11, r), Tm_FStar (t21, uu___)) ->
-          FStar_Reflection_Builtins.term_eq t11 t21
+          FStar_Reflection_V2_Builtins.term_eq t11 t21
       | uu___ -> false
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
