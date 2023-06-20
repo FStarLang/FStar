@@ -825,13 +825,16 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       : option (term & term)
       = maybe_unfold_side (which_side_to_unfold t0 t1) t0 t1
     in
+    let emit_guard t0 t1 =
+       let! _, t_typ = check' g t0 in
+       let! u = universe_of g t_typ in
+       guard (U.mk_eq2 u t_typ t0 t1)
+    in
     let fallback t0 t1 =
       if guard_ok
       then if equatable g t0
             || equatable g t1
-           then let! _, t_typ = check' g t0 in
-                let! u = universe_of g t_typ in
-                guard (U.mk_eq2 u t_typ t0 t1)
+           then emit_guard t0 t1
            else err ()
       else err ()
     in
@@ -1002,10 +1005,21 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         if not (head_matches && List.length args0 = List.length args1)
         then maybe_unfold_and_retry t0 t1
         else (
-          handle_with
-            (check_relation g EQUALITY head0 head1 ;!
-             check_relation_args g EQUALITY args0 args1)
-            (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
+          (* If we're proving equality and SMT queries are ok, 
+             defer things like `v.v1 == u.v1` to SMT
+             rather than matching on the v1 projector and
+             trying to prove `v == u` *)
+          if guard_ok &&
+            (rel=EQUALITY) && 
+            equatable g t0 &&
+            equatable g t1
+          then emit_guard t0 t1
+          else (
+            handle_with
+              (check_relation g EQUALITY head0 head1 ;!
+              check_relation_args g EQUALITY args0 args1)
+              (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
+          )
         )
 
       | Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt}, _ ->
