@@ -146,7 +146,7 @@ let (k_elab_equiv_continutation :
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             FStar_Pervasives.Mkdtuple3
-                              (Pulse_Syntax_Base.Tm_Emp, (), ())))
+                              (Pulse_Syntax_Base.tm_emp, (), ())))
                       (fun uu___ ->
                          (fun framing_token ->
                             Obj.magic
@@ -309,7 +309,7 @@ let (k_elab_equiv_prefix :
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             FStar_Pervasives.Mkdtuple3
-                              (Pulse_Syntax_Base.Tm_Emp, (), ())))
+                              (Pulse_Syntax_Base.tm_emp, (), ())))
                       (fun uu___ ->
                          (fun framing_token ->
                             Obj.magic
@@ -403,7 +403,7 @@ let rec (list_as_vprop' :
     fun fvps ->
       match fvps with
       | [] -> vp
-      | hd::tl -> list_as_vprop' (Pulse_Syntax_Base.Tm_Star (vp, hd)) tl
+      | hd::tl -> list_as_vprop' (Pulse_Syntax_Base.tm_star vp hd) tl
 let rec (canon_right_aux :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop Prims.list ->
@@ -562,10 +562,9 @@ let (continuation_elaborator_with_bind :
                                 (fun uu___ ->
                                    match Pulse_Checker_Framing.apply_frame g
                                            e1
-                                           (Pulse_Syntax_Base.Tm_Star
-                                              (ctxt,
-                                                (Pulse_Syntax_Base.comp_pre
-                                                   c1))) () c1 e1_typing
+                                           (Pulse_Syntax_Base.tm_star ctxt
+                                              (Pulse_Syntax_Base.comp_pre c1))
+                                           () c1 e1_typing
                                            (FStar_Pervasives.Mkdtuple3
                                               (ctxt, (), ()))
                                    with
@@ -733,10 +732,10 @@ let (continuation_elaborator_with_bind :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Bind.mk_bind
                                                                     g
-                                                                    (Pulse_Syntax_Base.Tm_Star
-                                                                    (ctxt,
+                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    ctxt
                                                                     (Pulse_Syntax_Base.comp_pre
-                                                                    c1))) e1
+                                                                    c1)) e1
                                                                     e2_closed
                                                                     c11 c2
                                                                     (Pulse_Syntax_Base.v_as_nv
@@ -829,12 +828,12 @@ let (elim_one :
                                                  g x nx
                                                  (Pulse_Syntax_Base.comp_res
                                                     c1)),
-                                               (Pulse_Syntax_Base.Tm_Star
-                                                  ((Pulse_Syntax_Naming.open_term_nv
-                                                      (Pulse_Syntax_Base.comp_post
-                                                         c1)
-                                                      (Pulse_Syntax_Base.v_as_nv
-                                                         x)), ctxt)), (), k)))))
+                                               (Pulse_Syntax_Base.tm_star
+                                                  (Pulse_Syntax_Naming.open_term_nv
+                                                     (Pulse_Syntax_Base.comp_post
+                                                        c1)
+                                                     (Pulse_Syntax_Base.v_as_nv
+                                                        x)) ctxt), (), k)))))
                          uu___)
 let rec (elim_all :
   Pulse_Typing_Env.env ->
@@ -859,7 +858,7 @@ let rec (elim_all :
                  fun mk ->
                    fun ctxt ->
                      fun ctxt_typing ->
-                       match ctxt with
+                       match ctxt.Pulse_Syntax_Base.t with
                        | Pulse_Syntax_Base.Tm_Star (ctxt', p) ->
                            Obj.magic
                              (Obj.repr
@@ -999,9 +998,8 @@ let rec (elim_all :
                                                                     (),
                                                                     (k_elab_trans
                                                                     g g' g''
-                                                                    (Pulse_Syntax_Base.Tm_Star
-                                                                    (ctxt',
-                                                                    p))
+                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    ctxt' p)
                                                                     uu___3
                                                                     ctxt'' k
                                                                     k'))))))))

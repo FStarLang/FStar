@@ -14,7 +14,7 @@ module E = Pulse.Elaborate.Pure
 
 let rec freevars (t:term) 
   : Set.set var
-  = match t with
+  = match t.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
@@ -26,7 +26,7 @@ let rec freevars (t:term)
     | Tm_ForallSL _ t1 t2 ->
       Set.union (freevars t1.binder_ty) (freevars t2)
     | Tm_Pure p -> freevars p
-    | Tm_FStar t _ -> RT.freevars t
+    | Tm_FStar t -> RT.freevars t
 
 let freevars_st_comp (s:st_comp) : Set.set var =
   freevars s.res `Set.union`
@@ -109,7 +109,7 @@ let rec freevars_st (t:st_term)
     | Tm_Protect { t } -> freevars_st t
 
 let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
-  match t with
+  match t.t with
   | Tm_Emp
   | Tm_VProp
   | Tm_Inames
@@ -128,7 +128,7 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
     ln' t.binder_ty i &&
     ln' body (i + 1)
     
-  | Tm_FStar t _ ->
+  | Tm_FStar t ->
     RT.ln' t i
 
 let ln_st_comp (s:st_comp) (i:int) : bool =
@@ -260,7 +260,8 @@ let open_or_close_host_term (t:host_term) (ss:subst)
 
 let rec subst_term (t:term) (ss:subst)
   : Tot term (decreases t)
-  = match t with
+  = let w t' = with_range t' t.range in
+    match t.t with
     | Tm_VProp
     | Tm_Emp
     | Tm_Inames
@@ -268,23 +269,23 @@ let rec subst_term (t:term) (ss:subst)
     | Tm_Unknown -> t
                  
     | Tm_Pure p ->
-      Tm_Pure (subst_term p ss)
+      w (Tm_Pure (subst_term p ss))
       
     | Tm_Star l r ->
-      Tm_Star (subst_term l ss)
-              (subst_term r ss)
+      w (Tm_Star (subst_term l ss)
+                 (subst_term r ss))
               
     | Tm_ExistsSL u b body ->
-      Tm_ExistsSL u { b with binder_ty = subst_term b.binder_ty ss }
-                    (subst_term body (shift_subst ss))
+      w (Tm_ExistsSL u { b with binder_ty = subst_term b.binder_ty ss }
+                       (subst_term body (shift_subst ss)))
                   
     | Tm_ForallSL u b body ->
-      Tm_ForallSL u { b with binder_ty = subst_term b.binder_ty ss }
-                    (subst_term body (shift_subst ss))
+      w (Tm_ForallSL u { b with binder_ty = subst_term b.binder_ty ss }
+                       (subst_term body (shift_subst ss)))
     
-    | Tm_FStar t r ->
+    | Tm_FStar t ->
       open_or_close_host_term t ss;
-      Tm_FStar (RT.subst_term t (rt_subst ss)) r
+      w (Tm_FStar (RT.subst_term t (rt_subst ss)))
 
 let open_term' (t:term) (v:term) (i:index) =
   subst_term t [ DT i v ]

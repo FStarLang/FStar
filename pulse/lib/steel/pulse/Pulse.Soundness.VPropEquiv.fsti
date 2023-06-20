@@ -12,7 +12,7 @@ open Pulse.Elaborate
 open Pulse.Soundness.Common
 
 val vprop_equiv_unit_soundness (#g:stt_env) (#v0 #v1:term) 
-                               (d0:tot_typing g v0 Tm_VProp)
+                               (d0:tot_typing g v0 tm_vprop)
                                (eq:vprop_equiv g v0 v1)
   : GTot (RT.tot_typing (elab_env g) (`())
             (stt_vprop_equiv (elab_term v0) (elab_term v1)))

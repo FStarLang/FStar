@@ -28,7 +28,7 @@ let (check_abs :
                      (Prims.of_int (25)) (Prims.of_int (2))
                      (Prims.of_int (59)) (Prims.of_int (27)))
                   (FStar_Tactics_Effect.lift_div_tac
-                     (fun uu___1 -> t.Pulse_Syntax_Base.range1))
+                     (fun uu___1 -> t.Pulse_Syntax_Base.range2))
                   (fun uu___1 ->
                      (fun range ->
                         match t.Pulse_Syntax_Base.term1 with

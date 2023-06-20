@@ -48,7 +48,7 @@ let rec (term_to_string' :
     fun uu___ ->
       (fun level ->
          fun t ->
-           match t with
+           match t.Pulse_Syntax_Base.t with
            | Pulse_Syntax_Base.Tm_Emp ->
                Obj.magic
                  (Obj.repr
@@ -409,7 +409,7 @@ let rec (term_to_string' :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "_")))
-           | Pulse_Syntax_Base.Tm_FStar (t1, uu___) ->
+           | Pulse_Syntax_Base.Tm_FStar t1 ->
                Obj.magic
                  (Obj.repr (FStar_Tactics_Builtins.term_to_string t1)))
         uu___1 uu___
@@ -2460,7 +2460,7 @@ let rec (st_term_to_string' :
                        (fun uu___1 ->
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___2 -> uu___1 uu___)))) uu___)
-      | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t1;_} ->
+      | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
                (Prims.of_int (248)) (Prims.of_int (6)) (Prims.of_int (248))
@@ -2480,7 +2480,7 @@ let (st_term_to_string :
   = fun t -> st_term_to_string' "" t
 let (tag_of_term : Pulse_Syntax_Base.term -> Prims.string) =
   fun t ->
-    match t with
+    match t.Pulse_Syntax_Base.t with
     | Pulse_Syntax_Base.Tm_Emp -> "Tm_Emp"
     | Pulse_Syntax_Base.Tm_Pure uu___ -> "Tm_Pure"
     | Pulse_Syntax_Base.Tm_Star (uu___, uu___1) -> "Tm_Star"
@@ -2490,7 +2490,7 @@ let (tag_of_term : Pulse_Syntax_Base.term -> Prims.string) =
     | Pulse_Syntax_Base.Tm_Inames -> "Tm_Inames"
     | Pulse_Syntax_Base.Tm_EmpInames -> "Tm_EmpInames"
     | Pulse_Syntax_Base.Tm_Unknown -> "Tm_Unknown"
-    | Pulse_Syntax_Base.Tm_FStar (uu___, uu___1) -> "Tm_FStar"
+    | Pulse_Syntax_Base.Tm_FStar uu___ -> "Tm_FStar"
 let (tag_of_st_term : Pulse_Syntax_Base.st_term -> Prims.string) =
   fun t ->
     match t.Pulse_Syntax_Base.term1 with
@@ -2513,7 +2513,7 @@ let rec (print_st_head : Pulse_Syntax_Base.st_term -> Prims.string) =
   fun t ->
     match t.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_Abs uu___ -> "Abs"
-    | Pulse_Syntax_Base.Tm_Protect p -> print_st_head p.Pulse_Syntax_Base.t
+    | Pulse_Syntax_Base.Tm_Protect p -> print_st_head p.Pulse_Syntax_Base.t3
     | Pulse_Syntax_Base.Tm_Return p -> print_head p.Pulse_Syntax_Base.term
     | Pulse_Syntax_Base.Tm_Bind uu___ -> "Bind"
     | Pulse_Syntax_Base.Tm_TotBind uu___ -> "TotBind"
@@ -2541,7 +2541,7 @@ let rec (print_skel : Pulse_Syntax_Base.st_term -> Prims.string) =
           Pulse_Syntax_Base.ret_ty = uu___3;
           Pulse_Syntax_Base.post1 = uu___4;_}
         -> Prims.strcat "(fun _ -> " (Prims.strcat (print_skel body) ")")
-    | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = p;_} ->
+    | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = p;_} ->
         Prims.strcat "(Protect " (Prims.strcat (print_skel p) ")")
     | Pulse_Syntax_Base.Tm_Return
         { Pulse_Syntax_Base.ctag = uu___;

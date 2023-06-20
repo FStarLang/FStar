@@ -10,7 +10,7 @@ module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 
 type bmap = m:Map.t var typ {
-  forall (x:var). (~ (Map.contains m x)) ==> (Map.sel m x == Tm_Unknown)
+  forall (x:var). (~ (Map.contains m x)) ==> (Map.sel m x == tm_unknown)
 }
 
 let related (bs:list (var & typ)) (m:Map.t var typ) =
@@ -37,7 +37,7 @@ let as_map g = g.m
 
 let bindings_as_map _ = ()
 
-let empty_bmap : bmap = Map.const_on Set.empty Tm_Unknown
+let empty_bmap : bmap = Map.const_on Set.empty tm_unknown
 
 let rec equal_names (l1 l2:list ppname)
   : Lemma 
@@ -125,7 +125,7 @@ let rec remove_binding_aux (g:env)
          (decreases List.Tot.length suffix) =
   match suffix, suffix_names with
   | [x, t], _ ->
-    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x Tm_Unknown) in
+    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x tm_unknown) in
     // we need uniqueness invariant in the representation
     assume (forall (b:var & typ). List.Tot.memP b prefix <==> (List.Tot.memP b g.bs /\
                                                                fst b =!= x));
@@ -143,7 +143,7 @@ let remove_binding g =
 let remove_latest_binding g =
   match g.bs with
   | (x, t)::rest ->
-    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x Tm_Unknown) in
+    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x tm_unknown) in
     // we need uniqueness invariant in the representation
     assume (forall (b:var & typ). List.Tot.memP b rest <==> (List.Tot.memP b g.bs /\
                                                              fst b =!= x));

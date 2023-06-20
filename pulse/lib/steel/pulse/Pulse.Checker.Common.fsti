@@ -20,7 +20,7 @@ type post_hint_t = {
   u:universe;
   ty_typing:universe_of g ret_ty u;
   post:term;
-  post_typing:FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ret_ty post) (mk_arrow ret_ty Tm_VProp))
+  post_typing:FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ret_ty post) (mk_arrow ret_ty tm_vprop))
 }
 
 let post_hint_for_env_p (g:env) (p:post_hint_t) = g `env_extends` p.g
@@ -38,7 +38,7 @@ let post_hint_opt (g:env) = o:option post_hint_t { None? o \/ post_hint_for_env_
 noeq
 type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) = {
   ty_typing:universe_of g p.ret_ty p.u;
-  post_typing:tot_typing (push_binding g x ppname_default p.ret_ty) (open_term p.post x) Tm_VProp
+  post_typing:tot_typing (push_binding g x ppname_default p.ret_ty) (open_term p.post x) tm_vprop
 }
 
 val post_hint_typing (g:env)
@@ -57,7 +57,7 @@ exception Framing_failure of Pulse.Checker.Framing.framing_failure
 val try_frame_pre (#g:env)
                   (#t:st_term)
                   (#pre:term)
-                  (pre_typing: tot_typing g pre Tm_VProp)
+                  (pre_typing: tot_typing g pre tm_vprop)
                   (#c:comp_st)
                   (t_typing: st_typing g t c)
   : T.Tac (c':comp_st { comp_pre c' == pre } &
@@ -80,7 +80,7 @@ type check_t =
   g:env ->
   t:st_term ->
   pre:term ->
-  pre_typing:tot_typing g pre Tm_VProp ->
+  pre_typing:tot_typing g pre tm_vprop ->
   post_hint:post_hint_opt g ->
   T.Tac (checker_result_t g pre post_hint)
 
@@ -91,8 +91,8 @@ val repack (#g:env) (#pre:term) (#t:st_term)
 
 val intro_comp_typing (g:env) 
                       (c:comp_st)
-                      (pre_typing:tot_typing g (comp_pre c) Tm_VProp)
+                      (pre_typing:tot_typing g (comp_pre c) tm_vprop)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
                       (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) Tm_VProp)
+                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
   : T.Tac (comp_typing g c (comp_u c))

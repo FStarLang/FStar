@@ -15,12 +15,12 @@ let (check_prop :
            (Prims.of_int (13)) (Prims.of_int (3)) (Prims.of_int (18))
            (Prims.of_int (40)))
         (Obj.magic
-           (Pulse_Checker_Pure.check_vprop g (Pulse_Syntax_Base.Tm_Pure p)))
+           (Pulse_Checker_Pure.check_vprop g (Pulse_Syntax_Base.tm_pure p)))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
               | Prims.Mkdtuple2 (p1, p_typing) ->
-                  (match p1 with
+                  (match p1.Pulse_Syntax_Base.t with
                    | Pulse_Syntax_Base.Tm_Pure pp ->
                        Obj.magic
                          (Obj.repr

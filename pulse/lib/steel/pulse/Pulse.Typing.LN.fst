@@ -37,7 +37,7 @@ let rec open_term_ln' (e:term)
     (requires ln' (open_term' e x i) (i - 1))
     (ensures ln' e i)
     (decreases e)
-  = match e with
+  = match e.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
@@ -56,7 +56,7 @@ let rec open_term_ln' (e:term)
       open_term_ln' t.binder_ty x i;    
       open_term_ln' b x (i + 1)
 
-    | Tm_FStar t _ ->
+    | Tm_FStar t ->
       open_term_ln_host' t (elab_term x) i
 
 let open_comp_ln' (c:comp)
@@ -202,7 +202,7 @@ let rec ln_weakening (e:term) (i j:int)
     (decreases e)
     [SMTPat (ln' e j);
      SMTPat (ln' e i)]
-  = match e with
+  = match e.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
@@ -221,7 +221,7 @@ let rec ln_weakening (e:term) (i j:int)
       ln_weakening t.binder_ty i j;    
       ln_weakening b (i + 1) (j + 1)
 
-    | Tm_FStar t _ ->
+    | Tm_FStar t ->
       r_ln_weakening t i j
 
 let ln_weakening_comp (c:comp) (i j:int)
@@ -349,7 +349,7 @@ let rec open_term_ln_inv' (e:term)
     (requires ln' e i)
     (ensures ln' (open_term' e x i) (i - 1))
     (decreases e)
-  = match e with
+  = match e.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
@@ -370,7 +370,7 @@ let rec open_term_ln_inv' (e:term)
       open_term_ln_inv' t.binder_ty x i;    
       open_term_ln_inv' b x (i + 1)
 
-    | Tm_FStar t _ ->
+    | Tm_FStar t ->
       Pulse.Elaborate.elab_ln x (-1);
       r_open_term_ln_inv' t (elab_term x) i
 
@@ -509,7 +509,7 @@ let rec close_term_ln' (e:term)
     (requires ln' e (i - 1))
     (ensures ln' (close_term' e x i) i)
     (decreases e)
-  = match e with
+  = match e.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
@@ -528,7 +528,7 @@ let rec close_term_ln' (e:term)
       close_term_ln' t.binder_ty x i;    
       close_term_ln' b x (i + 1)
 
-    | Tm_FStar t _ ->
+    | Tm_FStar t ->
       r_close_term_ln' t x i
 
 let close_comp_ln' (c:comp)
@@ -807,9 +807,9 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       else begin
         // Add some lemmas about ln' of tm_pureapp etc.
         assume (ln' (mk_eq2_prop u t (null_var x) e) (-1));
-        let e = Tm_Star
+        let e = tm_star
           (open_term' post (null_var x) 0)
-          (Tm_Pure (mk_eq2_prop u t (null_var x) e)) in
+          (tm_pure (mk_eq2_prop u t (null_var x) e)) in
         close_term_ln' e x 0
       end
 

@@ -17,7 +17,7 @@ let check_par
   (g:env)
   (t:st_term{Tm_Par? t.term})
   (pre:term)
-  (pre_typing:tot_typing g pre Tm_VProp)
+  (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (checker_result_t g pre post_hint) =
@@ -25,9 +25,9 @@ let check_par
   let Tm_Par {pre1=preL; body1=eL; post1=postL;
               pre2=preR; body2=eR; post2=postR} = t.term in
   let (| preL, preL_typing |) =
-    check_term_with_expected_type g preL Tm_VProp in
+    check_term_with_expected_type g preL tm_vprop in
   let (| preR, preR_typing |) =
-    check_term_with_expected_type g preR Tm_VProp in
+    check_term_with_expected_type g preR tm_vprop in
 
   let postL_hint = intro_post_hint g None postL in
   let (| eL, cL, eL_typing |) =

@@ -14,7 +14,7 @@ let tm_bool = tm_fvar (as_fv bool_lid)
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
-let tm_prop = Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0
+let tm_prop = with_range (Tm_FStar FStar.Reflection.Typing.tm_prop) Range.range_0
 
 let mk_erased (u:universe) (t:term) : term =
   let hd = tm_uinst (as_fv erased_lid) [u] in
@@ -45,7 +45,7 @@ let mk_eq2_prop (u:universe) (t:term) (e0 e1:term)
                      None e0) None e1
 
 let mk_vprop_eq (e0 e1:term) : term =
-  mk_eq2 u2 Tm_VProp e0 e1
+  mk_eq2 u2 tm_vprop e0 e1
 
 let mk_ref (t:term) : term = tm_pureapp (tm_fvar (as_fv ref_lid)) None t
 
@@ -62,7 +62,7 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
   let post_maybe_eq =
     if use_eq
     then let post = open_term' post (null_var x) 0 in
-         let post = Tm_Star post (Tm_Pure (mk_eq2_prop u t (null_var x) e)) in
+         let post = tm_star post (tm_pure (mk_eq2_prop u t (null_var x) e)) in
          close_term post x
     else post in
 
@@ -70,10 +70,10 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
   | STT ->
     C_ST { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
   | STT_Atomic ->
-    C_STAtomic Tm_EmpInames
+    C_STAtomic tm_emp_inames
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
   | STT_Ghost ->
-    C_STGhost Tm_EmpInames
+    C_STGhost tm_emp_inames
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
 
@@ -123,25 +123,25 @@ type vprop_equiv : env -> term -> term -> Type =
      t1':term ->
      vprop_equiv g t0 t0' ->
      vprop_equiv g t1 t1' ->
-     vprop_equiv g (Tm_Star t0 t1) (Tm_Star t0' t1')
+     vprop_equiv g (tm_star t0 t1) (tm_star t0' t1')
      
   | VE_Unit: (*   *)
      g:env ->
      t:term ->
-     vprop_equiv g (Tm_Star Tm_Emp t) t
+     vprop_equiv g (tm_star tm_emp t) t
 
   | VE_Comm:
      g:env ->
      t0:term ->
      t1:term ->
-     vprop_equiv g (Tm_Star t0 t1) (Tm_Star t1 t0)
+     vprop_equiv g (tm_star t0 t1) (tm_star t1 t0)
      
   | VE_Assoc:
      g:env ->
      t0:term ->
      t1:term ->
      t2:term ->
-     vprop_equiv g (Tm_Star t0 (Tm_Star t1 t2)) (Tm_Star (Tm_Star t0 t1) t2)
+     vprop_equiv g (tm_star t0 (tm_star t1 t2)) (tm_star (tm_star t0 t1) t2)
 
   | VE_Ext:
      g:env ->
@@ -157,7 +157,7 @@ type vprop_equiv : env -> term -> term -> Type =
   //    t0:term ->
   //    t1:term ->
   //    vprop_equiv f ((x, Inl ty)::g) (open_term t0 x) (open_term t1 x) ->
-  //    vprop_equiv f g (Tm_ExistsSL ty t0) (Tm_ExistsSL ty t1)
+  //    vprop_equiv f g (tm_exists_sl ty t0) (tm_exists_sl ty t1)
 
   // | VE_Fa:
   //    g:env ->
@@ -172,8 +172,8 @@ type vprop_equiv : env -> term -> term -> Type =
 let add_frame (s:comp_st) (frame:term)
   : comp_st
   = let add_frame_s (s:st_comp) : st_comp =
-        { s with pre = Tm_Star s.pre frame;
-                 post = Tm_Star s.post frame }
+        { s with pre = tm_star s.pre frame;
+                 post = tm_star s.post frame }
     in
     match s with
     | C_ST s -> C_ST (add_frame_s s)
@@ -266,43 +266,43 @@ let elim_exists_post (u:universe) (t:term) (p:term) (x:nvar)
 
 let comp_elim_exists (u:universe) (t:term) (p:term) (x:nvar)
   : comp
-  = C_STGhost Tm_EmpInames 
+  = C_STGhost tm_emp_inames 
               {
                 u=u;
                 res=mk_erased u t;
-                pre=Tm_ExistsSL u (as_binder t) p;
+                pre=tm_exists_sl u (as_binder t) p;
                 post=elim_exists_post u t p x
               }
 
 let comp_intro_pure (p:term) =
-  C_STGhost Tm_EmpInames 
+  C_STGhost tm_emp_inames 
             {
               u=u_zero;
               res=tm_unit;
-              pre=Tm_Emp;
-              post=Tm_Pure p
+              pre=tm_emp;
+              post=tm_pure p
             }
 
 let named_binder (x:ppname) (t:term) = { binder_ppname = x; binder_ty = t}
 
 let comp_intro_exists (u:universe) (b:binder) (p:term) (e:term)
   : comp
-  = C_STGhost Tm_EmpInames
+  = C_STGhost tm_emp_inames
               {
                 u=u0;
                 res=tm_unit;
                 pre=open_term' p e 0;
-                post=Tm_ExistsSL u b p
+                post=tm_exists_sl u b p
               }
 
 let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
   : comp
-  = C_STGhost Tm_EmpInames
+  = C_STGhost tm_emp_inames
               {
                 u=u0;
                 res=tm_unit;
                 pre=open_term' p (mk_reveal u b.binder_ty e) 0;
-                post=Tm_ExistsSL u b p
+                post=tm_exists_sl u b p
               }
 
 
@@ -311,7 +311,7 @@ let comp_while_cond (x:ppname) (inv:term)
   = C_ST {
            u=u0;
            res=tm_bool;
-           pre=Tm_ExistsSL u0 (named_binder x tm_bool) inv;
+           pre=tm_exists_sl u0 (named_binder x tm_bool) inv;
            post=inv
          }
 
@@ -321,7 +321,7 @@ let comp_while_body (x:ppname) (inv:term)
            u=u0;
            res=tm_unit;
            pre=open_term' inv tm_true 0;
-           post=Tm_ExistsSL u0 (named_binder x tm_bool) inv
+           post=tm_exists_sl u0 (named_binder x tm_bool) inv
          }
 
 let comp_while (x:ppname) (inv:term)
@@ -329,7 +329,7 @@ let comp_while (x:ppname) (inv:term)
   = C_ST {
            u=u0;
            res=tm_unit;
-           pre=Tm_ExistsSL u0 (named_binder x tm_bool) inv;
+           pre=tm_exists_sl u0 (named_binder x tm_bool) inv;
            post=open_term' inv tm_false 0
          }
 
@@ -356,7 +356,7 @@ let par_post (uL uR:universe) (aL aR postL postR:term) (x:var) : term =
   
   let postL = open_term' postL (mk_fst uL uR aL aR x_tm) 0 in
   let postR = open_term' postR (mk_snd uL uR aL aR x_tm) 0 in
-  let post = Tm_Star postL postR in
+  let post = tm_star postL postR in
   close_term post x
 
 let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
@@ -370,15 +370,15 @@ let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
   C_ST {
     u = uL;
     res = mk_tuple2 uL uR aL aR;
-    pre = Tm_Star (comp_pre cL) (comp_pre cR);
+    pre = tm_star (comp_pre cL) (comp_pre cR);
     post
   }
 
 let comp_withlocal_body_pre (pre:vprop) (init_t:term) (r:term) (init:term) : vprop =
-  Tm_Star pre (mk_pts_to init_t r init)
+  tm_star pre (mk_pts_to init_t r init)
 
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
-  Tm_Star post (Tm_ExistsSL u0 (as_binder init_t) (mk_pts_to init_t r (null_bvar 0)))  
+  tm_star post (tm_exists_sl u0 (as_binder init_t) (mk_pts_to init_t r (null_bvar 0)))  
 
 let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in
@@ -390,7 +390,7 @@ let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : co
   }
 
 let comp_rewrite (p q:vprop) : comp =
-  C_STGhost Tm_EmpInames {
+  C_STGhost tm_emp_inames {
 			u = u0;
 			res = tm_unit;
 			pre = p;
@@ -400,8 +400,8 @@ let comp_rewrite (p q:vprop) : comp =
 let comp_admit (c:ctag) (s:st_comp) : comp =
   match c with
   | STT -> C_ST s
-  | STT_Atomic -> C_STAtomic Tm_EmpInames s
-  | STT_Ghost -> C_STGhost Tm_EmpInames s
+  | STT_Atomic -> C_STAtomic tm_emp_inames s
+  | STT_Ghost -> C_STGhost tm_emp_inames s
 
 [@@erasable]
 noeq
@@ -435,9 +435,9 @@ type st_equiv : env -> comp -> comp -> Type =
       x:var { None? (lookup g x) /\
               ~(x `Set.mem` freevars (comp_post c1)) /\
               ~(x `Set.mem` freevars (comp_post c2)) } ->
-      tot_typing g (comp_pre c1) Tm_VProp ->
+      tot_typing g (comp_pre c1) tm_vprop ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) ->
-      tot_typing (push_binding g x ppname_default (comp_res c1)) (open_term (comp_post c1) x) Tm_VProp ->
+      tot_typing (push_binding g x ppname_default (comp_res c1)) (open_term (comp_post c1) x) tm_vprop ->
       vprop_equiv g (comp_pre c1) (comp_pre c2) ->
       vprop_equiv (push_binding g x ppname_default (comp_res c1))
                   (open_term (comp_post c1) x)
@@ -455,7 +455,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->      
-      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) tm_vprop ->
       bind_comp g x c1 c2 (bind_comp_out c1 c2)
 
   | Bind_comp_ghost_l :  // (C_STGhost and C_STAtomic)
@@ -467,7 +467,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
-      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) tm_vprop ->
       bind_comp g x c1 c2 (bind_comp_ghost_l_out c1 c2)
 
   | Bind_comp_ghost_r :  // (C_STAtomic and C_STGhost)
@@ -479,7 +479,7 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
-      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) Tm_VProp ->
+      tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) tm_vprop ->
       bind_comp g x c1 c2 (bind_comp_ghost_r_out c1 c2)
 
 [@@ no_auto_projectors]
@@ -487,7 +487,7 @@ noeq
 type lift_comp : env -> comp -> comp -> Type =
   | Lift_STAtomic_ST :
       g:env ->
-      c:comp_st{C_STAtomic? c /\ comp_inames c == Tm_EmpInames} ->
+      c:comp_st{C_STAtomic? c /\ comp_inames c == tm_emp_inames} ->
       lift_comp g c (C_ST (st_comp_of_comp c))
 
   | Lift_STGhost_STAtomic :
@@ -506,8 +506,8 @@ type st_comp_typing : env -> st_comp -> Type =
       st:st_comp ->
       x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars st.post) } ->
       universe_of g st.res st.u ->
-      tot_typing g st.pre Tm_VProp ->
-      tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) Tm_VProp ->
+      tot_typing g st.pre tm_vprop ->
+      tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop ->
       st_comp_typing g st
 
 [@@ no_auto_projectors]
@@ -530,7 +530,7 @@ type comp_typing : env -> comp -> universe -> Type =
       g:env -> 
       inames:term ->
       st:st_comp -> 
-      tot_typing g inames Tm_Inames ->
+      tot_typing g inames tm_inames ->
       st_comp_typing g st ->
       comp_typing g (C_STAtomic inames st) st.u
 
@@ -538,7 +538,7 @@ type comp_typing : env -> comp -> universe -> Type =
       g:env -> 
       inames:term ->
       st:st_comp -> 
-      tot_typing g inames Tm_Inames ->      
+      tot_typing g inames tm_inames ->      
       st_comp_typing g st ->
       comp_typing g (C_STGhost inames st) st.u
 
@@ -583,7 +583,7 @@ type st_typing : env -> st_term -> comp -> Type =
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars post) } ->
       universe_of g t u ->
       tot_typing g e t ->
-      tot_typing (push_binding g x ppname_default t) (open_term post x) Tm_VProp ->
+      tot_typing (push_binding g x ppname_default t) (open_term post x) tm_vprop ->
       st_typing g (wr (Tm_Return { ctag=c; insert_eq=use_eq; term=e }))
                   (comp_return c use_eq u t e post x)
 
@@ -649,7 +649,7 @@ type st_typing : env -> st_term -> comp -> Type =
       e:st_term ->
       c:comp_st ->
       frame:term ->
-      tot_typing g frame Tm_VProp ->
+      tot_typing g frame tm_vprop ->
       st_typing g e c ->
       st_typing g e (add_frame c frame)
 
@@ -677,8 +677,8 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       x:var { None? (lookup g x) } ->
       tot_typing g t (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u (as_binder t) p) Tm_VProp ->
-      st_typing g (wr (Tm_ElimExists { p = Tm_ExistsSL u (as_binder t) p }))
+      tot_typing g (tm_exists_sl u (as_binder t) p) tm_vprop ->
+      st_typing g (wr (Tm_ElimExists { p = tm_exists_sl u (as_binder t) p }))
                   (comp_elim_exists u t p (v_as_nv x))
 
   | T_IntroExists:
@@ -688,10 +688,10 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       e:term ->
       tot_typing g b.binder_ty (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u b p) Tm_VProp ->
+      tot_typing g (tm_exists_sl u b p) tm_vprop ->
       tot_typing g e b.binder_ty ->
       st_typing g (wr (Tm_IntroExists { erased = false;
-                                        p = Tm_ExistsSL u b p;
+                                        p = tm_exists_sl u b p;
                                         witnesses= [e];
                                         should_check=should_check_true }))
                   (comp_intro_exists u b p e)
@@ -703,10 +703,10 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       e:term ->
       tot_typing g b.binder_ty (tm_type u) ->
-      tot_typing g (Tm_ExistsSL u b p) Tm_VProp ->
+      tot_typing g (tm_exists_sl u b p) tm_vprop ->
       tot_typing g e (mk_erased u b.binder_ty)  ->
       st_typing g (wr (Tm_IntroExists { erased = true;
-                                        p = Tm_ExistsSL u b p;
+                                        p = tm_exists_sl u b p;
                                         witnesses= [e];
                                         should_check=should_check_true }))
                   (comp_intro_exists_erased u b p e)
@@ -716,7 +716,7 @@ type st_typing : env -> st_term -> comp -> Type =
       inv:term ->
       cond:st_term ->
       body:st_term ->
-      tot_typing g (Tm_ExistsSL u0 (as_binder tm_bool) inv) Tm_VProp ->
+      tot_typing g (tm_exists_sl u0 (as_binder tm_bool) inv) tm_vprop ->
       st_typing g cond (comp_while_cond ppname_default inv) ->
       st_typing g body (comp_while_body ppname_default inv) ->
       st_typing g (wr (Tm_While { invariant = inv;
@@ -737,8 +737,8 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing g cR (comp_u cR) ->
       st_typing g eL cL ->
       st_typing g eR cR ->
-      st_typing g (wr (Tm_Par { pre1=Tm_Unknown; body1=eL; post1=Tm_Unknown;
-                                pre2=Tm_Unknown; body2=eR; post2=Tm_Unknown }))
+      st_typing g (wr (Tm_Par { pre1=tm_unknown; body1=eL; post1=tm_unknown;
+                                pre2=tm_unknown; body2=eR; post2=tm_unknown }))
                   (comp_par cL cR x)
 
   | T_WithLocal:
@@ -760,7 +760,7 @@ type st_typing : env -> st_term -> comp -> Type =
       g:env ->
       p:vprop ->
       q:vprop ->
-      tot_typing g p Tm_VProp ->
+      tot_typing g p tm_vprop ->
       vprop_equiv g p q ->
       st_typing g (wr (Tm_Rewrite { t1=p; t2=q } ))
                   (comp_rewrite p q)
@@ -792,33 +792,33 @@ type st_typing : env -> st_term -> comp -> Type =
     G |- e1 : t0
 
 *)
-let star_typing_inversion_l (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
-  : tot_typing g t0 Tm_VProp
+let star_typing_inversion_l (#g:_) (#t0 #t1:term) (d:tot_typing g (tm_star t0 t1) tm_vprop)
+  : tot_typing g t0 tm_vprop
   = admit ()
 
-let star_typing_inversion_r (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
-  : tot_typing g t1 Tm_VProp
+let star_typing_inversion_r (#g:_) (#t0 #t1:term) (d:tot_typing g (tm_star t0 t1) tm_vprop)
+  : tot_typing g t1 tm_vprop
   = admit ()
 
-let star_typing_inversion (#g:_) (#t0 #t1:term) (d:tot_typing g (Tm_Star t0 t1) Tm_VProp)
-  : GTot (tot_typing g t0 Tm_VProp & tot_typing g t1 Tm_VProp)
+let star_typing_inversion (#g:_) (#t0 #t1:term) (d:tot_typing g (tm_star t0 t1) tm_vprop)
+  : GTot (tot_typing g t0 tm_vprop & tot_typing g t1 tm_vprop)
   = admit ()
 
 let vprop_eq_typing_inversion g (t0 t1:term)
                               (token:FTB.equiv_token (elab_env g)
                                                      (elab_term t0)
                                                      (elab_term t1))
-  : GTot (tot_typing g t0 Tm_VProp &
-          tot_typing g t1 Tm_VProp)
+  : GTot (tot_typing g t0 tm_vprop &
+          tot_typing g t1 tm_vprop)
   = admit ()
 
 (* These I can easily prove *)
 let star_typing (#g:_) (#t0 #t1:term)
-                (d0:tot_typing g t0 Tm_VProp)
-                (d1:tot_typing g t1 Tm_VProp)
-  : tot_typing g (Tm_Star t0 t1) Tm_VProp
+                (d0:tot_typing g t0 tm_vprop)
+                (d1:tot_typing g t1 tm_vprop)
+  : tot_typing g (tm_star t0 t1) tm_vprop
   = admit ()
 
 let emp_typing (#g:_) 
-  : tot_typing g Tm_Emp Tm_VProp
+  : tot_typing g tm_emp tm_vprop
   = admit ()

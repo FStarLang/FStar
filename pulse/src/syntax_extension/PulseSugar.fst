@@ -7,13 +7,19 @@ type binder = A.aqual & ident & A.term
 
 type binders = list binder
 
-type vprop =
+type vprop' =
   | VPropTerm of A.term
   | VPropStar of vprop & vprop
   | VPropExists {
       binders:binders;
       body:vprop
     }
+and vprop = {
+  v:vprop';
+  vrange:rng
+}
+
+let as_vprop (v:vprop') (r:rng) = { v; vrange=r}
 
 type st_comp_tag = 
   | ST

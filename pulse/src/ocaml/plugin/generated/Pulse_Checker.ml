@@ -16,13 +16,14 @@ let (terms_to_string :
            (fun uu___1 -> FStar_String.concat "\n" uu___))
 let (has_pure_vprops : Pulse_Syntax_Base.term -> Prims.bool) =
   fun pre ->
-    FStar_List_Tot_Base.existsb Pulse_Syntax_Base.uu___is_Tm_Pure
+    FStar_List_Tot_Base.existsb
+      (fun t -> Pulse_Syntax_Base.uu___is_Tm_Pure t.Pulse_Syntax_Base.t)
       (Pulse_Checker_VPropEquiv.vprop_as_list pre)
 let (elim_pure_explicit_lid : Prims.string Prims.list) =
   Pulse_Reflection_Util.mk_steel_wrapper_lid "elim_pure_explicit"
 let (default_binder_annot : Pulse_Syntax_Base.binder) =
   {
-    Pulse_Syntax_Base.binder_ty = Pulse_Syntax_Base.Tm_Unknown;
+    Pulse_Syntax_Base.binder_ty = Pulse_Syntax_Base.tm_unknown;
     Pulse_Syntax_Base.binder_ppname = Pulse_Syntax_Base.ppname_default
   }
 let (add_intro_pure :
@@ -34,12 +35,12 @@ let (add_intro_pure :
     fun continuation ->
       fun p ->
         let wr t =
-          { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range1 = rng } in
+          { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range2 = rng } in
         let intro_pure_tm =
           wr
             (Pulse_Syntax_Base.Tm_Protect
                {
-                 Pulse_Syntax_Base.t =
+                 Pulse_Syntax_Base.t3 =
                    (wr
                       (Pulse_Syntax_Base.Tm_IntroPure
                          {
@@ -51,7 +52,7 @@ let (add_intro_pure :
         wr
           (Pulse_Syntax_Base.Tm_Protect
              {
-               Pulse_Syntax_Base.t =
+               Pulse_Syntax_Base.t3 =
                  (wr
                     (Pulse_Syntax_Base.Tm_Bind
                        {
@@ -67,7 +68,7 @@ let rec (prepare_instantiations :
     (Pulse_Syntax_Base.vprop * (Pulse_Syntax_Base.term,
       Pulse_Syntax_Base.term) FStar_Pervasives.either) Prims.list ->
       uvar_tys ->
-        Pulse_Syntax_Base.term ->
+        Pulse_Syntax_Base.vprop ->
           Pulse_Syntax_Base.term Prims.list ->
             ((Pulse_Syntax_Base.vprop * (Pulse_Syntax_Base.vprop *
                (Pulse_Syntax_Base.term, Pulse_Syntax_Base.term)
@@ -84,7 +85,8 @@ let rec (prepare_instantiations :
                  fun out_uvars ->
                    fun goal_vprop ->
                      fun witnesses ->
-                       match (witnesses, goal_vprop) with
+                       match (witnesses, (goal_vprop.Pulse_Syntax_Base.t))
+                       with
                        | ([], Pulse_Syntax_Base.Tm_ExistsSL (u, b, p)) ->
                            Obj.magic
                              (Obj.repr
@@ -150,7 +152,7 @@ let rec (prepare_instantiations :
                                    (FStar_Range.mk_range "Pulse.Checker.fst"
                                       (Prims.of_int (80)) (Prims.of_int (42))
                                       (Prims.of_int (89)) (Prims.of_int (98)))
-                                   (match t with
+                                   (match t.Pulse_Syntax_Base.t with
                                     | Pulse_Syntax_Base.Tm_Unknown ->
                                         Obj.magic
                                           (Obj.repr
@@ -352,7 +354,8 @@ let rec (build_instantiations :
                                       (fun uu___ ->
                                          FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___1 ->
-                                              { Pulse_Syntax_Base.t = uu___ }))))
+                                              { Pulse_Syntax_Base.t3 = uu___
+                                              }))))
                                 (fun uu___ ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___1 ->
@@ -488,7 +491,7 @@ let rec (build_instantiations :
                                                                     (fun
                                                                     uu___1 ->
                                                                     {
-                                                                    Pulse_Syntax_Base.t
+                                                                    Pulse_Syntax_Base.t3
                                                                     = uu___
                                                                     }))))
                                                                     (
@@ -552,7 +555,8 @@ let rec (build_instantiations :
                                       (fun uu___ ->
                                          FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___1 ->
-                                              { Pulse_Syntax_Base.t = uu___ }))))
+                                              { Pulse_Syntax_Base.t3 = uu___
+                                              }))))
                                 (fun uu___ ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___1 ->
@@ -581,18 +585,38 @@ let (maybe_infer_intro_exists :
                   match FStar_List_Tot_Base.partition
                           (fun uu___1 ->
                              match uu___1 with
-                             | Pulse_Syntax_Base.Tm_Pure uu___2 -> false
-                             | Pulse_Syntax_Base.Tm_Emp -> false
+                             | {
+                                 Pulse_Syntax_Base.t =
+                                   Pulse_Syntax_Base.Tm_Pure uu___2;
+                                 Pulse_Syntax_Base.range1 = uu___3;_} ->
+                                 false
+                             | {
+                                 Pulse_Syntax_Base.t =
+                                   Pulse_Syntax_Base.Tm_Emp;
+                                 Pulse_Syntax_Base.range1 = uu___2;_} ->
+                                 false
                              | uu___2 -> true)
                           (Pulse_Checker_VPropEquiv.vprop_as_list t)
                   with
                   | (rest, pure) ->
                       (((match Pulse_Checker_VPropEquiv.list_as_vprop rest
                          with
-                         | Pulse_Syntax_Base.Tm_Star
-                             (t1, Pulse_Syntax_Base.Tm_Emp) -> t1
-                         | Pulse_Syntax_Base.Tm_Star
-                             (Pulse_Syntax_Base.Tm_Emp, t1) -> t1
+                         | {
+                             Pulse_Syntax_Base.t = Pulse_Syntax_Base.Tm_Star
+                               (t1,
+                                {
+                                  Pulse_Syntax_Base.t =
+                                    Pulse_Syntax_Base.Tm_Emp;
+                                  Pulse_Syntax_Base.range1 = uu___1;_});
+                             Pulse_Syntax_Base.range1 = uu___2;_} -> t1
+                         | {
+                             Pulse_Syntax_Base.t = Pulse_Syntax_Base.Tm_Star
+                               ({
+                                  Pulse_Syntax_Base.t =
+                                    Pulse_Syntax_Base.Tm_Emp;
+                                  Pulse_Syntax_Base.range1 = uu___1;_},
+                                t1);
+                             Pulse_Syntax_Base.range1 = uu___2;_} -> t1
                          | t1 -> t1)), pure)))
           (fun uu___ ->
              (fun remove_pure_conjuncts ->
@@ -666,7 +690,7 @@ let (maybe_infer_intro_exists :
                                                           (Prims.of_int (44)))
                                                        (Obj.magic
                                                           (FStar_Tactics_Builtins.range_to_string
-                                                             st.Pulse_Syntax_Base.range1))
+                                                             st.Pulse_Syntax_Base.range2))
                                                        (fun uu___1 ->
                                                           FStar_Tactics_Effect.lift_div_tac
                                                             (fun uu___2 ->
@@ -861,7 +885,8 @@ let (maybe_infer_intro_exists :
                                                                     uu___8 ->
                                                                     (fun p1
                                                                     ->
-                                                                    match p1
+                                                                    match 
+                                                                    p1.Pulse_Syntax_Base.t
                                                                     with
                                                                     | 
                                                                     Pulse_Syntax_Base.Tm_Pure
@@ -1415,7 +1440,7 @@ let (maybe_infer_intro_exists :
                                                                     "Error"
                                                                     uu___9
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (st.Pulse_Syntax_Base.range1))
+                                                                    (st.Pulse_Syntax_Base.range2))
                                                                     (FStar_Pervasives_Native.Some
                                                                     (Pulse_RuntimeUtils.error_code_uninstantiated_variable
                                                                     ()))
@@ -1529,9 +1554,9 @@ let (maybe_infer_intro_exists :
                                                                     {
                                                                     Pulse_Syntax_Base.term1
                                                                     = t2;
-                                                                    Pulse_Syntax_Base.range1
+                                                                    Pulse_Syntax_Base.range2
                                                                     =
-                                                                    (st.Pulse_Syntax_Base.range1)
+                                                                    (st.Pulse_Syntax_Base.range2)
                                                                     }))
                                                                     (fun
                                                                     uu___9 ->
@@ -1584,7 +1609,7 @@ let (maybe_infer_intro_exists :
                                                                     (Prims.of_int (218))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (218))
-                                                                    (Prims.of_int (67)))
+                                                                    (Prims.of_int (71)))
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.fst"
                                                                     (Prims.of_int (218))
@@ -1592,9 +1617,30 @@ let (maybe_infer_intro_exists :
                                                                     (Prims.of_int (220))
                                                                     (Prims.of_int (19)))
                                                                     (Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.fst"
+                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (69)))
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.fst"
+                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (71)))
+                                                                    (Obj.magic
                                                                     (Pulse_Checker_Inference.apply_solution
                                                                     solutions2
                                                                     vp))
+                                                                    (fun
+                                                                    uu___9 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___10
+                                                                    ->
+                                                                    uu___9.Pulse_Syntax_Base.t))))
                                                                     (fun
                                                                     uu___9 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -1658,7 +1704,7 @@ let (maybe_infer_intro_exists :
                                                                     uu___9 ->
                                                                     FStar_List_Tot_Base.fold_left
                                                                     (add_intro_pure
-                                                                    intro_exists_chain.Pulse_Syntax_Base.range1)
+                                                                    intro_exists_chain.Pulse_Syntax_Base.range2)
                                                                     intro_exists_chain
                                                                     pure_conjuncts2))
                                                                     (fun
@@ -1967,7 +2013,7 @@ let (format_failed_goal :
                                                                     "Failed to prove the following goals:\n  "
                                                                     (Prims.strcat
                                                                     uu___2
-                                                                    "\nThe remaining conjuncts in the separation logic context are:\n  "))
+                                                                    "\nThe remaining conjuncts in the separation logic context available for use are:\n  "))
                                                                     (Prims.strcat
                                                                     x
                                                                     "\nThe typing context is:\n  "))
@@ -2017,8 +2063,8 @@ let (handle_framing_failure :
                         fun t ->
                           {
                             Pulse_Syntax_Base.term1 = t;
-                            Pulse_Syntax_Base.range1 =
-                              (t0.Pulse_Syntax_Base.range1)
+                            Pulse_Syntax_Base.range2 =
+                              (t0.Pulse_Syntax_Base.range2)
                           }))
                   (fun uu___ ->
                      (fun wr ->
@@ -2184,7 +2230,7 @@ let (handle_framing_failure :
                                            (Prims.of_int (270))
                                            (Prims.of_int (6))
                                            (Prims.of_int (270))
-                                           (Prims.of_int (91)))
+                                           (Prims.of_int (101)))
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.fst"
                                            (Prims.of_int (268))
@@ -2196,8 +2242,13 @@ let (handle_framing_failure :
                                               FStar_List_Tot_Base.partition
                                                 (fun uu___2 ->
                                                    match uu___2 with
-                                                   | Pulse_Syntax_Base.Tm_Pure
-                                                       uu___3 -> true
+                                                   | {
+                                                       Pulse_Syntax_Base.t =
+                                                         Pulse_Syntax_Base.Tm_Pure
+                                                         uu___3;
+                                                       Pulse_Syntax_Base.range1
+                                                         = uu___4;_}
+                                                       -> true
                                                    | uu___3 -> false)
                                                 failure.Pulse_Checker_Framing.unmatched_preconditions))
                                         (fun uu___1 ->
@@ -2224,7 +2275,8 @@ let (handle_framing_failure :
                                                                 fun uu___2 ->
                                                                   (fun t ->
                                                                     fun p ->
-                                                                    match p
+                                                                    match 
+                                                                    p.Pulse_Syntax_Base.t
                                                                     with
                                                                     | 
                                                                     Pulse_Syntax_Base.Tm_Pure
@@ -2234,7 +2286,7 @@ let (handle_framing_failure :
                                                                     (fun
                                                                     uu___2 ->
                                                                     add_intro_pure
-                                                                    t0.Pulse_Syntax_Base.range1
+                                                                    t0.Pulse_Syntax_Base.range2
                                                                     t p1))
                                                                     | 
                                                                     uu___2 ->
@@ -2246,7 +2298,7 @@ let (handle_framing_failure :
                                                              (wr
                                                                 (Pulse_Syntax_Base.Tm_Protect
                                                                    {
-                                                                    Pulse_Syntax_Base.t
+                                                                    Pulse_Syntax_Base.t3
                                                                     = t0
                                                                    })) pures))
                                                        (fun uu___2 ->
@@ -2259,8 +2311,14 @@ let (handle_framing_failure :
                                                                    check g t1
                                                                     pre ()
                                                                     post_hint
-                                                               | (Pulse_Syntax_Base.Tm_ExistsSL
-                                                                   (u, ty, p))::rest2
+                                                               | {
+                                                                   Pulse_Syntax_Base.t
+                                                                    =
+                                                                    Pulse_Syntax_Base.Tm_ExistsSL
+                                                                    (u, ty,
+                                                                    p);
+                                                                   Pulse_Syntax_Base.range1
+                                                                    = range;_}::rest2
                                                                    ->
                                                                    FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Range.mk_range
@@ -2288,7 +2346,7 @@ let (handle_framing_failure :
                                                                     (wr
                                                                     (Pulse_Syntax_Base.Tm_Protect
                                                                     {
-                                                                    Pulse_Syntax_Base.t
+                                                                    Pulse_Syntax_Base.t3
                                                                     =
                                                                     (wr
                                                                     (Pulse_Syntax_Base.Tm_IntroExists
@@ -2297,9 +2355,10 @@ let (handle_framing_failure :
                                                                     = true;
                                                                     Pulse_Syntax_Base.p2
                                                                     =
+                                                                    (Pulse_Syntax_Base.with_range
                                                                     (Pulse_Syntax_Base.Tm_ExistsSL
                                                                     (u, ty,
-                                                                    p));
+                                                                    p)) range);
                                                                     Pulse_Syntax_Base.witnesses
                                                                     = [];
                                                                     Pulse_Syntax_Base.should_check1
@@ -2312,7 +2371,7 @@ let (handle_framing_failure :
                                                                     (wr
                                                                     (Pulse_Syntax_Base.Tm_Protect
                                                                     {
-                                                                    Pulse_Syntax_Base.t
+                                                                    Pulse_Syntax_Base.t3
                                                                     = t1
                                                                     }))
                                                                     }))
@@ -2352,7 +2411,7 @@ let (handle_framing_failure :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (t0.Pulse_Syntax_Base.range1))
+                                                                    (t0.Pulse_Syntax_Base.range2))
                                                                     uu___3))
                                                                     uu___3) in
                                                              Obj.magic
@@ -2364,8 +2423,8 @@ let (protect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term) =
   fun t ->
     {
       Pulse_Syntax_Base.term1 =
-        (Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t });
-      Pulse_Syntax_Base.range1 = (t.Pulse_Syntax_Base.range1)
+        (Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t });
+      Pulse_Syntax_Base.range2 = (t.Pulse_Syntax_Base.range2)
     }
 let rec (unprotect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term)
   =
@@ -2373,18 +2432,18 @@ let rec (unprotect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term)
     let wr t0 =
       {
         Pulse_Syntax_Base.term1 = t0;
-        Pulse_Syntax_Base.range1 = (t.Pulse_Syntax_Base.range1)
+        Pulse_Syntax_Base.range2 = (t.Pulse_Syntax_Base.range2)
       } in
     match t.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_Protect
         {
-          Pulse_Syntax_Base.t =
+          Pulse_Syntax_Base.t3 =
             {
               Pulse_Syntax_Base.term1 = Pulse_Syntax_Base.Tm_Bind
                 { Pulse_Syntax_Base.binder = binder;
                   Pulse_Syntax_Base.head1 = head;
                   Pulse_Syntax_Base.body1 = body;_};
-              Pulse_Syntax_Base.range1 = uu___;_};_}
+              Pulse_Syntax_Base.range2 = uu___;_};_}
         ->
         wr
           (Pulse_Syntax_Base.Tm_Bind
@@ -2395,13 +2454,13 @@ let rec (unprotect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term)
              })
     | Pulse_Syntax_Base.Tm_Protect
         {
-          Pulse_Syntax_Base.t =
+          Pulse_Syntax_Base.t3 =
             {
               Pulse_Syntax_Base.term1 = Pulse_Syntax_Base.Tm_If
                 { Pulse_Syntax_Base.b1 = b; Pulse_Syntax_Base.then_ = then_;
                   Pulse_Syntax_Base.else_ = else_;
                   Pulse_Syntax_Base.post2 = post;_};
-              Pulse_Syntax_Base.range1 = uu___;_};_}
+              Pulse_Syntax_Base.range2 = uu___;_};_}
         ->
         wr
           (Pulse_Syntax_Base.Tm_If
@@ -2411,7 +2470,7 @@ let rec (unprotect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term)
                Pulse_Syntax_Base.else_ = (protect else_);
                Pulse_Syntax_Base.post2 = post
              })
-    | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t1;_} ->
+    | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
         unprotect t1
     | uu___ -> t
 let (elim_then_check :
@@ -2716,7 +2775,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                        (Prims.of_int (44)))
                                                     (Obj.magic
                                                        (FStar_Tactics_Builtins.range_to_string
-                                                          t.Pulse_Syntax_Base.range1))
+                                                          t.Pulse_Syntax_Base.range2))
                                                     (fun uu___2 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___3 ->
@@ -2777,7 +2836,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                               Pulse_Checker_Pure.push_context
                                                 (Pulse_Syntax_Printer.tag_of_st_term
                                                    t1)
-                                                t1.Pulse_Syntax_Base.range1 g))
+                                                t1.Pulse_Syntax_Base.range2 g))
                                         (fun uu___2 ->
                                            (fun g1 ->
                                               Obj.magic
@@ -3003,7 +3062,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (t1.Pulse_Syntax_Base.range1))
+                                                                    (t1.Pulse_Syntax_Base.range2))
                                                                     uu___3))
                                                                     uu___3)))
                                                                     | 
@@ -3015,7 +3074,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (t1.Pulse_Syntax_Base.range1))
+                                                                    (t1.Pulse_Syntax_Base.range2))
                                                                     "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\nEither annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")))
                                                                     (fun
                                                                     uu___3 ->
@@ -3110,7 +3169,8 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     with
                                                                     | 
                                                                     w::[] ->
-                                                                    (match w
+                                                                    (match 
+                                                                    w.Pulse_Syntax_Base.t
                                                                     with
                                                                     | 
                                                                     Pulse_Syntax_Base.Tm_Unknown

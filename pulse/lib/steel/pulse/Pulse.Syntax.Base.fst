@@ -23,7 +23,7 @@ let univ_equality (u1 u2:universe)
 
 let rec eq_tm (t1 t2:term) 
   : Tot (b:bool { b <==> (t1 == t2) }) (decreases t1)
-  = match t1, t2 with
+  = match t1.t, t2.t with
     | Tm_VProp, Tm_VProp
     | Tm_Emp, Tm_Emp
     | Tm_Inames, Tm_Inames
@@ -40,7 +40,7 @@ let rec eq_tm (t1 t2:term)
       eq_univ u1 u2 &&
       eq_tm t1.binder_ty t2.binder_ty &&
       eq_tm b1 b2
-    | Tm_FStar t1 r, Tm_FStar t2 _ ->
+    | Tm_FStar t1, Tm_FStar t2 ->
       host_term_equality t1 t2;
       R.term_eq t1 t2
     | _ -> false

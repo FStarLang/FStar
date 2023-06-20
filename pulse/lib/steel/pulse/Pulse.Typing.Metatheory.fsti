@@ -20,21 +20,21 @@ let fresh_wrt (x:var) (g:env) (vars:_) =
     
 val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
-     tot_typing g st.pre Tm_VProp &
+     tot_typing g st.pre tm_vprop &
      (x:var{fresh_wrt x g (freevars st.post)} -> //this part is tricky, to get the quantification on x
-       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) Tm_VProp))
+       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop))
 
 val st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
-     tot_typing g st.pre Tm_VProp &
+     tot_typing g st.pre tm_vprop &
      x:var{fresh_wrt x g (freevars st.post)} &
-     tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) Tm_VProp)
+     tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop)
 
 val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
-                        (_:tot_typing g (Tm_ExistsSL u (as_binder ty) p) Tm_VProp)
+                        (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_vprop)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
-    tot_typing (push_binding g x ppname_default ty) p Tm_VProp
+    tot_typing (push_binding g x ppname_default ty) p tm_vprop
 
 val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
                          (x:var { fresh_wrt x g Set.empty })
@@ -42,8 +42,8 @@ val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
                          (_:tot_typing g t ty)
    : tot_typing (push_binding g x ppname_default x_t) t ty
 
-val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
-   : tot_typing g p (Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0)
+val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
+   : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
 
 
 let comp_st_with_post (c:comp_st) (post:term) : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =

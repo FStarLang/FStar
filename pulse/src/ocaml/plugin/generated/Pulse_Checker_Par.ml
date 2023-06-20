@@ -27,7 +27,7 @@ let (check_par :
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Checker_Pure.push_context "check_par"
-                          t.Pulse_Syntax_Base.range1 g))
+                          t.Pulse_Syntax_Base.range2 g))
                   (fun uu___ ->
                      (fun g1 ->
                         Obj.magic
@@ -68,7 +68,7 @@ let (check_par :
                                             (Obj.magic
                                                (Pulse_Checker_Pure.check_term_with_expected_type
                                                   g1 preL
-                                                  Pulse_Syntax_Base.Tm_VProp))
+                                                  Pulse_Syntax_Base.tm_vprop))
                                             (fun uu___1 ->
                                                (fun uu___1 ->
                                                   match uu___1 with
@@ -91,7 +91,7 @@ let (check_par :
                                                            (Obj.magic
                                                               (Pulse_Checker_Pure.check_term_with_expected_type
                                                                  g1 preR
-                                                                 Pulse_Syntax_Base.Tm_VProp))
+                                                                 Pulse_Syntax_Base.tm_vprop))
                                                            (fun uu___2 ->
                                                               (fun uu___2 ->
                                                                  match uu___2
@@ -347,20 +347,20 @@ let (check_par :
                                                                     {
                                                                     Pulse_Syntax_Base.pre11
                                                                     =
-                                                                    Pulse_Syntax_Base.Tm_Unknown;
+                                                                    Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.body11
                                                                     = eL1;
                                                                     Pulse_Syntax_Base.post11
                                                                     =
-                                                                    Pulse_Syntax_Base.Tm_Unknown;
+                                                                    Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.pre2
                                                                     =
-                                                                    Pulse_Syntax_Base.Tm_Unknown;
+                                                                    Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.body21
                                                                     = eR1;
                                                                     Pulse_Syntax_Base.post21
                                                                     =
-                                                                    Pulse_Syntax_Base.Tm_Unknown
+                                                                    Pulse_Syntax_Base.tm_unknown
                                                                     })) pre
                                                                     ()
                                                                     (Pulse_Typing.comp_par
@@ -378,20 +378,20 @@ let (check_par :
                                                                     {
                                                                     Pulse_Syntax_Base.pre11
                                                                     =
-                                                                    Pulse_Syntax_Base.Tm_Unknown;
+                                                                    Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.body11
                                                                     = eL1;
                                                                     Pulse_Syntax_Base.post11
                                                                     =
-                                                                    Pulse_Syntax_Base.Tm_Unknown;
+                                                                    Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.pre2
                                                                     =
-                                                                    Pulse_Syntax_Base.Tm_Unknown;
+                                                                    Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.body21
                                                                     = eR1;
                                                                     Pulse_Syntax_Base.post21
                                                                     =
-                                                                    Pulse_Syntax_Base.Tm_Unknown
+                                                                    Pulse_Syntax_Base.tm_unknown
                                                                     }))
                                                                     uu___5
                                                                     post_hint))
@@ -404,7 +404,7 @@ let (check_par :
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (eR1.Pulse_Syntax_Base.range1))
+                                                                    (eR1.Pulse_Syntax_Base.range2))
                                                                     "par: cR is not stt"))
                                                                     uu___4)))
                                                                     uu___4)))
@@ -414,7 +414,7 @@ let (check_par :
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (eL1.Pulse_Syntax_Base.range1))
+                                                                    (eL1.Pulse_Syntax_Base.range2))
                                                                     "par: cL is not stt"))
                                                                     uu___3)))
                                                                     uu___3)))

@@ -103,7 +103,7 @@ let (main' :
                                                 (pre1, ty, pre_typing) ->
                                                 if
                                                   Pulse_Syntax_Base.eq_tm ty
-                                                    Pulse_Syntax_Base.Tm_VProp
+                                                    Pulse_Syntax_Base.tm_vprop
                                                 then
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
@@ -164,7 +164,7 @@ let (main' :
                                                   Obj.magic
                                                     (Pulse_Typing_Env.fail g1
                                                        (FStar_Pervasives_Native.Some
-                                                          (t.Pulse_Syntax_Base.range1))
+                                                          (t.Pulse_Syntax_Base.range2))
                                                        "pulse main: cannot typecheck pre at type vprop"))
                                            uu___1))) uu___)))) uu___2 uu___1
           uu___
@@ -202,7 +202,7 @@ let (check_pulse :
                         match uu___ with
                         | FStar_Pervasives.Inl st_term ->
                             Obj.magic
-                              (main st_term Pulse_Syntax_Base.Tm_Emp env)
+                              (main st_term Pulse_Syntax_Base.tm_emp env)
                         | FStar_Pervasives.Inr (msg, range) ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind

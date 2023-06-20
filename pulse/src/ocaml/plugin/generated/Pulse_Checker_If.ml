@@ -94,7 +94,7 @@ let rec (combine_if_branches :
                                       Obj.repr
                                         (if
                                            Pulse_Syntax_Base.eq_tm inames
-                                             Pulse_Syntax_Base.Tm_EmpInames
+                                             Pulse_Syntax_Base.tm_emp_inames
                                          then
                                            Obj.repr
                                              (FStar_Tactics_Effect.lift_div_tac
@@ -119,7 +119,7 @@ let rec (combine_if_branches :
                                       Obj.repr
                                         (if
                                            Pulse_Syntax_Base.eq_tm inames
-                                             Pulse_Syntax_Base.Tm_EmpInames
+                                             Pulse_Syntax_Base.tm_emp_inames
                                          then
                                            Obj.repr
                                              (FStar_Tactics_Effect.lift_div_tac
@@ -535,7 +535,7 @@ let (check_if :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (br1.Pulse_Syntax_Base.range1))
+                                                                    (br1.Pulse_Syntax_Base.range2))
                                                                     "Illegal use of control-flow hypothesis in branch"))
                                                                     else
                                                                     Obj.magic
@@ -549,7 +549,7 @@ let (check_if :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (br1.Pulse_Syntax_Base.range1))
+                                                                    (br1.Pulse_Syntax_Base.range2))
                                                                     "Branch computation type not st")
                                                                     else
                                                                     Obj.repr

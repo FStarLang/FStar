@@ -14,7 +14,7 @@ let check_rewrite
   (g:env)
   (t:st_term{Tm_Rewrite? t.term})
   (pre:term)
-  (pre_typing:tot_typing g pre Tm_VProp)
+  (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "check_rewrite" t.range g in

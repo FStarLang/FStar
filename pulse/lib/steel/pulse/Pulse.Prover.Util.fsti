@@ -74,10 +74,10 @@ val apply_partial_subs_veq (#g0:env) (#p1 #p2:vprop)
                 (Psubst.subst_term ss p2)
 
 let ghost_comp pre post : c:comp_st { comp_pre c == pre /\ comp_post c == post } = 
-  C_STGhost Tm_EmpInames { u=u_zero; res=tm_unit; pre; post }
+  C_STGhost tm_emp_inames { u=u_zero; res=tm_unit; pre; post }
 
 
 val idem_steps (g:env) (ctxt:vprop)
   : t:st_term &
-    st_typing g t (ghost_comp ctxt (Tm_Star (list_as_vprop (vprop_as_list ctxt))
-                                            Tm_Emp))
+    st_typing g t (ghost_comp ctxt (tm_star (list_as_vprop (vprop_as_list ctxt))
+                                            tm_emp))

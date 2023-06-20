@@ -221,10 +221,10 @@ let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
                          "intro_pure"))) FStar_Pervasives_Native.None p);
            Pulse_Syntax_Base.arg_qual = FStar_Pervasives_Native.None;
            Pulse_Syntax_Base.arg =
-             (Pulse_Syntax_Base.Tm_FStar
-                ((FStar_Reflection_Builtins.pack_ln
-                    (FStar_Reflection_Data.Tv_Const
-                       FStar_Reflection_Data.C_Unit)), FStar_Range.range_0))
+             (Pulse_Syntax_Base.tm_fstar
+                (FStar_Reflection_Builtins.pack_ln
+                   (FStar_Reflection_Data.Tv_Const
+                      FStar_Reflection_Data.C_Unit)) FStar_Range.range_0)
          })
 let rec (elab_st_typing :
   Pulse_Typing_Env.env ->

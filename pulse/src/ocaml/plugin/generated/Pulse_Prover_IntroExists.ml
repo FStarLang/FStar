@@ -43,7 +43,7 @@ let (intro_exists_sub_prover_state :
                           {
                             Pulse_Syntax_Base.erased = false;
                             Pulse_Syntax_Base.p2 =
-                              (Pulse_Syntax_Base.Tm_ExistsSL (u, b, body));
+                              (Pulse_Syntax_Base.tm_exists_sl u b body);
                             Pulse_Syntax_Base.witnesses =
                               [Pulse_Syntax_Pure.null_var x];
                             Pulse_Syntax_Base.should_check1 =
@@ -55,7 +55,7 @@ let (intro_exists_sub_prover_state :
                   Pulse_Prover_Common.uvs = uvs1
                 } in
               let ss = Pulse_Prover_Substs.empty g0 in
-              let solved_goals = Pulse_Syntax_Base.Tm_Emp in
+              let solved_goals = Pulse_Syntax_Base.tm_emp in
               let unsolved_goals =
                 Pulse_Checker_VPropEquiv.vprop_as_list
                   (Pulse_Syntax_Base.comp_pre
@@ -181,10 +181,10 @@ let (intro_exists_step :
                                                                     p.Pulse_Prover_Common.steps
                                                                     (Pulse_Prover_Util.ghost_comp
                                                                     preamble.Pulse_Prover_Common.ctxt
-                                                                    (Pulse_Syntax_Base.Tm_Star
-                                                                    ((Pulse_Checker_VPropEquiv.list_as_vprop
-                                                                    p.Pulse_Prover_Common.remaining_ctxt),
-                                                                    (p.Pulse_Prover_Common.solved_goals))))
+                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    p.Pulse_Prover_Common.remaining_ctxt)
+                                                                    p.Pulse_Prover_Common.solved_goals))
                                                                     (Pulse_Prover_Util.psubst_env
                                                                     preamble.Pulse_Prover_Common.g0
                                                                     (Pulse_Prover_Util.filter_ss
@@ -215,10 +215,10 @@ let (intro_exists_step :
                                                                     p.Pulse_Prover_Common.ss
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     preamble.Pulse_Prover_Common.c))
-                                                                    (Pulse_Syntax_Base.Tm_Star
-                                                                    ((Pulse_Checker_VPropEquiv.list_as_vprop
-                                                                    p.Pulse_Prover_Common.unsolved_goals),
-                                                                    (p.Pulse_Prover_Common.solved_goals)))
+                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    p.Pulse_Prover_Common.unsolved_goals)
+                                                                    p.Pulse_Prover_Common.solved_goals)
                                                                     (Pulse_Prover_Util.psubst_env
                                                                     preamble.Pulse_Prover_Common.g0
                                                                     (Pulse_Prover_Util.filter_ss
@@ -292,8 +292,8 @@ let (intro_exists_step :
                                                                     x))));
                                                                     Pulse_Prover_Common.solved_goals
                                                                     =
-                                                                    (Pulse_Syntax_Base.Tm_Star
-                                                                    ((Pulse_Prover_Substs.subst_term
+                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Prover_Substs.subst_term
                                                                     s_preamble.Pulse_Prover_Common.g0
                                                                     (Pulse_Prover_Substs.diff
                                                                     s_preamble.Pulse_Prover_Common.g0
@@ -304,10 +304,9 @@ let (intro_exists_step :
                                                                     s_preamble.Pulse_Prover_Common.g0
                                                                     sp2.Pulse_Prover_Common.ss
                                                                     x)))
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
-                                                                    (u, b,
-                                                                    body))),
-                                                                    (p.Pulse_Prover_Common.solved_goals)));
+                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    u b body))
+                                                                    p.Pulse_Prover_Common.solved_goals);
                                                                     Pulse_Prover_Common.unsolved_goals
                                                                     =
                                                                     (Pulse_Checker_VPropEquiv.vprop_as_list

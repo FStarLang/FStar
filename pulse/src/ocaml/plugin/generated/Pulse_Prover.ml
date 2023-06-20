@@ -72,7 +72,7 @@ let (prove_precondition :
                                          (Prims.of_int (57)))
                                       (FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___ ->
-                                            Pulse_Syntax_Base.Tm_Emp))
+                                            Pulse_Syntax_Base.tm_emp))
                                       (fun uu___ ->
                                          (fun solved_goals ->
                                             Obj.magic

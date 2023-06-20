@@ -24,7 +24,7 @@ let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y === x} = x
 
 let prover : prover_t = fun #_ _ -> magic ()
 
-#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:vprop_typing g ctxt)
   (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
   : T.Tac (option (t:st_term &
@@ -36,7 +36,7 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:vprop_typing g ctxt)
   } in
 
   let ss = Psubst.empty g in
-  let solved_goals = Tm_Emp in
+  let solved_goals = tm_emp in
   let unsolved_goals = vprop_as_list (comp_pre c) in
   let remaining_ctxt = vprop_as_list ctxt in
   assert (equal (pst_env preamble.uvs ss) g);
@@ -59,13 +59,13 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:vprop_typing g ctxt)
   let steps_typing:
     st_typing (pst_env preamble.uvs ss)
               steps
-              (ghost_comp preamble.ctxt (Tm_Star (list_as_vprop remaining_ctxt) solved_goals)) = steps_typing in
+              (ghost_comp preamble.ctxt (tm_star (list_as_vprop remaining_ctxt) solved_goals)) = steps_typing in
 
   // some emp manipulation
   let c_pre_inv:
     vprop_equiv (pst_env preamble.uvs ss)
                 (Psubst.subst_term ss (comp_pre preamble.c))
-                (Tm_Star (list_as_vprop unsolved_goals) solved_goals) = magic () in
+                (tm_star (list_as_vprop unsolved_goals) solved_goals) = magic () in
 
   let pst : prover_state preamble = {
     ss; solved_goals; unsolved_goals; remaining_ctxt; steps;
@@ -81,8 +81,8 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:vprop_typing g ctxt)
     assert (equal g0 (pst_env preamble.uvs pst.ss));
     let c_pre_inv:
       vprop_equiv g0 (Psubst.subst_term pst.ss (comp_pre preamble.c))
-                     (Tm_Star (list_as_vprop []) pst.solved_goals) = pst.c_pre_inv in
-    // normalize Tm_Star in the second vprop of vprop_equiv
+                     (tm_star (list_as_vprop []) pst.solved_goals) = pst.c_pre_inv in
+    // normalize tm_star in the second vprop of vprop_equiv
     let c_pre_inv:
       vprop_equiv g0 (Psubst.subst_term pst.ss (comp_pre preamble.c))
                      pst.solved_goals = magic () in
@@ -90,14 +90,14 @@ let prove_precondition (#g:env) (#ctxt:term) (ctxt_typing:vprop_typing g ctxt)
     let remaining_ctxt = list_as_vprop pst.remaining_ctxt in
     let steps_typing:
       st_typing g0 pst.steps
-        (ghost_comp preamble.ctxt (Tm_Star remaining_ctxt pst.solved_goals)) = pst.steps_typing in
+        (ghost_comp preamble.ctxt (tm_star remaining_ctxt pst.solved_goals)) = pst.steps_typing in
     // replace pst.solved_goals with equivalent (Psubst.subst_term pst.ss (comp_pre preamble.c))
     //   from c_pre_inv
     // note that all these postconditions are ln
     let steps_typing:
       st_typing g0 pst.steps
         (ghost_comp preamble.ctxt
-                    (Tm_Star remaining_ctxt
+                    (tm_star remaining_ctxt
                              (Psubst.subst_term pst.ss (comp_pre preamble.c)))) = magic () in
     let t_typing:
       st_typing g0

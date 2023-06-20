@@ -170,7 +170,7 @@ let (ghost_comp :
   fun pre ->
     fun post ->
       Pulse_Syntax_Base.C_STGhost
-        (Pulse_Syntax_Base.Tm_EmpInames,
+        (Pulse_Syntax_Base.tm_emp_inames,
           {
             Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u_zero;
             Pulse_Syntax_Base.res = Pulse_Typing.tm_unit;

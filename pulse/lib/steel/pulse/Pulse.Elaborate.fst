@@ -29,7 +29,7 @@ let rec elab_open_commute' (e:term)
               RT.subst_term (elab_term e) [ RT.DT n (elab_term v) ] ==
               elab_term (open_term' e v n))
           (decreases e)
-  = match e with
+  = match e.t with
     | Tm_Emp 
     | Tm_Inames
     | Tm_EmpInames
@@ -47,7 +47,7 @@ let rec elab_open_commute' (e:term)
     | Tm_ForallSL u t body ->
       elab_open_commute' t.binder_ty v n;
       elab_open_commute' body v (n + 1)
-    | Tm_FStar t _ -> ()
+    | Tm_FStar t -> ()
 
 let elab_comp_open_commute' (c:comp) (v:term) (n:index)
   : Lemma (ensures
@@ -73,7 +73,7 @@ let rec elab_close_commute' (e:term)
               RT.subst_term (elab_term e) [ RT.ND v n ] ==
               elab_term (close_term' e v n)))
           (decreases e)
-  = match e with
+  = match e.t with
     | Tm_Emp 
     | Tm_Inames
     | Tm_EmpInames
@@ -88,7 +88,7 @@ let rec elab_close_commute' (e:term)
     | Tm_ForallSL _ t body ->
       elab_close_commute' t.binder_ty v n;
       elab_close_commute' body v (n + 1)    
-    | Tm_FStar _ _ -> ()
+    | Tm_FStar _ -> ()
     
 let elab_comp_close_commute' (c:comp) (v:var) (n:index)
   : Lemma (ensures
@@ -124,7 +124,7 @@ let elab_comp_open_commute (c:comp) (x:term)
     elab_comp_open_commute' c x 0
 
 let rec elab_ln t i =
-  match t with
+  match t.t with
   | Tm_Emp -> ()
   | Tm_Pure t -> elab_ln t i
   | Tm_Star l r ->
@@ -138,7 +138,7 @@ let rec elab_ln t i =
   | Tm_Inames
   | Tm_EmpInames
   | Tm_Unknown
-  | Tm_FStar _ _ -> ()
+  | Tm_FStar _ -> ()
 
 let elab_ln_comp (c:comp) (i:int)
   : Lemma (requires ln_c' c i)
@@ -159,7 +159,7 @@ let elab_ln_comp (c:comp) (i:int)
 
 let rec elab_freevars_eq (e:term)
   : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) =
-  match e with
+  match e.t with
   | Tm_Emp -> ()
   | Tm_Pure t -> elab_freevars_eq t
   | Tm_Star l r ->
@@ -173,7 +173,7 @@ let rec elab_freevars_eq (e:term)
   | Tm_Inames
   | Tm_EmpInames
   | Tm_Unknown
-  | Tm_FStar _ _ -> ()
+  | Tm_FStar _ -> ()
 
 let elab_freevars_comp_eq (c:comp)
   : Lemma (Set.equal (freevars_comp c) (RT.freevars (elab_comp c))) =

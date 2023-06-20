@@ -12,7 +12,7 @@ module FV = Pulse.Typing.FV
 
 let check_comp (g:env) 
                (c:comp_st)
-               (pre_typing:tot_typing g (comp_pre c) Tm_VProp)
+               (pre_typing:tot_typing g (comp_pre c) tm_vprop)
   : T.Tac (comp_typing g c (comp_u c))
   = let check_st_comp (st:st_comp { comp_u c == st.u /\
                                     comp_pre c == st.pre /\
@@ -28,10 +28,10 @@ let check_comp (g:env)
           assume (~(x `Set.mem` freevars (comp_post c)));
           let gx = push_binding g x (fst px) st.res in
           let (| ty, post_typing |) = core_check_term gx (open_term_nv (comp_post c) px) in
-          if not (eq_tm ty Tm_VProp)
+          if not (eq_tm ty tm_vprop)
           then fail g None "Ill-typed postcondition"
           else (
-            assert (ty == Tm_VProp);
+            assert (ty == tm_vprop);
             STC g st x t_u pre_typing (E post_typing)
           )
         )
@@ -43,12 +43,12 @@ let check_comp (g:env)
     | C_STAtomic i st -> 
       let stc = check_st_comp st in
       let (| ty, i_typing |) = core_check_term g i in
-      if not (eq_tm ty Tm_Inames)
+      if not (eq_tm ty tm_inames)
       then fail g None "Ill-typed inames"
       else CT_STAtomic _ _ _ (E i_typing) stc
     | C_STGhost i st -> 
       let stc = check_st_comp st in
       let (| ty, i_typing |) = core_check_term g i in
-      if not (eq_tm ty Tm_Inames)
+      if not (eq_tm ty tm_inames)
       then fail g None "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc

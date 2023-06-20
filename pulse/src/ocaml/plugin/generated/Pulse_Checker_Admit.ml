@@ -170,7 +170,7 @@ let (check_admit :
                                                                     (FStar_Pervasives_Native.fst
                                                                     px) t1)
                                                                     post_opened
-                                                                    Pulse_Syntax_Base.Tm_VProp))
+                                                                    Pulse_Syntax_Base.tm_vprop))
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

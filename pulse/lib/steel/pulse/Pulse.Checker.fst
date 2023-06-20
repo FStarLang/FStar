@@ -35,12 +35,12 @@ let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
 
-let has_pure_vprops (pre:term) = L.existsb Tm_Pure? (vprop_as_list pre)
+let has_pure_vprops (pre:term) = L.existsb (fun (t:term) -> Tm_Pure? t.t) (vprop_as_list pre)
 let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit"
 
 let default_binder_annot = {
     binder_ppname = ppname_default;
-    binder_ty = Tm_Unknown
+    binder_ty = tm_unknown
 }
    
 let add_intro_pure rng (continuation:st_term) (p:term) =
@@ -63,10 +63,10 @@ let rec prepare_instantiations
           (g:env)
           (out:list (vprop & either term term))
           (out_uvars: uvar_tys)
-          goal_vprop
+          (goal_vprop:vprop)
           witnesses
   : T.Tac (vprop & list (vprop & either term term) & uvar_tys)
-  = match witnesses, goal_vprop with
+  = match witnesses, goal_vprop.t with
     | [], Tm_ExistsSL u b p ->
       let next_goal_vprop, inst, uv =
           let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
@@ -79,7 +79,7 @@ let rec prepare_instantiations
 
     | t :: witnesses, Tm_ExistsSL u b p ->
       let next_goal_vprop, inst, uvs =
-          match t with
+          match (t<:term).t with
           | Tm_Unknown ->
             let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
             open_term' p t 0, Inr t, [(uv,b.binder_ty)]
@@ -123,14 +123,14 @@ let maybe_infer_intro_exists
   : T.Tac st_term
   = let remove_pure_conjuncts t =
         let rest, pure = 
-            List.Tot.partition
-              (function Tm_Pure _ | Tm_Emp -> false | _ -> true)
+            List.Tot.partition #term
+              (function {t=Tm_Pure _} | {t=Tm_Emp} -> false | _ -> true)
               (vprop_as_list t)
         in
         let rest =
           match list_as_vprop rest with
-          | Tm_Star t Tm_Emp -> t
-          | Tm_Star Tm_Emp t -> t        
+          | {t=Tm_Star t {t=Tm_Emp}} -> t
+          | {t=Tm_Star {t=Tm_Emp} t} -> t        
           | t -> t
         in
         rest, pure
@@ -157,7 +157,7 @@ let maybe_infer_intro_exists
     //       (Pulse.Checker.Inference.solutions_to_string solutions));
     let maybe_solve_pure solutions p =
       let p = Pulse.Checker.Inference.apply_solution solutions p in
-      match p with
+      match p.t with
       | Tm_Pure p -> (
         let sols = Pulse.Checker.Inference.try_solve_pure_equalities g p in
         sols @ solutions
@@ -215,7 +215,7 @@ let maybe_infer_intro_exists
     let pure_conjuncts =
       T.map 
        (fun vp -> 
-          match Pulse.Checker.Inference.apply_solution solutions vp with
+          match (Pulse.Checker.Inference.apply_solution solutions vp).t with
           | Tm_Pure p -> [p]
           | p -> [])
        pure_conjuncts
@@ -239,7 +239,7 @@ let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
   Printf.sprintf 
     "Failed to prove the following goals:\n  \
      %s\n\
-     The remaining conjuncts in the separation logic context are:\n  \
+     The remaining conjuncts in the separation logic context available for use are:\n  \
      %s\n\
      The typing context is:\n  \
      %s\n"
@@ -251,7 +251,7 @@ let handle_framing_failure
     (g:env)
     (t0:st_term)
     (pre:term)
-    (pre_typing: tot_typing g pre Tm_VProp)
+    (pre_typing: tot_typing g pre tm_vprop)
     (post_hint:post_hint_opt g)
     (failure:framing_failure)
     (check:check_t)
@@ -267,22 +267,22 @@ let handle_framing_failure
                       (terms_to_string failure.remaining_context))
     );
     let pures, rest = 
-      L.partition (function Tm_Pure _ -> true | _ -> false) failure.unmatched_preconditions
+      L.partition #term (function {t=Tm_Pure _} -> true | _ -> false) failure.unmatched_preconditions
     in
     let t =
       T.fold_left 
-        (fun t p ->
-          match p with
+        (fun t (p:term) ->
+          match p.t with
           | Tm_Pure p -> add_intro_pure t0.range t p
           | _ -> T.fail "Impossible")
         (wr (Tm_Protect { t = t0 })) //don't elim what we just intro'd here
         pures
     in
-    let rec handle_intro_exists rest (t:st_term)
+    let rec handle_intro_exists (rest:list term) (t:st_term)
       : T.Tac (checker_result_t g pre post_hint)
       = match rest with
         | [] -> check g t pre pre_typing post_hint
-        | Tm_ExistsSL u ty p :: rest ->
+        | {t=Tm_ExistsSL u ty p; range} :: rest ->
           let t = 
               Tm_Bind { 
                 binder = default_binder_annot;
@@ -290,7 +290,7 @@ let handle_framing_failure
                    wr (Tm_Protect {
                           t = wr (Tm_IntroExists {
                                     erased=true;
-                                    p=Tm_ExistsSL u ty p;
+                                    p=with_range (Tm_ExistsSL u ty p) range;
                                     witnesses=[];
                                     should_check=should_check_true
                                   });
@@ -320,7 +320,7 @@ let rec unprotect t =
 #push-options "--ifuel 2"
 
 let elim_then_check (#g:env) (#ctxt:term) 
-                    (ctxt_typing:tot_typing g ctxt Tm_VProp)
+                    (ctxt_typing:tot_typing g ctxt tm_vprop)
                     (st:st_term { not (Tm_Protect? st.term) })
                     (post_hint: post_hint_opt g)
                     (check:check_t)
@@ -341,7 +341,7 @@ let rec check' : bool -> check_t =
       (g:env)
       (t:st_term)
       (pre:term)
-      (pre_typing: tot_typing g pre Tm_VProp)
+      (pre_typing: tot_typing g pre tm_vprop)
       (post_hint:post_hint_opt g) ->
   let open T in
   // T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
@@ -414,7 +414,7 @@ let rec check' : bool -> check_t =
         let should_infer_witnesses =
           match witnesses with
           | [w] -> (
-            match w with
+            match w.t with
             | Tm_Unknown -> true
             | _ -> false
           )

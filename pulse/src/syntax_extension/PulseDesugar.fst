@@ -42,9 +42,9 @@ let as_term (t:S.term)
   : SW.term
   = match t.n with
     | S.Tm_unknown ->
-      SW.tm_unknown
+      SW.tm_unknown t.pos
     | _ -> 
-      SW.tm_expr t
+      SW.tm_expr t t.pos
 
 type env_t = { 
   tcenv: TcEnv.env;
@@ -78,7 +78,7 @@ let stapp_assignment (lhs rhs:S.term) (r:_)
   = let head_fv = S.lid_as_fv assign_lid None in
     let head = S.fv_to_tm head_fv in
     let app = S.mk_Tm_app head [(lhs, None)] lhs.pos in
-    SW.(tm_st_app (tm_expr app) None (as_term rhs) r)
+    SW.(tm_st_app (tm_expr app r) None (as_term rhs) r)
 
 
 let resolve_name (env:env_t) (id:ident)
@@ -169,7 +169,7 @@ let stapp_or_return (env:env_t) (s:S.term)
             then ( //this is an st app
               let head = S.mk_Tm_app head (L.init args) s.pos in
               let last, q = L.last args in
-              STTerm SW.(tm_st_app (tm_expr head) q (as_term last) r)
+              STTerm SW.(tm_st_app (tm_expr head head.pos) q (as_term last) r)
             )
             else (
               //partial app of a stateful function
@@ -208,35 +208,35 @@ let desugar_term (env:env_t) (t:A.term)
 let desugar_term_opt (env:env_t) (t:option A.term)
   : err SW.term
   = match t with
-    | None -> return SW.tm_unknown
+    | None -> return (SW.tm_unknown FStar.Compiler.Range.dummyRange)
     | Some e -> desugar_term env e
 
-let rec interpret_vprop_constructors (env:env_t) (v:S.term)
+let interpret_vprop_constructors (env:env_t) (v:S.term)
   : SW.term
   = let head, args = U.head_and_args_full v in
     match head.n, args with
     | S.Tm_fvar fv, [(l, _)]
       when S.fv_eq_lid fv pure_lid ->
-      let res = SW.tm_pure (as_term l) in
+      let res = SW.tm_pure (as_term l) v.pos in
       res
       
 
     | S.Tm_fvar fv, []
       when S.fv_eq_lid fv emp_lid ->
-      SW.tm_emp
+      SW.tm_emp v.pos
       
     | _ -> as_term v
   
 let rec desugar_vprop (env:env_t) (v:Sugar.vprop)
   : err SW.vprop
-  = match v with
+  = match v.v with
     | Sugar.VPropTerm t -> 
       let? t = tosyntax env t in
       return (interpret_vprop_constructors env t)
     | Sugar.VPropStar (v1, v2) ->
       let? v1 = desugar_vprop env v1 in
       let? v2 = desugar_vprop env v2 in
-      return (SW.tm_star v1 v2)
+      return (SW.tm_star v1 v2 v.vrange)
     | Sugar.VPropExists { binders; body } ->
       let rec aux env binders
         : err SW.vprop =
@@ -249,7 +249,7 @@ let rec desugar_vprop (env:env_t) (v:Sugar.vprop)
           let? body = aux env bs in
           let body = SW.close_term body bv.index in
           let b = SW.mk_binder i t in
-          return (SW.tm_exists b body)
+          return (SW.tm_exists b body v.vrange)
       in
       aux env binders
 
@@ -302,7 +302,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? else_ = 
         match else_opt with
         | None -> 
-          return (tm_return (tm_expr S.unit_const) R.dummyRange)
+          return (tm_return (tm_expr S.unit_const R.dummyRange) R.dummyRange)
         | Some e -> 
           desugar_stmt env e
       in
@@ -322,7 +322,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       return (SW.tm_while guard (id, invariant) body s.range)
 
     | Introduce { vprop; witnesses } -> (
-      match vprop with
+      match vprop.v with
       | VPropTerm _ ->
         fail "introduce expects an existential formula" s.range
       | VPropExists _ ->
@@ -386,7 +386,7 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
   : err SW.st_term
   = let? s1 = desugar_stmt env s1 in
     let? s2 = desugar_stmt env s2 in
-    let annot = SW.mk_binder (Ident.id_of_text "_") SW.tm_unknown in
+    let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
     return (mk_bind annot s1 s2 r)
 
 let explicit_rvalues (env:env_t) (s:Sugar.stmt)
@@ -451,7 +451,7 @@ let desugar_decl (env:env_t)
       | (q, b)::bs, bv::bvs ->
         let? body = aux bs bvs in
         let body = SW.close_st_term body bv.index in
-        return (SW.tm_abs b q SW.tm_emp body None None p.range)
+        return (SW.tm_abs b q (SW.tm_emp p.range) body None None p.range)
       | _ -> fail "Unexpected empty binders in decl" r_
     in
     aux bs bvs

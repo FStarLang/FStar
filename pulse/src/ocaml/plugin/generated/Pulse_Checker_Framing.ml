@@ -127,11 +127,11 @@ let (__proj__Mkmatch_result__item__unmatched_q :
           | { matched; unmatched_p; unmatched_q; p_eq; q_eq;_} -> unmatched_q
 let (equational : Pulse_Syntax_Base.term -> Prims.bool) =
   fun t ->
-    match t with
-    | Pulse_Syntax_Base.Tm_FStar (host_term, uu___) ->
+    match t.Pulse_Syntax_Base.t with
+    | Pulse_Syntax_Base.Tm_FStar host_term ->
         (match FStar_Reflection_Builtins.inspect_ln host_term with
-         | FStar_Reflection_Data.Tv_Match (uu___1, uu___2, uu___3) -> true
-         | uu___1 -> false)
+         | FStar_Reflection_Data.Tv_Match (uu___, uu___1, uu___2) -> true
+         | uu___ -> false)
     | uu___ -> false
 let (check_one_vprop :
   Pulse_Typing_Env.env ->
@@ -714,7 +714,7 @@ let rec (check_equiv_emp :
   =
   fun g ->
     fun vp ->
-      match vp with
+      match vp.Pulse_Syntax_Base.t with
       | Pulse_Syntax_Base.Tm_Emp -> FStar_Pervasives_Native.Some ()
       | Pulse_Syntax_Base.Tm_Star (vp1, vp2) ->
           (match ((check_equiv_emp g vp1), (check_equiv_emp g vp2)) with

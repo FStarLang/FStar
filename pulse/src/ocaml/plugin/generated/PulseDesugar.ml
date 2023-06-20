@@ -26,8 +26,9 @@ let rec map_err :
 let (as_term : FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.term) =
   fun t ->
     match t.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_unknown -> PulseSyntaxWrapper.tm_unknown
-    | uu___ -> PulseSyntaxWrapper.tm_expr t
+    | FStar_Syntax_Syntax.Tm_unknown ->
+        PulseSyntaxWrapper.tm_unknown t.FStar_Syntax_Syntax.pos
+    | uu___ -> PulseSyntaxWrapper.tm_expr t t.FStar_Syntax_Syntax.pos
 type env_t =
   {
   tcenv: FStar_TypeChecker_Env.env ;
@@ -282,7 +283,7 @@ let (stapp_assignment :
         let app =
           FStar_Syntax_Syntax.mk_Tm_app head
             [(lhs, FStar_Pervasives_Native.None)] lhs.FStar_Syntax_Syntax.pos in
-        let uu___ = PulseSyntaxWrapper.tm_expr app in
+        let uu___ = PulseSyntaxWrapper.tm_expr app r in
         let uu___1 = as_term rhs in
         PulseSyntaxWrapper.tm_st_app uu___ FStar_Pervasives_Native.None
           uu___1 r
@@ -435,7 +436,8 @@ let (stapp_or_return :
                                    | (last, q) ->
                                        let uu___10 =
                                          let uu___11 =
-                                           PulseSyntaxWrapper.tm_expr head1 in
+                                           PulseSyntaxWrapper.tm_expr head1
+                                             head1.FStar_Syntax_Syntax.pos in
                                          let uu___12 = as_term last in
                                          PulseSyntaxWrapper.tm_st_app uu___11
                                            q uu___12 r in
@@ -490,9 +492,13 @@ let (desugar_term_opt :
   fun env ->
     fun t ->
       match t with
-      | FStar_Pervasives_Native.None -> return PulseSyntaxWrapper.tm_unknown
+      | FStar_Pervasives_Native.None ->
+          let uu___ =
+            PulseSyntaxWrapper.tm_unknown
+              FStar_Compiler_Range_Type.dummyRange in
+          return uu___
       | FStar_Pervasives_Native.Some e -> desugar_term env e
-let rec (interpret_vprop_constructors :
+let (interpret_vprop_constructors :
   env_t -> FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.term) =
   fun env ->
     fun v ->
@@ -503,17 +509,18 @@ let rec (interpret_vprop_constructors :
            | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
                FStar_Syntax_Syntax.fv_eq_lid fv pure_lid ->
                let res =
-                 let uu___2 = as_term l in PulseSyntaxWrapper.tm_pure uu___2 in
+                 let uu___2 = as_term l in
+                 PulseSyntaxWrapper.tm_pure uu___2 v.FStar_Syntax_Syntax.pos in
                res
            | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                FStar_Syntax_Syntax.fv_eq_lid fv emp_lid ->
-               PulseSyntaxWrapper.tm_emp
+               PulseSyntaxWrapper.tm_emp v.FStar_Syntax_Syntax.pos
            | uu___1 -> as_term v)
 let rec (desugar_vprop :
   env_t -> PulseSugar.vprop -> PulseSyntaxWrapper.vprop err) =
   fun env ->
     fun v ->
-      match v with
+      match v.PulseSugar.v with
       | PulseSugar.VPropTerm t ->
           let uu___ = tosyntax env t in
           op_let_Question uu___
@@ -527,7 +534,8 @@ let rec (desugar_vprop :
                let uu___1 = desugar_vprop env v2 in
                op_let_Question uu___1
                  (fun v21 ->
-                    let uu___2 = PulseSyntaxWrapper.tm_star v11 v21 in
+                    let uu___2 =
+                      PulseSyntaxWrapper.tm_star v11 v21 v.PulseSugar.vrange in
                     return uu___2))
       | PulseSugar.VPropExists
           { PulseSugar.binders = binders; PulseSugar.body = body;_} ->
@@ -549,7 +557,8 @@ let rec (desugar_vprop :
                                   bv.FStar_Syntax_Syntax.index in
                               let b = PulseSyntaxWrapper.mk_binder i t1 in
                               let uu___4 =
-                                PulseSyntaxWrapper.tm_exists b body2 in
+                                PulseSyntaxWrapper.tm_exists b body2
+                                  v.PulseSugar.vrange in
                               return uu___4)) in
           aux env binders
 let (mk_totbind :
@@ -644,7 +653,8 @@ let rec (desugar_stmt :
                                let uu___4 =
                                  let uu___5 =
                                    PulseSyntaxWrapper.tm_expr
-                                     FStar_Syntax_Syntax.unit_const in
+                                     FStar_Syntax_Syntax.unit_const
+                                     FStar_Compiler_Range_Type.dummyRange in
                                  PulseSyntaxWrapper.tm_return uu___5
                                    FStar_Compiler_Range_Type.dummyRange in
                                return uu___4
@@ -690,7 +700,7 @@ let rec (desugar_stmt :
                          return uu___3)))
       | PulseSugar.Introduce
           { PulseSugar.vprop = vprop; PulseSugar.witnesses = witnesses;_} ->
-          (match vprop with
+          (match vprop.PulseSugar.v with
            | PulseSugar.VPropTerm uu___ ->
                fail "introduce expects an existential formula"
                  s.PulseSugar.range1
@@ -829,8 +839,8 @@ and (desugar_sequence :
                  (fun s21 ->
                     let annot =
                       let uu___2 = FStar_Ident.id_of_text "_" in
-                      PulseSyntaxWrapper.mk_binder uu___2
-                        PulseSyntaxWrapper.tm_unknown in
+                      let uu___3 = PulseSyntaxWrapper.tm_unknown r in
+                      PulseSyntaxWrapper.mk_binder uu___2 uu___3 in
                     let uu___2 = mk_bind annot s11 s21 r in return uu___2))
 let (explicit_rvalues : env_t -> PulseSugar.stmt -> PulseSugar.stmt) =
   fun env -> fun s -> s
@@ -985,9 +995,11 @@ let (desugar_decl :
                                       PulseSyntaxWrapper.close_st_term body1
                                         bv.FStar_Syntax_Syntax.index in
                                     let uu___5 =
-                                      PulseSyntaxWrapper.tm_abs b q
-                                        PulseSyntaxWrapper.tm_emp body2
-                                        FStar_Pervasives_Native.None
+                                      let uu___6 =
+                                        PulseSyntaxWrapper.tm_emp
+                                          p.PulseSugar.range2 in
+                                      PulseSyntaxWrapper.tm_abs b q uu___6
+                                        body2 FStar_Pervasives_Native.None
                                         FStar_Pervasives_Native.None
                                         p.PulseSugar.range2 in
                                     return uu___5)

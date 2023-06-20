@@ -32,7 +32,7 @@ let (dom : env -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun g -> FStar_Map.domain (as_map g)
 type ('g1, 'g2) equal = unit
 let (empty_bmap : bmap) =
-  FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Base.Tm_Unknown
+  FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Base.tm_unknown
 let (default_context : Pulse_RuntimeUtils.context) = FStar_Sealed.seal []
 let (mk_env : FStar_Reflection_Typing.fstar_top_env -> env) =
   fun f -> { f; bs = []; names = []; m = empty_bmap; ctxt = default_context }
@@ -114,7 +114,7 @@ let rec (remove_binding_aux :
                 let m =
                   FStar_Map.restrict
                     (FStar_Set.complement (FStar_Set.singleton x))
-                    (FStar_Map.upd g.m x Pulse_Syntax_Base.Tm_Unknown) in
+                    (FStar_Map.upd g.m x Pulse_Syntax_Base.tm_unknown) in
                 let g' =
                   {
                     f = (g.f);
@@ -139,7 +139,7 @@ let (remove_latest_binding :
     | (x, t)::rest ->
         let m =
           FStar_Map.restrict (FStar_Set.complement (FStar_Set.singleton x))
-            (FStar_Map.upd g.m x Pulse_Syntax_Base.Tm_Unknown) in
+            (FStar_Map.upd g.m x Pulse_Syntax_Base.tm_unknown) in
         let g' =
           {
             f = (g.f);

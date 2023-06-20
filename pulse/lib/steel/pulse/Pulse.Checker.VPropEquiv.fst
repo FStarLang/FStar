@@ -5,8 +5,8 @@ open FStar.List.Tot
 
 
 let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
-  : GTot ((tot_typing g t0 Tm_VProp -> tot_typing g t1 Tm_VProp) &
-          (tot_typing g t1 Tm_VProp -> tot_typing g t0 Tm_VProp))
+  : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
+          (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
         (decreases v)
   = match v with
     | VE_Refl _ _ -> (fun x -> x), (fun x -> x)
@@ -24,15 +24,15 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
     | VE_Ctxt g s0 s1 s0' s1' v0 v1 ->
       let f0, f0' = vprop_equiv_typing v0 in
       let f1, f1' = vprop_equiv_typing v1 in      
-      let ff (x:tot_typing g (Tm_Star s0 s1) Tm_VProp)
-        : tot_typing g (Tm_Star s0' s1') Tm_VProp
+      let ff (x:tot_typing g (tm_star s0 s1) tm_vprop)
+        : tot_typing g (tm_star s0' s1') tm_vprop
         = let s0_typing = star_typing_inversion_l x in
           let s1_typing = star_typing_inversion_r x in
           let s0'_typing, s1'_typing = f0 s0_typing, f1 s1_typing in
           star_typing s0'_typing s1'_typing
       in
-      let gg (x:tot_typing g (Tm_Star s0' s1') Tm_VProp)
-        : tot_typing g (Tm_Star s0 s1) Tm_VProp
+      let gg (x:tot_typing g (tm_star s0' s1') tm_vprop)
+        : tot_typing g (tm_star s0 s1) tm_vprop
         = let s0'_typing = star_typing_inversion_l x in
           let s1'_typing = star_typing_inversion_r x in
           star_typing (f0' s0'_typing) (f1' s1'_typing)        
@@ -40,20 +40,20 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       ff, gg
 
     | VE_Unit g t ->
-      let fwd (x:tot_typing g (Tm_Star Tm_Emp t) Tm_VProp)
-        : tot_typing g t Tm_VProp
+      let fwd (x:tot_typing g (tm_star tm_emp t) tm_vprop)
+        : tot_typing g t tm_vprop
         = let r = star_typing_inversion_r x in
           r
       in
-      let bk (x:tot_typing g t Tm_VProp)
-        : tot_typing g (Tm_Star Tm_Emp t) Tm_VProp
+      let bk (x:tot_typing g t tm_vprop)
+        : tot_typing g (tm_star tm_emp t) tm_vprop
         = star_typing emp_typing x
       in
       fwd, bk
 
     | VE_Comm g t0 t1 ->
-      let f t0 t1 (x:tot_typing g (Tm_Star t0 t1) Tm_VProp)
-        : tot_typing g (Tm_Star t1 t0) Tm_VProp
+      let f t0 t1 (x:tot_typing g (tm_star t0 t1) tm_vprop)
+        : tot_typing g (tm_star t1 t0) tm_vprop
         = let tt0 = star_typing_inversion_l x in
           let tt1 = star_typing_inversion_r x in
           star_typing tt1 tt0
@@ -61,16 +61,16 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       f t0 t1, f t1 t0
 
     | VE_Assoc g t0 t1 t2 ->
-      let fwd (x:tot_typing g (Tm_Star t0 (Tm_Star t1 t2)) Tm_VProp)
-        : tot_typing g (Tm_Star (Tm_Star t0 t1) t2) Tm_VProp
+      let fwd (x:tot_typing g (tm_star t0 (tm_star t1 t2)) tm_vprop)
+        : tot_typing g (tm_star (tm_star t0 t1) t2) tm_vprop
         = let tt0 = star_typing_inversion_l x in
           let tt12 = star_typing_inversion_r x in
           let tt1 = star_typing_inversion_l tt12 in
           let tt2 = star_typing_inversion_r tt12 in
           star_typing (star_typing tt0 tt1) tt2
       in
-      let bk (x : tot_typing g (Tm_Star (Tm_Star t0 t1) t2) Tm_VProp)
-        : tot_typing g (Tm_Star t0 (Tm_Star t1 t2)) Tm_VProp
+      let bk (x : tot_typing g (tm_star (tm_star t0 t1) t2) tm_vprop)
+        : tot_typing g (tm_star t0 (tm_star t1 t2)) tm_vprop
         = let tt01 = star_typing_inversion_l x in
           let tt2 = star_typing_inversion_r x in
           let tt0 = star_typing_inversion_l tt01 in
@@ -87,7 +87,7 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
 
 let rec vprop_as_list (vp:term)
   : list term
-  = match vp with
+  = match vp.t with
     | Tm_Emp -> []
     | Tm_Star vp0 vp1 -> vprop_as_list vp0 @ vprop_as_list vp1
     | _ -> [vp]
@@ -95,32 +95,32 @@ let rec vprop_as_list (vp:term)
 let rec list_as_vprop (vps:list term)
   : term
   = match vps with
-    | [] -> Tm_Emp
-    | hd::tl -> Tm_Star hd (list_as_vprop tl)
+    | [] -> tm_emp
+    | hd::tl -> tm_star hd (list_as_vprop tl)
 
 
-let ve_unit_r g (p:term) : vprop_equiv g (Tm_Star p Tm_Emp) p = 
+let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p = 
   VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _)
       
 let rec list_as_vprop_append g (vp0 vp1:list term)
   : GTot (vprop_equiv g (list_as_vprop (vp0 @ vp1))
-                        (Tm_Star (list_as_vprop vp0) 
+                        (tm_star (list_as_vprop vp0) 
                                  (list_as_vprop vp1)))
          (decreases vp0)
   = match vp0 with
     | [] -> 
       let v : vprop_equiv g (list_as_vprop vp1)
-                            (Tm_Star Tm_Emp (list_as_vprop vp1)) = VE_Sym _ _ _ (VE_Unit _ _)
+                            (tm_star tm_emp (list_as_vprop vp1)) = VE_Sym _ _ _ (VE_Unit _ _)
       in
       v
     | hd::tl ->
       let tl_vp1 = list_as_vprop_append g tl vp1 in
       let d : vprop_equiv g (list_as_vprop (vp0 @ vp1))
-                              (Tm_Star hd (Tm_Star (list_as_vprop tl) (list_as_vprop vp1)))
+                              (tm_star hd (tm_star (list_as_vprop tl) (list_as_vprop vp1)))
             = VE_Ctxt _ _ _ _ _ (VE_Refl _ hd) tl_vp1
       in
       let d : vprop_equiv g (list_as_vprop (vp0 @ vp1))
-                              (Tm_Star (Tm_Star hd (list_as_vprop tl)) (list_as_vprop vp1))
+                              (tm_star (tm_star hd (list_as_vprop tl)) (list_as_vprop vp1))
             = VE_Trans _ _ _ _ d (VE_Assoc _ _ _ _) in
       d
 
@@ -153,30 +153,30 @@ let list_as_vprop_singleton g
   (p q:term)
   (d:vprop_equiv g p q)
   : GTot (vprop_equiv g (list_as_vprop [p]) (list_as_vprop [q]))
-  = VE_Ctxt _ p Tm_Emp q Tm_Emp d (VE_Refl _ Tm_Emp)
+  = VE_Ctxt _ p tm_emp q tm_emp d (VE_Refl _ tm_emp)
 
 let rec vprop_list_equiv (g:env)
                          (vp:term)
   : GTot (vprop_equiv g vp (canon_vprop vp))
          (decreases vp)
-  = match vp with
+  = match vp.t with
     | Tm_Emp -> VE_Refl _ _
     | Tm_Star vp0 vp1 ->
       let eq0 = vprop_list_equiv g vp0 in
       let eq1 = vprop_list_equiv g vp1 in      
       let app_eq
-        : vprop_equiv _ (canon_vprop vp) (Tm_Star (canon_vprop vp0) (canon_vprop vp1))
+        : vprop_equiv _ (canon_vprop vp) (tm_star (canon_vprop vp0) (canon_vprop vp1))
         = list_as_vprop_append g (vprop_as_list vp0) (vprop_as_list vp1)
       in
       let step
-        : vprop_equiv _ vp (Tm_Star (canon_vprop vp0) (canon_vprop vp1))
+        : vprop_equiv _ vp (tm_star (canon_vprop vp0) (canon_vprop vp1))
         = VE_Ctxt _ _ _ _ _ eq0 eq1
       in
       VE_Trans _ _ _ _ step (VE_Sym _ _ _ app_eq)
       
     | _ -> 
       VE_Sym _ _ _
-        (VE_Trans _ _ _ _ (VE_Comm g vp Tm_Emp) (VE_Unit _ vp))
+        (VE_Trans _ _ _ _ (VE_Comm g vp tm_emp) (VE_Unit _ vp))
 
 let vprop_equiv_swap_equiv (g:_)
                           (l0 l2:list term)
@@ -207,26 +207,26 @@ let vprop_equiv_swap_equiv (g:_)
 let vprop_equiv_split_frame (g:_) (ctxt req:term) (frame:list term)
                             (veq:vprop_equiv g (list_as_vprop (vprop_as_list req @ frame))
                                                (list_as_vprop (vprop_as_list ctxt)))                                             
-  : vprop_equiv g (Tm_Star req (list_as_vprop frame)) ctxt
+  : vprop_equiv g (tm_star req (list_as_vprop frame)) ctxt
   = let ctxt_l = vprop_as_list ctxt in
     let req_l = vprop_as_list req in
     let veq : vprop_equiv g (list_as_vprop (req_l @ frame))
                             (list_as_vprop ctxt_l) = veq in
     let d1 
-        : vprop_equiv _ (Tm_Star (canon_vprop req) (list_as_vprop frame))
+        : vprop_equiv _ (tm_star (canon_vprop req) (list_as_vprop frame))
                         (list_as_vprop (req_l @ frame))
         = VE_Sym _ _ _ (list_as_vprop_append g req_l frame)
     in
     let d1 
-        : vprop_equiv _ (Tm_Star req (list_as_vprop frame))
+        : vprop_equiv _ (tm_star req (list_as_vprop frame))
                         (list_as_vprop (req_l @ frame))
         = VE_Trans _ _ _ _ (VE_Ctxt _ _ _ _ _ (vprop_list_equiv g req) (VE_Refl _ _)) d1
     in
-    let d : vprop_equiv  _ (Tm_Star req (list_as_vprop frame))
+    let d : vprop_equiv  _ (tm_star req (list_as_vprop frame))
                             (canon_vprop ctxt) =
         VE_Trans _ _ _ _ d1 veq
     in
-    let d : vprop_equiv _ (Tm_Star req (list_as_vprop frame))
+    let d : vprop_equiv _ (tm_star req (list_as_vprop frame))
                             ctxt =
         VE_Trans _ _ _ _ d (VE_Sym _ _ _ (vprop_list_equiv g ctxt))
     in

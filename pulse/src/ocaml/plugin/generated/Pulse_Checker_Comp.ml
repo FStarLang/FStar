@@ -138,7 +138,7 @@ let (check_comp :
                                                                     Prims.op_Negation
                                                                     (Pulse_Syntax_Base.eq_tm
                                                                     ty
-                                                                    Pulse_Syntax_Base.Tm_VProp)
+                                                                    Pulse_Syntax_Base.tm_vprop)
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -212,7 +212,7 @@ let (check_comp :
                                               if
                                                 Prims.op_Negation
                                                   (Pulse_Syntax_Base.eq_tm ty
-                                                     Pulse_Syntax_Base.Tm_Inames)
+                                                     Pulse_Syntax_Base.tm_inames)
                                               then
                                                 Obj.magic
                                                   (Obj.repr
@@ -264,7 +264,7 @@ let (check_comp :
                                               if
                                                 Prims.op_Negation
                                                   (Pulse_Syntax_Base.eq_tm ty
-                                                     Pulse_Syntax_Base.Tm_Inames)
+                                                     Pulse_Syntax_Base.tm_inames)
                                               then
                                                 Obj.magic
                                                   (Obj.repr

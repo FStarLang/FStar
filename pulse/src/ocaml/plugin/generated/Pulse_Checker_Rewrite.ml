@@ -23,7 +23,7 @@ let (check_rewrite :
               (FStar_Tactics_Effect.lift_div_tac
                  (fun uu___ ->
                     Pulse_Checker_Pure.push_context "check_rewrite"
-                      t.Pulse_Syntax_Base.range1 g))
+                      t.Pulse_Syntax_Base.range2 g))
               (fun uu___ ->
                  (fun g1 ->
                     Obj.magic

@@ -24,8 +24,8 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
         T.print (Printf.sprintf "About to check pulse term:\n%s\n" (P.st_term_to_string t))
       );
       let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_term g pre in
-      if eq_tm ty Tm_VProp
-      then let pre_typing : tot_typing g pre Tm_VProp = E pre_typing in
+      if eq_tm ty tm_vprop
+      then let pre_typing : tot_typing g pre tm_vprop = E pre_typing in
            let (| t, c, t_typing |) = check g t pre pre_typing None in
            let refl_e = elab_st_typing t_typing in
            let refl_t = elab_comp c in
@@ -45,7 +45,7 @@ let check_pulse (namespaces:list string)
   = fun env ->
       match Pulse.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
       | Inl st_term ->
-        main st_term Tm_Emp env
+        main st_term tm_emp env
       | Inr (msg, range) ->
         T.fail (Printf.sprintf "%s: %s"
                   (T.range_to_string range)

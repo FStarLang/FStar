@@ -164,45 +164,41 @@ let (readback_ty_ascribed :
     match FStar_Reflection_Builtins.inspect_ln t with
     | FStar_Reflection_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
         FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t1, (FStar_Reflection_Builtins.range_of_term t1)))
+          (Pulse_Syntax_Base.tm_fstar t1
+             (FStar_Reflection_Builtins.range_of_term t1))
     | FStar_Reflection_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
         FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t1, (FStar_Reflection_Builtins.range_of_term t1)))
+          (Pulse_Syntax_Base.tm_fstar t1
+             (FStar_Reflection_Builtins.range_of_term t1))
 let rec (readback_ty :
   FStar_Reflection_Types.term ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
   =
   fun t ->
+    let w res =
+      Pulse_Syntax_Base.with_range res (Pulse_RuntimeUtils.range_of_term t) in
+    let return res = FStar_Pervasives_Native.Some (w res) in
     match FStar_Reflection_Builtins.inspect_ln t with
     | FStar_Reflection_Data.Tv_FVar fv ->
         let fv_lid = FStar_Reflection_Builtins.inspect_fv fv in
         if fv_lid = Pulse_Reflection_Util.vprop_lid
-        then FStar_Pervasives_Native.Some Pulse_Syntax_Base.Tm_VProp
+        then return Pulse_Syntax_Base.Tm_VProp
         else
           if fv_lid = Pulse_Reflection_Util.emp_lid
-          then FStar_Pervasives_Native.Some Pulse_Syntax_Base.Tm_Emp
+          then return Pulse_Syntax_Base.Tm_Emp
           else
             if fv_lid = Pulse_Reflection_Util.inames_lid
-            then FStar_Pervasives_Native.Some Pulse_Syntax_Base.Tm_Inames
+            then return Pulse_Syntax_Base.Tm_Inames
             else
               if fv_lid = Pulse_Reflection_Util.emp_inames_lid
-              then
-                FStar_Pervasives_Native.Some Pulse_Syntax_Base.Tm_EmpInames
-              else
-                FStar_Pervasives_Native.Some
-                  (Pulse_Syntax_Base.Tm_FStar
-                     (t, (FStar_Reflection_Builtins.range_of_term t)))
+              then return Pulse_Syntax_Base.Tm_EmpInames
+              else return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_App (hd, (a, q)) ->
         let aux uu___ =
           match q with
           | FStar_Reflection_Data.Q_Meta uu___1 ->
               FStar_Pervasives_Native.None
-          | uu___1 ->
-              FStar_Pervasives_Native.Some
-                (Pulse_Syntax_Base.Tm_FStar
-                   (t, (FStar_Reflection_Builtins.range_of_term t))) in
+          | uu___1 -> return (Pulse_Syntax_Base.Tm_FStar t) in
         let uu___ = collect_app_refined t in
         (match uu___ with
          | (head, args) ->
@@ -217,8 +213,7 @@ let rec (readback_ty :
                       (fun t1 ->
                          op_let_Question (readback_ty a2)
                            (fun t2 ->
-                              FStar_Pervasives_Native.Some
-                                (Pulse_Syntax_Base.Tm_Star (t1, t2))))
+                              return (Pulse_Syntax_Base.Tm_Star (t1, t2))))
                   else aux ()
               | (FStar_Reflection_Data.Tv_UInst (fv, u::[]),
                  (a1, uu___1)::(a2, uu___2)::[]) ->
@@ -258,16 +253,17 @@ let rec (readback_ty :
                                         (Pulse_Syntax_Base.mk_ppname ppname
                                            range)
                                     } in
-                                  let pulse_t =
-                                    if
-                                      (FStar_Reflection_Builtins.inspect_fv
-                                         fv)
-                                        = Pulse_Reflection_Util.exists_lid
-                                    then
-                                      Pulse_Syntax_Base.Tm_ExistsSL (u, b, p)
-                                    else
-                                      Pulse_Syntax_Base.Tm_ForallSL (u, b, p) in
-                                  FStar_Pervasives_Native.Some pulse_t))
+                                  if
+                                    (FStar_Reflection_Builtins.inspect_fv fv)
+                                      = Pulse_Reflection_Util.exists_lid
+                                  then
+                                    return
+                                      (Pulse_Syntax_Base.Tm_ExistsSL
+                                         (u, b, p))
+                                  else
+                                    return
+                                      (Pulse_Syntax_Base.Tm_ForallSL
+                                         (u, b, p))))
                   else aux ()
               | (FStar_Reflection_Data.Tv_FVar fv, (a1, uu___1)::[]) ->
                   if
@@ -275,48 +271,28 @@ let rec (readback_ty :
                       Pulse_Reflection_Util.pure_lid
                   then
                     op_let_Question (readback_ty a1)
-                      (fun t1 ->
-                         FStar_Pervasives_Native.Some
-                           (Pulse_Syntax_Base.Tm_Pure t1))
+                      (fun t1 -> return (Pulse_Syntax_Base.Tm_Pure t1))
                   else aux ()
               | uu___1 -> aux ()))
     | FStar_Reflection_Data.Tv_Refine (uu___, uu___1, uu___2) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_Arrow (uu___, uu___1) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_Type uu___ ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_Const uu___ ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_Let
         (uu___, uu___1, uu___2, uu___3, uu___4, uu___5) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_Var uu___ ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_BVar uu___ ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_UInst (uu___, uu___1) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_Match (uu___, uu___1, uu___2) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.Tm_FStar
-             (t, (FStar_Reflection_Builtins.range_of_term t)))
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_Data.Tv_Abs (uu___, uu___1) ->
         FStar_Pervasives_Native.None
     | FStar_Reflection_Data.Tv_Uvar (uu___, uu___1) ->
@@ -325,8 +301,7 @@ let rec (readback_ty :
         readback_ty_ascribed t
     | FStar_Reflection_Data.Tv_AscribedC (uu___, uu___1, uu___2, uu___3) ->
         readback_ty_ascribed t
-    | FStar_Reflection_Data.Tv_Unknown ->
-        FStar_Pervasives_Native.Some Pulse_Syntax_Base.Tm_Unknown
+    | FStar_Reflection_Data.Tv_Unknown -> return Pulse_Syntax_Base.Tm_Unknown
     | FStar_Reflection_Data.Tv_Unsupp -> FStar_Pervasives_Native.None
 let (readback_comp :
   FStar_Reflection_Types.term ->

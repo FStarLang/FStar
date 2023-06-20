@@ -7,7 +7,7 @@ let (should_elim_exists :
        Obj.magic
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
-               match v with
+               match v.Pulse_Syntax_Base.t with
                | Pulse_Syntax_Base.Tm_ExistsSL (uu___1, uu___2, uu___3) ->
                    true
                | uu___1 -> false))) uu___
@@ -29,7 +29,7 @@ let (mk :
                Obj.magic
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
-                       match v with
+                       match v.Pulse_Syntax_Base.t with
                        | Pulse_Syntax_Base.Tm_ExistsSL
                            (u,
                             { Pulse_Syntax_Base.binder_ty = t;
@@ -43,15 +43,14 @@ let (mk :
                                      (Pulse_Syntax_Base.Tm_ElimExists
                                         {
                                           Pulse_Syntax_Base.p1 =
-                                            (Pulse_Syntax_Base.Tm_ExistsSL
-                                               ((Pulse_Syntax_Base.comp_u
-                                                   (Pulse_Typing.comp_elim_exists
-                                                      u t p
-                                                      (nm,
-                                                        (Pulse_Typing_Env.fresh
-                                                           g)))),
-                                                 (Pulse_Typing.as_binder t),
-                                                 p))
+                                            (Pulse_Syntax_Base.tm_exists_sl
+                                               (Pulse_Syntax_Base.comp_u
+                                                  (Pulse_Typing.comp_elim_exists
+                                                     u t p
+                                                     (nm,
+                                                       (Pulse_Typing_Env.fresh
+                                                          g))))
+                                               (Pulse_Typing.as_binder t) p)
                                         })),
                                   (Pulse_Typing.comp_elim_exists u t p
                                      (nm, (Pulse_Typing_Env.fresh g))),

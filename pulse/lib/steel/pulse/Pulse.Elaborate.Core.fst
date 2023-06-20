@@ -123,7 +123,7 @@ let intro_pure_tm (p:term) =
                        None
                        p;
           arg_qual = None;
-          arg = Tm_FStar (`()) Range.range_0 })
+          arg = tm_fstar (`()) Range.range_0 })
 
 let rec elab_st_typing (#g:env)
                        (#t:st_term)

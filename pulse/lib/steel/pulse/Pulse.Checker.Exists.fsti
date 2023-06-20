@@ -10,7 +10,7 @@ val check_elim_exists
   (g:env)
   (t:st_term{Tm_ElimExists? t.term})
   (pre:term)
-  (pre_typing:tot_typing g pre Tm_VProp)
+  (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   : T.Tac (checker_result_t g pre post_hint)
 
@@ -26,8 +26,8 @@ let intro_exists_vprop (st:st_term { Tm_IntroExists? st.term })  =
 val check_intro_exists_either
   (g:env)
   (st:st_term{intro_exists_witness_singleton st})
-  (vprop_typing: option (tot_typing g (intro_exists_vprop st) Tm_VProp))
+  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   (pre:term)
-  (pre_typing:tot_typing g pre Tm_VProp)
+  (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   : T.Tac (checker_result_t g pre post_hint)

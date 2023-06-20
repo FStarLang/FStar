@@ -214,5 +214,5 @@ let apply_partial_subs_veq (#g0:env) (#p1 #p2:vprop)
 
 let idem_steps (g:env) (ctxt:vprop)
   : t:st_term &
-    st_typing g t (ghost_comp ctxt (Tm_Star (list_as_vprop (vprop_as_list ctxt))
-                                            Tm_Emp)) = admit ()
+    st_typing g t (ghost_comp ctxt (tm_star (list_as_vprop (vprop_as_list ctxt))
+                                            tm_emp)) = admit ()

@@ -141,7 +141,7 @@ let elim_exists_soundness
       (RT.EQ_Beta (RT.extend_env (elab_env g) _ _) rt R.Q_Explicit rp rreveal_x)  in
 
   let comp_equiv = elab_stghost_equiv (elab_env g) c _ _ (RT.EQ_Refl _ _) post_eq in
-  let d = WT.elim_exists_typing x rt_typing rp_typing in
+  let d = WT.elim_exists_typing #_ #u x rt_typing rp_typing in
   RT.T_Sub _ _ _ _ d
     (RT.Relc_typ _ _ _ _ _
        (RT.Rel_equiv _ _ _ _ comp_equiv))

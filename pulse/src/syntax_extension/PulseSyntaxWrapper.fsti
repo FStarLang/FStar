@@ -32,13 +32,13 @@ val tm_bvar (bv:bv) : term
 val tm_var (x:nm) : term
 val tm_fvar (x:fv) : term
 val tm_uinst (l:fv) (us:list universe) : term
-val tm_emp : term
-val tm_pure (p:term) : term
-val tm_star (p0 p1:term) : term
-val tm_exists (b:binder) (body:vprop) : term
-val tm_arrow (b:binder) (q:FStar.Syntax.Syntax.aqual) (body:comp) : term
-val tm_expr (t:FStar.Syntax.Syntax.term) : term
-val tm_unknown : term
+val tm_emp (_:range) : term
+val tm_pure (p:term) (_:range) : term
+val tm_star (p0 p1:term) (_:range) : term
+val tm_exists (b:binder) (body:vprop) (_:range)  : term
+val tm_arrow (b:binder) (q:FStar.Syntax.Syntax.aqual) (body:comp) (_:range)  : term
+val tm_expr (t:FStar.Syntax.Syntax.term) (_:range) : term
+val tm_unknown (_:range)  : term
 val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 val atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp

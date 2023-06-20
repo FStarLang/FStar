@@ -49,7 +49,7 @@ let (check_withlocal :
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Checker_Pure.push_context "check_withlocal"
-                          t.Pulse_Syntax_Base.range1 g))
+                          t.Pulse_Syntax_Base.range2 g))
                   (fun uu___ ->
                      (fun g1 ->
                         Obj.magic
@@ -67,8 +67,8 @@ let (check_withlocal :
                                    fun t0 ->
                                      {
                                        Pulse_Syntax_Base.term1 = t0;
-                                       Pulse_Syntax_Base.range1 =
-                                         (t.Pulse_Syntax_Base.range1)
+                                       Pulse_Syntax_Base.range2 =
+                                         (t.Pulse_Syntax_Base.range2)
                                      }))
                              (fun uu___ ->
                                 (fun wr ->
@@ -234,7 +234,7 @@ let (check_withlocal :
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (body.Pulse_Syntax_Base.range1))
+                                                                    (body.Pulse_Syntax_Base.range2))
                                                                     uu___2))
                                                                     uu___2))
                                                                     else
@@ -458,7 +458,7 @@ let (check_withlocal :
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (body.Pulse_Syntax_Base.range1))
+                                                                    (body.Pulse_Syntax_Base.range2))
                                                                     "withlocal: body is not stt or postcondition mismatch")
                                                                     else
                                                                     Obj.magic

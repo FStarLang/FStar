@@ -15,12 +15,12 @@ module Metatheory = Pulse.Typing.Metatheory
 module RU = Pulse.RuntimeUtils
 
 let while_cond_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
-                           (inv_typing:tot_typing g (Tm_ExistsSL u (as_binder ty) inv_body) Tm_VProp)
+                           (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_vprop)
   : Metatheory.comp_typing_u g (comp_while_cond x inv_body)
   = Metatheory.admit_comp_typing g (comp_while_cond x inv_body)
 
 let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
-                           (inv_typing:tot_typing g (Tm_ExistsSL u (as_binder ty) inv_body) Tm_VProp)
+                           (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_vprop)
   : Metatheory.comp_typing_u g (comp_while_body x inv_body)
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
@@ -30,7 +30,7 @@ let check_while
   (g:env)
   (t:st_term{Tm_While? t.term})
   (pre:term)
-  (pre_typing:tot_typing g pre Tm_VProp)
+  (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (checker_result_t g pre post_hint) =
@@ -38,7 +38,7 @@ let check_while
   let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
   let (| ex_inv, inv_typing |) =
     check_vprop (push_context "invariant" (term_range inv) g) 
-                (Tm_ExistsSL u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv)
+                (tm_exists_sl u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv)
   in
   if RU.debug_at_level (fstar_env g) "inference"
   then (
@@ -47,7 +47,7 @@ let check_while
   match Framing.check_frameable pre_typing ex_inv with
   | Inr f -> T.raise (Framing_failure f)
   | Inl framing_token ->
-    match ex_inv with
+    match ex_inv.t with
     | Tm_ExistsSL u {binder_ppname=nm; binder_ty=ty} inv ->
       if not (eq_tm ty tm_bool) ||
          not (eq_univ u u0)

@@ -37,7 +37,7 @@ let indent (level:string) = level ^ "\t"
     
 let rec term_to_string' (level:string) (t:term)
   : T.Tac string
-  = match t with
+  = match t.t with
     | Tm_Emp -> "emp"
 
     | Tm_Pure p ->
@@ -69,7 +69,7 @@ let rec term_to_string' (level:string) (t:term)
     | Tm_Inames -> "inames"
     | Tm_EmpInames -> "emp_inames"
     | Tm_Unknown -> "_"
-    | Tm_FStar t _ ->
+    | Tm_FStar t ->
       T.term_to_string t
 let term_to_string t = term_to_string' "" t
 
@@ -251,7 +251,7 @@ let st_term_to_string t = st_term_to_string' "" t
 
 
 let tag_of_term (t:term) =
-  match t with
+  match t.t with
   | Tm_Emp -> "Tm_Emp"
   | Tm_Pure _ -> "Tm_Pure"
   | Tm_Star _ _ -> "Tm_Star"
@@ -261,7 +261,7 @@ let tag_of_term (t:term) =
   | Tm_Inames -> "Tm_Inames"
   | Tm_EmpInames -> "Tm_EmpInames"
   | Tm_Unknown -> "Tm_Unknown"
-  | Tm_FStar _ _ -> "Tm_FStar"
+  | Tm_FStar _ -> "Tm_FStar"
 
 let tag_of_st_term (t:st_term) =
   match t.term with

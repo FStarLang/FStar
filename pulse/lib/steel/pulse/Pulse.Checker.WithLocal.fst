@@ -17,11 +17,11 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
   = { p with post = comp_withlocal_body_post p.post init_t (null_var x);
              post_typing = admit() } //star typing intro
 
-let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre Tm_VProp)
+let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_vprop)
                           (init_t:term) (x:var { ~ (Set.mem x (dom g)) }) (i:term)
   : tot_typing (push_binding g x ppname_default (mk_ref init_t))
                (comp_withlocal_body_pre pre init_t (null_var x) i)
-               Tm_VProp
+               tm_vprop
   = admit()
 
 
@@ -31,7 +31,7 @@ let check_withlocal
   (g:env)
   (t:st_term{Tm_WithLocal? t.term})
   (pre:term)
-  (pre_typing:tot_typing g pre Tm_VProp)
+  (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   (check':bool -> check_t)
   : T.Tac (checker_result_t g pre post_hint) =

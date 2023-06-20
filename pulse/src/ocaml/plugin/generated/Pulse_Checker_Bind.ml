@@ -183,7 +183,7 @@ let rec (mk_bind :
                                                           (if
                                                              Pulse_Syntax_Base.eq_tm
                                                                inames
-                                                               Pulse_Syntax_Base.Tm_EmpInames
+                                                               Pulse_Syntax_Base.tm_emp_inames
                                                            then
                                                              Obj.repr
                                                                (FStar_Tactics_Effect.lift_div_tac
@@ -387,7 +387,7 @@ let rec (mk_bind :
                                                           (if
                                                              Pulse_Syntax_Base.eq_tm
                                                                inames
-                                                               Pulse_Syntax_Base.Tm_EmpInames
+                                                               Pulse_Syntax_Base.tm_emp_inames
                                                            then
                                                              Obj.repr
                                                                (FStar_Tactics_Effect.lift_div_tac
@@ -473,7 +473,7 @@ let rec (mk_bind :
                                                           (if
                                                              Pulse_Syntax_Base.eq_tm
                                                                inames
-                                                               Pulse_Syntax_Base.Tm_EmpInames
+                                                               Pulse_Syntax_Base.tm_emp_inames
                                                            then
                                                              FStar_Tactics_Effect.tac_bind
                                                                (FStar_Range.mk_range
@@ -578,7 +578,7 @@ let rec (mk_bind :
                                                           (if
                                                              Pulse_Syntax_Base.eq_tm
                                                                inames
-                                                               Pulse_Syntax_Base.Tm_EmpInames
+                                                               Pulse_Syntax_Base.tm_emp_inames
                                                            then
                                                              FStar_Tactics_Effect.tac_bind
                                                                (FStar_Range.mk_range
@@ -745,7 +745,7 @@ let rec (mk_bind :
                                                           (if
                                                              Pulse_Syntax_Base.eq_tm
                                                                inames
-                                                               Pulse_Syntax_Base.Tm_EmpInames
+                                                               Pulse_Syntax_Base.tm_emp_inames
                                                            then
                                                              FStar_Tactics_Effect.tac_bind
                                                                (FStar_Range.mk_range
@@ -1724,7 +1724,7 @@ let (check_tot_bind :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (e21.Pulse_Syntax_Base.range1))
+                                                                    (e21.Pulse_Syntax_Base.range2))
                                                                     "Tm_TotBind: e2 is not a stateful computation"))
                                                                     else
                                                                     Obj.magic

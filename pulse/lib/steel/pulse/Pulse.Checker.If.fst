@@ -38,7 +38,7 @@ let rec combine_if_branches
       then (| c_then, e_then_typing, e_else_typing |)
       else fail g None "Cannot combine then and else branches (different inames)"
     | C_ST _, C_STAtomic inames _ ->
-      if eq_tm inames Tm_EmpInames
+      if eq_tm inames tm_emp_inames
       then begin
         let e_else_typing =
           T_Lift g_else e_else c_else c_then e_else_typing
@@ -47,7 +47,7 @@ let rec combine_if_branches
       end
       else fail g None "Cannot lift STAtomic else branch to match then"
     | C_STAtomic inames _, C_ST _ ->
-      if eq_tm inames Tm_EmpInames
+      if eq_tm inames tm_emp_inames
       then begin
         let e_then_typing =
           T_Lift g_then e_then c_then c_else e_then_typing
@@ -77,7 +77,7 @@ let check_if (g:env)
              (b:term)
              (e1 e2:st_term)
              (pre:term)
-             (pre_typing: tot_typing g pre Tm_VProp)
+             (pre_typing: tot_typing g pre tm_vprop)
              (post_hint:post_hint_for_env g)
              (check:check_t)
   : T.Tac (checker_result_t g pre (Some post_hint))

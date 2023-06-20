@@ -25,7 +25,7 @@ let (check_stapp :
                      (Prims.of_int (25)) (Prims.of_int (24))
                      (Prims.of_int (91)) (Prims.of_int (117)))
                   (FStar_Tactics_Effect.lift_div_tac
-                     (fun uu___ -> t.Pulse_Syntax_Base.range1))
+                     (fun uu___ -> t.Pulse_Syntax_Base.range2))
                   (fun uu___ ->
                      (fun range ->
                         Obj.magic
@@ -146,7 +146,7 @@ let (check_stapp :
                                                                (fun uu___2 ->
                                                                   Pulse_Checker_Pure.push_context
                                                                     "pure_app"
-                                                                    t.Pulse_Syntax_Base.range1
+                                                                    t.Pulse_Syntax_Base.range2
                                                                     g))
                                                             (fun uu___2 ->
                                                                (fun g1 ->
@@ -229,7 +229,7 @@ let (check_stapp :
                                                                (fun uu___2 ->
                                                                   Pulse_Checker_Pure.push_context
                                                                     "st_app"
-                                                                    t.Pulse_Syntax_Base.range1
+                                                                    t.Pulse_Syntax_Base.range2
                                                                     g))
                                                             (fun uu___2 ->
                                                                (fun g1 ->
@@ -883,7 +883,7 @@ let (check_stapp :
                                                                     (Prims.of_int (44)))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Builtins.range_to_string
-                                                                    t.Pulse_Syntax_Base.range1))
+                                                                    t.Pulse_Syntax_Base.range2))
                                                                     (fun
                                                                     uu___8 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

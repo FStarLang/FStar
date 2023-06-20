@@ -13,7 +13,7 @@ module T = FStar.Tactics
 
 module Psubst = Pulse.Prover.Substs
 
-let vprop_typing (g:env) (t:term) = tot_typing g t Tm_VProp
+let vprop_typing (g:env) (t:term) = tot_typing g t tm_vprop
 
 noeq
 type preamble = {
@@ -62,12 +62,12 @@ type prover_state (preamble:preamble) = {
                 steps
                 (ghost_comp
                    preamble.ctxt
-                   (Tm_Star (list_as_vprop remaining_ctxt) solved_goals));
+                   (tm_star (list_as_vprop remaining_ctxt) solved_goals));
 
   c_pre_inv
     : vprop_equiv (pst_env preamble.uvs ss)
                   (Psubst.subst_term ss (comp_pre preamble.c))
-                  (Tm_Star (list_as_vprop unsolved_goals) solved_goals);
+                  (tm_star (list_as_vprop unsolved_goals) solved_goals);
 
   solved_goals_closed : squash (freevars solved_goals `Set.subset`
                                 dom preamble.g0);

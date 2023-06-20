@@ -33,14 +33,14 @@ val all_matches (g:env) (p q:list vprop)
 val check_vprop_equiv
   (g:env)
   (vp1 vp2:term)
-  (vp1_typing:tot_typing g vp1 Tm_VProp)
+  (vp1_typing:tot_typing g vp1 tm_vprop)
   : T.Tac (vprop_equiv g vp1 vp2)
 
 
 let frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term)
    = (frame:term &
-      tot_typing g frame Tm_VProp &
-      vprop_equiv g (Tm_Star req frame) ctxt)
+      tot_typing g frame tm_vprop &
+      vprop_equiv g (tm_star req frame) ctxt)
 
 let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) =
   let (| frame, _, _ |) = f in frame
@@ -48,7 +48,7 @@ let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) =
 
 val check_frameable (#g:env)
                     (#ctxt:term)
-                    (ctxt_typing: tot_typing g ctxt Tm_VProp)
+                    (ctxt_typing: tot_typing g ctxt tm_vprop)
                     (req:term)
    : T.Tac (either (frame_for_req_in_ctxt g ctxt req)
                    framing_failure)
@@ -56,14 +56,14 @@ val check_frameable (#g:env)
 val apply_frame (#g:env)
                 (#t:st_term)
                 (#ctxt:term)
-                (ctxt_typing: tot_typing g ctxt Tm_VProp)
+                (ctxt_typing: tot_typing g ctxt tm_vprop)
                 (#c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
   : Tot (c':comp_st { comp_pre c' == ctxt /\
                       comp_res c' == comp_res c /\
                       comp_u c' == comp_u c /\
-                      comp_post c' == Tm_Star (comp_post c) (frame_of frame_t) } &
+                      comp_post c' == tm_star (comp_post c) (frame_of frame_t) } &
          st_typing g t c')
 
 
@@ -71,7 +71,7 @@ val apply_frame (#g:env)
 val try_frame_pre (#g:env)
                   (#t:st_term)
                   (#pre:term)
-                  (pre_typing: tot_typing g pre Tm_VProp)
+                  (pre_typing: tot_typing g pre tm_vprop)
                   (#c:comp_st)
                   (t_typing: st_typing g t c)
   : T.Tac (either (c':comp_st { comp_pre c' == pre } &
@@ -80,12 +80,12 @@ val try_frame_pre (#g:env)
 
 val frame_empty (#g:env)
                 (#pre:term)
-                (pre_typing: tot_typing g pre Tm_VProp)
+                (pre_typing: tot_typing g pre tm_vprop)
                 (#u:universe)
                 (#ty:term) 
                 (ut:universe_of g ty u)
                 (t:st_term)
-                (c0:comp_st{ comp_pre c0 == Tm_Emp })
+                (c0:comp_st{ comp_pre c0 == tm_emp })
                 (d:st_typing g t c0)
   : T.Tac (c:comp_st { comp_pre c == pre} &
            st_typing g t c)

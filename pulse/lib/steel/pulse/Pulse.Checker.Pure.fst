@@ -246,18 +246,18 @@ let core_check_term_with_expected_type g e t =
 
 let check_vprop (g:env)
                 (t:term)
-  : T.Tac (t:term & tot_typing g t Tm_VProp) =
+  : T.Tac (t:term & tot_typing g t tm_vprop) =
 
   let (| t, t_typing |) =
-    check_term_with_expected_type (push_context_no_range g "check_vprop") t Tm_VProp in
+    check_term_with_expected_type (push_context_no_range g "check_vprop") t tm_vprop in
   (| t, E t_typing |)
 
 
 let check_vprop_with_core (g:env)
                           (t:term)
-  : T.Tac (tot_typing g t Tm_VProp) =
+  : T.Tac (tot_typing g t tm_vprop) =
 
-  let t_typing = core_check_term_with_expected_type (push_context_no_range g "check_vprop_with_core") t Tm_VProp in
+  let t_typing = core_check_term_with_expected_type (push_context_no_range g "check_vprop_with_core") t tm_vprop in
   E t_typing
   
 let get_non_informative_witness g u t

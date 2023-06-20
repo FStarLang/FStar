@@ -40,14 +40,13 @@ let is_uvar_r (t:R.term) : option uvar =
     | _ -> None
 
 let is_uvar (t:term) : option uvar =
-  match t with
-  | Tm_FStar r _ -> is_uvar_r r
+  match t.t with
+  | Tm_FStar r -> is_uvar_r r
   | _ -> None
 
 let wrap_nat_to_uvar (name:string) (r:range) (n:nat) : term =
   let tm = R.pack_ln (R.Tv_UInst (R.pack_fv [embedded_uvar_prefix; name]) [R.pack_universe (R.Uv_BVar n)]) in
-  let tm = set_range_of tm r in
-  Tm_FStar tm r
+  tm_fstar tm r
 
 let gen_uvar (name:ppname) =
   let n = T.fresh () in
@@ -123,7 +122,7 @@ let rec match_typ (g:env) (t1 t2:term) (uv_sols:solution)
     then check_valid_solution g (uvar_index t1) t2 uv_sols
     else if Some? (is_uvar t2)
     then fail g None "match_typ: t2 is a uvar"
-    else match t1, t2 with
+    else match t1.t, t2.t with
          | Tm_Pure t1, Tm_Pure t2 ->
            match_typ g t1 t2 uv_sols
     
@@ -139,7 +138,7 @@ let rec match_typ (g:env) (t1 t2:term) (uv_sols:solution)
 
 let rec atomic_vprop_has_uvar (t:term) : bool =
   if Some? (is_uvar t) then true
-  else match t with
+  else match t.t with
        | Tm_Pure arg -> atomic_vprop_has_uvar arg
        | Tm_Emp -> false
        | _ ->
@@ -153,7 +152,7 @@ let rec atomic_vprops_may_match (t1:term) (t2:term) : bool =
   if Some? (is_reveal_uvar t1) && not (is_reveal t2)
   then true
   else if Some? (is_uvar t1) then true
-  else match t1, t2 with
+  else match t1.t, t2.t with
        | Tm_Pure x, Tm_Pure y ->
          atomic_vprops_may_match x y
        | _, _ ->
@@ -290,38 +289,40 @@ let apply_sol (sol:solution) (t:R.term) =
     | Some n ->
       match find_solution sol n with
       | None -> t
-      | Some (Tm_FStar t _) -> t
+      | Some ({t=Tm_FStar t}) -> t
       | Some t -> Pulse.Elaborate.Pure.elab_term t
   in
   FStar.Tactics.Visit.visit_tm solve_uvar t
  
 let rec apply_solution (sol:solution) (t:term)
   : T.Tac term
-  = match t with
+  = let w (t':term') : term = Pulse.Syntax.Base.with_range t' t.range in
+    match t.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> t
 
-    | Tm_FStar t r ->
+    | Tm_FStar t ->
       let t = apply_sol sol t in
       assume (not_tv_unknown t);
-      Tm_FStar t r
+      w (Tm_FStar t)
 
     | Tm_Pure p ->
-      Tm_Pure (apply_solution sol p)
+      w (Tm_Pure (apply_solution sol p))
+
     | Tm_Star l r ->
-      Tm_Star (apply_solution sol l)
-              (apply_solution sol r)
+      w (Tm_Star (apply_solution sol l)
+                 (apply_solution sol r))
               
     | Tm_ExistsSL u b body ->
-      Tm_ExistsSL u { b with binder_ty = apply_solution sol b.binder_ty }
-                    (apply_solution sol body)
+      w (Tm_ExistsSL u { b with binder_ty = apply_solution sol b.binder_ty }
+                       (apply_solution sol body))
        
     | Tm_ForallSL u b body ->
-      Tm_ForallSL u { b with binder_ty = apply_solution sol b.binder_ty }
-                    (apply_solution sol body)
+      w (Tm_ForallSL u { b with binder_ty = apply_solution sol b.binder_ty }
+                       (apply_solution sol body))
 
 let contains_uvar_r (t:R.term) =
     let is_uvar (t:R.term) : T.Tac R.term = 
@@ -338,7 +339,7 @@ let contains_uvar_r (t:R.term) =
 
 let rec contains_uvar (t:term)
   : T.Tac bool
-  = match t with
+  = match t.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
@@ -360,7 +361,7 @@ let rec contains_uvar (t:term)
       if contains_uvar t.binder_ty then true
       else contains_uvar body
                     
-    | Tm_FStar t _ ->
+    | Tm_FStar t ->
       contains_uvar_r t
 
 let try_unify (g:env) (l r:term) = match_typ g l r []
@@ -390,7 +391,8 @@ let try_solve_pure_equalities (g:env) (p:term) : T.Tac solution =
       if contains0 || contains1
       then (
         assume (not_tv_unknown t0 /\ not_tv_unknown t1);
-        try_unify g (Tm_FStar t0 FStar.Range.range_0) (Tm_FStar t1 FStar.Range.range_0) @ sol
+        try_unify g (tm_fstar t0 FStar.Range.range_0)
+                    (tm_fstar t1 FStar.Range.range_0) @ sol
       )
       else sol
     in
@@ -402,6 +404,6 @@ let try_solve_pure_equalities (g:env) (p:term) : T.Tac solution =
       | Some (t0, t1) -> handle_eq t0 t1
       | _ -> sol 
   in
-  match p with
-  | Tm_FStar t r -> aux [] t
+  match p.t with
+  | Tm_FStar t -> aux [] t
   | _ -> []

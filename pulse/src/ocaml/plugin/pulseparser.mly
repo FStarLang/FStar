@@ -161,12 +161,12 @@ atomicVprop:
   | LPAREN p=pulseVprop RPAREN
     { p }
   | BACKTICK_AT p=atomicTerm
-    { PulseSugar.VPropTerm p }
+    { PulseSugar.(as_vprop (VPropTerm p) (rr $loc)) }
   | head=qlident args=list(argTerm)
     { 
       let head = mk_term (Var head) (rr $loc(head)) Un in
       let app = mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) in
-      PulseSugar.VPropTerm app
+      PulseSugar.(as_vprop (VPropTerm app) (rr $loc))
     }
 
 %inline
@@ -180,6 +180,6 @@ pulseVprop:
   | t=atomicVprop
     { t }
   | EXISTS bs=nonempty_list(pulseMultiBinder) DOT body=pulseVprop
-    { PulseSugar.mk_vprop_exists (List.flatten bs) body }
+    { PulseSugar.(as_vprop (mk_vprop_exists (List.flatten bs) body) (rr $loc)) }
   | l=pulseVprop starOp r=pulseVprop
-    {  PulseSugar.VPropStar (l, r) }
+    {  PulseSugar.(as_vprop (VPropStar (l, r)) (rr $loc)) }

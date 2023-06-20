@@ -51,7 +51,7 @@ let (check_elim_exists :
                              (FStar_Range.mk_range "Pulse.Checker.Exists.fst"
                                 (Prims.of_int (55)) (Prims.of_int (4))
                                 (Prims.of_int (70)) (Prims.of_int (61)))
-                             (match t1 with
+                             (match t1.Pulse_Syntax_Base.t with
                               | Pulse_Syntax_Base.Tm_Unknown ->
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
@@ -80,7 +80,7 @@ let (check_elim_exists :
                                                      (Prims.of_int (40))
                                                      (Prims.of_int (24))
                                                      (Prims.of_int (40))
-                                                     (Prims.of_int (99)))
+                                                     (Prims.of_int (112)))
                                                   (FStar_Range.mk_range
                                                      "Pulse.Checker.Exists.fst"
                                                      (Prims.of_int (41))
@@ -93,10 +93,15 @@ let (check_elim_exists :
                                                           (fun uu___2 ->
                                                              match uu___2
                                                              with
-                                                             | Pulse_Syntax_Base.Tm_ExistsSL
-                                                                 (uu___3,
-                                                                  uu___4,
-                                                                  uu___5)
+                                                             | {
+                                                                 Pulse_Syntax_Base.t
+                                                                   =
+                                                                   Pulse_Syntax_Base.Tm_ExistsSL
+                                                                   (uu___3,
+                                                                    uu___4,
+                                                                    uu___5);
+                                                                 Pulse_Syntax_Base.range1
+                                                                   = uu___6;_}
                                                                  -> true
                                                              | uu___3 ->
                                                                  false) ts))
@@ -216,7 +221,8 @@ let (check_elim_exists :
                                               match uu___1 with
                                               | Prims.Mkdtuple2
                                                   (t2, t_typing) ->
-                                                  (match t2 with
+                                                  (match t2.Pulse_Syntax_Base.t
+                                                   with
                                                    | Pulse_Syntax_Base.Tm_ExistsSL
                                                        (u,
                                                         {
@@ -323,10 +329,10 @@ let (check_elim_exists :
                                                                     {
                                                                     Pulse_Syntax_Base.p1
                                                                     =
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
-                                                                    (u,
+                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    u
                                                                     (Pulse_Typing.as_binder
-                                                                    ty), p))
+                                                                    ty) p)
                                                                     })) pre
                                                                     ()
                                                                     (Pulse_Typing.comp_elim_exists
@@ -345,10 +351,10 @@ let (check_elim_exists :
                                                                     {
                                                                     Pulse_Syntax_Base.p1
                                                                     =
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
-                                                                    (u,
+                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    u
                                                                     (Pulse_Typing.as_binder
-                                                                    ty), p))
+                                                                    ty) p)
                                                                     }))
                                                                     uu___4
                                                                     post_hint))
@@ -507,7 +513,7 @@ let (check_intro_exists_erased :
                                   (fun uu___2 ->
                                      match uu___2 with
                                      | Prims.Mkdtuple2 (t1, t_typing) ->
-                                         (match t1 with
+                                         (match t1.Pulse_Syntax_Base.t with
                                           | Pulse_Syntax_Base.Tm_ExistsSL
                                               (u, b, p) ->
                                               Obj.magic
@@ -617,8 +623,8 @@ let (check_intro_exists_erased :
                                                                     = true;
                                                                     Pulse_Syntax_Base.p2
                                                                     =
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
-                                                                    (u, b, p));
+                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    u b p);
                                                                     Pulse_Syntax_Base.witnesses
                                                                     = [e1];
                                                                     Pulse_Syntax_Base.should_check1
@@ -643,8 +649,8 @@ let (check_intro_exists_erased :
                                                                     = true;
                                                                     Pulse_Syntax_Base.p2
                                                                     =
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
-                                                                    (u, b, p));
+                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    u b p);
                                                                     Pulse_Syntax_Base.witnesses
                                                                     = [e1];
                                                                     Pulse_Syntax_Base.should_check1
@@ -773,7 +779,7 @@ let (check_intro_exists :
                                   (fun uu___2 ->
                                      match uu___2 with
                                      | Prims.Mkdtuple2 (t1, t_typing) ->
-                                         (match t1 with
+                                         (match t1.Pulse_Syntax_Base.t with
                                           | Pulse_Syntax_Base.Tm_ExistsSL
                                               (u, b, p) ->
                                               Obj.magic
@@ -936,8 +942,8 @@ let (check_intro_exists :
                                                                     = false;
                                                                     Pulse_Syntax_Base.p2
                                                                     =
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
-                                                                    (u, b, p));
+                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    u b p);
                                                                     Pulse_Syntax_Base.witnesses
                                                                     =
                                                                     [witness1];
@@ -960,8 +966,8 @@ let (check_intro_exists :
                                                                     = false;
                                                                     Pulse_Syntax_Base.p2
                                                                     =
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
-                                                                    (u, b, p));
+                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    u b p);
                                                                     Pulse_Syntax_Base.witnesses
                                                                     =
                                                                     [witness1];

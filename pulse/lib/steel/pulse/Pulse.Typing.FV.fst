@@ -12,9 +12,9 @@ let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x
 
 let freevars_close_term_host_term (t:host_term) (x:var) (i:index)
   : Lemma
-    (ensures (freevars (close_term' (Tm_FStar t FStar.Range.range_0) x i)
+    (ensures (freevars (close_term' (tm_fstar t FStar.Range.range_0) x i)
             `Set.equal`
-             (freevars (Tm_FStar t FStar.Range.range_0) `set_minus` x)))
+             (freevars (tm_fstar t FStar.Range.range_0) `set_minus` x)))
   = admit()
 
 #push-options "--query_stats --z3rlimit_factor 2"
@@ -22,7 +22,7 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
   : Lemma 
     (ensures freevars (close_term' e x i) `Set.equal`
              (freevars e `set_minus` x))
-  = match e with
+  = match e.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames
@@ -41,7 +41,7 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
       freevars_close_term' t.binder_ty x i;    
       freevars_close_term' b x (i + 1)
 
-    | Tm_FStar t _ ->
+    | Tm_FStar t ->
       freevars_close_term_host_term t x i
 
 let freevars_close_comp (c:comp)
@@ -385,14 +385,14 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      let post_maybe_eq =
        if use_eq
        then let post = open_term' post (null_var x) 0 in
-            let post = Tm_Star post (Tm_Pure (mk_eq2_prop u t (null_var x) e)) in
+            let post = tm_star post (tm_pure (mk_eq2_prop u t (null_var x) e)) in
             let post = close_term post x in
             post
        else post in
     freevars_open_term post (null_var x) 0;
     freevars_mk_eq2_prop u t (null_var x) e;
     freevars_close_term
-      (Tm_Star (open_term' post (null_var x) 0) (Tm_Pure (mk_eq2_prop u t (null_var x) e)))
+      (tm_star (open_term' post (null_var x) 0) (tm_pure (mk_eq2_prop u t (null_var x) e)))
       x 0;
     freevars_open_term post e 0
 
@@ -469,13 +469,13 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
       (Set.equal) {}
         freevars_comp (comp_intro_exists u b p w);
       (Set.equal) {}
-        freevars Tm_EmpInames `Set.union`
+        freevars tm_emp_inames `Set.union`
         (freevars tm_unit `Set.union`
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u b p)));
+         freevars (tm_exists_sl u b p)));
       (Set.equal) {} 
         (freevars (open_term' p w 0) `Set.union`
-         freevars (Tm_ExistsSL u b p));
+         freevars (tm_exists_sl u b p));
       (Set.subset) { freevars_open_term p w 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`
@@ -494,13 +494,13 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
       (Set.equal) {}
         freevars_comp (comp_intro_exists_erased u b p w);
       (Set.equal) {}
-        freevars Tm_EmpInames `Set.union`
+        freevars tm_emp_inames `Set.union`
         (freevars tm_unit `Set.union`
         (freevars (open_term' p (Pulse.Typing.mk_reveal u b.binder_ty w) 0) `Set.union`
-         freevars (Tm_ExistsSL u b p)));
+         freevars (tm_exists_sl u b p)));
       (Set.equal) {} 
         (freevars (open_term' p (Pulse.Typing.mk_reveal u b.binder_ty w) 0) `Set.union`
-         freevars (Tm_ExistsSL u b p));
+         freevars (tm_exists_sl u b p));
       (Set.subset) { freevars_open_term p (Pulse.Typing.mk_reveal u b.binder_ty w) 0 }
         (freevars p `Set.union` 
          freevars w `Set.union`
@@ -532,7 +532,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      freevars_mk_snd u aL aR x_tm;
      freevars_open_term (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
      freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
-     freevars_close_term (Tm_Star (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0)
+     freevars_close_term (tm_star (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0)
                                   (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0)) x 0;
      freevars_mk_tuple2 u aL aR
 

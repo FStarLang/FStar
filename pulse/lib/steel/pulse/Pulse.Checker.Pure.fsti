@@ -44,11 +44,11 @@ val core_check_term_with_expected_type (g:env) (e:term) (t:term)
 
 val check_vprop (g:env)
                 (t:term)
-  : T.Tac (t:term & tot_typing g t Tm_VProp)
+  : T.Tac (t:term & tot_typing g t tm_vprop)
 
 val check_vprop_with_core (g:env)
                           (t:term)
-  : T.Tac (tot_typing g t Tm_VProp)
+  : T.Tac (tot_typing g t tm_vprop)
 
 val get_non_informative_witness (g:env) (u:universe) (t:term)
   : T.Tac (non_informative_t g u t)

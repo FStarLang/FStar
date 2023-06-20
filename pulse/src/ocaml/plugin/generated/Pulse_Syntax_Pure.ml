@@ -36,64 +36,62 @@ let (u_unknown : Pulse_Syntax_Base.universe) =
   FStar_Reflection_Builtins.pack_universe FStar_Reflection_Data.Uv_Unk
 let (tm_bvar : Pulse_Syntax_Base.bv -> Pulse_Syntax_Base.term) =
   fun bv ->
-    Pulse_Syntax_Base.Tm_FStar
-      ((FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_BVar
-             (FStar_Reflection_Builtins.pack_bv
-                (FStar_Reflection_Typing.make_bv_with_name
-                   (bv.Pulse_Syntax_Base.bv_ppname).Pulse_Syntax_Base.name
-                   bv.Pulse_Syntax_Base.bv_index)))),
-        ((bv.Pulse_Syntax_Base.bv_ppname).Pulse_Syntax_Base.range))
+    Pulse_Syntax_Base.tm_fstar
+      (FStar_Reflection_Builtins.pack_ln
+         (FStar_Reflection_Data.Tv_BVar
+            (FStar_Reflection_Builtins.pack_bv
+               (FStar_Reflection_Typing.make_bv_with_name
+                  (bv.Pulse_Syntax_Base.bv_ppname).Pulse_Syntax_Base.name
+                  bv.Pulse_Syntax_Base.bv_index))))
+      (bv.Pulse_Syntax_Base.bv_ppname).Pulse_Syntax_Base.range
 let (tm_var : Pulse_Syntax_Base.nm -> Pulse_Syntax_Base.term) =
   fun nm ->
-    Pulse_Syntax_Base.Tm_FStar
-      ((FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_Var
-             (FStar_Reflection_Builtins.pack_bv
-                (FStar_Reflection_Typing.make_bv_with_name
-                   (nm.Pulse_Syntax_Base.nm_ppname).Pulse_Syntax_Base.name
-                   nm.Pulse_Syntax_Base.nm_index)))),
-        ((nm.Pulse_Syntax_Base.nm_ppname).Pulse_Syntax_Base.range))
+    Pulse_Syntax_Base.tm_fstar
+      (FStar_Reflection_Builtins.pack_ln
+         (FStar_Reflection_Data.Tv_Var
+            (FStar_Reflection_Builtins.pack_bv
+               (FStar_Reflection_Typing.make_bv_with_name
+                  (nm.Pulse_Syntax_Base.nm_ppname).Pulse_Syntax_Base.name
+                  nm.Pulse_Syntax_Base.nm_index))))
+      (nm.Pulse_Syntax_Base.nm_ppname).Pulse_Syntax_Base.range
 let (tm_fvar : Pulse_Syntax_Base.fv -> Pulse_Syntax_Base.term) =
   fun l ->
-    Pulse_Syntax_Base.Tm_FStar
-      ((FStar_Reflection_Builtins.pack_ln
-          (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Builtins.pack_fv l.Pulse_Syntax_Base.fv_name))),
-        (l.Pulse_Syntax_Base.fv_range))
+    Pulse_Syntax_Base.tm_fstar
+      (FStar_Reflection_Builtins.pack_ln
+         (FStar_Reflection_Data.Tv_FVar
+            (FStar_Reflection_Builtins.pack_fv l.Pulse_Syntax_Base.fv_name)))
+      l.Pulse_Syntax_Base.fv_range
 let (tm_uinst :
   Pulse_Syntax_Base.fv ->
     Pulse_Syntax_Base.universe Prims.list -> Pulse_Syntax_Base.term)
   =
   fun l ->
     fun us ->
-      Pulse_Syntax_Base.Tm_FStar
-        ((FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_UInst
-               ((FStar_Reflection_Builtins.pack_fv
-                   l.Pulse_Syntax_Base.fv_name), us))),
-          (l.Pulse_Syntax_Base.fv_range))
+      Pulse_Syntax_Base.tm_fstar
+        (FStar_Reflection_Builtins.pack_ln
+           (FStar_Reflection_Data.Tv_UInst
+              ((FStar_Reflection_Builtins.pack_fv l.Pulse_Syntax_Base.fv_name),
+                us))) l.Pulse_Syntax_Base.fv_range
 let (tm_constant : Pulse_Syntax_Base.constant -> Pulse_Syntax_Base.term) =
   fun c ->
-    Pulse_Syntax_Base.Tm_FStar
-      ((FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Const c)),
-        FStar_Range.range_0)
+    Pulse_Syntax_Base.tm_fstar
+      (FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Const c))
+      FStar_Range.range_0
 let (tm_refine :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
   fun b ->
     fun t ->
-      Pulse_Syntax_Base.Tm_FStar
-        ((FStar_Reflection_Builtins.pack_ln
-            (FStar_Reflection_Data.Tv_Refine
-               ((FStar_Reflection_Builtins.pack_bv
-                   (FStar_Reflection_Typing.make_bv_with_name
-                      (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
-                      Prims.int_zero)),
-                 (Pulse_Elaborate_Pure.elab_term
-                    b.Pulse_Syntax_Base.binder_ty),
-                 (Pulse_Elaborate_Pure.elab_term t)))), FStar_Range.range_0)
+      Pulse_Syntax_Base.tm_fstar
+        (FStar_Reflection_Builtins.pack_ln
+           (FStar_Reflection_Data.Tv_Refine
+              ((FStar_Reflection_Builtins.pack_bv
+                  (FStar_Reflection_Typing.make_bv_with_name
+                     (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+                     Prims.int_zero)),
+                (Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty),
+                (Pulse_Elaborate_Pure.elab_term t)))) FStar_Range.range_0
 let (tm_let :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
@@ -102,16 +100,15 @@ let (tm_let :
   fun t ->
     fun e1 ->
       fun e2 ->
-        Pulse_Syntax_Base.Tm_FStar
-          ((FStar_Reflection_Builtins.pack_ln
-              (FStar_Reflection_Data.Tv_Let
-                 (false, [],
-                   (FStar_Reflection_Builtins.pack_bv
-                      (FStar_Reflection_Typing.make_bv Prims.int_zero)),
-                   (Pulse_Elaborate_Pure.elab_term t),
-                   (Pulse_Elaborate_Pure.elab_term e1),
-                   (Pulse_Elaborate_Pure.elab_term e2)))),
-            FStar_Range.range_0)
+        Pulse_Syntax_Base.tm_fstar
+          (FStar_Reflection_Builtins.pack_ln
+             (FStar_Reflection_Data.Tv_Let
+                (false, [],
+                  (FStar_Reflection_Builtins.pack_bv
+                     (FStar_Reflection_Typing.make_bv Prims.int_zero)),
+                  (Pulse_Elaborate_Pure.elab_term t),
+                  (Pulse_Elaborate_Pure.elab_term e1),
+                  (Pulse_Elaborate_Pure.elab_term e2)))) FStar_Range.range_0
 let (tm_pureapp :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
@@ -120,11 +117,11 @@ let (tm_pureapp :
   fun head ->
     fun q ->
       fun arg ->
-        Pulse_Syntax_Base.Tm_FStar
-          ((FStar_Reflection_Derived.mk_app
-              (Pulse_Elaborate_Pure.elab_term head)
-              [((Pulse_Elaborate_Pure.elab_term arg),
-                 (Pulse_Elaborate_Pure.elab_qual q))]), FStar_Range.range_0)
+        Pulse_Syntax_Base.tm_fstar
+          (FStar_Reflection_Derived.mk_app
+             (Pulse_Elaborate_Pure.elab_term head)
+             [((Pulse_Elaborate_Pure.elab_term arg),
+                (Pulse_Elaborate_Pure.elab_qual q))]) FStar_Range.range_0
 let (tm_arrow :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
@@ -133,17 +130,17 @@ let (tm_arrow :
   fun b ->
     fun q ->
       fun c ->
-        Pulse_Syntax_Base.Tm_FStar
-          ((Pulse_Reflection_Util.mk_arrow_with_name
-              (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
-              ((Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty),
-                (Pulse_Elaborate_Pure.elab_qual q))
-              (Pulse_Elaborate_Pure.elab_comp c)), FStar_Range.range_0)
+        Pulse_Syntax_Base.tm_fstar
+          (Pulse_Reflection_Util.mk_arrow_with_name
+             (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+             ((Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty),
+               (Pulse_Elaborate_Pure.elab_qual q))
+             (Pulse_Elaborate_Pure.elab_comp c)) FStar_Range.range_0
 let (tm_type : Pulse_Syntax_Base.universe -> Pulse_Syntax_Base.term) =
   fun u ->
-    Pulse_Syntax_Base.Tm_FStar
-      ((FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Type u)),
-        FStar_Range.range_0)
+    Pulse_Syntax_Base.tm_fstar
+      (FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Type u))
+      FStar_Range.range_0
 let (mk_bvar :
   Prims.string ->
     FStar_Range.range -> Pulse_Syntax_Base.index -> Pulse_Syntax_Base.term)
@@ -186,8 +183,8 @@ let (is_var :
     Pulse_Syntax_Base.nm FStar_Pervasives_Native.option)
   =
   fun t ->
-    match t with
-    | Pulse_Syntax_Base.Tm_FStar (host_term, r) ->
+    match t.Pulse_Syntax_Base.t with
+    | Pulse_Syntax_Base.Tm_FStar host_term ->
         (match FStar_Reflection_Builtins.inspect_ln host_term with
          | FStar_Reflection_Data.Tv_Var bv ->
              let bv_view = FStar_Reflection_Builtins.inspect_bv bv in
@@ -197,7 +194,8 @@ let (is_var :
                    (bv_view.FStar_Reflection_Data.bv_index);
                  Pulse_Syntax_Base.nm_ppname =
                    (Pulse_Syntax_Base.mk_ppname
-                      bv_view.FStar_Reflection_Data.bv_ppname r)
+                      bv_view.FStar_Reflection_Data.bv_ppname
+                      t.Pulse_Syntax_Base.range1)
                }
          | uu___ -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
@@ -207,8 +205,8 @@ let (is_fvar :
       FStar_Pervasives_Native.option)
   =
   fun t ->
-    match t with
-    | Pulse_Syntax_Base.Tm_FStar (host_term, uu___) ->
+    match t.Pulse_Syntax_Base.t with
+    | Pulse_Syntax_Base.Tm_FStar host_term ->
         (match FStar_Reflection_Builtins.inspect_ln host_term with
          | FStar_Reflection_Data.Tv_FVar fv ->
              FStar_Pervasives_Native.Some
@@ -216,7 +214,7 @@ let (is_fvar :
          | FStar_Reflection_Data.Tv_UInst (fv, us) ->
              FStar_Pervasives_Native.Some
                ((FStar_Reflection_Builtins.inspect_fv fv), us)
-         | uu___1 -> FStar_Pervasives_Native.None)
+         | uu___ -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
 let (is_pure_app :
   Pulse_Syntax_Base.term ->
@@ -225,35 +223,35 @@ let (is_pure_app :
       FStar_Pervasives_Native.option)
   =
   fun t ->
-    match t with
-    | Pulse_Syntax_Base.Tm_FStar (host_term, uu___) ->
+    match t.Pulse_Syntax_Base.t with
+    | Pulse_Syntax_Base.Tm_FStar host_term ->
         (match FStar_Reflection_Builtins.inspect_ln host_term with
          | FStar_Reflection_Data.Tv_App (hd, (arg, q)) ->
              op_let_Question
                (match Pulse_Readback.readback_ty hd with
                 | FStar_Pervasives_Native.Some hd1 ->
                     FStar_Pervasives_Native.Some hd1
-                | uu___1 -> FStar_Pervasives_Native.None)
+                | uu___ -> FStar_Pervasives_Native.None)
                (fun hd1 ->
                   let q1 = Pulse_Readback.readback_qual q in
                   op_let_Question
                     (match Pulse_Readback.readback_ty arg with
                      | FStar_Pervasives_Native.Some arg1 ->
                          FStar_Pervasives_Native.Some arg1
-                     | uu___1 -> FStar_Pervasives_Native.None)
+                     | uu___ -> FStar_Pervasives_Native.None)
                     (fun arg1 -> FStar_Pervasives_Native.Some (hd1, q1, arg1)))
-         | uu___1 -> FStar_Pervasives_Native.None)
+         | uu___ -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
 let (leftmost_head :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
   =
   fun t ->
-    match t with
-    | Pulse_Syntax_Base.Tm_FStar (host_term, uu___) ->
-        let uu___1 = FStar_Reflection_Derived.collect_app_ln host_term in
-        (match uu___1 with
-         | (hd, uu___2) ->
+    match t.Pulse_Syntax_Base.t with
+    | Pulse_Syntax_Base.Tm_FStar host_term ->
+        let uu___ = FStar_Reflection_Derived.collect_app_ln host_term in
+        (match uu___ with
+         | (hd, uu___1) ->
              (match Pulse_Readback.readback_ty hd with
               | FStar_Pervasives_Native.Some t1 ->
                   FStar_Pervasives_Native.Some t1
@@ -287,20 +285,20 @@ let (is_arrow :
       FStar_Pervasives_Native.option)
   =
   fun t ->
-    match t with
-    | Pulse_Syntax_Base.Tm_FStar (host_term, uu___) ->
+    match t.Pulse_Syntax_Base.t with
+    | Pulse_Syntax_Base.Tm_FStar host_term ->
         (match FStar_Reflection_Builtins.inspect_ln host_term with
          | FStar_Reflection_Data.Tv_Arrow (b, c) ->
-             let uu___1 = FStar_Reflection_Builtins.inspect_binder b in
-             (match uu___1 with
+             let uu___ = FStar_Reflection_Builtins.inspect_binder b in
+             (match uu___ with
               | { FStar_Reflection_Data.binder_bv = binder_bv;
                   FStar_Reflection_Data.binder_qual = binder_qual;
-                  FStar_Reflection_Data.binder_attrs = uu___2;
+                  FStar_Reflection_Data.binder_attrs = uu___1;
                   FStar_Reflection_Data.binder_sort = binder_sort;_} ->
                   (match binder_qual with
-                   | FStar_Reflection_Data.Q_Meta uu___3 ->
+                   | FStar_Reflection_Data.Q_Meta uu___2 ->
                        FStar_Pervasives_Native.None
-                   | uu___3 ->
+                   | uu___2 ->
                        let q = Pulse_Readback.readback_qual binder_qual in
                        let bv_view =
                          FStar_Reflection_Builtins.inspect_bv binder_bv in
@@ -328,8 +326,8 @@ let (is_arrow :
                                                 (FStar_Reflection_Builtins.range_of_term
                                                    host_term))
                                          }, q, c1)))
-                        | uu___4 -> FStar_Pervasives_Native.None)))
-         | uu___1 -> FStar_Pervasives_Native.None)
+                        | uu___3 -> FStar_Pervasives_Native.None)))
+         | uu___ -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
 let (is_eq2 :
   Pulse_Syntax_Base.term ->

@@ -2516,7 +2516,7 @@ let (check_vprop :
         (Obj.magic
            (check_term_with_expected_type
               (Pulse_Typing_Env.push_context_no_range g "check_vprop") t
-              Pulse_Syntax_Base.Tm_VProp))
+              Pulse_Syntax_Base.tm_vprop))
         (fun uu___ ->
            FStar_Tactics_Effect.lift_div_tac
              (fun uu___1 ->
@@ -2536,7 +2536,7 @@ let (check_vprop_with_core :
         (Obj.magic
            (core_check_term_with_expected_type
               (Pulse_Typing_Env.push_context_no_range g
-                 "check_vprop_with_core") t Pulse_Syntax_Base.Tm_VProp))
+                 "check_vprop_with_core") t Pulse_Syntax_Base.tm_vprop))
         (fun t_typing -> FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
 let (get_non_informative_witness :
   Pulse_Typing_Env.env ->

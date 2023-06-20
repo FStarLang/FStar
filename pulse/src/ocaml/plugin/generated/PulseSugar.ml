@@ -3,36 +3,44 @@ type rng = FStar_Compiler_Range_Type.range
 type binder =
   (FStar_Parser_AST.aqual * FStar_Ident.ident * FStar_Parser_AST.term)
 type binders = binder Prims.list
-type vprop__VPropExists__payload = {
+type vprop'__VPropExists__payload = {
   binders: binders ;
   body: vprop }
-and vprop =
+and vprop' =
   | VPropTerm of FStar_Parser_AST.term 
   | VPropStar of (vprop * vprop) 
-  | VPropExists of vprop__VPropExists__payload 
-let (__proj__Mkvprop__VPropExists__payload__item__binders :
-  vprop__VPropExists__payload -> binders) =
+  | VPropExists of vprop'__VPropExists__payload 
+and vprop = {
+  v: vprop' ;
+  vrange: rng }
+let (__proj__Mkvprop'__VPropExists__payload__item__binders :
+  vprop'__VPropExists__payload -> binders) =
   fun projectee ->
     match projectee with | { binders = binders1; body;_} -> binders1
-let (__proj__Mkvprop__VPropExists__payload__item__body :
-  vprop__VPropExists__payload -> vprop) =
+let (__proj__Mkvprop'__VPropExists__payload__item__body :
+  vprop'__VPropExists__payload -> vprop) =
   fun projectee ->
     match projectee with | { binders = binders1; body;_} -> body
-let (uu___is_VPropTerm : vprop -> Prims.bool) =
+let (uu___is_VPropTerm : vprop' -> Prims.bool) =
   fun projectee ->
     match projectee with | VPropTerm _0 -> true | uu___ -> false
-let (__proj__VPropTerm__item___0 : vprop -> FStar_Parser_AST.term) =
+let (__proj__VPropTerm__item___0 : vprop' -> FStar_Parser_AST.term) =
   fun projectee -> match projectee with | VPropTerm _0 -> _0
-let (uu___is_VPropStar : vprop -> Prims.bool) =
+let (uu___is_VPropStar : vprop' -> Prims.bool) =
   fun projectee ->
     match projectee with | VPropStar _0 -> true | uu___ -> false
-let (__proj__VPropStar__item___0 : vprop -> (vprop * vprop)) =
+let (__proj__VPropStar__item___0 : vprop' -> (vprop * vprop)) =
   fun projectee -> match projectee with | VPropStar _0 -> _0
-let (uu___is_VPropExists : vprop -> Prims.bool) =
+let (uu___is_VPropExists : vprop' -> Prims.bool) =
   fun projectee ->
     match projectee with | VPropExists _0 -> true | uu___ -> false
-let (__proj__VPropExists__item___0 : vprop -> vprop__VPropExists__payload) =
-  fun projectee -> match projectee with | VPropExists _0 -> _0
+let (__proj__VPropExists__item___0 : vprop' -> vprop'__VPropExists__payload)
+  = fun projectee -> match projectee with | VPropExists _0 -> _0
+let (__proj__Mkvprop__item__v : vprop -> vprop') =
+  fun projectee -> match projectee with | { v; vrange;_} -> v
+let (__proj__Mkvprop__item__vrange : vprop -> rng) =
+  fun projectee -> match projectee with | { v; vrange;_} -> vrange
+let (as_vprop : vprop' -> rng -> vprop) = fun v -> fun r -> { v; vrange = r }
 type st_comp_tag =
   | ST 
   | STAtomic of FStar_Parser_AST.term 
@@ -417,7 +425,7 @@ let (mk_comp :
                 postcondition;
                 range
               }
-let (mk_vprop_exists : binders -> vprop -> vprop) =
+let (mk_vprop_exists : binders -> vprop -> vprop') =
   fun binders1 -> fun body -> VPropExists { binders = binders1; body }
 let (mk_expr : FStar_Parser_AST.term -> stmt') = fun e -> Expr { e }
 let (mk_assignment : FStar_Ident.ident -> FStar_Parser_AST.term -> stmt') =

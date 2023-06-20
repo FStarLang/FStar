@@ -2,6 +2,7 @@ module Pulse.Elaborate.Pure
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection
 module L = FStar.List.Tot
+module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open Pulse.Syntax.Base
 
@@ -19,43 +20,45 @@ let elab_qual = function
 let rec elab_term (top:term)
   : R.term
   = let open R in
-    match top with
+    let w t' = RU.set_range t' top.range in
+    match top.t with
     | Tm_VProp ->
-      pack_ln (Tv_FVar (pack_fv vprop_lid))
+      w (pack_ln (Tv_FVar (pack_fv vprop_lid)))
 
     | Tm_Emp ->
-      pack_ln (Tv_FVar (pack_fv emp_lid))
+      w (pack_ln (Tv_FVar (pack_fv emp_lid)))
       
     | Tm_Pure p ->
       let p = elab_term p in
       let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
-      pack_ln (Tv_App head (p, Q_Explicit))
+      w (pack_ln (Tv_App head (p, Q_Explicit)))
 
     | Tm_Star l r ->
       let l = elab_term l in
       let r = elab_term r in
-      mk_star l r
+      w (mk_star l r)
       
     | Tm_ExistsSL u b body
     | Tm_ForallSL u b body ->
       let t = elab_term b.binder_ty in
       let body = elab_term body in
       let t = set_range_of t b.binder_ppname.range in
-      if Tm_ExistsSL? top
-      then mk_exists u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body)
-      else mk_forall u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body)
+      if Tm_ExistsSL? top.t
+      then w (mk_exists u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
+      else w (mk_forall u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
 
     | Tm_Inames ->
-      pack_ln (Tv_FVar (pack_fv inames_lid))
+      w (pack_ln (Tv_FVar (pack_fv inames_lid)))
 
     | Tm_EmpInames ->
-      emp_inames_tm
+      w (emp_inames_tm)
 
     | Tm_Unknown ->
-      pack_ln R.Tv_Unknown
+      w (pack_ln R.Tv_Unknown)
 
-    | Tm_FStar t _ ->
-      t
+    | Tm_FStar t ->
+      w t
+  
 
 let elab_st_comp (c:st_comp)
   : R.universe & R.term & R.term & R.term

@@ -11,12 +11,13 @@ open Pulse.Checker.Common
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 
+#push-options "--query_stats --z3rlimit_factor 2"
 let check_return
   (allow_inst:bool)
   (g:env)
   (st:st_term{Tm_Return? st.term})
   (pre:term)
-  (pre_typing:tot_typing g pre Tm_VProp)
+  (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   : T.Tac (checker_result_t g pre post_hint) =
   let g = push_context "check_return" st.range g in
@@ -40,10 +41,10 @@ let check_return
   in
   let x = fresh g in
   let px = v_as_nv x in
-  let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t Tm_VProp =
+  let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_vprop =
       match post_hint with
       | None -> 
-        let (| t, ty |) = check_term_with_expected_type (push_binding g x (fst px) ty) Tm_Emp Tm_VProp in
+        let (| t, ty |) = check_term_with_expected_type (push_binding g x (fst px) ty) tm_emp tm_vprop in
         (| t, E ty |)
         
       | Some post ->
