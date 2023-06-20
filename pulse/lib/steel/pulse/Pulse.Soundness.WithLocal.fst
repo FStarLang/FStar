@@ -7,14 +7,34 @@ open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 
 module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 
-#push-options "--z3rlimit_factor 20 --fuel 10"
+let mk_t_abs (g:env)
+             (#ty:term)
+             (t_typing:typing g ty (tm_type u_zero))
+             (ppname:ppname)
+             (r_t_typing:RT.tot_typing (elab_env g)
+                                       (elab_term ty)
+                                       (elab_comp (C_Tot (tm_type u_zero))))
+             (#body:st_term)
+             (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) })
+             (#c:comp)
+             (#body_typing:st_typing (push_binding g x ppname ty) (open_st_term body x) c)
+             (r_body_typing:RT.tot_typing (elab_env (push_binding g x ppname ty))
+                                          (elab_st_typing body_typing)
+                                          (elab_comp c))
+  : GTot (RT.tot_typing (elab_env g)
+            (mk_abs_with_name ppname.name (elab_term ty) R.Q_Explicit (RT.close_term (elab_st_typing body_typing) x))
+            (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} None (close_comp c x))))
+  = mk_t_abs g #_ #_ #_ #t_typing ppname r_t_typing r_body_typing
+
+//TODO: this proof needs to be tamed
+#push-options "--z3rlimit_factor 40 --fuel 10 --split_queries always --query_stats"
 let withlocal_soundness #g #t #c d soundness =
   let T_WithLocal _ init body init_t c x init_typing init_t_typing c_typing body_typing = d in
   let CT_ST _ st st_typing = c_typing in
@@ -29,7 +49,6 @@ let withlocal_soundness #g #t #c d soundness =
   let rbody =
     RT.mk_abs (PReflUtil.mk_ref ra) R.Q_Explicit
       (RT.subst_term (elab_st_typing body_typing) [ RT.ND x 0 ]) in
-  
   let a_typing:RT.tot_typing rg ra (R.pack_ln (R.Tv_Type (R.pack_universe R.Uv_Zero))) =
     tot_typing_soundness init_t_typing in
   
@@ -43,7 +62,7 @@ let withlocal_soundness #g #t #c d soundness =
   let ret_t_typing:RT.tot_typing rg rret_t (R.pack_ln (R.Tv_Type ru)) = cres_typing in
   let post_typing:RT.tot_typing rg rpost (mk_arrow (rret_t, R.Q_Explicit) vprop_tm) =
     cpost_typing in
-
+  
   let elab_body_comp = elab_comp (comp_withlocal_body x init_t init c) in
 
   let rbody_typing
@@ -63,14 +82,17 @@ let withlocal_soundness #g #t #c d soundness =
   RT.close_term_spec (elab_st_typing body_typing) x;
   assert (RT.subst_term (elab_st_typing body_typing) [ RT.ND x 0 ] ==
           RT.close_term (elab_st_typing body_typing) x);
-
+          
+  
   let rbody_typing
     : RT.tot_typing (elab_env g)
                     rbody
                     (mk_arrow (PReflUtil.mk_ref ra, R.Q_Explicit)
                               (elab_comp (close_comp (comp_withlocal_body x init_t init c) x))) =
-    mk_t_abs _ #_ #_ #_ #ref_init_t_typing ppname_default rref_init_t_typing rbody_typing in
-
+    coerce_eq () (
+       mk_t_abs g #(mk_ref init_t) ref_init_t_typing ppname_default rref_init_t_typing #body #x #_ #body_typing rbody_typing
+    )
+  in
   // We now have this rbody typing,
   //   need to match it to what is expected by wrapper withlocal typing
 
@@ -100,26 +122,25 @@ let withlocal_soundness #g #t #c d soundness =
   // try to get c1 in mk_stt_comp form,
   //   after which we will use mk_stt_comp_equiv
 
-  let c1_pre = elab_term (Tm_Star (comp_pre c) (mk_pts_to init_t (null_bvar 0) init)) in
+  let c1_pre = elab_term (tm_star (comp_pre c) (mk_pts_to init_t (null_bvar 0) init)) in
   let c1_post =
     mk_abs rret_t R.Q_Explicit
       (mk_star
          (elab_term (comp_post c))
          (elab_term
-            (Tm_ExistsSL u0 (as_binder init_t)
+            (tm_exists_sl u0 (as_binder init_t)
                (mk_pts_to init_t (null_bvar 2) (null_bvar 0))))) in
 
   assert (c1 == mk_stt_comp ru rret_t c1_pre c1_post);
   assert (c1_pre == mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit));
-
   let rbody_typing
     : RT.tot_typing (elab_env g)
                     rbody
                     (mk_arrow
                        (PReflUtil.mk_ref ra, R.Q_Explicit)
                        (mk_stt_comp ru rret_t c1_pre c1_post)) =
-    rbody_typing in
-
+    coerce_eq () rbody_typing in
+  
   let rx_tm = RT.var_as_term x in
 
   // get WT withlocal body post in mk_star form (push close inside)
@@ -191,7 +212,7 @@ let withlocal_soundness #g #t #c d soundness =
     : RT.equiv g_z
         (RT.subst_term
            (RT.subst_term
-              (elab_term (Tm_ExistsSL u0 (as_binder init_t)
+              (elab_term (tm_exists_sl u0 (as_binder init_t)
                            (mk_pts_to init_t (null_bvar 2) (null_bvar 0))))
               (RT.open_with_var y 1))
            (RT.open_with_var z 0))
@@ -227,7 +248,7 @@ let withlocal_soundness #g #t #c d soundness =
                 (elab_term (comp_post c))
                 (RT.open_with_var y 1))
              (RT.subst_term
-                (elab_term (Tm_ExistsSL u0 (as_binder init_t)
+                (elab_term (tm_exists_sl u0 (as_binder init_t)
                               (mk_pts_to init_t (null_bvar 2) (null_bvar 0))))
                 (RT.open_with_var y 1))))
         (mk_abs (RT.subst_term rret_t (RT.open_with_var y 0)) R.Q_Explicit

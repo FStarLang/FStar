@@ -24,7 +24,7 @@ let st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st)
   = admit_comp_typing g c
     
 let add_frame_well_typed (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
-                         (#f:term) (ft:tot_typing g f Tm_VProp)
+                         (#f:term) (ft:tot_typing g f tm_vprop)
   : comp_typing_u g (add_frame c f)
   = admit_comp_typing _ _
 
@@ -42,14 +42,14 @@ let st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st) =
   (| ty, pre, x, post |)
 
 let tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
-                        (_:tot_typing g (Tm_ExistsSL u (as_binder ty) p) Tm_VProp)
+                        (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_vprop)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
-    tot_typing (push_binding g x ppname_default ty) p Tm_VProp
+    tot_typing (push_binding g x ppname_default ty) p tm_vprop
   = admit(), admit()
 
 let tot_typing_weakening #g #t #ty x b d = admit()
 
-let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
-   : tot_typing g p (Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0)
+let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
+   : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
    = admit()

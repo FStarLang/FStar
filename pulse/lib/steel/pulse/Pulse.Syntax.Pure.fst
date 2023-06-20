@@ -1,7 +1,7 @@
 module Pulse.Syntax.Pure
 
-module R = FStar.Reflection
-module T = FStar.Tactics
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax.Base
@@ -22,56 +22,55 @@ let u_zero = u0
 let u_succ (u:universe) : universe =
   R.pack_universe (R.Uv_Succ u)
 let u_var (s:string) : universe =
-  R.pack_universe (R.Uv_Name (s, FStar.Range.range_0)) 
+  R.pack_universe (R.Uv_Name (R.pack_ident (s, FStar.Range.range_0)))
 let u_max (u0 u1:universe) : universe =
   R.pack_universe (R.Uv_Max [u0; u1])
 let u_unknown : universe = R.pack_universe R.Uv_Unk
 
 let tm_bvar (bv:bv) : term =
-  Tm_FStar (R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv_with_name bv.bv_ppname.name bv.bv_index))))
-           bv.bv_ppname.range
+  tm_fstar (R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv_with_name bv.bv_ppname.name bv.bv_index))))
+            bv.bv_ppname.range
 
 let tm_var (nm:nm) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv_with_name nm.nm_ppname.name nm.nm_index))))
+  tm_fstar (R.pack_ln (R.Tv_Var (R.pack_namedv (RT.make_namedv_with_name nm.nm_ppname.name nm.nm_index))))
            nm.nm_ppname.range
 
 let tm_fvar (l:fv) : term =
-  Tm_FStar (R.pack_ln (R.Tv_FVar (R.pack_fv l.fv_name)))
+  tm_fstar (R.pack_ln (R.Tv_FVar (R.pack_fv l.fv_name)))
            l.fv_range
 
 let tm_uinst (l:fv) (us:list universe) : term =
-  Tm_FStar (R.pack_ln (R.Tv_UInst (R.pack_fv l.fv_name) us))
+  tm_fstar (R.pack_ln (R.Tv_UInst (R.pack_fv l.fv_name) us))
            l.fv_range
 
 let tm_constant (c:constant) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
+  tm_fstar (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
 
 let tm_refine (b:binder) (t:term) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Refine (R.pack_bv (RT.make_bv_with_name b.binder_ppname.name 0))
-                                   (elab_term b.binder_ty)
-                                   (elab_term t)))
+  let rb : R.simple_binder = RT.mk_simple_binder b.binder_ppname.name (elab_term b.binder_ty) in
+  tm_fstar (R.pack_ln (R.Tv_Refine rb (elab_term t)))
            FStar.Range.range_0
 
 let tm_let (t e1 e2:term) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Let false
+  let rb : R.simple_binder = RT.mk_simple_binder RT.pp_name_default (elab_term t) in
+  tm_fstar (R.pack_ln (R.Tv_Let false
                                 []
-                                (R.pack_bv (RT.make_bv 0))
-                                (elab_term t)
+                                rb
                                 (elab_term e1)
                                 (elab_term e2)))
            FStar.Range.range_0
 
 let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
-  Tm_FStar (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
+  tm_fstar (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
            FStar.Range.range_0
 
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
-  Tm_FStar (mk_arrow_with_name b.binder_ppname.name (elab_term b.binder_ty, elab_qual q)
+  tm_fstar (mk_arrow_with_name b.binder_ppname.name (elab_term b.binder_ty, elab_qual q)
                                                     (elab_comp c))
            FStar.Range.range_0
 
 let tm_type (u:universe) : term =
-  Tm_FStar (R.pack_ln (R.Tv_Type u)) FStar.Range.range_0
+  tm_fstar (R.pack_ln (R.Tv_Type u)) FStar.Range.range_0
 
 let mk_bvar (s:string) (r:Range.range) (i:index) : term =
   tm_bvar {bv_index=i;bv_ppname=mk_ppname (RT.seal_pp_name s) r}
@@ -89,13 +88,13 @@ let term_of_no_name_var (x:var) : term =
 
 let is_var (t:term) : option nm =
   let open R in
-  match t with
-  | Tm_FStar host_term r ->
+  match t.t with
+  | Tm_FStar host_term ->
     begin match R.inspect_ln host_term with
-          | R.Tv_Var bv ->
-            let bv_view = R.inspect_bv bv in
-            Some {nm_index=bv_view.bv_index;
-                  nm_ppname=mk_ppname (bv_view.bv_ppname) r}
+          | R.Tv_Var nv ->
+            let nv_view = R.inspect_namedv nv in
+            Some {nm_index=nv_view.uniq;
+                  nm_ppname=mk_ppname (nv_view.ppname) t.range}
           | _ -> None
     end
   | _ -> None
@@ -103,8 +102,8 @@ let is_var (t:term) : option nm =
 
 let is_fvar (t:term) : option (R.name & list universe) =
   let open R in
-  match t with
-  | Tm_FStar host_term _ ->
+  match t.t with
+  | Tm_FStar host_term ->
     begin match inspect_ln host_term with
           | Tv_FVar fv -> Some (inspect_fv fv, [])
           | Tv_UInst fv us -> Some (inspect_fv fv, us)
@@ -113,8 +112,8 @@ let is_fvar (t:term) : option (R.name & list universe) =
   | _ -> None
 
 let is_pure_app (t:term) : option (term & option qualifier & term) =
-  match t with
-  | Tm_FStar host_term _ ->
+  match t.t with
+  | Tm_FStar host_term ->
     begin match R.inspect_ln host_term with
           | R.Tv_App hd (arg, q) ->
             let? hd =
@@ -132,8 +131,8 @@ let is_pure_app (t:term) : option (term & option qualifier & term) =
   | _ -> None
 
 let leftmost_head (t:term) : option term =
-  match t with
-  | Tm_FStar host_term _ ->
+  match t.t with
+  | Tm_FStar host_term ->
     let hd, _ = R.collect_app_ln host_term in
     (match readback_ty hd with
      | Some t -> Some t
@@ -162,27 +161,25 @@ let is_fvar_app (t:term) : option (R.name &
     // | _ -> None
 
 let is_arrow (t:term) : option (binder & option qualifier & comp) =
-  match t with
-  | Tm_FStar host_term _ ->
+  match t.t with
+  | Tm_FStar host_term ->
     begin match R.inspect_ln host_term with
           | R.Tv_Arrow b c ->
-            let {binder_bv;binder_qual;binder_sort} =
-              R.inspect_binder b in
-            begin match binder_qual with
+            let {ppname;qual;sort} = R.inspect_binder b in
+            begin match qual with
                   | R.Q_Meta _ -> None
                   | _ ->
-                    let q = readback_qual binder_qual in
-                    let bv_view = R.inspect_bv binder_bv in
+                    let q = readback_qual qual in
                     let c_view = R.inspect_comp c in
                     begin match c_view with
                           | R.C_Total c_t ->
-                            let? binder_ty = readback_ty binder_sort in
+                            let? binder_ty = readback_ty sort in
                             let? c =
                               match readback_comp c_t with
                               | Some c -> Some c <: option Pulse.Syntax.Base.comp
                               | None -> None in
                             Some ({binder_ty;
-                                   binder_ppname=mk_ppname (bv_view.bv_ppname) (T.range_of_term host_term)},
+                                   binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
                                   q,
                                   c)
                           | _ -> None

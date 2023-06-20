@@ -1,8 +1,8 @@
 module Pulse.Soundness.Frame
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
@@ -68,7 +68,7 @@ let elab_frame_typing (g:stt_env)
                       (e:R.term)
                       (c:ln_comp)
                       (frame:term)
-                      (frame_typing: tot_typing g frame Tm_VProp)
+                      (frame_typing: tot_typing g frame tm_vprop)
                       (e_typing: RT.tot_typing (elab_env g) e (elab_comp c))
   : GTot (RT.tot_typing (elab_env g)
                         (elab_frame c frame e)
@@ -104,7 +104,7 @@ let elab_frame_typing (g:stt_env)
       (RT.Relc_typ _ _ _ _ _
          (RT.Rel_equiv _ _ _ _
             (equiv_frame_post rg u t 
-               (elab_term (Tm_Star (comp_pre c) frame))
+               (elab_term (tm_star (comp_pre c) frame))
                (comp_post c)
                (elab_term frame))))
     else admit ()

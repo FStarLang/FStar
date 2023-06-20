@@ -1,7 +1,7 @@
 module Pulse.Syntax.Printer
 open Pulse.Syntax
-module R = FStar.Reflection
-module T = FStar.Tactics
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
 
 val name_to_string (f:R.name) : string
 // val constant_to_string (c:constant) : string

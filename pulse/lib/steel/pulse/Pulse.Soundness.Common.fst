@@ -1,8 +1,8 @@
 module Pulse.Soundness.Common
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
@@ -79,6 +79,10 @@ let mk_t_abs_tot (g:env)
     assert (~ (x `Set.mem` RT.freevars (elab_term body)));
     assume (~ (x `Set.mem` RT.freevars (RT.close_term r_body x)));
     RT.close_term_spec (elab_comp c) x;
+    assert (elab_term (tm_type u) == RT.tm_type u);
+    let r_t_typing : RT.tot_typing (elab_env g) r_ty (RT.tm_type u)
+      = coerce_eq () r_t_typing //strange that this coercion is needed
+    in
     let d : RT.tot_typing (elab_env g)
               (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q)
                  (RT.close_term (elab_term (open_term body x)) x))
@@ -341,11 +345,11 @@ val inversion_of_stt_typing (g:env) (c:comp_st)
           // _ |- pre : vprop
           RT.tot_typing (elab_env g)
                         (elab_term (comp_pre c))
-                        (elab_term (Tm_VProp)) &
+                        (elab_term (tm_vprop)) &
           // _ |- (fun (x:t) -> post) : t -> vprop
           RT.tot_typing (elab_env g)
                         (elab_comp_post c)
-                        (elab_term (tm_arrow (null_binder (comp_res c)) None (C_Tot Tm_VProp))))
+                        (elab_term (tm_arrow (null_binder (comp_res c)) None (C_Tot tm_vprop))))
 
 let soundness_t (d:'a) = 
     g:stt_env ->

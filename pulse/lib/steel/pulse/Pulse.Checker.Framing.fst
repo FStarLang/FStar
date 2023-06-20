@@ -1,8 +1,8 @@
 module Pulse.Checker.Framing
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
@@ -10,7 +10,7 @@ open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.VPropEquiv
 module P = Pulse.Syntax.Printer
-module RTB = FStar.Tactics.Builtins
+module RTB = FStar.Tactics.V2.Builtins
 module FV = Pulse.Typing.FV
 module Metatheory = Pulse.Typing.Metatheory
 module VP = Pulse.Checker.VPropEquiv
@@ -26,8 +26,8 @@ let print_framing_failure ff =
 
 
 let equational (t:term) : bool =
-  match t with
-  | Tm_FStar host_term _ ->
+  match t.t with
+  | Tm_FStar host_term ->
     (match R.inspect_ln host_term with
      | R.Tv_Match _ _ _ -> true
      | _ -> false)
@@ -130,11 +130,11 @@ let rec try_split_vprop g (req:list term) (ctxt:list term)
 
 let split_vprop (g:env)
                 (ctxt:term)
-                (ctxt_typing: tot_typing g ctxt Tm_VProp)
+                (ctxt_typing: tot_typing g ctxt tm_vprop)
                 (req:term)
    : T.Tac (either (frame:term &
-                    tot_typing g frame Tm_VProp &
-                    vprop_equiv g (Tm_Star req frame) ctxt)
+                    tot_typing g frame tm_vprop &
+                    vprop_equiv g (tm_star req frame) ctxt)
                    framing_failure)
    = let ctxt_l = VP.vprop_as_list ctxt in
      let req_l = VP.vprop_as_list req in
@@ -143,7 +143,7 @@ let split_vprop (g:env)
        Inr failure 
      | Inl (| frame, veq |) ->
        let d = VP.vprop_equiv_split_frame g ctxt req frame veq in
-       let typing : tot_typing g (VP.list_as_vprop frame) Tm_VProp = 
+       let typing : tot_typing g (VP.list_as_vprop frame) tm_vprop = 
          let fwd, bk = VP.vprop_equiv_typing d in
          let star_typing = bk ctxt_typing in
          star_typing_inversion_r star_typing
@@ -191,15 +191,15 @@ let rec all_matches g p q
 
 
 let rec check_equiv_emp (g:env) (vp:term)
-  : option (vprop_equiv g vp Tm_Emp)
-  = match vp with
+  : option (vprop_equiv g vp tm_emp)
+  = match vp.t with
     | Tm_Emp -> Some (VE_Refl _ _)
     | Tm_Star vp1 vp2 ->
       (match check_equiv_emp g vp1, check_equiv_emp g vp2 with
        | Some d1, Some d2 ->
-         let d3 : vprop_equiv g (Tm_Star vp1 vp2) (Tm_Star Tm_Emp Tm_Emp)
+         let d3 : vprop_equiv g (tm_star vp1 vp2) (tm_star tm_emp tm_emp)
            = VE_Ctxt _ _ _ _ _ d1 d2 in
-         let d4 : vprop_equiv g (Tm_Star Tm_Emp Tm_Emp) Tm_Emp =
+         let d4 : vprop_equiv g (tm_star tm_emp tm_emp) tm_emp =
            VE_Unit _ _ in
          Some (VE_Trans _ _ _ _ d3 d4)
        | _, _ -> None)
@@ -209,7 +209,7 @@ let rec check_equiv_emp (g:env) (vp:term)
 let check_vprop_equiv
   (g:env)
   (vp1 vp2:term)
-  (vp1_typing:tot_typing g vp1 Tm_VProp)
+  (vp1_typing:tot_typing g vp1 tm_vprop)
 
   : T.Tac (vprop_equiv g vp1 vp2) =
 
@@ -224,16 +224,16 @@ let check_vprop_equiv
   | Inl (| frame, _, d |) ->
     match check_equiv_emp g frame with
     | Some d_frame_equiv_emp ->
-      let d : vprop_equiv g (Tm_Star vp2 frame) vp1 = d in
-      let d : vprop_equiv g vp1 (Tm_Star vp2 frame) =
+      let d : vprop_equiv g (tm_star vp2 frame) vp1 = d in
+      let d : vprop_equiv g vp1 (tm_star vp2 frame) =
         VE_Sym _ _ _ d in
-      let d' : vprop_equiv g (Tm_Star vp2 frame) (Tm_Star vp2 Tm_Emp) =
+      let d' : vprop_equiv g (tm_star vp2 frame) (tm_star vp2 tm_emp) =
         VE_Ctxt _ _ _ _ _ (VE_Refl _ vp2) d_frame_equiv_emp in
-      let d : vprop_equiv g vp1 (Tm_Star vp2 Tm_Emp) =
+      let d : vprop_equiv g vp1 (tm_star vp2 tm_emp) =
         VE_Trans _ _ _ _ d d' in
-      let d' : vprop_equiv g (Tm_Star vp2 Tm_Emp) (Tm_Star Tm_Emp vp2) = VE_Comm _ _ _ in
-      let d  : vprop_equiv g vp1 (Tm_Star Tm_Emp vp2) = VE_Trans _ _ _ _ d d' in
-      let d' : vprop_equiv g (Tm_Star Tm_Emp vp2) vp2 = VE_Unit _ _ in
+      let d' : vprop_equiv g (tm_star vp2 tm_emp) (tm_star tm_emp vp2) = VE_Comm _ _ _ in
+      let d  : vprop_equiv g vp1 (tm_star tm_emp vp2) = VE_Trans _ _ _ _ d d' in
+      let d' : vprop_equiv g (tm_star tm_emp vp2) vp2 = VE_Unit _ _ in
       VE_Trans _ _ _ _ d d'
     | None ->
       fail g None (Printf.sprintf "check_vprop_equiv: %s and %s are not equivalent, frame: %s\n"
@@ -251,7 +251,7 @@ let freevars_comp_post (c:comp { stateful_comp c })
   
 let check_frameable (#g:env)
                     (#ctxt:term)
-                    (ctxt_typing: tot_typing g ctxt Tm_VProp)
+                    (ctxt_typing: tot_typing g ctxt tm_vprop)
                     (req:term)
    : T.Tac (either (frame_for_req_in_ctxt g ctxt req)
                    framing_failure)
@@ -260,14 +260,14 @@ let check_frameable (#g:env)
 let apply_frame (#g:env)
                 (#t:st_term)
                 (#ctxt:term)
-                (ctxt_typing: tot_typing g ctxt Tm_VProp)
+                (ctxt_typing: tot_typing g ctxt tm_vprop)
                 (#c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
   : Tot (c':comp_st { comp_pre c' == ctxt /\
                       comp_res c' == comp_res c /\
                       comp_u c' == comp_u c /\
-                      comp_post c' == Tm_Star (comp_post c) (frame_of frame_t) } &
+                      comp_post c' == tm_star (comp_post c) (frame_of frame_t) } &
            st_typing g t c')
   = let s = st_comp_of_comp c in
     let (| frame, frame_typing, ve |) = frame_t in
@@ -292,7 +292,7 @@ let apply_frame (#g:env)
 let try_frame_pre (#g:env)
                   (#t:st_term)
                   (#pre:term)
-                  (pre_typing: tot_typing g pre Tm_VProp)
+                  (pre_typing: tot_typing g pre tm_vprop)
                   (#c:comp { stateful_comp c })
                   (t_typing: st_typing g t c)
   : T.Tac (either (c':comp_st { comp_pre c' == pre } &
@@ -306,12 +306,12 @@ let try_frame_pre (#g:env)
   
 let frame_empty (#g:env)
                 (#pre:term)
-                (pre_typing: tot_typing g pre Tm_VProp)
+                (pre_typing: tot_typing g pre tm_vprop)
                 (#u:universe)
                 (#ty:term) 
                 (ut:universe_of g ty u)
                 (t:st_term)
-                (c0:comp_st{ comp_pre c0 == Tm_Emp })
+                (c0:comp_st{ comp_pre c0 == tm_emp })
                 (d:st_typing g t c0)
   : T.Tac (c:comp_st { comp_pre c == pre} &
            st_typing g t c)

@@ -10,11 +10,8 @@ module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 
 type bmap = m:Map.t var typ {
-  forall (x:var). (~ (Map.contains m x)) ==> (Map.sel m x == Tm_Unknown)
+  forall (x:var). (~ (Map.contains m x)) ==> (Map.sel m x == tm_unknown)
 }
-
-let remove_binding ((x, _):var & typ) (m:bmap) : bmap =
-  Map.restrict (Set.complement (Set.singleton x)) (Map.upd m x Tm_Unknown)
 
 let related (bs:list (var & typ)) (m:Map.t var typ) =
   (forall (b:var & typ).
@@ -40,7 +37,7 @@ let as_map g = g.m
 
 let bindings_as_map _ = ()
 
-let empty_bmap : bmap = Map.const_on Set.empty Tm_Unknown
+let empty_bmap : bmap = Map.const_on Set.empty tm_unknown
 
 let rec equal_names (l1 l2:list ppname)
   : Lemma 
@@ -62,10 +59,12 @@ let mk_env (f:RT.fstar_top_env) : env =
 
 let mk_env_bs _ = ()
 
+let mk_env_dom _ = assert (Set.equal (Map.domain empty_bmap) Set.empty)
+
 let push_binding g x p t =
   { g with bs = (x, t)::g.bs;
            names = p::g.names;
-          m = Map.upd g.m x t }
+           m = Map.upd g.m x t }
 
 let push_binding_bs _ _ _ _ = ()
 
@@ -109,6 +108,49 @@ let push_env_as_map _ _ = ()
 let push_env_assoc g1 g2 g3 =
   L.append_assoc g3.bs g2.bs g1.bs;
   assert (equal (push_env g1 (push_env g2 g3)) (push_env (push_env g1 g2) g3))
+
+let rec remove_binding_aux (g:env)
+  (prefix:list (var & typ))
+  (prefix_names:list ppname { List.length prefix == List.length prefix_names})
+  (suffix:list (var & typ) { Cons? suffix })
+  (suffix_names:list ppname { List.length suffix == List.length suffix_names })
+  : Pure (var & typ & env)
+         (requires bindings g == prefix @ suffix /\
+                   g.names == prefix_names @ suffix_names)
+         (ensures fun r ->
+            let x, t, g' = r in
+            fstar_env g' == fstar_env g /\
+            (~ (x `Set.mem` dom g')) /\
+            g == push_env (push_binding (mk_env (fstar_env g)) x ppname_default t) g')
+         (decreases List.Tot.length suffix) =
+  match suffix, suffix_names with
+  | [x, t], _ ->
+    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x tm_unknown) in
+    // we need uniqueness invariant in the representation
+    assume (forall (b:var & typ). List.Tot.memP b prefix <==> (List.Tot.memP b g.bs /\
+                                                               fst b =!= x));
+    let g' = {g with bs = prefix; names=prefix_names; m} in
+    assert (equal g (push_env (push_binding (mk_env (fstar_env g)) x ppname_default t) g'));
+    x, t, g'
+  | (x, t)::suffix_rest, n::suffix_names_rest ->
+    assume (prefix @ suffix == (prefix @ [x,t]) @ suffix_rest);
+    assume (prefix_names @ suffix_names == (prefix_names @ [n]) @ suffix_names_rest);
+    remove_binding_aux g (prefix @ [x, t]) (prefix_names @ [n]) suffix_rest suffix_names_rest
+
+let remove_binding g =
+  remove_binding_aux g [] [] g.bs g.names
+
+let remove_latest_binding g =
+  match g.bs with
+  | (x, t)::rest ->
+    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x tm_unknown) in
+    // we need uniqueness invariant in the representation
+    assume (forall (b:var & typ). List.Tot.memP b rest <==> (List.Tot.memP b g.bs /\
+                                                             fst b =!= x));
+    let g' = {g with bs = rest; names=L.tl g.names; m} in
+    assert (equal g (push_binding g' x ppname_default t));
+    x, t, g'    
+
 
 let intro_env_extends (g1 g2 g3:env)
   : Lemma (requires extends_with g1 g2 g3)
@@ -205,7 +247,7 @@ let env_to_string (e:env) : T.Tac string =
   let bs = T.map
     (fun ((_, t), x) -> Printf.sprintf "%s : %s" (T.unseal x.name) (Pulse.Syntax.Printer.term_to_string t))
     (T.zip e.bs e.names) in
-  Printf.sprintf "Env:\n\t%s\n" (String.concat "\n\t" bs)
+  String.concat "\n  " bs
 
 let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   let r = 
@@ -216,7 +258,6 @@ let fail (#a:Type) (g:env) (r:option range) (msg:string) =
       then range_of_env g
       else r
   in
-  let ctx = Printf.sprintf "Environment: %s\n"  (env_to_string g) in
-  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctx::ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
   FStar.Tactics.log_issues [issue];
   T.fail "Pulse checker failed"

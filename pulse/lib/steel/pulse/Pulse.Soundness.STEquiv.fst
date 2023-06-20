@@ -1,8 +1,8 @@
 module Pulse.Soundness.STEquiv
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
@@ -42,9 +42,9 @@ let inst_intro_vprop_post_equiv (#g:R.env) (#ty:R.term) (#u:_)
                                 (d_ty:RT.tot_typing g ty (RT.tm_type u))
                                 (#post0 #post1:R.term)
                                 (d_0:RT.tot_typing g post0 
-                                       (mk_arrow (ty, R.Q_Explicit) (elab_term Tm_VProp)))
+                                       (mk_arrow (ty, R.Q_Explicit) (elab_term tm_vprop)))
                                 (d_1:RT.tot_typing g post1 
-                                       (mk_arrow (ty, R.Q_Explicit) (elab_term Tm_VProp)))
+                                       (mk_arrow (ty, R.Q_Explicit) (elab_term tm_vprop)))
                                 (#pf:_)
                                 (eq:RT.tot_typing g pf (mk_arrow (ty, R.Q_Explicit) 
                                       (stt_vprop_equiv (app0 post0) (app0 post1))))
@@ -57,25 +57,25 @@ let stt_vprop_post_equiv_is_prop (#g:R.env) (#ty:R.term) (#u:_)
                                  (d_ty:RT.tot_typing g ty (RT.tm_type u))
                                  (#post0 #post1:R.term)
                                  (d_0:RT.tot_typing g post0 
-                                                (mk_arrow (ty, R.Q_Explicit) (elab_term Tm_VProp)))
+                                                (mk_arrow (ty, R.Q_Explicit) (elab_term tm_vprop)))
                                  (d_1:RT.tot_typing g post1 
-                                                (mk_arrow (ty, R.Q_Explicit) (elab_term Tm_VProp)))
+                                                (mk_arrow (ty, R.Q_Explicit) (elab_term tm_vprop)))
   : GTot (RT.tot_typing g (stt_vprop_post_equiv u ty post0 post1) RT.tm_prop)
   = admit()
 
 let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
                  (d_a: RT.tot_typing g a (RT.tm_type u))
-                 (d_pre1: RT.tot_typing g pre1 (elab_term Tm_VProp))
-                 (d_pre2: RT.tot_typing g pre2 (elab_term Tm_VProp))
-                 (d_post1:RT.tot_typing g post1 (mk_arrow (a, R.Q_Explicit) (elab_term Tm_VProp)))
-                 (d_post2:RT.tot_typing g post2 (mk_arrow (a, R.Q_Explicit) (elab_term Tm_VProp)))
+                 (d_pre1: RT.tot_typing g pre1 (elab_term tm_vprop))
+                 (d_pre2: RT.tot_typing g pre2 (elab_term tm_vprop))
+                 (d_post1:RT.tot_typing g post1 (mk_arrow (a, R.Q_Explicit) (elab_term tm_vprop)))
+                 (d_post2:RT.tot_typing g post2 (mk_arrow (a, R.Q_Explicit) (elab_term tm_vprop)))
                  (pre_equiv:RT.tot_typing g (`()) (stt_vprop_equiv pre1 pre2))
                  (post_equiv:RT.tot_typing g (`()) (stt_vprop_post_equiv u a post1 post2))
                  (d_r:RT.tot_typing g r (mk_stt_comp u a pre1 post1))
   : GTot (RT.tot_typing g (mk_sub_stt u a pre1 pre2 post1 post2 r) (mk_stt_comp u a pre2 post2))
   = admit()
 
-let vprop_arrow (t:term) : term = tm_arrow (null_binder t) None (C_Tot Tm_VProp)
+let vprop_arrow (t:term) : term = tm_arrow (null_binder t) None (C_Tot tm_vprop)
 
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --query_stats"
 let st_equiv_soundness (g:stt_env)
@@ -124,7 +124,7 @@ let st_equiv_soundness (g:stt_env)
                         (RT.open_term (elab_term (comp_post c0)) x)
                         (RT.open_term (elab_term (comp_post c1)) x))
                       [ RT.ND x 0 ]);
-            RT.T_Abs _ _ _ (`()) _ _ _ R.Q_Explicit _ r_res_typing post_equiv
+            RT.T_Abs _ _ _ (`()) _ (comp_u c1) _ R.Q_Explicit _ r_res_typing post_equiv
       in
       let d = stt_vprop_equiv_abstract d in
       let abs_post0_typing
@@ -147,7 +147,7 @@ let st_equiv_soundness (g:stt_env)
             (stt_vprop_post_equiv_is_prop r_res_typing abs_post0_typing abs_post1_typing)
             (RT.Relc_total_ghost _ _))
       in
-      inst_sub_stt r_res_typing 
+      inst_sub_stt #_ #(comp_u c1) r_res_typing 
                   (tot_typing_soundness pre_typing)
                   (tot_typing_soundness (fst (vprop_equiv_typing eq_pre) pre_typing))
                   abs_post0_typing

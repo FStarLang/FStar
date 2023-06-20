@@ -1,5 +1,5 @@
 module Pulse.Checker.Common
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module Metatheory = Pulse.Typing.Metatheory
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
@@ -12,15 +12,15 @@ let post_hint_typing g p x = {
 }
 
 let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { Metatheory.fresh_wrt x g (freevars t) })
-                               (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) Tm_VProp)
-  : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty Tm_VProp))                                 
+                               (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
+  : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_vprop))                                 
   = admit()
 
 let intro_post_hint g ret_ty_opt post =
   let x = fresh g in
   let ret_ty = 
       match ret_ty_opt with
-      | None -> Tm_FStar RT.unit_ty FStar.Range.range_0
+      | None -> tm_fstar RT.unit_ty FStar.Range.range_0
       | Some t -> t
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty in
@@ -47,7 +47,7 @@ let post_hint_from_comp_typing #g #c ct =
 let try_frame_pre (#g:env)
                   (#t:st_term)
                   (#pre:term)
-                  (pre_typing: tot_typing g pre Tm_VProp)
+                  (pre_typing: tot_typing g pre tm_vprop)
                   (#c:comp_st)
                   (t_typing: st_typing g t c)
   : T.Tac (c':comp_st { comp_pre c' == pre } &
@@ -140,10 +140,10 @@ let repack (#g:env) (#pre:term) (#t:st_term)
 
 let intro_comp_typing (g:env) 
                       (c:comp_st)
-                      (pre_typing:tot_typing g (comp_pre c) Tm_VProp)
+                      (pre_typing:tot_typing g (comp_pre c) tm_vprop)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
                       (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) Tm_VProp)
+                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
   : T.Tac (comp_typing g c (comp_u c))
   = let intro_st_comp_typing (st:st_comp { comp_u c == st.u /\
                                            comp_pre c == st.pre /\
@@ -159,12 +159,12 @@ let intro_comp_typing (g:env)
     | C_STAtomic i st -> 
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_check_term g i in
-      if not (eq_tm ty Tm_Inames)
+      if not (eq_tm ty tm_inames)
       then fail g None "Ill-typed inames"
       else CT_STAtomic _ _ _ (E i_typing) stc
     | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_check_term g i in
-      if not (eq_tm ty Tm_Inames)
+      if not (eq_tm ty tm_inames)
       then fail g None "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc

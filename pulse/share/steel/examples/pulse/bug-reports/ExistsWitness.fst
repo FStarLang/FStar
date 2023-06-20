@@ -31,8 +31,8 @@ fn sample (x:R.ref int)
 requires exists p y. R.pts_to x p y
 ensures exists p y. R.pts_to x p y ** pure (y == 17)
 {
-    let y = get_witness x;
-    assume_squash (y==17);
+    let y' = get_witness x;
+    assume_squash (y'==17);
     ()
 }
 ```

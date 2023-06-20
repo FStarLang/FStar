@@ -1,8 +1,8 @@
 module Pulse.Elaborate.Core
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
@@ -123,7 +123,7 @@ let intro_pure_tm (p:term) =
                        None
                        p;
           arg_qual = None;
-          arg = Tm_FStar (`()) Range.range_0 })
+          arg = tm_fstar (`()) Range.range_0 })
 
 let rec elab_st_typing (#g:env)
                        (#t:st_term)

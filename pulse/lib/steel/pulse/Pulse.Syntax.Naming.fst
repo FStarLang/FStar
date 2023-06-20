@@ -12,7 +12,7 @@ let rec close_open_inverse' (t:term)
                             (i:index)
   : Lemma (ensures close_term' (open_term' t (U.term_of_no_name_var x) i) x i == t)
           (decreases t)
-  = match t with
+  = match t.t with
     | Tm_Emp
     | Tm_VProp
     | Tm_Inames 
@@ -31,7 +31,7 @@ let rec close_open_inverse' (t:term)
       close_open_inverse' t.binder_ty x i;    
       close_open_inverse' b x (i + 1)
 
-    | Tm_FStar t _ ->
+    | Tm_FStar t ->
       RT.close_open_inverse' i t x
 
 let close_open_inverse_comp' (c:comp)
@@ -164,7 +164,7 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
       (requires ln' e i /\ i < j)
       (ensures open_term' e t j == e)
       (decreases e) =
-  match e with
+  match e.t with
   | Tm_Emp
   | Tm_VProp
   | Tm_Inames
@@ -178,7 +178,7 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
   | Tm_ForallSL _ t1 body ->
     open_with_gt_ln t1.binder_ty i t j;
     open_with_gt_ln body (i + 1) t (j + 1)
-  | Tm_FStar _ _ -> admit()
+  | Tm_FStar _ -> admit()
 
 let open_with_gt_ln_st (s:st_comp) (i:int) (t:term) (j:nat)
   : Lemma (requires ln_st_comp s i /\ i < j)
@@ -205,7 +205,7 @@ let rec close_with_non_freevar (e:term) (x:var) (i:nat)
       (ensures close_term' e x i == e)
       (decreases e) =
   
-  match e with
+  match e.t with
   | Tm_Emp
   | Tm_VProp
   | Tm_Inames
@@ -219,7 +219,7 @@ let rec close_with_non_freevar (e:term) (x:var) (i:nat)
   | Tm_ForallSL _ t1 body ->
     close_with_non_freevar t1.binder_ty x i;
     close_with_non_freevar body x (i + 1)
-  | Tm_FStar _ _ -> admit()
+  | Tm_FStar _ -> admit()
 
 let close_with_non_freevar_st (s:st_comp) (x:var) (i:nat)
   : Lemma

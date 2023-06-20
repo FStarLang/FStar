@@ -7,7 +7,7 @@ open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 
 module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
@@ -73,7 +73,7 @@ let par_soundness
   let post_body_eq : RT.equiv (RT.extend_env (elab_env g) x _)
     (mk_star (R.pack_ln (R.Tv_App rpostL (PReflUtil.mk_fst ru ru raL raR rx_tm, R.Q_Explicit)))
              (R.pack_ln (R.Tv_App rpostR (PReflUtil.mk_snd ru ru raL raR rx_tm, R.Q_Explicit))))
-    (elab_term (Tm_Star (open_term' postL (mk_fst uL uR aL aR x_tm) 0)
+    (elab_term (tm_star (open_term' postL (mk_fst uL uR aL aR x_tm) 0)
                         (open_term' postR (mk_snd uL uR aL aR x_tm) 0)))
     = assume (RT.ln' (elab_term postL) 0);
       assume (RT.ln (elab_term (mk_fst uL uR aL aR x_tm)));

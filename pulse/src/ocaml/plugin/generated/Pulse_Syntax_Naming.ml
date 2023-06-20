@@ -2,7 +2,7 @@ open Prims
 let rec (freevars :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun t ->
-    match t with
+    match t.Pulse_Syntax_Base.t with
     | Pulse_Syntax_Base.Tm_Emp -> FStar_Set.empty ()
     | Pulse_Syntax_Base.Tm_VProp -> FStar_Set.empty ()
     | Pulse_Syntax_Base.Tm_Inames -> FStar_Set.empty ()
@@ -17,8 +17,7 @@ let rec (freevars :
         FStar_Set.union (freevars t1.Pulse_Syntax_Base.binder_ty)
           (freevars t2)
     | Pulse_Syntax_Base.Tm_Pure p -> freevars p
-    | Pulse_Syntax_Base.Tm_FStar (t1, uu___) ->
-        FStar_Reflection_Typing.freevars t1
+    | Pulse_Syntax_Base.Tm_FStar t1 -> FStar_Reflection_Typing.freevars t1
 let (freevars_st_comp :
   Pulse_Syntax_Base.st_comp -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun s ->
@@ -132,12 +131,12 @@ let rec (freevars_st :
         { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
           Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
         -> FStar_Set.union (freevars typ) (freevars_opt post)
-    | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t1;_} ->
+    | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
         freevars_st t1
 let rec (ln' : Pulse_Syntax_Base.term -> Prims.int -> Prims.bool) =
   fun t ->
     fun i ->
-      match t with
+      match t.Pulse_Syntax_Base.t with
       | Pulse_Syntax_Base.Tm_Emp -> true
       | Pulse_Syntax_Base.Tm_VProp -> true
       | Pulse_Syntax_Base.Tm_Inames -> true
@@ -151,8 +150,7 @@ let rec (ln' : Pulse_Syntax_Base.term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_ForallSL (uu___, t1, body) ->
           (ln' t1.Pulse_Syntax_Base.binder_ty i) &&
             (ln' body (i + Prims.int_one))
-      | Pulse_Syntax_Base.Tm_FStar (t1, uu___) ->
-          FStar_Reflection_Typing.ln' t1 i
+      | Pulse_Syntax_Base.Tm_FStar t1 -> FStar_Reflection_Typing.ln' t1 i
 let (ln_st_comp : Pulse_Syntax_Base.st_comp -> Prims.int -> Prims.bool) =
   fun s ->
     fun i ->
@@ -267,7 +265,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
             Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
           -> (ln' typ i) && (ln_opt' post (i + Prims.int_one))
-      | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t1;_} ->
+      | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
           ln_st' t1 i
 let (ln : Pulse_Syntax_Base.term -> Prims.bool) =
   fun t -> ln' t (Prims.of_int (-1))
@@ -328,37 +326,42 @@ let rec (subst_term :
   Pulse_Syntax_Base.term -> subst -> Pulse_Syntax_Base.term) =
   fun t ->
     fun ss ->
-      match t with
+      let w t' = Pulse_Syntax_Base.with_range t' t.Pulse_Syntax_Base.range1 in
+      match t.Pulse_Syntax_Base.t with
       | Pulse_Syntax_Base.Tm_VProp -> t
       | Pulse_Syntax_Base.Tm_Emp -> t
       | Pulse_Syntax_Base.Tm_Inames -> t
       | Pulse_Syntax_Base.Tm_EmpInames -> t
       | Pulse_Syntax_Base.Tm_Unknown -> t
       | Pulse_Syntax_Base.Tm_Pure p ->
-          Pulse_Syntax_Base.Tm_Pure (subst_term p ss)
+          w (Pulse_Syntax_Base.Tm_Pure (subst_term p ss))
       | Pulse_Syntax_Base.Tm_Star (l, r) ->
-          Pulse_Syntax_Base.Tm_Star ((subst_term l ss), (subst_term r ss))
+          w
+            (Pulse_Syntax_Base.Tm_Star ((subst_term l ss), (subst_term r ss)))
       | Pulse_Syntax_Base.Tm_ExistsSL (u, b, body) ->
-          Pulse_Syntax_Base.Tm_ExistsSL
-            (u,
-              {
-                Pulse_Syntax_Base.binder_ty =
-                  (subst_term b.Pulse_Syntax_Base.binder_ty ss);
-                Pulse_Syntax_Base.binder_ppname =
-                  (b.Pulse_Syntax_Base.binder_ppname)
-              }, (subst_term body (shift_subst ss)))
+          w
+            (Pulse_Syntax_Base.Tm_ExistsSL
+               (u,
+                 {
+                   Pulse_Syntax_Base.binder_ty =
+                     (subst_term b.Pulse_Syntax_Base.binder_ty ss);
+                   Pulse_Syntax_Base.binder_ppname =
+                     (b.Pulse_Syntax_Base.binder_ppname)
+                 }, (subst_term body (shift_subst ss))))
       | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
-          Pulse_Syntax_Base.Tm_ForallSL
-            (u,
-              {
-                Pulse_Syntax_Base.binder_ty =
-                  (subst_term b.Pulse_Syntax_Base.binder_ty ss);
-                Pulse_Syntax_Base.binder_ppname =
-                  (b.Pulse_Syntax_Base.binder_ppname)
-              }, (subst_term body (shift_subst ss)))
-      | Pulse_Syntax_Base.Tm_FStar (t1, r) ->
-          Pulse_Syntax_Base.Tm_FStar
-            ((FStar_Reflection_Typing.subst_term t1 (rt_subst ss)), r)
+          w
+            (Pulse_Syntax_Base.Tm_ForallSL
+               (u,
+                 {
+                   Pulse_Syntax_Base.binder_ty =
+                     (subst_term b.Pulse_Syntax_Base.binder_ty ss);
+                   Pulse_Syntax_Base.binder_ppname =
+                     (b.Pulse_Syntax_Base.binder_ppname)
+                 }, (subst_term body (shift_subst ss))))
+      | Pulse_Syntax_Base.Tm_FStar t1 ->
+          w
+            (Pulse_Syntax_Base.Tm_FStar
+               (FStar_Reflection_Typing.subst_term t1 (rt_subst ss)))
 let (open_term' :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
@@ -623,12 +626,12 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.post3 =
                   (subst_term_opt post (shift_subst ss))
               }
-        | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t = t1;_} ->
+        | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
             Pulse_Syntax_Base.Tm_Protect
-              { Pulse_Syntax_Base.t = (subst_st_term t1 ss) } in
+              { Pulse_Syntax_Base.t3 = (subst_st_term t1 ss) } in
       {
         Pulse_Syntax_Base.term1 = t';
-        Pulse_Syntax_Base.range1 = (t.Pulse_Syntax_Base.range1)
+        Pulse_Syntax_Base.range2 = (t.Pulse_Syntax_Base.range2)
       }
 let (open_st_term' :
   Pulse_Syntax_Base.st_term ->

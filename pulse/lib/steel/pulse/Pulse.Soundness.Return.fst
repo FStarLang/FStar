@@ -7,7 +7,7 @@ open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 
 module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
@@ -36,7 +36,7 @@ let return_soundess
   let rpost_abs_typing
     : RT.tot_typing _ rpost_abs
                       (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
-    mk_t_abs_tot g ppname_default t_typing post_typing in
+    mk_t_abs_tot g #_ #None ppname_default t_typing post_typing in
   
   let rx_tm = RT.var_as_term x in
   let elab_c_pre = RT.subst_term rpost [ RT.DT 0 re ] in
@@ -83,10 +83,10 @@ let return_soundess
                    (WT.return_stt_ghost_comp ru rt re rpost_abs x)
                    (elab_comp c)) =
     
-    assert (elab_term (close_term' (Tm_Star (open_term' post (null_var x) 0)
-                                            (Tm_Pure (mk_eq2_prop u t (null_var x) e))) x 0) ==
-            RT.subst_term (elab_term (Tm_Star (open_term' post (null_var x) 0)
-                                              (Tm_Pure (mk_eq2_prop u t (null_var x) e))))
+    assert (elab_term (close_term' (tm_star (open_term' post (null_var x) 0)
+                                            (tm_pure (mk_eq2_prop u t (null_var x) e))) x 0) ==
+            RT.subst_term (elab_term (tm_star (open_term' post (null_var x) 0)
+                                              (tm_pure (mk_eq2_prop u t (null_var x) e))))
                           [ RT. ND x 0 ]);
     let elab_c_post =
       mk_abs rt R.Q_Explicit

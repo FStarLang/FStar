@@ -45,18 +45,19 @@ let tm_bvar (bv:bv) : term = U.tm_bvar bv
 let tm_var (x:nm) : term = U.tm_var x
 let tm_fvar (x:fv) : term = U.tm_fvar x
 let tm_uinst (l:fv) (us:universe list) : term = U.tm_uinst l us
-let tm_emp : term = Tm_Emp
-let tm_pure (p:term) : term = Tm_Pure p
-let tm_star (p0:term) (p1:term) : term = Tm_Star (p0, p1)
-let tm_exists (b:binder) (body:vprop) : term = Tm_ExistsSL (U_unknown, b, body)
+let wr r t = { t; range1 = r }
+let tm_emp r : term = wr r Tm_Emp
+let tm_pure (p:term) r : term = wr r (Tm_Pure p)
+let tm_star (p0:term) (p1:term) r : term = wr r (Tm_Star (p0, p1))
+let tm_exists (b:binder) (body:vprop) r : term = wr r (Tm_ExistsSL (U_unknown, b, body))
 let map_aqual (q:S.aqual) =
   match q with
   | Some { S.aqual_implicit = true } -> Some Implicit
   | _ -> None
 let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
   U.tm_arrow b (map_aqual q) body
-let tm_expr (t:S.term) : term = Tm_FStar (t, t.pos)
-let tm_unknown : term = Tm_Unknown
+let tm_expr (t:S.term) r : term = wr r (Tm_FStar t)
+let tm_unknown r : term = wr r Tm_Unknown
 
 
 let mk_st_comp (pre:term) (ret:binder) (post:term) : st_comp =
@@ -115,7 +116,7 @@ let is_tm_intro_exists (s:st_term) : bool =
   | Tm_IntroExists _ -> true
   | _ -> false
 
-let tm_protect (s:st_term) : st_term = PSB.(with_range (tm_protect s) s.range1)
+let tm_protect (s:st_term) : st_term = PSB.(with_range (tm_protect s) s.range2)
 
 let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
   PSB.(with_range (tm_par p1 b1 q1 p2 b2 q2) r)
@@ -124,7 +125,7 @@ let tm_rewrite p1 p2 r : st_term =
   PSB.(with_range (tm_rewrite p1 p2) r)
 
 let tm_admit r : st_term =
-  PSB.(with_range (tm_admit STT u_zero tm_unknown None) r)
+  PSB.(with_range (tm_admit STT u_zero (tm_unknown r) None) r)
   
 let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v
@@ -134,7 +135,7 @@ let comp_pre c =
    | C_ST st
    | C_STAtomic (_, st)
    | C_STGhost (_, st) -> st.pre
-   | _ -> tm_emp
+   | _ -> Pulse_Syntax_Base.tm_emp
 
 let comp_res c =
   match c with
@@ -148,7 +149,7 @@ let comp_post c =
    | C_ST st
    | C_STAtomic (_, st)
    | C_STGhost (_, st) -> st.post
-   | _ -> tm_emp
+   | _ -> Pulse_Syntax_Base.tm_emp
 
 let print_exn (e:exn) = Printexc.to_string e
 
@@ -156,7 +157,7 @@ open FStar_Pervasives
 module Env = FStar_TypeChecker_Env
 let tac_to_string (env:Env.env) f =
     let ps =
-        FStar_Tactics_Basic.proofstate_of_goals 
+        FStar_Tactics_V2_Basic.proofstate_of_goals 
                 (Env.get_range env)
                 env
                 []

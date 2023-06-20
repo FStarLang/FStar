@@ -1,6 +1,6 @@
 module Pulse.Checker.Admit
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax
@@ -23,7 +23,7 @@ let check_admit
   (g:env)
   (t:st_term{Tm_Admit? t.term})
   (pre:term)
-  (pre_typing:tot_typing g pre Tm_VProp)
+  (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   : T.Tac (checker_result_t g pre post_hint) =
   let Tm_Admit { ctag = c; typ=t; post } = t.term in
@@ -34,7 +34,7 @@ let check_admit
        u:universe &
        universe_of g t u &
        post:vprop { post_hint_compatible post_hint x t u post } &
-       tot_typing (push_binding g x (fst px) t) post Tm_VProp)
+       tot_typing (push_binding g x (fst px) t) post tm_vprop)
     = match post, post_hint with
       | None, None
       | Some _, Some _ ->
@@ -44,7 +44,7 @@ let check_admit
         let (| u, t_typing |) = check_universe g t in    
         let post_opened = open_term_nv post px in      
         let (| post, post_typing |) = 
-            check_term_with_expected_type (push_binding g x (fst px) t) post_opened Tm_VProp
+            check_term_with_expected_type (push_binding g x (fst px) t) post_opened tm_vprop
         in
         (| t, u, t_typing, post, E post_typing |)
 

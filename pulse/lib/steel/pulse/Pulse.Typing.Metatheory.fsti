@@ -20,21 +20,21 @@ let fresh_wrt (x:var) (g:env) (vars:_) =
     
 val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
-     tot_typing g st.pre Tm_VProp &
+     tot_typing g st.pre tm_vprop &
      (x:var{fresh_wrt x g (freevars st.post)} -> //this part is tricky, to get the quantification on x
-       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) Tm_VProp))
+       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop))
 
 val st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
-     tot_typing g st.pre Tm_VProp &
+     tot_typing g st.pre tm_vprop &
      x:var{fresh_wrt x g (freevars st.post)} &
-     tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) Tm_VProp)
+     tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop)
 
 val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
-                        (_:tot_typing g (Tm_ExistsSL u (as_binder ty) p) Tm_VProp)
+                        (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_vprop)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
-    tot_typing (push_binding g x ppname_default ty) p Tm_VProp
+    tot_typing (push_binding g x ppname_default ty) p tm_vprop
 
 val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
                          (x:var { fresh_wrt x g Set.empty })
@@ -42,8 +42,8 @@ val tot_typing_weakening (#g:env) (#t:term) (#ty:term)
                          (_:tot_typing g t ty)
    : tot_typing (push_binding g x ppname_default x_t) t ty
 
-val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (Tm_Pure p) Tm_VProp)
-   : tot_typing g p (Tm_FStar FStar.Reflection.Typing.tm_prop Range.range_0)
+val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
+   : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
 
 
 let comp_st_with_post (c:comp_st) (post:term) : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
@@ -77,83 +77,29 @@ let st_typing_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
   : st_typing g t (comp_st_with_pre c pre)
   = admit()
 
-
-///// Substitution lemma /////
-
-module L = FStar.List.Tot
-let map_opt (#a #b:Type) (f:a -> b) (x:option a) : option b =
-  match x with
-  | None -> None
-  | Some x -> Some (f x)
-
-let subst_flip (ss:subst) (t:term) = subst_term t ss
-
-let subst_env (en:env) (ss:subst)
-  : en':env { forall (x:var). lookup en' x ==
-                              map_opt (subst_flip ss) (lookup en x) }
-  = admit ()
-
-type nt_subst = s:subst {
-  forall (elt:subst_elt). List.Tot.memP elt s ==> NT? elt
-}
-
 let pairwise_disjoint (g g' g'':env) =
   disjoint g g' /\ disjoint g' g'' /\ disjoint g g''
 
-let rec lookup_nt_subst (ss:nt_subst) (x:var) : option term =
-  match ss with
-  | [] -> None
-  | (NT y t)::ss -> if x = y then Some t else lookup_nt_subst ss x
+// move to Env
+let singleton_env (f:_) (x:var) (t:typ) = push_binding (mk_env f) x ppname_default t
 
-let well_typed_ss (g:env) (g':env) (ss:nt_subst) =
+let nt (x:var) (t:term) = [ NT x t ]
 
-  forall (elt:subst_elt).
-  L.memP elt ss ==> (let NT x e = elt in
-                     x `Set.mem` dom g' /\
-                     (let Some t = lookup g' x in
-                      tot_typing g e t))
+let subst_env (en:env) (ss:subst)
+  : en':env { fstar_env en == fstar_env en' /\
+              dom en == dom en' } =
+  admit ()
 
-let ss_covers_g' (ss:nt_subst) (g':env) =
-  forall (x:var). x `Set.mem` dom g' ==> Some? (lookup_nt_subst ss x)
-
-let tot_typing_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' })
-  (#e1:term) (#t1:typ)
-  (e1_typing:tot_typing (push_env g (push_env g' g'')) e1 t1)
-  (ss:nt_subst { well_typed_ss g g' ss /\ ss_covers_g' ss g' })
-  : tot_typing (push_env g g'') (subst_term e1 ss) (subst_term t1 ss) = admit ()
-  
-let rec st_typing_subst (g:env) (g':env) (g'':env { pairwise_disjoint g g' g'' })
+let st_typing_subst
+  (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
+  (#e:term)
+  (e_typing:tot_typing g e t)
   (#e1:st_term) (#c1:comp_st)
-  (e1_typing:st_typing (push_env g (push_env g' g'')) e1 c1)
-  (ss:nt_subst { well_typed_ss g g' ss /\ ss_covers_g' ss g' })
-  : st_typing (push_env g g'') (subst_st_term e1 ss) (subst_comp c1 ss) =
+  (e1_typing:st_typing (push_env g (push_env (singleton_env (fstar_env g) x t) g')) e1 c1)
 
-  match e1_typing with
-  | T_Abs _ x q b u body c b_ty_typing body_typing ->
-    let b_ty_typing
-      : tot_typing (push_env g g'')
-                   (subst_term b.binder_ty ss)
-                   (tm_type u) = tot_typing_subst g g' g'' b_ty_typing ss in
-    
-    let g1 : env = push_binding (push_env g (push_env g' g'')) x ppname_default (subst_term b.binder_ty ss) in
-    let g2 : env = push_env g (push_env g' (push_binding g'' x ppname_default (subst_term b.binder_ty ss))) in
-    assume (bindings g1 == bindings g2);
-  
-    let body_typing
-      : st_typing g1 (open_st_term_nv (subst_st_term body ss) (b.binder_ppname, x)) (subst_comp c ss)
-      = st_typing_subst g g' (push_binding g'' x ppname_default (subst_term b.binder_ty ss)) body_typing ss in
+  : st_typing (push_env g (subst_env g' (nt x e)))
+              (subst_st_term e1 (nt x e))
+              (subst_comp c1 (nt x e)) =
+  admit ()
 
-    T_Abs (push_env g g') x q (subst_binder b ss) u (subst_st_term body ss) (subst_comp c ss)
-          b_ty_typing body_typing
 
-  | T_STApp _ head ty q res arg head_typing arg_typing ->
-    assume (subst_term (tm_arrow (as_binder ty) q res) ss ==
-            tm_arrow (as_binder (subst_term ty ss)) q (subst_comp res ss));
-    assume (subst_comp (open_comp_with res arg) ss ==
-            open_comp_with (subst_comp res ss) (subst_term arg ss));
-    T_STApp (push_env g g'') (subst_term head ss) (subst_term ty ss) q
-            (subst_comp res ss) (subst_term arg ss)
-            (tot_typing_subst g g' g'' head_typing ss)
-            (tot_typing_subst g g' g'' arg_typing ss)
-
-  | _ -> admit ()

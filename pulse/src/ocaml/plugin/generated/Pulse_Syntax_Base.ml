@@ -1,5 +1,5 @@
 open Prims
-type constant = FStar_Reflection_Data.vconst
+type constant = FStar_Reflection_V2_Data.vconst
 type var = Prims.nat
 type index = Prims.nat
 type universe = FStar_Reflection_Types.universe
@@ -55,7 +55,7 @@ let (as_fv : FStar_Reflection_Types.name -> fv) =
   fun l -> { fv_name = l; fv_range = FStar_Range.range_0 }
 type 't not_tv_unknown = unit
 type host_term = FStar_Reflection_Types.term
-type term =
+type term' =
   | Tm_Emp 
   | Tm_Pure of term 
   | Tm_Star of term * term 
@@ -64,11 +64,14 @@ type term =
   | Tm_VProp 
   | Tm_Inames 
   | Tm_EmpInames 
-  | Tm_FStar of host_term * range 
+  | Tm_FStar of host_term 
   | Tm_Unknown 
 and binder = {
   binder_ty: term ;
   binder_ppname: ppname }
+and term = {
+  t: term' ;
+  range1: range }
 let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
 let uu___is_Tm_Pure uu___ = match uu___ with | Tm_Pure _ -> true | _ -> false
 let uu___is_Tm_Star uu___ = match uu___ with | Tm_Star _ -> true | _ -> false
@@ -88,9 +91,43 @@ let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
 type vprop = term
 type typ = term
-let (term_range : term -> FStar_Range.range) =
-  fun t ->
-    match t with | Tm_FStar (uu___, r) -> r | uu___ -> FStar_Range.range_0
+let (term_range : term -> range) = fun t -> t.range1
+let (tm_fstar : host_term -> range -> term) =
+  fun t -> fun r -> { t = (Tm_FStar t); range1 = r }
+let (with_range : term' -> range -> term) =
+  fun t -> fun r -> { t; range1 = r }
+let (tm_vprop : term) = with_range Tm_VProp FStar_Range.range_0
+let (tm_inames : term) = with_range Tm_Inames FStar_Range.range_0
+let (tm_emp : term) = with_range Tm_Emp FStar_Range.range_0
+let (tm_emp_inames : term) = with_range Tm_EmpInames FStar_Range.range_0
+let (tm_unknown : term) = with_range Tm_Unknown FStar_Range.range_0
+let (tm_pure : term -> term) =
+  fun p -> { t = (Tm_Pure p); range1 = (p.range1) }
+let (tm_star : vprop -> vprop -> term) =
+  fun l ->
+    fun r ->
+      {
+        t = (Tm_Star (l, r));
+        range1 = (Pulse_RuntimeUtils.union_ranges l.range1 r.range1)
+      }
+let (tm_exists_sl : universe -> binder -> vprop -> term) =
+  fun u ->
+    fun b ->
+      fun body ->
+        {
+          t = (Tm_ExistsSL (u, b, body));
+          range1 =
+            (Pulse_RuntimeUtils.union_ranges (b.binder_ty).range1 body.range1)
+        }
+let (tm_forall_sl : universe -> binder -> vprop -> term) =
+  fun u ->
+    fun b ->
+      fun body ->
+        {
+          t = (Tm_ForallSL (u, b, body));
+          range1 =
+            (Pulse_RuntimeUtils.union_ranges (b.binder_ty).range1 body.range1)
+        }
 type st_comp = {
   u: universe ;
   res: term ;
@@ -215,7 +252,7 @@ and st_term'__Tm_Admit__payload =
   typ: term ;
   post3: term FStar_Pervasives_Native.option }
 and st_term'__Tm_Protect__payload = {
-  t: st_term }
+  t3: st_term }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
   | Tm_Abs of st_term'__Tm_Abs__payload 
@@ -234,7 +271,7 @@ and st_term' =
   | Tm_Protect of st_term'__Tm_Protect__payload 
 and st_term = {
   term1: st_term' ;
-  range1: range }
+  range2: range }
 let uu___is_Tm_Return uu___ =
   match uu___ with | Tm_Return _ -> true | _ -> false
 let uu___is_Tm_Abs uu___ = match uu___ with | Tm_Abs _ -> true | _ -> false
@@ -275,13 +312,15 @@ let (mk_binder : Prims.string -> range -> term -> binder) =
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 ->
     fun u2 ->
-      FStar_Reflection_Builtins.term_eq
-        (FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Type u1))
-        (FStar_Reflection_Builtins.pack_ln (FStar_Reflection_Data.Tv_Type u2))
+      FStar_Reflection_V2_Builtins.term_eq
+        (FStar_Reflection_V2_Builtins.pack_ln
+           (FStar_Reflection_V2_Data.Tv_Type u1))
+        (FStar_Reflection_V2_Builtins.pack_ln
+           (FStar_Reflection_V2_Data.Tv_Type u2))
 let rec (eq_tm : term -> term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
-      match (t1, t2) with
+      match ((t1.t), (t2.t)) with
       | (Tm_VProp, Tm_VProp) -> true
       | (Tm_Emp, Tm_Emp) -> true
       | (Tm_Inames, Tm_Inames) -> true
@@ -296,8 +335,8 @@ let rec (eq_tm : term -> term -> Prims.bool) =
       | (Tm_ForallSL (u1, t11, b1), Tm_ForallSL (u2, t21, b2)) ->
           ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
             (eq_tm b1 b2)
-      | (Tm_FStar (t11, r), Tm_FStar (t21, uu___)) ->
-          FStar_Reflection_Builtins.term_eq t11 t21
+      | (Tm_FStar t11, Tm_FStar t21) ->
+          FStar_Reflection_V2_Builtins.term_eq t11 t21
       | uu___ -> false
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
@@ -405,7 +444,7 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { ctag1 = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
-      | (Tm_Protect { t = t11;_}, Tm_Protect { t = t21;_}) ->
+      | (Tm_Protect { t3 = t11;_}, Tm_Protect { t3 = t21;_}) ->
           eq_st_term t11 t21
       | uu___ -> false
 let (comp_res : comp -> term) =
