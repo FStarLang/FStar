@@ -83,6 +83,15 @@ Guidelines for the changelog:
     collects all those refinement goals and presents them to the user
     tactic for furhter processing.
 
+  * A new version of the tactics and reflection engine was started by
+    PR https://github.com/FStarLang/FStar/pull/2960. The new version is
+    under the `FStar.Tactics.V2` and `FStar.Reflection.V2` namespaces
+    and should be considered *experimental* and subject to change. The
+    old version is still supported, available under the corresponding V1
+    namespaces. All the old, unqualified modules point to V1, so users
+    should not need to make any change to their code to continue using
+    V1.
+
 ## Typeclass argument syntax
 
   * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
