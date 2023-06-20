@@ -229,7 +229,7 @@ fn l0_core_step1
 
   // get_witness is successful on arrays in bug-reports/Records.fst
   // (code at the bottom) so it's unclear why it doesn't work here...
-  let s1 = get_witness l0.deviceID_pub;
+  // let s1 = get_witness l0.deviceID_pub;
 
   admit()
 }

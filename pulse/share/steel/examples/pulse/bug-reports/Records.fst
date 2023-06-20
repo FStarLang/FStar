@@ -13,22 +13,23 @@ open Steel.ST.Util
 open Pulse.Steel.Wrapper
 
 
+(* test record mutation and permissions for records of byte refs *)
+
 noeq
-type rec2 = {
+type rec = {
   r1: R.ref U8.t;
   r2: R.ref U8.t;
 }
 
-type rec2_repr = {
+type rec_repr = {
   v1: U8.t;
   v2: U8.t;
 }
 
-let rec2_perm (r:rec2) (v:rec2_repr)
+let rec_perm (r:rec) (v:rec_repr)
   : vprop = 
   R.pts_to r.r1 full_perm v.v1 `star`
   R.pts_to r.r2 full_perm v.v2
-
 
 // helpers 
 
@@ -52,54 +53,75 @@ fn mutate_ref (r:R.ref U8.t) (x:U8.t) (#v:Ghost.erased U8.t)
 }
 ```
 
+
 // this works without the introduction, but pulse can't 
 // infer the existential unless v is provided as a witness
 // and fails with a mysterious error: "match_typ: t2 is a uvar"
 [@@expect_failure]
 ```pulse
-fn rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
-  requires rec2_perm r v
-  ensures exists (v_:rec2_repr) . rec2_perm r v_
+fn rec_get_witness (r:rec) (#v:Ghost.erased rec_repr)
+  requires rec_perm r v
+  ensures exists (v_:rec_repr) . rec_perm r v_
 {
-  rewrite (rec2_perm r v)
+  rewrite (rec_perm r v)
     as (R.pts_to r.r1 full_perm v.v1 `star`
         R.pts_to r.r2 full_perm v.v2);
 
-  introduce exists (v_:Ghost.erased rec2_repr). (
+  introduce exists (v_:Ghost.erased rec_repr). (
     pure (v == v_)
   ) with _;
 
   rewrite (R.pts_to r.r1 full_perm v.v1 `star`
            R.pts_to r.r2 full_perm v.v2)
-    as (rec2_perm r v);
+    as (rec_perm r v);
   
   ()
 }
 ```
 
-// fails with no error reported, but purports that it succeeds
-// when [@@expect_failure] is uncommented
-// [@@expect_failure]
-// ```pulse
-// fn mutate_rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
-//   requires rec2_perm r v
-//   ensures exists (v_:rec2_repr) . rec2_perm r v_
-// {
-//   rewrite (rec2_perm r v)
-//     as (R.pts_to r.r1 full_perm v.v1 `star`
-//         R.pts_to r.r2 full_perm v.v2);
+// error says: could not infer implicit arguments in rec_perm on line 94,
+// but this fcn has no implicit args. also, this fcn errors at a different
+// line (88) when the remainder of this file is *not* commented out... strange
+[@@expect_failure]
+```pulse
+fn mutate_rec_get_witness (r:rec) (#v:Ghost.erased rec_repr)
+  requires rec_perm r v
+  ensures exists (v_:rec_repr) . rec_perm r v_
+{
+  rewrite (rec_perm r v)
+    as (R.pts_to r.r1 full_perm v.v1 `star`
+        R.pts_to r.r2 full_perm v.v2);
 
-//   mutate_ref r.r2 0uy;
-//   let v2_ = get_witness(r.r2);
+  mutate_ref r.r2 0uy;
+  let v2_ = get_witness(r.r2);
 
-//   rewrite (R.pts_to r.r1 full_perm v.v1 `star`
-//            R.pts_to r.r2 full_perm v2_)
-//     as `@(rec2_perm r {v with v2=v2_});
-  
-//   ()
-// }
-// ```
+  rewrite (R.pts_to r.r1 full_perm v.v1 `star`
+           R.pts_to r.r2 full_perm v2_)
+    as `@(rec_perm r {v with v2=v2_});
+  ()
+}
+```
 
+
+(* same experiments but with records of arrays instead of byte refs *)
+
+noeq
+type rec_array = {
+  r1: A.array U8.t;
+  r2: A.array U8.t;
+}
+
+type rec_array_repr = {
+  v1: Seq.seq U8.t;
+  v2: Seq.seq U8.t;
+}
+
+let rec_array_perm (r:rec_array) (v:rec_array_repr)
+  : vprop = 
+  A.pts_to r.r1 full_perm v.v1 `star`
+  A.pts_to r.r2 full_perm v.v2
+
+// helpers 
 
 ```pulse
 fn get_witness_array (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
@@ -113,38 +135,40 @@ ensures A.pts_to x full_perm y ** pure (y==z)
 
 ```pulse
 fn mutate_array (l:US.t) (a:(a:A.array U8.t{ US.v l == A.length a }))
-                (#s:Ghost.erased (Seq.seq t))
-   requires (A.pts_to a full_perm s)
-   ensures exists (s_:Seq.seq t). A.pts_to a full_perm s_
+                (#s:(s:Ghost.erased (Seq.seq U8.t){ US.v l > 0 /\ US.v l == Seq.length s }))
+   requires A.pts_to a full_perm s
+   ensures A.pts_to a full_perm (Seq.upd s 0 0uy)
 {
   (a.(0sz) <- 0uy)
 }
 ```
 
-noeq
-type rec2_array = {
-  r1: A.array U8.t;
-  r2: A.array U8.t;
-}
 
-type rec2_array_repr = {
-  v1: Seq.seq U8.t;
-  v2: Seq.seq U8.t;
-}
-
+// same failure as mutate_rec_get_witness. suprrising that getting
+// an array witness works (line 168) because the same currently 
+// fails in L0Core.fst:232 ...
+[@@expect_failure]
 ```pulse
-fn get_witness_rec_arrays (l:US.t) (r:rec2_array) (#v:Ghost.erased rec2_array_repr)
+fn mutate_rec_get_witness (l:US.t) (r:rec_array) (#v:Ghost.erased rec_array_repr)
   requires (
-    A.pts_to r.r1 full_perm v.v1 `star`
-    A.pts_to r.r2 full_perm v.v2 `star`
-    pure (A.length r.r1 == (US.v l) /\ A.length r.r2 == (US.v l) /\ Seq.length v.v2 )
+    rec_array_perm r v `star`
+    pure (US.v l > 0 /\ A.length r.r2 == (US.v l) /\ Seq.length v.v2 == (US.v l))
   )
   ensures (
     A.pts_to r.r1 full_perm v.v1 `star`
     exists (v_:Seq.seq U8.t) . A.pts_to r.r2 full_perm v_
   )
 {
-  mutate_array l a;
+  rewrite (rec_array_perm r v)
+    as (A.pts_to r.r1 full_perm v.v1 `star`
+        A.pts_to r.r2 full_perm v.v2);
+  
+  mutate_array l r.r2;
+  let y = get_witness_array (r.r2); (* this works! *)
+
+  rewrite (A.pts_to r.r1 full_perm v.v1 `star`
+           A.pts_to r.r2 full_perm y)
+    as `@(rec_array_perm r {v with v2=y});
   ()
 }
 ```
