@@ -158,7 +158,7 @@ let (k_elab_equiv_continutation :
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             FStar_Pervasives.Mkdtuple3
-                              (Pulse_Syntax_Base.Tm_Emp, (), ())))
+                              (Pulse_Syntax_Base.tm_emp, (), ())))
                       (fun uu___ ->
                          (fun framing_token ->
                             Obj.magic
@@ -349,7 +349,7 @@ let (k_elab_equiv_prefix :
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             FStar_Pervasives.Mkdtuple3
-                              (Pulse_Syntax_Base.Tm_Emp, (), ())))
+                              (Pulse_Syntax_Base.tm_emp, (), ())))
                       (fun uu___ ->
                          (fun framing_token ->
                             Obj.magic
@@ -451,7 +451,7 @@ let rec (list_as_vprop' :
     fun fvps ->
       match fvps with
       | [] -> vp
-      | hd::tl -> list_as_vprop' (Pulse_Syntax_Base.Tm_Star (vp, hd)) tl
+      | hd::tl -> list_as_vprop' (Pulse_Syntax_Base.tm_star vp hd) tl
 let rec (canon_right_aux :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop Prims.list ->
@@ -626,10 +626,9 @@ let (continuation_elaborator_with_bind :
                                 (fun uu___ ->
                                    match Pulse_Checker_Framing.apply_frame g
                                            e1
-                                           (Pulse_Syntax_Base.Tm_Star
-                                              (ctxt,
-                                                (Pulse_Syntax_Base.comp_pre
-                                                   c1))) () c1 e1_typing
+                                           (Pulse_Syntax_Base.tm_star ctxt
+                                              (Pulse_Syntax_Base.comp_pre c1))
+                                           () c1 e1_typing
                                            (FStar_Pervasives.Mkdtuple3
                                               (ctxt, (), ()))
                                    with
@@ -817,10 +816,10 @@ let (continuation_elaborator_with_bind :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Bind.mk_bind
                                                                     g
-                                                                    (Pulse_Syntax_Base.Tm_Star
-                                                                    (ctxt,
+                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    ctxt
                                                                     (Pulse_Syntax_Base.comp_pre
-                                                                    c1))) e1
+                                                                    c1)) e1
                                                                     e2_closed
                                                                     c11 c2
                                                                     (Pulse_Syntax_Base.v_as_nv
@@ -854,82 +853,86 @@ type mk_t =
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->
       unit ->
-        ((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
-           (unit, unit, unit) Pulse_Typing.st_typing)
-           FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option,
+        ((Pulse_Syntax_Base.ppname, Pulse_Syntax_Base.st_term,
+           Pulse_Syntax_Base.comp, (unit, unit, unit) Pulse_Typing.st_typing)
+           FStar_Pervasives.dtuple4 FStar_Pervasives_Native.option,
           unit) FStar_Tactics_Effect.tac_repr
 let (elim_one :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.vprop ->
         unit ->
-          Pulse_Syntax_Base.st_term ->
-            Pulse_Syntax_Base.comp ->
-              (unit, unit, unit) Pulse_Typing.st_typing ->
-                ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
-                   (unit, unit, unit, unit) continuation_elaborator)
-                   FStar_Pervasives.dtuple4,
-                  unit) FStar_Tactics_Effect.tac_repr)
+          Pulse_Syntax_Base.ppname ->
+            Pulse_Syntax_Base.st_term ->
+              Pulse_Syntax_Base.comp ->
+                (unit, unit, unit) Pulse_Typing.st_typing ->
+                  ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
+                     (unit, unit, unit, unit) continuation_elaborator)
+                     FStar_Pervasives.dtuple4,
+                    unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun ctxt ->
       fun p ->
         fun ctxt_p_typing ->
-          fun e1 ->
-            fun c1 ->
-              fun e1_typing ->
-                FStar_Tactics_Effect.tac_bind
-                  (FStar_Sealed.seal
-                     (Obj.magic
-                        (FStar_Range.mk_range "Pulse.Checker.Auto.Elims.fst"
-                           (Prims.of_int (259)) (Prims.of_int (20))
-                           (Prims.of_int (259)) (Prims.of_int (57)))))
-                  (FStar_Sealed.seal
-                     (Obj.magic
-                        (FStar_Range.mk_range "Pulse.Checker.Auto.Elims.fst"
-                           (Prims.of_int (259)) (Prims.of_int (60))
-                           (Prims.of_int (273)) (Prims.of_int (34)))))
-                  (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
-                  (fun uu___ ->
-                     (fun ctxt_typing ->
-                        Obj.magic
-                          (FStar_Tactics_Effect.tac_bind
-                             (FStar_Sealed.seal
-                                (Obj.magic
-                                   (FStar_Range.mk_range
-                                      "Pulse.Checker.Auto.Elims.fst"
-                                      (Prims.of_int (261))
-                                      (Prims.of_int (19))
-                                      (Prims.of_int (261))
-                                      (Prims.of_int (81)))))
-                             (FStar_Sealed.seal
-                                (Obj.magic
-                                   (FStar_Range.mk_range
-                                      "Pulse.Checker.Auto.Elims.fst"
-                                      (Prims.of_int (259))
-                                      (Prims.of_int (60))
-                                      (Prims.of_int (273))
-                                      (Prims.of_int (34)))))
-                             (Obj.magic
-                                (continuation_elaborator_with_bind g ctxt c1
-                                   e1 e1_typing ()))
-                             (fun uu___ ->
-                                FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___1 ->
-                                     match uu___ with
-                                     | Prims.Mkdtuple2 (x, k) ->
-                                         FStar_Pervasives.Mkdtuple4
-                                           ((Pulse_Typing_Env.push_binding g
-                                               x
-                                               Pulse_Syntax_Base.ppname_default
-                                               (Pulse_Syntax_Base.comp_res c1)),
-                                             (Pulse_Syntax_Base.Tm_Star
-                                                ((Pulse_Syntax_Naming.open_term_nv
-                                                    (Pulse_Syntax_Base.comp_post
-                                                       c1)
-                                                    (Pulse_Syntax_Base.v_as_nv
-                                                       x)), ctxt)), (), k)))))
-                       uu___)
+          fun nx ->
+            fun e1 ->
+              fun c1 ->
+                fun e1_typing ->
+                  FStar_Tactics_Effect.tac_bind
+                    (FStar_Sealed.seal
+                       (Obj.magic
+                          (FStar_Range.mk_range
+                             "Pulse.Checker.Auto.Elims.fst"
+                             (Prims.of_int (259)) (Prims.of_int (20))
+                             (Prims.of_int (259)) (Prims.of_int (57)))))
+                    (FStar_Sealed.seal
+                       (Obj.magic
+                          (FStar_Range.mk_range
+                             "Pulse.Checker.Auto.Elims.fst"
+                             (Prims.of_int (259)) (Prims.of_int (60))
+                             (Prims.of_int (273)) (Prims.of_int (34)))))
+                    (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
+                    (fun uu___ ->
+                       (fun ctxt_typing ->
+                          Obj.magic
+                            (FStar_Tactics_Effect.tac_bind
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "Pulse.Checker.Auto.Elims.fst"
+                                        (Prims.of_int (261))
+                                        (Prims.of_int (19))
+                                        (Prims.of_int (261))
+                                        (Prims.of_int (81)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "Pulse.Checker.Auto.Elims.fst"
+                                        (Prims.of_int (259))
+                                        (Prims.of_int (60))
+                                        (Prims.of_int (273))
+                                        (Prims.of_int (34)))))
+                               (Obj.magic
+                                  (continuation_elaborator_with_bind g ctxt
+                                     c1 e1 e1_typing ()))
+                               (fun uu___ ->
+                                  FStar_Tactics_Effect.lift_div_tac
+                                    (fun uu___1 ->
+                                       match uu___ with
+                                       | Prims.Mkdtuple2 (x, k) ->
+                                           FStar_Pervasives.Mkdtuple4
+                                             ((Pulse_Typing_Env.push_binding
+                                                 g x nx
+                                                 (Pulse_Syntax_Base.comp_res
+                                                    c1)),
+                                               (Pulse_Syntax_Base.tm_star
+                                                  (Pulse_Syntax_Naming.open_term_nv
+                                                     (Pulse_Syntax_Base.comp_post
+                                                        c1)
+                                                     (Pulse_Syntax_Base.v_as_nv
+                                                        x)) ctxt), (), k)))))
+                         uu___)
 let rec (elim_all :
   Pulse_Typing_Env.env ->
     (Pulse_Syntax_Base.vprop ->
@@ -953,7 +956,7 @@ let rec (elim_all :
                  fun mk ->
                    fun ctxt ->
                      fun ctxt_typing ->
-                       match ctxt with
+                       match ctxt.Pulse_Syntax_Base.t with
                        | Pulse_Syntax_Base.Tm_Star (ctxt', p) ->
                            Obj.magic
                              (Obj.repr
@@ -1031,8 +1034,9 @@ let rec (elim_all :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (FStar_Pervasives.Mkdtuple3
-                                                                    (e1, c1,
+                                                                    (FStar_Pervasives.Mkdtuple4
+                                                                    (nx, e1,
+                                                                    c1,
                                                                     e1_typing))
                                                                     ->
                                                                     Obj.magic
@@ -1045,19 +1049,20 @@ let rec (elim_all :
                                                                     (Prims.of_int (291))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (291))
-                                                                    (Prims.of_int (60)))))
+                                                                    (Prims.of_int (63)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Auto.Elims.fst"
                                                                     (Prims.of_int (289))
-                                                                    (Prims.of_int (45))
+                                                                    (Prims.of_int (49))
                                                                     (Prims.of_int (294))
                                                                     (Prims.of_int (71)))))
                                                                     (Obj.magic
                                                                     (elim_one
                                                                     g ctxt' p
-                                                                    () e1 c1
+                                                                    () nx e1
+                                                                    c1
                                                                     e1_typing))
                                                                     (fun
                                                                     uu___2 ->
@@ -1086,7 +1091,7 @@ let rec (elim_all :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Auto.Elims.fst"
                                                                     (Prims.of_int (291))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (66))
                                                                     (Prims.of_int (294))
                                                                     (Prims.of_int (71)))))
                                                                     (Obj.magic
@@ -1114,9 +1119,8 @@ let rec (elim_all :
                                                                     (),
                                                                     (k_elab_trans
                                                                     g g' g''
-                                                                    (Pulse_Syntax_Base.Tm_Star
-                                                                    (ctxt',
-                                                                    p))
+                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    ctxt' p)
                                                                     uu___3
                                                                     ctxt'' k
                                                                     k'))))))))

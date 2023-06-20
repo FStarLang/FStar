@@ -63,7 +63,7 @@ let (check_while :
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Checker_Pure.push_context "while loop"
-                          t.Pulse_Syntax_Base.range1 g))
+                          t.Pulse_Syntax_Base.range2 g))
                   (fun uu___ ->
                      (fun g1 ->
                         Obj.magic
@@ -102,7 +102,7 @@ let (check_while :
                                                      (Prims.of_int (40))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (41))
-                                                     (Prims.of_int (87)))))
+                                                     (Prims.of_int (88)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
@@ -117,15 +117,15 @@ let (check_while :
                                                      "invariant"
                                                      (Pulse_Syntax_Base.term_range
                                                         inv) g1)
-                                                  (Pulse_Syntax_Base.Tm_ExistsSL
-                                                     (Pulse_Syntax_Pure.u0,
-                                                       {
-                                                         Pulse_Syntax_Base.binder_ty
-                                                           =
-                                                           Pulse_Typing.tm_bool;
-                                                         Pulse_Syntax_Base.binder_ppname
-                                                           = condition_var
-                                                       }, inv))))
+                                                  (Pulse_Syntax_Base.tm_exists_sl
+                                                     Pulse_Syntax_Pure.u0
+                                                     {
+                                                       Pulse_Syntax_Base.binder_ty
+                                                         =
+                                                         Pulse_Typing.tm_bool;
+                                                       Pulse_Syntax_Base.binder_ppname
+                                                         = condition_var
+                                                     } inv)))
                                             (fun uu___1 ->
                                                (fun uu___1 ->
                                                   match uu___1 with
@@ -264,7 +264,8 @@ let (check_while :
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (match ex_inv
+                                                                    (match 
+                                                                    ex_inv.Pulse_Syntax_Base.t
                                                                     with
                                                                     | 
                                                                     Pulse_Syntax_Base.Tm_ExistsSL
@@ -431,7 +432,7 @@ let (check_while :
                                                                     allow_inst
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "while condition"
-                                                                    cond.Pulse_Syntax_Base.range1
+                                                                    cond.Pulse_Syntax_Base.range2
                                                                     g1) cond
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     (Pulse_Typing.comp_while_cond
@@ -597,7 +598,7 @@ let (check_while :
                                                                     allow_inst
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "while body"
-                                                                    body.Pulse_Syntax_Base.range1
+                                                                    body.Pulse_Syntax_Base.range2
                                                                     g1) body
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     (Pulse_Typing.comp_while_body

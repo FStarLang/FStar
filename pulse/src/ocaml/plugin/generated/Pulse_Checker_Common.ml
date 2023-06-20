@@ -99,9 +99,9 @@ let (intro_post_hint :
                         (fun uu___ ->
                            match ret_ty_opt with
                            | FStar_Pervasives_Native.None ->
-                               Pulse_Syntax_Base.Tm_FStar
-                                 (FStar_Reflection_Typing.unit_ty,
-                                   FStar_Range.range_0)
+                               Pulse_Syntax_Base.tm_fstar
+                                 FStar_Reflection_Typing.unit_ty
+                                 FStar_Range.range_0
                            | FStar_Pervasives_Native.Some t -> t))
                      (fun uu___ ->
                         (fun ret_ty ->
@@ -279,7 +279,7 @@ let (try_frame_pre :
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
                       Pulse_Checker_Pure.push_context "try_frame_pre"
-                        t.Pulse_Syntax_Base.range1 g))
+                        t.Pulse_Syntax_Base.range2 g))
                 (fun uu___ ->
                    (fun g1 ->
                       Obj.magic
@@ -465,7 +465,7 @@ let (try_frame_pre :
                                                                     (Prims.of_int (44)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Builtins.range_to_string
-                                                                    t.Pulse_Syntax_Base.range1))
+                                                                    t.Pulse_Syntax_Base.range2))
                                                                     (fun
                                                                     uu___3 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -1129,7 +1129,7 @@ let (repack :
                                            (Prims.of_int (46)))))
                                   (Obj.magic
                                      (replace_equiv_post
-                                        t.Pulse_Syntax_Base.range1 g c
+                                        t.Pulse_Syntax_Base.range2 g c
                                         (Pulse_Typing_Metatheory.st_typing_correctness
                                            g t c d_c) post_hint))
                                   (fun uu___1 ->
@@ -1265,7 +1265,7 @@ let (intro_comp_typing :
                                                       Prims.op_Negation
                                                         (Pulse_Syntax_Base.eq_tm
                                                            ty
-                                                           Pulse_Syntax_Base.Tm_Inames)
+                                                           Pulse_Syntax_Base.tm_inames)
                                                     then
                                                       Obj.magic
                                                         (Obj.repr
@@ -1334,7 +1334,7 @@ let (intro_comp_typing :
                                                       Prims.op_Negation
                                                         (Pulse_Syntax_Base.eq_tm
                                                            ty
-                                                           Pulse_Syntax_Base.Tm_Inames)
+                                                           Pulse_Syntax_Base.tm_inames)
                                                     then
                                                       Obj.magic
                                                         (Obj.repr
