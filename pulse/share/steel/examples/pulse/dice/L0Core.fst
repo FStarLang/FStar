@@ -69,6 +69,7 @@ fn derive_DeviceID
   ensures (
     A.pts_to cdi full_perm cdi0 `star`
     A.pts_to deviceID_label full_perm deviceID_label0 `star`
+    // (exists (deviceID_pub1:Seq.seq U8.t). A.pts_to deviceID_pub full_perm deviceID_pub1) `star`
     (exists (deviceID_pub1:Seq.seq U8.t) (deviceID_priv1:Seq.seq U8.t). (
         A.pts_to deviceID_pub full_perm deviceID_pub1 `star`
         A.pts_to deviceID_priv full_perm deviceID_priv1 `star`
@@ -182,6 +183,58 @@ ensures A.pts_to x full_perm y ** pure (y==z)
 }
 ```
 
+(* BEGIN RECORD MUT/PERM EXPERIMENT *)
+```pulse
+fn mutate_array (l:US.t) (a:(a:A.array U8.t{ US.v l == A.length a }))
+                (#s:(s:Ghost.erased (Seq.seq U8.t){ US.v l > 0 /\ US.v l == Seq.length s }))
+   requires A.pts_to a full_perm s
+   ensures A.pts_to a full_perm (Seq.upd s 0 0uy)
+{
+  (a.(0sz) <- 0uy)
+}
+```
+```pulse
+fn mutate_rec_get_witness (l:US.t) (l0:l0_record) (#vl0:Ghost.erased l0_repr)
+  requires (
+    l0_perm l0 vl0 `star`
+    pure (US.v l > 0 /\ A.length l0.deviceID_pub == (US.v l) /\ Seq.length vl0.deviceID_pub == (US.v l))
+  )
+  ensures (
+    A.pts_to l0.cdi full_perm vl0.cdi `star`
+    A.pts_to l0.fwid full_perm vl0.fwid `star`
+    A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
+    A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
+    A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
+    A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
+    A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
+    A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+    A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
+    A.pts_to l0.authKeyID full_perm vl0.authKeyID `star`
+    exists (s:Seq.seq U8.t) . A.pts_to l0.deviceID_pub full_perm s
+  )
+{
+  rewrite (l0_perm l0 vl0)
+    as (
+      A.pts_to l0.cdi full_perm vl0.cdi `star`
+      A.pts_to l0.fwid full_perm vl0.fwid `star`
+      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
+      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
+      A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
+      A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
+      A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
+      A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
+      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
+      A.pts_to l0.authKeyID full_perm vl0.authKeyID
+    );
+  
+  mutate_array l l0.deviceID_pub;
+  let y = get_witness (l0.deviceID_pub); (* this works! *)
+  ()
+}
+```
+(* END RECORD MUT/PERM EXPERIMENT *)
+
 ```pulse
 fn l0_core_step1
   (l0: l0_record)
@@ -229,7 +282,7 @@ fn l0_core_step1
 
   // get_witness is successful on arrays in bug-reports/Records.fst
   // (code at the bottom) so it's unclear why it doesn't work here...
-  // let s1 = get_witness l0.deviceID_pub;
+  // let s1 = get_witness (l0.deviceID_pub);
 
   admit()
 }
@@ -245,7 +298,6 @@ assume
 val aliasKeyCRT_pre (v:aliasKeyCRT_ingredients_t) (l:US.t) : vprop
 
 let l0_pre
-  // (#a:Type)
   (l0: l0_record)
   (vl0: l0_repr)
   : vprop =
