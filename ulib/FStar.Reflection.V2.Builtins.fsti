@@ -107,40 +107,48 @@ val simple_binder_defn (b:binder) :
 
 (** These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
- * the dependency of Reflection/Tactics into * FStar.String, which
+ * the dependency of Reflection/Tactics into FStar.String, which
  * pulls a LOT of modules. *)
 val implode_qn     : list string -> string
 val explode_qn     : string -> list string
 val compare_string : s1:string -> s2:string -> x:int{x == 0 <==> s1 == s2}
 
-(** FIXME *)
+(** Lookup a top-level definition in the environment (not necessarily
+a type) *)
 val lookup_typ            : env -> name -> option sigelt
 
-(** FIXME *)
+(** Compare two bvs by their index. This should really not be a
+primitive, and just use inspect to compare the index field. *)
+[@@(deprecated "Use FStar.Reflection.V2.Derived.compare_bv")]
 val compare_bv            : bv -> bv -> order
 
-(** FIXME *)
+(** (As above.) Compare two namedv by their uniq. This should really not
+be a primitive, and just use inspect to compare the uniq field. *)
+[@@(deprecated "Use FStar.Reflection.V2.Derived.compare_namedv")]
 val compare_namedv        : namedv -> namedv -> order
 
-(** FIXME *)
+(** Returns all bindings in an environment *)
 val vars_of_env           : env -> list binding
 
-(** FIXME *)
+(** Returns the current module of an environment. *)
 val moduleof              : env -> name
 
-(** FIXME *)
+(** Returns all top-level names marked with a given attribute.
+Used e.g. to find all typeclass instances. *)
 val lookup_attr           : term -> env -> list fv
 
-(** FIXME *)
+(** Returns all top-level names in an environment. *)
 val all_defs_in_env       : env -> list fv
 
-(** FIXME *)
+(** Returns all top-level names in a given module. *)
 val defs_in_module        : env -> name -> list fv
 
-(** FIXME *)
+(** Compare two terms for equality using the internal implementation.
+Deprecated, we should use the userland version instead. *)
+[@@(deprecated "Use FStar.Reflection.V2.TermEq.term_eq")]
 val term_eq               : term -> term -> bool
 
-(** FIXME *)
+(** Return all module names which are opened in the given scope. *)
 val env_open_modules      : env -> list name
 
 (** [push_binding] extends the environment with a single binding.

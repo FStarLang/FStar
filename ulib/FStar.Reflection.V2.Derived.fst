@@ -28,6 +28,12 @@ let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv
     | Tv_AscribedC t' _ _ _ -> inspect_ln_unascribe t'
     | tv -> tv
 
+let compare_bv (v1 v2 : bv) : order =
+  Order.compare_int (inspect_bv v1).index (inspect_bv v2).index
+
+let compare_namedv (v1 v2 : namedv) : order =
+  Order.compare_int (inspect_namedv v1).uniq (inspect_namedv v2).uniq
+
 let shift n s = match s with
     | DB i t -> DB (i+n) t
     | DT i t -> DT (i+n) t
