@@ -125,10 +125,10 @@ let rec (compare_term :
               (FStar_Reflection_V2_Builtins.inspect_ln t))
       with
       | (FStar_Reflection_V2_Data.Tv_Var sv, FStar_Reflection_V2_Data.Tv_Var
-         tv) -> FStar_Reflection_V2_Builtins.compare_namedv sv tv
+         tv) -> FStar_Reflection_V2_Derived.compare_namedv sv tv
       | (FStar_Reflection_V2_Data.Tv_BVar sv,
          FStar_Reflection_V2_Data.Tv_BVar tv) ->
-          FStar_Reflection_V2_Builtins.compare_bv sv tv
+          FStar_Reflection_V2_Derived.compare_bv sv tv
       | (FStar_Reflection_V2_Data.Tv_FVar sv,
          FStar_Reflection_V2_Data.Tv_FVar tv) -> compare_fv sv tv
       | (FStar_Reflection_V2_Data.Tv_UInst (sv, sus),
