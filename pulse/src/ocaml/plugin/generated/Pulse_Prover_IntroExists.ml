@@ -116,26 +116,40 @@ let (intro_exists_step :
               fun uu___ ->
                 fun prover ->
                   FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range "Pulse.Prover.IntroExists.fst"
-                       (Prims.of_int (131)) (Prims.of_int (11))
-                       (Prims.of_int (131)) (Prims.of_int (22)))
-                    (FStar_Range.mk_range "Pulse.Prover.IntroExists.fst"
-                       (Prims.of_int (131)) (Prims.of_int (25))
-                       (Prims.of_int (336)) (Prims.of_int (13)))
+                    (FStar_Sealed.seal
+                       (Obj.magic
+                          (FStar_Range.mk_range
+                             "Pulse.Prover.IntroExists.fst"
+                             (Prims.of_int (131)) (Prims.of_int (11))
+                             (Prims.of_int (131)) (Prims.of_int (22)))))
+                    (FStar_Sealed.seal
+                       (Obj.magic
+                          (FStar_Range.mk_range
+                             "Pulse.Prover.IntroExists.fst"
+                             (Prims.of_int (131)) (Prims.of_int (25))
+                             (Prims.of_int (336)) (Prims.of_int (13)))))
                     (FStar_Tactics_Effect.lift_div_tac
                        (fun uu___1 -> preamble.Pulse_Prover_Common.g0))
                     (fun uu___1 ->
                        (fun g0 ->
                           Obj.magic
                             (FStar_Tactics_Effect.tac_bind
-                               (FStar_Range.mk_range
-                                  "Pulse.Prover.IntroExists.fst"
-                                  (Prims.of_int (132)) (Prims.of_int (32))
-                                  (Prims.of_int (134)) (Prims.of_int (14)))
-                               (FStar_Range.mk_range
-                                  "Pulse.Prover.IntroExists.fst"
-                                  (Prims.of_int (131)) (Prims.of_int (25))
-                                  (Prims.of_int (336)) (Prims.of_int (13)))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "Pulse.Prover.IntroExists.fst"
+                                        (Prims.of_int (132))
+                                        (Prims.of_int (32))
+                                        (Prims.of_int (134))
+                                        (Prims.of_int (14)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "Pulse.Prover.IntroExists.fst"
+                                        (Prims.of_int (131))
+                                        (Prims.of_int (25))
+                                        (Prims.of_int (336))
+                                        (Prims.of_int (13)))))
                                (FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___1 ->
                                      intro_exists_sub_prover_state preamble p
@@ -147,18 +161,22 @@ let (intro_exists_step :
                                          (x, s_preamble, sp) ->
                                          Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "Pulse.Prover.IntroExists.fst"
-                                                 (Prims.of_int (136))
-                                                 (Prims.of_int (11))
-                                                 (Prims.of_int (136))
-                                                 (Prims.of_int (20)))
-                                              (FStar_Range.mk_range
-                                                 "Pulse.Prover.IntroExists.fst"
-                                                 (Prims.of_int (137))
-                                                 (Prims.of_int (2))
-                                                 (Prims.of_int (336))
-                                                 (Prims.of_int (13)))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "Pulse.Prover.IntroExists.fst"
+                                                       (Prims.of_int (136))
+                                                       (Prims.of_int (11))
+                                                       (Prims.of_int (136))
+                                                       (Prims.of_int (20)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "Pulse.Prover.IntroExists.fst"
+                                                       (Prims.of_int (137))
+                                                       (Prims.of_int (2))
+                                                       (Prims.of_int (336))
+                                                       (Prims.of_int (13)))))
                                               (Obj.magic
                                                  (prover s_preamble sp))
                                               (fun sp1 ->

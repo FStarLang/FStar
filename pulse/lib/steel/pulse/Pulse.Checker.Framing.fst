@@ -1,8 +1,8 @@
 module Pulse.Checker.Framing
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
@@ -10,7 +10,7 @@ open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.VPropEquiv
 module P = Pulse.Syntax.Printer
-module RTB = FStar.Tactics.Builtins
+module RTB = FStar.Tactics.V2.Builtins
 module FV = Pulse.Typing.FV
 module Metatheory = Pulse.Typing.Metatheory
 module VP = Pulse.Checker.VPropEquiv

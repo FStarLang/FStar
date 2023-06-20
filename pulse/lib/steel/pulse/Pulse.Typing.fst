@@ -1,12 +1,11 @@
 module Pulse.Typing
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 open Pulse.Reflection.Util
 open FStar.List.Tot
 open Pulse.Syntax
-
 module L = FStar.List.Tot
-module FTB = FStar.Tactics
+module FTB = FStar.Tactics.V2
 include Pulse.Typing.Env
 
 let tm_unit = tm_fvar (as_fv unit_lid)

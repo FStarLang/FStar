@@ -1,6 +1,6 @@
 module Pulse.Checker.WithLocal
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 open Pulse.Syntax
 open Pulse.Typing

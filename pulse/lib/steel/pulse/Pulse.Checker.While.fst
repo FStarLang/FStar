@@ -1,6 +1,6 @@
 module Pulse.Checker.While
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax

@@ -157,7 +157,7 @@ open FStar_Pervasives
 module Env = FStar_TypeChecker_Env
 let tac_to_string (env:Env.env) f =
     let ps =
-        FStar_Tactics_Basic.proofstate_of_goals 
+        FStar_Tactics_V2_Basic.proofstate_of_goals
                 (Env.get_range env)
                 env
                 []

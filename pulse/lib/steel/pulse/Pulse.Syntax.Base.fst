@@ -1,8 +1,8 @@
 module Pulse.Syntax.Base
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
-module T = FStar.Tactics
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
 
 let host_term_equality (t1 t2:host_term)
   : Lemma

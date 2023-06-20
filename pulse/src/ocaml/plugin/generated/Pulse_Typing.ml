@@ -6,9 +6,9 @@ let (tm_bool : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.bool_lid)
 let (tm_true : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Pure.tm_constant FStar_Reflection_Data.C_True
+  Pulse_Syntax_Pure.tm_constant FStar_Reflection_V2_Data.C_True
 let (tm_false : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Pure.tm_constant FStar_Reflection_Data.C_False
+  Pulse_Syntax_Pure.tm_constant FStar_Reflection_V2_Data.C_False
 let (tm_prop : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Base.with_range
     (Pulse_Syntax_Base.Tm_FStar FStar_Reflection_Typing.tm_prop)
@@ -688,7 +688,7 @@ let uu___is_CT_STAtomic uu___2 uu___1 uu___ uu___3 =
 let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
 type ('g, 't) prop_validity =
-  (unit, unit) FStar_Tactics_Builtins.prop_validity_token
+  (unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *

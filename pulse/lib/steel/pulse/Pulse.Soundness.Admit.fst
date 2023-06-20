@@ -1,6 +1,6 @@
 module Pulse.Soundness.Admit
 
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax

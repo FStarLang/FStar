@@ -7,7 +7,7 @@ open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 
 module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing

@@ -1,9 +1,9 @@
 module Pulse.Syntax.Printer
 open FStar.Printf
 open Pulse.Syntax
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module Un = FStar.Sealed
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 let name_to_string (f:R.name) = String.concat "." f
 
 let dbg_printing : bool = true

@@ -1,5 +1,5 @@
 module Pulse.Checker.Common
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module Metatheory = Pulse.Typing.Metatheory
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
