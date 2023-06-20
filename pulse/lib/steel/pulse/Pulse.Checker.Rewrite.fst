@@ -7,7 +7,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Common
-
+module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 
 let check_rewrite
@@ -24,10 +24,19 @@ let check_rewrite
   let equiv_p_q =
       if eq_tm p q
       then VE_Refl g p
-      else match T.check_equiv (elab_env g) (elab_term p) (elab_term q) with
-           | None, issues -> 
-             fail g None (Printf.sprintf "rewrite: p and q elabs are not equiv\n%s" 
-                          (print_issues g issues))
-           | Some token, _ -> VE_Ext g p q token in
+      else let elab_p = elab_term p in
+           let elab_q = elab_term q in
+           let res, issues = T.check_equiv (elab_env g) elab_p elab_q in
+           T.log_issues issues;
+           match res with
+           | None -> 
+             fail g (Some t.range)
+                    (Printf.sprintf "rewrite: could not prove equality of %s and %s\nElaborations: %s and %s\n" 
+                           (P.term_to_string p)
+                           (P.term_to_string q)
+                           (T.term_to_string elab_p)
+                           (T.term_to_string elab_q))
+           | Some token ->
+            VE_Ext g p q token in
 	     let d = T_Rewrite _ p q p_typing equiv_p_q in
 	     repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint

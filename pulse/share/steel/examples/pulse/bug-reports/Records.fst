@@ -16,7 +16,7 @@ open Pulse.Steel.Wrapper
 (* test record mutation and permissions for records of byte refs *)
 
 noeq
-type rec = {
+type rec2 = {
   r1: R.ref U8.t;
   r2: R.ref U8.t;
 }
@@ -26,10 +26,21 @@ type rec_repr = {
   v2: U8.t;
 }
 
-let rec_perm (r:rec) (v:rec_repr)
-  : vprop = 
-  R.pts_to r.r1 full_perm v.v1 `star`
-  R.pts_to r.r2 full_perm v.v2
+(* defining rec_perm directly cause Core to prove `v.v1 == u.v1` by proving `v == u` which is bad.
+  This indirection prevents F* from unfolding it and that works around the problem.
+  Should fix this in Core.
+*)
+assume
+val rec_perm (r:rec2) (v:rec_repr)
+  : vprop
+
+assume
+val rec_perm_definition (r:rec2) (v:rec_repr)
+  : Lemma 
+    (ensures rec_perm r v == 
+      (R.pts_to r.r1 full_perm v.v1 `star`
+       R.pts_to r.r2 full_perm v.v2))
+    [SMTPat (rec_perm r v)]
 
 // helpers 
 
@@ -59,7 +70,7 @@ fn mutate_ref (r:R.ref U8.t) (x:U8.t) (#v:Ghost.erased U8.t)
 // and fails with a mysterious error: "match_typ: t2 is a uvar"
 [@@expect_failure]
 ```pulse
-fn rec_get_witness (r:rec) (#v:Ghost.erased rec_repr)
+fn rec_get_witness (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
   ensures exists (v_:rec_repr) . rec_perm r v_
 {
@@ -79,12 +90,14 @@ fn rec_get_witness (r:rec) (#v:Ghost.erased rec_repr)
 }
 ```
 
+let rec_repr_with_v2 (v:rec_repr) (v2:U8.t) = { v1=v.v1; v2=v2 }
+
 // error says: could not infer implicit arguments in rec_perm on line 94,
 // but this fcn has no implicit args. also, this fcn errors at a different
 // line (88) when the remainder of this file is *not* commented out... strange
 [@@expect_failure]
 ```pulse
-fn mutate_rec_get_witness (r:rec) (#v:Ghost.erased rec_repr)
+fn mutate_rec_get_witness (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
   ensures exists (v_:rec_repr) . rec_perm r v_
 {
@@ -95,9 +108,13 @@ fn mutate_rec_get_witness (r:rec) (#v:Ghost.erased rec_repr)
   mutate_ref r.r2 0uy;
   let v2_ = get_witness(r.r2);
 
+
+  // assert_ (R.pts_to r.r1 full_perm v.v1 `star`
+  //          R.pts_to r.r2 full_perm v2_);
+
   rewrite (R.pts_to r.r1 full_perm v.v1 `star`
            R.pts_to r.r2 full_perm v2_)
-    as `@(rec_perm r {v with v2=v2_});
+    as    (rec_perm r (rec_repr_with_v2 v v2_));
   ()
 }
 ```

@@ -162,8 +162,7 @@ let l0_core_step1_post
   (l0: l0_record)
   (vl0: l0_repr)
   (alg:alg_t)
-  : vprop = 
-  pure (
+  : prop = 
     valid_hkdf_ikm_len (digest_len alg) /\
     derive_DeviceID_spec alg (digest_len alg) vl0.cdi l0.deviceID_label_len vl0.deviceID_label
       == (vl0.deviceID_pub, vl0.deviceID_priv) /\
@@ -171,8 +170,7 @@ let l0_core_step1_post
       == (vl0.aliasKey_pub, vl0.aliasKey_priv) /\
     derive_authKeyID_spec alg vl0.deviceID_pub
       == vl0.authKeyID 
-  )
-
+  
 ```pulse
 fn get_witness (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
 requires A.pts_to x full_perm y
@@ -229,11 +227,20 @@ fn mutate_rec_get_witness (l:US.t) (l0:l0_record) (#vl0:Ghost.erased l0_repr)
     );
   
   mutate_array l l0.deviceID_pub;
-  let y = get_witness (l0.deviceID_pub); (* this works! *)
+  // let y = get_witness (l0.deviceID_pub); (* this works! *)
   ()
 }
 ```
 (* END RECORD MUT/PERM EXPERIMENT *)
+
+let l0_core_post_state (vl0:l0_repr) (s1 s2 s3 s4 s5:_) 
+  = { vl0 with 
+      deviceID_pub = s1;
+      deviceID_priv = s2;
+      aliasKey_pub = s3;
+      aliasKey_priv = s4;
+      authKeyID = s5;
+    }
 
 ```pulse
 fn l0_core_step1
@@ -245,8 +252,9 @@ fn l0_core_step1
          valid_hkdf_lbl_len l0.aliasKey_label_len)
   )
   ensures (
-    l0_perm l0 vl0 `star`
-    l0_core_step1_post l0 vl0 dice_hash_alg
+    exists (vl0_:l0_repr). 
+      l0_perm l0 vl0_ **
+      pure (l0_core_step1_post l0 vl0_ dice_hash_alg)
   )
 {
   dice_digest_len_is_hkdf_ikm;
@@ -272,19 +280,37 @@ fn l0_core_step1
 
   derive_authkeyID dice_hash_alg l0.authKeyID l0.deviceID_pub;
 
-  introduce exists (s1 s2 s3 s4 s5: Seq.seq U8.t). (
+  // introduce exists (s1 s2 s3 s4 s5: Seq.seq U8.t). (
+  //     A.pts_to l0.deviceID_pub full_perm s1 `star`
+  //     A.pts_to l0.deviceID_priv full_perm s2 `star`
+  //     A.pts_to l0.aliasKey_pub full_perm s3 `star`
+  //     A.pts_to l0.aliasKey_priv full_perm s4 `star`
+  //     A.pts_to l0.authKeyID full_perm s5
+  //   ) with _;
+
+  // get_witness is successful on arrays in bug-reports/Records.fst
+  // (code at the bottom) so it's unclear why it doesn't work here...
+  let s1 = get_witness (l0.deviceID_pub);
+  let s2 = get_witness (l0.deviceID_priv);
+  let s3 = get_witness (l0.aliasKey_pub);
+  let s4 = get_witness (l0.aliasKey_priv);
+  let s5 = get_witness (l0.authKeyID);
+
+  rewrite  (
+      A.pts_to l0.cdi full_perm vl0.cdi `star`
+      A.pts_to l0.fwid full_perm vl0.fwid `star`
+      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
+      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
       A.pts_to l0.deviceID_pub full_perm s1 `star`
       A.pts_to l0.deviceID_priv full_perm s2 `star`
       A.pts_to l0.aliasKey_pub full_perm s3 `star`
       A.pts_to l0.aliasKey_priv full_perm s4 `star`
+      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
       A.pts_to l0.authKeyID full_perm s5
-    ) with _;
-
-  // get_witness is successful on arrays in bug-reports/Records.fst
-  // (code at the bottom) so it's unclear why it doesn't work here...
-  // let s1 = get_witness (l0.deviceID_pub);
-
-  admit()
+  )
+  as (l0_perm l0 (l0_core_post_state vl0 s1 s2 s3 s4 s5));
+  ()
 }
 ```
 
