@@ -890,11 +890,15 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
               | FStar_Pervasives_Native.Some s -> Prims.op_Hat "@" s in
             let uu___2 =
               match z3result.FStar_SMTEncoding_Z3.z3result_status with
-              | FStar_SMTEncoding_Z3.UNSAT core -> ("succeeded", core)
+              | FStar_SMTEncoding_Z3.UNSAT core ->
+                  let uu___3 = FStar_Compiler_Util.colorize_green "succeeded" in
+                  (uu___3, core)
               | uu___3 ->
-                  ((Prims.op_Hat "failed {reason-unknown="
-                      (Prims.op_Hat status_string "}")),
-                    FStar_Pervasives_Native.None) in
+                  let uu___4 =
+                    FStar_Compiler_Util.colorize_red
+                      (Prims.op_Hat "failed {reason-unknown="
+                         (Prims.op_Hat status_string "}")) in
+                  (uu___4, FStar_Pervasives_Native.None) in
             (match uu___2 with
              | (tag, core) ->
                  let range =
