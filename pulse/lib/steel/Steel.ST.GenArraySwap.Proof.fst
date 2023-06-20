@@ -1,7 +1,71 @@
 module Steel.ST.GenArraySwap.Proof
 open FStar.Math.Lemmas
 open FStar.Mul
-open FStar.Tactics.CanonCommSemiring
+
+let lemma_mod_lt
+  (a:int)
+  (b:pos)
+: Lemma
+  (let r = a % b in 0 <= r /\ r < b)
+  [SMTPat (a % b)]
+= ()
+
+let lemma_mul_nat_nat_is_nat
+  (a b: nat)
+: Lemma
+  (a * b >= 0)
+  [SMTPat (a * b)]
+= ()
+
+let lemma_pos_mul_pos_args
+  (a: nat)
+  (b: nat)
+: Lemma
+  (requires (a * b > 0))
+  (ensures (a > 0 /\ b > 0 /\ a <= a * b /\ b <= a * b /\ a * b == b * a))
+= ()
+
+let lemma_div_nat
+  (a: nat)
+  (b: pos)
+: Lemma
+  (a / b >= 0)
+  [SMTPat (a / b)]
+= ()
+
+let lemma_mult_reg_l
+  (k: int)
+  (x1 x2: int)
+: Lemma
+  (requires (
+    k * x1 == k * x2 /\
+    k <> 0
+  ))
+  (ensures (
+    x1 == x2
+  ))
+= ()
+
+let lemma_bezout_one_zero
+  (x1: int)
+  (x2: nat)
+  (y1 y2: int)
+: Lemma
+  (requires (
+    x1 * x2 + y1 * y2 == 1 /\
+    y1 == 0
+  ))
+  (ensures (
+    x1 == 1 /\ x2 == 1
+  ))
+= ()
+
+#set-options "--z3cliopt smt.arith.nl=false"
+
+let int_semiring () =
+  FStar.Tactics.CanonCommSemiring.int_semiring ();
+  FStar.Tactics.trefl ();
+  FStar.Tactics.qed ()
 
 [@@erasable]
 noeq
@@ -13,22 +77,31 @@ type bezout_t = {
   u_l: int;
 }
 
+let bezout_prop'
+  (n: nat)
+  (l: nat)
+  (d: pos)
+  (q_n: nat)
+  (q_l: nat)
+  (u_n: int)
+  (u_l: int)
+: Tot prop
+= n == d * q_n /\
+  l == d * q_l /\
+  d == n * u_n + l * u_l
+
 let bezout_prop
   (n: nat)
   (l: nat)
   (b: bezout_t)
 : Tot prop
-= n == b.d * b.q_n /\
-  l == b.d * b.q_l /\
-  b.d == n * b.u_n + l * b.u_l
+= bezout_prop' n l b.d b.q_n b.q_l b.u_n b.u_l
 
 let bezout
   (n: nat)
   (l: nat)
 : Tot Type
 = (b: bezout_t { bezout_prop n l b })
-
-#push-options "--z3rlimit 32"
 
 #restart-solver
 let rec mk_bezout
@@ -39,42 +112,59 @@ let rec mk_bezout
   (ensures (fun _ -> True))
   (decreases l)
 = if l = 0
-  then {
-    d = n;
-    q_n = 1;
-    q_l = 0;
-    u_n = 1;
-    u_l = 0;
-  }
-  else begin
-    let l' = n % l in
-    let ql = n / l in
-    let n_alt0 = l * ql + l' in
-    euclidean_division_definition n l;
-    assert (n == n_alt0);
-    let b' = mk_bezout l l' in
-    let l_alt = b'.d * b'.q_n in
-    let l'_alt1 = b'.d * b'.q_l in
-    let n_alt1 = l_alt * ql + l'_alt1 in
-    assert (n_alt1 == n);
-    let q_n = b'.q_n * ql + b'.q_l in
-    assert (n_alt1 == b'.d * q_n) by (int_semiring ());
-    let l'_alt2 = n - l * ql in
-    assert (l'_alt2 == l');
-    let d_alt = l * b'.u_n + l'_alt2 * b'.u_l in
-    assert (d_alt == b'.d);
-    let u_l = b'.u_n - ql * b'.u_l in
-    assert (d_alt == n_alt0 * b'.u_l + l * u_l) by (int_semiring ());
-    {
-      d = b'.d;
+  then begin
+    let d : pos = n in
+    let q_n : nat = 1 in
+    let q_l : nat = 0 in
+    let u_n : int = 1 in
+    let u_l : int = 0 in
+    let res = {
+      d = d;
       q_n = q_n;
-      q_l = b'.q_n;
-      u_n = b'.u_l;
+      q_l = q_l;
+      u_n = u_n;
       u_l = u_l;
     }
+    in
+    assert (eq2 #int n (d * q_n)) by (int_semiring ());
+    assert (eq2 #int 0 (d * q_l)) by (int_semiring ());
+    assert (eq2 #int d (n * 1 + 0 * res.u_l)) by (int_semiring ());
+    res
   end
-
-#pop-options
+  else begin
+    let lpre = n % l in
+    let ql = n / l in
+    euclidean_division_definition n l;
+    let bpre = mk_bezout l lpre in
+    let d = bpre.d in
+    let q_l = bpre.q_n in
+    let qpre_lpre = bpre.q_l in
+    let upre_l = bpre.u_n in
+    let upre_lpre = bpre.u_l in
+    let n_alt0 = l * ql + lpre in
+    assert (n == n_alt0);
+    let l_alt = d * q_l in
+    let lpre_alt1 = d * qpre_lpre in
+    let n_alt1 = l_alt * ql + lpre_alt1 in
+    assert (n_alt1 == n);
+    let q_n = q_l * ql + qpre_lpre in
+    assert (eq2 #int n_alt1 (d * q_n)) by (int_semiring ());
+    let lpre_alt2 = n + - l * ql in
+    assert (lpre_alt2 == lpre);
+    let d_alt = l * upre_l + lpre_alt2 * upre_lpre in
+    assert (d_alt == d);
+    let u_l = upre_l + - ql * upre_lpre in
+    assert (eq2 #int (n * upre_lpre + l * u_l) d_alt) by (int_semiring ());
+    let res = {
+      d = d;
+      q_n = q_n;
+      q_l = q_l;
+      u_n = upre_lpre;
+      u_l = u_l;
+    }
+    in
+    res
+  end
 
 let bezout_q_eq
   (n: nat)
@@ -105,8 +195,6 @@ let jump
 : GTot (nat_up_to n)
 = (x + l) % n
 
-#push-options "--z3rlimit 64"
-
 #restart-solver
 let jump_mod_d
   (n: pos)
@@ -115,21 +203,19 @@ let jump_mod_d
   (x: nat_up_to n)
 : Lemma
   (jump n l x % b.d == x % b.d)
-= let x' = jump n l x in
+=
+  let x' = jump n l x in
   let x'q = (x + l) / n in
+  euclidean_division_definition (x + l) n;
   let l_alt = b.d * b.q_l in
   assert (l_alt == l);
   let n_alt = b.d * b.q_n in
   assert (n_alt == n);
-  let x'_alt = x + l_alt - x'q * n_alt in
-  euclidean_division_definition (x + l) n;
+  let x'_alt = x + l_alt + - x'q * n_alt in
   assert (x'_alt == x');
-  let qx = b.q_l - x'q * b.q_n in
-  assert (x'_alt == x + qx * b.d) by (int_semiring ());
-  lemma_mod_plus x qx b.d;
-  ()
-
-#pop-options
+  let qx = b.q_l + - x'q * b.q_n in
+  assert (eq2 #int x'_alt (x + qx * b.d)) by (int_semiring ());
+  lemma_mod_plus x qx b.d
 
 let rec jump_iter_mod_d
   (n: pos)
@@ -155,18 +241,27 @@ let rec jump_iter
   (x: nat_up_to n)
   (k: nat)
 : Lemma
-  (ensures (iter_fun (jump n l) k x == (x + k * l) % n))
+  (ensures (iter_fun #(nat_up_to n) (jump n l) k x == (x + k * l) % n))
   (decreases k)
 = if k = 0
-  then ()
-  else begin
+  then begin
+    assert (eq2 #int (x + 0 * l) x) by (int_semiring ());
+    small_mod x n
+  end else begin
     let k' = k - 1 in
-    assert (x + k * l == (x + l) + k' * l);
+    assert (eq2 #int (x + (k' + 1) * l) ((x + l) + k' * l)) by (int_semiring ());
     jump_iter n l ((x + l) % n) k';
     lemma_mod_add_distr (k' * l) (x + l) n
   end
 
-#push-options "--z3rlimit 128"
+let bezout_pos_le
+  (n: pos)
+  (l: nat)
+  (b: bezout n l)
+: Lemma
+  (b.d <= n /\ b.q_n > 0)
+  [SMTPat (bezout_prop n l b)]
+= lemma_pos_mul_pos_args b.q_n b.d
 
 #restart-solver
 [@@"opaque_to_smt"]
@@ -181,11 +276,13 @@ let jump_coverage
   (ensures (fun k ->
     x == iter_fun (jump n l) k (x % b.d)
   ))
-= let i = x % b.d in
+=
+  let i = x % b.d in
   let qx = x / b.d in
   euclidean_division_definition x b.d;
   let k1 = qx * b.u_l in
   let m = qx * b.u_n in
+  assert (eq2 #int (qx * (n * b.u_n + l * b.u_l) + i) (i + k1 * l + m * n)) by (int_semiring ());
   assert (x == i + k1 * l + m * n);
   small_mod x n;
   lemma_mod_plus (i + k1 * l) m n;
@@ -193,13 +290,11 @@ let jump_coverage
   let k = k1 % n in
   let qk = k1 / n in
   euclidean_division_definition k1 n;
-  assert (i + k1 * l == i + k * l + (qk * l) * n);
+  assert (i + (qk * n + k) * l == i + k * l + (qk * l) * n) by (int_semiring ());
   lemma_mod_plus (i + k * l) (qk * l) n;
-  assert (x == (i + k * l) % n);
+  assert (eq2 #int x ((i + k * l) % n));
   jump_iter n l i k;
   k
-
-#pop-options
 
 [@@"opaque_to_smt"]
 irreducible
@@ -271,7 +366,7 @@ let jump_iter_mod_q
   euclidean_division_definition k b.q_n;
   jump_iter n l x k';
   jump_iter n l x k;
-  assert (x + (qk * b.q_n + k') * (b.d * b.q_l) == x + k' * (b.d * b.q_l) + (qk * b.q_l) * (b.d * b.q_n)) by (int_semiring ());
+  assert (eq2 #int (x + (qk * b.q_n + k') * (b.d * b.q_l)) (x + k' * (b.d * b.q_l) + (qk * b.q_l) * (b.d * b.q_n))) by (int_semiring ());
   assert (x + k * l == x + k' * l + (qk * b.q_l) * n);
   lemma_mod_plus (x + k' * l) (qk * b.q_l) n
 
@@ -300,7 +395,12 @@ let mod_eq_elim
   (ensures (fun k -> x1 - x2 == k * n))
 = euclidean_division_definition x1 n;
   euclidean_division_definition x2 n;
-  (x1 / n) - (x2 / n)
+  let q1 = x1 / n in
+  let q2 = x2 / n in
+  let k = q1 + - q2 in
+  let r = x1 % n in
+  assert (q1 * n + r + - (q2 * n + r) == k * n) by (int_semiring ());
+  k
 
 let mod_eq_intro
   (n: pos)
@@ -310,8 +410,6 @@ let mod_eq_intro
   (requires (x1 - x2 == k * n))
   (ensures (x1 % n == x2 % n))
 = lemma_mod_plus x2 k n
-
-#push-options "--z3rlimit 64"
 
 #restart-solver
 [@@"opaque_to_smt"]
@@ -329,17 +427,22 @@ let gauss
     kl == k * b.q_n
   ))
 = assert ((b.d * b.q_n) * b.u_n + (b.d * b.q_l) * b.u_l == b.d * (b.u_n * b.q_n + b.u_l * b.q_l)) by (int_semiring ());
+  assert (b.d == b.d * 1) by (int_semiring ());
   assert (b.d * (b.u_n * b.q_n + b.u_l * b.q_l) == b.d * 1);
+  lemma_mult_reg_l b.d (b.u_n * b.q_n + b.u_l * b.q_l) 1;
   assert (b.u_n * b.q_n + b.u_l * b.q_l == 1);
   if b.u_l = 0
   then begin
+    lemma_bezout_one_zero b.u_n b.q_n b.u_l b.q_l;
     assert (b.q_n == 1);
+    assert (kl * 1 == kl) by (int_semiring ());
     kl
   end else begin
     assert (kl * (b.d * b.q_l) == kn * (b.d * b.q_n));
     assert (kl * (b.d * b.q_l) == b.d * (kl * b.q_l)) by (int_semiring ());
     assert (kn * (b.d * b.q_n) == b.d * (kn * b.q_n)) by (int_semiring ());
     assert (b.d * (kl * b.q_l) == b.d * (kn * b.q_n));
+    lemma_mult_reg_l b.d (kl * b.q_l) (kn * b.q_n);
     assert (kl * b.q_l == kn * b.q_n);
     assert (b.u_l * (kl * b.q_l) == b.u_l * (kn * b.q_n));
     assert (b.u_l * (kl * b.q_l) == kl * (b.u_l * b.q_l)) by (int_semiring ());
@@ -349,8 +452,6 @@ let gauss
     assert (kl * b.u_n * b.q_n + (kn * b.u_l) * b.q_n == (kn * b.u_l + kl * b.u_n) * b.q_n) by (int_semiring ());
     kn * b.u_l + kl * b.u_n
   end
-
-#pop-options
 
 let jump_iter_mod_q_inj_weak
   (n: pos)
@@ -369,7 +470,8 @@ let jump_iter_mod_q_inj_weak
 = jump_iter n l x k1;
   jump_iter n l x k2;
   let kn = mod_eq_elim n (x + k1 * l) (x + k2 * l) in
-  let kq = gauss n l b (k1 - k2) kn in
+  assert ((k1 + - k2) * l == (k1 * l + - (k2 * l))) by (int_semiring ());
+  let kq = gauss n l b (k1 + - k2) kn in
   mod_eq_intro b.q_n k1 k2 kq
 
 let jump_iter_inj
@@ -437,7 +539,7 @@ let jump_if
 = let idx' = (if idx + l >= n then idx - (n - l) else idx + l) in
   small_mod idx n;
   small_mod idx' n;
-  lemma_mod_plus (idx + l) 1 n
+  lemma_mod_plus (idx + l) (-1) n
 
 let jump_iter_q
   (n: pos)
@@ -600,4 +702,4 @@ let sz_rem_spec
   (requires (SZ.v l > 0))
   (ensures (SZ.v (SZ.rem n l) == SZ.v n % SZ.v l))
   [SMTPat (SZ.rem n l)]
-= ()
+= euclidean_division_definition (SZ.v n) (SZ.v l)
