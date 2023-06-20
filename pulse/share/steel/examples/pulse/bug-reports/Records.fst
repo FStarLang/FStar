@@ -52,12 +52,12 @@ fn mutate_ref (r:R.ref U8.t) (x:U8.t) (#v:Ghost.erased U8.t)
 }
 ```
 
-
-// fails with no error reported, but purports that it succeeds
-// when [@@expect_failure] is uncommented
-// [@@expect_failure]
+// this works without the introduction, but pulse can't 
+// infer the existential unless v is provided as a witness
+// and fails with a mysterious error: "match_typ: t2 is a uvar"
+[@@expect_failure]
 ```pulse
-fn mutate_rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
+fn rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
   requires rec2_perm r v
   ensures exists (v_:rec2_repr) . rec2_perm r v_
 {
@@ -65,12 +65,13 @@ fn mutate_rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
     as (R.pts_to r.r1 full_perm v.v1 `star`
         R.pts_to r.r2 full_perm v.v2);
 
-  mutate_ref r.r2 0uy;
-  let v2_ = get_witness(r.r2);
+  introduce exists (v_:Ghost.erased rec2_repr). (
+    pure (v == v_)
+  ) with _;
 
   rewrite (R.pts_to r.r1 full_perm v.v1 `star`
-           R.pts_to r.r2 full_perm v2_)
-    as `@(rec2_perm r {v with v2=v2_});
+           R.pts_to r.r2 full_perm v.v2)
+    as (rec2_perm r v);
   
   ()
 }
@@ -78,7 +79,7 @@ fn mutate_rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
 
 // fails with no error reported, but purports that it succeeds
 // when [@@expect_failure] is uncommented
-// [@@expect_failure]
+[@@expect_failure]
 ```pulse
 fn mutate_rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
   requires rec2_perm r v
