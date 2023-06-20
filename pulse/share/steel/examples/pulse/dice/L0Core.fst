@@ -59,7 +59,7 @@ fn derive_DeviceID
   (cdi: A.larray U8.t 32)
   (deviceID_label_len: hkdf_lbl_len)
   (deviceID_label: A.larray U8.t (US.v deviceID_label_len))
-  (#cdi0 #deviceID_label0 #deviceID_pub0 #deviceID_priv0: Seq.seq U8.t)
+  (#cdi0 #deviceID_label0 #deviceID_pub0 #deviceID_priv0: Ghost.erased (Seq.seq U8.t))
   requires (
     A.pts_to cdi full_perm cdi0 `star`
     A.pts_to deviceID_label full_perm deviceID_label0 `star`
@@ -105,7 +105,7 @@ fn derive_AliasKey
   (fwid: A.larray U8.t 32)
   (aliasKey_label_len: hkdf_lbl_len)
   (aliasKey_label: A.larray U8.t (US.v aliasKey_label_len))
-  (#cdi0 #fwid0 #aliasKey_label0 #aliasKey_pub0 #aliasKey_priv0: Seq.seq U8.t)
+  (#cdi0 #fwid0 #aliasKey_label0 #aliasKey_pub0 #aliasKey_priv0: Ghost.erased (Seq.seq U8.t))
   requires (
     A.pts_to cdi full_perm cdi0 `star`
     A.pts_to fwid full_perm fwid0 `star`
@@ -140,7 +140,7 @@ fn derive_authkeyID
   (alg:alg_t)
   (authKeyID: A.larray U8.t 32)
   (deviceID_pub: A.larray U8.t 32)
-  (#authKeyID0 #deviceID_pub0: Seq.seq U8.t)
+  (#authKeyID0 #deviceID_pub0: Ghost.erased (Seq.seq U8.t))
   requires (
     A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
     A.pts_to authKeyID full_perm authKeyID0 
@@ -173,9 +173,19 @@ let l0_core_step1_post
   )
 
 ```pulse
+fn get_witness (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
+requires A.pts_to x full_perm y
+returns z:Ghost.erased (Seq.seq U8.t)
+ensures A.pts_to x full_perm y ** pure (y==z)
+{   
+    y
+}
+```
+
+```pulse
 fn l0_core_step1
   (l0: l0_record)
-  (vl0: l0_repr)
+  (#vl0: Ghost.erased l0_repr)
   requires (
     l0_perm l0 vl0 `star`
     pure(valid_hkdf_lbl_len l0.deviceID_label_len /\
@@ -209,17 +219,22 @@ fn l0_core_step1
 
   derive_authkeyID dice_hash_alg l0.authKeyID l0.deviceID_pub;
 
+  // introduce exists (vl0_:Ghost.erased l0_repr). (
+  //   pure (vl0 == vl0_)
+  // ) with _;
+
+  introduce exists (s1 s2 s3 s4 s5: Seq.seq U8.t). (
+      A.pts_to l0.deviceID_pub full_perm s1 `star`
+      A.pts_to l0.deviceID_priv full_perm s2 `star`
+      A.pts_to l0.aliasKey_pub full_perm s3 `star`
+      A.pts_to l0.aliasKey_priv full_perm s4 `star`
+      A.pts_to l0.authKeyID full_perm s5
+    ) with _;
+
+  // want to get our hands on s1..s5
+  // let s1 = get_witness l0.deviceID_pub;
+
   admit()
-
-//   derive_authKeyID
-//     authKeyID
-//     deviceID_pub_sec;
-
-//   (**) let hsf = HST.get () in
-//   HST.pop_frame ();
-//   (**) let hf = HST.get () in
-//   (**) B.popped_modifies hsf hf;
-// ()
 }
 ```
 
@@ -292,7 +307,7 @@ let l0_post
 ```pulse
 fn l0
   (l0: l0_record)
-  (vl0: l0_repr)
+  (#vl0: Ghost.erased l0_repr)
   // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
   requires (l0_perm l0 vl0 `star`
             l0_pre l0 vl0)
@@ -309,7 +324,7 @@ fn l0
         pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
               valid_hkdf_lbl_len l0.aliasKey_label_len));
 
-  l0_core_step1 l0 vl0;
+  l0_core_step1 l0;
 
   admit()
 
