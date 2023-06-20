@@ -219,10 +219,6 @@ fn l0_core_step1
 
   derive_authkeyID dice_hash_alg l0.authKeyID l0.deviceID_pub;
 
-  // introduce exists (vl0_:Ghost.erased l0_repr). (
-  //   pure (vl0 == vl0_)
-  // ) with _;
-
   introduce exists (s1 s2 s3 s4 s5: Seq.seq U8.t). (
       A.pts_to l0.deviceID_pub full_perm s1 `star`
       A.pts_to l0.deviceID_priv full_perm s2 `star`
@@ -231,8 +227,9 @@ fn l0_core_step1
       A.pts_to l0.authKeyID full_perm s5
     ) with _;
 
-  // want to get our hands on s1..s5
-  // let s1 = get_witness l0.deviceID_pub;
+  // get_witness is successful on arrays in bug-reports/Records.fst
+  // (code at the bottom) so it's unclear why it doesn't work here...
+  let s1 = get_witness l0.deviceID_pub;
 
   admit()
 }

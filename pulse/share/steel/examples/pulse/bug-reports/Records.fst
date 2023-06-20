@@ -79,29 +79,27 @@ fn rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
 
 // fails with no error reported, but purports that it succeeds
 // when [@@expect_failure] is uncommented
-[@@expect_failure]
-```pulse
-fn mutate_rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
-  requires rec2_perm r v
-  ensures exists (v_:rec2_repr) . rec2_perm r v_
-{
-  rewrite (rec2_perm r v)
-    as (R.pts_to r.r1 full_perm v.v1 `star`
-        R.pts_to r.r2 full_perm v.v2);
+// [@@expect_failure]
+// ```pulse
+// fn mutate_rec2_get_witness (r:rec2) (#v:Ghost.erased rec2_repr)
+//   requires rec2_perm r v
+//   ensures exists (v_:rec2_repr) . rec2_perm r v_
+// {
+//   rewrite (rec2_perm r v)
+//     as (R.pts_to r.r1 full_perm v.v1 `star`
+//         R.pts_to r.r2 full_perm v.v2);
 
-  mutate_ref r.r2 0uy;
-  let v2_ = get_witness(r.r2);
+//   mutate_ref r.r2 0uy;
+//   let v2_ = get_witness(r.r2);
 
-  rewrite (R.pts_to r.r1 full_perm v.v1 `star`
-           R.pts_to r.r2 full_perm v2_)
-    as `@(rec2_perm r {v with v2=v2_});
+//   rewrite (R.pts_to r.r1 full_perm v.v1 `star`
+//            R.pts_to r.r2 full_perm v2_)
+//     as `@(rec2_perm r {v with v2=v2_});
   
-  ()
-}
-```
+//   ()
+// }
+// ```
 
-(* 
-Code below works!
 
 ```pulse
 fn get_witness_array (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
@@ -113,22 +111,40 @@ ensures A.pts_to x full_perm y ** pure (y==z)
 }
 ```
 
+```pulse
+fn mutate_array (l:US.t) (a:(a:A.array U8.t{ US.v l == A.length a }))
+                (#s:Ghost.erased (Seq.seq t))
+   requires (A.pts_to a full_perm s)
+   ensures exists (s_:Seq.seq t). A.pts_to a full_perm s_
+{
+  (a.(0sz) <- 0uy)
+}
+```
+
 noeq
-type rec1_array = {
-  r: A.array U8.t;
+type rec2_array = {
+  r1: A.array U8.t;
+  r2: A.array U8.t;
 }
 
-type rec1_array_repr = {
-  v: Seq.seq U8.t;
+type rec2_array_repr = {
+  v1: Seq.seq U8.t;
+  v2: Seq.seq U8.t;
 }
 
 ```pulse
-fn get_witness_rec_arrays (r:rec1_array) (#v:Ghost.erased rec1_array_repr)
-  requires A.pts_to r.r full_perm v.v
-  ensures exists (v_:Seq.seq U8.t) . A.pts_to r.r full_perm v_
+fn get_witness_rec_arrays (l:US.t) (r:rec2_array) (#v:Ghost.erased rec2_array_repr)
+  requires (
+    A.pts_to r.r1 full_perm v.v1 `star`
+    A.pts_to r.r2 full_perm v.v2 `star`
+    pure (A.length r.r1 == (US.v l) /\ A.length r.r2 == (US.v l) /\ Seq.length v.v2 )
+  )
+  ensures (
+    A.pts_to r.r1 full_perm v.v1 `star`
+    exists (v_:Seq.seq U8.t) . A.pts_to r.r2 full_perm v_
+  )
 {
-  let y = get_witness_array(r.r);
+  mutate_array l a;
   ()
 }
 ```
-*)
