@@ -561,8 +561,8 @@ let query_info settings z3result =
             | Some s -> "@"^s
         in
         let tag, core = match z3result.z3result_status with
-         | UNSAT core -> "succeeded", core
-         | _ -> "failed {reason-unknown=" ^ status_string ^ "}", None
+         | UNSAT core -> BU.colorize_green "succeeded", core
+         | _ -> BU.colorize_red ("failed {reason-unknown=" ^ status_string ^ "}"), None
         in
         let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
