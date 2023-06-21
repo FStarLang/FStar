@@ -253,6 +253,11 @@ and st_term'__Tm_Admit__payload =
   post3: term FStar_Pervasives_Native.option }
 and st_term'__Tm_Protect__payload = {
   t3: st_term }
+and st_term'__Tm_AssertWithBinders__payload =
+  {
+  binders: binder Prims.list ;
+  v: vprop ;
+  t4: st_term }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
   | Tm_Abs of st_term'__Tm_Abs__payload 
@@ -269,6 +274,7 @@ and st_term' =
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
   | Tm_Protect of st_term'__Tm_Protect__payload 
+  | Tm_AssertWithBinders of st_term'__Tm_AssertWithBinders__payload 
 and st_term = {
   term1: st_term' ;
   range2: range }
@@ -298,6 +304,8 @@ let uu___is_Tm_Admit uu___ =
   match uu___ with | Tm_Admit _ -> true | _ -> false
 let uu___is_Tm_Protect uu___ =
   match uu___ with | Tm_Protect _ -> true | _ -> false
+let uu___is_Tm_AssertWithBinders uu___ =
+  match uu___ with | Tm_AssertWithBinders _ -> true | _ -> false
 let (null_binder : term -> binder) =
   fun t -> { binder_ty = t; binder_ppname = ppname_default }
 let (mk_binder : Prims.string -> range -> term -> binder) =
@@ -366,13 +374,21 @@ let (eq_tm_opt :
       | (FStar_Pervasives_Native.Some t11, FStar_Pervasives_Native.Some t21)
           -> eq_tm t11 t21
       | uu___ -> false
-let rec (eq_tm_list : term Prims.list -> term Prims.list -> Prims.bool) =
-  fun t1 ->
-    fun t2 ->
-      match (t1, t2) with
-      | ([], []) -> true
-      | (h1::t11, h2::t21) -> (eq_tm h1 h2) && (eq_tm_list t11 t21)
-      | uu___ -> false
+let rec eq_list :
+  'a .
+    ('a -> 'a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list -> Prims.bool
+  =
+  fun f ->
+    fun l ->
+      fun m ->
+        match (l, m) with
+        | ([], []) -> true
+        | (h1::t1, h2::t2) -> (f h1 h2) && (eq_list f t1 t2)
+        | uu___ -> false
+let (eq_binder : binder -> binder -> Prims.bool) =
+  fun b0 -> fun b1 -> eq_tm b0.binder_ty b1.binder_ty
+let (eq_tm_list : term Prims.list -> term Prims.list -> Prims.bool) =
+  fun t1 -> fun t2 -> eq_list eq_tm t1 t2
 let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
@@ -446,6 +462,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
             (eq_tm_opt post1 post2)
       | (Tm_Protect { t3 = t11;_}, Tm_Protect { t3 = t21;_}) ->
           eq_st_term t11 t21
+      | (Tm_AssertWithBinders { binders = bs1; v = v1; t4 = t11;_},
+         Tm_AssertWithBinders { binders = bs2; v = v2; t4 = t21;_}) ->
+          ((eq_list eq_binder bs1 bs2) && (eq_tm v1 v2)) &&
+            (eq_st_term t11 t21)
       | uu___ -> false
 let (comp_res : comp -> term) =
   fun c ->

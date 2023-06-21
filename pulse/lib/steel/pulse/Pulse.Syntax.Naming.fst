@@ -148,6 +148,11 @@ let rec close_open_inverse_st'  (t:st_term)
 
     | Tm_Protect { t } ->
       close_open_inverse_st' t x i
+    
+    | Tm_AssertWithBinders { binders; v; t} ->
+      let n = L.length binders in
+      close_open_inverse' v x (i + n);
+      close_open_inverse_st' t x (i + n)
       
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)

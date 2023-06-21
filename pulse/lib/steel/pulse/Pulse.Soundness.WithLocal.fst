@@ -33,6 +33,7 @@ let mk_t_abs (g:env)
             (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} None (close_comp c x))))
   = mk_t_abs g #_ #_ #_ #t_typing ppname r_t_typing r_body_typing
 
+
 //TODO: this proof needs to be tamed
 #push-options "--z3rlimit_factor 40 --fuel 10 --split_queries always --query_stats"
 let withlocal_soundness #g #t #c d soundness =
@@ -140,7 +141,7 @@ let withlocal_soundness #g #t #c d soundness =
                        (PReflUtil.mk_ref ra, R.Q_Explicit)
                        (mk_stt_comp ru rret_t c1_pre c1_post)) =
     coerce_eq () rbody_typing in
-  
+
   let rx_tm = RT.var_as_term x in
 
   // get WT withlocal body post in mk_star form (push close inside)
