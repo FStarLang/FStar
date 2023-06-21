@@ -543,3 +543,6 @@ val close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
   : Lemma
     (requires ~ (x `Set.mem` freevars_comp c))
     (ensures close_comp' c x i == c)
+
+val close_binders (bs:list binder) (vs:list var { L.length bs == L.length vs })
+  : list binder

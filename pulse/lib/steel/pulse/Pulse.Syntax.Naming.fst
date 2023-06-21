@@ -246,3 +246,14 @@ let close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
   | C_STGhost inames s ->
     close_with_non_freevar inames x i;
     close_with_non_freevar_st s x i
+
+let close_binders (bs:list binder) (xs:list var { L.length bs == L.length xs }) =
+  let rec aux s out (bs:_) (xs:_{ L.length bs == L.length xs}) : Tot (list binder) (decreases bs) = 
+    match bs, xs with
+    | [], [] -> L.rev out
+    | b::bs, x::xs ->
+      let b = { b with binder_ty = subst_term b.binder_ty s } in
+      let s = ND x 0 :: shift_subst s in
+      aux s (b::out) bs xs
+  in
+  aux [] [] bs xs

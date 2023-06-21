@@ -590,6 +590,15 @@ let (mk_bind :
             let uu___2 = PulseSyntaxWrapper.tm_protect s2 in
             PulseSyntaxWrapper.tm_bind b uu___1 uu___2 r
           else PulseSyntaxWrapper.tm_bind b s1 s2 r
+let (explicit_rvalues : env_t -> PulseSugar.stmt -> PulseSugar.stmt) =
+  fun env -> fun s -> s
+type qual = PulseSyntaxWrapper.qualifier FStar_Pervasives_Native.option
+let (as_qual : FStar_Parser_AST.aqual -> qual) =
+  fun q ->
+    match q with
+    | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit) ->
+        PulseSyntaxWrapper.as_qual true
+    | uu___ -> PulseSyntaxWrapper.as_qual false
 let rec (desugar_stmt :
   env_t -> PulseSugar.stmt -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -628,6 +637,9 @@ let rec (desugar_stmt :
                 PulseSugar.range1 = uu___;_};
             PulseSugar.s2 = s2;_}
           -> desugar_bind env lb s2 s.PulseSugar.range1
+      | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} when
+          PulseSugar.uu___is_AssertWithBinders s1.PulseSugar.s ->
+          desugar_assert_with_binders env s1 s2 s.PulseSugar.range1
       | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} ->
           desugar_sequence env s1 s2 s.PulseSugar.range1
       | PulseSugar.Block { PulseSugar.stmt = stmt;_} -> desugar_stmt env stmt
@@ -846,16 +858,56 @@ and (desugar_sequence :
                       let uu___3 = PulseSyntaxWrapper.tm_unknown r in
                       PulseSyntaxWrapper.mk_binder uu___2 uu___3 in
                     let uu___2 = mk_bind annot s11 s21 r in return uu___2))
-let (explicit_rvalues : env_t -> PulseSugar.stmt -> PulseSugar.stmt) =
-  fun env -> fun s -> s
-type qual = PulseSyntaxWrapper.qualifier FStar_Pervasives_Native.option
-let (as_qual : FStar_Parser_AST.aqual -> qual) =
-  fun q ->
-    match q with
-    | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit) ->
-        PulseSyntaxWrapper.as_qual true
-    | uu___ -> PulseSyntaxWrapper.as_qual false
-let (desugar_binders :
+and (desugar_assert_with_binders :
+  env_t ->
+    PulseSugar.stmt ->
+      PulseSugar.stmt -> PulseSugar.rng -> PulseSyntaxWrapper.st_term err)
+  =
+  fun env ->
+    fun s1 ->
+      fun s2 ->
+        fun r ->
+          match s1.PulseSugar.s with
+          | PulseSugar.AssertWithBinders
+              { PulseSugar.binders1 = bs; PulseSugar.vprop1 = v;_} ->
+              let uu___ = desugar_binders env bs in
+              op_let_Question uu___
+                (fun uu___1 ->
+                   match uu___1 with
+                   | (env1, binders, bvs) ->
+                       let bvs1 =
+                         FStar_Compiler_List.map
+                           (fun bv -> bv.FStar_Syntax_Syntax.index) bvs in
+                       let uu___2 = desugar_vprop env1 v in
+                       op_let_Question uu___2
+                         (fun v1 ->
+                            let uu___3 = desugar_stmt env1 s2 in
+                            op_let_Question uu___3
+                              (fun s21 ->
+                                 let binders1 =
+                                   FStar_Compiler_List.map
+                                     FStar_Pervasives_Native.snd binders in
+                                 let s22 =
+                                   FStar_Compiler_List.fold_right
+                                     (fun bv ->
+                                        fun s23 ->
+                                          PulseSyntaxWrapper.close_st_term
+                                            s23 bv) bvs1 s21 in
+                                 let v2 =
+                                   FStar_Compiler_List.fold_right
+                                     (fun bv ->
+                                        fun v3 ->
+                                          PulseSyntaxWrapper.close_term v3 bv)
+                                     bvs1 v1 in
+                                 let uu___4 =
+                                   let uu___5 =
+                                     PulseSyntaxWrapper.close_binders
+                                       binders1 bvs1 in
+                                   PulseSyntaxWrapper.tm_assert_with_binders
+                                     uu___5 v2 s22 r in
+                                 return uu___4)))
+          | uu___ -> fail "Expected AssertWithBinders" s1.PulseSugar.range1
+and (desugar_binders :
   env_t ->
     PulseSugar.binders ->
       (env_t * (PulseSyntaxWrapper.qualifier FStar_Pervasives_Native.option *
@@ -956,7 +1008,7 @@ let (desugar_decl :
   env_t -> PulseSugar.decl -> PulseSyntaxWrapper.st_term err) =
   fun env ->
     fun p ->
-      let uu___ = desugar_binders env p.PulseSugar.binders1 in
+      let uu___ = desugar_binders env p.PulseSugar.binders2 in
       op_let_Question uu___
         (fun uu___1 ->
            match uu___1 with
