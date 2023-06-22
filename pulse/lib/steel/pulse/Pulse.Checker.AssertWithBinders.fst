@@ -12,9 +12,29 @@ module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming 
 module Inf = Pulse.Checker.Inference
-
+module RT = FStar.Reflection.Typing
+module RU = Pulse.RuntimeUtils
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
-let infer_binder_types (g:env) (bs:list binder) (v:vprop) : T.Tac (list (binder & T.binder) & vprop) = 
+
+let instantiate_binders_with_uvars (top:R.term) : T.Tac (list (Inf.uvar & term) & vprop) =
+    let rec aux uvars (t:R.term) : T.Tac (list (Inf.uvar & term) & vprop) = 
+        match R.inspect_ln t with
+        | R.Tv_Unknown -> T.fail "Impossible"
+        | R.Tv_Abs b body ->
+            let bv = R.inspect_binder b in
+            let uv, t = Inf.gen_uvar (mk_ppname bv.ppname (RU.range_of_term t)) in
+            let uvars = (uv, t)::uvars in
+            let body = RT.subst_term body N.(rt_subst [DT 0 t]) in
+            aux uvars body
+        | _ ->
+          match readback_ty t with
+          | None -> T.fail "Failed to readback elaborated assertion"
+          | Some t -> L.rev uvars, t
+    in
+    aux [] top
+
+let infer_binder_types (g:env) (bs:list binder) (v:vprop)
+  : T.Tac (list (Inf.uvar & term) & vprop) = 
     let tv = elab_term v in
     if not (is_host_term tv)
     then fail g (Some v.range) (Printf.sprintf "Cannot infer type of %s" (P.term_to_string v));
@@ -35,15 +55,13 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop) : T.Tac (list (binder 
             bs
             tv
     in
+    T.print (Printf.sprintf "About to elaborate assert body: %s" (T.term_to_string abstraction));
     let inst_abstraction, _ = PC.instantiate_term_implicits g (tm_fstar abstraction v.range) in
-    let formals, body = 
-        match inst_abstraction.t with
-        | Tm_FStar t -> T.collect_abs t
-        | _ -> T.fail "Impossible"
-    in
-    if not (is_host_term body)
-    then T.fail "Impossible"
-    else T.zip bs formals, tm_fstar body v.range
+    T.print (Printf.sprintf "Instantiated abstraction is: %s" (T.term_to_string abstraction));
+    match inst_abstraction.t with
+    | Tm_FStar t -> 
+      instantiate_binders_with_uvars t
+    |  _ -> T.fail "Impossible"
 
 let instantiate_binders (bs:list (binder & T.binder)) (v:vprop)
   : T.Tac (list (Inf.uvar & term) & vprop)
@@ -67,8 +85,10 @@ let check
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
   = let Tm_AssertWithBinders { binders; v; t=body } = st.term in
-    let t_binders, v = infer_binder_types g binders v in
-    let uvs, v = instantiate_binders t_binders v in
+    let uvs, v = infer_binder_types g binders v in
+    T.print (Printf.sprintf "Elaborated assertion is %s\n" (P.term_to_string v));
+    // let uvs, v = instantiate_binders t_binders v in
+    T.print (Printf.sprintf "Trying to solve %s \nagainst goal %s" (P.term_to_string v) (P.term_to_string pre));
     let solution = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre v in
     match Inf.unsolved solution uvs with
     | Some uvs ->
@@ -76,14 +96,17 @@ let check
              (Printf.sprintf "Could not instantiate %s"
                              (String.concat ", " (T.map (fun (_, t) -> P.term_to_string t) uvs)))
     | _ ->
-      let _, body_subst = 
-        T.fold_right #_ #(nat & N.subst)
-            (fun (uv, t) (index, subst) ->
+      T.print (Printf.sprintf "Got solution: %s\n" (Inf.solutions_to_string solution));
+      let body_subst = 
+        T.fold_left 
+            (fun subst (uv, t) ->
                 let sol = Inf.apply_solution solution t in 
-                index + 1, N.DT index sol::subst)
+                N.DT 0 sol::shift_subst subst)
+            []
             uvs
-            (0, [])
       in
-      let body = subst_st_term body body_subst in
-      check g body pre pre_typing post_hint
+      let body' = subst_st_term body body_subst in
+      T.print (Printf.sprintf "Substituted body from %s\nto %s\nEnv is %s\n"
+                    (P.st_term_to_string body) (P.st_term_to_string body') (env_to_string g));
+      check g body' pre pre_typing post_hint
     

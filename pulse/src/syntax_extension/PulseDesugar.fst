@@ -407,13 +407,14 @@ and desugar_assert_with_binders (env:env_t) (s1 s2:Sugar.stmt) r
   = match s1.s with
     | Sugar.AssertWithBinders { binders=bs; vprop=v } ->
       let? env, binders, bvs = desugar_binders env bs in
-      let bvs = L.map (fun bv -> bv.S.index) bvs in
+      let vars = L.map (fun bv -> bv.S.index) bvs in
       let? v = desugar_vprop env v in
       let? s2 = desugar_stmt env s2 in
       let binders = L.map snd binders in
-      let s2 = L.fold_right (fun bv s2 -> SW.close_st_term s2 bv) bvs s2 in
-      let v = L.fold_right (fun bv v -> SW.close_term v bv) bvs v in
-      return (SW.tm_assert_with_binders (SW.close_binders binders bvs) v s2 r)
+      let sub = SW.bvs_as_subst vars in
+      let s2 = SW.subst_st_term sub s2 in
+      let v = SW.subst_term sub v in
+      return (SW.tm_assert_with_binders (SW.close_binders binders vars) v s2 r)
     | _ -> fail "Expected AssertWithBinders" s1.range
 
 and desugar_binders (env:env_t) (bs:Sugar.binders)

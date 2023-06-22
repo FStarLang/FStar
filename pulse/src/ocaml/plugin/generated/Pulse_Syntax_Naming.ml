@@ -720,3 +720,23 @@ let (close_st_term :
 let (close_comp :
   Pulse_Syntax_Base.comp -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.comp)
   = fun t -> fun v -> close_comp' t v Prims.int_zero
+let (close_binders :
+  Pulse_Syntax_Base.binder Prims.list ->
+    Pulse_Syntax_Base.var Prims.list -> Pulse_Syntax_Base.binder Prims.list)
+  =
+  fun bs ->
+    fun xs ->
+      let rec aux s out bs1 xs1 =
+        match (bs1, xs1) with
+        | ([], []) -> FStar_List_Tot_Base.rev out
+        | (b::bs2, x::xs2) ->
+            let b1 =
+              {
+                Pulse_Syntax_Base.binder_ty =
+                  (subst_term b.Pulse_Syntax_Base.binder_ty s);
+                Pulse_Syntax_Base.binder_ppname =
+                  (b.Pulse_Syntax_Base.binder_ppname)
+              } in
+            let s1 = (ND (x, Prims.int_zero)) :: (shift_subst s) in
+            aux s1 (b1 :: out) bs2 xs2 in
+      aux [] [] bs xs

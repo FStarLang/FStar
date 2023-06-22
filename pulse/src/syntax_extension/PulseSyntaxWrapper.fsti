@@ -72,3 +72,8 @@ val binder_to_string (env:FStar.TypeChecker.Env.env) (b:binder) : string
 val term_to_string (env:FStar.TypeChecker.Env.env) (_:term) : string
 val st_term_to_string (env:FStar.TypeChecker.Env.env) (_:st_term) : string
 val comp_to_string (env:FStar.TypeChecker.Env.env) (_:comp) : string
+
+val subst : Type0
+val bvs_as_subst (l:list var) : subst
+val subst_term (s:subst) (t:term) : term
+val subst_st_term (s:subst) (t:st_term) : st_term

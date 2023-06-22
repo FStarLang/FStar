@@ -288,7 +288,7 @@ let rec (readback_ty :
     | FStar_Reflection_V2_Data.Tv_Match (uu___, uu___1, uu___2) ->
         return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_V2_Data.Tv_Abs (uu___, uu___1) ->
-        FStar_Pervasives_Native.None
+        return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_V2_Data.Tv_Uvar (uu___, uu___1) ->
         FStar_Pervasives_Native.None
     | FStar_Reflection_V2_Data.Tv_AscribedT (uu___, uu___1, uu___2, uu___3)

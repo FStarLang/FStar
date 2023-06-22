@@ -875,7 +875,7 @@ and (desugar_assert_with_binders :
                 (fun uu___1 ->
                    match uu___1 with
                    | (env1, binders, bvs) ->
-                       let bvs1 =
+                       let vars =
                          FStar_Compiler_List.map
                            (fun bv -> bv.FStar_Syntax_Syntax.index) bvs in
                        let uu___2 = desugar_vprop env1 v in
@@ -887,22 +887,16 @@ and (desugar_assert_with_binders :
                                  let binders1 =
                                    FStar_Compiler_List.map
                                      FStar_Pervasives_Native.snd binders in
+                                 let sub =
+                                   PulseSyntaxWrapper.bvs_as_subst vars in
                                  let s22 =
-                                   FStar_Compiler_List.fold_right
-                                     (fun bv ->
-                                        fun s23 ->
-                                          PulseSyntaxWrapper.close_st_term
-                                            s23 bv) bvs1 s21 in
+                                   PulseSyntaxWrapper.subst_st_term sub s21 in
                                  let v2 =
-                                   FStar_Compiler_List.fold_right
-                                     (fun bv ->
-                                        fun v3 ->
-                                          PulseSyntaxWrapper.close_term v3 bv)
-                                     bvs1 v1 in
+                                   PulseSyntaxWrapper.subst_term sub v1 in
                                  let uu___4 =
                                    let uu___5 =
                                      PulseSyntaxWrapper.close_binders
-                                       binders1 bvs1 in
+                                       binders1 vars in
                                    PulseSyntaxWrapper.tm_assert_with_binders
                                      uu___5 v2 s22 r in
                                  return uu___4)))

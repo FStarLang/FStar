@@ -117,8 +117,8 @@ pulseStmtNoSeq:
     { PulseSugar.mk_par p1 p2 q1 q2 b1 b2 }
   | REWRITE p1=pulseVprop AS p2=pulseVprop
     { PulseSugar.mk_rewrite p1 p2 }
-  | WITH bs=nonempty_list(pulseMultiBinder) ASSERT p=pulseVprop
-    { PulseSugar.mk_assert_with_binder bs p }
+  | WITH bs=nonempty_list(pulseMultiBinder) DOT ASSERT p=pulseVprop
+    { PulseSugar.mk_assert_with_binders (List.flatten bs) p }
 
 %inline
 returnsAnnot:

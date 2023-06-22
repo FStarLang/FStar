@@ -16,3 +16,4 @@ let tm_rewrite t1 t2 = Tm_Rewrite { t1; t2 }
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
 let tm_protect t = Tm_Protect { t }
 let with_range t r = { term = t; range = r}
+let tm_assert_with_binders bs v t = Tm_AssertWithBinders { binders=bs; v; t }

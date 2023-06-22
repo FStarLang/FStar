@@ -199,3 +199,17 @@ let (with_range :
   =
   fun t ->
     fun r -> { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range2 = r }
+let (tm_assert_with_binders :
+  Pulse_Syntax_Base.binder Prims.list ->
+    Pulse_Syntax_Base.vprop ->
+      Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
+  =
+  fun bs ->
+    fun v ->
+      fun t ->
+        Pulse_Syntax_Base.Tm_AssertWithBinders
+          {
+            Pulse_Syntax_Base.binders = bs;
+            Pulse_Syntax_Base.v = v;
+            Pulse_Syntax_Base.t4 = t
+          }
