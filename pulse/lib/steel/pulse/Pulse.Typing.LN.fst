@@ -788,7 +788,7 @@ let ln_mk_ref (t:term) (n:int)
       (ensures ln' (mk_ref t) n) =
   admit ()
 
-#push-options "--z3rlimit_factor 6 --fuel 4 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --fuel 4 --ifuel 1"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
   : Lemma 
