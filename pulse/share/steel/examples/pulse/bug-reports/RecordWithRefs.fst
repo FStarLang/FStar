@@ -61,3 +61,22 @@ fn swap_pair (p: u8_pair) (#v: erased u8_pair_repr)
     ()
 }
 ```
+
+//strange failure after the unfold;tbd
+[@@expect_failure] 
+```pulse
+fn swap_pair_alt (p: u8_pair) (#v: erased u8_pair_repr)
+  requires 
+    u8_pair_pred p v
+  ensures
+    u8_pair_pred p (snd v, fst v)
+{
+    unfold (u8_pair_pred p v);
+    let x = !p.a;
+    let y = !p.b;
+    (write p.a y);
+    (write p.b x);
+    with v1 v2. fold (u8_pair_pred p (v1, v2));
+    ()
+}
+```

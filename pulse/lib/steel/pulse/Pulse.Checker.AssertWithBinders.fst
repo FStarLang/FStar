@@ -71,10 +71,10 @@ let unfold_head (g:env) (t:term)
       match R.inspect_ln head with
       | R.Tv_FVar fv
       | R.Tv_UInst fv _ ->
-        let rt = T.norm_term [delta_only [String.concat "." (R.inspect_fv fv)]] rt in
-        if not (is_host_term rt)
+        let rt = RU.unfold_def (fstar_env g) (String.concat "." (R.inspect_fv fv)) rt in
+        if None? rt || not (is_host_term (Some?.v rt))
         then T.fail "Unexpected: reduction produced an ill-formed term"
-        else tm_fstar rt t.range
+        else tm_fstar (Some?.v rt) t.range
       | _ ->
         fail g (Some t.range) (Printf.sprintf "Cannot unfold %s" (P.term_to_string t))
     )
@@ -114,6 +114,7 @@ let check
                            head = rw;
                            body = body' } in
         let tm = { term = tm; range = st.range } in
+        T.print (Printf.sprintf "After unfold: about to check %s\n" (P.st_term_to_string tm));
         check g tm pre pre_typing post_hint
       in
       match hint_type with
