@@ -207,8 +207,9 @@ let (tm_assert_with_binders :
   fun bs ->
     fun v ->
       fun t ->
-        Pulse_Syntax_Base.Tm_AssertWithBinders
+        Pulse_Syntax_Base.Tm_ProofHintWithBinders
           {
+            Pulse_Syntax_Base.hint_type = Pulse_Syntax_Base.ASSERT;
             Pulse_Syntax_Base.binders = bs;
             Pulse_Syntax_Base.v = v;
             Pulse_Syntax_Base.t4 = t

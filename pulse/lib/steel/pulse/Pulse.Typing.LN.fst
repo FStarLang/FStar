@@ -176,7 +176,7 @@ let rec open_st_term_ln' (e:st_term)
     | Tm_Protect { t } ->
       open_st_term_ln' t x i
 
-    | Tm_AssertWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       open_term_ln' v x (i + n);
       open_st_term_ln' t x (i + n)
@@ -341,7 +341,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Protect { t } ->
       ln_weakening_st t i j
 
-    | Tm_AssertWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       ln_weakening v (i + n) (j + n);
       ln_weakening_st t (i + n) (j + n)
@@ -505,7 +505,7 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_Protect { t } ->
       open_term_ln_inv_st' t x i
 
-    | Tm_AssertWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       open_term_ln_inv' v x (i + n);
       open_term_ln_inv_st' t x (i + n)
@@ -662,7 +662,7 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_Protect { t } ->
       close_st_term_ln' t x i
     
-    | Tm_AssertWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       close_term_ln' v x (i + n);
       close_st_term_ln' t x (i + n)

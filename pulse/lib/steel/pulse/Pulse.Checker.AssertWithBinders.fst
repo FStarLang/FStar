@@ -63,15 +63,33 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
       instantiate_binders_with_uvars t
     |  _ -> T.fail "Impossible"
 
+let unfold_head (g:env) (t:term) 
+  : T.Tac term
+  = match t.t with
+    | Tm_FStar rt -> (
+      let head, _ = T.collect_app rt in
+      match R.inspect_ln head with
+      | R.Tv_FVar fv
+      | R.Tv_UInst fv _ ->
+        let rt = T.norm_term [delta_only [String.concat "." (R.inspect_fv fv)]] rt in
+        if not (is_host_term rt)
+        then T.fail "Unexpected: reduction produced an ill-formed term"
+        else tm_fstar rt t.range
+      | _ ->
+        fail g (Some t.range) (Printf.sprintf "Cannot unfold %s" (P.term_to_string t))
+    )
+     
+    | _ -> T.fail "Impossible"
+
 let check
   (g:env)
-  (st:st_term{Tm_AssertWithBinders? st.term})
+  (st:st_term{Tm_ProofHintWithBinders? st.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
-  = let Tm_AssertWithBinders { binders; v; t=body } = st.term in
+  = let Tm_ProofHintWithBinders { hint_type; binders; v; t=body } = st.term in
     let uvs, v = infer_binder_types g binders v in
     // T.print (Printf.sprintf "Trying to solve %s \nagainst goal %s" (P.term_to_string v) (P.term_to_string pre));
     let solution = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre v in
@@ -81,8 +99,7 @@ let check
              (Printf.sprintf "Could not instantiate %s"
                              (String.concat ", " (T.map (fun (_, t) -> P.term_to_string t) uvs)))
     | _ ->
-    //   T.print (Printf.sprintf "Got solution: %s\n" (Inf.solutions_to_string solution));
-      let body_subst = 
+      let sub = 
         T.fold_left 
             (fun subst (uv, t) ->
                 let sol = Inf.apply_solution solution t in 
@@ -90,8 +107,26 @@ let check
             []
             uvs
       in
-      let body' = subst_st_term body body_subst in
-    //   T.print (Printf.sprintf "Substituted body from %s\nto %s\nEnv is %s\n"
-    //                 (P.st_term_to_string body) (P.st_term_to_string body') (env_to_string g));
-      check g body' pre pre_typing post_hint
+      let rewrite_and_check lhs rhs =
+        let rw = { term = Tm_Rewrite { t1 = lhs; t2 = rhs }; range = st.range } in
+        let body' = subst_st_term body sub in
+        let tm = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
+                           head = rw;
+                           body = body' } in
+        let tm = { term = tm; range = st.range } in
+        check g tm pre pre_typing post_hint
+      in
+      match hint_type with
+      | ASSERT ->
+        let body' = subst_st_term body sub in
+        check g body' pre pre_typing post_hint
+      | UNFOLD ->
+        let v = subst_term v sub in
+        let unfolded_v = unfold_head g v in
+        rewrite_and_check v unfolded_v    
+      | FOLD ->
+        let v = subst_term v sub in
+        let unfolded_v = unfold_head g v in
+        rewrite_and_check unfolded_v v
+
     

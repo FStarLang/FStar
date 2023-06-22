@@ -51,7 +51,7 @@ let r p = rng (fst p) (snd p)
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE
+%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD
 
 %start pulseDecl
 %start peekFnId
@@ -117,8 +117,17 @@ pulseStmtNoSeq:
     { PulseSugar.mk_par p1 p2 q1 q2 b1 b2 }
   | REWRITE p1=pulseVprop AS p2=pulseVprop
     { PulseSugar.mk_rewrite p1 p2 }
-  | WITH bs=nonempty_list(pulseMultiBinder) DOT ASSERT p=pulseVprop
-    { PulseSugar.mk_assert_with_binders (List.flatten bs) p }
+  | bs=withBindersOpt ASSERT p=pulseVprop
+    { PulseSugar.mk_proof_hint_with_binders ASSERT bs p }
+  | bs=withBindersOpt UNFOLD p=pulseVprop
+    { PulseSugar.mk_proof_hint_with_binders UNFOLD bs p }
+  | bs=withBindersOpt FOLD p=pulseVprop
+    { PulseSugar.mk_proof_hint_with_binders FOLD bs p }
+
+withBindersOpt:
+  | WITH bs=nonempty_list(pulseMultiBinder) DOT
+    { List.flatten bs }
+  | { [] }
 
 %inline
 returnsAnnot:

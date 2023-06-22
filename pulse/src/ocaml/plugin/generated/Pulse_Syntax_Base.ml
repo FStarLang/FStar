@@ -179,6 +179,16 @@ let (uu___is_STT_Atomic : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Atomic -> true | uu___ -> false
 let (uu___is_STT_Ghost : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Ghost -> true | uu___ -> false
+type proof_hint_type =
+  | ASSERT 
+  | FOLD 
+  | UNFOLD 
+let (uu___is_ASSERT : proof_hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | ASSERT -> true | uu___ -> false
+let (uu___is_FOLD : proof_hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | FOLD -> true | uu___ -> false
+let (uu___is_UNFOLD : proof_hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | UNFOLD -> true | uu___ -> false
 type st_term'__Tm_Return__payload =
   {
   ctag: ctag ;
@@ -253,8 +263,9 @@ and st_term'__Tm_Admit__payload =
   post3: term FStar_Pervasives_Native.option }
 and st_term'__Tm_Protect__payload = {
   t3: st_term }
-and st_term'__Tm_AssertWithBinders__payload =
+and st_term'__Tm_ProofHintWithBinders__payload =
   {
+  hint_type: proof_hint_type ;
   binders: binder Prims.list ;
   v: vprop ;
   t4: st_term }
@@ -274,7 +285,7 @@ and st_term' =
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
   | Tm_Protect of st_term'__Tm_Protect__payload 
-  | Tm_AssertWithBinders of st_term'__Tm_AssertWithBinders__payload 
+  | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
 and st_term = {
   term1: st_term' ;
   range2: range }
@@ -304,8 +315,8 @@ let uu___is_Tm_Admit uu___ =
   match uu___ with | Tm_Admit _ -> true | _ -> false
 let uu___is_Tm_Protect uu___ =
   match uu___ with | Tm_Protect _ -> true | _ -> false
-let uu___is_Tm_AssertWithBinders uu___ =
-  match uu___ with | Tm_AssertWithBinders _ -> true | _ -> false
+let uu___is_Tm_ProofHintWithBinders uu___ =
+  match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
 let (null_binder : term -> binder) =
   fun t -> { binder_ty = t; binder_ppname = ppname_default }
 let (mk_binder : Prims.string -> range -> term -> binder) =
@@ -462,8 +473,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
             (eq_tm_opt post1 post2)
       | (Tm_Protect { t3 = t11;_}, Tm_Protect { t3 = t21;_}) ->
           eq_st_term t11 t21
-      | (Tm_AssertWithBinders { binders = bs1; v = v1; t4 = t11;_},
-         Tm_AssertWithBinders { binders = bs2; v = v2; t4 = t21;_}) ->
+      | (Tm_ProofHintWithBinders
+         { hint_type = uu___; binders = bs1; v = v1; t4 = t11;_},
+         Tm_ProofHintWithBinders
+         { hint_type = uu___1; binders = bs2; v = v2; t4 = t21;_}) ->
           ((eq_list eq_binder bs1 bs2) && (eq_tm v1 v2)) &&
             (eq_st_term t11 t21)
       | uu___ -> false

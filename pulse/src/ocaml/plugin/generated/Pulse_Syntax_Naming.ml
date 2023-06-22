@@ -133,8 +133,9 @@ let rec (freevars_st :
         -> FStar_Set.union (freevars typ) (freevars_opt post)
     | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
         freevars_st t1
-    | Pulse_Syntax_Base.Tm_AssertWithBinders
-        { Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
+    | Pulse_Syntax_Base.Tm_ProofHintWithBinders
+        { Pulse_Syntax_Base.hint_type = uu___;
+          Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
           Pulse_Syntax_Base.t4 = t1;_}
         -> FStar_Set.union (freevars v) (freevars_st t1)
 let rec (ln' : Pulse_Syntax_Base.term -> Prims.int -> Prims.bool) =
@@ -271,8 +272,9 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           -> (ln' typ i) && (ln_opt' post (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
           ln_st' t1 i
-      | Pulse_Syntax_Base.Tm_AssertWithBinders
-          { Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
+      | Pulse_Syntax_Base.Tm_ProofHintWithBinders
+          { Pulse_Syntax_Base.hint_type = uu___;
+            Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
             Pulse_Syntax_Base.t4 = t1;_}
           ->
           let n = FStar_List_Tot_Base.length binders in
@@ -639,14 +641,16 @@ let rec (subst_st_term :
         | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
             Pulse_Syntax_Base.Tm_Protect
               { Pulse_Syntax_Base.t3 = (subst_st_term t1 ss) }
-        | Pulse_Syntax_Base.Tm_AssertWithBinders
-            { Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
+        | Pulse_Syntax_Base.Tm_ProofHintWithBinders
+            { Pulse_Syntax_Base.hint_type = hint_type;
+              Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
               Pulse_Syntax_Base.t4 = t1;_}
             ->
             let n = FStar_List_Tot_Base.length binders in
             let ss1 = shift_subst_n n ss in
-            Pulse_Syntax_Base.Tm_AssertWithBinders
+            Pulse_Syntax_Base.Tm_ProofHintWithBinders
               {
+                Pulse_Syntax_Base.hint_type = hint_type;
                 Pulse_Syntax_Base.binders = binders;
                 Pulse_Syntax_Base.v = (subst_term v ss1);
                 Pulse_Syntax_Base.t4 = (subst_st_term t1 ss1)

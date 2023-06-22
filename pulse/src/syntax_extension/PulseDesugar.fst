@@ -293,7 +293,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     | Sequence { s1={s=LetBinding lb}; s2 } ->
       desugar_bind env lb s2 s.range
 
-    | Sequence { s1; s2 } when AssertWithBinders? s1.s ->
+    | Sequence { s1; s2 } when ProofHintWithBinders? s1.s ->
       desugar_assert_with_binders env s1 s2 s.range
 
     | Sequence { s1; s2 } -> 
@@ -405,7 +405,7 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
 and desugar_assert_with_binders (env:env_t) (s1 s2:Sugar.stmt) r
   : err SW.st_term
   = match s1.s with
-    | Sugar.AssertWithBinders { binders=bs; vprop=v } ->
+    | Sugar.ProofHintWithBinders { hint_type; binders=bs; vprop=v } ->
       let? env, binders, bvs = desugar_binders env bs in
       let vars = L.map (fun bv -> bv.S.index) bvs in
       let? v = desugar_vprop env v in
@@ -414,8 +414,8 @@ and desugar_assert_with_binders (env:env_t) (s1 s2:Sugar.stmt) r
       let sub = SW.bvs_as_subst vars in
       let s2 = SW.subst_st_term sub s2 in
       let v = SW.subst_term sub v in
-      return (SW.tm_assert_with_binders (SW.close_binders binders vars) v s2 r)
-    | _ -> fail "Expected AssertWithBinders" s1.range
+      return (SW.tm_proof_hint_with_binders hint_type (SW.close_binders binders vars) v s2 r)
+    | _ -> fail "Expected ProofHintWithBinders" s1.range
 
 and desugar_binders (env:env_t) (bs:Sugar.binders)
   : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)

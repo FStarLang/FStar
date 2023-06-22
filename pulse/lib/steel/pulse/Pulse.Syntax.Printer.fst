@@ -247,7 +247,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
       level
       (st_term_to_string' level t)
 
-    | Tm_AssertWithBinders { binders; v; t} ->
+    | Tm_ProofHintWithBinders { binders; v; t} ->
       sprintf "assert %s in\n%s"
         (term_to_string v)
         (st_term_to_string' level t)
@@ -285,7 +285,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_Rewrite _ -> "Tm_Rewrite"
   | Tm_Admit _ -> "Tm_Admit"
   | Tm_Protect _ -> "Tm_Protect"
-  | Tm_AssertWithBinders _ -> "Tm_AssertWithBinders"
+  | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
 
 let rec print_st_head (t:st_term)
   : Tot string (decreases t) =
@@ -305,7 +305,7 @@ let rec print_st_head (t:st_term)
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"  
-  | Tm_AssertWithBinders _ -> "AssertWithBinders"
+  | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
 and print_head (t:term) =
   match t with
   // | Tm_FVar fv
@@ -331,4 +331,4 @@ let rec print_skel (t:st_term) =
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"
-  | Tm_AssertWithBinders _ -> "AssertWithBinders"
+  | Tm_ProofHintWithBinders _ -> "AssertWithBinders"

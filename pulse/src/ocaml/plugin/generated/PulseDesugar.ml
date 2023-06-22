@@ -638,7 +638,7 @@ let rec (desugar_stmt :
             PulseSugar.s2 = s2;_}
           -> desugar_bind env lb s2 s.PulseSugar.range1
       | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} when
-          PulseSugar.uu___is_AssertWithBinders s1.PulseSugar.s ->
+          PulseSugar.uu___is_ProofHintWithBinders s1.PulseSugar.s ->
           desugar_assert_with_binders env s1 s2 s.PulseSugar.range1
       | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} ->
           desugar_sequence env s1 s2 s.PulseSugar.range1
@@ -868,8 +868,10 @@ and (desugar_assert_with_binders :
       fun s2 ->
         fun r ->
           match s1.PulseSugar.s with
-          | PulseSugar.AssertWithBinders
-              { PulseSugar.binders1 = bs; PulseSugar.vprop1 = v;_} ->
+          | PulseSugar.ProofHintWithBinders
+              { PulseSugar.hint_type = hint_type; PulseSugar.binders1 = bs;
+                PulseSugar.vprop1 = v;_}
+              ->
               let uu___ = desugar_binders env bs in
               op_let_Question uu___
                 (fun uu___1 ->
@@ -897,10 +899,11 @@ and (desugar_assert_with_binders :
                                    let uu___5 =
                                      PulseSyntaxWrapper.close_binders
                                        binders1 vars in
-                                   PulseSyntaxWrapper.tm_assert_with_binders
-                                     uu___5 v2 s22 r in
+                                   PulseSyntaxWrapper.tm_proof_hint_with_binders
+                                     hint_type uu___5 v2 s22 r in
                                  return uu___4)))
-          | uu___ -> fail "Expected AssertWithBinders" s1.PulseSugar.range1
+          | uu___ ->
+              fail "Expected ProofHintWithBinders" s1.PulseSugar.range1
 and (desugar_binders :
   env_t ->
     PulseSugar.binders ->

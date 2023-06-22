@@ -436,7 +436,7 @@ let rec check' : bool -> check_t =
       | Tm_Rewrite _ ->
         Rewrite.check_rewrite g t pre pre_typing post_hint
 
-      | Tm_AssertWithBinders _ ->
+      | Tm_ProofHintWithBinders _ ->
         Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint (check' true)
     with
     | Framing_failure failure ->
